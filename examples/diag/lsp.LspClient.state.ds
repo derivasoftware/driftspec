@@ -1,0 +1,15 @@
+// A state machine belongs to one entity (same identity as the class) and its
+// events are the entity's operations. An event that is not an operation of
+// lsp::LspClient is a finding.
+
+package ds {
+  module lsp {
+
+    state LspClient {
+      initial Idle
+      Idle      -> Connected  on open       // ! open is not an operation of LspClient → finding
+      Connected -> Idle       on close      // lsp::LspClient::close
+      Connected -> Connected  on send       // lsp::LspClient::send
+    }
+  }
+}

@@ -1,0 +1,10 @@
+// The package itself. A package or a module can be reopened in any file of
+// the workspace (R9): every file below reopens `package ds { ... }` and adds
+// one entity to it. The identity is the qualified name, not the file.
+// A class, a requirement, a sequence or a diagram cannot be reopened: declaring
+// the same identity twice anywhere in the workspace is an error (R5).
+
+package ds {
+  owner: dcoello
+  title: diagnostics package
+}

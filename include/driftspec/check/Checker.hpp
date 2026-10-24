@@ -1,0 +1,36 @@
+#ifndef DRIFTSPEC_CHECK_CHECKER_HPP
+#define DRIFTSPEC_CHECK_CHECKER_HPP
+
+#include <set>
+#include <string>
+
+#include "driftspec/bind/Binder.hpp"
+#include "driftspec/model/Model.hpp"
+
+namespace driftspec {
+namespace check {
+
+/// Resolves the references the Binder collected (R5, R6) and checks the
+/// dynamic specifications against the static ones.
+class Checker {
+ public:
+  explicit Checker(model::Model& model) : model_(model) {}
+  void run(const bind::Binder& binder);
+
+  /// Resolve `name` as written in `scope`: innermost scope first, then outward, then global.
+  /// Returns the identity, or "" when nothing declares it.
+  std::string resolve(const std::string& name, const std::string& scope) const;
+
+ private:
+  void resolveReference(const bind::Reference& reference);
+  void checkMessage(const bind::Message& message);
+  void checkEvent(const bind::Event& event);
+
+  model::Model& model_;
+  std::set<std::string> reported_;
+};
+
+}  // namespace check
+}  // namespace driftspec
+
+#endif  // DRIFTSPEC_CHECK_CHECKER_HPP

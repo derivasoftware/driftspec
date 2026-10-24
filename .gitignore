@@ -1,0 +1,18 @@
+# Argos runtime state (federation cache, eval data, reports) — derived,
+# never committed.
+.argos/
+
+# Per-operator workspace overrides (REQ-00625-1): the GDD analogue of
+# an editable install. Always local, never committed.
+argos.local.toml
+
+# Python working residue (DDEV-245): the venv and interpreter caches
+# every ``argos init --language python`` project grows on first run.
+# Inert lines for the other languages.
+.venv/
+__pycache__/
+*.egg-info/
+
+# build tree
+build/
+build-*.log

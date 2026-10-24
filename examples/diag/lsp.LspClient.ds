@@ -1,0 +1,23 @@
+// A class in its own file. Its identity is lsp::LspClient (R4); the file name
+// is a convention for humans, the tool never relies on it.
+// ! AbstractClass and Vector are declared nowhere in this workspace: they load
+// ! as EXPECTED nodes and are reported (W-REF-UNDECLARED) until declared (R6).
+
+package ds {
+  module lsp {
+
+    class LspClient : AbstractClass {
+      @requirement DS-0002
+      @boundary LSP          // this class realises the LSP boundary
+
+      + send(msg: int) -> bool
+        [abstract, noexcept]
+        [requires: 0 < msg < 100]
+        [ensures: ret == false on error]
+
+      - a: Vector
+
+      + close() -> none
+    }
+  }
+}

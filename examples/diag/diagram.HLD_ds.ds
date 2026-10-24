@@ -1,0 +1,7 @@
+// The black-box view: the package, its boundaries and its modules as boxes.
+
+diagram HLD_ds {
+  kind: component
+  include: ds
+  show: boundaries, requirements
+}

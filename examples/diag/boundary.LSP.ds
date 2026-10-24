@@ -1,0 +1,8 @@
+package ds {
+
+  boundary LSP {
+    kind: http
+    spec: lsp/openapi.yaml          // an external contract, kept in the repo
+    operation publishDiagnostics(findings) -> none
+  }
+}

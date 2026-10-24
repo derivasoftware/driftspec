@@ -1,0 +1,37 @@
+# Pre-commit hooks scaffolded by argos init --language cpp (REQ-00469-1).
+# Extend as the project's toolchain grows; the default set keeps a fresh
+# project's `pre-commit run --all-files` green out of the box.
+repos:
+  - repo: local
+    hooks:
+      - id: no-push-to-main
+        name: Prevent direct push to main
+        language: system
+        entry: >-
+          bash -c 'branch=$(git rev-parse --abbrev-ref HEAD);
+          if [ "$branch" = "main" ]; then
+          echo "Direct push to main is not allowed.
+          Use a feature branch and open a merge request."; exit 1; fi'
+        pass_filenames: false
+        stages: [pre-push]
+  - repo: https://github.com/derivasoftware/plantuml-fmt
+    rev: v0.5.0
+    hooks:
+      - id: plantuml-fmt
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v20.1.5
+    hooks:
+      - id: clang-format
+        types_or: [c++, c]
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format

@@ -1,0 +1,14 @@
+// Representations live outside any package: they are projections of the
+// model and own only layout. A diagram cannot drift from the model because it
+// does not redraw it; it selects it.
+
+diagram CL_Diag {
+  kind: class
+  include: lsp::*
+  include: ds::module_b::*
+  exclude: ds::module_b::module_c
+  show: contracts, requirements
+  layout:
+    direction: top-down
+    group: lsp
+}

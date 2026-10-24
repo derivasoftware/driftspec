@@ -1,0 +1,17 @@
+// A white-box requirement: declared inside module ds, so it is about how ds
+// does it (R2). Its parent is the black-box requirement, by id and revision.
+
+package ds {
+  module ds {
+
+    requirement DS-0002 {
+      revision: 0
+      owner: dcoello
+      title: The ds module shall resolve a qualified name to one identity
+      text:
+        A reference namespace::name collapses to the declared entity when one
+        exists; an ambiguous name is a finding, never a silent choice (R5).
+      parent: DS-0001-0
+    }
+  }
+}

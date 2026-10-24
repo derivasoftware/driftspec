@@ -1,0 +1,11 @@
+// Nested namespaces. Modules are reopenable (R9), so ds::module_b could be
+// reopened later in another file to add module_d without touching this one.
+
+package ds {
+  module ds {
+    module module_a { }
+    module module_b {
+      module module_c { }
+    }
+  }
+}

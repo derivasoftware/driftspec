@@ -1,0 +1,11 @@
+// A boundary is a port of the black box. The white box must realise each
+// operation it declares; an operation nobody realises is a finding (R6).
+
+package ds {
+
+  boundary cli {
+    kind: cli
+    operation diagnose(workspace: path) -> findings
+    operation explain(code: string) -> article
+  }
+}

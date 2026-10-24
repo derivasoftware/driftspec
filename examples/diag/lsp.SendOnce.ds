@@ -1,0 +1,20 @@
+// A sequence is a dynamic entity bound to the static ones by identity: every
+// message resolves to an operation of the participant's class, or it is a
+// finding (W-MSG-UNDECLARED). Renaming lsp::LspClient::send breaks this file
+// as a finding, not as a drawing that lies.
+
+package ds {
+  module lsp {
+
+    sequence SendOnce {
+      @requirement DS-0002
+      @verification VF-0001            // the test expected to exercise it
+      participant client: LspClient
+      participant server: LspServer    // ! undeclared → EXPECTED node
+
+      client -> server.receive(msg)    // ! reported once LspServer exists without receive
+      server -> client.send(ack)       // resolves to lsp::LspClient::send(msg: int) -> bool
+      return client.send -> true
+    }
+  }
+}

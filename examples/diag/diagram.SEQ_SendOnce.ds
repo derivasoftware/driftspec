@@ -1,0 +1,5 @@
+diagram SEQ_SendOnce {
+  kind: sequence
+  include: lsp::SendOnce
+  show: returns
+}
