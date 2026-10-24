@@ -12,7 +12,7 @@ namespace render {
 
 namespace {
 
-using M = Metrics;
+const Metrics M = Metrics::svg();
 
 // The stylesheet of plantuml-render's engine (shared.ts STYLE), verbatim: one theming contract.
 const char* const kStyle = R"CSS(
@@ -213,23 +213,23 @@ std::string emitNode(const Placed& p, const std::string& px) {
     out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"6\"/>";
     out << "<text class=\"pr-header\" x=\"" << r.x + 10 << "\" y=\"" << r.y + 15 << "\">" << esc(n.label) << "</text>";
   } else if (n.kind == "note") {
-    const int f = M::NOTE_FOLD;
+    const int f = M.NOTE_FOLD;
     out << "<path d=\"M" << r.x << "," << r.y << " H" << r.x + r.w - f << " L" << r.x + r.w << "," << r.y + f << " V" << r.y + r.h << " H" << r.x << " Z\"/>";
     out << "<path d=\"M" << r.x + r.w - f << "," << r.y << " V" << r.y + f << " H" << r.x + r.w << "\"/>";
     const auto lines = linesOf(n.label);
     for (size_t i = 0; i < lines.size(); ++i) {
-      out << "<text x=\"" << r.x + M::PAD << "\" y=\"" << r.y + M::PAD + 12 + static_cast<int>(i) * M::LINE_H << "\">" << esc(lines[i]) << "</text>";
+      out << "<text x=\"" << r.x + M.PAD_X << "\" y=\"" << r.y + M.PAD_X + 12 + static_cast<int>(i) * M.LINE_H << "\">" << esc(lines[i]) << "</text>";
     }
   } else {
     out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"4\"/>";
-    int ty = r.y + M::PAD + 12;
+    int ty = r.y + M.PAD_X + 12;
     const int rad = 4;
-    const int bandH = n.sections.empty() ? r.h : M::PAD + 12 + (n.stereotype.empty() ? 0 : M::LINE_H) + M::SECTION_GAP + 6;
+    const int bandH = n.sections.empty() ? r.h : M.PAD_X + 12 + (n.stereotype.empty() ? 0 : M.LINE_H) + M.SECTION_GAP + 6;
     out << "<path class=\"pr-head\" d=\"M" << r.x + rad << "," << r.y << " H" << r.x + r.w - rad << " A" << rad << "," << rad << " 0 0 1 " << r.x + r.w << "," << r.y + rad
         << " V" << r.y + bandH << " H" << r.x << " V" << r.y + rad << " A" << rad << "," << rad << " 0 0 1 " << r.x + rad << "," << r.y << " Z\"/>";
     if (!n.stereotype.empty()) {
-      out << "<text class=\"pr-stereo\" x=\"" << r.x + M::PAD << "\" y=\"" << ty - 2 << "\">" << esc("\xC2\xAB" + n.stereotype + "\xC2\xBB") << "</text>";
-      ty += M::LINE_H;
+      out << "<text class=\"pr-stereo\" x=\"" << r.x + M.PAD_X << "\" y=\"" << ty - 2 << "\">" << esc("\xC2\xAB" + n.stereotype + "\xC2\xBB") << "</text>";
+      ty += M.LINE_H;
     }
     std::string letter = "C";
     if (n.abstract && n.classifier.empty()) {
@@ -238,21 +238,21 @@ std::string emitNode(const Placed& p, const std::string& px) {
       const auto b = kBadge.find(n.classifier);
       letter = b != kBadge.end() ? b->second : std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(n.classifier[0]))));
     }
-    out << "<circle class=\"pr-badge\" cx=\"" << r.x + M::PAD + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
-    out << "<text class=\"pr-badge-text\" x=\"" << r.x + M::PAD + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">" << esc(letter) << "</text>";
-    out << "<text class=\"pr-header\" x=\"" << r.x + M::PAD + M::BADGE_W << "\" y=\"" << ty << "\">" << esc(n.label) << "</text>";
-    ty += M::LINE_H;
+    out << "<circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
+    out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">" << esc(letter) << "</text>";
+    out << "<text class=\"pr-header\" x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << esc(n.label) << "</text>";
+    ty += M.LINE_H;
     for (const auto& section : n.sections) {
-      const int sepY = ty - M::LINE_H + M::SECTION_GAP + 6;
+      const int sepY = ty - M.LINE_H + M.SECTION_GAP + 6;
       out << "<line class=\"pr-sep\" x1=\"" << r.x << "\" y1=\"" << sepY << "\" x2=\"" << r.x + r.w << "\" y2=\"" << sepY << "\"/>";
-      ty += M::SECTION_GAP;
+      ty += M.SECTION_GAP;
       for (const auto& line : section) {
         const auto marked = memberMarkup(line);
         if (!marked.first.empty()) {
-          out << "<circle class=\"pr-vis pr-vis-" << marked.first << "\" cx=\"" << r.x + M::PAD + 4 << "\" cy=\"" << ty - 4 << "\" r=\"3.5\"/>";
+          out << "<circle class=\"pr-vis pr-vis-" << marked.first << "\" cx=\"" << r.x + M.PAD_X + 4 << "\" cy=\"" << ty - 4 << "\" r=\"3.5\"/>";
         }
-        out << "<text x=\"" << r.x + M::PAD + (marked.first.empty() ? 0 : M::DOT_W) << "\" y=\"" << ty << "\">" << marked.second << "</text>";
-        ty += M::LINE_H;
+        out << "<text x=\"" << r.x + M.PAD_X + (marked.first.empty() ? 0 : M.DOT_W) << "\" y=\"" << ty << "\">" << marked.second << "</text>";
+        ty += M.LINE_H;
       }
     }
   }
@@ -292,7 +292,7 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
     const int y = (a.y + b.y) / 2 - 4;
     const auto lines = linesOf(e.label);
     std::string rows;
-    for (size_t i = 0; i < lines.size(); ++i) rows += "<tspan x=\"" + num(x) + "\" dy=\"" + num(i == 0 ? 0 : M::LABEL_H) + "\">" + esc(lines[i]) + "</tspan>";
+    for (size_t i = 0; i < lines.size(); ++i) rows += "<tspan x=\"" + num(x) + "\" dy=\"" + num(i == 0 ? 0 : 14) + "\">" + esc(lines[i]) + "</tspan>";
     out.label = "<text class=\"pr-edge-label\" x=\"" + num(x) + "\" y=\"" + num(y) + "\">" + (lines.size() == 1 ? esc(e.label) : rows) + "</text>";
   }
   out.path = "<g class=\"pr-edge-group\" data-from=\"" + esc(e.from) + "\" data-to=\"" + esc(e.to) + "\">" + (e.title.empty() ? "" : "<title>" + esc(e.title) + "</title>") +
@@ -369,16 +369,16 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
     const auto lines = linesOf(notice);
     size_t width = 0;
     for (const auto& l : lines) width = std::max(width, l.size());
-    const int w = static_cast<int>(width) * M::CHAR_W + 2 * M::PAD;
-    const int h = static_cast<int>(lines.size()) * M::LINE_H + 2 * M::PAD - 4;
+    const int w = static_cast<int>(width) * M.CHAR_W + 2 * M.PAD_X;
+    const int h = static_cast<int>(lines.size()) * M.LINE_H + 2 * M.PAD_X - 4;
     const int x = minX;
-    const int y = maxY + 2 * M::PAD;
+    const int y = maxY + 2 * M.PAD_X;
     noticeBlock = "<g class=\"pr-notice\"><rect x=\"" + num(x) + "\" y=\"" + num(y) + "\" width=\"" + num(w) + "\" height=\"" + num(h) + "\" rx=\"3\"/>";
-    for (size_t i = 0; i < lines.size(); ++i) noticeBlock += "<text x=\"" + num(x + M::PAD) + "\" y=\"" + num(y + M::PAD + 4 + static_cast<int>(i) * M::LINE_H) + "\">" + esc(lines[i]) + "</text>";
+    for (size_t i = 0; i < lines.size(); ++i) noticeBlock += "<text x=\"" + num(x + M.PAD_X) + "\" y=\"" + num(y + M.PAD_X + 4 + static_cast<int>(i) * M.LINE_H) + "\">" + esc(lines[i]) + "</text>";
     noticeBlock += "</g>";
     extend(x + w, y + h);
   }
-  const int vx = minX - M::PAD, vy = minY - M::PAD, vw = maxX + M::PAD - vx, vh = maxY + M::PAD - vy;
+  const int vx = minX - M.PAD_X, vy = minY - M.PAD_X, vw = maxX + M.PAD_X - vx, vh = maxY + M.PAD_X - vy;
   std::ostringstream out;
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" width=\"" << vw << "\" height=\"" << vh
       << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";

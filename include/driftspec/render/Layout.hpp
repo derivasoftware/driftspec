@@ -10,21 +10,40 @@
 namespace driftspec {
 namespace render {
 
-/// Fixed metrics, the same as plantuml-render's: sizing never measures fonts.
+/// Fixed metrics: sizing never measures fonts. `svg()` is plantuml-render's
+/// pixel table; `text()` is the same table in character cells, so the same
+/// layout lands on a terminal grid.
 struct Metrics {
-  static constexpr int CHAR_W = 8;
-  static constexpr int LINE_H = 18;
-  static constexpr int PAD = 10;
-  static constexpr int SECTION_GAP = 4;
-  static constexpr int BADGE_W = 20;
-  static constexpr int DOT_W = 12;
-  static constexpr int NOTE_FOLD = 9;
-  static constexpr int GAP_X = 40;
-  static constexpr int GAP_Y = 56;
-  static constexpr int CONTAINER_PAD = 18;
-  static constexpr int CONTAINER_LABEL_H = 22;
-  static constexpr int LABEL_CHAR_W = 7;
-  static constexpr int LABEL_H = 14;
+  int CHAR_W = 8;
+  int LINE_H = 18;
+  int PAD_X = 10;
+  int PAD_Y = 10;
+  int SECTION_GAP = 4;
+  int BADGE_W = 20;
+  int DOT_W = 12;
+  int NOTE_FOLD = 9;
+  int GAP_X = 40;
+  int GAP_Y = 56;
+  int CONTAINER_PAD = 18;
+  int CONTAINER_LABEL_H = 22;
+
+  static Metrics svg() { return Metrics{}; }
+  static Metrics text() {
+    Metrics m;
+    m.CHAR_W = 1;
+    m.LINE_H = 1;
+    m.PAD_X = 2;  // border and one space
+    m.PAD_Y = 1;  // border
+    m.SECTION_GAP = 1;  // the separator row
+    m.BADGE_W = 2;
+    m.DOT_W = 2;
+    m.NOTE_FOLD = 1;
+    m.GAP_X = 4;
+    m.GAP_Y = 3;  // stub, channel, head
+    m.CONTAINER_PAD = 2;
+    m.CONTAINER_LABEL_H = 1;
+    return m;
+  }
 };
 
 struct Point {
@@ -56,12 +75,12 @@ struct LayoutResult {
 };
 
 /// The size a node takes, from its text alone.
-Rect sizeOf(const IrNode& node);
+Rect sizeOf(const IrNode& node, const Metrics& m);
 
 /// Layered layout (Sugiyama) per container: bases above subtypes, wholes above
 /// parts, components packed towards a readable aspect, orthogonal routes.
-/// Deterministic: same document, same coordinates.
-LayoutResult layout(const IrDocument& doc);
+/// Deterministic: same document and metrics, same coordinates.
+LayoutResult layout(const IrDocument& doc, const Metrics& m = Metrics::svg());
 
 }  // namespace render
 }  // namespace driftspec

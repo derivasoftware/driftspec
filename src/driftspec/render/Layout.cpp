@@ -11,8 +11,6 @@ namespace render {
 
 namespace {
 
-using M = Metrics;
-
 std::vector<std::string> linesOf(const std::string& label) {
   std::vector<std::string> out;
   std::string current;
@@ -66,7 +64,7 @@ constexpr int kSink = -2;
 
 class Engine {
  public:
-  explicit Engine(const IrDocument& doc) : doc_(doc) {
+  Engine(const IrDocument& doc, const Metrics& m) : doc_(doc), M(m) {
     const size_t n = doc.nodes.size();
     rel_.assign(n, Rect{});
     parent_.assign(n, -1);
@@ -93,8 +91,8 @@ class Engine {
       abs[node] = rel_[node];
       abs[node].x += ox;
       abs[node].y += oy;
-      const int cx = abs[node].x + M::CONTAINER_PAD;
-      const int cy = abs[node].y + M::CONTAINER_LABEL_H + M::CONTAINER_PAD / 2;
+      const int cx = abs[node].x + M.CONTAINER_PAD;
+      const int cy = abs[node].y + M.CONTAINER_LABEL_H + M.CONTAINER_PAD / 2;
       origin[node] = {cx, cy};
       for (int c : children_[node]) place(c, cx, cy);
     };
@@ -125,13 +123,13 @@ class Engine {
       if (doc_.nodes[k].kind == "container") {
         frame(k);
       } else {
-        rel_[k] = sizeOf(doc_.nodes[k]);
+        rel_[k] = sizeOf(doc_.nodes[k], M);
       }
     }
     if (kids.empty()) {
       if (parent >= 0) {
-        rel_[parent].w = static_cast<int>(doc_.nodes[parent].label.size()) * M::CHAR_W + 2 * M::CONTAINER_PAD + 20;
-        rel_[parent].h = M::CONTAINER_LABEL_H + 2 * M::CONTAINER_PAD;
+        rel_[parent].w = static_cast<int>(doc_.nodes[parent].label.size()) * M.CHAR_W + 2 * M.CONTAINER_PAD + 20;
+        rel_[parent].h = M.CONTAINER_LABEL_H + 2 * M.CONTAINER_PAD;
       }
       return;
     }
@@ -199,7 +197,7 @@ class Engine {
       Component& c = components[r];
       if (x > 0 && x + c.w > target) {
         x = 0;
-        y += rowH + M::GAP_Y;
+        y += rowH + M.GAP_Y;
         rowH = 0;
       }
       for (int k : c.nodes) {
@@ -216,15 +214,15 @@ class Engine {
         ways_[w.first] = w.second;
         wayFrame_[w.first] = parent;
       }
-      x += c.w + M::GAP_X;
+      x += c.w + M.GAP_X;
       rowH = std::max(rowH, c.h);
-      contentW = std::max(contentW, x - M::GAP_X);
+      contentW = std::max(contentW, x - M.GAP_X);
     }
     const int contentH = y + rowH;
     if (parent >= 0) {
-      const int labelW = static_cast<int>(doc_.nodes[parent].label.size()) * M::CHAR_W + 20;
-      rel_[parent].w = std::max(contentW, labelW) + 2 * M::CONTAINER_PAD;
-      rel_[parent].h = contentH + M::CONTAINER_LABEL_H + M::CONTAINER_PAD / 2 + M::CONTAINER_PAD;
+      const int labelW = static_cast<int>(doc_.nodes[parent].label.size()) * M.CHAR_W + 20;
+      rel_[parent].w = std::max(contentW, labelW) + 2 * M.CONTAINER_PAD;
+      rel_[parent].h = contentH + M.CONTAINER_LABEL_H + M.CONTAINER_PAD / 2 + M.CONTAINER_PAD;
     }
   }
 
@@ -293,7 +291,7 @@ class Engine {
         succA.push_back({});
         predA.push_back({});
         layer.push_back(l);
-        widths.push_back(8);
+        widths.push_back(M.CHAR_W);  // a channel one character wide
         heights.push_back(0);
         succA[prev].push_back(d);
         predA[d].push_back(prev);
@@ -340,11 +338,11 @@ class Engine {
     std::vector<int> rowY(depth + 1), rowH(depth + 1, 0);
     for (int l = 0; l <= depth; ++l) {
       for (int v : rows[l]) rowH[l] = std::max(rowH[l], heights[v]);
-      rowY[l] = l == 0 ? 0 : rowY[l - 1] + rowH[l - 1] + (rowH[l - 1] > 0 ? M::GAP_Y : 0);
+      rowY[l] = l == 0 ? 0 : rowY[l - 1] + rowH[l - 1] + (rowH[l - 1] > 0 ? M.GAP_Y : 0);
     }
     // x: sequential, then pulled under the barycenter of the neighbours without overlapping
     std::vector<int> x(total);
-    auto gapAfter = [&](int v) { return widths[v] > 0 ? widths[v] + M::GAP_X : 0; };
+    auto gapAfter = [&](int v) { return widths[v] > 0 ? widths[v] + M.GAP_X : 0; };
     for (int l = 0; l <= depth; ++l) {
       int cursor = 0;
       for (int v : rows[l]) {
@@ -399,6 +397,7 @@ class Engine {
       c.w = std::max(c.w, r.x + r.w);
       c.h = std::max(c.h, r.y + r.h);
     }
+    for (int d = real; d < total; ++d) c.w = std::max(c.w, x[d] - minX + widths[d]);  // the channels count too
     for (const auto& e : c.edges) {
       if (e.edge == std::numeric_limits<size_t>::max()) continue;
       std::pair<int, int> key{local[e.upper], local[e.lower]};
@@ -488,14 +487,14 @@ class Engine {
         r.points.push_back(top);
         int prevX = top.x;
         for (const Waypoint& w : way->second) {
-          const int gap = w.top - M::GAP_Y / 2;
+          const int gap = w.top - M.GAP_Y / 2;
           if (prevX != w.x) {
             r.points.push_back({prevX, gap});
             r.points.push_back({w.x, gap});
           }
           prevX = w.x;
         }
-        const int gap = way->second.back().bottom + M::GAP_Y / 2;
+        const int gap = way->second.back().bottom + M.GAP_Y / 2;
         if (prevX != bottom.x) {
           r.points.push_back({prevX, gap});
           r.points.push_back({bottom.x, gap});
@@ -522,6 +521,7 @@ class Engine {
   }
 
   const IrDocument& doc_;
+  const Metrics M;
   std::map<std::string, int> index_;
   std::vector<Rect> rel_;
   std::vector<int> parent_;
@@ -533,28 +533,28 @@ class Engine {
 
 }  // namespace
 
-Rect sizeOf(const IrNode& node) {
+Rect sizeOf(const IrNode& node, const Metrics& M) {
   Rect r;
   if (node.kind == "note") {
     const auto lines = linesOf(node.label);
-    r.w = static_cast<int>(std::max<size_t>(1, longest(lines))) * M::CHAR_W + 2 * M::PAD + M::NOTE_FOLD;
-    r.h = 2 * M::PAD + static_cast<int>(lines.size()) * M::LINE_H;
+    r.w = static_cast<int>(std::max<size_t>(1, longest(lines))) * M.CHAR_W + 2 * M.PAD_X + M.NOTE_FOLD;
+    r.h = 2 * M.PAD_Y + static_cast<int>(lines.size()) * M.LINE_H;
     return r;
   }
-  int textW = static_cast<int>(node.label.size()) * M::CHAR_W + (node.kind == "box" ? M::BADGE_W : 0);
-  textW = std::max(textW, static_cast<int>(node.stereotype.size()) * M::CHAR_W + 16);
+  int textW = static_cast<int>(node.label.size()) * M.CHAR_W + (node.kind == "box" ? M.BADGE_W : 0);
+  textW = std::max(textW, static_cast<int>(node.stereotype.size()) * M.CHAR_W + 16);
   int sectionLines = 0;
   for (const auto& s : node.sections) {
-    for (const auto& line : s) textW = std::max(textW, static_cast<int>(line.size()) * M::CHAR_W + M::DOT_W);
+    for (const auto& line : s) textW = std::max(textW, static_cast<int>(line.size()) * M.CHAR_W + M.DOT_W);
     sectionLines += static_cast<int>(s.size());
   }
   const int headerLines = node.stereotype.empty() ? 1 : 2;
-  r.w = textW + 2 * M::PAD;
-  r.h = 2 * M::PAD + headerLines * M::LINE_H + static_cast<int>(node.sections.size()) * M::SECTION_GAP + sectionLines * M::LINE_H;
+  r.w = textW + 2 * M.PAD_X;
+  r.h = 2 * M.PAD_Y + headerLines * M.LINE_H + static_cast<int>(node.sections.size()) * M.SECTION_GAP + sectionLines * M.LINE_H;
   return r;
 }
 
-LayoutResult layout(const IrDocument& doc) { return Engine(doc).run(); }
+LayoutResult layout(const IrDocument& doc, const Metrics& m) { return Engine(doc, m).run(); }
 
 }  // namespace render
 }  // namespace driftspec
