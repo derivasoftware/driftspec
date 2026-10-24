@@ -44,12 +44,42 @@
     "type": "attribute",
     "named": true,
     "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "member_body",
+            "named": true
+          }
+        ]
+      },
+      "default": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "default_value",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
         "types": [
           {
             "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "ownership": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "ownership",
             "named": true
           }
         ]
@@ -115,12 +145,36 @@
     "named": true,
     "fields": {
       "base": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {
             "type": "qualified_name",
             "named": true
+          }
+        ]
+      },
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "class_body",
+            "named": true
+          }
+        ]
+      },
+      "kind": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "class",
+            "named": false
+          },
+          {
+            "type": "dataclass",
+            "named": false
           }
         ]
       },
@@ -130,6 +184,91 @@
         "types": [
           {
             "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "operators": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "operator_set",
+            "named": true
+          }
+        ]
+      },
+      "params": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "template_params",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "class_body",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "constraint",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "method",
+          "named": true
+        },
+        {
+          "type": "operator",
+          "named": true
+        },
+        {
+          "type": "requirement",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "constraint",
+    "named": true,
+    "fields": {
+      "id": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "title": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "line_text",
             "named": true
           }
         ]
@@ -144,15 +283,7 @@
           "named": true
         },
         {
-          "type": "attribute",
-          "named": true
-        },
-        {
           "type": "field",
-          "named": true
-        },
-        {
-          "type": "method",
           "named": true
         }
       ]
@@ -185,6 +316,29 @@
     }
   },
   {
+    "type": "default_value",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "number",
+          "named": true
+        },
+        {
+          "type": "qualified_name",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "diagram",
     "named": true,
     "fields": {
@@ -208,6 +362,58 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "enum",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "enum_value",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "enum_value",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -254,6 +460,37 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "member_body",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "constraint",
+          "named": true
+        },
+        {
+          "type": "contract",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "requirement",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -306,6 +543,26 @@
     "type": "method",
     "named": true,
     "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "member_body",
+            "named": true
+          }
+        ]
+      },
+      "modifier": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "method_modifier",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -353,9 +610,24 @@
     }
   },
   {
+    "type": "method_modifier",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "module",
     "named": true,
     "fields": {
+      "extern": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "extern",
+            "named": false
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -373,6 +645,14 @@
       "types": [
         {
           "type": "class",
+          "named": true
+        },
+        {
+          "type": "constraint",
+          "named": true
+        },
+        {
+          "type": "enum",
           "named": true
         },
         {
@@ -439,6 +719,102 @@
     }
   },
   {
+    "type": "operator",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "member_body",
+            "named": true
+          }
+        ]
+      },
+      "returns": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      },
+      "symbol": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "operator_symbol",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "contract",
+          "named": true
+        },
+        {
+          "type": "parameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "operator_item",
+    "named": true,
+    "fields": {
+      "family": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "operator_symbol",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "operator_set",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "operator_item",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ownership",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "package",
     "named": true,
     "fields": {
@@ -459,6 +835,10 @@
       "types": [
         {
           "type": "boundary",
+          "named": true
+        },
+        {
+          "type": "constraint",
           "named": true
         },
         {
@@ -583,6 +963,10 @@
       "types": [
         {
           "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "constraint",
           "named": true
         },
         {
@@ -733,6 +1117,47 @@
     }
   },
   {
+    "type": "template_param",
+    "named": true,
+    "fields": {
+      "bound": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "template_params",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "template_param",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "transition",
     "named": true,
     "fields": {
@@ -771,13 +1196,39 @@
   {
     "type": "type",
     "named": true,
+    "fields": {
+      "args": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_args",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "type_args",
+    "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
-          "type": "qualified_name",
+          "type": "type",
           "named": true
         }
       ]
@@ -863,6 +1314,26 @@
     "named": false
   },
   {
+    "type": "<",
+    "named": false
+  },
+  {
+    "type": "<<",
+    "named": false
+  },
+  {
+    "type": "=",
+    "named": false
+  },
+  {
+    "type": ">",
+    "named": false
+  },
+  {
+    "type": ">>",
+    "named": false
+  },
+  {
     "type": "@",
     "named": false
   },
@@ -872,6 +1343,10 @@
   },
   {
     "type": "]",
+    "named": false
+  },
+  {
+    "type": "abstract",
     "named": false
   },
   {
@@ -892,11 +1367,35 @@
     "extra": true
   },
   {
+    "type": "const",
+    "named": false
+  },
+  {
+    "type": "constraint",
+    "named": false
+  },
+  {
     "type": "contract_body",
     "named": true
   },
   {
+    "type": "dataclass",
+    "named": false
+  },
+  {
     "type": "diagram",
+    "named": false
+  },
+  {
+    "type": "enum",
+    "named": false
+  },
+  {
+    "type": "extern",
+    "named": false
+  },
+  {
+    "type": "false",
     "named": false
   },
   {
@@ -916,6 +1415,10 @@
     "named": true
   },
   {
+    "type": "number",
+    "named": true
+  },
+  {
     "type": "on",
     "named": false
   },
@@ -924,11 +1427,27 @@
     "named": false
   },
   {
+    "type": "operator",
+    "named": false
+  },
+  {
+    "type": "operator_symbol",
+    "named": true
+  },
+  {
+    "type": "owns",
+    "named": false
+  },
+  {
     "type": "package",
     "named": false
   },
   {
     "type": "participant",
+    "named": false
+  },
+  {
+    "type": "refs",
     "named": false
   },
   {
@@ -944,7 +1463,23 @@
     "named": false
   },
   {
+    "type": "shares",
+    "named": false
+  },
+  {
     "type": "state",
+    "named": false
+  },
+  {
+    "type": "static",
+    "named": false
+  },
+  {
+    "type": "string",
+    "named": true
+  },
+  {
+    "type": "true",
     "named": false
   },
   {

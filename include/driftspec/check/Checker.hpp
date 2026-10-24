@@ -10,8 +10,9 @@
 namespace driftspec {
 namespace check {
 
-/// Resolves the references the Binder collected (R5, R6) and checks the
-/// dynamic specifications against the static ones.
+/// Resolves the references the Binder collected (R5, R6), checks the static
+/// model against its own rules (R14–R17) and the dynamic specifications
+/// against the static ones.
 class Checker {
  public:
   explicit Checker(model::Model& model) : model_(model) {}
@@ -21,10 +22,16 @@ class Checker {
   /// Returns the identity, or "" when nothing declares it.
   std::string resolve(const std::string& name, const std::string& scope) const;
 
+  /// Whether `derived` is `base` or inherits from it, transitively.
+  bool derives(const std::string& derived, const std::string& base) const;
+
  private:
   void resolveReference(const bind::Reference& reference);
   void checkMessage(const bind::Message& message);
   void checkEvent(const bind::Event& event);
+  void checkTemplateBound(const bind::Reference& reference);
+  void checkOwnershipCycles();
+  void classify();
 
   model::Model& model_;
   std::set<std::string> reported_;

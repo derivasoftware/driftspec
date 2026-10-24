@@ -23,9 +23,12 @@ enum class Kind {
   Verification,
   Boundary,
   Operation,
+  Constraint,
   Class,
+  Enum,
   Method,
   Attribute,
+  Operator,
   Sequence,
   State,
   Diagram
@@ -40,16 +43,20 @@ struct Entity {
   std::string name;    ///< the simple name as written
   std::string scope;   ///< qualified name of the enclosing scope ("" at top)
   std::map<std::string, std::string> fields;
+  std::vector<std::string> flags;  ///< modifiers with semantics (R19): abstract, static, const, owns, refs, shares, extern, dataclass, constructor
   Location location;
   bool expected = false;  ///< referenced somewhere but declared nowhere
+
+  bool has(const std::string& flag) const;
 };
 
 /// A typed relation between two identities.
 struct Relation {
-  std::string kind;  ///< contains, refines, verifies, realises, inherits, uses, exercises, ...
+  std::string kind;  ///< contains, refines, verifies, realises, inherits, uses, owns, refs, shares, instantiates, ...
   std::string from;
   std::string to;
   Location location;
+  std::string multiplicity;  ///< for owns/refs/shares: "1", "0..1" or "*" (R16); empty otherwise
 };
 
 /// One diagnostic of the engine.

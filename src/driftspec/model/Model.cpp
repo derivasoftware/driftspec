@@ -11,14 +11,24 @@ const char* kindName(Kind kind) {
     case Kind::Verification: return "verification";
     case Kind::Boundary: return "boundary";
     case Kind::Operation: return "operation";
+    case Kind::Constraint: return "constraint";
     case Kind::Class: return "class";
+    case Kind::Enum: return "enum";
     case Kind::Method: return "method";
     case Kind::Attribute: return "attribute";
+    case Kind::Operator: return "operator";
     case Kind::Sequence: return "sequence";
     case Kind::State: return "state";
     case Kind::Diagram: return "diagram";
   }
   return "?";
+}
+
+bool Entity::has(const std::string& flag) const {
+  for (const auto& f : flags) {
+    if (f == flag) return true;
+  }
+  return false;
 }
 
 Entity& Model::declare(const Entity& entity) {

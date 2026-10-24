@@ -1,0 +1,223 @@
+// static.v3.ds — third round, static part only.
+// Extends R1–R9 (CL_Diag.v2.ds). Diagnostics the tool would emit start with "!".
+// Open choices are marked "?".
+//
+//  R10 No includes, no using. A reference is a bare name, resolved from the
+//      innermost module outward, or a qualified name module::Name. Two
+//      candidates at the same depth = E-REF-AMBIGUOUS, never a silent pick.
+//  R11 extern declares identities that live outside the workspace (std, Qt,
+//      a vendor SDK). They resolve like any entity but carry no obligations:
+//      no members required, no verification, no diagnostics about their inside.
+//  R12 Any entity, including a member, may open a body { }. A body holds
+//      fields (key: value), notes, annotations (@kind id), contracts ([...])
+//      and nested process artefacts (requirement, constraint).
+//      Nesting means "about this" (R3).
+//  R13 Comments (//) are not part of the model. Notes are: `note:` is a field
+//      the model keeps, diagrams print and tools can search.
+//  R14 Kinds of type: class, dataclass, enum. interface and abstract
+//      are never written; the tool derives them from the methods:
+//      every method abstract and no data → interface; at least one abstract
+//      method → abstract. What is derived cannot be declared, so it cannot
+//      contradict.
+//  R15 Templates: a type may declare parameters <T, U: Bound>. Identity is the
+//      name plus arity (Repository<1>). A use Repository<Finding> relates the
+//      user to Repository (instantiates) and to Finding (argument).
+//      Built-in generics: list<T>, set<T>, map<K,V>, optional<T>.
+//  R16 Ownership comes from the attribute, not from a drawn arrow:
+//        owns    (default) the whole creates and destroys the part  → composition
+//        refs    the part lives elsewhere; the whole only knows it  → aggregation
+//        shares  lifetime shared with other holders                 → aggregation
+//      Multiplicity comes from the type: T → 1, optional<T> → 0..1,
+//      list<T>, set<T>, map<K,T> → *. Parameters and return types give `uses`.
+//      A composition cycle (A owns B, B owns A) = E-OWNERSHIP-CYCLE.
+//  R17 Operators are declared in the class header, as a set: class Vector
+//      <<==, ordered, +, []>>. Each symbol has a canonical signature the tool
+//      knows; comparison symbols never appear raw, they come as the family
+//      `ordered` (<, <=, >, >=, <=>) and `==` implies `!=`. When an operand
+//      matters, the body refines: `operator *(k: float) -> Vector`. A body
+//      operator absent from the header = E-OPERATOR-UNDECLARED. Derived
+//      stereotypes (interface, abstract, equatable…) print in the same slot
+//      of a diagram and are never written.
+//  R18 A characteristic of an entity is a claim about it, and a claim with
+//      traceability is a requirement or a constraint. There is no third
+//      vocabulary: what has checkable semantics is a modifier (R19), the rest
+//      is a nested `constraint`/`requirement` with an id. Constraints are
+//      process artefacts: explicit id, revision (0 when omitted), declared
+//      once. A one-line form `id: title` exists for the short ones.
+//  R19 Member modifiers, in this order: visibility (+ public, # protected,
+//      - private), then abstract | static | const for methods, owns | refs |
+//      shares for attributes, then the name. A method named like its class is
+//      a constructor. An attribute may carry a default: `retries: int = 3`.
+
+package ds {
+
+  // --- the outside world the package relies on (R11) --------------------------
+
+  extern module std {
+    class string
+    class vector<T>
+    class shared_ptr<T>
+  }
+
+  // --- process artefacts at package level (R18) -------------------------------
+
+  constraint DS-C-0001: The diagnostics core shall not depend on any I/O library
+
+  constraint DS-C-0002 {
+    revision: 1
+    title: Finding codes are stable
+    text:
+      Once published, a code keeps its meaning. A check whose meaning changes
+      gets a new code.
+  }
+
+  module ds {
+
+    // --- value types -----------------------------------------------------------
+
+    enum Severity { Error, Warning, Info }
+
+    dataclass Location <<==, ordered, print>> {
+      + file: path
+      + line: int
+      + column: int = 0
+    }
+
+    dataclass Finding <<==, hash>> {
+      note: A finding is a value: two findings with equal fields are the same finding.
+      + code: string
+      + severity: Severity
+      + message: string
+      + location: Location               // owns by default → composition, 1
+    }
+
+    // --- classification is derived (R14) ---------------------------------------
+
+    // every method abstract, no data → <<interface>>
+    class Check {
+      + abstract name() -> string
+      + abstract run(model: Model) -> list<Finding>
+    }
+
+    // one abstract method left → <<abstract>>
+    class ScopedCheck : Check {
+      + name() -> string
+      + run(model: Model) -> list<Finding> {
+        note: walks the scopes and delegates each one to runScope
+        [ensures: result sorted by location]
+      }
+      # abstract runScope(scope: Scope, model: Model) -> list<Finding>
+      - refs scopes: list<Scope>         // aggregation, *: the scopes belong to the model
+    }
+
+    class Scope {
+      + name: string
+      - owns children: list<Scope>       // composition of the same type is fine; a cycle is not
+    }
+
+    dataclass Entity {
+      + id: string
+      + scope: Scope                     // ? a dataclass that owns a class: allowed, but worth a warning?
+    }
+
+    dataclass Relation {
+      + kind: string
+      + from: string
+      + to: string
+    }
+
+    // --- a class with an inline requirement in a member body (R12) -------------
+
+    class Model {
+      @constraint DS-C-0001
+      - owns entities: map<string, Entity>   // composition, *; the key is a string and relates nothing
+      - owns relations: list<Relation>
+      - shares cache: Cache              // ! Cache is undeclared → EXPECTED node, W-REF-UNDECLARED
+      + find(id: string) -> optional<Entity>   // uses Entity, 0..1
+      + declare(entity: Entity) -> Entity {
+        requirement DS-0003 {
+          revision: 0
+          owner: dcoello
+          title: Declaring an identity twice shall be an error
+          text:
+            The second declaration of an identity already declared in the
+            workspace is reported as E-DUPLICATE-IDENTITY at its location.
+        }
+        [requires: entity.id is not empty]
+        [ensures: find(entity.id) == entity]
+      }
+    }
+
+    // --- templates (R15) ---------------------------------------------------------
+
+    class Repository<T: Entity> {
+      + get(id: string) -> optional<T>
+      + all() -> list<T>
+    }
+
+    class Index {
+      - owns requirements: Repository<Requirement>   // instantiates Repository<1>; Requirement is EXPECTED (!)
+      - owns relations: Repository<Relation>         // ! Relation is a dataclass, not an Entity → E-TEMPLATE-BOUND
+    }
+
+    class Stack<T> {
+      - owns items: list<T>
+      + push(item: T) -> none
+      + pop() -> optional<T>
+      + static of(items: list<T>) -> Stack<T>
+      + const size() -> int
+    }
+
+    // --- operators (R17) ---------------------------------------------------------
+
+    class Vector <<==, +, *, []>> {
+      + Vector(x: float, y: float)       // constructor (R19)
+      + x: float
+      + y: float
+      constraint DS-C-0003: Vector is immutable once constructed
+      operator *(k: float) -> Vector     // refines the header: the operand is a scalar
+      operator [](i: int) -> float
+      operator -(other: Vector) -> Vector   // ! E-OPERATOR-UNDECLARED: `-` is not in the header
+    }
+
+    // --- things the tool refuses -------------------------------------------------
+
+    dataclass Broken {
+      + abstract size() -> int           // ! E-DATACLASS-ABSTRACT: a value type has no abstract methods
+      - refs count: int                  // ! W-MODIFIER-ON-VALUE: refs/shares on a primitive mean nothing
+    }
+
+    class Node {
+      - owns tree: Tree                  // ! E-OWNERSHIP-CYCLE: Node owns Tree, Tree owns Node
+    }
+
+    class Tree {
+      - owns root: Node
+    }
+  }
+
+  // --- a second module resolving across modules without includes (R10) ---------
+
+  module lsp {
+
+    class Publisher {
+      - refs model: ds::Model            // qualified: no include needed
+      - owns last: list<ds::Finding>     // the package does not contribute to names (R4): ds:: is needed
+      + publish(findings: list<Finding>) -> none   // ! bare Finding is not visible from lsp → W-REF-UNDECLARED (R4)
+    }
+  }
+}
+
+// --- representations: what to print, never what to draw --------------------------
+
+diagram CL_Model {
+  kind: class
+  include: ds::Model, ds::Check, ds::ScopedCheck, ds::Finding, ds::Location
+  show: ownership, multiplicity, operators, notes, derived-stereotypes
+}
+
+diagram CL_Values {
+  kind: class
+  include: ds::Finding, ds::Location, ds::Severity
+  show: fields, operators
+}

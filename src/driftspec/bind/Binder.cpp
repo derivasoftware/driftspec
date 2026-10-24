@@ -17,6 +17,17 @@ std::string fieldText(const parse::ParsedFile& file, TSNode node, const char* fi
   return ts_node_is_null(c) ? std::string() : parse::textOf(file, c);
 }
 
+/// Every child carrying `fieldName` (a field may repeat: bases, modifiers).
+std::vector<TSNode> childrenNamed(TSNode node, const char* fieldName) {
+  std::vector<TSNode> out;
+  const uint32_t count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < count; ++i) {
+    const char* f = ts_node_field_name_for_child(node, i);
+    if (f && std::strcmp(f, fieldName) == 0) out.push_back(ts_node_child(node, i));
+  }
+  return out;
+}
+
 std::string trim(const std::string& text) {
   const auto begin = text.find_first_not_of(" \t\r\n");
   if (begin == std::string::npos) return "";
@@ -24,8 +35,15 @@ std::string trim(const std::string& text) {
   return text.substr(begin, end - begin + 1);
 }
 
+std::string join(const std::vector<std::string>& items, const char* sep) {
+  std::string out;
+  for (const auto& i : items) out += (out.empty() ? "" : sep) + i;
+  return out;
+}
+
 model::Kind kindForRelation(const std::string& relation) {
   if (relation == "verifies" || relation == "refines" || relation == "requires") return model::Kind::Requirement;
+  if (relation == "constrained-by") return model::Kind::Constraint;
   if (relation == "realises") return model::Kind::Boundary;
   if (relation == "exercised-by") return model::Kind::Verification;
   return model::Kind::Class;
@@ -33,6 +51,7 @@ model::Kind kindForRelation(const std::string& relation) {
 
 std::string relationForAnnotation(model::Kind from, const std::string& annotation) {
   if (annotation == "requirement") return from == model::Kind::Verification ? "verifies" : "requires";
+  if (annotation == "constraint") return "constrained-by";
   if (annotation == "boundary") return "realises";
   if (annotation == "verification") return "exercised-by";
   return "refers";
@@ -43,6 +62,15 @@ const char* const kPrimitives[] = {"int", "bool", "string", "path", "none", "voi
 bool isPrimitive(const std::string& type) {
   for (const char* p : kPrimitives) {
     if (type == p) return true;
+  }
+  return false;
+}
+
+bool isOwnership(const std::string& relation) { return relation == "owns" || relation == "refs" || relation == "shares"; }
+
+bool contains(const std::vector<std::string>& items, const std::string& item) {
+  for (const auto& i : items) {
+    if (i == item) return true;
   }
   return false;
 }
@@ -64,8 +92,12 @@ std::string Binder::qualify(const std::string& scope, const std::string& name) c
 }
 
 void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity) {
+  if (ts_node_is_null(node)) return;
   const uint32_t count = ts_node_named_child_count(node);
   int contracts = 0;
+  for (const auto& f : entity.fields) {
+    if (f.first.rfind("contract.", 0) == 0) ++contracts;  // keep numbering across trailing contracts and the body
+  }
   for (uint32_t i = 0; i < count; ++i) {
     TSNode c = ts_node_named_child(node, i);
     if (is(c, "field")) {
@@ -78,6 +110,7 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
 }
 
 void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const std::string& from, const std::string& scope) {
+  if (ts_node_is_null(node)) return;
   const model::Entity* entity = model_.find(from);
   const uint32_t count = ts_node_named_child_count(node);
   for (uint32_t i = 0; i < count; ++i) {
@@ -85,9 +118,256 @@ void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const s
     if (!is(c, "annotation")) continue;
     const std::string kind = fieldText(file, c, "kind");
     const std::string relation = relationForAnnotation(entity ? entity->kind : model::Kind::Class, kind);
-    references_.push_back({from, fieldText(file, c, "target"), scope, relation, kindForRelation(relation), locationOf(file, c)});
+    references_.push_back({from, fieldText(file, c, "target"), scope, relation, kindForRelation(relation), locationOf(file, c), "", {}});
   }
 }
+
+// ---- process artefacts: requirement, verification, constraint (R5, R18) ------
+
+void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner) {
+  const model::Location loc = locationOf(file, node);
+  model::Entity e;
+  e.kind = is(node, "requirement") ? model::Kind::Requirement : is(node, "verification") ? model::Kind::Verification : model::Kind::Constraint;
+  e.name = fieldText(file, node, "id");
+  e.id = e.name;  // process artefacts are identified by id (R5)
+  e.scope = scope;
+  e.location = loc;
+  bindFields(file, node, e);
+  const std::string title = fieldText(file, node, "title");
+  if (!title.empty()) e.fields["title"] = trim(title);  // one-line constraint
+  if (e.fields.find("revision") == e.fields.end()) e.fields["revision"] = "0";
+  model_.declare(e);
+  if (!owner.empty()) {
+    const model::Entity* ownerEntity = model_.find(owner);
+    const bool verifiesOwner = e.kind == model::Kind::Verification && ownerEntity && ownerEntity->kind == model::Kind::Requirement;
+    model_.relate({verifiesOwner ? "verifies" : "about", e.id, owner, loc, ""});  // nesting gives the relation (R3)
+  }
+  auto parent = e.fields.find("parent");
+  if (parent != e.fields.end() && !parent->second.empty()) {
+    references_.push_back({e.id, parent->second, scope, "refines", model::Kind::Requirement, loc, "", {}});
+  }
+  bindAnnotations(file, node, e.id, scope);
+  visit(file, node, scope, e.id);  // nested verifications and constraints
+}
+
+// ---- types (R15, R16) ----------------------------------------------------------
+
+Binder::TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
+                                 const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
+                                 const model::Location& location) {
+  TypeUse use;
+  if (ts_node_is_null(type)) return use;
+  use.text = trim(parse::textOf(file, type));
+  const std::string name = fieldText(file, type, "name");
+  std::vector<TSNode> args;
+  TSNode argsNode = child(type, "args");
+  if (!ts_node_is_null(argsNode)) {
+    const uint32_t n = ts_node_named_child_count(argsNode);
+    for (uint32_t i = 0; i < n; ++i) args.push_back(ts_node_named_child(argsNode, i));
+  }
+
+  // built-in generics decide the multiplicity and pass the relation to their element (R16)
+  const std::string text = use.text;
+  if (name == "list" || name == "set") {
+    if (!args.empty()) use = bindType(file, args[0], scope, from, relation, "*", params, location);
+    use.text = text;
+    return use;
+  }
+  if (name == "optional") {
+    if (!args.empty()) use = bindType(file, args[0], scope, from, relation, "0..1", params, location);
+    use.text = text;
+    return use;
+  }
+  if (name == "map") {
+    if (args.size() > 0) bindType(file, args[0], scope, from, "uses", "", params, location);
+    if (args.size() > 1) use = bindType(file, args[1], scope, from, relation, "*", params, location);
+    use.text = text;
+    return use;
+  }
+  if (contains(params, name)) {
+    use.parameter = true;
+    return use;
+  }
+  if (isPrimitive(name)) return use;  // nothing to relate
+
+  use.classLike = true;
+  Reference ref;
+  ref.from = from;
+  ref.target = args.empty() ? name : name + "<" + std::to_string(args.size()) + ">";  // identity = name + arity (R15)
+  ref.scope = scope;
+  ref.relation = relation;
+  ref.expectedKind = model::Kind::Class;
+  ref.location = location;
+  ref.multiplicity = isOwnership(relation) ? (multiplicity.empty() ? "1" : multiplicity) : "";
+  for (TSNode a : args) {
+    ref.args.push_back(trim(parse::textOf(file, a)));
+    bindType(file, a, scope, from, "uses", "", params, location);  // the argument is used by the holder
+  }
+  references_.push_back(ref);
+  return use;
+}
+
+// ---- classes (R14, R15, R17, R19) ----------------------------------------------
+
+void Binder::declareOperator(model::Entity& cls, const std::string& symbol, const model::Location& location) {
+  model::Entity op;
+  op.kind = model::Kind::Operator;
+  op.name = "operator" + symbol;
+  op.id = cls.id + "::" + op.name;
+  op.scope = cls.id;
+  op.location = location;
+  op.fields["symbol"] = symbol;
+  model_.declare(op);
+  model_.relate({"contains", cls.id, op.id, location, ""});
+}
+
+void Binder::bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope) {
+  bindFields(file, member, entity);  // trailing contracts, if any
+  TSNode body = child(member, "body");
+  if (!ts_node_is_null(body)) bindFields(file, body, entity);
+  model::Entity* declared = model_.find(entity.id);
+  if (declared) declared->fields = entity.fields;
+  if (ts_node_is_null(body)) return;
+  bindAnnotations(file, body, entity.id, scope);
+  visit(file, body, scope, entity.id);  // nested requirements and constraints are about the member (R12)
+}
+
+void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& cls, const std::vector<std::string>& params,
+                        const std::set<std::string>& operators) {
+  const model::Location loc = locationOf(file, m);
+  const std::string scope = cls.scope;
+  model::Entity member;
+  member.scope = cls.id;
+  member.location = loc;
+
+  if (is(m, "operator")) {
+    const std::string symbol = fieldText(file, m, "symbol");
+    member.kind = model::Kind::Operator;
+    member.name = "operator" + symbol;
+    member.id = cls.id + "::" + member.name;
+    member.fields["symbol"] = symbol;
+    if (operators.count(symbol) == 0) {
+      model_.report({"E-OPERATOR-UNDECLARED", "error", "operator " + symbol + " is refined in the body of " + cls.id + " but is not in its header set", loc});
+    }
+  } else {
+    member.kind = is(m, "method") ? model::Kind::Method : model::Kind::Attribute;
+    member.name = fieldText(file, m, "name");
+    member.id = cls.id + "::" + member.name;
+    member.fields["visibility"] = fieldText(file, m, "visibility");
+  }
+
+  if (is(m, "method") || is(m, "operator")) {
+    for (TSNode mod : childrenNamed(m, "modifier")) member.flags.push_back(parse::textOf(file, mod));
+    if (is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
+    if (cls.has("dataclass") && member.has("abstract")) {
+      model_.report({"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
+    }
+    TSNode parameters = ts_node_child(m, 0);
+    for (uint32_t i = 0; i < ts_node_named_child_count(m); ++i) {
+      if (is(ts_node_named_child(m, i), "parameters")) parameters = ts_node_named_child(m, i);
+    }
+    if (!is(parameters, "parameters")) parameters = TSNode{};
+    std::vector<std::string> paramTexts;
+    if (!ts_node_is_null(parameters)) {
+      const uint32_t n = ts_node_named_child_count(parameters);
+      for (uint32_t i = 0; i < n; ++i) {
+        TSNode p = ts_node_named_child(parameters, i);
+        paramTexts.push_back(trim(parse::textOf(file, p)));
+        bindType(file, child(p, "type"), scope, member.id, "uses", "", params, locationOf(file, p));
+      }
+    }
+    member.fields["params"] = join(paramTexts, ", ");
+    TypeUse returns = bindType(file, child(m, "returns"), scope, member.id, "uses", "", params, loc);
+    if (!returns.text.empty()) member.fields["returns"] = returns.text;
+  } else {
+    const std::string ownership = fieldText(file, m, "ownership");
+    const std::string relation = ownership.empty() ? "owns" : ownership;  // owns by default (R16)
+    member.flags.push_back(relation);
+    TypeUse use = bindType(file, child(m, "type"), scope, member.id, relation, "", params, loc);
+    member.fields["type"] = use.text;
+    const std::string def = fieldText(file, m, "default");
+    if (!def.empty()) member.fields["default"] = def;
+    if (!ownership.empty() && !use.classLike && !use.parameter) {
+      model_.report({"W-MODIFIER-ON-VALUE", "warning", "'" + ownership + "' on " + member.id + " means nothing: " + use.text + " is a value, not an entity", loc});
+    }
+  }
+
+  if (member.kind == model::Kind::Operator && model_.find(member.id)) {
+    model::Entity* declared = model_.find(member.id);  // declared by the header set: the body refines it
+    for (const auto& f : member.fields) declared->fields[f.first] = f.second;
+    for (const auto& f : member.flags) declared->flags.push_back(f);
+    declared->location = loc;
+  } else {
+    model_.declare(member);
+    model_.relate({"contains", cls.id, member.id, loc, ""});
+  }
+  bindMemberBody(file, m, member, scope);
+}
+
+void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::string& scope, const std::string& owner) {
+  const model::Location loc = locationOf(file, c);
+  model::Entity e;
+  e.kind = model::Kind::Class;
+  e.name = fieldText(file, c, "name");
+  e.scope = scope;
+  e.location = loc;
+  if (fieldText(file, c, "kind") == "dataclass") e.flags.push_back("dataclass");
+  const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
+  if (ownerEntity && ownerEntity->has("extern")) e.flags.push_back("extern");
+
+  std::vector<std::string> params;
+  std::map<std::string, std::string> bounds;
+  TSNode paramsNode = child(c, "params");
+  if (!ts_node_is_null(paramsNode)) {
+    const uint32_t n = ts_node_named_child_count(paramsNode);
+    for (uint32_t i = 0; i < n; ++i) {
+      TSNode p = ts_node_named_child(paramsNode, i);
+      const std::string name = fieldText(file, p, "name");
+      params.push_back(name);
+      const std::string bound = fieldText(file, p, "bound");
+      if (!bound.empty()) bounds[name] = bound;
+    }
+  }
+  e.id = qualify(scope, params.empty() ? e.name : e.name + "<" + std::to_string(params.size()) + ">");  // R15
+  if (!params.empty()) e.fields["params"] = join(params, ", ");
+  for (const auto& b : bounds) e.fields["bound." + b.first] = b.second;
+
+  std::set<std::string> operators;
+  std::vector<std::string> operatorTexts;
+  TSNode opSet = child(c, "operators");
+  if (!ts_node_is_null(opSet)) {
+    const uint32_t n = ts_node_named_child_count(opSet);
+    for (uint32_t i = 0; i < n; ++i) {
+      TSNode item = ts_node_named_child(opSet, i);
+      const std::string text = trim(parse::textOf(file, item));
+      operatorTexts.push_back(text);
+      if (ts_node_is_null(child(item, "family"))) operators.insert(text);
+    }
+    e.fields["operators"] = join(operatorTexts, ", ");
+  }
+
+  TSNode body = child(c, "body");
+  bindFields(file, body, e);
+  model::Entity& declared = model_.declare(e);
+  if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
+  for (TSNode base : childrenNamed(c, "base")) {
+    references_.push_back({declared.id, parse::textOf(file, base), scope, "inherits", model::Kind::Class, loc, "", {}});
+  }
+  for (const auto& b : bounds) {
+    references_.push_back({declared.id, b.second, scope, "bounded-by", model::Kind::Class, loc, "", {}});
+  }
+  for (const auto& symbol : operators) declareOperator(declared, symbol, loc);
+  if (ts_node_is_null(body)) return;
+  bindAnnotations(file, body, declared.id, scope);
+  const uint32_t n = ts_node_named_child_count(body);
+  for (uint32_t j = 0; j < n; ++j) {
+    TSNode m = ts_node_named_child(body, j);
+    if (is(m, "method") || is(m, "attribute") || is(m, "operator")) bindMember(file, m, declared, params, operators);
+  }
+  visit(file, body, scope, declared.id);  // nested requirements and constraints are about the class (R12)
+}
+
+// ---- the walk --------------------------------------------------------------------
 
 void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner) {
   const uint32_t count = ts_node_named_child_count(node);
@@ -113,30 +393,14 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.id = qualify(scope, e.name);
       e.scope = scope;
       e.location = loc;
+      const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
+      if (!ts_node_is_null(child(c, "extern")) || (ownerEntity && ownerEntity->has("extern"))) e.flags.push_back("extern");  // R11
       model::Entity& declared = model_.declare(e);
-      if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc});
+      if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
       visit(file, c, declared.id, declared.id);
 
-    } else if (is(c, "requirement") || is(c, "verification")) {
-      model::Entity e;
-      e.kind = is(c, "requirement") ? model::Kind::Requirement : model::Kind::Verification;
-      e.name = fieldText(file, c, "id");
-      e.id = e.name;  // process artefacts are identified by id (R5)
-      e.scope = scope;
-      e.location = loc;
-      bindFields(file, c, e);
-      model_.declare(e);
-      if (!owner.empty()) {
-        const model::Entity* ownerEntity = model_.find(owner);
-        const bool nestedInRequirement = ownerEntity && ownerEntity->kind == model::Kind::Requirement;
-        model_.relate({nestedInRequirement ? "verifies" : "about", e.id, owner, loc});  // nesting gives the relation (R3)
-      }
-      auto parent = e.fields.find("parent");
-      if (parent != e.fields.end() && !parent->second.empty()) {
-        references_.push_back({e.id, parent->second, scope, "refines", model::Kind::Requirement, loc});
-      }
-      bindAnnotations(file, c, e.id, scope);
-      visit(file, c, scope, e.id);  // nested verifications
+    } else if (is(c, "requirement") || is(c, "verification") || is(c, "constraint")) {
+      bindArtefact(file, c, scope, owner);
 
     } else if (is(c, "boundary")) {
       model::Entity e;
@@ -147,7 +411,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.location = loc;
       bindFields(file, c, e);
       model_.declare(e);
-      if (!owner.empty()) model_.relate({"exposes", owner, e.id, loc});
+      if (!owner.empty()) model_.relate({"exposes", owner, e.id, loc, ""});
       bindAnnotations(file, c, e.id, scope);
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
@@ -159,48 +423,31 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
         o.id = e.id + "::" + o.name;
         o.scope = e.id;
         o.location = locationOf(file, op);
-        o.fields["returns"] = fieldText(file, op, "returns");
         model_.declare(o);
-        model_.relate({"contains", e.id, o.id, o.location});
-        if (!o.fields["returns"].empty() && !isPrimitive(o.fields["returns"])) {
-          references_.push_back({o.id, o.fields["returns"], scope, "uses", model::Kind::Class, o.location});
-        }
+        model_.relate({"contains", e.id, o.id, o.location, ""});
+        TypeUse returns = bindType(file, child(op, "returns"), scope, o.id, "uses", "", {}, o.location);
+        if (!returns.text.empty()) model_.find(o.id)->fields["returns"] = returns.text;
       }
 
     } else if (is(c, "class")) {
+      bindClass(file, c, scope, owner);
+
+    } else if (is(c, "enum")) {
       model::Entity e;
-      e.kind = model::Kind::Class;
+      e.kind = model::Kind::Enum;
       e.name = fieldText(file, c, "name");
       e.id = qualify(scope, e.name);
       e.scope = scope;
       e.location = loc;
-      bindFields(file, c, e);
-      model_.declare(e);
-      if (!owner.empty()) model_.relate({"contains", owner, e.id, loc});
-      const std::string base = fieldText(file, c, "base");
-      if (!base.empty()) references_.push_back({e.id, base, scope, "inherits", model::Kind::Class, loc});
-      bindAnnotations(file, c, e.id, scope);
+      std::vector<std::string> values;
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
-        TSNode m = ts_node_named_child(c, j);
-        if (is(m, "method") || is(m, "attribute")) {
-          model::Entity member;
-          member.kind = is(m, "method") ? model::Kind::Method : model::Kind::Attribute;
-          member.name = fieldText(file, m, "name");
-          member.id = e.id + "::" + member.name;
-          member.scope = e.id;
-          member.location = locationOf(file, m);
-          member.fields["visibility"] = fieldText(file, m, "visibility");
-          const std::string type = fieldText(file, m, is(m, "method") ? "returns" : "type");
-          if (!type.empty()) member.fields[is(m, "method") ? "returns" : "type"] = type;
-          if (is(m, "method")) bindFields(file, m, member);
-          model_.declare(member);
-          model_.relate({"contains", e.id, member.id, member.location});
-          if (!type.empty() && !isPrimitive(type)) {
-            references_.push_back({member.id, type, scope, "uses", model::Kind::Class, member.location});
-          }
-        }
+        TSNode v = ts_node_named_child(c, j);
+        if (is(v, "enum_value")) values.push_back(trim(parse::textOf(file, v)));
       }
+      e.fields["values"] = join(values, ", ");
+      model_.declare(e);
+      if (!owner.empty()) model_.relate({"contains", owner, e.id, loc, ""});
 
     } else if (is(c, "sequence")) {
       model::Entity e;
@@ -211,7 +458,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.location = loc;
       bindFields(file, c, e);
       model_.declare(e);
-      if (!owner.empty()) model_.relate({"contains", owner, e.id, loc});
+      if (!owner.empty()) model_.relate({"contains", owner, e.id, loc, ""});
       bindAnnotations(file, c, e.id, scope);
       std::map<std::string, std::string> participants;
       const uint32_t n = ts_node_named_child_count(c);
@@ -221,7 +468,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
           const std::string name = fieldText(file, s, "name");
           const std::string type = fieldText(file, s, "type");
           participants[name] = type;
-          references_.push_back({e.id, type, scope, "uses", model::Kind::Class, locationOf(file, s)});
+          references_.push_back({e.id, type, scope, "uses", model::Kind::Class, locationOf(file, s), "", {}});
         } else if (is(s, "message") || is(s, "return")) {
           const std::string to = fieldText(file, s, "to");
           auto p = participants.find(to);
@@ -243,7 +490,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.location = loc;
       bindFields(file, c, e);
       model_.declare(e);
-      references_.push_back({e.id, entityName, scope, "behaviour-of", model::Kind::Class, loc});
+      references_.push_back({e.id, entityName, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
       bindAnnotations(file, c, e.id, scope);
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
