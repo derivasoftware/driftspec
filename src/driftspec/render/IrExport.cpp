@@ -75,9 +75,28 @@ std::vector<std::string> IrExport::diagrams() const {
 
 bool IrExport::matches(const std::string& pattern, const model::Entity& entity) const {
   if (pattern == entity.id) return true;
+  if (entity.has("extern")) return false;  // what lives outside the workspace is drawn only when named
+  // a namespace, written ns::* or just ns when ns is a module: the module and everything inside
+  std::string ns;
   if (pattern.size() > 3 && pattern.compare(pattern.size() - 3, 3, "::*") == 0) {
-    const std::string ns = pattern.substr(0, pattern.size() - 3);
-    return entity.scope == ns || entity.scope.rfind(ns + "::", 0) == 0;
+    ns = pattern.substr(0, pattern.size() - 3);
+  } else if (const model::Entity* m = model_.find(pattern)) {
+    if (m->kind == model::Kind::Module) ns = pattern;
+  }
+  if (!ns.empty() && (entity.scope == ns || entity.scope.rfind(ns + "::", 0) == 0)) return true;
+  // a whole package: package:ds selects every module it contains, transitively (R1)
+  if (pattern.rfind("package:", 0) == 0) {
+    std::string top = entity.kind == model::Kind::Module ? entity.id : entity.scope;
+    while (!top.empty()) {
+      const auto cut = top.rfind("::");
+      if (cut == std::string::npos) break;
+      top = top.substr(0, cut);
+    }
+    if (top.empty()) return false;
+    for (const auto& r : model_.relations()) {
+      if (r.kind == "contains" && r.from == pattern && r.to == top) return true;
+    }
+    return false;
   }
   // a template written without arity: Repository matches Repository<1>
   const auto lt = entity.id.find('<');
