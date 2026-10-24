@@ -1,0 +1,90 @@
+#include <gtest/gtest.h>
+
+#include <nlohmann/json.hpp>
+
+#include "driftspec/bind/Binder.hpp"
+#include "driftspec/check/Checker.hpp"
+#include "driftspec/model/Model.hpp"
+#include "driftspec/parse/Parser.hpp"
+#include "driftspec/render/IrExport.hpp"
+
+namespace {
+
+/// A diagram is a projection of the model onto render-IR: selection, members, edges.
+class TestIrExport : public ::testing::Test {
+ protected:
+  driftspec::model::Model model;
+
+  void SetUp() override {
+    driftspec::parse::Parser parser;
+    driftspec::bind::Binder binder(model);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/static")) binder.bind(f);
+    driftspec::check::Checker(model).run(binder);
+  }
+
+  nlohmann::json render(const std::string& diagram) { return nlohmann::json::parse(driftspec::render::IrExport(model).render("diagram:" + diagram, false)); }
+
+  static const nlohmann::json* node(const nlohmann::json& doc, const std::string& id) {
+    for (const auto& n : doc["nodes"]) {
+      if (n["id"] == id) return &n;
+    }
+    return nullptr;
+  }
+
+  static int edges(const nlohmann::json& doc, const std::string& kind) {
+    int n = 0;
+    for (const auto& e : doc["edges"]) n += e["kind"] == kind ? 1 : 0;
+    return n;
+  }
+};
+
+TEST_F(TestIrExport, ListsTheDeclaredDiagrams) {
+  const auto ids = driftspec::render::IrExport(model).diagrams();
+  EXPECT_EQ(ids.size(), 2u);
+  EXPECT_EQ(ids[0], "diagram:CL_Model");
+}
+
+TEST_F(TestIrExport, IncludeSelectsAndTheModuleBecomesAContainer) {
+  const auto doc = render("CL_Model");
+  EXPECT_EQ(doc["ir"], 1);
+  ASSERT_NE(node(doc, "ds"), nullptr);
+  EXPECT_EQ((*node(doc, "ds"))["kind"], "container");
+  ASSERT_NE(node(doc, "ds::Model"), nullptr);
+  EXPECT_EQ((*node(doc, "ds::Model"))["parent"], "ds");
+  EXPECT_EQ(node(doc, "ds::Vector"), nullptr);  // not included
+  EXPECT_EQ(node(doc, "ds::Cache"), nullptr);   // expected nodes are never drawn
+}
+
+TEST_F(TestIrExport, DerivedStereotypesAndMembersArePrinted) {
+  const auto doc = render("CL_Model");
+  const nlohmann::json& check = *node(doc, "ds::Check");
+  EXPECT_EQ(check["classifier"], "interface");
+  EXPECT_EQ(check["abstract"], true);
+  EXPECT_EQ(check["stereotype"], "interface");
+  EXPECT_EQ(check["sectionKinds"], nlohmann::json({"methods"}));
+  EXPECT_EQ(check["sections"][0][0], "+ abstract name() -> string");
+  const nlohmann::json& location = *node(doc, "ds::Location");
+  EXPECT_EQ(location["stereotype"], "value, equatable, ordered, printable");
+  EXPECT_EQ(location["sections"][0][2], "+ column: int = 0");  // source order
+}
+
+TEST_F(TestIrExport, EdgesAreLiftedFromMembersToClasses) {
+  const auto doc = render("CL_Model");
+  EXPECT_EQ(edges(doc, "inheritance"), 1);  // ScopedCheck -> Check
+  EXPECT_EQ(edges(doc, "composition"), 1);  // Finding owns Location, labelled with name and multiplicity
+  EXPECT_EQ(edges(doc, "attachment"), 1);   // the note of Finding
+  bool labelled = false;
+  for (const auto& e : doc["edges"]) labelled |= e["kind"] == "composition" && e["label"] == "location 1";
+  EXPECT_TRUE(labelled);
+}
+
+TEST_F(TestIrExport, AnEnumIsAValueSoItIsAssociatedNotOwned) {
+  const auto doc = render("CL_Values");
+  EXPECT_EQ((*node(doc, "ds::Severity"))["classifier"], "enum");
+  EXPECT_EQ(edges(doc, "association"), 1);
+  EXPECT_EQ(edges(doc, "composition"), 1);
+  EXPECT_EQ(node(doc, "ds::Finding")->count("stereotype"), 0u);  // nothing shown beyond members
+  EXPECT_EQ((*node(doc, "ds::Finding"))["sectionKinds"], nlohmann::json({"attributes"}));  // hide: methods
+}
+
+}  // namespace

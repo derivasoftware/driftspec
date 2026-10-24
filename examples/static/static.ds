@@ -210,6 +210,10 @@ package ds {
 
 // --- representations: what to print, never what to draw --------------------------
 
+// `include`/`exclude` select (ids, or ns::* for a namespace); members are printed unless
+// `hide: fields, methods`; `show` adds detail: ownership, multiplicity, operators, notes,
+// derived-stereotypes.
+
 diagram CL_Model {
   kind: class
   include: ds::Model, ds::Check, ds::ScopedCheck, ds::Finding, ds::Location
@@ -219,5 +223,6 @@ diagram CL_Model {
 diagram CL_Values {
   kind: class
   include: ds::Finding, ds::Location, ds::Severity
-  show: fields, operators
+  hide: methods
+  show: operators
 }

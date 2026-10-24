@@ -101,7 +101,14 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
   for (uint32_t i = 0; i < count; ++i) {
     TSNode c = ts_node_named_child(node, i);
     if (is(c, "field")) {
-      entity.fields[fieldText(file, c, "key")] = trim(fieldText(file, c, "value"));
+      const std::string key = fieldText(file, c, "key");
+      const std::string value = trim(fieldText(file, c, "value"));
+      auto existing = entity.fields.find(key);
+      if (existing == entity.fields.end() || existing->second.empty()) {
+        entity.fields[key] = value;
+      } else {
+        existing->second += ", " + value;  // a repeated key accumulates (include: a / include: b)
+      }
     } else if (is(c, "contract")) {
       const std::string key = fieldText(file, c, "key");
       entity.fields["contract." + std::to_string(contracts++)] = trim((key.empty() ? "" : key + ": ") + fieldText(file, c, "body"));
