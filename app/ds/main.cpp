@@ -9,11 +9,15 @@
 #include "driftspec/model/Model.hpp"
 #include "driftspec/parse/Parser.hpp"
 #include "driftspec/render/IrExport.hpp"
+#include "driftspec/render/Svg.hpp"
+
+#include <fstream>
+#include <sstream>
 
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram]   (render-IR JSON for plantuml-render --ir)\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg]   (render-IR JSON, or the SVG drawn by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n";
   return 2;
 }
 
@@ -36,9 +40,20 @@ driftspec::model::Model load(const std::string& dir) {
 }  // namespace
 
 int main(int argc, char** argv) {
-  if (argc < 3 || argc > 4) return usage();
+  if (argc < 3 || argc > 5) return usage();
   const std::string verb = argv[1];
   const std::string dir = argv[2];
+  if (verb == "draw") {
+    std::ifstream in(dir);
+    if (!in) {
+      std::cerr << "cannot read " << dir << "\n";
+      return 1;
+    }
+    std::stringstream buffer;
+    buffer << in.rdbuf();
+    std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(buffer.str()));
+    return 0;
+  }
   const driftspec::model::Model model = load(dir);
   if (verb == "render") {
     driftspec::render::IrExport ir(model);
@@ -47,10 +62,15 @@ int main(int argc, char** argv) {
       return 0;
     }
     const std::string name = argv[3];
-    const std::string doc = ir.render(name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name, true);
+    const bool svg = argc == 5 && std::string(argv[4]) == "--svg";
+    const std::string doc = ir.render(name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name, !svg);
     if (doc.empty()) {
       std::cerr << "no diagram named " << name << "\n";
       return 1;
+    }
+    if (svg) {
+      std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc));
+      return 0;
     }
     std::cout << doc << "\n";
     return 0;
