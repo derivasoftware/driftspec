@@ -1,6 +1,6 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 verification:
-  id: VER-00008-1
+  id: SVER-00008-1
   req_id: SREQ-00008-1
   title: "System tests confirm the grammar ships with queries that name its nodes"
   description: >

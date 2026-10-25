@@ -360,6 +360,10 @@ crosses a container border is routed straight between its ends.
 - Grammar with external scanner for indented text; Neovim plugin
   (`editors/nvim`, lazy spec in the user's config).
 - Parser, Binder, Checker, JsonExport; `ds check`, `ds export`.
+- Query (2026-10-25): `ds query <ws> diagrams | entities | relations |
+  artefacts | behaviours | shows | findings`, answers by identity, text or
+  `--json`; the same mechanism is meant for the editor, the agent pane and
+  argos.
 - IrExport with `include`/`exclude` (ids, modules, `package:x`), `hide`,
   `show`; `ds render <dir> [diagram] [--svg|--text]`, `ds draw <ir.json>`.
 - Own SVG engine and terminal engine over one layered layout.
@@ -379,7 +383,9 @@ crosses a container border is routed straight between its ends.
 - Core: open `Kind` registry; domain packs.
 - Governance: the repos exist since 2026-10-25 (`deriva/apps/driftspec`,
   `deriva/argos/plugins/argos-design-driftspec`); argos reads the design in
-  DriftSpec through the plugin. Still to do: the real design and requirements
+  DriftSpec through the plugin (system artefacts land in `input/` and
+  `qualification/` as SREQ/SVER, module ones in `requirements/` and
+  `verifications/`). Still to do: the real design and requirements
   of driftspec in `.ds` (`design/engine.ds` is the POC sketch and argos
   reports its drift), CI with ci-templates, version manifest, pre-commit,
   `projects.toml` registration, the plugin on the registry.

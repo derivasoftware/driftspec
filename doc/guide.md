@@ -95,6 +95,9 @@ them. The vision (`vision.md`) says why; this says what.*
   to the declared one, so the graph stays whole and the drift is visible.
 - **Level by placement.** `requirement` in a package is of the system (an
   SREQ for argos); in a module, of the software (a REQ). No keyword, no field.
+  The id prefix follows the host's naming (`SREQ`/`SVER` at the system level,
+  `REQ`/`VER` in a module), but the language reads the level from the
+  placement, never from the prefix.
 - **Fields.** `title` (the shall sentence), `text` and `rationale`
   (multiline), `status: draft | approved` (draft when absent), `tags` (free,
   one line). No `asil`: the team classifies with tags.
@@ -102,7 +105,7 @@ them. The vision (`vision.md`) says why; this says what.*
   `@refines`. A `parent:` field is ignored with `W-PARENT-IGNORED`: one
   representation per concept.
 - **Verification.** Nested in its requirement, or `@requirement` from
-  elsewhere. `method: test | review | inspection | analysis`. `tests:` lists
+  elsewhere; `@constraint` from a verification verifies the constraint. `method: test | review | inspection | analysis`. `tests:` lists
   the ids as the runner names them, one per line; `evidence:` lists paths for
   the other methods. `W-VER-NO-TEST` for a test verification without tests.
   The outcome is never in the language.
@@ -123,3 +126,17 @@ them. The vision (`vision.md`) says why; this says what.*
   (`package:ds`); extern entities only when named.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
+
+## 6. Questions (`ds query`, SREQ-00011-1)
+
+- `ds query <workspace> <question> [subject] [--json]`. Every answer is a line
+  `kind  identity  detail`, so one answer feeds the next question or a drawing.
+- `diagrams` (each with its kind), `entities <scope>` (the direct members of a
+  package, module, class or behaviour; a package may be named plainly),
+  `relations <id>` (every relation touching it, `->` out and `<-` in, with
+  multiplicity), `artefacts <id>` (what a class realises, requires or is bound
+  by, and what verifies each), `behaviours <id>` (the sequences and state
+  machines of a method or class), `shows <diagram>` (what the drawing would
+  show: the projection itself answers), `findings [file]`.
+- An unknown question fails with the list of questions; `--json` gives the
+  same answers as an array of `{kind, id, detail}`.

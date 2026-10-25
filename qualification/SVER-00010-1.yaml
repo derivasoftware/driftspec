@@ -1,6 +1,6 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 verification:
-  id: VER-00010-1
+  id: SVER-00010-1
   req_id: SREQ-00010-1
   title: "System tests confirm class, requirement and sequence diagrams are views of the model"
   description: >

@@ -6,7 +6,7 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
 - `grammar/` — the tree-sitter grammar (`grammar.js`), the generated parser and
   the external scanner for indented text blocks.
 - `include/driftspec/`, `src/driftspec/` — the engine: parse, bind, check, export.
-- `app/ds/` — the `ds` command line: `ds check <workspace>`, `ds export <workspace>`.
+- `app/ds/` — the `ds` command line: `ds check`, `ds export`, `ds render`, `ds draw`, `ds coupling`, `ds diff`, `ds query` (run `ds` for the arguments).
 - `examples/diag/` — the reference workspace, one entity per file.
 - `tests/unit/driftspec/` — GoogleTest suites, one per subsystem.
 

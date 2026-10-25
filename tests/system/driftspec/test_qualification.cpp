@@ -213,6 +213,24 @@ TEST_F(TestQualification, ClassRequirementAndSequenceDiagramsAreViewsOfTheModel)
   EXPECT_TRUE(lifeline);
 }
 
+// SREQ-00011-1: questions about the model answered by identity, so one answer leads to the next
+TEST_F(TestQualification, AQuestionAboutTheModelIsAnsweredByIdentity) {
+  const Outcome diagrams = ds("query " + examples("artefacts") + " diagrams");
+  EXPECT_EQ(diagrams.code, 0);
+  EXPECT_NE(diagrams.out.find("diagram  REQ_Tracker  requirement"), std::string::npos);
+  const Outcome relations = ds("query " + examples("artefacts") + " relations SREQ-00001-2 --json");
+  bool refinedBy = false;
+  for (const auto& a : nlohmann::json::parse(relations.out)) refinedBy |= a["kind"] == "refines" && a["detail"] == "<-";
+  EXPECT_TRUE(refinedBy);
+  // the answer names an identity that the next question takes
+  const Outcome artefacts = ds("query " + examples("artefacts") + " artefacts iris@projection::Projection");
+  EXPECT_NE(artefacts.out.find("requires  REQ-00001-2"), std::string::npos);
+  EXPECT_NE(artefacts.out.find("verified-by  VER-"), std::string::npos);
+  const Outcome shows = ds("query " + examples("artefacts") + " shows CL_Projection");
+  EXPECT_NE(shows.out.find("class  iris@projection::Projection"), std::string::npos);
+  EXPECT_EQ(ds("query " + examples("artefacts") + " weather").code, 1);
+}
+
 // CST-00001-1: every command under a hundred milliseconds on a hundred classes
 TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds) {
   const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-perf-" + std::to_string(::getpid());

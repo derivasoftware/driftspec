@@ -1,6 +1,6 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 verification:
-  id: VER-00002-1
+  id: SVER-00002-1
   req_id: SREQ-00002-1
   title: "System tests confirm every incoherence is a finding with code, severity and location"
   description: >

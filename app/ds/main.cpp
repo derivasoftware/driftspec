@@ -1,4 +1,4 @@
-// ds — the DriftSpec command line: `ds check`, `ds export` and `ds render <workspace> [diagram]`.
+// ds — the DriftSpec command line: check, export, render, draw, coupling, diff and query over a workspace.
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -10,6 +10,7 @@
 #include "driftspec/export/JsonExport.hpp"
 #include "driftspec/model/Model.hpp"
 #include "driftspec/parse/Parser.hpp"
+#include "driftspec/query/Query.hpp"
 #include "driftspec/render/IrExport.hpp"
 #include "driftspec/render/Layout.hpp"
 #include "driftspec/render/Svg.hpp"
@@ -28,7 +29,7 @@
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells] [--width N]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself; N wraps the drawing)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git revisions of <path>)\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells] [--width N]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself; N wraps the drawing)\n       ds draw <render-ir.json> [--svg|--text|--cells] [--width N]   (any render-IR document, drawn like a workspace diagram)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git revisions of <path>)\n       ds query <workspace-dir> <question> [subject] [--json]   (ask the model: diagrams · entities <scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings [file])\n";
   return 2;
 }
 
@@ -141,7 +142,12 @@ int main(int argc, char** argv) {
     }
     std::stringstream buffer;
     buffer << in.rdbuf();
-    std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(buffer.str()));
+    // any render-IR producer (design-render over argos, plantuml-render) reaches the same drawings as a workspace
+    const driftspec::render::IrDocument doc = driftspec::render::IrDocument::parse(buffer.str());
+    const std::string how = argc >= 4 ? argv[3] : "--svg";
+    if (how == "--text") std::cout << driftspec::render::Text().render(doc, isatty(1) != 0, width);
+    else if (how == "--cells") std::cout << driftspec::render::Text().cells(doc, width) << "\n";
+    else std::cout << driftspec::render::Svg().render(doc, width);
     return 0;
   }
   const driftspec::model::Model model = load(dir);
@@ -196,6 +202,29 @@ int main(int argc, char** argv) {
       return 0;
     }
     std::cout << doc << "\n";
+    return 0;
+  }
+  if (verb == "query") {
+    if (argc < 4) return usage();
+    bool json = false;
+    std::string question = argv[3], subject;
+    for (int i = 4; i < argc; ++i) {
+      if (std::string(argv[i]) == "--json") json = true;
+      else subject = argv[i];
+    }
+    const driftspec::query::Query query(model);
+    const std::vector<driftspec::query::Answer> answers = query.ask(question, subject);
+    const bool failed = !answers.empty() && answers.front().kind == "error";
+    if (failed) {
+      std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
+      if (answers.front().detail.find("not a question") != std::string::npos) {
+        std::cerr << "questions:";
+        for (const auto& q : driftspec::query::Query::questions()) std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
+        std::cerr << "\n";
+      }
+      return 1;
+    }
+    std::cout << (json ? driftspec::query::Query::json(answers) + "\n" : driftspec::query::Query::text(answers));
     return 0;
   }
   if (argc != 3) return usage();

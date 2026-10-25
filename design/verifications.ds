@@ -1,10 +1,10 @@
 // System qualification: one verification per system requirement, each a test
 // that drives the ds binary from outside (tests/system/driftspec/test_qualification.cpp).
-// SREQ-00011-1 (queries) has no verification yet: nothing implements it.
+// System verifications are SVER (argos: qualification/); module ones will be VER.
 
 package driftspec {
 
-  verification VER-00001-1 {
+  verification SVER-00001-1 {
     @requirement SREQ-00001-1
     title: System tests confirm a workspace loads into one model with one identity per entity
     text:
@@ -16,7 +16,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
   }
 
-  verification VER-00002-1 {
+  verification SVER-00002-1 {
     @requirement SREQ-00002-1
     title: System tests confirm every incoherence is a finding with code, severity and location
     text:
@@ -28,7 +28,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
   }
 
-  verification VER-00003-1 {
+  verification SVER-00003-1 {
     @requirement SREQ-00003-1
     title: System tests confirm artefacts are linked to the design by revision
     text:
@@ -39,7 +39,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision
   }
 
-  verification VER-00004-1 {
+  verification SVER-00004-1 {
     @requirement SREQ-00004-1
     title: System tests confirm behaviour is bound to its subject and checked against it
     text:
@@ -50,7 +50,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
   }
 
-  verification VER-00005-1 {
+  verification SVER-00005-1 {
     @requirement SREQ-00005-1
     title: System tests confirm a selection is drawn as SVG and as text to a given width
     text:
@@ -61,7 +61,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
   }
 
-  verification VER-00006-1 {
+  verification SVER-00006-1 {
     @requirement SREQ-00006-1
     title: System tests confirm the model and the drawings are exported
     text:
@@ -72,7 +72,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
   }
 
-  verification VER-00007-1 {
+  verification SVER-00007-1 {
     @requirement SREQ-00007-1
     title: System tests confirm two versions are compared by identity
     text:
@@ -83,7 +83,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
   }
 
-  verification VER-00008-1 {
+  verification SVER-00008-1 {
     @requirement SREQ-00008-1
     title: System tests confirm the grammar ships with queries that name its nodes
     text:
@@ -94,7 +94,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.TheGrammarShipsWithQueriesThatNameItsNodes
   }
 
-  verification VER-00009-1 {
+  verification SVER-00009-1 {
     @requirement SREQ-00009-1
     title: System tests confirm the static metamodel is modelled and classified by derivation
     text:
@@ -106,7 +106,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.TheStaticMetamodelIsModelledAndClassifiedByDerivation
   }
 
-  verification VER-00010-1 {
+  verification SVER-00010-1 {
     @requirement SREQ-00010-1
     title: System tests confirm class, requirement and sequence diagrams are views of the model
     text:
@@ -118,7 +118,7 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.ClassRequirementAndSequenceDiagramsAreViewsOfTheModel
   }
 
-  verification VER-00011-1 {
+  verification SVER-00011-1 {
     @constraint CST-00001-1
     title: System tests confirm a hundred classes check, export and draw in under a hundred milliseconds
     text:
@@ -128,5 +128,18 @@ package driftspec {
     method: test
     tests:
       tests/system/driftspec/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
+  }
+
+  verification SVER-00012-1 {
+    @requirement SREQ-00011-1
+    title: System tests confirm a question about the model is answered by identity
+    text:
+      ds query lists the diagrams with their kind, the relations of an
+      artefact in both directions, what a class realises and what proves it,
+      and what a diagram shows; each answer names an identity the next
+      question takes, and an unknown question fails.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.AQuestionAboutTheModelIsAnsweredByIdentity
   }
 }

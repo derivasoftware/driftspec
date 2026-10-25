@@ -1,6 +1,6 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 verification:
-  id: VER-00007-1
+  id: SVER-00007-1
   req_id: SREQ-00007-1
   title: "System tests confirm two versions are compared by identity"
   description: >

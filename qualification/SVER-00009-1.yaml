@@ -1,6 +1,6 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 verification:
-  id: VER-00009-1
+  id: SVER-00009-1
   req_id: SREQ-00009-1
   title: "System tests confirm the static metamodel is modelled and classified by derivation"
   description: >

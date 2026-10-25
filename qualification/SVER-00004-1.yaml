@@ -1,6 +1,6 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 verification:
-  id: VER-00004-1
+  id: SVER-00004-1
   req_id: SREQ-00004-1
   title: "System tests confirm behaviour is bound to its subject and checked against it"
   description: >

@@ -1,6 +1,6 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 verification:
-  id: VER-00001-1
+  id: SVER-00001-1
   req_id: SREQ-00001-1
   title: "System tests confirm a workspace loads into one model with one identity per entity"
   description: >
