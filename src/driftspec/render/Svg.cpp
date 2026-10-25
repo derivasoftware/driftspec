@@ -78,6 +78,27 @@ const char* const kStyle = R"CSS(
   .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
   .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
   .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-rel-inheritance: #1d4ed8; --pr-rel-realization: #1d4ed8; --pr-rel-composition: #0f766e; --pr-rel-aggregation: #0e7490; --pr-rel-dependency: #9a3412; --pr-rel-association: #6b7280; --pr-rel-attachment: #a16207; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-rel-inheritance: #93c5fd; --pr-rel-realization: #93c5fd; --pr-rel-composition: #5eead4; --pr-rel-aggregation: #67e8f9; --pr-rel-dependency: #fdba74; --pr-rel-association: #9ca3af; --pr-rel-attachment: #fcd34d; } }
+  [data-theme="dark"] .pr-diagram { --pr-rel-inheritance: #93c5fd; --pr-rel-realization: #93c5fd; --pr-rel-composition: #5eead4; --pr-rel-aggregation: #67e8f9; --pr-rel-dependency: #fdba74; --pr-rel-association: #9ca3af; --pr-rel-attachment: #fcd34d; }
+  .pr-diagram .pr-edge-inheritance, .pr-diagram .pr-edge-label-inheritance { stroke: var(--pr-rel-inheritance); }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-label-realization { stroke: var(--pr-rel-realization); }
+  .pr-diagram .pr-edge-composition { stroke: var(--pr-rel-composition); }
+  .pr-diagram .pr-edge-aggregation { stroke: var(--pr-rel-aggregation); }
+  .pr-diagram .pr-edge-dependency { stroke: var(--pr-rel-dependency); }
+  .pr-diagram .pr-edge-association { stroke: var(--pr-rel-association); }
+  .pr-diagram .pr-edge-attachment { stroke: var(--pr-rel-attachment); }
+  .pr-diagram .pr-edge-label-inheritance, .pr-diagram .pr-edge-label-realization { fill: var(--pr-rel-inheritance); stroke: var(--pr-box-fill); }
+  .pr-diagram .pr-edge-label-composition { fill: var(--pr-rel-composition); }
+  .pr-diagram .pr-edge-label-aggregation { fill: var(--pr-rel-aggregation); }
+  .pr-diagram .pr-edge-label-dependency { fill: var(--pr-rel-dependency); }
+  .pr-diagram .pr-edge-label-association { fill: var(--pr-rel-association); }
+  .pr-diagram marker.pr-marker-inheritance path, .pr-diagram marker.pr-marker-realization path { stroke: var(--pr-rel-inheritance); }
+  .pr-diagram marker.pr-marker-composition path { stroke: var(--pr-rel-composition); fill: var(--pr-rel-composition); }
+  .pr-diagram marker.pr-marker-aggregation path { stroke: var(--pr-rel-aggregation); }
+  .pr-diagram marker.pr-marker-dependency path, .pr-diagram marker.pr-marker-association path { stroke: var(--pr-rel-dependency); }
+  .pr-diagram.pr-focusing .pr-box, .pr-diagram.pr-focusing .pr-edge-group, .pr-diagram.pr-focusing .pr-edge-label, .pr-diagram.pr-focusing .pr-note { opacity: var(--pr-dimmed, .25); transition: opacity .12s; }
+  .pr-diagram.pr-focusing .pr-focus { opacity: 1; }
   .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
   [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
@@ -97,6 +118,42 @@ const char* const kStyle = R"CSS(
 
 std::string esc(const std::string& text);
 std::string dataAttrs(const std::map<std::string, std::string>& refs);
+
+const char* const kClassScript = R"JS(
+(function () {
+  var root = document.getElementById('%ROOT%');
+  if (!root || root.dataset.wired) return;
+  root.dataset.wired = '1';
+  var boxes = Array.prototype.slice.call(root.querySelectorAll('.pr-box, .pr-note'));
+  var edges = Array.prototype.slice.call(root.querySelectorAll('.pr-edge-group'));
+  var labels = Array.prototype.slice.call(root.querySelectorAll('.pr-edge-label'));
+  function focus(id) {
+    var near = {}; near[id] = true;
+    edges.forEach(function (e) { if (e.dataset.from === id || e.dataset.to === id) { near[e.dataset.from] = true; near[e.dataset.to] = true; } });
+    root.classList.add('pr-focusing');
+    boxes.forEach(function (b) { b.classList.toggle('pr-focus', !!near[b.dataset.id]); });
+    edges.forEach(function (e) { e.classList.toggle('pr-focus', e.dataset.from === id || e.dataset.to === id); });
+    labels.forEach(function (l) { l.classList.toggle('pr-focus', l.dataset.from === id || l.dataset.to === id); });
+  }
+  function unfocus() {
+    root.classList.remove('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-focus'), function (el) { el.classList.remove('pr-focus'); });
+  }
+  boxes.forEach(function (b) {
+    b.addEventListener('mouseenter', function () { focus(b.dataset.id); });
+    b.addEventListener('mouseleave', unfocus);
+  });
+  edges.forEach(function (e) {
+    e.addEventListener('mouseenter', function () {
+      root.classList.add('pr-focusing');
+      boxes.forEach(function (b) { b.classList.toggle('pr-focus', b.dataset.id === e.dataset.from || b.dataset.id === e.dataset.to); });
+      edges.forEach(function (o) { o.classList.toggle('pr-focus', o === e); });
+      labels.forEach(function (l) { l.classList.toggle('pr-focus', l.dataset.from === e.dataset.from && l.dataset.to === e.dataset.to); });
+    });
+    e.addEventListener('mouseleave', unfocus);
+  });
+})();
+)JS";
 
 std::string esc(const std::string& text) {
   std::string out;
@@ -138,6 +195,24 @@ std::string markers(const std::string& px) {
 
 const std::map<std::string, std::string> kMarkerByKind = {
     {"inheritance", "tri"}, {"realization", "tri"}, {"composition", "diamond-filled"}, {"aggregation", "diamond"}, {"dependency", "arrow"}, {"association", "arrow"}};
+
+/// The markers again, one per relation kind, so each head is painted in its kind's colour.
+std::string kindMarkers(const std::string& px) {
+  std::string out;
+  for (const auto& k : kMarkerByKind) {
+    const std::string& shape = k.second;
+    std::string body;
+    if (shape == "tri") body = "<path d=\"M1,1 L13,6 L1,11 Z\"/>";
+    if (shape == "diamond-filled") body = "<path class=\"pr-filled\" d=\"M1,5 L8,1 L15,5 L8,9 Z\"/>";
+    if (shape == "diamond") body = "<path d=\"M1,5 L8,1 L15,5 L8,9 Z\"/>";
+    if (shape == "arrow") body = "<path class=\"pr-open\" d=\"M1,1 L11,6 L1,11\"/>";
+    const std::string box = shape == "tri" ? "0 0 14 12\" refX=\"13\" refY=\"6\" markerWidth=\"14\" markerHeight=\"12" :
+                            shape == "arrow" ? "0 0 12 12\" refX=\"11\" refY=\"6\" markerWidth=\"12\" markerHeight=\"12" :
+                                               "0 0 16 10\" refX=\"15\" refY=\"5\" markerWidth=\"16\" markerHeight=\"10";
+    out += "\n  <marker id=\"" + px + "m-" + k.first + "\" class=\"pr-marker-" + k.first + "\" viewBox=\"" + box + "\" orient=\"auto\">" + body + "</marker>";
+  }
+  return out + "\n";
+}
 
 const std::map<std::string, std::string> kBadge = {{"class", "C"}, {"interface", "I"}, {"enum", "E"}, {"dataclass", "D"}, {"function", "f"}, {"struct", "S"},
                                                    {"requirement", "R"}, {"constraint", "K"}, {"verification", "V"}};
@@ -301,7 +376,7 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
   std::string d;
   for (size_t i = 0; i < points.size(); ++i) d += (i == 0 ? "M" : " L") + num(points[i].x) + "," + num(points[i].y);
   const auto marker = kMarkerByKind.find(e.kind);
-  const std::string markerAttr = marker == kMarkerByKind.end() ? "" : " marker-end=\"url(#" + px + marker->second + ")\"";
+  const std::string markerAttr = marker == kMarkerByKind.end() ? "" : " marker-end=\"url(#" + px + "m-" + e.kind + ")\"";
   EdgeMarkup out;
   if (!e.label.empty() && points.size() >= 2) {
     // beside the midpoint of the longest segment
@@ -321,7 +396,8 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
     const auto lines = linesOf(e.label);
     std::string rows;
     for (size_t i = 0; i < lines.size(); ++i) rows += "<tspan x=\"" + num(x) + "\" dy=\"" + num(i == 0 ? 0 : 14) + "\">" + esc(lines[i]) + "</tspan>";
-    out.label = "<text class=\"pr-edge-label\" x=\"" + num(x) + "\" y=\"" + num(y) + "\">" + (lines.size() == 1 ? esc(e.label) : rows) + "</text>";
+    out.label = "<text class=\"pr-edge-label pr-edge-label-" + e.kind + "\" data-from=\"" + esc(e.from) + "\" data-to=\"" + esc(e.to) + "\" x=\"" + num(x) + "\" y=\"" + num(y) + "\">" +
+                (lines.size() == 1 ? esc(e.label) : rows) + "</text>";
   }
   const auto change = e.refs.find("change");
   const std::string changeClass = change == e.refs.end() ? "" : " pr-edge-change-" + change->second;
@@ -772,15 +848,20 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
   }
   const int vx = minX - M.PAD_X, vy = minY - M.PAD_X, vw = maxX + M.PAD_X - vx, vh = maxY + M.PAD_X - vy;
   std::ostringstream out;
-  out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" width=\"" << vw << "\" height=\"" << vh
+  out << "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"" << px << "root\" viewBox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" width=\"" << vw << "\" height=\"" << vh
       << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
   if (!doc.title.empty()) out << "<title>" << esc(doc.title) << "</title>\n";
-  out << "<style>" << kStyle << "</style>\n<defs>" << markers(px) << "</defs>\n";
+  out << "<style>" << kStyle << "</style>\n<defs>" << markers(px) << kindMarkers(px) << "</defs>\n";
   for (const auto& s : containers) out << s << "\n";
   for (const auto& s : paths) out << s << "\n";
   for (const auto& s : leaves) out << s << "\n";
   for (const auto& s : labels) out << s << "\n";
   if (!noticeBlock.empty()) out << noticeBlock << "\n";
+  // focus on hover: a class, its relations and its neighbours stay; the rest fades
+  std::string script = kClassScript;
+  const std::string marker = "%ROOT%";
+  script.replace(script.find(marker), marker.size(), px + "root");
+  out << "<script><![CDATA[" << script << "]]></script>\n";
   out << "</svg>\n";
   return out.str();
 }
