@@ -268,7 +268,10 @@ void box(Grid& g, const Placed& p) {
     const std::string mark = change->second == "added" ? "+" : change->second == "removed" ? "-" : change->second == "renamed" ? ">" : "~";
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
-    g.text(r.x + M.PAD_X, y, badge, n.classifier == "interface" ? kPublic : n.classifier == "enum" ? kProtected : "35");
+    if (n.classifier == "requirement") badge = "R";
+    if (n.classifier == "verification") badge = "V";
+    if (n.classifier == "constraint") badge = "K";
+    g.text(r.x + M.PAD_X, y, badge, n.classifier == "interface" || n.classifier == "verification" ? kPublic : n.classifier == "enum" || n.classifier == "constraint" ? kProtected : "35");
   }
   g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;

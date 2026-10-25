@@ -137,3 +137,22 @@ package iris {
     }
   }
 }
+
+// --- views ----------------------------------------------------------------------
+
+diagram REQ_Tracker {
+  kind: requirement
+  include: SREQ-00001-2          // the umbrella: what refines it, what verifies it, what realises it
+}
+
+diagram REQ_Iris {
+  kind: requirement
+  include: package:iris          // every artefact of the package
+  show: verifications            // design left out
+}
+
+diagram CL_Projection {
+  kind: class
+  include: projection::Projection
+  show: requirements             // the artefacts of each class, as a note
+}

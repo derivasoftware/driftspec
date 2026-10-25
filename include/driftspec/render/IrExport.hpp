@@ -30,6 +30,7 @@ class IrExport {
  private:
   bool matches(const std::string& pattern, const model::Entity& entity) const;
   std::string renderSequence(const model::Entity& diagram, bool pretty) const;
+  std::string renderRequirements(const model::Entity& diagram, bool pretty) const;
 
   const model::Model& model_;
 };

@@ -122,6 +122,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   const model::Entity* diagram = model_.find(diagramId);
   if (!diagram || diagram->kind != model::Kind::Diagram) return "";
   if (fieldOf(*diagram, "kind") == "sequence") return renderSequence(*diagram, pretty);
+  if (fieldOf(*diagram, "kind") == "requirement") return renderRequirements(*diagram, pretty);
   // `show` adds optional detail (ownership, multiplicity, operators, notes, derived-stereotypes);
   // `hide` removes compartments (fields, methods). Nothing written = members only.
   const std::vector<std::string> showList = split(fieldOf(*diagram, "show"), ',');
@@ -240,6 +241,22 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     if (shows("notes") && !note.empty()) {
       out["nodes"].push_back({{"id", id + "::note"}, {"kind", "note"}, {"label", note}});
       out["edges"].push_back({{"from", id + "::note"}, {"to", id}, {"kind", "attachment"}});
+    }
+    if (shows("requirements")) {
+      // the artefacts this entity realises or is bound by, one note
+      std::vector<std::string> lines;
+      for (const auto& r : model_.relations()) {
+        if (r.from != id || (r.kind != "requires" && r.kind != "constrained-by")) continue;
+        const model::Entity* a = model_.find(r.to);
+        if (!a || a->expected) continue;
+        lines.push_back(a->id + "  " + fieldOf(*a, "title"));
+      }
+      if (!lines.empty()) {
+        std::string text;
+        for (const auto& l : lines) text += (text.empty() ? "" : "\n") + l;
+        out["nodes"].push_back({{"id", id + "::artefacts"}, {"kind", "note"}, {"label", text}, {"classifier", "requirement"}});
+        out["edges"].push_back({{"from", id + "::artefacts"}, {"to", id}, {"kind", "attachment"}});
+      }
     }
   }
 
@@ -444,6 +461,129 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   if (b.edges.empty()) out["notice"] = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
   out["nodes"] = b.nodes;
   out["edges"] = b.edges;
+  return pretty ? out.dump(2) : out.dump();
+}
+
+
+// ---- requirements: the umbrella of an artefact, or the tree of a package ----------------
+
+namespace {
+
+std::vector<std::string> wrap(const std::string& text, size_t width) {
+  std::vector<std::string> lines;
+  std::string line;
+  std::stringstream in(text);
+  std::string word;
+  while (in >> word) {
+    if (!line.empty() && line.size() + 1 + word.size() > width) {
+      lines.push_back(line);
+      line.clear();
+    }
+    line += (line.empty() ? "" : " ") + word;
+  }
+  if (!line.empty()) lines.push_back(line);
+  return lines;
+}
+
+bool isArtefact(const model::Entity& e) {
+  return e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint || e.kind == model::Kind::Verification;
+}
+
+}  // namespace
+
+std::string IrExport::renderRequirements(const model::Entity& diagram, bool pretty) const {
+  const std::vector<std::string> showList = split(fieldOf(diagram, "show"), ',');
+  const std::set<std::string> show(showList.begin(), showList.end());
+  const bool withDesign = show.empty() || show.count("design");
+  const bool withVerifications = show.empty() || show.count("verifications");
+  // the roots: artefacts named, or every artefact of a package / module
+  std::set<std::string> roots;
+  for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
+    for (const auto& pair : model_.entities()) {
+      const model::Entity& e = pair.second;
+      if (!isArtefact(e) || e.expected) continue;
+      bool hit = pattern == e.id;
+      if (pattern.rfind("package:", 0) == 0) {
+        // an artefact of the package: declared in it (scope "") or in one of its modules
+        std::string top = e.scope;
+        while (top.find("::") != std::string::npos) top = top.substr(0, top.rfind("::"));
+        for (const auto& r : model_.relations()) hit |= r.kind == "contains" && r.from == pattern && (r.to == top || e.scope.empty());
+        hit |= e.scope.empty() && model_.find(pattern) != nullptr && [&] {
+          for (const auto& r : model_.relations()) {
+            if (r.kind == "about" && r.from == e.id && r.to == pattern) return true;
+          }
+          return false;
+        }();
+      } else if (pattern.size() > 3 && pattern.compare(pattern.size() - 3, 3, "::*") == 0) {
+        const std::string ns = pattern.substr(0, pattern.size() - 3);
+        hit |= e.scope == ns || e.scope.rfind(ns + "::", 0) == 0;
+      } else if (const model::Entity* m = model_.find(pattern)) {
+        hit |= m->kind == model::Kind::Module && (e.scope == pattern || e.scope.rfind(pattern + "::", 0) == 0);
+      }
+      if (hit) roots.insert(e.id);
+    }
+  }
+  // the umbrella: what refines a root (down, transitively), what verifies it, what realises it
+  std::set<std::string> selected = roots;
+  bool grew = true;
+  while (grew) {
+    grew = false;
+    for (const auto& r : model_.relations()) {
+      if ((r.kind == "refines" && selected.count(r.to) && !selected.count(r.from)) ||
+          (withVerifications && r.kind == "verifies" && selected.count(r.to) && !selected.count(r.from)) ||
+          (withDesign && (r.kind == "requires" || r.kind == "constrained-by") && selected.count(r.to) && !selected.count(r.from))) {
+        const model::Entity* from = model_.find(r.from);
+        if (!from || from->expected) continue;
+        if (from->kind != model::Kind::Class && !isArtefact(*from)) continue;
+        selected.insert(r.from);
+        grew = true;
+      }
+    }
+  }
+  nlohmann::json out;
+  out["ir"] = 1;
+  out["title"] = diagram.name;
+  out["nodes"] = nlohmann::json::array();
+  out["edges"] = nlohmann::json::array();
+  for (const auto& id : selected) {
+    const model::Entity& e = *model_.find(id);
+    nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", isArtefact(e) ? e.id : e.name}, {"classifier", model::kindName(e.kind)}};
+    if (isArtefact(e)) {
+      std::vector<std::string> lines = wrap(fieldOf(e, "title"), 44);
+      const std::string status = fieldOf(e, "status");
+      const std::string method = fieldOf(e, "method");
+      std::string stereotype = model::kindName(e.kind);
+      if (!status.empty()) stereotype += ", " + status;
+      if (!method.empty()) stereotype += ", " + method;
+      if (e.kind == model::Kind::Requirement) stereotype += e.scope.empty() ? ", system" : ", " + e.scope;
+      node["stereotype"] = stereotype;
+      if (!lines.empty()) node["sections"] = nlohmann::json::array({lines});
+      const std::string text = fieldOf(e, "text");
+      if (!text.empty()) node["title"] = text;
+      if (!e.location.file.empty()) node["refs"] = {{"location", e.location.file + ":" + std::to_string(e.location.line)}};
+    } else {
+      node["parent"] = nlohmann::json();  // no containers in this view
+      node.erase("parent");
+      node["stereotype"] = fieldOf(e, "stereotypes");
+      if (node["stereotype"].get<std::string>().empty()) node.erase("stereotype");
+    }
+    const std::string change = fieldOf(e, "change");
+    if (!change.empty()) node["refs"]["change"] = change;
+    out["nodes"].push_back(node);
+  }
+  for (const auto& r : model_.relations()) {
+    if (!selected.count(r.from) || !selected.count(r.to)) continue;
+    if (r.kind == "refines") {
+      out["edges"].push_back({{"from", r.from}, {"to", r.to}, {"kind", "realization"}, {"label", "refines"}});  // the parent above
+    } else if (r.kind == "verifies") {
+      out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "verified by"}});
+    } else if (r.kind == "requires") {
+      out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "realised by"}});
+    } else if (r.kind == "constrained-by") {
+      out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "constrains"}});
+    }
+  }
+  if (out["nodes"].empty()) out["notice"] = "No artefact selected: include names a requirement, a package (package:x) or a module.";
   return pretty ? out.dump(2) : out.dump();
 }
 

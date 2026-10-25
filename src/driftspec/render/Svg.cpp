@@ -41,6 +41,12 @@ const char* const kStyle = R"CSS(
   .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
   .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
   .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
   .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
   .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
   .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
@@ -133,7 +139,8 @@ std::string markers(const std::string& px) {
 const std::map<std::string, std::string> kMarkerByKind = {
     {"inheritance", "tri"}, {"realization", "tri"}, {"composition", "diamond-filled"}, {"aggregation", "diamond"}, {"dependency", "arrow"}, {"association", "arrow"}};
 
-const std::map<std::string, std::string> kBadge = {{"class", "C"}, {"interface", "I"}, {"enum", "E"}, {"dataclass", "D"}, {"function", "f"}, {"struct", "S"}};
+const std::map<std::string, std::string> kBadge = {{"class", "C"}, {"interface", "I"}, {"enum", "E"}, {"dataclass", "D"}, {"function", "f"}, {"struct", "S"},
+                                                   {"requirement", "R"}, {"constraint", "K"}, {"verification", "V"}};
 
 std::vector<std::string> linesOf(const std::string& label) {
   std::vector<std::string> out;
