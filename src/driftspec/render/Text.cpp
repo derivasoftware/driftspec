@@ -305,12 +305,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
   const auto change = e.refs.find("change");
   const bool removed = change != e.refs.end() && change->second == "removed";
   const bool dashed = removed || e.kind == "dependency" || e.kind == "realization" || e.kind == "attachment";
-  // a colour per kind, so a relation is told apart at a crossing; a diff mark wins
-  static const std::map<std::string, std::string> kindColour = {{"inheritance", "34"}, {"realization", "34"}, {"composition", "36"}, {"aggregation", "96"},
-                                                                 {"dependency", "33"}, {"association", "37"}, {"attachment", "33"}};
-  const auto kc = kindColour.find(e.kind);
-  const std::string byKind = kc == kindColour.end() ? std::string(kEdge) : kc->second;
-  const std::string edgeColor = change == e.refs.end() ? byKind : change->second == "added" ? "32" : "31";
+  const std::string edgeColor = change == e.refs.end() ? std::string(kEdge) : change->second == "added" ? "32" : "31";
   // an anchor on a top or left border names the border cell itself: step outside it
   auto outside = [&](Point& p, const std::string& id, bool first) {
     const auto it = byId.find(id);
@@ -377,9 +372,9 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
     if (a.y == b.y) {
       std::string joined;
       for (const auto& l : lines) joined += (joined.empty() ? "" : ", ") + l;
-      g.text((a.x + b.x) / 2 - static_cast<int>(joined.size()) / 2, a.y - 1, joined, edgeColor);
+      g.text((a.x + b.x) / 2 - static_cast<int>(joined.size()) / 2, a.y - 1, joined, kMuted);
     } else {
-      for (size_t i = 0; i < lines.size(); ++i) g.text(a.x + 2, (a.y + b.y) / 2 + static_cast<int>(i), lines[i], edgeColor);
+      for (size_t i = 0; i < lines.size(); ++i) g.text(a.x + 2, (a.y + b.y) / 2 + static_cast<int>(i), lines[i], kMuted);
     }
   }
 }
