@@ -99,7 +99,7 @@ TEST_F(TestBehaviour, ASequenceDiagramExpandsByDepthAndLinksAtDepthZero) {
     lifelines += n["kind"] == "lifeline";
     frames += n["kind"] == "frame";
   }
-  EXPECT_EQ(lifelines, 5);  // self, binder, model, and the unresolved binder/parser of checkMessage
+  EXPECT_EQ(lifelines, 6);  // caller, self, binder, model, and the unresolved binder/parser of checkMessage
   EXPECT_EQ(frames, 3);     // loop, alt (inlined), loop
   bool altSpansExpansion = false;
   for (const auto& n : deep["nodes"]) altSpansExpansion |= n["kind"] == "frame" && n["label"] == "loop each reference" && n["span"][1] > n["span"][0];
@@ -108,7 +108,9 @@ TEST_F(TestBehaviour, ASequenceDiagramExpandsByDepthAndLinksAtDepthZero) {
   int links = 0;
   for (const auto& e : shallow["edges"]) links += e.contains("href");
   EXPECT_EQ(links, 2);  // resolveReference and checkMessage are reachable, not inlined
-  EXPECT_EQ(shallow["edges"].size(), 6u);
+  EXPECT_EQ(shallow["edges"].size(), 7u);  // the caller's run(binder) first; run returns none
+  EXPECT_EQ(shallow["edges"][0]["from"], "caller");
+  EXPECT_EQ(shallow["edges"][0]["label"], "run(binder: Binder)");
 }
 
 TEST_F(TestBehaviour, LiftingToModuleLevelKeepsOnlyCrossModuleMessages) {

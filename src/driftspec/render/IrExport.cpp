@@ -388,9 +388,19 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const std::string subjectId = seq->id.substr(0, seq->id.find("::sequence"));
       const model::Entity* subject = model_.find(subjectId);
       const model::Entity* cls = subject && subject->kind == model::Kind::Method ? model_.find(subject->scope) : subject;
+      // the caller, leftmost, invokes the entry operation on the subject: what is being looked at is the first thing drawn
+      const bool method = subject && subject->kind == model::Kind::Method;
+      const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";
       const std::string self = b.lifeline(cls ? cls->id : subjectId, "self: " + (cls ? cls->name : subjectId), "participant");
+      if (method) {
+        b.edges.push_back({{"from", caller}, {"to", self}, {"kind", "message"}, {"order", b.order++}, {"label", subject->name + "(" + fieldOf(*subject, "params") + ")"}});
+      }
       std::set<std::string> stack;
       b.emit(*seq, self, depth, stack);
+      const std::string returns = method ? fieldOf(*subject, "returns") : "";
+      if (method && !returns.empty() && returns != "none" && returns != "void") {
+        b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", returns}, {"dashed", true}});
+      }
     }
   }
   if (b.edges.empty()) out["notice"] = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
