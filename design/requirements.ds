@@ -157,6 +157,24 @@ package driftspec {
     tags: diagrams, views
   }
 
+  requirement SREQ-00011-1 {
+    title: The system shall answer questions about the model: what exists, what an entity relates to, what a diagram shows
+    text:
+      From the command line and from any host, the model can be asked: the
+      diagrams a workspace declares, the entities of a module, the relations
+      an entity has and in which direction, the requirements a class
+      realises and the verifications that prove them, the behaviours of a
+      method, the findings of a file. An answer names entities by their
+      identity, so that it can be followed by another question or by a
+      drawing.
+    rationale:
+      A model is only as useful as the questions it answers without reading
+      the files. The same mechanism serves a person at the terminal, an
+      editor, an agent and argos, and the drawings become one answer among
+      others.
+    tags: query, model
+  }
+
   constraint CST-00001-1 {
     category: performance
     title: Every command of the tool shall complete in under one hundred milliseconds on a workspace of a hundred classes
