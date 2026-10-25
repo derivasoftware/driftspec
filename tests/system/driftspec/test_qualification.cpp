@@ -3,18 +3,17 @@
 // here links the engine: the binary, its arguments, its output, its exit code.
 #include <gtest/gtest.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <regex>
 #include <map>
+#include <nlohmann/json.hpp>
+#include <regex>
 #include <set>
 #include <string>
-#include <unistd.h>
-
-#include <nlohmann/json.hpp>
 
 namespace {
 
@@ -63,6 +62,8 @@ TEST_F(TestQualification, AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity) {
   }
   EXPECT_TRUE(model);
   EXPECT_TRUE(scopedCheck);
+  const Outcome missing = ds("check " + examples("nowhere"));  // a workspace that is not a directory is refused, never a crash
+  EXPECT_EQ(missing.code, 1);
   const Outcome twice = ds("check " + examples("behaviour"));
   EXPECT_NE(twice.out.find("E-DUPLICATE-IDENTITY"), std::string::npos);  // the same scenario declared twice
   EXPECT_EQ(twice.code, 1);
@@ -137,12 +138,14 @@ TEST_F(TestQualification, TheModelAndTheDrawingsAreExported) {
 TEST_F(TestQualification, TwoVersionsAreComparedByIdentity) {
   const Outcome same = ds("diff " + examples("static") + " " + examples("static"));
   EXPECT_NE(same.out.find("no design change"), std::string::npos);
-  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-qualification-" + std::to_string(::getpid());
+  const std::string tmp =
+      std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-qualification-" + std::to_string(::getpid());
   std::system(("mkdir -p " + tmp + " && cp " + examples("static") + "/static.ds " + tmp + "/").c_str());
   std::ifstream in(tmp + "/static.ds");
   std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
   in.close();
-  text.replace(text.find("class Vector <<==, +, *, []>>"), std::string("class Vector <<==, +, *, []>>").size(), "class Vec3 <<==, +, *, []>>");
+  text.replace(text.find("class Vector <<==, +, *, []>>"), std::string("class Vector <<==, +, *, []>>").size(),
+               "class Vec3 <<==, +, *, []>>");
   std::ofstream(tmp + "/static.ds") << text;
   const Outcome diff = ds("diff " + examples("static") + " " + tmp);
   EXPECT_NE(diff.out.find("> class ds@ds::Vec3   (Vector -> Vec3)"), std::string::npos);  // a rename, not a removal and an addition
@@ -238,7 +241,8 @@ TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
   std::ofstream ws(tmp + "/big.ds");
   ws << "package big {\n  module m {\n";
   for (int i = 0; i < 100; ++i) {
-    ws << "    class C" << i << (i > 0 ? " : C" + std::to_string((i - 1) / 3) : "") << " {\n      - owns next: C" << (i + 1) % 100 << "\n      + run(a: int) -> C" << (i + 7) % 100 << "\n    }\n";
+    ws << "    class C" << i << (i > 0 ? " : C" + std::to_string((i - 1) / 3) : "") << " {\n      - owns next: C" << (i + 1) % 100
+       << "\n      + run(a: int) -> C" << (i + 7) % 100 << "\n    }\n";
   }
   ws << "  }\n}\ndiagram CL_Big {\n  kind: class\n  include: big@*\n}\n";
   ws.close();
@@ -247,7 +251,9 @@ TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
     const auto start = std::chrono::steady_clock::now();
     const Outcome run = ds(args);
     const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
-    EXPECT_LT(ms, 100) << command;
+    // the budget is the product's (Release); a Debug ds runs the same commands under a looser bound, so the test still exercises them
+    const bool release = std::string(DRIFTSPEC_BUILD_TYPE) == "Release";
+    EXPECT_LT(ms, release ? 100 : 300) << command << (release ? "" : " (Debug build: the 100 ms budget is measured on Release)");
     EXPECT_FALSE(run.out.empty()) << command;
   }
   std::system(("rm -rf " + tmp).c_str());

@@ -63,11 +63,11 @@ TEST_F(TestArtefacts, TheRevisionIsPartOfTheIdentityAndLinksNameIt) {
 }
 
 TEST_F(TestArtefacts, LevelByPlacementAndNestingGivesTheRelation) {
-  EXPECT_EQ(model.find("SREQ-00001-2")->scope, "iris@");          // in the package: system level
-  EXPECT_EQ(model.find("REQ-00001-2")->scope, "iris@projection");  // in a module: software level
-  EXPECT_NE(relation("refines", "SREQ-00004-1", "SREQ-00001-2"), nullptr);   // requirement nested in a requirement
-  EXPECT_NE(relation("verifies", "VER-00001-3", "REQ-00001-2"), nullptr);    // verification nested in a requirement
-  EXPECT_NE(relation("verifies", "VER-00050-1", "SREQ-00001-2"), nullptr);   // verification elsewhere, @requirement
+  EXPECT_EQ(model.find("SREQ-00001-2")->scope, "iris@");                    // in the package: system level
+  EXPECT_EQ(model.find("REQ-00001-2")->scope, "iris@projection");           // in a module: software level
+  EXPECT_NE(relation("refines", "SREQ-00004-1", "SREQ-00001-2"), nullptr);  // requirement nested in a requirement
+  EXPECT_NE(relation("verifies", "VER-00001-3", "REQ-00001-2"), nullptr);   // verification nested in a requirement
+  EXPECT_NE(relation("verifies", "VER-00050-1", "SREQ-00001-2"), nullptr);  // verification elsewhere, @requirement
   EXPECT_NE(relation("about", "CST-00002-1", "iris"), nullptr);
   EXPECT_NE(relation("requires", "iris@projection::Projection", "REQ-00001-2"), nullptr);
   EXPECT_NE(relation("constrained-by", "iris@projection::Projection", "CST-00002-1"), nullptr);
@@ -75,9 +75,9 @@ TEST_F(TestArtefacts, LevelByPlacementAndNestingGivesTheRelation) {
 
 TEST_F(TestArtefacts, FieldsAsDecided) {
   EXPECT_EQ(field("SREQ-00003-1", "title"), "The system shall report the stamps of the last activity");  // one-line form
-  EXPECT_EQ(field("SREQ-00003-1", "status"), "");                                                          // draft by absence
+  EXPECT_EQ(field("SREQ-00003-1", "status"), "");                                                        // draft by absence
   EXPECT_EQ(field("SREQ-00001-2", "tags"), "projection, tracker");
-  EXPECT_EQ(field("SREQ-00001-2", "asil"), "");                                                            // no asil: tags are the user's
+  EXPECT_EQ(field("SREQ-00001-2", "asil"), "");  // no asil: tags are the user's
   EXPECT_EQ(field("VER-00001-3", "method"), "test");
   EXPECT_NE(field("VER-00001-3", "tests").find("test_it_req00003_namespacing.py::"), std::string::npos);
   EXPECT_NE(field("VER-00050-1", "evidence").find("doc/reviews/"), std::string::npos);

@@ -1,12 +1,20 @@
 // ds — the DriftSpec command line: check, export, render, draw, coupling, diff and query over a workspace.
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "driftspec/bind/Binder.hpp"
 #include "driftspec/check/Checker.hpp"
+#include "driftspec/diff/Diff.hpp"
 #include "driftspec/export/JsonExport.hpp"
 #include "driftspec/model/Model.hpp"
 #include "driftspec/parse/Parser.hpp"
@@ -15,21 +23,17 @@
 #include "driftspec/render/Layout.hpp"
 #include "driftspec/render/Svg.hpp"
 #include "driftspec/render/Text.hpp"
-#include "driftspec/diff/Diff.hpp"
-
-#include <cstdio>
-#include <cstdlib>
-#include <sys/stat.h>
-
-#include <unistd.h>
-
-#include <fstream>
-#include <sstream>
 
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells] [--width N]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself; N wraps the drawing)\n       ds draw <render-ir.json> [--svg|--text|--cells] [--width N]   (any render-IR document, drawn like a workspace diagram)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git revisions of <path>)\n       ds query <workspace-dir> <question> [subject] [--json]   (ask the model: diagrams · entities <scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings [file])\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] "
+               "[--svg|--text|--cells] [--width N]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself; N wraps the "
+               "drawing)\n       ds draw <render-ir.json> [--svg|--text|--cells] [--width N]   (any render-IR document, drawn like a "
+               "workspace diagram)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its "
+               "module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git "
+               "revisions of <path>)\n       ds query <workspace-dir> <question> [subject] [--json]   (ask the model: diagrams · entities "
+               "<scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings [file])\n";
   return 2;
 }
 
@@ -62,7 +66,8 @@ std::string checkout(const std::string& rev, const std::string& path) {
     if (root.empty()) return "";
     if (relative.empty()) relative = ".";
   }
-  const std::string command = "git -C '" + root + "' archive '" + rev + "' -- '" + relative + "' 2>/dev/null | tar -x -C '" + std::string(dir) + "' 2>/dev/null";
+  const std::string command =
+      "git -C '" + root + "' archive '" + rev + "' -- '" + relative + "' 2>/dev/null | tar -x -C '" + std::string(dir) + "' 2>/dev/null";
   if (std::system(command.c_str()) != 0) return "";
   return std::string(dir) + "/" + relative;
 }
@@ -121,14 +126,18 @@ int main(int argc, char** argv) {
     if (argc > next + 1) {
       const std::string how = argv[next], diagram = argv[next + 1];
       const driftspec::model::Model marked = driftspec::diff::Diff::marked(before, after, result);
-      const std::string doc = driftspec::render::IrExport(marked).render(diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram, false);
+      const std::string doc =
+          driftspec::render::IrExport(marked).render(diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram, false);
       if (doc.empty()) {
         std::cerr << "no diagram named " << diagram << "\n";
         return 1;
       }
-      if (how == "--svg") std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc), width);
-      else if (how == "--cells") std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc), width) << "\n";
-      else std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0, width);
+      if (how == "--svg")
+        std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc), width);
+      else if (how == "--cells")
+        std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc), width) << "\n";
+      else
+        std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0, width);
       return 0;
     }
     std::cout << driftspec::diff::Diff::report(result);
@@ -145,10 +154,17 @@ int main(int argc, char** argv) {
     // any render-IR producer (design-render over argos, plantuml-render) reaches the same drawings as a workspace
     const driftspec::render::IrDocument doc = driftspec::render::IrDocument::parse(buffer.str());
     const std::string how = argc >= 4 ? argv[3] : "--svg";
-    if (how == "--text") std::cout << driftspec::render::Text().render(doc, isatty(1) != 0, width);
-    else if (how == "--cells") std::cout << driftspec::render::Text().cells(doc, width) << "\n";
-    else std::cout << driftspec::render::Svg().render(doc, width);
+    if (how == "--text")
+      std::cout << driftspec::render::Text().render(doc, isatty(1) != 0, width);
+    else if (how == "--cells")
+      std::cout << driftspec::render::Text().cells(doc, width) << "\n";
+    else
+      std::cout << driftspec::render::Svg().render(doc, width);
     return 0;
+  }
+  if (!isDirectory(dir)) {
+    std::cerr << "cannot read " << dir << ": not a directory\n";
+    return 1;
   }
   const driftspec::model::Model model = load(dir);
   if (verb == "render") {
@@ -182,15 +198,18 @@ int main(int argc, char** argv) {
       std::cout << "{\"nodes\":[";
       bool first = true;
       for (const auto& p : lay.placed) {
-        std::cout << (first ? "" : ",") << "{\"id\":\"" << p.node->id << "\",\"kind\":\"" << p.node->kind << "\",\"x\":" << p.rect.x << ",\"y\":" << p.rect.y << ",\"w\":" << p.rect.w << ",\"h\":" << p.rect.h << "}";
+        std::cout << (first ? "" : ",") << "{\"id\":\"" << p.node->id << "\",\"kind\":\"" << p.node->kind << "\",\"x\":" << p.rect.x
+                  << ",\"y\":" << p.rect.y << ",\"w\":" << p.rect.w << ",\"h\":" << p.rect.h << "}";
         first = false;
       }
       std::cout << "],\"routes\":[";
       first = true;
       for (const auto& r : lay.routes) {
         const driftspec::render::IrEdge& e = parsed.edges[r.first];
-        std::cout << (first ? "" : ",") << "{\"from\":\"" << e.from << "\",\"to\":\"" << e.to << "\",\"kind\":\"" << e.kind << "\",\"points\":[";
-        for (size_t k = 0; k < r.second.points.size(); ++k) std::cout << (k ? "," : "") << "[" << r.second.points[k].x << "," << r.second.points[k].y << "]";
+        std::cout << (first ? "" : ",") << "{\"from\":\"" << e.from << "\",\"to\":\"" << e.to << "\",\"kind\":\"" << e.kind
+                  << "\",\"points\":[";
+        for (size_t k = 0; k < r.second.points.size(); ++k)
+          std::cout << (k ? "," : "") << "[" << r.second.points[k].x << "," << r.second.points[k].y << "]";
         std::cout << "]}";
         first = false;
       }
@@ -209,8 +228,10 @@ int main(int argc, char** argv) {
     bool json = false;
     std::string question = argv[3], subject;
     for (int i = 4; i < argc; ++i) {
-      if (std::string(argv[i]) == "--json") json = true;
-      else subject = argv[i];
+      if (std::string(argv[i]) == "--json")
+        json = true;
+      else
+        subject = argv[i];
     }
     const driftspec::query::Query query(model);
     const std::vector<driftspec::query::Answer> answers = query.ask(question, subject);
@@ -219,7 +240,8 @@ int main(int argc, char** argv) {
       std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
       if (answers.front().detail.find("not a question") != std::string::npos) {
         std::cerr << "questions:";
-        for (const auto& q : driftspec::query::Query::questions()) std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
+        for (const auto& q : driftspec::query::Query::questions())
+          std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
         std::cerr << "\n";
       }
       return 1;
@@ -237,7 +259,8 @@ int main(int argc, char** argv) {
     std::map<std::string, std::vector<std::string>> byBehaviour;
     for (const auto& r : model.relations()) {
       if (r.kind != "couples-structural" && r.kind != "couples-transient") continue;
-      byBehaviour[r.from].push_back(r.to + (r.kind == "couples-transient" ? "  (transient: created inside)" : "  (structural: an attribute or parameter)"));
+      byBehaviour[r.from].push_back(
+          r.to + (r.kind == "couples-transient" ? "  (transient: created inside)" : "  (structural: an attribute or parameter)"));
     }
     if (byBehaviour.empty()) std::cout << "no behaviour couples to another module\n";
     for (const auto& b : byBehaviour) {

@@ -58,7 +58,8 @@ TEST_F(TestLayout, EveryNodeIsPlacedAndNoTwoLeavesOverlap) {
       EXPECT_GT(lay.placed[i].rect.w, 0) << name;
       for (size_t j = i + 1; j < lay.placed.size(); ++j) {
         if (lay.placed[j].node->kind == "container") continue;
-        EXPECT_FALSE(overlap(lay.placed[i].rect, lay.placed[j].rect)) << name << ": " << lay.placed[i].node->id << " over " << lay.placed[j].node->id;
+        EXPECT_FALSE(overlap(lay.placed[i].rect, lay.placed[j].rect))
+            << name << ": " << lay.placed[i].node->id << " over " << lay.placed[j].node->id;
       }
     }
   }
@@ -118,7 +119,8 @@ TEST_F(TestLayout, ParallelRelationsAreBundledWithTheirLabelsStacked) {
   const IrDocument doc = raw.bundled();
   EXPECT_LT(doc.edges.size(), raw.edges.size());
   bool stacked = false;
-  for (const auto& e : doc.edges) stacked |= e.from == "ds@ds::Index" && e.to == "ds@ds::Repository<1>" && e.label == "requirements 1\nrelations 1";
+  for (const auto& e : doc.edges)
+    stacked |= e.from == "ds@ds::Index" && e.to == "ds@ds::Repository<1>" && e.label == "requirements 1\nrelations 1";
   EXPECT_TRUE(stacked);
 }
 
@@ -176,8 +178,6 @@ TEST_F(TestSequenceSvg, CarriesLinksSpansLocationsAndTheScript) {
   EXPECT_EQ(shallow.find("data-ref-span"), std::string::npos);
 }
 
-TEST_F(TestSequenceSvg, IsDeterministic) {
-  EXPECT_EQ(svg("SEQ_Publish"), svg("SEQ_Publish"));
-}
+TEST_F(TestSequenceSvg, IsDeterministic) { EXPECT_EQ(svg("SEQ_Publish"), svg("SEQ_Publish")); }
 
 }  // namespace

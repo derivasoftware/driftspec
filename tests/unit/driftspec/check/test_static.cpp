@@ -63,8 +63,8 @@ TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
   EXPECT_EQ(field("DS-C-0001-0", "title"), "The diagnostics core shall not depend on any I/O library");
   EXPECT_EQ(field("DS-C-0002-1", "title"), "Finding codes are stable");
   EXPECT_NE(relation("about", "DS-C-0001-0", "ds"), nullptr);
-  EXPECT_NE(relation("about", "DS-C-0003-0", "ds@ds::Vector"), nullptr);         // nested in a class
-  EXPECT_NE(relation("about", "DS-0003-0", "ds@ds::Model::declare"), nullptr);   // requirement nested in a member body (R12)
+  EXPECT_NE(relation("about", "DS-C-0003-0", "ds@ds::Vector"), nullptr);          // nested in a class
+  EXPECT_NE(relation("about", "DS-0003-0", "ds@ds::Model::declare"), nullptr);    // requirement nested in a member body (R12)
   EXPECT_NE(relation("constrained-by", "ds@ds::Model", "DS-C-0001-0"), nullptr);  // a pinned link
 }
 

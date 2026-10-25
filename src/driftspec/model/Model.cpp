@@ -5,23 +5,40 @@ namespace model {
 
 const char* kindName(Kind kind) {
   switch (kind) {
-    case Kind::Package: return "package";
-    case Kind::Module: return "module";
-    case Kind::Requirement: return "requirement";
-    case Kind::Verification: return "verification";
-    case Kind::Boundary: return "boundary";
-    case Kind::Operation: return "operation";
-    case Kind::Constraint: return "constraint";
-    case Kind::Class: return "class";
-    case Kind::Enum: return "enum";
-    case Kind::Method: return "method";
-    case Kind::Attribute: return "attribute";
-    case Kind::Operator: return "operator";
-    case Kind::Sequence: return "sequence";
-    case Kind::Message: return "message";
-    case Kind::Frame: return "frame";
-    case Kind::State: return "state";
-    case Kind::Diagram: return "diagram";
+    case Kind::Package:
+      return "package";
+    case Kind::Module:
+      return "module";
+    case Kind::Requirement:
+      return "requirement";
+    case Kind::Verification:
+      return "verification";
+    case Kind::Boundary:
+      return "boundary";
+    case Kind::Operation:
+      return "operation";
+    case Kind::Constraint:
+      return "constraint";
+    case Kind::Class:
+      return "class";
+    case Kind::Enum:
+      return "enum";
+    case Kind::Method:
+      return "method";
+    case Kind::Attribute:
+      return "attribute";
+    case Kind::Operator:
+      return "operator";
+    case Kind::Sequence:
+      return "sequence";
+    case Kind::Message:
+      return "message";
+    case Kind::Frame:
+      return "frame";
+    case Kind::State:
+      return "state";
+    case Kind::Diagram:
+      return "diagram";
   }
   return "?";
 }
@@ -50,8 +67,8 @@ Entity& Model::declare(const Entity& entity) {
   const bool reopenable = entity.kind == Kind::Package || entity.kind == Kind::Module;
   if (!reopenable) {
     report({"E-DUPLICATE-IDENTITY", "error",
-            std::string(kindName(entity.kind)) + " '" + entity.id + "' is declared twice (first at " +
-                existing.location.file + ":" + std::to_string(existing.location.line) + ")",
+            std::string(kindName(entity.kind)) + " '" + entity.id + "' is declared twice (first at " + existing.location.file + ":" +
+                std::to_string(existing.location.line) + ")",
             entity.location});
   }
   return existing;
@@ -75,7 +92,8 @@ bool Model::rename(const std::string& from, const std::string& to) {
   if (it == entities_.end()) return false;
   if (const Entity* other = find(to); other && !other->expected) {
     report({"E-DUPLICATE-IDENTITY", "error",
-            std::string(kindName(it->second.kind)) + " '" + to + "' is declared twice (first at " + other->location.file + ":" + std::to_string(other->location.line) + ")",
+            std::string(kindName(it->second.kind)) + " '" + to + "' is declared twice (first at " + other->location.file + ":" +
+                std::to_string(other->location.line) + ")",
             it->second.location});
     return false;
   }
@@ -100,8 +118,10 @@ bool Model::rename(const std::string& from, const std::string& to) {
   }
   for (auto& m : members) entities_.emplace(m.first, m.second);
   auto translate = [&](std::string& id) {
-    if (id == from) id = to;
-    else if (id.rfind(from + "::", 0) == 0 || id.rfind(from + "/", 0) == 0) id = to + id.substr(from.size());
+    if (id == from)
+      id = to;
+    else if (id.rfind(from + "::", 0) == 0 || id.rfind(from + "/", 0) == 0)
+      id = to + id.substr(from.size());
   };
   for (Relation& r : relations_) {
     translate(r.from);

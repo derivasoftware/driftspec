@@ -10,7 +10,9 @@ namespace {
 
 bool is(TSNode node, const char* type) { return std::strcmp(ts_node_type(node), type) == 0; }
 
-TSNode child(TSNode node, const char* fieldName) { return ts_node_child_by_field_name(node, fieldName, static_cast<uint32_t>(std::strlen(fieldName))); }
+TSNode child(TSNode node, const char* fieldName) {
+  return ts_node_child_by_field_name(node, fieldName, static_cast<uint32_t>(std::strlen(fieldName)));
+}
 
 std::string fieldText(const parse::ParsedFile& file, TSNode node, const char* fieldName) {
   TSNode c = child(node, fieldName);
@@ -52,7 +54,8 @@ model::Kind kindForRelation(const std::string& relation) {
 std::string relationForAnnotation(model::Kind from, const std::string& annotation) {
   if (annotation == "requirement") return from == model::Kind::Verification ? "verifies" : "requires";
   if (annotation == "refines") return "refines";
-  if (annotation == "constraint") return from == model::Kind::Verification ? "verifies" : "constrained-by";  // a verification verifies a constraint
+  if (annotation == "constraint")
+    return from == model::Kind::Verification ? "verifies" : "constrained-by";  // a verification verifies a constraint
   if (annotation == "boundary") return "realises";
   if (annotation == "verification") return "exercised-by";
   return "refers";
@@ -138,7 +141,9 @@ void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const s
 void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner) {
   const model::Location loc = locationOf(file, node);
   model::Entity e;
-  e.kind = is(node, "requirement") ? model::Kind::Requirement : is(node, "verification") ? model::Kind::Verification : model::Kind::Constraint;
+  e.kind = is(node, "requirement")    ? model::Kind::Requirement
+           : is(node, "verification") ? model::Kind::Verification
+                                      : model::Kind::Constraint;
   e.name = fieldText(file, node, "id");
   e.id = e.name;  // process artefacts are identified by id (R5)
   e.scope = scope;
@@ -159,7 +164,8 @@ void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std:
   }
   if (e.fields.count("parent")) {
     // one representation per concept: nesting or @refines, never a field
-    model_.report({"W-PARENT-IGNORED", "warning", e.id + " carries a parent: field; nest it in its parent or write @refines <id-revision>", loc});
+    model_.report(
+        {"W-PARENT-IGNORED", "warning", e.id + " carries a parent: field; nest it in its parent or write @refines <id-revision>", loc});
   }
   bindAnnotations(file, node, e.id, scope);
   visit(file, node, scope, e.id);  // nested verifications and constraints
@@ -262,7 +268,8 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
     member.id = cls.id + "::" + member.name;
     member.fields["symbol"] = symbol;
     if (operators.count(symbol) == 0) {
-      model_.report({"E-OPERATOR-UNDECLARED", "error", "operator " + symbol + " is refined in the body of " + cls.id + " but is not in its header set", loc});
+      model_.report({"E-OPERATOR-UNDECLARED", "error",
+                     "operator " + symbol + " is refined in the body of " + cls.id + " but is not in its header set", loc});
     }
   } else {
     member.kind = is(m, "method") ? model::Kind::Method : model::Kind::Attribute;
@@ -275,7 +282,8 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
     for (TSNode mod : childrenNamed(m, "modifier")) member.flags.push_back(parse::textOf(file, mod));
     if (is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
     if (cls.has("dataclass") && member.has("abstract")) {
-      model_.report({"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
+      model_.report(
+          {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
     }
     TSNode parameters = ts_node_child(m, 0);
     for (uint32_t i = 0; i < ts_node_named_child_count(m); ++i) {
@@ -303,7 +311,8 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
     const std::string def = fieldText(file, m, "default");
     if (!def.empty()) member.fields["default"] = def;
     if (!ownership.empty() && !use.classLike && !use.parameter) {
-      model_.report({"W-MODIFIER-ON-VALUE", "warning", "'" + ownership + "' on " + member.id + " means nothing: " + use.text + " is a value, not an entity", loc});
+      model_.report({"W-MODIFIER-ON-VALUE", "warning",
+                     "'" + ownership + "' on " + member.id + " means nothing: " + use.text + " is a value, not an entity", loc});
     }
   }
 
@@ -382,10 +391,10 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   visit(file, body, scope, declared.id);  // nested requirements and constraints are about the class (R12)
 }
 
-
 // ---- behaviour (block 3): a sequence is the behaviour of its subject ------------
 
-void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order, int& frames) {
+void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order,
+                       int& frames) {
   const uint32_t n = ts_node_child_count(node);
   bool otherwise = false;
   for (uint32_t i = 0; i < n; ++i) {

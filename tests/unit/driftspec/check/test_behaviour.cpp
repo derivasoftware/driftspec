@@ -35,7 +35,9 @@ class TestBehaviour : public ::testing::Test {
     return nullptr;
   }
 
-  nlohmann::json diagram(const std::string& name) { return nlohmann::json::parse(driftspec::render::IrExport(model).render("diagram:" + name, false)); }
+  nlohmann::json diagram(const std::string& name) {
+    return nlohmann::json::parse(driftspec::render::IrExport(model).render("diagram:" + name, false));
+  }
 };
 
 TEST_F(TestBehaviour, TheOracleFindings) {
@@ -43,7 +45,7 @@ TEST_F(TestBehaviour, TheOracleFindings) {
   EXPECT_EQ(byCode["E-MSG-ARITY"], 1);               // Model::find(id, scope)
   EXPECT_EQ(byCode["W-ACTION-UNDECLARED"], 1);       // / report is Model's
   EXPECT_EQ(byCode["W-MSG-UNDECLARED"], 0);
-  EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 1);      // the default scenario of checkMessage declared again from another module
+  EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 1);  // the default scenario of checkMessage declared again from another module
 }
 
 TEST_F(TestBehaviour, ABehaviourIsIdentifiedByItsSubject) {
@@ -106,12 +108,13 @@ TEST_F(TestBehaviour, ASequenceDiagramExpandsByDepthAndLinksAtDepthZero) {
   EXPECT_EQ(lifelines, 6);  // caller, self, binder, model, and the unresolved binder/parser of checkMessage
   EXPECT_EQ(frames, 3);     // loop, alt (inlined), loop
   bool altSpansExpansion = false;
-  for (const auto& n : deep["nodes"]) altSpansExpansion |= n["kind"] == "frame" && n["label"] == "loop each reference" && n["span"][1] > n["span"][0];
+  for (const auto& n : deep["nodes"])
+    altSpansExpansion |= n["kind"] == "frame" && n["label"] == "loop each reference" && n["span"][1] > n["span"][0];
   EXPECT_TRUE(altSpansExpansion);
   const nlohmann::json shallow = diagram("SEQ_Run_Overview");
   int links = 0;
   for (const auto& e : shallow["edges"]) links += e.contains("href");
-  EXPECT_EQ(links, 2);  // resolveReference and checkMessage are reachable, not inlined
+  EXPECT_EQ(links, 2);                     // resolveReference and checkMessage are reachable, not inlined
   EXPECT_EQ(shallow["edges"].size(), 7u);  // the caller's run(binder) first; run returns none
   EXPECT_EQ(shallow["edges"][0]["from"], "caller");
   EXPECT_EQ(shallow["edges"][0]["label"], "run(binder: Binder)");

@@ -46,9 +46,12 @@ class Grid {
       // one UTF-8 code point per cell
       size_t len = 1;
       const unsigned char c = static_cast<unsigned char>(s[i]);
-      if (c >= 0xF0) len = 4;
-      else if (c >= 0xE0) len = 3;
-      else if (c >= 0xC0) len = 2;
+      if (c >= 0xF0)
+        len = 4;
+      else if (c >= 0xE0)
+        len = 3;
+      else if (c >= 0xC0)
+        len = 2;
       put(col++, y, s.substr(i, len), color);
       i += len;
     }
@@ -72,7 +75,8 @@ class Grid {
 
   /// base64 of u32 little-endian triplets per cell: codepoint, foreground, background
   std::string encode() const {
-    static const std::map<std::string, uint32_t> rgb = {{"2", 0x64748b}, {"34", 0x2563eb}, {"32", 0x16a34a}, {"31", 0xdc2626}, {"33", 0xd97706}, {"35", 0x7c3aed}};
+    static const std::map<std::string, uint32_t> rgb = {{"2", 0x64748b},  {"34", 0x2563eb}, {"32", 0x16a34a},
+                                                        {"31", 0xdc2626}, {"33", 0xd97706}, {"35", 0x7c3aed}};
     std::string bytes;
     bytes.reserve(cells_.size() * 12);
     auto put32 = [&](uint32_t v) {
@@ -81,10 +85,14 @@ class Grid {
     for (const Cell& c : cells_) {
       uint32_t cp = 0x20;
       const unsigned char b0 = static_cast<unsigned char>(c.glyph[0]);
-      if (b0 < 0x80) cp = b0;
-      else if (b0 >= 0xF0 && c.glyph.size() >= 4) cp = ((b0 & 0x07u) << 18) | ((c.glyph[1] & 0x3fu) << 12) | ((c.glyph[2] & 0x3fu) << 6) | (c.glyph[3] & 0x3fu);
-      else if (b0 >= 0xE0 && c.glyph.size() >= 3) cp = ((b0 & 0x0fu) << 12) | ((c.glyph[1] & 0x3fu) << 6) | (c.glyph[2] & 0x3fu);
-      else if (b0 >= 0xC0 && c.glyph.size() >= 2) cp = ((b0 & 0x1fu) << 6) | (c.glyph[1] & 0x3fu);
+      if (b0 < 0x80)
+        cp = b0;
+      else if (b0 >= 0xF0 && c.glyph.size() >= 4)
+        cp = ((b0 & 0x07u) << 18) | ((c.glyph[1] & 0x3fu) << 12) | ((c.glyph[2] & 0x3fu) << 6) | (c.glyph[3] & 0x3fu);
+      else if (b0 >= 0xE0 && c.glyph.size() >= 3)
+        cp = ((b0 & 0x0fu) << 12) | ((c.glyph[1] & 0x3fu) << 6) | (c.glyph[2] & 0x3fu);
+      else if (b0 >= 0xC0 && c.glyph.size() >= 2)
+        cp = ((b0 & 0x1fu) << 6) | (c.glyph[1] & 0x3fu);
       const auto colour = rgb.find(c.color);
       put32(cp);
       put32(colour == rgb.end() ? 0x01000000u : colour->second);
@@ -94,7 +102,8 @@ class Grid {
     std::string out;
     size_t i = 0;
     for (; i + 2 < bytes.size(); i += 3) {
-      const uint32_t n = (static_cast<unsigned char>(bytes[i]) << 16) | (static_cast<unsigned char>(bytes[i + 1]) << 8) | static_cast<unsigned char>(bytes[i + 2]);
+      const uint32_t n = (static_cast<unsigned char>(bytes[i]) << 16) | (static_cast<unsigned char>(bytes[i + 1]) << 8) |
+                         static_cast<unsigned char>(bytes[i + 2]);
       out += alphabet[(n >> 18) & 63];
       out += alphabet[(n >> 12) & 63];
       out += alphabet[(n >> 6) & 63];
@@ -257,13 +266,19 @@ void box(Grid& g, const Placed& p) {
     return;
   }
   const auto change = n.refs.find("change");
-  const std::string changeColor = change == n.refs.end() ? "" : change->second == "added" ? "32" : change->second == "removed" ? "31" : change->second == "renamed" ? "34" : "33";
+  const std::string changeColor = change == n.refs.end()        ? ""
+                                  : change->second == "added"   ? "32"
+                                  : change->second == "removed" ? "31"
+                                  : change->second == "renamed" ? "34"
+                                                                : "33";
   frame(g, r, true, changeColor);
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
   std::string badge = "C";
-  if (n.abstract && n.classifier.empty()) badge = "A";
-  else if (!n.classifier.empty()) badge = std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(n.classifier[0]))));
+  if (n.abstract && n.classifier.empty())
+    badge = "A";
+  else if (!n.classifier.empty())
+    badge = std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(n.classifier[0]))));
   if (change != n.refs.end()) {
     const std::string mark = change->second == "added" ? "+" : change->second == "removed" ? "-" : change->second == "renamed" ? ">" : "~";
     g.text(r.x + M.PAD_X, y, mark, changeColor);
@@ -271,7 +286,10 @@ void box(Grid& g, const Placed& p) {
     if (n.classifier == "requirement") badge = "R";
     if (n.classifier == "verification") badge = "V";
     if (n.classifier == "constraint") badge = "K";
-    g.text(r.x + M.PAD_X, y, badge, n.classifier == "interface" || n.classifier == "verification" ? kPublic : n.classifier == "enum" || n.classifier == "constraint" ? kProtected : "35");
+    g.text(r.x + M.PAD_X, y, badge,
+           n.classifier == "interface" || n.classifier == "verification" ? kPublic
+           : n.classifier == "enum" || n.classifier == "constraint"      ? kProtected
+                                                                         : "35");
   }
   g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
@@ -283,8 +301,10 @@ void box(Grid& g, const Placed& p) {
     g.put(r.x + r.w - 1, y, "\xE2\x94\xA4");  // ┤
     ++y;
     for (const auto& line : section) {
-      if (members) member(g, r.x + M.PAD_X, y++, line);
-      else g.text(r.x + M.PAD_X, y++, line);
+      if (members)
+        member(g, r.x + M.PAD_X, y++, line);
+      else
+        g.text(r.x + M.PAD_X, y++, line);
     }
   }
 }
@@ -297,9 +317,10 @@ void container(Grid& g, const Placed& p) {
 
 /// The marker glyph for an edge that enters its target moving in (dx, dy).
 std::string marker(const std::string& kind, int dx, int dy) {
-  if (kind == "inheritance" || kind == "realization") return dy < 0 ? "\xE2\x96\xB3" : dy > 0 ? "\xE2\x96\xBD" : dx < 0 ? "\xE2\x97\x81" : "\xE2\x96\xB7";  // △ ▽ ◁ ▷
-  if (kind == "composition") return "\xE2\x97\x86";  // ◆
-  if (kind == "aggregation") return "\xE2\x97\x87";  // ◇
+  if (kind == "inheritance" || kind == "realization")
+    return dy < 0 ? "\xE2\x96\xB3" : dy > 0 ? "\xE2\x96\xBD" : dx < 0 ? "\xE2\x97\x81" : "\xE2\x96\xB7";  // △ ▽ ◁ ▷
+  if (kind == "composition") return "\xE2\x97\x86";                                                       // ◆
+  if (kind == "aggregation") return "\xE2\x97\x87";                                                       // ◇
   if (kind == "attachment") return "";
   return dy < 0 ? "\xE2\x96\xB2" : dy > 0 ? "\xE2\x96\xBC" : dx < 0 ? "\xE2\x97\x80" : "\xE2\x96\xB6";  // ▲ ▼ ◀ ▶
 }
@@ -341,10 +362,14 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
         const bool down = prev.y > y || next.y > y;
         const bool right = prev.x > x || next.x > x;
         std::string glyph = "\xE2\x94\xBC";
-        if (up && right) glyph = "\xE2\x94\x94";        // └
-        else if (up && left) glyph = "\xE2\x94\x98";    // ┘
-        else if (down && right) glyph = "\xE2\x94\x8C"; // ┌
-        else if (down && left) glyph = "\xE2\x94\x90";  // ┐
+        if (up && right)
+          glyph = "\xE2\x94\x94";  // └
+        else if (up && left)
+          glyph = "\xE2\x94\x98";  // ┘
+        else if (down && right)
+          glyph = "\xE2\x94\x8C";  // ┌
+        else if (down && left)
+          glyph = "\xE2\x94\x90";  // ┐
         g.put(x, y, glyph, edgeColor);
       } else {
         g.line(x, y, horizontal, dashed, edgeColor);
@@ -385,7 +410,6 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
 }
 
 }  // namespace
-
 
 // ---- sequences: lifelines as columns, messages as rows ----------------------------
 
@@ -492,7 +516,8 @@ Grid sequenceGrid(const IrDocument& doc) {
     // an outer frame wraps its inner ones: three cells per level
     int outer = 0;
     for (size_t j = 0; j < frames.size(); ++j) {
-      if (j != fi && frames[fi].first <= frames[j].first && frames[j].last <= frames[fi].last && depthOf[j] > depthOf[fi]) outer = std::max(outer, depthOf[j] - depthOf[fi]);
+      if (j != fi && frames[fi].first <= frames[j].first && frames[j].last <= frames[fi].last && depthOf[j] > depthOf[fi])
+        outer = std::max(outer, depthOf[j] - depthOf[fi]);
     }
     left -= 3 + 3 * outer;
     right += static_cast<int>(f.label.size()) + 6 + 3 * outer;
@@ -523,20 +548,30 @@ Grid sequenceGrid(const IrDocument& doc) {
     const int y = rowOf[m->order] + 1;
     const int a = lines[index[m->from]].centre, b = lines[index[m->to]].centre;
     const auto change = m->refs.find("change");
-    const std::string colour = change == m->refs.end() ? std::string(kEdge) : change->second == "added" ? "32" : change->second == "removed" ? "31" : "33";
+    const std::string colour = change == m->refs.end()       ? std::string(kEdge)
+                               : change->second == "added"   ? "32"
+                               : change->second == "removed" ? "31"
+                                                             : "33";
     const std::string labelColour = change == m->refs.end() ? std::string(kMuted) : colour;
-    const std::string label = change == m->refs.end() ? m->label : std::string(change->second == "added" ? "+ " : change->second == "removed" ? "- " : "~ ") + m->label;
-    const std::string dash = m->dashed || (change != m->refs.end() && change->second == "removed") ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
+    const std::string label = change == m->refs.end() ? m->label
+                                                      : std::string(change->second == "added"     ? "+ "
+                                                                    : change->second == "removed" ? "- "
+                                                                                                  : "~ ") +
+                                                            m->label;
+    const std::string dash =
+        m->dashed || (change != m->refs.end() && change->second == "removed") ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
     if (a == b) {
-      g.text(a + 1, y, dash + dash + "\xE2\x94\x90", colour);        // ──┐
+      g.text(a + 1, y, dash + dash + "\xE2\x94\x90", colour);                // ──┐
       g.text(a + 1, y + 1, "\xE2\x97\x80" + dash + "\xE2\x94\x98", colour);  // ◀─┘
       g.text(a + 5, y, label, labelColour);
       continue;
     }
     const int lo = std::min(a, b), hi = std::max(a, b);
     for (int xx = lo + 1; xx < hi; ++xx) g.put(xx, y, dash, colour);
-    if (b > a) g.put(hi - 1, y, "\xE2\x96\xB6", colour);  // ▶
-    else g.put(lo + 1, y, "\xE2\x97\x80", colour);        // ◀
+    if (b > a)
+      g.put(hi - 1, y, "\xE2\x96\xB6", colour);  // ▶
+    else
+      g.put(lo + 1, y, "\xE2\x97\x80", colour);  // ◀
     g.text((lo + hi) / 2 - static_cast<int>(label.size()) / 2, y - 1, label, labelColour);
   }
   return g;
@@ -570,7 +605,8 @@ Grid classGrid(const IrDocument& doc, const LayoutResult& lay) {
   for (const auto& p : lay.placed) {
     if (p.node->kind == "container") frames.push_back(&p);
   }
-  std::stable_sort(frames.begin(), frames.end(), [](const Placed* a, const Placed* b) { return a->rect.w * a->rect.h > b->rect.w * b->rect.h; });
+  std::stable_sort(frames.begin(), frames.end(),
+                   [](const Placed* a, const Placed* b) { return a->rect.w * a->rect.h > b->rect.w * b->rect.h; });
   for (const Placed* f : frames) container(g, *f);
   for (size_t i = 0; i < doc.edges.size(); ++i) {
     const auto r = lay.routes.find(i);

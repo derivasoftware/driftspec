@@ -297,7 +297,6 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   return pretty ? out.dump(2) : out.dump();
 }
 
-
 // ---- sequences: lifelines are the static context, children expand by depth (B3, B5, B9) ----
 
 namespace {
@@ -317,7 +316,8 @@ struct SequenceBuilder {
       node["href"] = "#" + typeId;  // a page that also shows the class diagram lands on the class
       node["title"] = typeId;
       const model::Entity* type = model.find(typeId);
-      if (type && !type->location.file.empty()) node["refs"] = {{"location", type->location.file + ":" + std::to_string(type->location.line)}};
+      if (type && !type->location.file.empty())
+        node["refs"] = {{"location", type->location.file + ":" + std::to_string(type->location.line)}};
     }
     nodes.push_back(node);
     lifelineOf[key] = key;
@@ -362,7 +362,11 @@ struct SequenceBuilder {
         if (fieldOf(*fe, "else") == m->id) elseOrder[f] = order;
       }
       const int row = order++;
-      nlohmann::json edge = {{"from", selfLine}, {"to", target}, {"kind", "message"}, {"order", row}, {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")"}};
+      nlohmann::json edge = {{"from", selfLine},
+                             {"to", target},
+                             {"kind", "message"},
+                             {"order", row},
+                             {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")"}};
       nlohmann::json refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
       const std::string expands = fieldOf(*m, "expands");
       std::string title;
@@ -388,13 +392,17 @@ struct SequenceBuilder {
       }
       edges[at]["refs"] = refs;
       const std::string result = fieldOf(*m, "result");
-      if (!result.empty()) edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
+      if (!result.empty())
+        edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
       for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) lastOrder[f] = order - 1;  // after any expansion
     }
     for (const auto& f : firstOrder) {
       const model::Entity* fe = model.find(f.first);
-      nlohmann::json frame = {{"id", f.first}, {"kind", "frame"}, {"label", fieldOf(*fe, "kind") + " " + fieldOf(*fe, "condition")},
-                              {"classifier", fieldOf(*fe, "kind")}, {"span", nlohmann::json::array({f.second, lastOrder[f.first]})}};
+      nlohmann::json frame = {{"id", f.first},
+                              {"kind", "frame"},
+                              {"label", fieldOf(*fe, "kind") + " " + fieldOf(*fe, "condition")},
+                              {"classifier", fieldOf(*fe, "kind")},
+                              {"span", nlohmann::json::array({f.second, lastOrder[f.first]})}};
       if (elseOrder.count(f.first)) frame["dividers"] = nlohmann::json::array({{{"at", elseOrder[f.first]}, {"label", "else"}}});
       nodes.push_back(frame);
     }
@@ -450,16 +458,23 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       // the caller, leftmost, invokes the entry operation on the subject: what is being looked at is the first thing drawn
       const bool method = subject && subject->kind == model::Kind::Method;
       const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";
-      const std::string self = b.lifeline(cls ? cls->id : subjectId, "self: " + (cls ? cls->name : subjectId), "participant", cls ? cls->id : "");
+      const std::string self =
+          b.lifeline(cls ? cls->id : subjectId, "self: " + (cls ? cls->name : subjectId), "participant", cls ? cls->id : "");
       if (method) {
-        b.edges.push_back({{"from", caller}, {"to", self}, {"kind", "message"}, {"order", b.order++}, {"label", subject->name + "(" + fieldOf(*subject, "params") + ")"},
-                           {"title", subject->id}, {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
+        b.edges.push_back({{"from", caller},
+                           {"to", self},
+                           {"kind", "message"},
+                           {"order", b.order++},
+                           {"label", subject->name + "(" + fieldOf(*subject, "params") + ")"},
+                           {"title", subject->id},
+                           {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
       }
       std::set<std::string> stack;
       b.emit(*seq, self, depth, stack);
       const std::string returns = method ? fieldOf(*subject, "returns") : "";
       if (method && !returns.empty() && returns != "none" && returns != "void") {
-        b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", returns}, {"dashed", true}});
+        b.edges.push_back(
+            {{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", returns}, {"dashed", true}});
       }
     }
   }
@@ -468,7 +483,6 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   out["edges"] = b.edges;
   return pretty ? out.dump(2) : out.dump();
 }
-
 
 // ---- requirements: the umbrella of an artefact, or the tree of a package ----------------
 
@@ -549,7 +563,10 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       std::string stereotype = model::kindName(e.kind);
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
-      if (e.kind == model::Kind::Requirement) stereotype += e.scope.find("::") == std::string::npos && (e.scope.empty() || e.scope.back() == '@') ? ", system" : ", " + e.scope.substr(e.scope.find('@') + 1);
+      if (e.kind == model::Kind::Requirement)
+        stereotype += e.scope.find("::") == std::string::npos && (e.scope.empty() || e.scope.back() == '@')
+                          ? ", system"
+                          : ", " + e.scope.substr(e.scope.find('@') + 1);
       node["stereotype"] = stereotype;
       if (!lines.empty()) node["sections"] = nlohmann::json::array({lines});
       const std::string text = fieldOf(e, "text");

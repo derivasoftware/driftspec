@@ -16,8 +16,14 @@ std::string JsonExport::render(const model::Model& model, bool pretty) const {
   out["entities"] = nlohmann::json::array();
   for (const auto& pair : model.entities()) {
     const model::Entity& e = pair.second;
-    out["entities"].push_back({{"id", e.id}, {"kind", model::kindName(e.kind)}, {"name", e.name}, {"scope", e.scope}, {"expected", e.expected},
-                               {"fields", e.fields}, {"flags", e.flags}, {"location", locationJson(e.location)}});
+    out["entities"].push_back({{"id", e.id},
+                               {"kind", model::kindName(e.kind)},
+                               {"name", e.name},
+                               {"scope", e.scope},
+                               {"expected", e.expected},
+                               {"fields", e.fields},
+                               {"flags", e.flags},
+                               {"location", locationJson(e.location)}});
   }
   out["relations"] = nlohmann::json::array();
   for (const auto& r : model.relations()) {

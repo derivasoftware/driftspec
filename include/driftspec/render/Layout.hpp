@@ -35,8 +35,8 @@ struct Metrics {
     Metrics m;
     m.CHAR_W = 1;
     m.LINE_H = 1;
-    m.PAD_X = 2;  // border and one space
-    m.PAD_Y = 1;  // border
+    m.PAD_X = 2;        // border and one space
+    m.PAD_Y = 1;        // border
     m.SECTION_GAP = 1;  // the separator row
     m.BADGE_W = 2;
     m.DOT_W = 2;
@@ -76,7 +76,7 @@ struct Route {
 };
 
 struct LayoutResult {
-  std::vector<Placed> placed;   ///< every node of the document that could be placed
+  std::vector<Placed> placed;      ///< every node of the document that could be placed
   std::map<size_t, Route> routes;  ///< by edge index; absent when an end was not placed
 };
 

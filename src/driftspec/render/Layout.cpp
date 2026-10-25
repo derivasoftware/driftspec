@@ -62,7 +62,7 @@ struct Component {
   std::vector<int> nodes;  // kid indices; -1 = pseudo source, -2 = pseudo sink
   std::vector<Projected> edges;
   std::map<size_t, std::vector<Waypoint>> ways;  // by edge index, upper to lower
-  std::map<int, Band> bands;                      // by kid: the gap under its layer
+  std::map<int, Band> bands;                     // by kid: the gap under its layer
   int w = 0;
   int h = 0;
 };
@@ -500,7 +500,8 @@ class Engine {
       std::vector<Waypoint> way;
       for (int d : it->second) {
         const int l = layer[d];
-        way.push_back({x[d] - minX + widths[d] / 2, rowY[l] + lineTop[d], rowY[l] + lineTop[d] + lineHeight[d], l < depth ? gapBelow[l] : M.GAP_Y});
+        way.push_back(
+            {x[d] - minX + widths[d] / 2, rowY[l] + lineTop[d], rowY[l] + lineTop[d] + lineHeight[d], l < depth ? gapBelow[l] : M.GAP_Y});
       }
       if (it->first.first != key.first) std::reverse(way.begin(), way.end());
       if (!way.empty()) c.ways[e.edge] = way;
@@ -649,7 +650,8 @@ class Engine {
     for (Jog& j : jogs) bands[{j.bandTop, j.bandBottom}].push_back(&j);
     for (auto& band : bands) {
       std::vector<Jog*>& list = band.second;
-      std::stable_sort(list.begin(), list.end(), [](const Jog* p, const Jog* q) { return std::min(p->fromX, p->toX) < std::min(q->fromX, q->toX); });
+      std::stable_sort(list.begin(), list.end(),
+                       [](const Jog* p, const Jog* q) { return std::min(p->fromX, p->toX) < std::min(q->fromX, q->toX); });
       const int top = band.first.first, bottom = band.first.second;
       const int n = static_cast<int>(list.size());
       for (int k = 0; k < n; ++k) {
@@ -676,7 +678,7 @@ class Engine {
   std::vector<int> roots_;
   std::map<size_t, std::vector<Waypoint>> ways_;
   std::map<size_t, int> wayFrame_;
-  std::map<int, Band> bands_;      ///< by node, relative to its frame's content origin
+  std::map<int, Band> bands_;  ///< by node, relative to its frame's content origin
   std::map<int, int> bandFrame_;
 };
 
