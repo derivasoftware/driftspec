@@ -89,8 +89,37 @@ bool Checker::derives(const std::string& derived, const std::string& base) const
   return false;
 }
 
+std::string Checker::current(const std::string& id) const {
+  for (const auto& r : renamed_) {
+    if (id == r.first) return r.second;
+    if (id.rfind(r.first + "::", 0) == 0 || id.rfind(r.first + "/", 0) == 0) return r.second + id.substr(r.first.size());
+  }
+  return id;
+}
+
+// `sequence ds@ds::Checker::run / timeout` written in another module is the same behaviour
+// as one written beside the class: its identity is the subject it resolves to (B1, B2)
+void Checker::unifyBehaviours() {
+  std::vector<std::pair<std::string, std::string>> moves;  // old id, new id
+  for (const auto& r : model_.relations()) {
+    if (r.kind != "behaviour-of") continue;
+    const model::Entity* seq = model_.find(r.from);
+    const model::Entity* subject = model_.find(r.to);
+    if (!seq || !subject || subject->expected) continue;
+    if (seq->kind != model::Kind::Sequence && seq->kind != model::Kind::State) continue;
+    const std::string tail = seq->kind == model::Kind::State ? "::state" : "::sequence";
+    const auto scenario = seq->fields.find("scenario");
+    const std::string wanted = subject->id + tail + (scenario == seq->fields.end() ? "" : "/" + scenario->second);
+    if (wanted != seq->id) moves.push_back({seq->id, wanted});
+  }
+  for (const auto& m : moves) {
+    if (model_.rename(m.first, m.second)) renamed_[m.first] = m.second;
+  }
+}
+
 void Checker::run(const bind::Binder& binder) {
   for (const auto& r : binder.references()) resolveReference(r);
+  unifyBehaviours();
   for (const auto& r : binder.references()) checkTemplateBound(r);
   for (const auto& m : binder.messages()) checkMessage(m);
   checkLocals();
@@ -254,8 +283,8 @@ void Checker::couple(const model::Entity& sequence, const model::Entity& type, b
 }
 
 void Checker::checkMessage(const bind::Message& message) {
-  const model::Entity* seq = model_.find(message.sequence);
-  model::Entity* msg = model_.find(message.message);
+  const model::Entity* seq = model_.find(current(message.sequence));
+  model::Entity* msg = model_.find(current(message.message));
   if (!seq || !msg) return;
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(*seq, &subject);
@@ -341,7 +370,7 @@ void Checker::checkEvent(const bind::Event& event) {
   if (!entity || entity->expected) return;
   const std::string op = type + "::" + event.event;
   if (const model::Entity* target = model_.find(op)) {
-    model_.relate({event.action ? "does" : "on", event.state, target->id, event.location, ""});
+    model_.relate({event.action ? "does" : "on", current(event.state), target->id, event.location, ""});
     return;
   }
   if (event.action) {

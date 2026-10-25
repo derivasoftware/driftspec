@@ -413,9 +413,10 @@ corpus the same day.
 2. **Static leftovers**: DECIDED 2026-10-25: contracts as text in the body
    only; ids `pkg@mod::Class`, boundaries `pkg@name`, artefacts global;
    braces enclose and one thing per line; `extern` names only.
-3. **Dynamic**: messages with arguments and return, `alt`/`loop`/`opt` or not,
-   guards and actions on transitions, nested states, meaning of
-   `@verification` on a sequence.
+3. **Dynamic**: DECIDED 2026-10-25 as the proof of concept had it (subject
+   as the name, `/ scenario` anywhere with the identity of the subject,
+   inline return, `loop`/`alt`/`opt` in prose, `on event [guard] / action`);
+   no nested states, activities with the process domain.
 4. **Black box**: closed or free boundary `kind`; typed operation parameters;
    a class realising one operation rather than a whole boundary; system
    requirements that only see boundaries.

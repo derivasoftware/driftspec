@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_CHECK_CHECKER_HPP
 #define DRIFTSPEC_CHECK_CHECKER_HPP
 
+#include <map>
 #include <set>
 #include <string>
 
@@ -31,6 +32,11 @@ class Checker {
   void checkEvent(const bind::Event& event);
   void checkLocals();
   void checkArtefacts();
+  /// A behaviour's identity is its resolved subject plus its scenario, wherever it was written.
+  void unifyBehaviours();
+  std::string current(const std::string& id) const;  ///< an identity after the renames
+
+  std::map<std::string, std::string> renamed_;
   /// The identity of a type written as text (`list<Scope>` → the class Scope), or "".
   std::string resolveTypeText(const std::string& text, const std::string& scope) const;
   /// The class a behaviour is about, and whether its subject is a method.

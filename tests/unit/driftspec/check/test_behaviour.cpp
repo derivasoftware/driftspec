@@ -43,12 +43,16 @@ TEST_F(TestBehaviour, TheOracleFindings) {
   EXPECT_EQ(byCode["E-MSG-ARITY"], 1);               // Model::find(id, scope)
   EXPECT_EQ(byCode["W-ACTION-UNDECLARED"], 1);       // / report is Model's
   EXPECT_EQ(byCode["W-MSG-UNDECLARED"], 0);
-  EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 0);      // two scenarios of one subject are two identities
+  EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 1);      // the default scenario of checkMessage declared again from another module
 }
 
 TEST_F(TestBehaviour, ABehaviourIsIdentifiedByItsSubject) {
   ASSERT_NE(model.find("ds@ds::Checker::run::sequence"), nullptr);
   ASSERT_NE(model.find("ds@ds::Checker::resolveReference::sequence/duplicate-identity"), nullptr);
+  // written in module scenarios, identified by its subject (B2): scenarios may live anywhere
+  ASSERT_NE(model.find("ds@ds::Checker::resolveReference::sequence/timeout"), nullptr);
+  EXPECT_EQ(model.find("ds@scenarios::ds::Checker::resolveReference::sequence/timeout"), nullptr);
+  EXPECT_NE(relation("calls", "ds@ds::Checker::resolveReference::sequence/timeout::m0", "ds@ds::Checker::resolve"), nullptr);
   EXPECT_NE(relation("behaviour-of", "ds@ds::Checker::run::sequence", "ds@ds::Checker::run"), nullptr);
   EXPECT_NE(relation("behaviour-of", "ds@ds::Checker::state", "ds@ds::Checker"), nullptr);
 }

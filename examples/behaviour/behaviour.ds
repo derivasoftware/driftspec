@@ -208,3 +208,18 @@ diagram STM_Checker {
 //   B4 (B)  self -> binder.references()
 //           return binder.references -> refs
 //   B6 (B)  no alt/loop: one scenario per branch, loops described in note:
+
+// --- B2: scenarios may be written anywhere; the identity is the subject's -------------
+
+package ds {
+  module scenarios {
+    // the same subject, another scenario, from another module: ds@ds::Checker::resolveReference::sequence/timeout
+    sequence ds::Checker::resolveReference / timeout {
+      -> resolve(ref.target, ref.scope) -> target
+    }
+    // ! E-DUPLICATE-IDENTITY: the default scenario of checkMessage is already declared in module ds
+    sequence ds::Checker::checkMessage {
+      self -> model.find(id)
+    }
+  }
+}

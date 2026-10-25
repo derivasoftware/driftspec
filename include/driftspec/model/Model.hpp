@@ -77,6 +77,9 @@ class Model {
   Entity* find(const std::string& id);
   void relate(const Relation& relation);
   void report(const Finding& finding);
+  /// Give an entity a new identity, carrying its members (scope) and relations along.
+  /// Returns false, reporting E-DUPLICATE-IDENTITY, when the new identity is already declared.
+  bool rename(const std::string& from, const std::string& to);
 
   const std::map<std::string, Entity>& entities() const { return entities_; }
   const std::vector<Relation>& relations() const { return relations_; }

@@ -59,10 +59,17 @@ them. The vision (`vision.md`) says why; this says what.*
 - A characteristic of an entity is a requirement or a constraint, nested or
   linked; there is no other vocabulary (R18).
 
-## 3. Behaviour (`examples/behaviour`, syntax provisional)
+## 3. Behaviour (`examples/behaviour`, decided 2026-10-25)
 
-- A behaviour is identified by its subject: `sequence Checker::run { }`,
-  `state Checker { }`; scenarios as `sequence Checker::run / duplicate { }`.
+- A behaviour is identified by its subject, written as any reference is
+  (`Checker::run` beside the class, `ds@ds::Checker::run` from outside):
+  `sequence Checker::run { }`, `state Checker { }`. Scenarios as
+  `sequence Checker::run / timeout { }`; the unnamed one is the default, the
+  one an expansion inlines. Scenarios may be written anywhere (the subject's
+  module reopened, another module, a file of their own): the identity is the
+  subject's. Two declarations of one scenario, wherever they are, are
+  `E-DUPLICATE-IDENTITY`. A diagram names one scenario by id or all of them
+  with `ds@ds::Checker::run*`.
 - Participants are the static context: `self`, the attributes of the class,
   the parameters of the method, by name; only what the method creates is
   written, `local parser: Parser`. `W-PARTICIPANT-UNDECLARED`.
@@ -72,8 +79,12 @@ them. The vision (`vision.md`) says why; this says what.*
 - A message to an operation with a behaviour expands to it (derived; a
   diagram inlines it with `depth` or links it). Coupling to another module is
   derived from what a behaviour touches.
-- State machines: `A -> B on event [guard] / action`; event and action are
-  operations (`W-EVENT-UNDECLARED`, `W-ACTION-UNDECLARED`).
+- State machines, the behaviour of a class: `initial Idle`, then
+  `Idle -> Running on run [guard] / report`: in `Idle`, a call of `run` whose
+  guard (prose) holds moves to `Running` running `report`. Event and action
+  are operations of the class (`W-EVENT-UNDECLARED`, `W-ACTION-UNDECLARED`);
+  the guard is not interpreted. No nested states until a design asks for
+  them. Activities come with the process domain.
 
 ## 4. Requirements, constraints and verifications (`examples/artefacts`, decided 2026-10-25)
 
