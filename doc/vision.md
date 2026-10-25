@@ -377,10 +377,12 @@ crosses a container border is routed straight between its ends.
   of a requirement (what realises it, what verifies it), cross-container
   routing, `ds layout`.
 - Core: open `Kind` registry; domain packs.
-- Governance: GitLab project (group to decide: `deriva/apps` vs
-  `deriva/argos`), argos SREQ/REQ/VER/CL_, CI with ci-templates, version
-  manifest, pre-commit; the repo is local only, no remote, nothing created
-  in GitLab or Plane yet (needs explicit confirmation).
+- Governance: the repos exist since 2026-10-25 (`deriva/apps/driftspec`,
+  `deriva/argos/plugins/argos-design-driftspec`); argos reads the design in
+  DriftSpec through the plugin. Still to do: the real design and requirements
+  of driftspec in `.ds` (`design/engine.ds` is the POC sketch and argos
+  reports its drift), CI with ci-templates, version manifest, pre-commit,
+  `projects.toml` registration, the plugin on the registry.
 - Surfaces: LSP, MCP, `ds serve`, VS Code, Neovim navigation, Python
   bindings (deferred), wasm.
 
