@@ -1,16 +1,16 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 requirement:
   id: SREQ-00007-1
-  title: The system shall compute the difference between two versions of a workspace in terms of the model
+  title: "The system shall compute the difference between two versions of a workspace in terms of the model"
   description: >
     Two directories, or two git revisions of a path, are compared by
-          identity: entities and relations added, removed or changed, a class
-          renamed when its shape survives, an artefact whose text changed under the
-          same revision. The difference is reported by module and drawn on the
-          diagrams with the changes marked.
+    identity: entities and relations added, removed or changed, a class
+    renamed when its shape survives, an artefact whose text changed under the
+    same revision. The difference is reported by module and drawn on the
+    diagrams with the changes marked.
   rationale: >
     A review needs to see what changed in the design, not which lines moved
-          in which file. Only a model with identities can answer that.
+    in which file. Only a model with identities can answer that.
   status: DRAFT
   asil: NA
   tags:

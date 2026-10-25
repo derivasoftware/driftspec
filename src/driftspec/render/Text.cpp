@@ -591,10 +591,13 @@ bool isSequence(const IrDocument& doc) {
 
 }  // namespace
 
+/// The grid keeps a one-cell margin on each side: the layout gets the rest.
+int contentWidth(int maxWidth) { return maxWidth > 0 ? std::max(10, maxWidth - 2) : 0; }
+
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
   if (isSequence(doc)) return sequenceGrid(doc).dump(color);
   const IrDocument bundled = doc.bundled();
-  return render(bundled, layout(bundled, M, maxWidth), color);
+  return render(bundled, layout(bundled, M, contentWidth(maxWidth)), color);
 }
 
 std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
@@ -604,7 +607,7 @@ std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool co
 
 std::string Text::cells(const IrDocument& doc, int maxWidth) const {
   const IrDocument bundled = doc.bundled();
-  const Grid g = isSequence(doc) ? sequenceGrid(doc) : classGrid(bundled, layout(bundled, M, maxWidth));
+  const Grid g = isSequence(doc) ? sequenceGrid(doc) : classGrid(bundled, layout(bundled, M, contentWidth(maxWidth)));
   nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode()}, {"text", g.dump(false)}};
   return out.dump();
 }

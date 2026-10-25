@@ -426,12 +426,17 @@ class Engine {
         int cursor = 0;
         lines.push_back({});
         std::vector<int> channels;
+        int channelRoom = 0;  // the first line keeps room for the channels at its end
         for (int v : rows[l]) {
           if (v >= real) {
             channels.push_back(v);
-            continue;
+            channelRoom += gapAfter(v);
           }
-          if (cursor > 0 && cursor + widths[v] > available) {
+        }
+        const int room = std::max(widths[rows[l].front()], available - channelRoom);
+        for (int v : rows[l]) {
+          if (v >= real) continue;
+          if (cursor > 0 && cursor + widths[v] > room) {
             lines.push_back({});
             cursor = 0;
           }

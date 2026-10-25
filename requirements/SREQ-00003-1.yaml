@@ -1,18 +1,18 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 requirement:
   id: SREQ-00003-1
-  title: The system shall keep requirements, constraints and verifications as artefacts linked to the design by revision
+  title: "The system shall keep requirements, constraints and verifications as artefacts linked to the design by revision"
   description: >
     Requirements, constraints and verifications are declared in the same
-          language as the design, with an id that carries their revision. Every
-          link to an artefact names a revision; nesting gives the relation
-          (a requirement in a requirement refines it, a verification in a
-          requirement verifies it) and annotations add relations from elsewhere.
+    language as the design, with an id that carries their revision. Every
+    link to an artefact names a revision; nesting gives the relation
+    (a requirement in a requirement refines it, a verification in a
+    requirement verifies it) and annotations add relations from elsewhere.
   rationale: >
     The design and the artefacts about it belong to one model: a class
-          realises a requirement, a constraint binds it, a verification proves it.
-          Pinning links to a revision is what lets the tool tell who stayed behind
-          when an artefact moved.
+    realises a requirement, a constraint binds it, a verification proves it.
+    Pinning links to a revision is what lets the tool tell who stayed behind
+    when an artefact moved.
   status: DRAFT
   asil: NA
   tags:

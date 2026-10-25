@@ -1,0 +1,132 @@
+// System qualification: one verification per system requirement, each a test
+// that drives the ds binary from outside (tests/system/driftspec/test_qualification.cpp).
+// SREQ-00011-1 (queries) has no verification yet: nothing implements it.
+
+package driftspec {
+
+  verification VER-00001-1 {
+    @requirement SREQ-00001-1
+    title: System tests confirm a workspace loads into one model with one identity per entity
+    text:
+      ds export of the static corpus names ds@ds::Model and the scope of
+      ds@ds::ScopedCheck; ds check of the behaviour corpus reports the scenario
+      declared twice as E-DUPLICATE-IDENTITY and exits with 1.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
+  }
+
+  verification VER-00002-1 {
+    @requirement SREQ-00002-1
+    title: System tests confirm every incoherence is a finding with code, severity and location
+    text:
+      ds check prints file:line:column, code and message per finding and
+      exits with 1 when an error is among them; a workspace with an
+      undeclared reference still exports whole, with the warning.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
+  }
+
+  verification VER-00003-1 {
+    @requirement SREQ-00003-1
+    title: System tests confirm artefacts are linked to the design by revision
+    text:
+      The export of the artefacts corpus carries refines, verifies and
+      requires relations between pinned ids and the classes that realise them.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision
+  }
+
+  verification VER-00004-1 {
+    @requirement SREQ-00004-1
+    title: System tests confirm behaviour is bound to its subject and checked against it
+    text:
+      The export of the behaviour corpus carries behaviour-of and expands-to
+      relations; ds check reports E-MSG-ARITY and W-PARTICIPANT-UNDECLARED.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
+  }
+
+  verification VER-00005-1 {
+    @requirement SREQ-00005-1
+    title: System tests confirm a selection is drawn as SVG and as text to a given width
+    text:
+      ds render --svg yields an SVG with stable ids; --text with --width 80
+      stays within 80 columns while the unbounded drawing exceeds them.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
+  }
+
+  verification VER-00006-1 {
+    @requirement SREQ-00006-1
+    title: System tests confirm the model and the drawings are exported
+    text:
+      ds export yields entities, relations and findings as JSON; ds render
+      yields a render-IR document of the plantuml family.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
+  }
+
+  verification VER-00007-1 {
+    @requirement SREQ-00007-1
+    title: System tests confirm two versions are compared by identity
+    text:
+      A workspace against itself is no design change; a class renamed with its
+      shape intact is reported as a rename, not as a removal and an addition.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
+  }
+
+  verification VER-00008-1 {
+    @requirement SREQ-00008-1
+    title: System tests confirm the grammar ships with queries that name its nodes
+    text:
+      Every node the highlight and fold queries name is a node the generated
+      grammar defines, so an editor loading them never gets an invalid query.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.TheGrammarShipsWithQueriesThatNameItsNodes
+  }
+
+  verification VER-00009-1 {
+    @requirement SREQ-00009-1
+    title: System tests confirm the static metamodel is modelled and classified by derivation
+    text:
+      The export carries derived stereotypes (interface, abstract, value with
+      its operator families), template bounds, header operators, ownership
+      with multiplicity, and a package boundary.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.TheStaticMetamodelIsModelledAndClassifiedByDerivation
+  }
+
+  verification VER-00010-1 {
+    @requirement SREQ-00010-1
+    title: System tests confirm class, requirement and sequence diagrams are views of the model
+    text:
+      ds render yields a class diagram with containers, a requirement diagram
+      with artefact boxes and a sequence diagram with lifelines. State
+      diagrams are not drawn yet: this verification covers three of the four.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.ClassRequirementAndSequenceDiagramsAreViewsOfTheModel
+  }
+
+  verification VER-00011-1 {
+    @constraint CST-00001-1
+    title: System tests confirm a hundred classes check, export and draw in under a hundred milliseconds
+    text:
+      A generated workspace of a hundred classes with inheritance, ownership
+      and dependencies runs ds check, ds export and ds render --svg each in
+      under one hundred milliseconds.
+    method: test
+    tests:
+      tests/system/driftspec/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
+  }
+}

@@ -1,19 +1,19 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 requirement:
   id: SREQ-00002-1
-  title: The system shall report every incoherence of the model as a finding with a code, a severity and a location
+  title: "The system shall report every incoherence of the model as a finding with a code, a severity and a location"
   description: >
     A reference nobody declares, a duplicate identity, a template argument
-          outside its bound, a composition cycle, an operator refined but not
-          declared, a message to an operation that does not exist, a link to an
-          artefact revision the workspace no longer declares: each is one finding
-          at the place it was written. Loading never fails on a dangling
-          reference, only on syntax.
+    outside its bound, a composition cycle, an operator refined but not
+    declared, a message to an operation that does not exist, a link to an
+    artefact revision the workspace no longer declares: each is one finding
+    at the place it was written. Loading never fails on a dangling
+    reference, only on syntax.
   rationale: >
     The tool's value is saying where the model contradicts itself. A tool
-          that stopped at the first problem, or that failed to load a workspace
-          with a missing declaration, could not be used while the design is being
-          written.
+    that stopped at the first problem, or that failed to load a workspace
+    with a missing declaration, could not be used while the design is being
+    written.
   status: DRAFT
   asil: NA
   tags:

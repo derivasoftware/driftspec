@@ -1,0 +1,11 @@
+# generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
+verification:
+  id: VER-00008-1
+  req_id: SREQ-00008-1
+  title: "System tests confirm the grammar ships with queries that name its nodes"
+  description: >
+    Every node the highlight and fold queries name is a node the generated
+    grammar defines, so an editor loading them never gets an invalid query.
+  method: test
+  test_ids:
+    - tests/system/driftspec/test_qualification.cpp::TestQualification.TheGrammarShipsWithQueriesThatNameItsNodes

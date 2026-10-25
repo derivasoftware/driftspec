@@ -1,0 +1,11 @@
+# generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
+verification:
+  id: VER-00005-1
+  req_id: SREQ-00005-1
+  title: "System tests confirm a selection is drawn as SVG and as text to a given width"
+  description: >
+    ds render --svg yields an SVG with stable ids; --text with --width 80
+    stays within 80 columns while the unbounded drawing exceeds them.
+  method: test
+  test_ids:
+    - tests/system/driftspec/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth

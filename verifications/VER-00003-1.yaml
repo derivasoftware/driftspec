@@ -1,0 +1,11 @@
+# generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
+verification:
+  id: VER-00003-1
+  req_id: SREQ-00003-1
+  title: "System tests confirm artefacts are linked to the design by revision"
+  description: >
+    The export of the artefacts corpus carries refines, verifies and
+    requires relations between pinned ids and the classes that realise them.
+  method: test
+  test_ids:
+    - tests/system/driftspec/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision

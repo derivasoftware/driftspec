@@ -66,3 +66,17 @@ foreach(test_src IN LISTS driftspec_TESTS)
   target_compile_definitions(${test_name} PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples")
   add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
+
+# ---- system qualification: tests/system/**/test_*.cpp drive the ds binary from outside ----
+file(GLOB_RECURSE driftspec_SYSTEM_TESTS CONFIGURE_DEPENDS "tests/system/*/test_*.cpp")
+foreach(test_src IN LISTS driftspec_SYSTEM_TESTS)
+  get_filename_component(test_name ${test_src} NAME_WE)
+  add_executable(${test_name} ${test_src})
+  target_link_libraries(${test_name} PRIVATE nlohmann_json::nlohmann_json GTest::gtest_main)
+  target_compile_definitions(${test_name} PRIVATE
+    DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
+    DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    DRIFTSPEC_DS_BIN="$<TARGET_FILE:ds>")
+  add_dependencies(${test_name} ds)
+  add_test(NAME ${test_name} COMMAND ${test_name})
+endforeach()
