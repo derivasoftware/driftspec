@@ -169,6 +169,7 @@ package driftspec {
       is a constraint and not a capability.
     tags: performance
   }
+}
 
 diagram REQ_System {
   kind: requirement
