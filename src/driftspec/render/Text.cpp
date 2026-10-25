@@ -275,12 +275,17 @@ void box(Grid& g, const Placed& p) {
   }
   g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
+  // only class members are tokenised; an artefact's title is prose and stays plain
+  const bool members = !n.sectionKinds.empty();
   for (const auto& section : n.sections) {
     g.put(r.x, y, "\xE2\x94\x9C");  // ├
     for (int x = r.x + 1; x < r.x + r.w - 1; ++x) g.put(x, y, "\xE2\x94\x80");
     g.put(r.x + r.w - 1, y, "\xE2\x94\xA4");  // ┤
     ++y;
-    for (const auto& line : section) member(g, r.x + M.PAD_X, y++, line);
+    for (const auto& line : section) {
+      if (members) member(g, r.x + M.PAD_X, y++, line);
+      else g.text(r.x + M.PAD_X, y++, line);
+    }
   }
 }
 

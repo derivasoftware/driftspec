@@ -275,7 +275,8 @@ std::string emitNode(const Placed& p, const std::string& px) {
       out << "<line class=\"pr-sep\" x1=\"" << r.x << "\" y1=\"" << sepY << "\" x2=\"" << r.x + r.w << "\" y2=\"" << sepY << "\"/>";
       ty += M.SECTION_GAP;
       for (const auto& line : section) {
-        const auto marked = memberMarkup(line);
+        // only class members are tokenised; an artefact's title is prose and stays plain
+        const auto marked = n.sectionKinds.empty() ? std::make_pair(std::string(), esc(line)) : memberMarkup(line);
         if (!marked.first.empty()) {
           out << "<circle class=\"pr-vis pr-vis-" << marked.first << "\" cx=\"" << r.x + M.PAD_X + 4 << "\" cy=\"" << ty - 4 << "\" r=\"3.5\"/>";
         }
