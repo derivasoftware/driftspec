@@ -1,0 +1,110 @@
+// How ds is built, as ds sees it: the first piece of driftspec specified in driftspec.
+// One class per subsystem; the arrows are what each one hands to the next.
+
+package driftspec {
+
+  module parse {
+    class Parser {
+      + parseDirectory(dir: path) -> list<ParsedFile>
+    }
+    dataclass ParsedFile {
+      + path: path
+      + hasSyntaxErrors: bool
+    }
+  }
+
+  module model {
+    class Model {
+      - owns entities: map<string, Entity>
+      - owns relations: list<Relation>
+      - owns findings: list<Finding>
+      + declare(entity: Entity) -> Entity
+      + relate(relation: Relation) -> none
+      + report(finding: Finding) -> none
+    }
+    dataclass Entity { + id: string }
+    dataclass Relation { + kind: string }
+    dataclass Finding { + code: string }
+  }
+
+  module bind {
+    class Binder {
+      - refs model: model::Model
+      + bind(file: parse::ParsedFile) -> none
+    }
+  }
+
+  module check {
+    class Checker {
+      - refs model: model::Model
+      + run(binder: bind::Binder) -> none
+    }
+  }
+
+  module render {
+    class IrExport {
+      - refs model: model::Model
+      + render(diagram: string) -> IrDocument
+    }
+    dataclass IrDocument { + title: string }
+    class Layout {
+      + layout(doc: IrDocument) -> none
+    }
+    class Svg {
+      - owns layout: Layout
+      + render(doc: IrDocument) -> string
+    }
+    class Text {
+      - owns layout: Layout
+      + render(doc: IrDocument) -> string
+    }
+  }
+
+  // the pipeline, as the behaviour of the command
+  module app {
+    class Cli {
+      - owns parser: parse::Parser
+      - owns model: model::Model
+      - owns binder: bind::Binder
+      - owns checker: check::Checker
+      - owns exporter: render::IrExport
+      - owns svg: render::Svg
+      - owns text: render::Text
+      + render(dir: path, diagram: string) -> string
+    }
+    sequence Cli::render {
+      self -> parser.parseDirectory(dir) -> files
+      loop each file {
+        self -> binder.bind(file)
+      }
+      self -> checker.run(binder)
+      self -> exporter.render(diagram) -> doc
+      alt svg wanted {
+        self -> svg.render(doc) -> out
+      } else {
+        self -> text.render(doc) -> out
+      }
+    }
+  }
+}
+
+diagram CL_Engine {
+  kind: class
+  include: package:driftspec
+  exclude: app::Cli
+  hide: methods
+  show: ownership
+}
+
+diagram SEQ_Render {
+  kind: sequence
+  include: app::Cli::render
+}
+
+// narrower, for the terminal pane: the five stages without their value types
+diagram CL_Pipeline {
+  kind: class
+  include: parse::Parser, bind::Binder, model::Model, check::Checker, render::IrExport, render::Svg, render::Text
+  hide: methods
+  show: ownership
+}
