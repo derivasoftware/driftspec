@@ -14,7 +14,7 @@ requirement:
     Pinning links to a revision is what lets the tool tell who stayed behind
     when an artefact moved.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - requirements
     - traceability

@@ -12,7 +12,7 @@ requirement:
     A review needs to see what changed in the design, not which lines moved
     in which file. Only a model with identities can answer that.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - diff
     - review

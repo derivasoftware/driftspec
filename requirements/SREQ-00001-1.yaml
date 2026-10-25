@@ -13,7 +13,7 @@ requirement:
     the same thing. Identity across the workspace is what makes references,
     diagrams and diffs mean the same entity everywhere.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - workspace
     - identity

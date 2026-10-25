@@ -15,7 +15,7 @@ requirement:
     the rest of the model and the abstraction level of a diagram comes from
     the architecture instead of from the author.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - behaviour
     - sequences

@@ -15,7 +15,7 @@ requirement:
     contradict what is declared, and the ownership written on the
     attribute is what the drawings and the checks read.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - metamodel
     - static

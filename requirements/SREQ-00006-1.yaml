@@ -12,7 +12,7 @@ requirement:
     the model, not the files. The IR keeps the family's renderers
     interchangeable.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - export
     - argos

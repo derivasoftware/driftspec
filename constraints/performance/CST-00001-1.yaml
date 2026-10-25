@@ -13,6 +13,6 @@ constraint:
     property as the tool grows; it applies to every command, which is why it
     is a constraint and not a capability.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - performance

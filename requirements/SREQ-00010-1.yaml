@@ -13,7 +13,7 @@ requirement:
     Each part of the metamodel needs its view, and keeping the views as
     selections is what keeps them from drifting from the model.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - diagrams
     - views

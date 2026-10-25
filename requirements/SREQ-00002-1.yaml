@@ -15,7 +15,7 @@ requirement:
     with a missing declaration, could not be used while the design is being
     written.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - coherence
     - findings

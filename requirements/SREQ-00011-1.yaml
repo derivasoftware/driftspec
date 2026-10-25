@@ -16,7 +16,7 @@ requirement:
     editor, an agent and argos, and the drawings become one answer among
     others.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - query
     - model

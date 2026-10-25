@@ -10,7 +10,7 @@ requirement:
     A specification language that is not supported where it is written will
     not be written.
   status: DRAFT
-  asil: NA
+  asil: QM
   tags:
     - grammar
     - editors
