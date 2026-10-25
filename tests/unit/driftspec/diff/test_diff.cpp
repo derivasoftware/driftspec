@@ -1,0 +1,203 @@
+#include <gtest/gtest.h>
+
+#include "driftspec/bind/Binder.hpp"
+#include "driftspec/check/Checker.hpp"
+#include "driftspec/diff/Diff.hpp"
+#include "driftspec/model/Model.hpp"
+#include "driftspec/parse/Parser.hpp"
+
+namespace {
+
+/// The semantic diff: identities, not lines.
+class TestDiff : public ::testing::Test {
+ protected:
+  driftspec::model::Model load(const std::string& text) {
+    driftspec::model::Model model;
+    driftspec::parse::Parser parser;
+    driftspec::bind::Binder binder(model);
+    binder.bind(parser.parseText("t.ds", text));
+    driftspec::check::Checker(model).run(binder);
+    return model;
+  }
+
+  static const driftspec::diff::Change* find(const driftspec::diff::DiffResult& d, const std::string& kind, const std::string& idPart) {
+    for (const auto& c : d.changes) {
+      if (c.kind == kind && c.id.find(idPart) != std::string::npos) return &c;
+    }
+    return nullptr;
+  }
+
+  const std::string before = R"(package p {
+  module m {
+    class Layout { }
+    class Svg {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Text {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Cli {
+      - owns text: Text
+      + run(a: int) -> none
+    }
+    requirement R-0001-0 {
+      title: The system shall draw
+    }
+  }
+})";
+};
+
+TEST_F(TestDiff, AMovedOrReorderedDeclarationIsNoChange) {
+  const std::string reordered = R"(package p {
+  module m {
+    class Cli {
+      + run(a: int) -> none
+      - owns text: Text
+    }
+    requirement R-0001-0 {
+      title: The system shall draw
+    }
+    class Text {
+      + render(doc: string) -> string
+      - owns layout: Layout
+    }
+    class Svg {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Layout { }
+  }
+})";
+  const auto d = driftspec::diff::Diff::compare(load(before), load(reordered));
+  EXPECT_TRUE(d.empty()) << driftspec::diff::Diff::report(d);
+}
+
+TEST_F(TestDiff, AddedRemovedAndChangedByIdentity) {
+  const std::string after = R"(package p {
+  module m {
+    class Layout { }
+    class Svg {
+      - shares layout: Layout
+      + render(doc: string) -> string
+    }
+    class Text {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Cli {
+      - owns text: Text
+      + run() -> none
+      + stop() -> none
+    }
+    requirement R-0001-0 {
+      title: The system shall draw
+    }
+  }
+})";
+  const auto d = driftspec::diff::Diff::compare(load(before), load(after));
+  ASSERT_NE(find(d, "changed", "m::Svg::layout"), nullptr);
+  EXPECT_NE(find(d, "changed", "m::Svg::layout")->detail.find("owns -> shares"), std::string::npos);
+  ASSERT_NE(find(d, "changed", "m::Cli::run"), nullptr);
+  EXPECT_NE(find(d, "added", "m::Cli::stop"), nullptr);
+  EXPECT_NE(find(d, "removed", "owns m::Svg::layout -> m::Layout"), nullptr);
+  EXPECT_NE(find(d, "added", "shares m::Svg::layout -> m::Layout"), nullptr);
+  EXPECT_EQ(find(d, "removed", "m::Text"), nullptr);
+}
+
+TEST_F(TestDiff, ARenameIsRecognisedByShapeAndByWhoFollows) {
+  const std::string after = R"(package p {
+  module m {
+    class Layout { }
+    class Svg {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Terminal {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Cells {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Cli {
+      - owns text: Terminal
+      + run(a: int) -> none
+    }
+    requirement R-0001-0 {
+      title: The system shall draw
+    }
+  }
+})";
+  const auto d = driftspec::diff::Diff::compare(load(before), load(after));
+  const auto* renamed = find(d, "renamed", "m::Terminal");
+  ASSERT_NE(renamed, nullptr);
+  EXPECT_EQ(renamed->from, "m::Text");
+  EXPECT_NE(find(d, "added", "m::Cells"), nullptr);
+  EXPECT_EQ(find(d, "removed", "m::Text::layout"), nullptr);  // members travel with the rename
+  EXPECT_EQ(find(d, "changed", "m::Terminal::render"), nullptr);  // and a move is not a change
+}
+
+TEST_F(TestDiff, AnArtefactChangedWithoutANewRevisionIsAFinding) {
+  const std::string after = R"(package p {
+  module m {
+    class Layout { }
+    class Svg {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Text {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Cli {
+      - owns text: Text
+      + run(a: int) -> none
+    }
+    requirement R-0001-0 {
+      title: The system shall draw on every surface
+    }
+  }
+})";
+  const auto d = driftspec::diff::Diff::compare(load(before), load(after));
+  ASSERT_EQ(d.findings.size(), 1u);
+  EXPECT_EQ(d.findings[0].code, "W-REVISION-STALE");
+  EXPECT_NE(d.findings[0].message.find("R-0001-0"), std::string::npos);
+}
+
+TEST_F(TestDiff, TheMarkedModelCarriesTheChangesForADrawing) {
+  const std::string after = R"(package p {
+  module m {
+    class Layout { }
+    class Svg {
+      - owns layout: Layout
+      + render(doc: string) -> string
+    }
+    class Cli {
+      - owns svg: Svg
+      + run(a: int) -> none
+    }
+    requirement R-0001-0 {
+      title: The system shall draw
+    }
+  }
+})";
+  const auto a = load(before);
+  const auto b = load(after);
+  const auto d = driftspec::diff::Diff::compare(a, b);
+  const auto marked = driftspec::diff::Diff::marked(a, b, d);
+  ASSERT_NE(marked.find("m::Text"), nullptr);  // the removed class comes over as a ghost
+  EXPECT_EQ(marked.find("m::Text")->fields.at("change"), "removed");
+  EXPECT_EQ(marked.find("m::Cli::svg")->fields.at("change"), "added");
+  bool removedEdge = false, addedEdge = false;
+  for (const auto& r : marked.relations()) {
+    removedEdge |= r.kind == "owns+removed" && r.from == "m::Cli::text";
+    addedEdge |= r.kind == "owns+added" && r.from == "m::Cli::svg";
+  }
+  EXPECT_TRUE(removedEdge);
+  EXPECT_TRUE(addedEdge);
+}
+
+}  // namespace

@@ -72,7 +72,25 @@ const char* const kStyle = R"CSS(
   .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
   .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
   .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
 )CSS";
+
+std::string esc(const std::string& text);
+std::string dataAttrs(const std::map<std::string, std::string>& refs);
 
 std::string esc(const std::string& text) {
   std::string out;
@@ -207,8 +225,10 @@ std::string emitNode(const Placed& p, const std::string& px) {
     classes += " pr-stereotype-" + st;
   }
   if (n.abstract) classes += " pr-abstract";
+  const auto change = n.refs.find("change");
+  if (change != n.refs.end()) classes += " pr-change-" + change->second;
   std::ostringstream out;
-  out << "<g id=\"" << px << esc(n.id) << "\" data-id=\"" << esc(n.id) << "\" class=\"" << classes << "\">";
+  out << "<g id=\"" << px << esc(n.id) << "\" data-id=\"" << esc(n.id) << "\" class=\"" << classes << "\"" << dataAttrs(n.refs) << ">";
   if (!n.title.empty()) out << "<title>" << esc(n.title) << "</title>";
   if (n.kind == "container") {
     out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"6\"/>";
@@ -296,8 +316,10 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
     for (size_t i = 0; i < lines.size(); ++i) rows += "<tspan x=\"" + num(x) + "\" dy=\"" + num(i == 0 ? 0 : 14) + "\">" + esc(lines[i]) + "</tspan>";
     out.label = "<text class=\"pr-edge-label\" x=\"" + num(x) + "\" y=\"" + num(y) + "\">" + (lines.size() == 1 ? esc(e.label) : rows) + "</text>";
   }
-  out.path = "<g class=\"pr-edge-group\" data-from=\"" + esc(e.from) + "\" data-to=\"" + esc(e.to) + "\">" + (e.title.empty() ? "" : "<title>" + esc(e.title) + "</title>") +
-             "<path class=\"pr-edge-hit\" d=\"" + d + "\"/><path class=\"pr-edge pr-edge-" + e.kind + "\" d=\"" + d + "\"" + markerAttr + "/></g>";
+  const auto change = e.refs.find("change");
+  const std::string changeClass = change == e.refs.end() ? "" : " pr-edge-change-" + change->second;
+  out.path = "<g class=\"pr-edge-group\" data-from=\"" + esc(e.from) + "\" data-to=\"" + esc(e.to) + "\"" + dataAttrs(e.refs) + ">" + (e.title.empty() ? "" : "<title>" + esc(e.title) + "</title>") +
+             "<path class=\"pr-edge-hit\" d=\"" + d + "\"/><path class=\"pr-edge pr-edge-" + e.kind + changeClass + "\" d=\"" + d + "\"" + markerAttr + "/></g>";
   if (!e.href.empty()) out.path = "<a href=\"" + esc(e.href) + "\" class=\"pr-link\">" + out.path + "</a>";
   return out;
 }
@@ -431,6 +453,7 @@ std::string dataAttrs(const std::map<std::string, std::string>& refs) {
   for (const auto& r : refs) out += " data-ref-" + r.first + "=\"" + esc(r.second) + "\"";
   return out;
 }
+
 
 std::string sequenceSvg(const IrDocument& doc) {
   const int HEAD_H = 38, ROW_H = 30, SELF_H = 42, MARGIN = 20, SELF_W = 32;

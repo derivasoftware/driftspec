@@ -256,14 +256,21 @@ void box(Grid& g, const Placed& p) {
     for (size_t i = 0; i < lines.size(); ++i) g.text(r.x + M.PAD_X, r.y + M.PAD_Y + static_cast<int>(i), lines[i], kNote);
     return;
   }
-  frame(g, r, true, "");
+  const auto change = n.refs.find("change");
+  const std::string changeColor = change == n.refs.end() ? "" : change->second == "added" ? "32" : change->second == "removed" ? "31" : change->second == "renamed" ? "34" : "33";
+  frame(g, r, true, changeColor);
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
   std::string badge = "C";
   if (n.abstract && n.classifier.empty()) badge = "A";
   else if (!n.classifier.empty()) badge = std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(n.classifier[0]))));
-  g.text(r.x + M.PAD_X, y, badge, n.classifier == "interface" ? kPublic : n.classifier == "enum" ? kProtected : "35");
-  g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, kName);
+  if (change != n.refs.end()) {
+    const std::string mark = change->second == "added" ? "+" : change->second == "removed" ? "-" : change->second == "renamed" ? ">" : "~";
+    g.text(r.x + M.PAD_X, y, mark, changeColor);
+  } else {
+    g.text(r.x + M.PAD_X, y, badge, n.classifier == "interface" ? kPublic : n.classifier == "enum" ? kProtected : "35");
+  }
+  g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
   for (const auto& section : n.sections) {
     g.put(r.x, y, "\xE2\x94\x9C");  // ├
@@ -292,7 +299,10 @@ std::string marker(const std::string& kind, int dx, int dy) {
 void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId) {
   if (route.points.size() < 2) return;
   const bool diamond = e.kind == "composition" || e.kind == "aggregation";
-  const bool dashed = e.kind == "dependency" || e.kind == "realization" || e.kind == "attachment";
+  const auto change = e.refs.find("change");
+  const bool removed = change != e.refs.end() && change->second == "removed";
+  const bool dashed = removed || e.kind == "dependency" || e.kind == "realization" || e.kind == "attachment";
+  const std::string edgeColor = change == e.refs.end() ? std::string(kEdge) : change->second == "added" ? "32" : "31";
   // an anchor on a top or left border names the border cell itself: step outside it
   auto outside = [&](Point& p, const std::string& id, bool first) {
     const auto it = byId.find(id);
@@ -327,9 +337,9 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
         else if (up && left) glyph = "\xE2\x94\x98";    // ┘
         else if (down && right) glyph = "\xE2\x94\x8C"; // ┌
         else if (down && left) glyph = "\xE2\x94\x90";  // ┐
-        g.put(x, y, glyph, kEdge);
+        g.put(x, y, glyph, edgeColor);
       } else {
-        g.line(x, y, horizontal, dashed, kEdge);
+        g.line(x, y, horizontal, dashed, edgeColor);
       }
     }
   }
@@ -337,14 +347,14 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
   const Point tail = pts.front(), head = pts.back();
   const Point before = pts[pts.size() - 2];
   if (diamond) {
-    g.put(tail.x, tail.y, marker(e.kind, 0, 0), kEdge);
+    g.put(tail.x, tail.y, marker(e.kind, 0, 0), edgeColor);
     const std::string m = marker("association", head.x - before.x, head.y - before.y);
     if (e.label.empty()) (void)m;
   } else {
     const std::string m = marker(e.kind, head.x - before.x, head.y - before.y);
-    if (!m.empty()) g.put(head.x, head.y, m, kEdge);
+    if (!m.empty()) g.put(head.x, head.y, m, edgeColor);
   }
-  if (!e.label.empty()) {
+  if (!e.label.empty() || change != e.refs.end()) {
     size_t best = 0;
     int bestLen = -1;
     for (size_t i = 1; i < pts.size(); ++i) {
@@ -355,7 +365,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
       }
     }
     const Point a = pts[best], b = pts[best + 1];
-    const auto lines = linesOf(e.label);
+    const auto lines = linesOf(change == e.refs.end() ? e.label : (change->second == "added" ? "+ " : "- ") + e.label);
     if (a.y == b.y) {
       std::string joined;
       for (const auto& l : lines) joined += (joined.empty() ? "" : ", ") + l;

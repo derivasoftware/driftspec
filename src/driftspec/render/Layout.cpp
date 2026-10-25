@@ -191,7 +191,7 @@ class Engine {
       area += static_cast<long>(components[r].w) * components[r].h;
       widest = std::max(widest, components[r].w);
     }
-    const int target = std::max(widest, static_cast<int>(std::ceil(std::sqrt(static_cast<double>(area) * 1.6))));
+    const int target = std::max(widest, static_cast<int>(std::ceil(std::sqrt(static_cast<double>(area) * M.ASPECT))));
     int x = 0, y = 0, rowH = 0, contentW = 0;
     for (int r : order) {
       Component& c = components[r];

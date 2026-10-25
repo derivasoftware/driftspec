@@ -26,6 +26,7 @@ struct Metrics {
   int GAP_Y = 56;
   int CONTAINER_PAD = 18;
   int CONTAINER_LABEL_H = 22;
+  double ASPECT = 1.6;  ///< width/height the packing aims at, in this table's units
 
   static Metrics svg() { return Metrics{}; }
   static Metrics text() {
@@ -42,6 +43,7 @@ struct Metrics {
     m.GAP_Y = 3;  // stub, channel, head
     m.CONTAINER_PAD = 2;
     m.CONTAINER_LABEL_H = 1;
+    m.ASPECT = 0.8;  // a terminal cell is about twice as tall as wide: 1.6 on screen is 0.8 in cells
     return m;
   }
 };

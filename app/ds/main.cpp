@@ -13,6 +13,11 @@
 #include "driftspec/render/IrExport.hpp"
 #include "driftspec/render/Svg.hpp"
 #include "driftspec/render/Text.hpp"
+#include "driftspec/diff/Diff.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <sys/stat.h>
 
 #include <unistd.h>
 
@@ -22,8 +27,23 @@
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text <diagram>]   (design diff: two directories, or two git revisions of <path>)\n";
   return 2;
+}
+
+bool isDirectory(const std::string& path) {
+  struct stat st;
+  return ::stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+/// The .ds files of `path` at git revision `rev`, extracted to a fresh directory ("" on failure).
+std::string checkout(const std::string& rev, const std::string& path) {
+  char tmpl[] = "/tmp/ds-diff-XXXXXX";
+  const char* dir = ::mkdtemp(tmpl);
+  if (!dir) return "";
+  const std::string command = "git archive '" + rev + "' -- '" + path + "' 2>/dev/null | tar -x -C '" + std::string(dir) + "' 2>/dev/null";
+  if (std::system(command.c_str()) != 0) return "";
+  return std::string(dir) + "/" + path;
 }
 
 driftspec::model::Model load(const std::string& dir) {
@@ -45,9 +65,41 @@ driftspec::model::Model load(const std::string& dir) {
 }  // namespace
 
 int main(int argc, char** argv) {
-  if (argc < 3 || argc > 5) return usage();
+  if (argc < 3 || argc > 7) return usage();
   const std::string verb = argv[1];
   const std::string dir = argv[2];
+  if (verb == "diff") {
+    if (argc < 4) return usage();
+    std::string a = argv[2], b = argv[3];
+    int next = 4;
+    std::string path = ".";
+    if (argc > next && std::string(argv[next]).rfind("--", 0) != 0) path = argv[next++];
+    if (!isDirectory(a) || !isDirectory(b)) {
+      a = checkout(a, path);
+      b = checkout(b, path);
+      if (a.empty() || b.empty()) {
+        std::cerr << "cannot read both revisions (give two directories, or two git revisions and a path)\n";
+        return 1;
+      }
+    }
+    const driftspec::model::Model before = load(a);
+    const driftspec::model::Model after = load(b);
+    const driftspec::diff::DiffResult result = driftspec::diff::Diff::compare(before, after);
+    if (argc > next + 1) {
+      const std::string how = argv[next], diagram = argv[next + 1];
+      const driftspec::model::Model marked = driftspec::diff::Diff::marked(before, after, result);
+      const std::string doc = driftspec::render::IrExport(marked).render(diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram, false);
+      if (doc.empty()) {
+        std::cerr << "no diagram named " << diagram << "\n";
+        return 1;
+      }
+      if (how == "--svg") std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc));
+      else std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0);
+      return 0;
+    }
+    std::cout << driftspec::diff::Diff::report(result);
+    return result.findings.empty() ? 0 : 1;
+  }
   if (verb == "draw") {
     std::ifstream in(dir);
     if (!in) {

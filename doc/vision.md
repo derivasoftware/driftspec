@@ -313,6 +313,31 @@ Priority: development, process, analysis.
 - **`ds serve`** (to do): HTTP preview with reload and focus script; the
   embryo of the LSP preview.
 
+### Semantic diff (built 2026-10-25)
+
+A design change is a difference between two models, never between two
+texts: a moved file or a reordered member is no change. `ds diff A B [path]`
+compares two directories or two git revisions of a path (git stays the only
+history) and reports, by module, the entities and relations added, removed
+and changed by identity, with what changed (`params: … -> …`,
+`flags: owns -> shares`). A removed class and an added one of the same shape
+in the same scope is a **rename** when at least 60 % of their members match;
+the tie between look-alikes is broken by who now points at the candidate
+(the attribute that used to be typed `Text` is now typed `Terminal`). Members
+of a renamed class travel with it. Containment is implied and not reported.
+
+Process: an artefact (requirement, constraint, verification) whose text
+changed under the same id and revision raises `W-REVISION-STALE`: the silent
+drift a merge request never shows.
+
+The **diff diagram** is a projection of the after model marked with the diff
+(`change` = added | removed | changed | renamed on entities, `kind+added` /
+`kind+removed` on relations; removed entities come over as ghosts):
+`ds diff A B path --svg CL_X` / `--text CL_X`. SVG: green added, red dashed
+removed, amber changed, blue renamed, with the detail as tooltip; terminal:
+`+ - ~ >` badges and colours. Meant for a merge request's description next to
+argos's code quality report.
+
 ## 8. Performance (measured 2026-10-24, Release build, wall time per process)
 
 | document | nodes / edges | ds (C++) | plantuml-render (Node + ELK) |
