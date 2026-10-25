@@ -139,3 +139,8 @@ package driftspec {
     tags: performance
   }
 }
+
+diagram REQ_System {
+  kind: requirement
+  include: driftspec@*           // every artefact of the package: the system requirements and what hangs from them
+}

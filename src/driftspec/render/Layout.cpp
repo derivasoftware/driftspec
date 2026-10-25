@@ -206,7 +206,7 @@ class Engine {
       widest = std::max(widest, components[r].w);
     }
     int target = std::max(widest, static_cast<int>(std::ceil(std::sqrt(static_cast<double>(area) * M.ASPECT))));
-    if (available > 0) target = std::max(widest, std::min(target, available));  // the screen wins over the aspect
+    if (available > 0) target = std::max(widest, available);  // a known screen is filled before growing downwards
     int x = 0, y = 0, rowH = 0, contentW = 0;
     for (int r : order) {
       Component& c = components[r];
