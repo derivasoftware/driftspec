@@ -19,6 +19,7 @@ struct Change {
   std::string scope;   ///< module, to group the report
   std::string detail;  ///< what changed: "params: a -> b; flags: owns -> refs"
   std::string from;    ///< for a rename: the old identity
+  std::string label;   ///< how the report names it when the identity is not readable (a message)
 };
 
 /// The semantic difference between two workspaces: entities and relations by

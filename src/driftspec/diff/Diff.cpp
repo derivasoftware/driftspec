@@ -99,8 +99,9 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     }
     const auto diffs = differences(ea, *eb);
     if (diffs.empty()) continue;
-    const std::string shown = ea.kind == model::Kind::Message ? ea.scope + " : " + ea.name : ea.id;
-    out.changes.push_back({"changed", "entity", shown, model::kindName(ea.kind), ea.scope, join(diffs, "; "), ""});
+    Change change{"changed", "entity", ea.id, model::kindName(ea.kind), ea.scope, join(diffs, "; "), "", ""};
+    if (ea.kind == model::Kind::Message) change.label = ea.scope + " : " + ea.name;
+    out.changes.push_back(change);
     if (isArtefact(ea.kind)) {
       // the same id with other text: the revision should have moved
       out.findings.push_back({"W-REVISION-STALE", "warning",
@@ -149,7 +150,7 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     if (best) {
       matched.insert(best->id);
       renamed[r->id] = best->id;
-      out.changes.push_back({"renamed", "entity", best->id, model::kindName(best->kind), best->scope, r->name + " -> " + best->name, r->id});
+      out.changes.push_back({"renamed", "entity", best->id, model::kindName(best->kind), best->scope, r->name + " -> " + best->name, r->id, ""});
     }
   }
   // the members of a renamed class are compared under their new name
@@ -160,19 +161,19 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
       const std::string newId = rn.second + ea.id.substr(rn.first.size());
       const model::Entity* eb = b.find(newId);
       if (!eb) {
-        out.changes.push_back({"removed", "entity", ea.id, model::kindName(ea.kind), rn.second, "", ""});
+        out.changes.push_back({"removed", "entity", ea.id, model::kindName(ea.kind), rn.second, "", "", ""});
         continue;
       }
       model::Entity moved = ea;  // under its new name the scope is not a change
       moved.scope = eb->scope;
       const auto diffs = differences(moved, *eb);
-      if (!diffs.empty()) out.changes.push_back({"changed", "entity", newId, model::kindName(ea.kind), rn.second, join(diffs, "; "), ""});
+      if (!diffs.empty()) out.changes.push_back({"changed", "entity", newId, model::kindName(ea.kind), rn.second, join(diffs, "; "), "", ""});
     }
     for (const auto& pair : b.entities()) {
       const model::Entity& eb = pair.second;
       if (eb.scope != rn.second) continue;
       const std::string oldId = rn.first + eb.id.substr(rn.second.size());
-      if (!a.find(oldId)) out.changes.push_back({"added", "entity", eb.id, model::kindName(eb.kind), rn.second, "", ""});
+      if (!a.find(oldId)) out.changes.push_back({"added", "entity", eb.id, model::kindName(eb.kind), rn.second, "", "", ""});
     }
   }
   for (const auto& pair : a.entities()) {
@@ -184,7 +185,7 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     bool insideRenamed = false;
     for (const auto& r : renamed) insideRenamed |= ea.scope == r.first || ea.id.rfind(r.first + "::", 0) == 0;
     if (insideRenamed) continue;
-    out.changes.push_back({"removed", "entity", ea.id, model::kindName(ea.kind), ea.scope, "", ""});
+    out.changes.push_back({"removed", "entity", ea.id, model::kindName(ea.kind), ea.scope, "", "", ""});
   }
   for (const auto& pair : b.entities()) {
     const model::Entity& eb = pair.second;
@@ -194,7 +195,7 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     bool insideRenamed = false;
     for (const auto& r : renamed) insideRenamed |= eb.scope == r.second || eb.id.rfind(r.second + "::", 0) == 0;
     if (insideRenamed) continue;
-    out.changes.push_back({"added", "entity", eb.id, model::kindName(eb.kind), eb.scope, "", ""});
+    out.changes.push_back({"added", "entity", eb.id, model::kindName(eb.kind), eb.scope, "", "", ""});
   }
   // relations: by their key, with renamed ids translated; containment is implied by the entities
   auto translate = [&](std::string id) {
@@ -227,13 +228,13 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     if (from) scopeA[relationKey(t)] = translate(from->scope);
   }
   for (const auto& k : relA) {
-    if (!relB.count(k)) out.changes.push_back({"removed", "relation", k, "relation", scopeA[k], "", ""});
+    if (!relB.count(k)) out.changes.push_back({"removed", "relation", k, "relation", scopeA[k], "", "", ""});
   }
   for (const auto& k : relB) {
     if (!relA.count(k)) {
       const model::Relation* r = byKey[k];
       const model::Entity* from = b.find(r->from);
-      out.changes.push_back({"added", "relation", k, "relation", from ? (from->kind == model::Kind::Class ? from->scope : from->scope) : "", "", ""});
+      out.changes.push_back({"added", "relation", k, "relation", from ? from->scope : "", "", "", ""});
     }
   }
   return out;
@@ -300,7 +301,7 @@ std::string Diff::report(const DiffResult& diff) {
     out << group.first << "\n";
     for (const Change* c : group.second) {
       const char* mark = c->kind == "added" ? "+" : c->kind == "removed" ? "-" : c->kind == "renamed" ? ">" : "~";
-      out << "  " << mark << " " << c->entity << " " << c->id;
+      out << "  " << mark << " " << c->entity << " " << (c->label.empty() ? c->id : c->label);
       if (!c->detail.empty()) out << "   (" << c->detail << ")";
       out << "\n";
     }
