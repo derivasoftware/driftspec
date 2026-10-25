@@ -18,6 +18,7 @@
 (enum name: (name) @type)
 (enum_value name: (name) @constant)
 (requirement id: (name) @constant)
+(requirement title: (line_text) @string)
 (constraint id: (name) @constant)
 (constraint title: (line_text) @string)
 (verification id: (name) @constant)
@@ -39,7 +40,7 @@
 (state entity: (qualified_name) @type)
 (diagram name: (name) @type)
 (participant name: (name) @variable)
-(participant type: (qualified_name) @type)
+(participant type: (type) @type)
 (parameter name: (name) @variable.parameter)
 (type name: (qualified_name) @type)
 (default_value) @constant
