@@ -96,21 +96,21 @@ package driftspec {
 
 diagram CL_Engine {
   kind: class
-  include: package:driftspec
-  exclude: app::Cli
+  include: driftspec@*
+  exclude: driftspec@app::Cli
   hide: methods
   show: ownership
 }
 
 diagram SEQ_Render {
   kind: sequence
-  include: app::Cli::render
+  include: driftspec@app::Cli::render
 }
 
 // narrower, for the terminal pane: the five stages without their value types
 diagram CL_Pipeline {
   kind: class
-  include: parse::Parser, bind::Binder, model::Model, check::Checker, render::IrExport, render::Svg, render::Terminal, render::Cells
+  include: driftspec@parse::Parser, driftspec@bind::Binder, driftspec@model::Model, driftspec@check::Checker, driftspec@render::IrExport, driftspec@render::Svg, driftspec@render::Terminal, driftspec@render::Cells
   hide: methods
   show: ownership
 }

@@ -47,23 +47,23 @@ TEST_F(TestIrExport, ListsTheDeclaredDiagrams) {
 TEST_F(TestIrExport, IncludeSelectsAndTheModuleBecomesAContainer) {
   const auto doc = render("CL_Model");
   EXPECT_EQ(doc["ir"], 1);
-  ASSERT_NE(node(doc, "ds"), nullptr);
-  EXPECT_EQ((*node(doc, "ds"))["kind"], "container");
-  ASSERT_NE(node(doc, "ds::Model"), nullptr);
-  EXPECT_EQ((*node(doc, "ds::Model"))["parent"], "ds");
-  EXPECT_EQ(node(doc, "ds::Vector"), nullptr);  // not included
-  EXPECT_EQ(node(doc, "ds::Cache"), nullptr);   // expected nodes are never drawn
+  ASSERT_NE(node(doc, "ds@ds"), nullptr);
+  EXPECT_EQ((*node(doc, "ds@ds"))["kind"], "container");
+  ASSERT_NE(node(doc, "ds@ds::Model"), nullptr);
+  EXPECT_EQ((*node(doc, "ds@ds::Model"))["parent"], "ds@ds");
+  EXPECT_EQ(node(doc, "ds@ds::Vector"), nullptr);  // not included
+  EXPECT_EQ(node(doc, "ds@ds::Cache"), nullptr);   // expected nodes are never drawn
 }
 
 TEST_F(TestIrExport, DerivedStereotypesAndMembersArePrinted) {
   const auto doc = render("CL_Model");
-  const nlohmann::json& check = *node(doc, "ds::Check");
+  const nlohmann::json& check = *node(doc, "ds@ds::Check");
   EXPECT_EQ(check["classifier"], "interface");
   EXPECT_EQ(check["abstract"], true);
   EXPECT_EQ(check["stereotype"], "interface");
   EXPECT_EQ(check["sectionKinds"], nlohmann::json({"methods"}));
   EXPECT_EQ(check["sections"][0][0], "+ abstract name() -> string");
-  const nlohmann::json& location = *node(doc, "ds::Location");
+  const nlohmann::json& location = *node(doc, "ds@ds::Location");
   EXPECT_EQ(location["stereotype"], "value, equatable, ordered, printable");
   EXPECT_EQ(location["sections"][0][2], "+ column: int = 0");  // source order
 }
@@ -80,11 +80,11 @@ TEST_F(TestIrExport, EdgesAreLiftedFromMembersToClasses) {
 
 TEST_F(TestIrExport, AnEnumIsAValueSoItIsAssociatedNotOwned) {
   const auto doc = render("CL_Values");
-  EXPECT_EQ((*node(doc, "ds::Severity"))["classifier"], "enum");
+  EXPECT_EQ((*node(doc, "ds@ds::Severity"))["classifier"], "enum");
   EXPECT_EQ(edges(doc, "association"), 1);
   EXPECT_EQ(edges(doc, "composition"), 1);
-  EXPECT_EQ(node(doc, "ds::Finding")->count("stereotype"), 0u);  // nothing shown beyond members
-  EXPECT_EQ((*node(doc, "ds::Finding"))["sectionKinds"], nlohmann::json({"attributes"}));  // hide: methods
+  EXPECT_EQ(node(doc, "ds@ds::Finding")->count("stereotype"), 0u);  // nothing shown beyond members
+  EXPECT_EQ((*node(doc, "ds@ds::Finding"))["sectionKinds"], nlohmann::json({"attributes"}));  // hide: methods
 }
 
 }  // namespace

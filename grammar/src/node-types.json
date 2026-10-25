@@ -804,13 +804,9 @@
       }
     },
     "children": {
-      "multiple": true,
+      "multiple": false,
       "required": true,
       "types": [
-        {
-          "type": "contract",
-          "named": true
-        },
         {
           "type": "parameters",
           "named": true
@@ -963,13 +959,9 @@
       }
     },
     "children": {
-      "multiple": true,
+      "multiple": false,
       "required": true,
       "types": [
-        {
-          "type": "contract",
-          "named": true
-        },
         {
           "type": "parameters",
           "named": true
@@ -1197,7 +1189,18 @@
   {
     "type": "qualified_name",
     "named": true,
-    "fields": {},
+    "fields": {
+      "package": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "package_prefix",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
       "required": true,
@@ -1796,6 +1799,10 @@
   {
     "type": "package",
     "named": false
+  },
+  {
+    "type": "package_prefix",
+    "named": true
   },
   {
     "type": "participant",

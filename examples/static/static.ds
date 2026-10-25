@@ -208,34 +208,34 @@ package ds {
 
 // --- representations: what to print, never what to draw --------------------------
 
-// `include`/`exclude` select: an id, a module (ds or ds::*) with everything inside, or a
-// whole package (package:ds). extern entities are drawn only when named. Members are
+// `include`/`exclude` select: a full id (ds@ds::Model), a module with everything inside
+// (ds@ds::*), or a whole package (ds@*). extern entities are drawn only when named. Members are
 // printed unless `hide: fields, methods`; `show` adds detail: ownership, multiplicity,
 // operators, notes, derived-stereotypes.
 
 diagram CL_Model {
   kind: class
-  include: ds::Model, ds::Check, ds::ScopedCheck, ds::Finding, ds::Location
+  include: ds@ds::Model, ds@ds::Check, ds@ds::ScopedCheck, ds@ds::Finding, ds@ds::Location
   show: ownership, multiplicity, operators, notes, derived-stereotypes
 }
 
 diagram CL_Values {
   kind: class
-  include: ds::Finding, ds::Location, ds::Severity
+  include: ds@ds::Finding, ds@ds::Location, ds@ds::Severity
   hide: methods
   show: operators
 }
 
 diagram CL_Templates {
   kind: class
-  include: ds::Repository, ds::Stack, ds::Index, ds::Entity, ds::Relation, ds::Scope
+  include: ds@ds::Repository, ds@ds::Stack, ds@ds::Index, ds@ds::Entity, ds@ds::Relation, ds@ds::Scope
   show: ownership, multiplicity, derived-stereotypes
 }
 
 diagram CL_Package_ds {
   kind: class
-  include: package:ds
-  exclude: ds::Broken, ds::Node, ds::Tree
+  include: ds@*
+  exclude: ds@ds::Broken, ds@ds::Node, ds@ds::Tree
   hide: methods
   show: ownership, multiplicity, derived-stereotypes
 }

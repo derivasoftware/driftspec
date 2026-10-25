@@ -43,16 +43,33 @@ std::string join(const std::vector<std::string>& items, const char* sep) {
 
 }  // namespace
 
+namespace {
+
+/// The scope outside `scope`: ds@ds::b → ds@ds → ds@ → "" (R10).
+std::string outer(const std::string& scope) {
+  const auto cut = scope.rfind("::");
+  if (cut != std::string::npos) return scope.substr(0, cut);
+  const auto at = scope.find('@');
+  if (at != std::string::npos && at + 1 < scope.size()) return scope.substr(0, at + 1);
+  return "";
+}
+
+std::string qualifyIn(const std::string& scope, const std::string& name) {
+  if (scope.empty()) return name;
+  if (scope.back() == '@') return scope + name;
+  return scope + "::" + name;
+}
+
+}  // namespace
+
 std::string Checker::resolve(const std::string& name, const std::string& scope) const {
-  if (model_.find(name)) return name;
+  if (model_.find(name)) return name;  // a full id (pkg@mod::Class), a global artefact, a package
   const std::string bare = withoutRevision(name);
   if (bare != name && model_.find(bare)) return bare;
-  std::string s = scope;
-  while (!s.empty()) {
-    const std::string candidate = s + "::" + name;
+  if (name.find('@') != std::string::npos) return "";  // absolute, and nobody declares it
+  for (std::string s = scope; !s.empty(); s = outer(s)) {
+    const std::string candidate = qualifyIn(s, name);
     if (model_.find(candidate)) return candidate;
-    const auto cut = s.rfind("::");
-    s = cut == std::string::npos ? "" : s.substr(0, cut);
   }
   return "";
 }
@@ -137,9 +154,17 @@ void Checker::resolveReference(const bind::Reference& reference) {
     expected.name = reference.target;
     expected.scope = reference.scope;
     const bool artefact = reference.expectedKind == model::Kind::Requirement || reference.expectedKind == model::Kind::Verification ||
-                          reference.expectedKind == model::Kind::Constraint || reference.expectedKind == model::Kind::Boundary ||
-                          reference.target.find("::") != std::string::npos;
-    expected.id = artefact ? withoutRevision(reference.target) : (reference.scope.empty() ? reference.target : reference.scope + "::" + reference.target);
+                          reference.expectedKind == model::Kind::Constraint;
+    const std::string pkg = reference.scope.substr(0, reference.scope.find('@') == std::string::npos ? 0 : reference.scope.find('@') + 1);
+    if (artefact) {
+      expected.id = withoutRevision(reference.target);
+    } else if (reference.target.find('@') != std::string::npos) {
+      expected.id = reference.target;  // absolute
+    } else if (reference.target.find("::") != std::string::npos) {
+      expected.id = pkg + reference.target;  // module-qualified, in this package
+    } else {
+      expected.id = qualifyIn(reference.scope, reference.target);  // bare, in this scope
+    }
     expected.location = reference.location;
     expected.expected = true;
     model_.declare(expected);

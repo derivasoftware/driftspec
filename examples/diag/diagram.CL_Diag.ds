@@ -4,9 +4,9 @@
 
 diagram CL_Diag {
   kind: class
-  include: lsp::*
-  include: ds::module_b::*
-  exclude: ds::module_b::module_c
+  include: ds@lsp::*
+  include: ds@ds::module_b::*
+  exclude: ds@ds::module_b::module_c
   show: contracts, requirements
   layout:
     direction: top-down

@@ -72,14 +72,14 @@ TEST_F(TestLayout, ChildrenSitInsideTheirContainer) {
     if (p.node->parent.empty()) continue;
     EXPECT_TRUE(inside(p.rect, placed.at(p.node->parent)->rect)) << p.node->id << " outside " << p.node->parent;
   }
-  EXPECT_FALSE(overlap(placed.at("ds")->rect, placed.at("lsp")->rect));
+  EXPECT_FALSE(overlap(placed.at("ds@ds")->rect, placed.at("ds@lsp")->rect));
 }
 
 TEST_F(TestLayout, BasesAreDrawnAboveSubtypesAndWholesAboveParts) {
   const IrDocument doc = document("CL_Model");
   const auto placed = byId(driftspec::render::layout(doc));
-  EXPECT_LT(placed.at("ds::Check")->rect.y + placed.at("ds::Check")->rect.h, placed.at("ds::ScopedCheck")->rect.y);
-  EXPECT_LT(placed.at("ds::Finding")->rect.y + placed.at("ds::Finding")->rect.h, placed.at("ds::Location")->rect.y);
+  EXPECT_LT(placed.at("ds@ds::Check")->rect.y + placed.at("ds@ds::Check")->rect.h, placed.at("ds@ds::ScopedCheck")->rect.y);
+  EXPECT_LT(placed.at("ds@ds::Finding")->rect.y + placed.at("ds@ds::Finding")->rect.h, placed.at("ds@ds::Location")->rect.y);
 }
 
 TEST_F(TestLayout, EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute) {
@@ -101,9 +101,9 @@ TEST_F(TestLayout, LongEdgesStepAroundTheNodesTheyCross) {
   const IrDocument doc = document("CL_Model");
   const LayoutResult lay = driftspec::render::layout(doc);
   const auto placed = byId(lay);
-  const Rect scoped = placed.at("ds::ScopedCheck")->rect;
+  const Rect scoped = placed.at("ds@ds::ScopedCheck")->rect;
   for (size_t i = 0; i < doc.edges.size(); ++i) {
-    if (doc.edges[i].from != "ds::Check" || doc.edges[i].to != "ds::Finding") continue;
+    if (doc.edges[i].from != "ds@ds::Check" || doc.edges[i].to != "ds@ds::Finding") continue;
     for (size_t k = 1; k < lay.routes.at(i).points.size(); ++k) {
       const auto& a = lay.routes.at(i).points[k - 1];
       const auto& b = lay.routes.at(i).points[k];
@@ -118,7 +118,7 @@ TEST_F(TestLayout, ParallelRelationsAreBundledWithTheirLabelsStacked) {
   const IrDocument doc = raw.bundled();
   EXPECT_LT(doc.edges.size(), raw.edges.size());
   bool stacked = false;
-  for (const auto& e : doc.edges) stacked |= e.from == "ds::Index" && e.to == "ds::Repository<1>" && e.label == "requirements 1\nrelations 1";
+  for (const auto& e : doc.edges) stacked |= e.from == "ds@ds::Index" && e.to == "ds@ds::Repository<1>" && e.label == "requirements 1\nrelations 1";
   EXPECT_TRUE(stacked);
 }
 
@@ -127,7 +127,7 @@ TEST_F(TestLayout, TheSvgIsDeterministicAndCarriesStableIds) {
   const std::string once = driftspec::render::Svg().render(doc);
   const std::string twice = driftspec::render::Svg().render(doc);
   EXPECT_EQ(once, twice);
-  EXPECT_NE(once.find("data-id=\"ds::Finding\""), std::string::npos);
+  EXPECT_NE(once.find("data-id=\"ds@ds::Finding\""), std::string::npos);
   EXPECT_NE(once.find("class=\"pr-edge pr-edge-composition\""), std::string::npos);
   EXPECT_NE(once.find("<title>CL_Values</title>"), std::string::npos);
   EXPECT_EQ(once.find("NaN"), std::string::npos);
@@ -157,7 +157,7 @@ class TestSequenceSvg : public ::testing::Test {
 TEST_F(TestSequenceSvg, DrawsLifelinesRowsFramesAndTheCaller) {
   const std::string out = svg("SEQ_Run");
   EXPECT_NE(out.find("class=\"pr-lifeline pr-actor\" data-id=\"caller\""), std::string::npos);
-  EXPECT_NE(out.find("data-id=\"ds::Checker\""), std::string::npos);
+  EXPECT_NE(out.find("data-id=\"ds@ds::Checker\""), std::string::npos);
   EXPECT_NE(out.find("class=\"pr-frame pr-frame-loop\""), std::string::npos);
   EXPECT_NE(out.find("class=\"pr-frame pr-frame-alt\""), std::string::npos);
   EXPECT_NE(out.find("run(binder: Binder)"), std::string::npos);
@@ -167,12 +167,12 @@ TEST_F(TestSequenceSvg, DrawsLifelinesRowsFramesAndTheCaller) {
 TEST_F(TestSequenceSvg, CarriesLinksSpansLocationsAndTheScript) {
   const std::string deep = svg("SEQ_Run");
   EXPECT_NE(deep.find("data-ref-span=\"4-9\""), std::string::npos);  // resolveReference expanded into rows 4..9
-  EXPECT_NE(deep.find("data-ref-expands=\"ds::Checker::resolveReference::sequence\""), std::string::npos);
+  EXPECT_NE(deep.find("data-ref-expands=\"ds@ds::Checker::resolveReference::sequence\""), std::string::npos);
   EXPECT_NE(deep.find("behaviour.ds:"), std::string::npos);  // data-ref-location carries file:line (absolute under the test runner)
   EXPECT_NE(deep.find("<script><![CDATA["), std::string::npos);
-  EXPECT_NE(deep.find("<a href=\"#ds::Model\""), std::string::npos);  // a lifeline links to its class
+  EXPECT_NE(deep.find("<a href=\"#ds@ds::Model\""), std::string::npos);  // a lifeline links to its class
   const std::string shallow = svg("SEQ_Run_Overview");
-  EXPECT_NE(shallow.find("<a href=\"#ds::Checker::resolveReference::sequence\""), std::string::npos);  // a folded child is a link
+  EXPECT_NE(shallow.find("<a href=\"#ds@ds::Checker::resolveReference::sequence\""), std::string::npos);  // a folded child is a link
   EXPECT_EQ(shallow.find("data-ref-span"), std::string::npos);
 }
 

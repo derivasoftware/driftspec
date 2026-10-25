@@ -11,9 +11,15 @@ them. The vision (`vision.md`) says why; this says what.*
   not a unit of meaning. `examples/diag`.
 - A `package` is the whole scope, the black box. A `module` is a namespace
   and opens the white box. Both reopen across files (R1, R2, R9).
-- Packages do not contribute to qualified names; modules do: `ds::Model`
-  wherever its file is (R4). No includes, no using: a bare name resolves from
-  the innermost module outward, a qualified name crosses modules (R10).
+- Full identities name their package with `@` and their modules with `::`,
+  like C++ namespaces: the class `Model` of module `ds` in package `ds` is
+  `ds@ds::Model`; the boundary `cli` of the package is `ds@cli`; process
+  artefacts stay global (`REQ-00001-2`) (R4, decided 2026-10-25). What already
+  encloses you is omitted: inside the package, `ds::Model`; inside the module,
+  `Model`. No includes, no using: a bare name resolves from the innermost
+  scope outward (module, then package), a qualified name crosses modules and a
+  `pkg@` one crosses packages (R10). Diagrams live outside packages, so they
+  name full ids: `include: ds@ds::Model`, a module `ds@ds::*`, a package `ds@*`.
 - Identity: design artefacts (module, class, enum, boundary, behaviour) by
   qualified name; process artefacts (requirement, constraint, verification)
   by id **with its revision**, `REQ-00001-2`. Two declarations of one
@@ -32,7 +38,13 @@ them. The vision (`vision.md`) says why; this says what.*
   from the methods and never written (R14).
 - Any entity, a member too, may open a body with fields, `note:`,
   annotations, contracts and nested requirements or constraints; nesting
-  means "about this" (R12, R13).
+  means "about this" (R12, R13). Braces enclose, one thing per line, a field
+  value runs to the end of its line and `//` always starts a comment.
+- Contracts (`[requires: …]`, `[ensures: …]`, `[flags]`) are written only in
+  the body and kept as text: semantic constraints for the reader and for
+  argos, not interpreted by the tool (R8, decided 2026-10-25).
+- `extern` declares names only, never signatures: what lives outside the
+  workspace is not checked (R11).
 - Members: visibility (`+ # -`), then `abstract | static | const` for
   methods or `owns | refs | shares` for attributes, then the name. A method
   named like its class is a constructor. `name: type = default` (R19).

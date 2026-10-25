@@ -172,30 +172,30 @@ package ds {
 
 diagram SEQ_Run {
   kind: sequence
-  include: ds::Checker::run
+  include: ds@ds::Checker::run
   depth: 1                     // inline resolveReference; checkMessage has no behaviour, stays a message
 }
 
 diagram SEQ_Run_Overview {
   kind: sequence
-  include: ds::Checker::run
+  include: ds@ds::Checker::run
   depth: 0                     // child behaviours as ref frames with links
 }
 
 diagram SEQ_Modules {
   kind: sequence
-  include: ds::*, lsp::*
+  include: ds@ds::*, ds@lsp::*
   level: module                // B9: every method sequence lifted to module ↔ module messages
 }
 
 diagram SEQ_Publish {
   kind: sequence
-  include: lsp::Publisher::publish
+  include: ds@lsp::Publisher::publish
 }
 
 diagram STM_Checker {
   kind: state
-  include: ds::Checker
+  include: ds@ds::Checker
 }
 
 // ---------------------------------------------------------------------------

@@ -89,7 +89,10 @@ model::Location Binder::locationOf(const parse::ParsedFile& file, TSNode node) c
 }
 
 std::string Binder::qualify(const std::string& scope, const std::string& name) const {
-  return scope.empty() ? name : scope + "::" + name;
+  // the package gives its name with @, modules with :: (R4): ds@ds::Model, ds@cli
+  if (scope.empty()) return name;
+  if (scope.back() == '@') return scope + name;
+  return scope + "::" + name;
 }
 
 void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity) {
@@ -504,12 +507,12 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity e;
       e.kind = model::Kind::Package;
       e.name = fieldText(file, c, "name");
-      e.id = "package:" + e.name;  // packages do not contribute to names (R4)
+      e.id = e.name;  // a package is its name; what it holds is ds@... (R4)
       e.location = loc;
       bindFields(file, c, e);
       model::Entity& declared = model_.declare(e);
       for (const auto& f : e.fields) declared.fields[f.first] = f.second;
-      visit(file, c, scope, declared.id);
+      visit(file, c, declared.id + "@", declared.id);
 
     } else if (is(c, "module")) {
       model::Entity e;
@@ -531,7 +534,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity e;
       e.kind = model::Kind::Boundary;
       e.name = fieldText(file, c, "name");
-      e.id = e.name;
+      e.id = qualify(scope, e.name);  // ds@cli: the package's port
       e.scope = scope;
       e.location = loc;
       bindFields(file, c, e);

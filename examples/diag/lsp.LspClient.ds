@@ -10,10 +10,11 @@ package ds {
       @requirement DS-0002-0
       @boundary LSP          // this class realises the LSP boundary
 
-      + send(msg: int) -> bool
+      + send(msg: int) -> bool {
         [abstract, noexcept]
         [requires: 0 < msg < 100]
         [ensures: ret == false on error]
+      }
 
       - a: Vector
 

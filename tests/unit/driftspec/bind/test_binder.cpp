@@ -17,11 +17,11 @@ class TestBinder : public ::testing::Test {
   }
 };
 
-TEST_F(TestBinder, ModulesQualifyNamesAndPackagesDoNot) {
+TEST_F(TestBinder, PackagesQualifyWithAtAndModulesWithColons) {
   bindText("package ds { module lsp { class LspClient { + send(msg: int) -> bool } } }");
-  EXPECT_NE(model.find("lsp::LspClient"), nullptr);
-  EXPECT_NE(model.find("lsp::LspClient::send"), nullptr);
-  EXPECT_EQ(model.find("ds::lsp::LspClient"), nullptr);
+  EXPECT_NE(model.find("ds@lsp::LspClient"), nullptr);
+  EXPECT_NE(model.find("ds@lsp::LspClient::send"), nullptr);
+  EXPECT_EQ(model.find("ds@ds::lsp::LspClient"), nullptr);
 }
 
 TEST_F(TestBinder, ModulesCanBeReopenedAcrossFilesButClassesCannot) {
@@ -29,8 +29,8 @@ TEST_F(TestBinder, ModulesCanBeReopenedAcrossFilesButClassesCannot) {
   binder.bind(parser.parseText("a.ds", "package ds { module m { class A { } } }"));
   binder.bind(parser.parseText("b.ds", "package ds { module m { class B { } } }"));
   binder.bind(parser.parseText("c.ds", "package ds { module m { class A { } } }"));
-  EXPECT_NE(model.find("m::A"), nullptr);
-  EXPECT_NE(model.find("m::B"), nullptr);
+  EXPECT_NE(model.find("ds@m::A"), nullptr);
+  EXPECT_NE(model.find("ds@m::B"), nullptr);
   ASSERT_EQ(model.findings().size(), 1u);
   EXPECT_EQ(model.findings()[0].code, "E-DUPLICATE-IDENTITY");
 }

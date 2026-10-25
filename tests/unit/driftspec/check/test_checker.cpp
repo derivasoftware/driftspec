@@ -26,7 +26,7 @@ class TestChecker : public ::testing::Test {
 
 TEST_F(TestChecker, UndeclaredReferencesBecomeExpectedNodesReportedOnce) {
   const auto byCode = loadExamples();
-  const driftspec::model::Entity* base = model.find("lsp::AbstractClass");
+  const driftspec::model::Entity* base = model.find("ds@lsp::AbstractClass");
   ASSERT_NE(base, nullptr);
   EXPECT_TRUE(base->expected);
   EXPECT_GE(byCode.at("W-REF-UNDECLARED"), 3);  // AbstractClass, Vector, LspServer (and boundary return types)
@@ -48,7 +48,7 @@ TEST_F(TestChecker, ResolvesInnermostScopeFirst) {
   binder.bind(parser.parseText("t.ds", "package p { module a { class X { } module b { class Y : X { } } } }"));
   driftspec::check::Checker checker(model);
   checker.run(binder);
-  EXPECT_EQ(checker.resolve("X", "a::b"), "a::X");
+  EXPECT_EQ(checker.resolve("X", "p@a::b"), "p@a::X");
   EXPECT_EQ(model.findings().size(), 0u);
 }
 

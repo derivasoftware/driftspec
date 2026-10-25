@@ -60,7 +60,7 @@ TEST_F(TestRequirementsView, AClassDiagramHangsItsArtefactsAsANote) {
   const auto doc = diagram("CL_Projection");
   bool note = false;
   for (const auto& n : doc["nodes"]) {
-    if (n["kind"] == "note" && n["id"] == "projection::Projection::artefacts") {
+    if (n["kind"] == "note" && n["id"] == "iris@projection::Projection::artefacts") {
       const std::string label = n["label"];
       note = label.find("REQ-00001-2") != std::string::npos && label.find("CST-00002-1") != std::string::npos;
     }

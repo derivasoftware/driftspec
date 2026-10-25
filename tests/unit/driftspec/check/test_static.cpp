@@ -52,86 +52,86 @@ TEST_F(TestStatic, TheOracleFindingsAndNothingElse) {
 }
 
 TEST_F(TestStatic, ExternDeclaresIdentitiesWithoutObligations) {
-  const driftspec::model::Entity* vec = model.find("std::vector<1>");
+  const driftspec::model::Entity* vec = model.find("ds@std::vector<1>");
   ASSERT_NE(vec, nullptr);
   EXPECT_TRUE(vec->has("extern"));
-  EXPECT_EQ(field("std::vector<1>", "stereotypes"), "extern");
+  EXPECT_EQ(field("ds@std::vector<1>", "stereotypes"), "extern");
 }
 
 TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
   // the revision is part of the identity (block 1): DS-C-0001-0, DS-C-0002-1
   EXPECT_EQ(field("DS-C-0001-0", "title"), "The diagnostics core shall not depend on any I/O library");
   EXPECT_EQ(field("DS-C-0002-1", "title"), "Finding codes are stable");
-  EXPECT_NE(relation("about", "DS-C-0001-0", "package:ds"), nullptr);
-  EXPECT_NE(relation("about", "DS-C-0003-0", "ds::Vector"), nullptr);         // nested in a class
-  EXPECT_NE(relation("about", "DS-0003-0", "ds::Model::declare"), nullptr);   // requirement nested in a member body (R12)
-  EXPECT_NE(relation("constrained-by", "ds::Model", "DS-C-0001-0"), nullptr);  // a pinned link
+  EXPECT_NE(relation("about", "DS-C-0001-0", "ds"), nullptr);
+  EXPECT_NE(relation("about", "DS-C-0003-0", "ds@ds::Vector"), nullptr);         // nested in a class
+  EXPECT_NE(relation("about", "DS-0003-0", "ds@ds::Model::declare"), nullptr);   // requirement nested in a member body (R12)
+  EXPECT_NE(relation("constrained-by", "ds@ds::Model", "DS-C-0001-0"), nullptr);  // a pinned link
 }
 
 TEST_F(TestStatic, NotesAndContractsLiveInMemberBodies) {
-  EXPECT_EQ(field("ds::ScopedCheck::run", "note"), "walks the scopes and delegates each one to runScope");
-  EXPECT_EQ(field("ds::ScopedCheck::run", "contract.0"), "ensures: result sorted by location");
-  EXPECT_EQ(field("ds::Model::declare", "contract.1"), "ensures: find(entity.id) == entity");
+  EXPECT_EQ(field("ds@ds::ScopedCheck::run", "note"), "walks the scopes and delegates each one to runScope");
+  EXPECT_EQ(field("ds@ds::ScopedCheck::run", "contract.0"), "ensures: result sorted by location");
+  EXPECT_EQ(field("ds@ds::Model::declare", "contract.1"), "ensures: find(entity.id) == entity");
 }
 
 TEST_F(TestStatic, InterfaceAndAbstractAreDerived) {
-  EXPECT_EQ(field("ds::Check", "stereotypes"), "interface");
-  EXPECT_EQ(field("ds::ScopedCheck", "stereotypes"), "abstract");
-  EXPECT_EQ(field("ds::Model", "stereotypes"), "");
-  EXPECT_EQ(field("ds::Location", "stereotypes"), "value, equatable, ordered, printable");
-  EXPECT_EQ(field("ds::Finding", "stereotypes"), "value, equatable, hashable");
+  EXPECT_EQ(field("ds@ds::Check", "stereotypes"), "interface");
+  EXPECT_EQ(field("ds@ds::ScopedCheck", "stereotypes"), "abstract");
+  EXPECT_EQ(field("ds@ds::Model", "stereotypes"), "");
+  EXPECT_EQ(field("ds@ds::Location", "stereotypes"), "value, equatable, ordered, printable");
+  EXPECT_EQ(field("ds@ds::Finding", "stereotypes"), "value, equatable, hashable");
 }
 
 TEST_F(TestStatic, EnumsAndTemplatesHaveIdentities) {
-  EXPECT_EQ(field("ds::Severity", "values"), "Error, Warning, Info");
-  EXPECT_EQ(field("ds::Repository<1>", "params"), "T");
-  EXPECT_EQ(field("ds::Repository<1>", "bound.T"), "Entity");
-  EXPECT_NE(relation("bounded-by", "ds::Repository<1>", "ds::Entity"), nullptr);
-  EXPECT_NE(relation("owns", "ds::Index::relations", "ds::Repository<1>"), nullptr);
-  EXPECT_NE(relation("uses", "ds::Index::relations", "ds::Relation"), nullptr);
+  EXPECT_EQ(field("ds@ds::Severity", "values"), "Error, Warning, Info");
+  EXPECT_EQ(field("ds@ds::Repository<1>", "params"), "T");
+  EXPECT_EQ(field("ds@ds::Repository<1>", "bound.T"), "Entity");
+  EXPECT_NE(relation("bounded-by", "ds@ds::Repository<1>", "ds@ds::Entity"), nullptr);
+  EXPECT_NE(relation("owns", "ds@ds::Index::relations", "ds@ds::Repository<1>"), nullptr);
+  EXPECT_NE(relation("uses", "ds@ds::Index::relations", "ds@ds::Relation"), nullptr);
 }
 
 TEST_F(TestStatic, OwnershipAndMultiplicityComeFromTheAttribute) {
-  const auto* location = relation("owns", "ds::Finding::location", "ds::Location");
+  const auto* location = relation("owns", "ds@ds::Finding::location", "ds@ds::Location");
   ASSERT_NE(location, nullptr);
   EXPECT_EQ(location->multiplicity, "1");
-  const auto* scopes = relation("refs", "ds::ScopedCheck::scopes", "ds::Scope");
+  const auto* scopes = relation("refs", "ds@ds::ScopedCheck::scopes", "ds@ds::Scope");
   ASSERT_NE(scopes, nullptr);
   EXPECT_EQ(scopes->multiplicity, "*");
-  const auto* entities = relation("owns", "ds::Model::entities", "ds::Entity");
+  const auto* entities = relation("owns", "ds@ds::Model::entities", "ds@ds::Entity");
   ASSERT_NE(entities, nullptr);
   EXPECT_EQ(entities->multiplicity, "*");
-  const auto* found = relation("uses", "ds::Model::find", "ds::Entity");
+  const auto* found = relation("uses", "ds@ds::Model::find", "ds@ds::Entity");
   ASSERT_NE(found, nullptr);
   EXPECT_EQ(found->multiplicity, "");
-  EXPECT_NE(relation("shares", "ds::Model::cache", "ds::Cache"), nullptr);
-  EXPECT_NE(relation("uses", "ds::ScopedCheck::runScope", "ds::Model"), nullptr);  // parameters give uses
+  EXPECT_NE(relation("shares", "ds@ds::Model::cache", "ds@ds::Cache"), nullptr);
+  EXPECT_NE(relation("uses", "ds@ds::ScopedCheck::runScope", "ds@ds::Model"), nullptr);  // parameters give uses
 }
 
 TEST_F(TestStatic, OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody) {
-  EXPECT_EQ(field("ds::Vector", "operators"), "==, +, *, []");
-  ASSERT_NE(model.find("ds::Vector::operator+"), nullptr);
-  EXPECT_EQ(field("ds::Vector::operator*", "params"), "k: float");
-  EXPECT_EQ(field("ds::Vector::operator*", "returns"), "Vector");
-  ASSERT_NE(model.find("ds::Vector::Vector"), nullptr);
-  EXPECT_TRUE(model.find("ds::Vector::Vector")->has("constructor"));
+  EXPECT_EQ(field("ds@ds::Vector", "operators"), "==, +, *, []");
+  ASSERT_NE(model.find("ds@ds::Vector::operator+"), nullptr);
+  EXPECT_EQ(field("ds@ds::Vector::operator*", "params"), "k: float");
+  EXPECT_EQ(field("ds@ds::Vector::operator*", "returns"), "Vector");
+  ASSERT_NE(model.find("ds@ds::Vector::Vector"), nullptr);
+  EXPECT_TRUE(model.find("ds@ds::Vector::Vector")->has("constructor"));
 }
 
 TEST_F(TestStatic, CrossModuleReferencesNeedTheModuleNotAnInclude) {
-  const auto* model_ = relation("refs", "lsp::Publisher::model", "ds::Model");
+  const auto* model_ = relation("refs", "ds@lsp::Publisher::model", "ds@ds::Model");
   ASSERT_NE(model_, nullptr);
-  EXPECT_NE(relation("owns", "lsp::Publisher::last", "ds::Finding"), nullptr);
-  const driftspec::model::Entity* bare = model.find("lsp::Finding");
+  EXPECT_NE(relation("owns", "ds@lsp::Publisher::last", "ds@ds::Finding"), nullptr);
+  const driftspec::model::Entity* bare = model.find("ds@lsp::Finding");
   ASSERT_NE(bare, nullptr);
   EXPECT_TRUE(bare->expected);
 }
 
 TEST_F(TestStatic, DefaultsAndModifiersAreKept) {
-  EXPECT_EQ(field("ds::Location::column", "default"), "0");
-  EXPECT_TRUE(model.find("ds::Stack<1>::of")->has("static"));
-  EXPECT_TRUE(model.find("ds::Stack<1>::size")->has("const"));
-  EXPECT_TRUE(model.find("ds::Check::run")->has("abstract"));
-  EXPECT_TRUE(model.find("ds::Finding::location")->has("owns"));
+  EXPECT_EQ(field("ds@ds::Location::column", "default"), "0");
+  EXPECT_TRUE(model.find("ds@ds::Stack<1>::of")->has("static"));
+  EXPECT_TRUE(model.find("ds@ds::Stack<1>::size")->has("const"));
+  EXPECT_TRUE(model.find("ds@ds::Check::run")->has("abstract"));
+  EXPECT_TRUE(model.find("ds@ds::Finding::location")->has("owns"));
 }
 
 }  // namespace

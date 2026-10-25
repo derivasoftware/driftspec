@@ -919,13 +919,6 @@
             ]
           },
           {
-            "type": "REPEAT",
-            "content": {
-              "type": "SYMBOL",
-              "name": "contract"
-            }
-          },
-          {
             "type": "CHOICE",
             "members": [
               {
@@ -1114,13 +1107,6 @@
                 "type": "BLANK"
               }
             ]
-          },
-          {
-            "type": "REPEAT",
-            "content": {
-              "type": "SYMBOL",
-              "name": "contract"
-            }
           },
           {
             "type": "CHOICE",
@@ -2270,6 +2256,22 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "package",
+              "content": {
+                "type": "SYMBOL",
+                "name": "package_prefix"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "SYMBOL",
           "name": "name"
         },
@@ -2299,6 +2301,22 @@
           }
         }
       ]
+    },
+    "package_prefix": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "[A-Za-z_][A-Za-z0-9_]*(-[A-Za-z0-9_]+)*"
+          },
+          {
+            "type": "STRING",
+            "value": "@"
+          }
+        ]
+      }
     },
     "number": {
       "type": "PATTERN",

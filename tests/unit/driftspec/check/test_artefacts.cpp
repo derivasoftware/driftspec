@@ -63,14 +63,14 @@ TEST_F(TestArtefacts, TheRevisionIsPartOfTheIdentityAndLinksNameIt) {
 }
 
 TEST_F(TestArtefacts, LevelByPlacementAndNestingGivesTheRelation) {
-  EXPECT_EQ(model.find("SREQ-00001-2")->scope, "");               // in the package: system level
-  EXPECT_EQ(model.find("REQ-00001-2")->scope, "projection");      // in a module: software level
+  EXPECT_EQ(model.find("SREQ-00001-2")->scope, "iris@");          // in the package: system level
+  EXPECT_EQ(model.find("REQ-00001-2")->scope, "iris@projection");  // in a module: software level
   EXPECT_NE(relation("refines", "SREQ-00004-1", "SREQ-00001-2"), nullptr);   // requirement nested in a requirement
   EXPECT_NE(relation("verifies", "VER-00001-3", "REQ-00001-2"), nullptr);    // verification nested in a requirement
   EXPECT_NE(relation("verifies", "VER-00050-1", "SREQ-00001-2"), nullptr);   // verification elsewhere, @requirement
-  EXPECT_NE(relation("about", "CST-00002-1", "package:iris"), nullptr);
-  EXPECT_NE(relation("requires", "projection::Projection", "REQ-00001-2"), nullptr);
-  EXPECT_NE(relation("constrained-by", "projection::Projection", "CST-00002-1"), nullptr);
+  EXPECT_NE(relation("about", "CST-00002-1", "iris"), nullptr);
+  EXPECT_NE(relation("requires", "iris@projection::Projection", "REQ-00001-2"), nullptr);
+  EXPECT_NE(relation("constrained-by", "iris@projection::Projection", "CST-00002-1"), nullptr);
 }
 
 TEST_F(TestArtefacts, FieldsAsDecided) {
@@ -88,7 +88,7 @@ TEST_F(TestArtefacts, FieldsAsDecided) {
 TEST_F(TestArtefacts, TheSeparateFileIsTheNormalPlace) {
   EXPECT_NE(relation("refines", "REQ-00005-1", "SREQ-00001-2"), nullptr);
   EXPECT_NE(relation("verifies", "VER-00006-1", "REQ-00005-1"), nullptr);
-  EXPECT_EQ(model.find("REQ-00005-1")->scope, "projection");
+  EXPECT_EQ(model.find("REQ-00005-1")->scope, "iris@projection");
 }
 
 }  // namespace

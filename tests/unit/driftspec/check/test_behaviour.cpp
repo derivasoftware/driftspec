@@ -47,49 +47,49 @@ TEST_F(TestBehaviour, TheOracleFindings) {
 }
 
 TEST_F(TestBehaviour, ABehaviourIsIdentifiedByItsSubject) {
-  ASSERT_NE(model.find("ds::Checker::run::sequence"), nullptr);
-  ASSERT_NE(model.find("ds::Checker::resolveReference::sequence/duplicate-identity"), nullptr);
-  EXPECT_NE(relation("behaviour-of", "ds::Checker::run::sequence", "ds::Checker::run"), nullptr);
-  EXPECT_NE(relation("behaviour-of", "ds::Checker::state", "ds::Checker"), nullptr);
+  ASSERT_NE(model.find("ds@ds::Checker::run::sequence"), nullptr);
+  ASSERT_NE(model.find("ds@ds::Checker::resolveReference::sequence/duplicate-identity"), nullptr);
+  EXPECT_NE(relation("behaviour-of", "ds@ds::Checker::run::sequence", "ds@ds::Checker::run"), nullptr);
+  EXPECT_NE(relation("behaviour-of", "ds@ds::Checker::state", "ds@ds::Checker"), nullptr);
 }
 
 TEST_F(TestBehaviour, ParticipantsComeFromTheStaticContext) {
   // self, the attribute `model`, the parameter `binder`: resolved without a participant line
-  const driftspec::model::Entity* m0 = model.find("ds::Checker::run::sequence::m0");
+  const driftspec::model::Entity* m0 = model.find("ds@ds::Checker::run::sequence::m0");
   ASSERT_NE(m0, nullptr);
   EXPECT_EQ(m0->fields.at("to"), "binder");
-  EXPECT_EQ(m0->fields.at("type"), "ds::Binder");
-  EXPECT_NE(relation("calls", "ds::Checker::run::sequence::m0", "ds::Binder::references"), nullptr);
-  const driftspec::model::Entity* m1 = model.find("ds::Checker::resolveReference::sequence::m1");
+  EXPECT_EQ(m0->fields.at("type"), "ds@ds::Binder");
+  EXPECT_NE(relation("calls", "ds@ds::Checker::run::sequence::m0", "ds@ds::Binder::references"), nullptr);
+  const driftspec::model::Entity* m1 = model.find("ds@ds::Checker::resolveReference::sequence::m1");
   ASSERT_NE(m1, nullptr);
-  EXPECT_EQ(m1->fields.at("type"), "ds::Model");  // the attribute, by name
-  EXPECT_NE(relation("calls", m1->id, "ds::Model::declare"), nullptr);
+  EXPECT_EQ(m1->fields.at("type"), "ds@ds::Model");  // the attribute, by name
+  EXPECT_NE(relation("calls", m1->id, "ds@ds::Model::declare"), nullptr);
 }
 
 TEST_F(TestBehaviour, AMessageToAnOperationWithABehaviourExpandsToIt) {
-  EXPECT_NE(relation("expands-to", "ds::Checker::run::sequence::m1", "ds::Checker::resolveReference::sequence"), nullptr);
-  EXPECT_EQ(model.find("ds::Checker::run::sequence::m1")->fields.at("expands"), "ds::Checker::resolveReference::sequence");
+  EXPECT_NE(relation("expands-to", "ds@ds::Checker::run::sequence::m1", "ds@ds::Checker::resolveReference::sequence"), nullptr);
+  EXPECT_EQ(model.find("ds@ds::Checker::run::sequence::m1")->fields.at("expands"), "ds@ds::Checker::resolveReference::sequence");
 }
 
 TEST_F(TestBehaviour, FramesKeepTheirSpanAndElse) {
-  const driftspec::model::Entity* alt = model.find("ds::Checker::resolveReference::sequence::f0");
+  const driftspec::model::Entity* alt = model.find("ds@ds::Checker::resolveReference::sequence::f0");
   ASSERT_NE(alt, nullptr);
   EXPECT_EQ(alt->fields.at("kind"), "alt");
   EXPECT_EQ(alt->fields.at("condition"), "target is empty");
-  EXPECT_EQ(alt->fields.at("first"), "ds::Checker::resolveReference::sequence::m1");
-  EXPECT_EQ(alt->fields.at("last"), "ds::Checker::resolveReference::sequence::m2");
+  EXPECT_EQ(alt->fields.at("first"), "ds@ds::Checker::resolveReference::sequence::m1");
+  EXPECT_EQ(alt->fields.at("last"), "ds@ds::Checker::resolveReference::sequence::m2");
 }
 
 TEST_F(TestBehaviour, CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule) {
-  EXPECT_NE(relation("couples-structural", "lsp::Publisher::publish::sequence", "ds::Model"), nullptr);
-  EXPECT_NE(relation("couples-transient", "lsp::Publisher::publish::sequence", "ds::Checker"), nullptr);
+  EXPECT_NE(relation("couples-structural", "ds@lsp::Publisher::publish::sequence", "ds@ds::Model"), nullptr);
+  EXPECT_NE(relation("couples-transient", "ds@lsp::Publisher::publish::sequence", "ds@ds::Checker"), nullptr);
   // inside ds nothing couples: cohesion
-  for (const auto& r : model.relations()) EXPECT_FALSE(r.kind.rfind("couples", 0) == 0 && r.from.rfind("ds::", 0) == 0) << r.from;
+  for (const auto& r : model.relations()) EXPECT_FALSE(r.kind.rfind("couples", 0) == 0 && r.from.rfind("ds@ds::", 0) == 0) << r.from;
 }
 
 TEST_F(TestBehaviour, StateEventsAndActionsAreOperations) {
-  EXPECT_NE(relation("on", "ds::Checker::state", "ds::Checker::run"), nullptr);
-  EXPECT_NE(relation("on", "ds::Checker::state", "ds::Checker::resolveReference"), nullptr);
+  EXPECT_NE(relation("on", "ds@ds::Checker::state", "ds@ds::Checker::run"), nullptr);
+  EXPECT_NE(relation("on", "ds@ds::Checker::state", "ds@ds::Checker::resolveReference"), nullptr);
 }
 
 TEST_F(TestBehaviour, ASequenceDiagramExpandsByDepthAndLinksAtDepthZero) {
@@ -117,8 +117,8 @@ TEST_F(TestBehaviour, LiftingToModuleLevelKeepsOnlyCrossModuleMessages) {
   const nlohmann::json lifted = diagram("SEQ_Modules");
   EXPECT_EQ(lifted["nodes"].size(), 2u);  // lsp, ds
   EXPECT_EQ(lifted["edges"].size(), 2u);  // Model::find, Checker::resolve
-  EXPECT_EQ(lifted["edges"][0]["from"], "lsp");
-  EXPECT_EQ(lifted["edges"][0]["to"], "ds");
+  EXPECT_EQ(lifted["edges"][0]["from"], "ds@lsp");
+  EXPECT_EQ(lifted["edges"][0]["to"], "ds@ds");
 }
 
 }  // namespace

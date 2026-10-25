@@ -76,27 +76,14 @@ std::vector<std::string> IrExport::diagrams() const {
 bool IrExport::matches(const std::string& pattern, const model::Entity& entity) const {
   if (pattern == entity.id) return true;
   if (entity.has("extern")) return false;  // what lives outside the workspace is drawn only when named
-  // a namespace, written ns::* or just ns when ns is a module: the module and everything inside
-  std::string ns;
-  if (pattern.size() > 3 && pattern.compare(pattern.size() - 3, 3, "::*") == 0) {
-    ns = pattern.substr(0, pattern.size() - 3);
-  } else if (const model::Entity* m = model_.find(pattern)) {
-    if (m->kind == model::Kind::Module) ns = pattern;
+  // a prefix with *: ds@* is the whole package, ds@ds::* a module and everything inside (full ids, R4)
+  if (!pattern.empty() && pattern.back() == '*') {
+    const std::string prefix = pattern.substr(0, pattern.size() - 1);
+    return entity.id.rfind(prefix, 0) == 0 || entity.scope.rfind(prefix, 0) == 0;
   }
-  if (!ns.empty() && (entity.scope == ns || entity.scope.rfind(ns + "::", 0) == 0)) return true;
-  // a whole package: package:ds selects every module it contains, transitively (R1)
-  if (pattern.rfind("package:", 0) == 0) {
-    std::string top = entity.kind == model::Kind::Module ? entity.id : entity.scope;
-    while (!top.empty()) {
-      const auto cut = top.rfind("::");
-      if (cut == std::string::npos) break;
-      top = top.substr(0, cut);
-    }
-    if (top.empty()) return false;
-    for (const auto& r : model_.relations()) {
-      if (r.kind == "contains" && r.from == pattern && r.to == top) return true;
-    }
-    return false;
+  // a module named as such: the module and everything inside
+  if (const model::Entity* m = model_.find(pattern)) {
+    if (m->kind == model::Kind::Module) return entity.scope == pattern || entity.scope.rfind(pattern + "::", 0) == 0;
   }
   // a template written without arity: Repository matches Repository<1>
   const auto lt = entity.id.find('<');
@@ -135,14 +122,16 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   std::set<std::string> selected = select(*diagram);
   // modules of the selected classes become containers (R2); a module with nothing drawn in it is not drawn
   std::set<std::string> containers;
+  auto up = [](const std::string& s) {
+    const auto cut = s.rfind("::");
+    return cut == std::string::npos ? std::string() : s.substr(0, cut);  // ds@ds::b → ds@ds → ""; the package is no container
+  };
   for (const auto& id : selected) {
     const model::Entity* e = model_.find(id);
     if (!isClassLike(*e)) continue;
-    for (std::string s = e->scope; !s.empty();) {
+    for (std::string s = e->scope; !s.empty(); s = up(s)) {
       const model::Entity* m = model_.find(s);
       if (m && m->kind == model::Kind::Module) containers.insert(s);
-      const auto cut = s.rfind("::");
-      s = cut == std::string::npos ? "" : s.substr(0, cut);
     }
   }
 
@@ -154,17 +143,16 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   std::set<std::string> placed;
 
   auto parentOf = [&](const model::Entity& e) -> std::string {
-    for (std::string s = e.scope; !s.empty();) {
+    for (std::string s = e.scope; !s.empty(); s = up(s)) {
       if (containers.count(s)) return s;
-      const auto cut = s.rfind("::");
-      s = cut == std::string::npos ? "" : s.substr(0, cut);
     }
     return "";
   };
 
   for (const auto& id : containers) {
     const model::Entity& m = *model_.find(id);
-    nlohmann::json node = {{"id", id}, {"kind", "container"}, {"label", id}, {"classifier", "namespace"}};
+    const std::string label = id.substr(id.find('@') == std::string::npos ? 0 : id.find('@') + 1);  // the module, without its package
+    nlohmann::json node = {{"id", id}, {"kind", "container"}, {"label", label}, {"classifier", "namespace"}};
     const std::string parent = parentOf(m);
     if (!parent.empty()) node["parent"] = parent;
     out["nodes"].push_back(node);
@@ -409,9 +397,8 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const model::Entity& e = pair.second;
       if (e.kind != model::Kind::Sequence || e.expected) continue;
       const std::string subjectId = e.id.substr(0, e.id.find("::sequence"));
-      const bool ns = pattern.size() > 3 && pattern.compare(pattern.size() - 3, 3, "::*") == 0 &&
-                      (e.scope == pattern.substr(0, pattern.size() - 3) || e.scope.rfind(pattern.substr(0, pattern.size() - 3) + "::", 0) == 0);
-      if (pattern == e.id || pattern == subjectId || ns) selected.push_back(&e);
+      const bool prefix = !pattern.empty() && pattern.back() == '*' && e.id.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
+      if (pattern == e.id || pattern == subjectId || prefix) selected.push_back(&e);
     }
   }
   SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0};
@@ -430,8 +417,9 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
         const std::string typeId = fieldOf(*m, "type");
         const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
         if (!type || type->scope == cls->scope) continue;
-        const std::string from = b.lifeline(cls->scope, cls->scope, "namespace");
-        const std::string to = b.lifeline(type->scope, type->scope, "namespace");
+        auto moduleLabel = [](const std::string& id) { return id.substr(id.find('@') == std::string::npos ? 0 : id.find('@') + 1); };
+        const std::string from = b.lifeline(cls->scope, moduleLabel(cls->scope), "namespace");
+        const std::string to = b.lifeline(type->scope, moduleLabel(type->scope), "namespace");
         const std::string label = b.shortName(typeId) + "::" + fieldOf(*m, "op");
         if (!drawn.insert(from + "|" + to + "|" + label).second) continue;
         b.edges.push_back({{"from", from}, {"to", to}, {"kind", "message"}, {"order", b.order++}, {"label", label}});
@@ -503,20 +491,9 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       const model::Entity& e = pair.second;
       if (!isArtefact(e) || e.expected) continue;
       bool hit = pattern == e.id;
-      if (pattern.rfind("package:", 0) == 0) {
-        // an artefact of the package: declared in it (scope "") or in one of its modules
-        std::string top = e.scope;
-        while (top.find("::") != std::string::npos) top = top.substr(0, top.rfind("::"));
-        for (const auto& r : model_.relations()) hit |= r.kind == "contains" && r.from == pattern && (r.to == top || e.scope.empty());
-        hit |= e.scope.empty() && model_.find(pattern) != nullptr && [&] {
-          for (const auto& r : model_.relations()) {
-            if (r.kind == "about" && r.from == e.id && r.to == pattern) return true;
-          }
-          return false;
-        }();
-      } else if (pattern.size() > 3 && pattern.compare(pattern.size() - 3, 3, "::*") == 0) {
-        const std::string ns = pattern.substr(0, pattern.size() - 3);
-        hit |= e.scope == ns || e.scope.rfind(ns + "::", 0) == 0;
+      if (!pattern.empty() && pattern.back() == '*') {
+        // iris@* every artefact of the package (their scope starts with iris@), iris@projection::* those of a module
+        hit |= e.scope.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
       } else if (const model::Entity* m = model_.find(pattern)) {
         hit |= m->kind == model::Kind::Module && (e.scope == pattern || e.scope.rfind(pattern + "::", 0) == 0);
       }
@@ -555,7 +532,7 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       std::string stereotype = model::kindName(e.kind);
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
-      if (e.kind == model::Kind::Requirement) stereotype += e.scope.empty() ? ", system" : ", " + e.scope;
+      if (e.kind == model::Kind::Requirement) stereotype += e.scope.find("::") == std::string::npos && (e.scope.empty() || e.scope.back() == '@') ? ", system" : ", " + e.scope.substr(e.scope.find('@') + 1);
       node["stereotype"] = stereotype;
       if (!lines.empty()) node["sections"] = nlohmann::json::array({lines});
       const std::string text = fieldOf(e, "text");

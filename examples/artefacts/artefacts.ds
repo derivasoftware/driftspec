@@ -147,12 +147,12 @@ diagram REQ_Tracker {
 
 diagram REQ_Iris {
   kind: requirement
-  include: package:iris          // every artefact of the package
+  include: iris@*                // every artefact of the package
   show: verifications            // design left out
 }
 
 diagram CL_Projection {
   kind: class
-  include: projection::Projection
+  include: iris@projection::Projection
   show: requirements             // the artefacts of each class, as a note
 }

@@ -83,7 +83,10 @@ whose `!` comments are the oracle of the test suite. In short:
 - **R3** Nesting gives the default relation ("about", "verifies"); an
   `@annotation` adds a relation and never replaces it; a contradiction is an
   error.
-- **R4** Packages do not contribute to qualified names; modules do.
+- **R4** Full ids name the package with `@` and modules with `::`
+  (`ds@ds::Model`, boundary `ds@cli`); what encloses you is omitted; process
+  artefact ids stay global. (Decided 2026-10-25; earlier the package gave no
+  name.)
 - **R5** Identity: process artefacts by id with revision (`DS-0001-0`), design
   artefacts by qualified name. Two declarations of one identity = error
   (`E-DUPLICATE-IDENTITY`); packages and modules are reopenable (R9).
@@ -91,8 +94,8 @@ whose `!` comments are the oracle of the test suite. In short:
   `W-REF-UNDECLARED`; checks that depend on it wait for the declaration.
 - **R7** Multiline text by indentation. Field values run to the end of the
   line; closing braces go on their own line.
-- **R8** Contracts (`[requires: …]`, `[ensures: …]`, flags) are stored, not
-  yet interpreted. **Open.**
+- **R8** Contracts (`[requires: …]`, `[ensures: …]`, flags) are text, in
+  the member's body only, never interpreted (decided 2026-10-25).
 - **R10** No includes, no using; bare names resolve innermost scope outward,
   qualified names cross modules; two candidates at the same depth should be
   `E-REF-AMBIGUOUS` (not implemented: the scope scheme makes it unreachable
@@ -129,8 +132,7 @@ Decisions taken and why (so they are not reopened by accident):
 - No `feature`: a characteristic is a requirement or a constraint.
 - No `alias`: it would hide multiplicity behind a name and the corpus did not
   need it.
-- Boundaries and artefact ids currently have no package prefix. **Open**:
-  proposal `ds/cli` from outside, `cli` inside.
+- Boundaries are `pkg@name`; artefact ids global (decided 2026-10-25).
 
 ## 5. Architecture
 
@@ -408,9 +410,9 @@ corpus the same day.
    `parent:` (nesting or `@refines`), verification nested or `@requirement`,
    tests as the runner names them, constraint `category`/`bok`, one-line
    forms; `applies:` on constraints deferred. Corpus `examples/artefacts`.
-2. **Static leftovers**: contracts (free text vs a minimal checkable
-   expression), one place for contracts, package prefix for boundaries/ids,
-   closing-brace rule, `extern` with or without signatures.
+2. **Static leftovers**: DECIDED 2026-10-25: contracts as text in the body
+   only; ids `pkg@mod::Class`, boundaries `pkg@name`, artefacts global;
+   braces enclose and one thing per line; `extern` names only.
 3. **Dynamic**: messages with arguments and return, `alt`/`loop`/`opt` or not,
    guards and actions on transitions, nested states, meaning of
    `@verification` on a sequence.

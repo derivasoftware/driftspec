@@ -97,13 +97,13 @@ TEST_F(TestDiff, AddedRemovedAndChangedByIdentity) {
   }
 })";
   const auto d = driftspec::diff::Diff::compare(load(before), load(after));
-  ASSERT_NE(find(d, "changed", "m::Svg::layout"), nullptr);
-  EXPECT_NE(find(d, "changed", "m::Svg::layout")->detail.find("owns -> shares"), std::string::npos);
-  ASSERT_NE(find(d, "changed", "m::Cli::run"), nullptr);
-  EXPECT_NE(find(d, "added", "m::Cli::stop"), nullptr);
-  EXPECT_NE(find(d, "removed", "owns m::Svg::layout -> m::Layout"), nullptr);
-  EXPECT_NE(find(d, "added", "shares m::Svg::layout -> m::Layout"), nullptr);
-  EXPECT_EQ(find(d, "removed", "m::Text"), nullptr);
+  ASSERT_NE(find(d, "changed", "p@m::Svg::layout"), nullptr);
+  EXPECT_NE(find(d, "changed", "p@m::Svg::layout")->detail.find("owns -> shares"), std::string::npos);
+  ASSERT_NE(find(d, "changed", "p@m::Cli::run"), nullptr);
+  EXPECT_NE(find(d, "added", "p@m::Cli::stop"), nullptr);
+  EXPECT_NE(find(d, "removed", "owns p@m::Svg::layout -> p@m::Layout"), nullptr);
+  EXPECT_NE(find(d, "added", "shares p@m::Svg::layout -> p@m::Layout"), nullptr);
+  EXPECT_EQ(find(d, "removed", "p@m::Text"), nullptr);
 }
 
 TEST_F(TestDiff, ARenameIsRecognisedByShapeAndByWhoFollows) {
@@ -132,12 +132,12 @@ TEST_F(TestDiff, ARenameIsRecognisedByShapeAndByWhoFollows) {
   }
 })";
   const auto d = driftspec::diff::Diff::compare(load(before), load(after));
-  const auto* renamed = find(d, "renamed", "m::Terminal");
+  const auto* renamed = find(d, "renamed", "p@m::Terminal");
   ASSERT_NE(renamed, nullptr);
-  EXPECT_EQ(renamed->from, "m::Text");
-  EXPECT_NE(find(d, "added", "m::Cells"), nullptr);
-  EXPECT_EQ(find(d, "removed", "m::Text::layout"), nullptr);  // members travel with the rename
-  EXPECT_EQ(find(d, "changed", "m::Terminal::render"), nullptr);  // and a move is not a change
+  EXPECT_EQ(renamed->from, "p@m::Text");
+  EXPECT_NE(find(d, "added", "p@m::Cells"), nullptr);
+  EXPECT_EQ(find(d, "removed", "p@m::Text::layout"), nullptr);  // members travel with the rename
+  EXPECT_EQ(find(d, "changed", "p@m::Terminal::render"), nullptr);  // and a move is not a change
 }
 
 TEST_F(TestDiff, AnArtefactChangedWithoutANewRevisionIsAFinding) {
@@ -188,13 +188,13 @@ TEST_F(TestDiff, TheMarkedModelCarriesTheChangesForADrawing) {
   const auto b = load(after);
   const auto d = driftspec::diff::Diff::compare(a, b);
   const auto marked = driftspec::diff::Diff::marked(a, b, d);
-  ASSERT_NE(marked.find("m::Text"), nullptr);  // the removed class comes over as a ghost
-  EXPECT_EQ(marked.find("m::Text")->fields.at("change"), "removed");
-  EXPECT_EQ(marked.find("m::Cli::svg")->fields.at("change"), "added");
+  ASSERT_NE(marked.find("p@m::Text"), nullptr);  // the removed class comes over as a ghost
+  EXPECT_EQ(marked.find("p@m::Text")->fields.at("change"), "removed");
+  EXPECT_EQ(marked.find("p@m::Cli::svg")->fields.at("change"), "added");
   bool removedEdge = false, addedEdge = false;
   for (const auto& r : marked.relations()) {
-    removedEdge |= r.kind == "owns+removed" && r.from == "m::Cli::text";
-    addedEdge |= r.kind == "owns+added" && r.from == "m::Cli::svg";
+    removedEdge |= r.kind == "owns+removed" && r.from == "p@m::Cli::text";
+    addedEdge |= r.kind == "owns+added" && r.from == "p@m::Cli::svg";
   }
   EXPECT_TRUE(removedEdge);
   EXPECT_TRUE(addedEdge);
