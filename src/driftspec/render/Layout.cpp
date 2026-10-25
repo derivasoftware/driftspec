@@ -64,7 +64,7 @@ constexpr int kSink = -2;
 
 class Engine {
  public:
-  Engine(const IrDocument& doc, const Metrics& m) : doc_(doc), M(m) {
+  Engine(const IrDocument& doc, const Metrics& m, int maxWidth) : doc_(doc), M(m), maxWidth_(maxWidth) {
     const size_t n = doc.nodes.size();
     rel_.assign(n, Rect{});
     parent_.assign(n, -1);
@@ -82,7 +82,7 @@ class Engine {
   }
 
   LayoutResult run() {
-    frame(-1);
+    frame(-1, maxWidth_);
     LayoutResult out;
     std::vector<Rect> abs(doc_.nodes.size());
     std::map<int, Point> origin;  // content origin of every frame, -1 = the page
@@ -117,11 +117,12 @@ class Engine {
     return node;
   }
 
-  void frame(int parent) {
+  void frame(int parent, int available) {
     const std::vector<int>& kids = parent < 0 ? roots_ : children_[parent];
+    const int inner = available > 0 ? std::max(M.CHAR_W * 8, available - 2 * M.CONTAINER_PAD) : 0;
     for (int k : kids) {
       if (doc_.nodes[k].kind == "container") {
-        frame(k);
+        frame(k, inner);
       } else {
         rel_[k] = sizeOf(doc_.nodes[k], M);
       }
@@ -181,7 +182,7 @@ class Engine {
       }
       if (source) c.nodes.push_back(kSource);
       if (sink) c.nodes.push_back(kSink);
-      layered(c);
+      layered(c, available);
     }
 
     // pack the components in rows towards a 1.6 aspect
@@ -191,7 +192,8 @@ class Engine {
       area += static_cast<long>(components[r].w) * components[r].h;
       widest = std::max(widest, components[r].w);
     }
-    const int target = std::max(widest, static_cast<int>(std::ceil(std::sqrt(static_cast<double>(area) * M.ASPECT))));
+    int target = std::max(widest, static_cast<int>(std::ceil(std::sqrt(static_cast<double>(area) * M.ASPECT))));
+    if (available > 0) target = std::max(widest, std::min(target, available));  // the screen wins over the aspect
     int x = 0, y = 0, rowH = 0, contentW = 0;
     for (int r : order) {
       Component& c = components[r];
@@ -227,7 +229,7 @@ class Engine {
   }
 
   // ---- one component: layers, dummies for long edges, order, coordinates ----------
-  void layered(Component& c) {
+  void layered(Component& c, int available) {
     const int real = static_cast<int>(c.nodes.size());
     std::map<int, int> local;
     for (int i = 0; i < real; ++i) local[c.nodes[i]] = i;
@@ -387,17 +389,61 @@ class Engine {
       if (widths[v] > 0) minX = std::min(minX, x[v]);
     }
     if (minX == std::numeric_limits<int>::max()) minX = 0;
+    for (int v = 0; v < total; ++v) x[v] -= minX;
+    // a layer wider than the screen wraps onto further lines, in its order
+    std::vector<int> lineOf(total, 0), lineTop(total, 0), lineHeight(total, 0);
+    for (int l = 0; l <= depth; ++l) {
+      int extent = 0;
+      for (int v : rows[l]) extent = std::max(extent, x[v] + widths[v]);
+      std::vector<std::vector<int>> lines;
+      if (available > 0 && extent > available) {
+        int cursor = 0;
+        lines.push_back({});
+        for (int v : rows[l]) {
+          if (cursor > 0 && cursor + widths[v] > available) {
+            lines.push_back({});
+            cursor = 0;
+          }
+          x[v] = cursor;
+          lines.back().push_back(v);
+          cursor += gapAfter(v);
+        }
+      } else {
+        lines.push_back(rows[l]);
+      }
+      int top = 0;
+      std::vector<int> tops, heightsOfLines;
+      for (size_t k = 0; k < lines.size(); ++k) {
+        int h = 0;
+        for (int v : lines[k]) h = std::max(h, heights[v]);
+        tops.push_back(top);
+        heightsOfLines.push_back(h);
+        for (int v : lines[k]) {
+          lineOf[v] = static_cast<int>(k);
+          lineTop[v] = top;
+          lineHeight[v] = h;
+        }
+        top += h + (k + 1 < lines.size() ? M.GAP_Y / 2 : 0);
+      }
+      if (lines.size() > 1) {
+        // the layer grew: every layer below moves down
+        const int grown = top - rowH[l];
+        rowH[l] = top;
+        for (int m = l + 1; m <= depth; ++m) rowY[m] += grown;
+      }
+    }
     c.w = 0;
     c.h = 0;
     for (int v = 0; v < real; ++v) {
       if (c.nodes[v] < 0) continue;
       Rect& r = rel_[c.nodes[v]];
-      r.x = x[v] - minX;
-      r.y = rowY[layer[v]];
+      r.x = x[v];
+      r.y = rowY[layer[v]] + lineTop[v];
       c.w = std::max(c.w, r.x + r.w);
       c.h = std::max(c.h, r.y + r.h);
     }
-    for (int d = real; d < total; ++d) c.w = std::max(c.w, x[d] - minX + widths[d]);  // the channels count too
+    for (int d = real; d < total; ++d) c.w = std::max(c.w, x[d] + widths[d]);  // the channels count too
+    minX = 0;
     for (const auto& e : c.edges) {
       if (e.edge == std::numeric_limits<size_t>::max()) continue;
       std::pair<int, int> key{local[e.upper], local[e.lower]};
@@ -407,7 +453,7 @@ class Engine {
         if (it == chain.end()) continue;
       }
       std::vector<Waypoint> way;
-      for (int d : it->second) way.push_back({x[d] - minX + widths[d] / 2, rowY[layer[d]], rowY[layer[d]] + rowH[layer[d]]});
+      for (int d : it->second) way.push_back({x[d] - minX + widths[d] / 2, rowY[layer[d]] + lineTop[d], rowY[layer[d]] + lineTop[d] + lineHeight[d]});
       if (it->first.first != key.first) std::reverse(way.begin(), way.end());
       if (!way.empty()) c.ways[e.edge] = way;
     }
@@ -522,6 +568,7 @@ class Engine {
 
   const IrDocument& doc_;
   const Metrics M;
+  const int maxWidth_;
   std::map<std::string, int> index_;
   std::vector<Rect> rel_;
   std::vector<int> parent_;
@@ -554,7 +601,7 @@ Rect sizeOf(const IrNode& node, const Metrics& M) {
   return r;
 }
 
-LayoutResult layout(const IrDocument& doc, const Metrics& m) { return Engine(doc, m).run(); }
+LayoutResult layout(const IrDocument& doc, const Metrics& m, int maxWidth) { return Engine(doc, m, maxWidth).run(); }
 
 }  // namespace render
 }  // namespace driftspec

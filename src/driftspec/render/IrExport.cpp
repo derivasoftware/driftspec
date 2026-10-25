@@ -133,11 +133,11 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
 
   std::set<std::string> selected = select(*diagram);
-  // modules of the selected classes become containers (R2)
+  // modules of the selected classes become containers (R2); a module with nothing drawn in it is not drawn
   std::set<std::string> containers;
   for (const auto& id : selected) {
     const model::Entity* e = model_.find(id);
-    if (e->kind == model::Kind::Module) containers.insert(id);
+    if (!isClassLike(*e)) continue;
     for (std::string s = e->scope; !s.empty();) {
       const model::Entity* m = model_.find(s);
       if (m && m->kind == model::Kind::Module) containers.insert(s);

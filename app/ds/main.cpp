@@ -27,7 +27,7 @@
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git revisions of <path>)\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells] [--width N]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself; N wraps the drawing)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git revisions of <path>)\n";
   return 2;
 }
 
@@ -84,6 +84,18 @@ driftspec::model::Model load(const std::string& dir) {
 }  // namespace
 
 int main(int argc, char** argv) {
+  // --width N (columns for text and cells, pixels for svg) wraps the drawing to the screen
+  int width = 0;
+  std::vector<char*> kept;
+  for (int i = 0; i < argc; ++i) {
+    if (std::string(argv[i]) == "--width" && i + 1 < argc) {
+      width = std::atoi(argv[++i]);
+      continue;
+    }
+    kept.push_back(argv[i]);
+  }
+  argc = static_cast<int>(kept.size());
+  argv = kept.data();
   if (argc < 3 || argc > 7) return usage();
   const std::string verb = argv[1];
   const std::string dir = argv[2];
@@ -112,9 +124,9 @@ int main(int argc, char** argv) {
         std::cerr << "no diagram named " << diagram << "\n";
         return 1;
       }
-      if (how == "--svg") std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc));
-      else if (how == "--cells") std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc)) << "\n";
-      else std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0);
+      if (how == "--svg") std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc), width);
+      else if (how == "--cells") std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc), width) << "\n";
+      else std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0, width);
       return 0;
     }
     std::cout << driftspec::diff::Diff::report(result);
@@ -148,15 +160,15 @@ int main(int argc, char** argv) {
       return 1;
     }
     if (svg) {
-      std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc));
+      std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc), width);
       return 0;
     }
     if (text) {
-      std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0);
+      std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0, width);
       return 0;
     }
     if (cells) {
-      std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc)) << "\n";
+      std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc), width) << "\n";
       return 0;
     }
     std::cout << doc << "\n";

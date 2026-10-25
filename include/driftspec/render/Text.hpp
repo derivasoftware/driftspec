@@ -15,14 +15,15 @@ namespace render {
 class Text {
  public:
   /// With `color`, ANSI colours follow the SVG palette roles (name, type, visibility).
-  std::string render(const IrDocument& doc, bool color) const;
+  /// `maxWidth` in columns (0 = unbounded): the drawing wraps to it.
+  std::string render(const IrDocument& doc, bool color, int maxWidth = 0) const;
   std::string render(const IrDocument& doc, const LayoutResult& layout, bool color) const;
 
   /// The same drawing as a cell grid for hosts that paint cells themselves
   /// (a Claude Code mod's Raster, a TUI): JSON {columns, rows, cells, text}
   /// where cells is base64 of little-endian u32 triplets [codepoint, fg, bg]
   /// per cell, row-major, 0x01000000 meaning the terminal's default colour.
-  std::string cells(const IrDocument& doc) const;
+  std::string cells(const IrDocument& doc, int maxWidth = 0) const;
 };
 
 }  // namespace render

@@ -14,7 +14,8 @@ namespace render {
 /// both the same way and a drawing from either engine is comparable.
 class Svg {
  public:
-  std::string render(const IrDocument& doc) const;
+  /// `maxWidth` in pixels (0 = unbounded): the drawing wraps to it.
+  std::string render(const IrDocument& doc, int maxWidth = 0) const;
   std::string render(const IrDocument& doc, const LayoutResult& layout) const;
 };
 

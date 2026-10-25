@@ -81,8 +81,11 @@ Rect sizeOf(const IrNode& node, const Metrics& m);
 
 /// Layered layout (Sugiyama) per container: bases above subtypes, wholes above
 /// parts, components packed towards a readable aspect, orthogonal routes.
-/// Deterministic: same document and metrics, same coordinates.
-LayoutResult layout(const IrDocument& doc, const Metrics& m = Metrics::svg());
+/// With `maxWidth` (in the metrics' units; 0 = unbounded) a layer that does not
+/// fit wraps onto further lines and components pack to that width, so the
+/// drawing adapts to the screen instead of asking the reader to pan.
+/// Deterministic: same document, metrics and width, same coordinates.
+LayoutResult layout(const IrDocument& doc, const Metrics& m = Metrics::svg(), int maxWidth = 0);
 
 }  // namespace render
 }  // namespace driftspec

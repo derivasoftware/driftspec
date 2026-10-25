@@ -692,12 +692,12 @@ std::string sequenceSvg(const IrDocument& doc) {
 
 }  // namespace
 
-std::string Svg::render(const IrDocument& doc) const {
+std::string Svg::render(const IrDocument& doc, int maxWidth) const {
   for (const auto& n : doc.nodes) {
     if (n.kind == "lifeline") return sequenceSvg(doc);
   }
   const IrDocument bundled = doc.bundled();
-  return render(bundled, layout(bundled));
+  return render(bundled, layout(bundled, Metrics::svg(), maxWidth));
 }
 
 std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {

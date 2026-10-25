@@ -586,10 +586,10 @@ bool isSequence(const IrDocument& doc) {
 
 }  // namespace
 
-std::string Text::render(const IrDocument& doc, bool color) const {
+std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
   if (isSequence(doc)) return sequenceGrid(doc).dump(color);
   const IrDocument bundled = doc.bundled();
-  return render(bundled, layout(bundled, M), color);
+  return render(bundled, layout(bundled, M, maxWidth), color);
 }
 
 std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
@@ -597,9 +597,9 @@ std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool co
   return classGrid(doc, lay).dump(color);
 }
 
-std::string Text::cells(const IrDocument& doc) const {
+std::string Text::cells(const IrDocument& doc, int maxWidth) const {
   const IrDocument bundled = doc.bundled();
-  const Grid g = isSequence(doc) ? sequenceGrid(doc) : classGrid(bundled, layout(bundled, M));
+  const Grid g = isSequence(doc) ? sequenceGrid(doc) : classGrid(bundled, layout(bundled, M, maxWidth));
   nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode()}, {"text", g.dump(false)}};
   return out.dump();
 }
