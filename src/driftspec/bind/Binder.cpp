@@ -52,7 +52,7 @@ model::Kind kindForRelation(const std::string& relation) {
 std::string relationForAnnotation(model::Kind from, const std::string& annotation) {
   if (annotation == "requirement") return from == model::Kind::Verification ? "verifies" : "requires";
   if (annotation == "refines") return "refines";
-  if (annotation == "constraint") return "constrained-by";
+  if (annotation == "constraint") return from == model::Kind::Verification ? "verifies" : "constrained-by";  // a verification verifies a constraint
   if (annotation == "boundary") return "realises";
   if (annotation == "verification") return "exercised-by";
   return "refers";
