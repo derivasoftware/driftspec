@@ -162,6 +162,36 @@ requirements, constraints, verifications, sequences, state machines,
 diagrams. Checks: identity, references, templates, ownership, operators,
 messages and events against the static model.
 
+### Behaviour is addressable, and linked through the static model (decided 2026-10-25)
+
+A sequence, a state machine or an activity is an entity with an identity and
+a **subject** in the static model: the method, class or operation whose
+behaviour it describes. `sequence Model::declare { ... }` is the behaviour of
+that method; `state LspClient { ... }` the behaviour of that class. Behaviours
+never reference other diagrams: they reference the static model, and the tool
+derives the links.
+
+- A message `client -> model.declare(e)` resolves to the method
+  `ds::Model::declare` (relation `calls`). If a behaviour has that method as
+  subject, the message also gets `expands-to` → that sequence. In a drawing
+  the message is a link to the child diagram (SVG `href`, terminal `gd`); in a
+  diagram it can be expanded inline (`depth: n`) or drawn as a `ref` frame.
+  UML's `ref` is therefore derived, never written.
+- The reverse links are the same relations read backwards: from a method in a
+  class diagram to its behaviours, from a class to its state machine, from a
+  sequence to the classes it touches (the static chapter of that behaviour).
+- An event of a state machine (`on open`) is an operation, so it links to the
+  sequence of that operation; an activity's actions may bind to operations
+  (`action parse: Parser::parseFile`) and link the same way.
+- One subject may have several scenarios (syntax open: `sequence
+  Model::declare / duplicate`); the default one is the unnamed.
+- Checks this enables: a message with no static path between the caller's
+  type and the callee (`W-MSG-NO-PATH`), a participant typed differently from
+  the subject's class, a method with no behaviour (informative), a behaviour
+  whose subject nobody declares (expected node), recursion made visible.
+- This is the input for syntax block 3; the behaviour-as-entity decision
+  itself is taken.
+
 **Process** (useful now, with a consumer): PaC already exists in argos (PROC,
 ACT, ROLE, protocols) and is the source of truth; titere edits it. DriftSpec
 is its specification face: static checks outside argos (a role nobody
