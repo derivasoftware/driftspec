@@ -1,17 +1,18 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 requirement:
   id: SREQ-00009-1
-  title: The system shall load, check and draw a workspace of a hundred classes in under one hundred milliseconds
+  title: The system shall draw the static model as class diagrams and as requirement diagrams
   description: >
-    From the files to the SVG or the terminal drawing, a workspace of a
-          hundred classes with their relations and diagrams completes in under one
-          hundred milliseconds on a development machine, so that an editor preview
-          or an agent loop can redraw on every change.
+    A class diagram shows a selection of classes, enumerations and modules
+          with their members, ownership, inheritance and dependencies; a
+          requirement diagram shows a selection of artefacts with what refines
+          them, what verifies them and what realises them. Both are selections
+          over the model, drawn by the same engine.
   rationale: >
-    Measured: the whole pipeline over the engine's own design takes five
-          milliseconds, and a synthetic hundred-class document draws in eight.
-          The budget keeps that property as the tool grows.
+    These are the two static views a design review reads: the structure and
+          the traceability of what the structure answers to.
   status: DRAFT
   asil: NA
   tags:
-    - performance
+    - render
+    - static

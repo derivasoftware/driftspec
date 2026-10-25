@@ -1,0 +1,19 @@
+# generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
+requirement:
+  id: SREQ-00010-1
+  title: The system shall draw the dynamic model as sequence diagrams and as state diagrams
+  description: >
+    A sequence diagram shows a behaviour with its participants, messages,
+          returns and control blocks, expanding or linking the behaviours it
+          calls, at the abstraction level asked for (method, class, module); a
+          state diagram shows the state machine of a class with its transitions,
+          events, guards and actions.
+  rationale: >
+    A behaviour bound to the static model is only useful when it can be
+          seen at the level the reader needs, and the state machine of a class is
+          the other half of its behaviour.
+  status: DRAFT
+  asil: NA
+  tags:
+    - render
+    - dynamic
