@@ -211,6 +211,26 @@ derives the links.
   level above is what lets argos compare at the grain it has evidence for
   (system behaviour from boundaries, module behaviour from units), but the
   comparison is not here.
+- **Participants are the static context.** In the behaviour of a method the
+  participants are `self`, the attributes of the class and the parameters of
+  the method, by name, without writing them; only what the method creates
+  itself is declared (`local parser: Parser`). At class level the attributes,
+  at module level the classes, at package level the modules and boundaries.
+  A message to a name outside that context is `W-PARTICIPANT-UNDECLARED`.
+- **Coupling is derived from behaviour (decided 2026-10-25).** Inside a
+  module everything a behaviour touches is cohesion; a `local` of a type from
+  another module, or a message through an attribute typed in another module,
+  is coupling to that namespace. Because participants come from the static
+  context, every behaviour yields its external dependencies without anyone
+  listing them, and lifting them gives the module-to-module and
+  package-to-package dependency graph: the component view is derived, like
+  everything else. Two grains are kept apart: structural coupling (an
+  attribute typed elsewhere) and transient coupling (a local created and
+  dropped inside a method), because the second is the one that usually hides
+  a missing injection. If a module declares what it may depend on
+  (syntax open, e.g. `module lsp { depends: ds }`), a behaviour that couples to
+  an undeclared module is an incoherence of the model (`W-COUPLING-UNDECLARED`);
+  without the declaration it is a derived fact, reported, never a finding.
 - This is the input for syntax block 3; the behaviour-as-entity decision
   itself is taken.
 
