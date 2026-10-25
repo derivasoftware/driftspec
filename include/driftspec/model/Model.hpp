@@ -30,6 +30,8 @@ enum class Kind {
   Attribute,
   Operator,
   Sequence,
+  Message,
+  Frame,
   State,
   Diagram
 };

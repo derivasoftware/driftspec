@@ -20,6 +20,9 @@ module.exports = grammar({
 
   word: $ => $.name,
 
+  // `a -> b.op() -> r` then `-> op2()`: the second arrow may be a result or the next self call; GLR decides on the `(`
+  conflicts: $ => [[$.message]],
+
   rules: {
     source_file: $ => repeat(choice($.package, $.diagram)),
 
@@ -102,16 +105,32 @@ module.exports = grammar({
     enum: $ => seq('enum', field('name', $.name), '{', optional(seq($.enum_value, repeat(seq(',', $.enum_value)), optional(','))), '}'),
     enum_value: $ => seq(field('name', $.name), optional(seq('=', field('value', $.number)))),
 
-    // ---- white box: dynamic -----------------------------------------------
-    sequence: $ => seq('sequence', field('name', $.name), '{', repeat(choice($.field, $.annotation, $.participant, $.message, $.return)), '}'),
-    participant: $ => seq('participant', field('name', $.name), ':', field('type', $.qualified_name)),
-    message: $ => seq(field('from', $.name), '->', field('to', $.name), '.', field('op', $.name), $.arguments),
+    // ---- white box: dynamic (block 3) --------------------------------------
+    // a behaviour's identity is its subject: the method, class or module it describes;
+    // participants are the static context (self, attributes, parameters); only locals are written
+    sequence: $ => seq('sequence', field('subject', $.qualified_name), optional(seq('/', field('scenario', $.name))), '{', repeat($._sequence_item), '}'),
+    _sequence_item: $ => choice($.field, $.annotation, $.participant, $.local, $.message, $.return, $.loop, $.alt, $.opt),
+    participant: $ => seq('participant', field('name', $.name), ':', field('type', $.type)),  // kept for older files: the same as local
+    local: $ => seq('local', field('name', $.name), ':', field('type', $.type)),
+    message: $ => seq(
+      optional(field('from', $.name)),
+      '->',
+      optional(seq(field('to', $.name), '.')),
+      field('op', $.name),
+      $.arguments,
+      optional(seq('->', field('result', $.name))),
+    ),
     return: $ => seq('return', field('to', $.name), '.', field('op', $.name), '->', field('value', $.name)),
-    arguments: $ => seq('(', optional(seq($.name, repeat(seq(',', $.name)))), ')'),
+    arguments: $ => seq('(', optional(seq($.argument, repeat(seq(',', $.argument)))), ')'),
+    argument: $ => seq($.name, repeat(seq('.', $.name))),
+    loop: $ => seq('loop', field('condition', $.condition), '{', repeat($._sequence_item), '}'),
+    alt: $ => seq('alt', field('condition', $.condition), '{', repeat($._sequence_item), '}', optional(seq('else', '{', repeat(field('otherwise', $._sequence_item)), '}'))),
+    opt: $ => seq('opt', field('condition', $.condition), '{', repeat($._sequence_item), '}'),
+    condition: $ => /([^{\/\n]|\/[^\/{\n])+/,
 
     state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.transition)), '}'),
     initial: $ => seq('initial', field('name', $.name)),
-    transition: $ => seq(field('from', $.name), '->', field('to', $.name), 'on', field('event', $.name)),
+    transition: $ => seq(field('from', $.name), '->', field('to', $.name), 'on', field('event', $.name), optional(field('guard', $.contract)), optional(seq('/', field('action', $.name)))),
 
     // ---- representations --------------------------------------------------
     diagram: $ => seq('diagram', field('name', $.name), '{', repeat($.field), '}'),
@@ -119,7 +138,7 @@ module.exports = grammar({
     // ---- common -----------------------------------------------------------
     annotation: $ => seq('@', field('kind', $.name), field('target', $.qualified_name)),
     field: $ => seq(field('key', $.name), ':', optional(field('value', choice($.block_text, $.line_text)))),
-    line_text: $ => /[^\n]+/,
+    line_text: $ => /([^\/\n]|\/[^\/\n])+/,
     qualified_name: $ => seq($.name, repeat(seq('::', choice($.name, '*')))),
     number: $ => /-?[0-9]+(\.[0-9]+)?/,
     string: $ => /"[^"\n]*"/,

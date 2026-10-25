@@ -29,6 +29,12 @@ class Checker {
   void resolveReference(const bind::Reference& reference);
   void checkMessage(const bind::Message& message);
   void checkEvent(const bind::Event& event);
+  void checkLocals();
+  /// The identity of a type written as text (`list<Scope>` → the class Scope), or "".
+  std::string resolveTypeText(const std::string& text, const std::string& scope) const;
+  /// The class a behaviour is about, and whether its subject is a method.
+  const model::Entity* subjectClass(const model::Entity& sequence, const model::Entity** subject) const;
+  void couple(const model::Entity& sequence, const model::Entity& type, bool transient);
   void checkTemplateBound(const bind::Reference& reference);
   void checkOwnershipCycles();
   void classify();

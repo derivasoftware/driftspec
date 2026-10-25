@@ -231,8 +231,20 @@ derives the links.
   (syntax open, e.g. `module lsp { depends: ds }`), a behaviour that couples to
   an undeclared module is an incoherence of the model (`W-COUPLING-UNDECLARED`);
   without the declaration it is a derived fact, reported, never a finding.
+- **Proof of concept (2026-10-25, commit after 1ed159d)**: block 3 is built
+  with the recommended syntax as *provisional*: `sequence Class::method { }`
+  and `/ scenario`, participants from the static context plus `local`,
+  `a -> b.op(args) -> result` and `-> op()` for self, `loop`/`alt … else`/`opt`
+  with prose conditions, `on event [guard] / action` in states. Derived:
+  `calls`, `expands-to`, `couples-structural`/`couples-transient`; checks
+  `W-PARTICIPANT-UNDECLARED`, `E-MSG-ARITY`, `W-ACTION-UNDECLARED`.
+  Diagrams `kind: sequence` with `depth` (inline or link) and `level: module`
+  (lifting). `ds coupling` reports what every behaviour touches outside its
+  module. Terminal sequences drawn by `ds`; SVG sequences by plantuml-render
+  until our engine draws them. Corpus `examples/behaviour`. Activities are not
+  in the POC. A `//` now always starts a comment, also after a field value.
 - This is the input for syntax block 3; the behaviour-as-entity decision
-  itself is taken.
+  itself is taken, the syntax is provisional until chosen.
 
 **Process** (useful now, with a consumer): PaC already exists in argos (PROC,
 ACT, ROLE, protocols) and is the source of truth; titere edits it. DriftSpec

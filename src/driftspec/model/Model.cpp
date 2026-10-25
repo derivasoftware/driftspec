@@ -18,6 +18,8 @@ const char* kindName(Kind kind) {
     case Kind::Attribute: return "attribute";
     case Kind::Operator: return "operator";
     case Kind::Sequence: return "sequence";
+    case Kind::Message: return "message";
+    case Kind::Frame: return "frame";
     case Kind::State: return "state";
     case Kind::Diagram: return "diagram";
   }

@@ -1,7 +1,9 @@
 // ds — the DriftSpec command line: `ds check`, `ds export` and `ds render <workspace> [diagram]`.
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <string>
+#include <vector>
 
 #include "driftspec/bind/Binder.hpp"
 #include "driftspec/check/Checker.hpp"
@@ -20,7 +22,7 @@
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text]   (render-IR JSON, or the SVG / terminal drawing by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text]   (render-IR JSON, or the SVG / terminal drawing by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n";
   return 2;
 }
 
@@ -86,6 +88,21 @@ int main(int argc, char** argv) {
   if (argc != 3) return usage();
   if (verb == "export") {
     std::cout << driftspec::exporter::JsonExport().render(model) << "\n";
+    return 0;
+  }
+  if (verb == "coupling") {
+    // derived from behaviour: a local or an attribute typed in another module is coupling to it
+    std::map<std::string, std::vector<std::string>> byBehaviour;
+    for (const auto& r : model.relations()) {
+      if (r.kind != "couples-structural" && r.kind != "couples-transient") continue;
+      byBehaviour[r.from].push_back(r.to + (r.kind == "couples-transient" ? "  (transient: created inside)" : "  (structural: an attribute or parameter)"));
+    }
+    if (byBehaviour.empty()) std::cout << "no behaviour couples to another module\n";
+    for (const auto& b : byBehaviour) {
+      const driftspec::model::Entity* seq = model.find(b.first);
+      std::cout << (seq ? seq->name : b.first) << "  (module " << (seq ? seq->scope : "?") << ")\n";
+      for (const auto& t : b.second) std::cout << "  -> " << t << "\n";
+    }
     return 0;
   }
   if (verb != "check") return usage();

@@ -23,21 +23,24 @@ struct Reference {
   std::vector<std::string> args;  ///< template arguments as written, for Repository<Finding> (R15)
 };
 
-/// A message of a sequence: `from -> to.op(args)`, checked against the static model.
+/// A message of a behaviour: `from -> to.op(args) -> result`, checked against the static
+/// context of the behaviour's subject (self, attributes, parameters, locals).
 struct Message {
-  std::string sequence;
-  std::string participantType;  ///< as written, resolved later
-  std::string scope;
+  std::string sequence;  ///< identity of the behaviour
+  std::string message;   ///< identity of the message entity
+  std::string to;        ///< participant name as written; "self" when omitted
   std::string op;
+  int argc = 0;
   model::Location location;
 };
 
-/// A transition event of a state machine, checked against the entity's operations.
+/// A transition event (or action) of a state machine, checked against the entity's operations.
 struct Event {
   std::string state;
   std::string entity;  ///< as written
   std::string scope;
   std::string event;
+  bool action = false;  ///< `/ action` rather than `on event`
   model::Location location;
 };
 
@@ -67,6 +70,8 @@ class Binder {
   void bindMember(const parse::ParsedFile& file, TSNode node, model::Entity& cls, const std::vector<std::string>& params,
                   const std::set<std::string>& operators);
   void bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope);
+  void bindSequence(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
+  void bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order, int& frames);
   /// Relate `from` to every class-like name of a type expression (R15, R16).
   TypeUse bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from, const std::string& relation,
                    const std::string& multiplicity, const std::vector<std::string>& params, const model::Location& location);

@@ -121,6 +121,7 @@ std::set<std::string> IrExport::select(const model::Entity& diagram) const {
 std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   const model::Entity* diagram = model_.find(diagramId);
   if (!diagram || diagram->kind != model::Kind::Diagram) return "";
+  if (fieldOf(*diagram, "kind") == "sequence") return renderSequence(*diagram, pretty);
   // `show` adds optional detail (ownership, multiplicity, operators, notes, derived-stereotypes);
   // `hide` removes compartments (fields, methods). Nothing written = members only.
   const std::vector<std::string> showList = split(fieldOf(*diagram, "show"), ',');
@@ -259,6 +260,142 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     if (!label.empty()) edge["label"] = label;
     out["edges"].push_back(edge);
   }
+  return pretty ? out.dump(2) : out.dump();
+}
+
+
+// ---- sequences: lifelines are the static context, children expand by depth (B3, B5, B9) ----
+
+namespace {
+
+struct SequenceBuilder {
+  const model::Model& model;
+  nlohmann::json nodes = nlohmann::json::array();
+  nlohmann::json edges = nlohmann::json::array();
+  std::map<std::string, std::string> lifelineOf;  // key → lifeline id
+  int order = 0;
+
+  std::string lifeline(const std::string& key, const std::string& label, const std::string& classifier) {
+    auto it = lifelineOf.find(key);
+    if (it != lifelineOf.end()) return it->second;
+    nodes.push_back({{"id", key}, {"kind", "lifeline"}, {"label", label}, {"classifier", classifier}});
+    lifelineOf[key] = key;
+    return key;
+  }
+
+  std::vector<const model::Entity*> messagesOf(const std::string& sequenceId) const {
+    std::vector<const model::Entity*> out;
+    for (const auto& pair : model.entities()) {
+      if (pair.second.kind == model::Kind::Message && pair.second.scope == sequenceId) out.push_back(&pair.second);
+    }
+    std::sort(out.begin(), out.end(), [](const model::Entity* a, const model::Entity* b) {
+      return std::stoi(fieldOf(*a, "order")) < std::stoi(fieldOf(*b, "order"));
+    });
+    return out;
+  }
+
+  std::string shortName(const std::string& id) {
+    const auto cut = id.rfind("::");
+    return cut == std::string::npos ? id : id.substr(cut + 2);
+  }
+
+  /// Emits the messages of one behaviour; `selfLine` is the lifeline its subject runs on.
+  void emit(const model::Entity& seq, const std::string& selfLine, int depth, std::set<std::string>& stack) {
+    if (stack.count(seq.id)) return;  // recursion: drawn once
+    stack.insert(seq.id);
+    std::map<std::string, int> firstOrder, lastOrder, elseOrder;  // by frame id
+    for (const model::Entity* m : messagesOf(seq.id)) {
+      const std::string to = fieldOf(*m, "to");
+      const std::string typeId = fieldOf(*m, "type");
+      std::string target = selfLine;
+      if (to != "self") {
+        // one lifeline per entity of the static context: the same attribute reached from two
+        // behaviours of one class is one participant; an unresolved name stays local to its behaviour
+        const std::string typeName = typeId.empty() ? "?" : shortName(typeId);
+        target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId, to + ": " + typeName, "participant");
+      }
+      const std::string frame = fieldOf(*m, "frame");
+      for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
+        if (!firstOrder.count(f)) firstOrder[f] = order;
+        const model::Entity* fe = model.find(f);
+        if (fieldOf(*fe, "else") == m->id) elseOrder[f] = order;
+      }
+      nlohmann::json edge = {{"from", selfLine}, {"to", target}, {"kind", "message"}, {"order", order++}, {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")"}};
+      const std::string expands = fieldOf(*m, "expands");
+      if (!expands.empty() && depth <= 0) {
+        edge["href"] = "#" + expands;
+        edge["title"] = "expands to " + model.find(expands)->name;
+      }
+      edges.push_back(edge);
+      if (!expands.empty() && depth > 0) emit(*model.find(expands), target, depth - 1, stack);
+      const std::string result = fieldOf(*m, "result");
+      if (!result.empty()) edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
+      for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) lastOrder[f] = order - 1;  // after any expansion
+    }
+    for (const auto& f : firstOrder) {
+      const model::Entity* fe = model.find(f.first);
+      nlohmann::json frame = {{"id", f.first}, {"kind", "frame"}, {"label", fieldOf(*fe, "kind") + " " + fieldOf(*fe, "condition")},
+                              {"classifier", fieldOf(*fe, "kind")}, {"span", nlohmann::json::array({f.second, lastOrder[f.first]})}};
+      if (elseOrder.count(f.first)) frame["dividers"] = nlohmann::json::array({{{"at", elseOrder[f.first]}, {"label", "else"}}});
+      nodes.push_back(frame);
+    }
+    stack.erase(seq.id);
+  }
+};
+
+}  // namespace
+
+std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) const {
+  const int depth = fieldOf(diagram, "depth").empty() ? 0 : std::stoi(fieldOf(diagram, "depth"));
+  const std::string level = fieldOf(diagram, "level");
+  // the behaviours selected: by subject id, by sequence id, or a namespace
+  std::vector<const model::Entity*> selected;
+  for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
+    for (const auto& pair : model_.entities()) {
+      const model::Entity& e = pair.second;
+      if (e.kind != model::Kind::Sequence || e.expected) continue;
+      const std::string subjectId = e.id.substr(0, e.id.find("::sequence"));
+      const bool ns = pattern.size() > 3 && pattern.compare(pattern.size() - 3, 3, "::*") == 0 &&
+                      (e.scope == pattern.substr(0, pattern.size() - 3) || e.scope.rfind(pattern.substr(0, pattern.size() - 3) + "::", 0) == 0);
+      if (pattern == e.id || pattern == subjectId || ns) selected.push_back(&e);
+    }
+  }
+  SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0};
+  nlohmann::json out;
+  out["ir"] = 1;
+  out["title"] = diagram.name;
+  if (level == "module") {
+    // lifting (B9): every message between classes of different modules is a message between the modules
+    std::set<std::string> drawn;
+    for (const model::Entity* seq : selected) {
+      const std::string subjectId = seq->id.substr(0, seq->id.find("::sequence"));
+      const model::Entity* subject = model_.find(subjectId);
+      const model::Entity* cls = subject && subject->kind == model::Kind::Method ? model_.find(subject->scope) : subject;
+      if (!cls) continue;
+      for (const model::Entity* m : b.messagesOf(seq->id)) {
+        const std::string typeId = fieldOf(*m, "type");
+        const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
+        if (!type || type->scope == cls->scope) continue;
+        const std::string from = b.lifeline(cls->scope, cls->scope, "namespace");
+        const std::string to = b.lifeline(type->scope, type->scope, "namespace");
+        const std::string label = b.shortName(typeId) + "::" + fieldOf(*m, "op");
+        if (!drawn.insert(from + "|" + to + "|" + label).second) continue;
+        b.edges.push_back({{"from", from}, {"to", to}, {"kind", "message"}, {"order", b.order++}, {"label", label}});
+      }
+    }
+  } else {
+    for (const model::Entity* seq : selected) {
+      const std::string subjectId = seq->id.substr(0, seq->id.find("::sequence"));
+      const model::Entity* subject = model_.find(subjectId);
+      const model::Entity* cls = subject && subject->kind == model::Kind::Method ? model_.find(subject->scope) : subject;
+      const std::string self = b.lifeline(cls ? cls->id : subjectId, "self: " + (cls ? cls->name : subjectId), "participant");
+      std::set<std::string> stack;
+      b.emit(*seq, self, depth, stack);
+    }
+  }
+  if (b.edges.empty()) out["notice"] = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
+  out["nodes"] = b.nodes;
+  out["edges"] = b.edges;
   return pretty ? out.dump(2) : out.dump();
 }
 

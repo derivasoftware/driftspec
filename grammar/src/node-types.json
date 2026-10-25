@@ -1,5 +1,105 @@
 [
   {
+    "type": "alt",
+    "named": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "condition",
+            "named": true
+          }
+        ]
+      },
+      "otherwise": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "alt",
+            "named": true
+          },
+          {
+            "type": "annotation",
+            "named": true
+          },
+          {
+            "type": "field",
+            "named": true
+          },
+          {
+            "type": "local",
+            "named": true
+          },
+          {
+            "type": "loop",
+            "named": true
+          },
+          {
+            "type": "message",
+            "named": true
+          },
+          {
+            "type": "opt",
+            "named": true
+          },
+          {
+            "type": "participant",
+            "named": true
+          },
+          {
+            "type": "return",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "alt",
+          "named": true
+        },
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "local",
+          "named": true
+        },
+        {
+          "type": "loop",
+          "named": true
+        },
+        {
+          "type": "message",
+          "named": true
+        },
+        {
+          "type": "opt",
+          "named": true
+        },
+        {
+          "type": "participant",
+          "named": true
+        },
+        {
+          "type": "return",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "annotation",
     "named": true,
     "fields": {
@@ -26,6 +126,21 @@
     }
   },
   {
+    "type": "argument",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "name",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "arguments",
     "named": true,
     "fields": {},
@@ -34,7 +149,7 @@
       "required": false,
       "types": [
         {
-          "type": "name",
+          "type": "argument",
           "named": true
         }
       ]
@@ -463,6 +578,90 @@
     }
   },
   {
+    "type": "local",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "loop",
+    "named": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "condition",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "alt",
+          "named": true
+        },
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "local",
+          "named": true
+        },
+        {
+          "type": "loop",
+          "named": true
+        },
+        {
+          "type": "message",
+          "named": true
+        },
+        {
+          "type": "opt",
+          "named": true
+        },
+        {
+          "type": "participant",
+          "named": true
+        },
+        {
+          "type": "return",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "member_body",
     "named": true,
     "fields": {},
@@ -499,7 +698,7 @@
     "fields": {
       "from": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "name",
@@ -517,9 +716,19 @@
           }
         ]
       },
+      "result": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
       "to": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "name",
@@ -810,6 +1019,64 @@
     }
   },
   {
+    "type": "opt",
+    "named": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "condition",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "alt",
+          "named": true
+        },
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "local",
+          "named": true
+        },
+        {
+          "type": "loop",
+          "named": true
+        },
+        {
+          "type": "message",
+          "named": true
+        },
+        {
+          "type": "opt",
+          "named": true
+        },
+        {
+          "type": "participant",
+          "named": true
+        },
+        {
+          "type": "return",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "ownership",
     "named": true,
     "fields": {}
@@ -920,7 +1187,7 @@
         "required": true,
         "types": [
           {
-            "type": "qualified_name",
+            "type": "type",
             "named": true
           }
         ]
@@ -1020,12 +1287,22 @@
     "type": "sequence",
     "named": true,
     "fields": {
-      "name": {
+      "scenario": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "subject": {
         "multiple": false,
         "required": true,
         "types": [
           {
-            "type": "name",
+            "type": "qualified_name",
             "named": true
           }
         ]
@@ -1036,6 +1313,10 @@
       "required": false,
       "types": [
         {
+          "type": "alt",
+          "named": true
+        },
+        {
           "type": "annotation",
           "named": true
         },
@@ -1044,7 +1325,19 @@
           "named": true
         },
         {
+          "type": "local",
+          "named": true
+        },
+        {
+          "type": "loop",
+          "named": true
+        },
+        {
           "type": "message",
+          "named": true
+        },
+        {
+          "type": "opt",
           "named": true
         },
         {
@@ -1161,6 +1454,16 @@
     "type": "transition",
     "named": true,
     "fields": {
+      "action": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
       "event": {
         "multiple": false,
         "required": true,
@@ -1177,6 +1480,16 @@
         "types": [
           {
             "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "guard": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "contract",
             "named": true
           }
         ]
@@ -1306,6 +1619,10 @@
     "named": false
   },
   {
+    "type": "/",
+    "named": false
+  },
+  {
     "type": ":",
     "named": false
   },
@@ -1350,6 +1667,10 @@
     "named": false
   },
   {
+    "type": "alt",
+    "named": false
+  },
+  {
     "type": "block_text",
     "named": true
   },
@@ -1365,6 +1686,10 @@
     "type": "comment",
     "named": true,
     "extra": true
+  },
+  {
+    "type": "condition",
+    "named": true
   },
   {
     "type": "const",
@@ -1387,6 +1712,10 @@
     "named": false
   },
   {
+    "type": "else",
+    "named": false
+  },
+  {
     "type": "enum",
     "named": false
   },
@@ -1405,6 +1734,14 @@
   {
     "type": "line_text",
     "named": true
+  },
+  {
+    "type": "local",
+    "named": false
+  },
+  {
+    "type": "loop",
+    "named": false
   },
   {
     "type": "module",
@@ -1433,6 +1770,10 @@
   {
     "type": "operator_symbol",
     "named": true
+  },
+  {
+    "type": "opt",
+    "named": false
   },
   {
     "type": "owns",

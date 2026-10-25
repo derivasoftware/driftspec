@@ -374,6 +374,119 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   visit(file, body, scope, declared.id);  // nested requirements and constraints are about the class (R12)
 }
 
+
+// ---- behaviour (block 3): a sequence is the behaviour of its subject ------------
+
+void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order, int& frames) {
+  const uint32_t n = ts_node_child_count(node);
+  bool otherwise = false;
+  for (uint32_t i = 0; i < n; ++i) {
+    TSNode c = ts_node_child(node, i);
+    if (!ts_node_is_named(c)) {
+      if (std::strcmp(ts_node_type(c), "else") == 0) otherwise = true;
+      continue;
+    }
+    const model::Location loc = locationOf(file, c);
+    if (is(c, "message") || is(c, "return")) {
+      model::Entity m;
+      m.kind = model::Kind::Message;
+      m.id = sequence.id + "::m" + std::to_string(order);
+      m.scope = sequence.id;
+      m.location = loc;
+      m.fields["order"] = std::to_string(order);
+      const std::string from = fieldText(file, c, "from");
+      const std::string to = fieldText(file, c, "to");
+      m.fields["from"] = from.empty() ? "self" : from;
+      m.fields["to"] = to.empty() ? "self" : to;
+      m.fields["op"] = fieldText(file, c, "op");
+      if (is(c, "return")) {
+        m.fields["result"] = fieldText(file, c, "value");
+        m.fields["return"] = "true";
+      } else {
+        const std::string result = fieldText(file, c, "result");
+        if (!result.empty()) m.fields["result"] = result;
+      }
+      int argc = 0;
+      std::vector<std::string> args;
+      const uint32_t k = ts_node_named_child_count(c);
+      for (uint32_t j = 0; j < k; ++j) {
+        TSNode a = ts_node_named_child(c, j);
+        if (!is(a, "arguments")) continue;
+        const uint32_t na = ts_node_named_child_count(a);
+        for (uint32_t x = 0; x < na; ++x) {
+          args.push_back(trim(parse::textOf(file, ts_node_named_child(a, x))));
+          ++argc;
+        }
+      }
+      m.fields["args"] = join(args, ", ");
+      m.fields["argc"] = std::to_string(argc);
+      if (!frame.empty()) m.fields["frame"] = frame;
+      m.name = m.fields["to"] + "." + m.fields["op"];
+      model_.declare(m);
+      model_.relate({"contains", sequence.id, m.id, loc, ""});
+      if (!is(c, "return")) messages_.push_back({sequence.id, m.id, m.fields["to"], m.fields["op"], argc, loc});
+      if (!frame.empty()) {
+        model::Entity* f = model_.find(frame);
+        if (f->fields.find("first") == f->fields.end()) f->fields["first"] = m.id;
+        f->fields["last"] = m.id;
+        if (otherwise && f->fields.find("else") == f->fields.end()) f->fields["else"] = m.id;
+      }
+      ++order;
+    } else if (is(c, "loop") || is(c, "alt") || is(c, "opt")) {
+      model::Entity f;
+      f.kind = model::Kind::Frame;
+      f.id = sequence.id + "::f" + std::to_string(frames++);
+      f.scope = sequence.id;
+      f.location = loc;
+      f.name = ts_node_type(c);
+      f.fields["kind"] = ts_node_type(c);
+      f.fields["condition"] = trim(fieldText(file, c, "condition"));
+      if (!frame.empty()) f.fields["parent"] = frame;
+      model_.declare(f);
+      model_.relate({"contains", sequence.id, f.id, loc, ""});
+      bindSteps(file, c, sequence, f.id, order, frames);
+      // a frame's span also covers its parent's
+      model::Entity* child = model_.find(f.id);
+      if (!frame.empty() && child->fields.count("first")) {
+        model::Entity* parent = model_.find(frame);
+        if (parent->fields.find("first") == parent->fields.end()) parent->fields["first"] = child->fields["first"];
+        parent->fields["last"] = child->fields["last"];
+        if (otherwise && parent->fields.find("else") == parent->fields.end()) parent->fields["else"] = child->fields["first"];
+      }
+    }
+  }
+}
+
+void Binder::bindSequence(const parse::ParsedFile& file, TSNode c, const std::string& scope, const std::string& owner) {
+  const model::Location loc = locationOf(file, c);
+  const std::string subject = fieldText(file, c, "subject");
+  const std::string scenario = fieldText(file, c, "scenario");
+  model::Entity e;
+  e.kind = model::Kind::Sequence;
+  e.name = subject + (scenario.empty() ? "" : "/" + scenario);
+  e.id = qualify(scope, subject) + "::sequence" + (scenario.empty() ? "" : "/" + scenario);  // identity = the subject (B1)
+  e.scope = scope;
+  e.location = loc;
+  e.fields["subject"] = subject;
+  if (!scenario.empty()) e.fields["scenario"] = scenario;
+  bindFields(file, c, e);
+  model::Entity& declared = model_.declare(e);
+  if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
+  references_.push_back({declared.id, subject, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
+  bindAnnotations(file, c, declared.id, scope);
+  // locals (and the older `participant`) are the only participants written (B3)
+  const uint32_t n = ts_node_named_child_count(c);
+  for (uint32_t j = 0; j < n; ++j) {
+    TSNode s = ts_node_named_child(c, j);
+    if (!is(s, "local") && !is(s, "participant")) continue;
+    const std::string name = fieldText(file, s, "name");
+    TypeUse use = bindType(file, child(s, "type"), scope, declared.id, "uses", "", {}, locationOf(file, s));
+    model_.find(declared.id)->fields["local." + name] = use.text;
+  }
+  int order = 0, frames = 0;
+  bindSteps(file, c, *model_.find(declared.id), "", order, frames);
+}
+
 // ---- the walk --------------------------------------------------------------------
 
 void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner) {
@@ -457,35 +570,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       if (!owner.empty()) model_.relate({"contains", owner, e.id, loc, ""});
 
     } else if (is(c, "sequence")) {
-      model::Entity e;
-      e.kind = model::Kind::Sequence;
-      e.name = fieldText(file, c, "name");
-      e.id = qualify(scope, e.name);
-      e.scope = scope;
-      e.location = loc;
-      bindFields(file, c, e);
-      model_.declare(e);
-      if (!owner.empty()) model_.relate({"contains", owner, e.id, loc, ""});
-      bindAnnotations(file, c, e.id, scope);
-      std::map<std::string, std::string> participants;
-      const uint32_t n = ts_node_named_child_count(c);
-      for (uint32_t j = 0; j < n; ++j) {
-        TSNode s = ts_node_named_child(c, j);
-        if (is(s, "participant")) {
-          const std::string name = fieldText(file, s, "name");
-          const std::string type = fieldText(file, s, "type");
-          participants[name] = type;
-          references_.push_back({e.id, type, scope, "uses", model::Kind::Class, locationOf(file, s), "", {}});
-        } else if (is(s, "message") || is(s, "return")) {
-          const std::string to = fieldText(file, s, "to");
-          auto p = participants.find(to);
-          if (p == participants.end()) {
-            model_.report({"W-PARTICIPANT-UNDECLARED", "warning", "'" + to + "' is not a participant of " + e.id, locationOf(file, s)});
-            continue;
-          }
-          messages_.push_back({e.id, p->second, scope, fieldText(file, s, "op"), locationOf(file, s)});
-        }
-      }
+      bindSequence(file, c, scope, owner);
 
     } else if (is(c, "state")) {
       const std::string entityName = fieldText(file, c, "entity");
@@ -502,7 +587,10 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
         TSNode t = ts_node_named_child(c, j);
-        if (is(t, "transition")) events_.push_back({e.id, entityName, scope, fieldText(file, t, "event"), locationOf(file, t)});
+        if (!is(t, "transition")) continue;
+        events_.push_back({e.id, entityName, scope, fieldText(file, t, "event"), false, locationOf(file, t)});
+        const std::string action = fieldText(file, t, "action");
+        if (!action.empty()) events_.push_back({e.id, entityName, scope, action, true, locationOf(file, t)});
       }
 
     } else if (is(c, "diagram")) {

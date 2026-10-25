@@ -3,7 +3,8 @@
 (comment) @comment
 
 [ "package" "module" "extern" "requirement" "constraint" "verification" "boundary" "operation"
-  "class" "dataclass" "enum" "operator" "sequence" "state" "diagram" "participant" "initial" "on" "return" ] @keyword
+  "class" "dataclass" "enum" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "on" "return"
+  "loop" "alt" "opt" "else" ] @keyword
 
 (method_modifier) @keyword.modifier
 (ownership) @keyword.modifier
@@ -27,7 +28,14 @@
 (operator symbol: (operator_symbol) @function.method)
 (operator_set (operator_item (operator_symbol) @function.method))
 (operator_set (operator_item family: (name) @function.method))
-(sequence name: (name) @type)
+(sequence subject: (qualified_name) @type)
+(sequence scenario: (name) @constant)
+(local name: (name) @variable)
+(local type: (type) @type)
+(condition) @string
+(message result: (name) @variable)
+(argument) @variable
+(transition action: (name) @function.method.call)
 (state entity: (qualified_name) @type)
 (diagram name: (name) @type)
 (participant name: (name) @variable)

@@ -37,6 +37,8 @@ IrDocument IrDocument::parse(const std::string& json) {
       node.sections.push_back(lines);
     }
     for (const auto& k : n.value("sectionKinds", nlohmann::json::array())) node.sectionKinds.push_back(k.get<std::string>());
+    if (n.contains("span") && n["span"].size() == 2) node.span = {n["span"][0].get<int>(), n["span"][1].get<int>()};
+    for (const auto& d : n.value("dividers", nlohmann::json::array())) node.dividers.push_back({d.value("at", 0), d.value("label", std::string())});
     doc.nodes.push_back(node);
   }
   for (const auto& e : j.value("edges", nlohmann::json::array())) {
@@ -48,6 +50,7 @@ IrDocument IrDocument::parse(const std::string& json) {
     edge.title = text(e, "title");
     edge.href = text(e, "href");
     edge.dashed = e.value("dashed", false);
+    edge.order = e.value("order", -1);
     doc.edges.push_back(edge);
   }
   return doc;

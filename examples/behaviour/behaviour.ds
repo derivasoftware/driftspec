@@ -1,0 +1,210 @@
+// behaviour.v1.ds — block 3 sketch: behaviour bound to the static model.
+// Written over driftspec's own engine (Checker, Model, Binder) so every
+// message names something that exists. Decisions are B-numbers; competing
+// forms are (A)/(B), the recommended one marked "rec". The `!` lines are the
+// findings the tool would emit; they become the oracle once chosen.
+//
+//  B1  subject: the static element a behaviour describes
+//      (A) rec  the subject is the name:  sequence Checker::run { }
+//               state Checker { }   activity Checker::run { }
+//               A behaviour has no other name: its identity is
+//               <subject>::sequence (plus a scenario, B2). Level = subject's level.
+//      (B)      a name and a subject:  sequence ResolveAll of Checker::run { }
+//  B2  scenarios: several behaviours of one subject
+//      (A) rec  sequence Checker::run / duplicate-identity { }
+//               the unnamed one is the default scenario; identity
+//               Checker::run::sequence/duplicate-identity
+//      (B)      a field: scenario: duplicate-identity
+//  B3  participants are the static context; nothing is declared twice
+//      In the behaviour of a method the participants are, without writing them:
+//        self                     the subject's class
+//        the attributes of the class (owns, refs, shares), by their name
+//        the parameters of the method, by their name
+//      Only what the method creates itself is declared, because it does not
+//      exist in the static model:
+//        local parser: Parser     a stack or heap entity born in this method
+//      At class level the participants are the class's attributes; at module
+//      level the module's classes; at package level its modules and boundaries.
+//      ! a message to a name that is neither attribute, parameter nor local
+//        → W-PARTICIPANT-UNDECLARED (this replaces the W-MSG-NO-PATH idea:
+//        the path IS the static context).
+//      ! a local whose type is not reachable from the subject's module by
+//        uses/owns → W-REF-UNDECLARED as for any reference.
+//  B4  messages
+//      (A) rec  from -> to.op(args) -> result        return on the same line
+//      (B)      from -> to.op(args)  and a separate  return to.op -> result  (today)
+//      args are names (not expressions); their count is checked against the
+//      operation's parameters: ! E-MSG-ARITY. A name that is a declared
+//      attribute, parameter or earlier result is resolved; an unknown name is
+//      a local (no finding: absence is not an error).
+//      self calls:  self -> self.resolveReference(ref)   or   -> resolveReference(ref)  (rec: the short form)
+//  B5  expansion (derived, never written)
+//      a message to an operation that has a behaviour gets expands-to → it.
+//      No `ref` keyword exists. A diagram decides: depth: 0 draws a ref frame
+//      with a link, depth: 1 inlines the child, depth: * everything.
+//  B6  control: alt / loop / opt
+//      (A) rec  three blocks, with a condition in prose, no expression language:
+//                 loop each reference {  ...  }
+//                 alt declared {  ...  } else {  ...  }
+//                 opt has a bound {  ...  }
+//      (B)      none: scenarios (B2) replace branches; loops are prose in a note.
+//  B7  state machines
+//      state <Class> { initial X;  A -> B on <op> [guard] / <action>  }
+//      event = an operation of the class (checked today);
+//      guard = prose in brackets; action = an operation of the class
+//      (checked, same as events) or prose.
+//      nested:  state Idle { initial Cold; Cold -> Warm on tick }   (open: needed?)
+//      ! W-EVENT-UNDECLARED as today; ! W-ACTION-UNDECLARED new.
+//  B8  activities
+//      activity <subject> { start; action <name>: <Class::op>; decision <prose>;
+//                           a -> b; a -> c when <prose>; end }
+//      an action bound to an operation links to its behaviour (B5).
+//      Subject may be a package or module (a process-level activity) or a method.
+//      Lanes: lane <Class or module> { actions }  — derived from the actions'
+//      operations when omitted. (open: is activity needed in block 3 or later?)
+//  B9  lifting (derived): a method-level sequence projects to class, module and
+//      package level; a diagram asks for a level:  level: module
+//  B10 diagrams of behaviour
+//      diagram SEQ_Run { kind: sequence; include: ds::Checker::run; depth: 1; level: method }
+//      diagram STM_Checker { kind: state; include: ds::Checker }
+//      diagram ACT_Check { kind: activity; include: ds::Checker::run }
+
+package ds {
+  module ds {
+
+    dataclass Reference {
+      + from: string
+      + target: string
+      + scope: string
+    }
+
+    class Model {
+      + find(id: string) -> optional<Entity>
+      + declare(entity: Entity) -> Entity
+      + relate(relation: Relation) -> none
+      + report(finding: Finding) -> none
+    }
+
+    class Binder {
+      + references() -> list<Reference>
+      + messages() -> list<Message>
+    }
+
+    class Checker {
+      - refs model: Model
+      + run(binder: Binder) -> none
+      + resolve(name: string, scope: string) -> string
+      + resolveReference(ref: Reference) -> none
+      + checkMessage(message: Message) -> none
+    }
+
+    // --- B1 (A): the behaviour of a method; `self` is the Checker ---------------
+
+    sequence Checker::run {
+      // no participants written: self (Checker), model (attribute), binder (parameter)
+      self -> binder.references() -> refs           // B4 (A): result on the same line
+      loop each reference {                         // B6 (A)
+        -> resolveReference(ref)                    // self call, short form; expands-to Checker::resolveReference (B5)
+      }
+      self -> binder.messages() -> msgs
+      loop each message {
+        -> checkMessage(message)                    // no behaviour declared: a plain message, no finding
+      }
+    }
+
+    sequence Checker::resolveReference {
+      -> resolve(ref.target, ref.scope) -> target   // self call with two args: arity ok
+      local expected: Entity                        // B3: born here, so declared here
+      alt target is empty {                         // B6 (A)
+        self -> model.declare(expected) -> target
+        self -> model.report(finding)
+      } else {
+        // nothing: the identity was declared
+      }
+      self -> model.relate(relation)
+    }
+
+    // --- B2 (A): a second scenario of the same subject --------------------------
+
+    sequence Checker::resolveReference / duplicate-identity {
+      -> resolve(ref.target, ref.scope) -> target
+      self -> model.relate(relation)
+    }
+
+    // --- things the tool refuses (B3, B4) --------------------------------------
+
+    sequence Checker::checkMessage {
+      local parser: Parser                          // ! W-REF-UNDECLARED: Parser (expected node)
+      self -> binder.messages()                     // ! W-PARTICIPANT-UNDECLARED: binder is neither an attribute of Checker, a parameter of checkMessage nor a local
+      self -> model.find(id, scope)                 // ! E-MSG-ARITY: Model::find takes 1 parameter, 2 given
+      self -> parser.parseFile(path)                // waits: Parser is expected (R6)
+    }
+
+    // --- B7: a state machine of a class; events and actions are operations ----
+
+    state Checker {
+      initial Idle
+      Idle    -> Running on run
+      Running -> Idle    on run [every reference resolved] / report   // guard in prose, action = Checker::report? ! W-ACTION-UNDECLARED (report is Model's, not Checker's)
+      Running -> Running on resolveReference
+    }
+
+  }
+}
+
+// --- coupling is derived (vision): lsp::Publisher::publish touches ds from another module ---
+
+package ds {
+  module lsp {
+    class Publisher {
+      - refs model: ds::Model                      // structural coupling to ds
+      + publish(findings: list<ds::Finding>) -> none
+    }
+    sequence Publisher::publish {
+      local checker: ds::Checker                   // transient coupling to ds: created here
+      self -> model.find(id) -> entity             // through the attribute: structural
+      self -> checker.resolve(name, scope) -> target
+    }
+  }
+}
+
+// --- B10: representations ------------------------------------------------------
+
+diagram SEQ_Run {
+  kind: sequence
+  include: ds::Checker::run
+  depth: 1                     // inline resolveReference; checkMessage has no behaviour, stays a message
+}
+
+diagram SEQ_Run_Overview {
+  kind: sequence
+  include: ds::Checker::run
+  depth: 0                     // child behaviours as ref frames with links
+}
+
+diagram SEQ_Modules {
+  kind: sequence
+  include: ds::*, lsp::*
+  level: module                // B9: every method sequence lifted to module ↔ module messages
+}
+
+diagram SEQ_Publish {
+  kind: sequence
+  include: lsp::Publisher::publish
+}
+
+diagram STM_Checker {
+  kind: state
+  include: ds::Checker
+}
+
+// ---------------------------------------------------------------------------
+// The (B) forms, once, for comparison
+// ---------------------------------------------------------------------------
+//
+//   B1 (B)  sequence ResolveAll of Checker::run { ... }
+//   B2 (B)  sequence Checker::resolveReference { scenario: duplicate-identity ... }
+//   B3 (old) participant binder: Binder  — dropped: the static context declares the participants
+//   B4 (B)  self -> binder.references()
+//           return binder.references -> refs
+//   B6 (B)  no alt/loop: one scenario per branch, loops described in note:

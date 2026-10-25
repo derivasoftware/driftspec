@@ -322,12 +322,172 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
 
 }  // namespace
 
+
+// ---- sequences: lifelines as columns, messages as rows ----------------------------
+
+namespace {
+
+struct SeqLine {
+  std::string id;
+  std::string label;
+  int centre = 0;
+  int width = 0;
+};
+
+std::string sequenceText(const IrDocument& doc, bool color) {
+  std::vector<SeqLine> lines;
+  std::map<std::string, size_t> index;
+  for (const auto& n : doc.nodes) {
+    if (n.kind != "lifeline") continue;
+    index[n.id] = lines.size();
+    lines.push_back({n.id, n.label, 0, static_cast<int>(n.label.size()) + 4});
+  }
+  if (lines.empty()) return "";
+  std::vector<const IrEdge*> messages;
+  for (const auto& e : doc.edges) {
+    if (e.kind == "message" && index.count(e.from) && index.count(e.to)) messages.push_back(&e);
+  }
+  std::sort(messages.begin(), messages.end(), [](const IrEdge* a, const IrEdge* b) { return a->order < b->order; });
+  // lanes: wide enough for the heads and for the longest label that crosses each gap
+  std::vector<int> gap(lines.size(), 0);
+  for (size_t i = 0; i + 1 < lines.size(); ++i) gap[i] = (lines[i].width + lines[i + 1].width) / 2 + 2;
+  for (const IrEdge* m : messages) {
+    const size_t a = std::min(index[m->from], index[m->to]), b = std::max(index[m->from], index[m->to]);
+    const int need = static_cast<int>(m->label.size()) + 6;
+    if (a == b) {
+      if (a + 1 < lines.size()) gap[a] = std::max(gap[a], need + lines[a].width / 2);
+      continue;
+    }
+    int have = 0;
+    for (size_t i = a; i < b; ++i) have += gap[i];
+    if (have < need) gap[b - 1] += need - have;
+  }
+  int x = lines[0].width / 2 + 1;
+  for (size_t i = 0; i < lines.size(); ++i) {
+    lines[i].centre = x;
+    if (i + 1 < lines.size()) x += gap[i];
+  }
+  const int width = x + lines.back().width / 2 + 24;
+  // frames, by the row range they cover
+  struct FrameAt {
+    int first, last;
+    std::string label;
+    std::vector<std::pair<int, std::string>> dividers;
+  };
+  std::vector<FrameAt> frames;
+  for (const auto& n : doc.nodes) {
+    if (n.kind != "frame") continue;
+    FrameAt f{n.span.first, n.span.second, n.label, {}};
+    for (const auto& d : n.dividers) f.dividers.push_back(d);
+    frames.push_back(f);
+  }
+  // rows: 3 for the heads, then per message 2 rows (label, arrow), plus frame rows
+  const size_t count = messages.empty() ? 0 : static_cast<size_t>(messages.back()->order) + 1;
+  std::vector<int> rowOf(count, 0), heightOf(count, 2);
+  int rows = 4;
+  std::vector<int> opens(count, 0), closes(count, 0), divs(count, 0);
+  std::vector<int> depthOf(frames.size(), 0);  // how many frames enclose each frame
+  for (size_t i = 0; i < frames.size(); ++i) {
+    for (size_t j = 0; j < frames.size(); ++j) {
+      if (i != j && frames[j].first <= frames[i].first && frames[i].last <= frames[j].last &&
+          (frames[j].first < frames[i].first || frames[i].last < frames[j].last)) {
+        ++depthOf[i];
+      }
+    }
+    if (frames[i].first < static_cast<int>(count)) ++opens[frames[i].first];
+    if (frames[i].last < static_cast<int>(count)) ++closes[frames[i].last];
+    for (const auto& d : frames[i].dividers) {
+      if (d.first < static_cast<int>(count)) ++divs[d.first];
+    }
+  }
+  for (const IrEdge* m : messages) {
+    rows += opens[m->order] + divs[m->order];
+    rowOf[m->order] = rows;
+    heightOf[m->order] = m->from == m->to ? 3 : 2;
+    rows += heightOf[m->order] + closes[m->order];
+  }
+  rows += 1;
+  Grid g(0, 0, width, rows);
+  // lifelines
+  for (const auto& l : lines) {
+    const int x0 = l.centre - l.width / 2;
+    frame(g, Rect{x0, 0, l.width, 3}, true, "");
+    g.text(x0 + 2, 1, l.label, kName);
+    for (int y = 3; y < rows; ++y) g.put(l.centre, y, "\xE2\x94\x86", kMuted);  // ┆
+  }
+  // frames: a box from the row above the first message to the row below the last
+  for (size_t fi = 0; fi < frames.size(); ++fi) {
+    const FrameAt& f = frames[fi];
+    if (f.first >= static_cast<int>(count) || f.last >= static_cast<int>(count)) continue;
+    int left = width, right = 0;
+    for (const IrEdge* m : messages) {
+      if (m->order < f.first || m->order > f.last) continue;
+      left = std::min({left, lines[index[m->from]].centre, lines[index[m->to]].centre});
+      right = std::max({right, lines[index[m->from]].centre, lines[index[m->to]].centre});
+    }
+    // an outer frame wraps its inner ones: three cells per level
+    int outer = 0;
+    for (size_t j = 0; j < frames.size(); ++j) {
+      if (j != fi && frames[fi].first <= frames[j].first && frames[j].last <= frames[fi].last && depthOf[j] > depthOf[fi]) outer = std::max(outer, depthOf[j] - depthOf[fi]);
+    }
+    left -= 3 + 3 * outer;
+    right += static_cast<int>(f.label.size()) + 6 + 3 * outer;
+    const int top = rowOf[f.first] - 1 - (opens[f.first] - 1 - static_cast<int>(depthOf[fi] > 0 ? 0 : 0)) * 0;
+    const int bottom = rowOf[f.last] + heightOf[f.last] + (closes[f.last] > 1 ? (depthOf[fi] == 0 ? 1 : 0) : 0);
+    for (int xx = left; xx <= right; ++xx) {
+      g.put(xx, top, "\xE2\x94\x80", kMuted);
+      g.put(xx, bottom, "\xE2\x94\x80", kMuted);
+    }
+    for (int yy = top + 1; yy < bottom; ++yy) {
+      g.put(left, yy, "\xE2\x94\x82", kMuted);
+      g.put(right, yy, "\xE2\x94\x82", kMuted);
+    }
+    g.put(left, top, "\xE2\x94\x8C", kMuted);
+    g.put(right, top, "\xE2\x94\x90", kMuted);
+    g.put(left, bottom, "\xE2\x94\x94", kMuted);
+    g.put(right, bottom, "\xE2\x94\x98", kMuted);
+    g.text(left + 1, top, " " + f.label + " ", kMuted);
+    for (const auto& d : f.dividers) {
+      if (d.first >= static_cast<int>(rowOf.size())) continue;
+      const int yy = rowOf[d.first] - 1;
+      for (int xx = left + 1; xx < right; ++xx) g.put(xx, yy, "\xE2\x94\x84", kMuted);
+      g.text(left + 1, yy, " " + d.second + " ", kMuted);
+    }
+  }
+  // messages
+  for (const IrEdge* m : messages) {
+    const int y = rowOf[m->order] + 1;
+    const int a = lines[index[m->from]].centre, b = lines[index[m->to]].centre;
+    const std::string dash = m->dashed ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
+    if (a == b) {
+      g.text(a + 1, y, dash + dash + "\xE2\x94\x90", kEdge);        // ──┐
+      g.text(a + 1, y + 1, "\xE2\x97\x80" + dash + "\xE2\x94\x98", kEdge);  // ◀─┘
+      g.text(a + 5, y, m->label, kMuted);
+      continue;
+    }
+    const int lo = std::min(a, b), hi = std::max(a, b);
+    for (int xx = lo + 1; xx < hi; ++xx) g.put(xx, y, dash, kEdge);
+    if (b > a) g.put(hi - 1, y, "\xE2\x96\xB6", kEdge);  // ▶
+    else g.put(lo + 1, y, "\xE2\x97\x80", kEdge);        // ◀
+    g.text((lo + hi) / 2 - static_cast<int>(m->label.size()) / 2, y - 1, m->label, kMuted);
+  }
+  return g.dump(color);
+}
+
+}  // namespace
+
 std::string Text::render(const IrDocument& doc, bool color) const {
+  for (const auto& n : doc.nodes) {
+    if (n.kind == "lifeline") return sequenceText(doc, color);
+  }
   const IrDocument bundled = doc.bundled();
   return render(bundled, layout(bundled, M), color);
 }
 
 std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
+  for (const auto& n : doc.nodes) {
+    if (n.kind == "lifeline") return sequenceText(doc, color);
+  }
   int minX = 0, minY = 0, maxX = 1, maxY = 1;
   for (const auto& p : lay.placed) {
     minX = std::min(minX, p.rect.x - 1);

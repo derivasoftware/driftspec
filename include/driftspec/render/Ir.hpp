@@ -2,6 +2,7 @@
 #define DRIFTSPEC_RENDER_IR_HPP
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace driftspec {
@@ -20,6 +21,8 @@ struct IrNode {
   bool abstract = false;
   std::vector<std::vector<std::string>> sections;
   std::vector<std::string> sectionKinds;
+  std::pair<int, int> span{-1, -1};                      ///< frame: first and last sequence row
+  std::vector<std::pair<int, std::string>> dividers;     ///< frame: else sections
 };
 
 /// One relation of a render-IR document.
@@ -31,6 +34,7 @@ struct IrEdge {
   std::string title;
   std::string href;
   bool dashed = false;
+  int order = -1;  ///< sequence row of a message
 };
 
 /// A render-IR document, read from JSON; what `ds render` emits and plantuml-render consumes.

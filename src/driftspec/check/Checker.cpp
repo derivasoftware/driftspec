@@ -71,6 +71,7 @@ void Checker::run(const bind::Binder& binder) {
   for (const auto& r : binder.references()) resolveReference(r);
   for (const auto& r : binder.references()) checkTemplateBound(r);
   for (const auto& m : binder.messages()) checkMessage(m);
+  checkLocals();
   for (const auto& e : binder.events()) checkEvent(e);
   checkOwnershipCycles();
   classify();
@@ -126,17 +127,136 @@ void Checker::checkTemplateBound(const bind::Reference& reference) {
   }
 }
 
+std::string Checker::resolveTypeText(const std::string& text, const std::string& scope) const {
+  std::string t = text;
+  // containers hand over to their element (the value of a map)
+  for (;;) {
+    const auto lt = t.find('<');
+    if (lt == std::string::npos) break;
+    const std::string head = t.substr(0, lt);
+    if (head == "list" || head == "set" || head == "optional") {
+      t = t.substr(lt + 1, t.size() - lt - 2);
+    } else if (head == "map") {
+      const auto comma = t.find(',');
+      t = comma == std::string::npos ? "" : t.substr(comma + 1, t.size() - comma - 2);
+    } else {
+      // a template use: identity is name + arity
+      int arity = 1;
+      for (char c : t.substr(lt)) arity += c == ',' ? 1 : 0;
+      t = head + "<" + std::to_string(arity) + ">";
+      break;
+    }
+    const auto b = t.find_first_not_of(' ');
+    t = b == std::string::npos ? "" : t.substr(b, t.find_last_not_of(' ') - b + 1);
+  }
+  if (t.empty()) return "";
+  return resolve(t, scope);
+}
+
+const model::Entity* Checker::subjectClass(const model::Entity& sequence, const model::Entity** subject) const {
+  const auto field = sequence.fields.find("subject");
+  if (field == sequence.fields.end()) return nullptr;
+  const std::string id = resolve(field->second, sequence.scope);
+  const model::Entity* s = id.empty() ? nullptr : model_.find(id);
+  if (!s || s->expected) return nullptr;
+  *subject = s;
+  if (s->kind == model::Kind::Method) return model_.find(s->scope);
+  if (s->kind == model::Kind::Class) return s;
+  return nullptr;
+}
+
+void Checker::couple(const model::Entity& sequence, const model::Entity& type, bool transient) {
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = subjectClass(sequence, &subject);
+  if (!cls || type.expected || type.has("extern")) return;
+  if (type.scope == cls->scope || type.id == cls->id) return;  // inside the module: cohesion, not coupling
+  const std::string kind = transient ? "couples-transient" : "couples-structural";
+  for (const auto& r : model_.relations()) {
+    if (r.kind == kind && r.from == sequence.id && r.to == type.id) return;
+  }
+  model_.relate({kind, sequence.id, type.id, sequence.location, ""});
+}
+
 void Checker::checkMessage(const bind::Message& message) {
-  const std::string type = resolve(message.participantType, message.scope);
-  const model::Entity* entity = type.empty() ? nullptr : model_.find(type);
-  if (!entity || entity->expected) return;  // reported once the type is declared (R6)
-  const std::string op = type + "::" + message.op;
-  if (const model::Entity* target = model_.find(op)) {
-    model_.relate({"calls", message.sequence, target->id, message.location, ""});
+  const model::Entity* seq = model_.find(message.sequence);
+  model::Entity* msg = model_.find(message.message);
+  if (!seq || !msg) return;
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = subjectClass(*seq, &subject);
+  if (!cls) return;  // the subject waits for its declaration (R6)
+  // the participant: self, an attribute of the class, a parameter of the method, or a local (B3)
+  std::string typeId;
+  bool transient = false;
+  if (message.to == "self") {
+    typeId = cls->id;
+  } else if (const model::Entity* attribute = model_.find(cls->id + "::" + message.to)) {
+    const auto type = attribute->fields.find("type");
+    typeId = type == attribute->fields.end() ? "" : resolveTypeText(type->second, cls->scope);
+  } else {
+    bool found = false;
+    if (subject->kind == model::Kind::Method) {
+      const auto params = subject->fields.find("params");
+      if (params != subject->fields.end()) {
+        for (const auto& p : split(params->second, ',')) {
+          const auto colon = p.find(':');
+          if (colon == std::string::npos || p.substr(0, colon) != message.to) continue;
+          typeId = resolveTypeText(p.substr(colon + 1).substr(p.substr(colon + 1).find_first_not_of(' ')), cls->scope);
+          found = true;
+        }
+      }
+    }
+    if (!found) {
+      const auto local = seq->fields.find("local." + message.to);
+      if (local == seq->fields.end()) {
+        model_.report({"W-PARTICIPANT-UNDECLARED", "warning",
+                       "'" + message.to + "' is neither an attribute of " + cls->id + ", a parameter of " + subject->name + " nor a local of " + seq->name,
+                       message.location});
+        return;
+      }
+      typeId = resolveTypeText(local->second, seq->scope);
+      transient = true;
+    }
+  }
+  if (typeId.empty()) return;  // a primitive or an unknown spelling: nothing to check
+  const model::Entity* type = model_.find(typeId);
+  if (!type || type->expected) return;  // reported once the type is declared (R6)
+  msg->fields["type"] = typeId;
+  if (message.to != "self") couple(*seq, *type, transient);
+  const std::string opId = typeId + "::" + message.op;
+  const model::Entity* op = model_.find(opId);
+  if (!op) {
+    model_.report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
     return;
   }
-  model_.report({"W-MSG-UNDECLARED", "warning", "sequence " + message.sequence + " calls " + op + ", which " + type + " does not declare",
-                 message.location});
+  model_.relate({"calls", msg->id, op->id, message.location, ""});
+  const auto params = op->fields.find("params");
+  const int expected = params == op->fields.end() || params->second.empty() ? 0 : static_cast<int>(split(params->second, ',').size());
+  if (expected != message.argc) {
+    model_.report({"E-MSG-ARITY", "error",
+                   opId + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " + std::to_string(message.argc) + " given",
+                   message.location});
+  }
+  // a message to an operation with a behaviour expands to it (B5): derived, never written
+  if (const model::Entity* child = model_.find(opId + "::sequence")) {
+    model_.relate({"expands-to", msg->id, child->id, message.location, ""});
+    msg->fields["expands"] = child->id;
+  }
+}
+
+void Checker::checkLocals() {
+  std::vector<std::pair<std::string, std::string>> locals;
+  for (const auto& pair : model_.entities()) {
+    if (pair.second.kind != model::Kind::Sequence) continue;
+    for (const auto& f : pair.second.fields) {
+      if (f.first.rfind("local.", 0) == 0) locals.push_back({pair.first, f.second});
+    }
+  }
+  for (const auto& l : locals) {
+    const model::Entity* seq = model_.find(l.first);
+    const std::string typeId = resolveTypeText(l.second, seq->scope);
+    const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
+    if (type) couple(*seq, *type, true);
+  }
 }
 
 void Checker::checkEvent(const bind::Event& event) {
@@ -145,7 +265,11 @@ void Checker::checkEvent(const bind::Event& event) {
   if (!entity || entity->expected) return;
   const std::string op = type + "::" + event.event;
   if (const model::Entity* target = model_.find(op)) {
-    model_.relate({"on", event.state, target->id, event.location, ""});
+    model_.relate({event.action ? "does" : "on", event.state, target->id, event.location, ""});
+    return;
+  }
+  if (event.action) {
+    model_.report({"W-ACTION-UNDECLARED", "warning", "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});
     return;
   }
   model_.report({"W-EVENT-UNDECLARED", "warning", "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type,
