@@ -1,7 +1,9 @@
 #include "driftspec/render/Text.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <map>
+#include <nlohmann/json.hpp>
 #include <regex>
 #include <vector>
 
@@ -67,6 +69,50 @@ class Grid {
     c->line |= bit;
     c->color = color;
   }
+
+  /// base64 of u32 little-endian triplets per cell: codepoint, foreground, background
+  std::string encode() const {
+    static const std::map<std::string, uint32_t> rgb = {{"2", 0x64748b}, {"34", 0x2563eb}, {"32", 0x16a34a}, {"31", 0xdc2626}, {"33", 0xd97706}, {"35", 0x7c3aed}};
+    std::string bytes;
+    bytes.reserve(cells_.size() * 12);
+    auto put32 = [&](uint32_t v) {
+      for (int i = 0; i < 4; ++i) bytes.push_back(static_cast<char>((v >> (8 * i)) & 0xff));
+    };
+    for (const Cell& c : cells_) {
+      uint32_t cp = 0x20;
+      const unsigned char b0 = static_cast<unsigned char>(c.glyph[0]);
+      if (b0 < 0x80) cp = b0;
+      else if (b0 >= 0xF0 && c.glyph.size() >= 4) cp = ((b0 & 0x07u) << 18) | ((c.glyph[1] & 0x3fu) << 12) | ((c.glyph[2] & 0x3fu) << 6) | (c.glyph[3] & 0x3fu);
+      else if (b0 >= 0xE0 && c.glyph.size() >= 3) cp = ((b0 & 0x0fu) << 12) | ((c.glyph[1] & 0x3fu) << 6) | (c.glyph[2] & 0x3fu);
+      else if (b0 >= 0xC0 && c.glyph.size() >= 2) cp = ((b0 & 0x1fu) << 6) | (c.glyph[1] & 0x3fu);
+      const auto colour = rgb.find(c.color);
+      put32(cp);
+      put32(colour == rgb.end() ? 0x01000000u : colour->second);
+      put32(0x01000000u);
+    }
+    static const char* const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    size_t i = 0;
+    for (; i + 2 < bytes.size(); i += 3) {
+      const uint32_t n = (static_cast<unsigned char>(bytes[i]) << 16) | (static_cast<unsigned char>(bytes[i + 1]) << 8) | static_cast<unsigned char>(bytes[i + 2]);
+      out += alphabet[(n >> 18) & 63];
+      out += alphabet[(n >> 12) & 63];
+      out += alphabet[(n >> 6) & 63];
+      out += alphabet[n & 63];
+    }
+    if (i < bytes.size()) {
+      uint32_t n = static_cast<unsigned char>(bytes[i]) << 16;
+      if (i + 1 < bytes.size()) n |= static_cast<unsigned char>(bytes[i + 1]) << 8;
+      out += alphabet[(n >> 18) & 63];
+      out += alphabet[(n >> 12) & 63];
+      out += i + 1 < bytes.size() ? alphabet[(n >> 6) & 63] : '=';
+      out += '=';
+    }
+    return out;
+  }
+
+  int columns() const { return w_; }
+  int rows() const { return h_; }
 
   std::string dump(bool color) const {
     std::string out;
@@ -334,7 +380,7 @@ struct SeqLine {
   int width = 0;
 };
 
-std::string sequenceText(const IrDocument& doc, bool color) {
+Grid sequenceGrid(const IrDocument& doc) {
   std::vector<SeqLine> lines;
   std::map<std::string, size_t> index;
   for (const auto& n : doc.nodes) {
@@ -342,7 +388,7 @@ std::string sequenceText(const IrDocument& doc, bool color) {
     index[n.id] = lines.size();
     lines.push_back({n.id, n.label, 0, static_cast<int>(n.label.size()) + 4});
   }
-  if (lines.empty()) return "";
+  if (lines.empty()) return Grid(0, 0, 1, 1);
   std::vector<const IrEdge*> messages;
   for (const auto& e : doc.edges) {
     if (e.kind == "message" && index.count(e.from) && index.count(e.to)) messages.push_back(&e);
@@ -471,23 +517,14 @@ std::string sequenceText(const IrDocument& doc, bool color) {
     else g.put(lo + 1, y, "\xE2\x97\x80", kEdge);        // ◀
     g.text((lo + hi) / 2 - static_cast<int>(m->label.size()) / 2, y - 1, m->label, kMuted);
   }
-  return g.dump(color);
+  return g;
 }
 
 }  // namespace
 
-std::string Text::render(const IrDocument& doc, bool color) const {
-  for (const auto& n : doc.nodes) {
-    if (n.kind == "lifeline") return sequenceText(doc, color);
-  }
-  const IrDocument bundled = doc.bundled();
-  return render(bundled, layout(bundled, M), color);
-}
+namespace {
 
-std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
-  for (const auto& n : doc.nodes) {
-    if (n.kind == "lifeline") return sequenceText(doc, color);
-  }
+Grid classGrid(const IrDocument& doc, const LayoutResult& lay) {
   int minX = 0, minY = 0, maxX = 1, maxY = 1;
   for (const auto& p : lay.placed) {
     minX = std::min(minX, p.rect.x - 1);
@@ -520,7 +557,34 @@ std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool co
   for (const auto& p : lay.placed) {
     if (p.node->kind != "container") box(g, p);
   }
-  return g.dump(color);
+  return g;
+}
+
+bool isSequence(const IrDocument& doc) {
+  for (const auto& n : doc.nodes) {
+    if (n.kind == "lifeline") return true;
+  }
+  return false;
+}
+
+}  // namespace
+
+std::string Text::render(const IrDocument& doc, bool color) const {
+  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
+  const IrDocument bundled = doc.bundled();
+  return render(bundled, layout(bundled, M), color);
+}
+
+std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
+  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
+  return classGrid(doc, lay).dump(color);
+}
+
+std::string Text::cells(const IrDocument& doc) const {
+  const IrDocument bundled = doc.bundled();
+  const Grid g = isSequence(doc) ? sequenceGrid(doc) : classGrid(bundled, layout(bundled, M));
+  nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode()}, {"text", g.dump(false)}};
+  return out.dump();
 }
 
 }  // namespace render

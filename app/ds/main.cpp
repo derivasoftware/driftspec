@@ -22,7 +22,7 @@
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text]   (render-IR JSON, or the SVG / terminal drawing by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n";
   return 2;
 }
 
@@ -69,7 +69,8 @@ int main(int argc, char** argv) {
     const std::string name = argv[3];
     const bool svg = argc == 5 && std::string(argv[4]) == "--svg";
     const bool text = argc == 5 && std::string(argv[4]) == "--text";
-    const std::string doc = ir.render(name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name, !svg && !text);
+    const bool cells = argc == 5 && std::string(argv[4]) == "--cells";
+    const std::string doc = ir.render(name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name, !svg && !text && !cells);
     if (doc.empty()) {
       std::cerr << "no diagram named " << name << "\n";
       return 1;
@@ -80,6 +81,10 @@ int main(int argc, char** argv) {
     }
     if (text) {
       std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0);
+      return 0;
+    }
+    if (cells) {
+      std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc)) << "\n";
       return 0;
     }
     std::cout << doc << "\n";
