@@ -27,7 +27,7 @@
 namespace {
 
 int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text <diagram>]   (design diff: two directories, or two git revisions of <path>)\n";
+  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] [--svg|--text|--cells]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself)\n       ds draw <render-ir.json>                      (SVG from any render-IR document)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git revisions of <path>)\n";
   return 2;
 }
 
@@ -36,14 +36,33 @@ bool isDirectory(const std::string& path) {
   return ::stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
 }
 
-/// The .ds files of `path` at git revision `rev`, extracted to a fresh directory ("" on failure).
+std::string firstLine(const std::string& command) {
+  std::string out;
+  if (FILE* p = ::popen(command.c_str(), "r")) {
+    char buffer[4096];
+    if (std::fgets(buffer, sizeof buffer, p)) out = buffer;
+    ::pclose(p);
+  }
+  while (!out.empty() && (out.back() == '\n' || out.back() == '/')) out.pop_back();
+  return out;
+}
+
+/// The .ds files of `path` (relative to the current directory, or absolute inside a
+/// repository) at git revision `rev`, extracted to a fresh directory ("" on failure).
 std::string checkout(const std::string& rev, const std::string& path) {
   char tmpl[] = "/tmp/ds-diff-XXXXXX";
   const char* dir = ::mkdtemp(tmpl);
   if (!dir) return "";
-  const std::string command = "git archive '" + rev + "' -- '" + path + "' 2>/dev/null | tar -x -C '" + std::string(dir) + "' 2>/dev/null";
+  std::string root = ".", relative = path;
+  if (!path.empty() && path[0] == '/') {
+    root = firstLine("git -C '" + path + "' rev-parse --show-toplevel 2>/dev/null");
+    relative = firstLine("git -C '" + path + "' rev-parse --show-prefix 2>/dev/null");
+    if (root.empty()) return "";
+    if (relative.empty()) relative = ".";
+  }
+  const std::string command = "git -C '" + root + "' archive '" + rev + "' -- '" + relative + "' 2>/dev/null | tar -x -C '" + std::string(dir) + "' 2>/dev/null";
   if (std::system(command.c_str()) != 0) return "";
-  return std::string(dir) + "/" + path;
+  return std::string(dir) + "/" + relative;
 }
 
 driftspec::model::Model load(const std::string& dir) {
@@ -94,6 +113,7 @@ int main(int argc, char** argv) {
         return 1;
       }
       if (how == "--svg") std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc));
+      else if (how == "--cells") std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc)) << "\n";
       else std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0);
       return 0;
     }
