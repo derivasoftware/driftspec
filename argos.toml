@@ -13,4 +13,10 @@ asil = "NA"
 # W-TEST-LAYOUT-UNRECOGNISED.
 
 [sources]
-cpp = ["src"]
+cpp = ["src", "include"]
+
+# The design of this repository is written in DriftSpec (design/**/*.ds) and
+# read by argos-design-driftspec; the PlantUML design plugin stays out so the
+# host resolves the DriftSpec reader.
+[plugins]
+disabled = ["argos-design-plantuml"]
