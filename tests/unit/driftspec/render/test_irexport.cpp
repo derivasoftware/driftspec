@@ -40,8 +40,8 @@ class TestIrExport : public ::testing::Test {
 
 TEST_F(TestIrExport, ListsTheDeclaredDiagrams) {
   const auto ids = driftspec::render::IrExport(model).diagrams();
-  EXPECT_EQ(ids.size(), 4u);
-  EXPECT_EQ(ids[0], "diagram:CL_Model");
+  EXPECT_EQ(ids.size(), 5u);
+  EXPECT_EQ(ids[0], "diagram:CL_Around_Model");  // alphabetical
 }
 
 TEST_F(TestIrExport, IncludeSelectsAndTheModuleBecomesAContainer) {

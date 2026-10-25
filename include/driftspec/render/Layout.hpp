@@ -24,6 +24,8 @@ struct Metrics {
   int NOTE_FOLD = 9;
   int GAP_X = 40;
   int GAP_Y = 56;
+  int LANE = 12;      ///< one row per edge crossing a gap between layers
+  int LANE_PAD = 20;  ///< air above the first lane and below the last
   int CONTAINER_PAD = 18;
   int CONTAINER_LABEL_H = 22;
   double ASPECT = 1.6;  ///< width/height the packing aims at, in this table's units
@@ -41,6 +43,8 @@ struct Metrics {
     m.NOTE_FOLD = 1;
     m.GAP_X = 4;
     m.GAP_Y = 3;  // stub, channel, head
+    m.LANE = 1;   // a row per lane
+    m.LANE_PAD = 2;
     m.CONTAINER_PAD = 2;
     m.CONTAINER_LABEL_H = 1;
     m.ASPECT = 0.8;  // a terminal cell is about twice as tall as wide: 1.6 on screen is 0.8 in cells

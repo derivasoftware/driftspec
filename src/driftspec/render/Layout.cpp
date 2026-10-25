@@ -48,6 +48,13 @@ struct Waypoint {
   int x;
   int top;
   int bottom;
+  int gapBelow;  ///< the height of the gap under its layer: where the next jog lives
+};
+
+/// The gap under a node's layer: the band its outgoing jogs live in.
+struct Band {
+  int top;
+  int bottom;
 };
 
 /// The layered placement of one connected component: nodes get x/y relative to the component.
@@ -55,6 +62,7 @@ struct Component {
   std::vector<int> nodes;  // kid indices; -1 = pseudo source, -2 = pseudo sink
   std::vector<Projected> edges;
   std::map<size_t, std::vector<Waypoint>> ways;  // by edge index, upper to lower
+  std::map<int, Band> bands;                      // by kid: the gap under its layer
   int w = 0;
   int h = 0;
 };
@@ -105,6 +113,11 @@ class Engine {
         p.top += o.y;
         p.bottom += o.y;
       }
+    }
+    for (auto& b : bands_) {
+      const Point o = origin[bandFrame_[b.first]];
+      b.second.top += o.y;
+      b.second.bottom += o.y;
     }
     route(out, abs);
     return out;
@@ -206,6 +219,10 @@ class Engine {
         if (k < 0) continue;
         rel_[k].x += x;
         rel_[k].y += y;
+        if (c.bands.count(k)) {
+          bands_[k] = {c.bands[k].top + y, c.bands[k].bottom + y};
+          bandFrame_[k] = parent;
+        }
       }
       for (auto& w : c.ways) {
         for (Waypoint& p : w.second) {
@@ -336,11 +353,18 @@ class Engine {
       sweep(predA, true);
       sweep(succA, false);
     }
-    // y: each layer as tall as its tallest real node; a layer of pseudo nodes takes no room
-    std::vector<int> rowY(depth + 1), rowH(depth + 1, 0);
+    // y: each layer as tall as its tallest real node; a layer of pseudo nodes takes no room.
+    // The gap below a layer holds one lane per edge crossing it (succA counts the chains), so
+    // every horizontal jog has a row of its own (M.LANE apart) instead of piling on the middle.
+    std::vector<int> rowY(depth + 1), rowH(depth + 1, 0), gapBelow(depth + 1, M.GAP_Y);
+    for (int l = 0; l < depth; ++l) {
+      int crossing = 0;
+      for (int v : rows[l]) crossing += static_cast<int>(succA[v].size());
+      gapBelow[l] = std::max(M.GAP_Y, M.LANE * (crossing + 1) + M.LANE_PAD);
+    }
     for (int l = 0; l <= depth; ++l) {
       for (int v : rows[l]) rowH[l] = std::max(rowH[l], heights[v]);
-      rowY[l] = l == 0 ? 0 : rowY[l - 1] + rowH[l - 1] + (rowH[l - 1] > 0 ? M.GAP_Y : 0);
+      rowY[l] = l == 0 ? 0 : rowY[l - 1] + rowH[l - 1] + (rowH[l - 1] > 0 ? gapBelow[l - 1] : 0);
     }
     // x: sequential, then pulled under the barycenter of the neighbours without overlapping
     std::vector<int> x(total);
@@ -397,9 +421,16 @@ class Engine {
       for (int v : rows[l]) extent = std::max(extent, x[v] + widths[v]);
       std::vector<std::vector<int>> lines;
       if (available > 0 && extent > available) {
+        // real nodes wrap; a dummy (a channel one character wide) stays on the first line past
+        // its end rather than starting a line below, where its vertical would cut through a node
         int cursor = 0;
         lines.push_back({});
+        std::vector<int> channels;
         for (int v : rows[l]) {
+          if (v >= real) {
+            channels.push_back(v);
+            continue;
+          }
           if (cursor > 0 && cursor + widths[v] > available) {
             lines.push_back({});
             cursor = 0;
@@ -407,6 +438,13 @@ class Engine {
           x[v] = cursor;
           lines.back().push_back(v);
           cursor += gapAfter(v);
+        }
+        int right = 0;
+        for (int v : lines[0]) right = std::max(right, x[v] + gapAfter(v));
+        for (int d : channels) {
+          x[d] = right;
+          lines[0].push_back(d);
+          right += gapAfter(d);
         }
       } else {
         lines.push_back(rows[l]);
@@ -441,6 +479,8 @@ class Engine {
       r.y = rowY[layer[v]] + lineTop[v];
       c.w = std::max(c.w, r.x + r.w);
       c.h = std::max(c.h, r.y + r.h);
+      const int l = layer[v];
+      c.bands[c.nodes[v]] = {rowY[l] + rowH[l], rowY[l] + rowH[l] + (l < depth ? gapBelow[l] : M.GAP_Y)};
     }
     for (int d = real; d < total; ++d) c.w = std::max(c.w, x[d] + widths[d]);  // the channels count too
     minX = 0;
@@ -453,7 +493,10 @@ class Engine {
         if (it == chain.end()) continue;
       }
       std::vector<Waypoint> way;
-      for (int d : it->second) way.push_back({x[d] - minX + widths[d] / 2, rowY[layer[d]] + lineTop[d], rowY[layer[d]] + lineTop[d] + lineHeight[d]});
+      for (int d : it->second) {
+        const int l = layer[d];
+        way.push_back({x[d] - minX + widths[d] / 2, rowY[l] + lineTop[d], rowY[l] + lineTop[d] + lineHeight[d], l < depth ? gapBelow[l] : M.GAP_Y});
+      }
       if (it->first.first != key.first) std::reverse(way.begin(), way.end());
       if (!way.empty()) c.ways[e.edge] = way;
     }
@@ -519,50 +562,102 @@ class Engine {
         }
       }
     }
+    // every horizontal jog is a lane request in a band (the gap between two layers): the
+    // band is keyed by its bottom edge (the top of the lower node), and the jogs of one band
+    // get distinct rows, ordered by where they come from, so they neither pile up nor cross
+    struct Jog {
+      size_t edge;
+      size_t index;  // which jog of the edge's polyline
+      int fromX, toX;
+      int bandTop, bandBottom;
+    };
+    std::vector<Jog> jogs;
+    std::map<size_t, std::vector<Point>> drafts;  // polylines with the jog rows still unset (y = -1 marks a jog)
     for (size_t i = 0; i < doc_.edges.size(); ++i) {
       if (pairs[i].first < 0) continue;
       const Point a = anchors[{i, true}];
       const Point b = anchors[{i, false}];
-      Route r;
+      std::vector<Point> pts;
       const auto way = ways_.find(i);
+      auto jog = [&](int fromX, int toX, int bandTop, int bandBottom) {
+        if (fromX == toX) return;
+        jogs.push_back({i, pts.size(), fromX, toX, bandTop, bandBottom});
+        pts.push_back({fromX, -1});
+        pts.push_back({toX, -1});
+      };
+      // the first jog lives in the gap under the upper node's layer; later ones under each dummy's layer
+      const int upperNode = a.y <= b.y ? pairs[i].first : pairs[i].second;
+      const auto band = bands_.find(upperNode);
       if (way != ways_.end() && verticalEdge[i]) {
-        // upper end first: the waypoints run top to bottom
         const bool downwards = a.y <= b.y;
         const Point top = downwards ? a : b;
         const Point bottom = downwards ? b : a;
-        r.points.push_back(top);
+        pts.push_back(top);
         int prevX = top.x;
+        int bandTop = band != bands_.end() ? band->second.top : top.y;
+        int bandBottom = band != bands_.end() ? band->second.bottom : way->second.front().top;
         for (const Waypoint& w : way->second) {
-          const int gap = w.top - M.GAP_Y / 2;
-          if (prevX != w.x) {
-            r.points.push_back({prevX, gap});
-            r.points.push_back({w.x, gap});
-          }
+          jog(prevX, w.x, bandTop, bandBottom);
           prevX = w.x;
+          bandTop = w.bottom;
+          bandBottom = w.bottom + w.gapBelow;
         }
-        const int gap = way->second.back().bottom + M.GAP_Y / 2;
-        if (prevX != bottom.x) {
-          r.points.push_back({prevX, gap});
-          r.points.push_back({bottom.x, gap});
+        jog(prevX, bottom.x, bandTop, bandBottom);
+        pts.push_back(bottom);
+        if (!downwards) {
+          std::reverse(pts.begin(), pts.end());
+          for (Jog& j : jogs) {
+            if (j.edge == i) j.index = pts.size() - 2 - j.index;
+          }
         }
-        r.points.push_back(bottom);
-        if (!downwards) std::reverse(r.points.begin(), r.points.end());
       } else if (verticalEdge[i]) {
-        if (a.x == b.x) {
-          r.points = {a, b};
+        // no waypoints: an edge across containers, or between adjacent layers; its jog
+        // goes right under the upper end, never spread over whatever lies between
+        const bool downwards = a.y <= b.y;
+        const Point top = downwards ? a : b;
+        const Point bottom = downwards ? b : a;
+        pts.push_back(top);
+        if (band != bands_.end() && band->second.bottom <= bottom.y) {
+          jog(top.x, bottom.x, band->second.top, band->second.bottom);
         } else {
-          const int midY = (a.y + b.y) / 2;
-          r.points = {a, {a.x, midY}, {b.x, midY}, b};
+          jog(top.x, bottom.x, top.y, std::min(bottom.y, top.y + 2 * M.GAP_Y));
+        }
+        pts.push_back(bottom);
+        if (!downwards) {
+          std::reverse(pts.begin(), pts.end());
+          for (Jog& j : jogs) {
+            if (j.edge == i) j.index = pts.size() - 2 - j.index;
+          }
         }
       } else {
         if (a.y == b.y) {
-          r.points = {a, b};
+          pts = {a, b};
         } else {
           const int midX = (a.x + b.x) / 2;
-          r.points = {a, {midX, a.y}, {midX, b.y}, b};
+          pts = {a, {midX, a.y}, {midX, b.y}, b};
         }
       }
-      out.routes[i] = r;
+      drafts[i] = pts;
+    }
+    // lanes: group the jogs by band, order them by their x, spread them over the band
+    std::map<std::pair<int, int>, std::vector<Jog*>> bands;
+    for (Jog& j : jogs) bands[{j.bandTop, j.bandBottom}].push_back(&j);
+    for (auto& band : bands) {
+      std::vector<Jog*>& list = band.second;
+      std::stable_sort(list.begin(), list.end(), [](const Jog* p, const Jog* q) { return std::min(p->fromX, p->toX) < std::min(q->fromX, q->toX); });
+      const int top = band.first.first, bottom = band.first.second;
+      const int n = static_cast<int>(list.size());
+      for (int k = 0; k < n; ++k) {
+        const int y = top + (bottom - top) * (k + 1) / (n + 1);
+        std::vector<Point>& pts = drafts[list[k]->edge];
+        pts[list[k]->index].y = y;
+        pts[list[k]->index + 1].y = y;
+      }
+    }
+    for (auto& d : drafts) {
+      Route r;
+      r.points = d.second;
+      out.routes[d.first] = r;
     }
   }
 
@@ -576,6 +671,8 @@ class Engine {
   std::vector<int> roots_;
   std::map<size_t, std::vector<Waypoint>> ways_;
   std::map<size_t, int> wayFrame_;
+  std::map<int, Band> bands_;      ///< by node, relative to its frame's content origin
+  std::map<int, int> bandFrame_;
 };
 
 }  // namespace

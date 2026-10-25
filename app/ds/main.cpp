@@ -11,6 +11,7 @@
 #include "driftspec/model/Model.hpp"
 #include "driftspec/parse/Parser.hpp"
 #include "driftspec/render/IrExport.hpp"
+#include "driftspec/render/Layout.hpp"
 #include "driftspec/render/Svg.hpp"
 #include "driftspec/render/Text.hpp"
 #include "driftspec/diff/Diff.hpp"
@@ -154,7 +155,8 @@ int main(int argc, char** argv) {
     const bool svg = argc == 5 && std::string(argv[4]) == "--svg";
     const bool text = argc == 5 && std::string(argv[4]) == "--text";
     const bool cells = argc == 5 && std::string(argv[4]) == "--cells";
-    const std::string doc = ir.render(name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name, !svg && !text && !cells);
+    const bool layoutOnly = argc == 5 && std::string(argv[4]) == "--layout";
+    const std::string doc = ir.render(name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name, !svg && !text && !cells && !layoutOnly);
     if (doc.empty()) {
       std::cerr << "no diagram named " << name << "\n";
       return 1;
@@ -165,6 +167,28 @@ int main(int argc, char** argv) {
     }
     if (text) {
       std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0, width);
+      return 0;
+    }
+    if (layoutOnly) {
+      // the placed rectangles and routes, in cells: the portable form for hosts that draw themselves
+      const driftspec::render::IrDocument parsed = driftspec::render::IrDocument::parse(doc).bundled();
+      const driftspec::render::LayoutResult lay = driftspec::render::layout(parsed, driftspec::render::Metrics::text(), width);
+      std::cout << "{\"nodes\":[";
+      bool first = true;
+      for (const auto& p : lay.placed) {
+        std::cout << (first ? "" : ",") << "{\"id\":\"" << p.node->id << "\",\"kind\":\"" << p.node->kind << "\",\"x\":" << p.rect.x << ",\"y\":" << p.rect.y << ",\"w\":" << p.rect.w << ",\"h\":" << p.rect.h << "}";
+        first = false;
+      }
+      std::cout << "],\"routes\":[";
+      first = true;
+      for (const auto& r : lay.routes) {
+        const driftspec::render::IrEdge& e = parsed.edges[r.first];
+        std::cout << (first ? "" : ",") << "{\"from\":\"" << e.from << "\",\"to\":\"" << e.to << "\",\"kind\":\"" << e.kind << "\",\"points\":[";
+        for (size_t k = 0; k < r.second.points.size(); ++k) std::cout << (k ? "," : "") << "[" << r.second.points[k].x << "," << r.second.points[k].y << "]";
+        std::cout << "]}";
+        first = false;
+      }
+      std::cout << "]}\n";
       return 0;
     }
     if (cells) {

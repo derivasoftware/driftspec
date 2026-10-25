@@ -120,6 +120,23 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
 
   std::set<std::string> selected = select(*diagram);
+  // neighbours: n widens the selection to what the selected entities relate to, n steps away
+  const int neighbours = fieldOf(*diagram, "neighbours").empty() ? 0 : std::stoi(fieldOf(*diagram, "neighbours"));
+  for (int step = 0; step < neighbours; ++step) {
+    std::set<std::string> grown = selected;
+    for (const auto& r : model_.relations()) {
+      if (edgeKind(r.kind).empty()) continue;
+      const model::Entity* from = model_.find(r.from);
+      const model::Entity* to = model_.find(r.to);
+      if (!from || !to) continue;
+      const std::string fromClass = isClassLike(*from) ? from->id : from->scope;
+      const model::Entity* fromEntity = model_.find(fromClass);
+      if (!fromEntity || !isClassLike(*fromEntity) || !isClassLike(*to) || to->expected || fromEntity->expected) continue;
+      if (selected.count(fromClass) && !to->has("extern")) grown.insert(r.to);
+      if (selected.count(r.to) && !fromEntity->has("extern")) grown.insert(fromClass);
+    }
+    selected = grown;
+  }
   // modules of the selected classes become containers (R2); a module with nothing drawn in it is not drawn
   std::set<std::string> containers;
   auto up = [](const std::string& s) {

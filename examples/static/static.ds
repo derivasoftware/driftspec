@@ -239,3 +239,10 @@ diagram CL_Package_ds {
   hide: methods
   show: ownership, multiplicity, derived-stereotypes
 }
+
+diagram CL_Around_Model {
+  kind: class
+  include: ds@ds::Model
+  neighbours: 1                // Model and what it touches, nothing else
+  show: ownership, multiplicity
+}
