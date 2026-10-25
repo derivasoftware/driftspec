@@ -61,10 +61,9 @@ package ds {
 
   // --- process artefacts at package level (R18) -------------------------------
 
-  constraint DS-C-0001: The diagnostics core shall not depend on any I/O library
+  constraint DS-C-0001-0: The diagnostics core shall not depend on any I/O library
 
-  constraint DS-C-0002 {
-    revision: 1
+  constraint DS-C-0002-1 {
     title: Finding codes are stable
     text:
       Once published, a code keeps its meaning. A check whose meaning changes
@@ -129,14 +128,13 @@ package ds {
     // --- a class with an inline requirement in a member body (R12) -------------
 
     class Model {
-      @constraint DS-C-0001
+      @constraint DS-C-0001-0
       - owns entities: map<string, Entity>   // composition, *; the key is a string and relates nothing
       - owns relations: list<Relation>
       - shares cache: Cache              // ! Cache is undeclared → EXPECTED node, W-REF-UNDECLARED
       + find(id: string) -> optional<Entity>   // uses Entity, 0..1
       + declare(entity: Entity) -> Entity {
-        requirement DS-0003 {
-          revision: 0
+        requirement DS-0003-0 {
           owner: dcoello
           title: Declaring an identity twice shall be an error
           text:
@@ -174,7 +172,7 @@ package ds {
       + Vector(x: float, y: float)       // constructor (R19)
       + x: float
       + y: float
-      constraint DS-C-0003: Vector is immutable once constructed
+      constraint DS-C-0003-0: Vector is immutable once constructed
       operator *(k: float) -> Vector     // refines the header: the operand is a scalar
       operator [](i: int) -> float
       operator -(other: Vector) -> Vector   // ! E-OPERATOR-UNDECLARED: `-` is not in the header

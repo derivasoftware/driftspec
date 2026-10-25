@@ -1,0 +1,139 @@
+// Block 1 as decided (2026-10-25): requirements, constraints and verifications.
+// Over real artefacts of iris. The `!` lines are the oracle of the tests.
+//
+//  Identity: the revision is part of the id (REQ-00001-2). Every link names a
+//  revision: an unpinned link is an error (E-REF-UNPINNED); a link to a
+//  revision the workspace no longer declares is W-REVISION-DRIFT and resolves
+//  to the declared one, so the drift is visible and the graph stays whole.
+//  Level: by placement. In a package a requirement is of the system; in a
+//  module, of the software. No keyword, no field.
+//  Fields: title (the shall sentence), text and rationale (multiline), status
+//  (draft | approved), tags (free, for whatever the team classifies by).
+//  No asil, no parent: nesting or @refines; a parent: field is ignored with a warning.
+//  Verification: nested in its requirement, or @requirement from elsewhere;
+//  method test | review | inspection | analysis; tests: the ids as the
+//  runner names them, one per line; evidence: paths for the other methods.
+//  Constraint: category (argos's subdirectory), bok, one-line form.
+//  Where: a separate file that reopens the package is the normal place; nesting
+//  is for ad-hoc views (an agent drawing one entity with its artefacts).
+
+package iris {
+
+  // --- system level: in the package ---------------------------------------------
+
+  requirement SREQ-00001-2 {
+    title: The system shall keep one work item per requirement in the tracker
+    text:
+      iris maintains a development's requirement cards in the configured
+      tracker project as one work item per requirement, reconciled on every
+      run so that re-running never duplicates.
+    status: approved
+    tags: projection, tracker
+
+    // nested → refines SREQ-00001-2
+    requirement SREQ-00004-1 {
+      title: The system shall reconcile rather than duplicate on a second run
+      status: draft
+    }
+  }
+
+  // ! W-REQ-NO-VERIFICATION: approved and nothing verifies it
+  requirement SREQ-00002-1 {
+    title: The system shall read the tracker without a token in the command line
+    status: approved
+  }
+
+  requirement SREQ-00003-1: The system shall report the stamps of the last activity   // one-line form, draft by absence of status
+
+  verification VER-00050-1 {
+    @requirement SREQ-00001-2
+    title: Review of the projection contract against the tracker API
+    method: review
+    evidence:
+      doc/reviews/2026-09-19-projection.md
+  }
+
+  constraint CST-00002-1 {
+    category: architecture
+    title: Every command entry shall run inside an observation scope
+    text:
+      Every CLI subcommand runs inside a scope named after it; every protocol
+      verb inside a scope carrying the run id of its envelope.
+    rationale:
+      One unmarked verb is a blind spot that reads as unused.
+    status: approved
+    bok: BOK-00002-1, BOK-00007-1
+  }
+
+  constraint CST-00009-1: Every projected card shall carry the requirement's revision in its external identifier
+
+  module projection {
+
+    // --- software level: in a module ---------------------------------------------
+
+    requirement REQ-00001-2 {
+      @refines SREQ-00001-2                      // pinned: the link names the revision it was written against
+      title: The system shall project one work item per requirement, keyed by its external identifier
+      text:
+        One work item per requirement, created on the first run and updated
+        on every later one, keyed by the requirement's external identifier.
+      rationale:
+        A single idempotent projection entry keeps the write path in one place.
+      status: approved
+      tags: projection
+
+      // nested → verifies REQ-00001-2
+      verification VER-00001-3 {
+        title: Integration tests confirm the external identifier is namespaced by application
+        method: test
+        tests:
+          tests/integration/test_it_req00003_namespacing.py::TestTheIdentifierCarriesTheApplication::test_a_plain_id_is_prefixed_by_the_application
+          tests/integration/test_it_req00003_namespacing.py::TestTheReconcileIsScopedToTheApplication::test_reprojecting_one_application_never_cancels_another_slice
+      }
+    }
+
+    requirement REQ-00002-1 {
+      @refines SREQ-00001-1                      // ! W-REVISION-DRIFT: the workspace declares SREQ-00001-2
+      title: The system shall update an existing work item instead of creating a second one
+      status: draft
+    }
+
+    requirement REQ-00003-1 {
+      @refines SREQ-00001                        // ! E-REF-UNPINNED: a link names a revision
+      title: The system shall namespace the external identifier by application
+      parent: SREQ-00001-2                       // ! W-PARENT-IGNORED: nest it or @refines
+      status: draft
+    }
+
+    verification VER-00004-3 {
+      @requirement REQ-00003-1
+      title: Unit tests cover the identifier builder
+      method: test                               // ! W-VER-NO-TEST: no tests: block
+    }
+
+    class Projection {
+      @requirement REQ-00001-2                   // the class realises it
+      @constraint CST-00002-1                    // the rule applies here
+      + sync(app: string) -> Report
+    }
+  }
+}
+
+// --- the separate file, the normal place (R9: the package reopens) -------------
+
+package iris {
+  module projection {
+    requirement REQ-00005-1 {
+      @refines SREQ-00001-2
+      title: The system shall skip a card whose revision did not change
+      status: draft
+    }
+    verification VER-00006-1 {
+      @requirement REQ-00005-1
+      title: Unit tests cover the skip
+      method: test
+      tests:
+        tests/unit/projection/test_skip.py::TestSkip
+    }
+  }
+}

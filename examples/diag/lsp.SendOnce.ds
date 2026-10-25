@@ -7,8 +7,8 @@ package ds {
   module lsp {
 
     sequence SendOnce {
-      @requirement DS-0002
-      @verification VF-0001            // the test expected to exercise it
+      @requirement DS-0002-0
+      @verification VF-0001-0            // the test expected to exercise it
       participant client: LspClient
       participant server: LspServer    // ! undeclared → EXPECTED node
 

@@ -1222,6 +1222,16 @@
             "named": true
           }
         ]
+      },
+      "title": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "line_text",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
@@ -1238,6 +1248,10 @@
         },
         {
           "type": "field",
+          "named": true
+        },
+        {
+          "type": "requirement",
           "named": true
         },
         {

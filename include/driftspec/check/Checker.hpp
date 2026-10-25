@@ -30,6 +30,7 @@ class Checker {
   void checkMessage(const bind::Message& message);
   void checkEvent(const bind::Event& event);
   void checkLocals();
+  void checkArtefacts();
   /// The identity of a type written as text (`list<Scope>` → the class Scope), or "".
   std::string resolveTypeText(const std::string& text, const std::string& scope) const;
   /// The class a behaviour is about, and whether its subject is a method.

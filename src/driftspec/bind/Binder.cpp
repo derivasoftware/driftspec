@@ -51,6 +51,7 @@ model::Kind kindForRelation(const std::string& relation) {
 
 std::string relationForAnnotation(model::Kind from, const std::string& annotation) {
   if (annotation == "requirement") return from == model::Kind::Verification ? "verifies" : "requires";
+  if (annotation == "refines") return "refines";
   if (annotation == "constraint") return "constrained-by";
   if (annotation == "boundary") return "realises";
   if (annotation == "verification") return "exercised-by";
@@ -141,17 +142,21 @@ void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std:
   e.location = loc;
   bindFields(file, node, e);
   const std::string title = fieldText(file, node, "title");
-  if (!title.empty()) e.fields["title"] = trim(title);  // one-line constraint
-  if (e.fields.find("revision") == e.fields.end()) e.fields["revision"] = "0";
+  if (!title.empty()) e.fields["title"] = trim(title);  // the one-line form
   model_.declare(e);
   if (!owner.empty()) {
+    // nesting gives the relation (R3): a verification verifies the requirement it is in,
+    // a requirement refines the requirement it is in, anything else is about its owner
     const model::Entity* ownerEntity = model_.find(owner);
-    const bool verifiesOwner = e.kind == model::Kind::Verification && ownerEntity && ownerEntity->kind == model::Kind::Requirement;
-    model_.relate({verifiesOwner ? "verifies" : "about", e.id, owner, loc, ""});  // nesting gives the relation (R3)
+    const bool inRequirement = ownerEntity && ownerEntity->kind == model::Kind::Requirement;
+    std::string relation = "about";
+    if (inRequirement && e.kind == model::Kind::Verification) relation = "verifies";
+    if (inRequirement && e.kind == model::Kind::Requirement) relation = "refines";
+    model_.relate({relation, e.id, owner, loc, ""});
   }
-  auto parent = e.fields.find("parent");
-  if (parent != e.fields.end() && !parent->second.empty()) {
-    references_.push_back({e.id, parent->second, scope, "refines", model::Kind::Requirement, loc, "", {}});
+  if (e.fields.count("parent")) {
+    // one representation per concept: nesting or @refines, never a field
+    model_.report({"W-PARENT-IGNORED", "warning", e.id + " carries a parent: field; nest it in its parent or write @refines <id-revision>", loc});
   }
   bindAnnotations(file, node, e.id, scope);
   visit(file, node, scope, e.id);  // nested verifications and constraints

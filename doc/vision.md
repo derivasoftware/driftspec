@@ -402,10 +402,12 @@ Work by blocks, each with a sketch file showing the real alternatives side by
 side on real artefacts; the chosen form goes into the guide and the oracle
 corpus the same day.
 
-1. **Process artefacts**: mandatory fields; revision in the id or as a field;
-   `title`/`text`; `parent` vs `@requirement`; verification levels and how the
-   real test is referenced; whether status (draft/approved) is in the language
-   or left to argos.
+1. **Process artefacts**: DECIDED 2026-10-25, see `guide.md` §4: revision in
+   the id and every link pinned to one (`E-REF-UNPINNED`, `W-REVISION-DRIFT`),
+   level by placement, `status` in the language, no `asil` (tags), no
+   `parent:` (nesting or `@refines`), verification nested or `@requirement`,
+   tests as the runner names them, constraint `category`/`bok`, one-line
+   forms; `applies:` on constraints deferred. Corpus `examples/artefacts`.
 2. **Static leftovers**: contracts (free text vs a minimal checkable
    expression), one place for contracts, package prefix for boundaries/ids,
    closing-brace rule, `extern` with or without signatures.

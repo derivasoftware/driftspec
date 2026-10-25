@@ -12,11 +12,16 @@ namespace check {
 
 namespace {
 
+// process artefact ids: PREFIX(-PART)*-NUMBER-REVISION, e.g. REQ-00001-2, DS-C-0001-0
+const std::regex kArtefactWithRevision("^([A-Z]+(?:-[A-Z]+)*-[0-9]+)-([0-9]+)$");
+const std::regex kArtefactBare("^[A-Z]+(?:-[A-Z]+)*-[0-9]+$");
+
 std::string withoutRevision(const std::string& id) {
-  static const std::regex revision("^([A-Z]+-[0-9]+)-[0-9]+$");
   std::smatch m;
-  return std::regex_match(id, m, revision) ? m[1].str() : id;
+  return std::regex_match(id, m, kArtefactWithRevision) ? m[1].str() : id;
 }
+
+bool looksLikeArtefact(const std::string& name) { return std::regex_match(name, kArtefactBare) || std::regex_match(name, kArtefactWithRevision); }
 
 std::vector<std::string> split(const std::string& text, char sep) {
   std::vector<std::string> out;
@@ -75,9 +80,55 @@ void Checker::run(const bind::Binder& binder) {
   for (const auto& e : binder.events()) checkEvent(e);
   checkOwnershipCycles();
   classify();
+  checkArtefacts();
+}
+
+// approved requirements are verified; a test verification names its tests
+void Checker::checkArtefacts() {
+  std::set<std::string> verified;
+  for (const auto& r : model_.relations()) {
+    if (r.kind == "verifies") verified.insert(r.to);
+  }
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.expected) continue;
+    const auto status = e.fields.find("status");
+    if (e.kind == model::Kind::Requirement && status != e.fields.end() && status->second == "approved" && !verified.count(e.id)) {
+      model_.report({"W-REQ-NO-VERIFICATION", "warning", e.id + " is approved and nothing verifies it", e.location});
+    }
+    const auto method = e.fields.find("method");
+    if (e.kind == model::Kind::Verification && method != e.fields.end() && method->second == "test") {
+      const auto tests = e.fields.find("tests");
+      if (tests == e.fields.end() || tests->second.empty()) model_.report({"W-VER-NO-TEST", "warning", e.id + " verifies by test but names no tests", e.location});
+    }
+  }
 }
 
 void Checker::resolveReference(const bind::Reference& reference) {
+  const bool artefactRef = reference.expectedKind == model::Kind::Requirement || reference.expectedKind == model::Kind::Verification ||
+                           reference.expectedKind == model::Kind::Constraint;
+  if (artefactRef && looksLikeArtefact(reference.target)) {
+    std::smatch m;
+    if (!std::regex_match(reference.target, m, kArtefactWithRevision)) {
+      // a link goes against a revision: an unpinned one says nothing about which text was meant
+      model_.report({"E-REF-UNPINNED", "error", reference.from + " refers to " + reference.target + " without a revision; write " + reference.target + "-<revision>",
+                     reference.location});
+      return;
+    }
+    // the declared revision of that artefact, whatever it is
+    const std::string bare = m[1].str();
+    std::string declaredId;
+    for (const auto& pair : model_.entities()) {
+      if (!pair.second.expected && withoutRevision(pair.first) == bare) declaredId = pair.first;
+    }
+    if (!declaredId.empty() && declaredId != reference.target) {
+      model_.report({"W-REVISION-DRIFT", "warning",
+                     reference.from + " refers to " + reference.target + " but the workspace declares " + declaredId + ": the link is behind the artefact",
+                     reference.location});
+      model_.relate({reference.relation, reference.from, declaredId, reference.location, reference.multiplicity});
+      return;
+    }
+  }
   std::string target = resolve(reference.target, reference.scope);
   if (target.empty()) {
     // nobody declares it: an EXPECTED node, reported once (R6)

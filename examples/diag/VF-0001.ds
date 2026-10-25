@@ -4,8 +4,8 @@
 
 package ds {
 
-  verification VF-0001 {
-    @requirement DS-0001
+  verification VF-0001-0 {
+    @requirement DS-0001-0
     level: system
     @boundary LSP
     precondition: a client connected over LSP to a loaded workspace

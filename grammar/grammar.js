@@ -36,7 +36,11 @@ module.exports = grammar({
     _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.sequence, $.state),
 
     // ---- process artefacts ------------------------------------------------
-    requirement: $ => seq('requirement', field('id', $.name), '{', repeat(choice($.field, $.annotation, $.verification, $.constraint)), '}'),
+    // a requirement nested in a requirement refines it; a verification nested in one verifies it (R3)
+    requirement: $ => choice(
+      seq('requirement', field('id', $.name), ':', field('title', $.line_text)),
+      seq('requirement', field('id', $.name), '{', repeat(choice($.field, $.annotation, $.requirement, $.verification, $.constraint)), '}'),
+    ),
     verification: $ => seq('verification', field('id', $.name), '{', repeat(choice($.field, $.annotation)), '}'),
     // a constraint is a requirement-like claim; the one-line form carries only its title (R18)
     constraint: $ => choice(

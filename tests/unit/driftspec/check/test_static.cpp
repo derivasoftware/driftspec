@@ -59,13 +59,13 @@ TEST_F(TestStatic, ExternDeclaresIdentitiesWithoutObligations) {
 }
 
 TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
-  EXPECT_EQ(field("DS-C-0001", "title"), "The diagnostics core shall not depend on any I/O library");
-  EXPECT_EQ(field("DS-C-0001", "revision"), "0");
-  EXPECT_EQ(field("DS-C-0002", "revision"), "1");
-  EXPECT_NE(relation("about", "DS-C-0001", "package:ds"), nullptr);
-  EXPECT_NE(relation("about", "DS-C-0003", "ds::Vector"), nullptr);         // nested in a class
-  EXPECT_NE(relation("about", "DS-0003", "ds::Model::declare"), nullptr);   // requirement nested in a member body (R12)
-  EXPECT_NE(relation("constrained-by", "ds::Model", "DS-C-0001"), nullptr);
+  // the revision is part of the identity (block 1): DS-C-0001-0, DS-C-0002-1
+  EXPECT_EQ(field("DS-C-0001-0", "title"), "The diagnostics core shall not depend on any I/O library");
+  EXPECT_EQ(field("DS-C-0002-1", "title"), "Finding codes are stable");
+  EXPECT_NE(relation("about", "DS-C-0001-0", "package:ds"), nullptr);
+  EXPECT_NE(relation("about", "DS-C-0003-0", "ds::Vector"), nullptr);         // nested in a class
+  EXPECT_NE(relation("about", "DS-0003-0", "ds::Model::declare"), nullptr);   // requirement nested in a member body (R12)
+  EXPECT_NE(relation("constrained-by", "ds::Model", "DS-C-0001-0"), nullptr);  // a pinned link
 }
 
 TEST_F(TestStatic, NotesAndContractsLiveInMemberBodies) {

@@ -7,7 +7,7 @@ package ds {
   module lsp {
 
     class LspClient : AbstractClass {
-      @requirement DS-0002
+      @requirement DS-0002-0
       @boundary LSP          // this class realises the LSP boundary
 
       + send(msg: int) -> bool
