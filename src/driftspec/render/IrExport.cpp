@@ -275,10 +275,17 @@ struct SequenceBuilder {
   std::map<std::string, std::string> lifelineOf;  // key → lifeline id
   int order = 0;
 
-  std::string lifeline(const std::string& key, const std::string& label, const std::string& classifier) {
+  std::string lifeline(const std::string& key, const std::string& label, const std::string& classifier, const std::string& typeId = "") {
     auto it = lifelineOf.find(key);
     if (it != lifelineOf.end()) return it->second;
-    nodes.push_back({{"id", key}, {"kind", "lifeline"}, {"label", label}, {"classifier", classifier}});
+    nlohmann::json node = {{"id", key}, {"kind", "lifeline"}, {"label", label}, {"classifier", classifier}};
+    if (!typeId.empty()) {
+      node["href"] = "#" + typeId;  // a page that also shows the class diagram lands on the class
+      node["title"] = typeId;
+      const model::Entity* type = model.find(typeId);
+      if (type && !type->location.file.empty()) node["refs"] = {{"location", type->location.file + ":" + std::to_string(type->location.line)}};
+    }
+    nodes.push_back(node);
     lifelineOf[key] = key;
     return key;
   }
@@ -312,7 +319,7 @@ struct SequenceBuilder {
         // one lifeline per entity of the static context: the same attribute reached from two
         // behaviours of one class is one participant; an unresolved name stays local to its behaviour
         const std::string typeName = typeId.empty() ? "?" : shortName(typeId);
-        target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId, to + ": " + typeName, "participant");
+        target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId, to + ": " + typeName, "participant", typeId);
       }
       const std::string frame = fieldOf(*m, "frame");
       for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
@@ -320,14 +327,26 @@ struct SequenceBuilder {
         const model::Entity* fe = model.find(f);
         if (fieldOf(*fe, "else") == m->id) elseOrder[f] = order;
       }
-      nlohmann::json edge = {{"from", selfLine}, {"to", target}, {"kind", "message"}, {"order", order++}, {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")"}};
+      const int row = order++;
+      nlohmann::json edge = {{"from", selfLine}, {"to", target}, {"kind", "message"}, {"order", row}, {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")"}};
+      nlohmann::json refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
       const std::string expands = fieldOf(*m, "expands");
-      if (!expands.empty() && depth <= 0) {
-        edge["href"] = "#" + expands;
-        edge["title"] = "expands to " + model.find(expands)->name;
+      std::string title;
+      if (!typeId.empty()) title = typeId + "::" + fieldOf(*m, "op");
+      if (!expands.empty()) {
+        refs["expands"] = expands;
+        title += (title.empty() ? "" : "\n") + std::string(depth > 0 ? "expanded below: " : "expands to: ") + model.find(expands)->name;
+        if (depth <= 0) edge["href"] = "#" + expands;  // a page that also shows the child lands on it
       }
+      if (!title.empty()) edge["title"] = title;
+      const size_t at = edges.size();
       edges.push_back(edge);
-      if (!expands.empty() && depth > 0) emit(*model.find(expands), target, depth - 1, stack);
+      if (!expands.empty() && depth > 0) {
+        const int first = order;
+        emit(*model.find(expands), target, depth - 1, stack);
+        if (order > first) refs["span"] = std::to_string(first) + "-" + std::to_string(order - 1);  // the rows the expansion occupies
+      }
+      edges[at]["refs"] = refs;
       const std::string result = fieldOf(*m, "result");
       if (!result.empty()) edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
       for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) lastOrder[f] = order - 1;  // after any expansion
@@ -391,9 +410,10 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       // the caller, leftmost, invokes the entry operation on the subject: what is being looked at is the first thing drawn
       const bool method = subject && subject->kind == model::Kind::Method;
       const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";
-      const std::string self = b.lifeline(cls ? cls->id : subjectId, "self: " + (cls ? cls->name : subjectId), "participant");
+      const std::string self = b.lifeline(cls ? cls->id : subjectId, "self: " + (cls ? cls->name : subjectId), "participant", cls ? cls->id : "");
       if (method) {
-        b.edges.push_back({{"from", caller}, {"to", self}, {"kind", "message"}, {"order", b.order++}, {"label", subject->name + "(" + fieldOf(*subject, "params") + ")"}});
+        b.edges.push_back({{"from", caller}, {"to", self}, {"kind", "message"}, {"order", b.order++}, {"label", subject->name + "(" + fieldOf(*subject, "params") + ")"},
+                           {"title", subject->id}, {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
       }
       std::set<std::string> stack;
       b.emit(*seq, self, depth, stack);

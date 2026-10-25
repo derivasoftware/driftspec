@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_RENDER_IR_HPP
 #define DRIFTSPEC_RENDER_IR_HPP
 
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -19,6 +20,7 @@ struct IrNode {
   std::string title;
   std::string href;
   bool abstract = false;
+  std::map<std::string, std::string> refs;  ///< named references (emitted as data-ref-<key>)
   std::vector<std::vector<std::string>> sections;
   std::vector<std::string> sectionKinds;
   std::pair<int, int> span{-1, -1};                      ///< frame: first and last sequence row
@@ -35,6 +37,7 @@ struct IrEdge {
   std::string href;
   bool dashed = false;
   int order = -1;  ///< sequence row of a message
+  std::map<std::string, std::string> refs;  ///< named references: expands, span, location
 };
 
 /// A render-IR document, read from JSON; what `ds render` emits and plantuml-render consumes.

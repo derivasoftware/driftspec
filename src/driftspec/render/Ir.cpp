@@ -8,6 +8,16 @@ namespace render {
 
 namespace {
 
+std::map<std::string, std::string> refsOf(const nlohmann::json& j) {
+  std::map<std::string, std::string> out;
+  auto it = j.find("refs");
+  if (it == j.end() || !it->is_object()) return out;
+  for (auto r = it->begin(); r != it->end(); ++r) {
+    if (r.value().is_string()) out[r.key()] = r.value().get<std::string>();
+  }
+  return out;
+}
+
 std::string text(const nlohmann::json& j, const char* key) {
   auto it = j.find(key);
   return it != j.end() && it->is_string() ? it->get<std::string>() : std::string();
@@ -31,6 +41,7 @@ IrDocument IrDocument::parse(const std::string& json) {
     node.title = text(n, "title");
     node.href = text(n, "href");
     node.abstract = n.value("abstract", false);
+    node.refs = refsOf(n);
     for (const auto& section : n.value("sections", nlohmann::json::array())) {
       std::vector<std::string> lines;
       for (const auto& line : section) lines.push_back(line.get<std::string>());
@@ -51,6 +62,7 @@ IrDocument IrDocument::parse(const std::string& json) {
     edge.href = text(e, "href");
     edge.dashed = e.value("dashed", false);
     edge.order = e.value("order", -1);
+    edge.refs = refsOf(e);
     doc.edges.push_back(edge);
   }
   return doc;

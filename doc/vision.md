@@ -240,8 +240,13 @@ derives the links.
   `W-PARTICIPANT-UNDECLARED`, `E-MSG-ARITY`, `W-ACTION-UNDECLARED`.
   Diagrams `kind: sequence` with `depth` (inline or link) and `level: module`
   (lifting). `ds coupling` reports what every behaviour touches outside its
-  module. Terminal sequences drawn by `ds`; SVG sequences by plantuml-render
-  until our engine draws them. Corpus `examples/behaviour`. Activities are not
+  module. Sequences are drawn by our own engine in SVG and in the terminal.
+  The SVG carries its usability inside (no host code needed): tooltips on
+  every element, links by identity (a lifeline to its class, a folded child
+  to its behaviour), focus on hover, expansions that fold on click with the
+  rows below moving up, and `data-ref-location` on every message for an
+  editor to jump to the `.ds` line. The caller invokes the entry operation
+  first, leftmost, so a drawing says what it shows. Corpus `examples/behaviour`. Activities are not
   in the POC. A `//` now always starts a comment, also after a field value.
 - This is the input for syntax block 3; the behaviour-as-entity decision
   itself is taken, the syntax is provisional until chosen.

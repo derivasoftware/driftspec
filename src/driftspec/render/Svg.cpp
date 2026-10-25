@@ -6,6 +6,7 @@
 #include <map>
 #include <regex>
 #include <sstream>
+#include <vector>
 
 namespace driftspec {
 namespace render {
@@ -303,7 +304,358 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
 
 }  // namespace
 
+
+// ---- sequences: lifelines as lanes, messages as rows; interaction lives in the SVG -----------
+//
+// The drawing carries its own usability: a tooltip on everything, links by identity
+// (a lifeline to its class, a message to the behaviour it expands to), focus on hover,
+// and expansions that fold on click with every row below moving up. A small script is
+// embedded so this works wherever the SVG is inline or opened on its own; as an <img>
+// it is simply static.
+
+namespace {
+
+const char* const kSeqStyle = R"CSS(
+  .pr-diagram .pr-lifeline-line { stroke: var(--pr-stroke); stroke-dasharray: 4 4; }
+  .pr-diagram .pr-lifeline-head > rect { fill: var(--pr-head-class); stroke: var(--pr-stroke); }
+  .pr-diagram .pr-actor circle, .pr-diagram .pr-actor path { fill: none; stroke: var(--pr-text); stroke-width: 1.4; stroke-linecap: round; }
+  .pr-diagram .pr-msg { stroke: var(--pr-edge); fill: none; pointer-events: none; }
+  .pr-diagram .pr-msg-dashed { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-msg-label { fill: var(--pr-text); font-size: 11.5px; text-anchor: middle; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram .pr-msg-self .pr-msg-label { text-anchor: start; }
+  .pr-diagram { --pr-frame-alt: #4338ca; --pr-frame-loop: #047857; --pr-frame-opt: #b45309; --pr-frame-other: #334155; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; } }
+  [data-theme="dark"] .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; }
+  .pr-diagram .pr-frame { --pr-frame: var(--pr-frame-other); }
+  .pr-diagram .pr-frame-alt { --pr-frame: var(--pr-frame-alt); }
+  .pr-diagram .pr-frame-loop { --pr-frame: var(--pr-frame-loop); }
+  .pr-diagram .pr-frame-opt { --pr-frame: var(--pr-frame-opt); }
+  .pr-diagram .pr-frame > rect { fill: none; stroke: var(--pr-frame); stroke-width: 1.6px; }
+  .pr-diagram .pr-frame-tab { fill: var(--pr-frame); stroke: none; }
+  .pr-diagram .pr-frame-label { font-weight: 700; fill: var(--pr-box-fill); font-size: 11px; letter-spacing: .3px; }
+  .pr-diagram .pr-frame-cond { fill: var(--pr-text); font-size: 11px; }
+  .pr-diagram .pr-frame-divider { stroke: var(--pr-frame); stroke-dasharray: 5 4; stroke-width: 1.2px; }
+  .pr-diagram .pr-expandable { cursor: pointer; }
+  .pr-diagram .pr-toggle { fill: var(--pr-muted); font-size: 10px; }
+  .pr-diagram .pr-toggle-closed { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-open { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-closed { display: inline; }
+  .pr-diagram .pr-collapsed .pr-msg-label { font-weight: 700; }
+  .pr-diagram.pr-focusing .pr-row, .pr-diagram.pr-focusing .pr-lifeline, .pr-diagram.pr-focusing .pr-frame { opacity: var(--pr-dimmed, .25); transition: opacity .12s; }
+  .pr-diagram.pr-focusing .pr-focus { opacity: 1; }
+  .pr-diagram .pr-link:hover .pr-msg-label, .pr-diagram .pr-link:hover .pr-header { text-decoration: underline; }
+)CSS";
+
+const char* const kSeqScript = R"JS(
+(function () {
+  var root = document.getElementById('%ROOT%');
+  if (!root || root.dataset.wired) return;
+  root.dataset.wired = '1';
+  var rows = Array.prototype.slice.call(root.querySelectorAll('.pr-row')).map(function (el) {
+    return { el: el, row: +el.dataset.row, y: +el.dataset.y, h: +el.dataset.h, span: el.dataset.refSpan };
+  }).sort(function (a, b) { return a.row - b.row; });
+  var frames = Array.prototype.slice.call(root.querySelectorAll('.pr-frame'));
+  var lines = Array.prototype.slice.call(root.querySelectorAll('.pr-lifeline-line'));
+  var collapsed = {};
+  function relayout() {
+    var hidden = {};
+    rows.forEach(function (r) {
+      if (!collapsed[r.row] || !r.span) return;
+      var ab = r.span.split('-').map(Number);
+      rows.forEach(function (q) { if (q.row >= ab[0] && q.row <= ab[1]) hidden[q.row] = true; });
+    });
+    var shift = 0, shiftOf = {}, endOf = {};
+    rows.forEach(function (r) {
+      shiftOf[r.row] = shift;
+      if (hidden[r.row]) { r.el.style.display = 'none'; shift += r.h; return; }
+      r.el.style.display = '';
+      r.el.setAttribute('transform', 'translate(0,' + (-shift) + ')');
+      r.el.classList.toggle('pr-collapsed', !!collapsed[r.row]);
+      endOf[r.row] = r.y + r.h - shift;
+    });
+    frames.forEach(function (f) {
+      var first = +f.dataset.first, last = +f.dataset.last, top = +f.dataset.top, bottom = +f.dataset.bottom;
+      var lastVisible = -1;
+      for (var q = last; q >= first; q--) { if (!hidden[q] && endOf[q] !== undefined) { lastVisible = q; break; } }
+      if (hidden[first] || lastVisible < 0) { f.style.display = 'none'; return; }
+      f.style.display = '';
+      var newTop = top - shiftOf[first];
+      var newBottom = lastVisible === last ? bottom - shiftOf[last] : endOf[lastVisible] - 2;
+      f.setAttribute('transform', 'translate(0,' + newTop + ')');
+      f.querySelector('rect').setAttribute('height', Math.max(24, newBottom - newTop));
+      Array.prototype.forEach.call(f.querySelectorAll('[data-divider-row]'), function (d) {
+        var row = +d.dataset.dividerRow, dy = +d.dataset.y - shiftOf[row] - newTop;
+        if (d.tagName === 'line') { d.setAttribute('y1', dy); d.setAttribute('y2', dy); } else { d.setAttribute('y', dy + 4); }
+        d.style.display = hidden[row] ? 'none' : '';
+      });
+    });
+    lines.forEach(function (l) { l.setAttribute('y2', +l.dataset.y2 - shift); });
+    var vb = root.dataset.viewbox.split(' ').map(Number);
+    vb[3] -= shift;
+    root.setAttribute('viewBox', vb.join(' '));
+    root.setAttribute('height', vb[3]);
+  }
+  rows.forEach(function (r) {
+    if (!r.span) return;
+    r.el.classList.add('pr-expandable');
+    r.el.addEventListener('click', function (e) { e.preventDefault(); collapsed[r.row] = !collapsed[r.row]; relayout(); });
+  });
+  function focus(ids, rowEl) {
+    root.classList.add('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (el) { el.classList.toggle('pr-focus', !!ids[el.dataset.id]); });
+    rows.forEach(function (r) { r.el.classList.toggle('pr-focus', rowEl ? r.el === rowEl : !!(ids[r.el.dataset.from] || ids[r.el.dataset.to])); });
+  }
+  function unfocus() {
+    root.classList.remove('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-focus'), function (el) { el.classList.remove('pr-focus'); });
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (l) {
+    l.addEventListener('mouseenter', function () { var ids = {}; ids[l.dataset.id] = true; focus(ids); });
+    l.addEventListener('mouseleave', unfocus);
+  });
+  rows.forEach(function (r) {
+    r.el.addEventListener('mouseenter', function () { var ids = {}; ids[r.el.dataset.from] = true; ids[r.el.dataset.to] = true; focus(ids, r.el); });
+    r.el.addEventListener('mouseleave', unfocus);
+  });
+})();
+)JS";
+
+struct Lane {
+  const IrNode* node;
+  int cx = 0;
+  int headW = 0;
+};
+
+std::string dataAttrs(const std::map<std::string, std::string>& refs) {
+  std::string out;
+  for (const auto& r : refs) out += " data-ref-" + r.first + "=\"" + esc(r.second) + "\"";
+  return out;
+}
+
+std::string sequenceSvg(const IrDocument& doc) {
+  const int HEAD_H = 38, ROW_H = 30, SELF_H = 42, MARGIN = 20, SELF_W = 32;
+  const int FRAME_LEAD = 30, FRAME_GAP = 8, FRAME_HEAD = 22, DIVIDER_LEAD = 26, FRAME_INSET = 16;
+  std::vector<Lane> lanes;
+  std::map<std::string, size_t> laneOf;
+  for (const auto& n : doc.nodes) {
+    if (n.kind != "lifeline") continue;
+    laneOf[n.id] = lanes.size();
+    const bool actor = n.classifier == "actor";
+    lanes.push_back({&n, 0, static_cast<int>(n.label.size()) * M.CHAR_W + (actor ? 8 : 2 * M.PAD_X)});
+  }
+  std::vector<const IrEdge*> messages;
+  for (const auto& e : doc.edges) {
+    if (e.kind == "message" && laneOf.count(e.from) && laneOf.count(e.to)) messages.push_back(&e);
+  }
+  std::sort(messages.begin(), messages.end(), [](const IrEdge* a, const IrEdge* b) { return a->order < b->order; });
+  const std::string px = idPrefix(doc.title);
+  const std::string rootId = px + "root";
+  if (lanes.empty()) {
+    return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 40\" width=\"320\" height=\"40\" class=\"pr-diagram\" role=\"img\"><style>" + std::string(kStyle) +
+           "</style><text x=\"10\" y=\"25\">" + esc(doc.notice.empty() ? "Nothing to draw." : doc.notice) + "</text></svg>\n";
+  }
+
+  // ---- lanes: gaps wide enough for the heads and for the labels crossing them
+  const size_t count = lanes.size();
+  std::vector<int> gap(count, 0);
+  auto half = [&](size_t i) { return (lanes[i].headW + 1) / 2; };
+  for (size_t i = 0; i + 1 < count; ++i) gap[i] = half(i) + half(i + 1) + 24;
+  auto need = [&](size_t a, size_t b, int width) {
+    if (a >= b || b >= count) return;
+    int have = 0;
+    for (size_t j = a; j < b; ++j) have += gap[j];
+    if (have >= width) return;
+    const int deficit = width - have, each = deficit / static_cast<int>(b - a);
+    for (size_t j = a; j < b; ++j) gap[j] += each;
+    gap[b - 1] += deficit - each * static_cast<int>(b - a);
+  };
+  for (const IrEdge* m : messages) {
+    const size_t a = laneOf[m->from], b = laneOf[m->to];
+    const int textW = static_cast<int>(m->label.size()) * M.CHAR_W;
+    if (a == b) {
+      if (a + 1 < count) need(a, a + 1, SELF_W + 6 + textW + 8 + half(a + 1));
+    } else {
+      need(std::min(a, b), std::max(a, b), textW + 32);
+    }
+  }
+  int x = MARGIN + half(0) + 16;
+  for (size_t i = 0; i < count; ++i) {
+    lanes[i].cx = x;
+    if (i + 1 < count) x += gap[i];
+  }
+  int width = lanes.back().cx + half(count - 1) + 16 + MARGIN;
+
+  // ---- frames and rows
+  struct Frame {
+    const IrNode* node;
+    int first, last;
+    int depth = 0;  // frames enclosing it
+    int inner = 0;  // levels nested inside it
+    int top = 0, bottom = 0, left = 0, right = 0;
+  };
+  std::vector<Frame> frames;
+  for (const auto& n : doc.nodes) {
+    if (n.kind == "frame" && n.span.first >= 0) frames.push_back({&n, n.span.first, n.span.second});
+  }
+  for (size_t i = 0; i < frames.size(); ++i) {
+    for (size_t j = 0; j < frames.size(); ++j) {
+      if (i == j) continue;
+      const bool inside = frames[j].first <= frames[i].first && frames[i].last <= frames[j].last && (frames[j].first < frames[i].first || frames[i].last < frames[j].last);
+      if (inside) ++frames[i].depth;
+    }
+  }
+  for (size_t i = 0; i < frames.size(); ++i) {
+    for (size_t j = 0; j < frames.size(); ++j) {
+      if (i != j && frames[i].first <= frames[j].first && frames[j].last <= frames[i].last && frames[j].depth > frames[i].depth) {
+        frames[i].inner = std::max(frames[i].inner, frames[j].depth - frames[i].depth);
+      }
+    }
+  }
+  const int rowsCount = messages.empty() ? 0 : messages.back()->order + 1;
+  std::vector<int> rowStart(rowsCount, 0), rowLine(rowsCount, 0), rowEnd(rowsCount, 0);
+  std::vector<std::vector<Frame*>> opensAt(rowsCount), closesAt(rowsCount);
+  std::vector<std::vector<std::pair<Frame*, std::string>>> dividersAt(rowsCount);
+  for (Frame& f : frames) {
+    if (f.first < rowsCount) opensAt[f.first].push_back(&f);
+    if (f.last < rowsCount) closesAt[f.last].push_back(&f);
+    for (const auto& d : f.node->dividers) {
+      if (d.first < rowsCount) dividersAt[d.first].push_back({&f, d.second});
+    }
+  }
+  for (auto& v : opensAt) std::sort(v.begin(), v.end(), [](Frame* a, Frame* b) { return a->depth < b->depth; });   // outer first
+  for (auto& v : closesAt) std::sort(v.begin(), v.end(), [](Frame* a, Frame* b) { return a->depth > b->depth; });  // inner first
+  int y = MARGIN + HEAD_H + 16;
+  for (const IrEdge* m : messages) {
+    const int r = m->order;
+    rowStart[r] = y;
+    for (size_t k = 0; k < opensAt[r].size(); ++k) {
+      opensAt[r][k]->top = y + FRAME_GAP;
+      y += FRAME_LEAD;
+    }
+    for (size_t k = 0; k < dividersAt[r].size(); ++k) y += DIVIDER_LEAD;
+    rowLine[r] = y + 20;
+    y += m->from == m->to ? SELF_H : ROW_H;
+    for (size_t k = 0; k < closesAt[r].size(); ++k) {
+      closesAt[r][k]->bottom = y + 2;
+      y += FRAME_GAP;
+    }
+    rowEnd[r] = y;
+  }
+  const int bottomY = y + 16;
+  for (Frame& f : frames) {
+    int left = width, right = 0;
+    for (const IrEdge* m : messages) {
+      if (m->order < f.first || m->order > f.last) continue;
+      left = std::min({left, lanes[laneOf[m->from]].cx, lanes[laneOf[m->to]].cx});
+      right = std::max({right, lanes[laneOf[m->from]].cx, lanes[laneOf[m->to]].cx});
+      if (m->from == m->to) right = std::max(right, lanes[laneOf[m->to]].cx + SELF_W + static_cast<int>(m->label.size()) * M.CHAR_W + 12);
+    }
+    f.left = left - 44 - FRAME_INSET * f.inner;
+    f.right = right + 44 + FRAME_INSET * f.inner;
+    const int labelW = 8 + static_cast<int>(f.node->classifier.size()) * 7 + 10 + static_cast<int>(f.node->label.size()) * 7 + 20;
+    f.right = std::max(f.right, f.left + labelW);
+    width = std::max(width, f.right + MARGIN);
+  }
+
+  // ---- emission
+  std::ostringstream out;
+  const int vx = 0, vy = 0, vw = width, vh = bottomY;
+  out << "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"" << rootId << "\" viewBox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" data-viewbox=\"" << vx << " " << vy << " " << vw << " " << vh
+      << "\" width=\"" << vw << "\" height=\"" << vh << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram pr-sequence\" role=\"img\">\n";
+  if (!doc.title.empty()) out << "<title>" << esc(doc.title) << "</title>\n";
+  out << "<style>" << kStyle << kSeqStyle << "</style>\n<defs>" << markers(px)
+      << "  <marker id=\"" << px << "msg\" viewBox=\"0 0 12 12\" refX=\"11\" refY=\"6\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path class=\"pr-filled\" d=\"M1,1 L11,6 L1,11 Z\"/></marker>\n</defs>\n";
+  // frames under everything
+  for (const Frame& f : frames) {
+    const std::string kind = f.node->classifier;
+    std::string condition = f.node->label;
+    if (condition.rfind(kind + " ", 0) == 0) condition = condition.substr(kind.size() + 1);
+    out << "<g class=\"pr-frame pr-frame-" << esc(kind) << "\" data-id=\"" << esc(f.node->id) << "\" data-first=\"" << f.first << "\" data-last=\"" << f.last << "\" data-top=\"" << f.top
+        << "\" data-bottom=\"" << f.bottom << "\" transform=\"translate(0," << f.top << ")\">";
+    out << "<title>" << esc(kind + ": " + condition) << "</title>";
+    out << "<rect x=\"" << f.left << "\" y=\"0\" width=\"" << f.right - f.left << "\" height=\"" << f.bottom - f.top << "\" rx=\"3\"/>";
+    const int tabW = static_cast<int>(kind.size()) * 7 + 16;
+    out << "<path class=\"pr-frame-tab\" d=\"M" << f.left << ",0 H" << f.left + tabW << " V" << FRAME_HEAD - 6 << " L" << f.left + tabW - 6 << "," << FRAME_HEAD << " H" << f.left << " Z\"/>";
+    out << "<text class=\"pr-frame-label\" x=\"" << f.left + 8 << "\" y=\"" << FRAME_HEAD - 7 << "\">" << esc(kind) << "</text>";
+    out << "<text class=\"pr-frame-cond\" x=\"" << f.left + tabW + 10 << "\" y=\"" << FRAME_HEAD - 7 << "\">" << esc(condition) << "</text>";
+    for (const auto& d : f.node->dividers) {
+      if (d.first >= rowsCount) continue;
+      // the divider sits in the lead reserved above its row
+      int dy = rowStart[d.first];
+      for (size_t k = 0; k < opensAt[d.first].size(); ++k) dy += FRAME_LEAD;
+      dy += 6;
+      out << "<line class=\"pr-frame-divider\" data-divider-row=\"" << d.first << "\" data-y=\"" << dy << "\" x1=\"" << f.left << "\" y1=\"" << dy - f.top << "\" x2=\"" << f.right << "\" y2=\"" << dy - f.top << "\"/>";
+      out << "<text class=\"pr-frame-cond\" data-divider-row=\"" << d.first << "\" data-y=\"" << dy << "\" x=\"" << f.left + 8 << "\" y=\"" << dy - f.top + 4 << "\">[" << esc(d.second) << "]</text>";
+    }
+    out << "</g>\n";
+  }
+  // lifelines
+  for (const Lane& l : lanes) {
+    const IrNode& n = *l.node;
+    const int hx = l.cx - l.headW / 2, hy = MARGIN;
+    out << "<g class=\"pr-lifeline" << (n.classifier == "actor" ? " pr-actor" : "") << "\" data-id=\"" << esc(n.id) << "\"" << dataAttrs(n.refs) << ">";
+    if (!n.title.empty()) out << "<title>" << esc(n.title) << "</title>";
+    out << "<line class=\"pr-lifeline-line\" x1=\"" << l.cx << "\" y1=\"" << hy + HEAD_H << "\" x2=\"" << l.cx << "\" y2=\"" << bottomY - 10 << "\" data-y2=\"" << bottomY - 10 << "\"/>";
+    std::string head;
+    if (n.classifier == "actor") {
+      const int cx = l.cx, top = hy;
+      head = "<g class=\"pr-lifeline-head\"><circle cx=\"" + num(cx) + "\" cy=\"" + num(top + 6) + "\" r=\"5\"/><path d=\"M" + num(cx) + "," + num(top + 11) + " V" + num(top + 22) + " M" + num(cx - 8) + "," + num(top + 15) + " H" +
+             num(cx + 8) + " M" + num(cx) + "," + num(top + 22) + " L" + num(cx - 7) + "," + num(top + 32) + " M" + num(cx) + "," + num(top + 22) + " L" + num(cx + 7) + "," + num(top + 32) + "\"/>" +
+             "<text class=\"pr-header\" x=\"" + num(cx) + "\" y=\"" + num(top + HEAD_H + 10) + "\" text-anchor=\"middle\" font-size=\"11\">" + esc(n.label) + "</text></g>";
+    } else {
+      head = "<g class=\"pr-lifeline-head\"><rect x=\"" + num(hx) + "\" y=\"" + num(hy) + "\" width=\"" + num(l.headW) + "\" height=\"" + num(HEAD_H) + "\" rx=\"4\"/><text class=\"pr-header\" x=\"" + num(l.cx) +
+             "\" y=\"" + num(hy + 24) + "\" text-anchor=\"middle\">" + esc(n.label) + "</text></g>";
+    }
+    out << (n.href.empty() ? head : "<a href=\"" + esc(n.href) + "\" class=\"pr-link\">" + head + "</a>") << "</g>\n";
+  }
+  // rows: one group per message, positioned at its absolute y, movable by the script
+  for (const IrEdge* m : messages) {
+    const int r = m->order;
+    const Lane& a = lanes[laneOf[m->from]];
+    const Lane& b = lanes[laneOf[m->to]];
+    const int ly = rowLine[r];
+    const bool self = m->from == m->to;
+    std::string classes = std::string("pr-row pr-msg-group") + (self ? " pr-msg-self" : "") + (m->dashed ? " pr-msg-return" : "");
+    out << "<g class=\"" << classes << "\" data-row=\"" << r << "\" data-y=\"" << rowStart[r] << "\" data-h=\"" << rowEnd[r] - rowStart[r] << "\" data-from=\"" << esc(m->from) << "\" data-to=\"" << esc(m->to) << "\""
+        << dataAttrs(m->refs) << ">";
+    std::string body;
+    if (!m->title.empty()) body += "<title>" + esc(m->title) + "</title>";
+    std::string d;
+    if (self) {
+      d = "M" + num(a.cx) + "," + num(ly) + " H" + num(a.cx + SELF_W) + " V" + num(ly + 16) + " H" + num(a.cx + 3);
+    } else {
+      const int dir = b.cx > a.cx ? -1 : 1;
+      d = "M" + num(a.cx) + "," + num(ly) + " L" + num(b.cx + dir * 2) + "," + num(ly);
+    }
+    body += "<path class=\"pr-edge-hit\" d=\"" + d + "\"/>";
+    body += "<path class=\"pr-msg" + std::string(m->dashed ? " pr-msg-dashed" : "") + "\" d=\"" + d + "\" marker-end=\"url(#" + px + (m->dashed ? "arrow" : "msg") + ")\"/>";
+    if (self) {
+      body += "<text class=\"pr-msg-label\" x=\"" + num(a.cx + SELF_W + 6) + "\" y=\"" + num(ly + 12) + "\">" + esc(m->label) + "</text>";
+    } else {
+      body += "<text class=\"pr-msg-label\" x=\"" + num((a.cx + b.cx) / 2) + "\" y=\"" + num(ly - 5) + "\">" + esc(m->label) + "</text>";
+    }
+    if (m->refs.count("span")) {
+      const int tx = self ? a.cx + SELF_W + 6 + static_cast<int>(m->label.size()) * M.CHAR_W + 6 : (a.cx + b.cx) / 2 + static_cast<int>(m->label.size()) * 4 + 8;
+      const int ty = self ? ly + 12 : ly - 5;
+      body += "<text class=\"pr-toggle pr-toggle-open\" x=\"" + num(tx) + "\" y=\"" + num(ty) + "\">\xE2\x96\xBE fold</text>";
+      body += "<text class=\"pr-toggle pr-toggle-closed\" x=\"" + num(tx) + "\" y=\"" + num(ty) + "\">\xE2\x96\xB8 unfold</text>";
+    }
+    out << (m->href.empty() ? body : "<a href=\"" + esc(m->href) + "\" class=\"pr-link\">" + body + "</a>") << "</g>\n";
+  }
+  if (!doc.notice.empty()) out << "<text class=\"pr-notice\" x=\"" << MARGIN << "\" y=\"" << bottomY - 4 << "\">" << esc(doc.notice) << "</text>\n";
+  std::string script = kSeqScript;
+  const std::string marker = "%ROOT%";
+  script.replace(script.find(marker), marker.size(), rootId);
+  out << "<script><![CDATA[" << script << "]]></script>\n</svg>\n";
+  return out.str();
+}
+
+}  // namespace
+
 std::string Svg::render(const IrDocument& doc) const {
+  for (const auto& n : doc.nodes) {
+    if (n.kind == "lifeline") return sequenceSvg(doc);
+  }
   const IrDocument bundled = doc.bundled();
   return render(bundled, layout(bundled));
 }

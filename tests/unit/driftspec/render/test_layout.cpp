@@ -134,3 +134,50 @@ TEST_F(TestLayout, TheSvgIsDeterministicAndCarriesStableIds) {
 }
 
 }  // namespace
+
+namespace {
+
+/// Sequences drawn by the engine carry their own interaction: stable ids, links, spans, a script.
+class TestSequenceSvg : public ::testing::Test {
+ protected:
+  driftspec::model::Model model;
+
+  void SetUp() override {
+    driftspec::parse::Parser parser;
+    driftspec::bind::Binder binder(model);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/behaviour")) binder.bind(f);
+    driftspec::check::Checker(model).run(binder);
+  }
+
+  std::string svg(const std::string& diagram) {
+    return driftspec::render::Svg().render(IrDocument::parse(driftspec::render::IrExport(model).render("diagram:" + diagram, false)));
+  }
+};
+
+TEST_F(TestSequenceSvg, DrawsLifelinesRowsFramesAndTheCaller) {
+  const std::string out = svg("SEQ_Run");
+  EXPECT_NE(out.find("class=\"pr-lifeline pr-actor\" data-id=\"caller\""), std::string::npos);
+  EXPECT_NE(out.find("data-id=\"ds::Checker\""), std::string::npos);
+  EXPECT_NE(out.find("class=\"pr-frame pr-frame-loop\""), std::string::npos);
+  EXPECT_NE(out.find("class=\"pr-frame pr-frame-alt\""), std::string::npos);
+  EXPECT_NE(out.find("run(binder: Binder)"), std::string::npos);
+  EXPECT_EQ(out.find("NaN"), std::string::npos);
+}
+
+TEST_F(TestSequenceSvg, CarriesLinksSpansLocationsAndTheScript) {
+  const std::string deep = svg("SEQ_Run");
+  EXPECT_NE(deep.find("data-ref-span=\"4-9\""), std::string::npos);  // resolveReference expanded into rows 4..9
+  EXPECT_NE(deep.find("data-ref-expands=\"ds::Checker::resolveReference::sequence\""), std::string::npos);
+  EXPECT_NE(deep.find("behaviour.ds:"), std::string::npos);  // data-ref-location carries file:line (absolute under the test runner)
+  EXPECT_NE(deep.find("<script><![CDATA["), std::string::npos);
+  EXPECT_NE(deep.find("<a href=\"#ds::Model\""), std::string::npos);  // a lifeline links to its class
+  const std::string shallow = svg("SEQ_Run_Overview");
+  EXPECT_NE(shallow.find("<a href=\"#ds::Checker::resolveReference::sequence\""), std::string::npos);  // a folded child is a link
+  EXPECT_EQ(shallow.find("data-ref-span"), std::string::npos);
+}
+
+TEST_F(TestSequenceSvg, IsDeterministic) {
+  EXPECT_EQ(svg("SEQ_Publish"), svg("SEQ_Publish"));
+}
+
+}  // namespace
