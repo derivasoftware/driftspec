@@ -21,21 +21,28 @@ specifications instead of for drawing.
 
 ## 2. Thesis, in the terms of the fleet
 
-argos closes the V: declaration against reality. DriftSpec is the declaration
-side done properly for design, with the same three layers everywhere:
+DriftSpec is a modelling tool based on text: it defines requirements,
+verifications, design, behaviour and diagrams, and keeps them coherent with
+each other. That is its whole job. It does not look at code, tests, runs or
+data, and it does not judge whether the model matches reality: that is
+argos's job, with gafas and prueba, on the model DriftSpec exports.
 
-1. **What we declare**: entities, relations, artefacts with identity.
-2. **What follows from it**: derived facts and obligations the tool computes
-   (an interface is derived, a composition cycle is an error, a template bound
-   is checked, a testable implication is listed).
-3. **What reality says**: evidence gathered by other tools (argos reading the
-   code, gafas observing tests, traza running checks on data) against the
-   obligations.
+The boundary, stated once:
 
-The tool owns 1 and 2. It emits 2 so that 3 can be done by whoever holds the
-evidence. A domain earns its place in the tool when it has a checker that
-catches something real; a domain that only draws is PlantUML with another
-syntax.
+- **DriftSpec owns the declaration and its internal coherence.** Every
+  identity declared once, every reference resolved, every relation typed,
+  every behaviour bound to the static element it describes, every diagram a
+  projection of the model. Incoherence inside the model is a finding.
+- **DriftSpec exports.** The model, with its relations, in a form argos can
+  read (`ds export`, later Python bindings).
+- **argos owns reality.** Declared against implemented, declared against
+  tested, declared against observed. If argos writes something back as `.ds`
+  files, DriftSpec loads them like any other files; it does not know or care
+  where they came from.
+
+A domain earns its place in the tool when it has a coherence check that
+catches something real inside the model; a domain that only draws is PlantUML
+with another syntax.
 
 ## 3. Principles
 
@@ -198,18 +205,12 @@ derives the links.
 - **Absence is not a finding.** A method without a declared behaviour means
   nobody wrote it, not that the design is wrong. Only contradictions are
   findings.
-- **Reality enters as behaviours with provenance.** argos, driving with prueba
-  and observing with gafas, regenerates the observed sequences into their own
-  files (`*.observed.ds` or a `source:` field, syntax open) that load into
-  the same model as a second source for the same subject, never as a second
-  declaration (no `E-DUPLICATE-IDENTITY`: declared and observed are two
-  variants of one subject). The comparison is then a diff on one subject:
-  a declared message never observed, an observed call the design does not
-  say (`W-SEQ-DRIFT`, `W-SEQ-UNDECLARED`), a declared behaviour nobody
-  exercises (informative, a test gap). That diff is the drift the name
-  promises, done for behaviour. At package level the observed entry points
-  are the boundary operations prueba drives (R1), so system sequences come
-  from system tests and module sequences from unit and integration tests.
+- **What DriftSpec does not do with behaviour**: compare it with code, tests
+  or runs. Declared sequences are a design artefact; whether the code calls
+  what the design says is argos's diff, outside this tool. The lifting by
+  level above is what lets argos compare at the grain it has evidence for
+  (system behaviour from boundaries, module behaviour from units), but the
+  comparison is not here.
 - This is the input for syntax block 3; the behaviour-as-entity decision
   itself is taken.
 
@@ -247,8 +248,9 @@ study ouffroad-fatigue {
 
 The tool checks the method against the DAG (`E-EFFECT-NOT-IDENTIFIABLE`
 when a needed adjustment is latent), lists the conditional independences the
-DAG implies as verifications that traza runs against the data, and projects
-the DAG with causal and biasing paths and the umbrella of each claim. Export
+DAG implies as the verifications of the study (running them against data is
+traza's job, not this tool's), and projects the DAG with causal and biasing
+paths and the umbrella of each claim. Export
 to dagitty's text syntax is trivial and keeps interoperability. The pipeline
 of steps is the process domain, not the DAG.
 
@@ -326,9 +328,10 @@ crosses a container border is routed straight between its ends.
 2. **Checker precision**: mutation over the oracle corpus (remove each `!`
    line, exactly one finding disappears; inject a defect, exactly one
    appears); random edits never crash, at most `E-SYNTAX`.
-3. **Reality**: `ds export` of driftspec's own spec against what
-   argos-implementation-cpp14 extracts from the headers; the inventory must
-   match except where declared.
+3. **Fit for argos**: `ds export` of driftspec's own spec carries what argos
+   needs to do its own comparison with the headers (classes, members,
+   relations, requirements, verifications); argos does the comparison, this
+   proves the export is complete.
 4. **Usability**: someone else writes a small spec from the guide alone.
 
 ## 12. Open decisions to take together (syntax of the artefacts)
@@ -368,4 +371,5 @@ Recommended order: 1, 2, then 3 and 4 together, then 5.
   engine; plantuml-vscode the precedent for the VS Code integration.
 - **folio**: embeds the SVGs in generated documents.
 - **PaC / titere**: the process domain's source of truth and editor.
-- **traza / gafas**: the right side of the V for analysis and for runtime.
+- **traza / gafas / prueba**: the right side of the V; DriftSpec never calls
+  them and never reads their evidence.
