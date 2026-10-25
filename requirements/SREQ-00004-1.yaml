@@ -1,0 +1,21 @@
+# generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
+requirement:
+  id: SREQ-00004-1
+  title: The system shall bind every behaviour to the static entity it describes and check it against that entity
+  description: >
+    A sequence or a state machine is the behaviour of a method or a class and
+          is identified by it. Its participants are the static context of the
+          subject: self, the attributes of the class and the parameters of the
+          method; only what the behaviour creates is declared. A message is checked
+          against the operation it names and its arity; a message to an operation
+          that has a behaviour expands to it.
+  rationale: >
+    A sequence diagram drawn apart from the classes it names drifts from them
+          without anyone noticing. Bound by identity, the behaviour is checked like
+          the rest of the model and the abstraction level of a diagram comes from
+          the architecture instead of from the author.
+  status: DRAFT
+  asil: NA
+  tags:
+    - behaviour
+    - sequences

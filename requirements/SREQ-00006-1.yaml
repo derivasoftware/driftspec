@@ -1,0 +1,18 @@
+# generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
+requirement:
+  id: SREQ-00006-1
+  title: The system shall export the model, with its relations and findings, for other tools
+  description: >
+    The whole model, every entity with its fields and flags, every relation
+          with its kind and multiplicity and every finding with its location, is
+          available as JSON from the command line, and the drawing of a diagram is
+          available as the render-IR of the plantuml family.
+  rationale: >
+    argos compares the declared design with the code and the tests; it needs
+          the model, not the files. The IR keeps the family's renderers
+          interchangeable.
+  status: DRAFT
+  asil: NA
+  tags:
+    - export
+    - argos

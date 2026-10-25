@@ -1,0 +1,17 @@
+# generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
+requirement:
+  id: SREQ-00009-1
+  title: The system shall load, check and draw a workspace of a hundred classes in under one hundred milliseconds
+  description: >
+    From the files to the SVG or the terminal drawing, a workspace of a
+          hundred classes with their relations and diagrams completes in under one
+          hundred milliseconds on a development machine, so that an editor preview
+          or an agent loop can redraw on every change.
+  rationale: >
+    Measured: the whole pipeline over the engine's own design takes five
+          milliseconds, and a synthetic hundred-class document draws in eight.
+          The budget keeps that property as the tool grows.
+  status: DRAFT
+  asil: NA
+  tags:
+    - performance

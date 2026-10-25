@@ -1,0 +1,141 @@
+// The system requirements of DriftSpec, in DriftSpec. Package level: what the
+// tool promises at its boundaries (the ds command, the export, the editors).
+// One capability per requirement, in the positive; the design and the
+// verifications refine and verify them from the modules.
+
+package driftspec {
+
+  requirement SREQ-00001-1 {
+    title: The system shall load a workspace of .ds files into one model in which every entity has one identity
+    text:
+      A workspace is a directory; its files are read whole and in any order.
+      A design entity is identified by its full name (package with @, modules
+      with ::) and a process artefact by its id with its revision. A second
+      declaration of one identity is reported; packages and modules reopen
+      across files.
+    rationale:
+      A specification that lives per file cannot say that two files talk about
+      the same thing. Identity across the workspace is what makes references,
+      diagrams and diffs mean the same entity everywhere.
+    tags: workspace, identity
+  }
+
+  requirement SREQ-00002-1 {
+    title: The system shall report every incoherence of the model as a finding with a code, a severity and a location
+    text:
+      A reference nobody declares, a duplicate identity, a template argument
+      outside its bound, a composition cycle, an operator refined but not
+      declared, a message to an operation that does not exist, a link to an
+      artefact revision the workspace no longer declares: each is one finding
+      at the place it was written. Loading never fails on a dangling
+      reference, only on syntax.
+    rationale:
+      The tool's value is saying where the model contradicts itself. A tool
+      that stopped at the first problem, or that failed to load a workspace
+      with a missing declaration, could not be used while the design is being
+      written.
+    tags: coherence, findings
+  }
+
+  requirement SREQ-00003-1 {
+    title: The system shall keep requirements, constraints and verifications as artefacts linked to the design by revision
+    text:
+      Requirements, constraints and verifications are declared in the same
+      language as the design, with an id that carries their revision. Every
+      link to an artefact names a revision; nesting gives the relation
+      (a requirement in a requirement refines it, a verification in a
+      requirement verifies it) and annotations add relations from elsewhere.
+    rationale:
+      The design and the artefacts about it belong to one model: a class
+      realises a requirement, a constraint binds it, a verification proves it.
+      Pinning links to a revision is what lets the tool tell who stayed behind
+      when an artefact moved.
+    tags: requirements, traceability
+  }
+
+  requirement SREQ-00004-1 {
+    title: The system shall bind every behaviour to the static entity it describes and check it against that entity
+    text:
+      A sequence or a state machine is the behaviour of a method or a class and
+      is identified by it. Its participants are the static context of the
+      subject: self, the attributes of the class and the parameters of the
+      method; only what the behaviour creates is declared. A message is checked
+      against the operation it names and its arity; a message to an operation
+      that has a behaviour expands to it.
+    rationale:
+      A sequence diagram drawn apart from the classes it names drifts from them
+      without anyone noticing. Bound by identity, the behaviour is checked like
+      the rest of the model and the abstraction level of a diagram comes from
+      the architecture instead of from the author.
+    tags: behaviour, sequences
+  }
+
+  requirement SREQ-00005-1 {
+    title: The system shall draw any selection of the model as a diagram, in SVG and in the terminal, adapting to a given width
+    text:
+      A diagram selects entities and decides what to print; it never draws.
+      The same selection is drawn as an SVG that a browser, an editor or a
+      document embeds, and as box-drawing text for a terminal, from one layout
+      that wraps to the width it is given. The SVG carries stable ids, links by
+      identity, tooltips and the interaction to fold and focus.
+    rationale:
+      If the drawing is a projection, it cannot drift from the model, and the
+      reader can ask for the view that explains what they need rather than
+      maintain pictures by hand.
+    tags: render, diagrams
+  }
+
+  requirement SREQ-00006-1 {
+    title: The system shall export the model, with its relations and findings, for other tools
+    text:
+      The whole model, every entity with its fields and flags, every relation
+      with its kind and multiplicity and every finding with its location, is
+      available as JSON from the command line, and the drawing of a diagram is
+      available as the render-IR of the plantuml family.
+    rationale:
+      argos compares the declared design with the code and the tests; it needs
+      the model, not the files. The IR keeps the family's renderers
+      interchangeable.
+    tags: export, argos
+  }
+
+  requirement SREQ-00007-1 {
+    title: The system shall compute the difference between two versions of a workspace in terms of the model
+    text:
+      Two directories, or two git revisions of a path, are compared by
+      identity: entities and relations added, removed or changed, a class
+      renamed when its shape survives, an artefact whose text changed under the
+      same revision. The difference is reported by module and drawn on the
+      diagrams with the changes marked.
+    rationale:
+      A review needs to see what changed in the design, not which lines moved
+      in which file. Only a model with identities can answer that.
+    tags: diff, review
+  }
+
+  requirement SREQ-00008-1 {
+    title: The system shall provide its grammar to editors so that a .ds file is parsed, highlighted and folded as it is typed
+    text:
+      The language is defined by a tree-sitter grammar with its highlight and
+      fold queries, built from this repository, and an editor loads them as it
+      loads any other language's.
+    rationale:
+      A specification language that is not supported where it is written will
+      not be written.
+    tags: grammar, editors
+  }
+
+  requirement SREQ-00009-1 {
+    title: The system shall load, check and draw a workspace of a hundred classes in under one hundred milliseconds
+    text:
+      From the files to the SVG or the terminal drawing, a workspace of a
+      hundred classes with their relations and diagrams completes in under one
+      hundred milliseconds on a development machine, so that an editor preview
+      or an agent loop can redraw on every change.
+    rationale:
+      Measured: the whole pipeline over the engine's own design takes five
+      milliseconds, and a synthetic hundred-class document draws in eight.
+      The budget keeps that property as the tool grows.
+    tags: performance
+  }
+}
