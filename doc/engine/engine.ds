@@ -37,7 +37,8 @@ package driftspec {
   module check {
     class Checker {
       - refs model: model::Model
-      + run(binder: bind::Binder) -> none
+      - refs binder: bind::Binder
+      + run() -> none
     }
   }
 
@@ -51,11 +52,15 @@ package driftspec {
       + layout(doc: IrDocument) -> none
     }
     class Svg {
-      - owns layout: Layout
+      - shares layout: Layout
       + render(doc: IrDocument) -> string
     }
-    class Text {
-      - owns layout: Layout
+    class Terminal {
+      - shares layout: Layout
+      + render(doc: IrDocument) -> string
+    }
+    class Cells {
+      - shares layout: Layout
       + render(doc: IrDocument) -> string
     }
   }
@@ -69,7 +74,8 @@ package driftspec {
       - owns checker: check::Checker
       - owns exporter: render::IrExport
       - owns svg: render::Svg
-      - owns text: render::Text
+      - owns text: render::Terminal
+      - owns cells: render::Cells
       + render(dir: path, diagram: string) -> string
     }
     sequence Cli::render {
@@ -77,7 +83,7 @@ package driftspec {
       loop each file {
         self -> binder.bind(file)
       }
-      self -> checker.run(binder)
+      self -> checker.run()
       self -> exporter.render(diagram) -> doc
       alt svg wanted {
         self -> svg.render(doc) -> out
@@ -104,7 +110,7 @@ diagram SEQ_Render {
 // narrower, for the terminal pane: the five stages without their value types
 diagram CL_Pipeline {
   kind: class
-  include: parse::Parser, bind::Binder, model::Model, check::Checker, render::IrExport, render::Svg, render::Text
+  include: parse::Parser, bind::Binder, model::Model, check::Checker, render::IrExport, render::Svg, render::Terminal, render::Cells
   hide: methods
   show: ownership
 }
