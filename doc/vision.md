@@ -189,6 +189,27 @@ derives the links.
   type and the callee (`W-MSG-NO-PATH`), a participant typed differently from
   the subject's class, a method with no behaviour (informative), a behaviour
   whose subject nobody declares (expected node), recursion made visible.
+- **The abstraction level is given by the subject, never declared.** A
+  behaviour whose subject is a method is at method level; of a class, class
+  level; of a module or a package, that level. A lower-level behaviour
+  projects upward by lifting: a call between methods of two modules is, at
+  module level, a message between the modules. One behaviour feeds every
+  level above it; nothing is drawn twice.
+- **Absence is not a finding.** A method without a declared behaviour means
+  nobody wrote it, not that the design is wrong. Only contradictions are
+  findings.
+- **Reality enters as behaviours with provenance.** argos, driving with prueba
+  and observing with gafas, regenerates the observed sequences into their own
+  files (`*.observed.ds` or a `source:` field, syntax open) that load into
+  the same model as a second source for the same subject, never as a second
+  declaration (no `E-DUPLICATE-IDENTITY`: declared and observed are two
+  variants of one subject). The comparison is then a diff on one subject:
+  a declared message never observed, an observed call the design does not
+  say (`W-SEQ-DRIFT`, `W-SEQ-UNDECLARED`), a declared behaviour nobody
+  exercises (informative, a test gap). That diff is the drift the name
+  promises, done for behaviour. At package level the observed entry points
+  are the boundary operations prueba drives (R1), so system sequences come
+  from system tests and module sequences from unit and integration tests.
 - This is the input for syntax block 3; the behaviour-as-entity decision
   itself is taken.
 
