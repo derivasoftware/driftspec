@@ -54,7 +54,7 @@ package driftspec {
   }
 
   requirement SREQ-00004-1 {
-    title: The system shall bind every behaviour to the static entity it describes and check it against that entity
+    title: The system shall model behaviour as sequences and state machines bound to the static entities they describe
     text:
       A sequence or a state machine is the behaviour of a method or a class and
       is identified by it. Its participants are the static context of the
@@ -126,32 +126,35 @@ package driftspec {
   }
 
   requirement SREQ-00009-1 {
-    title: The system shall draw the static model as class diagrams and as requirement diagrams
+    title: The system shall model the static design: packages, modules, classes with their members, ownership, inheritance, templates, operators and boundaries
     text:
-      A class diagram shows a selection of classes, enumerations and modules
-      with their members, ownership, inheritance and dependencies; a
-      requirement diagram shows a selection of artefacts with what refines
-      them, what verifies them and what realises them. Both are selections
-      over the model, drawn by the same engine.
+      A package is the black box and declares the boundaries it exposes; a
+      module is a namespace and opens the white box; classes, data classes
+      and enumerations carry attributes and methods with visibility,
+      modifiers and types; an attribute owns, references or shares what it
+      holds; a class inherits, is parameterised with bounds, and declares its
+      operators in its header. Interfaces, abstract classes and value types
+      are derived from the members, never declared.
     rationale:
-      These are the two static views a design review reads: the structure and
-      the traceability of what the structure answers to.
-    tags: render, static
+      This is the vocabulary a design is written in. What is derived cannot
+      contradict what is declared, and the ownership written on the
+      attribute is what the drawings and the checks read.
+    tags: metamodel, static
   }
 
   requirement SREQ-00010-1 {
-    title: The system shall draw the dynamic model as sequence diagrams and as state diagrams
+    title: The system shall provide a diagram kind for each view of the model: class, requirement, sequence and state
     text:
-      A sequence diagram shows a behaviour with its participants, messages,
-      returns and control blocks, expanding or linking the behaviours it
-      calls, at the abstraction level asked for (method, class, module); a
-      state diagram shows the state machine of a class with its transitions,
-      events, guards and actions.
+      A diagram is a selection of the model with what to print: a class
+      diagram over the static design, a requirement diagram over the
+      artefacts and what refines, verifies and realises them, a sequence
+      diagram over a behaviour at the level asked for, a state diagram over
+      the state machine of a class. A diagram never draws; the model draws
+      itself through it.
     rationale:
-      A behaviour bound to the static model is only useful when it can be
-      seen at the level the reader needs, and the state machine of a class is
-      the other half of its behaviour.
-    tags: render, dynamic
+      Each part of the metamodel needs its view, and keeping the views as
+      selections is what keeps them from drifting from the model.
+    tags: diagrams, views
   }
 
   constraint CST-00001-1 {

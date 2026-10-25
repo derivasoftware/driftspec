@@ -1,7 +1,7 @@
 # generated from design/**/*.ds by argos-design-driftspec — edit the .ds, not this file
 requirement:
   id: SREQ-00004-1
-  title: The system shall bind every behaviour to the static entity it describes and check it against that entity
+  title: The system shall model behaviour as sequences and state machines bound to the static entities they describe
   description: >
     A sequence or a state machine is the behaviour of a method or a class and
           is identified by it. Its participants are the static context of the
