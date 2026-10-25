@@ -345,6 +345,12 @@ struct SequenceBuilder {
       const std::string expands = fieldOf(*m, "expands");
       std::string title;
       if (!typeId.empty()) title = typeId + "::" + fieldOf(*m, "op");
+      const std::string change = fieldOf(*m, "change");  // a diff marks messages too
+      if (!change.empty()) {
+        refs["change"] = change;
+        const std::string detail = fieldOf(*m, "change-detail");
+        title = change + (detail.empty() ? "" : ": " + detail) + (title.empty() ? "" : "\n" + title);
+      }
       if (!expands.empty()) {
         refs["expands"] = expands;
         title += (title.empty() ? "" : "\n") + std::string(depth > 0 ? "expanded below: " : "expands to: ") + model.find(expands)->name;

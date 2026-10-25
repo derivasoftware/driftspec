@@ -510,22 +510,26 @@ Grid sequenceGrid(const IrDocument& doc) {
       g.text(left + 1, yy, " " + d.second + " ", kMuted);
     }
   }
-  // messages
+  // messages; a diff marks them: + added, - removed, ~ changed
   for (const IrEdge* m : messages) {
     const int y = rowOf[m->order] + 1;
     const int a = lines[index[m->from]].centre, b = lines[index[m->to]].centre;
-    const std::string dash = m->dashed ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
+    const auto change = m->refs.find("change");
+    const std::string colour = change == m->refs.end() ? std::string(kEdge) : change->second == "added" ? "32" : change->second == "removed" ? "31" : "33";
+    const std::string labelColour = change == m->refs.end() ? std::string(kMuted) : colour;
+    const std::string label = change == m->refs.end() ? m->label : std::string(change->second == "added" ? "+ " : change->second == "removed" ? "- " : "~ ") + m->label;
+    const std::string dash = m->dashed || (change != m->refs.end() && change->second == "removed") ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
     if (a == b) {
-      g.text(a + 1, y, dash + dash + "\xE2\x94\x90", kEdge);        // ──┐
-      g.text(a + 1, y + 1, "\xE2\x97\x80" + dash + "\xE2\x94\x98", kEdge);  // ◀─┘
-      g.text(a + 5, y, m->label, kMuted);
+      g.text(a + 1, y, dash + dash + "\xE2\x94\x90", colour);        // ──┐
+      g.text(a + 1, y + 1, "\xE2\x97\x80" + dash + "\xE2\x94\x98", colour);  // ◀─┘
+      g.text(a + 5, y, label, labelColour);
       continue;
     }
     const int lo = std::min(a, b), hi = std::max(a, b);
-    for (int xx = lo + 1; xx < hi; ++xx) g.put(xx, y, dash, kEdge);
-    if (b > a) g.put(hi - 1, y, "\xE2\x96\xB6", kEdge);  // ▶
-    else g.put(lo + 1, y, "\xE2\x97\x80", kEdge);        // ◀
-    g.text((lo + hi) / 2 - static_cast<int>(m->label.size()) / 2, y - 1, m->label, kMuted);
+    for (int xx = lo + 1; xx < hi; ++xx) g.put(xx, y, dash, colour);
+    if (b > a) g.put(hi - 1, y, "\xE2\x96\xB6", colour);  // ▶
+    else g.put(lo + 1, y, "\xE2\x97\x80", colour);        // ◀
+    g.text((lo + hi) / 2 - static_cast<int>(label.size()) / 2, y - 1, label, labelColour);
   }
   return g;
 }

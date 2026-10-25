@@ -366,6 +366,14 @@ const char* const kSeqStyle = R"CSS(
   .pr-diagram.pr-focusing .pr-row, .pr-diagram.pr-focusing .pr-lifeline, .pr-diagram.pr-focusing .pr-frame { opacity: var(--pr-dimmed, .25); transition: opacity .12s; }
   .pr-diagram.pr-focusing .pr-focus { opacity: 1; }
   .pr-diagram .pr-link:hover .pr-msg-label, .pr-diagram .pr-link:hover .pr-header { text-decoration: underline; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg-label { fill: var(--pr-added); font-weight: 700; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg-label { fill: var(--pr-removed); text-decoration: line-through; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg-label { fill: var(--pr-changed); font-weight: 700; }
+  .pr-diagram .pr-lifeline.pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-lifeline.pr-change-added .pr-header { fill: var(--pr-added); }
 )CSS";
 
 const char* const kSeqScript = R"JS(
@@ -639,6 +647,8 @@ std::string sequenceSvg(const IrDocument& doc) {
     const int ly = rowLine[r];
     const bool self = m->from == m->to;
     std::string classes = std::string("pr-row pr-msg-group") + (self ? " pr-msg-self" : "") + (m->dashed ? " pr-msg-return" : "");
+    const auto change = m->refs.find("change");
+    if (change != m->refs.end()) classes += " pr-change-" + change->second;
     out << "<g class=\"" << classes << "\" data-row=\"" << r << "\" data-y=\"" << rowStart[r] << "\" data-h=\"" << rowEnd[r] - rowStart[r] << "\" data-from=\"" << esc(m->from) << "\" data-to=\"" << esc(m->to) << "\""
         << dataAttrs(m->refs) << ">";
     std::string body;
