@@ -1,0 +1,44 @@
+// LLD of the exporter namespace (ds::exporter): the model as JSON for other
+// tools (SREQ-00006-1). The namespace is called exporter because export is a
+// C++ keyword; the box convention (name = namespace) bends here, once.
+
+package driftspec@ds {
+
+  module exporter {
+
+    requirement REQ-00005-1 {
+      status: approved
+      @refines SREQ-00006-1
+      title: The exporter shall render the whole model as JSON with every entity, relation and finding located
+      text:
+        One document with three arrays: entities (id, kind, name, scope,
+        expected, fields, flags, location), relations (kind, from, to,
+        location, multiplicity when set) and findings (code, severity,
+        message, location). Pretty-printed by default, compact on request.
+      rationale:
+        argos and every other host read the model, not the files; the
+        document is the contract between ds and them.
+      tags: export, json
+    }
+
+    verification VER-00005-1 {
+      status: approved
+      @requirement REQ-00005-1
+      title: Unit tests cover the three arrays, their fields and the compact form
+      method: test
+      tests:
+        tests/unit/ds/exporter/test_jsonexport.cpp::TestJsonExport.TheThreeArraysWithTheirFields
+        tests/unit/ds/exporter/test_jsonexport.cpp::TestJsonExport.CompactOnRequest
+    }
+
+    class JsonExport {
+      @requirement REQ-00005-1
+      + render(model: model::Model, pretty: bool) -> std::string
+    }
+  }
+}
+
+diagram CL_ExporterNamespace {
+  kind: class
+  include: driftspec@ds@exporter::*
+}
