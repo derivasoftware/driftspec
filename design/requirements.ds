@@ -6,6 +6,7 @@
 package driftspec {
 
   requirement SREQ-00001-1 {
+    status: approved
     title: The system shall load a workspace of .ds files into one model in which every entity has one identity
     text:
       A workspace is a directory; its files are read whole and in any order.
@@ -21,6 +22,7 @@ package driftspec {
   }
 
   requirement SREQ-00002-1 {
+    status: approved
     title: The system shall report every incoherence of the model as a finding with a code, a severity and a location
     text:
       A reference nobody declares, a duplicate identity, a template argument
@@ -38,6 +40,7 @@ package driftspec {
   }
 
   requirement SREQ-00003-1 {
+    status: approved
     title: The system shall keep requirements, constraints and verifications as artefacts linked to the design by revision
     text:
       Requirements, constraints and verifications are declared in the same
@@ -54,6 +57,7 @@ package driftspec {
   }
 
   requirement SREQ-00004-1 {
+    status: approved
     title: The system shall model behaviour as sequences and state machines bound to the static entities they describe
     text:
       A sequence or a state machine is the behaviour of a method or a class and
@@ -71,6 +75,7 @@ package driftspec {
   }
 
   requirement SREQ-00005-1 {
+    status: approved
     title: The system shall draw any selection of the model as a diagram, in SVG and in the terminal, adapting to a given width
     text:
       A diagram selects entities and decides what to print; it never draws.
@@ -86,6 +91,7 @@ package driftspec {
   }
 
   requirement SREQ-00006-1 {
+    status: approved
     title: The system shall export the model, with its relations and findings, for other tools
     text:
       The whole model, every entity with its fields and flags, every relation
@@ -100,6 +106,7 @@ package driftspec {
   }
 
   requirement SREQ-00007-1 {
+    status: approved
     title: The system shall compute the difference between two versions of a workspace in terms of the model
     text:
       Two directories, or two git revisions of a path, are compared by
@@ -114,6 +121,7 @@ package driftspec {
   }
 
   requirement SREQ-00008-1 {
+    status: approved
     title: The system shall provide its grammar to editors so that a .ds file is parsed, highlighted and folded as it is typed
     text:
       The language is defined by a tree-sitter grammar with its highlight and
@@ -126,6 +134,7 @@ package driftspec {
   }
 
   requirement SREQ-00009-2 {
+    status: approved
     title: The system shall model the static design: packages, modules, classes with their members, ownership, inheritance, templates, operators and boundaries
     text:
       A package is the black box and declares the boundaries it exposes; a
@@ -147,6 +156,7 @@ package driftspec {
   }
 
   requirement SREQ-00010-1 {
+    status: approved
     title: The system shall provide a diagram kind for each view of the model: class, requirement, sequence and state
     text:
       A diagram is a selection of the model with what to print: a class
@@ -162,6 +172,7 @@ package driftspec {
   }
 
   requirement SREQ-00011-1 {
+    status: approved
     title: The system shall answer questions about the model: what exists, what an entity relates to, what a diagram shows
     text:
       From the command line and from any host, the model can be asked: the
@@ -180,6 +191,7 @@ package driftspec {
   }
 
   constraint CST-00001-1 {
+    status: approved
     category: performance
     title: Every command of the tool shall complete in under one hundred milliseconds on a workspace of a hundred classes
     text:
