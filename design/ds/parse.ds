@@ -52,6 +52,9 @@ package driftspec@ds {
 
     class Parser {                           // the tree-sitter parser with the DriftSpec language set
       @requirement REQ-00008-1
+      @requirement REQ-00051-1
+      @requirement REQ-00012-1
+      @constraint CST-00007-1
       - owns parser_: TSParser
       + Parser()
       + parseText(path: std::string, text: std::string) -> ParsedFile

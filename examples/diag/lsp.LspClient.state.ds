@@ -7,7 +7,7 @@ package ds {
 
     state LspClient {
       initial Idle
-      Idle      -> Connected  on open       // ! open is not an operation of LspClient → finding
+      Idle      -> Connected  on open       // ! W-EVENT-UNDECLARED: open is not an operation of LspClient
       Connected -> Idle       on close      // lsp::LspClient::close
       Connected -> Connected  on send       // lsp::LspClient::send
     }

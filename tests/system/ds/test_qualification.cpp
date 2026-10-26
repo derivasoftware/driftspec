@@ -8,11 +8,13 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <regex>
 #include <set>
+#include <sstream>
 #include <string>
 
 namespace {
@@ -243,6 +245,36 @@ TEST_F(TestQualification, AQuestionAboutTheModelIsAnsweredByIdentity) {
   const Outcome shows = ds("query " + examples("artefacts") + " shows CL_Projection");
   EXPECT_NE(shows.out.find("class  iris@projection::Projection"), std::string::npos);
   EXPECT_EQ(ds("query " + examples("artefacts") + " weather").code, 1);
+}
+
+// SREQ-00012-1: the language is formal: every oracle corpus means exactly the findings it marks
+TEST_F(TestQualification, EveryCorpusMeansExactlyTheFindingsItMarks) {
+  const std::regex code(R"([EW]-[A-Z][A-Z-]+)");
+  int corpora = 0;
+  for (const auto& dir : std::filesystem::directory_iterator(std::string(DRIFTSPEC_EXAMPLES_DIR))) {
+    if (!dir.is_directory()) continue;
+    ++corpora;
+    std::set<std::string> marked, reported;
+    for (const auto& f : std::filesystem::recursive_directory_iterator(dir.path())) {
+      if (f.path().extension() != ".ds") continue;
+      std::ifstream in(f.path());
+      for (std::string line; std::getline(in, line);) {
+        const auto mark = line.find("// !");
+        if (mark == std::string::npos) continue;
+        for (std::sregex_iterator it(line.begin() + static_cast<long>(mark), line.end(), code), end; it != end; ++it)
+          marked.insert(it->str());
+      }
+    }
+    const Outcome check = ds("check " + dir.path().string());
+    std::istringstream out(check.out);
+    for (std::string line; std::getline(out, line);) {
+      std::smatch m;
+      if (line.find(":") != std::string::npos && std::regex_search(line, m, code) && line.find("  " + m.str() + "  ") != std::string::npos)
+        reported.insert(m.str());
+    }
+    EXPECT_EQ(reported, marked) << dir.path().filename();
+  }
+  EXPECT_GE(corpora, 5);
 }
 
 // CST-00001-1: every command under a hundred milliseconds on a hundred classes

@@ -1,0 +1,48 @@
+// The grammar box: the rules of the text itself and what it ships to the
+// editors. The language's DAG lives in design/ds/language.ds; the text node
+// refines its root through design/wiring.ds.
+
+package driftspec@grammar {
+
+  requirement REQ-00051-1 {
+    tags: language, grammar
+    status: approved
+    title: The grammar shall read a specification as text, unambiguously
+    rationale: A formal grammar is what gives every text one tree (SREQ-00012-1).
+    verification VER-00039-1 {
+      status: approved
+      method: test
+      tests:
+        tests/unit/ds/parse/test_parser.cpp::TestParser.ParsesAWholeWorkspaceWithoutSyntaxErrors
+    }
+    constraint CST-00007-1 {
+      tags: language, grammar
+      status: approved
+      category: language
+      title: Every file shall be braces that enclose one thing per line, // always a comment, a field value to the end of its line, multiline text by indentation
+      rationale: R7: one shape for every construct, readable without a parser in the head.
+    }
+    requirement REQ-00052-1 {
+      tags: language, grammar
+      status: approved
+      title: The grammar shall ship highlight and fold queries that name only nodes it defines
+      rationale: An editor loads them as any other language's.
+      verification VER-00040-1 {
+        status: approved
+        method: test
+        tests:
+          tests/unit/ds/parse/test_queries.cpp::TestParser.TheQueriesNameOnlyNodesTheGrammarDefines
+      }
+    }
+  }
+
+  verification VER-00047-1 {
+    status: approved
+    @constraint CST-00007-1
+    title: Unit tests confirm a file parses as one thing per line and a syntax error is reported
+    method: test
+    tests:
+      tests/unit/ds/parse/test_parser.cpp::TestParser.ParsesAWholeWorkspaceWithoutSyntaxErrors
+      tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
+  }
+}

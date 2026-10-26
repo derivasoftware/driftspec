@@ -192,6 +192,24 @@ package driftspec {
     tags: query, model
   }
 
+  requirement SREQ-00012-1 {
+    status: approved
+    title: The system shall define a formal language in which a software design is specified as text: its high-level design, its low-level design, the artefacts about it and the views of it
+    text:
+      The language has a grammar that reads every specification unambiguously,
+      a vocabulary of entities with one identity each, and rules that give
+      every construct one meaning; a workspace of files written in it is one
+      specification. The rules are written as requirements and constraints of
+      the language, each decided with its rationale and fixed by an oracle
+      corpus.
+    rationale:
+      Everything else the system promises, loading, checking, drawing,
+      comparing, asking, exists because a specification means one thing.
+      Without a formal language the model would be whatever the tool happened
+      to read.
+    tags: language, grammar
+  }
+
   constraint CST-00001-1 {
     status: approved
     category: performance

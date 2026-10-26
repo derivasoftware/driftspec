@@ -17,6 +17,7 @@ package driftspec {
     @requirement SREQ-00009-2                // the static metamodel, packages nesting
     @requirement SREQ-00010-1                // a diagram kind per view
     @requirement SREQ-00011-1                // questions answered by identity
+    @requirement SREQ-00012-1                // the language, in its semantics: bind and check
     @constraint CST-00001-1                  // every command under a hundred milliseconds
     // the namespaces the box owns; each one is filled by its LLD file (DS-4)
     module model { }
@@ -32,6 +33,7 @@ package driftspec {
 
   package grammar {                         // the language as a tree-sitter grammar, for the editors
     @requirement SREQ-00008-1                // parsed, highlighted and folded as it is typed
+    @requirement SREQ-00012-1                // the language, in its grammar
     // no code argos reads: its design is this box and SVER-00008-1 over its queries
   }
 }

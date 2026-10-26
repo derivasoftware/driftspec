@@ -144,6 +144,20 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
   }
 
+  verification SVER-00013-1 {
+    status: approved
+    @requirement SREQ-00012-1
+    title: System tests confirm every oracle corpus means exactly the findings it marks
+    text:
+      For every corpus under examples/, the codes ds check reports are
+      exactly the codes the corpus marks in its `// !` comments: every rule
+      of the language is fixed by a text that shows it and by the findings
+      it must and must not raise.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryCorpusMeansExactlyTheFindingsItMarks
+  }
+
   verification SVER-00012-1 {
     status: approved
     @requirement SREQ-00011-1

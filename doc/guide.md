@@ -1,5 +1,10 @@
 # DriftSpec language guide
 
+*Since 2026-10-26 the rules below are also the requirement DAG of the
+language, `design/grammar/language.ds` (SREQ-00012-1): concept, entity,
+characteristic, with the universal rules as constraints and every leaf fixed
+by an oracle test. This guide stays the prose; the DAG is the artefact.*
+
 *The rules of the language as decided, in the order a reader needs them.
 Each rule names the corpus that exercises it; the `!` comments in a corpus
 file are the findings the tool emits for it, and the tests hold the tool to
