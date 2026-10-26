@@ -1,0 +1,77 @@
+// LLD of the diff namespace (ds::diff): two models compared by identity
+// (SREQ-00007-1). Nothing here reads files: the models arrive resolved, the
+// result is a list of changes and a marked model for the drawings.
+
+package driftspec@ds {
+
+  module diff {
+
+    requirement REQ-00004-1 {
+      status: approved
+      @refines SREQ-00007-1
+      title: The diff shall compare two models by identity and mark the second with every change
+      text:
+        Entities and relations present in one model and not the other are
+        added or removed; an entity with the same identity and a different
+        shape is changed; an entity removed and one added with the same shape
+        are a rename, the referrers deciding between candidates. A
+        declaration moved or reordered is no change. An artefact whose text
+        changed under the same revision is a finding, W-REVISION-STALE. The
+        marked model is the second with a change on every entity and relation
+        the result names, so a diagram draws the difference.
+      rationale:
+        A review needs the design's changes in the design's terms; only
+        identities make that possible, and only a marked model lets the
+        drawing show it without a second renderer.
+      tags: diff, identity
+    }
+
+    verification VER-00004-1 {
+      status: approved
+      @requirement REQ-00004-1
+      title: Unit tests cover no-change on moves, add/remove/change, renames by shape and referrers, the stale revision and the marked model
+      method: test
+      tests:
+        tests/unit/ds/diff/test_diff.cpp::TestDiff.AMovedOrReorderedDeclarationIsNoChange
+        tests/unit/ds/diff/test_diff.cpp::TestDiff.AddedRemovedAndChangedByIdentity
+        tests/unit/ds/diff/test_diff.cpp::TestDiff.ARenameIsRecognisedByShapeAndByWhoFollows
+        tests/unit/ds/diff/test_diff.cpp::TestDiff.AnArtefactChangedWithoutANewRevisionIsAFinding
+        tests/unit/ds/diff/test_diff.cpp::TestDiff.TheMarkedModelCarriesTheChangesForADrawing
+    }
+
+    dataclass Change {                       // one difference: what changed, on which identity, how
+      @requirement REQ-00004-1
+      + kind: std::string
+      + what: std::string
+      + id: std::string
+      + entity: std::string
+      + scope: std::string
+      + detail: std::string
+      + from: std::string
+      + label: std::string
+    }
+
+    dataclass DiffResult {                   // the changes and the findings of a comparison
+      @requirement REQ-00004-1
+      + owns changes: std::vector<Change>
+      + findings: std::vector<model::Finding>
+      + added() -> int
+      + removed() -> int
+      + changed() -> int
+      + empty() -> bool
+    }
+
+    class Diff {                             // the comparison, stateless
+      @requirement REQ-00004-1
+      + static compare(a: model::Model, b: model::Model) -> DiffResult
+      + static marked(a: model::Model, b: model::Model, diff: DiffResult) -> model::Model
+      + static report(diff: DiffResult) -> std::string
+    }
+  }
+}
+
+diagram CL_DiffNamespace {
+  kind: class
+  include: driftspec@ds@diff::*
+  show: ownership
+}
