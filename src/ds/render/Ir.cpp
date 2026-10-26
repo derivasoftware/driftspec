@@ -40,8 +40,8 @@ IrDocument IrDocument::parse(const std::string& json) {
     node.parent = text(n, "parent");
     node.title = text(n, "title");
     node.href = text(n, "href");
-    node.abstract = n.value("abstract", false);
-    node.refs = refsOf(n);
+    node.isAbstract = n.value("abstract", false);
+    node.references = refsOf(n);
     for (const auto& section : n.value("sections", nlohmann::json::array())) {
       std::vector<std::string> lines;
       for (const auto& line : section) lines.push_back(line.get<std::string>());
@@ -63,7 +63,7 @@ IrDocument IrDocument::parse(const std::string& json) {
     edge.href = text(e, "href");
     edge.dashed = e.value("dashed", false);
     edge.order = e.value("order", -1);
-    edge.refs = refsOf(e);
+    edge.references = refsOf(e);
     doc.edges.push_back(edge);
   }
   return doc;

@@ -257,11 +257,12 @@ std::string emitNode(const Placed& p, const std::string& px) {
     for (char c : n.stereotype) st += std::isalnum(static_cast<unsigned char>(c)) ? c : '-';
     classes += " pr-stereotype-" + st;
   }
-  if (n.abstract) classes += " pr-abstract";
-  const auto change = n.refs.find("change");
-  if (change != n.refs.end()) classes += " pr-change-" + change->second;
+  if (n.isAbstract) classes += " pr-abstract";
+  const auto change = n.references.find("change");
+  if (change != n.references.end()) classes += " pr-change-" + change->second;
   std::ostringstream out;
-  out << "<g id=\"" << px << esc(n.id) << "\" data-id=\"" << esc(n.id) << "\" class=\"" << classes << "\"" << dataAttrs(n.refs) << ">";
+  out << "<g id=\"" << px << esc(n.id) << "\" data-id=\"" << esc(n.id) << "\" class=\"" << classes << "\"" << dataAttrs(n.references)
+      << ">";
   if (!n.title.empty()) out << "<title>" << esc(n.title) << "</title>";
   if (n.kind == "container") {
     out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"6\"/>";
@@ -290,7 +291,7 @@ std::string emitNode(const Placed& p, const std::string& px) {
       ty += M.LINE_H;
     }
     std::string letter = "C";
-    if (n.abstract && n.classifier.empty()) {
+    if (n.isAbstract && n.classifier.empty()) {
       letter = "A";
     } else if (!n.classifier.empty()) {
       const auto b = kBadge.find(n.classifier);
@@ -359,9 +360,9 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
     out.label =
         "<text class=\"pr-edge-label\" x=\"" + num(x) + "\" y=\"" + num(y) + "\">" + (lines.size() == 1 ? esc(e.label) : rows) + "</text>";
   }
-  const auto change = e.refs.find("change");
-  const std::string changeClass = change == e.refs.end() ? "" : " pr-edge-change-" + change->second;
-  out.path = "<g class=\"pr-edge-group\" data-from=\"" + esc(e.from) + "\" data-to=\"" + esc(e.to) + "\"" + dataAttrs(e.refs) + ">" +
+  const auto change = e.references.find("change");
+  const std::string changeClass = change == e.references.end() ? "" : " pr-edge-change-" + change->second;
+  out.path = "<g class=\"pr-edge-group\" data-from=\"" + esc(e.from) + "\" data-to=\"" + esc(e.to) + "\"" + dataAttrs(e.references) + ">" +
              (e.title.empty() ? "" : "<title>" + esc(e.title) + "</title>") + "<path class=\"pr-edge-hit\" d=\"" + d +
              "\"/><path class=\"pr-edge pr-edge-" + e.kind + changeClass + "\" d=\"" + d + "\"" + markerAttr + "/></g>";
   if (!e.href.empty()) out.path = "<a href=\"" + esc(e.href) + "\" class=\"pr-link\">" + out.path + "</a>";
@@ -677,7 +678,7 @@ std::string sequenceSvg(const IrDocument& doc) {
     const IrNode& n = *l.node;
     const int hx = l.cx - l.headW / 2, hy = MARGIN;
     out << "<g class=\"pr-lifeline" << (n.classifier == "actor" ? " pr-actor" : "") << "\" data-id=\"" << esc(n.id) << "\""
-        << dataAttrs(n.refs) << ">";
+        << dataAttrs(n.references) << ">";
     if (!n.title.empty()) out << "<title>" << esc(n.title) << "</title>";
     out << "<line class=\"pr-lifeline-line\" x1=\"" << l.cx << "\" y1=\"" << hy + HEAD_H << "\" x2=\"" << l.cx << "\" y2=\"" << bottomY - 10
         << "\" data-y2=\"" << bottomY - 10 << "\"/>";
@@ -704,10 +705,10 @@ std::string sequenceSvg(const IrDocument& doc) {
     const int ly = rowLine[r];
     const bool self = m->from == m->to;
     std::string classes = std::string("pr-row pr-msg-group") + (self ? " pr-msg-self" : "") + (m->dashed ? " pr-msg-return" : "");
-    const auto change = m->refs.find("change");
-    if (change != m->refs.end()) classes += " pr-change-" + change->second;
+    const auto change = m->references.find("change");
+    if (change != m->references.end()) classes += " pr-change-" + change->second;
     out << "<g class=\"" << classes << "\" data-row=\"" << r << "\" data-y=\"" << rowStart[r] << "\" data-h=\"" << rowEnd[r] - rowStart[r]
-        << "\" data-from=\"" << esc(m->from) << "\" data-to=\"" << esc(m->to) << "\"" << dataAttrs(m->refs) << ">";
+        << "\" data-from=\"" << esc(m->from) << "\" data-to=\"" << esc(m->to) << "\"" << dataAttrs(m->references) << ">";
     std::string body;
     if (!m->title.empty()) body += "<title>" + esc(m->title) + "</title>";
     std::string d;
@@ -725,7 +726,7 @@ std::string sequenceSvg(const IrDocument& doc) {
     } else {
       body += "<text class=\"pr-msg-label\" x=\"" + num((a.cx + b.cx) / 2) + "\" y=\"" + num(ly - 5) + "\">" + esc(m->label) + "</text>";
     }
-    if (m->refs.count("span")) {
+    if (m->references.count("span")) {
       const int tx = self ? a.cx + SELF_W + 6 + static_cast<int>(m->label.size()) * M.CHAR_W + 6
                           : (a.cx + b.cx) / 2 + static_cast<int>(m->label.size()) * 4 + 8;
       const int ty = self ? ly + 12 : ly - 5;
