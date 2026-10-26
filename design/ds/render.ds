@@ -136,10 +136,18 @@ package driftspec@ds {
       + IrExport(model: model::Model)
       + diagrams() -> std::vector<std::string>
       + render(diagramId: std::string, pretty: bool) -> std::string
-      + select(diagram: model::Entity) -> std::set<std::string>
+      + select(diagram: model::Entity) -> std::set<std::string> {
+        @requirement REQ-00047-1
+        @requirement REQ-00019-1
+        @requirement REQ-00048-1
+      }
       - matches(pattern: std::string, entity: model::Entity) -> bool
-      - renderSequence(diagram: model::Entity, pretty: bool) -> std::string
-      - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string
+      - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00049-1
+      }
+      - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00050-1
+      }
     }
 
     // ---- the layout: geometry the two drawings share ----

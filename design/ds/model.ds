@@ -117,7 +117,9 @@ package driftspec@ds {
       - owns entities_: std::map<std::string, Entity>
       - owns relations_: std::vector<Relation>
       - owns findings_: std::vector<Finding>
-      + declare(entity: Entity) -> Entity
+      + declare(entity: Entity) -> Entity {
+        @constraint CST-00002-1
+      }
       + find(id: std::string) -> Entity
       + relate(relation: Relation) -> void
       + report(finding: Finding) -> void

@@ -1,0 +1,37 @@
+// The consumer's file: what the language requirements refine in the system of
+// driftspec. language.ds knows nothing of this; another consumer brings its own
+// wiring and takes it away (extension blocks, 2026-10-26).
+
+package driftspec@ds {
+  requirement REQ-00012-1 {
+    @refines SREQ-00012-1
+  }
+  requirement REQ-00053-1 {
+    @refines SREQ-00002-1
+  }
+  requirement REQ-00013-1 {
+    @refines SREQ-00009-2
+  }
+  requirement REQ-00021-1 {
+    @refines SREQ-00009-2
+  }
+  requirement REQ-00034-1 {
+    @refines SREQ-00004-1
+  }
+  requirement REQ-00039-1 {
+    @refines SREQ-00004-1
+  }
+  requirement REQ-00042-1 {
+    @refines SREQ-00003-2
+  }
+  requirement REQ-00047-1 {
+    @refines SREQ-00010-1
+  }
+}
+
+package driftspec@grammar {
+  requirement REQ-00051-1 {
+    @refines SREQ-00008-1
+    @refines REQ-00012-1                                           // the text is one domain of the language
+  }
+}

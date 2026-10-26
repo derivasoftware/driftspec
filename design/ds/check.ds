@@ -8,108 +8,68 @@ package driftspec@ds {
 
   module check {
 
-    requirement REQ-00010-1 {
-      status: approved
-      @refines SREQ-00002-1
-      title: The checker shall resolve every reference outward through its scopes and report every incoherence as a finding at its location
-      text:
-        A name resolves in the innermost scope first, then outward one scope
-        at a time, then in the extern catalogue by simple name; a full
-        identity resolves directly; an artefact link resolves to the declared
-        revision and reports W-REVISION-DRIFT when it names another. What
-        nobody declares becomes an expected node, reported once as
-        W-REF-UNDECLARED. Template arguments are checked against their bound,
-        ownership against cycles, operators against their declaration,
-        verifications against their tests, approved requirements against
-        their verifications. Interfaces, abstract classes and value types are
-        classified from the members.
-      rationale:
-        The tool's value is saying where the model contradicts itself,
-        without stopping at the first problem and without refusing a
-        workspace that is still being written.
-      tags: check, resolution
-    }
-
-    requirement REQ-00011-1 {
-      status: approved
-      @refines SREQ-00004-1
-      title: The checker shall identify every behaviour by its resolved subject and check its messages and events against the static context
-      text:
-        A sequence or state machine bound under the subject as written is
-        renamed to the resolved subject, so two files describing one method
-        meet in one behaviour and a scenario declared twice is a duplicate.
-        A message is checked against the operation it names on the type of
-        its target and against its arity; an event or action must be an
-        operation of its entity; a local or attribute typed in another module
-        is coupling, structural or transient.
-      rationale:
-        Bound by identity, the behaviour is checked like the rest of the
-        model and the abstraction level of a diagram comes from the
-        architecture instead of from the author.
-      tags: check, behaviour
-    }
-
-    verification VER-00010-1 {
-      status: approved
-      @requirement REQ-00010-1
-      title: Unit tests cover resolution order, expected nodes, the static oracle and the artefact oracle
-      method: test
-      tests:
-        tests/unit/ds/check/test_checker.cpp::TestChecker.UndeclaredReferencesBecomeExpectedNodesReportedOnce
-        tests/unit/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
-        tests/unit/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
-        tests/unit/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
-        tests/unit/ds/check/test_static.cpp::TestStatic.ExternDeclaresIdentitiesWithoutObligations
-        tests/unit/ds/check/test_static.cpp::TestStatic.InterfaceAndAbstractAreDerived
-        tests/unit/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
-        tests/unit/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
-        tests/unit/ds/check/test_static.cpp::TestStatic.OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody
-        tests/unit/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesNeedTheModuleNotAnInclude
-        tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
-        tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
-        tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.LevelByPlacementAndNestingGivesTheRelation
-        tests/unit/ds/bind/test_packages.cpp::TestPackages.ABareNameFallsBackToTheExternCatalogue
-    }
-
-    verification VER-00011-1 {
-      status: approved
-      @requirement REQ-00011-1
-      title: Unit tests cover the behaviour oracle, identity by subject, participants, expansion, coupling and state events
-      method: test
-      tests:
-        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
-        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ABehaviourIsIdentifiedByItsSubject
-        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
-        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.AMessageToAnOperationWithABehaviourExpandsToIt
-        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule
-        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
-        tests/unit/ds/check/test_checker.cpp::TestChecker.AStateEventMustBeAnOperationOfItsEntity
-    }
-
-    class Checker {
-      @requirement REQ-00010-1
-      @requirement REQ-00011-1
+    class Checker {                          // realises the language rule by rule: each member names its requirement
+      @requirement REQ-00053-1
+      @requirement REQ-00012-1
       - owns renamed_: std::map<std::string, std::string>
       - refs model_: model::Model
       - owns reported_: std::set<std::string>
       + Checker(model: model::Model)
       + run(binder: bind::Binder) -> void
-      + resolve(name: std::string, scope: std::string) -> std::string
-      + externsNamed(name: std::string) -> std::vector<std::string>
-      + derives(derived: std::string, base: std::string) -> bool
-      - resolveReference(reference: bind::Reference) -> void
-      - checkMessage(message: bind::Message) -> void
-      - checkEvent(event: bind::Event) -> void
-      - checkLocals() -> void
-      - checkArtefacts() -> void
-      - unifyBehaviours() -> void
-      - current(id: std::string) -> std::string
-      - resolveTypeText(text: std::string, scope: std::string) -> std::string
-      - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity
-      - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void
-      - checkTemplateBound(reference: bind::Reference) -> void
-      - checkOwnershipCycles() -> void
-      - classify() -> void
+      + resolve(name: std::string, scope: std::string) -> std::string {
+        @requirement REQ-00023-1
+      }
+      + externsNamed(name: std::string) -> std::vector<std::string> {
+        @requirement REQ-00024-1
+      }
+      + derives(derived: std::string, base: std::string) -> bool {
+        @requirement REQ-00029-1
+      }
+      - resolveReference(reference: bind::Reference) -> void {
+        @requirement REQ-00043-1
+        @requirement REQ-00053-1
+        @constraint CST-00006-1
+      }
+      - checkMessage(message: bind::Message) -> void {
+        @requirement REQ-00037-1
+      }
+      - checkEvent(event: bind::Event) -> void {
+        @requirement REQ-00039-1
+        @requirement REQ-00040-1
+      }
+      - checkLocals() -> void {
+        @requirement REQ-00036-1
+      }
+      - checkArtefacts() -> void {
+        @requirement REQ-00045-1
+      }
+      - checkExtensions() -> void {
+        @constraint CST-00003-1
+      }
+      - unifyBehaviours() -> void {
+        @requirement REQ-00035-1
+      }
+      - current(id: std::string) -> std::string {
+        @requirement REQ-00035-1
+      }
+      - resolveTypeText(text: std::string, scope: std::string) -> std::string {
+        @requirement REQ-00023-1
+      }
+      - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
+        @requirement REQ-00036-1
+      }
+      - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
+        @requirement REQ-00038-1
+      }
+      - checkTemplateBound(reference: bind::Reference) -> void {
+        @requirement REQ-00029-1
+      }
+      - checkOwnershipCycles() -> void {
+        @requirement REQ-00028-1
+      }
+      - classify() -> void {
+        @requirement REQ-00031-1
+      }
     }
   }
 }

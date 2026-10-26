@@ -1,0 +1,621 @@
+// The requirements of the language as a DAG (SREQ-00012-1): the purpose at
+// the root, then the domains of the language, then the entities, then one
+// requirement per characteristic; the rules that hold for every instance of
+// a category are constraints, hung where they apply. Nesting is refinement.
+// Every leaf names the oracle test that fixes it, and the member of ds that
+// implements it realises it. The grammar box holds the rules of the text
+// (grammar/grammar.ds). This file knows nothing of who consumes the language:
+// the connections to the system's SREQ live in design/wiring.ds, the
+// consumer's file (decided 2026-10-26).
+
+package driftspec@ds {
+
+  requirement REQ-00012-1 {
+    tags: language
+    status: approved
+    verification VER-00048-1 {
+      status: approved
+      title: Unit tests confirm every oracle corpus of the language means what it marks
+      method: test
+      tests:
+        tests/unit/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
+        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
+        tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+    }
+    title: The language shall specify a software design as text: its high-level design, its low-level design, the artefacts about it and the views of it
+    rationale:
+      One text, one meaning, for the whole of a design: what the tool loads,
+      checks, draws, compares and asks about.
+
+    // ======================= workspace ====================================
+    requirement REQ-00053-1 {
+      tags: language, workspace
+      status: approved
+      title: A specification shall be a directory of .ds files read as one, in any order
+      text:
+        Files are read whole and are not units of meaning; a reference nobody
+        declares is an expected node reported once (W-REF-UNDECLARED) and never
+        stops the load; only syntax stops a file (E-SYNTAX).
+      rationale:
+        A specification that lives per file cannot say that two files talk
+        about the same thing (R1, R6).
+      verification VER-00041-1 {
+        status: approved
+        method: test
+        tests:
+          tests/unit/ds/check/test_checker.cpp::TestChecker.UndeclaredReferencesBecomeExpectedNodesReportedOnce
+          tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
+      }
+      constraint CST-00002-1 {
+        tags: language, workspace
+        status: approved
+        category: language
+        title: Every entity shall have one identity, and a second declaration of it shall be E-DUPLICATE-IDENTITY
+        rationale: R5: identity across the workspace is what makes references, diagrams and diffs mean the same entity everywhere.
+      }
+      constraint CST-00003-1 {
+        tags: language, workspace
+        status: approved
+        category: language
+        title: Every entity shall be defined once and extended only by blocks of annotations
+        text: An extension adds relations and never touches the definition; an extension of nothing is an expected node.
+        rationale: A box writes its requirements without knowing who consumes them (2026-10-26).
+      }
+    }
+
+    // ======================= HLD ==========================================
+    requirement REQ-00013-1 {
+      tags: language, hld
+      status: approved
+      verification VER-00049-1 {
+        status: approved
+        title: Unit tests confirm the HLD is modelled as nested packages
+        method: test
+        tests:
+          tests/unit/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
+      }
+      title: The language shall model the high-level design as packages, the organisation above the implementation
+      rationale:
+        The HLD is where a system is divided into deployable units and
+        boundaries; argos reads it as boxes that own namespaces.
+
+      requirement REQ-00014-1 {
+        tags: language, hld
+        status: approved
+        verification VER-00050-1 {
+          status: approved
+          title: Unit tests confirm a package is a box holding packages, modules and artefacts
+          method: test
+          tests:
+            tests/unit/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
+            tests/unit/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
+        }
+        title: A package shall be a box of the high-level design: a black box that holds packages, modules and artefacts
+        rationale: R1, R2; nested packages 2026-10-26.
+
+        requirement REQ-00015-1 {
+          tags: language, hld
+          status: approved
+          title: A package shall nest in a package, written nested or reopened flat by its full path
+          text:
+            package app { package core { } } and package app@core { } are the
+            same box; the flat form needs the outer package declared somewhere.
+          verification VER-00012-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.AnOuterPackageNobodyDeclaresIsExpected
+          }
+        }
+        constraint CST-00004-1 {
+          tags: language, hld
+          status: approved
+          category: language
+          title: Every identity shall name its packages with @ and its namespaces with ::, the box that holds the modules rooting the code's namespace
+          text:
+            app@core@model::Entity: boxes with @, namespaces with ::; outer
+            boxes are organisation and drop out of the qualified name.
+          rationale: decided 2026-10-26 with argos's reading by namespace (R4).
+        }
+        requirement REQ-00017-1 {
+          tags: language, hld
+          status: approved
+          title: A package shall realise requirements and carry constraints through annotations, like a class
+          text: @requirement and @constraint in the package body.
+          verification VER-00014-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.ABoxRealisesRequirementsLikeAClass
+          }
+        }
+        requirement REQ-00018-1 {
+          tags: language, hld
+          status: approved
+          title: The outermost package shall be the system, and the level of an artefact shall follow from where it is declared
+          text:
+            In the outermost package an artefact is of the system; in an inner
+            package or a module, of that level. No keyword, no field.
+          verification VER-00015-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
+              tests/unit/ds/model/test_scopes.cpp::TestIsSystemScope.OnlyTheOutermostPackageIsTheSystem
+          }
+        }
+        requirement REQ-00019-1 {
+          tags: language, hld
+          status: approved
+          title: A package shall draw as a container of its modules in a class diagram
+          verification VER-00016-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.NestedPackagesAreContainersOfTheDrawing
+          }
+        }
+        requirement REQ-00020-1 {
+          tags: language, hld
+          title: A package shall expose boundaries with their operations
+          text: boundary cli { operation check(dir: path) }. Boundaries of nested packages are not decided yet.
+          rationale: R3 of the diag corpus; deferred for inner boxes on 2026-10-26.
+        }
+      }
+    }
+
+    // ======================= LLD ==========================================
+    requirement REQ-00021-1 {
+      tags: language, lld
+      status: approved
+      verification VER-00051-1 {
+        status: approved
+        title: Unit tests confirm the LLD is modelled as modules of classes and behaviours: the static oracle
+        method: test
+        tests:
+          tests/unit/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
+      }
+      title: The language shall model the low-level design as modules of classes and their behaviours
+      rationale: The white box: what argos compares with the code.
+
+      // ---- module ----
+      requirement REQ-00022-1 {
+        tags: language, lld, module
+        status: approved
+        verification VER-00052-1 {
+          status: approved
+          title: Unit tests confirm a module is a namespace that reopens
+          method: test
+          tests:
+            tests/unit/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+        }
+        title: A module shall be a namespace that reopens across files and resolves names outward
+        rationale: R2, R9, R10.
+
+        requirement REQ-00023-1 {
+          tags: language, lld, module
+          status: approved
+          title: A bare name shall resolve from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
+          text: No includes, no using; what already encloses you is omitted.
+          verification VER-00017-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
+              tests/unit/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesNeedTheModuleNotAnInclude
+              tests/unit/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+          }
+        }
+        requirement REQ-00024-1 {
+          tags: language, lld, module
+          status: approved
+          title: An extern module shall declare names only, with no obligations, and every extern shall join one catalogue
+          text:
+            A bare name nobody declares in scope resolves to the one extern
+            of that simple name; two make it E-REF-AMBIGUOUS. The type text
+            stays as written.
+          rationale: R11; the catalogue 2026-10-26.
+          verification VER-00018-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_static.cpp::TestStatic.ExternDeclaresIdentitiesWithoutObligations
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.ABareNameFallsBackToTheExternCatalogue
+          }
+        }
+      }
+
+      // ---- class ----
+      requirement REQ-00025-1 {
+        tags: language, lld, class
+        status: approved
+        verification VER-00053-1 {
+          status: approved
+          title: Unit tests confirm classes, dataclasses and enums have identities and members
+          method: test
+          tests:
+            tests/unit/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
+            tests/unit/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
+        }
+        title: A class shall be a type of the design: class, dataclass or enum, with members
+        rationale: R12, R14, R19.
+
+        requirement REQ-00026-1 {
+          tags: language, lld, class
+          status: approved
+          title: A member shall carry visibility, modifiers, a name, a type and an optional default
+          text:
+            + # -, then abstract | static | const for methods or owns | refs |
+            shares for attributes, then the name; a method named like its
+            class is a constructor; name: type = default. Members are
+            identified by name: an overload is one member.
+          verification VER-00019-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
+          }
+        }
+        constraint CST-00005-1 {
+          tags: language, lld, class
+          status: approved
+          category: language
+          title: Every modifier shall be a word only in front of a name: nothing is reserved
+          text: + abstract: bool is an attribute named abstract.
+          rationale: decided 2026-10-26: a code base designed in DriftSpec keeps its names.
+        }
+        requirement REQ-00028-1 {
+          tags: language, lld, class
+          status: approved
+          title: Ownership and multiplicity shall come from the attribute and its type; parameters and returns shall give use
+          text:
+            owns (default), refs, shares; T is 1, optional<T> 0..1, list, set,
+            vector, map are *, a qualified container the same, and a container
+            passes the relation to its element. E-OWNERSHIP-CYCLE,
+            W-MODIFIER-ON-VALUE.
+          rationale: R16.
+          verification VER-00021-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
+              tests/unit/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
+          }
+        }
+        requirement REQ-00029-1 {
+          tags: language, lld, class
+          status: approved
+          title: A template shall be identified by name and arity and its arguments checked against their bounds
+          text: class Repository<T: Entity>; E-TEMPLATE-BOUND.
+          rationale: R15.
+          verification VER-00022-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
+          }
+        }
+        requirement REQ-00030-1 {
+          tags: language, lld, class
+          status: approved
+          title: Operators shall be declared in the class header as a set and refined in the body
+          text: class Vector <<==, ordered, +, []>>; E-OPERATOR-UNDECLARED.
+          rationale: R17.
+          verification VER-00023-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_static.cpp::TestStatic.OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody
+          }
+        }
+        requirement REQ-00031-1 {
+          tags: language, lld, class
+          status: approved
+          title: Interface, abstract and value shall be derived from the members, never written
+          rationale: What is derived cannot contradict what is declared (R14).
+          verification VER-00024-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_static.cpp::TestStatic.InterfaceAndAbstractAreDerived
+          }
+        }
+        requirement REQ-00032-1 {
+          tags: language, lld, class
+          status: approved
+          title: Any entity or member shall open a body with fields, notes, annotations and contracts kept as text
+          rationale: R8, R12, R13: contracts are for the reader and for argos, not interpreted.
+          verification VER-00025-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_static.cpp::TestStatic.NotesAndContractsLiveInMemberBodies
+          }
+        }
+        requirement REQ-00033-1 {
+          tags: language, lld, class
+          status: approved
+          title: An enum shall be a value type with its values, annotated like a class
+          verification VER-00026-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/bind/test_packages.cpp::TestPackages.AnEnumRealisesRequirementsLikeAClass
+          }
+        }
+      }
+
+      // ---- sequence ----
+      requirement REQ-00034-1 {
+        tags: language, lld, sequence
+        status: approved
+        verification VER-00054-1 {
+          status: approved
+          title: Unit tests confirm a sequence is the behaviour of a method: the behaviour oracle
+          method: test
+          tests:
+            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
+        }
+        title: A sequence shall be the behaviour of a method, identified by it
+        rationale: block 3, 2026-10-25.
+
+        requirement REQ-00035-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A sequence shall be identified by its resolved subject and scenario, wherever it is written
+          text: sequence Class::method [/ scenario]; two declarations are a duplicate; the unnamed scenario is the default.
+          verification VER-00027-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ABehaviourIsIdentifiedByItsSubject
+          }
+        }
+        requirement REQ-00036-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: The participants of a sequence shall be its static context: self, the attributes, the parameters, and the locals written
+          verification VER-00028-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
+          }
+        }
+        requirement REQ-00037-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A message shall name an operation of its target's type and match its arity, inside loop, alt and opt frames with prose conditions
+          verification VER-00029-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.FramesKeepTheirSpanAndElse
+              tests/unit/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
+          }
+        }
+        requirement REQ-00038-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A message to an operation with a behaviour shall expand to it, and coupling to another module shall be derived
+          verification VER-00030-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.AMessageToAnOperationWithABehaviourExpandsToIt
+              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule
+          }
+        }
+      }
+
+      // ---- state ----
+      requirement REQ-00039-1 {
+        tags: language, lld, state
+        status: approved
+        verification VER-00055-1 {
+          status: approved
+          title: Unit tests confirm a state machine is the behaviour of a class
+          method: test
+          tests:
+            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
+        }
+        title: A state machine shall be the behaviour of a class
+        rationale: block 3, 2026-10-25.
+
+        requirement REQ-00040-1 {
+          tags: language, lld, state
+          status: approved
+          title: The events and actions of a transition shall be operations of the class, and the guard shall be prose
+          text: Idle -> Running on run [guard] / report; no nested states until a design asks for them.
+          verification VER-00031-1 {
+            status: approved
+            method: test
+            tests:
+              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
+              tests/unit/ds/check/test_checker.cpp::TestChecker.AStateEventMustBeAnOperationOfItsEntity
+          }
+        }
+      }
+
+      // ---- activity ----
+      requirement REQ-00041-1 {
+        tags: language, lld, activity
+        title: An activity shall be the behaviour of a process
+        text: Reserved: nothing is decided until the process domain arrives.
+      }
+    }
+
+    // ======================= artefacts ====================================
+    requirement REQ-00042-1 {
+      tags: language, artefacts
+      status: approved
+      verification VER-00056-1 {
+        status: approved
+        title: Unit tests confirm artefacts are held in the same model: the artefacts oracle
+        method: test
+        tests:
+          tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+      }
+      title: The language shall hold requirements, constraints and verifications as artefacts of the same model
+      rationale: block 1, 2026-10-25.
+
+      requirement REQ-00043-1 {
+        tags: language, artefacts
+        status: approved
+        title: An artefact shall be identified by its id with its revision
+        text: REQ-00001-2: the revision is part of the identity; a link to a revision no longer declared is W-REVISION-DRIFT, resolved to the declared one.
+        verification VER-00032-1 {
+          status: approved
+          method: test
+          tests:
+            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
+        }
+        constraint CST-00006-1 {
+          tags: language, artefacts
+          status: approved
+          category: language
+          title: Every link to an artefact shall name a revision
+          text: An unpinned link is E-REF-UNPINNED.
+          rationale: Pinning links to a revision is what lets the tool tell who stayed behind when an artefact moved (block 1).
+        }
+      }
+      requirement REQ-00044-1 {
+        tags: language, artefacts
+        status: approved
+        title: Nesting shall give the relation between artefacts, and annotations shall add relations from elsewhere
+        text: a requirement in a requirement refines it; a verification in a requirement verifies it; @refines, @requirement, @constraint elsewhere.
+        verification VER-00033-1 {
+          status: approved
+          method: test
+          tests:
+            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.LevelByPlacementAndNestingGivesTheRelation
+            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheSeparateFileIsTheNormalPlace
+        }
+      }
+      requirement REQ-00045-1 {
+        tags: language, artefacts
+        status: approved
+        title: An artefact shall carry title, text, rationale, status and tags; a verification its method and tests; a constraint its category and bok
+        text: One-line forms for a requirement and a constraint; draft when no status.
+        verification VER-00034-1 {
+          status: approved
+          method: test
+          tests:
+            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.FieldsAsDecided
+            tests/unit/ds/check/test_static.cpp::TestStatic.ConstraintsAreArtefactsInBothForms
+        }
+      }
+    }
+
+    // ======================= diagrams =====================================
+    requirement REQ-00047-1 {
+      tags: language, diagrams
+      status: approved
+      verification VER-00057-1 {
+        status: approved
+        title: Unit tests confirm a diagram is a selection of the model
+        method: test
+        tests:
+          tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
+          tests/unit/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
+      }
+      title: A diagram shall be a selection of the model that decides what to print and never what to draw
+      rationale: Keeping the views as selections keeps them from drifting.
+
+      requirement REQ-00048-1 {
+        tags: language, diagrams
+        status: approved
+        title: A diagram shall select by id, module or package, with include and exclude, and print by hide and show
+        verification VER-00036-1 {
+          status: approved
+          method: test
+          tests:
+            tests/unit/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
+            tests/unit/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
+        }
+      }
+      requirement REQ-00049-1 {
+        tags: language, diagrams
+        status: approved
+        title: A sequence diagram shall expand by depth and lift to the level asked for
+        verification VER-00037-1 {
+          status: approved
+          method: test
+          tests:
+            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ASequenceDiagramExpandsByDepthAndLinksAtDepthZero
+            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
+        }
+      }
+      requirement REQ-00050-1 {
+        tags: language, diagrams
+        status: approved
+        title: A requirement diagram shall show the umbrella of an artefact: what refines, verifies and realises it
+        verification VER-00038-1 {
+          status: approved
+          method: test
+          tests:
+            tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
+        }
+      }
+    }
+
+  }
+
+  verification VER-00042-1 {
+    status: approved
+    @constraint CST-00002-1
+    title: Unit tests confirm a second declaration of one identity is reported and reopenable scopes are not
+    method: test
+    tests:
+      tests/unit/ds/model/test_model.cpp::TestModel.ASecondDeclarationIsReportedExceptForReopenableScopes
+      tests/unit/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+  }
+  verification VER-00043-1 {
+    status: approved
+    @constraint CST-00003-1
+    title: Unit tests confirm an extension adds relations without redefining and an extension of nothing is expected
+    method: test
+    tests:
+      tests/unit/ds/bind/test_packages.cpp::TestPackages.AnExtensionAddsRelationsWithoutRedefining
+      tests/unit/ds/bind/test_packages.cpp::TestPackages.AnExtensionOfNothingIsExpected
+  }
+  verification VER-00044-1 {
+    status: approved
+    @constraint CST-00004-1
+    title: Unit tests confirm packages qualify with @ and modules with ::
+    method: test
+    tests:
+      tests/unit/ds/bind/test_binder.cpp::TestBinder.PackagesQualifyWithAtAndModulesWithColons
+      tests/unit/ds/model/test_scopes.cpp::TestLastName.TheNameAfterTheLastSeparator
+  }
+  verification VER-00045-1 {
+    status: approved
+    @constraint CST-00005-1
+    title: Unit tests confirm a modifier is a word only in front of a name
+    method: test
+    tests:
+      tests/unit/ds/bind/test_packages.cpp::TestPackages.AModifierIsAWordOnlyInFrontOfAName
+  }
+  verification VER-00046-1 {
+    status: approved
+    @constraint CST-00006-1
+    title: Unit tests confirm an unpinned link is an error and a drifted one resolves to the declared revision
+    method: test
+    tests:
+      tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
+  }
+}
+
+diagram REQ_Language {
+  kind: requirement
+  include: REQ-00012-1
+  show: requirements
+}
+
+diagram REQ_LanguageVerified {
+  kind: requirement
+  include: REQ-00012-1
+  show: verifications
+}

@@ -145,7 +145,7 @@ package ds {
     state Checker {
       initial Idle
       Idle    -> Running on run
-      Running -> Idle    on run [every reference resolved] / report   // guard in prose, action = Checker::report? ! W-ACTION-UNDECLARED (report is Model's, not Checker's)
+      Running -> Idle    on run [every reference resolved] / report   // ! W-ACTION-UNDECLARED: report is Model's, not Checker's (the guard is prose)
       Running -> Running on resolveReference
     }
 
