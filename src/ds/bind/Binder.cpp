@@ -601,6 +601,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.fields["values"] = join(values, ", ");
       model_.declare(e);
       if (!owner.empty()) model_.relate({"contains", owner, e.id, loc, ""});
+      bindAnnotations(file, c, e.id, scope);  // an enum realises requirements like a class
 
     } else if (is(c, "sequence")) {
       bindSequence(file, c, scope, owner);

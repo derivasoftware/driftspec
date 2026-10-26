@@ -22,6 +22,8 @@ class Checker {
   /// Resolve `name` as written in `scope`: innermost scope first, then outward, then global.
   /// Returns the identity, or "" when nothing declares it.
   std::string resolve(const std::string& name, const std::string& scope) const;
+  /// The extern entities of a simple name, declared in any extern module (the catalogue, R11).
+  std::vector<std::string> externsNamed(const std::string& name) const;
 
   /// Whether `derived` is `base` or inherits from it, transitively.
   bool derives(const std::string& derived, const std::string& base) const;

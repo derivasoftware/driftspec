@@ -499,6 +499,10 @@
       "required": false,
       "types": [
         {
+          "type": "annotation",
+          "named": true
+        },
+        {
           "type": "enum_value",
           "named": true
         }

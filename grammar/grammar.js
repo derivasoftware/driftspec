@@ -110,7 +110,8 @@ module.exports = grammar({
     contract: $ => seq('[', optional(seq(field('key', $.name), ':')), field('body', $.contract_body), ']'),
     contract_body: $ => /[^\]\n]+/,
 
-    enum: $ => seq('enum', field('name', $.name), '{', optional(seq($.enum_value, repeat(seq(',', $.enum_value)), optional(','))), '}'),
+    // an enum is annotated like a class (@requirement before its values), decided 2026-10-26
+    enum: $ => seq('enum', field('name', $.name), '{', repeat($.annotation), optional(seq($.enum_value, repeat(seq(',', $.enum_value)), optional(','))), '}'),
     enum_value: $ => seq(field('name', $.name), optional(seq('=', field('value', $.number)))),
 
     // ---- white box: dynamic (block 3) --------------------------------------
