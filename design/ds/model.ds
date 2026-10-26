@@ -69,7 +69,10 @@ package driftspec@ds {
         tests/unit/ds/model/test_model.cpp::TestModel.ARenameOntoADeclaredIdentityIsRefused
     }
 
-    enum Kind { Package, Module, Requirement, Verification, Boundary, Operation, Constraint, Class, Enum, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram }
+    enum Kind {
+      @requirement REQ-00001-1
+      Package, Module, Requirement, Verification, Boundary, Operation, Constraint, Class, Enum, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram
+    }
 
     dataclass Location {                     // where something was read from: file, 1-based line and column
       @requirement REQ-00001-1

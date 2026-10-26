@@ -45,6 +45,13 @@ struct Event {
 };
 
 /// Walks the syntax trees of a workspace and declares its entities (R1-R5, R9).
+/// What a type expression named: an entity (or a container of one), a template parameter, or text.
+struct TypeUse {
+  bool classLike = false;  ///< named an entity (or a container of one)
+  bool parameter = false;  ///< named a template parameter: may be anything (R15)
+  std::string text;
+};
+
 class Binder {
  public:
   explicit Binder(model::Model& model) : model_(model) {}
@@ -56,12 +63,6 @@ class Binder {
 
  private:
   /// What a type expression contributed: whether it named something class-like, and its text.
-  struct TypeUse {
-    bool classLike = false;  ///< named an entity (or a container of one)
-    bool parameter = false;  ///< named a template parameter: may be anything (R15)
-    std::string text;
-  };
-
   void visit(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity);
   void bindAnnotations(const parse::ParsedFile& file, TSNode node, const std::string& from, const std::string& scope);

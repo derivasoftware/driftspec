@@ -1,0 +1,68 @@
+// LLD of the parse namespace (ds::parse): every .ds file of a workspace read
+// into a tree-sitter tree (SREQ-00001-1). The tree-sitter C API is borrowed
+// through the extern catalogue; its names stay as the code writes them.
+
+package driftspec@ds {
+
+  extern module tree_sitter {                // the catalogue: the C API, names only (R11)
+    class TSParser
+    class TSTree
+    class TSNode
+  }
+
+  extern module std {
+    class shared_ptr<T>
+  }
+
+  module parse {
+
+    requirement REQ-00008-1 {
+      status: approved
+      @refines SREQ-00001-1
+      title: The parser shall read every .ds file under a directory into a tree, in any order, marking the files that do not parse
+      text:
+        A directory is walked recursively; every .ds file is read whole and
+        parsed with the DriftSpec grammar into a tree that lives as long as
+        the parsed file. A file with a syntax error is still returned, marked,
+        so the workspace loads whole and the error is reported once at the
+        file. Text is parsed the same way without a file.
+      rationale:
+        Loading never fails on one file; the model absorbs the rest and says
+        which file did not parse.
+      tags: parse, workspace
+    }
+
+    verification VER-00008-1 {
+      status: approved
+      @requirement REQ-00008-1
+      title: Unit tests cover a whole workspace parsed without errors and a syntax error marked
+      method: test
+      tests:
+        tests/unit/ds/parse/test_parser.cpp::TestParser.ParsesAWholeWorkspaceWithoutSyntaxErrors
+        tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
+    }
+
+    dataclass ParsedFile {                   // one file read: its path, text, tree and whether it parsed
+      @requirement REQ-00008-1
+      + path: std::string
+      + text: std::string
+      + owns tree: std::shared_ptr<TSTree>
+      + hasSyntaxErrors: bool
+    }
+
+    class Parser {                           // the tree-sitter parser with the DriftSpec language set
+      @requirement REQ-00008-1
+      - owns parser_: TSParser
+      + Parser()
+      + parseText(path: std::string, text: std::string) -> ParsedFile
+      + parseFile(path: std::string) -> ParsedFile
+      + parseDirectory(directory: std::string) -> std::vector<ParsedFile>
+    }
+  }
+}
+
+diagram CL_ParseNamespace {
+  kind: class
+  include: driftspec@ds@parse::*
+  show: ownership
+}

@@ -1,0 +1,118 @@
+// LLD of the bind namespace (ds::bind): a parsed tree walked into the model.
+// The binder declares every entity under its qualified identity and records
+// every reference, message and event as written; it resolves nothing
+// (SREQ-00001-1). Resolution and checking are the checker's.
+
+package driftspec@ds {
+
+  module bind {
+
+    requirement REQ-00009-1 {
+      status: approved
+      @refines SREQ-00001-1
+      title: The binder shall declare every entity of a parsed file under its qualified identity and record every reference as written
+      text:
+        Packages add their name with @, modules and members with ::; the
+        flat form of a package or module reopens the one already declared.
+        Fields, annotations, members, operators, artefacts, behaviours and
+        their steps are bound in the order written; every type expression
+        becomes a reference with the scope it was written in, the relation it
+        implies (owns, refs, shares, uses, inherits, requires...) and, for
+        containers, the multiplicity passed to the element. Messages and
+        state events are recorded for the checker with their arity and
+        location. Nothing is resolved here.
+      rationale:
+        Binding before resolving is what lets files arrive in any order:
+        the binder never needs what another file declares.
+      tags: bind, identity
+    }
+
+    verification VER-00009-1 {
+      status: approved
+      @requirement REQ-00009-1
+      title: Unit tests cover qualification, reopening, nesting as relation, nested packages and the modifiers as names
+      method: test
+      tests:
+        tests/unit/ds/bind/test_binder.cpp::TestBinder.PackagesQualifyWithAtAndModulesWithColons
+        tests/unit/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+        tests/unit/ds/bind/test_binder.cpp::TestBinder.NestingGivesTheRelation
+        tests/unit/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
+        tests/unit/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
+        tests/unit/ds/bind/test_packages.cpp::TestPackages.ABoxRealisesRequirementsLikeAClass
+        tests/unit/ds/bind/test_packages.cpp::TestPackages.AModifierIsAWordOnlyInFrontOfAName
+        tests/unit/ds/bind/test_packages.cpp::TestPackages.AnEnumRealisesRequirementsLikeAClass
+    }
+
+    dataclass Reference {                    // a name as written, with where and for which relation
+      @requirement REQ-00009-1
+      + from: std::string
+      + target: std::string
+      + scope: std::string
+      + relation: std::string
+      + expectedKind: model::Kind
+      + owns location: model::Location
+      + multiplicity: std::string
+      + args: std::vector<std::string>
+    }
+
+    dataclass Message {                      // a message of a behaviour, checked later against the static context
+      @requirement REQ-00009-1
+      + sequence: std::string
+      + message: std::string
+      + to: std::string
+      + op: std::string
+      + argc: int
+      + owns location: model::Location
+    }
+
+    dataclass Event {                        // an event or action of a state machine, checked later as an operation
+      @requirement REQ-00009-1
+      + state: std::string
+      + entity: std::string
+      + scope: std::string
+      + event: std::string
+      + action: bool
+      + owns location: model::Location
+    }
+
+    dataclass TypeUse {                      // what a type expression named: an entity, a template parameter, or text
+      @requirement REQ-00009-1
+      + classLike: bool
+      + parameter: bool
+      + text: std::string
+    }
+
+    class Binder {
+      @requirement REQ-00009-1
+      - refs model_: model::Model
+      - owns references_: std::vector<Reference>
+      - owns messages_: std::vector<Message>
+      - owns events_: std::vector<Event>
+      + Binder(model: model::Model)
+      + bind(file: parse::ParsedFile) -> void
+      + references() -> std::vector<Reference>
+      + messages() -> std::vector<Message>
+      + events() -> std::vector<Event>
+      - visit(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void
+      - bindFields(file: parse::ParsedFile, node: TSNode, entity: model::Entity) -> void
+      - bindAnnotations(file: parse::ParsedFile, node: TSNode, from: std::string, scope: std::string) -> void
+      - bindArtefact(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void
+      - bindClass(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void
+      - bindMember(file: parse::ParsedFile, node: TSNode, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void
+      - bindMemberBody(file: parse::ParsedFile, member: TSNode, entity: model::Entity, scope: std::string) -> void
+      - bindSequence(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void
+      - bindSteps(file: parse::ParsedFile, node: TSNode, sequence: model::Entity, frame: std::string, order: int, frames: int) -> void
+      - bindType(file: parse::ParsedFile, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> TypeUse
+      - declareOperator(cls: model::Entity, symbol: std::string, location: model::Location) -> void
+      - locationOf(file: parse::ParsedFile, node: TSNode) -> model::Location
+      - qualify(scope: std::string, name: std::string) -> std::string
+    }
+  }
+}
+
+diagram CL_BindNamespace {
+  kind: class
+  include: driftspec@ds@bind::*
+  show: ownership
+  hide: methods
+}

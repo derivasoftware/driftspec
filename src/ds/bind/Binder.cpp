@@ -174,9 +174,9 @@ void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std:
 
 // ---- types (R15, R16) ----------------------------------------------------------
 
-Binder::TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
-                                 const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
-                                 const model::Location& location) {
+TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
+                         const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
+                         const model::Location& location) {
   TypeUse use;
   if (ts_node_is_null(type)) return use;
   use.text = trim(parse::textOf(file, type));
