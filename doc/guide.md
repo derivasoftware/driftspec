@@ -73,6 +73,11 @@ them. The vision (`vision.md`) says why; this says what.*
 - A characteristic of an entity is a requirement or a constraint, nested or
   linked; there is no other vocabulary (R18).
 
+- **Nothing is reserved (2026-10-26).** `abstract`, `static`, `const`,
+  `owns`, `refs`, `shares` are modifiers only in front of a name; followed by
+  `:` or `(` they are the name: `+ abstract: bool`, `+ refs: map<..>`. A code
+  base designed in DriftSpec keeps its own names.
+
 ## 3. Behaviour (`examples/behaviour`, decided 2026-10-25)
 
 - A behaviour is identified by its subject, written as any reference is

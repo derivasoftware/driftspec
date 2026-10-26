@@ -32,6 +32,8 @@ package app@render {                                                 // the flat
     class Svg {
       - owns model: app@core@model::Entity                           // across packages, by full identity
       - owns cache: std::map<std::string, app@core@model::Entity>    // a qualified container passes ownership to its element (R16)
+      + abstract: bool                                                // a modifier is a word only in front of a name: nothing is reserved
+      + static run() -> int                                           // ...and still a modifier where it modifies
       + render() -> string
     }
   }

@@ -71,6 +71,16 @@ TEST_F(TestPackages, ABoxRealisesRequirementsLikeAClass) {
   EXPECT_TRUE(related("requires", "app@core", "SREQ-00001-1"));  // @requirement in the package body
 }
 
+TEST_F(TestPackages, AModifierIsAWordOnlyInFrontOfAName) {
+  const auto* flag = model.find("app@render@svg::Svg::abstract");
+  ASSERT_NE(flag, nullptr);  // an attribute named abstract
+  EXPECT_EQ(flag->kind, ds::model::Kind::Attribute);
+  EXPECT_FALSE(flag->has("abstract"));
+  const auto* run = model.find("app@render@svg::Svg::run");
+  ASSERT_NE(run, nullptr);
+  EXPECT_TRUE(run->has("static"));  // the same word, modifying
+}
+
 TEST_F(TestPackages, LevelByPlacementThroughTheLevels) {
   EXPECT_EQ(model.find("SREQ-00001-1")->scope, "app@");      // the outermost package: system
   EXPECT_EQ(model.find("REQ-00001-1")->scope, "app@core@");  // the inner package: its own level

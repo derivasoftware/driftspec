@@ -905,7 +905,7 @@
             "name": "name",
             "content": {
               "type": "SYMBOL",
-              "name": "name"
+              "name": "member_name"
             }
           },
           {
@@ -1005,7 +1005,7 @@
           "name": "name",
           "content": {
             "type": "SYMBOL",
-            "name": "name"
+            "name": "member_name"
           }
         },
         {
@@ -1077,6 +1077,49 @@
         {
           "type": "STRING",
           "value": "shares"
+        }
+      ]
+    },
+    "member_name": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "name"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "abstract"
+              },
+              {
+                "type": "STRING",
+                "value": "static"
+              },
+              {
+                "type": "STRING",
+                "value": "const"
+              },
+              {
+                "type": "STRING",
+                "value": "owns"
+              },
+              {
+                "type": "STRING",
+                "value": "refs"
+              },
+              {
+                "type": "STRING",
+                "value": "shares"
+              }
+            ]
+          },
+          "named": true,
+          "value": "name"
         }
       ]
     },

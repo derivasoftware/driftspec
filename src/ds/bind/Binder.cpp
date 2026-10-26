@@ -61,7 +61,8 @@ std::string relationForAnnotation(model::Kind from, const std::string& annotatio
   return "refers";
 }
 
-const char* const kPrimitives[] = {"int", "bool", "string", "path", "none", "void", "float", "double"};
+const char* const kPrimitives[] = {"int",  "bool",  "string", "path",   "none",
+                                   "void", "float", "double", "size_t", "char"};  // the C++ sizes and chars relate nothing either
 
 bool isPrimitive(const std::string& type) {
   for (const char* p : kPrimitives) {

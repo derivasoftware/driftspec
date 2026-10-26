@@ -74,7 +74,7 @@ module.exports = grammar({
     method: $ => prec.right(seq(
       field('visibility', $.visibility),
       repeat(field('modifier', $.method_modifier)),
-      field('name', $.name),
+      field('name', $.member_name),
       $.parameters,
       optional(seq('->', field('returns', $.type))),
       optional(field('body', $.member_body)),
@@ -83,13 +83,16 @@ module.exports = grammar({
     attribute: $ => seq(
       field('visibility', $.visibility),
       optional(field('ownership', $.ownership)),
-      field('name', $.name),
+      field('name', $.member_name),
       ':',
       field('type', $.type),
       optional(seq('=', field('default', $.default_value))),
       optional(field('body', $.member_body)),
     ),
     ownership: $ => choice('owns', 'refs', 'shares'),
+    // a modifier is a word only in front of a name: `+ abstract: bool` is an attribute named abstract,
+    // `+ refs: map<..>` one named refs. The parser decides by what follows; nothing is reserved.
+    member_name: $ => choice($.name, alias(choice('abstract', 'static', 'const', 'owns', 'refs', 'shares'), $.name)),
     operator: $ => prec.right(seq(
       'operator',
       field('symbol', $.operator_symbol),

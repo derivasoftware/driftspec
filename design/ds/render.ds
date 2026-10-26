@@ -1,0 +1,226 @@
+// LLD of the render namespace (ds::render): the model drawn. A diagram selects
+// and decides what to print (IrExport → the render-IR of the plantuml family,
+// SREQ-00006-1, SREQ-00010-1); the IR is laid out once and drawn twice, as SVG
+// and as terminal text, wrapping to a width (SREQ-00005-1). Layout itself is a
+// function (layout(doc, metrics, width) → LayoutResult) over the types below.
+
+package driftspec@ds {
+
+  extern module std {
+    class set<T>
+  }
+
+  module render {
+
+    requirement REQ-00006-1 {
+      status: approved
+      @refines SREQ-00010-1
+      title: The export shall turn a diagram into the render-IR of its kind: class, requirement or sequence
+      text:
+        A diagram's include and exclude select entities by id, module or
+        package; hide and show decide what is printed. A class diagram prints
+        boxes with their sections inside the containers of their modules and
+        nested packages, and the edges lifted from members to classes; a
+        requirement diagram prints the artefacts and what refines, verifies
+        and realises them; a sequence diagram prints lifelines, messages and
+        frames at the depth and level asked for. The IR carries ids, links by
+        identity and locations.
+      rationale:
+        If the drawing is a projection of the model, it cannot drift from it;
+        the IR keeps the family's renderers interchangeable.
+      tags: render, diagrams
+    }
+
+    requirement REQ-00007-1 {
+      status: approved
+      @refines SREQ-00005-1
+      title: The renderers shall draw one layout of the IR as SVG and as terminal text, within a given width
+      text:
+        One layered layout places every node inside its container with no two
+        leaves overlapping, bases above subtypes, wholes above parts, and
+        routes every edge orthogonally around the nodes it crosses, bundling
+        parallel relations; given a width it wraps the layers. The SVG carries
+        stable ids, links, tooltips and the script to fold and focus; the text
+        draws the same layout with box characters and optional colour, and
+        can hand out the cell grid for a host that draws itself. Both are
+        deterministic.
+      rationale:
+        The same drawing in a browser, an editor and a terminal is what makes
+        the model usable where it is written.
+      tags: render, svg, terminal
+    }
+
+    verification VER-00006-1 {
+      status: approved
+      @requirement REQ-00006-1
+      title: Unit tests cover the class, requirement and sequence projections of the corpora
+      method: test
+      tests:
+        tests/unit/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
+        tests/unit/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
+        tests/unit/ds/render/test_irexport.cpp::TestIrExport.DerivedStereotypesAndMembersArePrinted
+        tests/unit/ds/render/test_irexport.cpp::TestIrExport.EdgesAreLiftedFromMembersToClasses
+        tests/unit/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
+        tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
+        tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
+        tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.AClassDiagramHangsItsArtefactsAsANote
+    }
+
+    verification VER-00007-1 {
+      status: approved
+      @requirement REQ-00007-1
+      title: Unit tests cover placement, routing, wrapping and the determinism of both drawings
+      method: test
+      tests:
+        tests/unit/ds/render/test_layout.cpp::TestLayout.EveryNodeIsPlacedAndNoTwoLeavesOverlap
+        tests/unit/ds/render/test_layout.cpp::TestLayout.ChildrenSitInsideTheirContainer
+        tests/unit/ds/render/test_layout.cpp::TestLayout.BasesAreDrawnAboveSubtypesAndWholesAboveParts
+        tests/unit/ds/render/test_layout.cpp::TestLayout.EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute
+        tests/unit/ds/render/test_layout.cpp::TestLayout.LongEdgesStepAroundTheNodesTheyCross
+        tests/unit/ds/render/test_layout.cpp::TestLayout.ParallelRelationsAreBundledWithTheirLabelsStacked
+        tests/unit/ds/render/test_layout.cpp::TestLayout.TheSvgIsDeterministicAndCarriesStableIds
+        tests/unit/ds/render/test_layout.cpp::TestSequenceSvg.DrawsLifelinesRowsFramesAndTheCaller
+        tests/unit/ds/render/test_layout.cpp::TestSequenceSvg.CarriesLinksSpansLocationsAndTheScript
+        tests/unit/ds/render/test_layout.cpp::TestSequenceSvg.IsDeterministic
+        tests/unit/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
+        tests/unit/ds/render/test_text.cpp::TestText.IsDeterministicAndPlainWithoutColor
+        tests/unit/ds/render/test_text.cpp::TestText.BoxesDoNotCollideOnTheGrid
+    }
+
+    // ---- the IR: what a diagram prints, in the plantuml family's vocabulary ----
+
+    dataclass IrNode {
+      @requirement REQ-00006-1
+      + id: std::string
+      + kind: std::string
+      + label: std::string
+      + classifier: std::string
+      + stereotype: std::string
+      + parent: std::string
+      + title: std::string
+      + href: std::string
+      + abstract: bool
+      + refs: std::map<std::string, std::string>
+      + sections: std::vector<std::vector<std::string>>
+      + sectionKinds: std::vector<std::string>
+      + span: std::pair<int, int>
+      + dividers: std::vector<std::pair<int, std::string>>
+    }
+
+    dataclass IrEdge {
+      @requirement REQ-00006-1
+      + from: std::string
+      + to: std::string
+      + kind: std::string
+      + label: std::string
+      + title: std::string
+      + href: std::string
+      + dashed: bool
+      + order: int
+      + refs: std::map<std::string, std::string>
+    }
+
+    dataclass IrDocument {
+      @requirement REQ-00006-1
+      + title: std::string
+      + notice: std::string
+      + owns nodes: std::vector<IrNode>
+      + owns edges: std::vector<IrEdge>
+      + static parse(json: std::string) -> IrDocument
+      + bundled() -> IrDocument
+    }
+
+    class IrExport {                         // the projection: selects, decides what to print, writes the IR
+      @requirement REQ-00006-1
+      - refs model_: model::Model
+      + IrExport(model: model::Model)
+      + diagrams() -> std::vector<std::string>
+      + render(diagramId: std::string, pretty: bool) -> std::string
+      + select(diagram: model::Entity) -> std::set<std::string>
+      - matches(pattern: std::string, entity: model::Entity) -> bool
+      - renderSequence(diagram: model::Entity, pretty: bool) -> std::string
+      - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string
+    }
+
+    // ---- the layout: geometry the two drawings share ----
+
+    dataclass Point {
+      @requirement REQ-00007-1
+      + x: int
+      + y: int
+    }
+
+    dataclass Rect {
+      @requirement REQ-00007-1
+      + x: int
+      + y: int
+      + w: int
+      + h: int
+    }
+
+    dataclass Route {
+      @requirement REQ-00007-1
+      + owns points: std::vector<Point>
+    }
+
+    dataclass Placed {
+      @requirement REQ-00007-1
+      + refs node: IrNode
+      + owns rect: Rect
+    }
+
+    dataclass LayoutResult {
+      @requirement REQ-00007-1
+      + owns placed: std::vector<Placed>
+      + owns routes: std::map<size_t, Route>
+    }
+
+    dataclass Metrics {                      // the runtime table of sizes: one for SVG pixels, one for terminal cells
+      @requirement REQ-00007-1
+      + CHAR_W: int
+      + LINE_H: int
+      + PAD_X: int
+      + PAD_Y: int
+      + SECTION_GAP: int
+      + BADGE_W: int
+      + DOT_W: int
+      + NOTE_FOLD: int
+      + GAP_X: int
+      + GAP_Y: int
+      + LANE: int
+      + LANE_PAD: int
+      + CONTAINER_PAD: int
+      + CONTAINER_LABEL_H: int
+      + ASPECT: double
+      + static svg() -> Metrics
+      + static text() -> Metrics
+    }
+
+    class Svg {                              // the SVG drawing, with its links, tooltips and script
+      @requirement REQ-00007-1
+      + render(doc: IrDocument, maxWidth: int) -> std::string   // also over a layout already made: one identity per member
+    }
+
+    class Text {                             // the terminal drawing, box characters and optional colour
+      @requirement REQ-00007-1
+      + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // also over a layout already made
+      + cells(doc: IrDocument, maxWidth: int) -> std::string
+    }
+  }
+}
+
+// Two views, one per intent: the namespace mixes the projection (REQ-00006-1)
+// and the drawing (REQ-00007-1), which argos reads as two requirement families
+// in one aggregate; splitting the namespace is a backlog task.
+diagram CL_RenderIr {
+  kind: class
+  include: driftspec@ds@render::IrNode, driftspec@ds@render::IrEdge, driftspec@ds@render::IrDocument, driftspec@ds@render::IrExport
+  show: ownership
+}
+
+diagram CL_RenderDrawing {
+  kind: class
+  include: driftspec@ds@render::Point, driftspec@ds@render::Rect, driftspec@ds@render::Route, driftspec@ds@render::Placed, driftspec@ds@render::LayoutResult, driftspec@ds@render::Metrics, driftspec@ds@render::Svg, driftspec@ds@render::Text
+  show: ownership
+  hide: fields
+}

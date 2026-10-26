@@ -20,7 +20,7 @@ struct IrNode {
   std::string title;
   std::string href;
   bool abstract = false;
-  std::map<std::string, std::string> refs;  ///< named references (emitted as data-ref-<key>)
+  std::map<std::string, std::string> refs;  ///< named references (emitted as data-ref-<key>); not `refs`: a modifier keyword in DriftSpec
   std::vector<std::vector<std::string>> sections;
   std::vector<std::string> sectionKinds;
   std::pair<int, int> span{-1, -1};                   ///< frame: first and last sequence row
