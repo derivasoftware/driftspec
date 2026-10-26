@@ -87,6 +87,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "annotation"
+        },
+        {
+          "type": "SYMBOL",
           "name": "requirement"
         },
         {

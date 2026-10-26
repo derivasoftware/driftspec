@@ -1103,6 +1103,10 @@
       "required": false,
       "types": [
         {
+          "type": "annotation",
+          "named": true
+        },
+        {
           "type": "boundary",
           "named": true
         },

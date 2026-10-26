@@ -32,7 +32,8 @@ module.exports = grammar({
     // a package holds packages (the HLD nests): written nested, or reopened by its full path
     // (`package app@render {`); every package level adds its name with @ (decided 2026-10-26)
     package: $ => seq('package', repeat(field('prefix', $.package_prefix)), field('name', $.name), '{', repeat($._package_item), '}'),
-    _package_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.boundary, $.package, $.module),
+    // a package is annotated like a class: @requirement for what the box realises, @constraint for what binds it (HLD, 2026-10-26)
+    _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.boundary, $.package, $.module),
 
     module: $ => seq(optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
     _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.sequence, $.state),

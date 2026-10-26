@@ -39,7 +39,7 @@ package driftspec {
     tags: coherence, findings
   }
 
-  requirement SREQ-00003-1 {
+  requirement SREQ-00003-2 {
     status: approved
     title: The system shall keep requirements, constraints and verifications as artefacts linked to the design by revision
     text:
@@ -47,10 +47,12 @@ package driftspec {
       language as the design, with an id that carries their revision. Every
       link to an artefact names a revision; nesting gives the relation
       (a requirement in a requirement refines it, a verification in a
-      requirement verifies it) and annotations add relations from elsewhere.
+      requirement verifies it) and annotations add relations from elsewhere:
+      a package (an HLD box) and a class realise a requirement the same way
+      (revision 2, decided 2026-10-26).
     rationale:
-      The design and the artefacts about it belong to one model: a class
-      realises a requirement, a constraint binds it, a verification proves it.
+      The design and the artefacts about it belong to one model: a box or a
+      class realises a requirement, a constraint binds it, a verification proves it.
       Pinning links to a revision is what lets the tool tell who stayed behind
       when an artefact moved.
     tags: requirements, traceability

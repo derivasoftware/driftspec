@@ -41,7 +41,9 @@ them. The vision (`vision.md`) says why; this says what.*
   Level by placement extends: the outermost package is the system; an inner
   package is its own level (argos: a REQ under the SREQ); a module its own.
   In a class diagram the nested packages are containers (the HLD boxes); the
-  outermost one is the drawing itself. Boundaries of nested packages: not
+  outermost one is the drawing itself. A package body takes annotations like
+  a class body: `@requirement` for what the box realises, `@constraint` for
+  what binds it (HLD, decided 2026-10-26). Boundaries of nested packages: not
   yet. Corpus: `examples/packages`.
 
 ## 2. Static design (`examples/static`)
