@@ -125,10 +125,14 @@ package driftspec {
     tags: grammar, editors
   }
 
-  requirement SREQ-00009-1 {
+  requirement SREQ-00009-2 {
     title: The system shall model the static design: packages, modules, classes with their members, ownership, inheritance, templates, operators and boundaries
     text:
       A package is the black box and declares the boundaries it exposes; a
+      package holds packages, written nested or reopened by its full path,
+      every level adding its name with @, so that one workspace models one
+      system of several packages and the level of an artefact follows from
+      where it is declared (revision 2, decided 2026-10-26); a
       module is a namespace and opens the white box; classes, data classes
       and enumerations carry attributes and methods with visibility,
       modifiers and types; an attribute owns, references or shares what it

@@ -1,0 +1,45 @@
+// Nested packages (decided 2026-10-26). A package holds packages: the HLD
+// nests, and it follows the conventions of every other entity. Written nested,
+// braces mean containment; written flat, `package app@render {` reopens render
+// inside app, as a module reopens across files. Every package level adds its
+// name with @: app, app@core, app@core@model::Entity. Level by placement:
+// what the outermost package declares is of the system; an inner package has
+// its own level, a module its own.
+
+package app {
+  requirement SREQ-00001-1: The system shall load a workspace      // system level: the outermost package
+
+  package core {
+    requirement REQ-00001-1 {                                       // package level: the core's own promise
+      @refines SREQ-00001-1
+      title: The core shall parse a workspace into one model
+    }
+    module model {
+      class Entity {
+        + id: string
+      }
+    }
+  }
+}
+
+package app@render {                                                 // the flat form: the same identity as nesting
+  module svg {
+    class Svg {
+      - owns model: app@core@model::Entity                           // across packages, by full identity
+      + render() -> string
+    }
+  }
+}
+
+package app@missing@deep {                                           // ! W-REF-UNDECLARED: nobody declares app@missing
+  module m {
+    class Orphan {
+      + run()
+    }
+  }
+}
+
+diagram CL_App {
+  kind: class
+  include: app@*                                                     // every package under app: the nested ones become containers
+}

@@ -94,13 +94,14 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.TheGrammarShipsWithQueriesThatNameItsNodes
   }
 
-  verification SVER-00009-1 {
-    @requirement SREQ-00009-1
+  verification SVER-00009-2 {
+    @requirement SREQ-00009-2
     title: System tests confirm the static metamodel is modelled and classified by derivation
     text:
       The export carries derived stereotypes (interface, abstract, value with
       its operator families), template bounds, header operators, ownership
-      with multiplicity, and a package boundary.
+      with multiplicity, a package boundary, and the identities of classes in
+      nested packages (revision 2: packages nest).
     method: test
     tests:
       tests/system/driftspec/test_qualification.cpp::TestQualification.TheStaticMetamodelIsModelledAndClassifiedByDerivation

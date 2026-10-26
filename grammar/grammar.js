@@ -29,8 +29,10 @@ module.exports = grammar({
     comment: $ => token(seq('//', /[^\n]*/)),
 
     // ---- scopes -----------------------------------------------------------
-    package: $ => seq('package', field('name', $.name), '{', repeat($._package_item), '}'),
-    _package_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.boundary, $.module),
+    // a package holds packages (the HLD nests): written nested, or reopened by its full path
+    // (`package app@render {`); every package level adds its name with @ (decided 2026-10-26)
+    package: $ => seq('package', repeat(field('prefix', $.package_prefix)), field('name', $.name), '{', repeat($._package_item), '}'),
+    _package_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.boundary, $.package, $.module),
 
     module: $ => seq(optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
     _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.sequence, $.state),
@@ -142,7 +144,7 @@ module.exports = grammar({
     field: $ => seq(field('key', $.name), ':', optional(field('value', choice($.block_text, $.line_text)))),
     line_text: $ => /([^\/\n]|\/[^\/\n])+/,
     // `pkg@` is one token (no space): `Model` followed by an `@requirement` line is never a package prefix
-    qualified_name: $ => seq(optional(field('package', $.package_prefix)), $.name, repeat(seq('::', choice($.name, '*')))),
+    qualified_name: $ => seq(repeat(field('package', $.package_prefix)), $.name, repeat(seq('::', choice($.name, '*')))),
     package_prefix: $ => token(seq(NAME, '@')),
     number: $ => /-?[0-9]+(\.[0-9]+)?/,
     string: $ => /"[^"\n]*"/,

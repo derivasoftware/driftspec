@@ -139,3 +139,16 @@ void Model::report(const Finding& finding) { findings_.push_back(finding); }
 
 }  // namespace model
 }  // namespace driftspec
+
+namespace driftspec {
+namespace model {
+
+bool isSystemScope(const std::string& scope) { return !scope.empty() && scope.back() == '@' && scope.find('@') == scope.size() - 1; }
+
+std::string lastName(const std::string& id) {
+  const auto cut = id.find_last_of(":@");
+  return cut == std::string::npos ? id : id.substr(cut + 1);
+}
+
+}  // namespace model
+}  // namespace driftspec

@@ -513,14 +513,26 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
     const model::Location loc = locationOf(file, c);
 
     if (is(c, "package")) {
+      // the flat form `package app@render {` reopens render inside app: the prefixes are the scope
+      std::string prefix;
+      const uint32_t parts = ts_node_named_child_count(c);
+      for (uint32_t j = 0; j < parts; ++j) {
+        TSNode part = ts_node_named_child(c, j);
+        if (is(part, "package_prefix")) prefix += parse::textOf(file, part);
+      }
       model::Entity e;
       e.kind = model::Kind::Package;
       e.name = fieldText(file, c, "name");
-      e.id = e.name;  // a package is its name; what it holds is ds@... (R4)
+      e.scope = prefix.empty() ? scope : prefix;
+      e.id = e.scope + e.name;  // every package level adds its name with @: app, app@core, app@core@model::Entity (R4)
       e.location = loc;
       bindFields(file, c, e);
       model::Entity& declared = model_.declare(e);
       for (const auto& f : e.fields) declared.fields[f.first] = f.second;
+      if (!owner.empty())
+        model_.relate({"contains", owner, declared.id, loc, ""});
+      else if (!prefix.empty())  // the outer package must be declared somewhere; the checker turns part-of into contains
+        references_.push_back({declared.id, prefix.substr(0, prefix.size() - 1), "", "part-of", model::Kind::Package, loc, "", {}});
       visit(file, c, declared.id + "@", declared.id);
 
     } else if (is(c, "module")) {

@@ -367,7 +367,9 @@ crosses a container border is routed straight between its ends.
 - IrExport with `include`/`exclude` (ids, modules, `package:x`), `hide`,
   `show`; `ds render <dir> [diagram] [--svg|--text]`, `ds draw <ir.json>`.
 - Own SVG engine and terminal engine over one layered layout.
-- Corpora: `examples/diag` (R1–R9), `examples/static` (R10–R19). 34 tests.
+- Corpora: `examples/diag` (R1–R9), `examples/static` (R10–R19),
+  `examples/packages` (nested packages, 2026-10-26: the HLD layers of the
+  tool itself: grammar, ds, render, diff, query, app under driftspec).
 - `~/code/DriftSpec/` holds the user's original sketches (`CL_Diag.ds`,
   `CL_Diag.v2.ds`, `static.v3.ds`, `split/`).
 

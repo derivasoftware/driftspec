@@ -47,12 +47,15 @@ std::string join(const std::vector<std::string>& items, const char* sep) {
 
 namespace {
 
-/// The scope outside `scope`: ds@ds::b → ds@ds → ds@ → "" (R10).
+/// The scope outside `scope`: ds@ds::b → ds@ds → ds@ → "" (R10); with nested packages,
+/// app@core@model → app@core@ → app@ → "": every package level adds its name with @.
 std::string outer(const std::string& scope) {
   const auto cut = scope.rfind("::");
   if (cut != std::string::npos) return scope.substr(0, cut);
-  const auto at = scope.find('@');
-  if (at != std::string::npos && at + 1 < scope.size()) return scope.substr(0, at + 1);
+  std::string s = scope;
+  if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope: step out of that package
+  const auto at = s.rfind('@');
+  if (at != std::string::npos) return s.substr(0, at + 1);
   return "";
 }
 
@@ -189,7 +192,8 @@ void Checker::resolveReference(const bind::Reference& reference) {
     expected.scope = reference.scope;
     const bool artefact = reference.expectedKind == model::Kind::Requirement || reference.expectedKind == model::Kind::Verification ||
                           reference.expectedKind == model::Kind::Constraint;
-    const std::string pkg = reference.scope.substr(0, reference.scope.find('@') == std::string::npos ? 0 : reference.scope.find('@') + 1);
+    const std::string pkg = reference.scope.substr(
+        0, reference.scope.rfind('@') == std::string::npos ? 0 : reference.scope.rfind('@') + 1);  // the innermost package
     if (artefact) {
       expected.id = withoutRevision(reference.target);
     } else if (reference.target.find('@') != std::string::npos) {
@@ -209,6 +213,10 @@ void Checker::resolveReference(const bind::Reference& reference) {
                          " but declared nowhere in the workspace",
                      reference.location});
     }
+  }
+  if (reference.relation == "part-of") {  // a package reopened by its path: the outer package contains it, as nesting would say
+    model_.relate({"contains", target, reference.from, reference.location, ""});
+    return;
   }
   model_.relate({reference.relation, reference.from, target, reference.location, reference.multiplicity});
 }
