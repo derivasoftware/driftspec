@@ -1,0 +1,37 @@
+// The HLD of driftspec: two boxes above the implementation. A box is
+// organisation; the namespaces inside it are the code (the qualified name
+// of a class is rooted at the box that holds its module: driftspec@ds@model::Entity
+// is ds::model::Entity). The system requirements live in requirements.ds, the
+// qualifications in verifications.ds; this file says which box realises what.
+
+package driftspec {
+
+  package ds {                              // the tool: one binary, every namespace of the C++ code
+    @requirement SREQ-00001-1                // one model, one identity per entity
+    @requirement SREQ-00002-1                // every incoherence a finding
+    @requirement SREQ-00003-2                // artefacts linked to the design by revision
+    @requirement SREQ-00004-1                // behaviour bound to the static entities
+    @requirement SREQ-00005-1                // drawings as SVG and terminal, adapting to a width
+    @requirement SREQ-00006-1                // the model and the drawings exported
+    @requirement SREQ-00007-1                // two versions compared in the model's terms
+    @requirement SREQ-00009-2                // the static metamodel, packages nesting
+    @requirement SREQ-00010-1                // a diagram kind per view
+    @requirement SREQ-00011-1                // questions answered by identity
+    @constraint CST-00001-1                  // every command under a hundred milliseconds
+    // the namespaces the box owns; each one is filled by its LLD file (DS-4)
+    module model { }
+    module parse { }
+    module bind { }
+    module check { }
+    module render { }
+    module diff { }
+    module query { }
+    module exporter { }
+    module app { }
+  }
+
+  package grammar {                         // the language as a tree-sitter grammar, for the editors
+    @requirement SREQ-00008-1                // parsed, highlighted and folded as it is typed
+    // no code argos reads: its design is this box and SVER-00008-1 over its queries
+  }
+}
