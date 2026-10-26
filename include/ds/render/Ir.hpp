@@ -20,7 +20,7 @@ struct IrNode {
   std::string title;
   std::string href;
   bool abstract = false;
-  std::map<std::string, std::string> refs;  ///< named refs (emitted as data-ref-<key>); not `refs`: a modifier keyword in DriftSpec
+  std::map<std::string, std::string> refs;  ///< named references (emitted as data-ref-<key>); not `refs`: a modifier keyword in DriftSpec
   std::vector<std::vector<std::string>> sections;
   std::vector<std::string> sectionKinds;
   std::pair<int, int> span{-1, -1};                   ///< frame: first and last sequence row
@@ -37,7 +37,7 @@ struct IrEdge {
   std::string href;
   bool dashed = false;
   int order = -1;                           ///< sequence row of a message
-  std::map<std::string, std::string> refs;  ///< named refs: expands, span, location
+  std::map<std::string, std::string> refs;  ///< named references: expands, span, location
 };
 
 /// A render-IR document, read from JSON; what `ds render` emits and plantuml-render consumes.
