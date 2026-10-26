@@ -1,1 +1,1 @@
-[ (package) (module) (requirement) (verification) (boundary) (class) (sequence) (state) (diagram) ] @fold
+[ (package) (module) (requirement) (verification) (boundary) (class) (function) (sequence) (state) (diagram) ] @fold

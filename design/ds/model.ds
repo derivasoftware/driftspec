@@ -71,7 +71,7 @@ package driftspec@ds {
 
     enum Kind {
       @requirement REQ-00001-1
-      Package, Module, Requirement, Verification, Boundary, Operation, Constraint, Class, Enum, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram
+      Package, Module, Requirement, Verification, Boundary, Operation, Constraint, Class, Enum, Function, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram
     }
 
     dataclass Location {                     // where something was read from: file, 1-based line and column

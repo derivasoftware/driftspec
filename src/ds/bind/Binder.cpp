@@ -333,23 +333,7 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
       model_.report(
           {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
     }
-    TSNode parameters = ts_node_child(m, 0);
-    for (uint32_t i = 0; i < ts_node_named_child_count(m); ++i) {
-      if (is(ts_node_named_child(m, i), "parameters")) parameters = ts_node_named_child(m, i);
-    }
-    if (!is(parameters, "parameters")) parameters = TSNode{};
-    std::vector<std::string> paramTexts;
-    if (!ts_node_is_null(parameters)) {
-      const uint32_t n = ts_node_named_child_count(parameters);
-      for (uint32_t i = 0; i < n; ++i) {
-        TSNode p = ts_node_named_child(parameters, i);
-        paramTexts.push_back(trim(parse::textOf(file, p)));
-        bindType(file, child(p, "type"), scope, member.id, "uses", "", params, locationOf(file, p));
-      }
-    }
-    member.fields["params"] = join(paramTexts, ", ");
-    TypeUse returns = bindType(file, child(m, "returns"), scope, member.id, "uses", "", params, loc);
-    if (!returns.text.empty()) member.fields["returns"] = returns.text;
+    bindSignature(file, m, member, scope, params);
   } else {
     const std::string ownership = fieldText(file, m, "ownership");
     const std::string relation = ownership.empty() ? "owns" : ownership;  // owns by default (R16)
@@ -374,6 +358,43 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
     model_.relate({"contains", cls.id, member.id, loc, ""});
   }
   bindMemberBody(file, m, member, scope);
+}
+
+void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::Entity& entity, const std::string& scope,
+                           const std::vector<std::string>& params) {
+  TSNode parameters{};
+  for (uint32_t i = 0; i < ts_node_named_child_count(node); ++i) {
+    if (is(ts_node_named_child(node, i), "parameters")) parameters = ts_node_named_child(node, i);
+  }
+  std::vector<std::string> paramTexts;
+  if (!ts_node_is_null(parameters)) {
+    const uint32_t n = ts_node_named_child_count(parameters);
+    for (uint32_t i = 0; i < n; ++i) {
+      TSNode p = ts_node_named_child(parameters, i);
+      paramTexts.push_back(trim(parse::textOf(file, p)));
+      bindType(file, child(p, "type"), scope, entity.id, "uses", "", params, locationOf(file, p));
+    }
+  }
+  entity.fields["params"] = join(paramTexts, ", ");  // parameters and returns give use (R16)
+  TypeUse returns = bindType(file, child(node, "returns"), scope, entity.id, "uses", "", params, locationOf(file, node));
+  if (!returns.text.empty()) entity.fields["returns"] = returns.text;
+}
+
+void Binder::bindFunction(const parse::ParsedFile& file, TSNode f, const std::string& scope, const std::string& owner) {
+  model::Entity e;
+  e.kind = model::Kind::Function;
+  e.name = fieldText(file, f, "name");
+  e.id = qualify(scope, e.name);  // ds@ds::load: a function is named like a class of its module
+  e.scope = scope;
+  e.location = locationOf(file, f);
+  const std::string visibility = fieldText(file, f, "visibility");
+  e.fields["visibility"] = visibility.empty() ? "+" : visibility;
+  const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
+  if (ownerEntity && ownerEntity->has("extern")) e.flags.push_back("extern");  // R11: a name, no obligations
+  bindSignature(file, f, e, scope, {});
+  model_.declare(e);
+  if (!owner.empty()) model_.relate({"contains", owner, e.id, e.location, ""});
+  bindMemberBody(file, f, e, scope);  // annotations, contracts and nested artefacts, as a method's
 }
 
 void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::string& scope, const std::string& owner) {
@@ -635,6 +656,9 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
 
     } else if (is(c, "class")) {
       bindClass(file, c, scope, owner);
+
+    } else if (is(c, "function")) {
+      bindFunction(file, c, scope, owner);
 
     } else if (is(c, "enum")) {
       model::Entity e;

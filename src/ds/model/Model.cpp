@@ -23,6 +23,8 @@ const char* kindName(Kind kind) {
       return "class";
     case Kind::Enum:
       return "enum";
+    case Kind::Function:
+      return "function";
     case Kind::Method:
       return "method";
     case Kind::Attribute:

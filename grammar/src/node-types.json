@@ -566,6 +566,62 @@
     }
   },
   {
+    "type": "function",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "member_body",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "member_name",
+            "named": true
+          }
+        ]
+      },
+      "returns": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      },
+      "visibility": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "visibility",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "parameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "initial",
     "named": true,
     "fields": {
@@ -730,7 +786,7 @@
         "required": true,
         "types": [
           {
-            "type": "name",
+            "type": "qualified_name",
             "named": true
           }
         ]
@@ -881,6 +937,10 @@
         },
         {
           "type": "field",
+          "named": true
+        },
+        {
+          "type": "function",
           "named": true
         },
         {
@@ -1779,6 +1839,10 @@
   },
   {
     "type": "false",
+    "named": false
+  },
+  {
+    "type": "function",
     "named": false
   },
   {

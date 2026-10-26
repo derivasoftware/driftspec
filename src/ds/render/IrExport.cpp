@@ -26,13 +26,16 @@ std::string fieldOf(const model::Entity& e, const std::string& key) {
   return it == e.fields.end() ? "" : it->second;
 }
 
-bool isClassLike(const model::Entity& e) { return e.kind == model::Kind::Class || e.kind == model::Kind::Enum; }
+/// What a class diagram draws as a box: a class, an enum, or a function of a module (one box each, «function»).
+bool isBox(const model::Entity& e) {
+  return e.kind == model::Kind::Class || e.kind == model::Kind::Enum || e.kind == model::Kind::Function;
+}
 
-bool drawable(const model::Entity& e) { return isClassLike(e) || e.kind == model::Kind::Module; }
+bool drawable(const model::Entity& e) { return isBox(e) || e.kind == model::Kind::Module; }
 
 /// `Repository<1>` → `Repository<T>`, from the params field.
 std::string displayName(const model::Entity& e) {
-  const std::string params = fieldOf(e, "params");
+  const std::string params = e.kind == model::Kind::Class ? fieldOf(e, "params") : "";  // a function's params are its signature
   return params.empty() ? e.name : e.name + "<" + params + ">";
 }
 
@@ -129,9 +132,9 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
       const model::Entity* from = model_.find(r.from);
       const model::Entity* to = model_.find(r.to);
       if (!from || !to) continue;
-      const std::string fromClass = isClassLike(*from) ? from->id : from->scope;
+      const std::string fromClass = isBox(*from) ? from->id : from->scope;
       const model::Entity* fromEntity = model_.find(fromClass);
-      if (!fromEntity || !isClassLike(*fromEntity) || !isClassLike(*to) || to->expected || fromEntity->expected) continue;
+      if (!fromEntity || !isBox(*fromEntity) || !isBox(*to) || to->expected || fromEntity->expected) continue;
       if (selected.count(fromClass) && !to->has("extern")) grown.insert(r.to);
       if (selected.count(r.to) && !fromEntity->has("extern")) grown.insert(fromClass);
     }
@@ -150,7 +153,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   };
   for (const auto& id : selected) {
     const model::Entity* e = model_.find(id);
-    if (!isClassLike(*e)) continue;
+    if (!isBox(*e)) continue;
     for (std::string s = e->scope; !s.empty(); s = up(s)) {
       const model::Entity* m = model_.find(s);
       if (m && (m->kind == model::Kind::Module || (m->kind == model::Kind::Package && !m->scope.empty()))) containers.insert(s);
@@ -186,12 +189,19 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
 
   for (const auto& id : selected) {
     const model::Entity& e = *model_.find(id);
-    if (!isClassLike(e)) continue;
+    if (!isBox(e)) continue;
     nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", displayName(e)}};
     const std::string parent = parentOf(e);
     if (!parent.empty()) node["parent"] = parent;
     const std::string stereotypes = fieldOf(e, "stereotypes");
-    if (e.kind == model::Kind::Enum) {
+    if (e.kind == model::Kind::Function) {
+      node["classifier"] = "function";
+      node["stereotype"] = "function";
+      if (!hidden("methods")) {
+        node["sections"] = nlohmann::json::array({nlohmann::json::array({memberLine(e)})});
+        node["sectionKinds"] = nlohmann::json::array({"methods"});
+      }
+    } else if (e.kind == model::Kind::Enum) {
       node["classifier"] = "enum";
       node["stereotype"] = "enum";
       node["sections"] = nlohmann::json::array({split(fieldOf(e, "values"), ',')});
@@ -286,7 +296,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     const model::Entity* to = model_.find(r.to);
     if (!from || !to) continue;
     if (to->kind == model::Kind::Enum && kind == "composition") kind = "association";  // a value has no lifetime to own
-    const std::string fromClass = isClassLike(*from) ? from->id : from->scope;
+    const std::string fromClass = isBox(*from) ? from->id : from->scope;
     if (!placed.count(fromClass) || !placed.count(r.to) || fromClass == r.to) continue;
     std::string label;
     if (baseKind == "owns" || baseKind == "refs" || baseKind == "shares") {
@@ -357,7 +367,12 @@ struct SequenceBuilder {
       const std::string to = fieldOf(*m, "to");
       const std::string typeId = fieldOf(*m, "type");
       std::string target = selfLine;
-      if (to != "self") {
+      if (to == "self" && !typeId.empty() && typeId != selfLine) {
+        // a function of another module (or of the class's module, called from a method) runs on that module's lifeline
+        target =
+            lifeline(typeId, shortName(typeId.substr(typeId.find_last_of('@') == std::string::npos ? 0 : typeId.find_last_of('@') + 1)),
+                     "participant", typeId);
+      } else if (to != "self") {
         // one lifeline per entity of the static context: the same attribute reached from two
         // behaviours of one class is one participant; an unresolved name stays local to its behaviour
         const std::string typeName = typeId.empty() ? "?" : shortName(typeId);
@@ -444,18 +459,21 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     for (const model::Entity* seq : selected) {
       const std::string subjectId = seq->id.substr(0, seq->id.find("::sequence"));
       const model::Entity* subject = model_.find(subjectId);
-      const model::Entity* cls = subject && subject->kind == model::Kind::Method ? model_.find(subject->scope) : subject;
+      const bool runsInModule = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Function);
+      const model::Entity* cls = runsInModule ? model_.find(subject->scope) : subject;
       if (!cls) continue;
+      const std::string home = subject->kind == model::Kind::Function ? cls->id : cls->scope;  // a function runs in its module
       for (const model::Entity* m : b.messagesOf(seq->id)) {
         const std::string typeId = fieldOf(*m, "type");
         const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
-        if (!type || type->scope == cls->scope) continue;
+        const std::string typeHome = type && type->kind == model::Kind::Module ? type->id : type ? type->scope : "";
+        if (!type || typeHome == home) continue;
         auto moduleLabel = [](const std::string& id) {
           return id.substr(id.find_last_of('@') == std::string::npos ? 0 : id.find_last_of('@') + 1);
         };
-        const std::string from = b.lifeline(cls->scope, moduleLabel(cls->scope), "namespace");
-        const std::string to = b.lifeline(type->scope, moduleLabel(type->scope), "namespace");
-        const std::string label = b.shortName(typeId) + "::" + fieldOf(*m, "op");
+        const std::string from = b.lifeline(home, moduleLabel(home), "namespace");
+        const std::string to = b.lifeline(typeHome, moduleLabel(typeHome), "namespace");
+        const std::string label = (type->kind == model::Kind::Module ? "" : b.shortName(typeId) + "::") + fieldOf(*m, "op");
         if (!drawn.insert(from + "|" + to + "|" + label).second) continue;
         b.edges.push_back({{"from", from}, {"to", to}, {"kind", "message"}, {"order", b.order++}, {"label", label}});
       }
@@ -464,12 +482,14 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     for (const model::Entity* seq : selected) {
       const std::string subjectId = seq->id.substr(0, seq->id.find("::sequence"));
       const model::Entity* subject = model_.find(subjectId);
-      const model::Entity* cls = subject && subject->kind == model::Kind::Method ? model_.find(subject->scope) : subject;
+      // a method runs on its class, a function on its module
+      const bool function = subject && subject->kind == model::Kind::Function;
+      const bool method = subject && (subject->kind == model::Kind::Method || function);
+      const model::Entity* cls = method ? model_.find(subject->scope) : subject;
       // the caller, leftmost, invokes the entry operation on the subject: what is being looked at is the first thing drawn
-      const bool method = subject && subject->kind == model::Kind::Method;
       const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";
-      const std::string self =
-          b.lifeline(cls ? cls->id : subjectId, "self: " + (cls ? cls->name : subjectId), "participant", cls ? cls->id : "");
+      const std::string selfLabel = cls ? (function ? cls->name : "self: " + cls->name) : "self: " + subjectId;
+      const std::string self = b.lifeline(cls ? cls->id : subjectId, selfLabel, "participant", cls ? cls->id : "");
       if (method) {
         b.edges.push_back({{"from", caller},
                            {"to", self},

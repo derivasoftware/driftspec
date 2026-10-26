@@ -26,6 +26,7 @@ enum class Kind {
   Constraint,
   Class,
   Enum,
+  Function,
   Method,
   Attribute,
   Operator,

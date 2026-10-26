@@ -73,6 +73,11 @@ class Binder {
               const std::string& scope, const model::Location& loc);
   void bindMember(const parse::ParsedFile& file, TSNode node, model::Entity& cls, const std::vector<std::string>& params,
                   const std::set<std::string>& operators);
+  /// A function of a module: a method's signature and body with the module as its scope.
+  void bindFunction(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
+  /// The parameters and the return of a method or a function: their text, and the use they give.
+  void bindSignature(const parse::ParsedFile& file, TSNode node, model::Entity& entity, const std::string& scope,
+                     const std::vector<std::string>& params);
   void bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope);
   void bindSequence(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order, int& frames);
