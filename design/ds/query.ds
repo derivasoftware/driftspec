@@ -34,14 +34,14 @@ package driftspec@ds {
       title: Unit tests cover the seven questions, the unknown question and both answer forms
       method: test
       tests:
-        tests/unit/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
-        tests/unit/ds/query/test_query.cpp::TestQuery.TheEntitiesOfAScope
-        tests/unit/ds/query/test_query.cpp::TestQuery.TheRelationsOfAnEntityInBothDirections
-        tests/unit/ds/query/test_query.cpp::TestQuery.WhatAClassRealisesAndWhatProvesIt
-        tests/unit/ds/query/test_query.cpp::TestQuery.WhatADiagramShows
-        tests/unit/ds/query/test_query.cpp::TestQuery.TheFindingsOfAFile
-        tests/unit/ds/query/test_query.cpp::TestQuery.AnUnknownQuestionIsAnError
-        tests/unit/ds/query/test_query.cpp::TestQuery.AnswersAsTextAndAsJson
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheEntitiesOfAScope
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheRelationsOfAnEntityInBothDirections
+        tests/integration/ds/query/test_query.cpp::TestQuery.WhatAClassRealisesAndWhatProvesIt
+        tests/integration/ds/query/test_query.cpp::TestQuery.WhatADiagramShows
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheFindingsOfAFile
+        tests/integration/ds/query/test_query.cpp::TestQuery.AnUnknownQuestionIsAnError
+        tests/integration/ds/query/test_query.cpp::TestQuery.AnswersAsTextAndAsJson
     }
 
     dataclass Answer {                       // one line of an answer: an identity and what the question asked about it

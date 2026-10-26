@@ -56,14 +56,14 @@ package driftspec@ds {
       title: Unit tests cover the class, requirement and sequence projections of the corpora
       method: test
       tests:
-        tests/unit/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
-        tests/unit/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
-        tests/unit/ds/render/test_irexport.cpp::TestIrExport.DerivedStereotypesAndMembersArePrinted
-        tests/unit/ds/render/test_irexport.cpp::TestIrExport.EdgesAreLiftedFromMembersToClasses
-        tests/unit/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
-        tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
-        tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
-        tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.AClassDiagramHangsItsArtefactsAsANote
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.DerivedStereotypesAndMembersArePrinted
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.EdgesAreLiftedFromMembersToClasses
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
+        tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
+        tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
+        tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.AClassDiagramHangsItsArtefactsAsANote
     }
 
     verification VER-00007-1 {
@@ -72,19 +72,19 @@ package driftspec@ds {
       title: Unit tests cover placement, routing, wrapping and the determinism of both drawings
       method: test
       tests:
-        tests/unit/ds/render/test_layout.cpp::TestLayout.EveryNodeIsPlacedAndNoTwoLeavesOverlap
-        tests/unit/ds/render/test_layout.cpp::TestLayout.ChildrenSitInsideTheirContainer
-        tests/unit/ds/render/test_layout.cpp::TestLayout.BasesAreDrawnAboveSubtypesAndWholesAboveParts
-        tests/unit/ds/render/test_layout.cpp::TestLayout.EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute
-        tests/unit/ds/render/test_layout.cpp::TestLayout.LongEdgesStepAroundTheNodesTheyCross
-        tests/unit/ds/render/test_layout.cpp::TestLayout.ParallelRelationsAreBundledWithTheirLabelsStacked
-        tests/unit/ds/render/test_layout.cpp::TestLayout.TheSvgIsDeterministicAndCarriesStableIds
-        tests/unit/ds/render/test_layout.cpp::TestSequenceSvg.DrawsLifelinesRowsFramesAndTheCaller
-        tests/unit/ds/render/test_layout.cpp::TestSequenceSvg.CarriesLinksSpansLocationsAndTheScript
-        tests/unit/ds/render/test_layout.cpp::TestSequenceSvg.IsDeterministic
-        tests/unit/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
-        tests/unit/ds/render/test_text.cpp::TestText.IsDeterministicAndPlainWithoutColor
-        tests/unit/ds/render/test_text.cpp::TestText.BoxesDoNotCollideOnTheGrid
+        tests/integration/ds/render/test_layout.cpp::TestLayout.EveryNodeIsPlacedAndNoTwoLeavesOverlap
+        tests/integration/ds/render/test_layout.cpp::TestLayout.ChildrenSitInsideTheirContainer
+        tests/integration/ds/render/test_layout.cpp::TestLayout.BasesAreDrawnAboveSubtypesAndWholesAboveParts
+        tests/integration/ds/render/test_layout.cpp::TestLayout.EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute
+        tests/integration/ds/render/test_layout.cpp::TestLayout.LongEdgesStepAroundTheNodesTheyCross
+        tests/integration/ds/render/test_layout.cpp::TestLayout.ParallelRelationsAreBundledWithTheirLabelsStacked
+        tests/integration/ds/render/test_layout.cpp::TestLayout.TheSvgIsDeterministicAndCarriesStableIds
+        tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.DrawsLifelinesRowsFramesAndTheCaller
+        tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.CarriesLinksSpansLocationsAndTheScript
+        tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.IsDeterministic
+        tests/integration/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
+        tests/integration/ds/render/test_text.cpp::TestText.IsDeterministicAndPlainWithoutColor
+        tests/integration/ds/render/test_text.cpp::TestText.BoxesDoNotCollideOnTheGrid
     }
 
     // ---- the IR: what a diagram prints, in the plantuml family's vocabulary ----
