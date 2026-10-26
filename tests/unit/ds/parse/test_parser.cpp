@@ -19,4 +19,28 @@ TEST_F(TestParser, ReportsSyntaxErrors) {
   EXPECT_TRUE(file.hasSyntaxErrors);
 }
 
+TEST_F(TestParser, ReportsWhereTheFileStopsParsing) {
+  ds::parse::Parser parser;
+  const auto file = parser.parseText("x.ds",
+                                     "package a {\n"
+                                     "  module m {\n"
+                                     "    class A {\n"
+                                     "      + x: int\n"
+                                     "      @uses b.c\n"
+                                     "    }\n"
+                                     "  }\n"
+                                     "}\n");
+  ASSERT_TRUE(file.hasSyntaxErrors);
+  EXPECT_EQ(file.errorLine, 5);  // the dot a qualified name does not take, not the top of the file
+  EXPECT_GT(file.errorColumn, 1);
+  EXPECT_FALSE(file.errorDetail.empty());
+}
+
+TEST_F(TestParser, AFileThatParsesHasNoErrorPlace) {
+  ds::parse::Parser parser;
+  const auto file = parser.parseText("x.ds", "package a { }\n");
+  EXPECT_FALSE(file.hasSyntaxErrors);
+  EXPECT_EQ(file.errorLine, 0);
+}
+
 }  // namespace

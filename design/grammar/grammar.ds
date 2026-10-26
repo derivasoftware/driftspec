@@ -36,13 +36,15 @@ package driftspec@grammar {
     }
   }
 
-  verification VER-00047-1 {
-    status: approved
+  verification VER-00047-2 {
+    status: draft
     @constraint CST-00007-1
-    title: Unit tests confirm a file parses as one thing per line and a syntax error is reported
+    title: Unit tests confirm a file parses as one thing per line and a syntax error is reported where the file stops parsing
     method: test
     tests:
       tests/unit/ds/parse/test_parser.cpp::TestParser.ParsesAWholeWorkspaceWithoutSyntaxErrors
       tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
+      tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsWhereTheFileStopsParsing
+      tests/unit/ds/parse/test_parser.cpp::TestParser.AFileThatParsesHasNoErrorPlace
   }
 }

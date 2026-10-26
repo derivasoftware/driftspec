@@ -48,6 +48,9 @@ package driftspec@ds {
       + text: std::string
       + owns tree: std::shared_ptr<TSTree>
       + hasSyntaxErrors: bool
+      + errorLine: int                       // where it stops parsing (SREQ-00002-1: a finding at its place)
+      + errorColumn: int
+      + errorDetail: std::string
     }
 
     class Parser {                           // the tree-sitter parser with the DriftSpec language set

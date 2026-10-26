@@ -77,7 +77,10 @@ ds::model::Model load(const std::string& dir) {
   ds::parse::Parser parser;
   ds::bind::Binder binder(model);
   for (const auto& file : parser.parseDirectory(dir)) {
-    if (file.hasSyntaxErrors) model.report({"E-SYNTAX", "error", "the file does not parse", {file.path, 1, 1}});
+    if (file.hasSyntaxErrors) {
+      const std::string detail = file.errorDetail.empty() ? "" : ": " + file.errorDetail;
+      model.report({"E-SYNTAX", "error", "the file does not parse" + detail, {file.path, file.errorLine, file.errorColumn}});
+    }
     binder.bind(file);
   }
   ds::check::Checker(model).run(binder);
