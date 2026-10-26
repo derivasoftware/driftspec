@@ -29,13 +29,12 @@ cpp-test:
     expire_in: 1 week
 
 # The gate installs the DriftSpec reader over the fleet's pinned plugins
-# and finds ds in the build tree. allow_failure until DS-4: design/*.ds is
-# still the proof-of-concept sketch and argos reports its drift as errors.
+# and finds ds in the build tree. Since DS-4 every class has its design and
+# the gate blocks the merge like everywhere else in the fleet.
 argos-diagnose:
   needs: [cpp-test, pre-commit]
-  allow_failure: true
   script:
-    - pip install --no-deps "argos-design-driftspec==0.0.5"
+    - pip install --no-deps "argos-design-driftspec==0.0.6"
     - export PATH="$CI_PROJECT_DIR/build-ci:$PATH"
     - ds 2>&1 | head -1 || true
     - !reference [.argos-diagnose-gate, script]

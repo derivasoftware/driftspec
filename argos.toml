@@ -20,3 +20,13 @@ cpp = ["src", "include"]
 # host resolves the DriftSpec reader.
 [plugins]
 disabled = ["argos-design-plantuml"]
+
+# The C++ reader lists a destructor and a deleted copy assignment as methods of
+# the class that declares them; DriftSpec cannot name them (~Parser, operator=)
+# and they are an idiom of a non-copyable RAII class, not design. Until
+# argos-implementation-cpp14 skips special member functions in drift, the two
+# findings on Parser are exempted here with the design kept honest.
+[[diagnose.exempt]]
+code = "E-DRIFT-METHOD-EXTRA"
+source = "ds.parse.Parser"
+reason = "Parser owns a TSParser: its destructor and deleted copy assignment are the non-copyable RAII idiom, special member functions the design language does not name (the cpp14 reader lists them as methods)."
