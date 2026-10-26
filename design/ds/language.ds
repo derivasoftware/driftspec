@@ -18,9 +18,9 @@ package driftspec@ds {
       title: Unit tests confirm every oracle corpus of the language means what it marks
       method: test
       tests:
-        tests/unit/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
-        tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
-        tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+        tests/integration/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
+        tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
+        tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
     }
     title: The language shall specify a software design as text: its high-level design, its low-level design, the artefacts about it and the views of it
     rationale:
@@ -43,7 +43,7 @@ package driftspec@ds {
         status: approved
         method: test
         tests:
-          tests/unit/ds/check/test_checker.cpp::TestChecker.UndeclaredReferencesBecomeExpectedNodesReportedOnce
+          tests/integration/ds/check/test_checker.cpp::TestChecker.UndeclaredReferencesBecomeExpectedNodesReportedOnce
           tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
       }
       constraint CST-00002-1 {
@@ -72,7 +72,7 @@ package driftspec@ds {
         title: Unit tests confirm the HLD is modelled as nested packages
         method: test
         tests:
-          tests/unit/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
+          tests/integration/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
       }
       title: The language shall model the high-level design as packages, the organisation above the implementation
       rationale:
@@ -87,8 +87,8 @@ package driftspec@ds {
           title: Unit tests confirm a package is a box holding packages, modules and artefacts
           method: test
           tests:
-            tests/unit/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
-            tests/unit/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
+            tests/integration/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
+            tests/integration/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
         }
         title: A package shall be a box of the high-level design: a black box that holds packages, modules and artefacts
         rationale: R1, R2; nested packages 2026-10-26.
@@ -104,9 +104,9 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.AnOuterPackageNobodyDeclaresIsExpected
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.AnOuterPackageNobodyDeclaresIsExpected
           }
         }
         constraint CST-00004-1 {
@@ -128,7 +128,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.ABoxRealisesRequirementsLikeAClass
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.ABoxRealisesRequirementsLikeAClass
           }
         }
         requirement REQ-00018-1 {
@@ -142,7 +142,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
               tests/unit/ds/model/test_scopes.cpp::TestIsSystemScope.OnlyTheOutermostPackageIsTheSystem
           }
         }
@@ -154,7 +154,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.NestedPackagesAreContainersOfTheDrawing
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.NestedPackagesAreContainersOfTheDrawing
           }
         }
         requirement REQ-00020-1 {
@@ -175,7 +175,7 @@ package driftspec@ds {
         title: Unit tests confirm the LLD is modelled as modules of classes and behaviours: the static oracle
         method: test
         tests:
-          tests/unit/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
+          tests/integration/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
       }
       title: The language shall model the low-level design as modules of classes and their behaviours
       rationale: The white box: what argos compares with the code.
@@ -189,7 +189,7 @@ package driftspec@ds {
           title: Unit tests confirm a module is a namespace that reopens
           method: test
           tests:
-            tests/unit/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+            tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
         }
         title: A module shall be a namespace that reopens across files and resolves names outward
         rationale: R2, R9, R10.
@@ -203,9 +203,9 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
-              tests/unit/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesNeedTheModuleNotAnInclude
-              tests/unit/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+              tests/integration/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
+              tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesNeedTheModuleNotAnInclude
+              tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
           }
         }
         requirement REQ-00024-1 {
@@ -221,8 +221,8 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_static.cpp::TestStatic.ExternDeclaresIdentitiesWithoutObligations
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.ABareNameFallsBackToTheExternCatalogue
+              tests/integration/ds/check/test_static.cpp::TestStatic.ExternDeclaresIdentitiesWithoutObligations
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.ABareNameFallsBackToTheExternCatalogue
           }
         }
       }
@@ -236,8 +236,8 @@ package driftspec@ds {
           title: Unit tests confirm classes, dataclasses and enums have identities and members
           method: test
           tests:
-            tests/unit/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
-            tests/unit/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
+            tests/integration/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
+            tests/integration/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
         }
         title: A class shall be a type of the design: class, dataclass or enum, with members
         rationale: R12, R14, R19.
@@ -255,7 +255,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
+              tests/integration/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
           }
         }
         constraint CST-00005-1 {
@@ -280,8 +280,8 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
-              tests/unit/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
+              tests/integration/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
+              tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
           }
         }
         requirement REQ-00029-1 {
@@ -294,7 +294,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
+              tests/integration/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
           }
         }
         requirement REQ-00030-1 {
@@ -307,7 +307,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_static.cpp::TestStatic.OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody
+              tests/integration/ds/check/test_static.cpp::TestStatic.OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody
           }
         }
         requirement REQ-00031-1 {
@@ -319,7 +319,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_static.cpp::TestStatic.InterfaceAndAbstractAreDerived
+              tests/integration/ds/check/test_static.cpp::TestStatic.InterfaceAndAbstractAreDerived
           }
         }
         requirement REQ-00032-1 {
@@ -331,7 +331,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_static.cpp::TestStatic.NotesAndContractsLiveInMemberBodies
+              tests/integration/ds/check/test_static.cpp::TestStatic.NotesAndContractsLiveInMemberBodies
           }
         }
         requirement REQ-00033-1 {
@@ -342,7 +342,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/bind/test_packages.cpp::TestPackages.AnEnumRealisesRequirementsLikeAClass
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.AnEnumRealisesRequirementsLikeAClass
           }
         }
       }
@@ -356,7 +356,7 @@ package driftspec@ds {
           title: Unit tests confirm a sequence is the behaviour of a method: the behaviour oracle
           method: test
           tests:
-            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
         }
         title: A sequence shall be the behaviour of a method, identified by it
         rationale: block 3, 2026-10-25.
@@ -370,7 +370,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ABehaviourIsIdentifiedByItsSubject
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ABehaviourIsIdentifiedByItsSubject
           }
         }
         requirement REQ-00036-1 {
@@ -381,7 +381,7 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
           }
         }
         requirement REQ-00037-1 {
@@ -392,8 +392,8 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.FramesKeepTheirSpanAndElse
-              tests/unit/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.FramesKeepTheirSpanAndElse
+              tests/integration/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
           }
         }
         requirement REQ-00038-1 {
@@ -404,8 +404,8 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.AMessageToAnOperationWithABehaviourExpandsToIt
-              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.AMessageToAnOperationWithABehaviourExpandsToIt
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule
           }
         }
       }
@@ -419,7 +419,7 @@ package driftspec@ds {
           title: Unit tests confirm a state machine is the behaviour of a class
           method: test
           tests:
-            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
         }
         title: A state machine shall be the behaviour of a class
         rationale: block 3, 2026-10-25.
@@ -433,8 +433,8 @@ package driftspec@ds {
             status: approved
             method: test
             tests:
-              tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
-              tests/unit/ds/check/test_checker.cpp::TestChecker.AStateEventMustBeAnOperationOfItsEntity
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
+              tests/integration/ds/check/test_checker.cpp::TestChecker.AStateEventMustBeAnOperationOfItsEntity
           }
         }
       }
@@ -456,7 +456,7 @@ package driftspec@ds {
         title: Unit tests confirm artefacts are held in the same model: the artefacts oracle
         method: test
         tests:
-          tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+          tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
       }
       title: The language shall hold requirements, constraints and verifications as artefacts of the same model
       rationale: block 1, 2026-10-25.
@@ -470,7 +470,7 @@ package driftspec@ds {
           status: approved
           method: test
           tests:
-            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
         }
         constraint CST-00006-1 {
           tags: language, artefacts
@@ -490,8 +490,9 @@ package driftspec@ds {
           status: approved
           method: test
           tests:
-            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.LevelByPlacementAndNestingGivesTheRelation
-            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheSeparateFileIsTheNormalPlace
+            tests/integration/ds/bind/test_binder.cpp::TestBinder.NestingGivesTheRelation
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.LevelByPlacementAndNestingGivesTheRelation
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheSeparateFileIsTheNormalPlace
         }
       }
       requirement REQ-00045-1 {
@@ -503,8 +504,8 @@ package driftspec@ds {
           status: approved
           method: test
           tests:
-            tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.FieldsAsDecided
-            tests/unit/ds/check/test_static.cpp::TestStatic.ConstraintsAreArtefactsInBothForms
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.FieldsAsDecided
+            tests/integration/ds/check/test_static.cpp::TestStatic.ConstraintsAreArtefactsInBothForms
         }
       }
     }
@@ -518,8 +519,8 @@ package driftspec@ds {
         title: Unit tests confirm a diagram is a selection of the model
         method: test
         tests:
-          tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
-          tests/unit/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
+          tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
+          tests/integration/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
       }
       title: A diagram shall be a selection of the model that decides what to print and never what to draw
       rationale: Keeping the views as selections keeps them from drifting.
@@ -532,8 +533,8 @@ package driftspec@ds {
           status: approved
           method: test
           tests:
-            tests/unit/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
-            tests/unit/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
+            tests/integration/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
+            tests/integration/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
         }
       }
       requirement REQ-00049-1 {
@@ -544,8 +545,8 @@ package driftspec@ds {
           status: approved
           method: test
           tests:
-            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.ASequenceDiagramExpandsByDepthAndLinksAtDepthZero
-            tests/unit/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ASequenceDiagramExpandsByDepthAndLinksAtDepthZero
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
         }
       }
       requirement REQ-00050-1 {
@@ -556,7 +557,7 @@ package driftspec@ds {
           status: approved
           method: test
           tests:
-            tests/unit/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
+            tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
         }
       }
     }
@@ -570,7 +571,7 @@ package driftspec@ds {
     method: test
     tests:
       tests/unit/ds/model/test_model.cpp::TestModel.ASecondDeclarationIsReportedExceptForReopenableScopes
-      tests/unit/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+      tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
   }
   verification VER-00043-1 {
     status: approved
@@ -578,8 +579,8 @@ package driftspec@ds {
     title: Unit tests confirm an extension adds relations without redefining and an extension of nothing is expected
     method: test
     tests:
-      tests/unit/ds/bind/test_packages.cpp::TestPackages.AnExtensionAddsRelationsWithoutRedefining
-      tests/unit/ds/bind/test_packages.cpp::TestPackages.AnExtensionOfNothingIsExpected
+      tests/integration/ds/bind/test_packages.cpp::TestPackages.AnExtensionAddsRelationsWithoutRedefining
+      tests/integration/ds/bind/test_packages.cpp::TestPackages.AnExtensionOfNothingIsExpected
   }
   verification VER-00044-1 {
     status: approved
@@ -587,7 +588,7 @@ package driftspec@ds {
     title: Unit tests confirm packages qualify with @ and modules with ::
     method: test
     tests:
-      tests/unit/ds/bind/test_binder.cpp::TestBinder.PackagesQualifyWithAtAndModulesWithColons
+      tests/integration/ds/bind/test_binder.cpp::TestBinder.PackagesQualifyWithAtAndModulesWithColons
       tests/unit/ds/model/test_scopes.cpp::TestLastName.TheNameAfterTheLastSeparator
   }
   verification VER-00045-1 {
@@ -596,7 +597,7 @@ package driftspec@ds {
     title: Unit tests confirm a modifier is a word only in front of a name
     method: test
     tests:
-      tests/unit/ds/bind/test_packages.cpp::TestPackages.AModifierIsAWordOnlyInFrontOfAName
+      tests/integration/ds/bind/test_packages.cpp::TestPackages.AModifierIsAWordOnlyInFrontOfAName
   }
   verification VER-00046-1 {
     status: approved
@@ -604,7 +605,7 @@ package driftspec@ds {
     title: Unit tests confirm an unpinned link is an error and a drifted one resolves to the declared revision
     method: test
     tests:
-      tests/unit/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
+      tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
   }
 }
 

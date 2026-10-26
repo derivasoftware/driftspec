@@ -32,11 +32,11 @@ package driftspec@ds {
       title: Unit tests cover no-change on moves, add/remove/change, renames by shape and referrers, the stale revision and the marked model
       method: test
       tests:
-        tests/unit/ds/diff/test_diff.cpp::TestDiff.AMovedOrReorderedDeclarationIsNoChange
-        tests/unit/ds/diff/test_diff.cpp::TestDiff.AddedRemovedAndChangedByIdentity
-        tests/unit/ds/diff/test_diff.cpp::TestDiff.ARenameIsRecognisedByShapeAndByWhoFollows
-        tests/unit/ds/diff/test_diff.cpp::TestDiff.AnArtefactChangedWithoutANewRevisionIsAFinding
-        tests/unit/ds/diff/test_diff.cpp::TestDiff.TheMarkedModelCarriesTheChangesForADrawing
+        tests/integration/ds/diff/test_diff.cpp::TestDiff.AMovedOrReorderedDeclarationIsNoChange
+        tests/integration/ds/diff/test_diff.cpp::TestDiff.AddedRemovedAndChangedByIdentity
+        tests/integration/ds/diff/test_diff.cpp::TestDiff.ARenameIsRecognisedByShapeAndByWhoFollows
+        tests/integration/ds/diff/test_diff.cpp::TestDiff.AnArtefactChangedWithoutANewRevisionIsAFinding
+        tests/integration/ds/diff/test_diff.cpp::TestDiff.TheMarkedModelCarriesTheChangesForADrawing
     }
 
     dataclass Change {                       // one difference: what changed, on which identity, how

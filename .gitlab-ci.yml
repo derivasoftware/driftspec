@@ -5,7 +5,7 @@
 
 include:
   - project: deriva/infra/ci-templates
-    ref: main
+    ref: dev/ddev-767-cpp-evidence   # TEMPORARY: the cpp-evidence job under test (DDEV-767); back to main before merging
     file:
       - /templates/base.yml
       - /templates/cpp.yml
@@ -15,6 +15,10 @@ include:
 variables:
   # The grammar's manifest carries the version of the whole tool.
   VERSION_MANIFEST: grammar/tree-sitter.json
+  # The execution evidence, as gafas and prueba give it to a Python repository:
+  # cpp-evidence builds the project for evidence from outside, runs every test
+  # and hands the reach record to the gate, which requires it (DS-11).
+  ARGOS_EVIDENCE: "1"
 
 # The Release ds travels to the gate: argos reads this repository's design
 # through argos-design-driftspec, which drives the binary.
@@ -32,7 +36,7 @@ cpp-test:
 # and finds ds in the build tree. Since DS-4 every class has its design and
 # the gate blocks the merge like everywhere else in the fleet.
 argos-diagnose:
-  needs: [cpp-test, pre-commit]
+  needs: [cpp-test, cpp-evidence, pre-commit]
   script:
     - pip install --no-deps "argos-design-driftspec==0.0.6"
     - export PATH="$CI_PROJECT_DIR/build-ci:$PATH"

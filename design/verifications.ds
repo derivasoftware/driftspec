@@ -1,5 +1,5 @@
 // System qualification: one verification per system requirement, each a test
-// that drives the ds binary from outside (tests/system/driftspec/test_qualification.cpp).
+// that drives the ds binary from outside (tests/system/ds/test_qualification.cpp).
 // System verifications are SVER (argos: qualification/); module ones will be VER.
 
 package driftspec {
@@ -14,7 +14,7 @@ package driftspec {
       declared twice as E-DUPLICATE-IDENTITY and exits with 1.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
+      tests/system/ds/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
   }
 
   verification SVER-00002-1 {
@@ -27,7 +27,7 @@ package driftspec {
       undeclared reference still exports whole, with the warning.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
   }
 
   verification SVER-00003-2 {
@@ -41,7 +41,7 @@ package driftspec {
       (revision 2).
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision
+      tests/system/ds/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision
   }
 
   verification SVER-00004-1 {
@@ -53,7 +53,7 @@ package driftspec {
       relations; ds check reports E-MSG-ARITY and W-PARTICIPANT-UNDECLARED.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
+      tests/system/ds/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
   }
 
   verification SVER-00005-1 {
@@ -65,7 +65,7 @@ package driftspec {
       stays within 80 columns while the unbounded drawing exceeds them.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
+      tests/system/ds/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
   }
 
   verification SVER-00006-1 {
@@ -77,7 +77,7 @@ package driftspec {
       yields a render-IR document of the plantuml family.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
+      tests/system/ds/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
   }
 
   verification SVER-00007-1 {
@@ -89,7 +89,7 @@ package driftspec {
       shape intact is reported as a rename, not as a removal and an addition.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
+      tests/system/ds/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
   }
 
   verification SVER-00008-1 {
@@ -101,7 +101,7 @@ package driftspec {
       grammar defines, so an editor loading them never gets an invalid query.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.TheGrammarShipsWithQueriesThatNameItsNodes
+      tests/system/ds/test_qualification.cpp::TestQualification.TheGrammarShipsWithQueriesThatNameItsNodes
   }
 
   verification SVER-00009-2 {
@@ -115,7 +115,7 @@ package driftspec {
       nested packages (revision 2: packages nest).
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.TheStaticMetamodelIsModelledAndClassifiedByDerivation
+      tests/system/ds/test_qualification.cpp::TestQualification.TheStaticMetamodelIsModelledAndClassifiedByDerivation
   }
 
   verification SVER-00010-1 {
@@ -128,7 +128,7 @@ package driftspec {
       diagrams are not drawn yet: this verification covers three of the four.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.ClassRequirementAndSequenceDiagramsAreViewsOfTheModel
+      tests/system/ds/test_qualification.cpp::TestQualification.ClassRequirementAndSequenceDiagramsAreViewsOfTheModel
   }
 
   verification SVER-00011-1 {
@@ -141,7 +141,7 @@ package driftspec {
       under one hundred milliseconds.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
+      tests/system/ds/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
   }
 
   verification SVER-00013-1 {
@@ -169,6 +169,6 @@ package driftspec {
       question takes, and an unknown question fails.
     method: test
     tests:
-      tests/system/driftspec/test_qualification.cpp::TestQualification.AQuestionAboutTheModelIsAnsweredByIdentity
+      tests/system/ds/test_qualification.cpp::TestQualification.AQuestionAboutTheModelIsAnsweredByIdentity
   }
 }
