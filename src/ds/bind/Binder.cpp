@@ -381,7 +381,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   if (ts_node_is_null(child(c, "params")) && childrenNamed(c, "base").empty() && ts_node_is_null(child(c, "operators")) &&
       annotationsOnly(child(c, "body"))) {
     const std::string name = fieldText(file, c, "name");
-    extend(file, c, qualify(scope, name), model::Kind::Class, name, scope, loc);
+    extend(file, child(c, "body"), qualify(scope, name), model::Kind::Class, name, scope, loc);  // the annotations sit in the body
     return;
   }
   model::Entity e;
