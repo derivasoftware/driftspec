@@ -99,8 +99,8 @@ package driftspec@ds {
       + parent: std::string
       + title: std::string
       + href: std::string
-      + isAbstract: bool
-      + references: std::map<std::string, std::string>
+      + abstract: bool
+      + refs: std::map<std::string, std::string>
       + sections: std::vector<std::vector<std::string>>
       + sectionKinds: std::vector<std::string>
       + span: std::pair<int, int>
@@ -117,7 +117,7 @@ package driftspec@ds {
       + href: std::string
       + dashed: bool
       + order: int
-      + references: std::map<std::string, std::string>
+      + refs: std::map<std::string, std::string>
     }
 
     dataclass IrDocument {

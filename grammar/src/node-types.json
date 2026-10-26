@@ -184,7 +184,7 @@
         "required": true,
         "types": [
           {
-            "type": "name",
+            "type": "member_name",
             "named": true
           }
         ]
@@ -693,6 +693,21 @@
     }
   },
   {
+    "type": "member_name",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "name",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "message",
     "named": true,
     "fields": {
@@ -777,7 +792,7 @@
         "required": true,
         "types": [
           {
-            "type": "name",
+            "type": "member_name",
             "named": true
           }
         ]

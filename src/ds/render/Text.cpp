@@ -265,8 +265,8 @@ void box(Grid& g, const Placed& p) {
     for (size_t i = 0; i < lines.size(); ++i) g.text(r.x + M.PAD_X, r.y + M.PAD_Y + static_cast<int>(i), lines[i], kNote);
     return;
   }
-  const auto change = n.references.find("change");
-  const std::string changeColor = change == n.references.end()  ? ""
+  const auto change = n.refs.find("change");
+  const std::string changeColor = change == n.refs.end()        ? ""
                                   : change->second == "added"   ? "32"
                                   : change->second == "removed" ? "31"
                                   : change->second == "renamed" ? "34"
@@ -275,11 +275,11 @@ void box(Grid& g, const Placed& p) {
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
   std::string badge = "C";
-  if (n.isAbstract && n.classifier.empty())
+  if (n.abstract && n.classifier.empty())
     badge = "A";
   else if (!n.classifier.empty())
     badge = std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(n.classifier[0]))));
-  if (change != n.references.end()) {
+  if (change != n.refs.end()) {
     const std::string mark = change->second == "added" ? "+" : change->second == "removed" ? "-" : change->second == "renamed" ? ">" : "~";
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
@@ -291,7 +291,7 @@ void box(Grid& g, const Placed& p) {
            : n.classifier == "enum" || n.classifier == "constraint"      ? kProtected
                                                                          : "35");
   }
-  g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.references.end() ? kName : changeColor);
+  g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
   // only class members are tokenised; an artefact's title is prose and stays plain
   const bool members = !n.sectionKinds.empty();
@@ -328,10 +328,10 @@ std::string marker(const std::string& kind, int dx, int dy) {
 void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId) {
   if (route.points.size() < 2) return;
   const bool diamond = e.kind == "composition" || e.kind == "aggregation";
-  const auto change = e.references.find("change");
-  const bool removed = change != e.references.end() && change->second == "removed";
+  const auto change = e.refs.find("change");
+  const bool removed = change != e.refs.end() && change->second == "removed";
   const bool dashed = removed || e.kind == "dependency" || e.kind == "realization" || e.kind == "attachment";
-  const std::string edgeColor = change == e.references.end() ? std::string(kEdge) : change->second == "added" ? "32" : "31";
+  const std::string edgeColor = change == e.refs.end() ? std::string(kEdge) : change->second == "added" ? "32" : "31";
   // an anchor on a top or left border names the border cell itself: step outside it
   auto outside = [&](Point& p, const std::string& id, bool first) {
     const auto it = byId.find(id);
@@ -387,7 +387,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
     const std::string m = marker(e.kind, head.x - before.x, head.y - before.y);
     if (!m.empty()) g.put(head.x, head.y, m, edgeColor);
   }
-  if (!e.label.empty() || change != e.references.end()) {
+  if (!e.label.empty() || change != e.refs.end()) {
     size_t best = 0;
     int bestLen = -1;
     for (size_t i = 1; i < pts.size(); ++i) {
@@ -398,7 +398,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
       }
     }
     const Point a = pts[best], b = pts[best + 1];
-    const auto lines = linesOf(change == e.references.end() ? e.label : (change->second == "added" ? "+ " : "- ") + e.label);
+    const auto lines = linesOf(change == e.refs.end() ? e.label : (change->second == "added" ? "+ " : "- ") + e.label);
     if (a.y == b.y) {
       std::string joined;
       for (const auto& l : lines) joined += (joined.empty() ? "" : ", ") + l;
@@ -547,19 +547,19 @@ Grid sequenceGrid(const IrDocument& doc) {
   for (const IrEdge* m : messages) {
     const int y = rowOf[m->order] + 1;
     const int a = lines[index[m->from]].centre, b = lines[index[m->to]].centre;
-    const auto change = m->references.find("change");
-    const std::string colour = change == m->references.end() ? std::string(kEdge)
+    const auto change = m->refs.find("change");
+    const std::string colour = change == m->refs.end()       ? std::string(kEdge)
                                : change->second == "added"   ? "32"
                                : change->second == "removed" ? "31"
                                                              : "33";
-    const std::string labelColour = change == m->references.end() ? std::string(kMuted) : colour;
-    const std::string label = change == m->references.end() ? m->label
-                                                            : std::string(change->second == "added"     ? "+ "
-                                                                          : change->second == "removed" ? "- "
-                                                                                                        : "~ ") +
-                                                                  m->label;
+    const std::string labelColour = change == m->refs.end() ? std::string(kMuted) : colour;
+    const std::string label = change == m->refs.end() ? m->label
+                                                      : std::string(change->second == "added"     ? "+ "
+                                                                    : change->second == "removed" ? "- "
+                                                                                                  : "~ ") +
+                                                            m->label;
     const std::string dash =
-        m->dashed || (change != m->references.end() && change->second == "removed") ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
+        m->dashed || (change != m->refs.end() && change->second == "removed") ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
     if (a == b) {
       g.text(a + 1, y, dash + dash + "\xE2\x94\x90", colour);                // ──┐
       g.text(a + 1, y + 1, "\xE2\x97\x80" + dash + "\xE2\x94\x98", colour);  // ◀─┘
