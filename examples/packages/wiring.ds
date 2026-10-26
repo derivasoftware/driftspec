@@ -1,0 +1,19 @@
+// Extension blocks (decided 2026-10-26): the same id declared again with
+// annotations only adds relations to an entity defined elsewhere. The render
+// box defines its requirement in packages.ds without knowing who consumes it;
+// this file, the consumer's, says what it refines and what realises it. Remove
+// the file and the links go; the definition does not change.
+
+package app@render {
+  requirement REQ-00002-1 {
+    @refines SREQ-00001-1                                              // the connection to the system, outside the box
+  }
+  module svg {
+    class Svg {
+      @requirement REQ-00002-1                                         // realisation added without reopening the definition
+    }
+  }
+  requirement REQ-00099-1 {                                            // ! W-REF-UNDECLARED: extended, defined nowhere
+    @refines SREQ-00001-1
+  }
+}

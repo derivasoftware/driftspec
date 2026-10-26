@@ -139,8 +139,53 @@ void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const s
 
 // ---- process artefacts: requirement, verification, constraint (R5, R18) ------
 
+namespace {
+
+/// An extension block: the same id declared again with annotations only (decided 2026-10-26).
+/// It adds relations to an entity defined elsewhere; a definition field, member or
+/// header item makes the block a definition, and a second definition is a duplicate.
+bool annotationsOnly(TSNode body, TSNode idNode = TSNode{}) {
+  if (ts_node_is_null(body)) return false;
+  bool any = false;
+  const uint32_t n = ts_node_named_child_count(body);
+  for (uint32_t i = 0; i < n; ++i) {
+    TSNode c = ts_node_named_child(body, i);
+    if (is(c, "comment")) continue;
+    if (!ts_node_is_null(idNode) && ts_node_eq(c, idNode)) continue;  // the id names the entity, it defines nothing
+    if (!is(c, "annotation")) return false;
+    any = true;
+  }
+  return any;
+}
+
+}  // namespace
+
+void Binder::extend(const parse::ParsedFile& file, TSNode node, const std::string& id, model::Kind kind, const std::string& name,
+                    const std::string& scope, const model::Location& loc) {
+  if (!model_.find(id)) {
+    // nobody has defined it yet (or ever): an expected node that a definition replaces (R6)
+    model::Entity expected;
+    expected.kind = kind;
+    expected.id = id;
+    expected.name = name;
+    expected.scope = scope;
+    expected.location = loc;
+    expected.expected = true;
+    expected.flags.push_back("extension");
+    model_.declare(expected);
+  }
+  bindAnnotations(file, node, id, scope);
+}
+
 void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner) {
   const model::Location loc = locationOf(file, node);
+  if (annotationsOnly(node, child(node, "id"))) {
+    const model::Kind kind = is(node, "requirement")    ? model::Kind::Requirement
+                             : is(node, "verification") ? model::Kind::Verification
+                                                        : model::Kind::Constraint;
+    extend(file, node, fieldText(file, node, "id"), kind, fieldText(file, node, "id"), scope, loc);
+    return;
+  }
   model::Entity e;
   e.kind = is(node, "requirement")    ? model::Kind::Requirement
            : is(node, "verification") ? model::Kind::Verification
@@ -333,6 +378,12 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
 
 void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::string& scope, const std::string& owner) {
   const model::Location loc = locationOf(file, c);
+  if (ts_node_is_null(child(c, "params")) && childrenNamed(c, "base").empty() && ts_node_is_null(child(c, "operators")) &&
+      annotationsOnly(child(c, "body"))) {
+    const std::string name = fieldText(file, c, "name");
+    extend(file, c, qualify(scope, name), model::Kind::Class, name, scope, loc);
+    return;
+  }
   model::Entity e;
   e.kind = model::Kind::Class;
   e.name = fieldText(file, c, "name");

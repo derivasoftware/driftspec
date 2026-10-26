@@ -145,9 +145,22 @@ void Checker::run(const bind::Binder& binder) {
   checkOwnershipCycles();
   classify();
   checkArtefacts();
+  checkExtensions();
 }
 
 // approved requirements are verified; a test verification names its tests
+void Checker::checkExtensions() {
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.expected && e.has("extension") && reported_.insert(e.id).second) {
+      model_.report(
+          {"W-REF-UNDECLARED", "warning",
+           std::string(model::kindName(e.kind)) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace",
+           e.location});
+    }
+  }
+}
+
 void Checker::checkArtefacts() {
   std::set<std::string> verified;
   for (const auto& r : model_.relations()) {
