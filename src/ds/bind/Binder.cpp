@@ -529,6 +529,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       bindFields(file, c, e);
       model::Entity& declared = model_.declare(e);
       for (const auto& f : e.fields) declared.fields[f.first] = f.second;
+      bindAnnotations(file, c, declared.id, declared.id + "@");  // an HLD box realises requirements like a class does
       if (!owner.empty())
         model_.relate({"contains", owner, declared.id, loc, ""});
       else if (!prefix.empty())  // the outer package must be declared somewhere; the checker turns part-of into contains

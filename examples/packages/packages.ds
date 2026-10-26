@@ -10,6 +10,7 @@ package app {
   requirement SREQ-00001-1: The system shall load a workspace      // system level: the outermost package
 
   package core {
+    @requirement SREQ-00001-1                                       // the box realises the system requirement (HLD)
     requirement REQ-00001-1 {                                       // package level: the core's own promise
       @refines SREQ-00001-1
       title: The core shall parse a workspace into one model

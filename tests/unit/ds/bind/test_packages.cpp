@@ -66,6 +66,10 @@ TEST_F(TestPackages, AnOuterPackageNobodyDeclaresIsExpected) {
   EXPECT_TRUE(related("contains", "app@missing", "app@missing@deep"));
 }
 
+TEST_F(TestPackages, ABoxRealisesRequirementsLikeAClass) {
+  EXPECT_TRUE(related("requires", "app@core", "SREQ-00001-1"));  // @requirement in the package body
+}
+
 TEST_F(TestPackages, LevelByPlacementThroughTheLevels) {
   EXPECT_EQ(model.find("SREQ-00001-1")->scope, "app@");      // the outermost package: system
   EXPECT_EQ(model.find("REQ-00001-1")->scope, "app@core@");  // the inner package: its own level

@@ -30,13 +30,15 @@ package driftspec {
       tests/system/driftspec/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
   }
 
-  verification SVER-00003-1 {
+  verification SVER-00003-2 {
     status: approved
-    @requirement SREQ-00003-1
+    @requirement SREQ-00003-2
     title: System tests confirm artefacts are linked to the design by revision
     text:
       The export of the artefacts corpus carries refines, verifies and
-      requires relations between pinned ids and the classes that realise them.
+      requires relations between pinned ids and the classes that realise them;
+      the packages corpus carries the same requires relation from an HLD box
+      (revision 2).
     method: test
     tests:
       tests/system/driftspec/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision

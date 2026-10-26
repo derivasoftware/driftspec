@@ -84,7 +84,7 @@ TEST_F(TestQualification, EveryIncoherenceIsAFindingAtItsLocation) {
   EXPECT_TRUE(undeclared);
 }
 
-// SREQ-00003-1: artefacts linked to the design by revision
+// SREQ-00003-2: artefacts linked to the design by revision, boxes and classes alike
 TEST_F(TestQualification, ArtefactsAreLinkedByRevision) {
   const auto exported = nlohmann::json::parse(ds("export " + examples("artefacts")).out);
   bool refines = false, verifies = false, realises = false;
@@ -96,6 +96,11 @@ TEST_F(TestQualification, ArtefactsAreLinkedByRevision) {
   EXPECT_TRUE(refines);
   EXPECT_TRUE(verifies);
   EXPECT_TRUE(realises);
+  // an HLD box realises a requirement the same way (revision 2)
+  const auto packages = nlohmann::json::parse(ds("export " + examples("packages")).out);
+  bool box = false;
+  for (const auto& r : packages["relations"]) box |= r["kind"] == "requires" && r["from"] == "app@core" && r["to"] == "SREQ-00001-1";
+  EXPECT_TRUE(box);
 }
 
 // SREQ-00004-1: behaviour bound to its subject and checked against it
