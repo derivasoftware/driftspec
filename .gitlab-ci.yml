@@ -5,7 +5,7 @@
 
 include:
   - project: deriva/infra/ci-templates
-    ref: dev/ddev-767-cpp-evidence   # TEMPORARY: the cpp-evidence job under test (DDEV-767); back to main before merging
+    ref: main
     file:
       - /templates/base.yml
       - /templates/cpp.yml
@@ -38,7 +38,7 @@ cpp-test:
 argos-diagnose:
   needs: [cpp-test, cpp-evidence, pre-commit]
   script:
-    - pip install --no-deps "argos-design-driftspec==0.0.6"
+    - pip install --no-deps "argos-design-driftspec==0.0.7"
     - export PATH="$CI_PROJECT_DIR/build-ci:$PATH"
     - ds 2>&1 | head -1 || true
     - !reference [.argos-diagnose-gate, script]
