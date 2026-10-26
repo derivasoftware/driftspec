@@ -85,11 +85,19 @@ std::string Checker::resolve(const std::string& name, const std::string& scope) 
 std::vector<std::string> Checker::externsNamed(const std::string& name) const {
   std::vector<std::string> out;
   if (name.find("::") != std::string::npos || name.find('@') != std::string::npos) return out;
+  // an extern is known by its simple name: a use's template arguments (tuple<2>) are not the
+  // design's to check, so any arity of the use, and of the declaration, finds it (R11)
+  const std::string simple = name.substr(0, name.find('<'));
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
-    if (e.has("extern") && (e.kind == model::Kind::Class || e.kind == model::Kind::Enum) && e.name == name) out.push_back(e.id);
+    if (e.has("extern") && (e.kind == model::Kind::Class || e.kind == model::Kind::Enum) && e.name == simple) out.push_back(e.id);
   }
-  return out;
+  // several declarations of the name (tuple<1>, tuple<2>): the one of the use's arity, when there is one
+  std::vector<std::string> exact;
+  for (const auto& id : out) {
+    if (id.size() >= name.size() + 2 && id.compare(id.size() - name.size() - 2, std::string::npos, "::" + name) == 0) exact.push_back(id);
+  }
+  return exact.size() == 1 ? exact : out;
 }
 
 bool Checker::derives(const std::string& derived, const std::string& base) const {

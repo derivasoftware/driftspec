@@ -208,21 +208,30 @@ package driftspec@ds {
               tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
           }
         }
-        requirement REQ-00024-1 {
+        requirement REQ-00024-2 {
           tags: language, lld, module
-          status: approved
+          status: draft
           title: An extern module shall declare names only, with no obligations, and every extern shall join one catalogue
           text:
             A bare name nobody declares in scope resolves to the one extern
-            of that simple name; two make it E-REF-AMBIGUOUS. The type text
-            stays as written.
-          rationale: R11; the catalogue 2026-10-26.
-          verification VER-00018-1 {
-            status: approved
+            of that simple name, whatever the template arguments of the use
+            or of the declaration (tuple<int, str> finds class tuple);
+            among several of that name, the one of the use's arity wins,
+            and two left without a winner make it E-REF-AMBIGUOUS. The type
+            text stays as written.
+          rationale:
+            R11; the catalogue 2026-10-26. Revision 2: an extern's template
+            arguments are not the design's to check, and a generic used by
+            its bare name never found its extern (tuple<2> against class
+            tuple), which left every generic Python type of the iris spike
+            undeclared.
+          verification VER-00018-2 {
+            status: draft
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.ExternDeclaresIdentitiesWithoutObligations
               tests/integration/ds/bind/test_packages.cpp::TestPackages.ABareNameFallsBackToTheExternCatalogue
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.AGenericUseFindsTheExternOfItsSimpleName
           }
         }
       }

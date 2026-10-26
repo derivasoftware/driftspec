@@ -20,7 +20,7 @@ package driftspec@ds {
         @requirement REQ-00023-1
       }
       + externsNamed(name: std::string) -> std::vector<std::string> {
-        @requirement REQ-00024-1
+        @requirement REQ-00024-2
       }
       + derives(derived: std::string, base: std::string) -> bool {
         @requirement REQ-00029-1
