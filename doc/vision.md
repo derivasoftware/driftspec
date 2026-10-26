@@ -387,10 +387,12 @@ crosses a container border is routed straight between its ends.
   `deriva/argos/plugins/argos-design-driftspec`); argos reads the design in
   DriftSpec through the plugin (system artefacts land in `input/` and
   `qualification/` as SREQ/SVER, module ones in `requirements/` and
-  `verifications/`). Still to do: the real design and requirements
-  of driftspec in `.ds` (`design/engine.ds` is the POC sketch and argos
-  reports its drift), CI with ci-templates, version manifest, pre-commit,
-  `projects.toml` registration, the plugin on the registry.
+  `verifications/`). Done since: CI with ci-templates,
+  version manifest, pre-commit, `projects.toml`, the plugin on the registry,
+  the system baseline approved (DS-3), the HLD in `design/hld.ds` (two boxes,
+  `ds` and `grammar`, 2026-10-26; the POC sketch `engine.ds` is gone). Still
+  to do: the LLD per namespace with the module requirements refining the
+  SREQ (DS-4).
 - Surfaces: LSP, MCP, `ds serve`, VS Code, Neovim navigation, Python
   bindings (deferred), wasm.
 
