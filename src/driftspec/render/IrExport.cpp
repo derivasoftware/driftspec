@@ -137,18 +137,23 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     }
     selected = grown;
   }
-  // modules of the selected classes become containers (R2); a module with nothing drawn in it is not drawn
+  // modules of the selected classes become containers (R2), and so do nested packages (the HLD
+  // boxes); the outermost package is the drawing itself. A container with nothing drawn in it is not drawn.
   std::set<std::string> containers;
   auto up = [](const std::string& s) {
     const auto cut = s.rfind("::");
-    return cut == std::string::npos ? std::string() : s.substr(0, cut);  // ds@ds::b → ds@ds → ""; the package is no container
+    if (cut != std::string::npos) return s.substr(0, cut);  // ds@ds::b → ds@ds
+    std::string t = s;
+    if (!t.empty() && t.back() == '@') t.pop_back();
+    const auto at = t.rfind('@');
+    return at == std::string::npos ? std::string() : t.substr(0, at);  // app@core@model → app@core → app → ""
   };
   for (const auto& id : selected) {
     const model::Entity* e = model_.find(id);
     if (!isClassLike(*e)) continue;
     for (std::string s = e->scope; !s.empty(); s = up(s)) {
       const model::Entity* m = model_.find(s);
-      if (m && m->kind == model::Kind::Module) containers.insert(s);
+      if (m && (m->kind == model::Kind::Module || (m->kind == model::Kind::Package && !m->scope.empty()))) containers.insert(s);
     }
   }
 
@@ -160,7 +165,9 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   std::set<std::string> placed;
 
   auto parentOf = [&](const model::Entity& e) -> std::string {
-    for (std::string s = e.scope; !s.empty(); s = up(s)) {
+    std::string s = e.scope;
+    if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope (app@core@) names the package app@core
+    for (; !s.empty(); s = up(s)) {
       if (containers.count(s)) return s;
     }
     return "";
@@ -168,8 +175,9 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
 
   for (const auto& id : containers) {
     const model::Entity& m = *model_.find(id);
-    const std::string label = id.substr(id.find('@') == std::string::npos ? 0 : id.find('@') + 1);  // the module, without its package
-    nlohmann::json node = {{"id", id}, {"kind", "container"}, {"label", label}, {"classifier", "namespace"}};
+    const std::string label = id.substr(id.find_last_of('@') == std::string::npos ? 0 : id.find_last_of('@') + 1);  // without its packages
+    nlohmann::json node = {
+        {"id", id}, {"kind", "container"}, {"label", label}, {"classifier", m.kind == model::Kind::Package ? "package" : "namespace"}};
     const std::string parent = parentOf(m);
     if (!parent.empty()) node["parent"] = parent;
     out["nodes"].push_back(node);
@@ -442,7 +450,9 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
         const std::string typeId = fieldOf(*m, "type");
         const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
         if (!type || type->scope == cls->scope) continue;
-        auto moduleLabel = [](const std::string& id) { return id.substr(id.find('@') == std::string::npos ? 0 : id.find('@') + 1); };
+        auto moduleLabel = [](const std::string& id) {
+          return id.substr(id.find_last_of('@') == std::string::npos ? 0 : id.find_last_of('@') + 1);
+        };
         const std::string from = b.lifeline(cls->scope, moduleLabel(cls->scope), "namespace");
         const std::string to = b.lifeline(type->scope, moduleLabel(type->scope), "namespace");
         const std::string label = b.shortName(typeId) + "::" + fieldOf(*m, "op");
@@ -564,9 +574,9 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
       if (e.kind == model::Kind::Requirement)
-        stereotype += e.scope.find("::") == std::string::npos && (e.scope.empty() || e.scope.back() == '@')
+        stereotype += e.scope.empty() || model::isSystemScope(e.scope)
                           ? ", system"
-                          : ", " + e.scope.substr(e.scope.find('@') + 1);
+                          : ", " + model::lastName(e.scope.back() == '@' ? e.scope.substr(0, e.scope.size() - 1) : e.scope);
       node["stereotype"] = stereotype;
       if (!lines.empty()) node["sections"] = nlohmann::json::array({lines});
       const std::string text = fieldOf(e, "text");

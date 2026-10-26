@@ -196,6 +196,12 @@ TEST_F(TestQualification, TheStaticMetamodelIsModelledAndClassifiedByDerivation)
   }
   EXPECT_TRUE(owns);
   EXPECT_TRUE(refs);
+  // packages nest, every level adding its name with @, and the flat form reopens by path
+  const auto packages = nlohmann::json::parse(ds("export " + examples("packages")).out);
+  std::set<std::string> ids;
+  for (const auto& e : packages["entities"]) ids.insert(e["id"]);
+  EXPECT_TRUE(ids.count("app@core@model::Entity"));
+  EXPECT_TRUE(ids.count("app@render@svg::Svg"));
   const auto diag = nlohmann::json::parse(ds("export " + examples("diag")).out);
   bool boundary = false;
   for (const auto& e : diag["entities"]) boundary |= e["id"] == "ds@cli" && e["kind"] == "boundary";

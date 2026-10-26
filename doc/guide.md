@@ -32,6 +32,18 @@ them. The vision (`vision.md`) says why; this says what.*
 - `extern module std { class vector<T> }` declares what lives outside the
   workspace, with no obligations (R11).
 
+- **Nested packages (decided 2026-10-26).** A package holds packages: the
+  HLD nests. Nested with braces, or reopened flat by its full path
+  (`package app@render { }`), like a module reopens across files; the flat
+  form needs the outer package declared somewhere (`W-REF-UNDECLARED`
+  otherwise, and the outer package becomes an expected node). Every package
+  level adds its name with `@`: `app`, `app@core`, `app@core@model::Entity`.
+  Level by placement extends: the outermost package is the system; an inner
+  package is its own level (argos: a REQ under the SREQ); a module its own.
+  In a class diagram the nested packages are containers (the HLD boxes); the
+  outermost one is the drawing itself. Boundaries of nested packages: not
+  yet. Corpus: `examples/packages`.
+
 ## 2. Static design (`examples/static`)
 
 - Kinds: `class`, `dataclass`, `enum`. Interface and abstract are derived

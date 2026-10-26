@@ -1086,6 +1086,16 @@
             "named": true
           }
         ]
+      },
+      "prefix": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "package_prefix",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
@@ -1106,6 +1116,10 @@
         },
         {
           "type": "module",
+          "named": true
+        },
+        {
+          "type": "package",
           "named": true
         },
         {
@@ -1191,7 +1205,7 @@
     "named": true,
     "fields": {
       "package": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {

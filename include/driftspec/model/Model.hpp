@@ -38,6 +38,12 @@ enum class Kind {
 
 const char* kindName(Kind kind);
 
+/// Whether `scope` is the inside of an outermost package (`app@`): what is declared there is of the system.
+bool isSystemScope(const std::string& scope);
+
+/// The simple name at the end of an identity: app@core@model::Entity → Entity, app@core → core.
+std::string lastName(const std::string& id);
+
 /// One declared (or expected, R6) entity of the workspace.
 struct Entity {
   Kind kind = Kind::Package;
