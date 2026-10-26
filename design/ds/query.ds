@@ -1,0 +1,77 @@
+// LLD of the query namespace (ds::query): questions about the model answered
+// by identity (SREQ-00011-1). The reader keeps the model it answers about;
+// every answer names an identity the next question or a drawing can take.
+
+package driftspec@ds {
+
+  extern module std {
+    class pair<A, B>
+  }
+
+  module query {
+
+    requirement REQ-00003-1 {
+      status: approved
+      @refines SREQ-00011-1
+      title: The query shall answer each question with answers that name an identity, as text or as JSON
+      text:
+        Seven questions: diagrams (each with its kind), entities of a scope (a
+        package named plainly or a module), relations of an identity in both
+        directions, artefacts a class realises and what verifies them,
+        behaviours of a method or class, what a diagram shows (the projection
+        itself answers), findings of a file. An unknown question is one answer
+        of kind error. The answers print as lines `kind  identity  detail` or
+        as a JSON array of the same three fields.
+      rationale:
+        The command line, the editor, the agent pane and argos ask the same
+        questions; one mechanism with identities as answers serves them all.
+      tags: query, identity
+    }
+
+    verification VER-00003-1 {
+      status: approved
+      @requirement REQ-00003-1
+      title: Unit tests cover the seven questions, the unknown question and both answer forms
+      method: test
+      tests:
+        tests/unit/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
+        tests/unit/ds/query/test_query.cpp::TestQuery.TheEntitiesOfAScope
+        tests/unit/ds/query/test_query.cpp::TestQuery.TheRelationsOfAnEntityInBothDirections
+        tests/unit/ds/query/test_query.cpp::TestQuery.WhatAClassRealisesAndWhatProvesIt
+        tests/unit/ds/query/test_query.cpp::TestQuery.WhatADiagramShows
+        tests/unit/ds/query/test_query.cpp::TestQuery.TheFindingsOfAFile
+        tests/unit/ds/query/test_query.cpp::TestQuery.AnUnknownQuestionIsAnError
+        tests/unit/ds/query/test_query.cpp::TestQuery.AnswersAsTextAndAsJson
+    }
+
+    dataclass Answer {                       // one line of an answer: an identity and what the question asked about it
+      @requirement REQ-00003-1
+      + kind: std::string
+      + id: std::string
+      + detail: std::string
+    }
+
+    class Query {
+      @requirement REQ-00003-1
+      - refs model_: model::Model
+      + Query(model: model::Model)
+      + static questions() -> std::vector<std::pair<std::string, std::string>>
+      + ask(question: std::string, subject: std::string) -> std::vector<Answer>
+      + diagrams() -> std::vector<Answer>
+      + entities(scope: std::string) -> std::vector<Answer>
+      + relations(id: std::string) -> std::vector<Answer>
+      + artefacts(id: std::string) -> std::vector<Answer>
+      + behaviours(id: std::string) -> std::vector<Answer>
+      + shows(diagram: std::string) -> std::vector<Answer>
+      + findings(file: std::string) -> std::vector<Answer>
+      + static text(answers: std::vector<Answer>) -> std::string
+      + static json(answers: std::vector<Answer>) -> std::string
+    }
+  }
+}
+
+diagram CL_QueryNamespace {
+  kind: class
+  include: driftspec@ds@query::*
+  show: ownership
+}
