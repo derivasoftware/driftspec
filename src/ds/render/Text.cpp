@@ -521,8 +521,16 @@ Grid sequenceGrid(const IrDocument& doc) {
     }
     left -= 3 + 3 * outer;
     right += static_cast<int>(f.label.size()) + 6 + 3 * outer;
-    const int top = rowOf[f.first] - 1 - (opens[f.first] - 1 - static_cast<int>(depthOf[fi] > 0 ? 0 : 0)) * 0;
-    const int bottom = rowOf[f.last] + heightOf[f.last] + (closes[f.last] > 1 ? (depthOf[fi] == 0 ? 1 : 0) : 0);
+    // frames that open (or close) at the same message stack: one row further out per frame inside
+    // this one that opens (or closes) there too, as the SVG does (DS-13)
+    int innerOpening = 0, innerClosing = 0;
+    for (size_t j = 0; j < frames.size(); ++j) {
+      if (j == fi || depthOf[j] <= depthOf[fi]) continue;
+      if (frames[j].first == f.first) ++innerOpening;
+      if (frames[j].last == f.last) ++innerClosing;
+    }
+    const int top = rowOf[f.first] - 1 - innerOpening;
+    const int bottom = rowOf[f.last] + heightOf[f.last] + innerClosing;
     for (int xx = left; xx <= right; ++xx) {
       g.put(xx, top, "\xE2\x94\x80", kMuted);
       g.put(xx, bottom, "\xE2\x94\x80", kMuted);

@@ -87,6 +87,15 @@ TEST_F(TestPackages, ABareNameFallsBackToTheExternCatalogue) {
   EXPECT_FALSE(related("owns", "app@render@svg::Svg::dup", "app@render@tree_sitter::Dup"));
 }
 
+TEST_F(TestPackages, AGenericUseFindsTheExternOfItsSimpleName) {
+  // an extern's template arguments are not the design's to check: the use's arity, and the declaration's, do not matter
+  EXPECT_TRUE(related("owns", "app@render@svg::Svg::ends", "app@render@std::pair<2>"));
+  EXPECT_TRUE(related("owns", "app@render@svg::Svg::span", "app@render@python::tuple"));
+  EXPECT_FALSE(reported("W-REF-UNDECLARED", "pair<2>"));
+  EXPECT_FALSE(reported("W-REF-UNDECLARED", "tuple<3>"));
+  EXPECT_FALSE(reported("E-REF-AMBIGUOUS", "pair<2>"));  // std::pair<2> and python::pair<1>: the arity of the use decides
+}
+
 TEST_F(TestPackages, AnEnumRealisesRequirementsLikeAClass) {
   EXPECT_TRUE(related("requires", "app@render@svg::Mode", "SREQ-00001-1"));
   EXPECT_EQ(model.find("app@render@svg::Mode")->fields.at("values"), "Fast, Slow");

@@ -28,6 +28,11 @@ package app@render {                                                 // the flat
   extern module std {                                                // names only (R11): the standard library
     class string
     class map<K, V>
+    class pair<A, B>
+  }
+  extern module python {
+    class tuple                                                      // a variadic type: declared with no arguments
+    class pair<A>                                                    // a second pair, of another arity: the use's arity chooses
   }
   extern module tree_sitter {                                        // the catalogue: a bare name resolves here as a last resort
     class TSNode
@@ -49,6 +54,8 @@ package app@render {                                                 // the flat
       + abstract: bool                                                // a modifier is a word only in front of a name: nothing is reserved
       + node: TSNode                                                  // bare: the one extern TSNode of the catalogue
       + dup: Dup                                                      // ! E-REF-AMBIGUOUS: two extern modules declare Dup
+      + ends: pair<int, int>                                          // bare and generic: the extern pair by its simple name
+      + span: tuple<int, int, int>                                    // any arity of the use finds the extern tuple
       + static run() -> int                                           // ...and still a modifier where it modifies
       + render() -> string
     }

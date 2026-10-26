@@ -101,7 +101,7 @@ package driftspec@ds {
       }
       - bindType(file: parse::ParsedFile, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> TypeUse {
         @requirement REQ-00028-1
-        @requirement REQ-00024-1
+        @requirement REQ-00024-2
       }
       - declareOperator(cls: model::Entity, symbol: std::string, location: model::Location) -> void {
         @requirement REQ-00030-1

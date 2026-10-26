@@ -16,6 +16,9 @@ struct ParsedFile {
   std::string text;
   std::shared_ptr<TSTree> tree;  ///< freed with ts_tree_delete
   bool hasSyntaxErrors = false;
+  int errorLine = 0;  ///< where the file stops parsing, 1-based; 0 when it parses
+  int errorColumn = 0;
+  std::string errorDetail;  ///< what is wrong there: unexpected `text`, or missing `token`
 };
 
 /// Wraps the tree-sitter parser for the DriftSpec grammar.

@@ -66,8 +66,8 @@ package driftspec@ds {
         tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.AClassDiagramHangsItsArtefactsAsANote
     }
 
-    verification VER-00007-1 {
-      status: approved
+    verification VER-00007-2 {
+      status: draft
       @requirement REQ-00007-1
       title: Unit tests cover placement, routing, wrapping and the determinism of both drawings
       method: test
@@ -85,6 +85,7 @@ package driftspec@ds {
         tests/integration/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
         tests/integration/ds/render/test_text.cpp::TestText.IsDeterministicAndPlainWithoutColor
         tests/integration/ds/render/test_text.cpp::TestText.BoxesDoNotCollideOnTheGrid
+        tests/integration/ds/render/test_text.cpp::TestText.FramesOpeningAtTheSameMessageStackTheirHeaders
     }
 
     // ---- the IR: what a diagram prints, in the plantuml family's vocabulary ----
