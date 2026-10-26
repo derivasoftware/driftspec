@@ -92,6 +92,22 @@ TEST_F(TestPackages, AnEnumRealisesRequirementsLikeAClass) {
   EXPECT_EQ(model.find("app@render@svg::Mode")->fields.at("values"), "Fast, Slow");
 }
 
+TEST_F(TestPackages, AnExtensionAddsRelationsWithoutRedefining) {
+  EXPECT_EQ(model.find("REQ-00002-1")->fields.at("title"), "The render shall draw the model");  // defined once, in packages.ds
+  EXPECT_TRUE(related("refines", "REQ-00002-1", "SREQ-00001-1"));                               // wired in wiring.ds
+  EXPECT_TRUE(related("requires", "app@render@svg::Svg", "REQ-00002-1"));
+  EXPECT_FALSE(reported("E-DUPLICATE-IDENTITY", "REQ-00002-1"));
+  EXPECT_FALSE(reported("E-DUPLICATE-IDENTITY", "Svg"));
+  EXPECT_FALSE(model.find("app@render@svg::Svg")->expected);
+}
+
+TEST_F(TestPackages, AnExtensionOfNothingIsExpected) {
+  ASSERT_NE(model.find("REQ-00099-1"), nullptr);
+  EXPECT_TRUE(model.find("REQ-00099-1")->expected);
+  EXPECT_TRUE(reported("W-REF-UNDECLARED", "REQ-00099-1"));
+  EXPECT_TRUE(related("refines", "REQ-00099-1", "SREQ-00001-1"));  // the relation waits for the definition
+}
+
 TEST_F(TestPackages, LevelByPlacementThroughTheLevels) {
   EXPECT_EQ(model.find("SREQ-00001-1")->scope, "app@");      // the outermost package: system
   EXPECT_EQ(model.find("REQ-00001-1")->scope, "app@core@");  // the inner package: its own level

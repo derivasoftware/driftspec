@@ -34,6 +34,7 @@ class Checker {
   void checkEvent(const bind::Event& event);
   void checkLocals();
   void checkArtefacts();
+  void checkExtensions();
   /// A behaviour's identity is its resolved subject plus its scenario, wherever it was written.
   void unifyBehaviours();
   std::string current(const std::string& id) const;  ///< an identity after the renames

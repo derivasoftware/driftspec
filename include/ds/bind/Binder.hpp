@@ -68,6 +68,9 @@ class Binder {
   void bindAnnotations(const parse::ParsedFile& file, TSNode node, const std::string& from, const std::string& scope);
   void bindArtefact(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindClass(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
+  /// An extension block (annotations only) adds relations to an entity defined elsewhere, or expects it.
+  void extend(const parse::ParsedFile& file, TSNode node, const std::string& id, model::Kind kind, const std::string& name,
+              const std::string& scope, const model::Location& loc);
   void bindMember(const parse::ParsedFile& file, TSNode node, model::Entity& cls, const std::vector<std::string>& params,
                   const std::set<std::string>& operators);
   void bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope);

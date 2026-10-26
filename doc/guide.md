@@ -73,6 +73,15 @@ them. The vision (`vision.md`) says why; this says what.*
 - A characteristic of an entity is a requirement or a constraint, nested or
   linked; there is no other vocabulary (R18).
 
+- **Definition and extension (2026-10-26).** An entity is defined once;
+  a block with the same id that holds annotations only is an extension: it
+  adds relations (`@refines`, `@requirement`, `@constraint`) to the entity
+  from wherever the relation belongs, typically the consumer's file, and
+  never touches the definition. A box writes its requirements without
+  knowing who consumes them; the wiring to the system's SREQ lives in the
+  consumer's file and leaves with it. A second definition is still
+  `E-DUPLICATE-IDENTITY`; an extension of something defined nowhere is an
+  expected node, `W-REF-UNDECLARED`. Corpus: `examples/packages/wiring.ds`.
 - **The extern catalogue (2026-10-26).** `extern` modules reopen in any
   file, so the names the workspace borrows (std, a C API) grow into one
   catalogue. A bare name nobody declares in scope resolves to the one extern

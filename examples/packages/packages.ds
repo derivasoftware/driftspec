@@ -24,6 +24,7 @@ package app {
 }
 
 package app@render {                                                 // the flat form: the same identity as nesting
+  requirement REQ-00002-1: The render shall draw the model            // the box's own requirement; who it refines is said in wiring.ds
   extern module std {                                                // names only (R11): the standard library
     class string
     class map<K, V>
