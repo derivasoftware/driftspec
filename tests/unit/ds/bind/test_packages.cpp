@@ -56,6 +56,7 @@ TEST_F(TestPackages, TheFlatFormIsTheSameIdentityAsNesting) {
   EXPECT_EQ(render->scope, "app@");
   EXPECT_TRUE(related("contains", "app", "app@render"));                                 // reopened by path: the outer package contains it
   EXPECT_TRUE(related("owns", "app@render@svg::Svg::model", "app@core@model::Entity"));  // resolved across packages
+  EXPECT_TRUE(related("owns", "app@render@svg::Svg::cache", "app@core@model::Entity"));  // std::map passes ownership to its value
 }
 
 TEST_F(TestPackages, AnOuterPackageNobodyDeclaresIsExpected) {

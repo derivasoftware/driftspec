@@ -1,0 +1,133 @@
+// LLD of the model namespace (ds::model): the resolved workspace and the
+// entities it is made of. Types are written as argos's C++ reader renders them
+// (std::string, std::map<std::string, Entity>), so design and code compare
+// without noise; references and const are not part of the type.
+
+package driftspec@ds {
+
+  extern module std {                        // the standard library, names only (R11)
+    class string
+    class map<K, V>
+    class vector<T>
+  }
+
+  module model {
+
+    requirement REQ-00001-1 {
+      status: approved
+      @refines SREQ-00001-1
+      title: The model shall hold one entity per identity, letting a declaration take the place of the expected node that preceded it
+      text:
+        Declaring an identity the model does not hold adds it. Declaring one
+        held as expected (referenced before, declared nowhere) replaces the
+        expected node. A second reference to an expected node keeps the one
+        node. Packages and modules reopen: a second declaration returns the
+        first. Any other second declaration of one identity is reported as
+        E-DUPLICATE-IDENTITY at the second location, naming the first.
+      rationale:
+        References arrive before declarations in any order of files; the
+        model absorbs them without losing either, and still says where an
+        identity was declared twice.
+      tags: identity, model
+    }
+
+    requirement REQ-00002-1 {
+      status: approved
+      @refines SREQ-00001-1
+      title: The model shall rename an entity carrying its members and every relation that names it
+      text:
+        Renaming an identity moves the entity, every entity whose identity or
+        scope begins with it (members, scenarios) and every relation end that
+        names it or a member of it. Renaming onto an identity another
+        declared entity holds is refused with E-DUPLICATE-IDENTITY; onto an
+        expected node, the node gives way.
+      rationale:
+        An identity can only be known late: a behaviour is identified by its
+        subject, which resolves after binding, so the checker renames it to the
+        resolved identity and the model keeps everything that named it whole.
+      tags: identity, behaviour
+    }
+
+    verification VER-00001-1 {
+      status: approved
+      @requirement REQ-00001-1
+      title: Unit tests cover declaring once, merging the expected node and reporting the duplicate
+      method: test
+      tests:
+        tests/unit/ds/model/test_model.cpp::TestModel.ADeclarationTakesThePlaceOfTheExpectedNode
+        tests/unit/ds/model/test_model.cpp::TestModel.ASecondDeclarationIsReportedExceptForReopenableScopes
+        tests/unit/ds/model/test_model.cpp::TestEntity.HasAFlagItWasDeclaredWith
+    }
+
+    verification VER-00002-1 {
+      status: approved
+      @requirement REQ-00002-1
+      title: Unit tests cover renaming with members and relations, and the refused rename
+      method: test
+      tests:
+        tests/unit/ds/model/test_model.cpp::TestModel.ARenameCarriesMembersAndRelations
+        tests/unit/ds/model/test_model.cpp::TestModel.ARenameOntoADeclaredIdentityIsRefused
+    }
+
+    enum Kind { Package, Module, Requirement, Verification, Boundary, Operation, Constraint, Class, Enum, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram }
+
+    dataclass Location {                     // where something was read from: file, 1-based line and column
+      @requirement REQ-00001-1
+      + file: std::string
+      + line: int
+      + column: int
+    }
+
+    dataclass Entity {                       // one declared (or expected, R6) entity of the workspace
+      @requirement REQ-00001-1
+      + kind: Kind
+      + id: std::string
+      + name: std::string
+      + scope: std::string
+      + fields: std::map<std::string, std::string>
+      + flags: std::vector<std::string>
+      + owns location: Location
+      + expected: bool
+      + has(flag: std::string) -> bool
+    }
+
+    dataclass Relation {                     // a typed relation between two identities
+      @requirement REQ-00001-1
+      + kind: std::string
+      + from: std::string
+      + to: std::string
+      + owns location: Location
+      + multiplicity: std::string
+    }
+
+    dataclass Finding {                      // one diagnostic of the engine
+      @requirement REQ-00001-1
+      + code: std::string
+      + severity: std::string
+      + message: std::string
+      + owns location: Location
+    }
+
+    class Model {                            // the resolved workspace: entities by identity, relations and findings
+      @requirement REQ-00001-1
+      @requirement REQ-00002-1
+      - owns entities_: std::map<std::string, Entity>
+      - owns relations_: std::vector<Relation>
+      - owns findings_: std::vector<Finding>
+      + declare(entity: Entity) -> Entity
+      + find(id: std::string) -> Entity
+      + relate(relation: Relation) -> void
+      + report(finding: Finding) -> void
+      + rename(from: std::string, to: std::string) -> bool
+      + entities() -> std::map<std::string, Entity>
+      + relations() -> std::vector<Relation>
+      + findings() -> std::vector<Finding>
+    }
+  }
+}
+
+diagram CL_ModelNamespace {
+  kind: class
+  include: driftspec@ds@model::*
+  show: ownership
+}

@@ -24,9 +24,14 @@ package app {
 }
 
 package app@render {                                                 // the flat form: the same identity as nesting
+  extern module std {                                                // names only (R11): the standard library
+    class string
+    class map<K, V>
+  }
   module svg {
     class Svg {
       - owns model: app@core@model::Entity                           // across packages, by full identity
+      - owns cache: std::map<std::string, app@core@model::Entity>    // a qualified container passes ownership to its element (R16)
       + render() -> string
     }
   }

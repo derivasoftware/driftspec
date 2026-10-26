@@ -187,19 +187,21 @@ Binder::TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, con
     for (uint32_t i = 0; i < n; ++i) args.push_back(ts_node_named_child(argsNode, i));
   }
 
-  // built-in generics decide the multiplicity and pass the relation to their element (R16)
+  // built-in generics decide the multiplicity and pass the relation to their element (R16);
+  // a qualified container (std::vector, std::map) is the same container
   const std::string text = use.text;
-  if (name == "list" || name == "set") {
+  const std::string base = name.substr(name.rfind("::") == std::string::npos ? 0 : name.rfind("::") + 2);
+  if (base == "list" || base == "set" || base == "vector") {
     if (!args.empty()) use = bindType(file, args[0], scope, from, relation, "*", params, location);
     use.text = text;
     return use;
   }
-  if (name == "optional") {
+  if (base == "optional") {
     if (!args.empty()) use = bindType(file, args[0], scope, from, relation, "0..1", params, location);
     use.text = text;
     return use;
   }
-  if (name == "map") {
+  if (base == "map") {
     if (args.size() > 0) bindType(file, args[0], scope, from, "uses", "", params, location);
     if (args.size() > 1) use = bindType(file, args[1], scope, from, relation, "*", params, location);
     use.text = text;
