@@ -28,11 +28,26 @@ package app@render {                                                 // the flat
     class string
     class map<K, V>
   }
+  extern module tree_sitter {                                        // the catalogue: a bare name resolves here as a last resort
+    class TSNode
+    class Dup
+  }
+  extern module other {
+    class Dup                                                        // the same simple name twice: a bare Dup is ambiguous
+  }
+  module svg {
+    enum Mode {
+      @requirement SREQ-00001-1                                      // an enum realises requirements like a class
+      Fast, Slow
+    }
+  }
   module svg {
     class Svg {
       - owns model: app@core@model::Entity                           // across packages, by full identity
       - owns cache: std::map<std::string, app@core@model::Entity>    // a qualified container passes ownership to its element (R16)
       + abstract: bool                                                // a modifier is a word only in front of a name: nothing is reserved
+      + node: TSNode                                                  // bare: the one extern TSNode of the catalogue
+      + dup: Dup                                                      // ! E-REF-AMBIGUOUS: two extern modules declare Dup
       + static run() -> int                                           // ...and still a modifier where it modifies
       + render() -> string
     }

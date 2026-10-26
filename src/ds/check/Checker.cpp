@@ -76,7 +76,20 @@ std::string Checker::resolve(const std::string& name, const std::string& scope) 
     const std::string candidate = qualifyIn(s, name);
     if (model_.find(candidate)) return candidate;
   }
-  return "";
+  // the extern catalogue (R11): a bare name nobody declares in scope is the one extern
+  // entity of that simple name, declared in any extern module of the workspace
+  const std::vector<std::string> externs = externsNamed(name);
+  return externs.size() == 1 ? externs.front() : "";
+}
+
+std::vector<std::string> Checker::externsNamed(const std::string& name) const {
+  std::vector<std::string> out;
+  if (name.find("::") != std::string::npos || name.find('@') != std::string::npos) return out;
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.has("extern") && (e.kind == model::Kind::Class || e.kind == model::Kind::Enum) && e.name == name) out.push_back(e.id);
+  }
+  return out;
 }
 
 bool Checker::derives(const std::string& derived, const std::string& base) const {
@@ -184,6 +197,13 @@ void Checker::resolveReference(const bind::Reference& reference) {
     }
   }
   std::string target = resolve(reference.target, reference.scope);
+  if (target.empty() && externsNamed(reference.target).size() > 1) {
+    model_.report({"E-REF-AMBIGUOUS", "error",
+                   reference.from + " refers to " + reference.target + ", which " + std::to_string(externsNamed(reference.target).size()) +
+                       " extern modules declare: qualify it",
+                   reference.location});
+    return;
+  }
   if (target.empty()) {
     // nobody declares it: an EXPECTED node, reported once (R6)
     model::Entity expected;

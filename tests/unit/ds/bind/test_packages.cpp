@@ -81,6 +81,17 @@ TEST_F(TestPackages, AModifierIsAWordOnlyInFrontOfAName) {
   EXPECT_TRUE(run->has("static"));  // the same word, modifying
 }
 
+TEST_F(TestPackages, ABareNameFallsBackToTheExternCatalogue) {
+  EXPECT_TRUE(related("owns", "app@render@svg::Svg::node", "app@render@tree_sitter::TSNode"));  // resolved by simple name
+  EXPECT_TRUE(reported("E-REF-AMBIGUOUS", "Dup"));                                              // two externs, no winner
+  EXPECT_FALSE(related("owns", "app@render@svg::Svg::dup", "app@render@tree_sitter::Dup"));
+}
+
+TEST_F(TestPackages, AnEnumRealisesRequirementsLikeAClass) {
+  EXPECT_TRUE(related("requires", "app@render@svg::Mode", "SREQ-00001-1"));
+  EXPECT_EQ(model.find("app@render@svg::Mode")->fields.at("values"), "Fast, Slow");
+}
+
 TEST_F(TestPackages, LevelByPlacementThroughTheLevels) {
   EXPECT_EQ(model.find("SREQ-00001-1")->scope, "app@");      // the outermost package: system
   EXPECT_EQ(model.find("REQ-00001-1")->scope, "app@core@");  // the inner package: its own level

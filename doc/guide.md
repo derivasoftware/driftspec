@@ -73,6 +73,14 @@ them. The vision (`vision.md`) says why; this says what.*
 - A characteristic of an entity is a requirement or a constraint, nested or
   linked; there is no other vocabulary (R18).
 
+- **The extern catalogue (2026-10-26).** `extern` modules reopen in any
+  file, so the names the workspace borrows (std, a C API) grow into one
+  catalogue. A bare name nobody declares in scope resolves to the one extern
+  entity of that simple name; two externs with the same simple name make the
+  bare reference `E-REF-AMBIGUOUS` (qualify it). The type text stays as
+  written, which is what a code reader compares.
+- **Enums are annotated like classes (2026-10-26)**: `@requirement` lines
+  before the values.
 - **Nothing is reserved (2026-10-26).** `abstract`, `static`, `const`,
   `owns`, `refs`, `shares` are modifiers only in front of a name; followed by
   `:` or `(` they are the name: `+ abstract: bool`, `+ refs: map<..>`. A code
