@@ -17,3 +17,12 @@ __pycache__/
 build/
 build-*.log
 build-*/
+
+# argos reads requirements, verifications and constraints from YAML folders;
+# here they are a projection of design/**/*.ds that argos-design-driftspec
+# regenerates on every load. Derived, never edited, never committed.
+input/
+qualification/
+requirements/
+verifications/
+constraints/

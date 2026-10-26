@@ -136,7 +136,7 @@ TEST_F(TestDiff, ARenameIsRecognisedByShapeAndByWhoFollows) {
   ASSERT_NE(renamed, nullptr);
   EXPECT_EQ(renamed->from, "p@m::Text");
   EXPECT_NE(find(d, "added", "p@m::Cells"), nullptr);
-  EXPECT_EQ(find(d, "removed", "p@m::Text::layout"), nullptr);  // members travel with the rename
+  EXPECT_EQ(find(d, "removed", "p@m::Text::layout"), nullptr);      // members travel with the rename
   EXPECT_EQ(find(d, "changed", "p@m::Terminal::render"), nullptr);  // and a move is not a change
 }
 

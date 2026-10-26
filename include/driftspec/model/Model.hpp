@@ -41,11 +41,12 @@ const char* kindName(Kind kind);
 /// One declared (or expected, R6) entity of the workspace.
 struct Entity {
   Kind kind = Kind::Package;
-  std::string id;      ///< identity: qualified name, or the artefact id
-  std::string name;    ///< the simple name as written
-  std::string scope;   ///< qualified name of the enclosing scope ("" at top)
+  std::string id;     ///< identity: qualified name, or the artefact id
+  std::string name;   ///< the simple name as written
+  std::string scope;  ///< qualified name of the enclosing scope ("" at top)
   std::map<std::string, std::string> fields;
-  std::vector<std::string> flags;  ///< modifiers with semantics (R19): abstract, static, const, owns, refs, shares, extern, dataclass, constructor
+  std::vector<std::string>
+      flags;  ///< modifiers with semantics (R19): abstract, static, const, owns, refs, shares, extern, dataclass, constructor
   Location location;
   bool expected = false;  ///< referenced somewhere but declared nowhere
 

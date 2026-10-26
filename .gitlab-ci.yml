@@ -1,0 +1,41 @@
+# CI for driftspec. The shared pattern (one-pipeline workflow rules,
+# rebase-gate, version-bump, cmake+gtest job, lightweight pre-commit venv
+# and the argos-diagnose gate) lives in deriva/infra/ci-templates; this
+# file carries only driftspec's knobs.
+
+include:
+  - project: deriva/infra/ci-templates
+    ref: main
+    file:
+      - /templates/base.yml
+      - /templates/cpp.yml
+      - /templates/precommit.yml
+      - /templates/argos-gate.yml
+
+variables:
+  # The grammar's manifest carries the version of the whole tool.
+  VERSION_MANIFEST: grammar/tree-sitter.json
+
+# The Release ds travels to the gate: argos reads this repository's design
+# through argos-design-driftspec, which drives the binary.
+cpp-test:
+  artifacts:
+    when: always
+    paths:
+      - $BUILD_DIR/*.junit.xml
+      - $BUILD_DIR/ds
+    reports:
+      junit: $BUILD_DIR/*.junit.xml
+    expire_in: 1 week
+
+# The gate installs the DriftSpec reader over the fleet's pinned plugins
+# and finds ds in the build tree. allow_failure until DS-4: design/*.ds is
+# still the proof-of-concept sketch and argos reports its drift as errors.
+argos-diagnose:
+  needs: [cpp-test, pre-commit]
+  allow_failure: true
+  script:
+    - pip install --no-deps "argos-design-driftspec==0.0.2"
+    - export PATH="$CI_PROJECT_DIR/build-ci:$PATH"
+    - ds 2>&1 | head -1 || true
+    - !reference [.argos-diagnose-gate, script]

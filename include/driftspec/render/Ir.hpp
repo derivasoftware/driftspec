@@ -23,8 +23,8 @@ struct IrNode {
   std::map<std::string, std::string> refs;  ///< named references (emitted as data-ref-<key>)
   std::vector<std::vector<std::string>> sections;
   std::vector<std::string> sectionKinds;
-  std::pair<int, int> span{-1, -1};                      ///< frame: first and last sequence row
-  std::vector<std::pair<int, std::string>> dividers;     ///< frame: else sections
+  std::pair<int, int> span{-1, -1};                   ///< frame: first and last sequence row
+  std::vector<std::pair<int, std::string>> dividers;  ///< frame: else sections
 };
 
 /// One relation of a render-IR document.
@@ -36,7 +36,7 @@ struct IrEdge {
   std::string title;
   std::string href;
   bool dashed = false;
-  int order = -1;  ///< sequence row of a message
+  int order = -1;                           ///< sequence row of a message
   std::map<std::string, std::string> refs;  ///< named references: expands, span, location
 };
 

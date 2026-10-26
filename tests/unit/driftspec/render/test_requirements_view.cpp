@@ -22,7 +22,9 @@ class TestRequirementsView : public ::testing::Test {
     driftspec::check::Checker(model).run(binder);
   }
 
-  nlohmann::json diagram(const std::string& name) { return nlohmann::json::parse(driftspec::render::IrExport(model).render("diagram:" + name, false)); }
+  nlohmann::json diagram(const std::string& name) {
+    return nlohmann::json::parse(driftspec::render::IrExport(model).render("diagram:" + name, false));
+  }
 
   static int count(const nlohmann::json& doc, const char* what, const std::string& value) {
     int n = 0;

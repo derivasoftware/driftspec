@@ -20,7 +20,9 @@ std::string joinFlags(const std::vector<std::string>& flags) {
   return out;
 }
 
-std::string relationKey(const model::Relation& r) { return r.kind + " " + r.from + " -> " + r.to + (r.multiplicity.empty() ? "" : " [" + r.multiplicity + "]"); }
+std::string relationKey(const model::Relation& r) {
+  return r.kind + " " + r.from + " -> " + r.to + (r.multiplicity.empty() ? "" : " [" + r.multiplicity + "]");
+}
 
 bool isArtefact(model::Kind k) { return k == model::Kind::Requirement || k == model::Kind::Verification || k == model::Kind::Constraint; }
 
@@ -104,8 +106,10 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     out.changes.push_back(change);
     if (isArtefact(ea.kind)) {
       // the same id with other text: the revision should have moved
-      out.findings.push_back({"W-REVISION-STALE", "warning",
-                              std::string(model::kindName(ea.kind)) + " " + ea.id + " changed (" + join(diffs, "; ") + ") but keeps its revision", eb->location});
+      out.findings.push_back(
+          {"W-REVISION-STALE", "warning",
+           std::string(model::kindName(ea.kind)) + " " + ea.id + " changed (" + join(diffs, "; ") + ") but keeps its revision",
+           eb->location});
     }
   }
   for (const auto& pair : b.entities()) {
@@ -150,7 +154,8 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     if (best) {
       matched.insert(best->id);
       renamed[r->id] = best->id;
-      out.changes.push_back({"renamed", "entity", best->id, model::kindName(best->kind), best->scope, r->name + " -> " + best->name, r->id, ""});
+      out.changes.push_back(
+          {"renamed", "entity", best->id, model::kindName(best->kind), best->scope, r->name + " -> " + best->name, r->id, ""});
     }
   }
   // the members of a renamed class are compared under their new name
@@ -167,7 +172,8 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
       model::Entity moved = ea;  // under its new name the scope is not a change
       moved.scope = eb->scope;
       const auto diffs = differences(moved, *eb);
-      if (!diffs.empty()) out.changes.push_back({"changed", "entity", newId, model::kindName(ea.kind), rn.second, join(diffs, "; "), "", ""});
+      if (!diffs.empty())
+        out.changes.push_back({"changed", "entity", newId, model::kindName(ea.kind), rn.second, join(diffs, "; "), "", ""});
     }
     for (const auto& pair : b.entities()) {
       const model::Entity& eb = pair.second;

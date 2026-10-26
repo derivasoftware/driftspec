@@ -13,10 +13,10 @@ namespace bind {
 
 /// A reference found while binding, resolved later by the Checker.
 struct Reference {
-  std::string from;        ///< identity of the referring entity
-  std::string target;      ///< the name as written
-  std::string scope;       ///< qualified scope where it was written (R4)
-  std::string relation;    ///< inherits, uses, verifies, refines, realises, exercises, refers
+  std::string from;          ///< identity of the referring entity
+  std::string target;        ///< the name as written
+  std::string scope;         ///< qualified scope where it was written (R4)
+  std::string relation;      ///< inherits, uses, verifies, refines, realises, exercises, refers
   model::Kind expectedKind;  ///< what to create when nobody declares it (R6)
   model::Location location;
   std::string multiplicity;       ///< for owns/refs/shares (R16)
@@ -73,8 +73,9 @@ class Binder {
   void bindSequence(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order, int& frames);
   /// Relate `from` to every class-like name of a type expression (R15, R16).
-  TypeUse bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from, const std::string& relation,
-                   const std::string& multiplicity, const std::vector<std::string>& params, const model::Location& location);
+  TypeUse bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
+                   const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
+                   const model::Location& location);
   void declareOperator(model::Entity& cls, const std::string& symbol, const model::Location& location);
   model::Location locationOf(const parse::ParsedFile& file, TSNode node) const;
   std::string qualify(const std::string& scope, const std::string& name) const;

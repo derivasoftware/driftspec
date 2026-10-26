@@ -22,7 +22,9 @@ class TestIrExport : public ::testing::Test {
     driftspec::check::Checker(model).run(binder);
   }
 
-  nlohmann::json render(const std::string& diagram) { return nlohmann::json::parse(driftspec::render::IrExport(model).render("diagram:" + diagram, false)); }
+  nlohmann::json render(const std::string& diagram) {
+    return nlohmann::json::parse(driftspec::render::IrExport(model).render("diagram:" + diagram, false));
+  }
 
   static const nlohmann::json* node(const nlohmann::json& doc, const std::string& id) {
     for (const auto& n : doc["nodes"]) {
@@ -83,7 +85,7 @@ TEST_F(TestIrExport, AnEnumIsAValueSoItIsAssociatedNotOwned) {
   EXPECT_EQ((*node(doc, "ds@ds::Severity"))["classifier"], "enum");
   EXPECT_EQ(edges(doc, "association"), 1);
   EXPECT_EQ(edges(doc, "composition"), 1);
-  EXPECT_EQ(node(doc, "ds@ds::Finding")->count("stereotype"), 0u);  // nothing shown beyond members
+  EXPECT_EQ(node(doc, "ds@ds::Finding")->count("stereotype"), 0u);                            // nothing shown beyond members
   EXPECT_EQ((*node(doc, "ds@ds::Finding"))["sectionKinds"], nlohmann::json({"attributes"}));  // hide: methods
 }
 

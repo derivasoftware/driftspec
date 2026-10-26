@@ -21,7 +21,9 @@ std::string withoutRevision(const std::string& id) {
   return std::regex_match(id, m, kArtefactWithRevision) ? m[1].str() : id;
 }
 
-bool looksLikeArtefact(const std::string& name) { return std::regex_match(name, kArtefactBare) || std::regex_match(name, kArtefactWithRevision); }
+bool looksLikeArtefact(const std::string& name) {
+  return std::regex_match(name, kArtefactBare) || std::regex_match(name, kArtefactWithRevision);
+}
 
 std::vector<std::string> split(const std::string& text, char sep) {
   std::vector<std::string> out;
@@ -145,7 +147,8 @@ void Checker::checkArtefacts() {
     const auto method = e.fields.find("method");
     if (e.kind == model::Kind::Verification && method != e.fields.end() && method->second == "test") {
       const auto tests = e.fields.find("tests");
-      if (tests == e.fields.end() || tests->second.empty()) model_.report({"W-VER-NO-TEST", "warning", e.id + " verifies by test but names no tests", e.location});
+      if (tests == e.fields.end() || tests->second.empty())
+        model_.report({"W-VER-NO-TEST", "warning", e.id + " verifies by test but names no tests", e.location});
     }
   }
 }
@@ -157,7 +160,8 @@ void Checker::resolveReference(const bind::Reference& reference) {
     std::smatch m;
     if (!std::regex_match(reference.target, m, kArtefactWithRevision)) {
       // a link goes against a revision: an unpinned one says nothing about which text was meant
-      model_.report({"E-REF-UNPINNED", "error", reference.from + " refers to " + reference.target + " without a revision; write " + reference.target + "-<revision>",
+      model_.report({"E-REF-UNPINNED", "error",
+                     reference.from + " refers to " + reference.target + " without a revision; write " + reference.target + "-<revision>",
                      reference.location});
       return;
     }
@@ -169,7 +173,8 @@ void Checker::resolveReference(const bind::Reference& reference) {
     }
     if (!declaredId.empty() && declaredId != reference.target) {
       model_.report({"W-REVISION-DRIFT", "warning",
-                     reference.from + " refers to " + reference.target + " but the workspace declares " + declaredId + ": the link is behind the artefact",
+                     reference.from + " refers to " + reference.target + " but the workspace declares " + declaredId +
+                         ": the link is behind the artefact",
                      reference.location});
       model_.relate({reference.relation, reference.from, declaredId, reference.location, reference.multiplicity});
       return;
@@ -226,7 +231,8 @@ void Checker::checkTemplateBound(const bind::Reference& reference) {
     if (boundId.empty() || !arg || arg->expected) continue;  // waits for a declaration (R6)
     if (!derives(argId, boundId)) {
       model_.report({"E-TEMPLATE-BOUND", "error",
-                     reference.args[i] + " does not satisfy " + params[i] + ": " + bound->second + " of " + templateId + " (used by " + reference.from + ")",
+                     reference.args[i] + " does not satisfy " + params[i] + ": " + bound->second + " of " + templateId + " (used by " +
+                         reference.from + ")",
                      reference.location});
     }
   }
@@ -314,7 +320,8 @@ void Checker::checkMessage(const bind::Message& message) {
       const auto local = seq->fields.find("local." + message.to);
       if (local == seq->fields.end()) {
         model_.report({"W-PARTICIPANT-UNDECLARED", "warning",
-                       "'" + message.to + "' is neither an attribute of " + cls->id + ", a parameter of " + subject->name + " nor a local of " + seq->name,
+                       "'" + message.to + "' is neither an attribute of " + cls->id + ", a parameter of " + subject->name +
+                           " nor a local of " + seq->name,
                        message.location});
         return;
       }
@@ -330,7 +337,8 @@ void Checker::checkMessage(const bind::Message& message) {
   const std::string opId = typeId + "::" + message.op;
   const model::Entity* op = model_.find(opId);
   if (!op) {
-    model_.report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
+    model_.report(
+        {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
     return;
   }
   model_.relate({"calls", msg->id, op->id, message.location, ""});
@@ -338,7 +346,8 @@ void Checker::checkMessage(const bind::Message& message) {
   const int expected = params == op->fields.end() || params->second.empty() ? 0 : static_cast<int>(split(params->second, ',').size());
   if (expected != message.argc) {
     model_.report({"E-MSG-ARITY", "error",
-                   opId + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " + std::to_string(message.argc) + " given",
+                   opId + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
+                       std::to_string(message.argc) + " given",
                    message.location});
   }
   // a message to an operation with a behaviour expands to it (B5): derived, never written
@@ -374,11 +383,12 @@ void Checker::checkEvent(const bind::Event& event) {
     return;
   }
   if (event.action) {
-    model_.report({"W-ACTION-UNDECLARED", "warning", "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});
+    model_.report({"W-ACTION-UNDECLARED", "warning",
+                   "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});
     return;
   }
-  model_.report({"W-EVENT-UNDECLARED", "warning", "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type,
-                 event.location});
+  model_.report({"W-EVENT-UNDECLARED", "warning",
+                 "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type, event.location});
 }
 
 // A owns B and B owns A: nobody can create either (R16). Self-composition (a tree) is fine.

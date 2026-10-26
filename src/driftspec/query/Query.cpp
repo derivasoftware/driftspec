@@ -12,13 +12,20 @@ namespace {
 
 Answer entityAnswer(const model::Entity& e, const std::string& detail = "") { return {model::kindName(e.kind), e.id, detail}; }
 
-bool endsWith(const std::string& s, const std::string& suffix) { return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0; }
+bool endsWith(const std::string& s, const std::string& suffix) {
+  return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
 
 }  // namespace
 
 std::vector<std::pair<std::string, std::string>> Query::questions() {
-  return {{"diagrams", ""},           {"entities", "<scope>"},  {"relations", "<identity>"}, {"artefacts", "<identity>"},
-          {"behaviours", "<identity>"}, {"shows", "<diagram>"}, {"findings", "[file]"}};
+  return {{"diagrams", ""},
+          {"entities", "<scope>"},
+          {"relations", "<identity>"},
+          {"artefacts", "<identity>"},
+          {"behaviours", "<identity>"},
+          {"shows", "<diagram>"},
+          {"findings", "[file]"}};
 }
 
 std::vector<Answer> Query::ask(const std::string& question, const std::string& subject) const {
@@ -58,8 +65,10 @@ std::vector<Answer> Query::entities(const std::string& asked) const {
 std::vector<Answer> Query::relations(const std::string& id) const {
   std::vector<Answer> out;
   for (const auto& r : model_.relations()) {
-    if (r.from == id) out.push_back({r.kind, r.to, "->" + (r.multiplicity.empty() ? "" : " " + r.multiplicity)});
-    else if (r.to == id) out.push_back({r.kind, r.from, "<-"});
+    if (r.from == id)
+      out.push_back({r.kind, r.to, "->" + (r.multiplicity.empty() ? "" : " " + r.multiplicity)});
+    else if (r.to == id)
+      out.push_back({r.kind, r.from, "<-"});
   }
   return out;
 }
