@@ -3,7 +3,7 @@
 (comment) @comment
 
 [ "package" "module" "extern" "requirement" "constraint" "verification" "boundary" "operation"
-  "class" "dataclass" "enum" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "on" "return"
+  "class" "dataclass" "enum" "function" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "on" "return"
   "loop" "alt" "opt" "else" ] @keyword
 
 (method_modifier) @keyword.modifier
@@ -24,8 +24,9 @@
 (verification id: (name) @constant)
 (boundary name: (name) @type.definition)
 (operation name: (name) @function)
-(method name: (name) @function.method)
-(attribute name: (name) @property)
+(method name: (member_name) @function.method)
+(function name: (member_name) @function)
+(attribute name: (member_name) @property)
 (operator symbol: (operator_symbol) @function.method)
 (operator_set (operator_item (operator_symbol) @function.method))
 (operator_set (operator_item family: (name) @function.method))
@@ -48,7 +49,7 @@
 (string) @string
 (message from: (name) @variable)
 (message to: (name) @variable)
-(message op: (name) @function.method.call)
+(message op: (qualified_name) @function.method.call)
 (return to: (name) @variable)
 (return op: (name) @function.method.call)
 (transition from: (name) @constant)

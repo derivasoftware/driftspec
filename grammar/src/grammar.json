@@ -196,6 +196,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "function"
+        },
+        {
+          "type": "SYMBOL",
           "name": "sequence"
         },
         {
@@ -620,6 +624,88 @@
           ]
         }
       ]
+    },
+    "function": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "FIELD",
+                "name": "visibility",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "visibility"
+                }
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "STRING",
+            "value": "function"
+          },
+          {
+            "type": "FIELD",
+            "name": "name",
+            "content": {
+              "type": "SYMBOL",
+              "name": "member_name"
+            }
+          },
+          {
+            "type": "SYMBOL",
+            "name": "parameters"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "->"
+                  },
+                  {
+                    "type": "FIELD",
+                    "name": "returns",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "type"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "FIELD",
+                "name": "body",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "member_body"
+                }
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        ]
+      }
     },
     "template_params": {
       "type": "SEQ",
@@ -1115,6 +1201,10 @@
               {
                 "type": "STRING",
                 "value": "shares"
+              },
+              {
+                "type": "STRING",
+                "value": "function"
               }
             ]
           },
@@ -1792,7 +1882,7 @@
           "name": "op",
           "content": {
             "type": "SYMBOL",
-            "name": "name"
+            "name": "qualified_name"
           }
         },
         {

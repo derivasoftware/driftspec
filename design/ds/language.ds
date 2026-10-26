@@ -356,6 +356,63 @@ package driftspec@ds {
         }
       }
 
+      // ---- function ----
+      requirement REQ-00054-1 {
+        tags: language, lld, function
+        verification VER-00058-1 {
+          title: Unit tests confirm a function is an operation of its module: the functions oracle
+          method: test
+          tests:
+            tests/integration/ds/check/test_functions.cpp::TestFunctions.TheOracleFindingsAndNothingElse
+        }
+        title: A function shall be an operation of a module, outside any class, identified by its module and its name
+        text:
+          function name(params) -> type in a module, with a member's optional
+          visibility in front, public when absent; two of one name are
+          E-DUPLICATE-IDENTITY. An extern module declares functions as names.
+        rationale:
+          A Python module or a C++ namespace declares operations no class
+          holds; a design that wraps them in a class the code does not have
+          drifts from it. Migrating iris (2026-10-26) found 133 of its design
+          entities were functions.
+
+        requirement REQ-00055-1 {
+          tags: language, lld, function
+          title: A function shall carry a method's signature and body
+          text: Parameters and the return give use; the body holds notes, annotations, contracts and nested artefacts.
+          verification VER-00059-1 {
+            method: test
+            tests:
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.AFunctionIsAnOperationOfItsModule
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.ItsSignatureGivesUseAndItsBodyIsAMethods
+          }
+        }
+        requirement REQ-00056-1 {
+          tags: language, lld, function
+          title: The behaviour of a function shall run on its parameters and locals, and a call with no target shall reach a function of the module
+          text:
+            sequence gather { }; there is no self. A call with no target is a
+            function resolved outward from the module, `-> tasks::gather()` one
+            of another module; a method reaches one its class does not declare.
+            In a sequence diagram a function runs on its module's lifeline.
+          verification VER-00060-1 {
+            method: test
+            tests:
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.ItsBehaviourRunsOnItsParametersAndCallsItsNeighbours
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.ASequenceOfAFunctionRunsOnItsModule
+          }
+        }
+        requirement REQ-00057-1 {
+          tags: language, lld, function
+          title: A class diagram shall draw each function as a box of its own, stereotyped function
+          verification VER-00061-1 {
+            method: test
+            tests:
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.AClassDiagramDrawsEachFunctionAsABox
+          }
+        }
+      }
+
       // ---- sequence ----
       requirement REQ-00034-1 {
         tags: language, lld, sequence

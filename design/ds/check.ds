@@ -32,6 +32,11 @@ package driftspec@ds {
       }
       - checkMessage(message: bind::Message) -> void {
         @requirement REQ-00037-1
+        @requirement REQ-00056-1
+      }
+      - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00037-1
+        @requirement REQ-00038-1
       }
       - checkEvent(event: bind::Event) -> void {
         @requirement REQ-00039-1

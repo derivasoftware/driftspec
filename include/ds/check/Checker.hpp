@@ -45,6 +45,8 @@ class Checker {
   /// The class a behaviour is about, and whether its subject is a method.
   const model::Entity* subjectClass(const model::Entity& sequence, const model::Entity** subject) const;
   void couple(const model::Entity& sequence, const model::Entity& type, bool transient);
+  /// A message that reached its operation: the call, its arity, and its expansion (B5).
+  void call(model::Entity& msg, const model::Entity& op, const bind::Message& message);
   void checkTemplateBound(const bind::Reference& reference);
   void checkOwnershipCycles();
   void classify();

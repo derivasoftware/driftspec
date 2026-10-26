@@ -36,7 +36,7 @@ module.exports = grammar({
     _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.boundary, $.package, $.module),
 
     module: $ => seq(optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
-    _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.sequence, $.state),
+    _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.function, $.sequence, $.state),
 
     // ---- process artefacts ------------------------------------------------
     // a requirement nested in a requirement refines it; a verification nested in one verifies it (R3)
@@ -64,6 +64,16 @@ module.exports = grammar({
       optional(field('operators', $.operator_set)),
       optional(field('body', $.class_body)),
     ),
+    // a function is an operation of the module, outside any class: what a Python module or a C++
+    // namespace declares free. Its signature and body are a method's; its scope is the module (2026-10-26)
+    function: $ => prec.right(seq(
+      optional(field('visibility', $.visibility)),
+      'function',
+      field('name', $.member_name),
+      $.parameters,
+      optional(seq('->', field('returns', $.type))),
+      optional(field('body', $.member_body)),
+    )),
     template_params: $ => seq('<', $.template_param, repeat(seq(',', $.template_param)), '>'),
     template_param: $ => seq(field('name', $.name), optional(seq(':', field('bound', $.qualified_name)))),
     operator_set: $ => seq('<<', $.operator_item, repeat(seq(',', $.operator_item)), '>>'),
@@ -92,7 +102,7 @@ module.exports = grammar({
     ownership: $ => choice('owns', 'refs', 'shares'),
     // a modifier is a word only in front of a name: `+ abstract: bool` is an attribute named abstract,
     // `+ refs: map<..>` one named refs. The parser decides by what follows; nothing is reserved.
-    member_name: $ => choice($.name, alias(choice('abstract', 'static', 'const', 'owns', 'refs', 'shares'), $.name)),
+    member_name: $ => choice($.name, alias(choice('abstract', 'static', 'const', 'owns', 'refs', 'shares', 'function'), $.name)),
     operator: $ => prec.right(seq(
       'operator',
       field('symbol', $.operator_symbol),
@@ -125,7 +135,7 @@ module.exports = grammar({
       optional(field('from', $.name)),
       '->',
       optional(seq(field('to', $.name), '.')),
-      field('op', $.name),
+      field('op', $.qualified_name),  // `-> tasks::gather(...)`: a function of another module, by its name (2026-10-26)
       $.arguments,
       optional(seq('->', field('result', $.name))),
     ),

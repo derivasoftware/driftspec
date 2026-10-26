@@ -322,19 +322,38 @@ const model::Entity* Checker::subjectClass(const model::Entity& sequence, const 
   *subject = s;
   if (s->kind == model::Kind::Method) return model_.find(s->scope);
   if (s->kind == model::Kind::Class) return s;
-  return nullptr;
+  return nullptr;  // a function has no class: its context is its parameters and its module
 }
 
 void Checker::couple(const model::Entity& sequence, const model::Entity& type, bool transient) {
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(sequence, &subject);
-  if (!cls || type.expected || type.has("extern")) return;
-  if (type.scope == cls->scope || type.id == cls->id) return;  // inside the module: cohesion, not coupling
+  const bool function = subject && subject->kind == model::Kind::Function;
+  if ((!cls && !function) || type.expected || type.has("extern")) return;
+  const std::string home = cls ? cls->scope : subject->scope;
+  if (type.scope == home || (cls && type.id == cls->id)) return;  // inside the module: cohesion, not coupling
   const std::string kind = transient ? "couples-transient" : "couples-structural";
   for (const auto& r : model_.relations()) {
     if (r.kind == kind && r.from == sequence.id && r.to == type.id) return;
   }
   model_.relate({kind, sequence.id, type.id, sequence.location, ""});
+}
+
+void Checker::call(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+  model_.relate({"calls", msg.id, op.id, message.location, ""});
+  const auto params = op.fields.find("params");
+  const int expected = params == op.fields.end() || params->second.empty() ? 0 : static_cast<int>(split(params->second, ',').size());
+  if (expected != message.argc) {
+    model_.report({"E-MSG-ARITY", "error",
+                   op.id + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
+                       std::to_string(message.argc) + " given",
+                   message.location});
+  }
+  // a message to an operation with a behaviour expands to it (B5): derived, never written
+  if (const model::Entity* child = model_.find(op.id + "::sequence")) {
+    model_.relate({"expands-to", msg.id, child->id, message.location, ""});
+    msg.fields["expands"] = child->id;
+  }
 }
 
 void Checker::checkMessage(const bind::Message& message) {
@@ -343,24 +362,43 @@ void Checker::checkMessage(const bind::Message& message) {
   if (!seq || !msg) return;
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(*seq, &subject);
-  if (!cls) return;  // the subject waits for its declaration (R6)
-  // the participant: self, an attribute of the class, a parameter of the method, or a local (B3)
+  const bool function = subject && subject->kind == model::Kind::Function;
+  if (!cls && !function) return;  // the subject waits for its declaration (R6)
+  const std::string home = cls ? cls->scope : subject->scope;
+  // a call with no target from a function, or one the class does not declare, is a function of the
+  // module, resolved outward like any name: a free function calls its neighbours (2026-10-26)
+  if (message.to == "self" && (function || !model_.find(cls->id + "::" + message.op))) {
+    const std::string id = resolve(message.op, home);
+    const model::Entity* target = id.empty() ? nullptr : model_.find(id);
+    if (target && target->kind == model::Kind::Function) {
+      msg->fields["type"] = target->scope;
+      couple(*seq, *target, true);  // a function of another module couples like a local
+      call(*msg, *target, message);
+      return;
+    }
+    if (function) {
+      model_.report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + message.op + ", which no function of " + home + " declares",
+                     message.location});
+      return;
+    }
+  }
+  // the participant: self, an attribute of the class, a parameter of the method or function, or a local (B3)
   std::string typeId;
   bool transient = false;
   if (message.to == "self") {
     typeId = cls->id;
-  } else if (const model::Entity* attribute = model_.find(cls->id + "::" + message.to)) {
+  } else if (const model::Entity* attribute = cls ? model_.find(cls->id + "::" + message.to) : nullptr) {
     const auto type = attribute->fields.find("type");
     typeId = type == attribute->fields.end() ? "" : resolveTypeText(type->second, cls->scope);
   } else {
     bool found = false;
-    if (subject->kind == model::Kind::Method) {
+    if (subject->kind == model::Kind::Method || function) {
       const auto params = subject->fields.find("params");
       if (params != subject->fields.end()) {
         for (const auto& p : split(params->second, ',')) {
           const auto colon = p.find(':');
           if (colon == std::string::npos || p.substr(0, colon) != message.to) continue;
-          typeId = resolveTypeText(p.substr(colon + 1).substr(p.substr(colon + 1).find_first_not_of(' ')), cls->scope);
+          typeId = resolveTypeText(p.substr(colon + 1).substr(p.substr(colon + 1).find_first_not_of(' ')), home);
           found = true;
         }
       }
@@ -368,10 +406,9 @@ void Checker::checkMessage(const bind::Message& message) {
     if (!found) {
       const auto local = seq->fields.find("local." + message.to);
       if (local == seq->fields.end()) {
+        const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
         model_.report({"W-PARTICIPANT-UNDECLARED", "warning",
-                       "'" + message.to + "' is neither an attribute of " + cls->id + ", a parameter of " + subject->name +
-                           " nor a local of " + seq->name,
-                       message.location});
+                       "'" + message.to + "' is neither " + context + subject->name + " nor a local of " + seq->name, message.location});
         return;
       }
       typeId = resolveTypeText(local->second, seq->scope);
@@ -390,20 +427,7 @@ void Checker::checkMessage(const bind::Message& message) {
         {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
     return;
   }
-  model_.relate({"calls", msg->id, op->id, message.location, ""});
-  const auto params = op->fields.find("params");
-  const int expected = params == op->fields.end() || params->second.empty() ? 0 : static_cast<int>(split(params->second, ',').size());
-  if (expected != message.argc) {
-    model_.report({"E-MSG-ARITY", "error",
-                   opId + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
-                       std::to_string(message.argc) + " given",
-                   message.location});
-  }
-  // a message to an operation with a behaviour expands to it (B5): derived, never written
-  if (const model::Entity* child = model_.find(opId + "::sequence")) {
-    model_.relate({"expands-to", msg->id, child->id, message.location, ""});
-    msg->fields["expands"] = child->id;
-  }
+  call(*msg, *op, message);
 }
 
 void Checker::checkLocals() {

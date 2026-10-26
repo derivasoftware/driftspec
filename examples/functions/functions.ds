@@ -1,0 +1,78 @@
+// functions.ds — functions of a module (decided 2026-10-26).
+// A Python module or a C++ namespace declares operations outside any class;
+// a design written in DriftSpec says them as they are, not wrapped in a class
+// that the code does not have. The `!` lines are the findings the tool emits.
+//
+//  F1  `function name(params) -> type` in a module, with the optional
+//      visibility of a member in front (`- function _row_of(...)`), public when
+//      absent. Its identity is the module's plus its name, like a class:
+//      iris@tasks::gather. Two of one name are E-DUPLICATE-IDENTITY.
+//  F2  Its signature and body are a method's: parameters and the return give
+//      `uses`; the body holds notes, annotations (@requirement, @constraint),
+//      contracts and nested artefacts.
+//  F3  Its behaviour is `sequence gather { }`. The participants are its
+//      parameters and the locals written; there is no self. A call with no
+//      target is a function of the module, resolved outward like any name;
+//      a method calling one that its class does not declare reaches it too.
+//  F4  In a class diagram each function is one box «function»; in a sequence
+//      a function runs on its module's lifeline.
+//  F5  An extern module declares functions as names, with no obligations.
+
+package iris {
+
+  extern module requests {
+    function get(url: string) -> string
+  }
+
+  module tasks {
+    requirement REQ-00900-1: The tasks of a project shall be gathered from the board
+
+    class Board {
+      + issues(project: string) -> list<Task>
+    }
+    dataclass Task {
+      + key: string
+      + title: string
+    }
+
+    function gather(board: Board, project: string) -> list<Task> {
+      @requirement REQ-00900-1
+      note: the one door to the board
+      [requires: project is a board identifier]
+    }
+    - function _row_of(task: Task) -> string
+    function describe(tasks: list<Task>) -> string
+    function describe(task: Task) -> string      // ! E-DUPLICATE-IDENTITY: a function is identified by its name, like a member
+
+    sequence gather {
+      -> board.issues(project) -> issues
+      -> _row_of(task)
+      -> _row_of(task, project)                    // ! E-MSG-ARITY: _row_of takes 1 parameter, 2 given
+      -> summarise(issues)                         // ! W-MSG-UNDECLARED: no function of iris@tasks is called summarise
+      -> cache.put(issues)                        // ! W-PARTICIPANT-UNDECLARED: a function has no attributes; cache is neither a parameter nor a local
+    }
+  }
+
+  module cli {
+    class Command {
+      + run(project: string) -> int
+    }
+    function main(argv: list<string>) -> int
+
+    sequence Command::run {
+      local board: tasks::Board
+      -> main(project)                             // a method reaches a function of its module
+      -> tasks::gather(board, project)
+    }
+  }
+}
+
+diagram CL_Tasks {
+  kind: class
+  include: iris@tasks::*
+}
+
+diagram SEQ_Gather {
+  kind: sequence
+  include: iris@tasks::gather
+}

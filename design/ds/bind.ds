@@ -88,6 +88,13 @@ package driftspec@ds {
       - bindMember(file: parse::ParsedFile, node: TSNode, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
         @requirement REQ-00026-1
       }
+      - bindFunction(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+        @requirement REQ-00054-1
+      }
+      - bindSignature(file: parse::ParsedFile, node: TSNode, entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
+        @requirement REQ-00028-1
+        @requirement REQ-00055-1
+      }
       - bindMemberBody(file: parse::ParsedFile, member: TSNode, entity: model::Entity, scope: std::string) -> void {
         @requirement REQ-00032-1
       }

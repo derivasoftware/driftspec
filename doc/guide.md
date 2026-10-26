@@ -53,7 +53,8 @@ them. The vision (`vision.md`) says why; this says what.*
 
 ## 2. Static design (`examples/static`)
 
-- Kinds: `class`, `dataclass`, `enum`. Interface and abstract are derived
+- Kinds: `class`, `dataclass`, `enum`, and `function` for an operation of the
+  module (below). Interface and abstract are derived
   from the methods and never written (R14).
 - Any entity, a member too, may open a body with fields, `note:`,
   annotations, contracts and nested requirements or constraints; nesting
@@ -95,6 +96,21 @@ them. The vision (`vision.md`) says why; this says what.*
   written, which is what a code reader compares.
 - **Enums are annotated like classes (2026-10-26)**: `@requirement` lines
   before the values.
+- **Functions of a module (2026-10-26).** A module declares operations no
+  class holds, as a Python module or a C++ namespace does:
+  `function gather(board: Board, project: string) -> list<Task>`, with a
+  member's visibility in front when it is not public (`- function _row_of(..)`).
+  Its identity is its module's plus its name, like a class
+  (`iris@tasks::gather`); two of one name are `E-DUPLICATE-IDENTITY`. Its
+  signature and body are a method's: parameters and the return give `uses`,
+  the body takes notes, `@requirement`, `@constraint`, contracts and nested
+  artefacts. An extern module declares functions as names. Its behaviour is
+  `sequence gather { }`: the participants are its parameters and locals, there
+  is no self; a call with no target is a function resolved outward from the
+  module, `-> tasks::gather(..)` one of another module, and a method reaches a
+  function its class does not declare the same way. A class diagram draws each
+  function as a box «function»; a sequence diagram runs it on its module's
+  lifeline. Corpus: `examples/functions`.
 - **Nothing is reserved (2026-10-26).** `abstract`, `static`, `const`,
   `owns`, `refs`, `shares` are modifiers only in front of a name; followed by
   `:` or `(` they are the name: `+ abstract: bool`, `+ refs: map<..>`. A code
