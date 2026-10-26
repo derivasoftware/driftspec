@@ -12,17 +12,17 @@
 #include <string>
 #include <vector>
 
-#include "driftspec/bind/Binder.hpp"
-#include "driftspec/check/Checker.hpp"
-#include "driftspec/diff/Diff.hpp"
-#include "driftspec/export/JsonExport.hpp"
-#include "driftspec/model/Model.hpp"
-#include "driftspec/parse/Parser.hpp"
-#include "driftspec/query/Query.hpp"
-#include "driftspec/render/IrExport.hpp"
-#include "driftspec/render/Layout.hpp"
-#include "driftspec/render/Svg.hpp"
-#include "driftspec/render/Text.hpp"
+#include "ds/bind/Binder.hpp"
+#include "ds/check/Checker.hpp"
+#include "ds/diff/Diff.hpp"
+#include "ds/export/JsonExport.hpp"
+#include "ds/model/Model.hpp"
+#include "ds/parse/Parser.hpp"
+#include "ds/query/Query.hpp"
+#include "ds/render/IrExport.hpp"
+#include "ds/render/Layout.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
 
 namespace {
 
@@ -72,15 +72,15 @@ std::string checkout(const std::string& rev, const std::string& path) {
   return std::string(dir) + "/" + relative;
 }
 
-driftspec::model::Model load(const std::string& dir) {
-  driftspec::model::Model model;
-  driftspec::parse::Parser parser;
-  driftspec::bind::Binder binder(model);
+ds::model::Model load(const std::string& dir) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
   for (const auto& file : parser.parseDirectory(dir)) {
     if (file.hasSyntaxErrors) model.report({"E-SYNTAX", "error", "the file does not parse", {file.path, 1, 1}});
     binder.bind(file);
   }
-  driftspec::check::Checker(model).run(binder);
+  ds::check::Checker(model).run(binder);
   auto& findings = model.findings();
   std::stable_sort(findings.begin(), findings.end(), [](const auto& a, const auto& b) {
     return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;
@@ -120,27 +120,27 @@ int main(int argc, char** argv) {
         return 1;
       }
     }
-    const driftspec::model::Model before = load(a);
-    const driftspec::model::Model after = load(b);
-    const driftspec::diff::DiffResult result = driftspec::diff::Diff::compare(before, after);
+    const ds::model::Model before = load(a);
+    const ds::model::Model after = load(b);
+    const ds::diff::DiffResult result = ds::diff::Diff::compare(before, after);
     if (argc > next + 1) {
       const std::string how = argv[next], diagram = argv[next + 1];
-      const driftspec::model::Model marked = driftspec::diff::Diff::marked(before, after, result);
+      const ds::model::Model marked = ds::diff::Diff::marked(before, after, result);
       const std::string doc =
-          driftspec::render::IrExport(marked).render(diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram, false);
+          ds::render::IrExport(marked).render(diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram, false);
       if (doc.empty()) {
         std::cerr << "no diagram named " << diagram << "\n";
         return 1;
       }
       if (how == "--svg")
-        std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc), width);
+        std::cout << ds::render::Svg().render(ds::render::IrDocument::parse(doc), width);
       else if (how == "--cells")
-        std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc), width) << "\n";
+        std::cout << ds::render::Text().cells(ds::render::IrDocument::parse(doc), width) << "\n";
       else
-        std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0, width);
+        std::cout << ds::render::Text().render(ds::render::IrDocument::parse(doc), isatty(1) != 0, width);
       return 0;
     }
-    std::cout << driftspec::diff::Diff::report(result);
+    std::cout << ds::diff::Diff::report(result);
     return result.findings.empty() ? 0 : 1;
   }
   if (verb == "draw") {
@@ -152,23 +152,23 @@ int main(int argc, char** argv) {
     std::stringstream buffer;
     buffer << in.rdbuf();
     // any render-IR producer (design-render over argos, plantuml-render) reaches the same drawings as a workspace
-    const driftspec::render::IrDocument doc = driftspec::render::IrDocument::parse(buffer.str());
+    const ds::render::IrDocument doc = ds::render::IrDocument::parse(buffer.str());
     const std::string how = argc >= 4 ? argv[3] : "--svg";
     if (how == "--text")
-      std::cout << driftspec::render::Text().render(doc, isatty(1) != 0, width);
+      std::cout << ds::render::Text().render(doc, isatty(1) != 0, width);
     else if (how == "--cells")
-      std::cout << driftspec::render::Text().cells(doc, width) << "\n";
+      std::cout << ds::render::Text().cells(doc, width) << "\n";
     else
-      std::cout << driftspec::render::Svg().render(doc, width);
+      std::cout << ds::render::Svg().render(doc, width);
     return 0;
   }
   if (!isDirectory(dir)) {
     std::cerr << "cannot read " << dir << ": not a directory\n";
     return 1;
   }
-  const driftspec::model::Model model = load(dir);
+  const ds::model::Model model = load(dir);
   if (verb == "render") {
-    driftspec::render::IrExport ir(model);
+    ds::render::IrExport ir(model);
     if (argc == 3) {
       for (const auto& d : ir.diagrams()) std::cout << d.substr(std::string("diagram:").size()) << "\n";
       return 0;
@@ -184,17 +184,17 @@ int main(int argc, char** argv) {
       return 1;
     }
     if (svg) {
-      std::cout << driftspec::render::Svg().render(driftspec::render::IrDocument::parse(doc), width);
+      std::cout << ds::render::Svg().render(ds::render::IrDocument::parse(doc), width);
       return 0;
     }
     if (text) {
-      std::cout << driftspec::render::Text().render(driftspec::render::IrDocument::parse(doc), isatty(1) != 0, width);
+      std::cout << ds::render::Text().render(ds::render::IrDocument::parse(doc), isatty(1) != 0, width);
       return 0;
     }
     if (layoutOnly) {
       // the placed rectangles and routes, in cells: the portable form for hosts that draw themselves
-      const driftspec::render::IrDocument parsed = driftspec::render::IrDocument::parse(doc).bundled();
-      const driftspec::render::LayoutResult lay = driftspec::render::layout(parsed, driftspec::render::Metrics::text(), width);
+      const ds::render::IrDocument parsed = ds::render::IrDocument::parse(doc).bundled();
+      const ds::render::LayoutResult lay = ds::render::layout(parsed, ds::render::Metrics::text(), width);
       std::cout << "{\"nodes\":[";
       bool first = true;
       for (const auto& p : lay.placed) {
@@ -205,7 +205,7 @@ int main(int argc, char** argv) {
       std::cout << "],\"routes\":[";
       first = true;
       for (const auto& r : lay.routes) {
-        const driftspec::render::IrEdge& e = parsed.edges[r.first];
+        const ds::render::IrEdge& e = parsed.edges[r.first];
         std::cout << (first ? "" : ",") << "{\"from\":\"" << e.from << "\",\"to\":\"" << e.to << "\",\"kind\":\"" << e.kind
                   << "\",\"points\":[";
         for (size_t k = 0; k < r.second.points.size(); ++k)
@@ -217,7 +217,7 @@ int main(int argc, char** argv) {
       return 0;
     }
     if (cells) {
-      std::cout << driftspec::render::Text().cells(driftspec::render::IrDocument::parse(doc), width) << "\n";
+      std::cout << ds::render::Text().cells(ds::render::IrDocument::parse(doc), width) << "\n";
       return 0;
     }
     std::cout << doc << "\n";
@@ -233,25 +233,24 @@ int main(int argc, char** argv) {
       else
         subject = argv[i];
     }
-    const driftspec::query::Query query(model);
-    const std::vector<driftspec::query::Answer> answers = query.ask(question, subject);
+    const ds::query::Query query(model);
+    const std::vector<ds::query::Answer> answers = query.ask(question, subject);
     const bool failed = !answers.empty() && answers.front().kind == "error";
     if (failed) {
       std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
       if (answers.front().detail.find("not a question") != std::string::npos) {
         std::cerr << "questions:";
-        for (const auto& q : driftspec::query::Query::questions())
-          std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
+        for (const auto& q : ds::query::Query::questions()) std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
         std::cerr << "\n";
       }
       return 1;
     }
-    std::cout << (json ? driftspec::query::Query::json(answers) + "\n" : driftspec::query::Query::text(answers));
+    std::cout << (json ? ds::query::Query::json(answers) + "\n" : ds::query::Query::text(answers));
     return 0;
   }
   if (argc != 3) return usage();
   if (verb == "export") {
-    std::cout << driftspec::exporter::JsonExport().render(model) << "\n";
+    std::cout << ds::exporter::JsonExport().render(model) << "\n";
     return 0;
   }
   if (verb == "coupling") {
@@ -264,7 +263,7 @@ int main(int argc, char** argv) {
     }
     if (byBehaviour.empty()) std::cout << "no behaviour couples to another module\n";
     for (const auto& b : byBehaviour) {
-      const driftspec::model::Entity* seq = model.find(b.first);
+      const ds::model::Entity* seq = model.find(b.first);
       std::cout << (seq ? seq->name : b.first) << "  (module " << (seq ? seq->scope : "?") << ")\n";
       for (const auto& t : b.second) std::cout << "  -> " << t << "\n";
     }

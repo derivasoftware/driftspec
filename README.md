@@ -5,10 +5,10 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
 
 - `grammar/` — the tree-sitter grammar (`grammar.js`), the generated parser and
   the external scanner for indented text blocks.
-- `include/driftspec/`, `src/driftspec/` — the engine: parse, bind, check, export.
+- `include/ds/`, `src/ds/` — the engine (namespace root `ds`): parse, model, bind, check, render, diff, query, exporter.
 - `app/ds/` — the `ds` command line: `ds check`, `ds export`, `ds render`, `ds draw`, `ds coupling`, `ds diff`, `ds query` (run `ds` for the arguments).
 - `examples/diag/` — the reference workspace, one entity per file.
-- `tests/unit/driftspec/` — GoogleTest suites, one per subsystem.
+- `tests/unit/ds/` — GoogleTest suites, mirroring the namespaces; `tests/system/ds/` drives the binary from outside.
 
 Build: `cmake -S . -B build && cmake --build build -j && ctest --test-dir build`.
 Regenerate the parser after editing the grammar: `tree-sitter generate` in `grammar/`.

@@ -2,6 +2,7 @@
 // One class per subsystem; the arrows are what each one hands to the next.
 
 package driftspec {
+  namespace: ds                       // the code root: boxes (@) are organisation, namespaces (::) are the code
 
   module parse {
     class Parser {

@@ -56,7 +56,7 @@ target_include_directories(driftspec_grammar PRIVATE grammar/src)
 target_link_libraries(driftspec_grammar PUBLIC tree_sitter_runtime)
 
 # ---- the engine --------------------------------------------------------------
-file(GLOB_RECURSE driftspec_SOURCES CONFIGURE_DEPENDS "src/driftspec/*.cpp")
+file(GLOB_RECURSE driftspec_SOURCES CONFIGURE_DEPENDS "src/ds/*.cpp")
 add_library(driftspec STATIC ${driftspec_SOURCES})
 target_include_directories(driftspec PUBLIC include)
 target_link_libraries(driftspec PUBLIC driftspec_grammar
