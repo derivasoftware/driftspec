@@ -179,7 +179,7 @@ TEST_F(TestQualification, TheGrammarShipsWithQueriesThatNameItsNodes) {
   }
 }
 
-// SREQ-00009-1: the static metamodel, with what is derived derived
+// SREQ-00009-2: the static metamodel, with what is derived derived
 TEST_F(TestQualification, TheStaticMetamodelIsModelledAndClassifiedByDerivation) {
   const auto exported = nlohmann::json::parse(ds("export " + examples("static")).out);
   std::map<std::string, nlohmann::json> by;
