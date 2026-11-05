@@ -119,6 +119,17 @@ package driftspec@ds {
       }
     }
 
+    // Free helpers of resolve, private to the module (anonymous namespace of Checker.cpp).
+    - function withoutRevision(id: std::string) -> std::string {   // REQ-00001-2 becomes REQ-00001
+      @requirement REQ-00023-1
+    }
+    - function outer(scope: std::string) -> std::string {          // the scope one level out: ds@ds::b, ds@ds, ds@, then none
+      @requirement REQ-00023-1
+    }
+    - function qualifyIn(scope: std::string, name: std::string) -> std::string {
+      @requirement REQ-00023-1
+    }
+
     // What ds check does, in order: the first behaviour of this design. The results
     // of the messages are remembered as they go, since each exists only for the
     // messages after it.
@@ -151,10 +162,6 @@ package driftspec@ds {
       -> checkExtensions()
     }
 
-    // How a name resolves, one scenario per place it can be found. The default is
-    // the common one: found in a scope, walking outward from where it was written.
-    // Stripping the revision and building each candidate are free helpers of the
-    // implementation: bare and candidate appear here without their origin.
     // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named
     // branch is a scenario, a path through it; what they all share is written once.
     sequence Checker::checkMessage {
@@ -230,111 +237,72 @@ package driftspec@ds {
       -> call(msg, op, message)
     }
 
+    // How a name resolves: one scenario per place it can be found. The default is the
+    // common one, found in a scope, walking outward from where it was written.
     sequence Checker::resolve {
       local bare: std::string
-      local candidate: std::string
+      local s: std::string
       self -> model_.find(name)
+      opt the model declares it as written: a full id, a global artefact, a package / declared {
+        return name
+      }
+      -> withoutRevision(name) -> bare
       opt the name carries a revision {
         self -> model_.find(bare)
       }
+      opt the model declares the id without its revision / revision {
+        return bare
+      }
+      opt the name has a package path and nobody declares it: no scope is tried / absolute {
+        return ""
+      }
       loop each scope, from the innermost outward, until one declares it {
+        -> qualifyIn(s, name) -> candidate
         self -> model_.find(candidate)
+        -> outer(s) -> s
+      }
+      opt no scope declares it: the extern catalogue {
+        -> externsNamed(name) -> externs
+        alt exactly one extern has that name / extern {
+          // the code returns externs.front(), an expression no return can say
+          return
+        } else / unresolved {
+          return ""
+        }
       }
       return candidate
     }
 
-    sequence Checker::resolve / declared {       // a full id, a global artefact, a package
-      self -> model_.find(name)
-      return name
-    }
-
-    sequence Checker::resolve / revision {       // the id, written with a revision the model does not key on
-      local bare: std::string
-      self -> model_.find(name)
-      self -> model_.find(bare)
-      return bare
-    }
-
-    sequence Checker::resolve / absolute {       // has a package path and nobody declares it: no scope is tried
-      local bare: std::string
-      self -> model_.find(name)
-      opt the name carries a revision {
-        self -> model_.find(bare)
-      }
-      return ""
-    }
-
-    // The one extern of that name. The code returns externs.front(), an expression:
-    // no return can say it, so this trace ends at the call.
-    sequence Checker::resolve / extern {
-      local bare: std::string
-      local candidate: std::string
-      self -> model_.find(name)
-      opt the name carries a revision {
-        self -> model_.find(bare)
-      }
-      loop each scope, from the innermost outward {
-        self -> model_.find(candidate)
-      }
-      -> externsNamed(name) -> externs
-    }
-
-    sequence Checker::resolve / unresolved {     // no scope has it, and no extern or several have that name
-      local bare: std::string
-      local candidate: std::string
-      self -> model_.find(name)
-      opt the name carries a revision {
-        self -> model_.find(bare)
-      }
-      loop each scope, from the innermost outward {
-        self -> model_.find(candidate)
-      }
-      -> externsNamed(name) -> externs
-      return ""
-    }
-
-    // Every extern class or enum of that simple name, in any arity. Filling out and
-    // testing each entity are not messages: std is names only, and a loop variable
-    // is not a participant.
+    // Every extern class or enum of that simple name, in any arity. Filling the lists
+    // and testing each entity are not messages: a loop variable is not a participant.
     sequence Checker::externsNamed {
       local out: std::vector<std::string>
-      self -> model_.entities() -> entities
-      return out
-    }
-
-    sequence Checker::externsNamed / exact {     // exactly one of those found has the arity of the use
       local exact: std::vector<std::string>
+      opt the name has a path, so it is no extern's simple name / qualified {
+        return out
+      }
       self -> model_.entities() -> entities
-      return exact
-    }
-
-    sequence Checker::externsNamed / qualified { // a name with a path is no extern's simple name: out stays empty
-      local out: std::vector<std::string>
+      opt exactly one of those found has the arity of the use / exact {
+        return exact
+      }
       return out
     }
 
     // Walks the inherits relations up from derived. The stack of pending names and
     // the set of seen ones are std containers, whose operations the design does not have.
     sequence Checker::derives {
+      opt derived is base: the first name taken ends the walk / itself {
+        return true
+      }
       loop while names are pending and the last taken is not base {
         opt the name was not seen before {
           self -> model_.relations() -> relations
         }
       }
-      return true
-    }
-
-    sequence Checker::derives / itself {         // derived is base: no relation is read
-      return true
-    }
-
-    sequence Checker::derives / unrelated {      // nothing pending is left, and base never came up
-      loop while names are pending {
-        opt the name was not seen before {
-          self -> model_.relations() -> relations
-        }
+      opt nothing pending is left and base never came up / unrelated {
+        return false
       }
-      return false
+      return true
     }
 
   }

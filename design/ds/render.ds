@@ -1,8 +1,8 @@
 // LLD of the render namespace (ds::render): the model drawn. A diagram selects
 // and decides what to print (IrExport → the render-IR of the plantuml family,
 // SREQ-00006-1, SREQ-00010-1); the IR is laid out once and drawn twice, as SVG
-// and as terminal text, wrapping to a width (SREQ-00005-1). Layout itself is a
-// function (layout(doc, metrics, width) → LayoutResult) over the types below.
+// and as terminal text, wrapping to a width (SREQ-00005-1). Layout itself is the
+// function layout, over the types below.
 
 package driftspec@ds {
 
@@ -214,6 +214,21 @@ package driftspec@ds {
     // so a name for it, not a checked value.
     sequence IrExport::render {
       self -> model_.find(diagramId) -> diagram
+      opt there is no such diagram / no-diagram {
+        return ""
+      }
+      opt it is a sequence diagram / sequence-diagram {
+        -> renderSequence(diagram, pretty) -> ir
+        return ir
+      }
+      opt it is a requirement diagram / requirement-diagram {
+        -> renderRequirements(diagram, pretty) -> ir
+        return ir
+      }
+      opt it is a state diagram / state-diagram {
+        -> renderState(diagram, pretty) -> ir
+        return ir
+      }
       -> select(diagram) -> selected
       opt neighbours is written {
         loop each step {
@@ -236,40 +251,11 @@ package driftspec@ds {
         }
       }
       self -> model_.relations() -> relations
-      return ir
-    }
-
-    // The same steps up to the edges, then the boxes close. Scenarios share nothing,
-    // so only the steps that matter here are repeated.
-    sequence IrExport::render / open-boxes {
-      self -> model_.find(diagramId) -> diagram
-      -> select(diagram) -> selected
-      self -> model_.relations() -> relations
-      self -> model_.relations() -> behaviourCoupling
-      -> closeBoxes(ir, open, pretty) -> closed
-      return closed
-    }
-
-    sequence IrExport::render / no-diagram {
-      self -> model_.find(diagramId) -> diagram
-      return ""
-    }
-
-    sequence IrExport::render / sequence-diagram {
-      self -> model_.find(diagramId) -> diagram
-      -> renderSequence(diagram, pretty) -> ir
-      return ir
-    }
-
-    sequence IrExport::render / requirement-diagram {
-      self -> model_.find(diagramId) -> diagram
-      -> renderRequirements(diagram, pretty) -> ir
-      return ir
-    }
-
-    sequence IrExport::render / state-diagram {
-      self -> model_.find(diagramId) -> diagram
-      -> renderState(diagram, pretty) -> ir
+      opt open: is written / open-boxes {
+        self -> model_.relations() -> behaviourCoupling
+        -> closeBoxes(ir, open, pretty) -> closed
+        return closed
+      }
       return ir
     }
 
@@ -327,6 +313,10 @@ package driftspec@ds {
       + static text() -> Metrics
     }
 
+    // The layout itself: two public functions of Layout.hpp.
+    function sizeOf(node: IrNode, m: Metrics) -> Rect
+    function layout(doc: IrDocument, m: Metrics, maxWidth: int) -> LayoutResult
+
     class Svg {                              // the SVG drawing, with its links, tooltips and script
       @requirement REQ-00007-1
       + render(doc: IrDocument, maxWidth: int) -> std::string   // also over a layout already made: one identity per member
@@ -338,35 +328,60 @@ package driftspec@ds {
       + cells(doc: IrDocument, maxWidth: int) -> std::string
     }
 
-    // The drawing happens in what cannot be told here: the free function layout, the
-    // second render over a layout, the helpers of the source files and the Grid they
-    // fill. So only the bundling shows, and the drawing comes back as a name.
+    // ---- what the drawings keep to their source files ----
+
+    - function sequenceSvg(doc: IrDocument) -> std::string     // a sequence document, drawn without the layout
+
+    - class Grid {                           // the character grid Text fills, cell by cell
+      + dump(color: bool) -> std::string
+      + encode() -> std::string
+      + columns() -> int
+      + rows() -> int
+    }
+
+    - function sequenceGrid(doc: IrDocument) -> Grid
+    - function classGrid(doc: IrDocument, lay: LayoutResult) -> Grid
+
+    // metrics is the pixel table, Metrics::svg(), a static call. The drawing over the
+    // layout is the second render, an overload: neither can be told, so the drawing of a
+    // class document comes back as a name.
     sequence Svg::render {
+      opt a node of the document is a lifeline / sequence-document {
+        -> sequenceSvg(doc) -> drawing
+        return drawing
+      }
       self -> doc.bundled() -> bundled
+      -> layout(bundled, metrics, maxWidth) -> lay
       return drawing
     }
 
-    sequence Svg::render / sequence-document {   // a node of the document is a lifeline
-      return drawing
-    }
-
+    // metrics is the cell table, Metrics::text(), and width is maxWidth less the grid's
+    // margin. The drawing over the layout is the second render, an overload.
     sequence Text::render {
+      opt a node of the document is a lifeline / sequence-document {
+        -> sequenceGrid(doc) -> grid
+        self -> grid.dump(color) -> drawing
+        return drawing
+      }
       self -> doc.bundled() -> bundled
+      -> layout(bundled, metrics, width) -> lay
       return drawing
     }
 
-    sequence Text::render / sequence-document {  // a node of the document is a lifeline
-      return drawing
-    }
-
+    // What comes back is the JSON of the grid, so a name for it.
     sequence Text::cells {
       self -> doc.bundled() -> bundled
-      return grid
-    }
-
-    sequence Text::cells / sequence-document {   // bundled all the same, and not used
-      self -> doc.bundled() -> bundled
-      return grid
+      alt a node of the document is a lifeline / sequence-document {
+        -> sequenceGrid(doc) -> grid         // bundled all the same, and not used
+      } else {
+        -> layout(bundled, metrics, width) -> lay
+        -> classGrid(bundled, lay) -> grid
+      }
+      self -> grid.columns() -> columns
+      self -> grid.rows() -> rows
+      self -> grid.encode() -> encoded
+      self -> grid.dump(false) -> text
+      return json
     }
   }
 }

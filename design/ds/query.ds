@@ -68,7 +68,17 @@ package driftspec@ds {
       + static json(answers: std::vector<Answer>) -> std::string
     }
 
-    // The first question that matches answers; the order is the code's.
+    - function entityAnswer(entity: model::Entity, detail: std::string) -> Answer
+
+    // An entity as an answer: its kind is named by the model.
+    sequence entityAnswer {
+      local answer: Answer
+      -> model::kindName(entity.kind) -> kind
+      return answer
+    }
+
+    // The first question that matches answers; the order is the code's. None matches:
+    // one answer of kind error, built in the return itself.
     sequence Query::ask {
       opt question is diagrams {
         -> diagrams() -> answers
@@ -98,11 +108,9 @@ package driftspec@ds {
         -> findings(subject) -> answers
         return answers
       }
-    }
-
-    // No question matches: one answer of kind error, built in the return itself.
-    sequence Query::ask / unknown {
-      return error
+      opt none of them is the question / unknown {
+        return error
+      }
     }
 
     sequence Query::diagrams {
@@ -110,6 +118,7 @@ package driftspec@ds {
       self -> model_.entities() -> held
       loop each entity held {
         opt it is a diagram {
+          -> model::kindName(entity.kind) -> kind
         }
       }
       return out
@@ -121,6 +130,7 @@ package driftspec@ds {
       self -> model_.entities() -> held
       loop each entity held {
         opt in the scope, written with @ when it names a package, and not expected {
+          -> entityAnswer(entity, title) -> answer
         }
       }
       return out
@@ -160,31 +170,33 @@ package driftspec@ds {
       loop each relation held {
         opt a behaviour-of that ends at id {
           self -> model_.find(relation.from) -> behaviour
+          opt the model holds it {
+            -> entityAnswer(behaviour, scenario) -> answer
+          }
         }
       }
       return out
     }
 
     // The projection answers. IrDocument::parse is static, so the document the loop
-    // walks is not told, nor its bundled().
+    // walks is not told, nor its bundled(). When the projection gives back nothing, one
+    // answer of kind error, built in the return itself.
     sequence Query::shows {
       local out: std::vector<Answer>
       local ir: render::IrExport
       self -> ir.render(diagram, false) -> document
+      opt the projection gives back nothing / no-such-diagram {
+        return error
+      }
       loop each node of the bundled document {
         opt it is not a note {
           self -> model_.find(node.id) -> entity
+          opt the model holds it {
+            -> entityAnswer(entity, "") -> answer
+          }
         }
       }
       return out
-    }
-
-    // The projection gives back nothing: one answer of kind error, built in the return itself.
-    sequence Query::shows / no-such-diagram {
-      local out: std::vector<Answer>
-      local ir: render::IrExport
-      self -> ir.render(diagram, false) -> document
-      return error
     }
 
     sequence Query::findings {

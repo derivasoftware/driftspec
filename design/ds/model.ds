@@ -69,6 +69,10 @@ package driftspec@ds {
         tests/unit/ds/model/test_model.cpp::TestModel.ARenameOntoADeclaredIdentityIsRefused
     }
 
+    function kindName(kind: Kind) -> std::string
+    function isSystemScope(scope: std::string) -> bool
+    function lastName(id: std::string) -> std::string
+
     function hasScenario(model: Model, sequence: std::string, scenario: std::string) -> bool {
       @requirement REQ-00065-1
     }
@@ -147,32 +151,39 @@ package driftspec@ds {
     }
 
     // An identity not held: the map keeps a copy of the entity and that copy comes back.
+    // One held comes back as it is, or replaced by a declaration of what was only expected.
     sequence Model::declare {
+      opt the identity is held {
+        opt it was only expected, and this declares it / replaces-expected {
+          return existing
+        }
+        opt this is one more reference / referenced-again {
+          return existing
+        }
+        alt a package or a module, opened again / reopened {
+        } else / duplicate {
+          -> kindName(entity.kind) -> name
+          -> report(finding)
+        }
+        return existing
+      }
       return entity
     }
 
-    // A declaration of what was only expected takes its place.
-    sequence Model::declare / replaces-expected {
-      return existing
-    }
-
-    // A second reference to something expected, or to something declared: nothing changes.
-    sequence Model::declare / referenced-again {
-      return existing
-    }
-
-    // A package or a module opened again: the first one comes back, with no finding.
-    sequence Model::declare / reopened {
-      return existing
-    }
-
-    sequence Model::declare / duplicate {
-      -> report(finding)
-      return existing
-    }
-
     sequence Model::rename {
+      opt the two identities are the same / same {
+        return true
+      }
+      opt from is not held / unknown {
+        return false
+      }
       -> find(to) -> other
+      opt another declared entity holds to / refused {
+        // the finding names the kind of the entity held at from
+        -> kindName(kind) -> name
+        -> report(finding)
+        return false
+      }
       // an expected node at `to` is erased; the entity moves under its new identity
       loop each entity held {
         alt its identity begins with from {
@@ -195,21 +206,6 @@ package driftspec@ds {
         }
       }
       return true
-    }
-
-    sequence Model::rename / same {
-      return true
-    }
-
-    sequence Model::rename / unknown {
-      return false
-    }
-
-    // Another declared entity holds the new identity.
-    sequence Model::rename / refused {
-      -> find(to) -> other
-      -> report(finding)
-      return false
     }
   }
 }

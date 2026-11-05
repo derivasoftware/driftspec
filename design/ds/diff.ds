@@ -68,16 +68,24 @@ package driftspec@ds {
       + static report(diff: DiffResult) -> std::string
     }
 
-    // The helpers differences and shapeOf and the lambda referrers are left out: free
-    // functions and lambdas have no target. So a change added to out shows only in the
-    // condition around it.
+    // What two declarations of one identity differ in, as "key: a -> b" items.
+    - function differences(a: model::Entity, b: model::Entity) -> std::vector<std::string>
+
+    // A class's shape: its members' names and signatures, to recognise a rename.
+    - function shapeOf(m: model::Model, classId: std::string) -> std::set<std::string>
+
+    // The lambda referrers, who points at a class, is left out: lambdas are not declared.
+    // So the tie it breaks between look-alikes shows only in the comment that scores them.
     sequence Diff::compare {
       local out: DiffResult
       self -> a.entities() -> before
       loop each entity of a that is not expected {
         self -> b.find(id) -> counterpart
-        opt it differs from its counterpart and is an artefact {
-          // out gets W-REVISION-STALE beside the change
+        opt b has it {
+          -> differences(entity, counterpart) -> diffs
+          opt they differ and it is an artefact {
+            // out gets W-REVISION-STALE beside the change
+          }
         }
       }
       self -> b.entities() -> after
@@ -85,7 +93,9 @@ package driftspec@ds {
         self -> a.find(id) -> counterpart
       }
       loop each class removed from a {
+        -> shapeOf(a, removedId) -> shape
         loop each class added to b in the same scope and not yet matched {
+          -> shapeOf(b, addedId) -> candidate
           // scored by shape and referrers; the best with 60 % of its members alike is the rename
         }
       }
@@ -93,6 +103,10 @@ package driftspec@ds {
         self -> a.entities() -> before
         loop each member of the old class {
           self -> b.find(newId) -> counterpart
+          opt b has it {
+            local moved: model::Entity       // the old member, under its new scope
+            -> differences(moved, counterpart) -> diffs
+          }
         }
         self -> b.entities() -> after
         loop each member of the new class {
@@ -157,6 +171,9 @@ package driftspec@ds {
     // The text is built on a stream, so what comes back is a name for it, not a checked value.
     sequence Diff::report {
       self -> diff.empty() -> nothing
+      opt the diff is empty / no-change {
+        return "no design change\n"
+      }
       loop each scope with its changes {
         loop each change of the scope {
           // one line: its mark, its entity, its name, its detail
@@ -169,11 +186,6 @@ package driftspec@ds {
         // one line: where, code, message
       }
       return text
-    }
-
-    sequence Diff::report / no-change {
-      self -> diff.empty() -> nothing
-      return "no design change\n"
     }
   }
 }
