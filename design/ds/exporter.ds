@@ -31,8 +31,35 @@ package driftspec@ds {
         tests/unit/ds/exporter/test_jsonexport.cpp::TestJsonExport.CompactOnRequest
     }
 
+    requirement REQ-00068-1 {
+      status: approved
+      @refines SREQ-00006-1
+      title: The exporter shall carry the metamodel the model is written in, so a reader learns the language from the document
+      text:
+        Beside entities, relations and findings, the document holds
+        metamodel: kinds (kind, meaning, fields with name, type, source and
+        meaning, flags, parents, top) and relations (kind, meaning, from, to),
+        as the metamodel declares them (REQ-00066-1).
+      rationale:
+        A host reading the export (argos, folio, the render of DS-67) needs
+        the shape of what it reads; carried in the document, it cannot drift
+        from the ds that wrote it.
+      tags: export, json, metamodel
+    }
+
+    verification VER-00074-1 {
+      status: approved
+      @requirement REQ-00068-1
+      title: Integration tests confirm the document of ds's own design names every kind and relation it holds in its metamodel, each field with its type and source
+      method: test
+      tests:
+        tests/integration/ds/exporter/test_export_metamodel.cpp::TestExportMetamodel.EveryKindAndRelationOfTheDocumentIsInItsMetamodel
+        tests/integration/ds/exporter/test_export_metamodel.cpp::TestExportMetamodel.EachFieldSaysItsTypeAndWhoSetsIt
+    }
+
     class JsonExport {
       @requirement REQ-00005-1
+      @requirement REQ-00068-1
       + render(model: model::Model, pretty: bool) -> std::string
     }
 
@@ -51,6 +78,8 @@ package driftspec@ds {
       self -> model.findings() -> findings
       loop each finding {
       }
+      -> model::kinds() -> kinds
+      -> model::relations() -> relationSpecs
       alt pretty {
         return indented
       } else {

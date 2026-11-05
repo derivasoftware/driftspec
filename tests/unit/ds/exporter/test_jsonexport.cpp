@@ -46,6 +46,27 @@ TEST_F(TestJsonExport, TheThreeArraysWithTheirFields) {
   EXPECT_EQ(f["location"]["file"], "a.ds");
 }
 
+TEST_F(TestJsonExport, CarriesTheMetamodelTheModelIsWrittenIn) {
+  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model));
+  const auto& meta = doc["metamodel"];
+  bool requirement = false, verifies = false;
+  for (const auto& k : meta["kinds"]) {
+    if (k["kind"] != "requirement") continue;
+    requirement = true;
+    EXPECT_EQ(k["fields"][0]["name"], "title");
+    EXPECT_EQ(k["fields"][0]["source"], "written");
+    EXPECT_EQ(k["fields"][0]["type"], "text");
+  }
+  for (const auto& r : meta["relations"]) {
+    if (r["kind"] != "verifies") continue;
+    verifies = true;
+    EXPECT_EQ(r["from"][0], "verification");
+    EXPECT_EQ(r["to"].size(), 2u);
+  }
+  EXPECT_TRUE(requirement);
+  EXPECT_TRUE(verifies);
+}
+
 TEST_F(TestJsonExport, CompactOnRequest) {
   const std::string pretty = ds::exporter::JsonExport().render(model, true);
   const std::string compact = ds::exporter::JsonExport().render(model, false);

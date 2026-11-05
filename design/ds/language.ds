@@ -27,6 +27,53 @@ package driftspec@ds {
       One text, one meaning, for the whole of a design: what the tool loads,
       checks, draws, compares and asks about.
 
+    // ======================= metamodel ====================================
+    requirement REQ-00066-1 {
+      tags: language, metamodel
+      status: approved
+      title: The language shall be declared once as a metamodel: every kind with its fields, flags and parents, every relation with the kinds it joins
+      text:
+        Each kind names the fields it carries, each with a type (text, name,
+        names, type, params, number, status, patterns) and who sets it (the
+        author, the syntax, or the checker), the flags it takes and the kinds
+        it may be declared inside; a field whose name ends in * is a family
+        (local.*, exit *, contract.*). Each relation names the kinds it may go
+        from and to. Everything the binder and the checker put in a model is
+        something the metamodel declares.
+      rationale:
+        Owner, 2026-11-05: DriftSpec has its own data model, not argos's. The
+        binder wrote some fifty field names that nothing declared, and every
+        reader parsed them again; the render of the whole model (DS-67) needs
+        to know what exists before drawing it.
+      verification VER-00072-1 {
+        status: approved
+        title: Integration tests confirm that the design of ds and every example corpus are made only of what the metamodel declares
+        method: test
+        tests:
+          tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.EveryEntityAndRelationIsOneTheMetamodelDeclares
+      }
+      requirement REQ-00067-1 {
+        tags: language, metamodel, fields
+        status: approved
+        title: A field that its kind does not declare shall be reported as W-FIELD-UNKNOWN
+        text:
+          A key: value an entity carries that the metamodel does not declare
+          for its kind (a typo, or a field the language does not know) is a
+          warning at the entity, naming the field and the kind. It is kept in
+          the model: the warning does not drop it.
+        rationale:
+          DS-22: a misspelt field entered silently. The metamodel now says
+          which fields exist, so the checker can say which do not.
+        verification VER-00073-1 {
+          status: approved
+          title: Integration tests confirm an undeclared field is reported and a declared one is not, and the diag corpus marks its layout field
+          method: test
+          tests:
+            tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AFieldItsKindDoesNotDeclareIsReportedAndADeclaredOneIsNot
+        }
+      }
+    }
+
     // ======================= workspace ====================================
     requirement REQ-00053-1 {
       tags: language, workspace

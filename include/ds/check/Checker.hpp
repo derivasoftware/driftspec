@@ -36,6 +36,7 @@ class Checker {
   void checkLocals();
   void checkArtefacts();
   void checkExtensions();
+  void checkFields();
   /// A behaviour's identity is its resolved subject plus its scenario, wherever it was written.
   void unifyBehaviours();
   std::string current(const std::string& id) const;  ///< an identity after the renames

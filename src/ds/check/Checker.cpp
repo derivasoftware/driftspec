@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -199,6 +200,21 @@ void Checker::run(const bind::Binder& binder) {
   classify();
   checkArtefacts();
   checkExtensions();
+  checkFields();
+}
+
+// a field its kind does not declare in the metamodel is a typo or a field the language does not know
+void Checker::checkFields() {
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    for (const auto& f : e.fields) {
+      if (model::fieldOf(e.kind, f.first)) continue;
+      model_.report({"W-FIELD-UNKNOWN", "warning",
+                     std::string(model::kindName(e.kind)) + " '" + e.id + "' has a field '" + f.first + "' that a " +
+                         model::kindName(e.kind) + " does not declare",
+                     e.location});
+    }
+  }
 }
 
 // approved requirements are verified; a test verification names its tests
