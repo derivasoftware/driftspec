@@ -155,6 +155,12 @@ package driftspec@ds {
       + column: int
     }
 
+    dataclass Param {                        // one parameter as the binder read it: name and type (a template's: name and bound)
+      @requirement REQ-00066-1
+      + name: std::string
+      + type: std::string
+    }
+
     dataclass Entity {                       // one declared (or expected, R6) entity of the workspace
       @requirement REQ-00001-1
       + kind: Kind
@@ -163,6 +169,8 @@ package driftspec@ds {
       + scope: std::string
       + fields: std::map<std::string, std::string>
       + flags: std::vector<std::string>
+      + params: std::vector<Param>
+      + args: std::vector<std::string>
       + owns location: Location
       + expected: bool
       + has(flag: std::string) -> bool

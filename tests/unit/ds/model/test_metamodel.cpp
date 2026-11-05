@@ -64,7 +64,9 @@ TEST_F(TestJoins, ARelationWithNoEndsJoinsAnyKind) {
 TEST_F(TestKindSpec, OnlyPackagesAndDiagramsStandAtTheTop) {
   for (const auto& k : ds::model::kinds()) {
     EXPECT_EQ(k.top, k.kind == Kind::Package || k.kind == Kind::Diagram) << ds::model::kindName(k.kind);
-    if (!k.top) EXPECT_FALSE(k.parents.empty()) << ds::model::kindName(k.kind);
+    if (!k.top) {
+      EXPECT_FALSE(k.parents.empty()) << ds::model::kindName(k.kind);
+    }
   }
 }
 

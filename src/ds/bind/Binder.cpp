@@ -296,7 +296,10 @@ void Binder::bindMemberBody(const parse::ParsedFile& file, TSNode member, model:
   TSNode body = child(member, "body");
   if (!ts_node_is_null(body)) bindFields(file, body, entity);
   model::Entity* declared = model_.find(entity.id);
-  if (declared) declared->fields = entity.fields;
+  // only the declaration the model kept takes the fields: a duplicate is reported and leaves the first as it was
+  const model::Location& at = declared ? declared->location : entity.location;
+  if (declared && at.file == entity.location.file && at.line == entity.location.line && at.column == entity.location.column)
+    declared->fields = entity.fields;
   if (ts_node_is_null(body)) return;
   bindAnnotations(file, body, entity.id, scope);
   visit(file, body, scope, entity.id);  // nested requirements and constraints are about the member (R12)
@@ -353,6 +356,7 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
     model::Entity* declared = model_.find(member.id);  // declared by the header set: the body refines it
     for (const auto& f : member.fields) declared->fields[f.first] = f.second;
     for (const auto& f : member.flags) declared->flags.push_back(f);
+    if (!member.params.empty()) declared->params = member.params;
     declared->location = loc;
   } else {
     model_.declare(member);
@@ -373,6 +377,8 @@ void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::En
     for (uint32_t i = 0; i < n; ++i) {
       TSNode p = ts_node_named_child(parameters, i);
       paramTexts.push_back(trim(parse::textOf(file, p)));
+      TSNode type = child(p, "type");
+      entity.params.push_back({fieldText(file, p, "name"), ts_node_is_null(type) ? "" : trim(parse::textOf(file, type))});
       bindType(file, child(p, "type"), scope, entity.id, "uses", "", params, locationOf(file, p));
     }
   }
@@ -426,6 +432,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
       const std::string name = fieldText(file, p, "name");
       params.push_back(name);
       const std::string bound = fieldText(file, p, "bound");
+      e.params.push_back({name, bound});
       if (!bound.empty()) bounds[name] = bound;
     }
   }
@@ -515,6 +522,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
         }
       }
       m.fields["args"] = join(args, ", ");
+      m.args = args;
       m.fields["argc"] = std::to_string(argc);
       if (!frame.empty()) m.fields["frame"] = frame;
       m.name = is(c, "return") ? "return" : m.fields["to"] + "." + m.fields["op"];

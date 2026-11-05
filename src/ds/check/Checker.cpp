@@ -29,29 +29,6 @@ bool looksLikeArtefact(const std::string& name) {
   return std::regex_match(name, kArtefactBare) || std::regex_match(name, kArtefactWithRevision);
 }
 
-/// Parameters split at their top level commas: `map<string, int>` is one parameter.
-std::vector<std::string> splitParameters(const std::string& text) {
-  std::vector<std::string> out;
-  std::string item;
-  int depth = 0;
-  const auto flush = [&]() {
-    const auto b = item.find_first_not_of(' ');
-    const auto e = item.find_last_not_of(' ');
-    if (b != std::string::npos) out.push_back(item.substr(b, e - b + 1));
-    item.clear();
-  };
-  for (const char c : text) {
-    depth += c == '<' ? 1 : c == '>' ? -1 : 0;
-    if (c == ',' && depth == 0) {
-      flush();
-    } else {
-      item.push_back(c);
-    }
-  }
-  flush();
-  return out;
-}
-
 /// Primitives one converts to the other without saying so; any other pair of primitives is a mismatch.
 int primitiveFamily(const std::string& type) {
   for (const char* t : {"int", "float", "double", "size_t", "char"}) {
@@ -377,20 +354,17 @@ void Checker::checkTemplateBound(const bind::Reference& reference) {
   const std::string templateId = resolve(reference.target, reference.scope);
   const model::Entity* tpl = templateId.empty() ? nullptr : model_.find(templateId);
   if (!tpl || tpl->expected) return;
-  const auto paramsField = tpl->fields.find("params");
-  if (paramsField == tpl->fields.end()) return;
-  const std::vector<std::string> params = split(paramsField->second, ',');
+  const std::vector<model::Param>& params = tpl->params;
   for (size_t i = 0; i < params.size() && i < reference.args.size(); ++i) {
-    const auto bound = tpl->fields.find("bound." + params[i]);
-    if (bound == tpl->fields.end()) continue;
-    const std::string boundId = resolve(bound->second, tpl->scope);
+    if (params[i].type.empty()) continue;  // a template parameter with no bound
+    const std::string boundId = resolve(params[i].type, tpl->scope);
     const std::string argId = resolve(reference.args[i], reference.scope);
     const model::Entity* arg = argId.empty() ? nullptr : model_.find(argId);
     if (boundId.empty() || !arg || arg->expected) continue;  // waits for a declaration (R6)
     if (!derives(argId, boundId)) {
       model_.report({"E-TEMPLATE-BOUND", "error",
-                     reference.args[i] + " does not satisfy " + params[i] + ": " + bound->second + " of " + templateId + " (used by " +
-                         reference.from + ")",
+                     reference.args[i] + " does not satisfy " + params[i].name + ": " + params[i].type + " of " + templateId +
+                         " (used by " + reference.from + ")",
                      reference.location});
     }
   }
@@ -451,8 +425,7 @@ void Checker::couple(const model::Entity& sequence, const model::Entity& type, b
 void Checker::call(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
   model_.relate({"calls", msg.id, op.id, message.location, ""});
   checkVisibility(msg.scope, op.id, message.location);
-  const auto params = op.fields.find("params");
-  const int expected = params == op.fields.end() ? 0 : static_cast<int>(splitParameters(params->second).size());
+  const int expected = static_cast<int>(op.params.size());
   if (expected != message.argc) {
     model_.report({"E-MSG-ARITY", "error",
                    op.id + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
@@ -597,15 +570,10 @@ bool Checker::typeOfName(const model::Entity& sequence, const model::Entity* cls
     *value = {type == attribute->fields.end() ? "" : type->second, cls->scope};
     return true;
   }
-  const auto params = subject.fields.find("params");
-  if (params != subject.fields.end()) {
-    for (const auto& p : splitParameters(params->second)) {
-      const auto colon = p.find(':');
-      if (colon == std::string::npos || p.substr(0, colon) != name) continue;
-      const auto begin = p.find_first_not_of(' ', colon + 1);
-      *value = {begin == std::string::npos ? "" : p.substr(begin), home};
-      return true;
-    }
+  for (const auto& p : subject.params) {
+    if (p.name != name) continue;
+    *value = {p.type, home};
+    return true;
   }
   const auto local = sequence.fields.find("local." + name);
   if (local != sequence.fields.end()) {
@@ -641,20 +609,17 @@ bool Checker::compatible(const std::pair<std::string, std::string>& argument, co
 }
 
 void Checker::checkArguments(const model::Entity& msg, const model::Entity& op, const bind::Message& message) {
-  const auto params = op.fields.find("params");
-  const auto args = msg.fields.find("args");
-  if (params == op.fields.end() || args == msg.fields.end()) return;
+  if (op.params.empty() || msg.args.empty()) return;
   const model::Entity* seq = model_.find(current(message.sequence));
   const model::Entity* subject = nullptr;
   const model::Entity* cls = seq ? subjectClass(*seq, &subject) : nullptr;
   if (!subject) return;
-  const std::vector<std::string> parameters = splitParameters(params->second);
-  const std::vector<std::string> arguments = splitParameters(args->second);
+  const std::vector<model::Param>& parameters = op.params;
+  const std::vector<std::string>& arguments = msg.args;
   const model::Entity* owner = op.kind == model::Kind::Method ? model_.find(op.scope) : nullptr;
   const std::string scope = owner ? owner->scope : op.scope;
   for (size_t i = 0; i < parameters.size() && i < arguments.size(); ++i) {
-    const auto colon = parameters[i].find(':');
-    if (colon == std::string::npos) continue;  // a parameter with no type
+    if (parameters[i].type.empty()) continue;  // a parameter with no type
     std::pair<std::string, std::string> argument;
     bool transient = false;
     const std::string& written = arguments[i];
@@ -667,10 +632,10 @@ void Checker::checkArguments(const model::Entity& msg, const model::Entity& op, 
     } else if (!typeOfName(*seq, cls, *subject, written, &argument, &transient) || argument.first.empty()) {
       continue;
     }
-    const auto begin = parameters[i].find_first_not_of(' ', colon + 1);
-    const std::pair<std::string, std::string> parameter{begin == std::string::npos ? "" : parameters[i].substr(begin), scope};
-    if (parameter.first.empty() || compatible(argument, parameter)) continue;
-    model_.report({"W-ARG-TYPE", "warning", op.id + " takes " + parameters[i] + ", and '" + arguments[i] + "' is " + argument.first,
+    const std::pair<std::string, std::string> parameter{parameters[i].type, scope};
+    if (compatible(argument, parameter)) continue;
+    model_.report({"W-ARG-TYPE", "warning",
+                   op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" + arguments[i] + "' is " + argument.first,
                    message.location});
   }
 }

@@ -84,4 +84,23 @@ TEST_F(TestEntity, HasAFlagItWasDeclaredWith) {
   EXPECT_FALSE(e.has("extern"));
 }
 
+/// A parameter is kept as the binder read it, and a renamed entity carries its parameters and arguments.
+class TestParam : public ::testing::Test {};
+
+TEST_F(TestParam, ARenamedEntityCarriesItsParametersAndArguments) {
+  Model model;
+  Entity e = entity(Kind::Function, "p@m::f", "p@m");
+  e.params = {{"name", "std::string"}, {"items", "std::vector<int>"}};
+  e.args = {"a", "\"b, c\""};
+  model.declare(e);
+  ASSERT_TRUE(model.rename("p@m::f", "p@m::g"));
+  const Entity* g = model.find("p@m::g");
+  ASSERT_NE(g, nullptr);
+  ASSERT_EQ(g->params.size(), 2u);
+  EXPECT_EQ(g->params[1].name, "items");
+  EXPECT_EQ(g->params[1].type, "std::vector<int>");
+  ASSERT_EQ(g->args.size(), 2u);
+  EXPECT_EQ(g->args[1], "\"b, c\"");  // an argument is one value even when its text holds a comma
+}
+
 }  // namespace
