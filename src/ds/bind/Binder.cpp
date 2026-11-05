@@ -497,6 +497,8 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       } else {
         const std::string result = fieldText(file, c, "result");
         if (!result.empty()) m.fields["result"] = result;
+        const std::string scenario = fieldText(file, c, "scenario");
+        if (!scenario.empty()) m.fields["scenario"] = scenario;
       }
       int argc = 0;
       std::vector<std::string> args;
@@ -513,10 +515,10 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       m.fields["args"] = join(args, ", ");
       m.fields["argc"] = std::to_string(argc);
       if (!frame.empty()) m.fields["frame"] = frame;
-      m.name = m.fields["to"] + "." + m.fields["op"];
+      m.name = is(c, "return") ? "return" : m.fields["to"] + "." + m.fields["op"];
       model_.declare(m);
       model_.relate({"contains", sequence.id, m.id, loc, ""});
-      if (!is(c, "return")) messages_.push_back({sequence.id, m.id, m.fields["to"], m.fields["op"], argc, loc});
+      messages_.push_back({sequence.id, m.id, m.fields["to"], m.fields["op"], argc, loc, is(c, "return")});
       if (!frame.empty()) {
         model::Entity* f = model_.find(frame);
         if (f->fields.find("first") == f->fields.end()) f->fields["first"] = m.id;

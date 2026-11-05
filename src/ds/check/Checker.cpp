@@ -1,6 +1,7 @@
 #include "ds/check/Checker.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <functional>
 #include <map>
 #include <regex>
@@ -399,14 +400,59 @@ void Checker::call(model::Entity& msg, const model::Entity& op, const bind::Mess
     const model::Entity* owner = op.kind == model::Kind::Method ? model_.find(op.scope) : nullptr;
     msg.fields["result_scope"] = owner ? owner->scope : op.scope;
   }
-  // a message to an operation with a behaviour expands to it (B5): derived, never written
-  if (const model::Entity* child = model_.find(op.id + "::sequence")) {
+  expand(msg, op, message);
+}
+
+void Checker::expand(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+  // a message to an operation with a behaviour expands to it (B5): derived, never written; a message
+  // that names a scenario expands to that one, and one nobody declares is a finding
+  const auto scenario = msg.fields.find("scenario");
+  const bool named = scenario != msg.fields.end();
+  const std::string id = op.id + "::sequence" + (named ? "/" + scenario->second : "");
+  if (const model::Entity* child = model_.find(id)) {
     model_.relate({"expands-to", msg.id, child->id, message.location, ""});
     msg.fields["expands"] = child->id;
+  } else if (named) {
+    model_.report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
+  }
+}
+
+void Checker::checkReturn(const bind::Message& message) {
+  const model::Entity* seq = model_.find(current(message.sequence));
+  const model::Entity* msg = model_.find(current(message.message));
+  if (!seq || !msg) return;
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = subjectClass(*seq, &subject);
+  if (!subject || (subject->kind != model::Kind::Method && subject->kind != model::Kind::Function)) return;
+  const auto returns = subject->fields.find("returns");
+  if (returns == subject->fields.end()) return;  // declares no return: nothing to check against
+  const std::string value = msg->fields.at("result");
+  const std::string home = cls ? cls->scope : subject->scope;
+  std::string given;
+  bool mismatch = false;
+  if (value.front() == '"' || value == "true" || value == "false" || value.front() == '-' ||
+      std::isdigit(static_cast<unsigned char>(value.front()))) {
+    given = value.front() == '"' ? "string" : (value == "true" || value == "false") ? "bool" : "int";
+    mismatch = !compatible({given, home}, {returns->second, home});
+  } else {
+    std::pair<std::string, std::string> named;
+    bool transient = false;
+    // a name the context does not know is a local of the prose: absence is not an error (B4)
+    if (!typeOfName(*seq, cls, *subject, value, &named, &transient) || named.first.empty()) return;
+    given = named.first;
+    mismatch = !compatible(named, {returns->second, home});
+  }
+  if (mismatch) {
+    model_.report(
+        {"W-RETURN-TYPE", "warning", subject->id + " returns " + returns->second + ", and '" + value + "' is " + given, message.location});
   }
 }
 
 void Checker::checkMessage(const bind::Message& message) {
+  if (message.returns) {
+    checkReturn(message);
+    return;
+  }
   const model::Entity* seq = model_.find(current(message.sequence));
   model::Entity* msg = model_.find(current(message.message));
   if (!seq || !msg) return;
@@ -542,6 +588,7 @@ void Checker::checkArguments(const model::Entity& msg, const model::Entity& op, 
 }
 
 void Checker::rememberResult(const bind::Message& message) {
+  if (message.returns) return;
   const model::Entity* seq = model_.find(current(message.sequence));
   const model::Entity* msg = model_.find(current(message.message));
   if (!seq || !msg) return;

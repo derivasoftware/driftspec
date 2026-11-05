@@ -1,0 +1,87 @@
+// scenarios.ds: a behaviour says what it gives back, and a call says which
+// scenario it enters. `return` takes a name or a literal, never an expression; a
+// call names a scenario as a declaration does, with `/`. So a trace goes down
+// through the scenario it follows, to the value it ends in. The `!` lines are the
+// findings the tool emits.
+
+package bank {
+  module core {
+    class Vault {
+      + withdraw(amount: int) -> int
+      - audit() -> none
+    }
+
+    sequence Vault::withdraw {
+      -> audit()
+      return 0
+    }
+
+    sequence Vault::withdraw / refused {
+      return 2
+    }
+  }
+
+  module desk {
+    class Teller {
+      - vault: core::Vault
+      + serve(amount: int) -> int
+      + name() -> string
+      + ready() -> bool
+      + quiet() -> none
+      + count() -> int
+      + describe(amount: int) -> string
+    }
+
+    sequence Teller::serve {
+      self -> vault.withdraw(amount) -> code
+      return code
+    }
+
+    sequence Teller::serve / refused {
+      self -> vault.withdraw(amount) / refused -> code
+      return code
+    }
+
+    sequence Teller::serve / lost {
+      self -> vault.withdraw(amount) / stolen -> code   // ! W-SCENARIO-UNDECLARED: Vault::withdraw has no such scenario
+      return code
+    }
+
+    sequence Teller::name {
+      return "ana"
+    }
+
+    sequence Teller::ready {
+      return true
+    }
+
+    sequence Teller::quiet {
+      return 1                                          // ! W-RETURN-TYPE: it returns nothing
+    }
+
+    sequence Teller::count {
+      return "many"                                     // ! W-RETURN-TYPE: a string is not an int
+    }
+
+    sequence Teller::describe {
+      return amount                                     // ! W-RETURN-TYPE: an int is not a string
+    }
+  }
+}
+
+diagram SEQ_Default {
+  kind: sequence
+  include: bank@desk::Teller::serve
+  depth: 1
+}
+
+diagram SEQ_Refused {
+  kind: sequence
+  include: bank@desk::Teller::serve / refused
+  depth: 1
+}
+
+diagram SEQ_All {
+  kind: sequence
+  include: bank@desk::Teller::serve*
+}

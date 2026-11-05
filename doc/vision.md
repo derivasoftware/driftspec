@@ -233,6 +233,10 @@ derives the links.
   (syntax open, e.g. `module lsp { depends: ds }`), a behaviour that couples to
   an undeclared module is an incoherence of the model (`W-COUPLING-UNDECLARED`);
   without the declaration it is a derived fact, reported, never a finding.
+- **Observed sequences stay in argos (decided 2026-11-05, DS-16).** What the tests
+  of a requirement did, with modules as participants, is reality, and reality is
+  argos's. The design's trace from the top is the sequence of an operation of an
+  interface, going down through the scenario each call names.
 - **Proof of concept (2026-10-25, commit after 1ed159d)**: block 3 is built
   with the recommended syntax as *provisional*: `sequence Class::method { }`
   and `/ scenario`, participants from the static context plus `local`,

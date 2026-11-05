@@ -125,8 +125,9 @@ them. The vision (`vision.md`) says why; this says what.*
   one an expansion inlines. Scenarios may be written anywhere (the subject's
   module reopened, another module, a file of their own): the identity is the
   subject's. Two declarations of one scenario, wherever they are, are
-  `E-DUPLICATE-IDENTITY`. A diagram names one scenario by id or all of them
-  with `ds@ds::Checker::run*`.
+  `E-DUPLICATE-IDENTITY`. A diagram asks as it is written:
+  `ds@ds::Checker::run` the default, `ds@ds::Checker::run / timeout` that one,
+  `ds@ds::Checker::run*` them all.
 - Participants are the static context: `self`, the attributes of the class,
   the parameters of the method, by name; only what the method creates is
   written, `local parser: Parser`. The result of a message is one too, for the
@@ -136,6 +137,12 @@ them. The vision (`vision.md`) says why; this says what.*
   argument is checked against its parameter (`W-ARG-TYPE`), and taking the
   result of an operation returning `none` is reported (`W-RESULT-NONE`). A value
   of unknown type has nothing to be checked against.
+- What a behaviour gives back and where a call goes (decided 2026-11-05,
+  `examples/scenarios`): `return code` or `return 2`, a name or a literal, never
+  an expression, checked against the operation (`W-RETURN-TYPE`). A call names
+  the scenario it enters as a declaration does, `vault.withdraw(amount) / refused`,
+  and expands to it; one nobody declares is `W-SCENARIO-UNDECLARED`. A trace so
+  goes down through its scenario to the value it ends in.
 - Messages `self -> binder.references() -> refs`, `-> resolveReference(ref)`
   for self; arity is checked (`E-MSG-ARITY`); `loop`, `alt … else`, `opt`
   with prose conditions.

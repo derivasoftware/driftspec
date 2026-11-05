@@ -32,6 +32,7 @@ struct Message {
   std::string op;
   int argc = 0;
   model::Location location;
+  bool returns = false;  ///< a `return` of the behaviour, not a call
 };
 
 /// A transition event (or action) of a state machine, checked against the entity's operations.
