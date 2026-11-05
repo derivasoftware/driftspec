@@ -441,19 +441,21 @@ package driftspec@ds {
         }
         requirement REQ-00036-2 {
           tags: language, lld, sequence
-          status: draft
+          status: approved
           title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
           rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
-          verification VER-00028-1 {
+          verification VER-00028-2 {
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
+              tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt
+              tests/integration/ds/check/test_values.cpp::TestValues.AResultDoesNotExistBeforeItsMessage
           }
         }
         requirement REQ-00058-1 {
           tags: language, lld, sequence
-          status: draft
+          status: approved
           title: A value of a sequence shall have the type of what produced it, and its uses shall be checked against that type
           text:
             The result of a message has the type its operation returns. A call on a
@@ -464,11 +466,9 @@ package driftspec@ds {
             nothing to be checked against and gives no finding.
           rationale: DS-51. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it.
           verification VER-00062-1 {
-            status: draft
+            status: approved
             method: test
             tests:
-              tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt
-              tests/integration/ds/check/test_values.cpp::TestValues.AResultDoesNotExistBeforeItsMessage
               tests/integration/ds/check/test_values.cpp::TestValues.ACallOnAResultIsCheckedAgainstItsType
               tests/integration/ds/check/test_values.cpp::TestValues.AValueOfUnknownTypeHasNothingToBeCheckedAgainst
               tests/integration/ds/check/test_values.cpp::TestValues.AnArgumentOfTheWrongTypeIsReported

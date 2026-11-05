@@ -69,7 +69,6 @@ package driftspec@ds {
       }
       - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
         @requirement REQ-00036-2
-        @requirement REQ-00058-1
       }
       - checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00058-1
