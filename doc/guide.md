@@ -131,6 +131,15 @@ them. The vision (`vision.md`) says why; this says what.*
   the parameters of the method, by name; only what the method creates is
   written, `local parser: Parser`. The result of a message is one too, for the
   messages after it. `W-PARTICIPANT-UNDECLARED`.
+- A branch names a scenario, a path through one behaviour (decided 2026-11-05,
+  `examples/branches`): `opt the account is frozen / frozen { ... return 3 }`, and a
+  bare `return` ends a branch. What every scenario shares is written once. The path
+  takes what is shared and its branch up to its return; the default path takes no
+  named branch; of an alt with one named side, the other is taken; a branch it
+  cannot tell stays a frame. Calls, diagrams and exit codes ask for it by name, as
+  for a sequence of its own, which stays for paths that share nothing. A name
+  given twice is `W-SCENARIO-TWICE`. A behaviour asked for by its subject is drawn
+  whole, early returns included; an unnamed call follows the default path.
 - Values have types (decided 2026-11-05, `examples/values`): a result has the
   type its operation returns, so a call on it is checked like any other. An
   argument is checked against its parameter (`W-ARG-TYPE`), and taking the

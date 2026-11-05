@@ -1,5 +1,9 @@
 #include "ds/model/Model.hpp"
 
+#include <algorithm>
+#include <limits>
+#include <set>
+
 namespace ds {
 namespace model {
 
@@ -152,6 +156,113 @@ bool isSystemScope(const std::string& scope) { return !scope.empty() && scope.ba
 std::string lastName(const std::string& id) {
   const auto cut = id.find_last_of(":@");
   return cut == std::string::npos ? id : id.substr(cut + 1);
+}
+
+namespace {
+
+int orderOf(const Model& model, const std::string& messageId) {
+  const Entity* m = messageId.empty() ? nullptr : model.find(messageId);
+  const auto order = m ? m->fields.find("order") : std::map<std::string, std::string>::const_iterator();
+  return m && order != m->fields.end() ? std::stoi(order->second) : -1;
+}
+
+std::string fieldIn(const Entity& e, const std::string& key) {
+  const auto f = e.fields.find(key);
+  return f == e.fields.end() ? "" : f->second;
+}
+
+/// The frames of one behaviour, and for each what its two sides name.
+struct Branches {
+  const Model& model;
+  std::map<std::string, const Entity*> frames;
+
+  int elseAt(const Entity& f) const {
+    const std::string otherwise = fieldIn(f, "else");
+    return otherwise.empty() ? std::numeric_limits<int>::max() : orderOf(model, otherwise);
+  }
+
+  bool onElse(const Entity& f, int order) const { return order >= elseAt(f); }
+
+  std::set<std::string> names(const Entity& f, bool elseSide) const {
+    std::set<std::string> out;
+    const std::string own = fieldIn(f, elseSide ? "else-scenario" : "scenario");
+    if (!own.empty()) out.insert(own);
+    for (const auto& pair : frames) {
+      const Entity& child = *pair.second;
+      if (fieldIn(child, "parent") != f.id) continue;
+      if (onElse(f, orderOf(model, fieldIn(child, "first"))) != elseSide) continue;
+      for (const bool side : {false, true}) {
+        for (const auto& n : names(child, side)) out.insert(n);
+      }
+    }
+    return out;
+  }
+
+  enum class Way { Then, Else, Skip, Keep };
+
+  Way decide(const Entity& f, const std::string& scenario) const {
+    const std::set<std::string> thenNames = names(f, false);
+    const std::set<std::string> elseNames = names(f, true);
+    if (!scenario.empty() && thenNames.count(scenario)) return Way::Then;
+    if (!scenario.empty() && elseNames.count(scenario)) return Way::Else;
+    const bool twoSides = !fieldIn(f, "else").empty() || !fieldIn(f, "else-scenario").empty();
+    if (twoSides) {
+      if (!thenNames.empty() && elseNames.empty()) return Way::Else;
+      if (thenNames.empty() && !elseNames.empty()) return Way::Then;
+      return Way::Keep;
+    }
+    return thenNames.empty() ? Way::Keep : Way::Skip;  // a branch nobody asked for is not taken
+  }
+};
+
+}  // namespace
+
+bool hasScenario(const Model& model, const std::string& sequence, const std::string& scenario) {
+  for (const auto& pair : model.entities()) {
+    const Entity& f = pair.second;
+    if (f.kind != Kind::Frame || f.scope != sequence) continue;
+    if (fieldIn(f, "scenario") == scenario || fieldIn(f, "else-scenario") == scenario) return true;
+  }
+  return false;
+}
+
+std::vector<const Entity*> pathOf(const Model& model, const std::string& sequence, const std::string& scenario,
+                                  std::set<std::string>* kept) {
+  Branches branches{model, {}};
+  std::vector<const Entity*> messages;
+  for (const auto& pair : model.entities()) {
+    if (pair.second.scope != sequence) continue;
+    if (pair.second.kind == Kind::Frame) branches.frames[pair.first] = &pair.second;
+    if (pair.second.kind == Kind::Message) messages.push_back(&pair.second);
+  }
+  std::sort(messages.begin(), messages.end(),
+            [](const Entity* a, const Entity* b) { return std::stoi(fieldIn(*a, "order")) < std::stoi(fieldIn(*b, "order")); });
+  std::vector<const Entity*> out;
+  for (const Entity* m : messages) {
+    const int order = std::stoi(fieldIn(*m, "order"));
+    bool taken = true;
+    bool certain = true;  // every frame around it is a side the path takes, none it cannot tell
+    std::vector<std::string> around;
+    for (std::string id = fieldIn(*m, "frame"); !id.empty() && taken;) {
+      const auto it = branches.frames.find(id);
+      if (it == branches.frames.end()) break;
+      const Entity& f = *it->second;
+      const Branches::Way way = branches.decide(f, scenario);
+      const bool elseSide = branches.onElse(f, order);
+      if (way == Branches::Way::Skip || (way == Branches::Way::Then && elseSide) || (way == Branches::Way::Else && !elseSide)) {
+        taken = false;
+      } else if (way == Branches::Way::Keep) {
+        certain = false;
+        around.push_back(f.id);
+      }
+      id = fieldIn(f, "parent");
+    }
+    if (!taken) continue;
+    if (kept) kept->insert(around.begin(), around.end());
+    out.push_back(m);
+    if (certain && fieldIn(*m, "return") == "true") break;  // the path ends here
+  }
+  return out;
 }
 
 }  // namespace model

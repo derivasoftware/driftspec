@@ -2,6 +2,7 @@
 #define DRIFTSPEC_MODEL_MODEL_HPP
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -100,6 +101,16 @@ class Model {
   std::vector<Relation> relations_;
   std::vector<Finding> findings_;
 };
+
+/// Whether a branch of the behaviour `sequence` is named `scenario` (`opt ... / scenario {`).
+bool hasScenario(const Model& model, const std::string& sequence, const std::string& scenario);
+
+/// The messages of `sequence` that the path named `scenario` takes, in order, up to the return that ends it.
+/// A named branch is taken when it is asked for and skipped otherwise; of an alt with one named side, the
+/// other side is taken; a branch it cannot tell is kept, and its frame is added to `kept`. An empty
+/// `scenario` is the default path: no named branch taken.
+std::vector<const Entity*> pathOf(const Model& model, const std::string& sequence, const std::string& scenario,
+                                  std::set<std::string>* kept);
 
 }  // namespace model
 }  // namespace ds
