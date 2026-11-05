@@ -439,15 +439,42 @@ package driftspec@ds {
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ABehaviourIsIdentifiedByItsSubject
           }
         }
-        requirement REQ-00036-1 {
+        requirement REQ-00036-2 {
           tags: language, lld, sequence
           status: approved
-          title: The participants of a sequence shall be its static context: self, the attributes, the parameters, and the locals written
-          verification VER-00028-1 {
+          title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
+          rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
+          verification VER-00028-2 {
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
+              tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt
+              tests/integration/ds/check/test_values.cpp::TestValues.AResultDoesNotExistBeforeItsMessage
+          }
+        }
+        requirement REQ-00058-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A value of a sequence shall have the type of what produced it, and its uses shall be checked against that type
+          text:
+            The result of a message has the type its operation returns. A call on a
+            result is checked as a call on any other participant, an argument against
+            the type of its parameter (W-ARG-TYPE), and taking the result of an operation
+            that returns none is reported (W-RESULT-NONE). A value whose type is not
+            known, because its operation declares no return or does not resolve, has
+            nothing to be checked against and gives no finding.
+          rationale: DS-51. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it.
+          verification VER-00062-1 {
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_values.cpp::TestValues.ACallOnAResultIsCheckedAgainstItsType
+              tests/integration/ds/check/test_values.cpp::TestValues.AValueOfUnknownTypeHasNothingToBeCheckedAgainst
+              tests/integration/ds/check/test_values.cpp::TestValues.AnArgumentOfTheWrongTypeIsReported
+              tests/integration/ds/check/test_values.cpp::TestValues.ADerivedClassSatisfiesItsBaseAsAnArgument
+              tests/integration/ds/check/test_values.cpp::TestValues.ATemplateWithCommasIsOneParameter
+              tests/integration/ds/check/test_values.cpp::TestValues.TakingTheResultOfAnOperationThatReturnsNothingIsReported
           }
         }
         requirement REQ-00037-1 {

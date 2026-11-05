@@ -14,6 +14,7 @@ package driftspec@ds {
       - owns renamed_: std::map<std::string, std::string>
       - refs model_: model::Model
       - owns reported_: std::set<std::string>
+      - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
       + Checker(model: model::Model)
       + run(binder: bind::Binder) -> void
       + resolve(name: std::string, scope: std::string) -> std::string {
@@ -43,7 +44,7 @@ package driftspec@ds {
         @requirement REQ-00040-1
       }
       - checkLocals() -> void {
-        @requirement REQ-00036-1
+        @requirement REQ-00036-2
       }
       - checkArtefacts() -> void {
         @requirement REQ-00045-1
@@ -61,10 +62,22 @@ package driftspec@ds {
         @requirement REQ-00023-1
       }
       - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
-        @requirement REQ-00036-1
+        @requirement REQ-00036-2
       }
       - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
         @requirement REQ-00038-1
+      }
+      - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
+        @requirement REQ-00036-2
+      }
+      - checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00058-1
+      }
+      - compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>) -> bool {
+        @requirement REQ-00058-1
+      }
+      - rememberResult(message: bind::Message) -> void {
+        @requirement REQ-00058-1
       }
       - checkTemplateBound(reference: bind::Reference) -> void {
         @requirement REQ-00029-1
@@ -76,7 +89,40 @@ package driftspec@ds {
         @requirement REQ-00031-1
       }
     }
+
+    // What ds check does, in order: the first behaviour of this design. The results
+    // of the messages are remembered as they go, since each exists only for the
+    // messages after it.
+    sequence Checker::run {
+      self -> binder.references() -> references
+      loop each reference {
+        -> resolveReference(reference)
+      }
+      -> unifyBehaviours()
+      loop each reference {
+        -> checkTemplateBound(reference)
+      }
+      self -> binder.messages() -> messages
+      loop each message {
+        -> checkMessage(message)
+        -> rememberResult(message)
+      }
+      -> checkLocals()
+      self -> binder.events() -> events
+      loop each event {
+        -> checkEvent(event)
+      }
+      -> checkOwnershipCycles()
+      -> classify()
+      -> checkArtefacts()
+      -> checkExtensions()
+    }
   }
+}
+
+diagram SEQ_CheckerRun {
+  kind: sequence
+  include: driftspec@ds@check::Checker::run::sequence
 }
 
 diagram CL_CheckNamespace {

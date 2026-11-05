@@ -101,7 +101,7 @@ package driftspec@ds {
       - bindSequence(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00034-1
         @requirement REQ-00035-1
-        @requirement REQ-00036-1
+        @requirement REQ-00036-2
       }
       - bindSteps(file: parse::ParsedFile, node: TSNode, sequence: model::Entity, frame: std::string, order: int, frames: int) -> void {
         @requirement REQ-00037-1

@@ -129,7 +129,13 @@ them. The vision (`vision.md`) says why; this says what.*
   with `ds@ds::Checker::run*`.
 - Participants are the static context: `self`, the attributes of the class,
   the parameters of the method, by name; only what the method creates is
-  written, `local parser: Parser`. `W-PARTICIPANT-UNDECLARED`.
+  written, `local parser: Parser`. The result of a message is one too, for the
+  messages after it. `W-PARTICIPANT-UNDECLARED`.
+- Values have types (decided 2026-11-05, `examples/values`): a result has the
+  type its operation returns, so a call on it is checked like any other. An
+  argument is checked against its parameter (`W-ARG-TYPE`), and taking the
+  result of an operation returning `none` is reported (`W-RESULT-NONE`). A value
+  of unknown type has nothing to be checked against.
 - Messages `self -> binder.references() -> refs`, `-> resolveReference(ref)`
   for self; arity is checked (`E-MSG-ARITY`); `loop`, `alt … else`, `opt`
   with prose conditions.
