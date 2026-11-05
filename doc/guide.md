@@ -234,7 +234,8 @@ them. The vision (`vision.md`) says why; this says what.*
   `open: shop@store@stock` opens that box and the way to it, `open:` alone closes
   them all, and a diagram that does not say it draws everything open. A closed box
   shows only its public children. An edge that loses an end to it says only that
-  one box depends on the other, and what stays inside it is not drawn: the
+  one box depends on the other, and what stays inside it is not drawn. A behaviour
+  that crosses boxes counts too, so an interface reaches what handles it: the
   component view is derived, never written.
 - `depth` and `level` belong to sequences: `depth: 2`, `depth: *` for every level
   (`W-DIAGRAM-DEPTH` for anything else), `level: module` for only what crosses

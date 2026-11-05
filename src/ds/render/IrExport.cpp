@@ -316,7 +316,23 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     out["edges"].push_back(edge);
   }
   // `open:` written says which boxes stay open, and every other closes: `open:` alone closes them all
-  if (diagram->fields.count("open")) return closeBoxes(out.dump(), split(fieldOf(*diagram, "open"), ','), pretty);
+  if (diagram->fields.count("open")) {
+    // what a box does counts as much as what it declares: its behaviours cross boxes too, and a closed box
+    // depends on whatever they reach. Types alone would leave an interface unconnected to what handles it
+    for (const auto& r : model_.relations()) {
+      if (r.kind != "couples-transient" && r.kind != "couples-structural") continue;
+      const auto cut = r.from.find("::sequence");
+      if (cut == std::string::npos) continue;
+      const std::string subject = r.from.substr(0, cut);
+      const model::Entity* s = model_.find(subject);
+      if (!s || !placed.count(r.to)) continue;
+      const std::string owner = placed.count(subject) ? subject : s->scope;
+      if (!placed.count(owner) || owner == r.to) continue;
+      if (!drawn.insert(owner + "|" + r.to + "|dependency||").second) continue;
+      out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}});
+    }
+    return closeBoxes(out.dump(), split(fieldOf(*diagram, "open"), ','), pretty);
+  }
   return pretty ? out.dump(2) : out.dump();
 }
 

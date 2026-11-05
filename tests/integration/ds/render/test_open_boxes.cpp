@@ -89,6 +89,18 @@ TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
   EXPECT_EQ(ir["nodes"][0]["kind"], "container");
 }
 
+TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawing) {
+  ds::model::Model shop;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(shop);
+  for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/interfaces")) binder.bind(f);
+  ds::check::Checker(shop).run(binder);
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(shop).render("diagram:HLD_Shop", false));
+  bool reached = false;
+  for (const auto& e : ir["edges"]) reached = reached || (e["from"] == "shop@shell" && e["to"] == "shop@till");
+  EXPECT_TRUE(reached);  // no type says it: only the sequence of shell::buy calls till::main
+}
+
 TEST_F(TestOpenBoxes, DepthStarIsEveryLevelAndNeverAnAbort) {
   const auto ir = diagram("SEQ_All");
   EXPECT_FALSE(ir["edges"].empty());

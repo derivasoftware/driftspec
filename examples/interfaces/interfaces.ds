@@ -116,3 +116,9 @@ diagram ST_Web {
   kind: state
   include: shop@web
 }
+
+diagram HLD_Shop {                   // every box closed: an interface reaches what handles it through its sequence
+  kind: class
+  include: shop@*
+  open:
+}
