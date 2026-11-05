@@ -48,6 +48,12 @@ bool isSystemScope(const std::string& scope);
 std::string lastName(const std::string& id);
 
 /// One declared (or expected, R6) entity of the workspace.
+/// One parameter as the binder read it: its name and its type as written (a template's: its name and bound).
+struct Param {
+  std::string name;
+  std::string type;
+};
+
 struct Entity {
   Kind kind = Kind::Package;
   std::string id;     ///< identity: qualified name, or the artefact id
@@ -56,6 +62,8 @@ struct Entity {
   std::map<std::string, std::string> fields;
   std::vector<std::string>
       flags;  ///< modifiers with semantics (R19): abstract, static, const, owns, refs, shares, extern, dataclass, constructor
+  std::vector<Param> params;      ///< read once from the syntax: an operation's parameters, a template's parameters
+  std::vector<std::string> args;  ///< read once from the syntax: a message's arguments, as written
   Location location;
   bool expected = false;  ///< referenced somewhere but declared nowhere
 

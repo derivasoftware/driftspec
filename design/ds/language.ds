@@ -52,6 +52,13 @@ package driftspec@ds {
         tests:
           tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.EveryEntityAndRelationIsOneTheMetamodelDeclares
       }
+      verification VER-00075-1 {
+        status: approved
+        title: Integration tests confirm parameters and arguments are read once into structures that agree with their text, over the design of ds and every example
+        method: test
+        tests:
+          tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.ParametersAndArgumentsAreReadOnceAndAgreeWithTheirText
+      }
       requirement REQ-00067-1 {
         tags: language, metamodel, fields
         status: approved

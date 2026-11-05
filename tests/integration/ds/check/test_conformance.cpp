@@ -78,6 +78,40 @@ TEST_F(TestMetamodelConformance, EveryEntityAndRelationIsOneTheMetamodelDeclares
   EXPECT_GT(relations, 2000);
 }
 
+TEST_F(TestMetamodelConformance, ParametersAndArgumentsAreReadOnceAndAgreeWithTheirText) {
+  int params = 0, messages = 0;
+  for (const auto& dir : workspaces()) {
+    const ds::model::Model model = load(dir);
+    for (const auto& pair : model.entities()) {
+      const ds::model::Entity& e = pair.second;
+      if (e.kind == ds::model::Kind::Message) {
+        ++messages;
+        const auto argc = e.fields.find("argc");
+        ASSERT_NE(argc, e.fields.end()) << e.id;
+        EXPECT_EQ(std::to_string(e.args.size()), argc->second) << dir << " " << e.id;
+        std::string joined;
+        for (const auto& a : e.args) joined += (joined.empty() ? "" : ", ") + a;
+        EXPECT_EQ(joined, e.fields.at("args")) << dir << " " << e.id;
+        continue;
+      }
+      const auto text = e.fields.find("params");
+      if (text == e.fields.end()) {
+        EXPECT_TRUE(e.params.empty()) << dir << " " << e.id;
+        continue;
+      }
+      ++params;
+      std::string joined;
+      for (const auto& p : e.params) {
+        const bool tpl = e.kind == ds::model::Kind::Class;  // a template lists names; its bounds are bound.* fields
+        joined += (joined.empty() ? "" : ", ") + p.name + (tpl || p.type.empty() ? "" : ": " + p.type);
+      }
+      EXPECT_EQ(joined, text->second) << dir << " " << e.id;
+    }
+  }
+  EXPECT_GT(params, 200);
+  EXPECT_GT(messages, 300);
+}
+
 TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclaredOneIsNot) {
   ds::model::Model model;
   ds::parse::Parser parser;
