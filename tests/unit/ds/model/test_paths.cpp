@@ -76,4 +76,58 @@ TEST_F(TestPathOf, TheDefaultPathSkipsTheNamedBranch) {
   EXPECT_TRUE(kept.empty());
 }
 
+/// A loop holding a named opt: m0 in the loop, the opt / found holding m1 and a return (m2); then m3.
+Model loopBehaviour() {
+  Model model;
+  const std::string seq = "p@m::C::find::sequence";
+  Entity loop;
+  loop.kind = Kind::Frame;
+  loop.id = seq + "::f0";
+  loop.scope = seq;
+  loop.fields["kind"] = "loop";
+  loop.fields["first"] = seq + "::m0";
+  model.declare(loop);
+  Entity opt;
+  opt.kind = Kind::Frame;
+  opt.id = seq + "::f1";
+  opt.scope = seq;
+  opt.fields["kind"] = "opt";
+  opt.fields["scenario"] = "found";
+  opt.fields["parent"] = loop.id;
+  opt.fields["first"] = seq + "::m1";
+  model.declare(opt);
+  auto message = [&](int order, const std::string& op, const std::string& frame, bool isReturn) {
+    Entity m;
+    m.kind = Kind::Message;
+    m.id = seq + "::m" + std::to_string(order);
+    m.scope = seq;
+    m.fields["order"] = std::to_string(order);
+    m.fields["op"] = op;
+    m.fields["frame"] = frame;
+    if (isReturn) {
+      m.fields["return"] = "true";
+      m.fields["result"] = op;
+    }
+    model.declare(m);
+  };
+  message(0, "next", loop.id, false);
+  message(1, "take", opt.id, false);
+  message(2, "1", opt.id, true);
+  message(3, "after", "", false);
+  model.find(seq + "::m3")->fields.erase("frame");
+  return model;
+}
+
+TEST_F(TestPathOf, ALoopWithANamedBranchInsideStaysOnTheDefaultPath) {
+  const Model model = loopBehaviour();
+  std::set<std::string> kept;
+  EXPECT_EQ(ops(ds::model::pathOf(model, "p@m::C::find::sequence", "", &kept)), (std::vector<std::string>{"next", "after"}));
+  EXPECT_TRUE(kept.count("p@m::C::find::sequence::f0"));  // drawn as the loop it is
+}
+
+TEST_F(TestPathOf, APathThatNamesABranchInsideALoopGoesIntoItAndEndsThere) {
+  const Model model = loopBehaviour();
+  EXPECT_EQ(ops(ds::model::pathOf(model, "p@m::C::find::sequence", "found", nullptr)), (std::vector<std::string>{"next", "take", "1"}));
+}
+
 }  // namespace

@@ -796,6 +796,19 @@ void Checker::checkScenarios() {
 void Checker::checkDiagrams() {
   for (const auto& pair : model_.entities()) {
     if (pair.second.kind != model::Kind::Diagram) continue;
+    // a sequence diagram that asks for a scenario: it is a behaviour of its own, or a named branch of one
+    const auto include = pair.second.fields.find("include");
+    if (include != pair.second.fields.end() && pair.second.fields.count("kind") && pair.second.fields.at("kind") == "sequence") {
+      for (const auto& pattern : split(include->second, ',')) {
+        const auto slash = pattern.find(" / ");
+        if (slash == std::string::npos) continue;
+        const std::string behaviour = pattern.substr(0, slash) + "::sequence";
+        const std::string scenario = pattern.substr(slash + 3);
+        if (!model_.find(behaviour) || model_.find(behaviour + "/" + scenario) || model::hasScenario(model_, behaviour, scenario)) continue;
+        model_.report({"W-SCENARIO-UNDECLARED", "warning", pair.second.name + " asks for " + pattern + ", a scenario nobody declares",
+                       pair.second.location});
+      }
+    }
     const auto depth = pair.second.fields.find("depth");
     if (depth == pair.second.fields.end() || depth->second == "*") continue;
     if (depth->second.empty() || depth->second.find_first_not_of("0123456789") != std::string::npos) {

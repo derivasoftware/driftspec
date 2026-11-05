@@ -94,3 +94,8 @@ diagram SEQ_Frozen {
   include: bank@teller::withdraw / frozen
   depth: 1
 }
+
+diagram SEQ_Bogus {                      // ! W-SCENARIO-UNDECLARED: Desk::withdraw has no scenario stolen
+  kind: sequence
+  include: bank@core::Desk::withdraw / stolen
+}

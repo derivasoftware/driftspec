@@ -73,8 +73,8 @@ TEST_F(TestBranches, ACallThatNamesABranchEntersThatPath) {
 }
 
 TEST_F(TestBranches, AnExitCodeIsCheckedAgainstTheEndOfItsPath) {
-  EXPECT_EQ(lines.count("W-OUTCOME-MISMATCH"), 0U);  // 0, 2 and 3, each through its path
-  EXPECT_EQ(lines.count("W-SCENARIO-UNDECLARED"), 0U);
+  EXPECT_EQ(lines.count("W-OUTCOME-MISMATCH"), 0U);      // 0, 2 and 3, each through its path
+  EXPECT_EQ(lines["W-SCENARIO-UNDECLARED"].size(), 1U);  // only the diagram that asks for stolen
 }
 
 TEST_F(TestBranches, ANameGivenTwiceIsAFinding) { EXPECT_EQ(lines["W-SCENARIO-TWICE"].size(), 2U); }
@@ -95,6 +95,12 @@ TEST_F(TestBranches, AnUnnamedCallFollowsTheDefaultPath) {
   const auto drawn = labels("SEQ_Default");
   EXPECT_NE(std::find(drawn.begin(), drawn.end(), "take(amount)"), drawn.end());
   EXPECT_EQ(std::find(drawn.begin(), drawn.end(), "return 3"), drawn.end());
+}
+
+TEST_F(TestBranches, ADiagramThatAsksForAScenarioNobodyDeclaresIsAFinding) {
+  bool found = false;
+  for (const auto& line : lines["W-SCENARIO-UNDECLARED"]) found = found || line.find("SEQ_Bogus") != std::string::npos;
+  EXPECT_TRUE(found);
 }
 
 }  // namespace
