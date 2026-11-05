@@ -422,6 +422,9 @@ std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::s
 
 namespace {
 
+/// The scenario of a behaviour drawn as written: every branch, with its frame.
+const char* const kWhole = "*";
+
 struct SequenceBuilder {
   const model::Model& model;
   nlohmann::json nodes = nlohmann::json::array();
@@ -462,12 +465,42 @@ struct SequenceBuilder {
   }
 
   /// Emits the messages of one behaviour; `selfLine` is the lifeline its subject runs on.
-  void emit(const model::Entity& seq, const std::string& selfLine, int depth, std::set<std::string>& stack) {
-    if (stack.count(seq.id)) return;  // recursion: drawn once
-    stack.insert(seq.id);
+  /// `backLine` is whoever called it, where an early return goes. `path` is the scenario it follows: its name,
+  /// "" for the default path that takes no named branch, or kWhole for every branch, as written.
+  void emit(const model::Entity& seq, const std::string& selfLine, const std::string& backLine, const std::string& path, int depth,
+            std::set<std::string>& stack) {
+    const std::string key = seq.id + "/" + path;
+    if (stack.count(key)) return;  // recursion: drawn once
+    stack.insert(key);
     std::map<std::string, int> firstOrder, lastOrder, elseOrder;  // by frame id
-    for (const model::Entity* m : messagesOf(seq.id)) {
-      if (fieldOf(*m, "return") == "true") continue;  // told by the arrow back to whoever called
+    // a path draws only the messages it takes, and only the frames it cannot tell; every branch otherwise
+    std::set<std::string> kept;
+    const bool whole = path == kWhole;
+    const std::vector<const model::Entity*> messages = whole ? messagesOf(seq.id) : model::pathOf(model, seq.id, path, &kept);
+    auto drawn = [&](const std::string& frame) { return whole || kept.count(frame); };
+    for (const model::Entity* m : messages) {
+      if (fieldOf(*m, "return") == "true") {
+        // a return inside a frame ends that branch early: it is drawn, so the frame is never empty
+        std::string frame = fieldOf(*m, "frame");
+        while (!frame.empty() && !drawn(frame)) frame = fieldOf(*model.find(frame), "parent");
+        if (frame.empty() || backLine.empty()) continue;  // the last return: the arrow back to whoever called tells it
+        for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
+          if (!drawn(f)) continue;
+          if (!firstOrder.count(f)) firstOrder[f] = order;
+          if (fieldOf(*model.find(f), "else") == m->id) elseOrder[f] = order;
+        }
+        const std::string value = fieldOf(*m, "result");
+        edges.push_back({{"from", selfLine},
+                         {"to", backLine},
+                         {"kind", "message"},
+                         {"order", order++},
+                         {"label", value.empty() ? "return" : "return " + value},
+                         {"dashed", true}});
+        for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
+          if (drawn(f)) lastOrder[f] = order - 1;
+        }
+        continue;
+      }
       const std::string to = fieldOf(*m, "to");
       const std::string typeId = fieldOf(*m, "type");
       std::string target = selfLine;
@@ -484,6 +517,7 @@ struct SequenceBuilder {
       }
       const std::string frame = fieldOf(*m, "frame");
       for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
+        if (!drawn(f)) continue;  // a branch the path takes is drawn inline, without its frame
         if (!firstOrder.count(f)) firstOrder[f] = order;
         const model::Entity* fe = model.find(f);
         if (fieldOf(*fe, "else") == m->id) elseOrder[f] = order;
@@ -515,14 +549,15 @@ struct SequenceBuilder {
       edges.push_back(edge);
       if (!expands.empty() && depth > 0) {
         const int first = order;
-        emit(*model.find(expands), target, depth - 1, stack);
+        emit(*model.find(expands), target, selfLine, fieldOf(*m, "expands-path"), depth - 1, stack);
         if (order > first) refs["span"] = std::to_string(first) + "-" + std::to_string(order - 1);  // the rows the expansion occupies
       }
       edges[at]["refs"] = refs;
       const std::string result = fieldOf(*m, "result");
       if (!result.empty())
         edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
-      for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) lastOrder[f] = order - 1;  // after any expansion
+      for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent"))
+        if (drawn(f)) lastOrder[f] = order - 1;  // after any expansion
     }
     for (const auto& f : firstOrder) {
       const model::Entity* fe = model.find(f.first);
@@ -547,6 +582,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   const std::string level = fieldOf(diagram, "level");
   // the behaviours selected: by subject id, by sequence id, or a namespace
   std::vector<const model::Entity*> selected;
+  std::map<const model::Entity*, std::string> pathOf;  // a named branch asked for: the path of that behaviour
   for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
     for (const auto& pair : model_.entities()) {
       const model::Entity& e = pair.second;
@@ -557,6 +593,14 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const bool isDefault = e.fields.find("scenario") == e.fields.end();
       const bool named = !isDefault && pattern == subjectId + " / " + e.fields.at("scenario");
       if (pattern == e.id || (pattern == subjectId && isDefault) || named || prefix) selected.push_back(&e);
+      // `Class::op / scenario` with no behaviour of its own: a named branch of the default one
+      const auto slash = pattern.find(" / ");
+      if (isDefault && slash != std::string::npos && pattern.substr(0, slash) == subjectId &&
+          !model_.find(subjectId + "::sequence/" + pattern.substr(slash + 3)) &&
+          model::hasScenario(model_, e.id, pattern.substr(slash + 3))) {
+        selected.push_back(&e);
+        pathOf[&e] = pattern.substr(slash + 3);
+      }
     }
   }
   SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0};
@@ -610,12 +654,16 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
                            {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
       }
       std::set<std::string> stack;
-      b.emit(*seq, self, depth, stack);
+      // a behaviour asked for by its subject is drawn whole; a scenario of it, as its path
+      const std::string path = pathOf.count(seq) ? pathOf[seq] : kWhole;
+      b.emit(*seq, self, caller, path, depth, stack);
       const std::string returns = method ? fieldOf(*subject, "returns") : "";
       if (method && !returns.empty() && returns != "none" && returns != "void") {
         std::string given = returns;  // what its `return` says, or the declared type
-        for (const model::Entity* m : b.messagesOf(seq->id)) {
-          if (fieldOf(*m, "return") == "true") given = fieldOf(*m, "result");
+        const std::vector<const model::Entity*> taken =
+            path == kWhole ? b.messagesOf(seq->id) : model::pathOf(model_, seq->id, path, nullptr);
+        for (const model::Entity* m : taken) {
+          if (fieldOf(*m, "return") == "true" && !fieldOf(*m, "result").empty()) given = fieldOf(*m, "result");
         }
         b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});
       }

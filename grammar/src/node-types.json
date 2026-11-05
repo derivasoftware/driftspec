@@ -13,6 +13,16 @@
           }
         ]
       },
+      "else_scenario": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
       "otherwise": {
         "multiple": true,
         "required": false,
@@ -51,6 +61,16 @@
           },
           {
             "type": "return",
+            "named": true
+          }
+        ]
+      },
+      "scenario": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
             "named": true
           }
         ]
@@ -706,6 +726,16 @@
             "named": true
           }
         ]
+      },
+      "scenario": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
@@ -1160,6 +1190,16 @@
             "named": true
           }
         ]
+      },
+      "scenario": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
@@ -1443,7 +1483,7 @@
     "fields": {
       "value": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "false",

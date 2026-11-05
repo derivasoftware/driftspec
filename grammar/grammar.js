@@ -146,13 +146,17 @@ module.exports = grammar({
       optional(seq('->', field('result', $.name))),
     ),
     // what the behaviour gives back: a name or a literal, never an expression (2026-11-05)
-    return: $ => seq('return', field('value', choice($.name, $.number, $.string, 'true', 'false'))),
+    // a bare return ends a branch of the behaviour with nothing given back (2026-11-05)
+    return: $ => prec.right(seq('return', optional(field('value', choice($.name, $.number, $.string, 'true', 'false'))))),
     arguments: $ => seq('(', optional(seq($.argument, repeat(seq(',', $.argument)))), ')'),
     argument: $ => seq($.name, repeat(seq('.', $.name))),
-    loop: $ => seq('loop', field('condition', $.condition), '{', repeat($._sequence_item), '}'),
-    alt: $ => seq('alt', field('condition', $.condition), '{', repeat($._sequence_item), '}', optional(seq('else', '{', repeat(field('otherwise', $._sequence_item)), '}'))),
-    opt: $ => seq('opt', field('condition', $.condition), '{', repeat($._sequence_item), '}'),
-    condition: $ => /([^{\/\n]|\/[^\/{\n])+/,
+    // a branch may name a scenario: `opt <prose> / refused {`, a path through this one behaviour (2026-11-05)
+    loop: $ => seq('loop', field('condition', $.condition), optional($._branch_name), '{', repeat($._sequence_item), '}'),
+    alt: $ => seq('alt', field('condition', $.condition), optional($._branch_name), '{', repeat($._sequence_item), '}',
+      optional(seq('else', optional(seq('/', field('else_scenario', $.name))), '{', repeat(field('otherwise', $._sequence_item)), '}'))),
+    opt: $ => seq('opt', field('condition', $.condition), optional($._branch_name), '{', repeat($._sequence_item), '}'),
+    _branch_name: $ => seq('/', field('scenario', $.name)),
+    condition: $ => /[^{\/\n]+/,
 
     state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.view, $.transition)), '}'),
     // a state of the navigation of a graphical interface: what it shows, in text, and what binds it (2026-11-05)

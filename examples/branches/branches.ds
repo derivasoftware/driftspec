@@ -1,0 +1,96 @@
+// branches.ds: a scenario is a path through one behaviour. A branch names it
+// (`opt <prose> / refused {`), and what every scenario shares is written once. A bare
+// `return` ends a branch. A call, a diagram and an exit code ask for the path by its
+// name. The `!` lines are the findings the tool emits.
+
+package bank {
+  interface teller {
+    kind: cli
+    operation withdraw(amount: int) -> int {
+      exit 0: default
+      exit 2: refused
+      exit 3: frozen
+    }
+  }
+
+  sequence teller::withdraw {
+    local desk: core::Desk
+    -> desk.withdraw(amount) -> code
+  }
+
+  sequence teller::withdraw / refused {
+    local desk: core::Desk
+    -> desk.withdraw(amount) / refused -> code
+  }
+
+  sequence teller::withdraw / frozen {
+    local desk: core::Desk
+    -> desk.withdraw(amount) / frozen -> code
+  }
+
+  module core {
+    class Vault {
+      + balance() -> int
+      + take(amount: int) -> none
+    }
+
+    class Desk {
+      - vault: Vault
+      + withdraw(amount: int) -> int
+      + close(amount: int) -> none
+      - log(amount: int) -> none
+    }
+
+    sequence Desk::withdraw {
+      self -> vault.balance() -> funds
+      opt the account is frozen / frozen {
+        -> log(amount)
+        return 3
+      }
+      alt there is enough {
+        self -> vault.take(amount)
+      } else / refused {
+        -> log(amount)
+        return 2
+      }
+      -> log(amount)
+      return 0
+    }
+
+    sequence Desk::close {
+      opt nothing is open / idle {
+        return
+      }
+      self -> vault.balance() -> funds
+      opt something left / idle {                 // ! W-SCENARIO-TWICE: idle names one path, twice
+        -> log(amount)
+      }
+    }
+
+    sequence Desk::close / idle {                 // ! W-SCENARIO-TWICE: a branch already has the name
+      -> log(amount)
+    }
+  }
+}
+
+diagram SEQ_Whole {
+  kind: sequence
+  include: bank@core::Desk::withdraw
+}
+
+diagram SEQ_Refused {
+  kind: sequence
+  include: bank@core::Desk::withdraw / refused
+}
+
+diagram SEQ_Default {
+  kind: sequence
+  include: bank@teller::withdraw
+  depth: 1
+}
+
+diagram SEQ_Frozen {
+  kind: sequence
+  include: bank@teller::withdraw / frozen
+  depth: 1
+}

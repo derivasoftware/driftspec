@@ -8,6 +8,8 @@
 #include <sstream>
 #include <vector>
 
+#include "ds/model/Model.hpp"
+
 namespace ds {
 namespace check {
 
@@ -192,6 +194,7 @@ void Checker::run(const bind::Binder& binder) {
   for (const auto& e : binder.events()) checkEvent(e);
   checkInterfaces();
   checkDiagrams();
+  checkScenarios();
   checkOwnershipCycles();
   classify();
   checkArtefacts();
@@ -463,6 +466,11 @@ void Checker::expand(model::Entity& msg, const model::Entity& op, const bind::Me
   if (const model::Entity* child = model_.find(id)) {
     model_.relate({"expands-to", msg.id, child->id, message.location, ""});
     msg.fields["expands"] = child->id;
+  } else if (named && model::hasScenario(model_, op.id + "::sequence", scenario->second)) {
+    // a named branch of the one behaviour: the call enters that path of it
+    model_.relate({"expands-to", msg.id, op.id + "::sequence", message.location, ""});
+    msg.fields["expands"] = op.id + "::sequence";
+    msg.fields["expands-path"] = scenario->second;
   } else if (named) {
     model_.report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
   }
@@ -477,7 +485,11 @@ void Checker::checkReturn(const bind::Message& message) {
   if (!subject || subject->kind == model::Kind::Class || subject->kind == model::Kind::Operation) return;
   const auto returns = subject->fields.find("returns");
   if (returns == subject->fields.end()) return;  // declares no return: nothing to check against
-  const std::string value = msg->fields.at("result");
+  const std::string value = msg->fields.count("result") ? msg->fields.at("result") : "";
+  if (value.empty()) {
+    // a bare return ends a branch; it gives nothing back, which only an operation returning none may do at its end
+    return;
+  }
   const std::string home = cls ? cls->scope : subject->scope;
   std::string given;
   bool mismatch = false;
@@ -651,20 +663,17 @@ void Checker::rememberResult(const bind::Message& message) {
   results_[seq->id][result->second] = {type == msg->fields.end() ? "" : type->second, scope == msg->fields.end() ? "" : scope->second};
 }
 
-std::string Checker::outcomeOf(const std::string& sequence, std::set<std::string>* seen) const {
-  if (!seen->insert(sequence).second) return "";
-  std::map<int, const model::Entity*> messages;
-  for (const auto& pair : model_.entities()) {
-    if (pair.second.kind != model::Kind::Message || pair.second.scope != sequence) continue;
-    messages[std::stoi(pair.second.fields.at("order"))] = &pair.second;
-  }
+std::string Checker::outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const {
+  if (!seen->insert(sequence + "/" + path).second) return "";
+  const std::vector<const model::Entity*> messages = model::pathOf(model_, sequence, path, nullptr);
   std::string wanted;  // the name of the result the behaviour returns; empty: its last call decides
   for (auto it = messages.rbegin(); it != messages.rend(); ++it) {
-    const model::Entity& m = *it->second;
+    const model::Entity& m = **it;
     const auto result = m.fields.find("result");
     if (m.fields.count("return")) {
       const std::string value = result == m.fields.end() ? "" : result->second;
-      if (value.empty() || !(std::isdigit(static_cast<unsigned char>(value.front())) || value.front() == '-')) {
+      if (value.empty()) return "";
+      if (!(std::isdigit(static_cast<unsigned char>(value.front())) || value.front() == '-')) {
         wanted = value;
         continue;
       }
@@ -672,7 +681,8 @@ std::string Checker::outcomeOf(const std::string& sequence, std::set<std::string
     }
     if (!wanted.empty() && (result == m.fields.end() || result->second != wanted)) continue;
     const auto expands = m.fields.find("expands");
-    return expands == m.fields.end() ? "" : outcomeOf(expands->second, seen);
+    const auto into = m.fields.find("expands-path");
+    return expands == m.fields.end() ? "" : outcomeOf(expands->second, into == m.fields.end() ? "" : into->second, seen);
   }
   return "";
 }
@@ -693,14 +703,19 @@ void Checker::checkInterfaces() {
     for (const auto& field : e.fields) {
       if (field.first.rfind("exit ", 0) != 0) continue;
       const std::string code = field.first.substr(5);
-      const std::string id = field.second == "default" ? behaviour : behaviour + "/" + field.second;
+      std::string id = field.second == "default" ? behaviour : behaviour + "/" + field.second;
+      std::string path;
+      if (!model_.find(id) && model::hasScenario(model_, behaviour, field.second)) {
+        id = behaviour;  // a named branch of the one behaviour
+        path = field.second;
+      }
       if (!model_.find(id)) {
         model_.report({"W-SCENARIO-UNDECLARED", "warning",
                        e.id + " exits " + code + " on '" + field.second + "', and it has no such scenario", e.location});
         continue;
       }
       std::set<std::string> seen;
-      const std::string outcome = outcomeOf(id, &seen);
+      const std::string outcome = outcomeOf(id, path, &seen);
       if (!outcome.empty() && outcome != code) {
         model_.report({"W-OUTCOME-MISMATCH", "warning",
                        e.id + " promises exit " + code + " on '" + field.second + "', and that trace ends in " + outcome, e.location});
@@ -747,6 +762,24 @@ void Checker::checkViews(const model::Entity& state) {
       model_.report({"W-VIEW-UNREACHABLE", "warning", "nothing leads to the view " + view + " of " + state.name, v->location});
     } else if (views.size() > 1 && next[view].empty()) {
       model_.report({"W-VIEW-NO-WAY-OUT", "warning", "nothing leaves the view " + view + " of " + state.name, v->location});
+    }
+  }
+}
+
+void Checker::checkScenarios() {
+  // a scenario has one name: a branch of the behaviour, or a behaviour of its own, never both nor twice
+  std::map<std::string, int> named;
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& f = pair.second;
+    if (f.kind != model::Kind::Frame) continue;
+    for (const char* key : {"scenario", "else-scenario"}) {
+      const auto name = f.fields.find(key);
+      if (name == f.fields.end()) continue;
+      const std::string base = f.scope.substr(0, f.scope.find("::sequence") + std::string("::sequence").size());
+      if (++named[base + "/" + name->second] == 2 || model_.find(base + "/" + name->second)) {
+        model_.report(
+            {"W-SCENARIO-TWICE", "warning", base + " names the scenario '" + name->second + "' twice: a scenario is one path", f.location});
+      }
     }
   }
 }

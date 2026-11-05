@@ -65,7 +65,8 @@ class Checker {
   void checkDiagrams();
   void checkViews(const model::Entity& state);
   /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
-  std::string outcomeOf(const std::string& sequence, std::set<std::string>* seen) const;
+  std::string outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const;
+  void checkScenarios();
   void checkTemplateBound(const bind::Reference& reference);
   void checkOwnershipCycles();
   void classify();

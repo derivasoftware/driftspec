@@ -93,13 +93,16 @@ package driftspec@ds {
       - checkLeak(from: std::string, target: std::string, location: model::Location) -> void {
         @requirement REQ-00063-1
       }
+      - checkScenarios() -> void {
+        @requirement REQ-00065-1
+      }
       - checkDiagrams() -> void {
         @requirement REQ-00049-2
       }
       - checkInterfaces() -> void {
         @requirement REQ-00060-1
       }
-      - outcomeOf(sequence: std::string, seen: std::set<std::string>) -> std::string {
+      - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
         @requirement REQ-00060-1
       }
       - checkViews(state: model::Entity) -> void {
@@ -141,6 +144,7 @@ package driftspec@ds {
       }
       -> checkInterfaces()
       -> checkDiagrams()
+      -> checkScenarios()
       -> checkOwnershipCycles()
       -> classify()
       -> checkArtefacts()
@@ -151,6 +155,81 @@ package driftspec@ds {
     // the common one: found in a scope, walking outward from where it was written.
     // Stripping the revision and building each candidate are free helpers of the
     // implementation: bare and candidate appear here without their origin.
+    // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named
+    // branch is a scenario, a path through it; what they all share is written once.
+    sequence Checker::checkMessage {
+      local subject: model::Entity
+      local value: std::pair<std::string, std::string>
+      local transient: bool
+      local home: std::string
+      local typeId: std::string
+      local opId: std::string
+      local finding: model::Finding
+
+      opt it is a return of the behaviour, not a call / a-return {
+        -> checkReturn(message)
+        return
+      }
+
+      -> current(message.sequence) -> sequenceId
+      self -> model_.find(sequenceId) -> seq
+      -> current(message.message) -> messageId
+      self -> model_.find(messageId) -> msg
+      opt the behaviour or the message is gone from the model / unknown-message {
+        return
+      }
+
+      -> subjectClass(seq, subject) -> cls
+      opt nothing declares the subject yet, it waits / subject-waits {
+        return
+      }
+
+      // A call with no target, from a function always, from a method when its class does
+      // not declare the name: a function of the module, resolved outward like any name.
+      opt a call to self the class does not declare {
+        -> resolve(message.op, home) -> id
+        self -> model_.find(id) -> target
+        opt it is a function of the module / function {
+          -> couple(seq, target, true)
+          -> call(msg, target, message)
+          return
+        }
+        opt the caller is itself a function / no-function {
+          self -> model_.report(finding)
+          return
+        }
+      }
+
+      // Who it is called on: self, or a name of the context of the behaviour.
+      alt the target is self / on-self {
+      } else {
+        -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
+        opt the context has nothing by that name / unknown-participant {
+          self -> model_.report(finding)
+          return
+        }
+        -> resolveTypeText(value.first, value.second) -> typeId
+      }
+
+      opt a primitive or an unknown spelling, nothing to check / no-type {
+        return
+      }
+      self -> model_.find(typeId) -> type
+      opt the type is not declared yet, reported once it is / type-waits {
+        return
+      }
+
+      opt the target is not self {
+        -> couple(seq, type, transient)
+      }
+      self -> model_.find(opId) -> op
+      opt the type does not declare the operation / undeclared-op {
+        self -> model_.report(finding)
+        return
+      }
+      -> call(msg, op, message)
+    }
+
     sequence Checker::resolve {
       local bare: std::string
       local candidate: std::string
@@ -258,183 +337,6 @@ package driftspec@ds {
       return false
     }
 
-    // Each message of each behaviour against its static context: the heart of the
-    // tool. The default is a call on a participant that reaches a declared operation.
-    // In all scenarios: current(...) inside find(...) is written as two messages, and
-    // setting msg.fields["type"] is an assignment nothing can say.
-    sequence Checker::checkMessage {
-      local subject: model::Entity
-      local value: std::pair<std::string, std::string>
-      local transient: bool
-      local opId: std::string
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
-      -> resolveTypeText(value.first, value.second) -> typeId
-      self -> model_.find(typeId) -> type
-      -> couple(seq, type, transient)
-      self -> model_.find(opId) -> op
-      -> call(msg, op, message)
-    }
-
-    sequence Checker::checkMessage / a-return {  // a return of the behaviour, not a call
-      -> checkReturn(message)
-    }
-
-    sequence Checker::checkMessage / unknown-message {  // the behaviour or the message is gone from the model
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-    }
-
-    sequence Checker::checkMessage / subject-waits {  // nothing declares the subject yet: it waits (R6)
-      local subject: model::Entity
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-    }
-
-    // A call to self the class declares: no name to look up, and no coupling with itself.
-    sequence Checker::checkMessage / on-self {
-      local subject: model::Entity
-      local typeId: std::string
-      local opId: std::string
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      self -> model_.find(opId)
-      self -> model_.find(typeId) -> type
-      self -> model_.find(opId) -> op
-      -> call(msg, op, message)
-    }
-
-    // A call with no target that is a function of the module: from a function always,
-    // from a method when its class does not declare the name.
-    sequence Checker::checkMessage / function {
-      local subject: model::Entity
-      local home: std::string
-      local opId: std::string
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      opt the subject is a method {
-        self -> model_.find(opId)
-      }
-      -> resolve(message.op, home) -> id
-      self -> model_.find(id) -> target
-      -> couple(seq, target, true)
-      -> call(msg, target, message)
-    }
-
-    sequence Checker::checkMessage / no-function {  // W-MSG-UNDECLARED: a function calls what no function of its module is
-      local subject: model::Entity
-      local home: std::string
-      local finding: model::Finding
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      -> resolve(message.op, home) -> id
-      opt the name resolved {
-        self -> model_.find(id) -> target
-      }
-      self -> model_.report(finding)
-    }
-
-    sequence Checker::checkMessage / unknown-participant {  // W-PARTICIPANT-UNDECLARED: the target is nothing of the context
-      local subject: model::Entity
-      local value: std::pair<std::string, std::string>
-      local transient: bool
-      local finding: model::Finding
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
-      self -> model_.report(finding)
-    }
-
-    sequence Checker::checkMessage / no-type {   // a primitive or an unknown spelling: nothing to check against
-      local subject: model::Entity
-      local value: std::pair<std::string, std::string>
-      local transient: bool
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
-      opt the value has a type written {
-        -> resolveTypeText(value.first, value.second) -> typeId
-      }
-    }
-
-    sequence Checker::checkMessage / type-waits {  // the type is not declared yet: reported once it is (R6)
-      local subject: model::Entity
-      local value: std::pair<std::string, std::string>
-      local transient: bool
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
-      -> resolveTypeText(value.first, value.second) -> typeId
-      self -> model_.find(typeId) -> type
-    }
-
-    sequence Checker::checkMessage / undeclared-op {  // W-MSG-UNDECLARED: the type is known and does not have the operation
-      local subject: model::Entity
-      local value: std::pair<std::string, std::string>
-      local transient: bool
-      local opId: std::string
-      local finding: model::Finding
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
-      -> resolveTypeText(value.first, value.second) -> typeId
-      self -> model_.find(typeId) -> type
-      -> couple(seq, type, transient)
-      self -> model_.find(opId) -> op
-      self -> model_.report(finding)
-    }
-
-    // W-MSG-UNDECLARED on self: the class does not declare it and it is no function either.
-    sequence Checker::checkMessage / undeclared-on-self {
-      local subject: model::Entity
-      local home: std::string
-      local typeId: std::string
-      local opId: std::string
-      local finding: model::Finding
-      -> current(message.sequence) -> sequenceId
-      self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
-      self -> model_.find(messageId) -> msg
-      -> subjectClass(seq, subject) -> cls
-      self -> model_.find(opId)
-      -> resolve(message.op, home) -> id
-      opt the name resolved {
-        self -> model_.find(id) -> target
-      }
-      self -> model_.find(typeId) -> type
-      self -> model_.find(opId) -> op
-      self -> model_.report(finding)
-    }
   }
 }
 
@@ -447,4 +349,14 @@ diagram CL_CheckNamespace {
   kind: class
   include: driftspec@ds@check::*
   show: ownership
+}
+
+diagram SEQ_CheckMessage {                 // the whole behaviour, every branch with its frame
+  kind: sequence
+  include: driftspec@ds@check::Checker::checkMessage
+}
+
+diagram SEQ_CheckMessageUndeclared {       // one scenario: what is shared, then its branch
+  kind: sequence
+  include: driftspec@ds@check::Checker::checkMessage / undeclared-op
 }

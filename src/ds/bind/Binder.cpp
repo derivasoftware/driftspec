@@ -537,6 +537,10 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       f.name = ts_node_type(c);
       f.fields["kind"] = ts_node_type(c);
       f.fields["condition"] = trim(fieldText(file, c, "condition"));
+      const std::string scenario = fieldText(file, c, "scenario");
+      if (!scenario.empty()) f.fields["scenario"] = scenario;
+      const std::string elseScenario = fieldText(file, c, "else_scenario");
+      if (!elseScenario.empty()) f.fields["else-scenario"] = elseScenario;
       if (!frame.empty()) f.fields["parent"] = frame;
       model_.declare(f);
       model_.relate({"contains", sequence.id, f.id, loc, ""});
