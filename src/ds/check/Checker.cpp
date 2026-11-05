@@ -668,10 +668,10 @@ void Checker::checkViews(const model::Entity& state) {
   std::map<std::string, std::set<std::string>> next;
   const auto moves = state.fields.find("transitions");
   if (moves != state.fields.end()) {
-    for (const auto& move : split(moves->second, ',')) {
+    for (const auto& move : split(moves->second, '\n')) {
       const auto gt = move.find('>');
       const std::string from = move.substr(0, gt);
-      const std::string to = move.substr(gt + 1);
+      const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
       for (const std::string& name : {from, to}) {
         if (!views.count(name)) {
           model_.report({"W-VIEW-UNDECLARED", "warning",

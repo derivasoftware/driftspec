@@ -727,6 +727,27 @@ package driftspec@ds {
             tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
         }
       }
+      requirement REQ-00062-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A state diagram shall draw the states and the jumps of a machine, and of an interface its navigation with what each view shows
+        text:
+          diagram ST_Web { kind: state; include: shop@web }. It reads from the initial state down;
+          a jump is an edge with its event and guard, a jump to the same state is a loop, and a view
+          shows its text and what binds it. A view no jump names is still drawn.
+        rationale: DS-5. In a graphical interface the navigation is the design, so it has to be seen.
+        verification VER-00067-1 {
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheViewsAreBoxesWithWhatTheyShowAndWhatBindsThem
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheJumpsAreEdgesWithTheirEventAndGuard
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineStartsFromItsInitialState
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AViewNoJumpNamesIsStillDrawn
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineOfAClassIsDrawnFromItsTransitionsAlone
+            tests/integration/ds/render/test_state_view.cpp::TestSelfLoop.ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack
+        }
+      }
       requirement REQ-00050-1 {
         tags: language, diagrams
         status: approved

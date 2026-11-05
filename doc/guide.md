@@ -212,11 +212,14 @@ them. The vision (`vision.md`) says why; this says what.*
 
 ## 5. Diagrams
 
-- `diagram CL_X { kind: class | sequence; include: …; exclude: …; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes; depth: n; level: module }`.
+- `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes; depth: n; level: module }`.
 - `include` takes ids, a module (`ds` or `ds::*`) or a package
   (`package:ds`); extern entities only when named.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
+- `kind: state` draws a machine, `include: shop@web` naming its class or interface:
+  from the initial state down, a jump with its event and guard, a jump to the same
+  state as a loop, and of a view its text and what binds it.
 
 ## 6. Questions (`ds query`, SREQ-00011-1)
 

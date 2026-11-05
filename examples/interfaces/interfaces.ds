@@ -111,3 +111,8 @@ diagram SEQ_Buy {
   include: shop@shell::buy / refused
   depth: 1
 }
+
+diagram ST_Web {
+  kind: state
+  include: shop@web
+}

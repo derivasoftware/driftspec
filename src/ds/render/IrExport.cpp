@@ -113,6 +113,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   if (!diagram || diagram->kind != model::Kind::Diagram) return "";
   if (fieldOf(*diagram, "kind") == "sequence") return renderSequence(*diagram, pretty);
   if (fieldOf(*diagram, "kind") == "requirement") return renderRequirements(*diagram, pretty);
+  if (fieldOf(*diagram, "kind") == "state") return renderState(*diagram, pretty);
   // `show` adds optional detail (ownership, multiplicity, operators, notes, derived-stereotypes);
   // `hide` removes compartments (fields, methods). Nothing written = members only.
   const std::vector<std::string> showList = split(fieldOf(*diagram, "show"), ',');
@@ -519,6 +520,87 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   if (b.edges.empty()) out["notice"] = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
   out["nodes"] = b.nodes;
   out["edges"] = b.edges;
+  return pretty ? out.dump(2) : out.dump();
+}
+
+// ---- state machines: the states and the jumps; of an interface, its navigation ----------
+
+namespace {
+std::vector<std::string> wrap(const std::string& text, size_t width);
+}  // namespace
+
+std::string IrExport::renderState(const model::Entity& diagram, bool pretty) const {
+  nlohmann::json nodes = nlohmann::json::array();
+  nlohmann::json edges = nlohmann::json::array();
+  std::set<std::string> drawn;
+  for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
+    const model::Entity* state = model_.find(pattern + "::state");
+    if (!state) state = model_.find(pattern);
+    if (!state || state->kind != model::Kind::State) continue;
+    const auto box = [&](const std::string& name) {
+      const std::string id = state->id + "::" + name;
+      if (!drawn.insert(id).second) return id;
+      nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", name}, {"classifier", "state"}};
+      if (const model::Entity* view = model_.find(id)) {
+        node["refs"] = {{"location", view->location.file + ":" + std::to_string(view->location.line)}};
+        nlohmann::json sections = nlohmann::json::array();
+        nlohmann::json kinds = nlohmann::json::array();
+        const std::string text = fieldOf(*view, "text");
+        if (!text.empty()) {
+          sections.push_back(wrap(text, 36));
+          kinds.push_back("attributes");
+        }
+        std::vector<std::string> binds;
+        for (const auto& r : model_.relations()) {
+          if (r.from == id && (r.kind == "requires" || r.kind == "constrained-by")) binds.push_back(r.to);
+        }
+        if (!binds.empty()) {
+          sections.push_back(binds);
+          kinds.push_back("methods");
+        }
+        if (!sections.empty()) {
+          node["sections"] = sections;
+          node["sectionKinds"] = kinds;
+        }
+      }
+      nodes.push_back(node);
+      return id;
+    };
+    // the machine reads from where it starts: first in the document, so the layout flows down from it
+    const std::string initial = fieldOf(*state, "initial");
+    if (!initial.empty()) {
+      const std::string start = state->id + "::initial";
+      nodes.push_back({{"id", start}, {"kind", "box"}, {"label", "start"}, {"classifier", "initial"}});
+      edges.push_back({{"from", start}, {"to", box(initial)}, {"kind", "association"}});
+    }
+    std::stringstream first(fieldOf(*state, "transitions"));
+    for (std::string move; std::getline(first, move);) {  // in the order written: the first jumps go down
+      const auto cut = move.find('>');
+      if (cut == std::string::npos) continue;
+      box(move.substr(0, cut));
+      const auto end = move.find('>', cut + 1);
+      if (end != std::string::npos) box(move.substr(cut + 1, end - cut - 1));
+    }
+    for (const auto& pair : model_.entities()) {  // a view no transition names is still drawn: it is the finding
+      if (pair.second.kind == model::Kind::View && pair.second.scope == state->id) box(pair.second.name);
+    }
+    std::stringstream moves(fieldOf(*state, "transitions"));
+    for (std::string move; std::getline(moves, move);) {
+      const auto first = move.find('>');
+      const auto second = move.find('>', first + 1);
+      if (first == std::string::npos || second == std::string::npos) continue;
+      edges.push_back({{"from", box(move.substr(0, first))},
+                       {"to", box(move.substr(first + 1, second - first - 1))},
+                       {"kind", "association"},
+                       {"label", move.substr(second + 1)}});
+    }
+  }
+  nlohmann::json out;
+  out["ir"] = 1;
+  out["title"] = diagram.name;
+  if (nodes.empty()) out["notice"] = "No state machine selected: include names its class or interface (shop@web)";
+  out["nodes"] = nodes;
+  out["edges"] = edges;
   return pretty ? out.dump(2) : out.dump();
 }
 

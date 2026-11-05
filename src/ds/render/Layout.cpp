@@ -546,6 +546,19 @@ class Engine {
         ends[t->second].push_back({i, false, 3, a.y + a.h / 2});
       }
     }
+    // a relation of a box with itself: out by its right side and back, one nested inside the other
+    std::map<int, int> loops;
+    for (size_t i = 0; i < doc_.edges.size(); ++i) {
+      const auto f = index_.find(doc_.edges[i].from);
+      const auto t = index_.find(doc_.edges[i].to);
+      if (f == index_.end() || t == index_.end() || f->second != t->second) continue;
+      const Rect& r = abs[f->second];
+      const int nth = loops[f->second]++;
+      const int reach = (nth + 1) * 3 * M.LANE;
+      const int top = r.y + r.h / 4;
+      const int bottom = r.y + r.h - r.h / 4;
+      out.routes[i].points = {{r.x + r.w, top}, {r.x + r.w + reach, top}, {r.x + r.w + reach, bottom}, {r.x + r.w, bottom}};
+    }
     std::map<std::pair<size_t, bool>, Point> anchors;
     for (auto& pair : ends) {
       const Rect& r = abs[pair.first];
