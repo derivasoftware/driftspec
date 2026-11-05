@@ -1,0 +1,113 @@
+// interfaces.ds: the external interfaces of a process, and how they go down.
+//
+//   An interface has a kind and typed operations. Its kind and the fields of its
+//   operations are data: `exit 2: refused` is a field with a code, and a new kind
+//   changes no grammar. Quality is a requirement or a constraint linked to it.
+//   An interface behaves as a class does: a sequence per operation and, optionally,
+//   a state machine over the whole. In a graphical interface that machine is the
+//   navigation, and its states are its views. The `!` lines are the findings.
+
+package shop {
+  requirement SREQ-00001-1: The system shall sell a thing
+  requirement SREQ-00002-1: The system shall answer within 100 milliseconds
+  constraint CST-00001-1: Every view shall take its colours from the palette
+
+  interface shell {
+    kind: cli
+    transport: process
+    @requirement SREQ-00002-1
+
+    operation buy(sku: string) -> int {
+      @requirement SREQ-00001-1
+      command: shop buy <sku>
+      exit 0: default
+      exit 2: refused
+      exit 3: stolen                     // ! W-SCENARIO-UNDECLARED: no such scenario
+    }
+
+    operation price(sku: string) -> int {
+      exit 7: default                    // ! W-OUTCOME-MISMATCH: the trace ends in 0
+    }
+
+    operation forgotten() -> none        // ! W-OPERATION-NO-BEHAVIOUR: no sequence says how
+  }
+
+  sequence shell::buy {
+    -> till::main(sku) -> code
+  }
+
+  sequence shell::buy / refused {
+    -> till::main(sku) / refused -> code
+  }
+
+  sequence shell::price {
+    -> till::main(sku) -> code
+  }
+
+  interface web {
+    kind: gui
+    operation buy(sku: string) -> int
+  }
+
+  sequence web::buy {
+    -> till::main(sku) -> code
+  }
+
+  state web {
+    initial Home
+
+    view Home {
+      text:
+        A field for the code of the thing, and a button to buy it.
+      @requirement SREQ-00001-1
+      @constraint CST-00001-1
+    }
+
+    view Done {
+      text:
+        What was bought.
+    }
+
+    view Lost {                          // ! W-VIEW-UNREACHABLE: nothing leads here
+      text:
+        A page nobody can reach.
+    }
+
+    view End {                           // ! W-VIEW-NO-WAY-OUT: nothing leaves it
+      text:
+        A page nobody can leave.
+    }
+
+    Home -> Done on buy
+    Home -> Home on buy [refused]        // staying is a way of neither in nor out
+    Home -> End on help                  // no operation behind it: a label
+    Done -> Home on back
+    Lost -> Home on back
+    Done -> Ghost on back                // ! W-VIEW-UNDECLARED: not one of its views
+  }
+
+  module till {
+    function main(sku: string) -> int {
+      @requirement SREQ-00001-1
+    }
+
+    sequence main {
+      return 0
+    }
+
+    sequence main / refused {
+      return 2
+    }
+  }
+}
+
+diagram IF_Shell {
+  kind: interface
+  include: shop@shell
+}
+
+diagram SEQ_Buy {
+  kind: sequence
+  include: shop@shell::buy / refused
+  depth: 1
+}

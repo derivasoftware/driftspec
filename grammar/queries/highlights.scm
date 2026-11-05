@@ -2,7 +2,7 @@
 
 (comment) @comment
 
-[ "package" "module" "extern" "requirement" "constraint" "verification" "boundary" "operation"
+[ "package" "module" "extern" "requirement" "constraint" "verification" "interface" "view" "operation"
   "class" "dataclass" "enum" "function" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "on" "return"
   "loop" "alt" "opt" "else" ] @keyword
 
@@ -22,7 +22,8 @@
 (constraint id: (name) @constant)
 (constraint title: (line_text) @string)
 (verification id: (name) @constant)
-(boundary name: (name) @type.definition)
+(interface name: (name) @type.definition)
+(view name: (name) @type.definition)
 (operation name: (name) @function)
 (method name: (member_name) @function.method)
 (function name: (member_name) @function)

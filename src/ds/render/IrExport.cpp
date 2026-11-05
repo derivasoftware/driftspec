@@ -28,7 +28,7 @@ std::string fieldOf(const model::Entity& e, const std::string& key) {
 
 /// What a class diagram draws as a box: a class, an enum, or a function of a module (one box each, «function»).
 bool isBox(const model::Entity& e) {
-  return e.kind == model::Kind::Class || e.kind == model::Kind::Enum || e.kind == model::Kind::Function;
+  return e.kind == model::Kind::Class || e.kind == model::Kind::Enum || e.kind == model::Kind::Function || e.kind == model::Kind::Interface;
 }
 
 bool drawable(const model::Entity& e) { return isBox(e) || e.kind == model::Kind::Module; }
@@ -207,7 +207,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
       node["sections"] = nlohmann::json::array({split(fieldOf(e, "values"), ',')});
       node["sectionKinds"] = nlohmann::json::array({"attributes"});
     } else {
-      const bool interface = stereotypes.find("interface") != std::string::npos;
+      const bool interface = e.kind == model::Kind::Interface || stereotypes.find("interface") != std::string::npos;
       node["classifier"] = interface ? "interface" : e.has("dataclass") ? "dataclass" : "class";
       node["abstract"] = interface || stereotypes.find("abstract") != std::string::npos;
       // the badge: derived stereotypes, then the operator symbols the families do not already say
@@ -233,7 +233,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
       std::vector<std::string> attributes, methods;
       for (const model::Entity* m : members) {
         if (m->kind == model::Kind::Attribute) attributes.push_back(memberLine(*m));
-        if (m->kind == model::Kind::Method) methods.push_back(memberLine(*m));
+        if (m->kind == model::Kind::Method || m->kind == model::Kind::Operation) methods.push_back(memberLine(*m));
         if (m->kind == model::Kind::Operator && shows("operators") && !fieldOf(*m, "params").empty()) methods.push_back(memberLine(*m));
       }
       nlohmann::json sections = nlohmann::json::array();
@@ -489,7 +489,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const model::Entity* subject = model_.find(subjectId);
       // a method runs on its class, a function on its module
       const bool function = subject && subject->kind == model::Kind::Function;
-      const bool method = subject && (subject->kind == model::Kind::Method || function);
+      const bool method = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Operation || function);
       const model::Entity* cls = method ? model_.find(subject->scope) : subject;
       // the caller, leftmost, invokes the entry operation on the subject: what is being looked at is the first thing drawn
       const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";

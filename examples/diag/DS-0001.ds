@@ -12,7 +12,7 @@ package ds {
 
     verification VF-0002-0 {
       level: system
-      @boundary cli
+      @interface cli
       precondition: a workspace with one known broken link
       postcondition: the CLI prints exactly one finding with code and location
       test: tests/system/test_cli_diagnose.py::test_one_broken_link

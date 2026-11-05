@@ -84,7 +84,7 @@ whose `!` comments are the oracle of the test suite. In short:
   `@annotation` adds a relation and never replaces it; a contradiction is an
   error.
 - **R4** Full ids name the package with `@` and modules with `::`
-  (`ds@ds::Model`, boundary `ds@cli`); what encloses you is omitted; process
+  (`ds@ds::Model`, interface `ds@cli`); what encloses you is omitted; process
   artefact ids stay global. (Decided 2026-10-25; earlier the package gave no
   name.)
 - **R5** Identity: process artefacts by id with revision (`DS-0001-0`), design

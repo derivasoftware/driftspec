@@ -1,0 +1,11 @@
+// An interface is a port of the black box. The white box must realise each
+// operation it declares; an operation nobody realises is a finding (R6).
+
+package ds {
+
+  interface cli {
+    kind: cli
+    operation diagnose(workspace: path) -> findings   // ! W-OPERATION-NO-BEHAVIOUR: no sequence says how
+    operation explain(code: string) -> article       // ! W-OPERATION-NO-BEHAVIOUR too
+  }
+}

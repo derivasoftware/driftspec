@@ -210,9 +210,9 @@ TEST_F(TestQualification, TheStaticMetamodelIsModelledAndClassifiedByDerivation)
   EXPECT_TRUE(ids.count("app@core@model::Entity"));
   EXPECT_TRUE(ids.count("app@render@svg::Svg"));
   const auto diag = nlohmann::json::parse(ds("export " + examples("diag")).out);
-  bool boundary = false;
-  for (const auto& e : diag["entities"]) boundary |= e["id"] == "ds@cli" && e["kind"] == "boundary";
-  EXPECT_TRUE(boundary);
+  bool interface = false;
+  for (const auto& e : diag["entities"]) interface |= e["id"] == "ds@cli" && e["kind"] == "interface";
+  EXPECT_TRUE(interface);
 }
 
 // SREQ-00010-1: a diagram kind per view: class, requirement, sequence (state: not yet drawn)

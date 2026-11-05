@@ -62,7 +62,7 @@ package driftspec@ds {
       - visit(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00013-1
         @requirement REQ-00014-1
-        @requirement REQ-00020-1
+        @requirement REQ-00020-2
         @requirement REQ-00015-1
         @requirement REQ-00022-1
         @requirement REQ-00017-1

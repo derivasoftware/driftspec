@@ -46,7 +46,7 @@ std::string join(const std::vector<std::string>& items, const char* sep) {
 model::Kind kindForRelation(const std::string& relation) {
   if (relation == "verifies" || relation == "refines" || relation == "requires") return model::Kind::Requirement;
   if (relation == "constrained-by") return model::Kind::Constraint;
-  if (relation == "realises") return model::Kind::Boundary;
+  if (relation == "realises") return model::Kind::Interface;
   if (relation == "exercised-by") return model::Kind::Verification;
   return model::Kind::Class;
 }
@@ -56,7 +56,7 @@ std::string relationForAnnotation(model::Kind from, const std::string& annotatio
   if (annotation == "refines") return "refines";
   if (annotation == "constraint")
     return from == model::Kind::Verification ? "verifies" : "constrained-by";  // a verification verifies a constraint
-  if (annotation == "boundary") return "realises";
+  if (annotation == "interface") return "realises";
   if (annotation == "verification") return "exercised-by";
   return "refers";
 }
@@ -109,7 +109,8 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
   for (uint32_t i = 0; i < count; ++i) {
     TSNode c = ts_node_named_child(node, i);
     if (is(c, "field")) {
-      const std::string key = fieldText(file, c, "key");
+      const std::string code = fieldText(file, c, "code");
+      const std::string key = fieldText(file, c, "key") + (code.empty() ? "" : " " + code);
       const std::string value = trim(fieldText(file, c, "value"));
       auto existing = entity.fields.find(key);
       if (existing == entity.fields.end() || existing->second.empty()) {
@@ -629,11 +630,11 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
     } else if (is(c, "requirement") || is(c, "verification") || is(c, "constraint")) {
       bindArtefact(file, c, scope, owner);
 
-    } else if (is(c, "boundary")) {
+    } else if (is(c, "interface")) {
       model::Entity e;
-      e.kind = model::Kind::Boundary;
+      e.kind = model::Kind::Interface;
       e.name = fieldText(file, c, "name");
-      e.id = qualify(scope, e.name);  // ds@cli: the package's port
+      e.id = qualify(scope, e.name);  // hola@shell: an external interface of the box
       e.scope = scope;
       e.location = loc;
       bindFields(file, c, e);
@@ -650,10 +651,11 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
         o.id = e.id + "::" + o.name;
         o.scope = e.id;
         o.location = locationOf(file, op);
+        bindSignature(file, op, o, scope, {});
+        bindFields(file, op, o);
         model_.declare(o);
         model_.relate({"contains", e.id, o.id, o.location, ""});
-        TypeUse returns = bindType(file, child(op, "returns"), scope, o.id, "uses", "", {}, o.location);
-        if (!returns.text.empty()) model_.find(o.id)->fields["returns"] = returns.text;
+        bindAnnotations(file, op, o.id, scope);
       }
 
     } else if (is(c, "class")) {
@@ -695,10 +697,26 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model_.declare(e);
       references_.push_back({e.id, entityName, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
       bindAnnotations(file, c, e.id, scope);
+      std::vector<std::string> transitions;
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
         TSNode t = ts_node_named_child(c, j);
+        if (is(t, "initial")) model_.find(e.id)->fields["initial"] = fieldText(file, t, "name");
+        if (is(t, "view")) {
+          model::Entity v;
+          v.kind = model::Kind::View;
+          v.name = fieldText(file, t, "name");
+          v.id = e.id + "::" + v.name;
+          v.scope = e.id;
+          v.location = locationOf(file, t);
+          bindFields(file, t, v);
+          model_.declare(v);
+          model_.relate({"contains", e.id, v.id, v.location, ""});
+          bindAnnotations(file, t, v.id, scope);
+        }
         if (!is(t, "transition")) continue;
+        transitions.push_back(fieldText(file, t, "from") + ">" + fieldText(file, t, "to"));
+        model_.find(e.id)->fields["transitions"] = join(transitions, ", ");
         events_.push_back({e.id, entityName, scope, fieldText(file, t, "event"), false, locationOf(file, t)});
         const std::string action = fieldText(file, t, "action");
         if (!action.empty()) events_.push_back({e.id, entityName, scope, action, true, locationOf(file, t)});

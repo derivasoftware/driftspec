@@ -33,7 +33,7 @@ module.exports = grammar({
     // (`package app@render {`); every package level adds its name with @ (decided 2026-10-26)
     package: $ => seq('package', repeat(field('prefix', $.package_prefix)), field('name', $.name), '{', repeat($._package_item), '}'),
     // a package is annotated like a class: @requirement for what the box realises, @constraint for what binds it (HLD, 2026-10-26)
-    _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.boundary, $.package, $.module),
+    _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.interface, $.package, $.module, $.sequence, $.state),
 
     module: $ => seq(optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
     _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.function, $.sequence, $.state),
@@ -52,8 +52,11 @@ module.exports = grammar({
     ),
 
     // ---- black box --------------------------------------------------------
-    boundary: $ => seq('boundary', field('name', $.name), '{', repeat(choice($.field, $.annotation, $.operation)), '}'),
-    operation: $ => seq('operation', field('name', $.name), $.parameters, optional(seq('->', field('returns', $.type)))),
+    // an external interface of a process or a library (2026-11-05). Its kind and the fields of its operations
+    // are data, not grammar: `exit 2: refused` is a field with a code, so a new kind changes nothing here
+    interface: $ => seq('interface', field('name', $.name), '{', repeat(choice($.field, $.annotation, $.operation)), '}'),
+    operation: $ => seq('operation', field('name', $.name), $.parameters, optional(seq('->', field('returns', $.type))),
+      optional(seq('{', repeat(choice($.field, $.annotation)), '}'))),
 
     // ---- white box: static ------------------------------------------------
     class: $ => seq(
@@ -149,7 +152,9 @@ module.exports = grammar({
     opt: $ => seq('opt', field('condition', $.condition), '{', repeat($._sequence_item), '}'),
     condition: $ => /([^{\/\n]|\/[^\/{\n])+/,
 
-    state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.transition)), '}'),
+    state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.view, $.transition)), '}'),
+    // a state of the navigation of a graphical interface: what it shows, in text, and what binds it (2026-11-05)
+    view: $ => seq('view', field('name', $.name), '{', repeat(choice($.field, $.annotation)), '}'),
     initial: $ => seq('initial', field('name', $.name)),
     transition: $ => seq(field('from', $.name), '->', field('to', $.name), 'on', field('event', $.name), optional(field('guard', $.contract)), optional(seq('/', field('action', $.name)))),
 
@@ -158,7 +163,7 @@ module.exports = grammar({
 
     // ---- common -----------------------------------------------------------
     annotation: $ => seq('@', field('kind', $.name), field('target', $.qualified_name)),
-    field: $ => seq(field('key', $.name), ':', optional(field('value', choice($.block_text, $.line_text)))),
+    field: $ => seq(field('key', $.name), optional(field('code', $.number)), ':', optional(field('value', choice($.block_text, $.line_text)))),
     line_text: $ => /([^\/\n]|\/[^\/\n])+/,
     // `pkg@` is one token (no space): `Model` followed by an `@requirement` line is never a package prefix
     qualified_name: $ => seq(repeat(field('package', $.package_prefix)), $.name, repeat(seq('::', choice($.name, '*')))),

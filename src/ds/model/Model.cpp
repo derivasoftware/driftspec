@@ -13,8 +13,10 @@ const char* kindName(Kind kind) {
       return "requirement";
     case Kind::Verification:
       return "verification";
-    case Kind::Boundary:
-      return "boundary";
+    case Kind::Interface:
+      return "interface";
+    case Kind::View:
+      return "view";
     case Kind::Operation:
       return "operation";
     case Kind::Constraint:

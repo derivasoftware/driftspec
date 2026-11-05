@@ -18,14 +18,14 @@ them. The vision (`vision.md`) says why; this says what.*
   and opens the white box. Both reopen across files (R1, R2, R9).
 - Full identities name their package with `@` and their modules with `::`,
   like C++ namespaces: the class `Model` of module `ds` in package `ds` is
-  `ds@ds::Model`; the boundary `cli` of the package is `ds@cli`; process
+  `ds@ds::Model`; the interface `cli` of the package is `ds@cli`; process
   artefacts stay global (`REQ-00001-2`) (R4, decided 2026-10-25). What already
   encloses you is omitted: inside the package, `ds::Model`; inside the module,
   `Model`. No includes, no using: a bare name resolves from the innermost
   scope outward (module, then package), a qualified name crosses modules and a
   `pkg@` one crosses packages (R10). Diagrams live outside packages, so they
   name full ids: `include: ds@ds::Model`, a module `ds@ds::*`, a package `ds@*`.
-- Identity: design artefacts (module, class, enum, boundary, behaviour) by
+- Identity: design artefacts (module, class, enum, interface, behaviour) by
   qualified name; process artefacts (requirement, constraint, verification)
   by id **with its revision**, `REQ-00001-2`. Two declarations of one
   identity are `E-DUPLICATE-IDENTITY` (R5).
@@ -48,8 +48,7 @@ them. The vision (`vision.md`) says why; this says what.*
   In a class diagram the nested packages are containers (the HLD boxes); the
   outermost one is the drawing itself. A package body takes annotations like
   a class body: `@requirement` for what the box realises, `@constraint` for
-  what binds it (HLD, decided 2026-10-26). Boundaries of nested packages: not
-  yet. Corpus: `examples/packages`.
+  what binds it (HLD, decided 2026-10-26). Corpus: `examples/packages`.
 
 ## 2. Static design (`examples/static`)
 
@@ -188,6 +187,28 @@ them. The vision (`vision.md`) says why; this says what.*
 - **Checks.** `W-REQ-NO-VERIFICATION` for an approved requirement nothing
   verifies. The semantic diff adds `W-REVISION-STALE` for an artefact whose
   text changed under the same revision.
+
+## 4b. Interfaces (`examples/interfaces`, decided 2026-11-05)
+
+- An interface is an external interface of a process, or of a library when it
+  is binary. It lives in a package, at any level: `interface shell { }` is
+  `shop@shell`. It replaces `boundary`.
+- `kind:` and the fields of an operation are data, not grammar: `command:`,
+  `exit 2: refused`. A new kind changes no syntax. An operation has typed
+  parameters and a return, and takes a body.
+- Quality is not a field: `@requirement` and `@constraint` on the interface or
+  on an operation.
+- An interface behaves as a class does. `sequence shell::buy / refused { }` is
+  the trace of an operation, going down through the scenario each call names:
+  `W-OPERATION-NO-BEHAVIOUR` when it has none. `exit 2: refused` names a scenario
+  (`W-SCENARIO-UNDECLARED`), and that trace has to end in that value
+  (`W-OUTCOME-MISMATCH`); what cannot be told gives no finding.
+- `state web { }` is optional. In a graphical interface it is the navigation and
+  its states are `view`s: free text and what binds them, nothing that reinvents
+  HTML. An event that names an operation goes down to it; any other is a label.
+  `W-VIEW-UNDECLARED`, `W-VIEW-UNREACHABLE`, `W-VIEW-NO-WAY-OUT`.
+- `@interface shell` says a class realises it. A sequence or a state may sit
+  directly in a package.
 
 ## 5. Diagrams
 
