@@ -1,0 +1,120 @@
+// The ds command: reads the verb, loads the workspace and hands it to whoever answers.
+// One scenario of main per thing it can end in; the rest of the tool knows nothing of
+// a command line.
+
+package driftspec@ds {
+  module app {
+    function main(argv: list<string>) -> int
+
+    - function usage() -> int
+    - function load(dir: path) -> model::Model
+    - function isDirectory(path: string) -> bool
+    - function checkout(rev: string, path: string) -> string
+
+    sequence usage {
+      return 2
+    }
+
+    sequence load {
+      local parser: parse::Parser
+      local binder: bind::Binder
+      local checker: check::Checker
+      -> parser.parseDirectory(dir) -> files
+      loop each file {
+        -> binder.bind(file)
+      }
+      -> checker.run(binder)
+    }
+
+    sequence main / check {
+      -> isDirectory(argv) -> found
+      -> load(argv) -> model
+      return 0
+    }
+
+    sequence main / check-errors {
+      -> load(argv) -> model
+      return 1
+    }
+
+    sequence main / bad-usage {
+      -> usage() -> code
+      return code
+    }
+
+    sequence main / export {
+      local exporter: exporter::JsonExport
+      -> load(argv) -> model
+      -> exporter.render(model, pretty) -> json
+      return 0
+    }
+
+    sequence main / no-workspace {
+      -> isDirectory(argv) -> found
+      return 1
+    }
+
+    sequence main / render {
+      local ir: render::IrExport
+      local svg: render::Svg
+      -> load(argv) -> model
+      -> ir.render(name, pretty) -> document
+      -> svg.render(document, width) -> drawing
+      return 0
+    }
+
+    sequence main / no-diagram {
+      local ir: render::IrExport
+      -> load(argv) -> model
+      -> ir.render(name, pretty) -> document
+      return 1
+    }
+
+    sequence main / draw {
+      local svg: render::Svg
+      -> svg.render(document, width) -> drawing
+      return 0
+    }
+
+    sequence main / no-document {
+      return 1
+    }
+
+    sequence main / coupling {
+      -> load(argv) -> model
+      return 0
+    }
+
+    sequence main / diff {
+      local differ: diff::Diff
+      -> load(argv) -> before
+      -> load(argv) -> after
+      -> differ.compare(before, after) -> result
+      -> differ.report(result) -> text
+      return 0
+    }
+
+    sequence main / diff-findings {
+      local differ: diff::Diff
+      -> load(argv) -> before
+      -> load(argv) -> after
+      -> differ.compare(before, after) -> result
+      return 1
+    }
+
+    sequence main / query {
+      local query: query::Query
+      -> load(argv) -> model
+      -> query.ask(question, subject) -> answers
+      -> query.text(answers) -> text
+      return 0
+    }
+
+    sequence main / unknown-question {
+      local query: query::Query
+      -> load(argv) -> model
+      -> query.ask(question, subject) -> answers
+      return 1
+    }
+  }
+}

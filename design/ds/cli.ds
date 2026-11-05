@@ -1,0 +1,166 @@
+// The one interface of ds: its command line. What a person or a script sees: each
+// command, what it prints and how it exits. Each operation has its trace, and each
+// exit code names the scenario that ends in it, so `ds check` keeps saying what it does.
+
+package driftspec@ds {
+  interface cli {
+    kind: cli
+    transport: process
+    encoding: utf-8 text
+    @constraint CST-00001-1
+
+    operation check(workspace: path) -> none {
+      @requirement SREQ-00002-1
+      command: ds check <workspace>
+      stdout: one line per finding, then the counts of the model
+      exit 0: default
+      exit 1: syntax-error
+      exit 2: bad-usage
+    }
+
+    operation export(workspace: path) -> none {
+      @requirement SREQ-00006-1
+      command: ds export <workspace>
+      stdout: the model as JSON, with its relations and findings
+      exit 0: default
+      exit 1: no-workspace
+    }
+
+    operation render(workspace: path, diagram: string) -> none {
+      @requirement SREQ-00005-1
+      @requirement SREQ-00010-1
+      command: ds render <workspace> [diagram] [--svg|--text|--cells|--layout] [--width N]
+      stdout: the render-IR as JSON, or the drawing it is asked for; no diagram lists them
+      exit 0: default
+      exit 1: no-diagram
+    }
+
+    operation draw(document: path) -> none {
+      @requirement SREQ-00005-1
+      command: ds draw <render-ir.json> [--svg|--text|--cells] [--width N]
+      stdout: the drawing of any render-IR document
+      exit 0: default
+      exit 1: no-document
+    }
+
+    operation coupling(workspace: path) -> none {
+      @requirement SREQ-00004-1
+      command: ds coupling <workspace>
+      stdout: what every behaviour touches outside its module
+      exit 0: default
+    }
+
+    operation diff(before: string, after: string) -> none {
+      @requirement SREQ-00007-1
+      command: ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]
+      stdout: the changes in the terms of the model, or a diagram with them marked
+      exit 0: default
+      exit 1: findings
+    }
+
+    operation query(workspace: path, question: string, subject: string) -> none {
+      @requirement SREQ-00011-1
+      command: ds query <workspace> <question> [subject] [--json]
+      stdout: one answer per line, or JSON
+      exit 0: default
+      exit 1: unknown-question
+    }
+  }
+
+  sequence cli::check {
+    -> app::main(workspace) / check -> code
+  }
+
+  sequence cli::check / syntax-error {
+    -> app::main(workspace) / check-errors -> code
+  }
+
+  sequence cli::check / bad-usage {
+    -> app::main(workspace) / bad-usage -> code
+  }
+
+  sequence cli::export {
+    -> app::main(workspace) / export -> code
+  }
+
+  sequence cli::export / no-workspace {
+    -> app::main(workspace) / no-workspace -> code
+  }
+
+  sequence cli::render {
+    -> app::main(workspace) / render -> code
+  }
+
+  sequence cli::render / no-diagram {
+    -> app::main(workspace) / no-diagram -> code
+  }
+
+  sequence cli::draw {
+    -> app::main(document) / draw -> code
+  }
+
+  sequence cli::draw / no-document {
+    -> app::main(document) / no-document -> code
+  }
+
+  sequence cli::coupling {
+    -> app::main(workspace) / coupling -> code
+  }
+
+  sequence cli::diff {
+    -> app::main(before) / diff -> code
+  }
+
+  sequence cli::diff / findings {
+    -> app::main(before) / diff-findings -> code
+  }
+
+  sequence cli::query {
+    -> app::main(workspace) / query -> code
+  }
+
+  sequence cli::query / unknown-question {
+    -> app::main(workspace) / unknown-question -> code
+  }
+}
+
+diagram IF_Cli {
+  kind: interface
+  include: driftspec@ds@cli
+}
+
+diagram SEQ_Check {
+  kind: sequence
+  include: driftspec@ds@cli::check
+  depth: *
+}
+
+diagram SEQ_CheckSyntaxError {
+  kind: sequence
+  include: driftspec@ds@cli::check / syntax-error
+  depth: 2
+}
+
+diagram SEQ_Render {
+  kind: sequence
+  include: driftspec@ds@cli::render
+  depth: 2
+}
+
+diagram SEQ_Diff {
+  kind: sequence
+  include: driftspec@ds@cli::diff
+  depth: 2
+}
+
+diagram SEQ_Query {
+  kind: sequence
+  include: driftspec@ds@cli::query
+  depth: 2
+}
+
+diagram HLD_Ds {                     // every box closed: who depends on whom, derived
+  kind: class
+  include: driftspec@ds@*
+  open: driftspec@ds
+}
