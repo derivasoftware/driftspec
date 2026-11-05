@@ -741,16 +741,40 @@ package driftspec@ds {
         tags: language, diagrams
         status: approved
         title: A sequence diagram shall select a behaviour as it is written, expand by depth and lift to the level asked for
-        verification VER-00037-2 {
+        verification VER-00037-3 {
           status: approved
           method: test
           tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.DepthStarIsEveryLevelAndNeverAnAbort
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADepthThatIsNoNumberIsAFindingAndStillDraws
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ASubjectAloneDrawsItsDefaultScenario
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AScenarioIsSelectedAsItIsWrittenAndItsTraceFollowsIt
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AStarSelectsEveryScenario
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.TheArrowBackCarriesWhatTheBehaviourReturns
             tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ASequenceDiagramExpandsByDepthAndLinksAtDepthZero
             tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
+        }
+      }
+      requirement REQ-00064-1 {
+        tags: language, diagrams, visibility
+        status: approved
+        title: A class diagram shall open the boxes it names and close the rest, each closed box showing only its public children
+        text:
+          open: shop@store@stock opens that box and the way to it; open: alone closes them all; a
+          diagram that does not say open draws everything open. An edge that loses an end to a closed
+          box says only that one box depends on the other, once, and what stays inside a closed box
+          is not drawn. So the component view is derived, never written.
+        rationale: Owner, 2026-11-05. Encapsulation has to be seen: which box holds what, and what each one offers.
+        verification VER-00069-1 {
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpenAloneClosesEveryBox
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AClosedBoxShowsOnlyItsPublicChildren
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.EdgesLiftToTheBoxesThatAreSeenAndOnlyOnce
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpeningABoxShowsTheWayToItAndClosesTheRest
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AnEdgeReachesInsideAnOpenBoxFromAClosedOne
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADiagramThatDoesNotSayOpenDrawsEverythingOpen
         }
       }
       requirement REQ-00062-1 {

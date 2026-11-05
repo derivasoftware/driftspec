@@ -68,3 +68,31 @@ package shop {
     }
   }
 }
+
+// A diagram says which boxes stay open and closes the rest. A closed box shows only
+// its public children, and an edge that loses an end to it says only that one box
+// depends on the other.
+
+diagram HLD_Shop {                     // open: alone closes every box
+  kind: class
+  include: shop@*
+  open:
+}
+
+diagram HLD_Store {                    // open the store, and see into stock
+  kind: class
+  include: shop@*
+  open: shop@store@stock
+}
+
+diagram HLD_Bad {
+  kind: sequence
+  include: shop@front@till::Till::sell
+  depth: lots                          // ! W-DIAGRAM-DEPTH: a number, or * for every level
+}
+
+diagram SEQ_All {
+  kind: sequence
+  include: shop@front@till::Till::sell
+  depth: *
+}
