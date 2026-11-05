@@ -715,8 +715,11 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
           bindAnnotations(file, t, v.id, scope);
         }
         if (!is(t, "transition")) continue;
-        transitions.push_back(fieldText(file, t, "from") + ">" + fieldText(file, t, "to"));
-        model_.find(e.id)->fields["transitions"] = join(transitions, ", ");
+        const std::string guard = trim(fieldText(file, t, "guard"));
+        const std::string does = fieldText(file, t, "action");
+        transitions.push_back(fieldText(file, t, "from") + ">" + fieldText(file, t, "to") + ">" + fieldText(file, t, "event") +
+                              (guard.empty() ? "" : " " + guard) + (does.empty() ? "" : " / " + does));
+        model_.find(e.id)->fields["transitions"] = join(transitions, "\n");  // from>to>label, one per line
         events_.push_back({e.id, entityName, scope, fieldText(file, t, "event"), false, locationOf(file, t)});
         const std::string action = fieldText(file, t, "action");
         if (!action.empty()) events_.push_back({e.id, entityName, scope, action, true, locationOf(file, t)});

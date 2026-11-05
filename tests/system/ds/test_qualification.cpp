@@ -215,8 +215,8 @@ TEST_F(TestQualification, TheStaticMetamodelIsModelledAndClassifiedByDerivation)
   EXPECT_TRUE(interface);
 }
 
-// SREQ-00010-1: a diagram kind per view: class, requirement, sequence (state: not yet drawn)
-TEST_F(TestQualification, ClassRequirementAndSequenceDiagramsAreViewsOfTheModel) {
+// SREQ-00010-1: a diagram kind per view: class, requirement, sequence and state
+TEST_F(TestQualification, EveryKindOfDiagramIsAViewOfTheModel) {
   const auto cl = nlohmann::json::parse(ds("render " + examples("static") + " CL_Model").out);
   EXPECT_EQ(cl["nodes"][0]["kind"], "container");
   const auto req = nlohmann::json::parse(ds("render " + examples("artefacts") + " REQ_Tracker").out);
@@ -227,6 +227,11 @@ TEST_F(TestQualification, ClassRequirementAndSequenceDiagramsAreViewsOfTheModel)
   bool lifeline = false;
   for (const auto& n : seq["nodes"]) lifeline |= n["kind"] == "lifeline";
   EXPECT_TRUE(lifeline);
+  const auto state = nlohmann::json::parse(ds("render " + examples("behaviour") + " STM_Checker").out);
+  bool stateBox = false;
+  for (const auto& n : state["nodes"]) stateBox |= n["classifier"] == "state";
+  EXPECT_TRUE(stateBox);
+  EXPECT_FALSE(state["edges"].empty());
 }
 
 // SREQ-00011-1: questions about the model answered by identity, so one answer leads to the next

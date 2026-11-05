@@ -118,17 +118,17 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.TheStaticMetamodelIsModelledAndClassifiedByDerivation
   }
 
-  verification SVER-00010-1 {
+  verification SVER-00010-2 {
     status: approved
     @requirement SREQ-00010-1
-    title: System tests confirm class, requirement and sequence diagrams are views of the model
+    title: System tests confirm class, requirement, sequence and state diagrams are views of the model
     text:
       ds render yields a class diagram with containers, a requirement diagram
-      with artefact boxes and a sequence diagram with lifelines. State
-      diagrams are not drawn yet: this verification covers three of the four.
+      with artefact boxes, a sequence diagram with lifelines and a state diagram
+      with its states and jumps. Revision 2 adds the fourth view (DS-5).
     method: test
     tests:
-      tests/system/ds/test_qualification.cpp::TestQualification.ClassRequirementAndSequenceDiagramsAreViewsOfTheModel
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryKindOfDiagramIsAViewOfTheModel
   }
 
   verification SVER-00011-1 {
