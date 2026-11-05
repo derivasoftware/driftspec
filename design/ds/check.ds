@@ -84,6 +84,15 @@ package driftspec@ds {
       - checkReturn(message: bind::Message) -> void {
         @requirement REQ-00059-1
       }
+      - privateOnTheWay(from: std::string, target: std::string) -> std::string {
+        @requirement REQ-00063-1
+      }
+      - checkVisibility(from: std::string, target: std::string, location: model::Location) -> void {
+        @requirement REQ-00063-1
+      }
+      - checkLeak(from: std::string, target: std::string, location: model::Location) -> void {
+        @requirement REQ-00063-1
+      }
       - checkInterfaces() -> void {
         @requirement REQ-00060-1
       }

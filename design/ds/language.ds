@@ -371,6 +371,32 @@ package driftspec@ds {
       }
 
       // ---- function ----
+      requirement REQ-00063-1 {
+        tags: language, lld, visibility
+        status: approved
+        title: Any child of a box may be private, and nothing outside its parent shall reach it
+        text:
+          One rule at every level: a box connects to another through a public child. A package's
+          public children are its interfaces and modules, a module's its classes and functions, a
+          class's its methods and attributes. A child is public unless it says -, and is seen from
+          inside its parent, so siblings see each other. A call or a type that crosses anything
+          private on its way down is W-NOT-VISIBLE; a public member showing a private type is
+          W-PRIVATE-LEAK.
+        rationale: Owner, 2026-11-05. There is no port concept: a port is a public child, and an interface is one that crosses a process. Whether the code respects this is argos's job.
+        verification VER-00068-1 {
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.AnyChildMayBePrivateAndIsPublicUnlessItSaysSo
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateModuleIsNotReachedFromAnotherBox
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateClassIsNotReachedFromAnotherModule
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateMethodIsNotCalledFromAnotherClass
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateFunctionIsNotCalledFromAnotherBox
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.SiblingsSeeEachOther
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.EveryOtherCrossingIsReportedExactlyAsMarked
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APublicMemberThatShowsAPrivateTypeIsALeak
+        }
+      }
       requirement REQ-00054-1 {
         tags: language, lld, function
         verification VER-00058-1 {

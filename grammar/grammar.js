@@ -31,11 +31,11 @@ module.exports = grammar({
     // ---- scopes -----------------------------------------------------------
     // a package holds packages (the HLD nests): written nested, or reopened by its full path
     // (`package app@render {`); every package level adds its name with @ (decided 2026-10-26)
-    package: $ => seq('package', repeat(field('prefix', $.package_prefix)), field('name', $.name), '{', repeat($._package_item), '}'),
+    package: $ => seq(optional(field('visibility', $.visibility)), 'package', repeat(field('prefix', $.package_prefix)), field('name', $.name), '{', repeat($._package_item), '}'),
     // a package is annotated like a class: @requirement for what the box realises, @constraint for what binds it (HLD, 2026-10-26)
     _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.interface, $.package, $.module, $.sequence, $.state),
 
-    module: $ => seq(optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
+    module: $ => seq(optional(field('visibility', $.visibility)), optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
     _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.function, $.sequence, $.state),
 
     // ---- process artefacts ------------------------------------------------
@@ -59,7 +59,9 @@ module.exports = grammar({
       optional(seq('{', repeat(choice($.field, $.annotation)), '}'))),
 
     // ---- white box: static ------------------------------------------------
+    // a child is public unless it says otherwise, at every level of the design (2026-11-05)
     class: $ => seq(
+      optional(field('visibility', $.visibility)),
       field('kind', choice('class', 'dataclass')),
       field('name', $.name),
       optional(field('params', $.template_params)),
@@ -124,7 +126,7 @@ module.exports = grammar({
     contract_body: $ => /[^\]\n]+/,
 
     // an enum is annotated like a class (@requirement before its values), decided 2026-10-26
-    enum: $ => seq('enum', field('name', $.name), '{', repeat($.annotation), optional(seq($.enum_value, repeat(seq(',', $.enum_value)), optional(','))), '}'),
+    enum: $ => seq(optional(field('visibility', $.visibility)), 'enum', field('name', $.name), '{', repeat($.annotation), optional(seq($.enum_value, repeat(seq(',', $.enum_value)), optional(','))), '}'),
     enum_value: $ => seq(field('name', $.name), optional(seq('=', field('value', $.number)))),
 
     // ---- white box: dynamic (block 3) --------------------------------------

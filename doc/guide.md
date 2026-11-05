@@ -188,6 +188,19 @@ them. The vision (`vision.md`) says why; this says what.*
   verifies. The semantic diff adds `W-REVISION-STALE` for an artefact whose
   text changed under the same revision.
 
+## 3b. Visibility (`examples/visibility`, decided 2026-11-05)
+
+- One rule at every level: a box connects to another through a public child. A
+  package's public children are its interfaces and modules, a module's its classes
+  and functions, a class's its methods and attributes. There is no port concept:
+  a port is a public child, and an interface is one that crosses a process.
+- A child is public unless it says `-`: `- module internal { }`, `- class Helper { }`,
+  `- function round(n: int) -> int`, `- margin() -> int`. It is seen from inside its
+  parent, so siblings see each other.
+- A call or a type that crosses anything private on its way down is `W-NOT-VISIBLE`.
+  A public member showing a private type is `W-PRIVATE-LEAK`. Dependencies between
+  boxes stay derived from calls and types (`ds coupling`).
+
 ## 4b. Interfaces (`examples/interfaces`, decided 2026-11-05)
 
 - An interface is an external interface of a process, or of a library when it

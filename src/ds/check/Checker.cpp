@@ -301,6 +301,54 @@ void Checker::resolveReference(const bind::Reference& reference) {
     return;
   }
   model_.relate({reference.relation, reference.from, target, reference.location, reference.multiplicity});
+  const std::string& r = reference.relation;
+  if (r == "uses" || r == "owns" || r == "refs" || r == "shares" || r == "inherits" || r == "bounded-by") {
+    checkVisibility(reference.from, target, reference.location);
+    checkLeak(reference.from, target, reference.location);
+  }
+}
+
+std::string Checker::privateOnTheWay(const std::string& from, const std::string& target) const {
+  std::set<std::string> chain;
+  for (std::string s = from; !s.empty(); s = outer(s)) chain.insert(s);
+  // down from the first container they share: a child is seen from inside its parent, so siblings see each other
+  for (std::string t = target; !t.empty() && !chain.count(t); t = outer(t)) {
+    const model::Entity* e = model_.find(t);
+    if (!e || e->has("extern")) return "";
+    const auto visibility = e->fields.find("visibility");
+    if (visibility != e->fields.end() && visibility->second == "-" && !chain.count(outer(t))) return t;
+  }
+  return "";
+}
+
+void Checker::checkVisibility(const std::string& from, const std::string& target, const model::Location& location) {
+  const std::string hidden = privateOnTheWay(from, target);
+  if (hidden.empty()) return;
+  model_.report({"W-NOT-VISIBLE", "warning",
+                 from + " reaches " + target + (hidden == target ? ", which is private" : " through " + hidden + ", which is private"),
+                 location});
+}
+
+void Checker::checkLeak(const std::string& from, const std::string& target, const model::Location& location) {
+  const model::Entity* type = model_.find(target);
+  const model::Entity* member = model_.find(from);
+  if (!type || !member || type->expected) return;
+  if (member->kind != model::Kind::Method && member->kind != model::Kind::Attribute && member->kind != model::Kind::Function &&
+      member->kind != model::Kind::Operation) {
+    return;
+  }
+  const auto hidden = type->fields.find("visibility");
+  if (hidden == type->fields.end() || hidden->second != "-") return;
+  // the member shows the type to whoever can see the member: from outside the type's parent, if all is public on the way
+  const std::string parent = outer(target);
+  for (std::string s = from; s != parent; s = outer(s)) {
+    if (s.empty()) return;  // the member lives elsewhere: that is W-NOT-VISIBLE's
+    const model::Entity* e = model_.find(s);
+    if (!e) return;
+    const auto visibility = e->fields.find("visibility");
+    if (visibility != e->fields.end() && visibility->second == "-") return;
+  }
+  model_.report({"W-PRIVATE-LEAK", "warning", from + " is public and shows " + target + ", which is private", location});
 }
 
 // Repository<Relation> against class Repository<T: Entity> (R15)
@@ -382,6 +430,7 @@ void Checker::couple(const model::Entity& sequence, const model::Entity& type, b
 
 void Checker::call(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
   model_.relate({"calls", msg.id, op.id, message.location, ""});
+  checkVisibility(msg.scope, op.id, message.location);
   const auto params = op.fields.find("params");
   const int expected = params == op.fields.end() ? 0 : static_cast<int>(splitParameters(params->second).size());
   if (expected != message.argc) {

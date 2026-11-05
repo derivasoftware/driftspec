@@ -400,8 +400,8 @@ void Binder::bindFunction(const parse::ParsedFile& file, TSNode f, const std::st
 
 void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::string& scope, const std::string& owner) {
   const model::Location loc = locationOf(file, c);
-  if (ts_node_is_null(child(c, "params")) && childrenNamed(c, "base").empty() && ts_node_is_null(child(c, "operators")) &&
-      annotationsOnly(child(c, "body"))) {
+  if (fieldText(file, c, "visibility").empty() && ts_node_is_null(child(c, "params")) && childrenNamed(c, "base").empty() &&
+      ts_node_is_null(child(c, "operators")) && annotationsOnly(child(c, "body"))) {
     const std::string name = fieldText(file, c, "name");
     extend(file, child(c, "body"), qualify(scope, name), model::Kind::Class, name, scope, loc);  // the annotations sit in the body
     return;
@@ -412,6 +412,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   e.scope = scope;
   e.location = loc;
   if (fieldText(file, c, "kind") == "dataclass") e.flags.push_back("dataclass");
+  if (fieldText(file, c, "visibility") == "-") e.fields["visibility"] = "-";
   const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
   if (ownerEntity && ownerEntity->has("extern")) e.flags.push_back("extern");
 
@@ -603,6 +604,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.name = fieldText(file, c, "name");
       e.scope = prefix.empty() ? scope : prefix;
       e.id = e.scope + e.name;  // every package level adds its name with @: app, app@core, app@core@model::Entity (R4)
+      if (fieldText(file, c, "visibility") == "-") e.fields["visibility"] = "-";
       e.location = loc;
       bindFields(file, c, e);
       model::Entity& declared = model_.declare(e);
@@ -623,7 +625,10 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.location = loc;
       const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
       if (!ts_node_is_null(child(c, "extern")) || (ownerEntity && ownerEntity->has("extern"))) e.flags.push_back("extern");  // R11
+      const bool isPrivate = fieldText(file, c, "visibility") == "-";
+      if (isPrivate) e.fields["visibility"] = "-";
       model::Entity& declared = model_.declare(e);
+      if (isPrivate) declared.fields["visibility"] = "-";  // a module reopens: any declaration may say it
       if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
       visit(file, c, declared.id, declared.id);
 
@@ -668,6 +673,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity e;
       e.kind = model::Kind::Enum;
       e.name = fieldText(file, c, "name");
+      if (fieldText(file, c, "visibility") == "-") e.fields["visibility"] = "-";
       e.id = qualify(scope, e.name);
       e.scope = scope;
       e.location = loc;
