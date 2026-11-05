@@ -146,7 +146,7 @@ package driftspec@ds {
       }
       - matches(pattern: std::string, entity: model::Entity) -> bool
       - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00049-1
+        @requirement REQ-00049-2
         @requirement REQ-00056-1
       }
       - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {

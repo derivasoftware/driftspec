@@ -453,6 +453,25 @@ package driftspec@ds {
               tests/integration/ds/check/test_values.cpp::TestValues.AResultDoesNotExistBeforeItsMessage
           }
         }
+        requirement REQ-00059-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A behaviour shall say what it gives back with return, and that value shall be checked against what its operation declares
+          text:
+            return takes a name or a literal, never an expression. Its type is checked
+            against the return of the operation (W-RETURN-TYPE), and an operation that
+            returns none gives nothing back. A name the context does not know is left
+            alone, as an argument is. An operation that declares no return has nothing
+            to check against.
+          rationale: DS-52. With the scenario a call follows, a trace reaches the value it ends in, which is what lets an interface promise an outcome.
+          verification VER-00063-1 {
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AReturnIsCheckedAgainstWhatTheOperationDeclares
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AReturnThatAgreesIsNotAFinding
+          }
+        }
         requirement REQ-00058-1 {
           tags: language, lld, sequence
           status: approved
@@ -489,14 +508,21 @@ package driftspec@ds {
               tests/integration/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
           }
         }
-        requirement REQ-00038-1 {
+        requirement REQ-00038-2 {
           tags: language, lld, sequence
           status: approved
-          title: A message to an operation with a behaviour shall expand to it, and coupling to another module shall be derived
-          verification VER-00030-1 {
+          title: A message to an operation with a behaviour shall expand to its default scenario or to the one it names, and coupling to another module shall be derived
+          text:
+            A call names a scenario as a declaration does, with a slash, and a scenario
+            the operation does not declare is W-SCENARIO-UNDECLARED. Revision 2 adds the
+            naming (DS-52): a trace could only go down through the default scenario.
+          verification VER-00030-2 {
             status: approved
             method: test
             tests:
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ACallThatNamesAScenarioExpandsToThatOne
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ACallThatNamesNoScenarioExpandsToTheDefault
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AScenarioNobodyDeclaresIsAFinding
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.AMessageToAnOperationWithABehaviourExpandsToIt
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule
           }
@@ -630,14 +656,18 @@ package driftspec@ds {
             tests/integration/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
         }
       }
-      requirement REQ-00049-1 {
+      requirement REQ-00049-2 {
         tags: language, diagrams
         status: approved
-        title: A sequence diagram shall expand by depth and lift to the level asked for
-        verification VER-00037-1 {
+        title: A sequence diagram shall select a behaviour as it is written, expand by depth and lift to the level asked for
+        verification VER-00037-2 {
           status: approved
           method: test
           tests:
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ASubjectAloneDrawsItsDefaultScenario
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AScenarioIsSelectedAsItIsWrittenAndItsTraceFollowsIt
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AStarSelectsEveryScenario
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.TheArrowBackCarriesWhatTheBehaviourReturns
             tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ASequenceDiagramExpandsByDepthAndLinksAtDepthZero
             tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
         }

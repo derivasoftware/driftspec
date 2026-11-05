@@ -801,6 +801,16 @@
           }
         ]
       },
+      "scenario": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
       "to": {
         "multiple": false,
         "required": false,
@@ -1365,33 +1375,29 @@
     "type": "return",
     "named": true,
     "fields": {
-      "op": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "name",
-            "named": true
-          }
-        ]
-      },
-      "to": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "name",
-            "named": true
-          }
-        ]
-      },
       "value": {
         "multiple": false,
         "required": true,
         "types": [
           {
+            "type": "false",
+            "named": false
+          },
+          {
             "type": "name",
             "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "string",
+            "named": true
+          },
+          {
+            "type": "true",
+            "named": false
           }
         ]
       }

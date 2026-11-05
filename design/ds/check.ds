@@ -37,7 +37,6 @@ package driftspec@ds {
       }
       - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00037-1
-        @requirement REQ-00038-1
       }
       - checkEvent(event: bind::Event) -> void {
         @requirement REQ-00039-1
@@ -65,7 +64,7 @@ package driftspec@ds {
         @requirement REQ-00036-2
       }
       - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
-        @requirement REQ-00038-1
+        @requirement REQ-00038-2
       }
       - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
         @requirement REQ-00036-2
@@ -78,6 +77,12 @@ package driftspec@ds {
       }
       - rememberResult(message: bind::Message) -> void {
         @requirement REQ-00058-1
+      }
+      - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00038-2
+      }
+      - checkReturn(message: bind::Message) -> void {
+        @requirement REQ-00059-1
       }
       - checkTemplateBound(reference: bind::Reference) -> void {
         @requirement REQ-00029-1
@@ -122,7 +127,7 @@ package driftspec@ds {
 
 diagram SEQ_CheckerRun {
   kind: sequence
-  include: driftspec@ds@check::Checker::run::sequence
+  include: driftspec@ds@check::Checker::run
 }
 
 diagram CL_CheckNamespace {

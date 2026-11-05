@@ -14,7 +14,7 @@ package ds {
 
       client -> server.receive(msg)    // ! reported once LspServer exists without receive
       server -> client.send(ack)       // resolves to lsp::LspClient::send(msg: int) -> bool
-      return client.send -> true
+      return true
     }
   }
 }

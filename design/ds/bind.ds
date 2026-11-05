@@ -27,6 +27,7 @@ package driftspec@ds {
       + op: std::string
       + argc: int
       + owns location: model::Location
+      + returns: bool
     }
 
     dataclass Event {                        // an event or action of a state machine, checked later as an operation

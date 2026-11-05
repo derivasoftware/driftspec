@@ -55,6 +55,8 @@ class Checker {
   void checkArguments(const model::Entity& msg, const model::Entity& op, const bind::Message& message);
   bool compatible(const std::pair<std::string, std::string>& argument, const std::pair<std::string, std::string>& parameter) const;
   void rememberResult(const bind::Message& message);
+  void expand(model::Entity& msg, const model::Entity& op, const bind::Message& message);
+  void checkReturn(const bind::Message& message);
   void checkTemplateBound(const bind::Reference& reference);
   void checkOwnershipCycles();
   void classify();

@@ -364,6 +364,7 @@ struct SequenceBuilder {
     stack.insert(seq.id);
     std::map<std::string, int> firstOrder, lastOrder, elseOrder;  // by frame id
     for (const model::Entity* m : messagesOf(seq.id)) {
+      if (fieldOf(*m, "return") == "true") continue;  // told by the arrow back to whoever called
       const std::string to = fieldOf(*m, "to");
       const std::string typeId = fieldOf(*m, "type");
       std::string target = selfLine;
@@ -389,7 +390,8 @@ struct SequenceBuilder {
                              {"to", target},
                              {"kind", "message"},
                              {"order", row},
-                             {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")"}};
+                             {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")" +
+                                           (fieldOf(*m, "scenario").empty() ? "" : " / " + fieldOf(*m, "scenario"))}};
       nlohmann::json refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
       const std::string expands = fieldOf(*m, "expands");
       std::string title;
@@ -446,7 +448,10 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       if (e.kind != model::Kind::Sequence || e.expected) continue;
       const std::string subjectId = e.id.substr(0, e.id.find("::sequence"));
       const bool prefix = !pattern.empty() && pattern.back() == '*' && e.id.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
-      if (pattern == e.id || pattern == subjectId || prefix) selected.push_back(&e);
+      // as it is written: `Class::op` the default, `Class::op / scenario` that one, `Class::op*` them all
+      const bool isDefault = e.fields.find("scenario") == e.fields.end();
+      const bool named = !isDefault && pattern == subjectId + " / " + e.fields.at("scenario");
+      if (pattern == e.id || (pattern == subjectId && isDefault) || named || prefix) selected.push_back(&e);
     }
   }
   SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0};
@@ -503,8 +508,11 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       b.emit(*seq, self, depth, stack);
       const std::string returns = method ? fieldOf(*subject, "returns") : "";
       if (method && !returns.empty() && returns != "none" && returns != "void") {
-        b.edges.push_back(
-            {{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", returns}, {"dashed", true}});
+        std::string given = returns;  // what its `return` says, or the declared type
+        for (const model::Entity* m : b.messagesOf(seq->id)) {
+          if (fieldOf(*m, "return") == "true") given = fieldOf(*m, "result");
+        }
+        b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});
       }
     }
   }

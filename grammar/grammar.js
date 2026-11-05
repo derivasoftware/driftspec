@@ -137,9 +137,11 @@ module.exports = grammar({
       optional(seq(field('to', $.name), '.')),
       field('op', $.qualified_name),  // `-> tasks::gather(...)`: a function of another module, by its name (2026-10-26)
       $.arguments,
+      optional(seq('/', field('scenario', $.name))),  // the scenario of its behaviour this call enters (2026-11-05)
       optional(seq('->', field('result', $.name))),
     ),
-    return: $ => seq('return', field('to', $.name), '.', field('op', $.name), '->', field('value', $.name)),
+    // what the behaviour gives back: a name or a literal, never an expression (2026-11-05)
+    return: $ => seq('return', field('value', choice($.name, $.number, $.string, 'true', 'false'))),
     arguments: $ => seq('(', optional(seq($.argument, repeat(seq(',', $.argument)))), ')'),
     argument: $ => seq($.name, repeat(seq('.', $.name))),
     loop: $ => seq('loop', field('condition', $.condition), '{', repeat($._sequence_item), '}'),
