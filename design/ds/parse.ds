@@ -65,27 +65,61 @@ package driftspec@ds {
       + parseDirectory(directory: std::string) -> std::vector<ParsedFile>
     }
 
+    function textOf(file: ParsedFile, node: TSNode) -> std::string
+    - function firstError(node: TSNode, text: std::string, file: ParsedFile) -> bool
+
     // Most of parsing is the tree-sitter C API, whose functions the design does not declare: what
-    // is left of parseText is the file it fills and whether the tree has an error.
+    // is left of parseText is the file it fills and, when the tree has an error, where it is.
     sequence Parser::parseText {
       local file: ParsedFile
       opt the tree has an error {
-        // firstError, a helper of this file only, finds the place
+        local root: TSNode
+        -> firstError(root, text, file) -> placed
       }
       return file
     }
 
+    // An error node may wrap a whole block: a narrower error inside it is found first.
+    sequence firstError {
+      opt the node is an error {
+        loop each child with an error {
+          -> firstError(child, text, file) -> found
+          opt the child placed it {
+            return true
+          }
+        }
+      }
+      opt the node is an error or a missing token {
+        return true
+      }
+      opt nothing under the node has an error {
+        return false
+      }
+      loop each child {
+        -> firstError(child, text, file) -> found
+        opt the child placed it {
+          return true
+        }
+      }
+      return false
+    }
+
+    // The file cannot be opened: it throws, and nothing comes back.
     sequence Parser::parseFile {
+      opt the file cannot be opened / unreadable {
+        return
+      }
       -> parseText(path, text) -> file
       return file
     }
 
-    // The file cannot be opened: it throws, and nothing comes back.
-    sequence Parser::parseFile / unreadable {
-    }
-
+    // The directory does not exist: walking it throws before any file is read. One file
+    // cannot be opened: the exception goes up and no file comes back.
     sequence Parser::parseDirectory {
       local paths: std::vector<std::string>
+      opt the directory does not exist / no-directory {
+        return
+      }
       loop each entry under the directory, recursively {
         opt a regular file ending in .ds {
         }
@@ -93,23 +127,14 @@ package driftspec@ds {
       // the paths are sorted here, so the order of the files is the order of the paths
       local files: std::vector<ParsedFile>
       loop each path {
-        -> parseFile(path) -> file
+        alt the file cannot be opened / unreadable {
+          -> parseFile(path) / unreadable
+          return
+        } else {
+          -> parseFile(path) -> file
+        }
       }
       return files
-    }
-
-    // One file cannot be opened: the exception goes up and no file comes back.
-    sequence Parser::parseDirectory / unreadable {
-      local paths: std::vector<std::string>
-      local files: std::vector<ParsedFile>
-      loop each path up to the one that fails {
-        -> parseFile(path) / unreadable
-      }
-    }
-
-    // The directory does not exist: walking it throws before any file is read.
-    sequence Parser::parseDirectory / no-directory {
-      local paths: std::vector<std::string>
     }
   }
 }

@@ -198,11 +198,15 @@ struct Branches {
     return out;
   }
 
-  enum class Way { Then, Else, Skip, Keep };
+  /// Then, Else: the path takes that side, drawn inline. Skip: it does not. Keep: it cannot tell, the frame is
+  /// drawn. Enter: a loop the path goes into, drawn as the loop it is.
+  enum class Way { Then, Else, Skip, Keep, Enter };
 
   Way decide(const Entity& f, const std::string& scenario) const {
     const std::set<std::string> thenNames = names(f, false);
     const std::set<std::string> elseNames = names(f, true);
+    // a loop is not a choice: every path goes through it, and one that names a branch inside goes into it
+    if (fieldIn(f, "kind") == "loop") return !scenario.empty() && thenNames.count(scenario) ? Way::Enter : Way::Keep;
     if (!scenario.empty() && thenNames.count(scenario)) return Way::Then;
     if (!scenario.empty() && elseNames.count(scenario)) return Way::Else;
     const bool twoSides = !fieldIn(f, "else").empty() || !fieldIn(f, "else-scenario").empty();
@@ -253,6 +257,8 @@ std::vector<const Entity*> pathOf(const Model& model, const std::string& sequenc
         taken = false;
       } else if (way == Branches::Way::Keep) {
         certain = false;
+        around.push_back(f.id);
+      } else if (way == Branches::Way::Enter) {
         around.push_back(f.id);
       }
       id = fieldIn(f, "parent");

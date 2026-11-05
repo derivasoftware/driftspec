@@ -41,6 +41,7 @@ package driftspec@ds {
     sequence JsonExport::render {
       self -> model.entities() -> entities
       loop each entity {
+        -> model::kindName(entity.kind) -> kind
       }
       self -> model.relations() -> relations
       loop each relation {

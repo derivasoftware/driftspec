@@ -567,10 +567,11 @@ package driftspec@ds {
             given twice is W-SCENARIO-TWICE. A behaviour asked for by its subject is drawn whole, its early
             returns included; an unnamed call follows the default path.
           rationale: Owner, 2026-11-05. Repeating the opening of every scenario was the largest cost of the design of ds, and a maintenance risk. checkMessage went from twelve sequences to one.
-          verification VER-00070-1 {
+          verification VER-00070-2 {
             status: approved
             method: test
             tests:
+              tests/integration/ds/check/test_branches.cpp::TestBranches.ADiagramThatAsksForAScenarioNobodyDeclaresIsAFinding
               tests/integration/ds/check/test_branches.cpp::TestBranches.ABranchNamesAScenarioAndABareReturnEndsIt
               tests/integration/ds/check/test_branches.cpp::TestBranches.APathTakesWhatIsSharedAndItsBranchUpToItsReturn
               tests/integration/ds/check/test_branches.cpp::TestBranches.TheDefaultPathTakesNoNamedBranch

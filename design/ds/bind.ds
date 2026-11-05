@@ -120,11 +120,106 @@ package driftspec@ds {
       }
     }
 
-    // Takes the root of the tree and walks it with no scope and no owner. Neither step
-    // can be said: the root comes from a free C function (ts_tree_root_node), and
-    // visit(file, root, "", "") takes literals, which an argument cannot be.
+    // Takes the root of the tree and walks it with no scope and no owner. Where the root
+    // comes from cannot be said: the free C function ts_tree_root_node of tree_sitter,
+    // called on file.tree.get(), a chained call.
     sequence Binder::bind {
       local root: TSNode
+      -> visit(file, root, "", "")
+    }
+
+    // Where binding happens: each child of the node is declared by its kind, related to
+    // its owner, and walked in turn. Reading names off the tree (fieldText, child, is) are
+    // free utilities of the implementation, and the identities are built by expressions,
+    // so e appears with its fields already set. A package is walked with its id plus @
+    // as scope, an expression: that call and its annotations are not told here.
+    sequence Binder::visit {
+      loop each named child of the node {
+        local c: TSNode
+        local e: model::Entity
+        local relation: model::Relation
+        -> locationOf(file, c) -> loc
+        opt a package {
+          -> bindFields(file, c, e)
+          self -> model_.declare(e) -> declared
+          opt it has an owner {
+            self -> model_.relate(relation)
+          }
+        }
+        opt a module {
+          -> qualify(scope, e.name) -> id
+          opt it has an owner {
+            self -> model_.find(owner) -> ownerEntity
+          }
+          self -> model_.declare(e) -> declared
+          opt it has an owner {
+            self -> model_.relate(relation)
+          }
+          -> visit(file, c, declared.id, declared.id)
+        }
+        opt a requirement, a verification or a constraint {
+          -> bindArtefact(file, c, scope, owner)
+        }
+        opt an interface, with its operations {
+          -> qualify(scope, e.name) -> id
+          -> bindFields(file, c, e)
+          self -> model_.declare(e)
+          opt it has an owner {
+            self -> model_.relate(relation)
+          }
+          -> bindAnnotations(file, c, e.id, scope)
+          loop each operation {
+            local op: TSNode
+            local o: model::Entity
+            -> locationOf(file, op)
+            -> bindFields(file, op, o)
+            self -> model_.declare(o)
+            self -> model_.relate(relation)
+            -> bindAnnotations(file, op, o.id, scope)
+          }
+        }
+        opt a class {
+          -> bindClass(file, c, scope, owner)
+        }
+        opt a function {
+          -> bindFunction(file, c, scope, owner)
+        }
+        opt an enum, with its values {
+          -> qualify(scope, e.name) -> id
+          self -> model_.declare(e)
+          opt it has an owner {
+            self -> model_.relate(relation)
+          }
+          -> bindAnnotations(file, c, e.id, scope)
+        }
+        opt a sequence {
+          -> bindSequence(file, c, scope, owner)
+        }
+        opt a state machine: its events and actions are kept for the checker {
+          local entityName: std::string
+          -> qualify(scope, entityName)
+          -> bindFields(file, c, e)
+          self -> model_.declare(e)
+          -> bindAnnotations(file, c, e.id, scope)
+          loop each view and transition {
+            local t: TSNode
+            local v: model::Entity
+            opt the initial state or a transition, set on the state entity {
+              self -> model_.find(e.id)
+            }
+            opt a view {
+              -> bindFields(file, t, v)
+              self -> model_.declare(v)
+              self -> model_.relate(relation)
+              -> bindAnnotations(file, t, v.id, scope)
+            }
+          }
+        }
+        opt a diagram {
+          -> bindFields(file, c, e)
+          self -> model_.declare(e)
+        }
+      }
     }
   }
 }
