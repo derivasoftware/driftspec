@@ -30,6 +30,7 @@ class IrExport {
  private:
   bool matches(const std::string& pattern, const model::Entity& entity) const;
   std::string renderSequence(const model::Entity& diagram, bool pretty) const;
+  std::string closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const;
   std::string renderState(const model::Entity& diagram, bool pretty) const;
   std::string renderRequirements(const model::Entity& diagram, bool pretty) const;
 

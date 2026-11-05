@@ -62,6 +62,7 @@ class Checker {
   void checkVisibility(const std::string& from, const std::string& target, const model::Location& location);
   void checkLeak(const std::string& from, const std::string& target, const model::Location& location);
   void checkInterfaces();
+  void checkDiagrams();
   void checkViews(const model::Entity& state);
   /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
   std::string outcomeOf(const std::string& sequence, std::set<std::string>* seen) const;

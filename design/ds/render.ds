@@ -145,6 +145,9 @@ package driftspec@ds {
         @requirement REQ-00048-1
       }
       - matches(pattern: std::string, entity: model::Entity) -> bool
+      - closeBoxes(ir: std::string, open: std::vector<std::string>, pretty: bool) -> std::string {
+        @requirement REQ-00064-1
+      }
       - renderState(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00062-1
       }

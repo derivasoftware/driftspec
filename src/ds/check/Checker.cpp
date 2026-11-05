@@ -191,6 +191,7 @@ void Checker::run(const bind::Binder& binder) {
   checkLocals();
   for (const auto& e : binder.events()) checkEvent(e);
   checkInterfaces();
+  checkDiagrams();
   checkOwnershipCycles();
   classify();
   checkArtefacts();
@@ -746,6 +747,18 @@ void Checker::checkViews(const model::Entity& state) {
       model_.report({"W-VIEW-UNREACHABLE", "warning", "nothing leads to the view " + view + " of " + state.name, v->location});
     } else if (views.size() > 1 && next[view].empty()) {
       model_.report({"W-VIEW-NO-WAY-OUT", "warning", "nothing leaves the view " + view + " of " + state.name, v->location});
+    }
+  }
+}
+
+void Checker::checkDiagrams() {
+  for (const auto& pair : model_.entities()) {
+    if (pair.second.kind != model::Kind::Diagram) continue;
+    const auto depth = pair.second.fields.find("depth");
+    if (depth == pair.second.fields.end() || depth->second == "*") continue;
+    if (depth->second.empty() || depth->second.find_first_not_of("0123456789") != std::string::npos) {
+      model_.report({"W-DIAGRAM-DEPTH", "warning",
+                     pair.second.name + " asks for depth '" + depth->second + "': a number, or * for every level", pair.second.location});
     }
   }
 }

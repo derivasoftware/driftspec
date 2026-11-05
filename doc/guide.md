@@ -230,6 +230,15 @@ them. The vision (`vision.md`) says why; this says what.*
   (`package:ds`); extern entities only when named.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
+- `open:` says which boxes of a class diagram stay open and closes the rest:
+  `open: shop@store@stock` opens that box and the way to it, `open:` alone closes
+  them all, and a diagram that does not say it draws everything open. A closed box
+  shows only its public children. An edge that loses an end to it says only that
+  one box depends on the other, and what stays inside it is not drawn: the
+  component view is derived, never written.
+- `depth` and `level` belong to sequences: `depth: 2`, `depth: *` for every level
+  (`W-DIAGRAM-DEPTH` for anything else), `level: module` for only what crosses
+  modules. A class diagram ignores them.
 - `kind: state` draws a machine, `include: shop@web` naming its class or interface:
   from the initial state down, a jump with its event and guard, a jump to the same
   state as a loop, and of a view its text and what binds it.

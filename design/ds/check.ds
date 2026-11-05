@@ -93,6 +93,9 @@ package driftspec@ds {
       - checkLeak(from: std::string, target: std::string, location: model::Location) -> void {
         @requirement REQ-00063-1
       }
+      - checkDiagrams() -> void {
+        @requirement REQ-00049-2
+      }
       - checkInterfaces() -> void {
         @requirement REQ-00060-1
       }
@@ -136,6 +139,7 @@ package driftspec@ds {
         -> checkEvent(event)
       }
       -> checkInterfaces()
+      -> checkDiagrams()
       -> checkOwnershipCycles()
       -> classify()
       -> checkArtefacts()

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <nlohmann/json.hpp>
+#include <regex>
 #include <sstream>
 
 namespace ds {
@@ -125,7 +126,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
 
   std::set<std::string> selected = select(*diagram);
   // neighbours: n widens the selection to what the selected entities relate to, n steps away
-  const int neighbours = fieldOf(*diagram, "neighbours").empty() ? 0 : std::stoi(fieldOf(*diagram, "neighbours"));
+  const std::string written = fieldOf(*diagram, "neighbours");
+  const int neighbours = std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
   for (int step = 0; step < neighbours; ++step) {
     std::set<std::string> grown = selected;
     for (const auto& r : model_.relations()) {
@@ -313,7 +315,91 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     if (!change.empty()) edge["refs"] = {{"change", change}};
     out["edges"].push_back(edge);
   }
+  // `open:` written says which boxes stay open, and every other closes: `open:` alone closes them all
+  if (diagram->fields.count("open")) return closeBoxes(out.dump(), split(fieldOf(*diagram, "open"), ','), pretty);
   return pretty ? out.dump(2) : out.dump();
+}
+
+std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const {
+  auto outerOf = [](const std::string& id) {
+    const auto cut = id.rfind("::");
+    if (cut != std::string::npos) return id.substr(0, cut);
+    const auto at = id.rfind('@');
+    return at == std::string::npos ? std::string() : id.substr(0, at);
+  };
+  auto pathOf = [&](const std::string& id) {  // from the outermost box down to the id
+    std::vector<std::string> path;
+    for (std::string s = id; !s.empty(); s = outerOf(s)) path.insert(path.begin(), s);
+    return path;
+  };
+  nlohmann::json doc = nlohmann::json::parse(ir);
+  std::set<std::string> containers;
+  for (const auto& n : doc["nodes"]) {
+    if (n["kind"] == "container") containers.insert(n["id"].get<std::string>());
+  }
+  // a box is open when it is named, or when something inside it is: opening a box shows the way to it
+  std::set<std::string> opened;
+  for (const auto& id : containers) {
+    for (const auto& pattern : open) {
+      const bool star = !pattern.empty() && pattern.back() == '*';
+      const std::string prefix = star ? pattern.substr(0, pattern.size() - 1) : pattern;
+      if (id != pattern && !(star && id.rfind(prefix, 0) == 0)) continue;
+      for (const auto& step : pathOf(id)) opened.insert(step);
+    }
+  }
+  // what stands for an id: the outermost closed box around it, or the id itself
+  auto visible = [&](const std::string& id) {
+    for (const auto& step : pathOf(id)) {
+      if (containers.count(step) && !opened.count(step)) return step;
+    }
+    return id;
+  };
+
+  nlohmann::json nodes = nlohmann::json::array();
+  for (auto n : doc["nodes"]) {
+    const std::string id = n["id"];
+    if (visible(id) != id) continue;
+    if (containers.count(id) && !opened.count(id)) {
+      // closed: a box that shows only what it offers, its public children
+      std::vector<const model::Entity*> children;
+      for (const auto& pair : model_.entities()) {
+        const model::Entity& e = pair.second;
+        if (outerOf(e.id) != id || e.expected) continue;
+        if (e.kind != model::Kind::Interface && e.kind != model::Kind::Module && e.kind != model::Kind::Package &&
+            e.kind != model::Kind::Class && e.kind != model::Kind::Enum && e.kind != model::Kind::Function) {
+          continue;
+        }
+        if (fieldOf(e, "visibility") != "-") children.push_back(&e);
+      }
+      std::sort(children.begin(), children.end(),
+                [](const model::Entity* a, const model::Entity* b) { return a->location.line < b->location.line; });
+      std::vector<std::string> names;
+      for (const model::Entity* c : children) names.push_back(displayName(*c));
+      n["kind"] = "box";
+      if (!names.empty()) {
+        n["sections"] = nlohmann::json::array({names});
+        n["sectionKinds"] = nlohmann::json::array({"methods"});
+      }
+    }
+    nodes.push_back(n);
+  }
+
+  // an edge that loses an end to a closed box says only that one box depends on the other
+  nlohmann::json edges = nlohmann::json::array();
+  std::set<std::string> lifted;
+  for (auto e : doc["edges"]) {
+    const std::string from = visible(e["from"]);
+    const std::string to = visible(e["to"]);
+    if (from == to) continue;  // what happens inside a closed box stays inside it
+    if (from != e["from"].get<std::string>() || to != e["to"].get<std::string>()) {
+      if (!lifted.insert(from + "|" + to).second) continue;
+      e = {{"from", from}, {"to", to}, {"kind", "dependency"}};
+    }
+    edges.push_back(e);
+  }
+  doc["nodes"] = nodes;
+  doc["edges"] = edges;
+  return pretty ? doc.dump(2) : doc.dump();
 }
 
 // ---- sequences: lifelines are the static context, children expand by depth (B3, B5, B9) ----
@@ -439,7 +525,9 @@ struct SequenceBuilder {
 }  // namespace
 
 std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) const {
-  const int depth = fieldOf(diagram, "depth").empty() ? 0 : std::stoi(fieldOf(diagram, "depth"));
+  const std::string written = fieldOf(diagram, "depth");
+  // `*` is every level: the guard against recursion is what ends it (a value that is no number is a finding)
+  const int depth = written == "*" ? 1000 : std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
   const std::string level = fieldOf(diagram, "level");
   // the behaviours selected: by subject id, by sequence id, or a namespace
   std::vector<const model::Entity*> selected;
