@@ -149,7 +149,8 @@ module.exports = grammar({
     // a bare return ends a branch of the behaviour with nothing given back (2026-11-05)
     return: $ => prec.right(seq('return', optional(field('value', choice($.name, $.number, $.string, 'true', 'false'))))),
     arguments: $ => seq('(', optional(seq($.argument, repeat(seq(',', $.argument)))), ')'),
-    argument: $ => seq($.name, repeat(seq('.', $.name))),
+    // a name, or a literal: `visit(file, root, "", "")` says what the code passes (2026-11-05)
+    argument: $ => choice(seq($.name, repeat(seq('.', $.name))), $.number, $.string),
     // a branch may name a scenario: `opt <prose> / refused {`, a path through this one behaviour (2026-11-05)
     loop: $ => seq('loop', field('condition', $.condition), optional($._branch_name), '{', repeat($._sequence_item), '}'),
     alt: $ => seq('alt', field('condition', $.condition), optional($._branch_name), '{', repeat($._sequence_item), '}',

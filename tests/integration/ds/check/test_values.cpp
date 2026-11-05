@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <map>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -8,6 +9,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/render/IrExport.hpp"
 
 namespace {
 
@@ -63,7 +65,7 @@ TEST_F(TestValues, AValueOfUnknownTypeHasNothingToBeCheckedAgainst) {
 TEST_F(TestValues, AnArgumentOfTheWrongTypeIsReported) {
   EXPECT_TRUE(reported("W-ARG-TYPE", "'price' is Price"));
   EXPECT_TRUE(reported("W-ARG-TYPE", "'sku' is string"));
-  EXPECT_EQ(lines["W-ARG-TYPE"].size(), 2U);
+  EXPECT_EQ(lines["W-ARG-TYPE"].size(), 3U);
 }
 
 TEST_F(TestValues, ADerivedClassSatisfiesItsBaseAsAnArgument) { EXPECT_FALSE(reported("W-ARG-TYPE", "'special'")); }
@@ -73,6 +75,31 @@ TEST_F(TestValues, ATemplateWithCommasIsOneParameter) { EXPECT_EQ(lines.count("E
 TEST_F(TestValues, TakingTheResultOfAnOperationThatReturnsNothingIsReported) {
   EXPECT_TRUE(reported("W-RESULT-NONE", "'gone'"));
   EXPECT_EQ(lines["W-RESULT-NONE"].size(), 1U);
+}
+
+TEST_F(TestValues, ALiteralArgumentHasTheTypeItIsWrittenIn) {
+  EXPECT_TRUE(reported("W-ARG-TYPE", "'7' is int"));
+  EXPECT_FALSE(reported("W-ARG-TYPE", "'3'"));
+  EXPECT_FALSE(reported("W-ARG-TYPE", "A-1"));
+}
+
+TEST_F(TestValues, ALocalInsideAFrameIsALocal) { EXPECT_FALSE(reported("W-PARTICIPANT-UNDECLARED", "'spare'")); }
+
+TEST_F(TestValues, TwoObjectsOfOneTypeAreTwoLifelines) {
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:SEQ_Sell", false));
+  std::vector<std::string> items;
+  for (const auto& n : ir["nodes"]) {
+    const std::string label = n["label"];
+    if (n["kind"] == "lifeline" && label.find(": Item") != std::string::npos) items.push_back(label);
+  }
+  EXPECT_EQ(items.size(), 3U);  // item, other and spare
+}
+
+TEST_F(TestValues, AFrameWithNoMessageIsStillDrawn) {
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:SEQ_Sell", false));
+  bool receipt = false;
+  for (const auto& n : ir["nodes"]) receipt = receipt || (n["kind"] == "frame" && n["label"] == "loop each line of the receipt");
+  EXPECT_TRUE(receipt);
 }
 
 }  // namespace

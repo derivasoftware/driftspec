@@ -641,7 +641,16 @@ void Checker::checkArguments(const model::Entity& msg, const model::Entity& op, 
     if (colon == std::string::npos) continue;  // a parameter with no type
     std::pair<std::string, std::string> argument;
     bool transient = false;
-    if (!typeOfName(*seq, cls, *subject, arguments[i], &argument, &transient) || argument.first.empty()) continue;
+    const std::string& written = arguments[i];
+    if (written.front() == '"') {
+      argument = {"string", scope};  // a literal has the type it is written in
+    } else if (std::isdigit(static_cast<unsigned char>(written.front())) || written.front() == '-') {
+      argument = {"int", scope};
+    } else if (written == "true" || written == "false") {
+      argument = {"bool", scope};
+    } else if (!typeOfName(*seq, cls, *subject, written, &argument, &transient) || argument.first.empty()) {
+      continue;
+    }
     const auto begin = parameters[i].find_first_not_of(' ', colon + 1);
     const std::pair<std::string, std::string> parameter{begin == std::string::npos ? "" : parameters[i].substr(begin), scope};
     if (parameter.first.empty() || compatible(argument, parameter)) continue;

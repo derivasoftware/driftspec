@@ -41,13 +41,29 @@ package shop {
       self -> stock.count(special) -> n              // a SpecialItem is an Item
       self -> stock.mystery(sku) -> unknown          // no return declared: its type is unknown
       self -> unknown.anything()                     // no finding: there is nothing to check it against
+      self -> stock.restock(3)                       // a literal has the type it is written in
+      self -> stock.find("A-1") -> other             // other is an Item too: its own lifeline, not item's
+      self -> other.price() -> otherPrice
+      opt a spare is on the shelf {
+        local spare: store::Item                     // a local inside a frame is a local
+        self -> spare.price() -> sparePrice
+      }
+      loop each line of the receipt {
+        // printed by the till, nothing the design draws
+      }
 
       self -> item.nothing()                         // ! W-MSG-UNDECLARED: Item does not declare it
       self -> stock.count(price) -> wrong            // ! W-ARG-TYPE: a Price is not an Item
       self -> stock.restock(sku)                     // ! W-ARG-TYPE: a string is not an int
+      self -> stock.find(7) -> wrongSku              // ! W-ARG-TYPE: a number is not a string
       self -> stock.restock(n) -> gone               // ! W-RESULT-NONE: restock returns nothing
       self -> early.price()                          // ! W-PARTICIPANT-UNDECLARED: only later
       self -> stock.find(sku) -> early
     }
   }
+}
+
+diagram SEQ_Sell {
+  kind: sequence
+  include: shop@till::Till::sell
 }

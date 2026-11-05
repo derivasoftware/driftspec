@@ -536,6 +536,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       f.location = loc;
       f.name = ts_node_type(c);
       f.fields["kind"] = ts_node_type(c);
+      f.fields["at"] = std::to_string(order);  // where it opens: drawn there even when it holds no message
       f.fields["condition"] = trim(fieldText(file, c, "condition"));
       const std::string scenario = fieldText(file, c, "scenario");
       if (!scenario.empty()) f.fields["scenario"] = scenario;
@@ -574,14 +575,20 @@ void Binder::bindSequence(const parse::ParsedFile& file, TSNode c, const std::st
   if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
   references_.push_back({declared.id, subject, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
   bindAnnotations(file, c, declared.id, scope);
-  // locals (and the older `participant`) are the only participants written (B3)
-  const uint32_t n = ts_node_named_child_count(c);
-  for (uint32_t j = 0; j < n; ++j) {
-    TSNode s = ts_node_named_child(c, j);
-    if (!is(s, "local") && !is(s, "participant")) continue;
-    const std::string name = fieldText(file, s, "name");
-    TypeUse use = bindType(file, child(s, "type"), scope, declared.id, "uses", "", {}, locationOf(file, s));
-    model_.find(declared.id)->fields["local." + name] = use.text;
+  // locals (and the older `participant`) are the only participants written (B3), at any depth of frames
+  std::vector<TSNode> pending{c};
+  while (!pending.empty()) {
+    TSNode node = pending.back();
+    pending.pop_back();
+    const uint32_t n = ts_node_named_child_count(node);
+    for (uint32_t j = 0; j < n; ++j) {
+      TSNode s = ts_node_named_child(node, j);
+      if (is(s, "loop") || is(s, "alt") || is(s, "opt")) pending.push_back(s);
+      if (!is(s, "local") && !is(s, "participant")) continue;
+      const std::string name = fieldText(file, s, "name");
+      TypeUse use = bindType(file, child(s, "type"), scope, declared.id, "uses", "", {}, locationOf(file, s));
+      model_.find(declared.id)->fields["local." + name] = use.text;
+    }
   }
   int order = 0, frames = 0;
   bindSteps(file, c, *model_.find(declared.id), "", order, frames);

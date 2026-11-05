@@ -484,10 +484,11 @@ package driftspec@ds {
           status: approved
           title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
           rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
-          verification VER-00028-2 {
+          verification VER-00028-3 {
             status: approved
             method: test
             tests:
+              tests/integration/ds/check/test_values.cpp::TestValues.ALocalInsideAFrameIsALocal
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
               tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt
               tests/integration/ds/check/test_values.cpp::TestValues.AResultDoesNotExistBeforeItsMessage
@@ -581,7 +582,7 @@ package driftspec@ds {
               tests/integration/ds/check/test_branches.cpp::TestBranches.AnUnnamedCallFollowsTheDefaultPath
           }
         }
-        requirement REQ-00058-1 {
+        requirement REQ-00058-2 {
           tags: language, lld, sequence
           status: approved
           title: A value of a sequence shall have the type of what produced it, and its uses shall be checked against that type
@@ -589,14 +590,16 @@ package driftspec@ds {
             The result of a message has the type its operation returns. A call on a
             result is checked as a call on any other participant, an argument against
             the type of its parameter (W-ARG-TYPE), and taking the result of an operation
-            that returns none is reported (W-RESULT-NONE). A value whose type is not
+            that returns none is reported (W-RESULT-NONE). An argument may be a literal, a number or a
+            string, and has the type it is written in. A value whose type is not
             known, because its operation declares no return or does not resolve, has
             nothing to be checked against and gives no finding.
-          rationale: DS-51. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it.
-          verification VER-00062-1 {
+          rationale: DS-51; revision 2 adds literal arguments (DS-64): the code passes them, and naming them invented values. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it.
+          verification VER-00062-2 {
             status: approved
             method: test
             tests:
+              tests/integration/ds/check/test_values.cpp::TestValues.ALiteralArgumentHasTheTypeItIsWrittenIn
               tests/integration/ds/check/test_values.cpp::TestValues.ACallOnAResultIsCheckedAgainstItsType
               tests/integration/ds/check/test_values.cpp::TestValues.AValueOfUnknownTypeHasNothingToBeCheckedAgainst
               tests/integration/ds/check/test_values.cpp::TestValues.AnArgumentOfTheWrongTypeIsReported
@@ -769,10 +772,12 @@ package driftspec@ds {
         tags: language, diagrams
         status: approved
         title: A sequence diagram shall select a behaviour as it is written, expand by depth and lift to the level asked for
-        verification VER-00037-3 {
+        verification VER-00037-4 {
           status: approved
           method: test
           tests:
+            tests/integration/ds/check/test_values.cpp::TestValues.TwoObjectsOfOneTypeAreTwoLifelines
+            tests/integration/ds/check/test_values.cpp::TestValues.AFrameWithNoMessageIsStillDrawn
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.DepthStarIsEveryLevelAndNeverAnAbort
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADepthThatIsNoNumberIsAFindingAndStillDraws
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ASubjectAloneDrawsItsDefaultScenario
