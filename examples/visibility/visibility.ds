@@ -1,0 +1,70 @@
+// visibility.ds: one rule at every level. A box connects to another through a
+// public child: a package through its interfaces and modules, a module through its
+// classes and functions, a class through its methods and attributes. A child is
+// public unless it says `-`, and it is seen from inside its parent, so siblings
+// see each other. Everything crossed on the way down has to be public. The `!`
+// lines are the findings the tool emits.
+
+package shop {
+  package store {
+    - module internal {
+      class Cache {
+        + get(sku: string) -> int
+      }
+    }
+
+    module stock {
+      class Item {
+        + price() -> int
+        - margin() -> int
+      }
+
+      - class Helper {
+        + help() -> int
+      }
+
+      dataclass Report {
+        + total: int
+      }
+
+      class Inventory {
+        - cache: internal::Cache         // inside its package: a sibling module sees it
+        - helper: Helper                 // and a private member of a private class is no leak
+        + find(sku: string) -> Item
+        + aid() -> Helper                // ! W-PRIVATE-LEAK: public, and it shows a private class
+        + report() -> Report
+      }
+
+      sequence Inventory::find {
+        self -> cache.get(sku) -> found  // a sibling module's class, seen from inside the package
+        self -> helper.help() -> n       // a sibling class, private or not
+      }
+
+      function count(n: int) -> int
+      - function round(n: int) -> int
+
+      sequence count {
+        -> round(n) -> r                 // a private function of its own module
+      }
+    }
+  }
+
+  package front {
+    module till {
+      class Till {
+        - stock: shop@store@stock::Inventory
+        - item: shop@store@stock::Item
+        - cache: shop@store@internal::Cache   // ! W-NOT-VISIBLE: private module of another box
+        - helper: shop@store@stock::Helper    // ! W-NOT-VISIBLE: private class of another module
+        + sell(sku: string) -> int
+      }
+
+      sequence Till::sell {
+        self -> stock.find(sku) -> found
+        self -> item.price() -> p
+        self -> item.margin() -> m       // ! W-NOT-VISIBLE: private method of another class
+        -> shop@store@stock::round(p) -> r    // ! W-NOT-VISIBLE: private function of another box
+      }
+    }
+  }
+}

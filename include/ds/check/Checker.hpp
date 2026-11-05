@@ -57,6 +57,10 @@ class Checker {
   void rememberResult(const bind::Message& message);
   void expand(model::Entity& msg, const model::Entity& op, const bind::Message& message);
   void checkReturn(const bind::Message& message);
+  /// What is private on the way from `from` down to `target`; empty when everything crossed is public.
+  std::string privateOnTheWay(const std::string& from, const std::string& target) const;
+  void checkVisibility(const std::string& from, const std::string& target, const model::Location& location);
+  void checkLeak(const std::string& from, const std::string& target, const model::Location& location);
   void checkInterfaces();
   void checkViews(const model::Entity& state);
   /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
