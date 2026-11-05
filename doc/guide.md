@@ -143,8 +143,9 @@ them. The vision (`vision.md`) says why; this says what.*
 - Values have types (decided 2026-11-05, `examples/values`): a result has the
   type its operation returns, so a call on it is checked like any other. An
   argument is checked against its parameter (`W-ARG-TYPE`), and taking the
-  result of an operation returning `none` is reported (`W-RESULT-NONE`). A value
-  of unknown type has nothing to be checked against.
+  result of an operation returning `none` is reported (`W-RESULT-NONE`). An
+  argument may be a literal, `visit(file, root, "", 7)`, with the type it is written
+  in. A value of unknown type has nothing to be checked against.
 - What a behaviour gives back and where a call goes (decided 2026-11-05,
   `examples/scenarios`): `return code` or `return 2`, a name or a literal, never
   an expression, checked against the operation (`W-RETURN-TYPE`). A call names

@@ -1,6 +1,7 @@
 #include "ds/render/IrExport.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <nlohmann/json.hpp>
 #include <regex>
 #include <sstream>
@@ -478,7 +479,30 @@ struct SequenceBuilder {
     const bool whole = path == kWhole;
     const std::vector<const model::Entity*> messages = whole ? messagesOf(seq.id) : model::pathOf(model, seq.id, path, &kept);
     auto drawn = [&](const std::string& frame) { return whole || kept.count(frame); };
+    // a frame that holds no message (only prose, or a branch that ends with nothing) still has a row of its own
+    std::vector<const model::Entity*> empty;
+    if (whole) {
+      for (const auto& pair : model.entities()) {
+        const model::Entity& f = pair.second;
+        if (f.kind == model::Kind::Frame && f.scope == seq.id && fieldOf(f, "first").empty()) empty.push_back(&f);
+      }
+      std::sort(empty.begin(), empty.end(),
+                [](const model::Entity* a, const model::Entity* b) { return std::stoi(fieldOf(*a, "at")) < std::stoi(fieldOf(*b, "at")); });
+    }
+    size_t nextEmpty = 0;
+    auto flushEmpty = [&](int before) {
+      for (; nextEmpty < empty.size() && std::stoi(fieldOf(*empty[nextEmpty], "at")) <= before; ++nextEmpty) {
+        const model::Entity& f = *empty[nextEmpty];
+        edges.push_back({{"from", selfLine}, {"to", selfLine}, {"kind", "message"}, {"order", order}, {"label", "..."}, {"dashed", true}});
+        for (std::string id = f.id; !id.empty(); id = fieldOf(*model.find(id), "parent")) {
+          if (!firstOrder.count(id)) firstOrder[id] = order;
+          lastOrder[id] = order;
+        }
+        ++order;
+      }
+    };
     for (const model::Entity* m : messages) {
+      flushEmpty(std::stoi(fieldOf(*m, "order")));
       if (fieldOf(*m, "return") == "true") {
         // a return inside a frame ends that branch early: it is drawn, so the frame is never empty
         std::string frame = fieldOf(*m, "frame");
@@ -513,7 +537,8 @@ struct SequenceBuilder {
         // one lifeline per entity of the static context: the same attribute reached from two
         // behaviours of one class is one participant; an unresolved name stays local to its behaviour
         const std::string typeName = typeId.empty() ? "?" : shortName(typeId);
-        target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId, to + ": " + typeName, "participant", typeId);
+        // two objects of one type are two lifelines: keyed by the name in the context, not by the type alone
+        target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId + "|" + to, to + ": " + typeName, "participant", typeId);
       }
       const std::string frame = fieldOf(*m, "frame");
       for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
@@ -559,6 +584,7 @@ struct SequenceBuilder {
       for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent"))
         if (drawn(f)) lastOrder[f] = order - 1;  // after any expansion
     }
+    flushEmpty(std::numeric_limits<int>::max());
     for (const auto& f : firstOrder) {
       const model::Entity* fe = model.find(f.first);
       nlohmann::json frame = {{"id", f.first},

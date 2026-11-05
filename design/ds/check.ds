@@ -70,13 +70,13 @@ package driftspec@ds {
         @requirement REQ-00036-2
       }
       - checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
-        @requirement REQ-00058-1
+        @requirement REQ-00058-2
       }
       - compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>) -> bool {
-        @requirement REQ-00058-1
+        @requirement REQ-00058-2
       }
       - rememberResult(message: bind::Message) -> void {
-        @requirement REQ-00058-1
+        @requirement REQ-00058-2
       }
       - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00038-2
