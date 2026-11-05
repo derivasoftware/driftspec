@@ -16,6 +16,11 @@ Regenerate the parser after editing the grammar: `tree-sitter generate` in `gram
 Governed by argos (ASIL NA). Rules of the language so far: `examples/diag/ds.package.ds`
 and the R1–R9 notes in `examples/diag/*.ds`.
 
+## Seeing a design
+
+`tools/design_page.py --workspace ds=design --out atlas.html` writes one self-contained
+page with every diagram beside the DriftSpec it comes from. Clicking a box goes to its text.
+
 ## Building and checking
 
 ```bash
