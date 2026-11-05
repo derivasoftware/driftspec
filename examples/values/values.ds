@@ -1,0 +1,53 @@
+// values.ds: the values of a sequence have types. A name in a behaviour is an
+// attribute, a parameter, a local or the result of an earlier message, and the
+// result of a message has the type its operation returns. The `!` lines are the
+// findings the tool emits.
+
+package shop {
+  module store {
+    dataclass Price {
+      + amount: int
+    }
+
+    class Item {
+      + price() -> Price
+      + rename(name: string) -> none
+    }
+
+    class SpecialItem : Item {
+      + discount() -> int
+    }
+
+    class Stock {
+      + find(sku: string) -> Item
+      + first(skus: map<string, int>) -> SpecialItem
+      + count(item: Item) -> int
+      + restock(amount: int) -> none
+      + mystery(sku: string)
+    }
+  }
+
+  module till {
+    class Till {
+      - stock: store::Stock
+      + sell(sku: string, skus: map<string, int>) -> int
+    }
+
+    sequence Till::sell {
+      self -> stock.find(sku) -> item                // a result: its type is Item
+      self -> item.price() -> price                  // a call on it, checked against Item
+      self -> stock.first(skus) -> special           // one parameter, whatever the commas of its type
+      self -> special.discount() -> off
+      self -> stock.count(special) -> n              // a SpecialItem is an Item
+      self -> stock.mystery(sku) -> unknown          // no return declared: its type is unknown
+      self -> unknown.anything()                     // no finding: there is nothing to check it against
+
+      self -> item.nothing()                         // ! W-MSG-UNDECLARED: Item does not declare it
+      self -> stock.count(price) -> wrong            // ! W-ARG-TYPE: a Price is not an Item
+      self -> stock.restock(sku)                     // ! W-ARG-TYPE: a string is not an int
+      self -> stock.restock(n) -> gone               // ! W-RESULT-NONE: restock returns nothing
+      self -> early.price()                          // ! W-PARTICIPANT-UNDECLARED: only later
+      self -> stock.find(sku) -> early
+    }
+  }
+}

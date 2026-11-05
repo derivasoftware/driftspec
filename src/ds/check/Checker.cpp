@@ -25,6 +25,42 @@ bool looksLikeArtefact(const std::string& name) {
   return std::regex_match(name, kArtefactBare) || std::regex_match(name, kArtefactWithRevision);
 }
 
+/// Parameters split at their top level commas: `map<string, int>` is one parameter.
+std::vector<std::string> splitParameters(const std::string& text) {
+  std::vector<std::string> out;
+  std::string item;
+  int depth = 0;
+  const auto flush = [&]() {
+    const auto b = item.find_first_not_of(' ');
+    const auto e = item.find_last_not_of(' ');
+    if (b != std::string::npos) out.push_back(item.substr(b, e - b + 1));
+    item.clear();
+  };
+  for (const char c : text) {
+    depth += c == '<' ? 1 : c == '>' ? -1 : 0;
+    if (c == ',' && depth == 0) {
+      flush();
+    } else {
+      item.push_back(c);
+    }
+  }
+  flush();
+  return out;
+}
+
+/// Primitives one converts to the other without saying so; any other pair of primitives is a mismatch.
+int primitiveFamily(const std::string& type) {
+  for (const char* t : {"int", "float", "double", "size_t", "char"}) {
+    if (type == t) return 1;
+  }
+  for (const char* t : {"string", "path"}) {
+    if (type == t) return 2;
+  }
+  if (type == "bool") return 3;
+  if (type == "none" || type == "void") return 4;
+  return 0;
+}
+
 std::vector<std::string> split(const std::string& text, char sep) {
   std::vector<std::string> out;
   std::stringstream in(text);
@@ -147,7 +183,10 @@ void Checker::run(const bind::Binder& binder) {
   for (const auto& r : binder.references()) resolveReference(r);
   unifyBehaviours();
   for (const auto& r : binder.references()) checkTemplateBound(r);
-  for (const auto& m : binder.messages()) checkMessage(m);
+  for (const auto& m : binder.messages()) {
+    checkMessage(m);
+    rememberResult(m);  // in order: a result exists for the messages after it
+  }
   checkLocals();
   for (const auto& e : binder.events()) checkEvent(e);
   checkOwnershipCycles();
@@ -342,12 +381,23 @@ void Checker::couple(const model::Entity& sequence, const model::Entity& type, b
 void Checker::call(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
   model_.relate({"calls", msg.id, op.id, message.location, ""});
   const auto params = op.fields.find("params");
-  const int expected = params == op.fields.end() || params->second.empty() ? 0 : static_cast<int>(split(params->second, ',').size());
+  const int expected = params == op.fields.end() ? 0 : static_cast<int>(splitParameters(params->second).size());
   if (expected != message.argc) {
     model_.report({"E-MSG-ARITY", "error",
                    op.id + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
                        std::to_string(message.argc) + " given",
                    message.location});
+  }
+  if (expected == message.argc) checkArguments(msg, op, message);
+  const auto returns = op.fields.find("returns");
+  const auto result = msg.fields.find("result");
+  if (returns != op.fields.end()) {
+    if (result != msg.fields.end() && primitiveFamily(returns->second) == 4) {
+      model_.report({"W-RESULT-NONE", "warning", op.id + " returns nothing, so '" + result->second + "' holds no value", message.location});
+    }
+    msg.fields["result_type"] = returns->second;
+    const model::Entity* owner = op.kind == model::Kind::Method ? model_.find(op.scope) : nullptr;
+    msg.fields["result_scope"] = owner ? owner->scope : op.scope;
   }
   // a message to an operation with a behaviour expands to it (B5): derived, never written
   if (const model::Entity* child = model_.find(op.id + "::sequence")) {
@@ -382,38 +432,22 @@ void Checker::checkMessage(const bind::Message& message) {
       return;
     }
   }
-  // the participant: self, an attribute of the class, a parameter of the method or function, or a local (B3)
+  // the participant: self, or a name of the behaviour's context (B3)
   std::string typeId;
   bool transient = false;
   if (message.to == "self") {
     typeId = cls->id;
-  } else if (const model::Entity* attribute = cls ? model_.find(cls->id + "::" + message.to) : nullptr) {
-    const auto type = attribute->fields.find("type");
-    typeId = type == attribute->fields.end() ? "" : resolveTypeText(type->second, cls->scope);
   } else {
-    bool found = false;
-    if (subject->kind == model::Kind::Method || function) {
-      const auto params = subject->fields.find("params");
-      if (params != subject->fields.end()) {
-        for (const auto& p : split(params->second, ',')) {
-          const auto colon = p.find(':');
-          if (colon == std::string::npos || p.substr(0, colon) != message.to) continue;
-          typeId = resolveTypeText(p.substr(colon + 1).substr(p.substr(colon + 1).find_first_not_of(' ')), home);
-          found = true;
-        }
-      }
+    std::pair<std::string, std::string> value;
+    if (!typeOfName(*seq, cls, *subject, message.to, &value, &transient)) {
+      const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
+      model_.report({"W-PARTICIPANT-UNDECLARED", "warning",
+                     "'" + message.to + "' is neither " + context + subject->name + ", a local of " + seq->name +
+                         " nor the result of an earlier message",
+                     message.location});
+      return;
     }
-    if (!found) {
-      const auto local = seq->fields.find("local." + message.to);
-      if (local == seq->fields.end()) {
-        const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
-        model_.report({"W-PARTICIPANT-UNDECLARED", "warning",
-                       "'" + message.to + "' is neither " + context + subject->name + " nor a local of " + seq->name, message.location});
-        return;
-      }
-      typeId = resolveTypeText(local->second, seq->scope);
-      transient = true;
-    }
+    typeId = value.first.empty() ? "" : resolveTypeText(value.first, value.second);
   }
   if (typeId.empty()) return;  // a primitive or an unknown spelling: nothing to check
   const model::Entity* type = model_.find(typeId);
@@ -428,6 +462,95 @@ void Checker::checkMessage(const bind::Message& message) {
     return;
   }
   call(*msg, *op, message);
+}
+
+bool Checker::typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject, const std::string& name,
+                         std::pair<std::string, std::string>* value, bool* transient) const {
+  const std::string home = cls ? cls->scope : subject.scope;
+  if (const model::Entity* attribute = cls ? model_.find(cls->id + "::" + name) : nullptr) {
+    const auto type = attribute->fields.find("type");
+    *value = {type == attribute->fields.end() ? "" : type->second, cls->scope};
+    return true;
+  }
+  const auto params = subject.fields.find("params");
+  if (params != subject.fields.end()) {
+    for (const auto& p : splitParameters(params->second)) {
+      const auto colon = p.find(':');
+      if (colon == std::string::npos || p.substr(0, colon) != name) continue;
+      const auto begin = p.find_first_not_of(' ', colon + 1);
+      *value = {begin == std::string::npos ? "" : p.substr(begin), home};
+      return true;
+    }
+  }
+  const auto local = sequence.fields.find("local." + name);
+  if (local != sequence.fields.end()) {
+    *value = {local->second, sequence.scope};
+    *transient = true;
+    return true;
+  }
+  const auto results = results_.find(sequence.id);
+  if (results != results_.end()) {
+    const auto result = results->second.find(name);
+    if (result != results->second.end()) {
+      *value = result->second;
+      *transient = true;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Checker::compatible(const std::pair<std::string, std::string>& argument, const std::pair<std::string, std::string>& parameter) const {
+  if (argument.first == parameter.first) return true;
+  const std::string argumentId = resolveTypeText(argument.first, argument.second);
+  const std::string parameterId = resolveTypeText(parameter.first, parameter.second);
+  const model::Entity* a = argumentId.empty() ? nullptr : model_.find(argumentId);
+  const model::Entity* p = parameterId.empty() ? nullptr : model_.find(parameterId);
+  // what is not declared, or lives outside the workspace, has no obligations (R6, R11)
+  if ((a && (a->expected || a->has("extern"))) || (p && (p->expected || p->has("extern")))) return true;
+  if (a && p) return derives(argumentId, parameterId);
+  const int af = primitiveFamily(argument.first);
+  const int pf = primitiveFamily(parameter.first);
+  if (a || p) return !(a ? pf : af);
+  return !af || !pf || af == pf;
+}
+
+void Checker::checkArguments(const model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+  const auto params = op.fields.find("params");
+  const auto args = msg.fields.find("args");
+  if (params == op.fields.end() || args == msg.fields.end()) return;
+  const model::Entity* seq = model_.find(current(message.sequence));
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = seq ? subjectClass(*seq, &subject) : nullptr;
+  if (!subject) return;
+  const std::vector<std::string> parameters = splitParameters(params->second);
+  const std::vector<std::string> arguments = splitParameters(args->second);
+  const model::Entity* owner = op.kind == model::Kind::Method ? model_.find(op.scope) : nullptr;
+  const std::string scope = owner ? owner->scope : op.scope;
+  for (size_t i = 0; i < parameters.size() && i < arguments.size(); ++i) {
+    const auto colon = parameters[i].find(':');
+    if (colon == std::string::npos) continue;  // a parameter with no type
+    std::pair<std::string, std::string> argument;
+    bool transient = false;
+    if (!typeOfName(*seq, cls, *subject, arguments[i], &argument, &transient) || argument.first.empty()) continue;
+    const auto begin = parameters[i].find_first_not_of(' ', colon + 1);
+    const std::pair<std::string, std::string> parameter{begin == std::string::npos ? "" : parameters[i].substr(begin), scope};
+    if (parameter.first.empty() || compatible(argument, parameter)) continue;
+    model_.report({"W-ARG-TYPE", "warning", op.id + " takes " + parameters[i] + ", and '" + arguments[i] + "' is " + argument.first,
+                   message.location});
+  }
+}
+
+void Checker::rememberResult(const bind::Message& message) {
+  const model::Entity* seq = model_.find(current(message.sequence));
+  const model::Entity* msg = model_.find(current(message.message));
+  if (!seq || !msg) return;
+  const auto result = msg->fields.find("result");
+  if (result == msg->fields.end()) return;
+  const auto type = msg->fields.find("result_type");
+  const auto scope = msg->fields.find("result_scope");
+  // a call that resolved to nothing leaves a value of unknown type: the name exists, the finding was given
+  results_[seq->id][result->second] = {type == msg->fields.end() ? "" : type->second, scope == msg->fields.end() ? "" : scope->second};
 }
 
 void Checker::checkLocals() {

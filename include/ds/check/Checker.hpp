@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "ds/bind/Binder.hpp"
 #include "ds/model/Model.hpp"
@@ -47,12 +48,20 @@ class Checker {
   void couple(const model::Entity& sequence, const model::Entity& type, bool transient);
   /// A message that reached its operation: the call, its arity, and its expansion (B5).
   void call(model::Entity& msg, const model::Entity& op, const bind::Message& message);
+  /// The type a name has in a behaviour: attribute, parameter, local or an earlier result (B3). A value is
+  /// a pair: the type as written and the scope that resolves it; an empty type is an unknown one.
+  bool typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject, const std::string& name,
+                  std::pair<std::string, std::string>* value, bool* transient) const;
+  void checkArguments(const model::Entity& msg, const model::Entity& op, const bind::Message& message);
+  bool compatible(const std::pair<std::string, std::string>& argument, const std::pair<std::string, std::string>& parameter) const;
+  void rememberResult(const bind::Message& message);
   void checkTemplateBound(const bind::Reference& reference);
   void checkOwnershipCycles();
   void classify();
 
   model::Model& model_;
   std::set<std::string> reported_;
+  std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>> results_;  ///< per behaviour, the results so far
 };
 
 }  // namespace check
