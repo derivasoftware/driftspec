@@ -8,7 +8,7 @@ diagram CL_Diag {
   include: ds@ds::module_b::*
   exclude: ds@ds::module_b::module_c
   show: contracts, requirements
-  layout:
+  layout:                          // ! W-FIELD-UNKNOWN: ds lays diagrams out itself, a diagram has no layout field
     direction: top-down
     group: lsp
 }

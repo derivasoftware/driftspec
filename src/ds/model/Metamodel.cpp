@@ -1,0 +1,269 @@
+#include "ds/model/Metamodel.hpp"
+
+#include <stdexcept>
+
+namespace ds {
+namespace model {
+
+namespace {
+
+FieldSpec written(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Written, meaning}; }
+FieldSpec syntax(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Syntax, meaning}; }
+FieldSpec derived(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Derived, meaning}; }
+
+// The fields every artefact carries (REQ-00045-1).
+std::vector<FieldSpec> artefact() {
+  return {
+      written("title", FieldType::Text, "one sentence that names it"), written("text", FieldType::Text, "what it says, in full"),
+      written("rationale", FieldType::Text, "why it is so"),           written("status", FieldType::Status, "draft, approved or obsolete"),
+      written("tags", FieldType::Names, "words to find it by"),        written("owner", FieldType::Name, "who answers for it")};
+}
+
+std::vector<FieldSpec> plus(std::vector<FieldSpec> base, const std::vector<FieldSpec>& more) {
+  base.insert(base.end(), more.begin(), more.end());
+  return base;
+}
+
+const FieldSpec kVisibility = syntax("visibility", FieldType::Name, "- when private to its parent, + otherwise");
+const FieldSpec kParams = syntax("params", FieldType::Params, "the parameters, name: type");
+const FieldSpec kReturns = syntax("returns", FieldType::Type, "what it gives back");
+const FieldSpec kNote = written("note", FieldType::Text, "a remark kept with the declaration");
+const FieldSpec kContract = written("contract.*", FieldType::Text, "a pre- or postcondition, numbered in order");
+
+std::vector<KindSpec> build() {
+  const Kind P = Kind::Package, M = Kind::Module, Cl = Kind::Class, Rq = Kind::Requirement;
+  std::vector<KindSpec> k;
+  k.push_back({P,
+               "a namespace of the system; packages nest and reopen",
+               {written("title", FieldType::Text, "what the package is"), written("owner", FieldType::Name, "who answers for it")},
+               {},
+               {P},
+               true});
+  k.push_back({M, "a unit of the design inside a package; modules nest and reopen", {kVisibility}, {"extern"}, {P, M}});
+  k.push_back({Rq,
+               "what the system or a module promises",
+               plus(artefact(), {written("parent", FieldType::Name, "ignored: nesting or @refines say it (W-PARENT-IGNORED)")}),
+               {"extension"},
+               {P, M}});
+  k.push_back(
+      {Kind::Verification,
+       "how a requirement or a constraint is proved",
+       plus(artefact(),
+            {written("method", FieldType::Name, "test, review, analysis or inspection"),
+             written("tests", FieldType::Names, "the tests that prove it, file::test"),
+             written("test", FieldType::Text, "one test that proves it"), written("evidence", FieldType::Text, "what was observed"),
+             written("level", FieldType::Name, "unit, integration or system"), written("precondition", FieldType::Text, "the state before"),
+             written("postcondition", FieldType::Text, "the state after")}),
+       {},
+       {P, M}});
+  k.push_back({Kind::Constraint,
+               "a rule every instance of a category obeys",
+               plus(artefact(), {written("category", FieldType::Name, "the category it applies to"),
+                                 written("bok", FieldType::Names, "the guides that ground it")}),
+               {},
+               {P, M}});
+  k.push_back({Kind::Interface,
+               "an external interface of a process or a library",
+               {written("kind", FieldType::Name, "cli, gui, http, ..."), written("transport", FieldType::Name, "how it travels"),
+                written("encoding", FieldType::Text, "how it is serialised")},
+               {},
+               {P}});
+  k.push_back({Kind::Operation,
+               "an operation an interface offers",
+               {kParams, kReturns, written("command", FieldType::Text, "how it is invoked"),
+                written("stdout", FieldType::Text, "what it writes out"), written("stderr", FieldType::Text, "what it writes as errors"),
+                written("exit *", FieldType::Name, "the scenario each exit code stands for")},
+               {},
+               {Kind::Interface}});
+  k.push_back({Kind::View, "a state of an interface's navigation", {written("text", FieldType::Text, "what it shows")}, {}, {Kind::State}});
+  k.push_back(
+      {Cl,
+       "a class, a dataclass or an extern type",
+       {kVisibility, kNote, syntax("stereotypes", FieldType::Names, "written between guillemets"),
+        syntax("params", FieldType::Params, "the template parameters"), syntax("operators", FieldType::Names, "the operators it declares"),
+        syntax("bound.*", FieldType::Type, "the bound of a template parameter")},
+       {"abstract", "dataclass", "extern", "extension"},
+       {P, M}});
+  k.push_back({Kind::Enum, "a closed set of values", {kVisibility, syntax("values", FieldType::Names, "its values")}, {}, {P, M}});
+  k.push_back({Kind::Function, "a free function of a module", {kParams, kReturns, kVisibility, kNote, kContract}, {"extern"}, {P, M}});
+  k.push_back({Kind::Method,
+               "an operation of a class",
+               {kParams, kReturns, kVisibility, kNote, kContract},
+               {"abstract", "static", "const", "constructor"},
+               {Cl}});
+  k.push_back({Kind::Attribute,
+               "a field of a class",
+               {syntax("type", FieldType::Type, "its type"), kVisibility, syntax("default", FieldType::Text, "its initial value")},
+               {"owns", "refs", "shares"},
+               {Cl}});
+  k.push_back({Kind::Operator, "an operator of a class", {syntax("symbol", FieldType::Name, "the operator"), kParams, kReturns}, {}, {Cl}});
+  k.push_back({Kind::Sequence,
+               "the behaviour of an operation, a function or a class, as messages in order",
+               {syntax("subject", FieldType::Name, "whose behaviour it is"),
+                syntax("scenario", FieldType::Name, "the scenario, when written apart"),
+                syntax("local.*", FieldType::Type, "a local and its type")},
+               {},
+               {P, M}});
+  k.push_back(
+      {Kind::Message,
+       "one call of a sequence",
+       {syntax("from", FieldType::Name, "who sends it"), syntax("to", FieldType::Name, "who receives it"),
+        syntax("op", FieldType::Name, "the operation called"), syntax("args", FieldType::Names, "the arguments"),
+        syntax("argc", FieldType::Number, "how many arguments"), syntax("order", FieldType::Number, "its place in the sequence"),
+        syntax("result", FieldType::Name, "the value it produces"), syntax("return", FieldType::Text, "what a return gives back"),
+        syntax("scenario", FieldType::Name, "the scenario of the callee it follows"),
+        syntax("frame", FieldType::Name, "the innermost frame around it"), derived("type", FieldType::Type, "the type of its target"),
+        derived("result_type", FieldType::Type, "the type of its result"),
+        derived("result_scope", FieldType::Name, "where that type resolves"),
+        derived("expands", FieldType::Name, "the sequence it expands to"),
+        derived("expands-path", FieldType::Names, "the path through that sequence")},
+       {},
+       {Kind::Sequence}});
+  k.push_back({Kind::Frame,
+               "a loop, alt or opt around messages",
+               {syntax("kind", FieldType::Name, "loop, alt or opt"), syntax("condition", FieldType::Text, "its guard, as prose"),
+                syntax("at", FieldType::Number, "the order where it opens"), syntax("first", FieldType::Name, "its first message"),
+                syntax("last", FieldType::Name, "its last message"), syntax("parent", FieldType::Name, "the frame around it"),
+                syntax("scenario", FieldType::Name, "the scenario its branch names"),
+                syntax("else", FieldType::Number, "where its else branch begins"),
+                syntax("else-scenario", FieldType::Name, "the scenario its else branch names")},
+               {},
+               {Kind::Sequence}});
+  k.push_back({Kind::State,
+               "the state machine of a class or the navigation of an interface",
+               {syntax("initial", FieldType::Name, "the initial state"), syntax("transitions", FieldType::Text, "its transitions")},
+               {},
+               {P, M}});
+  k.push_back(
+      {Kind::Diagram,
+       "a view asked of the model",
+       {written("kind", FieldType::Name, "class, sequence, state, requirement or interface"),
+        written("include", FieldType::Patterns, "what it shows"), written("exclude", FieldType::Patterns, "what it leaves out"),
+        written("open", FieldType::Patterns, "the boxes it closes, lifting their edges"),
+        written("depth", FieldType::Number, "how deep a sequence expands, or *"), written("show", FieldType::Names, "the extras it draws"),
+        written("hide", FieldType::Names, "the compartments it leaves out"),
+        written("neighbours", FieldType::Number, "how many steps of neighbours it adds"),
+        written("level", FieldType::Name, "the level of the verifications it shows")},
+       {},
+       {},
+       true});
+  return k;
+}
+
+std::vector<RelationSpec> buildRelations() {
+  const Kind P = Kind::Package, M = Kind::Module, Rq = Kind::Requirement, V = Kind::Verification, Cs = Kind::Constraint;
+  const Kind I = Kind::Interface, Op = Kind::Operation, Vw = Kind::View, Cl = Kind::Class, E = Kind::Enum, F = Kind::Function;
+  const Kind Me = Kind::Method, A = Kind::Attribute, O = Kind::Operator, S = Kind::Sequence, Ms = Kind::Message, Fr = Kind::Frame;
+  const Kind St = Kind::State;
+  return {
+      {"contains", "the parent holds the child", {P, M, Cl, I, S, St}, {P, M, Cl, E, F, Me, A, O, Op, S, Ms, Fr, Vw}},
+      {"exposes", "a package offers an interface", {P}, {I}},
+      {"requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S}, {Rq}},
+      {"constrained-by", "the entity obeys a constraint", {P, M, Cl, F, Me, I, Op, Vw}, {Cs}},
+      {"refines", "a requirement details another", {Rq}, {Rq}},
+      {"verifies", "a verification proves a requirement or a constraint", {V}, {Rq, Cs}},
+      {"about", "an artefact concerns the scope it is declared in", {Rq, V, Cs}, {}},
+      {"realises", "the entity carries out an interface", {Cl, V}, {I}},
+      {"exercised-by", "a behaviour is run by a verification", {S}, {V}},
+      {"inherits", "a class derives from another", {Cl}, {Cl}},
+      {"bounded-by", "a template parameter is bounded by a class", {Cl}, {Cl}},
+      {"owns", "an attribute owns its value", {A}, {Cl, E}},
+      {"refs", "an attribute refers to a value it does not own", {A}, {Cl, E}},
+      {"shares", "an attribute shares ownership of its value", {A}, {Cl, E}},
+      {"uses", "the entity names a type", {A, F, Me, Op, O, S}, {Cl, E}},
+      {"behaviour-of", "a sequence or a state machine is the behaviour of its subject", {S, St}, {Cl, F, Me, Op, I}},
+      {"calls", "a message calls an operation", {Ms}, {F, Me, Op}},
+      {"expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}},
+      {"couples-transient", "a behaviour touches a type for the length of a call", {S}, {Cl, E, F}},
+      {"couples-structural", "a behaviour reaches a type through an attribute", {S}, {Cl, E}},
+      {"on", "a transition fires on an operation", {St}, {Me, Op}},
+      {"does", "a transition runs an operation", {St}, {Me, Op}},
+      {"refers", "an annotation the language gives no meaning to", {}, {}},
+  };
+}
+
+bool among(const std::vector<Kind>& kinds, Kind kind) {
+  if (kinds.empty()) return true;
+  for (Kind k : kinds) {
+    if (k == kind) return true;
+  }
+  return false;
+}
+
+bool matches(const std::string& name, const std::string& key) {
+  if (!name.empty() && name.back() == '*')
+    return key.compare(0, name.size() - 1, name, 0, name.size() - 1) == 0 && key.size() >= name.size();
+  return name == key;
+}
+
+}  // namespace
+
+const char* fieldTypeName(FieldType type) {
+  switch (type) {
+    case FieldType::Text:
+      return "text";
+    case FieldType::Name:
+      return "name";
+    case FieldType::Names:
+      return "names";
+    case FieldType::Type:
+      return "type";
+    case FieldType::Params:
+      return "params";
+    case FieldType::Number:
+      return "number";
+    case FieldType::Status:
+      return "status";
+    case FieldType::Patterns:
+      return "patterns";
+  }
+  return "text";
+}
+
+const char* fieldSourceName(FieldSource source) {
+  switch (source) {
+    case FieldSource::Written:
+      return "written";
+    case FieldSource::Syntax:
+      return "syntax";
+    case FieldSource::Derived:
+      return "derived";
+  }
+  return "written";
+}
+
+const std::vector<KindSpec>& kinds() {
+  static const std::vector<KindSpec> all = build();
+  return all;
+}
+
+const std::vector<RelationSpec>& relations() {
+  static const std::vector<RelationSpec> all = buildRelations();
+  return all;
+}
+
+const KindSpec& specOf(Kind kind) {
+  for (const auto& k : kinds()) {
+    if (k.kind == kind) return k;
+  }
+  throw std::logic_error(std::string("the metamodel does not declare ") + kindName(kind));
+}
+
+const FieldSpec* fieldOf(Kind kind, const std::string& key) {
+  for (const auto& f : specOf(kind).fields) {
+    if (matches(f.name, key)) return &f;
+  }
+  return nullptr;
+}
+
+const RelationSpec* relationOf(const std::string& kind) {
+  for (const auto& r : relations()) {
+    if (r.kind == kind) return &r;
+  }
+  return nullptr;
+}
+
+bool joins(const RelationSpec& relation, Kind from, Kind to) { return among(relation.from, from) && among(relation.to, to); }
+
+}  // namespace model
+}  // namespace ds

@@ -81,6 +81,68 @@ package driftspec@ds {
       @requirement REQ-00065-1
     }
 
+    // ---- the metamodel (REQ-00066-1): the language declared once ----
+    enum FieldType {                         // how to read a field's text
+      @requirement REQ-00066-1
+      Text, Name, Names, Type, Params, Number, Status, Patterns
+    }
+
+    enum FieldSource {                       // who sets a field: the author, the syntax, or the checker
+      @requirement REQ-00066-1
+      Written, Syntax, Derived
+    }
+
+    dataclass FieldSpec {                    // one field of a kind; a name ending in * is a family
+      @requirement REQ-00066-1
+      + name: std::string
+      + type: FieldType
+      + source: FieldSource
+      + meaning: std::string
+    }
+
+    dataclass KindSpec {                     // one kind: its fields, the flags it takes, what it may be declared inside
+      @requirement REQ-00066-1
+      + kind: Kind
+      + meaning: std::string
+      + fields: std::vector<FieldSpec>
+      + flags: std::vector<std::string>
+      + parents: std::vector<Kind>
+      + top: bool
+    }
+
+    dataclass RelationSpec {                 // one relation and the kinds it may join; no ends is any kind
+      @requirement REQ-00066-1
+      + kind: std::string
+      + meaning: std::string
+      + from: std::vector<Kind>
+      + to: std::vector<Kind>
+    }
+
+    function kinds() -> std::vector<KindSpec> {
+      @requirement REQ-00066-1
+    }
+    function relations() -> std::vector<RelationSpec> {
+      @requirement REQ-00066-1
+    }
+    function specOf(kind: Kind) -> KindSpec {
+      @requirement REQ-00066-1
+    }
+    function fieldOf(kind: Kind, key: std::string) -> FieldSpec {
+      @requirement REQ-00066-1
+    }
+    function relationOf(kind: std::string) -> RelationSpec {
+      @requirement REQ-00066-1
+    }
+    function joins(relation: RelationSpec, from: Kind, to: Kind) -> bool {
+      @requirement REQ-00066-1
+    }
+    function fieldTypeName(type: FieldType) -> std::string {
+      @requirement REQ-00066-1
+    }
+    function fieldSourceName(source: FieldSource) -> std::string {
+      @requirement REQ-00066-1
+    }
+
     enum Kind {
       @requirement REQ-00001-1
       Package, Module, Requirement, Verification, Interface, Operation, View, Constraint, Class, Enum, Function, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram

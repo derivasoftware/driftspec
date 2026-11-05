@@ -2,12 +2,44 @@
 
 #include <nlohmann/json.hpp>
 
+#include "ds/model/Metamodel.hpp"
+
 namespace ds {
 namespace exporter {
 
 namespace {
 
 nlohmann::json locationJson(const model::Location& l) { return {{"file", l.file}, {"line", l.line}, {"column", l.column}}; }
+
+nlohmann::json kindNames(const std::vector<model::Kind>& kinds) {
+  nlohmann::json out = nlohmann::json::array();
+  for (model::Kind k : kinds) out.push_back(model::kindName(k));
+  return out;
+}
+
+// the language the model is written in: every kind with its fields, flags and parents, every relation with its ends
+nlohmann::json metamodelJson() {
+  nlohmann::json out;
+  out["kinds"] = nlohmann::json::array();
+  for (const auto& k : model::kinds()) {
+    nlohmann::json fields = nlohmann::json::array();
+    for (const auto& f : k.fields) {
+      fields.push_back(
+          {{"name", f.name}, {"type", model::fieldTypeName(f.type)}, {"source", model::fieldSourceName(f.source)}, {"meaning", f.meaning}});
+    }
+    out["kinds"].push_back({{"kind", model::kindName(k.kind)},
+                            {"meaning", k.meaning},
+                            {"fields", fields},
+                            {"flags", k.flags},
+                            {"parents", kindNames(k.parents)},
+                            {"top", k.top}});
+  }
+  out["relations"] = nlohmann::json::array();
+  for (const auto& r : model::relations()) {
+    out["relations"].push_back({{"kind", r.kind}, {"meaning", r.meaning}, {"from", kindNames(r.from)}, {"to", kindNames(r.to)}});
+  }
+  return out;
+}
 
 }  // namespace
 
@@ -35,6 +67,7 @@ std::string JsonExport::render(const model::Model& model, bool pretty) const {
   for (const auto& f : model.findings()) {
     out["findings"].push_back({{"code", f.code}, {"severity", f.severity}, {"message", f.message}, {"location", locationJson(f.location)}});
   }
+  out["metamodel"] = metamodelJson();
   return pretty ? out.dump(2) : out.dump();
 }
 

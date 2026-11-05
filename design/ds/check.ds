@@ -51,6 +51,9 @@ package driftspec@ds {
       - checkExtensions() -> void {
         @constraint CST-00003-1
       }
+      - checkFields() -> void {
+        @requirement REQ-00067-1
+      }
       - unifyBehaviours() -> void {
         @requirement REQ-00035-1
       }
@@ -160,6 +163,7 @@ package driftspec@ds {
       -> classify()
       -> checkArtefacts()
       -> checkExtensions()
+      -> checkFields()
     }
 
     // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named
