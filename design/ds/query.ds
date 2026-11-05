@@ -67,6 +67,150 @@ package driftspec@ds {
       + static text(answers: std::vector<Answer>) -> std::string
       + static json(answers: std::vector<Answer>) -> std::string
     }
+
+    // The first question that matches answers; the order is the code's.
+    sequence Query::ask {
+      opt question is diagrams {
+        -> diagrams() -> answers
+        return answers
+      }
+      opt question is entities {
+        -> entities(subject) -> answers
+        return answers
+      }
+      opt question is relations {
+        -> relations(subject) -> answers
+        return answers
+      }
+      opt question is artefacts {
+        -> artefacts(subject) -> answers
+        return answers
+      }
+      opt question is behaviours {
+        -> behaviours(subject) -> answers
+        return answers
+      }
+      opt question is shows {
+        -> shows(subject) -> answers
+        return answers
+      }
+      opt question is findings {
+        -> findings(subject) -> answers
+        return answers
+      }
+    }
+
+    // No question matches: one answer of kind error, built in the return itself.
+    sequence Query::ask / unknown {
+      return error
+    }
+
+    sequence Query::diagrams {
+      local out: std::vector<Answer>
+      self -> model_.entities() -> held
+      loop each entity held {
+        opt it is a diagram {
+        }
+      }
+      return out
+    }
+
+    sequence Query::entities {
+      self -> model_.find(scope) -> package
+      local out: std::vector<Answer>
+      self -> model_.entities() -> held
+      loop each entity held {
+        opt in the scope, written with @ when it names a package, and not expected {
+        }
+      }
+      return out
+    }
+
+    sequence Query::relations {
+      local out: std::vector<Answer>
+      self -> model_.relations() -> held
+      loop each relation held {
+        alt it starts at id {
+        } else {
+          opt it ends at id {
+          }
+        }
+      }
+      return out
+    }
+
+    sequence Query::artefacts {
+      local out: std::vector<Answer>
+      self -> model_.relations() -> held
+      loop each relation held {
+        opt it starts at id and realises, requires or is constrained by {
+          self -> model_.relations() -> others
+          loop each other relation {
+            opt it verifies the same target {
+            }
+          }
+        }
+      }
+      return out
+    }
+
+    sequence Query::behaviours {
+      local out: std::vector<Answer>
+      self -> model_.relations() -> held
+      loop each relation held {
+        opt a behaviour-of that ends at id {
+          self -> model_.find(relation.from) -> behaviour
+        }
+      }
+      return out
+    }
+
+    // The projection answers. IrDocument::parse is static, so the document the loop
+    // walks is not told, nor its bundled().
+    sequence Query::shows {
+      local out: std::vector<Answer>
+      local ir: render::IrExport
+      self -> ir.render(diagram, false) -> document
+      loop each node of the bundled document {
+        opt it is not a note {
+          self -> model_.find(node.id) -> entity
+        }
+      }
+      return out
+    }
+
+    // The projection gives back nothing: one answer of kind error, built in the return itself.
+    sequence Query::shows / no-such-diagram {
+      local out: std::vector<Answer>
+      local ir: render::IrExport
+      self -> ir.render(diagram, false) -> document
+      return error
+    }
+
+    sequence Query::findings {
+      local out: std::vector<Answer>
+      self -> model_.findings() -> held
+      loop each finding held {
+        opt no file was asked, or its file ends in the one asked {
+        }
+      }
+      return out
+    }
+
+    sequence Query::text {
+      local out: std::string
+      loop each answer {
+      }
+      return out
+    }
+
+    // The array is an nlohmann::json, a type the design does not know, and what comes
+    // back is its dump(): both go untold.
+    sequence Query::json {
+      loop each answer {
+      }
+      return document
+    }
   }
 }
 

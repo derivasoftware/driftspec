@@ -131,6 +131,30 @@ package driftspec@ds {
       + bundled() -> IrDocument
     }
 
+    // All of it is JSON reads and field writes, so only what it creates can be told.
+    sequence IrDocument::parse {
+      local doc: IrDocument
+      loop each node of the JSON {
+        local node: IrNode
+      }
+      loop each edge of the JSON {
+        local edge: IrEdge
+      }
+      return doc
+    }
+
+    sequence IrDocument::bundled {
+      local out: IrDocument                  // title, notice and nodes copied
+      loop each edge {
+        alt same ends, kind, dash and link as an earlier edge {
+          // its label and title are joined to the first one's, a line each
+        } else {
+          // kept as it is
+        }
+      }
+      return out
+    }
+
     class IrExport {                         // the projection: selects, decides what to print, writes the IR
       @requirement REQ-00006-1
       - refs model_: model::Model
@@ -158,6 +182,95 @@ package driftspec@ds {
       - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00050-1
       }
+    }
+
+    sequence IrExport::diagrams {
+      local out: std::vector<std::string>
+      self -> model_.entities() -> entities
+      return out
+    }
+
+    sequence IrExport::select {
+      local selected: std::set<std::string>
+      loop each pattern of include {
+        self -> model_.entities() -> entities
+        loop each entity {
+          opt it is drawable and not expected {
+            -> matches(pattern, entity) -> matched
+          }
+        }
+      }
+      loop each pattern of exclude {
+        loop each selected id {
+          self -> model_.find(id) -> entity
+          -> matches(pattern, entity) -> matched
+        }
+      }
+      return selected
+    }
+
+    // The kind written in the diagram picks the scenario. The default is a class diagram
+    // with no open: field, told by its main steps. What comes back is the JSON dumped,
+    // so a name for it, not a checked value.
+    sequence IrExport::render {
+      self -> model_.find(diagramId) -> diagram
+      -> select(diagram) -> selected
+      opt neighbours is written {
+        loop each step {
+          self -> model_.relations() -> relations
+        }
+      }
+      loop each selected id {
+        self -> model_.find(id) -> entity
+      }
+      loop each container {
+        self -> model_.find(id) -> container
+      }
+      loop each selected box {
+        self -> model_.find(id) -> entity
+        opt it is a class or an interface {
+          self -> model_.entities() -> entities
+        }
+        opt requirements are shown {
+          self -> model_.relations() -> relations
+        }
+      }
+      self -> model_.relations() -> relations
+      return ir
+    }
+
+    // The same steps up to the edges, then the boxes close. Scenarios share nothing,
+    // so only the steps that matter here are repeated.
+    sequence IrExport::render / open-boxes {
+      self -> model_.find(diagramId) -> diagram
+      -> select(diagram) -> selected
+      self -> model_.relations() -> relations
+      self -> model_.relations() -> behaviourCoupling
+      -> closeBoxes(ir, open, pretty) -> closed
+      return closed
+    }
+
+    sequence IrExport::render / no-diagram {
+      self -> model_.find(diagramId) -> diagram
+      return ""
+    }
+
+    sequence IrExport::render / sequence-diagram {
+      self -> model_.find(diagramId) -> diagram
+      -> renderSequence(diagram, pretty) -> ir
+      return ir
+    }
+
+    sequence IrExport::render / requirement-diagram {
+      self -> model_.find(diagramId) -> diagram
+      -> renderRequirements(diagram, pretty) -> ir
+      return ir
+    }
+
+    sequence IrExport::render / state-diagram {
+      self -> model_.find(diagramId) -> diagram
+      -> renderState(diagram, pretty) -> ir
+      return ir
     }
 
     // ---- the layout: geometry the two drawings share ----
@@ -223,6 +336,37 @@ package driftspec@ds {
       @requirement REQ-00007-1
       + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // also over a layout already made
       + cells(doc: IrDocument, maxWidth: int) -> std::string
+    }
+
+    // The drawing happens in what cannot be told here: the free function layout, the
+    // second render over a layout, the helpers of the source files and the Grid they
+    // fill. So only the bundling shows, and the drawing comes back as a name.
+    sequence Svg::render {
+      self -> doc.bundled() -> bundled
+      return drawing
+    }
+
+    sequence Svg::render / sequence-document {   // a node of the document is a lifeline
+      return drawing
+    }
+
+    sequence Text::render {
+      self -> doc.bundled() -> bundled
+      return drawing
+    }
+
+    sequence Text::render / sequence-document {  // a node of the document is a lifeline
+      return drawing
+    }
+
+    sequence Text::cells {
+      self -> doc.bundled() -> bundled
+      return grid
+    }
+
+    sequence Text::cells / sequence-document {   // bundled all the same, and not used
+      self -> doc.bundled() -> bundled
+      return grid
     }
   }
 }
