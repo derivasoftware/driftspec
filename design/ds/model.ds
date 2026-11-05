@@ -94,6 +94,15 @@ package driftspec@ds {
       + has(flag: std::string) -> bool
     }
 
+    sequence Entity::has {
+      loop each flag held {
+        opt it is the flag asked {
+          return true
+        }
+      }
+      return false
+    }
+
     dataclass Relation {                     // a typed relation between two identities
       @requirement REQ-00001-1
       + kind: std::string
@@ -127,6 +136,72 @@ package driftspec@ds {
       + entities() -> std::map<std::string, Entity>
       + relations() -> std::vector<Relation>
       + findings() -> std::vector<Finding>
+    }
+
+    // An identity not held: the map keeps a copy of the entity and that copy comes back.
+    sequence Model::declare {
+      return entity
+    }
+
+    // A declaration of what was only expected takes its place.
+    sequence Model::declare / replaces-expected {
+      return existing
+    }
+
+    // A second reference to something expected, or to something declared: nothing changes.
+    sequence Model::declare / referenced-again {
+      return existing
+    }
+
+    // A package or a module opened again: the first one comes back, with no finding.
+    sequence Model::declare / reopened {
+      return existing
+    }
+
+    sequence Model::declare / duplicate {
+      -> report(finding)
+      return existing
+    }
+
+    sequence Model::rename {
+      -> find(to) -> other
+      // an expected node at `to` is erased; the entity moves under its new identity
+      loop each entity held {
+        alt its identity begins with from {
+          // taken out, to go back in under the new identity
+        } else {
+          opt its scope is from {
+          }
+        }
+      }
+      loop each member taken out {
+      }
+      loop each relation held {
+        // both ends translated, by a lambda of this method
+      }
+      loop each entity held {
+        loop each field {
+          opt named expands or subject-of {
+            // translated by the same lambda
+          }
+        }
+      }
+      return true
+    }
+
+    sequence Model::rename / same {
+      return true
+    }
+
+    sequence Model::rename / unknown {
+      return false
+    }
+
+    // Another declared entity holds the new identity.
+    sequence Model::rename / refused {
+      -> find(to) -> other
+      -> report(finding)
+      return false
     }
   }
 }

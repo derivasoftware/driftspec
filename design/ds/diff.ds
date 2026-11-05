@@ -67,6 +67,114 @@ package driftspec@ds {
       + static marked(a: model::Model, b: model::Model, diff: DiffResult) -> model::Model
       + static report(diff: DiffResult) -> std::string
     }
+
+    // The helpers differences and shapeOf and the lambda referrers are left out: free
+    // functions and lambdas have no target. So a change added to out shows only in the
+    // condition around it.
+    sequence Diff::compare {
+      local out: DiffResult
+      self -> a.entities() -> before
+      loop each entity of a that is not expected {
+        self -> b.find(id) -> counterpart
+        opt it differs from its counterpart and is an artefact {
+          // out gets W-REVISION-STALE beside the change
+        }
+      }
+      self -> b.entities() -> after
+      loop each entity of b that is not expected {
+        self -> a.find(id) -> counterpart
+      }
+      loop each class removed from a {
+        loop each class added to b in the same scope and not yet matched {
+          // scored by shape and referrers; the best with 60 % of its members alike is the rename
+        }
+      }
+      loop each rename {
+        self -> a.entities() -> before
+        loop each member of the old class {
+          self -> b.find(newId) -> counterpart
+        }
+        self -> b.entities() -> after
+        loop each member of the new class {
+          self -> a.find(oldId) -> counterpart
+        }
+      }
+      self -> a.entities() -> before
+      loop each entity of a neither expected nor renamed {
+        self -> b.find(id) -> counterpart
+      }
+      self -> b.entities() -> after
+      loop each entity of b neither expected nor matched by a rename {
+        self -> a.find(id) -> counterpart
+      }
+      self -> a.relations() -> relationsBefore
+      self -> b.relations() -> relationsAfter
+      self -> a.relations() -> relationsBefore
+      loop each relation of a {
+        self -> a.find(source) -> sourceEntity
+      }
+      loop each relation key only in b {
+        self -> b.find(source) -> sourceEntity
+      }
+      return out
+    }
+
+    sequence Diff::marked {
+      local out: model::Model                // starts as a copy of b
+      self -> b.entities() -> entities
+      loop each entity of b the diff names {
+        self -> out.find(id) -> entity
+      }
+      loop each change that removed an entity {
+        self -> a.find(id) -> ghost
+        opt a has it {
+          self -> out.declare(ghost)
+        }
+      }
+      self -> out.relations() -> relations
+      local rebuilt: model::Model
+      self -> out.entities() -> entities
+      loop each entity of out {
+        self -> rebuilt.declare(entity)
+      }
+      self -> out.relations() -> relations
+      loop each relation of out {
+        self -> rebuilt.relate(relation)
+      }
+      self -> a.relations() -> relations
+      loop each relation of a {
+        opt the diff removed it {
+          self -> rebuilt.relate(relation)
+        }
+      }
+      self -> out.findings() -> findings
+      loop each finding of out {
+        self -> rebuilt.report(finding)
+      }
+      return rebuilt
+    }
+
+    // The text is built on a stream, so what comes back is a name for it, not a checked value.
+    sequence Diff::report {
+      self -> diff.empty() -> nothing
+      loop each scope with its changes {
+        loop each change of the scope {
+          // one line: its mark, its entity, its name, its detail
+        }
+      }
+      self -> diff.added() -> added
+      self -> diff.removed() -> removed
+      self -> diff.changed() -> changed
+      loop each finding of the diff {
+        // one line: where, code, message
+      }
+      return text
+    }
+
+    sequence Diff::report / no-change {
+      self -> diff.empty() -> nothing
+      return "no design change\n"
+    }
   }
 }
 
