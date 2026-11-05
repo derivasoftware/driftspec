@@ -103,7 +103,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "boundary"
+          "name": "interface"
         },
         {
           "type": "SYMBOL",
@@ -112,6 +112,14 @@
         {
           "type": "SYMBOL",
           "name": "module"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "sequence"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "state"
         }
       ]
     },
@@ -411,12 +419,12 @@
         }
       ]
     },
-    "boundary": {
+    "interface": {
       "type": "SEQ",
       "members": [
         {
           "type": "STRING",
-          "value": "boundary"
+          "value": "interface"
         },
         {
           "type": "FIELD",
@@ -492,6 +500,43 @@
                     "type": "SYMBOL",
                     "name": "type"
                   }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "{"
+                },
+                {
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "field"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "annotation"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "STRING",
+                  "value": "}"
                 }
               ]
             },
@@ -2224,7 +2269,52 @@
               },
               {
                 "type": "SYMBOL",
+                "name": "view"
+              },
+              {
+                "type": "SYMBOL",
                 "name": "transition"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "}"
+        }
+      ]
+    },
+    "view": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "view"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "name"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "{"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "field"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "annotation"
               }
             ]
           }
@@ -2397,6 +2487,22 @@
             "type": "SYMBOL",
             "name": "name"
           }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "code",
+              "content": {
+                "type": "SYMBOL",
+                "name": "number"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         },
         {
           "type": "STRING",

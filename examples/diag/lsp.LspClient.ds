@@ -8,7 +8,7 @@ package ds {
 
     class LspClient : AbstractClass {
       @requirement DS-0002-0
-      @boundary LSP          // this class realises the LSP boundary
+      @interface LSP          // this class realises the LSP interface
 
       + send(msg: int) -> bool {
         [abstract, noexcept]

@@ -190,6 +190,7 @@ void Checker::run(const bind::Binder& binder) {
   }
   checkLocals();
   for (const auto& e : binder.events()) checkEvent(e);
+  checkInterfaces();
   checkOwnershipCycles();
   classify();
   checkArtefacts();
@@ -362,13 +363,13 @@ const model::Entity* Checker::subjectClass(const model::Entity& sequence, const 
   *subject = s;
   if (s->kind == model::Kind::Method) return model_.find(s->scope);
   if (s->kind == model::Kind::Class) return s;
-  return nullptr;  // a function has no class: its context is its parameters and its module
+  return nullptr;  // a function or an interface's operation has no class: its context is its parameters and its scope
 }
 
 void Checker::couple(const model::Entity& sequence, const model::Entity& type, bool transient) {
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(sequence, &subject);
-  const bool function = subject && subject->kind == model::Kind::Function;
+  const bool function = subject && (subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation);
   if ((!cls && !function) || type.expected || type.has("extern")) return;
   const std::string home = cls ? cls->scope : subject->scope;
   if (type.scope == home || (cls && type.id == cls->id)) return;  // inside the module: cohesion, not coupling
@@ -423,7 +424,7 @@ void Checker::checkReturn(const bind::Message& message) {
   if (!seq || !msg) return;
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(*seq, &subject);
-  if (!subject || (subject->kind != model::Kind::Method && subject->kind != model::Kind::Function)) return;
+  if (!subject || subject->kind == model::Kind::Class || subject->kind == model::Kind::Operation) return;
   const auto returns = subject->fields.find("returns");
   if (returns == subject->fields.end()) return;  // declares no return: nothing to check against
   const std::string value = msg->fields.at("result");
@@ -458,7 +459,7 @@ void Checker::checkMessage(const bind::Message& message) {
   if (!seq || !msg) return;
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(*seq, &subject);
-  const bool function = subject && subject->kind == model::Kind::Function;
+  const bool function = subject && (subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation);
   if (!cls && !function) return;  // the subject waits for its declaration (R6)
   const std::string home = cls ? cls->scope : subject->scope;
   // a call with no target from a function, or one the class does not declare, is a function of the
@@ -600,6 +601,106 @@ void Checker::rememberResult(const bind::Message& message) {
   results_[seq->id][result->second] = {type == msg->fields.end() ? "" : type->second, scope == msg->fields.end() ? "" : scope->second};
 }
 
+std::string Checker::outcomeOf(const std::string& sequence, std::set<std::string>* seen) const {
+  if (!seen->insert(sequence).second) return "";
+  std::map<int, const model::Entity*> messages;
+  for (const auto& pair : model_.entities()) {
+    if (pair.second.kind != model::Kind::Message || pair.second.scope != sequence) continue;
+    messages[std::stoi(pair.second.fields.at("order"))] = &pair.second;
+  }
+  std::string wanted;  // the name of the result the behaviour returns; empty: its last call decides
+  for (auto it = messages.rbegin(); it != messages.rend(); ++it) {
+    const model::Entity& m = *it->second;
+    const auto result = m.fields.find("result");
+    if (m.fields.count("return")) {
+      const std::string value = result == m.fields.end() ? "" : result->second;
+      if (value.empty() || !(std::isdigit(static_cast<unsigned char>(value.front())) || value.front() == '-')) {
+        wanted = value;
+        continue;
+      }
+      return value;
+    }
+    if (!wanted.empty() && (result == m.fields.end() || result->second != wanted)) continue;
+    const auto expands = m.fields.find("expands");
+    return expands == m.fields.end() ? "" : outcomeOf(expands->second, seen);
+  }
+  return "";
+}
+
+void Checker::checkInterfaces() {
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.kind == model::Kind::State) {
+      const auto cut = e.id.rfind("::state");
+      const model::Entity* subject = cut == std::string::npos ? nullptr : model_.find(e.id.substr(0, cut));
+      if (subject && subject->kind == model::Kind::Interface) checkViews(e);
+    }
+    if (e.kind != model::Kind::Operation) continue;
+    const std::string behaviour = e.id + "::sequence";
+    if (!model_.find(behaviour)) {
+      model_.report({"W-OPERATION-NO-BEHAVIOUR", "warning", e.id + " has no sequence that says how it is handled", e.location});
+    }
+    for (const auto& field : e.fields) {
+      if (field.first.rfind("exit ", 0) != 0) continue;
+      const std::string code = field.first.substr(5);
+      const std::string id = field.second == "default" ? behaviour : behaviour + "/" + field.second;
+      if (!model_.find(id)) {
+        model_.report({"W-SCENARIO-UNDECLARED", "warning",
+                       e.id + " exits " + code + " on '" + field.second + "', and it has no such scenario", e.location});
+        continue;
+      }
+      std::set<std::string> seen;
+      const std::string outcome = outcomeOf(id, &seen);
+      if (!outcome.empty() && outcome != code) {
+        model_.report({"W-OUTCOME-MISMATCH", "warning",
+                       e.id + " promises exit " + code + " on '" + field.second + "', and that trace ends in " + outcome, e.location});
+      }
+    }
+  }
+}
+
+void Checker::checkViews(const model::Entity& state) {
+  std::set<std::string> views;
+  for (const auto& pair : model_.entities()) {
+    if (pair.second.kind == model::Kind::View && pair.second.scope == state.id) views.insert(pair.second.name);
+  }
+  if (views.empty()) return;  // the details of a view are optional: a bare machine asks nothing of them
+  std::map<std::string, std::set<std::string>> next;
+  const auto moves = state.fields.find("transitions");
+  if (moves != state.fields.end()) {
+    for (const auto& move : split(moves->second, ',')) {
+      const auto gt = move.find('>');
+      const std::string from = move.substr(0, gt);
+      const std::string to = move.substr(gt + 1);
+      for (const std::string& name : {from, to}) {
+        if (!views.count(name)) {
+          model_.report({"W-VIEW-UNDECLARED", "warning",
+                         "the navigation of " + state.name + " names '" + name + "', which is not one of its views", state.location});
+        }
+      }
+      if (from != to) next[from].insert(to);  // staying where you are is no way in or out
+    }
+  }
+  const auto initial = state.fields.find("initial");
+  std::set<std::string> reached;
+  std::vector<std::string> pending;
+  if (initial != state.fields.end()) pending.push_back(initial->second);
+  while (!pending.empty()) {
+    const std::string view = pending.back();
+    pending.pop_back();
+    if (!reached.insert(view).second) continue;
+    for (const auto& to : next[view]) pending.push_back(to);
+  }
+  for (const auto& view : views) {
+    const model::Entity* v = model_.find(state.id + "::" + view);
+    if (!reached.count(view)) {
+      model_.report({"W-VIEW-UNREACHABLE", "warning", "nothing leads to the view " + view + " of " + state.name, v->location});
+    } else if (views.size() > 1 && next[view].empty()) {
+      model_.report({"W-VIEW-NO-WAY-OUT", "warning", "nothing leaves the view " + view + " of " + state.name, v->location});
+    }
+  }
+}
+
 void Checker::checkLocals() {
   std::vector<std::pair<std::string, std::string>> locals;
   for (const auto& pair : model_.entities()) {
@@ -625,6 +726,7 @@ void Checker::checkEvent(const bind::Event& event) {
     model_.relate({event.action ? "does" : "on", current(event.state), target->id, event.location, ""});
     return;
   }
+  if (entity->kind == model::Kind::Interface) return;  // a jump with nothing behind it is a label of the navigation
   if (event.action) {
     model_.report({"W-ACTION-UNDECLARED", "warning",
                    "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});

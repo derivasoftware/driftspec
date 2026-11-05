@@ -222,40 +222,6 @@
     }
   },
   {
-    "type": "boundary",
-    "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "name",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "annotation",
-          "named": true
-        },
-        {
-          "type": "field",
-          "named": true
-        },
-        {
-          "type": "operation",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "class",
     "named": true,
     "fields": {
@@ -539,6 +505,16 @@
     "type": "field",
     "named": true,
     "fields": {
+      "code": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      },
       "key": {
         "multiple": false,
         "required": true,
@@ -635,6 +611,40 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "interface",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "operation",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1002,9 +1012,17 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
         {
           "type": "parameters",
           "named": true
@@ -1196,15 +1214,15 @@
           "named": true
         },
         {
-          "type": "boundary",
-          "named": true
-        },
-        {
           "type": "constraint",
           "named": true
         },
         {
           "type": "field",
+          "named": true
+        },
+        {
+          "type": "interface",
           "named": true
         },
         {
@@ -1217,6 +1235,14 @@
         },
         {
           "type": "requirement",
+          "named": true
+        },
+        {
+          "type": "sequence",
+          "named": true
+        },
+        {
+          "type": "state",
           "named": true
         },
         {
@@ -1525,6 +1551,10 @@
         {
           "type": "transition",
           "named": true
+        },
+        {
+          "type": "view",
+          "named": true
         }
       ]
     }
@@ -1698,6 +1728,36 @@
     }
   },
   {
+    "type": "view",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "visibility",
     "named": true,
     "fields": {}
@@ -1795,10 +1855,6 @@
     "named": true
   },
   {
-    "type": "boundary",
-    "named": false
-  },
-  {
     "type": "class",
     "named": false
   },
@@ -1853,6 +1909,10 @@
   },
   {
     "type": "initial",
+    "named": false
+  },
+  {
+    "type": "interface",
     "named": false
   },
   {
@@ -1953,6 +2013,10 @@
   },
   {
     "type": "verification",
+    "named": false
+  },
+  {
+    "type": "view",
     "named": false
   },
   {

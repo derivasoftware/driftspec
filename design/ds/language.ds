@@ -157,11 +157,25 @@ package driftspec@ds {
               tests/integration/ds/bind/test_packages.cpp::TestPackages.NestedPackagesAreContainersOfTheDrawing
           }
         }
-        requirement REQ-00020-1 {
+        requirement REQ-00020-2 {
           tags: language, hld
-          title: A package shall expose boundaries with their operations
-          text: boundary cli { operation check(dir: path) }. Boundaries of nested packages are not decided yet.
-          rationale: R3 of the diag corpus; deferred for inner boxes on 2026-10-26.
+          status: approved
+          title: A package shall declare the external interfaces of what it builds, with their kind and typed operations
+          text:
+            interface shell { kind: cli; operation buy(sku: string) -> int { exit 2: refused } }, at any
+            level of packages. The kind and the fields of an operation are data, not grammar, so a new
+            kind changes no syntax. Quality is a requirement or a constraint linked to the interface or
+            to an operation. Replaces boundary (DS-54): an interface of the high level design is the
+            external interface of a process, or of a library when it is binary.
+          rationale: Owner, 2026-11-05. The syntax is self-contained, with no other formats or parsers.
+          verification VER-00064-1 {
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceHoldsItsTypedOperationsAndTheirFields
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.RequirementsAndConstraintsLinkToAnInterfaceOrAnOperation
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceIsDrawnAsABoxWithItsOperations
+          }
         }
       }
     }
@@ -470,6 +484,47 @@ package driftspec@ds {
             tests:
               tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AReturnIsCheckedAgainstWhatTheOperationDeclares
               tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AReturnThatAgreesIsNotAFinding
+          }
+        }
+        requirement REQ-00060-1 {
+          tags: language, lld, sequence, interface
+          status: approved
+          title: An operation of an interface shall have a sequence, and each outcome it promises shall name a scenario whose trace ends in that value
+          text:
+            sequence shell::buy / refused goes down through the scenario each call names.
+            An operation with no sequence is W-OPERATION-NO-BEHAVIOUR, an outcome naming no
+            scenario W-SCENARIO-UNDECLARED, and one whose trace ends in another value
+            W-OUTCOME-MISMATCH. What cannot be told, a value that is not a literal at the end
+            of the trace, gives no finding.
+          rationale: DS-54. This is the link from the high level design to the low level one, and what keeps a promise such as exit 2 true.
+          verification VER-00065-1 {
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOperationIsTheSubjectOfItsSequenceAndItsTraceGoesDown
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOperationWithNoSequenceIsAFinding
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOutcomeThatNamesNoScenarioIsAFinding
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOutcomeIsCheckedAgainstTheValueItsTraceEndsIn
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.TheSequenceOfAnOperationIsDrawnDownThroughItsScenario
+          }
+        }
+        requirement REQ-00061-1 {
+          tags: language, lld, state, interface
+          status: approved
+          title: The state machine of an interface shall be its navigation, with views as its states, and shall report the views with no way in or out
+          text:
+            state web { view Home { text: ... } Home -> Done on buy }. A view holds free text and
+            the requirements and constraints that bind it, nothing that reinvents HTML. An event
+            that names an operation goes down to it; any other is a label. W-VIEW-UNDECLARED,
+            W-VIEW-UNREACHABLE and W-VIEW-NO-WAY-OUT. Views are optional: a bare machine asks nothing.
+          rationale: Owner, 2026-11-05. In a graphical interface the navigation is the design; the look is a requirement or a constraint.
+          verification VER-00066-1 {
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AViewIsAStateWithItsTextAndWhatBindsIt
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnEventThatNamesAnOperationGoesDownAndAnyOtherIsALabel
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.TheNavigationReportsViewsWithNoWayInOrOut
           }
         }
         requirement REQ-00058-1 {

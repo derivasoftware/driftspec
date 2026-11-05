@@ -1,0 +1,7 @@
+package ds {
+
+  interface LSP {
+    kind: http
+    operation publishDiagnostics(findings) -> none
+  }
+}

@@ -57,6 +57,10 @@ class Checker {
   void rememberResult(const bind::Message& message);
   void expand(model::Entity& msg, const model::Entity& op, const bind::Message& message);
   void checkReturn(const bind::Message& message);
+  void checkInterfaces();
+  void checkViews(const model::Entity& state);
+  /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
+  std::string outcomeOf(const std::string& sequence, std::set<std::string>* seen) const;
   void checkTemplateBound(const bind::Reference& reference);
   void checkOwnershipCycles();
   void classify();
