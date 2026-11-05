@@ -333,6 +333,7 @@ package driftspec@ds {
     - function sequenceSvg(doc: IrDocument) -> std::string     // a sequence document, drawn without the layout
 
     - class Grid {                           // the character grid Text fills, cell by cell
+      @requirement REQ-00007-1
       + dump(color: bool) -> std::string
       + encode() -> std::string
       + columns() -> int

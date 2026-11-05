@@ -572,8 +572,6 @@ package driftspec@ds {
             method: test
             tests:
               tests/integration/ds/check/test_branches.cpp::TestBranches.ADiagramThatAsksForAScenarioNobodyDeclaresIsAFinding
-              tests/unit/ds/model/test_paths.cpp::TestPathOf.ALoopWithANamedBranchInsideStaysOnTheDefaultPath
-              tests/unit/ds/model/test_paths.cpp::TestPathOf.APathThatNamesABranchInsideALoopGoesIntoItAndEndsThere
               tests/integration/ds/check/test_branches.cpp::TestBranches.ABranchNamesAScenarioAndABareReturnEndsIt
               tests/integration/ds/check/test_branches.cpp::TestBranches.APathTakesWhatIsSharedAndItsBranchUpToItsReturn
               tests/integration/ds/check/test_branches.cpp::TestBranches.TheDefaultPathTakesNoNamedBranch
