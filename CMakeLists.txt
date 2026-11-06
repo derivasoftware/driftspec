@@ -6,8 +6,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(driftspec LANGUAGES C CXX)
 
-option(DS_PYTHON
-       "Build driftspec._native, the engine as a Python extension (DS-84)" OFF)
+option(DS_PYTHON "Build pyds._native, the engine as a Python extension (DS-84)"
+       OFF)
 if(DS_PYTHON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON) # every static library ends up inside
                                           # a shared module
@@ -121,16 +121,15 @@ if(DS_PYTHON)
                      python/src/native.cpp)
   target_link_libraries(_native PRIVATE driftspec)
   set_target_properties(_native PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                           ${CMAKE_BINARY_DIR}/python/driftspec)
+                                           ${CMAKE_BINARY_DIR}/python/pyds)
   if(SKBUILD) # pip install .: the module goes into the package of the wheel
-    install(TARGETS _native LIBRARY DESTINATION driftspec COMPONENT python)
+    install(TARGETS _native LIBRARY DESTINATION pyds COMPONENT python)
   endif()
   add_custom_target(
     driftspec_python ALL # the package beside its native module, importable from
                          # the build
-    COMMAND
-      ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/driftspec
-      ${CMAKE_BINARY_DIR}/python/driftspec
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/pyds
+            ${CMAKE_BINARY_DIR}/python/pyds
     DEPENDS _native)
 endif()
 

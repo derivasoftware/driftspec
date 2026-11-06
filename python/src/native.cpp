@@ -1,4 +1,4 @@
-// driftspec._native: the engine for Python, through the limited CPython API (abi3), so one
+// pyds._native: the engine for Python, through the limited CPython API (abi3), so one
 // wheel serves every Python from 3.10 on (DS-84). Text in, the JSON of the command line out;
 // the Python face builds its model from that JSON.
 #define Py_LIMITED_API 0x030A0000

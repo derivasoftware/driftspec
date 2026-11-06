@@ -35,12 +35,12 @@ package driftspec {
     module app { }
   }
 
-  package py {                              // the Python face: the engine as a library, and a language server on it
+  package pyds {                              // the Python face: the engine as a library, and a language server on it
     language: python
     @requirement SREQ-00015-1                // the engine in process, for Python
     @requirement SREQ-00016-1                // a language server for .ds files
     module native { }                       // the CPython extension: C++, the one box here that is
-    module driftspec { }                    // the package: the JSON read into a typed model
+    module pyds { }                         // the package (import pyds): the JSON read into a typed model
     module lsp { }                          // the language server, on pygls
   }
 
@@ -51,9 +51,9 @@ package driftspec {
   }
 }
 
-diagram CL_Py {                             // the Python face: the library, the extension, the server
+diagram CL_Pyds {                             // the Python face: the library, the extension, the server
   kind: class
-  include: driftspec@py@*
+  include: driftspec@pyds@*
 }
 
 diagram CL_Ds {                             // the rollup of the ds box: every class of every namespace, names only

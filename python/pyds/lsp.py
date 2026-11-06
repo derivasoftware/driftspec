@@ -1,6 +1,6 @@
 """driftspec-lsp: a language server for .ds files, on the Python face (DS-85, a spike).
 
-    python -m driftspec.lsp        # speaks LSP on stdin/stdout
+    python -m pyds.lsp        # speaks LSP on stdin/stdout
 
 The workspace is every .ds file under the root the editor opens, with the buffers it holds on
 top: unsaved text is what is checked. On every change the whole workspace is checked again (the
@@ -18,12 +18,12 @@ from urllib.parse import unquote, urlparse
 from lsprotocol import types as lsp
 from pygls.lsp.server import LanguageServer
 
-import driftspec
+import pyds
 
 server = LanguageServer("driftspec-lsp", "0.0.1")
 WORD = re.compile(r"[A-Za-z_][\w-]*(?:(?:::|@)[A-Za-z_][\w-]*)*")
 state: dict = {"model": None}       # the model of the workspace the request is about
-models: dict[str, driftspec.Model] = {}  # every workspace open, by its directory
+models: dict[str, pyds.Model] = {}  # every workspace open, by its directory
 published: dict[str, set[str]] = {}       # the files of each workspace that carry diagnostics
 
 
@@ -56,7 +56,7 @@ def workspace_of(ls: LanguageServer, path: str) -> str:
 
 
 def workspace_files(ls: LanguageServer, ws: str) -> dict[str, str]:
-    files = {os.path.realpath(p): text for p, text in driftspec.read(ws).items()}
+    files = {os.path.realpath(p): text for p, text in pyds.read(ws).items()}
     for uri, doc in ls.workspace.text_documents.items():  # the buffers, saved or not, win over the disk
         path = path_of(uri)
         if path.endswith(".ds") and path.startswith(ws + os.sep):
@@ -75,7 +75,7 @@ def use(ls: LanguageServer, uri: str) -> str:
 
 def refresh(ls: LanguageServer, ws: str) -> None:
     files = workspace_files(ls, ws)
-    models[ws] = state["model"] = driftspec.load(files)
+    models[ws] = state["model"] = pyds.load(files)
     by_file: dict[str, list[lsp.Diagnostic]] = {path: [] for path in files}
     for f in state["model"].findings:
         line, col = max(f.location.line - 1, 0), max(f.location.column - 1, 0)
@@ -101,8 +101,8 @@ def word_at(ls: LanguageServer, uri: str, position: lsp.Position) -> str:
     return ""
 
 
-def entities_for(word: str) -> list[driftspec.Entity]:
-    model: driftspec.Model = state["model"]
+def entities_for(word: str) -> list[pyds.Entity]:
+    model: pyds.Model = state["model"]
     if not model or not word:
         return []
     exact = model.find(word)
@@ -112,7 +112,7 @@ def entities_for(word: str) -> list[driftspec.Entity]:
     return [e for e in model.named(tail) if e.id.endswith(word) or e.name == word]
 
 
-def location_of(e: driftspec.Entity) -> lsp.Location:
+def location_of(e: pyds.Entity) -> lsp.Location:
     p = lsp.Position(max(e.location.line - 1, 0), max(e.location.column - 1, 0))
     return lsp.Location(uri=uri_of(e.location.file), range=lsp.Range(p, p))
 
@@ -133,7 +133,7 @@ def definition(ls: LanguageServer, params: lsp.DefinitionParams) -> list[lsp.Loc
 @server.feature(lsp.TEXT_DOCUMENT_REFERENCES)
 def references(ls: LanguageServer, params: lsp.ReferenceParams) -> list[lsp.Location]:
     use(ls, params.text_document.uri)
-    model: driftspec.Model = state["model"]
+    model: pyds.Model = state["model"]
     out = []
     for e in entities_for(word_at(ls, params.text_document.uri, params.position)):
         for r in model.relations_of(e.id):
@@ -165,10 +165,10 @@ def completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.Completi
     doc = ls.workspace.get_text_document(params.text_document.uri)
     items = [
         lsp.CompletionItem(label=w, kind=lsp.CompletionItemKind.Keyword)
-        for w in driftspec.expected_at(doc.source, params.position.line, params.position.character)
+        for w in pyds.expected_at(doc.source, params.position.line, params.position.character)
         if w not in ("key: value",)
     ]
-    model: driftspec.Model = state["model"]
+    model: pyds.Model = state["model"]
     if model:  # the names the model declares, for a type or a call
         seen = set()
         for e in model.entities.values():
@@ -181,7 +181,7 @@ def completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.Completi
 @server.feature(lsp.TEXT_DOCUMENT_DOCUMENT_SYMBOL)
 def symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.SymbolInformation]:
     use(ls, params.text_document.uri)
-    model: driftspec.Model = state["model"]
+    model: pyds.Model = state["model"]
     kinds = {"package": lsp.SymbolKind.Package, "module": lsp.SymbolKind.Module, "class": lsp.SymbolKind.Class,
              "function": lsp.SymbolKind.Function, "method": lsp.SymbolKind.Method, "interface": lsp.SymbolKind.Interface,
              "requirement": lsp.SymbolKind.Key, "usecase": lsp.SymbolKind.Event}
@@ -209,9 +209,9 @@ def subject_at(ls: LanguageServer, uri: str, line: int, character: int, typed: s
     return "", word_at(ls, uri, lsp.Position(line, character)) or typed
 
 
-def enclosing(path: str, line: int) -> driftspec.Entity | None:
+def enclosing(path: str, line: int) -> pyds.Entity | None:
     """The declaration a line of a file is written in: the nearest one that opens above it."""
-    model: driftspec.Model = state["model"]
+    model: pyds.Model = state["model"]
     if not model:
         return None
     candidates = [e for e in model.in_file(path) if e.kind in STRUCTURE | ARTEFACT | {"diagram", "sequence"}
@@ -226,7 +226,7 @@ def enclosing(path: str, line: int) -> driftspec.Entity | None:
 
 
 def subject_of(word: str) -> tuple[str, str]:
-    model: driftspec.Model = state["model"]
+    model: pyds.Model = state["model"]
     if model and (model.find("diagram:" + word) or model.find(word) and model.find(word).kind == "diagram"):
         return "diagram", word.removeprefix("diagram:")
     found = entities_for(word)
@@ -259,7 +259,7 @@ def draw(ls: LanguageServer, uri: str, line: int, character: int, width: int = 0
         files, diagram = with_focus(files, name)
     else:
         diagram = name
-    text = driftspec.render(files, diagram, "text", width)
+    text = pyds.render(files, diagram, "text", width)
     return {"title": name, "text": text or f"{name} draws nothing"}
 
 
@@ -283,11 +283,11 @@ def view(ls: LanguageServer, uri: str, line: int, character: int, _width: int = 
     what, name = subject_at(ls, uri, line, character, typed)
     files = workspace_files(ls, ws)
     if what == "diagram":  # framed on what the diagram shows, as ds render <ws> <diagram> does
-        ir = driftspec.render(files, name, "ir", 0)
+        ir = pyds.render(files, name, "ir", 0)
         focus = [n["id"] for n in _json.loads(ir).get("nodes", [])] if ir else []
     else:
         focus = [name] if name else []
-    html = driftspec.page(files, os.path.basename(ws), focus)
+    html = pyds.page(files, os.path.basename(ws), focus)
     out = os.path.join(os.path.expanduser("~/.cache/driftspec"), "view.html")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:

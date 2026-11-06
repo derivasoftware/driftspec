@@ -1,10 +1,10 @@
-"""DriftSpec for Python: the engine in process, its model as typed objects (DS-84, a spike).
+"""pyds, DriftSpec for Python: the engine in process, its model as typed objects (DS-84, a spike).
 
-    import driftspec
-    model = driftspec.load("design/")            # a directory of .ds files ...
-    model = driftspec.load({"a.ds": "package a { }"})  # ... or the texts an editor holds
-    report = driftspec.check("design/")
-    driftspec.expected_at(text, line, column)     # what the grammar takes there
+    import pyds
+    model = pyds.load("design/")            # a directory of .ds files ...
+    model = pyds.load({"a.ds": "package a { }"})  # ... or the texts an editor holds
+    report = pyds.check("design/")
+    pyds.expected_at(text, line, column)     # what the grammar takes there
 
 The native module speaks the JSON of the command line (ds export, ds check --json); this
 module only reads it, so a tool sees the same thing whether it calls Python or the binary.
