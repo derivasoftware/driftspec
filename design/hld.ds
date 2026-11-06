@@ -5,6 +5,7 @@
 // qualifications in verifications.ds; this file says which box realises what.
 
 package driftspec {
+  language: cpp                       // the engine and the command line; a box in another says so
 
   package ds {                              // the tool: one binary, every namespace of the C++ code
     @requirement SREQ-00001-1                // one model, one identity per entity

@@ -30,6 +30,9 @@ const FieldSpec kParams = syntax("params", FieldType::Params, "the parameters, n
 const FieldSpec kReturns = syntax("returns", FieldType::Type, "what it gives back");
 const FieldSpec kNote = written("note", FieldType::Text, "a remark kept with the declaration");
 const FieldSpec kContract = written("contract.*", FieldType::Text, "a pre- or postcondition, numbered in order");
+const FieldSpec kLanguage = written("language", FieldType::Name,
+                                    "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless "
+                                    "that says otherwise");
 
 std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is written, from the manual (Manual.cpp)
   for (auto& k : kinds) {
@@ -42,13 +45,14 @@ std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is wr
 std::vector<KindSpec> build() {
   const Kind P = Kind::Package, M = Kind::Module, Cl = Kind::Class, Rq = Kind::Requirement;
   std::vector<KindSpec> k;
-  k.push_back({P,
-               "a namespace of the system; packages nest and reopen",
-               {written("title", FieldType::Text, "what the package is"), written("owner", FieldType::Name, "who answers for it")},
-               {},
-               {P},
-               true});
-  k.push_back({M, "a unit of the design inside a package; modules nest and reopen", {kVisibility}, {"extern"}, {P, M}});
+  k.push_back(
+      {P,
+       "a namespace of the system; packages nest and reopen",
+       {written("title", FieldType::Text, "what the package is"), written("owner", FieldType::Name, "who answers for it"), kLanguage},
+       {},
+       {P},
+       true});
+  k.push_back({M, "a unit of the design inside a package; modules nest and reopen", {kVisibility, kLanguage}, {"extern"}, {P, M}});
   k.push_back({Rq,
                "what the system or a module promises",
                plus(artefact(), {written("parent", FieldType::Name, "ignored: nesting or @refines say it (W-PARENT-IGNORED)")}),
