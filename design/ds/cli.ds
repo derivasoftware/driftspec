@@ -1,4 +1,4 @@
-// The one interface of ds: its command line. What a person or a script sees: each
+// The interface of ds for a person or a script: its command line. What they see: each
 // command, what it prints and how it exits. Each operation has its trace, and each
 // exit code names the scenario that ends in it, so `ds check` keeps saying what it does.
 

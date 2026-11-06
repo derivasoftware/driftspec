@@ -34,6 +34,7 @@ package driftspec@ds {
     }
 
     class Api {                              // static: the engine, called in process
+      @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-1
       + static check(files: Files) -> std::string
       + static exportModel(files: Files) -> std::string
@@ -80,5 +81,93 @@ package driftspec@ds {
       -> scene.page(title, css, focus) -> page
       return page
     }
+  }
+}
+
+// ---- the engine's binary interface: what a caller in the same process links against --------------
+package driftspec@ds {
+  interface engine {
+    kind: library
+    transport: in process, linked
+    encoding: json text
+    @requirement REQ-00085-1
+
+    operation check(files: api::Files) -> string : UC-00001-1
+    operation export(files: api::Files) -> string : UC-00005-1
+    operation render(files: api::Files, diagram: string, format: string, width: int) -> string : UC-00002-1
+    operation page(files: api::Files, title: string, focus: list<string>) -> string : UC-00002-1
+    operation expectedAt(text: string, line: int, column: int) -> string : UC-00007-1
+  }
+
+  sequence engine::check {
+    local api: api::Api
+    -> api.check(files) -> json
+    return json
+  }
+
+  sequence engine::check / errors {            // the errors are among the findings: nothing is raised
+    local api: api::Api
+    -> api.check(files) -> json
+    return json
+  }
+
+  sequence engine::export / no-workspace {     // no texts: an empty model, nothing refused (the caller refuses a path)
+    local api: api::Api
+    -> api.exportModel(files) -> json
+    return json
+  }
+
+  sequence engine::export {
+    local api: api::Api
+    -> api.exportModel(files) -> json
+    return json
+  }
+
+  sequence engine::check / bad-usage {         // no texts: counts of zero, nothing refused (the caller refuses a path)
+    local api: api::Api
+    -> api.check(files) -> json
+    return json
+  }
+
+  sequence engine::render {
+    local api: api::Api
+    -> api.render(files, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence engine::render / no-diagram {       // "" for a diagram the workspace does not have
+    local api: api::Api
+    -> api.render(files, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence engine::render / no-workspace {     // no texts: nothing to draw, ""
+    local api: api::Api
+    -> api.render(files, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence engine::page {
+    local api: api::Api
+    -> api.page(files, title, focus) -> html
+    return html
+  }
+
+  sequence engine::page / no-diagram {         // identities the model does not declare: the viewer opens unframed
+    local api: api::Api
+    -> api.page(files, title, focus) -> html
+    return html
+  }
+
+  sequence engine::page / no-workspace {       // no texts: the viewer of an empty model
+    local api: api::Api
+    -> api.page(files, title, focus) -> html
+    return html
+  }
+
+  sequence engine::expectedAt {
+    local api: api::Api
+    -> api.expectedAt(text, line, column) -> words
+    return words
   }
 }

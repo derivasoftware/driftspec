@@ -51,9 +51,11 @@ package driftspec {
   }
 }
 
-diagram CL_Pyds {                             // the Python face: the library, the extension, the server
+diagram CL_Pyds {                             // the Python face: the library, the extension, the server, and the engine it links
   kind: class
   include: driftspec@pyds@*
+  include: driftspec@ds@engine
+  include: driftspec@ds@api::Api
 }
 
 diagram CL_Ds {                             // the rollup of the ds box: every class of every namespace, names only
