@@ -33,10 +33,10 @@ module.exports = grammar({
     // (`package app@render {`); every package level adds its name with @ (decided 2026-10-26)
     package: $ => seq(optional(field('visibility', $.visibility)), 'package', repeat(field('prefix', $.package_prefix)), field('name', $.name), '{', repeat($._package_item), '}'),
     // a package is annotated like a class: @requirement for what the box realises, @constraint for what binds it (HLD, 2026-10-26)
-    _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.interface, $.package, $.module, $.sequence, $.state),
+    _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.interface, $.package, $.module, $.sequence, $.state),
 
     module: $ => seq(optional(field('visibility', $.visibility)), optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
-    _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.module, $.class, $.enum, $.function, $.sequence, $.state),
+    _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.usecase, $.module, $.class, $.enum, $.function, $.sequence, $.state),
 
     // ---- process artefacts ------------------------------------------------
     // a requirement nested in a requirement refines it; a verification nested in one verifies it (R3)
@@ -45,6 +45,15 @@ module.exports = grammar({
       seq('requirement', field('id', $.name), '{', repeat(choice($.field, $.annotation, $.requirement, $.verification, $.constraint)), '}'),
     ),
     verification: $ => seq('verification', field('id', $.name), '{', repeat(choice($.field, $.annotation)), '}'),
+    // a use case is a contract: what goes in, what comes out and the outcomes it may end in, happy
+    // (default) or not. An interface operation realises it (`operation greet(...) : UC-…`), so a
+    // generic use case knows nothing of who triggers it; a specific one specialises a generic one
+    // after `:`, keeping its signature and its outcomes (decided 2026-11-06, DS-77)
+    usecase: $ => seq('usecase', field('id', $.name),
+      optional(seq(field('name', $.name), $.parameters, optional(seq('->', field('returns', $.type))))),
+      optional(seq(':', field('base', $.qualified_name))),
+      '{', repeat(choice($.field, $.annotation, $.outcome)), '}'),
+    outcome: $ => seq('outcome', field('name', $.name), optional(seq('->', field('returns', $.type))), ':', field('text', $.line_text)),
     // a constraint is a requirement-like claim; the one-line form carries only its title (R18)
     constraint: $ => choice(
       seq('constraint', field('id', $.name), ':', field('title', $.line_text)),
@@ -56,6 +65,7 @@ module.exports = grammar({
     // are data, not grammar: `exit 2: refused` is a field with a code, so a new kind changes nothing here
     interface: $ => seq('interface', field('name', $.name), '{', repeat(choice($.field, $.annotation, $.operation)), '}'),
     operation: $ => seq('operation', field('name', $.name), $.parameters, optional(seq('->', field('returns', $.type))),
+      optional(seq(':', field('realises', $.qualified_name))),
       optional(seq('{', repeat(choice($.field, $.annotation)), '}'))),
 
     // ---- white box: static ------------------------------------------------

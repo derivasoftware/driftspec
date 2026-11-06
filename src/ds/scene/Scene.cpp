@@ -27,7 +27,9 @@ const double kRow = 11, kHead = 22, kUnitPadBottom = 6, kCharWidth = 3.95, kUnit
 const double kModulePad = 24, kModuleHead = 46, kUnitGap = 22;
 const double kPackagePad = 60, kPackageHead = 90, kBoxGap = 70, kLeftForInterfaces = 300;
 const double kInterfaceW = 360, kOperationRow = 30, kTopGap = 120;
-const double kTreeGap = 44;  // between a base and the row of what inherits from it: room for the trunk
+const double kTreeGap = 44;
+const double kUseCaseGap = 70;  // between the column of use cases and the interfaces that realise them  // between a base and the row of
+                                // what inherits from it: room for the trunk
 
 /// The size of a box and where its children sit, relative to its top left corner.
 struct Shape {
@@ -341,13 +343,41 @@ class Layout {
     return e.id;
   }
 
+  // a use case: its title, its contract and its outcomes, one row each (DS-77)
+  std::string usecase(const model::Entity& e, const std::string& parent) {
+    std::vector<std::pair<std::string, std::string>> rows;  // id, label
+    const std::string title = field(e, "title");
+    if (!title.empty()) rows.push_back({e.id + "#title", title});
+    const std::string operation = field(e, "operation");
+    if (!operation.empty()) rows.push_back({e.id + "#sig", signature(operation, e.params, field(e, "returns"))});
+    for (const model::Entity* o : children(e.id)) {
+      if (o->kind != model::Kind::Outcome) continue;
+      const std::string returns = field(*o, "returns");
+      rows.push_back({o->id, o->name + (returns.empty() ? "" : " → " + unqualified(returns)) + " · " + field(*o, "text")});
+    }
+    double widest = static_cast<double>(characters(e.name)) * 1.6 + 14;
+    for (const auto& r : rows) widest = std::max(widest, static_cast<double>(characters(r.second)));
+    const double w = std::max(kUnitMinW, std::min(kUnitMaxW, widest * kCharWidth + 18));
+    Shape s{w, kHead + static_cast<double>(rows.size()) * kRow + kUnitPadBottom, {}};
+    for (size_t i = 0; i < rows.size(); ++i) {
+      const bool outcome = rows[i].first.find('#') == std::string::npos;
+      row(rows[i].first, e.id, rows[i].second, outcome ? "outcome" : rows[i].first.substr(rows[i].first.find('#') + 1), "+",
+          outcome ? rows[i].first : "", w, kRow);
+      s.kids.push_back({rows[i].first, {0, kHead + static_cast<double>(i) * kRow}});
+    }
+    node(e.id, "usecase", parent, e.name, "usecase", "+", e.id);
+    shapes[e.id] = s;
+    return e.id;
+  }
+
   std::string package(const model::Entity& e, const std::string& parent) {
-    std::vector<std::pair<std::string, std::pair<double, double>>> boxes, interfaces;
+    std::vector<std::pair<std::string, std::pair<double, double>>> boxes, interfaces, usecases;
     for (const model::Entity* k : children(e.id + "@")) {
       if (k->has("extern")) continue;
       if (k->kind == model::Kind::Package) boxes.push_back({package(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Interface) interfaces.push_back({interface(*k, e.id), {0, 0}});
+      if (k->kind == model::Kind::UseCase && !k->expected) usecases.push_back({usecase(*k, e.id), {0, 0}});
     }
     order(boxes);
     const auto size = shelf(boxes, shapes, kBoxGap, width(e.id, target(boxes, shapes, 0, 1.6)));
@@ -359,9 +389,37 @@ class Layout {
       i.second = {-kInterfaceW / 2, y};
       y += shapes[i.first].h + 20;
     }
+    // the use cases stand left of the interfaces, outside the package: the generic above what specialises it
+    std::map<std::string, std::string> general;
+    std::set<std::string> here;
+    for (const auto& u : usecases) here.insert(u.first);
+    for (const auto& u : usecases) {
+      const auto b = bases_.find(u.first);
+      if (b != bases_.end())
+        for (const auto& to : b->second)
+          if (here.count(to) && to != u.first) general[u.first] = to;
+    }
+    std::vector<std::pair<std::string, int>> column;  // in taxonomy order, with depth
+    std::set<std::string> placed;
+    std::function<void(const std::string&, int)> walk = [&](const std::string& id, int depth) {
+      if (!placed.insert(id).second) return;
+      column.push_back({id, depth});
+      for (const auto& u : usecases)
+        if (general.count(u.first) && general.at(u.first) == id) walk(u.first, depth + 1);
+    };
+    for (const auto& u : usecases)
+      if (!general.count(u.first)) walk(u.first, 0);
+    for (const auto& u : usecases) walk(u.first, 0);
+    double widest = 0;
+    for (const auto& c : column) widest = std::max(widest, shapes[c.first].w + c.second * 30.0);
+    double uy = kPackageHead + 40;
+    for (const auto& c : column) {
+      boxes.push_back({c.first, {-kInterfaceW / 2 - kUseCaseGap - widest + c.second * 30.0, uy}});
+      uy += shapes[c.first].h + kTreeGap;
+    }
     boxes.insert(boxes.end(), interfaces.begin(), interfaces.end());
     node(e.id, "package", parent, e.name, "package", "+", e.id);
-    shapes[e.id] = {size.first + left + kPackagePad, std::max(size.second + kPackageHead + kPackagePad, y + kPackagePad), boxes};
+    shapes[e.id] = {size.first + left + kPackagePad, std::max({size.second + kPackageHead + kPackagePad, y + kPackagePad, uy}), boxes};
     return e.id;
   }
 

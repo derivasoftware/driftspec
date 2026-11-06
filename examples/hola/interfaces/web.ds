@@ -9,7 +9,7 @@ package hola {
     kind: gui
     @requirement SREQ-00002-1        // 100 ms, the same promise as the command line
 
-    operation greet(name: string) -> core::Greeting
+    operation greet(name: string) -> core::Greeting : UC-00002-1
   }
 
   state web {

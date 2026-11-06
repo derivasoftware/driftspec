@@ -58,6 +58,10 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .card .rel:hover{background:var(--soft)}
 .card .rel .me{color:var(--c,var(--fg));font-weight:600}.card .rel .far{font-weight:600}
 .card .rel .mod{margin-left:auto;color:var(--muted);font-size:11px}
+.card .uct{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}.card .uct th:first-child{width:55%}.card .uct td{overflow-wrap:anywhere}.card .uct .n{white-space:normal}.card .uct th{font-family:var(--mono);font-weight:600;font-size:11px;color:var(--muted);text-align:center;padding:2px 4px}
+.card .uct td{padding:5px 4px;border-top:1px solid var(--soft);vertical-align:top}.card .uct td+td{text-align:center}
+.card .uct button.play{border:1px solid var(--accent);color:var(--accent);background:var(--panel);border-radius:999px;padding:1px 10px;cursor:pointer}
+.card .uct .ok{color:var(--ok)}.card .uct .warn{color:var(--warn)}
 .card .rid{font-family:var(--mono);color:var(--req);font-weight:600}
 .card .rqs .rq{font-family:var(--sans);font-size:12px;color:var(--fg);margin:3px 0}.card .rqs .rq b{font-family:var(--mono);color:var(--req);font-weight:600}
 .card .acts{display:flex;gap:4px;align-items:center}
@@ -213,7 +217,8 @@ SCENE.nodes.forEach(s=>{const [x,y,w,h]=s.full; const n={id:s.id,kind:s.kind==='
   N[n.id]=n; ORDER.push(n.id); (KIDS[n.parent]=KIDS[n.parent]||[]).push(n.id);});
 const box=a=>({x:a[0],y:a[1],w:a[2],h:a[3]});
 const WORLD=box(SCENE.world);
-const BOXES=ORDER.filter(id=>['package','module','iface','unit'].includes(N[id].kind));
+const BOXES=ORDER.filter(id=>['package','module','iface','unit','usecase'].includes(N[id].kind));
+const isUC=id=>N[id]&&N[id].kind==='usecase';
 const UNITS=ORDER.filter(id=>N[id].kind==='unit');
 const anc=id=>{const a=[]; let n=N[id]; while(n){a.push(n.id); n=N[n.parent];} return a;};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -221,7 +226,7 @@ const LINKS=SCENE.links||[], DIAGS=SCENE.diagrams||[], TITLES=SCENE.titles||{};
 const FAMILY={inherits:'inheritance',realises:'inheritance'};  // the rest is never a line: it lights up when a box is touched
 const FAM={inheritance:true};
 const GROUP={owns:'owns',refs:'agg',shares:'agg',uses:'uses',calls:'calls'};  // the colour each relation lights up in
-const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls',req:'linked'};
+const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls',req:'linked',uc:'realises'};
 const GROUP_RANK={owns:0,agg:1,calls:2,uses:3};
 let HLBOX=new Map(), HLROW=new Map(), pills=[], REQSEL=null;
 const REQS=SCENE.requirements||[], VERS=SCENE.verifications||[], RBY={}, VBY={};
@@ -244,7 +249,7 @@ let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
   K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),ok:g('--ok'),warn:g('--warn'),mono:g('--mono'),sans:g('--sans'),
     kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-class'),abstract:g('--k-class')},
-    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req')}};}
+    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')}};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
 function resize(){const r=stage.getBoundingClientRect(); DPR=devicePixelRatio||1; U=r.width<560?.6:(r.width<800?.8:1); W=r.width/U; H=r.height/U;
   cv.width=r.width*DPR; cv.height=r.height*DPR; const m=mini.getBoundingClientRect(); mini.width=Math.max(1,m.width*DPR); mini.height=Math.max(1,m.height*DPR); loop();}
@@ -304,6 +309,20 @@ function draw(){
       const orh=HLROW.get(rid); rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); if(orh){ctx.globalAlpha=.2; ctx.fillStyle=K.rc[orh]; ctx.fill(); ctx.globalAlpha=1;} ctx.strokeStyle=orh?K.rc[orh]:K.accent; ctx.lineWidth=orh?2:1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg,orh?'700':'');
       const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.accent; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
     ctx.restore();});
+  // use cases, left of the interfaces that realise them: a contract and the outcomes it may end in
+  ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='usecase') return; const b=scr(n); if(!onScreen(b)) return;
+    const dim=(SEL||REQSEL)&&SEL!==id&&!RELATED.has(id), hl=HLBOX.get(id); ctx.globalAlpha=dim?.35:1;
+    rr(b.x,b.y,b.w,b.h,Math.min(22*cam.s,b.h/2)); ctx.fillStyle=K.panel; ctx.fill(); if(hl){ctx.globalAlpha=.13*(dim?.35:1); ctx.fillStyle=K.rc[hl]; ctx.fill(); ctx.globalAlpha=dim?.35:1;}
+    ctx.strokeStyle=SEL===id?K.accent:hl?K.rc[hl]:K.fg; ctx.lineWidth=SEL===id?3:hl?2.4:1.4; ctx.stroke();
+    const px=Math.min(14,Math.max(9,12*cam.s)), hy=b.y+Math.min(px+4,17*cam.s+3); ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
+    if(b.w>40){ctx.font=`${px*.72}px ${K.mono}`; const st='«use case» ', off=ctx.measureText(st).width; text(st,b.x+14,hy,px*.72,K.muted); text(n.label,b.x+14+off,hy,px,K.fg,'700');
+      if(n.reqs.length&&cam.s>2) chip(n.reqs,b.x+b.w-14,hy);}
+    (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(!visible(r)) return; const rb=scr(r), rpx=Math.min(13,r.h*cam.s*.78), cy=rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36;
+      const oc=r.st==='outcome', ok=oc&&rid.endsWith('::default'), mark=oc?(ok?'✓ ':'↯ '):'', col=r.st==='title'?K.fg:oc?(ok?K.ok:K.warn):K.muted;
+      const rh=HLROW.get(rid); if(rh){ctx.globalAlpha=.2; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+10,rb.y,rb.w-20,Math.max(rb.h,rpx+4)); ctx.globalAlpha=dim?.35:1;}
+      if(mark) text(mark,rb.x+14,cy,rpx,col,'700'); ctx.font=`${rpx}px ${K.mono}`; const mw=mark?ctx.measureText(mark).width:0;
+      text(r.label,rb.x+14+mw,cy,rpx,r.st==='title'?K.fg:K.fg,r.st==='title'?'700':'');});
+    ctx.restore(); ctx.globalAlpha=1;});
   drawLinks();
   drawPills();
   drawTour();
@@ -317,12 +336,13 @@ let drawn=[];
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
 function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
   const touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||linksOf(SEL).includes(l));
-  const list=LINKS.filter(l=>FAMILY[l.kind]&&(touched(l)||(FAM.inheritance&&boxOf(l.from)===boxOf(l.to))));  // across modules: written in the header, drawn when touched
+  const list=LINKS.filter(l=>FAMILY[l.kind]&&(touched(l)||(FAM.inheritance&&(boxOf(l.from)===boxOf(l.to)||isUC(l.to)))));  // across modules: written in the header, drawn when touched
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
   list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
     let A=repOf(keepRows&&inSel(l.from)?l.from:unitOf(l.from)), B=repOf(keepRows&&inSel(l.to)?l.to:unitOf(l.to)); if(!A||!B) return;
-    const coarse=!SEL&&(['module','package','iface'].includes(A.kind)||['module','package','iface'].includes(B.kind));
+    if(isUC(l.to)&&N[l.from]&&N[l.from].kind==='row'&&!N[l.from].hidden) A=N[l.from];  // an operation realises a use case: from its row
+    const coarse=!SEL&&!isUC(l.to)&&(['module','package','iface'].includes(A.kind)||['module','package','iface'].includes(B.kind));
     if(coarse){const a=boxOf(l.from), b=boxOf(l.to); if(!a||!b||a===b) return; A=N[a]; B=N[b];}  // far away: one arrow per pair of boxes
     if(A===B||anc(A.id).includes(B.id)||anc(B.id).includes(A.id)) return;
     const kind=coarse?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
@@ -353,7 +373,7 @@ function trunk(g,emph,st){const a=scr(g.A), b=scr(g.B); if(b.y+b.h>a.y-4) return
   const tri=12; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1,ym); ctx.lineTo(x2,ym); ctx.lineTo(x2,y2+tri); ctx.stroke(); ctx.setLineDash([]);
   triangle(x2,y2,-Math.PI/2,col); ctx.globalAlpha=1; return {pts:[[x1,y1],[x1,ym],[x2,ym],[x2,y2]]};}
 function edge(g,emph){const A=g.A,B=g.B,st=STYLE[g.kind]||STYLE['*'];
-  if((g.kind==='inherits'||g.kind==='realises')&&A.kind==='unit'&&B.kind==='unit'){const t=trunk(g,emph,st); if(t) return t;}
+  if((g.kind==='inherits'||g.kind==='realises')&&['unit','usecase'].includes(A.kind)&&['unit','usecase'].includes(B.kind)){const t=trunk(g,emph,st); if(t) return t;}
   const [a1,a2]=span(A).map(sx), [b1,b2]=span(B).map(sx); let y1=anchorY(A), y2=anchorY(B), x1,x2,c1,c2;
   if((Math.max(a1,b1)>W+300&&Math.max(a2,b2)>W+300)||(Math.min(a2,b2)<-300&&Math.min(a1,b1)<-300)||(y1<-300&&y2<-300)||(y1>H+300&&y2>H+300)) return null;
   if(b1<a2-4&&b2>a1+4){const o=Math.max(24,30*cam.s); x1=a2; x2=b2; c1=[x1+o,y1]; c2=[x2+o,y2];}
@@ -454,6 +474,7 @@ const qual=x=>{const n=N[x]; if(!n) return x; if(n.kind!=='row') return n.label;
 const memberOf=x=>N[x]&&N[x].kind==='row'?short(x)+(N[x].label.includes('(')?'()':''):'';
 function dock(on){if(document.body.classList.contains('carded')===on) return; document.body.classList.toggle('carded',on); setTimeout(()=>{resize(); if(on&&SEL){const b=scr(N[SEL]); if(!onScreen(b)) fly(fit(N[SEL],.6));}},30);}
 function select(id){SEL=id; REQSEL=null; markRow(); RELATED=new Set(); HLBOX=new Map(); HLROW=new Map(); if(!id){card.hidden=true; dock(false); loop(); return;} const n=N[id];
+  if(n.kind==='usecase') return selectUseCase(id);
   const isUnit=n.kind==='unit'||n.kind==='iface', inside=x=>isUnit?unitOf(x)===id:anc(x).includes(id);
   const mark=(m,k,g)=>{if(!m.has(k)||GROUP_RANK[g]<GROUP_RANK[m.get(k)]) m.set(k,g);};
   const entries=[];
@@ -499,6 +520,38 @@ card.addEventListener('click',e=>{if(e.target.closest('[data-close]')) return se
     const x0=Math.min(o.x,m.x), y0=Math.min(o.y,m.y); fly(fit({x:x0,y:y0,w:Math.max(o.x+o.w,m.x+m.w)-x0,h:Math.max(o.y+o.h,m.y+m.h)-y0},.25));}
   const p=e.target.closest('[data-tour]'); if(p) playAt(p.dataset.tour,+p.dataset.i);});
 addEventListener('keydown',e=>{if(e.key==='Escape') select(null);});
+/* ---------- use cases: the contract, its outcomes and who realises it, replayed from each interface ---------- */
+const ucBase=id=>{const l=LINKS.find(l=>l.kind==='inherits'&&l.from===id&&isUC(l.to)); return l?l.to:'';};
+const ucChain=id=>{const out=[]; for(let u=id;u&&!out.includes(u);u=ucBase(u)) out.push(u); return out;};
+const ucSpecific=id=>LINKS.filter(l=>l.kind==='inherits'&&l.to===id&&isUC(l.from)).map(l=>l.from);
+const ucOutcomes=id=>{const seen=new Set(), out=[]; ucChain(id).forEach(u=>(KIDS[u]||[]).forEach(r=>{const nm=r.slice(u.length+2); if(N[r].st==='outcome'&&!seen.has(nm)){seen.add(nm); out.push({name:nm,row:r,from:u});}})); return out.sort((a,b)=>(b.name==='default')-(a.name==='default'));};
+const ucRealisers=id=>LINKS.filter(l=>l.kind==='realises'&&l.to===id).map(l=>l.from);
+function selectUseCase(id){const n=N[id], chain=ucChain(id);
+  // what realises it: its own operations and those of every use case that specialises it
+  const via=[]; const walk=u=>{ucRealisers(u).forEach(op=>via.push({op,uc:u})); ucSpecific(u).forEach(walk);}; walk(id);
+  HLBOX=new Map(); HLROW=new Map(); RELATED=new Set([id]);
+  via.forEach(v=>{HLROW.set(v.op,'uc'); const ifc=N[v.op]?N[v.op].parent:null; if(ifc){HLBOX.set(ifc,'uc'); anc(ifc).forEach(a=>RELATED.add(a));}});
+  chain.concat(ucSpecific(id)).forEach(u=>{RELATED.add(u); if(u!==id) HLBOX.set(u,'uc');});
+  const sig=(KIDS[id]||[]).map(r=>N[r]).find(r=>r.st==='sig')||chain.map(u=>(KIDS[u]||[]).map(r=>N[r]).find(r=>r.st==='sig')).find(Boolean);
+  const title=(KIDS[id]||[]).map(r=>N[r]).find(r=>r.st==='title');
+  const reqs=[...new Set(chain.flatMap(u=>N[u].reqs))];
+  let h=`<div class="hd"><div><div class="st">«use case»${ucBase(id)?' · specialises '+esc(ucBase(id)):''}</div><b>${esc(n.label)}</b>`+
+    `<div class="sum">${via.length?via.length+' interface'+(via.length>1?'s':'')+' realise it':'<span class="warn">no interface realises it</span>'}</div></div>`+
+    `<span class="acts"><button class="x" data-close="1" aria-label="Close">×</button></span></div>`;
+  if(title) h+=`<p class="says"><b>${esc(title.label)}</b></p>`;
+  if(sig) h+=`<p class="says" style="font-family:var(--mono)">${esc(sig.label)}</p>`;
+  const outs=ucOutcomes(id);
+  // the outcomes against the interfaces: each cell replays that ending from that interface
+  const opName=op=>{const r=N[op]; return (r&&N[r.parent]?N[r.parent].label+'.':'')+op.split('::').pop();};
+  const tourOf=(op,o)=>{const t=op+(o==='default'?'':' / '+o); return TBY[t]?t:'';};
+  h+=`<section style="--c:var(--accent)"><h4>Outcomes, from each interface <span class="n">${outs.length}</span></h4><table class="uct"><tr><th></th>${via.map(v=>`<th>${esc(opName(v.op))}</th>`).join('')}</tr>`+
+    outs.map(o=>`<tr><td><span class="${o.name==='default'?'ok':'warn'}">${o.name==='default'?'✓':'↯'}</span> <b>${esc(o.name)}</b>${o.from!==id?` <span class="n">from ${esc(o.from)}</span>`:''}<div class="n">${esc(N[o.row].label.replace(/^[^·]*·\s*/,''))}</div></td>`+
+      via.map(v=>{const t=tourOf(v.op,o.name); return `<td>${t?`<button class="play" data-tour="${esc(t)}" data-i="0" title="replay ${esc(o.name)} from ${esc(opName(v.op))}">▶</button>`:'<span class="miss">not handled</span>'}</td>`;}).join('')+`</tr>`).join('')+`</table></section>`;
+  if(chain.length>1) h+=`<section><h4>Specialises</h4>${chain.slice(1).map(u=>`<div class="rel" data-node="${esc(u)}"><span class="far">${esc(u)}</span><span class="mod">${esc(((KIDS[u]||[]).map(r=>N[r]).find(r=>r.st==='title')||{}).label||'')}</span></div>`).join('')}</section>`;
+  const spec=ucSpecific(id); if(spec.length) h+=`<section><h4>Specialised by <span class="n">${spec.length}</span></h4>${spec.map(u=>`<div class="rel" data-node="${esc(u)}"><span class="far">${esc(u)}</span></div>`).join('')}</section>`;
+  h+=`<section style="--c:var(--req)"><h4>Requirements <span class="n">${reqs.length}</span></h4>${reqs.length?reqs.map(reqLine).join(''):'<div class="miss">none binds it</div>'}</section>`;
+  card.innerHTML=h; card.hidden=false; dock(true); loop();}
+
 /* ---------- requirements: the list in the bottom panel, the card, what lights up ---------- */
 const reqWhere=q=>q.scope&&N[q.scope]?anc(q.scope).reverse().map(a=>N[a].label).join(' › '):'';
 const reqNodes=q=>q.nodes.filter(id=>N[id]);

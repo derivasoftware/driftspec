@@ -9,7 +9,7 @@ package hola {
     encoding: utf-8 text
     @requirement SREQ-00002-1        // binds every operation
 
-    operation greet(name: string) -> core::Greeting {
+    operation greet(name: string) -> core::Greeting : UC-00001-1 {
       @requirement SREQ-00001-1
       command: hola <name>
       stdout: Greeting.text

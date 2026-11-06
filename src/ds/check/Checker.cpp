@@ -171,6 +171,7 @@ void Checker::run(const bind::Binder& binder) {
   checkLocals();
   for (const auto& e : binder.events()) checkEvent(e);
   checkInterfaces();
+  checkUseCases();
   checkDiagrams();
   checkScenarios();
   checkOwnershipCycles();
@@ -675,6 +676,108 @@ std::string Checker::outcomeOf(const std::string& sequence, const std::string& p
     return expands == m.fields.end() ? "" : outcomeOf(expands->second, into == m.fields.end() ? "" : into->second, seen);
   }
   return "";
+}
+
+// A use case is a contract (DS-77): what goes in, what comes out, the outcomes it ends in. A
+// specific one keeps its base's signature and outcomes; an interface operation that realises it
+// takes and returns the same and handles every outcome as a scenario of its behaviour; a scenario
+// no outcome names is behaviour no use case asked for.
+void Checker::checkUseCases() {
+  const auto isUseCase = [this](const std::string& id) {
+    const model::Entity* e = model_.find(id);
+    return e && !e->expected && e->kind == model::Kind::UseCase;
+  };
+  std::map<std::string, std::string> base;
+  std::map<std::string, std::vector<const model::Relation*>> realisedBy;
+  for (const auto& r : model_.relations()) {
+    const model::Entity* from = model_.find(r.from);
+    if (!from) continue;
+    if (r.kind == "inherits" && from->kind == model::Kind::UseCase) {
+      if (isUseCase(r.to))
+        base[r.from] = r.to;
+      else
+        model_.report(
+            {"W-USECASE-UNDECLARED", "warning", r.from + " specialises '" + r.to + "', which is no use case of the workspace", r.location});
+    } else if (r.kind == "realises" && from->kind == model::Kind::Operation) {
+      if (isUseCase(r.to))
+        realisedBy[r.to].push_back(&r);
+      else
+        model_.report(
+            {"W-USECASE-UNDECLARED", "warning", r.from + " realises '" + r.to + "', which is no use case of the workspace", r.location});
+    }
+  }
+  // the chain of a use case up to its most generic, never round a cycle
+  const auto chain = [&base](const std::string& id) {
+    std::vector<std::string> out{id};
+    std::set<std::string> seen{id};
+    for (auto it = base.find(id); it != base.end() && seen.insert(it->second).second; it = base.find(it->second)) out.push_back(it->second);
+    return out;
+  };
+  const auto outcomes = [this, &chain](const std::string& id) {
+    std::set<std::string> out;
+    for (const auto& uc : chain(id))
+      for (const auto& pair : model_.entities())
+        if (pair.second.kind == model::Kind::Outcome && pair.second.scope == uc) out.insert(pair.second.name);
+    return out;
+  };
+  const auto contract = [this, &chain](const std::string& id) -> const model::Entity* {  // the nearest that writes a signature
+    for (const auto& uc : chain(id)) {
+      const model::Entity* e = model_.find(uc);
+      if (e && e->fields.count("operation")) return e;
+    }
+    return nullptr;
+  };
+  const auto signature = [](const model::Entity& e) {
+    std::string out = "(";
+    for (size_t i = 0; i < e.params.size(); ++i) out += (i ? ", " : "") + model::lastName(e.params[i].type);
+    const auto returns = e.fields.find("returns");
+    return out + ") -> " + (returns == e.fields.end() ? std::string("none") : model::lastName(returns->second));
+  };
+  for (const auto& pair : base) {  // a specific use case keeps the contract of its base
+    const model::Entity* own = model_.find(pair.first);
+    const model::Entity* inherited = contract(pair.second);
+    if (own && inherited && own->fields.count("operation") && signature(*own) != signature(*inherited)) {
+      model_.report(
+          {"W-USECASE-SIGNATURE", "warning",
+           pair.first + " specialises " + pair.second + " but takes and gives " + signature(*own) + ", not " + signature(*inherited),
+           own->location});
+    }
+  }
+  std::set<std::string> realised;
+  for (const auto& pair : realisedBy) {
+    for (const auto& uc : chain(pair.first)) realised.insert(uc);
+    const model::Entity* promised = contract(pair.first);
+    const std::set<std::string> ends = outcomes(pair.first);
+    for (const model::Relation* r : pair.second) {
+      const model::Entity* op = model_.find(r->from);
+      if (promised && signature(*op) != signature(*promised)) {
+        model_.report({"W-USECASE-SIGNATURE", "warning",
+                       op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised),
+                       r->location});
+      }
+      const std::string behaviour = op->id + "::sequence";
+      for (const auto& end : ends) {
+        if (end == "default" || model_.find(behaviour + "/" + end) || model::hasScenario(model_, behaviour, end)) continue;
+        model_.report({"W-USECASE-OUTCOME-UNHANDLED", "warning",
+                       op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r->location});
+      }
+      for (const auto& other : model_.entities()) {  // a scenario written apart that no outcome names
+        const model::Entity& s = other.second;
+        if (s.kind != model::Kind::Sequence || s.id.rfind(behaviour + "/", 0) != 0) continue;
+        const std::string scenario = s.id.substr(behaviour.size() + 1);
+        if (!ends.count(scenario)) {
+          model_.report({"W-SCENARIO-NO-OUTCOME", "warning",
+                         op->id + " handles '" + scenario + "', and " + pair.first + " names no such outcome", s.location});
+        }
+      }
+    }
+  }
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.kind != model::Kind::UseCase || e.expected || realised.count(e.id)) continue;
+    model_.report({"W-USECASE-UNREALISED", "warning",
+                   e.id + " is realised by no interface operation, nor is any use case that specialises it", e.location});
+  }
 }
 
 void Checker::checkInterfaces() {
