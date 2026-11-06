@@ -22,7 +22,7 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
 .stage{position:fixed;inset:0;touch-action:none;user-select:none;-webkit-user-select:none}
 canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
-.tools{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:3}
+.tools{position:absolute;right:10px;top:10px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;z-index:3;max-width:calc(100% - 20px)}
 .tools button{height:34px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:inherit;font-size:13px;cursor:pointer}
 .tools button[aria-pressed=true]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 .crumbs{position:absolute;left:10px;top:10px;right:260px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-family:var(--mono);font-size:12px;pointer-events:none;z-index:2}
@@ -36,7 +36,15 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .legend i{display:inline-block;width:5px;height:12px;vertical-align:-2px;margin-right:3px}
 .legend b{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}
 .card{position:absolute;right:62px;top:54px;width:min(330px,calc(100% - 80px));max-height:calc(100% - 120px);overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px 12px;font-size:13px;z-index:4}
-.card[hidden]{display:none}
+.card[hidden],.pop[hidden]{display:none}
+.pop{position:absolute;width:min(340px,calc(100% - 20px));max-height:60%;overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.2);padding:10px 12px;font-size:13px;z-index:5}
+.pop .ttl{font-family:var(--mono);font-weight:700;font-size:13px;display:flex;justify-content:space-between;gap:6px}
+.pop h4{margin:8px 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.pop .row,.card .row{font-family:var(--mono);font-size:12px;display:flex;justify-content:space-between;gap:8px;padding:1px 0}
+.pop .n,.card .n{color:var(--muted);white-space:nowrap}
+.pop .x{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 4px}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;margin:2px 4px 0 0}
+.card .title{font-family:var(--sans);font-size:12px;color:var(--fg);margin:0 0 4px}
 .card .hd{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
 .card .hd b{font-family:var(--mono);font-size:15px}
 .card .st{color:var(--muted);font-family:var(--mono);font-size:11px}
@@ -66,10 +74,11 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 <div class="stage" id="stage">
   <canvas class="main" id="cv" aria-label="/*TITLE*/: el modelo entero, con zoom"></canvas>
   <div class="crumbs" id="crumbs"></div>
-  <div class="tools"><button id="priv" aria-pressed="false">ocultar privados</button><button id="fs">⛶</button></div>
+  <div class="tools"><button data-fam="estructura" aria-pressed="true" title="herencia, realización, composición, agregación, asociación">estructura</button><button data-fam="llamadas" aria-pressed="false" title="qué método llama a cuál">llamadas</button><button data-fam="usos" aria-pressed="false" title="dependencias: tipos que se nombran">usos</button><button id="priv" aria-pressed="false">ocultar privados</button><button id="fs">⛶</button></div>
+  <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Subir un nivel">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Entrar">▼</button><button id="home" aria-label="Ver todo">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimapa"></canvas>
-  <div class="legend"><span><i style="background:var(--k-class)"></i>clase</span><span><i style="background:var(--k-function)"></i>función</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>con requisito</span><span><b style="background:var(--warn)"></b>sin requisito</span><span>discontinuo: privado</span></div>
+  <div class="legend"><span><i style="background:var(--k-class)"></i>clase</span><span><i style="background:var(--k-function)"></i>función</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>con requisito</span><span><b style="background:var(--warn)"></b>sin requisito</span><span>discontinuo: privado</span><span>◁ hereda · ◁┄ realiza · ◆ contiene · ◇ comparte · → referencia · ┄> usa · <b style="background:var(--accent);border-radius:0;width:12px;height:2px;vertical-align:3px"></b> llama</span></div>
   <div class="card" id="card" hidden></div>
 </div>
 <script>
@@ -86,6 +95,16 @@ const BOXES=ORDER.filter(id=>['package','module','iface','unit'].includes(N[id].
 const UNITS=ORDER.filter(id=>N[id].kind==='unit');
 const anc=id=>{const a=[]; let n=N[id]; while(n){a.push(n.id); n=N[n.parent];} return a;};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LINKS=SCENE.links||[], DIAGS=SCENE.diagrams||[], TITLES=SCENE.titles||{};
+const FAMILY={inherits:'estructura',realises:'estructura',owns:'estructura',shares:'estructura',refs:'estructura',calls:'llamadas',uses:'usos'};
+const FAM={estructura:true,llamadas:false,usos:false};
+const KIND_ES={inherits:'hereda de',realises:'realiza',owns:'contiene',shares:'comparte',refs:'referencia',uses:'usa',calls:'llama a','*':'se relaciona con'};
+const unitOf=id=>N[id]&&N[id].kind==='row'?N[id].parent:id;
+const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.kind)) n=N[n.parent]; return n?n.id:null;};
+const short=id=>{const n=N[id]; return n?n.label.replace(/^[+-] /,'').split(/[(:]/)[0].trim():id;};
+function linksOf(id){const n=N[id]; if(!n) return []; if(n.kind==='unit'||n.kind==='iface') return LINKS.filter(l=>unitOf(l.from)===id||unitOf(l.to)===id);
+  const inside=x=>anc(x).includes(id); return LINKS.filter(l=>inside(l.from)!==inside(l.to));}
+let RELATED=new Set();
 const hasReq=id=>{const n=N[id]; if(n._rq===undefined) n._rq=!!(n.reqs.length||(KIDS[id]||[]).some(k=>N[k].reqs.length)); return n._rq;};
 
 /* ---------- canvas and camera ---------- */
@@ -124,7 +143,7 @@ function draw(){
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
     const st=`«${n.kind}» `; ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+10,b.y+px+8,px*.72,K.muted); text(n.label,b.x+10+off,b.y+px+8,px,K.fg,'700'); ctx.restore();});
   // units with their rows
-  UNITS.forEach(id=>{const n=N[id], b=scr(n); if(!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=SEL&&SEL!==id&&!anc(id).includes(SEL);
+  UNITS.forEach(id=>{const n=N[id], b=scr(n); if(!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=SEL&&SEL!==id&&!anc(id).includes(SEL)&&!RELATED.has(id);
     ctx.globalAlpha=(lab?1:.55)*(dim?.35:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
     ctx.setLineDash(n.vis==='-'?[5,3]:[]); ctx.strokeStyle=SEL===id?K.accent:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
     const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s)); ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,sw,Math.max(0,b.h-2));
@@ -150,8 +169,76 @@ function draw(){
       rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=K.accent; ctx.lineWidth=1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg);
       const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.accent; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
     ctx.restore();});
+  drawLinks();
   drawMini(); crumbs();
 }
+
+/* ---------- relations, each in its notation, lifted to what can be seen ---------- */
+const STYLE={inherits:{dash:[],end:'tri'},realises:{dash:[6,4],end:'tri'},owns:{dash:[],start:'diamond'},shares:{dash:[],start:'hollow'},
+  refs:{dash:[],end:'open'},uses:{dash:[5,4],end:'open',muted:true},calls:{dash:[],end:'arrow',accent:true},'*':{dash:[],end:'arrow',muted:true}};
+let drawn=[];
+function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
+function drawLinks(){drawn=[];
+  const list=SEL?linksOf(SEL):LINKS.filter(l=>FAM[FAMILY[l.kind]]);
+  const agg=new Map();
+  const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
+  list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
+    let A=repOf(keepRows&&inSel(l.from)?l.from:unitOf(l.from)), B=repOf(keepRows&&inSel(l.to)?l.to:unitOf(l.to)); if(!A||!B) return;
+    const coarse=!SEL&&(['module','package','iface'].includes(A.kind)||['module','package','iface'].includes(B.kind));
+    if(coarse){const a=boxOf(l.from), b=boxOf(l.to); if(!a||!b||a===b) return; A=N[a]; B=N[b];}  // far away: one arrow per pair of boxes
+    if(A===B||anc(A.id).includes(B.id)||anc(B.id).includes(A.id)) return;
+    const kind=coarse?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
+    if(!agg.has(k)) agg.set(k,{A,B,kind,n:0,links:[]}); const g=agg.get(k); g.n+=l.count; g.links.push(l);});
+  agg.forEach(g=>{const geo=edge(g,!!SEL); if(geo) drawn.push({...geo,g});});}
+function span(n){const p=n.kind==='row'?N[n.parent]:n; return [p.x,p.x+p.w];}
+function anchorY(n){const b=scr(n); return n.kind==='row'?b.y+b.h/2:b.y+Math.min(b.h/2,16);}
+function arrow(x,y,a,col){const s=8; ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.4),y-s*Math.sin(a-.4)); ctx.lineTo(x-s*Math.cos(a+.4),y-s*Math.sin(a+.4)); ctx.closePath(); ctx.fill();}
+function openArrow(x,y,a,col){const s=9; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x,y); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.stroke();}
+function triangle(x,y,a,col){const s=12; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.closePath(); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.stroke();}
+function diamond(x,y,a,col,hollow){ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(7,-4.5); ctx.lineTo(14,0); ctx.lineTo(7,4.5); ctx.closePath(); ctx.fillStyle=hollow?K.panel:col; ctx.fill(); ctx.strokeStyle=col; ctx.stroke(); ctx.restore();}
+function edge(g,emph){const A=g.A,B=g.B,st=STYLE[g.kind]||STYLE['*'];
+  const [a1,a2]=span(A).map(sx), [b1,b2]=span(B).map(sx); let y1=anchorY(A), y2=anchorY(B), x1,x2,c1,c2;
+  if((Math.max(a1,b1)>W+300&&Math.max(a2,b2)>W+300)||(Math.min(a2,b2)<-300&&Math.min(a1,b1)<-300)||(y1<-300&&y2<-300)||(y1>H+300&&y2>H+300)) return null;
+  if(b1<a2-4&&b2>a1+4){const o=Math.max(24,30*cam.s); x1=a2; x2=b2; c1=[x1+o,y1]; c2=[x2+o,y2];}
+  else if(b1>=a2){x1=a2; x2=b1; const d=Math.max(30,(x2-x1)/2); c1=[x1+d,y1]; c2=[x2-d,y2];}
+  else {x1=a1; x2=b2; const d=Math.max(30,(x1-x2)/2); c1=[x1-d,y1]; c2=[x2+d,y2];}
+  const col=st.accent?K.accent:st.muted?K.muted:K.fg;
+  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.25):.6); ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.bezierCurveTo(c1[0],c1[1],c2[0],c2[1],x2,y2); ctx.stroke(); ctx.setLineDash([]);
+  const endA=Math.atan2(y2-c2[1],x2-c2[0]), startA=Math.atan2(c1[1]-y1,c1[0]-x1);
+  if(st.end==='tri') triangle(x2,y2,endA,col); else if(st.end==='open') openArrow(x2,y2,endA,col); else if(st.end==='arrow') arrow(x2,y2,endA,col);
+  if(st.start) diamond(x1,y1,startA,col,st.start==='hollow');
+  const t=.5, bz=(p0,p1,p2,p3)=>(1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t*t*p2+t**3*p3, mx=bz(x1,c1[0],c2[0],x2), my=bz(y1,c1[1],c2[1],y2);
+  const mult=g.links.map(l=>l.multiplicity).find(Boolean);
+  if(mult&&g.kind!=='*'&&cam.s>.8){ctx.globalAlpha=Math.max(ctx.globalAlpha,.8); text(mult,x2+(x2>x1?-16:6),y2-6,10.5,col);}
+  if((g.kind==='*'&&g.n>1&&cam.s>=.45)||(emph&&g.n>1)){const tg='×'+g.n; ctx.font=`10.5px ${K.mono}`; const w=ctx.measureText(tg).width+10; ctx.globalAlpha=Math.max(ctx.globalAlpha,.75); rr(mx-w/2,my-8,w,16,8); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.lineWidth=1; ctx.stroke(); ctx.textAlign='center'; text(tg,mx,my+4,10.5,col); ctx.textAlign='left';}
+  ctx.globalAlpha=1; return {x1,y1,c1,c2,x2,y2};}
+function edgeAt(X,Y){let best=null,bd=9;
+  drawn.forEach(d=>{for(let i=0;i<=24;i++){const t=i/24, b=(p0,p1,p2,p3)=>(1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t*t*p2+t**3*p3;
+    const e=Math.hypot(b(d.x1,d.c1[0],d.c2[0],d.x2)-X,b(d.y1,d.c1[1],d.c2[1],d.y2)-Y); if(e<bd){bd=e; best=d;}}}); return best;}
+
+/* ---------- the card of a relation ---------- */
+const pop=document.getElementById('pop'); let popPinned=false;
+const diagramsWith=(...ids)=>DIAGS.filter(d=>ids.every(id=>d.nodes.includes(unitOf(id))||d.nodes.includes(boxOf(id)))).map(d=>d.name);
+const seqName=s=>s.replace(/^.*@/,'').replace(/::sequence/,'').replace(/\/(.*)$/,' / $1');
+function showPop(g,X,Y,pin){popPinned=!!pin; const A=g.A,B=g.B;
+  let h=`<div class="ttl"><span>${esc(A.label.replace(/^[+-] /,''))} <span style="font-weight:400;color:var(--muted)">${KIND_ES[g.kind]}</span> ${esc(B.label.replace(/^[+-] /,''))}</span><button class="x" data-close="1" aria-label="Cerrar">×</button></div>`;
+  if(g.kind==='*'){const by={}; g.links.forEach(l=>by[l.kind]=(by[l.kind]||0)+l.count); h+=`<h4>${g.n} relaciones</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="row"><span>${KIND_ES[k]}</span><span class="n">×${n}</span></div>`).join('');}
+  const rows=g.links.slice().sort((a,b)=>b.count-a.count);
+  h+=`<h4>De dónde sale</h4>`+rows.slice(0,12).map(l=>`<div class="row"><span>${esc(short(l.from))} → ${esc(short(l.to))}${g.kind==='*'?` <span class="n">${KIND_ES[l.kind]}</span>`:''}</span><span class="n">${l.multiplicity?'['+esc(l.multiplicity)+'] ':''}${l.count>1?'×'+l.count:''}</span></div>`).join('')+(rows.length>12?`<div class="n">y ${rows.length-12} más</div>`:'');
+  const seqs=[...new Set(g.links.flatMap(l=>l.sequences||[]))];
+  if(seqs.length) h+=`<h4>Escrita en las secuencias de</h4>`+seqs.slice(0,10).map(s=>`<span class="tag">${esc(seqName(s))}</span>`).join('');
+  const dg=[...new Set(g.links.flatMap(l=>diagramsWith(l.from,l.to)))];
+  h+=`<h4>Sale en los diagramas</h4>`+(dg.length?dg.map(d=>`<span class="tag">${esc(d)}</span>`).join(''):'<span class="n">ninguno</span>');
+  pop.innerHTML=h; pop.hidden=false;
+  const CW=W*U, CH=H*U, pw=Math.min(340,CW-20); let px=X*U+16, py=Y*U+12; if(px+pw>CW-8) px=Math.max(8,X*U-pw-16); pop.style.left=px+'px'; pop.style.top='0px';
+  const ph=pop.offsetHeight; if(py+ph>CH-8) py=Math.max(8,CH-8-ph); pop.style.top=py+'px';}
+function hidePop(){pop.hidden=true; popPinned=false;}
+pop.addEventListener('click',e=>{if(e.target.closest('[data-close]')) hidePop();});
+cv.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||e.buttons||popPinned) return; const r=cv.getBoundingClientRect(); const d=edgeAt((e.clientX-r.left)/U,(e.clientY-r.top)/U);
+  cv.style.cursor=d?'pointer':''; if(d) showPop(d.g,(e.clientX-r.left)/U,(e.clientY-r.top)/U); else hidePop();});
+document.querySelector('.tools').addEventListener('click',e=>{const b=e.target.closest('[data-fam]'); if(!b) return; FAM[b.dataset.fam]=!FAM[b.dataset.fam]; b.setAttribute('aria-pressed',String(FAM[b.dataset.fam])); loop();});
+
 function drawMini(){const mw=mini.width/DPR, mh=mini.height/DPR; if(mw<5) return; mctx.setTransform(DPR,0,0,DPR,0,0); mctx.clearRect(0,0,mw,mh);
   const k=Math.min(mw/WORLD.w,mh/WORLD.h), ox=(mw-WORLD.w*k)/2, oy=(mh-WORLD.h*k)/2, m=(x,y)=>[ox+(x-WORLD.x)*k,oy+(y-WORLD.y)*k];
   ORDER.forEach(id=>{const n=N[id]; if(!['package','module','iface'].includes(n.kind)) return; const [x,y]=m(n.x,n.y); mctx.strokeStyle=K.muted; mctx.lineWidth=.7; mctx.strokeRect(x,y,n.w*k,n.h*k);});
@@ -191,19 +278,29 @@ cv.addEventListener('wheel',e=>{e.preventDefault(); anim=null; const r=cv.getBou
   const wmx=wx(mx), wmy=wy(my); cam.s=Math.max(.03,Math.min(10,cam.s*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0012)))); cam.x=wmx-(mx-W/2)/cam.s; cam.y=wmy-(my-H/2)/cam.s; loop();},{passive:false});
 function hit(X,Y){const x=wx(X), y=wy(Y); let best=null;
   ORDER.forEach(id=>{const n=N[id]; if(n.hidden||!(x>=n.x&&x<=n.x+n.w&&y>=n.y&&y<=n.y+n.h)) return; if(!visible(n)) return; if(!best||anc(id).length>=anc(best).length) best=id;}); return best;}
-function tap(X,Y){const id=hit(X,Y); if(!id||N[id].kind==='package'){select(null); return;} const box=N[id].kind==='row'?N[id].parent:id;
+function tap(X,Y){const d=edgeAt(X,Y); if(d){showPop(d.g,X,Y,true); return;} hidePop(); const id=hit(X,Y); if(!id||N[id].kind==='package'){select(null); return;} const box=N[id].kind==='row'?N[id].parent:id;
   if(SEL===box) fly(fit(N[box])); else select(box);}
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect(); const id=hit((e.clientX-r.left)/U,(e.clientY-r.top)/U); if(id) fly(fit(N[N[id].kind==='row'?N[id].parent:id]));});
 
 /* ---------- the card of a selected box ---------- */
 const card=document.getElementById('card');
-function select(id){SEL=id; if(!id){card.hidden=true; loop(); return;} const n=N[id];
+const VERB={calls:['Llama a','La llaman'],owns:['Contiene','La contienen'],shares:['Comparte','La comparten'],refs:['Referencia','La referencian'],
+  inherits:['Hereda de','La heredan'],realises:['Realiza','La realizan'],uses:['Usa','La usan']};
+function select(id){SEL=id; RELATED=new Set(); if(!id){card.hidden=true; loop(); return;} const n=N[id];
+  const isUnit=n.kind==='unit'||n.kind==='iface', inside=x=>isUnit?unitOf(x)===id:anc(x).includes(id);
+  const groups={}; linksOf(id).forEach(l=>{const out=inside(l.from), other=isUnit?unitOf(out?l.to:l.from):(boxOf(out?l.to:l.from)||unitOf(out?l.to:l.from));
+    RELATED.add(unitOf(out?l.to:l.from)); anc(unitOf(out?l.to:l.from)).forEach(a=>RELATED.add(a));
+    const verb=VERB[l.kind][out?0:1]; (groups[verb]=groups[verb]||{}); groups[verb][other]=(groups[verb][other]||0)+l.count;});
   const rows=(KIDS[id]||[]).map(k=>N[k]).filter(k=>k.kind==='row'), boxes=(KIDS[id]||[]).map(k=>N[k]).filter(k=>k.kind!=='row');
   const reqs=[...new Set([...n.reqs,...rows.flatMap(r=>r.reqs)])];
   let h=`<div class="hd"><span><span class="st">«${esc(n.st)}» ${esc(anc(id).slice(1).reverse().map(a=>N[a].label).join(' › '))}</span><br><b>${esc(n.label)}</b></span><span><button data-zoom="1">acercar</button><button class="x" data-close="1" aria-label="Cerrar">×</button></span></div>`;
   if(rows.length){const priv=rows.filter(r=>r.vis==='-').length; h+=`<h4>${n.kind==='iface'?'Operaciones':'Miembros'} · ${rows.length}${priv?` (${priv} privados)`:''}</h4>`+rows.map(r=>`<div class="it" style="color:${r.vis==='-'?'var(--priv)':'inherit'}">${esc(r.label)}</div>`).join('');}
   if(boxes.length) h+=`<h4>Contiene · ${boxes.length}</h4>`+boxes.map(b=>`<div class="it" data-sel="${esc(b.id)}">${esc(b.label)} <span class="st">«${esc(b.st)}»</span></div>`).join('');
-  h+=`<h4>Requisitos · ${reqs.length}</h4>`+(reqs.length?reqs.map(r=>`<div class="rq">${esc(r)}</div>`).join(''):'<div class="st">ninguno enlazado</div>');
+  Object.entries(groups).forEach(([verb,others])=>{const list=Object.entries(others).sort((a,b)=>b[1]-a[1]);
+    h+=`<h4>${verb} · ${list.length}</h4>`+list.map(([o,c])=>`<div class="it row" data-sel="${esc(o)}"><span>${esc(N[o]?N[o].label:o)} <span class="st">${esc(N[o]?(N[boxOf(o)]||{}).label||'':'')}</span></span><span class="n">${c>1?'×'+c:''}</span></div>`).join('');});
+  h+=`<h4>Requisitos · ${reqs.length}</h4>`+(reqs.length?reqs.map(r=>`<div class="rq">${esc(r)}</div>${TITLES[r]?`<div class="title">${esc(TITLES[r])}</div>`:''}`).join(''):'<div class="st">ninguno enlazado</div>');
+  const dg=DIAGS.filter(d=>d.nodes.includes(id)).map(d=>d.name);
+  h+=`<h4>Sale en los diagramas · ${dg.length}</h4>`+(dg.length?dg.map(d=>`<span class="tag">${esc(d)}</span>`).join(''):'<div class="st">ninguno</div>');
   card.innerHTML=h; card.hidden=false; loop();}
 card.addEventListener('click',e=>{if(e.target.closest('[data-close]')) return select(null); if(e.target.closest('[data-zoom]')) return fly(fit(N[SEL]));
   const s=e.target.closest('[data-sel]'); if(s){select(s.dataset.sel); fly(fit(N[s.dataset.sel]));}});

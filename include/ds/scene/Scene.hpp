@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_SCENE_SCENE_HPP
 #define DRIFTSPEC_SCENE_SCENE_HPP
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -32,11 +33,33 @@ struct Node {
   Box leanBox;                            ///< its place with private members hidden
 };
 
+/// A relation between two nodes of the scene, of one kind, with what produces it: the
+/// members that call (calls), the attribute that owns or refers (owns, shares, refs), the
+/// sequences where a call is written. A viewer lifts it to the boxes it can see.
+struct Link {
+  std::string from;                    ///< a node: the member row or the unit the relation starts at
+  std::string to;                      ///< a node: the member row, unit or interface it reaches
+  std::string kind;                    ///< inherits, realises, owns, shares, refs, uses or calls
+  int count = 0;                       ///< how many times the model states it
+  std::string multiplicity;            ///< owns, shares, refs: 1, 0..1 or *
+  std::vector<std::string> sequences;  ///< calls: the sequences that write the call
+};
+
+/// A diagram of the workspace and the nodes it shows, so a viewer can say where a box or a relation is drawn.
+struct DiagramView {
+  std::string name;
+  std::string kind;
+  std::vector<std::string> nodes;
+};
+
 /// The whole model laid out once, nested, in two variants: every member, public members only.
 struct SceneDocument {
   std::vector<Node> nodes;
   Box world;
   Box leanWorld;
+  std::vector<Link> links;
+  std::vector<DiagramView> diagrams;
+  std::map<std::string, std::string> titles;  ///< the title of every requirement and constraint a node links
 };
 
 /// Builds the structural scene of a model: every box placed inside its parent, once, so a
@@ -54,6 +77,8 @@ class Scene {
   static std::string frame(const std::string& page, const std::string& title, int height);
 
  private:
+  void relate(SceneDocument& out_document) const;  // the links between nodes, the diagrams that show them, the titles of requirements
+
   const model::Model& model_;
 };
 

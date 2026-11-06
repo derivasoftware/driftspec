@@ -161,6 +161,7 @@ TEST_F(TestQualification, TheWholeModelIsLaidOutOnceForAViewer) {
   }
   EXPECT_GT(nested, 10);
   EXPECT_EQ(scene["lean_world"].size(), 4u);
+  EXPECT_TRUE(scene["links"].is_array() && scene["diagrams"].is_array());  // what joins the boxes, and where they are drawn
 }
 
 // SREQ-00013-1: the viewer is one page ds writes, with the scene inside, that a browser opens as it is

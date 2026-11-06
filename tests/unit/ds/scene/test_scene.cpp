@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -122,6 +123,72 @@ TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
   EXPECT_NE(page.find("a&lt;b \u00b7 DriftSpec"), std::string::npos);
   EXPECT_EQ(page.find("/*SCENE*/"), std::string::npos);
   EXPECT_EQ(page.find("/*TITLE*/"), std::string::npos);
+}
+
+/// The links of a scene: each relation of the model between two of its nodes, with what produces it.
+class TestLink : public ::testing::Test {
+ protected:
+  ds::model::Model model;
+  std::vector<ds::scene::Link> links;
+
+  void SetUp() override {
+    model.declare(entity(Kind::Package, "p", "p", ""));
+    model.declare(entity(Kind::Module, "p@m", "m", "p@"));
+    model.declare(entity(Kind::Class, "p@m::A", "A", "p@m"));
+    model.declare(entity(Kind::Class, "p@m::B", "B", "p@m"));
+    Entity run = entity(Kind::Method, "p@m::A::run", "run", "p@m::A");
+    model.declare(run);
+    Entity b = entity(Kind::Attribute, "p@m::A::b_", "b_", "p@m::A");
+    b.fields["type"] = "B";
+    model.declare(b);
+    model.declare(entity(Kind::Method, "p@m::B::go", "go", "p@m::B"));
+    model.relate({"calls", "p@m::A::run::sequence::m0", "p@m::B::go", {}, ""});
+    model.relate({"calls", "p@m::A::run::sequence::m3", "p@m::B::go", {}, ""});
+    model.relate({"owns", "p@m::A::b_", "p@m::B", {}, "*"});
+    model.relate({"uses", "p@m::A::run", "p@m::A", {}, ""});  // a member naming its own class stays inside the box
+    links = ds::scene::Scene(model).build().links;
+  }
+
+  const ds::scene::Link* link(const std::string& kind) const {
+    for (const auto& l : links)
+      if (l.kind == kind) return &l;
+    return nullptr;
+  }
+};
+
+TEST_F(TestLink, ACallGoesFromTheMemberWhoseBehaviourWritesItToTheMemberItCalls) {
+  const auto* call = link("calls");
+  ASSERT_NE(call, nullptr);
+  EXPECT_EQ(call->from, "p@m::A::run");
+  EXPECT_EQ(call->to, "p@m::B::go");
+  EXPECT_EQ(call->count, 2);
+  ASSERT_EQ(call->sequences.size(), 1u);
+  EXPECT_EQ(call->sequences[0], "p@m::A::run::sequence");
+}
+
+TEST_F(TestLink, OwnershipGoesFromTheAttributeWithItsMultiplicity) {
+  const auto* owns = link("owns");
+  ASSERT_NE(owns, nullptr);
+  EXPECT_EQ(owns->from, "p@m::A::b_");
+  EXPECT_EQ(owns->to, "p@m::B");
+  EXPECT_EQ(owns->multiplicity, "*");
+}
+
+TEST_F(TestLink, ARelationInsideOneBoxIsNoLink) { EXPECT_EQ(link("uses"), nullptr); }
+
+/// A diagram of the workspace, as the scene lists it: the nodes it shows.
+class TestDiagramView : public TestScene {};
+
+TEST_F(TestDiagramView, ADiagramListsTheNodesItShows) {
+  Entity diagram = entity(Kind::Diagram, "diagram:CL_M", "CL_M", "");
+  diagram.fields["kind"] = "class";
+  diagram.fields["include"] = "p@m::*";
+  model.declare(diagram);
+  const auto doc = ds::scene::Scene(model).build();
+  ASSERT_EQ(doc.diagrams.size(), 1u);
+  EXPECT_EQ(doc.diagrams[0].name, "CL_M");
+  EXPECT_EQ(doc.diagrams[0].kind, "class");
+  EXPECT_NE(std::find(doc.diagrams[0].nodes.begin(), doc.diagrams[0].nodes.end(), "p@m::A"), doc.diagrams[0].nodes.end());
 }
 
 }  // namespace

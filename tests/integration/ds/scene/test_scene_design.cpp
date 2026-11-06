@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -102,6 +104,44 @@ TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotClos
   EXPECT_GT(theme, page.find("--k-class:#3567a0"));                    // after the viewer's own value, so it wins
   EXPECT_NE(page.find("<\\/style><script>bad()"), std::string::npos);  // left as text inside the style, never a tag
   EXPECT_EQ(page.find("</style>", theme), page.find("</style>\n</head>"));
+}
+
+TEST_F(TestSceneOfTheDesign, EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws) {
+  const auto doc = ds::scene::Scene(model).build();
+  const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "calls"};
+  bool checkerCallsModel = false;
+  for (const auto& l : doc.links) {
+    EXPECT_EQ(byId.count(l.from), 1u) << l.from;
+    EXPECT_EQ(byId.count(l.to), 1u) << l.to;
+    EXPECT_TRUE(kinds.count(l.kind)) << l.kind;
+    EXPECT_GT(l.count, 0);
+    if (l.kind == "calls" && l.from.rfind("driftspec@ds@check::Checker::", 0) == 0 && l.to.rfind("driftspec@ds@model::Model::", 0) == 0) {
+      checkerCallsModel = true;
+      EXPECT_FALSE(l.sequences.empty());
+    }
+  }
+  EXPECT_TRUE(checkerCallsModel);
+  EXPECT_GT(doc.links.size(), 200u);
+}
+
+TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle) {
+  const auto doc = ds::scene::Scene(model).build();
+  bool checkNamespace = false;
+  for (const auto& d : doc.diagrams) {
+    for (const auto& n : d.nodes) EXPECT_EQ(byId.count(n), 1u) << d.name << " " << n;
+    if (d.name == "CL_CheckNamespace")
+      checkNamespace = std::find(d.nodes.begin(), d.nodes.end(), "driftspec@ds@check::Checker") != d.nodes.end();
+  }
+  EXPECT_TRUE(checkNamespace);
+  for (const auto& n : doc.nodes)
+    for (const auto& r : n.requirements) EXPECT_TRUE(doc.titles.count(r)) << r;
+}
+
+TEST_F(TestSceneOfTheDesign, HidingPrivateMembersMakesNoBoxWider) {
+  for (const auto& n : nodes) {
+    if (!n.lean || n.kind == "row") continue;
+    EXPECT_LE(n.leanBox.w, n.full.w + 0.01) << n.id;
+  }
 }
 
 TEST_F(TestSceneOfTheDesign, EveryBoxNestsInItsParentApartFromItsSiblings) { nestsAndKeepsApart(false); }

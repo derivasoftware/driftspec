@@ -92,6 +92,65 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
     }
 
+    requirement REQ-00072-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall carry each relation between its nodes with its kind and what produces it, the diagrams that show each node, and the title of every requirement linked
+      text:
+        A link joins the nodes that stand for a relation's ends: a call goes
+        from the member whose behaviour writes it to the member it calls,
+        with how many times and the sequences that write it; ownership,
+        sharing and reference go from the attribute to the type, with their
+        multiplicity; inheritance, realisation and use join the boxes they
+        name. A relation inside one box is no link. Every diagram of the
+        workspace lists the nodes it shows, through the same projection a
+        drawing uses. The viewer draws each kind in its notation (a hollow
+        triangle for inheritance, a filled diamond for composition, a dashed
+        arrow for use, the accent for calls), lifted to the boxes that can be
+        seen, and on demand.
+      rationale:
+        Owner, 2026-11-06: the relations, each in its own rendering, and on
+        a box or a relation the detail of where it comes from and where it is
+        drawn.
+      tags: render, scene, relations
+    }
+
+    verification VER-00080-1 {
+      status: approved
+      @requirement REQ-00072-1
+      title: Integration tests confirm every link of ds's design joins two nodes in a kind the viewer draws, every diagram lists nodes of the scene, every requirement has its title
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle
+    }
+
+    verification VER-00081-1 {
+      status: approved
+      @requirement REQ-00069-1
+      title: Integration tests confirm hiding private members makes no box of ds's design wider
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.HidingPrivateMembersMakesNoBoxWider
+    }
+
+    dataclass Link {                         // a relation between two nodes, with what produces it
+      @requirement REQ-00072-1
+      + from: std::string
+      + to: std::string
+      + kind: std::string
+      + count: int
+      + multiplicity: std::string
+      + sequences: std::vector<std::string>
+    }
+
+    dataclass DiagramView {                  // a diagram of the workspace and the nodes it shows
+      @requirement REQ-00072-1
+      + name: std::string
+      + kind: std::string
+      + nodes: std::vector<std::string>
+    }
+
     dataclass Box {                          // a rectangle of the scene: one unit is a pixel at zoom 1
       @requirement REQ-00069-1
       + x: double
@@ -119,6 +178,9 @@ package driftspec@ds {
       + nodes: std::vector<Node>
       + owns world: Box
       + owns leanWorld: Box
+      + owns links: std::vector<Link>
+      + owns diagrams: std::vector<DiagramView>
+      + titles: std::map<std::string, std::string>
     }
 
     class Scene {
@@ -131,6 +193,9 @@ package driftspec@ds {
         @requirement REQ-00070-1
         @requirement REQ-00071-1
       }
+      - relate(out_document: SceneDocument) -> void {
+        @requirement REQ-00072-1
+      }
       + static frame(page: std::string, title: std::string, height: int) -> std::string {
         @requirement REQ-00071-1
       }
@@ -141,6 +206,7 @@ package driftspec@ds {
     sequence Scene::build {
       loop each variant {
       }
+      -> relate(out_document)
       return document
     }
 

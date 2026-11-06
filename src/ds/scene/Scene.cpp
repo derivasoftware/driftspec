@@ -6,7 +6,11 @@
 #include <map>
 #include <nlohmann/json.hpp>
 #include <regex>
+#include <set>
 #include <utility>
+
+#include "ds/render/Ir.hpp"
+#include "ds/render/IrExport.hpp"
 
 namespace ds {
 namespace scene {
@@ -92,7 +96,7 @@ void shift(std::vector<std::pair<std::string, std::pair<double, double>>>& kids,
 /// Measures and lays out every box of the model once, for one variant (lean hides private members).
 class Layout {
  public:
-  Layout(const model::Model& model, bool lean) : lean_(lean) {
+  Layout(const model::Model& model, bool lean, std::map<std::string, double>* widths) : lean_(lean), widths_(widths) {
     for (const auto& pair : model.entities()) {
       const model::Entity& e = pair.second;
       if (!e.expected) byScope_[e.scope].push_back(&e);
@@ -111,7 +115,8 @@ class Layout {
     for (const model::Entity* e : children("")) {
       if (e->kind == model::Kind::Package && !e->has("extern")) roots.push_back({package(*e, ""), {0, 0}});
     }
-    const auto size = shelf(roots, shapes, kTopGap, target(roots, shapes, 0, 1.6));
+    const auto size = shelf(roots, shapes, kTopGap, width("", target(roots, shapes, 0, 1.6)));
+    keep("", size.first);
     root_ = {size.first, size.second, roots};
     for (const auto& r : roots) place(r.first, r.second.first, r.second.second);
     for (const auto& r : roots) top.push_back(r.first);
@@ -119,6 +124,18 @@ class Layout {
 
  private:
   bool lean_;
+  std::map<std::string, double>* widths_;  // the shelf width of every box in the full layout, kept by the lean one
+
+  // the lean layout fills its shelves no wider than the full one came out, so hiding private
+  // members never widens a box, only shortens it
+  double width(const std::string& id, double computed) const {
+    if (!lean_) return computed;
+    const auto kept = widths_->find(id);
+    return kept == widths_->end() ? computed : kept->second;
+  }
+  void keep(const std::string& id, double used) {
+    if (!lean_) (*widths_)[id] = used;
+  }
   std::map<std::string, std::vector<const model::Entity*>> byScope_;
   std::map<std::string, std::vector<std::string>> linked_;  // requirements and constraints, by the entity linked to them
   Shape root_;
@@ -217,7 +234,8 @@ class Layout {
     }
     std::stable_sort(units.begin(), units.end(), [&](const auto& a, const auto& b) { return shapes[a.first].h > shapes[b.first].h; });
     units.insert(units.end(), boxes.begin(), boxes.end());
-    const auto size = shelf(units, shapes, kUnitGap, target(units, shapes, 260, 1.5));
+    const auto size = shelf(units, shapes, kUnitGap, width(e.id, target(units, shapes, 260, 1.5)));
+    keep(e.id, size.first);
     shift(units, kModulePad, kModuleHead);
     node(e.id, "module", parent, e.name, "module", visibility(e), e.id);
     shapes[e.id] = {size.first + 2 * kModulePad, size.second + kModuleHead + kModulePad, units};
@@ -249,7 +267,8 @@ class Layout {
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Interface) interfaces.push_back({interface(*k, e.id), {0, 0}});
     }
-    const auto size = shelf(boxes, shapes, kBoxGap, target(boxes, shapes, 0, 1.6));
+    const auto size = shelf(boxes, shapes, kBoxGap, width(e.id, target(boxes, shapes, 0, 1.6)));
+    keep(e.id, size.first);
     const double left = interfaces.empty() ? kPackagePad : kLeftForInterfaces;
     shift(boxes, left, kPackageHead);
     double y = kPackageHead + 40;
@@ -294,8 +313,78 @@ Box bounds(const std::vector<Node>& nodes, bool lean) {
 
 Scene::Scene(const model::Model& model) : model_(model) {}
 
+namespace {
+
+// the node that stands for a model identity: itself, a function's signature row, or the nearest
+// enclosing node; a message stands for the member whose behaviour it is written in
+std::string nodeFor(const std::set<std::string>& ids, std::string id) {
+  const auto sequence = id.find("::sequence");
+  if (sequence != std::string::npos) id = id.substr(0, sequence);
+  for (;;) {
+    if (ids.count(id)) return id;
+    const auto at = id.rfind("::");
+    if (at == std::string::npos) return "";
+    id = id.substr(0, at);
+  }
+}
+
+}  // namespace
+
+void Scene::relate(SceneDocument& out_document) const {
+  std::set<std::string> ids;
+  std::map<std::string, std::string> parent;
+  for (const auto& n : out_document.nodes) {
+    ids.insert(n.id);
+    parent[n.id] = n.parent;
+  }
+  static const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "calls"};
+  std::map<std::tuple<std::string, std::string, std::string>, Link> links;
+  std::map<std::tuple<std::string, std::string, std::string>, std::set<std::string>> sequences;
+  for (const auto& r : model_.relations()) {
+    if (!kinds.count(r.kind)) continue;
+    const std::string from = nodeFor(ids, r.from), to = nodeFor(ids, r.to);
+    if (from.empty() || to.empty() || from == to || parent[from] == to || parent[to] == from) continue;  // within one box
+    const auto key = std::make_tuple(from, to, r.kind);
+    Link& link = links[key];
+    link.from = from;
+    link.to = to;
+    link.kind = r.kind;
+    ++link.count;
+    if (!r.multiplicity.empty()) link.multiplicity = r.multiplicity;
+    if (r.kind == "calls") sequences[key].insert(r.from.substr(0, r.from.rfind("::")));
+  }
+  for (auto& pair : links) {
+    for (const auto& s : sequences[pair.first]) pair.second.sequences.push_back(s);
+    out_document.links.push_back(pair.second);
+  }
+  // where each box is drawn: every diagram of the workspace, through the projection a drawing uses
+  const render::IrExport ir(model_);
+  for (const auto& id : ir.diagrams()) {
+    const std::string text = ir.render(id, false);
+    if (text.empty()) continue;
+    DiagramView view;
+    view.name = id.substr(std::string("diagram:").size());
+    const model::Entity* diagram = model_.find(id);
+    view.kind = diagram && diagram->fields.count("kind") ? diagram->fields.at("kind") : "";
+    std::set<std::string> shown;
+    for (const auto& n : render::IrDocument::parse(text).bundled().nodes) {
+      const std::string node = nodeFor(ids, n.id);
+      if (!node.empty() && shown.insert(node).second) view.nodes.push_back(node);
+    }
+    if (!view.nodes.empty()) out_document.diagrams.push_back(view);
+  }
+  for (const auto& n : out_document.nodes) {
+    for (const auto& r : n.requirements) {
+      const model::Entity* e = model_.find(r);
+      const auto title = e ? e->fields.find("title") : std::map<std::string, std::string>::const_iterator();
+      if (e && title != e->fields.end()) out_document.titles[r] = title->second;
+    }
+  }
+}
+
 SceneDocument Scene::build() const {
-  Layout full(model_, false), lean(model_, true);
+  std::map<std::string, double> widths;
+  Layout full(model_, false, &widths), lean(model_, true, &widths);
   full.run();
   lean.run();
   SceneDocument doc;
@@ -313,6 +402,7 @@ SceneDocument Scene::build() const {
   for (const auto& t : full.top) walk(t);
   doc.world = bounds(doc.nodes, false);
   doc.leanWorld = bounds(doc.nodes, true);
+  relate(doc);
   return doc;
 }
 
@@ -334,6 +424,16 @@ std::string Scene::render(bool pretty) const {
   }
   out["world"] = boxJson(doc.world);
   out["lean_world"] = boxJson(doc.leanWorld);
+  out["links"] = nlohmann::json::array();
+  for (const auto& l : doc.links) {
+    nlohmann::json j = {{"from", l.from}, {"to", l.to}, {"kind", l.kind}, {"count", l.count}};
+    if (!l.multiplicity.empty()) j["multiplicity"] = l.multiplicity;
+    if (!l.sequences.empty()) j["sequences"] = l.sequences;
+    out["links"].push_back(j);
+  }
+  out["diagrams"] = nlohmann::json::array();
+  for (const auto& d : doc.diagrams) out["diagrams"].push_back({{"name", d.name}, {"kind", d.kind}, {"nodes", d.nodes}});
+  out["titles"] = doc.titles;
   return pretty ? out.dump(2) : out.dump();
 }
 
