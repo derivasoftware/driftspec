@@ -147,16 +147,17 @@ TEST_F(TestQualification, TheWholeModelIsLaidOutOnceForAViewer) {
   EXPECT_EQ(run.code, 0);
   const auto scene = nlohmann::json::parse(run.out);
   ASSERT_FALSE(scene["nodes"].empty());
-  std::map<std::string, nlohmann::json> byId;
-  for (const auto& n : scene["nodes"]) byId[n["id"].get<std::string>()] = n;
+  std::map<std::string, size_t> column;  // the document names its columns
+  for (size_t i = 0; i < scene["fields"]["node"].size(); ++i) column[scene["fields"]["node"][i]] = i;
+  const auto& nodes = scene["nodes"];
   int nested = 0;
-  for (const auto& n : scene["nodes"]) {
-    const std::string parent = n["parent"];
-    if (parent.empty() || n["kind"] == "interface") continue;
-    const auto& b = n["full"];
-    const auto& p = byId.at(parent)["full"];
-    EXPECT_TRUE(b[0] >= p[0] && b[1] >= p[1] && b[0].get<double>() + b[2].get<double>() <= p[0].get<double>() + p[2].get<double>() + 0.1)
-        << n["id"];
+  for (const auto& n : nodes) {
+    const int parent = n[column["parent"]];
+    if (parent < 0 || n[column["kind"]] == "interface") continue;
+    const auto& b = n[column["full"]];
+    const auto& p = nodes[static_cast<size_t>(parent)][column["full"]];
+    EXPECT_TRUE(b[0] >= p[0] && b[1] >= p[1] && b[0].get<double>() + b[2].get<double>() <= p[0].get<double>() + p[2].get<double>() + 1)
+        << n[column["id"]];
     ++nested;
   }
   EXPECT_GT(nested, 10);
@@ -171,7 +172,7 @@ TEST_F(TestQualification, TheViewerIsOnePageWithTheWholeModelInside) {
   EXPECT_EQ(run.out.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(run.out.find("static \u00b7 DriftSpec"), std::string::npos);
   const auto scene = nlohmann::json::parse(ds("render " + examples("static") + " -f json").out);
-  for (const auto& n : scene["nodes"]) EXPECT_NE(run.out.find("\"" + n["id"].get<std::string>() + "\""), std::string::npos) << n["id"];
+  for (const auto& n : scene["nodes"]) EXPECT_NE(run.out.find("\"" + n[0].get<std::string>() + "\""), std::string::npos) << n[0];
 }
 
 // SREQ-00013-1: the viewer embeds into another document as one frame, in the reader's colours

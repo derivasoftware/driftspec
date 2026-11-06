@@ -61,14 +61,27 @@ struct Step {
   bool back = false;  ///< the answer of the call above it
 };
 
-/// A behaviour replayed over the scene: a sequence and every sequence it expands to, in order,
-/// along one scenario.
-struct Tour {
+/// One call of a behaviour, as written: whom it calls and which behaviour it goes on into.
+struct Call {
+  std::string to;      ///< the node it calls
+  std::string label;   ///< the call as written, op(args)
+  int expands = -1;    ///< the behaviour of the callee it goes on into, or -1
+  std::string result;  ///< what comes back, when the sequence names it
+};
+
+/// A sequence walked along one scenario, its calls in order: written once, however many tours
+/// pass through it. A tour is a behaviour expanded through the behaviours its calls go on into.
+struct Behaviour {
   std::string id;        ///< the subject's node, and / scenario for a named one
   std::string subject;   ///< the node whose behaviour it is
   std::string scenario;  ///< empty for the default path
-  std::string group;     ///< interface or method
-  std::vector<Step> steps;
+  std::vector<Call> calls;
+};
+
+/// A behaviour a viewer offers to replay: an interface operation or a public method or function.
+struct Tour {
+  int behaviour = -1;
+  std::string group;  ///< interface or method
 };
 
 /// The whole model laid out once, nested, in two variants: every member, public members only.
@@ -79,6 +92,7 @@ struct SceneDocument {
   std::vector<Link> links;
   std::vector<DiagramView> diagrams;
   std::map<std::string, std::string> titles;  ///< the title of every requirement and constraint a node links
+  std::vector<Behaviour> behaviours;
   std::vector<Tour> tours;
 };
 
@@ -95,6 +109,9 @@ class Scene {
   std::string page(const std::string& title, const std::string& css = "", const std::vector<std::string>& focus = {}) const;
   /// A page as an iframe that carries it whole (srcdoc), to paste into any HTML document.
   static std::string frame(const std::string& page, const std::string& title, int height);
+  /// The steps of a behaviour expanded through the behaviours its calls go on into, down to a
+  /// depth: each call, the steps of what it calls, then its answer. A cycle is not entered twice.
+  static std::vector<Step> expand(const SceneDocument& document, int behaviour, int depth);
 
  private:
   void relate(SceneDocument& out_document) const;

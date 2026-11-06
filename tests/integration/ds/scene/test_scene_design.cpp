@@ -139,28 +139,44 @@ TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirement
 
 TEST_F(TestSceneOfTheDesign, EveryInterfaceCommandIsATourThatReachesTheModelAndComesBack) {
   const auto doc = ds::scene::Scene(model).build();
-  const ds::scene::Tour* check = nullptr;
-  const ds::scene::Tour* syntax = nullptr;
+  int check = -1, syntax = -1;
   for (const auto& t : doc.tours) {
-    for (const auto& s : t.steps) {
-      EXPECT_EQ(byId.count(s.from), 1u) << t.id << " " << s.from;
-      EXPECT_EQ(byId.count(s.to), 1u) << t.id << " " << s.to;
+    const auto& b = doc.behaviours[static_cast<size_t>(t.behaviour)];
+    for (const auto& s : ds::scene::Scene::expand(doc, t.behaviour, 7)) {
+      EXPECT_EQ(byId.count(s.from), 1u) << b.id << " " << s.from;
+      EXPECT_EQ(byId.count(s.to), 1u) << b.id << " " << s.to;
     }
-    if (t.id == "driftspec@ds@cli::check") check = &t;
-    if (t.id == "driftspec@ds@cli::check / syntax-error") syntax = &t;
+    if (b.id == "driftspec@ds@cli::check") {
+      check = t.behaviour;
+      EXPECT_EQ(t.group, "interface");
+    }
+    if (b.id == "driftspec@ds@cli::check / syntax-error") syntax = t.behaviour;
   }
-  ASSERT_NE(check, nullptr);
-  ASSERT_NE(syntax, nullptr);  // a named scenario is a tour of its own
-  EXPECT_EQ(check->group, "interface");
+  ASSERT_GE(check, 0);
+  ASSERT_GE(syntax, 0);  // a named scenario is a tour of its own
+  const auto steps = ds::scene::Scene::expand(doc, check, 7);
   bool reachesTheChecker = false;
   int depth = 0;
-  for (const auto& s : check->steps) {
+  for (const auto& s : steps) {
     reachesTheChecker |= s.to.rfind("driftspec@ds@check::Checker::", 0) == 0;
     depth = std::max(depth, s.depth);
   }
   EXPECT_TRUE(reachesTheChecker);
   EXPECT_GE(depth, 4);
-  EXPECT_TRUE(check->steps.back().back);  // the command answers
+  EXPECT_TRUE(steps.back().back);  // the command answers
+}
+
+TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce) {
+  const auto doc = ds::scene::Scene(model).build();
+  std::set<std::string> seen;
+  size_t calls = 0, steps = 0;
+  for (const auto& b : doc.behaviours) {
+    EXPECT_TRUE(seen.insert(b.id).second) << b.id;
+    calls += b.calls.size();
+  }
+  for (const auto& t : doc.tours) steps += ds::scene::Scene::expand(doc, t.behaviour, 7).size();
+  EXPECT_LT(calls * 5, steps);                                             // the tours replay many more steps than the calls written
+  EXPECT_LT(ds::scene::Scene(model).page("design").size(), 250u * 1024u);  // the whole viewer of ds's design
 }
 
 TEST_F(TestSceneOfTheDesign, HidingPrivateMembersMakesNoBoxWider) {

@@ -117,7 +117,25 @@ body.touring .stage{right:380px}
 </aside>
 <script>
 (()=>{
-const SCENE=/*SCENE*/;
+const SCENE=decode(/*SCENE*/);
+// the scene comes compact (version 2): records are arrays whose columns `fields` names, and nodes and
+// behaviours are named by index; a tour is a behaviour expanded through the behaviours its calls go on into
+function decode(r){if(r.version!==2) return r;
+  const col=name=>{const f=r.fields[name]; return row=>{const o={}; f.forEach((k,i)=>{o[k]=row[i];}); return o;};};
+  const nodes=r.nodes.map(col('node')); const id=i=>i>=0&&nodes[i]?nodes[i].id:'';
+  nodes.forEach(n=>{n.parent=id(n.parent);});
+  const behaviours=r.behaviours.map(col('behaviour')).map(b=>({subject:id(b.subject),scenario:b.scenario,calls:b.calls.map(col('call')).map(c=>({to:id(c.to),label:c.label,next:c.behaviour,result:c.result}))}));
+  behaviours.forEach(b=>{b.id=b.subject+(b.scenario?' / '+b.scenario:'');});
+  const expand=(b0,depth)=>{const steps=[], stack=new Set();
+    const walk=(b,caller,level)=>{stack.add(b); for(const c of behaviours[b].calls){if(steps.length>=2000) break;
+      steps.push({f:caller,t:c.to,m:c.label,d:level}); if(c.next<0||level>=depth||stack.has(c.next)) continue;
+      walk(c.next,c.to,level+1); steps.push({f:c.to,t:caller,m:c.result||'\u21a9',d:level,ret:1});} stack.delete(b);};
+    walk(b0,behaviours[b0].subject,1); return steps;};
+  const tours=r.tours.map(col('tour')).map(t=>{const b=behaviours[t.behaviour]; const o={id:b.id,subject:b.subject,scenario:b.scenario,group:t.group};
+    Object.defineProperty(o,'steps',{get(){return this._s||(this._s=expand(t.behaviour,12));}}); return o;});
+  return {nodes,world:r.world,lean_world:r.lean_world,titles:r.titles,tours,
+    links:r.links.map(col('link')).map(l=>({from:id(l.from),to:id(l.to),kind:l.kind,count:l.count,multiplicity:l.multiplicity,sequences:l.behaviours.map(b=>behaviours[b]?behaviours[b].id:'')})),
+    diagrams:r.diagrams.map(col('diagram')).map(d=>({name:d.name,kind:d.kind,nodes:d.nodes.map(id)}))};}
 const FOCUS=/*FOCUS*/;  // the identities a diagram shows: the page opens framed on them
 /* ---------- the scene, as the viewer reads it ---------- */
 const N={}, ORDER=[], KIDS={};
@@ -256,7 +274,7 @@ function edgeAt(X,Y){let best=null,bd=9;
 /* ---------- the card of a relation ---------- */
 const pop=document.getElementById('pop'); let popPinned=false;
 const diagramsWith=(...ids)=>DIAGS.filter(d=>ids.every(id=>d.nodes.includes(unitOf(id))||d.nodes.includes(boxOf(id)))).map(d=>d.name);
-const seqName=s=>s.replace(/^.*@/,'').replace(/::sequence/,'').replace(/\/(.*)$/,' / $1');
+const seqName=s=>s.replace(/^.*@/,'');
 function showPop(g,X,Y,pin){popPinned=!!pin; const A=g.A,B=g.B;
   let h=`<div class="ttl"><span>${esc(A.label.replace(/^[+-] /,''))} <span style="font-weight:400;color:var(--muted)">${KIND_ES[g.kind]}</span> ${esc(B.label.replace(/^[+-] /,''))}</span><button class="x" data-close="1" aria-label="Cerrar">×</button></div>`;
   if(g.kind==='*'){const by={}; g.links.forEach(l=>by[l.kind]=(by[l.kind]||0)+l.count); h+=`<h4>${g.n} relaciones</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="row"><span>${KIND_ES[k]}</span><span class="n">×${n}</span></div>`).join('');}

@@ -289,11 +289,6 @@ class Layout {
   }
 };
 
-nlohmann::json boxJson(const Box& b) {
-  const auto r = [](double v) { return std::round(v * 10) / 10; };
-  return nlohmann::json::array({r(b.x), r(b.y), r(b.w), r(b.h)});
-}
-
 Box bounds(const std::vector<Node>& nodes, bool lean) {
   bool any = false;
   double x0 = 0, y0 = 0, x1 = 0, y1 = 0;
@@ -407,67 +402,99 @@ SceneDocument Scene::build() const {
   return doc;
 }
 
+// The document is compact, and says how to read itself: every record is an array whose
+// columns "fields" names, and a node, a behaviour or a link is named by its index.
 std::string Scene::render(bool pretty) const {
   const SceneDocument doc = build();
+  std::map<std::string, int> at;
+  std::set<std::string> ids;
+  for (size_t i = 0; i < doc.nodes.size(); ++i) {
+    at[doc.nodes[i].id] = static_cast<int>(i);
+    ids.insert(doc.nodes[i].id);
+  }
+  const auto index = [&at](const std::string& id) { return at.count(id) ? at.at(id) : -1; };
+  const auto ints = [](const Box& b) {
+    return nlohmann::json::array({std::lround(b.x), std::lround(b.y), std::lround(b.w), std::lround(b.h)});
+  };
+  std::map<std::string, int> behaviourOf;  // "subject / scenario" -> its index
+  for (size_t i = 0; i < doc.behaviours.size(); ++i) behaviourOf[doc.behaviours[i].id] = static_cast<int>(i);
+
   nlohmann::json out;
+  out["version"] = 2;
+  out["fields"] = {{"node", {"id", "kind", "parent", "label", "stereotype", "visibility", "requirements", "full", "lean"}},
+                   {"link", {"from", "to", "kind", "count", "multiplicity", "behaviours"}},
+                   {"behaviour", {"subject", "scenario", "calls"}},
+                   {"call", {"to", "label", "behaviour", "result"}},
+                   {"tour", {"behaviour", "group"}},
+                   {"diagram", {"name", "kind", "nodes"}}};
   out["nodes"] = nlohmann::json::array();
   for (const auto& n : doc.nodes) {
-    nlohmann::json j = {{"id", n.id},
-                        {"kind", n.kind},
-                        {"parent", n.parent},
-                        {"label", n.label},
-                        {"stereotype", n.stereotype},
-                        {"visibility", n.visibility},
-                        {"requirements", n.requirements},
-                        {"full", boxJson(n.full)}};
-    j["lean"] = n.lean ? boxJson(n.leanBox) : nlohmann::json();
-    out["nodes"].push_back(j);
+    out["nodes"].push_back({n.id, n.kind, index(n.parent), n.label, n.stereotype, n.visibility, n.requirements, ints(n.full),
+                            n.lean ? ints(n.leanBox) : nlohmann::json()});
   }
-  out["world"] = boxJson(doc.world);
-  out["lean_world"] = boxJson(doc.leanWorld);
+  out["world"] = ints(doc.world);
+  out["lean_world"] = ints(doc.leanWorld);
   out["links"] = nlohmann::json::array();
   for (const auto& l : doc.links) {
-    nlohmann::json j = {{"from", l.from}, {"to", l.to}, {"kind", l.kind}, {"count", l.count}};
-    if (!l.multiplicity.empty()) j["multiplicity"] = l.multiplicity;
-    if (!l.sequences.empty()) j["sequences"] = l.sequences;
-    out["links"].push_back(j);
-  }
-  out["diagrams"] = nlohmann::json::array();
-  for (const auto& d : doc.diagrams) out["diagrams"].push_back({{"name", d.name}, {"kind", d.kind}, {"nodes", d.nodes}});
-  out["titles"] = doc.titles;
-  out["tours"] = nlohmann::json::array();
-  for (const auto& t : doc.tours) {
-    nlohmann::json steps = nlohmann::json::array();
-    for (const auto& s : t.steps) {
-      nlohmann::json j = {{"f", s.from}, {"t", s.to}, {"m", s.label}, {"d", s.depth}};
-      if (s.back) j["ret"] = 1;
-      steps.push_back(j);
+    nlohmann::json written = nlohmann::json::array();
+    for (const auto& s : l.sequences) {  // a sequence id, X::sequence or X::sequence/scenario, as the behaviour it is
+      const auto cut = s.find("::sequence");
+      const std::string scenario = s.size() > cut + 10 ? s.substr(cut + 11) : "";
+      const auto b = behaviourOf.find(nodeFor(ids, s.substr(0, cut)) + (scenario.empty() ? "" : " / " + scenario));
+      if (b != behaviourOf.end()) written.push_back(b->second);
     }
-    out["tours"].push_back({{"id", t.id}, {"subject", t.subject}, {"scenario", t.scenario}, {"group", t.group}, {"steps", steps}});
+    out["links"].push_back({index(l.from), index(l.to), l.kind, l.count, l.multiplicity, written});
   }
+  out["behaviours"] = nlohmann::json::array();
+  for (const auto& b : doc.behaviours) {
+    nlohmann::json calls = nlohmann::json::array();
+    for (const auto& c : b.calls) calls.push_back({index(c.to), c.label, c.expands, c.result});
+    out["behaviours"].push_back({index(b.subject), b.scenario, calls});
+  }
+  out["tours"] = nlohmann::json::array();
+  for (const auto& t : doc.tours) out["tours"].push_back({t.behaviour, t.group});
+  out["diagrams"] = nlohmann::json::array();
+  for (const auto& d : doc.diagrams) {
+    nlohmann::json shown = nlohmann::json::array();
+    for (const auto& n : d.nodes) shown.push_back(index(n));
+    out["diagrams"].push_back({d.name, d.kind, shown});
+  }
+  out["titles"] = doc.titles;
   return pretty ? out.dump(2) : out.dump();
 }
 
 namespace {
 
-const int kMaxDepth = 7;
-const size_t kMaxSteps = 600;
+const size_t kMaxSteps = 2000;
 
 std::string fieldOf(const model::Entity& e, const std::string& key) {
   const auto it = e.fields.find(key);
   return it == e.fields.end() ? "" : it->second;
 }
 
-/// Walks a sequence along a scenario, expanding each call into the sequence of what it calls.
-struct Walker {
+/// Writes each behaviour once: a sequence along a scenario, its calls in order, each call naming
+/// the behaviour it goes on into (found or written the first time it is reached).
+struct Behaviours {
   const model::Model& model;
   const std::set<std::string>& ids;
   std::map<std::string, std::string> calls;  // message -> the operation it calls
+  std::map<std::pair<std::string, std::string>, int> index;
+  std::vector<Behaviour>& out;
 
-  void walk(const std::string& sequence, const std::string& scenario, const std::string& caller, int depth, std::set<std::string> stack,
-            std::vector<Step>& out_steps) const {
+  int of(const std::string& sequence, const std::string& scenario) {
+    const auto key = std::make_pair(sequence, scenario);
+    const auto found = index.find(key);
+    if (found != index.end()) return found->second;
+    const int at = static_cast<int>(out.size());
+    index[key] = at;  // before its calls: a behaviour that reaches itself names itself
+    const auto cut = sequence.find("::sequence");
+    Behaviour b;
+    b.subject = nodeFor(ids, sequence.substr(0, cut));
+    b.scenario = scenario.empty() && sequence.size() > cut + 10 ? sequence.substr(cut + 11) : scenario;
+    b.id = b.subject + (b.scenario.empty() ? "" : " / " + b.scenario);
+    out.push_back(b);
+    std::vector<Call> found_calls;
     for (const model::Entity* m : model::pathOf(model, sequence, scenario, nullptr)) {
-      if (out_steps.size() >= kMaxSteps) return;
       const auto call = calls.find(m->id);
       if (call == calls.end()) continue;
       const std::string callee = nodeFor(ids, call->second);
@@ -475,24 +502,21 @@ struct Walker {
       std::string args;
       for (const auto& a : m->args) args += (args.empty() ? "" : ", ") + a;
       const std::string op = fieldOf(*m, "op");
-      out_steps.push_back(
-          {caller, callee, op.substr(op.rfind("::") == std::string::npos ? 0 : op.rfind("::") + 2) + "(" + args + ")", depth, false});
-      const std::string expands = fieldOf(*m, "expands");
-      if (expands.empty() || depth >= kMaxDepth || stack.count(expands)) continue;
+      Call c{callee, op.substr(op.rfind("::") == std::string::npos ? 0 : op.rfind("::") + 2) + "(" + args + ")", -1, fieldOf(*m, "result")};
       // a scenario written apart is a sequence of its own; one written as a branch is a path through the base
-      std::string sub = expands, subScenario;
-      if (!model.find(expands)) {
-        const auto slash = expands.find('/');
-        if (slash == std::string::npos) continue;
-        sub = expands.substr(0, slash);
-        subScenario = expands.substr(slash + 1);
+      const std::string expands = fieldOf(*m, "expands");
+      if (!expands.empty()) {
+        if (model.find(expands)) {
+          c.expands = of(expands, "");
+        } else if (expands.find('/') != std::string::npos) {
+          const auto slash = expands.find('/');
+          if (model.find(expands.substr(0, slash))) c.expands = of(expands.substr(0, slash), expands.substr(slash + 1));
+        }
       }
-      stack.insert(expands);
-      walk(sub, subScenario, callee, depth + 1, stack, out_steps);
-      stack.erase(expands);
-      const std::string result = fieldOf(*m, "result");
-      out_steps.push_back({callee, caller, result.empty() ? "\u21a9" : result, depth, true});
+      found_calls.push_back(c);
     }
+    out[static_cast<size_t>(at)].calls = found_calls;
+    return at;
   }
 };
 
@@ -501,9 +525,9 @@ struct Walker {
 void Scene::tour(SceneDocument& out_document) const {
   std::set<std::string> ids;
   for (const auto& n : out_document.nodes) ids.insert(n.id);
-  Walker walker{model_, ids, {}};
+  Behaviours behaviours{model_, ids, {}, {}, out_document.behaviours};
   for (const auto& r : model_.relations()) {
-    if (r.kind == "calls") walker.calls[r.from] = r.to;
+    if (r.kind == "calls") behaviours.calls[r.from] = r.to;
   }
   const auto visible = [](const model::Entity* e) { return e && fieldOf(*e, "visibility") != "-"; };
   for (const auto& pair : model_.entities()) {
@@ -517,15 +541,10 @@ void Scene::tour(SceneDocument& out_document) const {
     const bool member = subject->kind == model::Kind::Method && visible(subject) && visible(model_.find(subject->scope));
     const bool function = subject->kind == model::Kind::Function && visible(subject);
     if (!operation && !member && !function) continue;  // a private behaviour is replayed inside the public one that reaches it
-    const std::string node = nodeFor(ids, subject->id);
-    if (node.empty()) continue;
-    // the scenarios of this behaviour: its default path and every branch it names, or the one it is written apart for
-    std::vector<std::string> scenarios;
-    const std::string apart = seq.id.size() > at + 10 && seq.id[at + 10] == '/' ? seq.id.substr(at + 11) : "";
-    if (!apart.empty()) {
-      scenarios.push_back(apart);
-    } else {
-      scenarios.push_back("");
+    if (nodeFor(ids, subject->id).empty()) continue;
+    // its scenarios: the default path and every branch it names, or the one it is written apart for
+    std::vector<std::string> scenarios{""};
+    if (seq.id.size() == at + 10) {
       std::set<std::string> named;
       for (const auto& f : model_.entities()) {
         if (f.second.kind != model::Kind::Frame || f.second.scope != seq.id) continue;
@@ -536,15 +555,30 @@ void Scene::tour(SceneDocument& out_document) const {
       }
     }
     for (const auto& scenario : scenarios) {
-      Tour t;
-      t.subject = node;
-      t.scenario = scenario;
-      t.id = node + (scenario.empty() ? "" : " / " + scenario);
-      t.group = operation ? "interface" : "method";
-      walker.walk(seq.id, apart.empty() ? scenario : "", node, 1, {seq.id}, t.steps);
-      if (t.steps.size() >= (operation ? 1u : 2u)) out_document.tours.push_back(t);
+      const int b = behaviours.of(seq.id, scenario);
+      if (out_document.behaviours[static_cast<size_t>(b)].calls.empty()) continue;
+      out_document.tours.push_back({b, operation ? "interface" : "method"});
     }
   }
+}
+
+std::vector<Step> Scene::expand(const SceneDocument& document, int behaviour, int depth) {
+  std::vector<Step> steps;
+  std::set<int> stack;
+  std::function<void(int, const std::string&, int)> walk = [&](int b, const std::string& caller, int level) {
+    stack.insert(b);
+    for (const auto& c : document.behaviours[static_cast<size_t>(b)].calls) {
+      if (steps.size() >= kMaxSteps) break;
+      steps.push_back({caller, c.to, c.label, level, false});
+      if (c.expands < 0 || level >= depth || stack.count(c.expands)) continue;
+      walk(c.expands, c.to, level + 1);
+      steps.push_back({c.to, caller, c.result.empty() ? "\u21a9" : c.result, level, true});
+    }
+    stack.erase(b);
+  };
+  if (behaviour >= 0 && behaviour < static_cast<int>(document.behaviours.size()))
+    walk(behaviour, document.behaviours[static_cast<size_t>(behaviour)].subject, 1);
+  return steps;
 }
 
 std::string Scene::page(const std::string& title, const std::string& css, const std::vector<std::string>& focus) const {
