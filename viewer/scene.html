@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -123,20 +123,20 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 </head>
 <body>
 <div class="stage" id="stage">
-  <canvas class="main" id="cv" aria-label="/*TITLE*/: el modelo entero, con zoom"></canvas>
+  <canvas class="main" id="cv" aria-label="/*TITLE*/: the whole model, zoomable"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><button id="tours" aria-pressed="false" title="reproducir el comportamiento sobre la estructura">recorridos</button><button data-fam="herencia" aria-pressed="true" title="herencia y realización, siempre como líneas">herencia</button><button id="priv" aria-pressed="false">ocultar privados</button><button id="fs">⛶</button></div>
+  <div class="tools"><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
   <div class="pop" id="pop" hidden></div>
-  <div class="rail"><button id="up" aria-label="Subir un nivel">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Entrar">▼</button><button id="home" aria-label="Ver todo">⤢</button></div>
-  <canvas class="mini" id="mini" aria-label="Minimapa"></canvas>
-  <div class="legend"><span><i style="background:var(--k-class)"></i>clase</span><span><i style="background:var(--k-function)"></i>función</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>con requisito</span><span><b style="background:var(--warn)"></b>sin requisito</span><span>discontinuo: privado</span><span>◁ hereda · ◁┄ realiza</span><span>al tocar una caja: <b style="background:var(--r-owns)"></b>compone <b style="background:var(--r-agg)"></b>agrega <b style="background:var(--r-calls)"></b>llama <b style="background:var(--r-uses)"></b>usa</span></div>
+  <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
+  <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
+  <div class="legend"><span><i style="background:var(--k-class)"></i>class</span><span><i style="background:var(--k-function)"></i>function</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>linked to a requirement</span><span><b style="background:var(--warn)"></b>no requirement</span><span>dashed: private</span><span>◁ inherits · ◁┄ realises</span><span>on touching a box: <b style="background:var(--r-owns)"></b>composes <b style="background:var(--r-agg)"></b>aggregates <b style="background:var(--r-calls)"></b>calls <b style="background:var(--r-uses)"></b>uses</span></div>
   <div class="card" id="card" hidden></div>
 </div>
-<aside class="tour" id="tour" hidden aria-label="Recorrido">
-  <div class="th"><select id="tsel" aria-label="Recorrido"></select><button id="tclose" aria-label="Cerrar">×</button></div>
-  <div class="tc"><button id="tfirst" aria-label="Al principio">⏮</button><button id="tprev" aria-label="Paso anterior">◀</button><button id="tplay" class="play" aria-label="Reproducir">▶</button><button id="tnext" aria-label="Paso siguiente">▶|</button><input type="range" id="tscrub" min="0" max="0" value="0" aria-label="Paso"><button class="follow" id="tfollow">seguir</button></div>
-  <label class="td">profundidad <input type="range" id="tdepth" min="1" max="7" value="3"><b id="tdv">3</b></label>
+<aside class="tour" id="tour" hidden aria-label="Tour">
+  <div class="th"><select id="tsel" aria-label="Tour"></select><button id="tclose" aria-label="Close">×</button></div>
+  <div class="tc"><button id="tfirst" aria-label="To the start">⏮</button><button id="tprev" aria-label="Previous step">◀</button><button id="tplay" class="play" aria-label="Play">▶</button><button id="tnext" aria-label="Next step">▶|</button><input type="range" id="tscrub" min="0" max="0" value="0" aria-label="Step"><button class="follow" id="tfollow">follow</button></div>
+  <label class="td">depth <input type="range" id="tdepth" min="1" max="7" value="3"><b id="tdv">3</b></label>
   <div class="tb" id="tbody"></div>
 </aside>
 <script>
@@ -145,7 +145,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 const PACKED='/*SCENE*/';
 async function unpack(b64){const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate')); return JSON.parse(await new Response(stream).text());}
-if(typeof DecompressionStream==='undefined'){document.getElementById('stage').innerHTML='<p style="padding:20px;font-family:sans-serif">Este navegador no sabe descomprimir la escena (le falta DecompressionStream). Ábrela con uno actual.</p>'; return;}
+if(typeof DecompressionStream==='undefined'){document.getElementById('stage').innerHTML='<p style="padding:20px;font-family:sans-serif">This browser cannot inflate the scene (it lacks DecompressionStream). Open the page in a current one.</p>'; return;}
 const SCENE=decode(await unpack(PACKED));
 // the scene comes compact (version 2): records are arrays whose columns `fields` names, and nodes and
 // behaviours are named by index; a tour is a behaviour expanded through the behaviours its calls go on into
@@ -177,13 +177,13 @@ const UNITS=ORDER.filter(id=>N[id].kind==='unit');
 const anc=id=>{const a=[]; let n=N[id]; while(n){a.push(n.id); n=N[n.parent];} return a;};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const LINKS=SCENE.links||[], DIAGS=SCENE.diagrams||[], TITLES=SCENE.titles||{};
-const FAMILY={inherits:'herencia',realises:'herencia'};  // the rest is never a line: it lights up when a box is touched
-const FAM={herencia:true};
+const FAMILY={inherits:'inheritance',realises:'inheritance'};  // the rest is never a line: it lights up when a box is touched
+const FAM={inheritance:true};
 const GROUP={owns:'owns',refs:'agg',shares:'agg',uses:'uses',calls:'calls'};  // the colour each relation lights up in
-const GROUP_ES={owns:'compone',agg:'agrega',uses:'usa',calls:'llama'};
+const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls'};
 const GROUP_RANK={owns:0,agg:1,calls:2,uses:3};
 let HLBOX=new Map(), HLROW=new Map(), pills=[];
-const KIND_ES={inherits:'hereda de',realises:'realiza',owns:'contiene',shares:'comparte',refs:'referencia',uses:'usa',calls:'llama a','*':'se relaciona con'};
+const KIND_EN={inherits:'inherits from',realises:'realises',owns:'composes',shares:'shares',refs:'refers to',uses:'uses',calls:'calls','*':'relates to'};
 const unitOf=id=>N[id]&&N[id].kind==='row'?N[id].parent:id;
 const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.kind)) n=N[n.parent]; return n?n.id:null;};
 const short=id=>{const n=N[id]; return n?n.label.replace(/^[+-] /,'').split(/[(:]/)[0].trim():id;};
@@ -273,7 +273,7 @@ let drawn=[];
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
 function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
   const touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||linksOf(SEL).includes(l));
-  const list=LINKS.filter(l=>FAMILY[l.kind]&&(touched(l)||(FAM.herencia&&boxOf(l.from)===boxOf(l.to))));  // across modules: written in the header, drawn when touched
+  const list=LINKS.filter(l=>FAMILY[l.kind]&&(touched(l)||(FAM.inheritance&&boxOf(l.from)===boxOf(l.to))));  // across modules: written in the header, drawn when touched
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
   list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
@@ -288,7 +288,7 @@ function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: on
 function drawPills(){pills=[]; if(!SEL) return; const cx=W/2, cy=H/2, m=14;
   HLBOX.forEach((g,id)=>{const n=N[id]; if(!n||n.hidden) return; const b=scr(n); if(b.x<W-40&&b.y<H-40&&b.x+b.w>40&&b.y+b.h>40) return;
     const tx=b.x+b.w/2-cx, ty=b.y+b.h/2-cy, k=Math.min((W/2-m-60)/Math.abs(tx||1e-9),(H/2-m-14)/Math.abs(ty||1e-9));
-    const px=cx+tx*k, py=cy+ty*k, t=GROUP_ES[g]+' '+n.label; ctx.font=`600 11.5px ${K.mono}`; const w=ctx.measureText(t).width+26;
+    const px=cx+tx*k, py=cy+ty*k, t=GROUP_EN[g]+' '+n.label; ctx.font=`600 11.5px ${K.mono}`; const w=ctx.measureText(t).width+26;
     let x=Math.max(m,Math.min(W-m-w,px-w/2)), y=Math.max(m,Math.min(H-m-22,py-11));
     const side=x<=m+1||x>=W-m-w-1, hits=()=>pills.some(q=>x<q.x+q.w+6&&q.x<x+w+6&&y<q.y+q.h+6&&q.y<y+22+6);  // never on top of another: slide along the edge
     for(let i=0;i<40&&hits();i++){if(side) y=y+28>H-m-22?m+((y+28)%(H-2*m)):y+28; else x=x+w/3>W-m-w?m:x+w/3;}
@@ -336,14 +336,14 @@ const pop=document.getElementById('pop'); let popPinned=false;
 const diagramsWith=(...ids)=>DIAGS.filter(d=>ids.every(id=>d.nodes.includes(unitOf(id))||d.nodes.includes(boxOf(id)))).map(d=>d.name);
 const seqName=s=>s.replace(/^.*@/,'');
 function showPop(g,X,Y,pin){popPinned=!!pin; const A=g.A,B=g.B;
-  let h=`<div class="ttl"><span>${esc(A.label.replace(/^[+-] /,''))} <span style="font-weight:400;color:var(--muted)">${KIND_ES[g.kind]}</span> ${esc(B.label.replace(/^[+-] /,''))}</span><button class="x" data-close="1" aria-label="Cerrar">×</button></div>`;
-  if(g.kind==='*'){const by={}; g.links.forEach(l=>by[l.kind]=(by[l.kind]||0)+l.count); h+=`<h4>${g.n} relaciones</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="row"><span>${KIND_ES[k]}</span><span class="n">×${n}</span></div>`).join('');}
+  let h=`<div class="ttl"><span>${esc(A.label.replace(/^[+-] /,''))} <span style="font-weight:400;color:var(--muted)">${KIND_EN[g.kind]}</span> ${esc(B.label.replace(/^[+-] /,''))}</span><button class="x" data-close="1" aria-label="Close">×</button></div>`;
+  if(g.kind==='*'){const by={}; g.links.forEach(l=>by[l.kind]=(by[l.kind]||0)+l.count); h+=`<h4>${g.n} relations</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="row"><span>${KIND_EN[k]}</span><span class="n">×${n}</span></div>`).join('');}
   const rows=g.links.slice().sort((a,b)=>b.count-a.count);
-  h+=`<h4>De dónde sale</h4>`+rows.slice(0,12).map(l=>`<div class="row"><span>${esc(short(l.from))} → ${esc(short(l.to))}${g.kind==='*'?` <span class="n">${KIND_ES[l.kind]}</span>`:''}</span><span class="n">${l.multiplicity?'['+esc(l.multiplicity)+'] ':''}${l.count>1?'×'+l.count:''}</span></div>`).join('')+(rows.length>12?`<div class="n">y ${rows.length-12} más</div>`:'');
+  h+=`<h4>Where it comes from</h4>`+rows.slice(0,12).map(l=>`<div class="row"><span>${esc(short(l.from))} → ${esc(short(l.to))}${g.kind==='*'?` <span class="n">${KIND_EN[l.kind]}</span>`:''}</span><span class="n">${l.multiplicity?'['+esc(l.multiplicity)+'] ':''}${l.count>1?'×'+l.count:''}</span></div>`).join('')+(rows.length>12?`<div class="n">and ${rows.length-12} more</div>`:'');
   const seqs=[...new Set(g.links.flatMap(l=>l.sequences||[]))];
-  if(seqs.length) h+=`<h4>Escrita en las secuencias de</h4>`+seqs.slice(0,10).map(s=>`<span class="tag">${esc(seqName(s))}</span>`).join('');
+  if(seqs.length) h+=`<h4>Written in the sequences of</h4>`+seqs.slice(0,10).map(s=>`<span class="tag">${esc(seqName(s))}</span>`).join('');
   const dg=[...new Set(g.links.flatMap(l=>diagramsWith(l.from,l.to)))];
-  h+=`<h4>Sale en los diagramas</h4>`+(dg.length?dg.map(d=>`<span class="tag">${esc(d)}</span>`).join(''):'<span class="n">ninguno</span>');
+  h+=`<h4>Drawn in the diagrams</h4>`+(dg.length?dg.map(d=>`<span class="tag">${esc(d)}</span>`).join(''):'<span class="n">none</span>');
   pop.innerHTML=h; pop.hidden=false;
   const CW=W*U, CH=H*U, pw=Math.min(340,CW-20); let px=X*U+16, py=Y*U+12; if(px+pw>CW-8) px=Math.max(8,X*U-pw-16); pop.style.left=px+'px'; pop.style.top='0px';
   const ph=pop.offsetHeight; if(py+ph>CH-8) py=Math.max(8,CH-8-ph); pop.style.top=py+'px';}
@@ -360,13 +360,13 @@ function drawMini(){const mw=mini.width/DPR, mh=mini.height/DPR; if(mw<5) return
   mini._m={k,ox,oy};}
 
 /* ---------- where am I ---------- */
-const LEVEL={package:'paquete',module:'módulo',iface:'interfaz',unit:'clase'};
+const LEVEL={package:'package',module:'module',iface:'interface',unit:'class'};
 function focus(){const cx=wx(W/2), cy=wy(H/2); let best=null;
   BOXES.forEach(id=>{const n=N[id]; if(cx>=n.x&&cx<=n.x+n.w&&cy>=n.y&&cy<=n.y+n.h&&n.w*cam.s>W*.25&&(!best||anc(id).length>anc(best).length)) best=id;}); return best;}
 function crumbs(){const f=focus(); const el=document.getElementById('crumbs');
   const html=f?anc(f).reverse().map((id,i)=>`${i?'<span>›</span>':''}<button data-go="${esc(id)}">${esc(N[id].label)}</button>`).join(''):`<button data-go="">/*TITLE*/</button>`;
   if(el._h!==html){el.innerHTML=html; el._h=html;}
-  let lvl=f?LEVEL[N[f].kind]:'todo'; if(f&&N[f].kind==='unit'&&11*cam.s>=8.5) lvl='miembros'; document.getElementById('lvl').textContent=lvl;}
+  let lvl=f?LEVEL[N[f].kind]:'all'; if(f&&N[f].kind==='unit'&&11*cam.s>=8.5) lvl='members'; document.getElementById('lvl').textContent=lvl;}
 document.getElementById('crumbs').onclick=e=>{const b=e.target.closest('[data-go]'); if(b) fly(b.dataset.go?fit(N[b.dataset.go]):fit(WORLD,.02));};
 document.getElementById('up').onclick=()=>{const f=focus(); const p=f&&N[f].parent?N[N[f].parent]:null; fly(p?fit(p):fit(WORLD,.02));};
 document.getElementById('down').onclick=()=>{const f=focus(); const cx=wx(W/2), cy=wy(H/2); const ks=(KIDS[f]||[]).filter(id=>BOXES.includes(id)&&!N[id].hidden);
@@ -401,11 +401,11 @@ cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect(); const id=
 const card=document.getElementById('card');
 // the sections of the card, in the colours the canvas lights up in: what the box is related to, and through which member
 const SECTIONS=[
-  {key:'tax',title:'Taxonomía',kinds:['inherits','realises'],out:{inherits:'hereda de',realises:'realiza'},in:{inherits:'la heredan',realises:'la realizan'}},
-  {key:'owns',title:'Composición',kinds:['owns'],out:{owns:'compone'},in:{owns:'la componen'}},
-  {key:'agg',title:'Agregación',kinds:['refs','shares'],out:{refs:'referencia',shares:'comparte'},in:{refs:'la referencian',shares:'la comparten'}},
-  {key:'calls',title:'Llamadas',kinds:['calls'],out:{calls:'llama a'},in:{calls:'la llaman'}},
-  {key:'uses',title:'Usos',kinds:['uses'],out:{uses:'usa'},in:{uses:'la usan'}}];
+  {key:'tax',title:'Taxonomy',kinds:['inherits','realises'],out:{inherits:'inherits from',realises:'realises'},in:{inherits:'inherited by',realises:'realised by'}},
+  {key:'owns',title:'Composition',kinds:['owns'],out:{owns:'composes'},in:{owns:'composed by'}},
+  {key:'agg',title:'Aggregation',kinds:['refs','shares'],out:{refs:'refers to',shares:'shares'},in:{refs:'referred to by',shares:'shared by'}},
+  {key:'calls',title:'Calls',kinds:['calls'],out:{calls:'calls'},in:{calls:'called by'}},
+  {key:'uses',title:'Uses',kinds:['uses'],out:{uses:'uses'},in:{uses:'used by'}}];
 const qual=x=>{const n=N[x]; if(!n) return x; if(n.kind!=='row') return n.label; const p=N[n.parent]; return (p?p.label+'.':'')+short(x)+(n.label.includes('(')?'()':'');};
 const memberOf=x=>N[x]&&N[x].kind==='row'?short(x)+(N[x].label.includes('(')?'()':''):'';
 function dock(on){if(document.body.classList.contains('carded')===on) return; document.body.classList.toggle('carded',on); setTimeout(()=>{resize(); if(on&&SEL){const b=scr(N[SEL]); if(!onScreen(b)) fly(fit(N[SEL],.6));}},30);}
@@ -422,9 +422,9 @@ function select(id){SEL=id; RELATED=new Set(); HLBOX=new Map(); HLROW=new Map();
   const where=anc(id).slice(1).reverse().map(a=>N[a].label).join(' › ');
   const priv=rows.filter(r=>r.vis==='-').length;
   let h=`<div class="hd"><div><div class="st">«${esc(n.st)}» · ${esc(where)}</div><b>${esc(n.label)}</b>`+
-    `<div class="sum">${rows.length?`${rows.length} ${n.kind==='iface'?'operaciones':'miembros'}${priv?`, ${priv} privados`:''}`:''}${boxes.length?`${boxes.length} cajas`:''}`+
-    ` · <span class="${reqs.length?'ok':'warn'}">${reqs.length?reqs.length+' requisito'+(reqs.length>1?'s':''):'sin requisito'}</span></div></div>`+
-    `<span class="acts"><button data-zoom="1">acercar</button><button class="x" data-close="1" aria-label="Cerrar">×</button></span></div>`;
+    `<div class="sum">${rows.length?`${rows.length} ${n.kind==='iface'?'operations':'members'}${priv?`, ${priv} private`:''}`:''}${boxes.length?`${boxes.length} boxes`:''}`+
+    ` · <span class="${reqs.length?'ok':'warn'}">${reqs.length?reqs.length+' requirement'+(reqs.length>1?'s':''):'no requirement'}</span></div></div>`+
+    `<span class="acts"><button data-zoom="1">zoom in</button><button class="x" data-close="1" aria-label="Close">×</button></span></div>`;
   const sev=entries.length;
   SECTIONS.forEach(sec=>{const es=entries.filter(e=>sec.kinds.includes(e.l.kind)); if(!es.length) return;
     const col=sec.key==='tax'?'var(--fg)':`var(--r-${sec.key})`;
@@ -434,14 +434,14 @@ function select(id){SEL=id; RELATED=new Set(); HLBOX=new Map(); HLROW=new Map();
         const mine=memberOf(e.mine), far=qual(e.far), mult=e.l.multiplicity?` <span class="n">[${esc(e.l.multiplicity)}]</span>`:'', cnt=e.l.count>1?` <span class="n">×${e.l.count}</span>`:'';
         const line=dir?(mine?`<span class="me">${esc(mine)}</span> → `:'')+`<span class="far">${esc(far)}</span>`
                       :`<span class="far">${esc(far)}</span>`+(mine?` → <span class="me">${esc(mine)}</span>`:'');
-        return `<div class="rel" data-sel="${esc(e.other)}" data-rows="${esc([e.mine,e.far].join('|'))}">${line}${mult}${cnt}<span class="mod">${esc((N[boxOf(e.other)]||{}).label||'')}</span></div>`;}).join('')+(list.length>14?`<div class="n">y ${list.length-14} más</div>`:'')).join('');};
+        return `<div class="rel" data-sel="${esc(e.other)}" data-rows="${esc([e.mine,e.far].join('|'))}">${line}${mult}${cnt}<span class="mod">${esc((N[boxOf(e.other)]||{}).label||'')}</span></div>`;}).join('')+(list.length>14?`<div class="n">and ${list.length-14} more</div>`:'')).join('');};
     h+=`<section style="--c:${col}"><h4>${esc(sec.title)} <span class="n">${es.length}</span></h4>${half(true)}${half(false)}</section>`;});
-  if(!sev) h+=`<section><h4>Relaciones</h4><div class="n">ninguna fuera de la caja</div></section>`;
-  if(reqs.length) h+=`<section class="rqs"><h4>Requisitos <span class="n">${reqs.length}</span></h4>`+reqs.map(r=>`<div class="rq"><b>${esc(r)}</b>${TITLES[r]?` ${esc(TITLES[r])}`:''}</div>`).join('')+`</section>`;
+  if(!sev) h+=`<section><h4>Relations</h4><div class="n">none outside the box</div></section>`;
+  if(reqs.length) h+=`<section class="rqs"><h4>Requirements <span class="n">${reqs.length}</span></h4>`+reqs.map(r=>`<div class="rq"><b>${esc(r)}</b>${TITLES[r]?` ${esc(TITLES[r])}`:''}</div>`).join('')+`</section>`;
   const inTours=TOURS.map(t=>[t,t.steps.findIndex(s=>!s.ret&&(inside(s.f)||inside(s.t)))]).filter(([,i])=>i>=0);
-  if(inTours.length) h+=`<section><h4>Recorridos <span class="n">${inTours.length}</span></h4>`+inTours.slice(0,8).map(([t,i])=>`<div class="rel" data-tour="${esc(t.id)}" data-i="${i}">▶ ${esc(tourName(t))}<span class="mod">paso ${i+1}</span></div>`).join('')+(inTours.length>8?`<div class="n">y ${inTours.length-8} más</div>`:'')+`</section>`;
+  if(inTours.length) h+=`<section><h4>Tours <span class="n">${inTours.length}</span></h4>`+inTours.slice(0,8).map(([t,i])=>`<div class="rel" data-tour="${esc(t.id)}" data-i="${i}">▶ ${esc(tourName(t))}<span class="mod">step ${i+1}</span></div>`).join('')+(inTours.length>8?`<div class="n">and ${inTours.length-8} more</div>`:'')+`</section>`;
   const dg=DIAGS.filter(d=>d.nodes.includes(id)).map(d=>d.name);
-  if(dg.length) h+=`<section><h4>Diagramas <span class="n">${dg.length}</span></h4>`+dg.map(d=>`<span class="tag">${esc(d)}</span>`).join('')+`</section>`;
+  if(dg.length) h+=`<section><h4>Diagrams <span class="n">${dg.length}</span></h4>`+dg.map(d=>`<span class="tag">${esc(d)}</span>`).join('')+`</section>`;
   card.innerHTML=h; card.hidden=false; dock(true); loop();}
 // hovering a relation marks its members on the canvas
 card.addEventListener('pointerover',e=>{const r=e.target.closest('[data-rows]'); ACTIVE=new Set(r?r.dataset.rows.split('|').filter(x=>N[x]).flatMap(x=>[x,unitOf(x)]):[]); loop();});
@@ -455,7 +455,7 @@ window.dsViewer={box:id=>N[id]&&{...scr(N[id]),U},select};  // where a box is on
 
 /* ---------- private members: in or out, the boxes follow ---------- */
 let showPriv=true;
-document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttribute('aria-pressed',String(!showPriv)); e.target.textContent=showPriv?'ocultar privados':'mostrar privados';
+document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttribute('aria-pressed',String(!showPriv)); e.target.textContent=showPriv?'hide private':'show private';
   const moves=ORDER.map(id=>{const n=N[id]; return [n,[n.x,n.y,n.w,n.h],showPriv?n.full:n.lean];});
   if(!showPriv) moves.forEach(([n,,to])=>{if(!to) n.hidden=true;});
   Object.assign(WORLD,box(showPriv?SCENE.world:SCENE.lean_world));
@@ -474,7 +474,7 @@ const tourEl=document.getElementById('tour'), tsel=document.getElementById('tsel
 const caption=document.getElementById('caption'), playBtn=document.getElementById('tplay'), followBtn=document.getElementById('tfollow');
 function tourName(t){const s=N[t.subject]; const own=s&&s.kind==='row'&&N[s.parent].kind==='unit'?N[s.parent].label+'.':s&&s.kind==='row'&&N[s.parent].kind==='iface'?N[s.parent].label+' ':'';
   return own+t.subject.split('::').pop().replace('#sig','')+(t.scenario?' / '+t.scenario:'');}
-tsel.innerHTML=[['interface','interfaz'],['method','métodos y funciones']].map(([g,l])=>{const ts=TOURS.filter(t=>t.group===g); return ts.length?`<optgroup label="${l}">`+ts.map(t=>`<option value="${esc(t.id)}">${esc(tourName(t))} · ${t.steps.length} pasos</option>`).join('')+'</optgroup>':'';}).join('');
+tsel.innerHTML=[['interface','interfaces'],['method','methods and functions']].map(([g,l])=>{const ts=TOURS.filter(t=>t.group===g); return ts.length?`<optgroup label="${l}">`+ts.map(t=>`<option value="${esc(t.id)}">${esc(tourName(t))} · ${t.steps.length} steps</option>`).join('')+'</optgroup>':'';}).join('');
 function buildSteps(){const t=TBY[T.id]; steps=t?t.steps.filter(s=>s.d<=T.depth):[]; lanes=[];
   steps.forEach(s=>[s.f,s.t].forEach(n=>{const u=unitOf(n); if(!lanes.includes(u)) lanes.push(u);})); scrub.max=Math.max(0,steps.length-1);}
 function setTour(id){T.id=id; tsel.value=id; const mx=Math.max(1,...TBY[id].steps.map(s=>s.d)); depthEl.max=mx; if(T.depth>mx) T.depth=mx; depthEl.value=T.depth; document.getElementById('tdv').textContent=T.depth; buildSteps();}
@@ -489,7 +489,7 @@ function camFor(s){const A=focusRect(s.f), B=focusRect(s.t); let c=fit(union(A,B
   c.s=Math.min(c.s,1.4); return c;}
 function go(i){T.idx=Math.max(-1,Math.min(steps.length-1,i)); const s=steps[T.idx]; ACTIVE=new Set(); FORCED=new Set();
   if(s){[s.f,s.t].forEach(id=>anc(id).forEach(a=>{ACTIVE.add(a); FORCED.add(a);})); if(T.follow) fly(camFor(s),600);
-    caption.innerHTML=`${T.idx+1}/${steps.length} · ${esc(short(s.f))} → ${esc(s.m)}<span class="z">profundidad ${s.d} · ${esc(anc(s.t).reverse().slice(1).map(a=>short(a)).join(' › '))}</span>`; caption.hidden=false;}
+    caption.innerHTML=`${T.idx+1}/${steps.length} · ${esc(short(s.f))} → ${esc(s.m)}<span class="z">depth ${s.d} · ${esc(anc(s.t).reverse().slice(1).map(a=>short(a)).join(' › '))}</span>`; caption.hidden=false;}
   else caption.hidden=true;
   scrub.value=Math.max(0,T.idx); seq(); loop();}
 function release(){if(T.follow){T.follow=false; followBtn.classList.add('on');}}
