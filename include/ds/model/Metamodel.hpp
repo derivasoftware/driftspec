@@ -47,6 +47,31 @@ struct KindSpec {
   std::vector<std::string> flags;
   std::vector<Kind> parents;  ///< the kinds it may be declared inside; empty when it stands at the top
   bool top = false;           ///< it may stand outside any package
+  std::string syntax = {};    ///< how it is written, for the manual
+  std::string example = {};   ///< a minimal workspace that declares one and checks clean
+};
+
+/// A finding code ds reports: what it means and what to do about it.
+struct CodeSpec {
+  std::string code;
+  std::string severity;  ///< error or warning
+  std::string meaning;
+  std::string fix;
+};
+
+/// An annotation that means something, and the relation it makes; any other @word refers to nothing in particular.
+struct AnnotationSpec {
+  std::string name;
+  std::string relation;
+  std::string meaning;
+};
+
+/// A command of ds: how it is invoked, what it does, what each exit code says.
+struct CommandSpec {
+  std::string name;
+  std::string synopsis;
+  std::string does;
+  std::vector<std::pair<int, std::string>> exits;
 };
 
 struct RelationSpec {
@@ -68,6 +93,17 @@ const KindSpec& specOf(Kind kind);
 /// The field a key names for a kind, families included; nullptr when the kind does not declare it.
 const FieldSpec* fieldOf(Kind kind, const std::string& key);
 const RelationSpec* relationOf(const std::string& kind);
+const std::vector<CodeSpec>& codes();
+const CodeSpec* codeOf(const std::string& code);
+const std::vector<AnnotationSpec>& annotations();
+const std::vector<CommandSpec>& commands();
+const CommandSpec* commandOf(const std::string& name);
+/// How a kind is written and a minimal workspace that declares one (the manual's, DS-79).
+std::string syntaxOf(Kind kind);
+std::string exampleOf(Kind kind);
+/// The manual ds embeds: the index ("" topic), a kind, a finding code, commands, annotations or codes; "" for no such topic.
+std::string manualPage(const std::string& topic);
+std::vector<std::string> manualTopics();
 /// Whether a relation of this kind may go from one kind to another.
 bool joins(const RelationSpec& relation, Kind from, Kind to);
 

@@ -219,4 +219,17 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.AQuestionAboutTheModelIsAnsweredByIdentity
       tests/system/ds/test_qualification.cpp::TestQualification.AnIdentityTheModelDoesNotDeclareIsAnError
   }
+
+  verification SVER-00018-1 {
+    status: approved
+    @requirement SREQ-00014-1
+    title: System tests confirm ds carries its manual: the index, a kind with its example, a code with what to do, exit codes in every help
+    text:
+      ds manual prints the index; ds manual sequence --json gives an
+      example that declares a sequence; ds manual E-SYNTAX says what to do;
+      an unknown topic exits 1; every command's --help lists its exit codes.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
+  }
 }

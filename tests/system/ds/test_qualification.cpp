@@ -340,6 +340,20 @@ TEST_F(TestQualification, AnIdentityTheModelDoesNotDeclareIsAnError) {
   EXPECT_EQ(nlohmann::json::parse(ds("query " + examples("artefacts") + " weather --json").out)[0]["kind"], "error");
 }
 
+// SREQ-00014-1: the tool carries its manual: how each kind is written, what each code means, the exit codes
+TEST_F(TestQualification, TheToolCarriesItsManual) {
+  const Outcome index = ds("manual");
+  EXPECT_EQ(index.code, 0);
+  EXPECT_NE(index.out.find("Kinds you write"), std::string::npos);
+  const Outcome kind = ds("manual sequence --json");
+  EXPECT_EQ(kind.code, 0);
+  EXPECT_NE(nlohmann::json::parse(kind.out)["kind"]["example"].get<std::string>().find("sequence "), std::string::npos);
+  EXPECT_NE(ds("manual E-SYNTAX").out.find("What to do:"), std::string::npos);
+  EXPECT_EQ(ds("manual weather").code, 1);
+  for (const char* command : {"check", "export", "render", "diff", "query"})
+    EXPECT_NE(ds(std::string(command) + " --help").out.find("Exit codes:"), std::string::npos) << command;
+}
+
 // SREQ-00011-1: questions about the model answered by identity, so one answer leads to the next
 TEST_F(TestQualification, AQuestionAboutTheModelIsAnsweredByIdentity) {
   const Outcome diagrams = ds("query " + examples("artefacts") + " diagrams");
