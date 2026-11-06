@@ -141,6 +141,28 @@ TEST_F(TestQualification, TheModelAndTheDrawingsAreExported) {
   EXPECT_FALSE(ir["nodes"].empty());
 }
 
+// SREQ-00013-1: the whole model laid out once, nested, in two variants, for a viewer that zooms
+TEST_F(TestQualification, TheWholeModelIsLaidOutOnceForAViewer) {
+  const Outcome run = ds("scene " + examples("static"));
+  EXPECT_EQ(run.code, 0);
+  const auto scene = nlohmann::json::parse(run.out);
+  ASSERT_FALSE(scene["nodes"].empty());
+  std::map<std::string, nlohmann::json> byId;
+  for (const auto& n : scene["nodes"]) byId[n["id"].get<std::string>()] = n;
+  int nested = 0;
+  for (const auto& n : scene["nodes"]) {
+    const std::string parent = n["parent"];
+    if (parent.empty() || n["kind"] == "interface") continue;
+    const auto& b = n["full"];
+    const auto& p = byId.at(parent)["full"];
+    EXPECT_TRUE(b[0] >= p[0] && b[1] >= p[1] && b[0].get<double>() + b[2].get<double>() <= p[0].get<double>() + p[2].get<double>() + 0.1)
+        << n["id"];
+    ++nested;
+  }
+  EXPECT_GT(nested, 10);
+  EXPECT_EQ(scene["lean_world"].size(), 4u);
+}
+
 // SREQ-00007-1: the difference between two versions, in the model's terms
 TEST_F(TestQualification, TwoVersionsAreComparedByIdentity) {
   const Outcome same = ds("diff " + examples("static") + " " + examples("static"));
@@ -294,7 +316,7 @@ TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
   }
   ws << "  }\n}\ndiagram CL_Big {\n  kind: class\n  include: big@*\n}\n";
   ws.close();
-  for (const char* command : {"check", "export", "render"}) {
+  for (const char* command : {"check", "export", "render", "scene"}) {
     const std::string args = std::string(command) + " " + tmp + (std::string(command) == "render" ? " CL_Big --svg" : "");
     const auto start = std::chrono::steady_clock::now();
     const Outcome run = ds(args);

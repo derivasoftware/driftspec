@@ -92,6 +92,22 @@ package driftspec {
     tags: render, diagrams
   }
 
+  requirement SREQ-00013-1 {
+    status: approved
+    title: The system shall lay out the whole model once, every box nested in its parent, so a viewer can zoom from the system down to a member
+    text:
+      One scene of the whole workspace: every package, module, interface,
+      class, function, enum and member has one place, inside the box that
+      holds it and apart from its siblings, computed once so that nothing
+      moves while a reader zooms. It comes in two variants, with every member
+      and with public members only, and as JSON from the command line.
+    rationale:
+      Owner, 2026-11-05 (DS-67): one diagram of the whole model, information
+      shown on demand, instead of many diagrams drawn apart. Depth is the
+      level of abstraction; the scene is what makes it possible.
+    tags: render, scene
+  }
+
   requirement SREQ-00006-1 {
     status: approved
     title: The system shall export the model, with its relations and findings, for other tools

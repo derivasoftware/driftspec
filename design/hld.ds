@@ -18,6 +18,7 @@ package driftspec {
     @requirement SREQ-00010-1                // a diagram kind per view
     @requirement SREQ-00011-1                // questions answered by identity
     @requirement SREQ-00012-1                // the language, in its semantics: bind and check
+    @requirement SREQ-00013-1                // the whole model laid out once, for a viewer that zooms
     @constraint CST-00001-1                  // every command under a hundred milliseconds
     // the namespaces the box owns; each one is filled by its LLD file (DS-4)
     module model { }
@@ -28,6 +29,7 @@ package driftspec {
     module diff { }
     module query { }
     module exporter { }
+    module scene { }
     module app { }
   }
 

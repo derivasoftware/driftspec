@@ -58,6 +58,14 @@ package driftspec@ds {
       exit 1: findings
     }
 
+    operation scene(workspace: path) -> none {
+      @requirement SREQ-00013-1
+      command: ds scene <workspace>
+      stdout: the whole model laid out once, nested, as JSON for a viewer
+      exit 0: default
+      exit 1: no-workspace
+    }
+
     operation query(workspace: path, question: string, subject: string) -> none {
       @requirement SREQ-00011-1
       command: ds query <workspace> <question> [subject] [--json]
@@ -113,6 +121,14 @@ package driftspec@ds {
 
   sequence cli::diff / findings {
     -> app::main(before) / diff-findings -> code
+  }
+
+  sequence cli::scene {
+    -> app::main(workspace) / scene -> code
+  }
+
+  sequence cli::scene / no-workspace {
+    -> app::main(workspace) / no-workspace -> code
   }
 
   sequence cli::query {
