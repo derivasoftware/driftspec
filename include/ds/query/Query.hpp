@@ -25,8 +25,8 @@ class Query {
   /// The questions `ask` understands, with the argument each takes.
   static std::vector<std::pair<std::string, std::string>> questions();
 
-  /// Answer `question` about `subject` ("" for the questions that take none);
-  /// an unknown question yields one answer of kind "error".
+  /// Answer `question` about `subject` ("" for the questions that take none); an unknown question,
+  /// a missing identity or one the model does not declare yields one answer of kind "error".
   std::vector<Answer> ask(const std::string& question, const std::string& subject) const;
 
   std::vector<Answer> diagrams() const;                          ///< every diagram, with its kind
@@ -43,6 +43,8 @@ class Query {
   static std::string json(const std::vector<Answer>& answers);
 
  private:
+  bool known(const std::string& id) const;                         // an entity, or a scope something is declared in
+  std::vector<std::string> nearTo(const std::string& name) const;  // identities ending in the name, for a hint
   const model::Model& model_;
 };
 

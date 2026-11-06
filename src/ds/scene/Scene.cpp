@@ -814,14 +814,27 @@ std::string Scene::page(const std::string& title, const std::string& css, const 
     if (at == std::string::npos) return out;
     code.erase(at, cut->size());
   }
+  // the viewer's own styles travel packed too, and go in before the reader's (the theme), which wins
+  const std::string styleOpen = "<style>", styleClose = "</style>";
+  const size_t styleFrom = out.find(styleOpen), styleTo = out.find(styleClose, styleFrom);
+  std::string own;
+  if (styleFrom != std::string::npos && styleTo != std::string::npos && styleTo < from) {
+    own = out.substr(styleFrom + styleOpen.size(), styleTo - styleFrom - styleOpen.size());
+    out.erase(styleFrom, styleTo + styleClose.size() - styleFrom);
+  }
+  const size_t codeFrom = out.find(open, out.find("<body>")), codeTo = out.rfind(close);
+  const std::string inflate =
+      "const inflate=async p=>new Response(new Blob([Uint8Array.from(atob(p),c=>c.charCodeAt(0))]).stream()"
+      ".pipeThrough(new DecompressionStream('deflate'))).text();";
   const std::string loader =
-      "\n" + mark + "\n" + aim + "\nconst VIEWER='" + pack(code) +
-      "';\n(async()=>{try{const b=Uint8Array.from(atob(VIEWER),c=>c.charCodeAt(0));"
-      "const t=await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate'))).text();"
+      "\n" + mark + "\n" + aim + "\nconst STYLE='" + pack(own) + "';\nconst VIEWER='" + pack(code) + "';\n(async()=>{try{" + inflate +
+      "const st=document.createElement('style');st.textContent=await "
+      "inflate(STYLE);document.head.insertBefore(st,document.getElementById('theme'));"
+      "const t=await inflate(VIEWER);"
       "const s=document.createElement('script');s.textContent=t;document.body.appendChild(s);}"
       "catch(e){document.body.insertAdjacentHTML('beforeend','<p style=\"padding:20px;font-family:sans-serif\">"
       "This browser cannot inflate the viewer (it lacks DecompressionStream). Open the page in a current one.</p>');}})();\n";
-  out.replace(from + open.size(), to - from - open.size(), loader);
+  out.replace(codeFrom + open.size(), codeTo - codeFrom - open.size(), loader);
   return out;
 }
 

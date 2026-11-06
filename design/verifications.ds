@@ -17,17 +17,21 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
   }
 
-  verification SVER-00002-1 {
+  verification SVER-00002-2 {
     status: approved
     @requirement SREQ-00002-1
-    title: System tests confirm every incoherence is a finding with code, severity and location
+    title: System tests confirm every incoherence is a finding with code, severity and location, and a path that is no workspace is bad usage
     text:
       ds check prints file:line:column, code and message per finding and
       exits with 1 when an error is among them; a workspace with an
-      undeclared reference still exports whole, with the warning.
+      undeclared reference still exports whole, with the warning. A path
+      that is no workspace (none there, or no .ds file under it) exits with
+      2 on every command, as a command line to correct.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
+      tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
   }
 
   verification SVER-00003-2 {
@@ -56,34 +60,39 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
   }
 
-  verification SVER-00005-1 {
+  verification SVER-00005-2 {
     status: approved
     @requirement SREQ-00005-1
     title: System tests confirm a selection is drawn as SVG and as text to a given width
     text:
-      ds render --svg yields an SVG with stable ids; --text with --width 80
-      stays within 80 columns while the unbounded drawing exceeds them.
+      ds render <workspace> <diagram> -f svg yields an SVG with stable ids;
+      -f text with -w 80 stays within 80 columns while the unbounded drawing
+      exceeds them. Revises SVER-00005-1, which named --svg, --text and
+      --width (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
   }
 
-  verification SVER-00014-1 {
+  verification SVER-00014-2 {
     status: approved
     @requirement SREQ-00013-1
-    title: System tests confirm ds scene lays out a workspace as nested boxes, in both variants
+    title: System tests confirm ds render -f json lays out a workspace as nested boxes, in both variants
     text:
-      ds scene yields JSON whose nodes each have a place inside their parent's,
-      with a lean place too unless they are private members.
+      ds render <workspace> -f json yields the scene: JSON whose nodes each
+      have a place inside their parent's, with a lean place too unless they
+      are private members. Revises SVER-00014-1, which named ds scene (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TheWholeModelIsLaidOutOnceForAViewer
   }
 
-  verification SVER-00015-1 {
+  verification SVER-00015-2 {
     status: approved
     @requirement SREQ-00013-1
-    title: System tests confirm ds view writes one page with the whole scene inside, that a browser opens as it is
+    title: System tests confirm ds render writes one page with the whole scene inside, that a browser opens as it is
+    text:
+      Revises SVER-00015-1, which named ds view (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TheViewerIsOnePageWithTheWholeModelInside
@@ -120,16 +129,23 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
   }
 
-  verification SVER-00007-1 {
+  verification SVER-00007-2 {
     status: approved
     @requirement SREQ-00007-1
-    title: System tests confirm two versions are compared by identity
+    title: System tests confirm two versions are compared by identity, and a version that does not load is compared to nothing
     text:
       A workspace against itself is no design change; a class renamed with its
       shape intact is reported as a rename, not as a removal and an addition.
+      A version that does not parse, or declares nothing, is no design
+      emptied: ds diff names its syntax errors, compares nothing and exits 1;
+      one with no .ds file is no workspace and exits 2. A diff that draws a
+      diagram still exits 1 when it raises findings, and -f with nothing to
+      draw is bad usage.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
+      tests/system/ds/test_qualification.cpp::TestQualification.AVersionThatDoesNotLoadIsComparedToNothing
+      tests/system/ds/test_qualification.cpp::TestQualification.ADiffThatDrawsStillCountsItsFindings
   }
 
   verification SVER-00008-1 {
@@ -171,14 +187,15 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.EveryKindOfDiagramIsAViewOfTheModel
   }
 
-  verification SVER-00011-1 {
+  verification SVER-00011-2 {
     status: approved
     @constraint CST-00001-1
     title: System tests confirm a hundred classes check, export and draw in under a hundred milliseconds
     text:
       A generated workspace of a hundred classes with inheritance, ownership
-      and dependencies runs ds check, ds export and ds render --svg each in
-      under one hundred milliseconds.
+      and dependencies runs ds check, ds export and ds render -f svg each in
+      under one hundred milliseconds. Revises SVER-00011-1, which named
+      --svg (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
@@ -198,17 +215,33 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCorpusMeansExactlyTheFindingsItMarks
   }
 
-  verification SVER-00012-1 {
+  verification SVER-00012-2 {
     status: approved
     @requirement SREQ-00011-1
-    title: System tests confirm a question about the model is answered by identity
+    title: System tests confirm a question about the model is answered by identity, and an identity it does not declare fails with a hint
     text:
       ds query lists the diagrams with their kind, the relations of an
       artefact in both directions, what a class realises and what proves it,
       and what a diagram shows; each answer names an identity the next
-      question takes, and an unknown question fails.
+      question takes, and an unknown question fails. An identity the model
+      does not declare, or none where one is needed, fails too: one answer
+      of kind error, naming the identities that end in what was asked.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.AQuestionAboutTheModelIsAnsweredByIdentity
+      tests/system/ds/test_qualification.cpp::TestQualification.AnIdentityTheModelDoesNotDeclareIsAnError
+  }
+
+  verification SVER-00018-1 {
+    status: approved
+    @requirement SREQ-00014-1
+    title: System tests confirm ds carries its manual: the index, a kind with its example, a code with what to do, exit codes in every help
+    text:
+      ds manual prints the index; ds manual sequence --json gives an
+      example that declares a sequence; ds manual E-SYNTAX says what to do;
+      an unknown topic exits 1; every command's --help lists its exit codes.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
   }
 }

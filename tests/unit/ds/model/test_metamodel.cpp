@@ -79,4 +79,61 @@ TEST_F(TestKindSpec, OnlyPackagesAndDiagramsStandAtTheTop) {
   }
 }
 
+/// The manual's tables (REQ-00079-1): a code, an annotation, a command, each found by its name.
+class TestCodeSpec : public ::testing::Test {};
+class TestAnnotationSpec : public ::testing::Test {};
+class TestCommandSpec : public ::testing::Test {};
+
+TEST_F(TestCodeSpec, ACodeIsFoundWithItsSeverityItsMeaningAndWhatToDo) {
+  const auto* code = ds::model::codeOf("E-SYNTAX");
+  ASSERT_NE(code, nullptr);
+  EXPECT_EQ(code->severity, "error");
+  EXPECT_FALSE(code->fix.empty());
+  EXPECT_EQ(ds::model::codeOf("E-NOTHING"), nullptr);
+}
+
+TEST_F(TestAnnotationSpec, EveryAnnotationThatMeansSomethingNamesTheRelationItMakes) {
+  for (const auto& a : ds::model::annotations()) {
+    if (a.relation == "refers") continue;  // any other word: a link with no meaning
+    EXPECT_NE(ds::model::relationOf(a.relation), nullptr) << a.name;
+  }
+}
+
+TEST_F(TestCommandSpec, EveryCommandSaysWhatEachOfItsExitCodesMeans) {
+  for (const char* name : {"check", "export", "render", "diff", "query", "manual"}) {
+    const auto* command = ds::model::commandOf(name);
+    ASSERT_NE(command, nullptr) << name;
+    ASSERT_GE(command->exits.size(), 2u) << name;
+    EXPECT_EQ(command->exits.front().first, 0) << name;
+  }
+}
+
+/// The manual's functions (REQ-00079-1), one fixture each.
+class TestSyntaxOf : public ::testing::Test {};
+class TestExampleOf : public ::testing::Test {};
+class TestManualPage : public ::testing::Test {};
+class TestManualTopics : public ::testing::Test {};
+
+TEST_F(TestSyntaxOf, AKindSaysHowItIsWritten) {
+  EXPECT_NE(ds::model::syntaxOf(Kind::Sequence).find("sequence <Class>::<method>"), std::string::npos);
+  EXPECT_EQ(ds::model::specOf(Kind::Sequence).syntax, ds::model::syntaxOf(Kind::Sequence));  // the metamodel carries it
+}
+
+TEST_F(TestExampleOf, AKindsExampleDeclaresOneOfItsKind) {
+  EXPECT_NE(ds::model::exampleOf(Kind::Enum).find("enum "), std::string::npos);
+  EXPECT_NE(ds::model::exampleOf(Kind::Diagram).find("diagram "), std::string::npos);
+}
+
+TEST_F(TestManualPage, TheIndexListsTheKindsAndAnUnknownTopicHasNoPage) {
+  const std::string index = ds::model::manualPage("");
+  for (const auto& k : ds::model::kinds()) EXPECT_NE(index.find(ds::model::kindName(k.kind)), std::string::npos);
+  EXPECT_EQ(ds::model::manualPage("weather"), "");
+}
+
+TEST_F(TestManualTopics, TheTopicsAreTheTablesTheKindsAndTheCodes) {
+  const auto topics = ds::model::manualTopics();
+  EXPECT_EQ(topics.size(), 4 + ds::model::kinds().size() + ds::model::codes().size());
+  EXPECT_EQ(topics.front(), "grammar");
+}
+
 }  // namespace

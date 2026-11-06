@@ -13,8 +13,9 @@ package driftspec@ds {
       @requirement SREQ-00002-1
       command: ds check <workspace> [--json]
       stdout: one line per finding, then the counts of the model; with --json, both as JSON
+      stderr: why nothing was read: a path that is no workspace (exit 2)
       exit 0: default
-      exit 1: syntax-error
+      exit 1: errors
       exit 2: bad-usage
     }
 
@@ -23,7 +24,7 @@ package driftspec@ds {
       command: ds export <workspace>
       stdout: the model as JSON, with its relations, findings and metamodel
       exit 0: default
-      exit 1: no-workspace
+      exit 2: no-workspace
     }
 
     operation render(input: path, diagram: string) -> none : UC-00002-1 {
@@ -34,14 +35,16 @@ package driftspec@ds {
       stdout: html, the viewer of the whole model, framed on the diagram when one is named; json, its scene; svg, text or cells, the diagram drawn; ir or layout, its data
       exit 0: default
       exit 1: no-diagram
+      exit 2: no-workspace
     }
 
-    operation diff(before: string, after: string) -> none : UC-00003-1 {
+    operation diff(before: string, after: string, path: string, diagram: string) -> none : UC-00003-1 {
       @requirement SREQ-00007-1
       command: ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]
       stdout: the changes in the terms of the model, or a diagram with them marked
       exit 0: default
       exit 1: findings
+      exit 2: no-workspace
     }
 
     operation query(workspace: path, question: string, subject: string) -> none : UC-00004-1 {
@@ -51,6 +54,15 @@ package driftspec@ds {
       stdout: one answer per line, or JSON; coupling answers what every behaviour touches outside its module
       exit 0: default
       exit 1: unknown-question
+      exit 2: no-workspace
+    }
+
+    operation manual(topic: string) -> none : UC-00006-1 {
+      @requirement SREQ-00014-1
+      command: ds manual [topic] [--json]
+      stdout: the index, or the page of a kind, a finding code, the commands, the annotations or the codes
+      exit 0: default
+      exit 1: no-topic
     }
   }
 
@@ -58,7 +70,7 @@ package driftspec@ds {
     -> app::main(workspace) / check -> code
   }
 
-  sequence cli::check / syntax-error {
+  sequence cli::check / errors {
     -> app::main(workspace) / check-errors -> code
   }
 
@@ -82,6 +94,10 @@ package driftspec@ds {
     -> app::main(input) / no-diagram -> code
   }
 
+  sequence cli::render / no-workspace {
+    -> app::main(input) / no-workspace -> code
+  }
+
   sequence cli::diff {
     -> app::main(before) / diff -> code
   }
@@ -90,12 +106,28 @@ package driftspec@ds {
     -> app::main(before) / diff-findings -> code
   }
 
+  sequence cli::diff / no-workspace {
+    -> app::main(before) / no-workspace -> code
+  }
+
   sequence cli::query {
     -> app::main(workspace) / query -> code
   }
 
   sequence cli::query / unknown-question {
     -> app::main(workspace) / unknown-question -> code
+  }
+
+  sequence cli::query / no-workspace {
+    -> app::main(workspace) / no-workspace -> code
+  }
+
+  sequence cli::manual {
+    -> app::main(topic) / manual -> code
+  }
+
+  sequence cli::manual / no-topic {
+    -> app::main(topic) / no-topic -> code
   }
 }
 
@@ -112,7 +144,7 @@ diagram SEQ_Check {
 
 diagram SEQ_CheckSyntaxError {
   kind: sequence
-  include: driftspec@ds@cli::check / syntax-error
+  include: driftspec@ds@cli::check / errors
   depth: 2
 }
 

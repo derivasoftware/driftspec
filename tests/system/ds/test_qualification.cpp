@@ -65,7 +65,7 @@ TEST_F(TestQualification, AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity) {
   EXPECT_TRUE(model);
   EXPECT_TRUE(scopedCheck);
   const Outcome missing = ds("check " + examples("nowhere"));  // a workspace that is not a directory is refused, never a crash
-  EXPECT_EQ(missing.code, 1);
+  EXPECT_EQ(missing.code, 2);                                  // as bad usage (cli::check exit 2), not as a design with errors
   const Outcome twice = ds("check " + examples("behaviour"));
   EXPECT_NE(twice.out.find("E-DUPLICATE-IDENTITY"), std::string::npos);  // the same scenario declared twice
   EXPECT_EQ(twice.code, 1);
@@ -305,6 +305,80 @@ TEST_F(TestQualification, EveryKindOfDiagramIsAViewOfTheModel) {
   for (const auto& n : state["nodes"]) stateBox |= n["classifier"] == "state";
   EXPECT_TRUE(stateBox);
   EXPECT_FALSE(state["edges"].empty());
+}
+
+// SREQ-00007-1: a version that does not load is not a design emptied: the diff says why and compares nothing
+TEST_F(TestQualification, AVersionThatDoesNotLoadIsComparedToNothing) {
+  const std::string tmp =
+      std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-unloadable-" + std::to_string(::getpid());
+  std::system(("mkdir -p " + tmp + "/broken " + tmp + "/empty").c_str());
+  std::ofstream(tmp + "/broken/a.ds") << "package x {\n  class A {\n";
+  const Outcome broken = ds("diff " + examples("static") + " " + tmp + "/broken");
+  EXPECT_EQ(broken.code, 1);
+  EXPECT_NE(broken.out.find("E-SYNTAX"), std::string::npos);
+  EXPECT_EQ(broken.out.find("- class"), std::string::npos);                    // nothing reported removed
+  EXPECT_EQ(ds("diff " + examples("static") + " " + tmp + "/empty").code, 2);  // a version with no .ds file is no workspace
+  std::system(("rm -rf " + tmp).c_str());
+}
+
+// SREQ-00002-1: a path that is no workspace is bad usage on every command, the same way
+TEST_F(TestQualification, EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage) {
+  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-nowhere-" + std::to_string(::getpid());
+  std::system(("mkdir -p " + tmp + "/empty").c_str());
+  for (const std::string& path : {std::string("/nonexistent/workspace"), tmp + "/empty"}) {
+    EXPECT_EQ(ds("check " + path).code, 2) << path;
+    EXPECT_EQ(ds("export " + path).code, 2) << path;
+    EXPECT_EQ(ds("render " + path).code, 2) << path;
+    EXPECT_EQ(ds("query " + path + " diagrams").code, 2) << path;
+    EXPECT_EQ(ds("diff " + examples("static") + " " + path).code, 2) << path;
+  }
+  std::system(("rm -rf " + tmp).c_str());
+}
+
+// SREQ-00007-1: a diff that draws a diagram still counts what it raises; -f without a diagram is bad usage
+TEST_F(TestQualification, ADiffThatDrawsStillCountsItsFindings) {
+  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-drawn-" + std::to_string(::getpid());
+  const std::string design = "diagram REQ_P {\n  kind: requirement\n  include: p@*\n}\n";
+  std::system(("mkdir -p " + tmp + "/a " + tmp + "/b").c_str());
+  std::ofstream(tmp + "/a/p.ds") << "package p {\n  requirement REQ-00001-1: The shop shall sell\n}\n" << design;
+  std::ofstream(tmp + "/b/p.ds") << "package p {\n  requirement REQ-00001-1: The shop shall sell and ship\n}\n" << design;
+  EXPECT_EQ(ds("diff " + tmp + "/a " + tmp + "/b").code, 1);                // W-REVISION-STALE: changed, same revision
+  EXPECT_EQ(ds("diff " + tmp + "/a " + tmp + "/b REQ_P -f text").code, 1);  // drawn, it still counts
+  EXPECT_EQ(ds("diff " + tmp + "/a " + tmp + "/b -f svg").code, 2);         // a format with nothing to draw
+  std::system(("rm -rf " + tmp).c_str());
+}
+
+// SREQ-00002-1: a path that is no workspace is a command line to correct, not a design with errors
+TEST_F(TestQualification, CheckingAPathThatIsNoWorkspaceIsBadUsage) {
+  EXPECT_EQ(ds("check /nonexistent/workspace").code, 2);
+  EXPECT_EQ(ds("check " + examples("static")).code, 1);  // its oracle carries errors: the design fails, exit 1
+}
+
+// SREQ-00011-1: an identity the model does not declare is no empty answer: it fails, and names what was meant
+TEST_F(TestQualification, AnIdentityTheModelDoesNotDeclareIsAnError) {
+  const Outcome unknown = ds("query " + examples("artefacts") + " relations Projection");
+  EXPECT_EQ(unknown.code, 1);
+  EXPECT_EQ(ds("query " + examples("artefacts") + " relations").code, 1);  // the identity is not optional
+  const Outcome hint = ds("query " + examples("artefacts") + " relations Projection --json");
+  const auto answer = nlohmann::json::parse(hint.out);
+  ASSERT_EQ(answer.size(), 1u);
+  EXPECT_EQ(answer[0]["kind"], "error");
+  EXPECT_NE(answer[0]["detail"].get<std::string>().find("iris@projection::Projection"), std::string::npos);
+  EXPECT_EQ(nlohmann::json::parse(ds("query " + examples("artefacts") + " weather --json").out)[0]["kind"], "error");
+}
+
+// SREQ-00014-1: the tool carries its manual: how each kind is written, what each code means, the exit codes
+TEST_F(TestQualification, TheToolCarriesItsManual) {
+  const Outcome index = ds("manual");
+  EXPECT_EQ(index.code, 0);
+  EXPECT_NE(index.out.find("Kinds you write"), std::string::npos);
+  const Outcome kind = ds("manual sequence --json");
+  EXPECT_EQ(kind.code, 0);
+  EXPECT_NE(nlohmann::json::parse(kind.out)["kind"]["example"].get<std::string>().find("sequence "), std::string::npos);
+  EXPECT_NE(ds("manual E-SYNTAX").out.find("What to do:"), std::string::npos);
+  EXPECT_EQ(ds("manual weather").code, 1);
+  for (const char* command : {"check", "export", "render", "diff", "query"})
+    EXPECT_NE(ds(std::string(command) + " --help").out.find("Exit codes:"), std::string::npos) << command;
 }
 
 // SREQ-00011-1: questions about the model answered by identity, so one answer leads to the next

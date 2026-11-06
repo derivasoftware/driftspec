@@ -36,7 +36,7 @@ module.exports = grammar({
     _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.interface, $.package, $.module, $.sequence, $.state),
 
     module: $ => seq(optional(field('visibility', $.visibility)), optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
-    _module_item: $ => choice($.field, $.requirement, $.constraint, $.verification, $.usecase, $.module, $.class, $.enum, $.function, $.sequence, $.state),
+    _module_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.module, $.class, $.enum, $.function, $.sequence, $.state),
 
     // ---- process artefacts ------------------------------------------------
     // a requirement nested in a requirement refines it; a verification nested in one verifies it (R3)

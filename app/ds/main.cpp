@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -18,6 +19,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/diff/Diff.hpp"
 #include "ds/export/JsonExport.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
@@ -83,10 +85,23 @@ ds::model::Model load(const std::string& dir) {
   return model;
 }
 
-/// The workspace loaded, or nothing when the path is not a directory (reported on stderr).
+/// Whether any .ds file lies under a directory: a directory with none is no workspace (a mistyped path, most often).
+bool holdsDesign(const std::string& dir) {
+  std::error_code error;
+  for (std::filesystem::recursive_directory_iterator it(dir, error), end; !error && it != end; it.increment(error))
+    if (it->is_regular_file() && it->path().extension() == ".ds") return true;
+  return false;
+}
+
+/// The workspace loaded, or nothing when the path is no workspace (reported on stderr): every command
+/// then exits 2, bad usage, since the command line names no design (DS-83).
 bool loadWorkspace(const std::string& dir, ds::model::Model* model) {
   if (!isDirectory(dir)) {
     std::cerr << "cannot read " << dir << ": not a directory\n";
+    return false;
+  }
+  if (!holdsDesign(dir)) {
+    std::cerr << "no .ds file under " << dir << ": it is no workspace\n";
     return false;
   }
   *model = load(dir);
@@ -125,9 +140,40 @@ std::string locationJson(const ds::model::Location& l) {
   return nlohmann::json{{"file", l.file}, {"line", l.line}, {"column", l.column}}.dump();
 }
 
+/// A page of the manual ds embeds; an unknown topic lists the ones there are.
+int manual(const std::string& topic, bool json) {
+  const std::string page = ds::model::manualPage(topic);
+  if (page.empty()) {
+    std::cerr << "no page '" << topic << "' in the manual; there are:";
+    for (const auto& t : ds::model::manualTopics()) std::cerr << " " << t;
+    std::cerr << "\n";
+    return 1;
+  }
+  if (!json) {
+    std::cout << page;
+    return 0;
+  }
+  nlohmann::json out{{"topic", topic.empty() ? "index" : topic}, {"text", page}};
+  for (const auto& k : ds::model::kinds()) {
+    if (topic != ds::model::kindName(k.kind)) continue;
+    nlohmann::json fields = nlohmann::json::array();
+    for (const auto& f : k.fields)
+      fields.push_back({{"name", f.name},
+                        {"type", ds::model::fieldTypeName(f.type)},
+                        {"source", ds::model::fieldSourceName(f.source)},
+                        {"meaning", f.meaning}});
+    out["kind"] = {{"meaning", k.meaning}, {"syntax", k.syntax}, {"fields", fields}, {"flags", k.flags}, {"example", k.example}};
+  }
+  if (const ds::model::CodeSpec* c = ds::model::codeOf(topic))
+    out["code"] = {{"code", c->code}, {"severity", c->severity}, {"meaning", c->meaning}, {"fix", c->fix}};
+  if (topic.empty()) out["topics"] = ds::model::manualTopics();
+  std::cout << out.dump(2) << "\n";
+  return 0;
+}
+
 int check(const std::string& dir, bool json) {
   ds::model::Model model;
-  if (!loadWorkspace(dir, &model)) return 1;
+  if (!loadWorkspace(dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
   int errors = 0;
   const auto& entities = model.entities();
   const long expected = std::count_if(entities.begin(), entities.end(), [](const auto& p) { return p.second.expected; });
@@ -196,8 +242,8 @@ struct Render {
     if (!isDirectory(input)) {  // a render-IR document someone else produced: drawn like a diagram of a workspace
       std::ifstream probe(input);
       if (!probe) {
-        std::cerr << "cannot read " << input << "\n";
-        return 1;
+        std::cerr << "cannot read " << input << ": neither a workspace nor a render-IR document\n";
+        return 2;
       }
       const std::string doc = readFile(input);
       if (format == "html" || format == "json") {
@@ -209,7 +255,7 @@ struct Render {
       return emit(output, drawing(ds::render::IrDocument::parse(doc), format, width));
     }
     ds::model::Model model;
-    if (!loadWorkspace(input, &model)) return 1;
+    if (!loadWorkspace(input, &model)) return 2;
     if (format == "html" || format == "json") {
       if (format == "json") return emit(output, ds::scene::Scene(model).render() + "\n");
       std::vector<std::string> focus;
@@ -245,7 +291,7 @@ struct Render {
 int main(int argc, char** argv) {
   CLI::App app{"ds: a software design as text, checked, drawn, compared and asked", "ds"};
   app.require_subcommand(1);
-  app.footer("A workspace is a directory of .ds files read as one. Each command takes --help.");
+  app.footer("A workspace is a directory of .ds files read as one. Each command takes --help; ds manual tells the rest.");
   const auto workspace = [](CLI::App* cmd, std::string* dir) {
     cmd->add_option("workspace", *dir, "a directory of .ds files")->required();
   };
@@ -301,6 +347,20 @@ int main(int argc, char** argv) {
   queryCmd->add_option("subject", subject, "what it is asked about");
   queryCmd->add_flag("--json", json, "answer as JSON");
 
+  std::string topic;
+  auto* manualCmd = app.add_subcommand("manual", "this manual: how each kind is written, what each finding means, the commands");
+  manualCmd->add_option("topic", topic, "a kind (class, sequence...), a finding code, commands, annotations or codes");
+  manualCmd->add_flag("--json", json, "the page as JSON");
+
+  // every command says its exit codes, from the one table the manual prints too (DS-79)
+  for (auto* cmd : {checkCmd, exportCmd, renderCmd, diffCmd, queryCmd, manualCmd}) {
+    const ds::model::CommandSpec* spec = ds::model::commandOf(cmd->get_name());
+    if (!spec) continue;
+    std::string exits = "Exit codes:";
+    for (const auto& e : spec->exits) exits += "\n  " + std::to_string(e.first) + "  " + e.second;
+    cmd->footer(exits);
+  }
+
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError& e) {
@@ -308,22 +368,50 @@ int main(int argc, char** argv) {
     return code == 0 ? 0 : 2;  // help is not a failure; a wrong command line is bad usage
   }
 
+  if (manualCmd->parsed()) return manual(topic, json);
   if (checkCmd->parsed()) return check(dir, json);
   if (renderCmd->parsed()) return render.run();
   if (diffCmd->parsed()) {
     std::string a = before, b = after;
     if (isDirectory(a) && isDirectory(b)) {
       if (diagram.empty()) diagram = path;  // two directories need no path: the third argument is the diagram
+      for (const std::string& version : {a, b}) {
+        if (holdsDesign(version)) continue;
+        std::cerr << "no .ds file under " << version << ": it is no workspace\n";
+        return 2;
+      }
     } else {
       a = checkout(a, path.empty() ? "." : path);
       b = checkout(b, path.empty() ? "." : path);
       if (a.empty() || b.empty()) {
         std::cerr << "cannot read both revisions (give two directories, or two git revisions and a path)\n";
-        return 1;
+        return 2;
       }
     }
     const ds::model::Model first = load(a);
     const ds::model::Model second = load(b);
+    // a version that does not load is no deletion of the design: say why, and compare nothing
+    bool unloadable = false;
+    for (const auto* version : {&first, &second}) {
+      const std::string& name = version == &first ? before : after;
+      long declared = 0;
+      for (const auto& p : version->entities()) declared += p.second.expected ? 0 : 1;
+      if (declared == 0) {
+        std::cerr << name << ": no .ds file declares anything there\n";
+        unloadable = true;
+      }
+      for (const auto& f : version->findings()) {
+        if (f.code != "E-SYNTAX") continue;
+        std::cout << name << ": " << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  "
+                  << f.message << "\n";
+        unloadable = true;
+      }
+    }
+    if (unloadable) return 1;
+    if (diagram.empty() && diffCmd->count("--format")) {
+      std::cerr << "-f draws a diagram with the changes marked: name one (ds query <workspace> diagrams lists them)\n";
+      return 2;
+    }
     const ds::diff::DiffResult result = ds::diff::Diff::compare(first, second);
     if (!diagram.empty()) {
       const ds::model::Model marked = ds::diff::Diff::marked(first, second, result);
@@ -333,14 +421,17 @@ int main(int argc, char** argv) {
         return 1;
       }
       std::cout << drawing(ds::render::IrDocument::parse(doc), format, diffWidth);
-      return 0;
+      // the drawing is the output; what the diff raises still counts, and goes where it cannot spoil a drawing
+      for (const auto& f : result.findings)
+        std::cerr << f.location.file << ":" << f.location.line << "  " << f.code << "  " << f.message << "\n";
+      return result.findings.empty() ? 0 : 1;
     }
     std::cout << ds::diff::Diff::report(result);
     return result.findings.empty() ? 0 : 1;
   }
 
   ds::model::Model model;
-  if (!loadWorkspace(dir, &model)) return 1;
+  if (!loadWorkspace(dir, &model)) return 2;
   if (exportCmd->parsed()) {
     std::cout << ds::exporter::JsonExport().render(model) << "\n";
     return 0;
@@ -348,6 +439,7 @@ int main(int argc, char** argv) {
   const ds::query::Query query(model);
   const std::vector<ds::query::Answer> answers = query.ask(question, subject);
   if (!answers.empty() && answers.front().kind == "error") {
+    if (json) std::cout << ds::query::Query::json(answers) << "\n";  // asked for JSON, the error is an answer too
     std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
     if (answers.front().detail.find("not a question") != std::string::npos) {
       std::cerr << "questions:";

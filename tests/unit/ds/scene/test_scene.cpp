@@ -359,4 +359,37 @@ TEST_F(TestVerification, AVerificationCarriesItsTestsOnePerLineAndWhatItProves) 
   EXPECT_EQ(v.requirements, std::vector<std::string>{"R-2"});
 }
 
+/// A use case of a small model, listed with the requirements (REQ-00083-1): its outcomes, the
+/// operation that realises it and the requirement that binds it.
+class TestOutcome : public ::testing::Test {};
+
+TEST_F(TestOutcome, AUseCaseCarriesItsOutcomesTheDefaultFirst) {
+  ds::model::Model model;
+  model.declare(entity(Kind::Package, "p", "p", ""));
+  model.declare(entity(Kind::Interface, "p@shell", "shell", "p@"));
+  model.declare(entity(Kind::Operation, "p@shell::greet", "greet", "p@shell"));
+  model.declare(entity(Kind::Requirement, "R-1", "R-1", "p@"));
+  Entity uc = entity(Kind::UseCase, "UC-1", "UC-1", "p@");
+  uc.fields["title"] = "Greet";
+  uc.fields["operation"] = "greet";
+  model.declare(uc);
+  Entity sad = entity(Kind::Outcome, "UC-1::empty", "empty", "UC-1");
+  sad.fields["text"] = "nobody is greeted";
+  model.declare(sad);
+  Entity happy = entity(Kind::Outcome, "UC-1::default", "default", "UC-1");
+  happy.fields["text"] = "a greeting";
+  model.declare(happy);
+  model.relate({"realises", "p@shell::greet", "UC-1", {}, ""});
+  model.relate({"requires", "UC-1", "R-1", {}, ""});
+  const auto doc = ds::scene::Scene(model).build();
+  const auto it = std::find_if(doc.requirements.begin(), doc.requirements.end(), [](const auto& r) { return r.id == "UC-1"; });
+  ASSERT_NE(it, doc.requirements.end());
+  EXPECT_EQ(it->kind, "usecase");
+  EXPECT_EQ(it->signature, "greet()");
+  ASSERT_EQ(it->outcomes.size(), 2u);
+  EXPECT_EQ(it->outcomes[0].name, "default");
+  EXPECT_EQ(it->outcomes[1].text, "nobody is greeted");
+  EXPECT_EQ(it->binds, std::vector<std::string>{"R-1"});
+}
+
 }  // namespace

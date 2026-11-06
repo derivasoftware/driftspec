@@ -94,6 +94,7 @@ package driftspec@ds {
         A specification that lives per file cannot say that two files talk
         about the same thing (R1, R6).
       verification VER-00041-1 {
+        title: Integration tests confirm a specification is a directory of .ds files read as one, in any order
         status: approved
         method: test
         tests:
@@ -155,6 +156,7 @@ package driftspec@ds {
             package app { package core { } } and package app@core { } are the
             same box; the flat form needs the outer package declared somewhere.
           verification VER-00012-1 {
+            title: Integration tests confirm a package nests in a package, written nested or reopened flat by its full path
             status: approved
             method: test
             tests:
@@ -173,16 +175,22 @@ package driftspec@ds {
             boxes are organisation and drop out of the qualified name.
           rationale: decided 2026-10-26 with argos's reading by namespace (R4).
         }
-        requirement REQ-00017-1 {
+        requirement REQ-00017-2 {
           tags: language, hld
           status: approved
-          title: A package shall realise requirements and carry constraints through annotations, like a class
-          text: @requirement and @constraint in the package body.
-          verification VER-00014-1 {
+          title: A package or a module shall realise requirements and carry constraints through annotations, like a class
+          text: @requirement and @constraint in the package or module body.
+          rationale:
+            Revises REQ-00017-1, which named the package only: the metamodel let
+            a module answer to a requirement but the grammar did not let one
+            write it (DS-82, found by a newcomer agent, 2026-11-06).
+          verification VER-00014-2 {
+            title: Integration tests confirm a package or a module realises requirements and carries constraints through annotations, like a class
             status: approved
             method: test
             tests:
               tests/integration/ds/bind/test_packages.cpp::TestPackages.ABoxRealisesRequirementsLikeAClass
+              tests/integration/ds/bind/test_module_annotations.cpp::TestModuleAnnotations.AModuleAnswersToTheRequirementItsBodyNames
           }
         }
         requirement REQ-00018-1 {
@@ -193,6 +201,7 @@ package driftspec@ds {
             In the outermost package an artefact is of the system; in an inner
             package or a module, of that level. No keyword, no field.
           verification VER-00015-1 {
+            title: Integration tests confirm the outermost package is the system, and the level of an artefact follows from where it is declared
             status: approved
             method: test
             tests:
@@ -205,6 +214,7 @@ package driftspec@ds {
           status: approved
           title: A package shall draw as a container of its modules in a class diagram
           verification VER-00016-1 {
+            title: Integration tests confirm a package draws as a container of its modules in a class diagram
             status: approved
             method: test
             tests:
@@ -223,12 +233,68 @@ package driftspec@ds {
             external interface of a process, or of a library when it is binary.
           rationale: Owner, 2026-11-05. The syntax is self-contained, with no other formats or parsers.
           verification VER-00064-1 {
+            title: Integration tests confirm a package declares the external interfaces of what it builds, with their kind and typed operations
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceHoldsItsTypedOperationsAndTheirFields
               tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.RequirementsAndConstraintsLinkToAnInterfaceOrAnOperation
               tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceIsDrawnAsABoxWithItsOperations
+          }
+        }
+        requirement REQ-00081-1 {
+          tags: language, hld, usecase
+          status: approved
+          title: A use case shall be declared as a contract with its outcomes, realised by interface operations and specialised by a specific use case
+          text:
+            usecase UC-00001-1 greet(name: string) -> Greeting { outcome default: ...; outcome
+            empty-name -> none: ... } is an artefact identified by its id with its revision: a
+            title, a status, the requirements that bind it (@requirement), an optional signature
+            and its outcomes, default the ending that goes well and every other one a scenario.
+            It names no interface: an interface operation realises it (operation greet(...) :
+            UC-00001-1), whoever drives that interface. A specific use case specialises a
+            generic one after a colon and keeps its signature, its outcomes and its
+            requirements. A design without use cases owes none.
+          rationale:
+            Owner, 2026-11-06 (DS-77): a use case is its own entity, close to a requirement; it
+            may be bound by several requirements and triggered from several interfaces of the
+            high level design, and it should be seen whole from each of them. No actor: the
+            interface already says what drives it.
+          verification VER-00090-1 {
+            title: Integration tests confirm hola realises its use cases from both interfaces, a specific one inherits the outcomes of its generic, and a design without use cases owes none
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.HolaRealisesItsUseCasesFromBothInterfacesAndChecksClean
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.ASpecificUseCaseInheritsTheOutcomesOfItsGeneric
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.ADesignWithoutUseCasesOwesNone
+          }
+        }
+        requirement REQ-00082-1 {
+          tags: language, hld, usecase, check
+          status: approved
+          title: The check shall hold every operation that realises a use case to its contract, outcome by outcome
+          text:
+            An operation that takes or gives something else than the use case it realises, or a
+            specific use case that does so against its generic, is W-USECASE-SIGNATURE. An
+            outcome, its own or inherited, that the operation handles with no scenario is
+            W-USECASE-OUTCOME-UNHANDLED; a scenario the operation handles that no outcome names
+            is W-SCENARIO-NO-OUTCOME. A use case no operation realises, directly or through one
+            that specialises it, is W-USECASE-UNREALISED; a realisation or a specialisation of an
+            id that is no use case is W-USECASE-UNDECLARED.
+          rationale:
+            The use case is what makes "from which interfaces, and how does it end" checkable:
+            on ds's own design these checks caught the outcomes the command line changed.
+          verification VER-00091-1 {
+            title: Integration tests confirm each way an operation can break its use case is a finding, and keeping the contract is none
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOperationThatHandlesEveryOutcomeKeepsTheContract
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOperationThatGivesSomethingElseBreaksTheContract
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOutcomeNoScenarioHandlesIsReported
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AScenarioNoOutcomeNamesIsReported
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AUseCaseNothingRealisesAndAnUnknownOneAreReported
           }
         }
       }
@@ -268,6 +334,7 @@ package driftspec@ds {
           title: A bare name shall resolve from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
           text: No includes, no using; what already encloses you is omitted.
           verification VER-00017-1 {
+            title: Integration tests confirm a bare name resolves from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
             status: approved
             method: test
             tests:
@@ -294,6 +361,7 @@ package driftspec@ds {
             tuple), which left every generic Python type of the iris spike
             undeclared.
           verification VER-00018-2 {
+            title: Integration tests confirm an extern module declares names only, with no obligations, and every extern joins one catalogue
             status: draft
             method: test
             tests:
@@ -329,6 +397,7 @@ package driftspec@ds {
             class is a constructor; name: type = default. Members are
             identified by name: an overload is one member.
           verification VER-00019-1 {
+            title: Integration tests confirm a member carries visibility, modifiers, a name, a type and an optional default
             status: approved
             method: test
             tests:
@@ -354,6 +423,7 @@ package driftspec@ds {
             W-MODIFIER-ON-VALUE.
           rationale: R16.
           verification VER-00021-1 {
+            title: Integration tests confirm ownership and multiplicity come from the attribute and its type, and parameters and returns give use
             status: approved
             method: test
             tests:
@@ -368,6 +438,7 @@ package driftspec@ds {
           text: class Repository<T: Entity>; E-TEMPLATE-BOUND.
           rationale: R15.
           verification VER-00022-1 {
+            title: Integration tests confirm a template is identified by name and arity and its arguments checked against their bounds
             status: approved
             method: test
             tests:
@@ -381,6 +452,7 @@ package driftspec@ds {
           text: class Vector <<==, ordered, +, []>>; E-OPERATOR-UNDECLARED.
           rationale: R17.
           verification VER-00023-1 {
+            title: Integration tests confirm operators are declared in the class header as a set and refined in the body
             status: approved
             method: test
             tests:
@@ -393,6 +465,7 @@ package driftspec@ds {
           title: Interface, abstract and value shall be derived from the members, never written
           rationale: What is derived cannot contradict what is declared (R14).
           verification VER-00024-1 {
+            title: Integration tests confirm interface, abstract and value are derived from the members, never written
             status: approved
             method: test
             tests:
@@ -405,6 +478,7 @@ package driftspec@ds {
           title: Any entity or member shall open a body with fields, notes, annotations and contracts kept as text
           rationale: R8, R12, R13: contracts are for the reader and for argos, not interpreted.
           verification VER-00025-1 {
+            title: Integration tests confirm any entity or member opens a body with fields, notes, annotations and contracts kept as text
             status: approved
             method: test
             tests:
@@ -416,6 +490,7 @@ package driftspec@ds {
           status: approved
           title: An enum shall be a value type with its values, annotated like a class
           verification VER-00026-1 {
+            title: Integration tests confirm an enum is a value type with its values, annotated like a class
             status: approved
             method: test
             tests:
@@ -438,6 +513,7 @@ package driftspec@ds {
           W-PRIVATE-LEAK.
         rationale: Owner, 2026-11-05. There is no port concept: a port is a public child, and an interface is one that crosses a process. Whether the code respects this is argos's job.
         verification VER-00068-1 {
+          title: Integration tests confirm any child of a box may be private, and nothing outside its parent reaches it
           status: approved
           method: test
           tests:
@@ -475,6 +551,7 @@ package driftspec@ds {
           title: A function shall carry a method's signature and body
           text: Parameters and the return give use; the body holds notes, annotations, contracts and nested artefacts.
           verification VER-00059-1 {
+            title: Integration tests confirm a function carries a method's signature and body
             method: test
             tests:
               tests/integration/ds/check/test_functions.cpp::TestFunctions.AFunctionIsAnOperationOfItsModule
@@ -490,6 +567,7 @@ package driftspec@ds {
             of another module; a method reaches one its class does not declare.
             In a sequence diagram a function runs on its module's lifeline.
           verification VER-00060-1 {
+            title: Integration tests confirm the behaviour of a function runs on its parameters and locals, and a call with no target reaches a function of the module
             method: test
             tests:
               tests/integration/ds/check/test_functions.cpp::TestFunctions.ItsBehaviourRunsOnItsParametersAndCallsItsNeighbours
@@ -500,6 +578,7 @@ package driftspec@ds {
           tags: language, lld, function
           title: A class diagram shall draw each function as a box of its own, stereotyped function
           verification VER-00061-1 {
+            title: Integration tests confirm a class diagram draws each function as a box of its own, stereotyped function
             method: test
             tests:
               tests/integration/ds/check/test_functions.cpp::TestFunctions.AClassDiagramDrawsEachFunctionAsABox
@@ -527,6 +606,7 @@ package driftspec@ds {
           title: A sequence shall be identified by its resolved subject and scenario, wherever it is written
           text: sequence Class::method [/ scenario]; two declarations are a duplicate; the unnamed scenario is the default.
           verification VER-00027-1 {
+            title: Integration tests confirm a sequence is identified by its resolved subject and scenario, wherever it is written
             status: approved
             method: test
             tests:
@@ -539,6 +619,7 @@ package driftspec@ds {
           title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
           rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
           verification VER-00028-3 {
+            title: Integration tests confirm the participants of a sequence are its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
             status: approved
             method: test
             tests:
@@ -560,6 +641,7 @@ package driftspec@ds {
             to check against.
           rationale: DS-52. With the scenario a call follows, a trace reaches the value it ends in, which is what lets an interface promise an outcome.
           verification VER-00063-1 {
+            title: Integration tests confirm a behaviour says what it gives back with return, and that value is checked against what its operation declares
             status: approved
             method: test
             tests:
@@ -579,6 +661,7 @@ package driftspec@ds {
             of the trace, gives no finding.
           rationale: DS-54. This is the link from the high level design to the low level one, and what keeps a promise such as exit 2 true.
           verification VER-00065-1 {
+            title: Integration tests confirm an operation of an interface has a sequence, and each outcome it promises names a scenario whose trace ends in that value
             status: approved
             method: test
             tests:
@@ -600,6 +683,7 @@ package driftspec@ds {
             W-VIEW-UNREACHABLE and W-VIEW-NO-WAY-OUT. Views are optional: a bare machine asks nothing.
           rationale: Owner, 2026-11-05. In a graphical interface the navigation is the design; the look is a requirement or a constraint.
           verification VER-00066-1 {
+            title: Integration tests confirm the state machine of an interface is its navigation, with views as its states, and reports the views with no way in or out
             status: approved
             method: test
             tests:
@@ -622,6 +706,7 @@ package driftspec@ds {
             returns included; an unnamed call follows the default path.
           rationale: Owner, 2026-11-05. Repeating the opening of every scenario was the largest cost of the design of ds, and a maintenance risk. checkMessage went from twelve sequences to one.
           verification VER-00070-2 {
+            title: Integration tests confirm a branch of a sequence names a scenario, a path through that one behaviour, so what scenarios share is written once
             status: approved
             method: test
             tests:
@@ -651,6 +736,7 @@ package driftspec@ds {
             nothing to be checked against and gives no finding.
           rationale: DS-51; revision 2 adds literal arguments (DS-64): the code passes them, and naming them invented values. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it.
           verification VER-00062-2 {
+            title: Integration tests confirm a value of a sequence has the type of what produced it, and its uses are checked against that type
             status: approved
             method: test
             tests:
@@ -668,6 +754,7 @@ package driftspec@ds {
           status: approved
           title: A message shall name an operation of its target's type and match its arity, inside loop, alt and opt frames with prose conditions
           verification VER-00029-1 {
+            title: Integration tests confirm a message names an operation of its target's type and matches its arity, inside loop, alt and opt frames with prose conditions
             status: approved
             method: test
             tests:
@@ -684,6 +771,7 @@ package driftspec@ds {
             the operation does not declare is W-SCENARIO-UNDECLARED. Revision 2 adds the
             naming (DS-52): a trace could only go down through the default scenario.
           verification VER-00030-2 {
+            title: Integration tests confirm a message to an operation with a behaviour expands to its default scenario or to the one it names, and coupling to another module is derived
             status: approved
             method: test
             tests:
@@ -716,6 +804,7 @@ package driftspec@ds {
           title: The events and actions of a transition shall be operations of the class, and the guard shall be prose
           text: Idle -> Running on run [guard] / report; no nested states until a design asks for them.
           verification VER-00031-1 {
+            title: Integration tests confirm the events and actions of a transition are operations of the class, and the guard is prose
             status: approved
             method: test
             tests:
@@ -753,6 +842,7 @@ package driftspec@ds {
         title: An artefact shall be identified by its id with its revision
         text: REQ-00001-2: the revision is part of the identity; a link to a revision no longer declared is W-REVISION-DRIFT, resolved to the declared one.
         verification VER-00032-1 {
+          title: Integration tests confirm an artefact is identified by its id with its revision
           status: approved
           method: test
           tests:
@@ -773,6 +863,7 @@ package driftspec@ds {
         title: Nesting shall give the relation between artefacts, and annotations shall add relations from elsewhere
         text: a requirement in a requirement refines it; a verification in a requirement verifies it; @refines, @requirement, @constraint elsewhere.
         verification VER-00033-1 {
+          title: Integration tests confirm nesting gives the relation between artefacts, and annotations add relations from elsewhere
           status: approved
           method: test
           tests:
@@ -787,6 +878,7 @@ package driftspec@ds {
         title: An artefact shall carry title, text, rationale, status and tags; a verification its method and tests; a constraint its category and bok
         text: One-line forms for a requirement and a constraint; draft when no status.
         verification VER-00034-1 {
+          title: Integration tests confirm an artefact carries title, text, rationale, status and tags; a verification its method and tests; a constraint its category and bok
           status: approved
           method: test
           tests:
@@ -816,6 +908,7 @@ package driftspec@ds {
         status: approved
         title: A diagram shall select by id, module or package, with include and exclude, and print by hide and show
         verification VER-00036-1 {
+          title: Integration tests confirm a diagram selects by id, module or package, with include and exclude, and prints by hide and show
           status: approved
           method: test
           tests:
@@ -828,6 +921,7 @@ package driftspec@ds {
         status: approved
         title: A sequence diagram shall select a behaviour as it is written, expand by depth and lift to the level asked for
         verification VER-00037-4 {
+          title: Integration tests confirm a sequence diagram selects a behaviour as it is written, expands by depth and lifts to the level asked for
           status: approved
           method: test
           tests:
@@ -855,6 +949,7 @@ package driftspec@ds {
           handles it though no type says so. The component view is derived, never written.
         rationale: Owner, 2026-11-05. Encapsulation has to be seen: which box holds what, and what each one offers.
         verification VER-00069-2 {
+          title: Integration tests confirm a class diagram opens the boxes it names and closes the rest, each closed box showing only its public children
           status: approved
           method: test
           tests:
@@ -877,6 +972,7 @@ package driftspec@ds {
           shows its text and what binds it. A view no jump names is still drawn.
         rationale: DS-5. In a graphical interface the navigation is the design, so it has to be seen.
         verification VER-00067-1 {
+          title: Integration tests confirm a state diagram draws the states and the jumps of a machine, and of an interface its navigation with what each view shows
           status: approved
           method: test
           tests:
@@ -893,6 +989,7 @@ package driftspec@ds {
         status: approved
         title: A requirement diagram shall show the umbrella of an artefact: what refines, verifies and realises it
         verification VER-00038-1 {
+          title: Integration tests confirm a requirement diagram shows the umbrella of an artefact: what refines, verifies and realises it
           status: approved
           method: test
           tests:

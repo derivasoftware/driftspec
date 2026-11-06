@@ -74,6 +74,19 @@ TEST_F(TestSceneTrace, AVerificationCarriesItsMethodItsTestsAndWhatItProves) {
   EXPECT_EQ(v.tests[0], "tests/unit/core/test_greeter.cpp::TestGreeter.GreetsByName");
 }
 
+TEST_F(TestSceneTrace, AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealisesIt) {
+  const auto& generic = requirement("UC-00001-1");
+  EXPECT_EQ(generic.kind, "usecase");
+  EXPECT_EQ(generic.signature, "greet(name: string) -> core::Greeting");
+  ASSERT_EQ(generic.outcomes.size(), 2u);
+  EXPECT_EQ(generic.outcomes[0].name, "default");  // the ending that goes well comes first
+  EXPECT_EQ(generic.outcomes[1].returns, "none");
+  EXPECT_EQ(generic.binds, (std::vector<std::string>{"SREQ-00001-1", "SREQ-00002-1"}));
+  EXPECT_TRUE(has(generic.nodes, "hola@shell::greet"));       // the operation that realises it
+  EXPECT_EQ(requirement("UC-00002-1").parent, "UC-00001-1");  // the specific under the generic
+  EXPECT_TRUE(has(requirement("UC-00002-1").nodes, "hola@web::greet"));
+}
+
 TEST_F(TestSceneTrace, ThePageListsTheRequirementsInTheBottomPanel) {
   const std::string page = ds::scene::Scene(model).page("hola");
   EXPECT_NE(page.find("data-tab=\"reqs\""), std::string::npos);  // a tab beside the tours

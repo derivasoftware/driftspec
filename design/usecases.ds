@@ -16,8 +16,8 @@ package driftspec {
     @requirement SREQ-00012-1
 
     outcome default: every finding of the model, then its counts
-    outcome syntax-error: a file does not parse; the findings say where
-    outcome bad-usage: the command is not understood; nothing is read
+    outcome errors: an error is among the findings; they say where and what to do
+    outcome bad-usage: the command is not understood, or the path holds no design; nothing is read
   }
 
   usecase UC-00002-1 render(input: path, diagram: string) -> none {
@@ -29,15 +29,17 @@ package driftspec {
 
     outcome default: the viewer framed on the diagram, or the diagram in the format asked
     outcome no-diagram: the diagram named is not in the workspace; nothing is drawn
+    outcome no-workspace: nothing to read at the path
   }
 
-  usecase UC-00003-1 diff(before: string, after: string) -> none {
+  usecase UC-00003-1 diff(before: string, after: string, path: string, diagram: string) -> none {
     title: Compare two versions of a design in the terms of the model
     status: draft
     @requirement SREQ-00007-1
 
     outcome default: the changes, entity by entity and relation by relation
-    outcome findings: a version does not load cleanly; its findings come first
+    outcome findings: a version does not parse, or the diff raises findings; they come first
+    outcome no-workspace: a version is no workspace
   }
 
   usecase UC-00004-1 query(workspace: path, question: string, subject: string) -> none {
@@ -47,7 +49,8 @@ package driftspec {
     @requirement SREQ-00004-1
 
     outcome default: one answer per line, or JSON
-    outcome unknown-question: the question is not one the model answers
+    outcome unknown-question: the question, or the identity it is about, is not one the model answers
+    outcome no-workspace: there is no workspace at the path
   }
 
   usecase UC-00005-1 export(workspace: path) -> none {
@@ -59,11 +62,12 @@ package driftspec {
     outcome no-workspace: there is no workspace at the path; nothing is written
   }
 
-  usecase UC-00006-1 {
-    title: Edit a design: a .ds file parsed, highlighted and folded as it is typed
+  usecase UC-00006-1 manual(topic: string) -> none {
+    title: Learn how a design is written, what a finding means and what a command's exit says
     status: draft
-    @requirement SREQ-00008-1
+    @requirement SREQ-00014-1
 
-    outcome default: the file highlighted and folded, its errors marked where they are
+    outcome default: the page asked for, or the index
+    outcome no-topic: there is no such page; the topics are listed
   }
 }

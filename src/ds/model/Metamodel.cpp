@@ -31,6 +31,14 @@ const FieldSpec kReturns = syntax("returns", FieldType::Type, "what it gives bac
 const FieldSpec kNote = written("note", FieldType::Text, "a remark kept with the declaration");
 const FieldSpec kContract = written("contract.*", FieldType::Text, "a pre- or postcondition, numbered in order");
 
+std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is written, from the manual (Manual.cpp)
+  for (auto& k : kinds) {
+    k.syntax = syntaxOf(k.kind);
+    k.example = exampleOf(k.kind);
+  }
+  return kinds;
+}
+
 std::vector<KindSpec> build() {
   const Kind P = Kind::Package, M = Kind::Module, Cl = Kind::Class, Rq = Kind::Requirement;
   std::vector<KindSpec> k;
@@ -249,7 +257,7 @@ const char* fieldSourceName(FieldSource source) {
 }
 
 const std::vector<KindSpec>& kinds() {
-  static const std::vector<KindSpec> all = build();
+  static const std::vector<KindSpec> all = describe(build());
   return all;
 }
 

@@ -108,6 +108,25 @@ package driftspec {
     tags: render, scene
   }
 
+  requirement SREQ-00014-1 {
+    status: approved
+    title: The system shall carry its own manual: how each kind of the language is written, what each finding means and what each command's exit codes say
+    text:
+      ds manual prints, from the tool itself and with no workspace: an index
+      of the commands and the kinds; for each kind, how it is written, its
+      fields, flags and relations, and a minimal example that checks clean;
+      for each finding code, what it means and what to do; the annotations
+      that mean something; the commands with their exit codes, which every
+      command's help repeats. The manual is generated from the metamodel and
+      held to the engine, so it cannot drift from the language.
+    rationale:
+      Owner, 2026-11-06, like argos: a newcomer agent with only the binary
+      understood what ds does (7/10) but could not write a design without
+      guessing its syntax (3/10, some 35 attempts); the metamodel named every
+      kind and field but not how any of them is written.
+    tags: manual, cli, language
+  }
+
   requirement SREQ-00006-1 {
     status: approved
     title: The system shall export the model, with its relations and findings, for other tools

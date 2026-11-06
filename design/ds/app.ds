@@ -15,6 +15,8 @@ package driftspec@ds {
     - function emit(output: string, text: string) -> int
     - function locationJson(location: model::Location) -> string
     - function check(dir: path, json: bool) -> int
+    - function holdsDesign(dir: path) -> bool         // a directory with no .ds file under it is no workspace
+    - function manual(topic: string, json: bool) -> int
     - function drawing(doc: render::IrDocument, format: string, width: int) -> string
     - function layoutJson(doc: string, width: int) -> string
     - function diagramId(name: string) -> string
@@ -75,9 +77,9 @@ package driftspec@ds {
       return 0
     }
 
-    sequence main / no-workspace {
+    sequence main / no-workspace {            // not a directory, or none with a .ds file: the command line names no design
       -> isDirectory(argv) -> found
-      return 1
+      return 2
     }
 
     // render: the whole model in the viewer (html, or its scene as json), or one diagram drawn
@@ -167,6 +169,25 @@ package driftspec@ds {
       -> loadWorkspace(argv, model) -> found
       -> query.ask(question, subject) -> answers
       return 1
+    }
+
+    sequence main / manual {                  // no workspace: the manual is in the tool
+      -> manual(topic, json) -> code
+      return code
+    }
+
+    sequence main / no-topic {
+      -> manual(topic, json) / no-topic -> code
+      return 1
+    }
+
+    sequence manual {
+      -> model::manualPage(topic) -> page
+      opt no such topic / no-topic {
+        -> model::manualTopics() -> topics
+        return 1
+      }
+      return 0
     }
   }
 }

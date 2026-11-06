@@ -12,6 +12,7 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
   - `ds render <workspace|ir.json> [diagram] [-f html|json|svg|text|cells|ir|layout] [-w N] [-o file] [--embed [--height N]] [--css file]` — the viewer of the whole model (html, framed on the diagram when one is named), its scene (json), or one diagram drawn still or as its data.
   - `ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]` — the changes in the model's terms, or a diagram with them marked.
   - `ds query <workspace> <question> [subject] [--json]` — diagrams, entities, relations, artefacts, behaviours, shows, findings, coupling.
+  - `ds manual [topic] [--json]` — the manual ds carries: how each kind is written, with an example that checks clean; what each finding code means; the annotations; the commands and their exit codes.
 - `viewer/` — the viewer page compiled into ds (`scene.html`) and its themes (`themes/night.css`, for `--css`).
   In the viewer, classes sit under the class they inherit from, and inheritance is the only relation drawn as a line; touching a box lights up what it composes, aggregates, calls and uses, each in its colour, and docks its card on the right. Tours play along the bottom.
 - `examples/hola/` — the example the viewer is tried on: `ds render examples/hola -o hola.html`.

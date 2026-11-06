@@ -105,6 +105,9 @@ package driftspec@ds {
       - checkInterfaces() -> void {
         @requirement REQ-00060-1
       }
+      - checkUseCases() -> void {
+        @requirement REQ-00082-1
+      }
       - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
         @requirement REQ-00060-1
       }
@@ -157,6 +160,7 @@ package driftspec@ds {
         -> checkEvent(event)
       }
       -> checkInterfaces()
+      -> checkUseCases()
       -> checkDiagrams()
       -> checkScenarios()
       -> checkOwnershipCycles()
