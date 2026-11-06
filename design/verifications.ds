@@ -25,11 +25,13 @@ package driftspec {
       ds check prints file:line:column, code and message per finding and
       exits with 1 when an error is among them; a workspace with an
       undeclared reference still exports whole, with the warning. A path
-      that is no workspace exits with 2, as a command line to correct.
+      that is no workspace (none there, or no .ds file under it) exits with
+      2 on every command, as a command line to correct.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
       tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
   }
 
   verification SVER-00003-2 {
@@ -130,11 +132,15 @@ package driftspec {
       A workspace against itself is no design change; a class renamed with its
       shape intact is reported as a rename, not as a removal and an addition.
       A version that does not parse, or declares nothing, is no design
-      emptied: ds diff names its syntax errors, compares nothing and exits 1.
+      emptied: ds diff names its syntax errors, compares nothing and exits 1;
+      one with no .ds file is no workspace and exits 2. A diff that draws a
+      diagram still exits 1 when it raises findings, and -f with nothing to
+      draw is bad usage.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
       tests/system/ds/test_qualification.cpp::TestQualification.AVersionThatDoesNotLoadIsComparedToNothing
+      tests/system/ds/test_qualification.cpp::TestQualification.ADiffThatDrawsStillCountsItsFindings
   }
 
   verification SVER-00008-1 {

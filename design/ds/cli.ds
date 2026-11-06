@@ -24,7 +24,7 @@ package driftspec@ds {
       command: ds export <workspace>
       stdout: the model as JSON, with its relations, findings and metamodel
       exit 0: default
-      exit 1: no-workspace
+      exit 2: no-workspace
     }
 
     operation render(input: path, diagram: string) -> none {
@@ -35,6 +35,7 @@ package driftspec@ds {
       stdout: html, the viewer of the whole model, framed on the diagram when one is named; json, its scene; svg, text or cells, the diagram drawn; ir or layout, its data
       exit 0: default
       exit 1: no-diagram
+      exit 2: no-workspace
     }
 
     operation diff(before: string, after: string) -> none {
@@ -43,6 +44,7 @@ package driftspec@ds {
       stdout: the changes in the terms of the model, or a diagram with them marked
       exit 0: default
       exit 1: findings
+      exit 2: no-workspace
     }
 
     operation query(workspace: path, question: string, subject: string) -> none {
@@ -52,6 +54,7 @@ package driftspec@ds {
       stdout: one answer per line, or JSON; coupling answers what every behaviour touches outside its module
       exit 0: default
       exit 1: unknown-question
+      exit 2: no-workspace
     }
 
     operation manual(topic: string) -> none {
@@ -91,6 +94,10 @@ package driftspec@ds {
     -> app::main(input) / no-diagram -> code
   }
 
+  sequence cli::render / no-workspace {
+    -> app::main(input) / no-workspace -> code
+  }
+
   sequence cli::diff {
     -> app::main(before) / diff -> code
   }
@@ -99,12 +106,20 @@ package driftspec@ds {
     -> app::main(before) / diff-findings -> code
   }
 
+  sequence cli::diff / no-workspace {
+    -> app::main(before) / no-workspace -> code
+  }
+
   sequence cli::query {
     -> app::main(workspace) / query -> code
   }
 
   sequence cli::query / unknown-question {
     -> app::main(workspace) / unknown-question -> code
+  }
+
+  sequence cli::query / no-workspace {
+    -> app::main(workspace) / no-workspace -> code
   }
 
   sequence cli::manual {

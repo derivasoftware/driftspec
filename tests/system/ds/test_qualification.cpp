@@ -316,8 +316,35 @@ TEST_F(TestQualification, AVersionThatDoesNotLoadIsComparedToNothing) {
   const Outcome broken = ds("diff " + examples("static") + " " + tmp + "/broken");
   EXPECT_EQ(broken.code, 1);
   EXPECT_NE(broken.out.find("E-SYNTAX"), std::string::npos);
-  EXPECT_EQ(broken.out.find("- class"), std::string::npos);  // nothing reported removed
-  EXPECT_EQ(ds("diff " + examples("static") + " " + tmp + "/empty").code, 1);
+  EXPECT_EQ(broken.out.find("- class"), std::string::npos);                    // nothing reported removed
+  EXPECT_EQ(ds("diff " + examples("static") + " " + tmp + "/empty").code, 2);  // a version with no .ds file is no workspace
+  std::system(("rm -rf " + tmp).c_str());
+}
+
+// SREQ-00002-1: a path that is no workspace is bad usage on every command, the same way
+TEST_F(TestQualification, EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage) {
+  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-nowhere-" + std::to_string(::getpid());
+  std::system(("mkdir -p " + tmp + "/empty").c_str());
+  for (const std::string& path : {std::string("/nonexistent/workspace"), tmp + "/empty"}) {
+    EXPECT_EQ(ds("check " + path).code, 2) << path;
+    EXPECT_EQ(ds("export " + path).code, 2) << path;
+    EXPECT_EQ(ds("render " + path).code, 2) << path;
+    EXPECT_EQ(ds("query " + path + " diagrams").code, 2) << path;
+    EXPECT_EQ(ds("diff " + examples("static") + " " + path).code, 2) << path;
+  }
+  std::system(("rm -rf " + tmp).c_str());
+}
+
+// SREQ-00007-1: a diff that draws a diagram still counts what it raises; -f without a diagram is bad usage
+TEST_F(TestQualification, ADiffThatDrawsStillCountsItsFindings) {
+  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-drawn-" + std::to_string(::getpid());
+  const std::string design = "diagram REQ_P {\n  kind: requirement\n  include: p@*\n}\n";
+  std::system(("mkdir -p " + tmp + "/a " + tmp + "/b").c_str());
+  std::ofstream(tmp + "/a/p.ds") << "package p {\n  requirement REQ-00001-1: The shop shall sell\n}\n" << design;
+  std::ofstream(tmp + "/b/p.ds") << "package p {\n  requirement REQ-00001-1: The shop shall sell and ship\n}\n" << design;
+  EXPECT_EQ(ds("diff " + tmp + "/a " + tmp + "/b").code, 1);                // W-REVISION-STALE: changed, same revision
+  EXPECT_EQ(ds("diff " + tmp + "/a " + tmp + "/b REQ_P -f text").code, 1);  // drawn, it still counts
+  EXPECT_EQ(ds("diff " + tmp + "/a " + tmp + "/b -f svg").code, 2);         // a format with nothing to draw
   std::system(("rm -rf " + tmp).c_str());
 }
 
