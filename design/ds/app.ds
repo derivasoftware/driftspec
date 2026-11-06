@@ -49,6 +49,13 @@ package driftspec@ds {
       return 0
     }
 
+    sequence main / scene {
+      local scene: scene::Scene
+      -> load(argv) -> model
+      -> scene.render(pretty) -> json
+      return 0
+    }
+
     sequence main / no-workspace {
       -> isDirectory(argv) -> found
       return 1

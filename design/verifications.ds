@@ -68,6 +68,18 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
   }
 
+  verification SVER-00014-1 {
+    status: approved
+    @requirement SREQ-00013-1
+    title: System tests confirm ds scene lays out a workspace as nested boxes, in both variants
+    text:
+      ds scene yields JSON whose nodes each have a place inside their parent's,
+      with a lean place too unless they are private members.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheWholeModelIsLaidOutOnceForAViewer
+  }
+
   verification SVER-00006-1 {
     status: approved
     @requirement SREQ-00006-1

@@ -1,0 +1,95 @@
+// LLD of the scene namespace (ds::scene): the whole model laid out once, nested, for a
+// viewer that zooms from the system down to a member (SREQ-00013-1, DS-69). Every box is
+// measured from what it holds and placed inside its parent in shelves; the layout runs
+// twice, with every member and with public members only, and nothing moves between zooms.
+
+package driftspec@ds {
+
+  module scene {
+
+    requirement REQ-00069-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall place every package, module, interface, class, function, enum and member inside its parent, once, apart from its siblings, with and without private members
+      text:
+        A unit (class, function, enum) is as wide as its longest row and as
+        tall as its rows; a module and a package lay their children out in
+        shelves no wider than the square root of their area allows; an
+        interface sits on its package's border, half outside, as a port. Rows
+        read unqualified: run(name) -> vector<Entity>. The second variant
+        leaves private members out and shrinks their class; a private class
+        keeps its place. Extern modules and expected nodes are not drawn.
+      rationale:
+        A viewer that shows what fits at each zoom needs places that do not
+        move; computed once by ds, the same scene feeds the interactive
+        viewer and any snapshot.
+      tags: render, scene
+    }
+
+    verification VER-00076-1 {
+      status: approved
+      @requirement REQ-00069-1
+      title: Integration tests confirm every class, function and member of ds's design has a place, nested and apart, in both variants
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryClassFunctionAndMemberOfTheModelHasAPlace
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryBoxNestsInItsParentApartFromItsSiblings
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.WithPrivateMembersHiddenEveryBoxStillNestsAndKeepsApart
+    }
+
+    dataclass Box {                          // a rectangle of the scene: one unit is a pixel at zoom 1
+      @requirement REQ-00069-1
+      + x: double
+      + y: double
+      + w: double
+      + h: double
+    }
+
+    dataclass Node {                         // one thing drawn: a package, module, interface, unit or row
+      @requirement REQ-00069-1
+      + id: std::string
+      + kind: std::string
+      + parent: std::string
+      + label: std::string
+      + stereotype: std::string
+      + visibility: std::string
+      + requirements: std::vector<std::string>
+      + owns full: Box
+      + lean: bool
+      + owns leanBox: Box
+    }
+
+    dataclass SceneDocument {                // the scene: its nodes in drawing order and the world each variant spans
+      @requirement REQ-00069-1
+      + nodes: std::vector<Node>
+      + owns world: Box
+      + owns leanWorld: Box
+    }
+
+    class Scene {
+      @requirement REQ-00069-1
+      - refs model_: model::Model
+      + Scene(model: model::Model)
+      + build() -> SceneDocument
+      + render(pretty: bool) -> std::string
+    }
+
+    // The layout runs twice, once per variant; build keeps the full one's order and adds
+    // the lean place of every node that has one.
+    sequence Scene::build {
+      loop each variant {
+      }
+      return document
+    }
+
+    sequence Scene::render {
+      -> build() -> document
+      return json
+    }
+  }
+}
+
+diagram CL_SceneNamespace {
+  kind: class
+  include: driftspec@ds@scene::*
+}

@@ -23,6 +23,7 @@
 #include "ds/render/Layout.hpp"
 #include "ds/render/Svg.hpp"
 #include "ds/render/Text.hpp"
+#include "ds/scene/Scene.hpp"
 
 namespace {
 
@@ -33,7 +34,8 @@ int usage() {
                "workspace diagram)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its "
                "module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git "
                "revisions of <path>)\n       ds query <workspace-dir> <question> [subject] [--json]   (ask the model: diagrams · entities "
-               "<scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings [file])\n";
+               "<scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings [file])\n"
+               "       ds scene <workspace-dir>                      (the whole model laid out once, nested, as JSON for a viewer)\n";
   return 2;
 }
 
@@ -254,6 +256,10 @@ int main(int argc, char** argv) {
   if (argc != 3) return usage();
   if (verb == "export") {
     std::cout << ds::exporter::JsonExport().render(model) << "\n";
+    return 0;
+  }
+  if (verb == "scene") {
+    std::cout << ds::scene::Scene(model).render() << "\n";
     return 0;
   }
   if (verb == "coupling") {
