@@ -403,6 +403,7 @@ SceneDocument Scene::build() const {
   doc.world = bounds(doc.nodes, false);
   doc.leanWorld = bounds(doc.nodes, true);
   relate(doc);
+  tour(doc);
   return doc;
 }
 
@@ -434,7 +435,116 @@ std::string Scene::render(bool pretty) const {
   out["diagrams"] = nlohmann::json::array();
   for (const auto& d : doc.diagrams) out["diagrams"].push_back({{"name", d.name}, {"kind", d.kind}, {"nodes", d.nodes}});
   out["titles"] = doc.titles;
+  out["tours"] = nlohmann::json::array();
+  for (const auto& t : doc.tours) {
+    nlohmann::json steps = nlohmann::json::array();
+    for (const auto& s : t.steps) {
+      nlohmann::json j = {{"f", s.from}, {"t", s.to}, {"m", s.label}, {"d", s.depth}};
+      if (s.back) j["ret"] = 1;
+      steps.push_back(j);
+    }
+    out["tours"].push_back({{"id", t.id}, {"subject", t.subject}, {"scenario", t.scenario}, {"group", t.group}, {"steps", steps}});
+  }
   return pretty ? out.dump(2) : out.dump();
+}
+
+namespace {
+
+const int kMaxDepth = 7;
+const size_t kMaxSteps = 600;
+
+std::string fieldOf(const model::Entity& e, const std::string& key) {
+  const auto it = e.fields.find(key);
+  return it == e.fields.end() ? "" : it->second;
+}
+
+/// Walks a sequence along a scenario, expanding each call into the sequence of what it calls.
+struct Walker {
+  const model::Model& model;
+  const std::set<std::string>& ids;
+  std::map<std::string, std::string> calls;  // message -> the operation it calls
+
+  void walk(const std::string& sequence, const std::string& scenario, const std::string& caller, int depth, std::set<std::string> stack,
+            std::vector<Step>& out_steps) const {
+    for (const model::Entity* m : model::pathOf(model, sequence, scenario, nullptr)) {
+      if (out_steps.size() >= kMaxSteps) return;
+      const auto call = calls.find(m->id);
+      if (call == calls.end()) continue;
+      const std::string callee = nodeFor(ids, call->second);
+      if (callee.empty()) continue;
+      std::string args;
+      for (const auto& a : m->args) args += (args.empty() ? "" : ", ") + a;
+      const std::string op = fieldOf(*m, "op");
+      out_steps.push_back(
+          {caller, callee, op.substr(op.rfind("::") == std::string::npos ? 0 : op.rfind("::") + 2) + "(" + args + ")", depth, false});
+      const std::string expands = fieldOf(*m, "expands");
+      if (expands.empty() || depth >= kMaxDepth || stack.count(expands)) continue;
+      // a scenario written apart is a sequence of its own; one written as a branch is a path through the base
+      std::string sub = expands, subScenario;
+      if (!model.find(expands)) {
+        const auto slash = expands.find('/');
+        if (slash == std::string::npos) continue;
+        sub = expands.substr(0, slash);
+        subScenario = expands.substr(slash + 1);
+      }
+      stack.insert(expands);
+      walk(sub, subScenario, callee, depth + 1, stack, out_steps);
+      stack.erase(expands);
+      const std::string result = fieldOf(*m, "result");
+      out_steps.push_back({callee, caller, result.empty() ? "\u21a9" : result, depth, true});
+    }
+  }
+};
+
+}  // namespace
+
+void Scene::tour(SceneDocument& out_document) const {
+  std::set<std::string> ids;
+  for (const auto& n : out_document.nodes) ids.insert(n.id);
+  Walker walker{model_, ids, {}};
+  for (const auto& r : model_.relations()) {
+    if (r.kind == "calls") walker.calls[r.from] = r.to;
+  }
+  const auto visible = [](const model::Entity* e) { return e && fieldOf(*e, "visibility") != "-"; };
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& seq = pair.second;
+    if (seq.kind != model::Kind::Sequence) continue;
+    const auto at = seq.id.find("::sequence");
+    if (at == std::string::npos) continue;
+    const model::Entity* subject = model_.find(seq.id.substr(0, at));
+    if (!subject) continue;
+    const bool operation = subject->kind == model::Kind::Operation;
+    const bool member = subject->kind == model::Kind::Method && visible(subject) && visible(model_.find(subject->scope));
+    const bool function = subject->kind == model::Kind::Function && visible(subject);
+    if (!operation && !member && !function) continue;  // a private behaviour is replayed inside the public one that reaches it
+    const std::string node = nodeFor(ids, subject->id);
+    if (node.empty()) continue;
+    // the scenarios of this behaviour: its default path and every branch it names, or the one it is written apart for
+    std::vector<std::string> scenarios;
+    const std::string apart = seq.id.size() > at + 10 && seq.id[at + 10] == '/' ? seq.id.substr(at + 11) : "";
+    if (!apart.empty()) {
+      scenarios.push_back(apart);
+    } else {
+      scenarios.push_back("");
+      std::set<std::string> named;
+      for (const auto& f : model_.entities()) {
+        if (f.second.kind != model::Kind::Frame || f.second.scope != seq.id) continue;
+        for (const char* key : {"scenario", "else-scenario"}) {
+          const std::string s = fieldOf(f.second, key);
+          if (!s.empty() && named.insert(s).second) scenarios.push_back(s);
+        }
+      }
+    }
+    for (const auto& scenario : scenarios) {
+      Tour t;
+      t.subject = node;
+      t.scenario = scenario;
+      t.id = node + (scenario.empty() ? "" : " / " + scenario);
+      t.group = operation ? "interface" : "method";
+      walker.walk(seq.id, apart.empty() ? scenario : "", node, 1, {seq.id}, t.steps);
+      if (t.steps.size() >= (operation ? 1u : 2u)) out_document.tours.push_back(t);
+    }
+  }
 }
 
 std::string Scene::page(const std::string& title, const std::string& css, const std::vector<std::string>& focus) const {

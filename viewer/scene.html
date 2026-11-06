@@ -54,9 +54,36 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .card .rq{font-family:var(--mono);font-size:12px;color:var(--req)}
 .card button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:3px 10px;cursor:pointer}
 .card .x{border:0;font-size:18px;color:var(--muted);padding:0 4px}
+/* the tour panel: beside the canvas on a wide screen, under it on a narrow one */
+.tour{position:fixed;right:0;top:0;bottom:0;width:380px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+.tour[hidden]{display:none}
+body.touring .stage{right:380px}
+.tour .th{display:flex;gap:6px;align-items:center;padding:8px 10px 4px}
+.tour select{flex:1;min-width:0;font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.tour .tc{display:flex;gap:5px;align-items:center;padding:4px 10px}
+.tour .tc button,.tour .th button{min-width:38px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:15px;cursor:pointer}
+.tour .tc button.play{background:var(--accent);color:var(--bg);border-color:var(--accent);min-width:48px}
+.tour .tc input{flex:1;min-width:60px;accent-color:var(--accent)}
+.tour .td{display:flex;align-items:center;gap:8px;padding:2px 12px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+.tour .td input{flex:1;accent-color:var(--accent)}
+.tour .follow{display:none;font-size:12px;border:1px solid var(--accent);color:var(--accent);background:var(--panel);border-radius:999px;padding:4px 10px;cursor:pointer}
+.tour .follow.on{display:inline-block}
+.tour .tb{flex:1;overflow:auto}
+.tour svg text{font-family:var(--mono);font-size:11px;fill:var(--fg)}
+.caption{position:absolute;left:50%;transform:translateX(-50%);bottom:60px;max-width:calc(100% - 100px);background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:5px 12px;font-family:var(--mono);font-size:12.5px;box-shadow:0 4px 18px rgba(0,0,0,.12);pointer-events:none;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:3}
+.caption .z{display:block;font-family:var(--sans);font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.caption[hidden]{display:none}
+.rail,.mini,.legend{transition:opacity .25s}
+.stage.quiet .rail,.stage.quiet .mini,.stage.quiet .legend{opacity:0;pointer-events:none}
+@media (max-width:700px){
+  .tour{left:0;top:auto;width:auto;height:46%;border-left:0;border-top:1px solid var(--line)}
+  body.touring .stage{right:0;bottom:46%}
+  .tour .tc button,.tour .th button{min-width:34px;height:32px;font-size:13px}
+  .caption{bottom:12px;font-size:11px;max-width:calc(100% - 24px)}
+}
 @media (max-width:600px){
   .tools button{height:30px;font-size:11.5px;padding:0 8px}
-  .crumbs{top:48px;right:10px;font-size:10.5px}
+  .crumbs{top:92px;right:10px;font-size:10.5px}
   .rail{top:auto;bottom:70px;transform:none}.rail button{width:34px;height:34px;font-size:13px}.rail .lvl{display:none}
   .mini{width:96px;height:68px}
   .legend{display:none}
@@ -74,13 +101,20 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 <div class="stage" id="stage">
   <canvas class="main" id="cv" aria-label="/*TITLE*/: el modelo entero, con zoom"></canvas>
   <div class="crumbs" id="crumbs"></div>
-  <div class="tools"><button data-fam="estructura" aria-pressed="true" title="herencia, realización, composición, agregación, asociación">estructura</button><button data-fam="llamadas" aria-pressed="false" title="qué método llama a cuál">llamadas</button><button data-fam="usos" aria-pressed="false" title="dependencias: tipos que se nombran">usos</button><button id="priv" aria-pressed="false">ocultar privados</button><button id="fs">⛶</button></div>
+  <div class="caption" id="caption" hidden></div>
+  <div class="tools"><button id="tours" aria-pressed="false" title="reproducir el comportamiento sobre la estructura">recorridos</button><button data-fam="estructura" aria-pressed="true" title="herencia, realización, composición, agregación, asociación">estructura</button><button data-fam="llamadas" aria-pressed="false" title="qué método llama a cuál">llamadas</button><button data-fam="usos" aria-pressed="false" title="dependencias: tipos que se nombran">usos</button><button id="priv" aria-pressed="false">ocultar privados</button><button id="fs">⛶</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Subir un nivel">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Entrar">▼</button><button id="home" aria-label="Ver todo">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimapa"></canvas>
   <div class="legend"><span><i style="background:var(--k-class)"></i>clase</span><span><i style="background:var(--k-function)"></i>función</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>con requisito</span><span><b style="background:var(--warn)"></b>sin requisito</span><span>discontinuo: privado</span><span>◁ hereda · ◁┄ realiza · ◆ contiene · ◇ comparte · → referencia · ┄> usa · <b style="background:var(--accent);border-radius:0;width:12px;height:2px;vertical-align:3px"></b> llama</span></div>
   <div class="card" id="card" hidden></div>
 </div>
+<aside class="tour" id="tour" hidden aria-label="Recorrido">
+  <div class="th"><select id="tsel" aria-label="Recorrido"></select><button id="tclose" aria-label="Cerrar">×</button></div>
+  <div class="tc"><button id="tfirst" aria-label="Al principio">⏮</button><button id="tprev" aria-label="Paso anterior">◀</button><button id="tplay" class="play" aria-label="Reproducir">▶</button><button id="tnext" aria-label="Paso siguiente">▶|</button><input type="range" id="tscrub" min="0" max="0" value="0" aria-label="Paso"><button class="follow" id="tfollow">seguir</button></div>
+  <label class="td">profundidad <input type="range" id="tdepth" min="1" max="7" value="3"><b id="tdv">3</b></label>
+  <div class="tb" id="tbody"></div>
+</aside>
 <script>
 (()=>{
 const SCENE=/*SCENE*/;
@@ -125,9 +159,9 @@ function fly(t,ms=600){const a={...cam}, t0=performance.now(); anim={step(now){l
 let raf=0; function loop(){if(raf) return; raf=requestAnimationFrame(t=>{raf=0; let more=false; if(lanim) more=lanim(t)||more; if(anim){const m=anim.step(t); if(!m) anim=null; more=m||more;} draw(); if(more) loop();});}
 
 /* ---------- what fits is shown ---------- */
-let SEL=null;
+let SEL=null; let FORCED=new Set(), ACTIVE=new Set();
 const scr=n=>({x:sx(n.x),y:sy(n.y),w:n.w*cam.s,h:n.h*cam.s});
-const visible=n=>!n.hidden&&(n.kind==='row'?(n.op||n.h*cam.s>=8.5):n.kind==='unit'?(n.w*cam.s>=70&&n.h*cam.s>=16):true);
+const visible=n=>!n.hidden&&(FORCED.has(n.id)||(n.kind==='row'?(n.op||n.h*cam.s>=8.5):n.kind==='unit'?(n.w*cam.s>=70&&n.h*cam.s>=16):true));
 const onScreen=b=>b.x<W&&b.y<H&&b.x+b.w>0&&b.y+b.h>0;
 function rr(x,y,w,h,r){ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x,y,w,h,Math.max(0,Math.min(r,w/2,h/2))); else ctx.rect(x,y,w,h);}
 function text(t,x,y,px,color,weight=''){ctx.font=`${weight} ${px}px ${K.mono}`; ctx.fillStyle=color; ctx.fillText(t,x,y);}
@@ -137,7 +171,7 @@ function draw(){
   ctx.setTransform(DPR*U,0,0,DPR*U,0,0); ctx.fillStyle=K.bg; ctx.fillRect(0,0,W,H);
   // packages and modules
   ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='package'&&n.kind!=='module') return; const b=scr(n); if(!onScreen(b)) return;
-    const pkg=n.kind==='package', sel=SEL===id; rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:K.fg; ctx.lineWidth=sel?2.6:pkg?1.6:1.3; ctx.stroke();
+    const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:K.fg; ctx.lineWidth=sel?2.6:pkg?1.6:1.3; ctx.stroke();
     const px=Math.min(pkg?18:16,Math.max(11,(pkg?30:22)*cam.s)); const room=(pkg?90:46)*cam.s;
     if(room<px+10||b.w<170){ctx.font=`700 ${px}px ${K.mono}`; const tw=ctx.measureText(n.label).width; rr(b.x+2,b.y-px-6,tw+10,px+6,4); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); text(n.label,b.x+7,b.y-5,px,K.fg,'700'); return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
@@ -145,7 +179,7 @@ function draw(){
   // units with their rows
   UNITS.forEach(id=>{const n=N[id], b=scr(n); if(!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=SEL&&SEL!==id&&!anc(id).includes(SEL)&&!RELATED.has(id);
     ctx.globalAlpha=(lab?1:.55)*(dim?.35:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
-    ctx.setLineDash(n.vis==='-'?[5,3]:[]); ctx.strokeStyle=SEL===id?K.accent:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.setLineDash(n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
     const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s)); ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,sw,Math.max(0,b.h-2));
     const dr=Math.max(2.5,Math.min(5.5,4.5*cam.s)); if(b.w>16&&b.h>12){ctx.beginPath(); ctx.arc(b.x+b.w-dr-4,b.y+dr+4,dr,0,7); ctx.fillStyle=hasReq(id)?K.ok:K.warn; ctx.fill();}
     if(!lab){ctx.globalAlpha=1; return;}
@@ -154,8 +188,9 @@ function draw(){
     ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+sw+5,hy,px*.72,kc); text(n.label,b.x+sw+5+off,hy,px,K.fg,'700');
     if(n.reqs.length&&cam.s>2) chip(n.reqs,b.x+b.w-2*dr-12,hy);
     (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(!visible(r)) return; const rb=scr(r); if(rb.y>H||rb.y+rb.h<0) return;
-      const rpx=Math.min(13,r.h*cam.s*.78);
-      text(r.label,rb.x+sw+6,rb.y+rb.h/2+rpx*.36,rpx,r.vis==='-'?K.priv:K.fg);
+      const f=FORCED.has(rid), rpx=f?Math.max(9.5,Math.min(13,r.h*cam.s*.78)):Math.min(13,r.h*cam.s*.78);
+      if(ACTIVE.has(rid)){ctx.fillStyle=K.as; ctx.fillRect(rb.x+1,rb.y,rb.w-2,Math.max(rb.h,rpx+4));}
+      text(r.label,rb.x+sw+6,rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36,rpx,r.vis==='-'?K.priv:K.fg,ACTIVE.has(rid)?'700':'');
       if(r.label.includes('(')&&rpx>=7){const rd=Math.max(2,Math.min(3.6,rpx*.28)); ctx.beginPath(); ctx.arc(rb.x+rb.w-rd-6,rb.y+rb.h/2,rd,0,7);
         if(r.reqs.length){ctx.fillStyle=K.ok; ctx.fill();} else {ctx.strokeStyle=K.line; ctx.lineWidth=1.2; ctx.stroke();}}
       if(r.reqs.length&&cam.s>2.6) chip(r.reqs,rb.x+rb.w-18,rb.y+rb.h/2+rpx*.36);});
@@ -170,6 +205,7 @@ function draw(){
       const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.accent; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
     ctx.restore();});
   drawLinks();
+  drawTour();
   drawMini(); crumbs();
 }
 
@@ -178,7 +214,7 @@ const STYLE={inherits:{dash:[],end:'tri'},realises:{dash:[6,4],end:'tri'},owns:{
   refs:{dash:[],end:'open'},uses:{dash:[5,4],end:'open',muted:true},calls:{dash:[],end:'arrow',accent:true},'*':{dash:[],end:'arrow',muted:true}};
 let drawn=[];
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
-function drawLinks(){drawn=[];
+function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
   const list=SEL?linksOf(SEL):LINKS.filter(l=>FAM[FAMILY[l.kind]]);
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
@@ -265,7 +301,7 @@ mini.addEventListener('pointerdown',e=>{const r=mini.getBoundingClientRect(), m=
 const ptrs=new Map(); let gest=null;
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); anim=null; gest={t:performance.now(),moved:0,start:{...cam},p0:[...ptrs.values()].map(p=>({...p}))};});
 cv.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId)) return; const r=cv.getBoundingClientRect(); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); const ps=[...ptrs.values()];
-  if(ps.length===1&&gest.p0.length===1){const dx=ps[0].x-gest.p0[0].x, dy=ps[0].y-gest.p0[0].y; gest.moved=Math.max(gest.moved,Math.hypot(dx,dy)); if(gest.moved>5){cam.x=gest.start.x-dx/U/cam.s; cam.y=gest.start.y-dy/U/cam.s; loop();}}
+  if(ps.length===1&&gest.p0.length===1){const dx=ps[0].x-gest.p0[0].x, dy=ps[0].y-gest.p0[0].y; gest.moved=Math.max(gest.moved,Math.hypot(dx,dy)); if(gest.moved>5){if(T.idx>=0) release(); cam.x=gest.start.x-dx/U/cam.s; cam.y=gest.start.y-dy/U/cam.s; loop();}}
   else if(ps.length>=2){if(gest.p0.length<2) gest={t:0,moved:99,start:{...cam},p0:ps.slice(0,2).map(p=>({...p}))};
     const d0=Math.hypot(gest.p0[0].x-gest.p0[1].x,gest.p0[0].y-gest.p0[1].y), d1=Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y);
     const m0={x:((gest.p0[0].x+gest.p0[1].x)/2-r.left)/U,y:((gest.p0[0].y+gest.p0[1].y)/2-r.top)/U}, m1={x:((ps[0].x+ps[1].x)/2-r.left)/U,y:((ps[0].y+ps[1].y)/2-r.top)/U};
@@ -274,7 +310,7 @@ function endPtr(e){if(!ptrs.has(e.pointerId)) return; const was=ptrs.size; ptrs.
   if(was===1&&gest&&gest.moved<=5&&performance.now()-gest.t<450){const r=cv.getBoundingClientRect(); tap((e.clientX-r.left)/U,(e.clientY-r.top)/U);}
   if(ptrs.size===1){const p=[...ptrs.values()][0]; gest={t:0,moved:99,start:{...cam},p0:[{...p}]};}}
 cv.addEventListener('pointerup',endPtr); cv.addEventListener('pointercancel',endPtr);
-cv.addEventListener('wheel',e=>{e.preventDefault(); anim=null; const r=cv.getBoundingClientRect(), mx=(e.clientX-r.left)/U, my=(e.clientY-r.top)/U;
+cv.addEventListener('wheel',e=>{e.preventDefault(); anim=null; if(T.idx>=0) release(); const r=cv.getBoundingClientRect(), mx=(e.clientX-r.left)/U, my=(e.clientY-r.top)/U;
   const wmx=wx(mx), wmy=wy(my); cam.s=Math.max(.03,Math.min(10,cam.s*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0012)))); cam.x=wmx-(mx-W/2)/cam.s; cam.y=wmy-(my-H/2)/cam.s; loop();},{passive:false});
 function hit(X,Y){const x=wx(X), y=wy(Y); let best=null;
   ORDER.forEach(id=>{const n=N[id]; if(n.hidden||!(x>=n.x&&x<=n.x+n.w&&y>=n.y&&y<=n.y+n.h)) return; if(!visible(n)) return; if(!best||anc(id).length>=anc(best).length) best=id;}); return best;}
@@ -299,11 +335,14 @@ function select(id){SEL=id; RELATED=new Set(); if(!id){card.hidden=true; loop();
   Object.entries(groups).forEach(([verb,others])=>{const list=Object.entries(others).sort((a,b)=>b[1]-a[1]);
     h+=`<h4>${verb} · ${list.length}</h4>`+list.map(([o,c])=>`<div class="it row" data-sel="${esc(o)}"><span>${esc(N[o]?N[o].label:o)} <span class="st">${esc(N[o]?(N[boxOf(o)]||{}).label||'':'')}</span></span><span class="n">${c>1?'×'+c:''}</span></div>`).join('');});
   h+=`<h4>Requisitos · ${reqs.length}</h4>`+(reqs.length?reqs.map(r=>`<div class="rq">${esc(r)}</div>${TITLES[r]?`<div class="title">${esc(TITLES[r])}</div>`:''}`).join(''):'<div class="st">ninguno enlazado</div>');
+  const inTours=TOURS.map(t=>[t,t.steps.findIndex(s=>!s.ret&&(inside(s.f)||inside(s.t)))]).filter(([,i])=>i>=0);
+  if(inTours.length) h+=`<h4>Aparece en recorridos · ${inTours.length}</h4>`+inTours.slice(0,12).map(([t,i])=>`<div class="it row" data-tour="${esc(t.id)}" data-i="${i}"><span>▶ ${esc(tourName(t))}</span><span class="n">paso ${i+1} · prof. ${t.steps[i].d}</span></div>`).join('');
   const dg=DIAGS.filter(d=>d.nodes.includes(id)).map(d=>d.name);
   h+=`<h4>Sale en los diagramas · ${dg.length}</h4>`+(dg.length?dg.map(d=>`<span class="tag">${esc(d)}</span>`).join(''):'<div class="st">ninguno</div>');
   card.innerHTML=h; card.hidden=false; loop();}
 card.addEventListener('click',e=>{if(e.target.closest('[data-close]')) return select(null); if(e.target.closest('[data-zoom]')) return fly(fit(N[SEL]));
-  const s=e.target.closest('[data-sel]'); if(s){select(s.dataset.sel); fly(fit(N[s.dataset.sel]));}});
+  const s=e.target.closest('[data-sel]'); if(s){select(s.dataset.sel); fly(fit(N[s.dataset.sel]));}
+  const p=e.target.closest('[data-tour]'); if(p) playAt(p.dataset.tour,+p.dataset.i);});
 addEventListener('keydown',e=>{if(e.key==='Escape') select(null);});
 
 /* ---------- private members: in or out, the boxes follow ---------- */
@@ -320,6 +359,84 @@ document.getElementById('fs').onclick=()=>{if(document.fullscreenElement) docume
 function focusBox(){const ids=new Set(FOCUS); const hit=ORDER.filter(id=>ids.has(id)&&N[id].kind!=='package'); if(!hit.length) return null;
   const x0=Math.min(...hit.map(i=>N[i].x)), y0=Math.min(...hit.map(i=>N[i].y)), x1=Math.max(...hit.map(i=>N[i].x+N[i].w)), y1=Math.max(...hit.map(i=>N[i].y+N[i].h));
   return {x:x0,y:y0,w:x1-x0,h:y1-y0};}
+/* ---------- tours: a behaviour replayed over the structure ---------- */
+const TOURS=SCENE.tours||[], TBY={}; TOURS.forEach(t=>TBY[t.id]=t);
+const T={id:null,depth:3,idx:-1,playing:false,follow:true}; let steps=[], lanes=[], timer=0;
+const tourEl=document.getElementById('tour'), tsel=document.getElementById('tsel'), scrub=document.getElementById('tscrub'), depthEl=document.getElementById('tdepth');
+const caption=document.getElementById('caption'), playBtn=document.getElementById('tplay'), followBtn=document.getElementById('tfollow');
+function tourName(t){const s=N[t.subject]; const own=s&&s.kind==='row'&&N[s.parent].kind==='unit'?N[s.parent].label+'.':s&&s.kind==='row'&&N[s.parent].kind==='iface'?N[s.parent].label+' ':'';
+  return own+t.subject.split('::').pop().replace('#sig','')+(t.scenario?' / '+t.scenario:'');}
+tsel.innerHTML=[['interface','interfaz'],['method','métodos y funciones']].map(([g,l])=>{const ts=TOURS.filter(t=>t.group===g); return ts.length?`<optgroup label="${l}">`+ts.map(t=>`<option value="${esc(t.id)}">${esc(tourName(t))} · ${t.steps.length} pasos</option>`).join('')+'</optgroup>':'';}).join('');
+function buildSteps(){const t=TBY[T.id]; steps=t?t.steps.filter(s=>s.d<=T.depth):[]; lanes=[];
+  steps.forEach(s=>[s.f,s.t].forEach(n=>{const u=unitOf(n); if(!lanes.includes(u)) lanes.push(u);})); scrub.max=Math.max(0,steps.length-1);}
+function setTour(id){T.id=id; tsel.value=id; const mx=Math.max(1,...TBY[id].steps.map(s=>s.d)); depthEl.max=mx; if(T.depth>mx) T.depth=mx; depthEl.value=T.depth; document.getElementById('tdv').textContent=T.depth; buildSteps();}
+function openTours(id){document.body.classList.add('touring'); tourEl.hidden=false; document.getElementById('tours').setAttribute('aria-pressed','true'); if(id||!T.id) setTour(id||(TOURS.find(t=>t.group==='interface')||TOURS[0]).id); setTimeout(resize,30); go(T.idx);}
+function closeTours(){play(false); document.body.classList.remove('touring'); tourEl.hidden=true; document.getElementById('tours').setAttribute('aria-pressed','false'); T.idx=-1; ACTIVE=new Set(); FORCED=new Set(); caption.hidden=true; setTimeout(resize,30); loop();}
+function playAt(id,i){openTours(id); const st=TBY[id].steps[i]; if(st.d>T.depth){T.depth=st.d; depthEl.value=st.d; document.getElementById('tdv').textContent=st.d; buildSteps();} lock(); go(steps.indexOf(st));}
+const focusRect=id=>{const n=N[id]; return n.kind==='row'?N[n.parent]:n;};
+function union(a,b){const x=Math.min(a.x,b.x), y=Math.min(a.y,b.y); return {x,y,w:Math.max(a.x+a.w,b.x+b.w)-x,h:Math.max(a.y+a.h,b.y+b.h)-y};}
+function camFor(s){const A=focusRect(s.f), B=focusRect(s.t); let c=fit(union(A,B),.25);
+  const minS=Math.min(.75,120/Math.max(B.w,1));  // the callee must be readable: else frame its module, or the callee alone
+  if(c.s<minS){const m=boxOf(B.id); const bx=m?fit(N[m],.1):null; const only=(bx&&bx.s>=minS*.55)?bx:fit(B,.6); c=only.s>c.s?only:c;}
+  c.s=Math.min(c.s,1.4); return c;}
+function go(i){T.idx=Math.max(-1,Math.min(steps.length-1,i)); const s=steps[T.idx]; ACTIVE=new Set(); FORCED=new Set();
+  if(s){[s.f,s.t].forEach(id=>anc(id).forEach(a=>{ACTIVE.add(a); FORCED.add(a);})); if(T.follow) fly(camFor(s),600);
+    caption.innerHTML=`${T.idx+1}/${steps.length} · ${esc(short(s.f))} → ${esc(s.m)}<span class="z">profundidad ${s.d} · ${esc(anc(s.t).reverse().slice(1).map(a=>short(a)).join(' › '))}</span>`; caption.hidden=false;}
+  else caption.hidden=true;
+  scrub.value=Math.max(0,T.idx); seq(); loop();}
+function release(){if(T.follow){T.follow=false; followBtn.classList.add('on');}}
+function lock(){T.follow=true; followBtn.classList.remove('on');}
+function play(on){T.playing=on; playBtn.textContent=on?'❚❚':'▶'; clearTimeout(timer); stage.classList.toggle('quiet',on); if(on){if(T.idx>=steps.length-1) T.idx=-1; lock(); tick();}}
+function tick(){if(!T.playing) return; if(T.idx>=steps.length-1){play(false); return;} go(T.idx+1); timer=setTimeout(tick,1250);}
+playBtn.onclick=()=>play(!T.playing);
+document.getElementById('tnext').onclick=()=>{play(false); lock(); go(T.idx+1);};
+document.getElementById('tprev').onclick=()=>{play(false); lock(); go(T.idx-1);};
+document.getElementById('tfirst').onclick=()=>{play(false); lock(); go(-1); fly(fit(WORLD,.02));};
+scrub.oninput=()=>{play(false); lock(); go(+scrub.value);};
+followBtn.onclick=()=>{lock(); if(steps[T.idx]) fly(camFor(steps[T.idx]));};
+tsel.onchange=()=>{play(false); setTour(tsel.value); go(-1);};
+depthEl.oninput=()=>{const cur=steps[T.idx]; T.depth=+depthEl.value; document.getElementById('tdv').textContent=T.depth; buildSteps();
+  let i=cur?steps.indexOf(cur):-1; if(cur&&i<0){const all=TBY[T.id].steps; for(let j=all.indexOf(cur);j>=0;j--){i=steps.indexOf(all[j]); if(i>=0) break;}} go(i);};
+document.getElementById('tours').onclick=()=>tourEl.hidden?openTours():closeTours();
+document.getElementById('tclose').onclick=closeTours;
+addEventListener('keydown',e=>{if(tourEl.hidden||['INPUT','SELECT'].includes(e.target.tagName)) return; if(e.key===' '){e.preventDefault(); play(!T.playing);} if(e.key==='ArrowRight'){play(false); lock(); go(T.idx+1);} if(e.key==='ArrowLeft'){play(false); lock(); go(T.idx-1);}});
+function drawTour(){if(T.idx<0) return;
+  for(let i=Math.max(0,T.idx-4);i<=T.idx;i++){const s=steps[i]; if(!s) continue; const A=repOf(s.f), B=repOf(s.t); if(!A||!B) continue; const cur=i===T.idx;
+    stepEdge(A,B,cur?1:.3,cur?2.6:1.5,s.ret,cur?{n:i+1,m:s.m}:null);}}
+function stepEdge(A,B,alpha,lw,ret,label){
+  const [a1,a2]=span(A).map(sx), [b1,b2]=span(B).map(sx); let y1=anchorY(A), y2=anchorY(B), x1,x2,c1,c2;
+  ctx.globalAlpha=alpha; ctx.strokeStyle=K.accent; ctx.lineWidth=lw; ctx.setLineDash(ret?[6,5]:[]);
+  if(A===B||(b1<a2-4&&b2>a1+4)){const o=Math.max(24,30*cam.s); x1=a2; x2=b2; if(A===B){y1-=4; y2+=6;} c1=[x1+o,y1]; c2=[x2+o,y2];}
+  else if(b1>=a2){x1=a2; x2=b1; const d=Math.max(30,(x2-x1)/2); c1=[x1+d,y1]; c2=[x2-d,y2];}
+  else {x1=a1; x2=b2; const d=Math.max(30,(x1-x2)/2); c1=[x1-d,y1]; c2=[x2+d,y2];}
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.bezierCurveTo(c1[0],c1[1],c2[0],c2[1],x2,y2); ctx.stroke(); ctx.setLineDash([]);
+  arrow(x2,y2,Math.atan2(y2-c2[1],x2-c2[0]),K.accent);
+  if(label){const t=.55, bz=(p0,p1,p2,p3)=>(1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t*t*p2+t**3*p3;
+    ctx.font=`12px ${K.mono}`; const m=label.m.length>40?label.m.slice(0,39)+'…':label.m; const bw=ctx.measureText(m).width+36;
+    const mx=Math.max(bw/2+6,Math.min(W-bw/2-60,bz(x1,c1[0],c2[0],x2))), my=Math.max(60,Math.min(H-60,bz(y1,c1[1],c2[1],y2)));
+    ctx.globalAlpha=1; rr(mx-bw/2,my-11,bw,22,11); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=K.accent; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(mx-bw/2+12,my,10,0,7); ctx.fillStyle=K.accent; ctx.fill(); ctx.textAlign='center'; text(String(label.n),mx-bw/2+12,my+4,label.n>99?8.5:10,K.bg,'700'); ctx.textAlign='left';
+    text(m,mx-bw/2+26,my+4,12,K.fg);}
+  ctx.globalAlpha=1;}
+function seq(){const body=document.getElementById('tbody'); if(tourEl.hidden) return;
+  const SU=(body.clientWidth||340)<560?.8:1, BW=Math.max(260,(body.clientWidth||340)/SU), top=34, RH=26;
+  const gap=Math.max(70,(BW-80)/Math.max(1,lanes.length-1)), LW=Math.max(BW,60+gap*(lanes.length-1)+60), lx=i=>40+i*gap, H2=top+steps.length*RH+24;
+  let s=`<svg width="${LW*SU}" height="${H2*SU}" viewBox="0 0 ${LW} ${H2}">`;
+  lanes.forEach((l,i)=>{s+=`<text x="${lx(i)}" y="16" text-anchor="middle" font-weight="700">${esc(N[l]?N[l].label.split('(')[0]:l)}</text><line x1="${lx(i)}" y1="22" x2="${lx(i)}" y2="${H2-6}" stroke="var(--line)" stroke-dasharray="3 3"/>`;});
+  steps.forEach((st,i)=>{const a=lanes.indexOf(unitOf(st.f)), b=lanes.indexOf(unitOf(st.t)), y=top+i*RH+14, cur=i===T.idx, past=i<T.idx;
+    const col=cur||past?'var(--accent)':'var(--fg)', op=cur?1:past?.5:.85, ind=(st.d-1)*3;
+    s+=`<g data-i="${i}" style="cursor:pointer" opacity="${op}"><rect x="0" y="${y-13}" width="${LW}" height="${RH}" fill="${cur?'var(--accent-soft)':'transparent'}"/>`;
+    if(a===b){const x=lx(a)+4+ind; s+=`<path d="M${x} ${y-4} h18 v9 h-16" fill="none" stroke="${col}" stroke-width="${cur?2:1.1}" ${st.ret?'stroke-dasharray="4 3"':''}/><text x="${x+22}" y="${y+4}" style="fill:${col}">${esc(st.m.slice(0,34))}</text>`;}
+    else {const x1=lx(a)+(b>a?4:-4), x2=lx(b)+(b>a?-4:4), dir=b>a?1:-1;
+      s+=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="${cur?2:1.1}" ${st.ret?'stroke-dasharray="4 3"':''}/><path d="M${x2} ${y} l${-7*dir} -4 l0 8z" fill="${col}"/>`;
+      s+=`<text x="${Math.min(x1,x2)+6}" y="${y-4}" style="fill:${col}">${esc(st.m.slice(0,Math.max(8,Math.floor(Math.abs(x2-x1)/6.6))))}</text>`;}
+    s+=`<text x="3" y="${y+4}" style="fill:var(--muted);font-size:9px">${i+1}</text></g>`;});
+  body.innerHTML=s+'</svg>';
+  body.querySelector('svg').onclick=e=>{const g=e.target.closest('[data-i]'); if(g){play(false); lock(); go(+g.dataset.i);}};
+  if(T.idx>=0){const y=(top+T.idx*RH)*SU; if(y<body.scrollTop+20||y>body.scrollTop+body.clientHeight-40) body.scrollTop=y-body.clientHeight/2;
+    const a=lanes.indexOf(unitOf(steps[T.idx].t)), x=(40+Math.max(0,a)*gap)*SU; if(x<body.scrollLeft+20||x>body.scrollLeft+body.clientWidth-40) body.scrollLeft=x-body.clientWidth/2;}}
+new ResizeObserver(()=>{clearTimeout(seq._t); seq._t=setTimeout(seq,80);}).observe(document.getElementById('tbody'));
+
 resize(); const fb=focusBox(); Object.assign(cam,fb?fit(fb,.15):fit(WORLD,.02)); loop();
 })();
 </script>

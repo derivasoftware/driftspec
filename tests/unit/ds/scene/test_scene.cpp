@@ -191,4 +191,71 @@ TEST_F(TestDiagramView, ADiagramListsTheNodesItShows) {
   EXPECT_NE(std::find(doc.diagrams[0].nodes.begin(), doc.diagrams[0].nodes.end(), "p@m::A"), doc.diagrams[0].nodes.end());
 }
 
+/// A tour: a public behaviour walked along its scenario, each call expanded into the sequence of what it calls.
+class TestTour : public ::testing::Test {
+ protected:
+  ds::model::Model model;
+  std::vector<ds::scene::Tour> tours;
+
+  static Entity message(const std::string& sequence, int order, const std::string& op, const std::string& expands) {
+    Entity m = entity(Kind::Message, sequence + "::m" + std::to_string(order), op, sequence);
+    m.fields["op"] = op;
+    m.fields["order"] = std::to_string(order);
+    m.fields["result"] = op + "ed";
+    if (!expands.empty()) m.fields["expands"] = expands;
+    return m;
+  }
+
+  void SetUp() override {
+    model.declare(entity(Kind::Package, "p", "p", ""));
+    model.declare(entity(Kind::Module, "p@m", "m", "p@"));
+    model.declare(entity(Kind::Class, "p@m::A", "A", "p@m"));
+    model.declare(entity(Kind::Class, "p@m::B", "B", "p@m"));
+    model.declare(entity(Kind::Method, "p@m::A::run", "run", "p@m::A"));
+    model.declare(entity(Kind::Method, "p@m::B::go", "go", "p@m::B"));
+    model.declare(entity(Kind::Method, "p@m::B::step", "step", "p@m::B"));
+    model.declare(entity(Kind::Sequence, "p@m::A::run::sequence", "run", "p@m"));
+    model.declare(entity(Kind::Sequence, "p@m::B::go::sequence", "go", "p@m"));
+    model.declare(message("p@m::A::run::sequence", 0, "go", "p@m::B::go::sequence"));
+    model.declare(message("p@m::B::go::sequence", 0, "step", ""));
+    model.declare(message("p@m::B::go::sequence", 1, "step", ""));
+    model.relate({"calls", "p@m::A::run::sequence::m0", "p@m::B::go", {}, ""});
+    model.relate({"calls", "p@m::B::go::sequence::m0", "p@m::B::step", {}, ""});
+    model.relate({"calls", "p@m::B::go::sequence::m1", "p@m::B::step", {}, ""});
+    tours = ds::scene::Scene(model).build().tours;
+  }
+
+  const ds::scene::Tour* tour(const std::string& id) const {
+    for (const auto& t : tours)
+      if (t.id == id) return &t;
+    return nullptr;
+  }
+};
+
+class TestStep : public TestTour {};
+
+TEST_F(TestStep, AStepGoesOneLevelDeeperForEachSequenceExpanded) {
+  const auto* run = tour("p@m::A::run");
+  ASSERT_NE(run, nullptr);
+  ASSERT_GE(run->steps.size(), 3u);
+  EXPECT_EQ(run->steps[0].depth + 1, run->steps[1].depth);
+  EXPECT_EQ(run->steps[1].label, "step()");
+  EXPECT_FALSE(run->steps[1].back);
+}
+
+TEST_F(TestTour, ACallExpandsIntoTheSequenceOfWhatItCallsAndItsAnswerComesBack) {
+  const auto* run = tour("p@m::A::run");
+  ASSERT_NE(run, nullptr);
+  ASSERT_EQ(run->steps.size(), 4u);  // run -> go, go -> step twice, go's answer back to run
+  EXPECT_EQ(run->steps[0].from, "p@m::A::run");
+  EXPECT_EQ(run->steps[0].to, "p@m::B::go");
+  EXPECT_EQ(run->steps[0].depth, 1);
+  EXPECT_EQ(run->steps[1].from, "p@m::B::go");
+  EXPECT_EQ(run->steps[1].depth, 2);
+  EXPECT_TRUE(run->steps[3].back);
+  EXPECT_EQ(run->steps[3].to, "p@m::A::run");
+  EXPECT_EQ(run->steps[3].label, "goed");
+  EXPECT_EQ(run->group, "method");
+}
+
 }  // namespace

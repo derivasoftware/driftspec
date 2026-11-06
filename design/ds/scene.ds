@@ -134,6 +134,53 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.HidingPrivateMembersMakesNoBoxWider
     }
 
+    requirement REQ-00073-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall carry a tour of every interface operation and public behaviour, each call expanded into the sequence of what it calls, along each named scenario
+      text:
+        A tour walks a sequence along a scenario (the default path, each
+        branch it names, each scenario written apart) with the model's own
+        path rule, and expands every call into the sequence it expands to, to
+        a depth of seven: a step from the caller to the callee, then the
+        steps of the callee, then its answer coming back. Each step knows its
+        depth. Private behaviours are replayed inside the public ones that
+        reach them. The viewer replays a tour over the structure: the camera
+        frames each call, the member called lights up in its box, a sequence
+        window keeps the same step, and a depth slider hides what lies below.
+      rationale:
+        Owner, 2026-11-05 (DS-67, the fourth dimension): the dynamic part
+        played over the static one.
+      tags: render, scene, behaviour
+    }
+
+    verification VER-00082-1 {
+      status: approved
+      @requirement REQ-00073-1
+      title: Integration tests confirm ds check is a tour from the CLI down to the Checker and back, with its syntax-error scenario a tour of its own
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryInterfaceCommandIsATourThatReachesTheModelAndComesBack
+    }
+
+    dataclass Step {                         // one step of a tour: a call, or its answer coming back
+      @requirement REQ-00073-1
+      + from: std::string
+      + to: std::string
+      + label: std::string
+      + depth: int
+      + back: bool
+    }
+
+    dataclass Tour {                         // a behaviour walked along one scenario, expanded through what it calls
+      @requirement REQ-00073-1
+      + id: std::string
+      + subject: std::string
+      + scenario: std::string
+      + group: std::string
+      + steps: std::vector<Step>
+    }
+
     dataclass Link {                         // a relation between two nodes, with what produces it
       @requirement REQ-00072-1
       + from: std::string
@@ -181,6 +228,7 @@ package driftspec@ds {
       + owns links: std::vector<Link>
       + owns diagrams: std::vector<DiagramView>
       + titles: std::map<std::string, std::string>
+      + owns tours: std::vector<Tour>
     }
 
     class Scene {
@@ -196,6 +244,9 @@ package driftspec@ds {
       - relate(out_document: SceneDocument) -> void {
         @requirement REQ-00072-1
       }
+      - tour(out_document: SceneDocument) -> void {
+        @requirement REQ-00073-1
+      }
       + static frame(page: std::string, title: std::string, height: int) -> std::string {
         @requirement REQ-00071-1
       }
@@ -207,6 +258,7 @@ package driftspec@ds {
       loop each variant {
       }
       -> relate(out_document)
+      -> tour(out_document)
       return document
     }
 

@@ -52,6 +52,25 @@ struct DiagramView {
   std::vector<std::string> nodes;
 };
 
+/// One step of a tour: a call from one node to another, or its answer coming back.
+struct Step {
+  std::string from;
+  std::string to;
+  std::string label;  ///< the call as written, op(args), or what comes back
+  int depth = 1;      ///< 1 for the subject's own messages, one more for each sequence expanded
+  bool back = false;  ///< the answer of the call above it
+};
+
+/// A behaviour replayed over the scene: a sequence and every sequence it expands to, in order,
+/// along one scenario.
+struct Tour {
+  std::string id;        ///< the subject's node, and / scenario for a named one
+  std::string subject;   ///< the node whose behaviour it is
+  std::string scenario;  ///< empty for the default path
+  std::string group;     ///< interface or method
+  std::vector<Step> steps;
+};
+
 /// The whole model laid out once, nested, in two variants: every member, public members only.
 struct SceneDocument {
   std::vector<Node> nodes;
@@ -60,6 +79,7 @@ struct SceneDocument {
   std::vector<Link> links;
   std::vector<DiagramView> diagrams;
   std::map<std::string, std::string> titles;  ///< the title of every requirement and constraint a node links
+  std::vector<Tour> tours;
 };
 
 /// Builds the structural scene of a model: every box placed inside its parent, once, so a
@@ -77,7 +97,9 @@ class Scene {
   static std::string frame(const std::string& page, const std::string& title, int height);
 
  private:
-  void relate(SceneDocument& out_document) const;  // the links between nodes, the diagrams that show them, the titles of requirements
+  void relate(SceneDocument& out_document) const;
+  void tour(SceneDocument& out_document) const;  // every public behaviour, expanded through what it calls  // the links between nodes, the
+                                                 // diagrams that show them, the titles of requirements
 
   const model::Model& model_;
 };

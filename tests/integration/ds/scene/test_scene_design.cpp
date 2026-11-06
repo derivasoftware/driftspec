@@ -137,6 +137,32 @@ TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirement
     for (const auto& r : n.requirements) EXPECT_TRUE(doc.titles.count(r)) << r;
 }
 
+TEST_F(TestSceneOfTheDesign, EveryInterfaceCommandIsATourThatReachesTheModelAndComesBack) {
+  const auto doc = ds::scene::Scene(model).build();
+  const ds::scene::Tour* check = nullptr;
+  const ds::scene::Tour* syntax = nullptr;
+  for (const auto& t : doc.tours) {
+    for (const auto& s : t.steps) {
+      EXPECT_EQ(byId.count(s.from), 1u) << t.id << " " << s.from;
+      EXPECT_EQ(byId.count(s.to), 1u) << t.id << " " << s.to;
+    }
+    if (t.id == "driftspec@ds@cli::check") check = &t;
+    if (t.id == "driftspec@ds@cli::check / syntax-error") syntax = &t;
+  }
+  ASSERT_NE(check, nullptr);
+  ASSERT_NE(syntax, nullptr);  // a named scenario is a tour of its own
+  EXPECT_EQ(check->group, "interface");
+  bool reachesTheChecker = false;
+  int depth = 0;
+  for (const auto& s : check->steps) {
+    reachesTheChecker |= s.to.rfind("driftspec@ds@check::Checker::", 0) == 0;
+    depth = std::max(depth, s.depth);
+  }
+  EXPECT_TRUE(reachesTheChecker);
+  EXPECT_GE(depth, 4);
+  EXPECT_TRUE(check->steps.back().back);  // the command answers
+}
+
 TEST_F(TestSceneOfTheDesign, HidingPrivateMembersMakesNoBoxWider) {
   for (const auto& n : nodes) {
     if (!n.lean || n.kind == "row") continue;
