@@ -60,34 +60,39 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
   }
 
-  verification SVER-00005-1 {
+  verification SVER-00005-2 {
     status: approved
     @requirement SREQ-00005-1
     title: System tests confirm a selection is drawn as SVG and as text to a given width
     text:
-      ds render --svg yields an SVG with stable ids; --text with --width 80
-      stays within 80 columns while the unbounded drawing exceeds them.
+      ds render <workspace> <diagram> -f svg yields an SVG with stable ids;
+      -f text with -w 80 stays within 80 columns while the unbounded drawing
+      exceeds them. Revises SVER-00005-1, which named --svg, --text and
+      --width (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
   }
 
-  verification SVER-00014-1 {
+  verification SVER-00014-2 {
     status: approved
     @requirement SREQ-00013-1
-    title: System tests confirm ds scene lays out a workspace as nested boxes, in both variants
+    title: System tests confirm ds render -f json lays out a workspace as nested boxes, in both variants
     text:
-      ds scene yields JSON whose nodes each have a place inside their parent's,
-      with a lean place too unless they are private members.
+      ds render <workspace> -f json yields the scene: JSON whose nodes each
+      have a place inside their parent's, with a lean place too unless they
+      are private members. Revises SVER-00014-1, which named ds scene (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TheWholeModelIsLaidOutOnceForAViewer
   }
 
-  verification SVER-00015-1 {
+  verification SVER-00015-2 {
     status: approved
     @requirement SREQ-00013-1
-    title: System tests confirm ds view writes one page with the whole scene inside, that a browser opens as it is
+    title: System tests confirm ds render writes one page with the whole scene inside, that a browser opens as it is
+    text:
+      Revises SVER-00015-1, which named ds view (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TheViewerIsOnePageWithTheWholeModelInside
@@ -182,14 +187,15 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.EveryKindOfDiagramIsAViewOfTheModel
   }
 
-  verification SVER-00011-1 {
+  verification SVER-00011-2 {
     status: approved
     @constraint CST-00001-1
     title: System tests confirm a hundred classes check, export and draw in under a hundred milliseconds
     text:
       A generated workspace of a hundred classes with inheritance, ownership
-      and dependencies runs ds check, ds export and ds render --svg each in
-      under one hundred milliseconds.
+      and dependencies runs ds check, ds export and ds render -f svg each in
+      under one hundred milliseconds. Revises SVER-00011-1, which named
+      --svg (DS-80).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds

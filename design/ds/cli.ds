@@ -38,7 +38,7 @@ package driftspec@ds {
       exit 2: no-workspace
     }
 
-    operation diff(before: string, after: string) -> none {
+    operation diff(before: string, after: string, path: string, diagram: string) -> none {
       @requirement SREQ-00007-1
       command: ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]
       stdout: the changes in the terms of the model, or a diagram with them marked

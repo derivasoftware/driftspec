@@ -65,27 +65,28 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
     }
 
-    requirement REQ-00071-1 {
+    requirement REQ-00071-2 {
       status: approved
       @refines SREQ-00013-1
       title: The viewer shall embed into any HTML document as one iframe, and take a reader's stylesheet over its own
       text:
-        ds view --embed prints an iframe whose srcdoc is the whole page, so
+        ds render --embed prints an iframe whose srcdoc is the whole page, so
         pasting it into a document is all it takes; --height sets its height.
-        ds view --css file puts the file after the viewer's own styles: it
+        ds render --css file puts the file after the viewer's own styles: it
         redefines the variables the viewer draws with (background, panels,
         accent, the colour of each kind, the requirement dot, the fonts), and
         cannot close the page's style.
       rationale:
         Owner, 2026-11-06: embed the design in any HTML page with a compact
         command line, and give it the host's look. Colours with a meaning in
-        the model belong to the language instead (DS-76).
+        the model belong to the language instead (DS-76). Revises
+        REQ-00071-1, which named ds view (DS-80).
       tags: render, scene, viewer
     }
 
     verification VER-00078-1 {
       status: approved
-      @requirement REQ-00071-1
+      @requirement REQ-00071-2
       title: Integration tests confirm ds's design embeds as one frame carrying the whole page, and a reader's stylesheet lands after the viewer's
       method: test
       tests:
@@ -454,7 +455,7 @@ package driftspec@ds {
       + render(pretty: bool) -> std::string
       + page(title: std::string, css: std::string, focus: std::vector<std::string>) -> std::string {
         @requirement REQ-00070-1
-        @requirement REQ-00071-1
+        @requirement REQ-00071-2
         @requirement REQ-00077-1
       }
       - relate(out_document: SceneDocument) -> void {
@@ -467,7 +468,7 @@ package driftspec@ds {
         @requirement REQ-00078-1
       }
       + static frame(page: std::string, title: std::string, height: int) -> std::string {
-        @requirement REQ-00071-1
+        @requirement REQ-00071-2
       }
       + static expand(document: SceneDocument, behaviour: int, depth: int) -> std::vector<Step> {
         @requirement REQ-00073-1

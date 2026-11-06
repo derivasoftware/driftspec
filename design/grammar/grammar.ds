@@ -10,6 +10,7 @@ package driftspec@grammar {
     title: The grammar shall read a specification as text, unambiguously
     rationale: A formal grammar is what gives every text one tree (SREQ-00012-1).
     verification VER-00039-1 {
+      title: Unit tests confirm the grammar reads a specification as text, unambiguously
       status: approved
       method: test
       tests:
@@ -28,6 +29,7 @@ package driftspec@grammar {
       title: The grammar shall ship highlight and fold queries that name only nodes it defines
       rationale: An editor loads them as any other language's.
       verification VER-00040-1 {
+        title: Unit tests confirm the grammar ships highlight and fold queries that name only nodes it defines
         status: approved
         method: test
         tests:
