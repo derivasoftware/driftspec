@@ -49,7 +49,7 @@ class TestSceneTrace : public ::testing::Test {
 };
 
 TEST_F(TestSceneTrace, EveryRequirementAndConstraintIsListedWithTheOneItRefines) {
-  EXPECT_EQ(doc.requirements.size(), 7u);  // three system requirements, three requirements, one constraint
+  EXPECT_EQ(doc.requirements.size(), 9u);  // three system requirements, three requirements, one constraint, two use cases
   EXPECT_EQ(requirement("REQ-00001-1").parent, "SREQ-00001-1");
   EXPECT_EQ(requirement("REQ-00003-1").parent, "SREQ-00003-1");
   EXPECT_EQ(requirement("SREQ-00001-1").parent, "");

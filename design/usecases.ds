@@ -1,0 +1,69 @@
+// What DriftSpec is for, as use cases (DS-77): contracts the operations of its interfaces realise.
+// A use case says what goes in, what comes out and how it may end; how ds does it is in the
+// sequences of each operation, which the viewer replays. Who drives the interface (a person at a
+// terminal, argos reading the design, an editor) does not matter: the interface does.
+
+package driftspec {
+
+  usecase UC-00001-1 check(workspace: path) -> none {
+    title: Check a design: load a workspace into one model and report what does not hold
+    status: draft
+    @requirement SREQ-00001-1
+    @requirement SREQ-00002-1
+    @requirement SREQ-00003-2
+    @requirement SREQ-00004-1
+    @requirement SREQ-00009-2
+    @requirement SREQ-00012-1
+
+    outcome default: every finding of the model, then its counts
+    outcome syntax-error: a file does not parse; the findings say where
+    outcome bad-usage: the command is not understood; nothing is read
+  }
+
+  usecase UC-00002-1 render(input: path, diagram: string) -> none {
+    title: See the design: the whole model as one viewer, or one diagram drawn
+    status: draft
+    @requirement SREQ-00005-1
+    @requirement SREQ-00010-1
+    @requirement SREQ-00013-1
+
+    outcome default: the viewer framed on the diagram, or the diagram in the format asked
+    outcome no-diagram: the diagram named is not in the workspace; nothing is drawn
+  }
+
+  usecase UC-00003-1 diff(before: string, after: string) -> none {
+    title: Compare two versions of a design in the terms of the model
+    status: draft
+    @requirement SREQ-00007-1
+
+    outcome default: the changes, entity by entity and relation by relation
+    outcome findings: a version does not load cleanly; its findings come first
+  }
+
+  usecase UC-00004-1 query(workspace: path, question: string, subject: string) -> none {
+    title: Ask the model what exists, what an entity relates to and what a diagram shows
+    status: draft
+    @requirement SREQ-00011-1
+    @requirement SREQ-00004-1
+
+    outcome default: one answer per line, or JSON
+    outcome unknown-question: the question is not one the model answers
+  }
+
+  usecase UC-00005-1 export(workspace: path) -> none {
+    title: Hand the model to another tool, with its relations, findings and metamodel
+    status: draft
+    @requirement SREQ-00006-1
+
+    outcome default: the model as JSON
+    outcome no-workspace: there is no workspace at the path; nothing is written
+  }
+
+  usecase UC-00006-1 {
+    title: Edit a design: a .ds file parsed, highlighted and folded as it is typed
+    status: draft
+    @requirement SREQ-00008-1
+
+    outcome default: the file highlighted and folded, its errors marked where they are
+  }
+}

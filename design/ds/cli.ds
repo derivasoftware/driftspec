@@ -9,7 +9,7 @@ package driftspec@ds {
     encoding: utf-8 text
     @constraint CST-00001-1
 
-    operation check(workspace: path) -> none {
+    operation check(workspace: path) -> none : UC-00001-1 {
       @requirement SREQ-00002-1
       command: ds check <workspace> [--json]
       stdout: one line per finding, then the counts of the model; with --json, both as JSON
@@ -18,7 +18,7 @@ package driftspec@ds {
       exit 2: bad-usage
     }
 
-    operation export(workspace: path) -> none {
+    operation export(workspace: path) -> none : UC-00005-1 {
       @requirement SREQ-00006-1
       command: ds export <workspace>
       stdout: the model as JSON, with its relations, findings and metamodel
@@ -26,7 +26,7 @@ package driftspec@ds {
       exit 1: no-workspace
     }
 
-    operation render(input: path, diagram: string) -> none {
+    operation render(input: path, diagram: string) -> none : UC-00002-1 {
       @requirement SREQ-00005-1
       @requirement SREQ-00010-1
       @requirement SREQ-00013-1
@@ -36,7 +36,7 @@ package driftspec@ds {
       exit 1: no-diagram
     }
 
-    operation diff(before: string, after: string) -> none {
+    operation diff(before: string, after: string) -> none : UC-00003-1 {
       @requirement SREQ-00007-1
       command: ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]
       stdout: the changes in the terms of the model, or a diagram with them marked
@@ -44,7 +44,7 @@ package driftspec@ds {
       exit 1: findings
     }
 
-    operation query(workspace: path, question: string, subject: string) -> none {
+    operation query(workspace: path, question: string, subject: string) -> none : UC-00004-1 {
       @requirement SREQ-00011-1
       @requirement SREQ-00004-1
       command: ds query <workspace> <question> [subject] [--json]

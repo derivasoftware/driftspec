@@ -84,17 +84,28 @@ struct Tour {
   std::string group;  ///< interface or method
 };
 
-/// A requirement or a constraint as a reader of the viewer lists it: what it says, the one it
-/// refines, where it is written and the nodes that answer to it.
+/// One way a use case may end: default when it goes well, a named scenario when it does not.
+struct Outcome {
+  std::string name;
+  std::string returns;  ///< what it gives back when not what the use case returns
+  std::string text;
+};
+
+/// A requirement, a constraint or a use case as a reader of the viewer lists it: what it says, the
+/// one it refines (or the use case it specialises), where it is written and the nodes that answer
+/// to it (for a use case, the interface operations that realise it).
 struct Requirement {
   std::string id;
-  std::string kind;  ///< requirement or constraint
+  std::string kind;  ///< requirement, constraint or usecase
   std::string title;
   std::string status;  ///< draft, approved, obsolete, or empty when not written
   std::string text;
   std::string parent;              ///< the requirement it refines; empty at the top
   std::string scope;               ///< the node it is written in; empty at the top of the workspace
   std::vector<std::string> nodes;  ///< the nodes whose entities answer to it
+  std::string signature;           ///< a use case: its contract, name(params) -> returns
+  std::vector<Outcome> outcomes;   ///< a use case: its own outcomes
+  std::vector<std::string> binds;  ///< a use case: the requirements it is bound by
 };
 
 /// A verification and what it proves: the requirements and constraints, the method, the tests.

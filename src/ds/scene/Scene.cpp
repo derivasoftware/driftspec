@@ -27,9 +27,7 @@ const double kRow = 11, kHead = 22, kUnitPadBottom = 6, kCharWidth = 3.95, kUnit
 const double kModulePad = 24, kModuleHead = 46, kUnitGap = 22;
 const double kPackagePad = 60, kPackageHead = 90, kBoxGap = 70, kLeftForInterfaces = 300;
 const double kInterfaceW = 360, kOperationRow = 30, kTopGap = 120;
-const double kTreeGap = 44;
-const double kUseCaseGap = 70;  // between the column of use cases and the interfaces that realise them  // between a base and the row of
-                                // what inherits from it: room for the trunk
+const double kTreeGap = 44;  // between a base and the row of what inherits from it: room for the trunk
 
 /// The size of a box and where its children sit, relative to its top left corner.
 struct Shape {
@@ -343,41 +341,13 @@ class Layout {
     return e.id;
   }
 
-  // a use case: its title, its contract and its outcomes, one row each (DS-77)
-  std::string usecase(const model::Entity& e, const std::string& parent) {
-    std::vector<std::pair<std::string, std::string>> rows;  // id, label
-    const std::string title = field(e, "title");
-    if (!title.empty()) rows.push_back({e.id + "#title", title});
-    const std::string operation = field(e, "operation");
-    if (!operation.empty()) rows.push_back({e.id + "#sig", signature(operation, e.params, field(e, "returns"))});
-    for (const model::Entity* o : children(e.id)) {
-      if (o->kind != model::Kind::Outcome) continue;
-      const std::string returns = field(*o, "returns");
-      rows.push_back({o->id, o->name + (returns.empty() ? "" : " → " + unqualified(returns)) + " · " + field(*o, "text")});
-    }
-    double widest = static_cast<double>(characters(e.name)) * 1.6 + 14;
-    for (const auto& r : rows) widest = std::max(widest, static_cast<double>(characters(r.second)));
-    const double w = std::max(kUnitMinW, std::min(kUnitMaxW, widest * kCharWidth + 18));
-    Shape s{w, kHead + static_cast<double>(rows.size()) * kRow + kUnitPadBottom, {}};
-    for (size_t i = 0; i < rows.size(); ++i) {
-      const bool outcome = rows[i].first.find('#') == std::string::npos;
-      row(rows[i].first, e.id, rows[i].second, outcome ? "outcome" : rows[i].first.substr(rows[i].first.find('#') + 1), "+",
-          outcome ? rows[i].first : "", w, kRow);
-      s.kids.push_back({rows[i].first, {0, kHead + static_cast<double>(i) * kRow}});
-    }
-    node(e.id, "usecase", parent, e.name, "usecase", "+", e.id);
-    shapes[e.id] = s;
-    return e.id;
-  }
-
   std::string package(const model::Entity& e, const std::string& parent) {
-    std::vector<std::pair<std::string, std::pair<double, double>>> boxes, interfaces, usecases;
+    std::vector<std::pair<std::string, std::pair<double, double>>> boxes, interfaces;
     for (const model::Entity* k : children(e.id + "@")) {
       if (k->has("extern")) continue;
       if (k->kind == model::Kind::Package) boxes.push_back({package(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Interface) interfaces.push_back({interface(*k, e.id), {0, 0}});
-      if (k->kind == model::Kind::UseCase && !k->expected) usecases.push_back({usecase(*k, e.id), {0, 0}});
     }
     order(boxes);
     const auto size = shelf(boxes, shapes, kBoxGap, width(e.id, target(boxes, shapes, 0, 1.6)));
@@ -389,37 +359,9 @@ class Layout {
       i.second = {-kInterfaceW / 2, y};
       y += shapes[i.first].h + 20;
     }
-    // the use cases stand left of the interfaces, outside the package: the generic above what specialises it
-    std::map<std::string, std::string> general;
-    std::set<std::string> here;
-    for (const auto& u : usecases) here.insert(u.first);
-    for (const auto& u : usecases) {
-      const auto b = bases_.find(u.first);
-      if (b != bases_.end())
-        for (const auto& to : b->second)
-          if (here.count(to) && to != u.first) general[u.first] = to;
-    }
-    std::vector<std::pair<std::string, int>> column;  // in taxonomy order, with depth
-    std::set<std::string> placed;
-    std::function<void(const std::string&, int)> walk = [&](const std::string& id, int depth) {
-      if (!placed.insert(id).second) return;
-      column.push_back({id, depth});
-      for (const auto& u : usecases)
-        if (general.count(u.first) && general.at(u.first) == id) walk(u.first, depth + 1);
-    };
-    for (const auto& u : usecases)
-      if (!general.count(u.first)) walk(u.first, 0);
-    for (const auto& u : usecases) walk(u.first, 0);
-    double widest = 0;
-    for (const auto& c : column) widest = std::max(widest, shapes[c.first].w + c.second * 30.0);
-    double uy = kPackageHead + 40;
-    for (const auto& c : column) {
-      boxes.push_back({c.first, {-kInterfaceW / 2 - kUseCaseGap - widest + c.second * 30.0, uy}});
-      uy += shapes[c.first].h + kTreeGap;
-    }
     boxes.insert(boxes.end(), interfaces.begin(), interfaces.end());
     node(e.id, "package", parent, e.name, "package", "+", e.id);
-    shapes[e.id] = {size.first + left + kPackagePad, std::max({size.second + kPackageHead + kPackagePad, y + kPackagePad, uy}), boxes};
+    shapes[e.id] = {size.first + left + kPackagePad, std::max(size.second + kPackageHead + kPackagePad, y + kPackagePad), boxes};
     return e.id;
   }
 
@@ -605,7 +547,7 @@ std::string Scene::render(bool pretty) const {
                    {"call", {"to", "label", "behaviour", "result"}},
                    {"tour", {"behaviour", "group"}},
                    {"diagram", {"name", "kind", "nodes"}},
-                   {"requirement", {"id", "kind", "title", "status", "text", "parent", "scope", "nodes"}},
+                   {"requirement", {"id", "kind", "title", "status", "text", "parent", "scope", "nodes", "signature", "outcomes", "binds"}},
                    {"verification", {"id", "title", "status", "method", "tests", "requirements"}}};
   out["nodes"] = nlohmann::json::array();
   for (const auto& n : doc.nodes) {
@@ -647,7 +589,13 @@ std::string Scene::render(bool pretty) const {
   for (const auto& r : doc.requirements) {
     nlohmann::json shown = nlohmann::json::array();
     for (const auto& n : r.nodes) shown.push_back(index(n));
-    out["requirements"].push_back({r.id, r.kind, r.title, r.status, r.text, requirement(r.parent), index(r.scope), shown});
+    nlohmann::json ends = nlohmann::json::array();
+    for (const auto& o : r.outcomes) ends.push_back({o.name, o.returns, o.text});
+    nlohmann::json bound = nlohmann::json::array();
+    for (const auto& b : r.binds)
+      if (requirement(b) >= 0) bound.push_back(requirement(b));
+    out["requirements"].push_back(
+        {r.id, r.kind, r.title, r.status, r.text, requirement(r.parent), index(r.scope), shown, r.signature, ends, bound});
   }
   out["verifications"] = nlohmann::json::array();
   for (const auto& v : doc.verifications) {
@@ -896,10 +844,26 @@ void Scene::trace(SceneDocument& out_document) const {
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
     if (e.expected) continue;
-    if (e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint) {
+    if (e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint || e.kind == model::Kind::UseCase) {
       Requirement r;
       r.id = e.id;
-      r.kind = e.kind == model::Kind::Requirement ? "requirement" : "constraint";
+      r.kind = e.kind == model::Kind::Requirement ? "requirement" : e.kind == model::Kind::Constraint ? "constraint" : "usecase";
+      if (e.kind == model::Kind::UseCase) {  // its contract and its outcomes (DS-77)
+        const std::string operation = fieldOf(e, "operation");
+        if (!operation.empty()) {
+          r.signature = operation + "(";
+          for (size_t i = 0; i < e.params.size(); ++i)
+            r.signature += (i ? ", " : "") + e.params[i].name + (e.params[i].type.empty() ? "" : ": " + e.params[i].type);
+          r.signature += ")";
+          const std::string returns = fieldOf(e, "returns");
+          if (!returns.empty()) r.signature += " -> " + returns;
+        }
+        for (const auto& other : model_.entities())
+          if (other.second.kind == model::Kind::Outcome && other.second.scope == e.id)
+            r.outcomes.push_back({other.second.name, fieldOf(other.second, "returns"), fieldOf(other.second, "text")});
+        std::stable_sort(r.outcomes.begin(), r.outcomes.end(),
+                         [](const Outcome& a, const Outcome& b) { return a.name == "default" && b.name != "default"; });
+      }
       r.title = fieldOf(e, "title");
       r.status = fieldOf(e, "status");
       r.text = fieldOf(e, "text");
@@ -928,8 +892,13 @@ void Scene::trace(SceneDocument& out_document) const {
     }
   }
   for (const auto& r : model_.relations()) {
-    if (r.kind == "refines" && at.count(r.from)) {
+    if ((r.kind == "refines" || r.kind == "inherits") && at.count(r.from)) {  // or the use case it specialises
       out_document.requirements[at[r.from]].parent = r.to;
+    } else if (r.kind == "requires" && at.count(r.from) && out_document.requirements[at[r.from]].kind == "usecase") {
+      out_document.requirements[at[r.from]].binds.push_back(r.to);
+    } else if (r.kind == "realises" && at.count(r.to)) {  // an interface operation realises a use case
+      const std::string node = nodeFor(ids, r.from);
+      if (!node.empty()) out_document.requirements[at[r.to]].nodes.push_back(node);
     } else if (r.kind == "verifies" && verificationAt.count(r.from)) {
       out_document.verifications[verificationAt[r.from]].requirements.push_back(r.to);
     } else if ((r.kind == "requires" || r.kind == "constrained-by") && at.count(r.to)) {
