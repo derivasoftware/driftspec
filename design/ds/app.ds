@@ -56,6 +56,13 @@ package driftspec@ds {
       return 0
     }
 
+    sequence main / view {
+      local scene: scene::Scene
+      -> load(argv) -> model
+      -> scene.page(title) -> page
+      return 0
+    }
+
     sequence main / no-workspace {
       -> isDirectory(argv) -> found
       return 1

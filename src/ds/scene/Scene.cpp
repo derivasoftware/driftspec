@@ -11,6 +11,8 @@
 namespace ds {
 namespace scene {
 
+const char* viewerTemplate();  // viewer/scene.html, compiled into ds by CMake
+
 namespace {
 
 // Sizes in scene units. A row is one member; a unit is sized by its longest row.
@@ -333,6 +335,21 @@ std::string Scene::render(bool pretty) const {
   out["world"] = boxJson(doc.world);
   out["lean_world"] = boxJson(doc.leanWorld);
   return pretty ? out.dump(2) : out.dump();
+}
+
+std::string Scene::page(const std::string& title) const {
+  std::string json = render(false);
+  for (size_t at = json.find("</"); at != std::string::npos; at = json.find("</", at + 2))
+    json.replace(at, 2, "<\\/");  // never closes the script
+  std::string safe;
+  for (const char c : title) safe += c == '<' ? "&lt;" : c == '>' ? "&gt;" : c == '&' ? "&amp;" : std::string(1, c);
+  std::string out = viewerTemplate();
+  const auto put = [&out](const std::string& mark, const std::string& value) {
+    for (size_t at = out.find(mark); at != std::string::npos; at = out.find(mark, at + value.size())) out.replace(at, mark.size(), value);
+  };
+  put("/*SCENE*/", json);
+  put("/*TITLE*/", safe);
+  return out;
 }
 
 }  // namespace scene

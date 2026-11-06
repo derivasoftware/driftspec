@@ -37,6 +37,33 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.WithPrivateMembersHiddenEveryBoxStillNestsAndKeepsApart
     }
 
+    requirement REQ-00070-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall be one self-contained page that ds writes with the scene inside, titled after the workspace
+      text:
+        viewer/scene.html is compiled into ds; ds fills it with the scene and
+        the workspace's name, so the page opens in a browser as it is, with
+        no server and nothing to fetch. What the scene holds never closes the
+        page's script. In the page a reader zooms from the system down to a
+        member (what fits is shown), sees each kind in its colour and a dot
+        for whether a box is linked to a requirement, hides private members,
+        and taps a box for its card.
+      rationale:
+        Owner, 2026-11-06: a JSON is not something to read; the page is what
+        a person opens, on a desktop or a phone.
+      tags: render, scene, viewer
+    }
+
+    verification VER-00077-1 {
+      status: approved
+      @requirement REQ-00070-1
+      title: Integration tests confirm the page of ds's design carries every node of its scene and one script only
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
+    }
+
     dataclass Box {                          // a rectangle of the scene: one unit is a pixel at zoom 1
       @requirement REQ-00069-1
       + x: double
@@ -72,6 +99,9 @@ package driftspec@ds {
       + Scene(model: model::Model)
       + build() -> SceneDocument
       + render(pretty: bool) -> std::string
+      + page(title: std::string) -> std::string {
+        @requirement REQ-00070-1
+      }
     }
 
     // The layout runs twice, once per variant; build keeps the full one's order and adds
@@ -85,6 +115,12 @@ package driftspec@ds {
     sequence Scene::render {
       -> build() -> document
       return json
+    }
+
+    // The viewer template is compiled into ds; the scene and the title go where it marks them.
+    sequence Scene::page {
+      -> render(pretty) -> json
+      return page
     }
   }
 }

@@ -46,6 +46,8 @@ class Scene {
   explicit Scene(const model::Model& model);
   SceneDocument build() const;
   std::string render(bool pretty = true) const;
+  /// The viewer as one self-contained HTML page with this scene inside, titled after the workspace.
+  std::string page(const std::string& title) const;
 
  private:
   const model::Model& model_;

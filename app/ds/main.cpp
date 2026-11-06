@@ -35,7 +35,8 @@ int usage() {
                "module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git "
                "revisions of <path>)\n       ds query <workspace-dir> <question> [subject] [--json]   (ask the model: diagrams · entities "
                "<scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings [file])\n"
-               "       ds scene <workspace-dir>                      (the whole model laid out once, nested, as JSON for a viewer)\n";
+               "       ds scene <workspace-dir>                      (the whole model laid out once, nested, as JSON for a viewer)\n"
+               "       ds view <workspace-dir> > model.html          (the viewer page with the scene inside: open it in a browser)\n";
   return 2;
 }
 
@@ -260,6 +261,13 @@ int main(int argc, char** argv) {
   }
   if (verb == "scene") {
     std::cout << ds::scene::Scene(model).render() << "\n";
+    return 0;
+  }
+  if (verb == "view") {
+    std::string title = dir;
+    while (title.size() > 1 && title.back() == '/') title.pop_back();
+    title = title.substr(title.find_last_of('/') == std::string::npos ? 0 : title.find_last_of('/') + 1);
+    std::cout << ds::scene::Scene(model).page(title);
     return 0;
   }
   if (verb == "coupling") {

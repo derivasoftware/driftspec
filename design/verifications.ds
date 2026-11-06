@@ -80,6 +80,15 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.TheWholeModelIsLaidOutOnceForAViewer
   }
 
+  verification SVER-00015-1 {
+    status: approved
+    @requirement SREQ-00013-1
+    title: System tests confirm ds view writes one page with the whole scene inside, that a browser opens as it is
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheViewerIsOnePageWithTheWholeModelInside
+  }
+
   verification SVER-00006-1 {
     status: approved
     @requirement SREQ-00006-1

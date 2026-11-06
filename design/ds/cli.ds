@@ -66,6 +66,14 @@ package driftspec@ds {
       exit 1: no-workspace
     }
 
+    operation view(workspace: path) -> none {
+      @requirement SREQ-00013-1
+      command: ds view <workspace> > model.html
+      stdout: the viewer page with the whole scene inside, to open in a browser
+      exit 0: default
+      exit 1: no-workspace
+    }
+
     operation query(workspace: path, question: string, subject: string) -> none {
       @requirement SREQ-00011-1
       command: ds query <workspace> <question> [subject] [--json]
@@ -128,6 +136,14 @@ package driftspec@ds {
   }
 
   sequence cli::scene / no-workspace {
+    -> app::main(workspace) / no-workspace -> code
+  }
+
+  sequence cli::view {
+    -> app::main(workspace) / view -> code
+  }
+
+  sequence cli::view / no-workspace {
     -> app::main(workspace) / no-workspace -> code
   }
 

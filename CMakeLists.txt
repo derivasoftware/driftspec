@@ -57,7 +57,21 @@ target_link_libraries(driftspec_grammar PUBLIC tree_sitter_runtime)
 
 # ---- the engine --------------------------------------------------------------
 file(GLOB_RECURSE driftspec_SOURCES CONFIGURE_DEPENDS "src/ds/*.cpp")
-add_library(driftspec STATIC ${driftspec_SOURCES})
+# the viewer page ships inside ds: viewer/scene.html becomes a string the scene
+# fills (ds view)
+file(READ ${CMAKE_SOURCE_DIR}/viewer/scene.html DS_VIEWER_HTML)
+file(
+  WRITE ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
+  "namespace ds {\nnamespace scene {\nconst char* viewerTemplate() {\n  return R\"DSVIEW(${DS_VIEWER_HTML})DSVIEW\";\n}\n}  // namespace scene\n}  // namespace ds\n"
+)
+configure_file(${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
+               ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp COPYONLY)
+set_property(
+  DIRECTORY
+  APPEND
+  PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/viewer/scene.html)
+add_library(driftspec STATIC ${driftspec_SOURCES}
+                             ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp)
 target_include_directories(driftspec PUBLIC include)
 target_link_libraries(driftspec PUBLIC driftspec_grammar
                                        nlohmann_json::nlohmann_json)
