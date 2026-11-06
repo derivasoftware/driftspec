@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -84,10 +85,23 @@ ds::model::Model load(const std::string& dir) {
   return model;
 }
 
-/// The workspace loaded, or nothing when the path is not a directory (reported on stderr).
+/// Whether any .ds file lies under a directory: a directory with none is no workspace (a mistyped path, most often).
+bool holdsDesign(const std::string& dir) {
+  std::error_code error;
+  for (std::filesystem::recursive_directory_iterator it(dir, error), end; !error && it != end; it.increment(error))
+    if (it->is_regular_file() && it->path().extension() == ".ds") return true;
+  return false;
+}
+
+/// The workspace loaded, or nothing when the path is no workspace (reported on stderr): every command
+/// then exits 2, bad usage, since the command line names no design (DS-83).
 bool loadWorkspace(const std::string& dir, ds::model::Model* model) {
   if (!isDirectory(dir)) {
     std::cerr << "cannot read " << dir << ": not a directory\n";
+    return false;
+  }
+  if (!holdsDesign(dir)) {
+    std::cerr << "no .ds file under " << dir << ": it is no workspace\n";
     return false;
   }
   *model = load(dir);
@@ -228,8 +242,8 @@ struct Render {
     if (!isDirectory(input)) {  // a render-IR document someone else produced: drawn like a diagram of a workspace
       std::ifstream probe(input);
       if (!probe) {
-        std::cerr << "cannot read " << input << "\n";
-        return 1;
+        std::cerr << "cannot read " << input << ": neither a workspace nor a render-IR document\n";
+        return 2;
       }
       const std::string doc = readFile(input);
       if (format == "html" || format == "json") {
@@ -241,7 +255,7 @@ struct Render {
       return emit(output, drawing(ds::render::IrDocument::parse(doc), format, width));
     }
     ds::model::Model model;
-    if (!loadWorkspace(input, &model)) return 1;
+    if (!loadWorkspace(input, &model)) return 2;
     if (format == "html" || format == "json") {
       if (format == "json") return emit(output, ds::scene::Scene(model).render() + "\n");
       std::vector<std::string> focus;
@@ -361,12 +375,17 @@ int main(int argc, char** argv) {
     std::string a = before, b = after;
     if (isDirectory(a) && isDirectory(b)) {
       if (diagram.empty()) diagram = path;  // two directories need no path: the third argument is the diagram
+      for (const std::string& version : {a, b}) {
+        if (holdsDesign(version)) continue;
+        std::cerr << "no .ds file under " << version << ": it is no workspace\n";
+        return 2;
+      }
     } else {
       a = checkout(a, path.empty() ? "." : path);
       b = checkout(b, path.empty() ? "." : path);
       if (a.empty() || b.empty()) {
         std::cerr << "cannot read both revisions (give two directories, or two git revisions and a path)\n";
-        return 1;
+        return 2;
       }
     }
     const ds::model::Model first = load(a);
@@ -389,6 +408,10 @@ int main(int argc, char** argv) {
       }
     }
     if (unloadable) return 1;
+    if (diagram.empty() && diffCmd->count("--format")) {
+      std::cerr << "-f draws a diagram with the changes marked: name one (ds query <workspace> diagrams lists them)\n";
+      return 2;
+    }
     const ds::diff::DiffResult result = ds::diff::Diff::compare(first, second);
     if (!diagram.empty()) {
       const ds::model::Model marked = ds::diff::Diff::marked(first, second, result);
@@ -398,14 +421,17 @@ int main(int argc, char** argv) {
         return 1;
       }
       std::cout << drawing(ds::render::IrDocument::parse(doc), format, diffWidth);
-      return 0;
+      // the drawing is the output; what the diff raises still counts, and goes where it cannot spoil a drawing
+      for (const auto& f : result.findings)
+        std::cerr << f.location.file << ":" << f.location.line << "  " << f.code << "  " << f.message << "\n";
+      return result.findings.empty() ? 0 : 1;
     }
     std::cout << ds::diff::Diff::report(result);
     return result.findings.empty() ? 0 : 1;
   }
 
   ds::model::Model model;
-  if (!loadWorkspace(dir, &model)) return 1;
+  if (!loadWorkspace(dir, &model)) return 2;
   if (exportCmd->parsed()) {
     std::cout << ds::exporter::JsonExport().render(model) << "\n";
     return 0;
