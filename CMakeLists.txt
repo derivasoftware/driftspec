@@ -122,6 +122,9 @@ if(DS_PYTHON)
   target_link_libraries(_native PRIVATE driftspec)
   set_target_properties(_native PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                                            ${CMAKE_BINARY_DIR}/python/driftspec)
+  if(SKBUILD) # pip install .: the module goes into the package of the wheel
+    install(TARGETS _native LIBRARY DESTINATION driftspec COMPONENT python)
+  endif()
   add_custom_target(
     driftspec_python ALL # the package beside its native module, importable from
                          # the build
