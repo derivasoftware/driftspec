@@ -114,4 +114,14 @@ TEST_F(TestScene, TheDocumentCarriesBothPlacesOfEveryNode) {
   EXPECT_EQ(doc["lean_world"].size(), 4u);
 }
 
+TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
+  const std::string page = ds::scene::Scene(model).page("a<b");
+  EXPECT_EQ(page.rfind("<!doctype html>", 0), 0u);
+  EXPECT_NE(page.find("<canvas"), std::string::npos);
+  EXPECT_NE(page.find("\"p@m::A::run\""), std::string::npos);
+  EXPECT_NE(page.find("a&lt;b \u00b7 DriftSpec"), std::string::npos);
+  EXPECT_EQ(page.find("/*SCENE*/"), std::string::npos);
+  EXPECT_EQ(page.find("/*TITLE*/"), std::string::npos);
+}
+
 }  // namespace

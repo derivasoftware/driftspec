@@ -79,6 +79,12 @@ TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
   EXPECT_GT(rows, 200);
 }
 
+TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript) {
+  const std::string page = ds::scene::Scene(model).page("design");
+  for (const auto& n : nodes) EXPECT_NE(page.find("\"" + n.id + "\""), std::string::npos) << n.id;
+  EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
+}
+
 TEST_F(TestSceneOfTheDesign, EveryBoxNestsInItsParentApartFromItsSiblings) { nestsAndKeepsApart(false); }
 
 TEST_F(TestSceneOfTheDesign, WithPrivateMembersHiddenEveryBoxStillNestsAndKeepsApart) {

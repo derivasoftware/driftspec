@@ -163,6 +163,16 @@ TEST_F(TestQualification, TheWholeModelIsLaidOutOnceForAViewer) {
   EXPECT_EQ(scene["lean_world"].size(), 4u);
 }
 
+// SREQ-00013-1: the viewer is one page ds writes, with the scene inside, that a browser opens as it is
+TEST_F(TestQualification, TheViewerIsOnePageWithTheWholeModelInside) {
+  const Outcome run = ds("view " + examples("static"));
+  EXPECT_EQ(run.code, 0);
+  EXPECT_EQ(run.out.rfind("<!doctype html>", 0), 0u);
+  EXPECT_NE(run.out.find("static \u00b7 DriftSpec"), std::string::npos);
+  const auto scene = nlohmann::json::parse(ds("scene " + examples("static")).out);
+  for (const auto& n : scene["nodes"]) EXPECT_NE(run.out.find("\"" + n["id"].get<std::string>() + "\""), std::string::npos) << n["id"];
+}
+
 // SREQ-00007-1: the difference between two versions, in the model's terms
 TEST_F(TestQualification, TwoVersionsAreComparedByIdentity) {
   const Outcome same = ds("diff " + examples("static") + " " + examples("static"));
