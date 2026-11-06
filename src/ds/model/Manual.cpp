@@ -96,9 +96,12 @@ const std::string kShopUseCase =
 const std::map<Kind, std::pair<std::string, std::string>>& written() {
   static const std::map<Kind, std::pair<std::string, std::string>> all = {
       {Kind::Package,
-       {"package <name> { ... }\npackage <outer>@<inner> { ... }      reopens the nested package <inner>",
+       {"package <name> { ... }\npackage <outer>@<inner> { ... }      reopens the nested package <inner>\nlanguage: cpp | c | "
+        "python | typescript | lua     what its code is written in; what it holds says the same unless it says otherwise",
         "package shop {\n  module store { }\n}\n"}},
-      {Kind::Module, {"[-] [extern] module <name> { ... }", "package shop {\n  module store {\n    module pricing { }\n  }\n}\n"}},
+      {Kind::Module,
+       {"[-] [extern] module <name> { ... }\nlanguage: <language>     only when it differs from the box around it",
+        "package shop {\n  language: cpp\n  module store {\n    module pricing { }\n  }\n  module web {\n    language: python\n  }\n}\n"}},
       {Kind::Requirement,
        {"requirement <ID> {\n  title: <one sentence: The <subject> shall <verb> <object>>\n  status: draft | approved | obsolete\n  text:\n"
         "    <what it says, indented>\n}\nrequirement <ID>: <title>             the one-line form\nnested in a requirement, it refines "
@@ -251,6 +254,9 @@ std::vector<CodeSpec> buildCodes() {
       {"W-DIAGRAM-DEPTH", "warning", "A diagram asks for a depth that is neither a number nor *.", "Write a number, or * for every level."},
       {"W-REQ-NO-VERIFICATION", "warning", "An approved requirement that nothing verifies.", "Nest a verification in it, or link one."},
       {"W-VER-NO-TEST", "warning", "A verification by test names no tests.", "List them under tests: as <file>::<Fixture>.<Test>."},
+      {"W-LANGUAGE-UNKNOWN", "warning",
+       "A package or a module says a language ds does not know, or two at once (two declarations of a box it reopens).",
+       "Write one of cpp, c, python, typescript or lua, once."},
       {"W-USECASE-UNDECLARED", "warning", "An operation realises, or a use case specialises, an id that is no use case of the workspace.",
        "Declare the use case, or correct the id after the colon."},
       {"W-USECASE-SIGNATURE", "warning",
