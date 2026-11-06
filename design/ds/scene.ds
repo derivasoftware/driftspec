@@ -274,33 +274,98 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
     }
 
-    requirement REQ-00075-1 {
+    requirement REQ-00075-2 {
       status: approved
       @refines SREQ-00013-1
-      title: The page shall carry its scene deflated and written in base64, and the viewer shall inflate it in the browser
+      title: The page shall carry its scene and the viewer's code deflated and written in base64, and inflate both in the browser
       text:
-        The scene travels inside the page as zlib-deflated text written in
-        base64, which needs no escaping in a script or in an iframe's srcdoc.
-        The viewer inflates it with the browser's own DecompressionStream and
-        says so when the browser has none. Unpacking a pack gives back the
-        text it was made from. The page of ds's own design stays under 100 KB,
-        and its embedded frame under 120 KB.
+        The scene and the viewer's code travel inside the page as
+        zlib-deflated text written in base64, which needs no escaping in a
+        script or in an iframe's srcdoc; what changes from one page to another
+        (the scene, the identities it opens framed on) stays outside the code's
+        pack. A short loader inflates the code with the browser's own
+        DecompressionStream and runs it, and says so when the browser has
+        none. Unpacking a pack gives back the text it was made from. The page
+        of ds's own design stays under 100 KB, and its embedded frame under
+        120 KB.
       rationale:
         Owner, 2026-11-06: keep the page small and usable. After writing each
         behaviour once the page weighed 147 KB, and the frame 196 KB because
-        every quote of the scene was escaped for the attribute. Packed, the
-        page weighs 77 KB and the frame 82 KB, and no library travels with it.
+        every quote of the scene was escaped for the attribute; packed, 77 KB
+        and 82 KB. Listing the requirements took the page to 123 KB, two
+        thirds of it the viewer's code as written; packing the code brings it
+        back to 92 KB. Revises REQ-00075-1, which packed the scene only.
       tags: render, scene, size
     }
 
-    verification VER-00084-1 {
+    verification VER-00084-2 {
       status: approved
-      @requirement REQ-00075-1
-      title: Integration tests confirm ds's design page and frame carry a pack that unpacks to the whole scene, within their size bounds
+      @requirement REQ-00075-2
+      title: Integration tests confirm ds's design page and frame carry packs that unpack to the whole scene and to the viewer's code, within their size bounds
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.TheDesignEmbedsAsOneFrameCarryingTheWholePage
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
+    }
+
+    requirement REQ-00078-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall list every requirement and constraint beside the tours, and on one show what it refines, what answers to it and what proves it
+      text:
+        The scene carries every requirement and constraint with its title,
+        status and text, the requirement it refines, the node it is written
+        in and the nodes whose entities answer to it; and every verification
+        with its method, status, tests and what it proves. The bottom panel
+        has a tab beside the tours: a table of the requirements as the tree of
+        what refines what, then the constraints, with their status, the
+        verifications that prove them and how many nodes answer to them,
+        filtered by text, by unverified, by unlinked or by draft. Touching a
+        requirement lights up in the canvas what answers to it and opens its
+        card: what it says, the one it refines, the ones that refine it, what
+        answers to it and the verifications with their tests. Touching a
+        verification lights up what its requirements reach. On a phone the
+        card opens over the list.
+      rationale:
+        Owner, 2026-11-06: as the sequences can be replayed, a list "al
+        estilo Excel" of the requirements, and on each one what exactly it is
+        linked to.
+      tags: render, viewer, requirements
+    }
+
+    verification VER-00087-1 {
+      status: approved
+      @requirement REQ-00078-1
+      title: Integration tests confirm examples/hola lists its requirements with what they refine, what answers to them and what proves them, and its page lists them beside the tours
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.EveryRequirementAndConstraintIsListedWithTheOneItRefines
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.WhatAnswersToARequirementIsTheNodeThatStandsForIt
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.AVerificationCarriesItsMethodItsTestsAndWhatItProves
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.ThePageListsTheRequirementsInTheBottomPanel
+    }
+
+    dataclass Requirement {                  // a requirement or a constraint as the viewer lists it
+      @requirement REQ-00078-1
+      + id: std::string
+      + kind: std::string
+      + title: std::string
+      + status: std::string
+      + text: std::string
+      + parent: std::string
+      + scope: std::string
+      + nodes: std::vector<std::string>
+    }
+
+    dataclass Verification {                 // a verification and what it proves
+      @requirement REQ-00078-1
+      + id: std::string
+      + title: std::string
+      + status: std::string
+      + method: std::string
+      + tests: std::vector<std::string>
+      + requirements: std::vector<std::string>
     }
 
     dataclass Call {                         // one call of a behaviour: whom it calls, the behaviour it goes on into
@@ -374,6 +439,8 @@ package driftspec@ds {
       + titles: std::map<std::string, std::string>
       + owns behaviours: std::vector<Behaviour>
       + owns tours: std::vector<Tour>
+      + owns requirements: std::vector<Requirement>
+      + owns verifications: std::vector<Verification>
     }
 
     class Scene {
@@ -396,6 +463,9 @@ package driftspec@ds {
       - tour(out_document: SceneDocument) -> void {
         @requirement REQ-00073-1
       }
+      - trace(out_document: SceneDocument) -> void {
+        @requirement REQ-00078-1
+      }
       + static frame(page: std::string, title: std::string, height: int) -> std::string {
         @requirement REQ-00071-1
       }
@@ -403,10 +473,10 @@ package driftspec@ds {
         @requirement REQ-00073-1
       }
       + static pack(text: std::string) -> std::string {
-        @requirement REQ-00075-1
+        @requirement REQ-00075-2
       }
       + static unpack(packed: std::string) -> std::string {
-        @requirement REQ-00075-1
+        @requirement REQ-00075-2
       }
     }
 
@@ -417,6 +487,7 @@ package driftspec@ds {
       }
       -> relate(out_document)
       -> tour(out_document)
+      -> trace(out_document)
       return document
     }
 

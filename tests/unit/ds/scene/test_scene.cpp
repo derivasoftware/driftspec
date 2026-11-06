@@ -305,4 +305,58 @@ TEST_F(TestTour, ACallExpandsIntoTheSequenceOfWhatItCallsAndItsAnswerComesBack) 
   EXPECT_TRUE(offered);
 }
 
+/// The requirements of a small model as the viewer lists them (REQ-00078-1): R-2 refines R-1,
+/// the class A answers to R-2, and V-1 proves it with a test.
+class TestRequirement : public ::testing::Test {
+ protected:
+  ds::model::Model model;
+  ds::scene::SceneDocument doc;
+
+  void SetUp() override {
+    model.declare(entity(Kind::Package, "p", "p", ""));
+    model.declare(entity(Kind::Module, "p@m", "m", "p@"));
+    model.declare(entity(Kind::Class, "p@m::A", "A", "p@m"));
+    Entity top = entity(Kind::Requirement, "R-1", "R-1", "p@");
+    top.fields["title"] = "The system shall greet";
+    model.declare(top);
+    Entity low = entity(Kind::Requirement, "R-2", "R-2", "p@m");
+    low.fields["title"] = "The greeter shall build a greeting";
+    low.fields["status"] = "approved";
+    model.declare(low);
+    Entity proof = entity(Kind::Verification, "V-1", "V-1", "p@m");
+    proof.fields["method"] = "test";
+    proof.fields["tests"] = "tests/a.cpp::TestA.Greets\ntests/a.cpp::TestA.Rejects";
+    model.declare(proof);
+    model.relate({"refines", "R-2", "R-1", {}, ""});
+    model.relate({"requires", "p@m::A", "R-2", {}, ""});
+    model.relate({"verifies", "V-1", "R-2", {}, ""});
+    doc = ds::scene::Scene(model).build();
+  }
+
+  const ds::scene::Requirement& requirement(const std::string& id) const {
+    return *std::find_if(doc.requirements.begin(), doc.requirements.end(), [&](const auto& r) { return r.id == id; });
+  }
+};
+
+TEST_F(TestRequirement, ARequirementKnowsTheOneItRefinesWhereItIsWrittenAndWhatAnswersToIt) {
+  ASSERT_EQ(doc.requirements.size(), 2u);
+  EXPECT_EQ(requirement("R-2").parent, "R-1");
+  EXPECT_EQ(requirement("R-2").scope, "p@m");
+  EXPECT_EQ(requirement("R-2").nodes, std::vector<std::string>{"p@m::A"});
+  EXPECT_EQ(requirement("R-2").status, "approved");
+  EXPECT_EQ(requirement("R-1").parent, "");
+  EXPECT_TRUE(requirement("R-1").nodes.empty());
+}
+
+/// A verification of the same model: its method, its tests one per line, what it proves.
+class TestVerification : public TestRequirement {};
+
+TEST_F(TestVerification, AVerificationCarriesItsTestsOnePerLineAndWhatItProves) {
+  ASSERT_EQ(doc.verifications.size(), 1u);
+  const auto& v = doc.verifications[0];
+  EXPECT_EQ(v.method, "test");
+  EXPECT_EQ(v.tests, (std::vector<std::string>{"tests/a.cpp::TestA.Greets", "tests/a.cpp::TestA.Rejects"}));
+  EXPECT_EQ(v.requirements, std::vector<std::string>{"R-2"});
+}
+
 }  // namespace

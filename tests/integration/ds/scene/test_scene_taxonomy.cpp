@@ -103,7 +103,9 @@ TEST_F(TestSceneOfTheTaxonomy, AHeaderThatNamesABaseInAnotherModuleIsWideEnoughF
 TEST_F(TestSceneOfTheTaxonomy, TheViewerLightsRelationsUpAndDocksItsPanels) {
   const std::string page = ds::scene::Scene(model).page("hola");
   // only inheritance is a family of lines; the rest of the relations light up in their colour
-  EXPECT_NE(page.find("const FAMILY={inherits:'inheritance',realises:'inheritance'}"), std::string::npos);
+  const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
+  const std::string code = ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));  // the viewer travels packed
+  EXPECT_NE(code.find("const FAMILY={inherits:'inheritance',realises:'inheritance'}"), std::string::npos);
   for (const char* colour : {"--r-owns", "--r-agg", "--r-uses", "--r-calls"}) EXPECT_NE(page.find(colour), std::string::npos) << colour;
   // the card docks on the right, the tour plays along the bottom, and on a phone the tour hides the card
   EXPECT_NE(page.find("body.carded .stage{right:380px}"), std::string::npos);
