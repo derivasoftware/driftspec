@@ -17,17 +17,19 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
   }
 
-  verification SVER-00002-1 {
+  verification SVER-00002-2 {
     status: approved
     @requirement SREQ-00002-1
-    title: System tests confirm every incoherence is a finding with code, severity and location
+    title: System tests confirm every incoherence is a finding with code, severity and location, and a path that is no workspace is bad usage
     text:
       ds check prints file:line:column, code and message per finding and
       exits with 1 when an error is among them; a workspace with an
-      undeclared reference still exports whole, with the warning.
+      undeclared reference still exports whole, with the warning. A path
+      that is no workspace exits with 2, as a command line to correct.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
+      tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
   }
 
   verification SVER-00003-2 {
@@ -120,16 +122,19 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
   }
 
-  verification SVER-00007-1 {
+  verification SVER-00007-2 {
     status: approved
     @requirement SREQ-00007-1
-    title: System tests confirm two versions are compared by identity
+    title: System tests confirm two versions are compared by identity, and a version that does not load is compared to nothing
     text:
       A workspace against itself is no design change; a class renamed with its
       shape intact is reported as a rename, not as a removal and an addition.
+      A version that does not parse, or declares nothing, is no design
+      emptied: ds diff names its syntax errors, compares nothing and exits 1.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
+      tests/system/ds/test_qualification.cpp::TestQualification.AVersionThatDoesNotLoadIsComparedToNothing
   }
 
   verification SVER-00008-1 {
@@ -198,17 +203,20 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCorpusMeansExactlyTheFindingsItMarks
   }
 
-  verification SVER-00012-1 {
+  verification SVER-00012-2 {
     status: approved
     @requirement SREQ-00011-1
-    title: System tests confirm a question about the model is answered by identity
+    title: System tests confirm a question about the model is answered by identity, and an identity it does not declare fails with a hint
     text:
       ds query lists the diagrams with their kind, the relations of an
       artefact in both directions, what a class realises and what proves it,
       and what a diagram shows; each answer names an identity the next
-      question takes, and an unknown question fails.
+      question takes, and an unknown question fails. An identity the model
+      does not declare, or none where one is needed, fails too: one answer
+      of kind error, naming the identities that end in what was asked.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.AQuestionAboutTheModelIsAnsweredByIdentity
+      tests/system/ds/test_qualification.cpp::TestQualification.AnIdentityTheModelDoesNotDeclareIsAnError
   }
 }

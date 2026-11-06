@@ -76,6 +76,8 @@ package driftspec@ds {
       + coupling() -> std::vector<Answer>
       + static text(answers: std::vector<Answer>) -> std::string
       + static json(answers: std::vector<Answer>) -> std::string
+      - known(id: std::string) -> bool                       // an entity, or a scope something is declared in
+      - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
     }
 
     - function entityAnswer(entity: model::Entity, detail: std::string) -> Answer

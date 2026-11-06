@@ -230,7 +230,7 @@ package driftspec@ds {
     verification VER-00082-1 {
       status: approved
       @requirement REQ-00073-1
-      title: Integration tests confirm ds check is a tour from the CLI down to the Checker and back, with its syntax-error scenario a tour of its own
+      title: Integration tests confirm ds check is a tour from the CLI down to the Checker and back, with its errors scenario a tour of its own
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryInterfaceCommandIsATourThatReachesTheModelAndComesBack

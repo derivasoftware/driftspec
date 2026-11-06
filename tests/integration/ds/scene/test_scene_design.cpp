@@ -159,7 +159,7 @@ TEST_F(TestSceneOfTheDesign, EveryInterfaceCommandIsATourThatReachesTheModelAndC
       check = t.behaviour;
       EXPECT_EQ(t.group, "interface");
     }
-    if (b.id == "driftspec@ds@cli::check / syntax-error") syntax = t.behaviour;
+    if (b.id == "driftspec@ds@cli::check / errors") syntax = t.behaviour;
   }
   ASSERT_GE(check, 0);
   ASSERT_GE(syntax, 0);  // a named scenario is a tour of its own

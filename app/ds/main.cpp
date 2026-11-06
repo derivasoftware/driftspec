@@ -127,7 +127,7 @@ std::string locationJson(const ds::model::Location& l) {
 
 int check(const std::string& dir, bool json) {
   ds::model::Model model;
-  if (!loadWorkspace(dir, &model)) return 1;
+  if (!loadWorkspace(dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
   int errors = 0;
   const auto& entities = model.entities();
   const long expected = std::count_if(entities.begin(), entities.end(), [](const auto& p) { return p.second.expected; });
@@ -324,6 +324,24 @@ int main(int argc, char** argv) {
     }
     const ds::model::Model first = load(a);
     const ds::model::Model second = load(b);
+    // a version that does not load is no deletion of the design: say why, and compare nothing
+    bool unloadable = false;
+    for (const auto* version : {&first, &second}) {
+      const std::string& name = version == &first ? before : after;
+      long declared = 0;
+      for (const auto& p : version->entities()) declared += p.second.expected ? 0 : 1;
+      if (declared == 0) {
+        std::cerr << name << ": no .ds file declares anything there\n";
+        unloadable = true;
+      }
+      for (const auto& f : version->findings()) {
+        if (f.code != "E-SYNTAX") continue;
+        std::cout << name << ": " << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  "
+                  << f.message << "\n";
+        unloadable = true;
+      }
+    }
+    if (unloadable) return 1;
     const ds::diff::DiffResult result = ds::diff::Diff::compare(first, second);
     if (!diagram.empty()) {
       const ds::model::Model marked = ds::diff::Diff::marked(first, second, result);
@@ -348,6 +366,7 @@ int main(int argc, char** argv) {
   const ds::query::Query query(model);
   const std::vector<ds::query::Answer> answers = query.ask(question, subject);
   if (!answers.empty() && answers.front().kind == "error") {
+    if (json) std::cout << ds::query::Query::json(answers) << "\n";  // asked for JSON, the error is an answer too
     std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
     if (answers.front().detail.find("not a question") != std::string::npos) {
       std::cerr << "questions:";
