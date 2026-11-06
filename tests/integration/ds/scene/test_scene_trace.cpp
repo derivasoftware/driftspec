@@ -78,7 +78,8 @@ TEST_F(TestSceneTrace, ThePageListsTheRequirementsInTheBottomPanel) {
   const std::string page = ds::scene::Scene(model).page("hola");
   EXPECT_NE(page.find("data-tab=\"reqs\""), std::string::npos);  // a tab beside the tours
   const std::string scene = packedIn(page);
-  EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\"]"),
+  EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\",\"signature\","
+                       "\"outcomes\",\"binds\"]"),
             std::string::npos);
   EXPECT_NE(scene.find("\"VER-00001-1\""), std::string::npos);
 }
