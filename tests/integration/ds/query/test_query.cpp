@@ -98,4 +98,25 @@ TEST_F(TestQuery, AnswersAsTextAndAsJson) {
   EXPECT_EQ(parsed[0]["id"], "a@b::C");
 }
 
+/// The same questions over ds's own design, whose behaviours cross modules.
+class TestQueryOfTheDesign : public TestQuery {
+ protected:
+  void SetUp() override {
+    ds::parse::Parser parser;
+    ds::bind::Binder binder(model);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
+    ds::check::Checker(model).run(binder);
+  }
+};
+
+TEST_F(TestQueryOfTheDesign, CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule) {
+  const auto answers = ds::query::Query(model).ask("coupling", "");
+  ASSERT_FALSE(answers.empty());
+  for (const auto& a : answers) {
+    EXPECT_TRUE(a.kind == "couples-transient" || a.kind == "couples-structural") << a.kind;
+    EXPECT_NE(a.detail.find(" in "), std::string::npos) << a.detail;  // the behaviour and the module it lives in
+  }
+  EXPECT_TRUE(names(answers, "driftspec@ds@check::Checker", "couples-transient"));  // load creates a Checker
+}
+
 }  // namespace

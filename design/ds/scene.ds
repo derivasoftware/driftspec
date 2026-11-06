@@ -127,7 +127,7 @@ package driftspec@ds {
       + Scene(model: model::Model)
       + build() -> SceneDocument
       + render(pretty: bool) -> std::string
-      + page(title: std::string, css: std::string) -> std::string {
+      + page(title: std::string, css: std::string, focus: std::vector<std::string>) -> std::string {
         @requirement REQ-00070-1
         @requirement REQ-00071-1
       }

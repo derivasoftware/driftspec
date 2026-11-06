@@ -48,7 +48,8 @@ class Scene {
   std::string render(bool pretty = true) const;
   /// The viewer as one self-contained HTML page with this scene inside, titled after the workspace;
   /// css, when given, is the reader's stylesheet, applied after the viewer's.
-  std::string page(const std::string& title, const std::string& css = "") const;
+  /// focus, when given, are the identities the page opens framed on (what a diagram shows).
+  std::string page(const std::string& title, const std::string& css = "", const std::vector<std::string>& focus = {}) const;
   /// A page as an iframe that carries it whole (srcdoc), to paste into any HTML document.
   static std::string frame(const std::string& page, const std::string& title, int height);
 

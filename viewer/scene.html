@@ -75,6 +75,7 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 <script>
 (()=>{
 const SCENE=/*SCENE*/;
+const FOCUS=/*FOCUS*/;  // the identities a diagram shows: the page opens framed on them
 /* ---------- the scene, as the viewer reads it ---------- */
 const N={}, ORDER=[], KIDS={};
 SCENE.nodes.forEach(s=>{const [x,y,w,h]=s.full; const n={id:s.id,kind:s.kind==='interface'?'iface':s.kind,parent:s.parent||null,x,y,w,h,label:s.label,st:s.stereotype,vis:s.visibility,reqs:s.requirements,lean:s.lean,full:s.full,op:s.stereotype==='operation'};
@@ -219,7 +220,10 @@ document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttr
     if(k>=1){if(showPriv) ORDER.forEach(id=>{N[id].hidden=false;}); lanim=null; if(SEL) select(SEL); return false;} return true;}; loop();};
 document.getElementById('fs').onclick=()=>{if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});};
 
-resize(); Object.assign(cam,fit(WORLD,.02)); loop();
+function focusBox(){const ids=new Set(FOCUS); const hit=ORDER.filter(id=>ids.has(id)&&N[id].kind!=='package'); if(!hit.length) return null;
+  const x0=Math.min(...hit.map(i=>N[i].x)), y0=Math.min(...hit.map(i=>N[i].y)), x1=Math.max(...hit.map(i=>N[i].x+N[i].w)), y1=Math.max(...hit.map(i=>N[i].y+N[i].h));
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};}
+resize(); const fb=focusBox(); Object.assign(cam,fb?fit(fb,.15):fit(WORLD,.02)); loop();
 })();
 </script>
 </body>

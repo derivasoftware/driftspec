@@ -122,11 +122,11 @@ TEST_F(TestQualification, BehaviourIsBoundToItsSubjectAndChecked) {
 
 // SREQ-00005-1: any selection drawn as SVG and as text, adapting to a width
 TEST_F(TestQualification, ASelectionIsDrawnAsSvgAndAsTextToAWidth) {
-  const Outcome svg = ds("render " + examples("static") + " CL_Package_ds --svg");
+  const Outcome svg = ds("render " + examples("static") + " CL_Package_ds -f svg");
   EXPECT_EQ(svg.out.rfind("<svg", 0), 0u);
   EXPECT_NE(svg.out.find("data-id=\"ds@ds::Model\""), std::string::npos);
-  const Outcome wide = ds("render " + examples("static") + " CL_Package_ds --text");
-  const Outcome narrow = ds("render " + examples("static") + " CL_Package_ds --text --width 80");
+  const Outcome wide = ds("render " + examples("static") + " CL_Package_ds -f text");
+  const Outcome narrow = ds("render " + examples("static") + " CL_Package_ds -f text -w 80");
   EXPECT_GT(widest(wide.out), 80);
   EXPECT_LE(widest(narrow.out), 80);
   EXPECT_NE(narrow.out.find("Model"), std::string::npos);
@@ -136,14 +136,14 @@ TEST_F(TestQualification, ASelectionIsDrawnAsSvgAndAsTextToAWidth) {
 TEST_F(TestQualification, TheModelAndTheDrawingsAreExported) {
   const auto exported = nlohmann::json::parse(ds("export " + examples("static")).out);
   EXPECT_TRUE(exported.contains("entities") && exported.contains("relations") && exported.contains("findings"));
-  const auto ir = nlohmann::json::parse(ds("render " + examples("static") + " CL_Values").out);
+  const auto ir = nlohmann::json::parse(ds("render " + examples("static") + " CL_Values -f ir").out);
   EXPECT_EQ(ir["ir"], 1);
   EXPECT_FALSE(ir["nodes"].empty());
 }
 
 // SREQ-00013-1: the whole model laid out once, nested, in two variants, for a viewer that zooms
 TEST_F(TestQualification, TheWholeModelIsLaidOutOnceForAViewer) {
-  const Outcome run = ds("scene " + examples("static"));
+  const Outcome run = ds("render " + examples("static") + " -f json");
   EXPECT_EQ(run.code, 0);
   const auto scene = nlohmann::json::parse(run.out);
   ASSERT_FALSE(scene["nodes"].empty());
@@ -165,11 +165,11 @@ TEST_F(TestQualification, TheWholeModelIsLaidOutOnceForAViewer) {
 
 // SREQ-00013-1: the viewer is one page ds writes, with the scene inside, that a browser opens as it is
 TEST_F(TestQualification, TheViewerIsOnePageWithTheWholeModelInside) {
-  const Outcome run = ds("view " + examples("static"));
+  const Outcome run = ds("render " + examples("static"));
   EXPECT_EQ(run.code, 0);
   EXPECT_EQ(run.out.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(run.out.find("static \u00b7 DriftSpec"), std::string::npos);
-  const auto scene = nlohmann::json::parse(ds("scene " + examples("static")).out);
+  const auto scene = nlohmann::json::parse(ds("render " + examples("static") + " -f json").out);
   for (const auto& n : scene["nodes"]) EXPECT_NE(run.out.find("\"" + n["id"].get<std::string>() + "\""), std::string::npos) << n["id"];
 }
 
@@ -178,13 +178,35 @@ TEST_F(TestQualification, TheViewerEmbedsAsAFrameInTheReadersColours) {
   const std::string tmp =
       std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-theme-" + std::to_string(::getpid()) + ".css";
   std::ofstream(tmp) << ":root{--bg:#0e1116}";
-  const Outcome run = ds("view " + examples("static") + " --embed --height 420 --css " + tmp);
+  const Outcome run = ds("render " + examples("static") + " --embed --height 420 --css " + tmp);
   std::remove(tmp.c_str());
   EXPECT_EQ(run.code, 0);
   EXPECT_EQ(run.out.rfind("<iframe ", 0), 0u);
   EXPECT_NE(run.out.find("height:420px"), std::string::npos);
   EXPECT_NE(run.out.find("--bg:#0e1116"), std::string::npos);
-  EXPECT_EQ(ds("view " + examples("static") + " --css /no/such.css").code, 2);  // a stylesheet that is not there is bad usage
+  EXPECT_EQ(ds("render " + examples("static") + " --css /no/such.css").code, 2);  // a stylesheet that is not there is bad usage
+}
+
+// SREQ-00002-1: the findings, for a machine: each with its code, severity and location, then the counts
+TEST_F(TestQualification, TheFindingsAreJsonForAMachine) {
+  const Outcome run = ds("check " + examples("artefacts") + " --json");
+  EXPECT_EQ(run.code, 1);  // the same exit as the text form: an error among the findings
+  const auto doc = nlohmann::json::parse(run.out);
+  ASSERT_FALSE(doc["findings"].empty());
+  for (const auto& f : doc["findings"]) {
+    EXPECT_TRUE(f.contains("code") && f.contains("severity") && f["location"].contains("line")) << f;
+  }
+  EXPECT_GT(doc["entities"].get<int>(), 0);
+}
+
+// SREQ-00013-1: a diagram named, the viewer opens framed on what it shows
+TEST_F(TestQualification, TheViewerOpensFramedOnTheDiagramNamed) {
+  const Outcome run = ds("render " + examples("static") + " CL_Values");
+  EXPECT_EQ(run.code, 0);
+  const auto start = run.out.find("const FOCUS=") + std::string("const FOCUS=").size();
+  const auto focus = nlohmann::json::parse(run.out.substr(start, run.out.find(';', start) - start));
+  EXPECT_FALSE(focus.empty());
+  EXPECT_EQ(ds("render " + examples("static") + " NoSuchDiagram").code, 1);
 }
 
 // SREQ-00007-1: the difference between two versions, in the model's terms
@@ -263,17 +285,17 @@ TEST_F(TestQualification, TheStaticMetamodelIsModelledAndClassifiedByDerivation)
 
 // SREQ-00010-1: a diagram kind per view: class, requirement, sequence and state
 TEST_F(TestQualification, EveryKindOfDiagramIsAViewOfTheModel) {
-  const auto cl = nlohmann::json::parse(ds("render " + examples("static") + " CL_Model").out);
+  const auto cl = nlohmann::json::parse(ds("render " + examples("static") + " CL_Model -f ir").out);
   EXPECT_EQ(cl["nodes"][0]["kind"], "container");
-  const auto req = nlohmann::json::parse(ds("render " + examples("artefacts") + " REQ_Tracker").out);
+  const auto req = nlohmann::json::parse(ds("render " + examples("artefacts") + " REQ_Tracker -f ir").out);
   bool requirement = false;
   for (const auto& n : req["nodes"]) requirement |= n["classifier"] == "requirement";
   EXPECT_TRUE(requirement);
-  const auto seq = nlohmann::json::parse(ds("render " + examples("behaviour") + " SEQ_Run").out);
+  const auto seq = nlohmann::json::parse(ds("render " + examples("behaviour") + " SEQ_Run -f ir").out);
   bool lifeline = false;
   for (const auto& n : seq["nodes"]) lifeline |= n["kind"] == "lifeline";
   EXPECT_TRUE(lifeline);
-  const auto state = nlohmann::json::parse(ds("render " + examples("behaviour") + " STM_Checker").out);
+  const auto state = nlohmann::json::parse(ds("render " + examples("behaviour") + " STM_Checker -f ir").out);
   bool stateBox = false;
   for (const auto& n : state["nodes"]) stateBox |= n["classifier"] == "state";
   EXPECT_TRUE(stateBox);
@@ -340,8 +362,8 @@ TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
   }
   ws << "  }\n}\ndiagram CL_Big {\n  kind: class\n  include: big@*\n}\n";
   ws.close();
-  for (const char* command : {"check", "export", "render", "scene"}) {
-    const std::string args = std::string(command) + " " + tmp + (std::string(command) == "render" ? " CL_Big --svg" : "");
+  for (const std::string& args : {"check " + tmp, "export " + tmp, "render " + tmp + " CL_Big -f svg", "render " + tmp}) {
+    const std::string command = args.substr(0, args.find(' ')) + (args.find("CL_Big") != std::string::npos ? " (svg)" : " (html)");
     const auto start = std::chrono::steady_clock::now();
     const Outcome run = ds(args);
     const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();

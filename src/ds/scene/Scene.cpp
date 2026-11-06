@@ -337,7 +337,7 @@ std::string Scene::render(bool pretty) const {
   return pretty ? out.dump(2) : out.dump();
 }
 
-std::string Scene::page(const std::string& title, const std::string& css) const {
+std::string Scene::page(const std::string& title, const std::string& css, const std::vector<std::string>& focus) const {
   std::string json = render(false);
   for (size_t at = json.find("</"); at != std::string::npos; at = json.find("</", at + 2))
     json.replace(at, 2, "<\\/");  // never closes the script
@@ -352,6 +352,9 @@ std::string Scene::page(const std::string& title, const std::string& css) const 
   put("/*SCENE*/", json);
   put("/*TITLE*/", safe);
   put("/*CSS*/", style);
+  std::string framed = nlohmann::json(focus).dump();
+  for (size_t at = framed.find("</"); at != std::string::npos; at = framed.find("</", at + 3)) framed.replace(at, 2, "<\\/");
+  put("/*FOCUS*/", framed);
   return out;
 }
 

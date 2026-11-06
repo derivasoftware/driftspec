@@ -25,7 +25,8 @@ std::vector<std::pair<std::string, std::string>> Query::questions() {
           {"artefacts", "<identity>"},
           {"behaviours", "<identity>"},
           {"shows", "<diagram>"},
-          {"findings", "[file]"}};
+          {"findings", "[file]"},
+          {"coupling", ""}};
 }
 
 std::vector<Answer> Query::ask(const std::string& question, const std::string& subject) const {
@@ -36,6 +37,7 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   if (question == "behaviours") return behaviours(subject);
   if (question == "shows") return shows(subject);
   if (question == "findings") return findings(subject);
+  if (question == "coupling") return coupling();
   return {{"error", question, "not a question ds answers"}};
 }
 
@@ -104,6 +106,17 @@ std::vector<Answer> Query::shows(const std::string& diagram) const {
     if (n.kind == "note") continue;
     const model::Entity* e = model_.find(n.id);
     out.push_back(e ? entityAnswer(*e) : Answer{n.kind, n.id, ""});
+  }
+  return out;
+}
+
+// derived from behaviour: a local or an attribute typed in another module is coupling to it
+std::vector<Answer> Query::coupling() const {
+  std::vector<Answer> out;
+  for (const auto& r : model_.relations()) {
+    if (r.kind != "couples-structural" && r.kind != "couples-transient") continue;
+    const model::Entity* seq = model_.find(r.from);
+    out.push_back({r.kind, r.to, (seq ? seq->name + " in " + seq->scope : r.from)});
   }
   return out;
 }

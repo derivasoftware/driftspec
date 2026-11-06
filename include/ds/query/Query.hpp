@@ -36,6 +36,7 @@ class Query {
   std::vector<Answer> behaviours(const std::string& id) const;   ///< the sequences and state machines of a method or class
   std::vector<Answer> shows(const std::string& diagram) const;   ///< the entities a diagram draws
   std::vector<Answer> findings(const std::string& file) const;   ///< the findings of a file ("" = all)
+  std::vector<Answer> coupling() const;                          ///< what each behaviour touches outside its module, and how
 
   /// The answers as lines (`kind  id  detail`) or as a JSON array.
   static std::string text(const std::vector<Answer>& answers);

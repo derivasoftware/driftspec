@@ -209,7 +209,7 @@ them. The vision (`vision.md`) says why; this says what.*
   parent, so siblings see each other.
 - A call or a type that crosses anything private on its way down is `W-NOT-VISIBLE`.
   A public member showing a private type is `W-PRIVATE-LEAK`. Dependencies between
-  boxes stay derived from calls and types (`ds coupling`).
+  boxes stay derived from calls and types (`ds query <workspace> coupling`).
 
 ## 4b. Interfaces (`examples/interfaces`, decided 2026-11-05)
 

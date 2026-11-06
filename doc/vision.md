@@ -245,7 +245,7 @@ derives the links.
   `calls`, `expands-to`, `couples-structural`/`couples-transient`; checks
   `W-PARTICIPANT-UNDECLARED`, `E-MSG-ARITY`, `W-ACTION-UNDECLARED`.
   Diagrams `kind: sequence` with `depth` (inline or link) and `level: module`
-  (lifting). `ds coupling` reports what every behaviour touches outside its
+  (lifting). `ds query <workspace> coupling` reports what every behaviour touches outside its
   module. Sequences are drawn by our own engine in SVG and in the terminal.
   The SVG carries its usability inside (no host code needed): tooltips on
   every element, links by identity (a lifeline to its class, a folded child
@@ -339,7 +339,7 @@ drift a merge request never shows.
 The **diff diagram** is a projection of the after model marked with the diff
 (`change` = added | removed | changed | renamed on entities, `kind+added` /
 `kind+removed` on relations; removed entities come over as ghosts):
-`ds diff A B path --svg CL_X` / `--text CL_X`. SVG: green added, red dashed
+`ds diff A B path CL_X -f svg` / `-f text`. SVG: green added, red dashed
 removed, amber changed, blue renamed, with the detail as tooltip; terminal:
 `+ - ~ >` badges and colours. Meant for a merge request's description next to
 argos's code quality report.
@@ -369,7 +369,7 @@ crosses a container border is routed straight between its ends.
   `--json`; the same mechanism is meant for the editor, the agent pane and
   argos.
 - IrExport with `include`/`exclude` (ids, modules, `package:x`), `hide`,
-  `show`; `ds render <dir> [diagram] [--svg|--text]`, `ds draw <ir.json>`.
+  `show`; `ds render <dir> [diagram] [-f svg|text|cells|ir]`, `ds render <ir.json> -f svg`.
 - Own SVG engine and terminal engine over one layered layout.
 - Corpora: `examples/diag` (R1–R9), `examples/static` (R10–R19),
   `examples/packages` (nested packages, 2026-10-26: the HLD layers of the
