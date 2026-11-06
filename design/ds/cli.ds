@@ -13,8 +13,9 @@ package driftspec@ds {
       @requirement SREQ-00002-1
       command: ds check <workspace> [--json]
       stdout: one line per finding, then the counts of the model; with --json, both as JSON
+      stderr: why nothing was read: a path that is no workspace (exit 2)
       exit 0: default
-      exit 1: syntax-error
+      exit 1: errors
       exit 2: bad-usage
     }
 
@@ -58,7 +59,7 @@ package driftspec@ds {
     -> app::main(workspace) / check -> code
   }
 
-  sequence cli::check / syntax-error {
+  sequence cli::check / errors {
     -> app::main(workspace) / check-errors -> code
   }
 
@@ -112,7 +113,7 @@ diagram SEQ_Check {
 
 diagram SEQ_CheckSyntaxError {
   kind: sequence
-  include: driftspec@ds@cli::check / syntax-error
+  include: driftspec@ds@cli::check / errors
   depth: 2
 }
 

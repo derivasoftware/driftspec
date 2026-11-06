@@ -30,6 +30,15 @@ std::vector<std::pair<std::string, std::string>> Query::questions() {
 }
 
 std::vector<Answer> Query::ask(const std::string& question, const std::string& subject) const {
+  // a question about an identity needs one the model declares: an empty answer would read as "it has none"
+  const bool aboutOne = question == "relations" || question == "artefacts" || question == "behaviours";
+  if (aboutOne && subject.empty()) return {{"error", question, "needs an identity: ds query <workspace> " + question + " <identity>"}};
+  if ((aboutOne || (question == "entities" && !subject.empty())) && !known(subject)) {
+    const std::vector<std::string> near = nearTo(subject);
+    std::string detail = "nothing in the model is named so";
+    for (size_t i = 0; i < near.size(); ++i) detail += (i ? ", " : "; did you mean ") + near[i];
+    return {{"error", subject, detail}};
+  }
   if (question == "diagrams") return diagrams();
   if (question == "entities") return entities(subject);
   if (question == "relations") return relations(subject);
@@ -39,6 +48,28 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   if (question == "findings") return findings(subject);
   if (question == "coupling") return coupling();
   return {{"error", question, "not a question ds answers"}};
+}
+
+bool Query::known(const std::string& id) const {
+  if (model_.find(id)) return true;
+  const std::string scope = id.back() == '@' ? id : id + "@";  // a package is a scope too: driftspec@ds
+  for (const auto& pair : model_.entities())
+    if (pair.second.scope == scope || pair.second.scope == id) return true;
+  return false;
+}
+
+std::vector<std::string> Query::nearTo(const std::string& name) const {
+  // identities that end in the name given: Checker is driftspec@ds@check::Checker
+  std::vector<std::string> out;
+  for (const auto& pair : model_.entities()) {
+    const std::string& id = pair.first;
+    if (pair.second.expected || id.size() <= name.size()) continue;
+    const std::string tail = id.substr(id.size() - name.size());
+    const char before = id[id.size() - name.size() - 1];
+    if (tail == name && (before == ':' || before == '@')) out.push_back(id);
+    if (out.size() == 5) break;
+  }
+  return out;
 }
 
 std::vector<Answer> Query::diagrams() const {
