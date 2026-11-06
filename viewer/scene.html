@@ -58,6 +58,10 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .card .rel:hover{background:var(--soft)}
 .card .rel .me{color:var(--c,var(--fg));font-weight:600}.card .rel .far{font-weight:600}
 .card .rel .mod{margin-left:auto;color:var(--muted);font-size:11px}
+.card .uct{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}.card .uct th:first-child{width:55%}.card .uct td{overflow-wrap:anywhere}.card .uct .n{white-space:normal}.card .uct th{font-family:var(--mono);font-weight:600;font-size:11px;color:var(--muted);text-align:center;padding:2px 4px}
+.card .uct td{padding:5px 4px;border-top:1px solid var(--soft);vertical-align:top}.card .uct td+td{text-align:center}
+.card .uct button.play{border:1px solid var(--accent);color:var(--accent);background:var(--panel);border-radius:999px;padding:1px 10px;cursor:pointer}
+.card .uct .ok{color:var(--ok)}.card .uct .warn{color:var(--warn)}
 .card .rid{font-family:var(--mono);color:var(--req);font-weight:600}
 .card .rqs .rq{font-family:var(--sans);font-size:12px;color:var(--fg);margin:3px 0}.card .rqs .rq b{font-family:var(--mono);color:var(--req);font-weight:600}
 .card .acts{display:flex;gap:4px;align-items:center}
@@ -148,7 +152,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 }
 </style>
 <style id="theme">
-/* ds view --css: the reader's stylesheet goes here, after the viewer's, so it wins.
+/* ds render --css: the reader's stylesheet goes here, after the viewer's, so it wins.
    The viewer draws with these variables: --bg --panel --fg --muted --line --soft --accent --accent-soft
    --req --req-soft --priv --pkg --mod --ifc --k-class --k-function --k-dataclass --k-enum --ok --warn --mono --sans */
 /*CSS*/
@@ -204,7 +208,8 @@ function decode(r){if(r.version!==2) return r;
 // the requirements and verifications, their ids in place of indices
 function trace(r,col,id){if(!r.requirements) return {requirements:[],verifications:[]};
   const reqs=r.requirements.map(col('requirement')); const rid=i=>i>=0&&reqs[i]?reqs[i].id:'';
-  return {requirements:reqs.map(q=>({...q,parent:rid(q.parent),scope:id(q.scope),nodes:q.nodes.map(id)})),
+  return {requirements:reqs.map(q=>({...q,parent:rid(q.parent),scope:id(q.scope),nodes:q.nodes.map(id),
+      outcomes:(q.outcomes||[]).map(([name,returns,text])=>({name,returns,text})),binds:(q.binds||[]).map(rid)})),
     verifications:r.verifications.map(col('verification')).map(v=>({...v,requirements:v.requirements.map(rid)}))};}
 const FOCUS=/*FOCUS*/;  // the identities a diagram shows: the page opens framed on them
 /* ---------- the scene, as the viewer reads it ---------- */
@@ -221,7 +226,7 @@ const LINKS=SCENE.links||[], DIAGS=SCENE.diagrams||[], TITLES=SCENE.titles||{};
 const FAMILY={inherits:'inheritance',realises:'inheritance'};  // the rest is never a line: it lights up when a box is touched
 const FAM={inheritance:true};
 const GROUP={owns:'owns',refs:'agg',shares:'agg',uses:'uses',calls:'calls'};  // the colour each relation lights up in
-const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls',req:'linked'};
+const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls',req:'linked',uc:'realises'};
 const GROUP_RANK={owns:0,agg:1,calls:2,uses:3};
 let HLBOX=new Map(), HLROW=new Map(), pills=[], REQSEL=null;
 const REQS=SCENE.requirements||[], VERS=SCENE.verifications||[], RBY={}, VBY={};
@@ -244,7 +249,7 @@ let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
   K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),ok:g('--ok'),warn:g('--warn'),mono:g('--mono'),sans:g('--sans'),
     kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-class'),abstract:g('--k-class')},
-    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req')}};}
+    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')}};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
 function resize(){const r=stage.getBoundingClientRect(); DPR=devicePixelRatio||1; U=r.width<560?.6:(r.width<800?.8:1); W=r.width/U; H=r.height/U;
   cv.width=r.width*DPR; cv.height=r.height*DPR; const m=mini.getBoundingClientRect(); mini.width=Math.max(1,m.width*DPR); mini.height=Math.max(1,m.height*DPR); loop();}
@@ -499,6 +504,36 @@ card.addEventListener('click',e=>{if(e.target.closest('[data-close]')) return se
     const x0=Math.min(o.x,m.x), y0=Math.min(o.y,m.y); fly(fit({x:x0,y:y0,w:Math.max(o.x+o.w,m.x+m.w)-x0,h:Math.max(o.y+o.h,m.y+m.h)-y0},.25));}
   const p=e.target.closest('[data-tour]'); if(p) playAt(p.dataset.tour,+p.dataset.i);});
 addEventListener('keydown',e=>{if(e.key==='Escape') select(null);});
+/* ---------- use cases: listed with the requirements; the contract, its outcomes and who realises it ---------- */
+const ucChain=id=>{const out=[]; for(let u=id;u&&RBY[u]&&RBY[u].kind==='usecase'&&!out.includes(u);u=RBY[u].parent) out.push(u); return out;};
+const ucSpecific=id=>REQS.filter(q=>q.kind==='usecase'&&q.parent===id).map(q=>q.id);
+const ucOutcomes=id=>{const seen=new Set(), out=[]; ucChain(id).forEach(u=>RBY[u].outcomes.forEach(o=>{if(!seen.has(o.name)){seen.add(o.name); out.push({...o,from:u});}}));
+  return out.sort((a,b)=>(b.name==='default')-(a.name==='default'));};
+function selectUseCase(id){const q=RBY[id], chain=ucChain(id); SEL=null;
+  // what realises it: its own operations and those of every use case that specialises it
+  const via=[]; const walk=u=>{RBY[u].nodes.forEach(op=>{if(N[op]) via.push({op,uc:u});}); ucSpecific(u).forEach(walk);}; walk(id);
+  HLBOX=new Map(); HLROW=new Map(); RELATED=new Set();
+  via.forEach(v=>{const r=N[v.op]; if(r.kind==='row'){HLROW.set(v.op,'uc'); HLBOX.set(r.parent,'uc'); anc(r.parent).forEach(a=>RELATED.add(a));} else {HLBOX.set(v.op,'uc'); anc(v.op).forEach(a=>RELATED.add(a));}});
+  REQSEL={kind:'uc',id,ids:via.map(v=>v.op)}; markRow();
+  const reqs=[...new Set(chain.flatMap(u=>RBY[u].binds))];
+  const sig=chain.map(u=>RBY[u].signature).find(Boolean);
+  let h=`<div class="hd"><div><div class="st">«use case»${reqWhere(q)?' · '+esc(reqWhere(q)):''}</div><b>${esc(q.id)}</b>`+
+    `<div class="sum"><span class="badge ${esc(q.status)}">${esc(q.status||'no status')}</span> · ${via.length?via.length+' realisation'+(via.length>1?'s':''):'<span class="warn">nothing realises it</span>'}</div></div>`+
+    `<span class="acts">${via.length?'<button data-zoom="1">frame</button>':''}<button class="x" data-close="1" aria-label="Close">×</button></span></div>`;
+  h+=`<p class="says"><b>${esc(q.title)}</b></p>`+(sig?`<p class="says" style="font-family:var(--mono)">${esc(sig)}</p>`:'');
+  const outs=ucOutcomes(id);
+  const opName=op=>{const r=N[op]; return (r&&N[r.parent]?N[r.parent].label+'.':'')+op.split('::').pop();};
+  const tourOf=(op,o)=>{const t=op+(o==='default'?'':' / '+o); return TBY[t]?t:'';};
+  // the outcomes against the interfaces: each cell replays that ending from that interface
+  h+=`<section style="--c:var(--accent)"><h4>Outcomes, from each interface <span class="n">${outs.length}</span></h4>`+(via.length?`<table class="uct"><tr><th></th>${via.map(v=>`<th>${esc(opName(v.op))}${v.uc!==id?`<div class="n">via ${esc(v.uc)}</div>`:''}</th>`).join('')}</tr>`+
+    outs.map(o=>`<tr><td><span class="${o.name==='default'?'ok':'warn'}">${o.name==='default'?'✓':'↯'}</span> <b>${esc(o.name)}</b>${o.returns?` <span class="n">→ ${esc(o.returns)}</span>`:''}${o.from!==id?` <span class="n">from ${esc(o.from)}</span>`:''}<div class="n">${esc(o.text)}</div></td>`+
+      via.map(v=>{const t=tourOf(v.op,o.name); return `<td>${t?`<button class="play" data-tour="${esc(t)}" data-i="0" title="replay ${esc(o.name)} from ${esc(opName(v.op))}">▶</button>`:'<span class="miss">not handled</span>'}</td>`;}).join('')+`</tr>`).join('')+`</table>`
+    :outs.map(o=>`<div class="rel"><span><b>${esc(o.name)}</b> ${esc(o.text)}</span></div>`).join('')+`<div class="miss">no interface operation realises it</div>`)+`</section>`;
+  if(chain.length>1) h+=`<section><h4>Specialises</h4>${chain.slice(1).map(reqLine).join('')}</section>`;
+  const spec=ucSpecific(id); if(spec.length) h+=`<section><h4>Specialised by <span class="n">${spec.length}</span></h4>${spec.map(reqLine).join('')}</section>`;
+  h+=`<section style="--c:var(--req)"><h4>Bound by <span class="n">${reqs.length}</span></h4>${reqs.length?reqs.map(reqLine).join(''):'<div class="miss">no requirement binds it</div>'}</section>`;
+  card.innerHTML=h; card.hidden=false; dock(true); frameReq(); loop();}
+
 /* ---------- requirements: the list in the bottom panel, the card, what lights up ---------- */
 const reqWhere=q=>q.scope&&N[q.scope]?anc(q.scope).reverse().map(a=>N[a].label).join(' › '):'';
 const reqNodes=q=>q.nodes.filter(id=>N[id]);
@@ -512,7 +547,7 @@ const nodeLine=id=>{const n=N[id], u=n.kind==='row'?N[n.parent]:n; return `<div 
 const reqLine=id=>{const q=RBY[id]; return `<div class="rel" data-req="${esc(id)}"><span><b class="rid">${esc(id)}</b> ${esc(q?q.title:'')}</span></div>`;};
 const verLine=id=>{const v=VBY[id]; return `<div class="rel" data-ver="${esc(id)}"><span><b class="rid">${esc(id)}</b> ${esc(v.method||'')} <span class="badge ${esc(v.status)}">${esc(v.status||'no status')}</span></span></div>`+
   (v.tests.length?`<div class="tests">${v.tests.map(t=>esc(t.replace(/^.*\//,''))).join('<br>')}</div>`:`<div class="tests miss">no tests named</div>`);};
-function selectReq(id,frame){const q=RBY[id]; if(!q) return; SEL=null; const ids=reqNodes(q); REQSEL={kind:'req',id,ids}; light(ids); markRow();
+function selectReq(id,frame){const q=RBY[id]; if(!q) return; if(q.kind==='usecase') return selectUseCase(id); SEL=null; const ids=reqNodes(q); REQSEL={kind:'req',id,ids}; light(ids); markRow();
   const verified=q.vers.length;
   let h=`<div class="hd"><div><div class="st">«${esc(q.kind)}»${reqWhere(q)?' · '+esc(reqWhere(q)):''}</div><b>${esc(q.id)}</b>`+
     `<div class="sum"><span class="badge ${esc(q.status)}">${esc(q.status||'no status')}</span> · ${ids.length} linked · <span class="${verified?'ok':'warn'}">${verified?verified+' verification'+(verified>1?'s':''):'not verified'}</span></div></div>`+
@@ -520,6 +555,8 @@ function selectReq(id,frame){const q=RBY[id]; if(!q) return; SEL=null; const ids
   h+=`<p class="says"><b>${esc(q.title)}</b></p>`+(q.text?q.text.split(/\n\s*\n/).map(par=>`<p class="says">${esc(par.replace(/\s*\n\s*/g,' ').trim())}</p>`).join(''):'');
   if(q.parent) h+=`<section><h4>Refines</h4>${reqLine(q.parent)}</section>`;
   if(q.kids.length) h+=`<section><h4>Refined by <span class="n">${q.kids.length}</span></h4>${q.kids.map(reqLine).join('')}</section>`;
+  const ucs=REQS.filter(u=>u.kind==='usecase'&&u.binds.includes(q.id)).map(u=>u.id);
+  if(ucs.length) h+=`<section style="--c:var(--accent)"><h4>Use cases it binds <span class="n">${ucs.length}</span></h4>${ucs.map(reqLine).join('')}</section>`;
   h+=`<section style="--c:var(--req)"><h4>Answered by <span class="n">${ids.length}</span></h4>${ids.length?ids.map(nodeLine).join(''):'<div class="miss">nothing in the design links it</div>'}</section>`;
   h+=`<section style="--c:var(--ok)"><h4>Verified by <span class="n">${verified}</span></h4>${verified?q.vers.map(verLine).join(''):'<div class="miss">no verification proves it</div>'}</section>`;
   card.innerHTML=h; card.hidden=false; dock(true); if(frame) frameReq(); loop();}
@@ -537,21 +574,26 @@ function reqRows(){const out=[], seen=new Set();
   const walk=(q,depth)=>{if(seen.has(q.id)) return; seen.add(q.id); out.push([q,depth]); q.kids.slice().sort().forEach(k=>walk(RBY[k],depth+1));};
   REQS.filter(q=>q.kind==='requirement'&&!RBY[q.parent]).sort((a,b)=>a.id.localeCompare(b.id)).forEach(q=>walk(q,0));
   REQS.filter(q=>q.kind==='requirement'&&!seen.has(q.id)).forEach(q=>walk(q,0));
-  const cs=REQS.filter(q=>q.kind==='constraint').sort((a,b)=>a.id.localeCompare(b.id)); return {reqs:out,cs};}
+  const cs=REQS.filter(q=>q.kind==='constraint').sort((a,b)=>a.id.localeCompare(b.id));
+  const ucs=[], done=new Set(); const uwalk=(q,depth)=>{if(done.has(q.id)) return; done.add(q.id); ucs.push([q,depth]); ucSpecific(q.id).sort().forEach(k=>uwalk(RBY[k],depth+1));};
+  REQS.filter(q=>q.kind==='usecase'&&!(RBY[q.parent]&&RBY[q.parent].kind==='usecase')).sort((a,b)=>a.id.localeCompare(b.id)).forEach(q=>uwalk(q,0));
+  return {reqs:out,cs,ucs};}
 function keep(q){const t=R.q.toLowerCase(); if(t&&!(q.id.toLowerCase().includes(t)||q.title.toLowerCase().includes(t))) return false;
+  if(q.kind==='usecase'&&(R.filter==='unverified'||R.filter==='unlinked')) return !q.nodes.length&&!ucSpecific(q.id).length;  // a use case is checked by what realises it
   if(R.filter==='unverified') return !q.vers.length; if(R.filter==='unlinked') return !reqNodes(q).length; if(R.filter==='draft') return q.status!=='approved'; return true;}
-function listReqs(){const {reqs,cs}=reqRows(); let shown=0;
+function listReqs(){const {reqs,cs,ucs}=reqRows(); let shown=0;
   const row=(q,depth)=>{if(!keep(q)) return ''; shown++; const ln=reqNodes(q).length;
     return `<tr class="r" data-req="${esc(q.id)}"><td class="id" style="padding-left:${8+depth*16}px">${depth?'↳ ':''}${esc(q.id)}</td><td class="t">${esc(q.title)}</td>`+
       `<td class="st"><span class="badge ${esc(q.status)}">${esc(q.status||'—')}</span></td>`+
-      `<td>${q.vers.length?q.vers.map(v=>`<span class="vchip ${VBY[v].method==='test'&&VBY[v].tests.length?'test':''}" data-ver="${esc(v)}" title="${esc(VBY[v].title)}">${esc(v)}</span>`).join(''):'<span class="miss">none</span>'}</td>`+
+      `<td>${q.kind==='usecase'?ucOutcomes(q.id).map(o=>`<span class="vchip ${o.name==='default'?'test':''}" title="${esc(o.text)}">${o.name==='default'?'✓':'↯'} ${esc(o.name)}</span>`).join(''):q.vers.length?q.vers.map(v=>`<span class="vchip ${VBY[v].method==='test'&&VBY[v].tests.length?'test':''}" data-ver="${esc(v)}" title="${esc(VBY[v].title)}">${esc(v)}</span>`).join(''):'<span class="miss">none</span>'}</td>`+
       `<td class="n">${ln?ln:'<span class="miss">0</span>'}</td></tr>`;};
   let h=`<table class="rtab"><thead><tr><th>id</th><th>title</th><th class="st">status</th><th>verified by</th><th class="n">linked</th></tr></thead><tbody>`;
+  const uq=ucs.map(([q,d])=>row(q,d)).join(''); if(uq) h+=`<tr class="grp"><td colspan="5">Use cases</td></tr>`+uq;
   const rq=reqs.map(([q,d])=>row(q,d)).join(''); if(rq) h+=`<tr class="grp"><td colspan="5">Requirements</td></tr>`+rq;
   const cq=cs.map(q=>row(q,0)).join(''); if(cq) h+=`<tr class="grp"><td colspan="5">Constraints</td></tr>`+cq;
   if(!shown) h+=`<tr><td colspan="5" class="miss" style="padding:14px 8px">nothing matches</td></tr>`;
   rbody.innerHTML=h+'</tbody></table>'; document.getElementById('rcount').textContent=`${shown} of ${REQS.length}`; markRow();}
-function markRow(){rbody.querySelectorAll('tr.on').forEach(t=>t.classList.remove('on')); if(REQSEL&&REQSEL.kind==='req'){const t=rbody.querySelector(`tr[data-req="${CSS.escape(REQSEL.id)}"]`); if(t) t.classList.add('on');}}
+function markRow(){rbody.querySelectorAll('tr.on').forEach(t=>t.classList.remove('on')); if(REQSEL&&(REQSEL.kind==='req'||REQSEL.kind==='uc')){const t=rbody.querySelector(`tr[data-req="${CSS.escape(REQSEL.id)}"]`); if(t) t.classList.add('on');}}
 rbody.addEventListener('click',e=>{const v=e.target.closest('[data-ver]'); if(v){selectVer(v.dataset.ver); return;} const t=e.target.closest('tr[data-req]'); if(t) selectReq(t.dataset.req,true);});
 document.getElementById('rq').oninput=e=>{R.q=e.target.value; listReqs();};
 document.querySelector('#rfilter .chips').addEventListener('click',e=>{const b=e.target.closest('[data-f]'); if(!b) return; R.filter=b.dataset.f;

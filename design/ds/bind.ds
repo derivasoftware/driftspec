@@ -78,6 +78,9 @@ package driftspec@ds {
         @requirement REQ-00042-1
         @requirement REQ-00045-1
       }
+      - bindUseCase(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+        @requirement REQ-00081-1
+      }
       - bindClass(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00025-1
         @requirement REQ-00029-1
@@ -159,6 +162,9 @@ package driftspec@ds {
         }
         opt a requirement, a verification or a constraint {
           -> bindArtefact(file, c, scope, owner)
+        }
+        opt a use case, with its outcomes {
+          -> bindUseCase(file, c, scope, owner)
         }
         opt an interface, with its operations {
           -> qualify(scope, e.name) -> id

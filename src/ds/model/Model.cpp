@@ -50,6 +50,10 @@ const char* kindName(Kind kind) {
       return "state";
     case Kind::Diagram:
       return "diagram";
+    case Kind::UseCase:
+      return "usecase";
+    case Kind::Outcome:
+      return "outcome";
   }
   return "?";
 }

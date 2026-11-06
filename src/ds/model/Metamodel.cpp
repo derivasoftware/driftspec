@@ -71,6 +71,18 @@ std::vector<KindSpec> build() {
                                  written("bok", FieldType::Names, "the guides that ground it")}),
                {},
                {P, M}});
+  k.push_back(
+      {Kind::UseCase,
+       "a contract an interface operation realises: what goes in, what comes out, the outcomes it ends in",
+       plus(artefact(), {syntax("operation", FieldType::Name, "the name of its contract, when it has a signature"), kParams, kReturns}),
+       {},
+       {P, M}});
+  k.push_back({Kind::Outcome,
+               "one way a use case ends: default when it goes well, a named scenario when it does not",
+               {written("text", FieldType::Text, "what is obtained, in a line"),
+                syntax("returns", FieldType::Type, "what it gives back when not what the use case returns")},
+               {},
+               {Kind::UseCase}});
   k.push_back({Kind::Interface,
                "an external interface of a process or a library",
                {written("kind", FieldType::Name, "cli, gui, http, ..."), written("transport", FieldType::Name, "how it travels"),
@@ -167,22 +179,22 @@ std::vector<RelationSpec> buildRelations() {
   const Kind P = Kind::Package, M = Kind::Module, Rq = Kind::Requirement, V = Kind::Verification, Cs = Kind::Constraint;
   const Kind I = Kind::Interface, Op = Kind::Operation, Vw = Kind::View, Cl = Kind::Class, E = Kind::Enum, F = Kind::Function;
   const Kind Me = Kind::Method, A = Kind::Attribute, O = Kind::Operator, S = Kind::Sequence, Ms = Kind::Message;
-  const Kind St = Kind::State;
+  const Kind St = Kind::State, Uc = Kind::UseCase;
   return {
       rel("exposes", "a package offers an interface", {P}, {I}),
-      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S}, {Rq}),
+      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S, Uc}, {Rq}),
       rel("constrained-by", "the entity obeys a constraint", {P, M, Cl, F, Me, I, Op, Vw}, {Cs}),
       rel("refines", "a requirement details another", {Rq}, {Rq}),
       rel("verifies", "a verification proves a requirement or a constraint", {V}, {Rq, Cs}),
-      rel("about", "an artefact concerns the scope it is declared in", {Rq, V, Cs}, {}),
-      rel("realises", "the entity carries out an interface", {Cl, V}, {I}),
+      rel("about", "an artefact concerns the scope it is declared in", {Rq, V, Cs, Uc}, {}),
+      rel("realises", "the entity carries out an interface, or an interface operation a use case", {Cl, V, Op}, {I, Uc}),
       rel("exercised-by", "a behaviour is run by a verification", {S}, {V}),
-      rel("inherits", "a class derives from another", {Cl}, {Cl}),
+      rel("inherits", "a class derives from another; a use case specialises another", {Cl, Uc}, {Cl, Uc}),
       rel("bounded-by", "a template parameter is bounded by a class", {Cl}, {Cl}),
       rel("owns", "an attribute owns its value", {A}, {Cl, E}),
       rel("refs", "an attribute refers to a value it does not own", {A}, {Cl, E}),
       rel("shares", "an attribute shares ownership of its value", {A}, {Cl, E}),
-      rel("uses", "the entity names a type", {A, F, Me, Op, O, S}, {Cl, E}),
+      rel("uses", "the entity names a type", {A, F, Me, Op, O, S, Uc, Kind::Outcome}, {Cl, E}),
       rel("behaviour-of", "a sequence or a state machine is the behaviour of its subject", {S, St}, {Cl, F, Me, Op, I}),
       rel("calls", "a message calls an operation", {Ms}, {F, Me, Op}),
       rel("expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}),

@@ -1052,6 +1052,10 @@
           "named": true
         },
         {
+          "type": "usecase",
+          "named": true
+        },
+        {
           "type": "verification",
           "named": true
         }
@@ -1068,6 +1072,16 @@
         "types": [
           {
             "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "realises": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "qualified_name",
             "named": true
           }
         ]
@@ -1258,6 +1272,42 @@
     }
   },
   {
+    "type": "outcome",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "returns": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      },
+      "text": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "line_text",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "ownership",
     "named": true,
     "fields": {}
@@ -1335,6 +1385,10 @@
         },
         {
           "type": "state",
+          "named": true
+        },
+        {
+          "type": "usecase",
           "named": true
         },
         {
@@ -1790,6 +1844,74 @@
     }
   },
   {
+    "type": "usecase",
+    "named": true,
+    "fields": {
+      "base": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "id": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "returns": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "outcome",
+          "named": true
+        },
+        {
+          "type": "parameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "verification",
     "named": true,
     "fields": {
@@ -2052,6 +2174,10 @@
     "named": false
   },
   {
+    "type": "outcome",
+    "named": false
+  },
+  {
     "type": "owns",
     "named": false
   },
@@ -2101,6 +2227,10 @@
   },
   {
     "type": "true",
+    "named": false
+  },
+  {
+    "type": "usecase",
     "named": false
   },
   {

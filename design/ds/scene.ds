@@ -275,12 +275,12 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
     }
 
-    requirement REQ-00075-2 {
+    requirement REQ-00075-3 {
       status: approved
       @refines SREQ-00013-1
-      title: The page shall carry its scene and the viewer's code deflated and written in base64, and inflate both in the browser
+      title: The page shall carry its scene, the viewer's code and its styles deflated and written in base64, and inflate them in the browser
       text:
-        The scene and the viewer's code travel inside the page as
+        The scene, the viewer's code and its own styles travel inside the page as
         zlib-deflated text written in base64, which needs no escaping in a
         script or in an iframe's srcdoc; what changes from one page to another
         (the scene, the identities it opens framed on) stays outside the code's
@@ -295,19 +295,23 @@ package driftspec@ds {
         every quote of the scene was escaped for the attribute; packed, 77 KB
         and 82 KB. Listing the requirements took the page to 123 KB, two
         thirds of it the viewer's code as written; packing the code brings it
-        back to 92 KB. Revises REQ-00075-1, which packed the scene only.
+        back to 92 KB. Use cases and the manual took it to 104 KB, a seventh of
+        it the viewer's styles as written; packed, before the reader's
+        theme so the theme still wins, 95 KB. Revises REQ-00075-2, which left
+        the styles as written.
       tags: render, scene, size
     }
 
-    verification VER-00084-2 {
+    verification VER-00084-3 {
       status: approved
-      @requirement REQ-00075-2
+      @requirement REQ-00075-3
       title: Integration tests confirm ds's design page and frame carry packs that unpack to the whole scene and to the viewer's code, within their size bounds
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.TheDesignEmbedsAsOneFrameCarryingTheWholePage
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
     }
 
     requirement REQ-00078-1 {
@@ -347,8 +351,49 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.ThePageListsTheRequirementsInTheBottomPanel
     }
 
-    dataclass Requirement {                  // a requirement or a constraint as the viewer lists it
+    requirement REQ-00083-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall list the use cases at the head of the requirements, and on one replay each of its outcomes from each interface that realises it
+      text:
+        The scene carries every use case with the requirements: its contract,
+        its own outcomes (the default first), the use case it specialises, the
+        operations that realise it and the requirements that bind it. The
+        requirements tab heads with the use cases, as the tree of what
+        specialises what, their outcomes in place of verifications. Touching
+        one lights up the operations that realise it, its own and those of
+        every use case that specialises it, and opens its card: the contract,
+        a grid of its outcomes (inherited ones too) against those operations,
+        each cell replaying that ending from that interface or saying it is
+        not handled, what it specialises and what binds it. A requirement's
+        card names the use cases it binds. Use cases are not drawn in the
+        canvas: they are artefacts, like the requirements.
+      rationale:
+        Owner, 2026-11-06 (DS-77): see a use case whole from each of its
+        interfaces; and not as a card of the design, but as a kind of
+        requirement.
+      tags: render, viewer, usecase
+    }
+
+    verification VER-00092-1 {
+      status: approved
+      @requirement REQ-00083-1
+      title: Integration tests confirm hola's use cases are listed with their contract, outcomes, specialisation, realisations and bindings
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealisesIt
+    }
+
+    dataclass Outcome {                      // one way a use case may end, as the viewer lists it
+      @requirement REQ-00083-1
+      + name: std::string
+      + returns: std::string
+      + text: std::string
+    }
+
+    dataclass Requirement {                  // a requirement, a constraint or a use case as the viewer lists it
       @requirement REQ-00078-1
+      @requirement REQ-00083-1
       + id: std::string
       + kind: std::string
       + title: std::string
@@ -357,6 +402,9 @@ package driftspec@ds {
       + parent: std::string
       + scope: std::string
       + nodes: std::vector<std::string>
+      + signature: std::string
+      + outcomes: std::vector<Outcome>
+      + binds: std::vector<std::string>
     }
 
     dataclass Verification {                 // a verification and what it proves
@@ -466,6 +514,7 @@ package driftspec@ds {
       }
       - trace(out_document: SceneDocument) -> void {
         @requirement REQ-00078-1
+        @requirement REQ-00083-1
       }
       + static frame(page: std::string, title: std::string, height: int) -> std::string {
         @requirement REQ-00071-2
@@ -474,10 +523,10 @@ package driftspec@ds {
         @requirement REQ-00073-1
       }
       + static pack(text: std::string) -> std::string {
-        @requirement REQ-00075-2
+        @requirement REQ-00075-3
       }
       + static unpack(packed: std::string) -> std::string {
-        @requirement REQ-00075-2
+        @requirement REQ-00075-3
       }
     }
 

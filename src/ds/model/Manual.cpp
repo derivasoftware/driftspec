@@ -66,6 +66,33 @@ const std::string kShopSequence =
     "  }\n"
     "}\n";
 
+const std::string kShopUseCase =
+    "package shop {\n"
+    "  usecase UC-00001-1 buy(item: string) -> int {\n"
+    "    title: Buy an item\n"
+    "    status: draft\n"
+    "    outcome default: the number of the order\n"
+    "    outcome sold-out: nothing is bought\n"
+    "  }\n"
+    "\n"
+    "  interface shell {\n"
+    "    kind: cli\n"
+    "    operation buy(item: string) -> int : UC-00001-1 {\n"
+    "      command: shop buy <item>\n"
+    "      exit 0: default\n"
+    "      exit 1: sold-out\n"
+    "    }\n"
+    "  }\n"
+    "\n"
+    "  sequence shell::buy {\n"
+    "    return 0\n"
+    "  }\n"
+    "\n"
+    "  sequence shell::buy / sold-out {\n"
+    "    return 1\n"
+    "  }\n"
+    "}\n";
+
 const std::map<Kind, std::pair<std::string, std::string>>& written() {
   static const std::map<Kind, std::pair<std::string, std::string>> all = {
       {Kind::Package,
@@ -139,6 +166,16 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
        {"state <Class | interface> {\n  initial <State>\n  <A> -> <B> on <operation> [<guard, as prose>] / <action>\n}",
         "package shop {\n  module store {\n    class Order {\n      + pay() -> none\n      + ship() -> none\n    }\n\n"
         "    state Order {\n      initial Open\n      Open -> Paid on pay\n      Paid -> Shipped on ship\n    }\n  }\n}\n"}},
+      {Kind::UseCase,
+       {"usecase <ID> [<name>(<param>: <type>, ...) [-> <type>]] [: <generic ID>] {\n  title: <what it is for>\n  status: draft | "
+        "approved | obsolete\n  @requirement <ID>\n  outcome default: <what is obtained>\n  outcome <scenario> [-> <type>]: <what is "
+        "obtained instead>\n}\nan interface operation realises it: operation <name>(...) -> <type> : <UC ID>\nit names no "
+        "interface: whoever drives the interface, the contract is the same",
+        kShopUseCase}},
+      {Kind::Outcome,
+       {"outcome default: <what is obtained>           the ending that goes well\noutcome <scenario> [-> <type>]: <what is "
+        "obtained>   any other: every operation that realises the use case handles it as a scenario",
+        kShopUseCase}},
       {Kind::Diagram,
        {"diagram <Name> {            at the top of a file, outside any package\n  kind: class | sequence | state | requirement | "
         "interface\n  include: <patterns>      shop@*, shop@store::*, shop@store::Cart\n  exclude, open, depth, show, hide: ...\n}",
@@ -214,6 +251,17 @@ std::vector<CodeSpec> buildCodes() {
       {"W-DIAGRAM-DEPTH", "warning", "A diagram asks for a depth that is neither a number nor *.", "Write a number, or * for every level."},
       {"W-REQ-NO-VERIFICATION", "warning", "An approved requirement that nothing verifies.", "Nest a verification in it, or link one."},
       {"W-VER-NO-TEST", "warning", "A verification by test names no tests.", "List them under tests: as <file>::<Fixture>.<Test>."},
+      {"W-USECASE-UNDECLARED", "warning", "An operation realises, or a use case specialises, an id that is no use case of the workspace.",
+       "Declare the use case, or correct the id after the colon."},
+      {"W-USECASE-SIGNATURE", "warning",
+       "An operation that realises a use case, or a use case that specialises another, takes or gives something else than the contract.",
+       "Make the parameters and the return agree with the use case."},
+      {"W-USECASE-OUTCOME-UNHANDLED", "warning", "An operation realises a use case but has no scenario for one of its outcomes.",
+       "Write the scenario (sequence <interface>::<operation> / <outcome>, or a branch named so) and an exit for it."},
+      {"W-SCENARIO-NO-OUTCOME", "warning", "An operation that realises a use case handles a scenario none of its outcomes names.",
+       "Add the outcome to the use case, or rename the scenario to the outcome it is."},
+      {"W-USECASE-UNREALISED", "warning", "No interface operation realises a use case, nor any use case that specialises it.",
+       "Realise it from an operation (operation <name>(...) : <UC ID>), or drop it."},
   };
 }
 
@@ -248,6 +296,7 @@ const std::vector<AnnotationSpec>& annotations() {
       {"@interface", "realises", "the class or verification carries out the interface"},
       {"@verification", "exercised-by", "the sequence is run by the verification"},
       {"@<any other word>", "refers", "kept as a link the language gives no meaning to: no check reads it"},
+      {": <UC ID> after an operation", "realises", "not an annotation: an interface operation realises the use case it names"},
   };
   return all;
 }

@@ -242,6 +242,61 @@ package driftspec@ds {
               tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceIsDrawnAsABoxWithItsOperations
           }
         }
+        requirement REQ-00081-1 {
+          tags: language, hld, usecase
+          status: approved
+          title: A use case shall be declared as a contract with its outcomes, realised by interface operations and specialised by a specific use case
+          text:
+            usecase UC-00001-1 greet(name: string) -> Greeting { outcome default: ...; outcome
+            empty-name -> none: ... } is an artefact identified by its id with its revision: a
+            title, a status, the requirements that bind it (@requirement), an optional signature
+            and its outcomes, default the ending that goes well and every other one a scenario.
+            It names no interface: an interface operation realises it (operation greet(...) :
+            UC-00001-1), whoever drives that interface. A specific use case specialises a
+            generic one after a colon and keeps its signature, its outcomes and its
+            requirements. A design without use cases owes none.
+          rationale:
+            Owner, 2026-11-06 (DS-77): a use case is its own entity, close to a requirement; it
+            may be bound by several requirements and triggered from several interfaces of the
+            high level design, and it should be seen whole from each of them. No actor: the
+            interface already says what drives it.
+          verification VER-00090-1 {
+            title: Integration tests confirm hola realises its use cases from both interfaces, a specific one inherits the outcomes of its generic, and a design without use cases owes none
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.HolaRealisesItsUseCasesFromBothInterfacesAndChecksClean
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.ASpecificUseCaseInheritsTheOutcomesOfItsGeneric
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.ADesignWithoutUseCasesOwesNone
+          }
+        }
+        requirement REQ-00082-1 {
+          tags: language, hld, usecase, check
+          status: approved
+          title: The check shall hold every operation that realises a use case to its contract, outcome by outcome
+          text:
+            An operation that takes or gives something else than the use case it realises, or a
+            specific use case that does so against its generic, is W-USECASE-SIGNATURE. An
+            outcome, its own or inherited, that the operation handles with no scenario is
+            W-USECASE-OUTCOME-UNHANDLED; a scenario the operation handles that no outcome names
+            is W-SCENARIO-NO-OUTCOME. A use case no operation realises, directly or through one
+            that specialises it, is W-USECASE-UNREALISED; a realisation or a specialisation of an
+            id that is no use case is W-USECASE-UNDECLARED.
+          rationale:
+            The use case is what makes "from which interfaces, and how does it end" checkable:
+            on ds's own design these checks caught the outcomes the command line changed.
+          verification VER-00091-1 {
+            title: Integration tests confirm each way an operation can break its use case is a finding, and keeping the contract is none
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOperationThatHandlesEveryOutcomeKeepsTheContract
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOperationThatGivesSomethingElseBreaksTheContract
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOutcomeNoScenarioHandlesIsReported
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AScenarioNoOutcomeNamesIsReported
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AUseCaseNothingRealisesAndAnUnknownOneAreReported
+          }
+        }
       }
     }
 

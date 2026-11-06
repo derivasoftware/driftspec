@@ -547,7 +547,7 @@ std::string Scene::render(bool pretty) const {
                    {"call", {"to", "label", "behaviour", "result"}},
                    {"tour", {"behaviour", "group"}},
                    {"diagram", {"name", "kind", "nodes"}},
-                   {"requirement", {"id", "kind", "title", "status", "text", "parent", "scope", "nodes"}},
+                   {"requirement", {"id", "kind", "title", "status", "text", "parent", "scope", "nodes", "signature", "outcomes", "binds"}},
                    {"verification", {"id", "title", "status", "method", "tests", "requirements"}}};
   out["nodes"] = nlohmann::json::array();
   for (const auto& n : doc.nodes) {
@@ -589,7 +589,13 @@ std::string Scene::render(bool pretty) const {
   for (const auto& r : doc.requirements) {
     nlohmann::json shown = nlohmann::json::array();
     for (const auto& n : r.nodes) shown.push_back(index(n));
-    out["requirements"].push_back({r.id, r.kind, r.title, r.status, r.text, requirement(r.parent), index(r.scope), shown});
+    nlohmann::json ends = nlohmann::json::array();
+    for (const auto& o : r.outcomes) ends.push_back({o.name, o.returns, o.text});
+    nlohmann::json bound = nlohmann::json::array();
+    for (const auto& b : r.binds)
+      if (requirement(b) >= 0) bound.push_back(requirement(b));
+    out["requirements"].push_back(
+        {r.id, r.kind, r.title, r.status, r.text, requirement(r.parent), index(r.scope), shown, r.signature, ends, bound});
   }
   out["verifications"] = nlohmann::json::array();
   for (const auto& v : doc.verifications) {
@@ -808,14 +814,27 @@ std::string Scene::page(const std::string& title, const std::string& css, const 
     if (at == std::string::npos) return out;
     code.erase(at, cut->size());
   }
+  // the viewer's own styles travel packed too, and go in before the reader's (the theme), which wins
+  const std::string styleOpen = "<style>", styleClose = "</style>";
+  const size_t styleFrom = out.find(styleOpen), styleTo = out.find(styleClose, styleFrom);
+  std::string own;
+  if (styleFrom != std::string::npos && styleTo != std::string::npos && styleTo < from) {
+    own = out.substr(styleFrom + styleOpen.size(), styleTo - styleFrom - styleOpen.size());
+    out.erase(styleFrom, styleTo + styleClose.size() - styleFrom);
+  }
+  const size_t codeFrom = out.find(open, out.find("<body>")), codeTo = out.rfind(close);
+  const std::string inflate =
+      "const inflate=async p=>new Response(new Blob([Uint8Array.from(atob(p),c=>c.charCodeAt(0))]).stream()"
+      ".pipeThrough(new DecompressionStream('deflate'))).text();";
   const std::string loader =
-      "\n" + mark + "\n" + aim + "\nconst VIEWER='" + pack(code) +
-      "';\n(async()=>{try{const b=Uint8Array.from(atob(VIEWER),c=>c.charCodeAt(0));"
-      "const t=await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate'))).text();"
+      "\n" + mark + "\n" + aim + "\nconst STYLE='" + pack(own) + "';\nconst VIEWER='" + pack(code) + "';\n(async()=>{try{" + inflate +
+      "const st=document.createElement('style');st.textContent=await "
+      "inflate(STYLE);document.head.insertBefore(st,document.getElementById('theme'));"
+      "const t=await inflate(VIEWER);"
       "const s=document.createElement('script');s.textContent=t;document.body.appendChild(s);}"
       "catch(e){document.body.insertAdjacentHTML('beforeend','<p style=\"padding:20px;font-family:sans-serif\">"
       "This browser cannot inflate the viewer (it lacks DecompressionStream). Open the page in a current one.</p>');}})();\n";
-  out.replace(from + open.size(), to - from - open.size(), loader);
+  out.replace(codeFrom + open.size(), codeTo - codeFrom - open.size(), loader);
   return out;
 }
 
@@ -838,10 +857,26 @@ void Scene::trace(SceneDocument& out_document) const {
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
     if (e.expected) continue;
-    if (e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint) {
+    if (e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint || e.kind == model::Kind::UseCase) {
       Requirement r;
       r.id = e.id;
-      r.kind = e.kind == model::Kind::Requirement ? "requirement" : "constraint";
+      r.kind = e.kind == model::Kind::Requirement ? "requirement" : e.kind == model::Kind::Constraint ? "constraint" : "usecase";
+      if (e.kind == model::Kind::UseCase) {  // its contract and its outcomes (DS-77)
+        const std::string operation = fieldOf(e, "operation");
+        if (!operation.empty()) {
+          r.signature = operation + "(";
+          for (size_t i = 0; i < e.params.size(); ++i)
+            r.signature += (i ? ", " : "") + e.params[i].name + (e.params[i].type.empty() ? "" : ": " + e.params[i].type);
+          r.signature += ")";
+          const std::string returns = fieldOf(e, "returns");
+          if (!returns.empty()) r.signature += " -> " + returns;
+        }
+        for (const auto& other : model_.entities())
+          if (other.second.kind == model::Kind::Outcome && other.second.scope == e.id)
+            r.outcomes.push_back({other.second.name, fieldOf(other.second, "returns"), fieldOf(other.second, "text")});
+        std::stable_sort(r.outcomes.begin(), r.outcomes.end(),
+                         [](const Outcome& a, const Outcome& b) { return a.name == "default" && b.name != "default"; });
+      }
       r.title = fieldOf(e, "title");
       r.status = fieldOf(e, "status");
       r.text = fieldOf(e, "text");
@@ -870,8 +905,13 @@ void Scene::trace(SceneDocument& out_document) const {
     }
   }
   for (const auto& r : model_.relations()) {
-    if (r.kind == "refines" && at.count(r.from)) {
+    if ((r.kind == "refines" || r.kind == "inherits") && at.count(r.from)) {  // or the use case it specialises
       out_document.requirements[at[r.from]].parent = r.to;
+    } else if (r.kind == "requires" && at.count(r.from) && out_document.requirements[at[r.from]].kind == "usecase") {
+      out_document.requirements[at[r.from]].binds.push_back(r.to);
+    } else if (r.kind == "realises" && at.count(r.to)) {  // an interface operation realises a use case
+      const std::string node = nodeFor(ids, r.from);
+      if (!node.empty()) out_document.requirements[at[r.to]].nodes.push_back(node);
     } else if (r.kind == "verifies" && verificationAt.count(r.from)) {
       out_document.verifications[verificationAt[r.from]].requirements.push_back(r.to);
     } else if ((r.kind == "requires" || r.kind == "constrained-by") && at.count(r.to)) {

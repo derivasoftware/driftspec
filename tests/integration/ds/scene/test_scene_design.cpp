@@ -110,7 +110,11 @@ TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotClos
   const std::string page = ds::scene::Scene(model).page("design", ":root{--k-class:#e06c75}</style><script>bad()</script>");
   const auto theme = page.find("--k-class:#e06c75");
   ASSERT_NE(theme, std::string::npos);
-  EXPECT_GT(theme, page.find("--k-class:#3567a0"));                    // after the viewer's own value, so it wins
+  // the viewer's own styles travel packed and go in before the theme, which wins
+  const auto at = page.find("const STYLE='") + std::string("const STYLE='").size();
+  EXPECT_NE(ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at)).find("--k-class:#3567a0"), std::string::npos);
+  EXPECT_NE(page.find("insertBefore(st,document.getElementById('theme'))"), std::string::npos);
+  EXPECT_LT(page.find("<style id=\"theme\">"), theme);
   EXPECT_NE(page.find("<\\/style><script>bad()"), std::string::npos);  // left as text inside the style, never a tag
   EXPECT_EQ(page.find("</style>", theme), page.find("</style>\n</head>"));
 }

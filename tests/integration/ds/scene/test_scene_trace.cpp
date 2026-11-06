@@ -49,7 +49,7 @@ class TestSceneTrace : public ::testing::Test {
 };
 
 TEST_F(TestSceneTrace, EveryRequirementAndConstraintIsListedWithTheOneItRefines) {
-  EXPECT_EQ(doc.requirements.size(), 7u);  // three system requirements, three requirements, one constraint
+  EXPECT_EQ(doc.requirements.size(), 9u);  // three system requirements, three requirements, one constraint, two use cases
   EXPECT_EQ(requirement("REQ-00001-1").parent, "SREQ-00001-1");
   EXPECT_EQ(requirement("REQ-00003-1").parent, "SREQ-00003-1");
   EXPECT_EQ(requirement("SREQ-00001-1").parent, "");
@@ -74,11 +74,25 @@ TEST_F(TestSceneTrace, AVerificationCarriesItsMethodItsTestsAndWhatItProves) {
   EXPECT_EQ(v.tests[0], "tests/unit/core/test_greeter.cpp::TestGreeter.GreetsByName");
 }
 
+TEST_F(TestSceneTrace, AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealisesIt) {
+  const auto& generic = requirement("UC-00001-1");
+  EXPECT_EQ(generic.kind, "usecase");
+  EXPECT_EQ(generic.signature, "greet(name: string) -> core::Greeting");
+  ASSERT_EQ(generic.outcomes.size(), 2u);
+  EXPECT_EQ(generic.outcomes[0].name, "default");  // the ending that goes well comes first
+  EXPECT_EQ(generic.outcomes[1].returns, "none");
+  EXPECT_EQ(generic.binds, (std::vector<std::string>{"SREQ-00001-1", "SREQ-00002-1"}));
+  EXPECT_TRUE(has(generic.nodes, "hola@shell::greet"));       // the operation that realises it
+  EXPECT_EQ(requirement("UC-00002-1").parent, "UC-00001-1");  // the specific under the generic
+  EXPECT_TRUE(has(requirement("UC-00002-1").nodes, "hola@web::greet"));
+}
+
 TEST_F(TestSceneTrace, ThePageListsTheRequirementsInTheBottomPanel) {
   const std::string page = ds::scene::Scene(model).page("hola");
   EXPECT_NE(page.find("data-tab=\"reqs\""), std::string::npos);  // a tab beside the tours
   const std::string scene = packedIn(page);
-  EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\"]"),
+  EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\",\"signature\","
+                       "\"outcomes\",\"binds\"]"),
             std::string::npos);
   EXPECT_NE(scene.find("\"VER-00001-1\""), std::string::npos);
 }

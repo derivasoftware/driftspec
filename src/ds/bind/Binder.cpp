@@ -218,6 +218,44 @@ void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std:
   visit(file, node, scope, e.id);  // nested verifications and constraints
 }
 
+// A use case is an artefact identified by its id (R5) and a contract: its signature, the base it
+// specialises, its outcomes as entities of their own (DS-77).
+void Binder::bindUseCase(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner) {
+  model::Entity e;
+  e.kind = model::Kind::UseCase;
+  e.name = fieldText(file, node, "id");
+  e.id = e.name;
+  e.scope = scope;
+  e.location = locationOf(file, node);
+  const std::string operation = fieldText(file, node, "name");
+  if (!operation.empty()) {
+    e.fields["operation"] = operation;
+    bindSignature(file, node, e, scope, {});
+  }
+  bindFields(file, node, e);
+  model_.declare(e);
+  if (!owner.empty()) model_.relate({"about", e.id, owner, e.location, ""});
+  const std::string base = fieldText(file, node, "base");
+  if (!base.empty()) model_.relate({"inherits", e.id, trim(base), e.location, ""});
+  bindAnnotations(file, node, e.id, scope);
+  const uint32_t n = ts_node_named_child_count(node);
+  for (uint32_t i = 0; i < n; ++i) {
+    TSNode o = ts_node_named_child(node, i);
+    if (!is(o, "outcome")) continue;
+    model::Entity out;
+    out.kind = model::Kind::Outcome;
+    out.name = fieldText(file, o, "name");
+    out.id = e.id + "::" + out.name;
+    out.scope = e.id;
+    out.location = locationOf(file, o);
+    out.fields["text"] = trim(fieldText(file, o, "text"));
+    const TypeUse returns = bindType(file, child(o, "returns"), scope, out.id, "uses", "", {}, out.location);
+    if (!returns.text.empty()) out.fields["returns"] = returns.text;
+    model_.declare(out);
+    model_.relate({"contains", e.id, out.id, out.location, ""});
+  }
+}
+
 // ---- types (R15, R16) ----------------------------------------------------------
 
 TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
@@ -655,6 +693,9 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
     } else if (is(c, "requirement") || is(c, "verification") || is(c, "constraint")) {
       bindArtefact(file, c, scope, owner);
 
+    } else if (is(c, "usecase")) {
+      bindUseCase(file, c, scope, owner);
+
     } else if (is(c, "interface")) {
       model::Entity e;
       e.kind = model::Kind::Interface;
@@ -680,6 +721,8 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
         bindFields(file, op, o);
         model_.declare(o);
         model_.relate({"contains", e.id, o.id, o.location, ""});
+        const std::string realised = fieldText(file, op, "realises");  // operation greet(...) : UC-00001-1
+        if (!realised.empty()) model_.relate({"realises", o.id, trim(realised), o.location, ""});
         bindAnnotations(file, op, o.id, scope);
       }
 
