@@ -112,7 +112,7 @@ target_link_libraries(
   PRIVATE miniz)
 
 # ---- the CLI -----------------------------------------------------------------
-# ---- the Python face (DS-84, a spike): the engine as a CPython extension, abi3
+# ---- the Python face (pyds, DS-84): the engine as a CPython extension, abi3
 # ----------
 if(DS_PYTHON)
   find_package(Python 3.10 REQUIRED COMPONENTS Interpreter
@@ -131,6 +131,16 @@ if(DS_PYTHON)
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/pyds
             ${CMAKE_BINARY_DIR}/python/pyds
     DEPENDS _native)
+  # pytest drives pyds and its language server from the build (tests/*/python)
+  enable_testing()
+  add_test(
+    NAME pyds
+    COMMAND
+      ${Python_EXECUTABLE} -m pytest -q -p no:cacheprovider
+      ${CMAKE_SOURCE_DIR}/tests/integration/python
+      ${CMAKE_SOURCE_DIR}/tests/system/python)
+  set_tests_properties(pyds PROPERTIES ENVIRONMENT
+                                       PYTHONPATH=${CMAKE_BINARY_DIR}/python)
 endif()
 
 add_executable(ds app/ds/main.cpp)

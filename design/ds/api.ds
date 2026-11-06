@@ -7,7 +7,7 @@ package driftspec@ds {
   module api {
 
     requirement REQ-00085-1 {
-      status: draft
+      status: approved
       @refines SREQ-00015-1
       title: The engine shall take a workspace as text, the buffers an editor holds included, and give back the JSON of the command line
       text:
@@ -19,6 +19,18 @@ package driftspec@ds {
         Owner, 2026-11-06 (DS-84): a Python face to depend on, and a language server; text in
         and JSON out keeps one contract for every caller.
       tags: api, python
+      verification VER-00094-1 {
+        status: approved
+        title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, and says what the grammar takes at a place
+        method: test
+        tests:
+          tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheExampleChecksCleanAsTheCommandLineSays
+          tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheModelOfTheExampleExportsByIdentity
+          tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.AnUnsavedBufferIsCheckedAsItIsTyped
+          tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.ADiagramDrawsAsTextOrAsItsRenderIr
+          tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheViewerOpensFramedOnWhatItIsAsked
+          tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.WhatTheGrammarTakesWhereAnEditorAsksInTheExample
+      }
     }
 
     class Api {                              // static: the engine, called in process

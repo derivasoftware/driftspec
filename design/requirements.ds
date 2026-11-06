@@ -109,7 +109,7 @@ package driftspec {
   }
 
   requirement SREQ-00015-1 {
-    status: draft
+    status: approved
     title: The system shall serve its engine in process to Python, as a package to depend on
     text:
       pip install driftspec gives a package whose engine runs in the same process: load a
@@ -124,7 +124,7 @@ package driftspec {
   }
 
   requirement SREQ-00016-1 {
-    status: draft
+    status: approved
     title: The system shall serve .ds files to an editor through the language server protocol
     text:
       driftspec-lsp checks the workspace a file belongs to on every change, with the buffers

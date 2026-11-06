@@ -247,9 +247,18 @@ def with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], st
     return files, name
 
 
+def optional(rest: tuple) -> tuple[int, str]:
+    width = int(rest[0]) if len(rest) > 0 and rest[0] else 0
+    typed = str(rest[1]) if len(rest) > 1 and rest[1] else ""
+    return width, typed
+
+
 @server.command("driftspec.draw")
-def draw(ls: LanguageServer, uri: str, line: int, character: int, width: int = 0, typed: str = "") -> dict:
-    line, character, width = int(line), int(character), int(width)
+def draw(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict:
+    """rest: the width to draw at and the word the editor sees under the cursor, both optional
+    (pygls counts arguments strictly, so the optional ones come through *rest)."""
+    width, typed = optional(rest)
+    line, character = int(line), int(character)
     ws = use(ls, uri)
     what, name = subject_at(ls, uri, line, character, typed)
     if not what:
@@ -275,7 +284,8 @@ def open_in_browser(path: str) -> None:
 
 
 @server.command("driftspec.view")
-def view(ls: LanguageServer, uri: str, line: int, character: int, _width: int = 0, typed: str = "") -> dict:
+def view(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict:
+    _, typed = optional(rest)
     import json as _json
 
     line, character = int(line), int(character)

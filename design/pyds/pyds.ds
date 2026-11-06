@@ -23,7 +23,7 @@ package driftspec@pyds {
   }
 
   requirement REQ-00086-1 {
-    status: draft
+    status: approved
     @refines SREQ-00015-1
     title: The Python face shall read a workspace into a typed model through one native module, every Python from 3.10 on
     text:
@@ -32,10 +32,24 @@ package driftspec@pyds {
       JSON pyds._native returns. check, render, page and expected_at do the same for their
       answers. The native module is built against the limited API (abi3).
     tags: python, api
+    verification VER-00095-1 {
+      status: approved
+      title: Integration tests confirm pyds loads a directory or the texts an editor holds into a typed model, checks it, draws and pages it
+      method: test
+      tests:
+        tests/integration/python/test_pyds.py::TestLoad::test_a_directory_loads_into_a_typed_model
+        tests/integration/python/test_pyds.py::TestLoad::test_the_texts_an_editor_holds_load_as_a_workspace
+        tests/integration/python/test_pyds.py::TestLoad::test_a_path_that_is_no_directory_is_refused
+        tests/integration/python/test_pyds.py::TestCheck::test_a_clean_workspace_reports_no_error
+        tests/integration/python/test_pyds.py::TestCheck::test_a_syntax_error_is_a_finding_where_it_is
+        tests/integration/python/test_pyds.py::TestDrawing::test_a_diagram_draws_as_text_and_none_draws_nothing
+        tests/integration/python/test_pyds.py::TestDrawing::test_the_viewer_opens_framed_where_it_is_asked
+        tests/integration/python/test_pyds.py::TestDrawing::test_what_the_grammar_takes_in_a_module
+    }
   }
 
   requirement REQ-00087-1 {
-    status: draft
+    status: approved
     @refines SREQ-00016-1
     title: The language server shall check the design a file belongs to on every change, and lead from a name to what it is
     text:
@@ -44,6 +58,15 @@ package driftspec@pyds {
       Definition, references, hover, completion and symbols answer from that model; draw and
       view show the diagram or the entity under the cursor, or the declaration the cursor is in.
     tags: lsp, editor
+    verification VER-00096-1 {
+      status: approved
+      title: Integration tests confirm the language server, driven over stdio, diagnoses a buffer as it is typed, leads a name to its declaration and draws it, and keeps each design apart
+      method: test
+      tests:
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_a_buffer_typed_wrong_is_diagnosed_and_cleared_when_right
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_a_name_leads_to_its_declaration_and_draws
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_a_file_belongs_to_its_own_design_only
+    }
   }
 
   // ---- the library: what a Python caller sees -------------------------------------------------
@@ -195,11 +218,13 @@ package driftspec@pyds {
 
     class Source                               // a directory, or a mapping of path to text
     dataclass Location {
+      @requirement REQ-00086-1
       + file: string
       + line: int
       + column: int
     }
     dataclass Entity {
+      @requirement REQ-00086-1
       + id: string
       + kind: string
       + name: string
@@ -210,18 +235,21 @@ package driftspec@pyds {
       + expected: bool
     }
     dataclass Relation {
+      @requirement REQ-00086-1
       + kind: string
       + source: string
       + target: string
       + location: Location
     }
     dataclass Finding {
+      @requirement REQ-00086-1
       + code: string
       + severity: string
       + message: string
       + location: Location
     }
     class Model {                              // a workspace loaded: every entity by its identity
+      @requirement REQ-00086-1
       + entities: map<string, Entity>
       + relations: list<Relation>
       + findings: list<Finding>
@@ -232,6 +260,7 @@ package driftspec@pyds {
       + in_file(path: string) -> list<Entity>
     }
     dataclass Report {
+      @requirement REQ-00086-1
       + findings: list<Finding>
       + counts: map<string, int>
     }

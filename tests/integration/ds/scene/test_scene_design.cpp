@@ -60,10 +60,12 @@ class TestSceneOfTheDesign : public ::testing::Test {
     }
   }
 
-  static std::string packedIn(const std::string& page) {
+  static std::string packOf(const std::string& page) {
     const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
-    return ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+    return page.substr(at, page.find('\'', at) - at);
   }
+
+  static std::string packedIn(const std::string& page) { return ds::scene::Scene::unpack(packOf(page)); }
 };
 
 TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
@@ -91,7 +93,9 @@ TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesI
   const std::string scene = packedIn(page);
   for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
   EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
-  EXPECT_LT(page.size(), 100u * 1024u);
+  // REQ-00075-4: what the tool adds to a scene is bounded, the scene grows with the design it draws
+  EXPECT_LT(page.size() - packOf(page).size(), 40u * 1024u);
+  EXPECT_LT(packOf(page).size(), 128u * nodes.size());  // each node with its relations, artefacts and behaviours
 }
 
 TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
@@ -103,7 +107,7 @@ TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
   EXPECT_NE(frame.find("&lt;canvas"), std::string::npos);
   const std::string scene = packedIn(frame);  // base64 needs no escaping in an attribute: the pack travels as it is
   for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
-  EXPECT_LT(frame.size(), 120u * 1024u);
+  EXPECT_LT(frame.size(), page.size() + 16u * 1024u);  // escaped for the attribute, the page grows little
 }
 
 TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
