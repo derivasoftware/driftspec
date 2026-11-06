@@ -10,6 +10,7 @@
   --accent:#2f5d8a;--accent-soft:#d6e4f2;--req:#8a4b2f;--req-soft:#f3e3d8;
   --priv:#8c8579;--pkg:#efe9dc;--mod:#f8f5ee;--ifc:#e3edf7;
   --k-class:#3567a0;--k-function:#2a8a6e;--k-dataclass:#8a5cb3;--k-enum:#b07a22;--ok:#2f8a4a;--warn:#d9822b;
+  --r-owns:#c2185b;--r-agg:#00838f;--r-uses:#5c6bc0;--r-calls:#c62828;
   --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -17,7 +18,8 @@
   --bg:#151618;--panel:#1d1f22;--fg:#e8e6e1;--muted:#9a968d;--line:#3a3d42;--soft:#26292d;
   --accent:#7fb0e0;--accent-soft:#203a55;--req:#e3a27f;--req-soft:#3a271d;
   --priv:#857f75;--pkg:#1a1c1f;--mod:#212427;--ifc:#1c2a37;
-  --k-class:#78a6dc;--k-function:#5cc4a2;--k-dataclass:#b994dc;--k-enum:#ddb25e;--ok:#6cc68a;--warn:#f0a35a;}}
+  --k-class:#78a6dc;--k-function:#5cc4a2;--k-dataclass:#b994dc;--k-enum:#ddb25e;--ok:#6cc68a;--warn:#f0a35a;
+  --r-owns:#f06292;--r-agg:#4dd0e1;--r-uses:#9fa8da;--r-calls:#ef7f7f;}}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
 .stage{position:fixed;inset:0;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -48,16 +50,33 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .card .hd{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
 .card .hd b{font-family:var(--mono);font-size:15px}
 .card .st{color:var(--muted);font-family:var(--mono);font-size:11px}
-.card h4{margin:10px 0 3px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.card h4{margin:0 0 4px;font-size:12px;font-weight:600;color:var(--fg);display:flex;justify-content:space-between}
+.card section{border-left:3px solid var(--c,var(--line));padding:2px 0 2px 9px;margin:12px 0 0}
+.card .sum{font-size:12px;color:var(--muted);margin-top:2px}.card .sum .ok{color:var(--ok)}.card .sum .warn{color:var(--warn)}
+.card .verb{font-size:11px;color:var(--muted);margin:5px 0 1px}
+.card .rel{font-family:var(--mono);font-size:12px;padding:3px 5px;border-radius:5px;cursor:pointer;display:flex;flex-wrap:wrap;gap:0 4px;align-items:baseline}
+.card .rel:hover{background:var(--soft)}
+.card .rel .me{color:var(--c,var(--fg));font-weight:600}.card .rel .far{font-weight:600}
+.card .rel .mod{margin-left:auto;color:var(--muted);font-size:11px}
+.card .rqs .rq{font-family:var(--sans);font-size:12px;color:var(--fg);margin:3px 0}.card .rqs .rq b{font-family:var(--mono);color:var(--req);font-weight:600}
+.card .acts{display:flex;gap:4px;align-items:center}
 .card .it{font-family:var(--mono);font-size:12px;padding:3px 4px;border-radius:5px;cursor:pointer}
 .card .it:hover{background:var(--soft)}
 .card .rq{font-family:var(--mono);font-size:12px;color:var(--req)}
 .card button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:3px 10px;cursor:pointer}
 .card .x{border:0;font-size:18px;color:var(--muted);padding:0 4px}
 /* the tour panel: beside the canvas on a wide screen, under it on a narrow one */
-.tour{position:fixed;right:0;top:0;bottom:0;width:380px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+/* the tour plays along the bottom, its controls in one row; the details of a box stay docked on the right */
+.tour{position:fixed;left:0;right:0;bottom:0;height:36%;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(220px,340px) 1fr minmax(160px,220px);grid-template-rows:auto 1fr;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+.tour .tb{grid-column:1/-1;border-top:1px solid var(--line)}
+.tour .td{border-bottom:0!important;padding:8px 12px!important}
 .tour[hidden]{display:none}
-body.touring .stage{right:380px}
+body.touring .stage{bottom:36%}
+body.touring .legend,body.touring .mini{opacity:0;pointer-events:none}  /* the step's caption needs the bottom of the canvas */
+body.carded.touring .tour{right:380px}
+/* the card of a box docks where the tour panel does: the canvas makes room instead of hiding under it */
+body.carded .stage{right:380px}
+body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:none;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;padding:14px 16px 20px;z-index:6}
 .tour .th{display:flex;gap:6px;align-items:center;padding:8px 10px 4px}
 .tour select{flex:1;min-width:0;font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
 .tour .tc{display:flex;gap:5px;align-items:center;padding:4px 10px}
@@ -76,8 +95,13 @@ body.touring .stage{right:380px}
 .rail,.mini,.legend{transition:opacity .25s}
 .stage.quiet .rail,.stage.quiet .mini,.stage.quiet .legend{opacity:0;pointer-events:none}
 @media (max-width:700px){
-  .tour{left:0;top:auto;width:auto;height:46%;border-left:0;border-top:1px solid var(--line)}
+  .tour{height:46%;grid-template-columns:1fr;grid-template-rows:auto auto auto 1fr}
+  body.carded.touring .tour{right:0}
   body.touring .stage{right:0;bottom:46%}
+  body.carded .stage{right:0;bottom:46%}
+  body.carded .card{left:0;top:auto;width:auto;height:46%;border-left:0;border-top:1px solid var(--line)}
+  body.carded.touring .card{display:none}  /* a phone has room for one panel: the tour, and the card comes back when it closes */
+  body.carded.touring .stage{bottom:46%}
   .tour .tc button,.tour .th button{min-width:34px;height:32px;font-size:13px}
   .caption{bottom:12px;font-size:11px;max-width:calc(100% - 24px)}
 }
@@ -102,11 +126,11 @@ body.touring .stage{right:380px}
   <canvas class="main" id="cv" aria-label="/*TITLE*/: el modelo entero, con zoom"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><button id="tours" aria-pressed="false" title="reproducir el comportamiento sobre la estructura">recorridos</button><button data-fam="estructura" aria-pressed="true" title="herencia, realización, composición, agregación, asociación">estructura</button><button data-fam="llamadas" aria-pressed="false" title="qué método llama a cuál">llamadas</button><button data-fam="usos" aria-pressed="false" title="dependencias: tipos que se nombran">usos</button><button id="priv" aria-pressed="false">ocultar privados</button><button id="fs">⛶</button></div>
+  <div class="tools"><button id="tours" aria-pressed="false" title="reproducir el comportamiento sobre la estructura">recorridos</button><button data-fam="herencia" aria-pressed="true" title="herencia y realización, siempre como líneas">herencia</button><button id="priv" aria-pressed="false">ocultar privados</button><button id="fs">⛶</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Subir un nivel">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Entrar">▼</button><button id="home" aria-label="Ver todo">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimapa"></canvas>
-  <div class="legend"><span><i style="background:var(--k-class)"></i>clase</span><span><i style="background:var(--k-function)"></i>función</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>con requisito</span><span><b style="background:var(--warn)"></b>sin requisito</span><span>discontinuo: privado</span><span>◁ hereda · ◁┄ realiza · ◆ contiene · ◇ comparte · → referencia · ┄> usa · <b style="background:var(--accent);border-radius:0;width:12px;height:2px;vertical-align:3px"></b> llama</span></div>
+  <div class="legend"><span><i style="background:var(--k-class)"></i>clase</span><span><i style="background:var(--k-function)"></i>función</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>con requisito</span><span><b style="background:var(--warn)"></b>sin requisito</span><span>discontinuo: privado</span><span>◁ hereda · ◁┄ realiza</span><span>al tocar una caja: <b style="background:var(--r-owns)"></b>compone <b style="background:var(--r-agg)"></b>agrega <b style="background:var(--r-calls)"></b>llama <b style="background:var(--r-uses)"></b>usa</span></div>
   <div class="card" id="card" hidden></div>
 </div>
 <aside class="tour" id="tour" hidden aria-label="Recorrido">
@@ -153,8 +177,12 @@ const UNITS=ORDER.filter(id=>N[id].kind==='unit');
 const anc=id=>{const a=[]; let n=N[id]; while(n){a.push(n.id); n=N[n.parent];} return a;};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const LINKS=SCENE.links||[], DIAGS=SCENE.diagrams||[], TITLES=SCENE.titles||{};
-const FAMILY={inherits:'estructura',realises:'estructura',owns:'estructura',shares:'estructura',refs:'estructura',calls:'llamadas',uses:'usos'};
-const FAM={estructura:true,llamadas:false,usos:false};
+const FAMILY={inherits:'herencia',realises:'herencia'};  // the rest is never a line: it lights up when a box is touched
+const FAM={herencia:true};
+const GROUP={owns:'owns',refs:'agg',shares:'agg',uses:'uses',calls:'calls'};  // the colour each relation lights up in
+const GROUP_ES={owns:'compone',agg:'agrega',uses:'usa',calls:'llama'};
+const GROUP_RANK={owns:0,agg:1,calls:2,uses:3};
+let HLBOX=new Map(), HLROW=new Map(), pills=[];
 const KIND_ES={inherits:'hereda de',realises:'realiza',owns:'contiene',shares:'comparte',refs:'referencia',uses:'usa',calls:'llama a','*':'se relaciona con'};
 const unitOf=id=>N[id]&&N[id].kind==='row'?N[id].parent:id;
 const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.kind)) n=N[n.parent]; return n?n.id:null;};
@@ -162,6 +190,7 @@ const short=id=>{const n=N[id]; return n?n.label.replace(/^[+-] /,'').split(/[(:
 function linksOf(id){const n=N[id]; if(!n) return []; if(n.kind==='unit'||n.kind==='iface') return LINKS.filter(l=>unitOf(l.from)===id||unitOf(l.to)===id);
   const inside=x=>anc(x).includes(id); return LINKS.filter(l=>inside(l.from)!==inside(l.to));}
 let RELATED=new Set();
+const BASE_FAR={}; LINKS.forEach(l=>{if(FAMILY[l.kind]&&boxOf(l.from)!==boxOf(l.to)) (BASE_FAR[unitOf(l.from)]=BASE_FAR[unitOf(l.from)]||[]).push(short(l.to));});
 const hasReq=id=>{const n=N[id]; if(n._rq===undefined) n._rq=!!(n.reqs.length||(KIDS[id]||[]).some(k=>N[k].reqs.length)); return n._rq;};
 
 /* ---------- canvas and camera ---------- */
@@ -170,7 +199,8 @@ const mini=document.getElementById('mini'), mctx=mini.getContext('2d');
 let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
   K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),ok:g('--ok'),warn:g('--warn'),mono:g('--mono'),sans:g('--sans'),
-    kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum')}};}
+    kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-class'),abstract:g('--k-class')},
+    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls')}};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
 function resize(){const r=stage.getBoundingClientRect(); DPR=devicePixelRatio||1; U=r.width<560?.6:(r.width<800?.8:1); W=r.width/U; H=r.height/U;
   cv.width=r.width*DPR; cv.height=r.height*DPR; const m=mini.getBoundingClientRect(); mini.width=Math.max(1,m.width*DPR); mini.height=Math.max(1,m.height*DPR); loop();}
@@ -202,18 +232,21 @@ function draw(){
   // units with their rows
   UNITS.forEach(id=>{const n=N[id], b=scr(n); if(!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=SEL&&SEL!==id&&!anc(id).includes(SEL)&&!RELATED.has(id);
     ctx.globalAlpha=(lab?1:.55)*(dim?.35:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
-    ctx.setLineDash(n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
+    const hl=HLBOX.get(id); if(hl){ctx.globalAlpha=.13; ctx.fillStyle=K.rc[hl]; ctx.fill(); ctx.globalAlpha=(lab?1:.55)*(dim?.35:1);}
+    ctx.setLineDash(n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
     const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s)); ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,sw,Math.max(0,b.h-2));
     const dr=Math.max(2.5,Math.min(5.5,4.5*cam.s)); if(b.w>16&&b.h>12){ctx.beginPath(); ctx.arc(b.x+b.w-dr-4,b.y+dr+4,dr,0,7); ctx.fillStyle=hasReq(id)?K.ok:K.warn; ctx.fill();}
     if(!lab){ctx.globalAlpha=1; return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
     const px=Math.min(14,Math.max(9,12*cam.s)), hy=b.y+Math.min(px+4,17*cam.s+3); const st=(n.vis==='-'?'− ':'')+'«'+n.st+'» ';
     ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+sw+5,hy,px*.72,kc); text(n.label,b.x+sw+5+off,hy,px,K.fg,'700');
+    if(BASE_FAR[id]){ctx.font=`700 ${px}px ${K.mono}`; const lw=ctx.measureText(n.label).width; text(' ◁ '+BASE_FAR[id].join(', '),b.x+sw+5+off+lw,hy,px*.85,K.muted);}
     if(n.reqs.length&&cam.s>2) chip(n.reqs,b.x+b.w-2*dr-12,hy);
     (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(!visible(r)) return; const rb=scr(r); if(rb.y>H||rb.y+rb.h<0) return;
       const f=FORCED.has(rid), rpx=f?Math.max(9.5,Math.min(13,r.h*cam.s*.78)):Math.min(13,r.h*cam.s*.78);
       if(ACTIVE.has(rid)){ctx.fillStyle=K.as; ctx.fillRect(rb.x+1,rb.y,rb.w-2,Math.max(rb.h,rpx+4));}
-      text(r.label,rb.x+sw+6,rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36,rpx,r.vis==='-'?K.priv:K.fg,ACTIVE.has(rid)?'700':'');
+      const rh=HLROW.get(rid); if(rh&&!ACTIVE.has(rid)){const hh=Math.max(rb.h,rpx+4); ctx.globalAlpha=.2; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+sw,rb.y,rb.w-sw-1,hh); ctx.globalAlpha=1; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+rb.w-5,rb.y+1,4,hh-2);}
+      text(r.label,rb.x+sw+6,rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36,rpx,r.vis==='-'?K.priv:K.fg,(ACTIVE.has(rid)||HLROW.has(rid))?'700':'');
       if(r.label.includes('(')&&rpx>=7){const rd=Math.max(2,Math.min(3.6,rpx*.28)); ctx.beginPath(); ctx.arc(rb.x+rb.w-rd-6,rb.y+rb.h/2,rd,0,7);
         if(r.reqs.length){ctx.fillStyle=K.ok; ctx.fill();} else {ctx.strokeStyle=K.line; ctx.lineWidth=1.2; ctx.stroke();}}
       if(r.reqs.length&&cam.s>2.6) chip(r.reqs,rb.x+rb.w-18,rb.y+rb.h/2+rpx*.36);});
@@ -228,6 +261,7 @@ function draw(){
       const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.accent; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
     ctx.restore();});
   drawLinks();
+  drawPills();
   drawTour();
   drawMini(); crumbs();
 }
@@ -238,7 +272,8 @@ const STYLE={inherits:{dash:[],end:'tri'},realises:{dash:[6,4],end:'tri'},owns:{
 let drawn=[];
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
 function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
-  const list=SEL?linksOf(SEL):LINKS.filter(l=>FAM[FAMILY[l.kind]]);
+  const touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||linksOf(SEL).includes(l));
+  const list=LINKS.filter(l=>FAMILY[l.kind]&&(touched(l)||(FAM.herencia&&boxOf(l.from)===boxOf(l.to))));  // across modules: written in the header, drawn when touched
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
   list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
@@ -248,14 +283,33 @@ function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: on
     if(A===B||anc(A.id).includes(B.id)||anc(B.id).includes(A.id)) return;
     const kind=coarse?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
     if(!agg.has(k)) agg.set(k,{A,B,kind,n:0,links:[]}); const g=agg.get(k); g.n+=l.count; g.links.push(l);});
-  agg.forEach(g=>{const geo=edge(g,!!SEL); if(geo) drawn.push({...geo,g});});}
+  agg.forEach(g=>{const geo=edge(g,!!SEL&&g.links.some(l=>unitOf(l.from)===SEL||unitOf(l.to)===SEL)); if(geo) drawn.push({...geo,g});});}
+// a related box out of sight: a pill on the edge of the screen, in its colour, that flies there
+function drawPills(){pills=[]; if(!SEL) return; const cx=W/2, cy=H/2, m=14;
+  HLBOX.forEach((g,id)=>{const n=N[id]; if(!n||n.hidden) return; const b=scr(n); if(b.x<W-40&&b.y<H-40&&b.x+b.w>40&&b.y+b.h>40) return;
+    const tx=b.x+b.w/2-cx, ty=b.y+b.h/2-cy, k=Math.min((W/2-m-60)/Math.abs(tx||1e-9),(H/2-m-14)/Math.abs(ty||1e-9));
+    const px=cx+tx*k, py=cy+ty*k, t=GROUP_ES[g]+' '+n.label; ctx.font=`600 11.5px ${K.mono}`; const w=ctx.measureText(t).width+26;
+    let x=Math.max(m,Math.min(W-m-w,px-w/2)), y=Math.max(m,Math.min(H-m-22,py-11));
+    const side=x<=m+1||x>=W-m-w-1, hits=()=>pills.some(q=>x<q.x+q.w+6&&q.x<x+w+6&&y<q.y+q.h+6&&q.y<y+22+6);  // never on top of another: slide along the edge
+    for(let i=0;i<40&&hits();i++){if(side) y=y+28>H-m-22?m+((y+28)%(H-2*m)):y+28; else x=x+w/3>W-m-w?m:x+w/3;}
+    rr(x,y,w,22,11); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=K.rc[g]; ctx.lineWidth=2; ctx.stroke();
+    const a=Math.atan2(ty,tx); ctx.fillStyle=K.rc[g]; ctx.beginPath(); ctx.moveTo(x+12+5*Math.cos(a),y+11+5*Math.sin(a)); ctx.lineTo(x+12+5*Math.cos(a+2.4),y+11+5*Math.sin(a+2.4)); ctx.lineTo(x+12+5*Math.cos(a-2.4),y+11+5*Math.sin(a-2.4)); ctx.fill();
+    text(t,x+20,y+15,11.5,K.fg,'600'); pills.push({x,y,w,h:22,id});});}
 function span(n){const p=n.kind==='row'?N[n.parent]:n; return [p.x,p.x+p.w];}
 function anchorY(n){const b=scr(n); return n.kind==='row'?b.y+b.h/2:b.y+Math.min(b.h/2,16);}
 function arrow(x,y,a,col){const s=8; ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.4),y-s*Math.sin(a-.4)); ctx.lineTo(x-s*Math.cos(a+.4),y-s*Math.sin(a+.4)); ctx.closePath(); ctx.fill();}
 function openArrow(x,y,a,col){const s=9; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x,y); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.stroke();}
 function triangle(x,y,a,col){const s=12; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.closePath(); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.stroke();}
 function diamond(x,y,a,col,hollow){ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(7,-4.5); ctx.lineTo(14,0); ctx.lineTo(7,4.5); ctx.closePath(); ctx.fillStyle=hollow?K.panel:col; ctx.fill(); ctx.strokeStyle=col; ctx.stroke(); ctx.restore();}
+// a base above what inherits from it: a trunk in right angles, one triangle on the base
+function trunk(g,emph,st){const a=scr(g.A), b=scr(g.B); if(b.y+b.h>a.y-4) return null;
+  const x1=a.x+a.w/2, y1=a.y, x2=b.x+b.w/2, y2=b.y+b.h, ym=y2+Math.min((y1-y2)/2,22*cam.s);
+  if(Math.max(x1,x2)<-300||Math.min(x1,x2)>W+300||y1<-300||y2>H+300) return {pts:[]};
+  const col=st.muted?K.muted:K.fg; ctx.globalAlpha=emph?1:.75; ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
+  const tri=12; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1,ym); ctx.lineTo(x2,ym); ctx.lineTo(x2,y2+tri); ctx.stroke(); ctx.setLineDash([]);
+  triangle(x2,y2,-Math.PI/2,col); ctx.globalAlpha=1; return {pts:[[x1,y1],[x1,ym],[x2,ym],[x2,y2]]};}
 function edge(g,emph){const A=g.A,B=g.B,st=STYLE[g.kind]||STYLE['*'];
+  if((g.kind==='inherits'||g.kind==='realises')&&A.kind==='unit'&&B.kind==='unit'){const t=trunk(g,emph,st); if(t) return t;}
   const [a1,a2]=span(A).map(sx), [b1,b2]=span(B).map(sx); let y1=anchorY(A), y2=anchorY(B), x1,x2,c1,c2;
   if((Math.max(a1,b1)>W+300&&Math.max(a2,b2)>W+300)||(Math.min(a2,b2)<-300&&Math.min(a1,b1)<-300)||(y1<-300&&y2<-300)||(y1>H+300&&y2>H+300)) return null;
   if(b1<a2-4&&b2>a1+4){const o=Math.max(24,30*cam.s); x1=a2; x2=b2; c1=[x1+o,y1]; c2=[x2+o,y2];}
@@ -273,7 +327,8 @@ function edge(g,emph){const A=g.A,B=g.B,st=STYLE[g.kind]||STYLE['*'];
   if((g.kind==='*'&&g.n>1&&cam.s>=.45)||(emph&&g.n>1)){const tg='×'+g.n; ctx.font=`10.5px ${K.mono}`; const w=ctx.measureText(tg).width+10; ctx.globalAlpha=Math.max(ctx.globalAlpha,.75); rr(mx-w/2,my-8,w,16,8); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.lineWidth=1; ctx.stroke(); ctx.textAlign='center'; text(tg,mx,my+4,10.5,col); ctx.textAlign='left';}
   ctx.globalAlpha=1; return {x1,y1,c1,c2,x2,y2};}
 function edgeAt(X,Y){let best=null,bd=9;
-  drawn.forEach(d=>{for(let i=0;i<=24;i++){const t=i/24, b=(p0,p1,p2,p3)=>(1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t*t*p2+t**3*p3;
+  const seg=(p,q)=>{const dx=q[0]-p[0], dy=q[1]-p[1], l=dx*dx+dy*dy||1, t=Math.max(0,Math.min(1,((X-p[0])*dx+(Y-p[1])*dy)/l)); return Math.hypot(p[0]+t*dx-X,p[1]+t*dy-Y);};
+  drawn.forEach(d=>{if(d.pts){for(let i=1;i<d.pts.length;i++){const e=seg(d.pts[i-1],d.pts[i]); if(e<bd){bd=e; best=d;}} return;} for(let i=0;i<=24;i++){const t=i/24, b=(p0,p1,p2,p3)=>(1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t*t*p2+t**3*p3;
     const e=Math.hypot(b(d.x1,d.c1[0],d.c2[0],d.x2)-X,b(d.y1,d.c1[1],d.c2[1],d.y2)-Y); if(e<bd){bd=e; best=d;}}}); return best;}
 
 /* ---------- the card of a relation ---------- */
@@ -337,36 +392,66 @@ cv.addEventListener('wheel',e=>{e.preventDefault(); anim=null; if(T.idx>=0) rele
   const wmx=wx(mx), wmy=wy(my); cam.s=Math.max(.03,Math.min(10,cam.s*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0012)))); cam.x=wmx-(mx-W/2)/cam.s; cam.y=wmy-(my-H/2)/cam.s; loop();},{passive:false});
 function hit(X,Y){const x=wx(X), y=wy(Y); let best=null;
   ORDER.forEach(id=>{const n=N[id]; if(n.hidden||!(x>=n.x&&x<=n.x+n.w&&y>=n.y&&y<=n.y+n.h)) return; if(!visible(n)) return; if(!best||anc(id).length>=anc(best).length) best=id;}); return best;}
-function tap(X,Y){const d=edgeAt(X,Y); if(d){showPop(d.g,X,Y,true); return;} hidePop(); const id=hit(X,Y); if(!id||N[id].kind==='package'){select(null); return;} const box=N[id].kind==='row'?N[id].parent:id;
+function tap(X,Y){const pl=pills.find(p=>X>=p.x&&X<=p.x+p.w&&Y>=p.y&&Y<=p.y+p.h); if(pl){fly(fit({x:Math.min(N[pl.id].x,N[SEL].x),y:Math.min(N[pl.id].y,N[SEL].y),w:Math.max(N[pl.id].x+N[pl.id].w,N[SEL].x+N[SEL].w)-Math.min(N[pl.id].x,N[SEL].x),h:Math.max(N[pl.id].y+N[pl.id].h,N[SEL].y+N[SEL].h)-Math.min(N[pl.id].y,N[SEL].y)})); return;}
+  const d=edgeAt(X,Y); if(d){showPop(d.g,X,Y,true); return;} hidePop(); const id=hit(X,Y); if(!id||N[id].kind==='package'){select(null); return;} const box=N[id].kind==='row'?N[id].parent:id;
   if(SEL===box) fly(fit(N[box])); else select(box);}
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect(); const id=hit((e.clientX-r.left)/U,(e.clientY-r.top)/U); if(id) fly(fit(N[N[id].kind==='row'?N[id].parent:id]));});
 
 /* ---------- the card of a selected box ---------- */
 const card=document.getElementById('card');
-const VERB={calls:['Llama a','La llaman'],owns:['Contiene','La contienen'],shares:['Comparte','La comparten'],refs:['Referencia','La referencian'],
-  inherits:['Hereda de','La heredan'],realises:['Realiza','La realizan'],uses:['Usa','La usan']};
-function select(id){SEL=id; RELATED=new Set(); if(!id){card.hidden=true; loop(); return;} const n=N[id];
+// the sections of the card, in the colours the canvas lights up in: what the box is related to, and through which member
+const SECTIONS=[
+  {key:'tax',title:'Taxonomía',kinds:['inherits','realises'],out:{inherits:'hereda de',realises:'realiza'},in:{inherits:'la heredan',realises:'la realizan'}},
+  {key:'owns',title:'Composición',kinds:['owns'],out:{owns:'compone'},in:{owns:'la componen'}},
+  {key:'agg',title:'Agregación',kinds:['refs','shares'],out:{refs:'referencia',shares:'comparte'},in:{refs:'la referencian',shares:'la comparten'}},
+  {key:'calls',title:'Llamadas',kinds:['calls'],out:{calls:'llama a'},in:{calls:'la llaman'}},
+  {key:'uses',title:'Usos',kinds:['uses'],out:{uses:'usa'},in:{uses:'la usan'}}];
+const qual=x=>{const n=N[x]; if(!n) return x; if(n.kind!=='row') return n.label; const p=N[n.parent]; return (p?p.label+'.':'')+short(x)+(n.label.includes('(')?'()':'');};
+const memberOf=x=>N[x]&&N[x].kind==='row'?short(x)+(N[x].label.includes('(')?'()':''):'';
+function dock(on){if(document.body.classList.contains('carded')===on) return; document.body.classList.toggle('carded',on); setTimeout(()=>{resize(); if(on&&SEL){const b=scr(N[SEL]); if(!onScreen(b)) fly(fit(N[SEL],.6));}},30);}
+function select(id){SEL=id; RELATED=new Set(); HLBOX=new Map(); HLROW=new Map(); if(!id){card.hidden=true; dock(false); loop(); return;} const n=N[id];
   const isUnit=n.kind==='unit'||n.kind==='iface', inside=x=>isUnit?unitOf(x)===id:anc(x).includes(id);
-  const groups={}; linksOf(id).forEach(l=>{const out=inside(l.from), other=isUnit?unitOf(out?l.to:l.from):(boxOf(out?l.to:l.from)||unitOf(out?l.to:l.from));
-    RELATED.add(unitOf(out?l.to:l.from)); anc(unitOf(out?l.to:l.from)).forEach(a=>RELATED.add(a));
-    const verb=VERB[l.kind][out?0:1]; (groups[verb]=groups[verb]||{}); groups[verb][other]=(groups[verb][other]||0)+l.count;});
+  const mark=(m,k,g)=>{if(!m.has(k)||GROUP_RANK[g]<GROUP_RANK[m.get(k)]) m.set(k,g);};
+  const entries=[];
+  linksOf(id).forEach(l=>{if(unitOf(l.from)===unitOf(l.to)) return; const out=inside(l.from), mine=out?l.from:l.to, far=out?l.to:l.from, other=unitOf(far);
+    RELATED.add(other); anc(other).forEach(a=>RELATED.add(a));
+    const g=GROUP[l.kind]; if(g){mark(HLBOX,other,g); [l.from,l.to].forEach(x=>{if(N[x]&&N[x].kind==='row') mark(HLROW,x,g);});}
+    entries.push({l,out,mine,far,other});});
   const rows=(KIDS[id]||[]).map(k=>N[k]).filter(k=>k.kind==='row'), boxes=(KIDS[id]||[]).map(k=>N[k]).filter(k=>k.kind!=='row');
   const reqs=[...new Set([...n.reqs,...rows.flatMap(r=>r.reqs)])];
-  let h=`<div class="hd"><span><span class="st">«${esc(n.st)}» ${esc(anc(id).slice(1).reverse().map(a=>N[a].label).join(' › '))}</span><br><b>${esc(n.label)}</b></span><span><button data-zoom="1">acercar</button><button class="x" data-close="1" aria-label="Cerrar">×</button></span></div>`;
-  if(rows.length){const priv=rows.filter(r=>r.vis==='-').length; h+=`<h4>${n.kind==='iface'?'Operaciones':'Miembros'} · ${rows.length}${priv?` (${priv} privados)`:''}</h4>`+rows.map(r=>`<div class="it" style="color:${r.vis==='-'?'var(--priv)':'inherit'}">${esc(r.label)}</div>`).join('');}
-  if(boxes.length) h+=`<h4>Contiene · ${boxes.length}</h4>`+boxes.map(b=>`<div class="it" data-sel="${esc(b.id)}">${esc(b.label)} <span class="st">«${esc(b.st)}»</span></div>`).join('');
-  Object.entries(groups).forEach(([verb,others])=>{const list=Object.entries(others).sort((a,b)=>b[1]-a[1]);
-    h+=`<h4>${verb} · ${list.length}</h4>`+list.map(([o,c])=>`<div class="it row" data-sel="${esc(o)}"><span>${esc(N[o]?N[o].label:o)} <span class="st">${esc(N[o]?(N[boxOf(o)]||{}).label||'':'')}</span></span><span class="n">${c>1?'×'+c:''}</span></div>`).join('');});
-  h+=`<h4>Requisitos · ${reqs.length}</h4>`+(reqs.length?reqs.map(r=>`<div class="rq">${esc(r)}</div>${TITLES[r]?`<div class="title">${esc(TITLES[r])}</div>`:''}`).join(''):'<div class="st">ninguno enlazado</div>');
+  const where=anc(id).slice(1).reverse().map(a=>N[a].label).join(' › ');
+  const priv=rows.filter(r=>r.vis==='-').length;
+  let h=`<div class="hd"><div><div class="st">«${esc(n.st)}» · ${esc(where)}</div><b>${esc(n.label)}</b>`+
+    `<div class="sum">${rows.length?`${rows.length} ${n.kind==='iface'?'operaciones':'miembros'}${priv?`, ${priv} privados`:''}`:''}${boxes.length?`${boxes.length} cajas`:''}`+
+    ` · <span class="${reqs.length?'ok':'warn'}">${reqs.length?reqs.length+' requisito'+(reqs.length>1?'s':''):'sin requisito'}</span></div></div>`+
+    `<span class="acts"><button data-zoom="1">acercar</button><button class="x" data-close="1" aria-label="Cerrar">×</button></span></div>`;
+  const sev=entries.length;
+  SECTIONS.forEach(sec=>{const es=entries.filter(e=>sec.kinds.includes(e.l.kind)); if(!es.length) return;
+    const col=sec.key==='tax'?'var(--fg)':`var(--r-${sec.key})`;
+    const half=dir=>{const xs=es.filter(e=>e.out===dir); if(!xs.length) return '';
+      const by={}; xs.forEach(e=>{const verb=(dir?sec.out:sec.in)[e.l.kind]; (by[verb]=by[verb]||[]).push(e);});
+      return Object.entries(by).map(([verb,list])=>`<div class="verb">${esc(verb)}</div>`+list.sort((a,b)=>b.l.count-a.l.count).slice(0,14).map(e=>{
+        const mine=memberOf(e.mine), far=qual(e.far), mult=e.l.multiplicity?` <span class="n">[${esc(e.l.multiplicity)}]</span>`:'', cnt=e.l.count>1?` <span class="n">×${e.l.count}</span>`:'';
+        const line=dir?(mine?`<span class="me">${esc(mine)}</span> → `:'')+`<span class="far">${esc(far)}</span>`
+                      :`<span class="far">${esc(far)}</span>`+(mine?` → <span class="me">${esc(mine)}</span>`:'');
+        return `<div class="rel" data-sel="${esc(e.other)}" data-rows="${esc([e.mine,e.far].join('|'))}">${line}${mult}${cnt}<span class="mod">${esc((N[boxOf(e.other)]||{}).label||'')}</span></div>`;}).join('')+(list.length>14?`<div class="n">y ${list.length-14} más</div>`:'')).join('');};
+    h+=`<section style="--c:${col}"><h4>${esc(sec.title)} <span class="n">${es.length}</span></h4>${half(true)}${half(false)}</section>`;});
+  if(!sev) h+=`<section><h4>Relaciones</h4><div class="n">ninguna fuera de la caja</div></section>`;
+  if(reqs.length) h+=`<section class="rqs"><h4>Requisitos <span class="n">${reqs.length}</span></h4>`+reqs.map(r=>`<div class="rq"><b>${esc(r)}</b>${TITLES[r]?` ${esc(TITLES[r])}`:''}</div>`).join('')+`</section>`;
   const inTours=TOURS.map(t=>[t,t.steps.findIndex(s=>!s.ret&&(inside(s.f)||inside(s.t)))]).filter(([,i])=>i>=0);
-  if(inTours.length) h+=`<h4>Aparece en recorridos · ${inTours.length}</h4>`+inTours.slice(0,12).map(([t,i])=>`<div class="it row" data-tour="${esc(t.id)}" data-i="${i}"><span>▶ ${esc(tourName(t))}</span><span class="n">paso ${i+1} · prof. ${t.steps[i].d}</span></div>`).join('');
+  if(inTours.length) h+=`<section><h4>Recorridos <span class="n">${inTours.length}</span></h4>`+inTours.slice(0,8).map(([t,i])=>`<div class="rel" data-tour="${esc(t.id)}" data-i="${i}">▶ ${esc(tourName(t))}<span class="mod">paso ${i+1}</span></div>`).join('')+(inTours.length>8?`<div class="n">y ${inTours.length-8} más</div>`:'')+`</section>`;
   const dg=DIAGS.filter(d=>d.nodes.includes(id)).map(d=>d.name);
-  h+=`<h4>Sale en los diagramas · ${dg.length}</h4>`+(dg.length?dg.map(d=>`<span class="tag">${esc(d)}</span>`).join(''):'<div class="st">ninguno</div>');
-  card.innerHTML=h; card.hidden=false; loop();}
+  if(dg.length) h+=`<section><h4>Diagramas <span class="n">${dg.length}</span></h4>`+dg.map(d=>`<span class="tag">${esc(d)}</span>`).join('')+`</section>`;
+  card.innerHTML=h; card.hidden=false; dock(true); loop();}
+// hovering a relation marks its members on the canvas
+card.addEventListener('pointerover',e=>{const r=e.target.closest('[data-rows]'); ACTIVE=new Set(r?r.dataset.rows.split('|').filter(x=>N[x]).flatMap(x=>[x,unitOf(x)]):[]); loop();});
+card.addEventListener('pointerleave',()=>{if(T.idx<0){ACTIVE=new Set(); loop();}});
 card.addEventListener('click',e=>{if(e.target.closest('[data-close]')) return select(null); if(e.target.closest('[data-zoom]')) return fly(fit(N[SEL]));
-  const s=e.target.closest('[data-sel]'); if(s){select(s.dataset.sel); fly(fit(N[s.dataset.sel]));}
+  const s=e.target.closest('[data-sel]'); if(s){const o=N[s.dataset.sel], m=N[SEL]; if(e.detail>1){select(s.dataset.sel); fly(fit(o)); return;}
+    const x0=Math.min(o.x,m.x), y0=Math.min(o.y,m.y); fly(fit({x:x0,y:y0,w:Math.max(o.x+o.w,m.x+m.w)-x0,h:Math.max(o.y+o.h,m.y+m.h)-y0},.25));}
   const p=e.target.closest('[data-tour]'); if(p) playAt(p.dataset.tour,+p.dataset.i);});
 addEventListener('keydown',e=>{if(e.key==='Escape') select(null);});
+window.dsViewer={box:id=>N[id]&&{...scr(N[id]),U},select};  // where a box is on screen, for tests and for a host page
 
 /* ---------- private members: in or out, the boxes follow ---------- */
 let showPriv=true;

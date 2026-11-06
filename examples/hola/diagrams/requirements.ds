@@ -1,0 +1,4 @@
+diagram REQ_Hola {
+  kind: requirement
+  include: hola@*
+}

@@ -1,0 +1,11 @@
+diagram SEQ_Run {
+  kind: sequence
+  include: hola@app::App::run
+  depth: 1
+}
+
+diagram SEQ_EmptyName {
+  kind: sequence
+  include: hola@app::App::run / empty-name
+  depth: 1
+}

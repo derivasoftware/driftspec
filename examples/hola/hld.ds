@@ -1,0 +1,17 @@
+// hola: a greeting, from the command line and from a web page. The example the
+// viewer is tried on (ds render examples/hola): two external interfaces, three
+// modules, a taxonomy inside a module (Formal and Casual realise the interface
+// Style), one across modules (Console and Response inherit the abstract Channel),
+// and every kind of ownership (Greeter owns, refers to and shares).
+//
+// The high level design: the boxes of the system and what each one is for.
+//
+//   core    the logic, with no idea what runs it
+//   app     the command line process: a command line into a call and an exit code
+//   server  the web process: a request into a call and a response
+
+package hola {
+  module core { }
+  module app { }
+  module server { }
+}

@@ -27,6 +27,7 @@ const double kRow = 11, kHead = 22, kUnitPadBottom = 6, kCharWidth = 3.95, kUnit
 const double kModulePad = 24, kModuleHead = 46, kUnitGap = 22;
 const double kPackagePad = 60, kPackageHead = 90, kBoxGap = 70, kLeftForInterfaces = 300;
 const double kInterfaceW = 360, kOperationRow = 30, kTopGap = 120;
+const double kTreeGap = 44;  // between a base and the row of what inherits from it: room for the trunk
 
 /// The size of a box and where its children sit, relative to its top left corner.
 struct Shape {
@@ -106,6 +107,7 @@ class Layout {
     }
     for (const auto& r : model.relations()) {
       if (r.kind == "requires" || r.kind == "constrained-by") linked_[r.from].push_back(r.to);
+      if (r.kind == "inherits" || r.kind == "realises") bases_[r.from].push_back(r.to);
     }
   }
 
@@ -141,6 +143,53 @@ class Layout {
   }
   std::map<std::string, std::vector<const model::Entity*>> byScope_;
   std::map<std::string, std::vector<std::string>> linked_;  // requirements and constraints, by the entity linked to them
+  std::map<std::string, std::vector<std::string>> bases_;   // what each class inherits from or realises
+
+  // the taxonomy of a module: each unit under the first base it has in the same module
+  std::map<std::string, std::string> taxonomy(const std::vector<std::pair<std::string, std::pair<double, double>>>& units) const {
+    std::set<std::string> here;
+    for (const auto& u : units) here.insert(u.first);
+    std::map<std::string, std::string> base;
+    for (const auto& u : units) {
+      const auto it = bases_.find(u.first);
+      if (it == bases_.end()) continue;
+      for (const auto& b : it->second) {
+        if (b == u.first || !here.count(b)) continue;
+        std::string up = b;  // never under one of its own descendants
+        while (base.count(up) && up != u.first) up = base.at(up);
+        if (up == u.first) continue;
+        base[u.first] = b;
+        break;
+      }
+    }
+    return base;
+  }
+
+  // a tree of a taxonomy as one block: the base centred over the row of what inherits from it
+  std::string tree(const std::string& root, const std::map<std::string, std::vector<std::string>>& below) {
+    const auto kids = below.find(root);
+    if (kids == below.end()) return root;
+    Shape block;
+    std::vector<std::pair<std::string, std::pair<double, double>>> row;
+    double x = 0, rowH = 0;
+    for (const auto& k : kids->second) {
+      const std::string b = tree(k, below);
+      row.push_back({b, {x, 0}});
+      x += shapes[b].w + kUnitGap;
+      rowH = std::max(rowH, shapes[b].h);
+    }
+    const double rowW = x - kUnitGap, baseW = shapes[root].w, baseH = shapes[root].h;
+    block.w = std::max(rowW, baseW);
+    block.kids.push_back({root, {(block.w - baseW) / 2, 0}});
+    for (auto& r : row) {
+      r.second = {r.second.first + (block.w - rowW) / 2, baseH + kTreeGap};
+      block.kids.push_back(r);
+    }
+    block.h = baseH + kTreeGap + rowH;
+    const std::string id = root + "#tree";
+    shapes[id] = block;
+    return id;
+  }
   Shape root_;
 
   const std::vector<const model::Entity*>& children(const std::string& scope) {
@@ -167,6 +216,15 @@ class Layout {
            const std::string& vis, const std::string& linkedFrom, double w, double h) {
     node(id, "row", parent, label, stereotype, vis, linkedFrom);
     shapes[id] = {w, h, {}};
+  }
+
+  // what a box says it is: interface and abstract are derived by the checker (R14), never written
+  static std::string stereotypeOf(const model::Entity& e) {
+    if (e.has("dataclass")) return "dataclass";
+    const std::string derived = field(e, "stereotypes");
+    if (derived.find("interface") != std::string::npos) return "interface";
+    if (derived.find("abstract") != std::string::npos) return "abstract";
+    return model::kindName(e.kind);
   }
 
   std::string unit(const model::Entity& e, const std::string& parent) {
@@ -206,7 +264,11 @@ class Layout {
         rows.push_back({m->id, label, model::kindName(m->kind), vis, m->id});
       }
     }
-    double widest = static_cast<double>(characters(e.name)) * 1.6 + 14;
+    double title = static_cast<double>(characters(e.name));
+    const auto bases = bases_.find(e.id);  // a header may name what it inherits from: Console ◁ Channel
+    if (bases != bases_.end())
+      for (const auto& b : bases->second) title += static_cast<double>(characters(b.substr(b.rfind(':') + 1))) * 0.85 + 3;
+    double widest = title * 1.6 + 14;
     for (const auto& r : rows) widest = std::max(widest, static_cast<double>(characters(r.label)));
     const double w = std::max(kUnitMinW, std::min(kUnitMaxW, widest * kCharWidth + 18));
     Shape s{w, kHead + static_cast<double>(rows.size()) * kRow + kUnitPadBottom, {}};
@@ -214,7 +276,7 @@ class Layout {
       row(rows[i].id, e.id, rows[i].label, rows[i].stereotype, rows[i].vis, rows[i].from, w, kRow);
       s.kids.push_back({rows[i].id, {0, kHead + static_cast<double>(i) * kRow}});
     }
-    node(e.id, "unit", parent, e.name, e.has("dataclass") ? "dataclass" : model::kindName(e.kind), visibility(e), e.id);
+    node(e.id, "unit", parent, e.name, stereotypeOf(e), visibility(e), e.id);
     shapes[e.id] = s;
     return e.id;
   }
@@ -236,6 +298,23 @@ class Layout {
         units.push_back({unit(*k, e.id), {0, 0}});
     }
     std::stable_sort(units.begin(), units.end(), [&](const auto& a, const auto& b) { return shapes[a.first].h > shapes[b.first].h; });
+    // the taxonomy shapes the module: every tree of inheritance is one block, base above
+    const auto base = taxonomy(units);
+    std::map<std::string, std::vector<std::string>> below;
+    for (const auto& u : units) {
+      const auto b = base.find(u.first);
+      if (b != base.end()) below[b->second].push_back(u.first);
+    }
+    std::vector<std::pair<std::string, std::pair<double, double>>> blocks;
+    for (const auto& u : units) {
+      if (!base.count(u.first)) blocks.push_back({tree(u.first, below), {0, 0}});
+    }
+    std::stable_sort(blocks.begin(), blocks.end(), [&](const auto& a, const auto& b) {
+      const bool aTree = a.first.size() > 5 && a.first.compare(a.first.size() - 5, 5, "#tree") == 0;
+      const bool bTree = b.first.size() > 5 && b.first.compare(b.first.size() - 5, 5, "#tree") == 0;
+      return aTree != bTree ? aTree : false;
+    });
+    units = blocks;
     units.insert(units.end(), boxes.begin(), boxes.end());
     const auto size = shelf(units, shapes, kUnitGap, width(e.id, target(units, shapes, 260, 1.5)));
     keep(e.id, size.first);
@@ -270,6 +349,7 @@ class Layout {
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Interface) interfaces.push_back({interface(*k, e.id), {0, 0}});
     }
+    order(boxes);
     const auto size = shelf(boxes, shapes, kBoxGap, width(e.id, target(boxes, shapes, 0, 1.6)));
     keep(e.id, size.first);
     const double left = interfaces.empty() ? kPackagePad : kLeftForInterfaces;
@@ -285,9 +365,37 @@ class Layout {
     return e.id;
   }
 
+  // a box whose classes are inherited from comes before the boxes that inherit: bases read first
+  void order(std::vector<std::pair<std::string, std::pair<double, double>>>& boxes) const {
+    const auto inside = [](const std::string& id, const std::string& box) { return id.compare(0, box.size() + 2, box + "::") == 0; };
+    const auto heirOf = [&](const std::string& heir, const std::string& base) {
+      for (const auto& pair : bases_) {
+        if (!inside(pair.first, heir)) continue;
+        for (const auto& b : pair.second)
+          if (inside(b, base)) return true;
+      }
+      return false;
+    };
+    std::vector<std::pair<std::string, std::pair<double, double>>> done;
+    std::vector<bool> taken(boxes.size(), false);
+    while (done.size() < boxes.size()) {
+      size_t pick = boxes.size();
+      for (size_t i = 0; i < boxes.size() && pick == boxes.size(); ++i) {
+        if (taken[i]) continue;
+        bool waits = false;
+        for (size_t j = 0; j < boxes.size() && !waits; ++j) waits = !taken[j] && j != i && heirOf(boxes[i].first, boxes[j].first);
+        if (!waits) pick = i;
+      }
+      if (pick == boxes.size()) pick = std::find(taken.begin(), taken.end(), false) - taken.begin();  // a cycle: keep the order written
+      taken[pick] = true;
+      done.push_back(boxes[pick]);
+    }
+    boxes = done;
+  }
+
   void place(const std::string& id, double x, double y) {
     const Shape& s = shapes.at(id);
-    nodes[id].full = {x, y, s.w, s.h};
+    if (nodes.count(id)) nodes[id].full = {x, y, s.w, s.h};  // a tree of a taxonomy only groups
     for (const auto& k : s.kids) place(k.first, x + k.second.first, y + k.second.second);
   }
 };
@@ -342,11 +450,15 @@ void Scene::relate(SceneDocument& out_document) const {
     if (!kinds.count(r.kind)) continue;
     const std::string from = nodeFor(ids, r.from), to = nodeFor(ids, r.to);
     if (from.empty() || to.empty() || from == to || parent[from] == to || parent[to] == from) continue;  // within one box
-    const auto key = std::make_tuple(from, to, r.kind);
+    // a class that inherits from an interface realises it: the checker derives the interface (R14)
+    const model::Entity* target = model_.find(r.to);
+    const bool realises = r.kind == "inherits" && target && field(*target, "stereotypes").find("interface") != std::string::npos;
+    const std::string kind = realises ? "realises" : r.kind;
+    const auto key = std::make_tuple(from, to, kind);
     Link& link = links[key];
     link.from = from;
     link.to = to;
-    link.kind = r.kind;
+    link.kind = kind;
     ++link.count;
     if (!r.multiplicity.empty()) link.multiplicity = r.multiplicity;
     if (r.kind == "calls") sequences[key].insert(r.from.substr(0, r.from.rfind("::")));
@@ -388,6 +500,10 @@ SceneDocument Scene::build() const {
   SceneDocument doc;
   // nodes in drawing order: parents before children, as the full layout placed them
   std::function<void(const std::string&)> walk = [&](const std::string& id) {
+    if (!full.nodes.count(id)) {  // a tree of a taxonomy groups units without being drawn
+      for (const auto& k : full.shapes.at(id).kids) walk(k.first);
+      return;
+    }
     Node n = full.nodes.at(id);
     const auto l = lean.nodes.find(id);
     if (l != lean.nodes.end()) {

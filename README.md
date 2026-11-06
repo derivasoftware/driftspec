@@ -13,6 +13,8 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
   - `ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]` — the changes in the model's terms, or a diagram with them marked.
   - `ds query <workspace> <question> [subject] [--json]` — diagrams, entities, relations, artefacts, behaviours, shows, findings, coupling.
 - `viewer/` — the viewer page compiled into ds (`scene.html`) and its themes (`themes/night.css`, for `--css`).
+  In the viewer, classes sit under the class they inherit from, and inheritance is the only relation drawn as a line; touching a box lights up what it composes, aggregates, calls and uses, each in its colour, and docks its card on the right. Tours play along the bottom.
+- `examples/hola/` — the example the viewer is tried on: `ds render examples/hola -o hola.html`.
 - `examples/diag/` — the reference workspace, one entity per file.
 - `tests/unit/ds/` — GoogleTest suites, mirroring the namespaces; `tests/system/ds/` drives the binary from outside.
 

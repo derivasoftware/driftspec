@@ -1,7 +1,8 @@
 // LLD of the scene namespace (ds::scene): the whole model laid out once, nested, for a
 // viewer that zooms from the system down to a member (SREQ-00013-1, DS-69). Every box is
-// measured from what it holds and placed inside its parent in shelves; the layout runs
-// twice, with every member and with public members only, and nothing moves between zooms.
+// measured from what it holds and placed inside its parent in shelves, a module's classes
+// grouped by their taxonomy, bases above heirs; the layout runs twice, with every member
+// and with public members only, and nothing moves between zooms.
 
 package driftspec@ds {
 
@@ -92,37 +93,109 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
     }
 
-    requirement REQ-00072-1 {
+    requirement REQ-00072-2 {
       status: approved
       @refines SREQ-00013-1
-      title: The scene shall carry each relation between its nodes with its kind and what produces it, the diagrams that show each node, and the title of every requirement linked
+      title: The scene shall carry each relation between its nodes with its kind and what produces it, and the viewer shall draw only inheritance as lines and light the rest up on the box touched
       text:
         A link joins the nodes that stand for a relation's ends: a call goes
         from the member whose behaviour writes it to the member it calls,
         with how many times and the sequences that write it; ownership,
         sharing and reference go from the attribute to the type, with their
         multiplicity; inheritance, realisation and use join the boxes they
-        name. A relation inside one box is no link. Every diagram of the
-        workspace lists the nodes it shows, through the same projection a
-        drawing uses. The viewer draws each kind in its notation (a hollow
-        triangle for inheritance, a filled diamond for composition, a dashed
-        arrow for use, the accent for calls), lifted to the boxes that can be
-        seen, and on demand.
+        name, and inheriting from a class the checker derives as an interface
+        is realising it. A relation inside one box is no link. Every diagram
+        of the workspace lists the nodes it shows, through the same
+        projection a drawing uses, and the scene carries the title of every
+        requirement linked.
+        The viewer draws inheritance and realisation as lines, a hollow
+        triangle on the base, solid or dashed; across modules a line is drawn
+        only when one of its boxes is touched, and the heir's header names
+        its base (Console ◁ Channel). The other relations are never lines:
+        touching a box lights up every box related to it in the colour of the
+        relation (composes, aggregates, calls, uses) and the member rows that
+        hold it in both boxes, and a related box out of sight shows as a pill
+        on the edge of the screen that frames both. The card of the box lists
+        its relations in the same colours, each with the member it goes
+        through (history → Greeting [*], App.run() → valid()).
       rationale:
-        Owner, 2026-11-06: the relations, each in its own rendering, and on
-        a box or a relation the detail of where it comes from and where it is
-        drawn.
+        Owner, 2026-11-06: an arrow for every relation made the design of ds
+        "un caos", lines crossing boxes; the colours "quitan el horror de las
+        flechas por el medio", and inheritance is the one relation whose line
+        reads, because it is the taxonomy. Revises REQ-00072-1, which drew
+        every kind in its notation.
       tags: render, scene, relations
     }
 
-    verification VER-00080-1 {
+    verification VER-00080-2 {
       status: approved
-      @requirement REQ-00072-1
-      title: Integration tests confirm every link of ds's design joins two nodes in a kind the viewer draws, every diagram lists nodes of the scene, every requirement has its title
+      @requirement REQ-00072-2
+      title: Integration tests confirm every link of ds's design joins two nodes in a kind the viewer knows, every diagram lists nodes of the scene, every requirement has its title, inheriting from an interface realises it, and the page lights relations up instead of drawing them
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AClassThatInheritsFromAnInterfaceRealisesIt
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
+    }
+
+    requirement REQ-00076-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall place a module's classes by their taxonomy, each base centred above the row of what inherits from it, and modules that hold bases before those that inherit
+      text:
+        Inside a module every tree of inheritance and realisation is one
+        block: the base on top, centred over the row of its heirs, with room
+        between them for one trunk; a class with no base in its module stands
+        alone. A tree only groups: its classes stay children of their module.
+        In a package, a module whose classes are inherited from comes before
+        the modules that inherit from them. A box says the stereotype the
+        checker derives, interface or abstract, and its header is wide enough
+        to name a base in another module.
+      rationale:
+        Owner, 2026-11-06: the classes should be ordered by inheritance,
+        which is what defines a taxonomy; placed by it, the lines of
+        inheritance come out short and straight and the rest of the module
+        reads around them.
+      tags: render, scene, layout
+    }
+
+    verification VER-00085-1 {
+      status: approved
+      @requirement REQ-00076-1
+      title: Integration tests confirm the classes of examples/hola sit under their bases in both variants, with derived stereotypes, and core comes before the modules that inherit from it
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.HeirsSitInARowBelowTheirBaseCentredOverThem
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.InterfaceAndAbstractAreTheStereotypesTheCheckerDerives
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheModuleThatHoldsTheBasesComesBeforeTheModulesThatInherit
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AHeaderThatNamesABaseInAnotherModuleIsWideEnoughForIt
+    }
+
+    requirement REQ-00077-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall dock the card of a box on the right and play a tour along the bottom, so a reader keeps both open beside the canvas
+      text:
+        On a desktop the card of the box touched docks on the right and the
+        canvas makes room for it; a tour plays in a panel along the bottom,
+        its controls in one row above the sequence, and the canvas keeps the
+        space between them. The legend and the minimap step aside while a
+        tour plays. On a phone there is room for one panel at the bottom: the
+        tour hides the card, which comes back when the tour closes.
+      rationale:
+        Owner, 2026-11-06: the card floating over the canvas hid what lit
+        up, and opening a tour pushed it away; "en pc se ve mucho mejor así".
+      tags: render, viewer
+    }
+
+    verification VER-00086-1 {
+      status: approved
+      @requirement REQ-00077-1
+      title: Integration tests confirm the page of examples/hola docks its card on the right and plays its tour along the bottom
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
     }
 
     verification VER-00081-1 {
@@ -253,7 +326,7 @@ package driftspec@ds {
     }
 
     dataclass Link {                         // a relation between two nodes, with what produces it
-      @requirement REQ-00072-1
+      @requirement REQ-00072-2
       + from: std::string
       + to: std::string
       + kind: std::string
@@ -263,7 +336,7 @@ package driftspec@ds {
     }
 
     dataclass DiagramView {                  // a diagram of the workspace and the nodes it shows
-      @requirement REQ-00072-1
+      @requirement REQ-00072-2
       + name: std::string
       + kind: std::string
       + nodes: std::vector<std::string>
@@ -307,14 +380,18 @@ package driftspec@ds {
       @requirement REQ-00069-1
       - refs model_: model::Model
       + Scene(model: model::Model)
-      + build() -> SceneDocument
+      + build() -> SceneDocument {
+        @requirement REQ-00069-1
+        @requirement REQ-00076-1
+      }
       + render(pretty: bool) -> std::string
       + page(title: std::string, css: std::string, focus: std::vector<std::string>) -> std::string {
         @requirement REQ-00070-1
         @requirement REQ-00071-1
+        @requirement REQ-00077-1
       }
       - relate(out_document: SceneDocument) -> void {
-        @requirement REQ-00072-1
+        @requirement REQ-00072-2
       }
       - tour(out_document: SceneDocument) -> void {
         @requirement REQ-00073-1

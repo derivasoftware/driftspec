@@ -19,6 +19,10 @@
   --k-function: #56d4b0;
   --k-dataclass: #c297ff;
   --k-enum: #e3b341;
+  --r-owns: #f778ba;      /* what a touched box composes, aggregates, calls and uses */
+  --r-agg: #39c5cf;
+  --r-uses: #a5b4fc;
+  --r-calls: #ff7b72;
   --ok: #3fb950;          /* linked to a requirement */
   --warn: #f0883e;        /* linked to none */
   --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
