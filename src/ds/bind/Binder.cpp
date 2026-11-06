@@ -649,6 +649,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity& declared = model_.declare(e);
       if (isPrivate) declared.fields["visibility"] = "-";  // a module reopens: any declaration may say it
       if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
+      bindAnnotations(file, c, declared.id, declared.id);  // a module answers to its requirements, as a package does
       visit(file, c, declared.id, declared.id);
 
     } else if (is(c, "requirement") || is(c, "verification") || is(c, "constraint")) {

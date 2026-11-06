@@ -173,16 +173,21 @@ package driftspec@ds {
             boxes are organisation and drop out of the qualified name.
           rationale: decided 2026-10-26 with argos's reading by namespace (R4).
         }
-        requirement REQ-00017-1 {
+        requirement REQ-00017-2 {
           tags: language, hld
           status: approved
-          title: A package shall realise requirements and carry constraints through annotations, like a class
-          text: @requirement and @constraint in the package body.
-          verification VER-00014-1 {
+          title: A package or a module shall realise requirements and carry constraints through annotations, like a class
+          text: @requirement and @constraint in the package or module body.
+          rationale:
+            Revises REQ-00017-1, which named the package only: the metamodel let
+            a module answer to a requirement but the grammar did not let one
+            write it (DS-82, found by a newcomer agent, 2026-11-06).
+          verification VER-00014-2 {
             status: approved
             method: test
             tests:
               tests/integration/ds/bind/test_packages.cpp::TestPackages.ABoxRealisesRequirementsLikeAClass
+              tests/integration/ds/bind/test_module_annotations.cpp::TestModuleAnnotations.AModuleAnswersToTheRequirementItsBodyNames
           }
         }
         requirement REQ-00018-1 {

@@ -24,11 +24,11 @@ TEST_F(TestSyntaxErrors, AWordTheGrammarDoesNotTakeNamesWhatTheModuleTakes) {
   EXPECT_NE(detail.find("it takes class, constraint, dataclass"), std::string::npos) << detail;
 }
 
-TEST_F(TestSyntaxErrors, ABlockClosedEarlyNamesWhatItWouldHaveTaken) {
-  // an annotation a module does not take: the parser closes the module, and says what it takes
-  const std::string detail = detailOf("package p {\n  module m {\n    @requirement REQ-1\n    class A { }\n  }\n}\n");
-  EXPECT_NE(detail.find("missing `}` in a module, which takes"), std::string::npos) << detail;
-  EXPECT_EQ(detail.find("@annotation"), std::string::npos) << detail;
+TEST_F(TestSyntaxErrors, ADeclarationAnInterfaceDoesNotHoldNamesWhatItHolds) {
+  // a class is no part of an interface: it takes operations, annotations and fields
+  const std::string detail = detailOf("package p {\n  interface i {\n    class A { }\n  }\n}\n");
+  EXPECT_NE(detail.find("unexpected `class A {` in an interface"), std::string::npos) << detail;
+  EXPECT_NE(detail.find("it takes operation, @annotation, key: value"), std::string::npos) << detail;
 }
 
 }  // namespace

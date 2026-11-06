@@ -65,7 +65,7 @@ package driftspec@ds {
         @requirement REQ-00020-2
         @requirement REQ-00015-1
         @requirement REQ-00022-1
-        @requirement REQ-00017-1
+        @requirement REQ-00017-2
       }
       - bindFields(file: parse::ParsedFile, node: TSNode, entity: model::Entity) -> void {
         @requirement REQ-00032-1

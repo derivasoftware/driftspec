@@ -68,7 +68,7 @@ package driftspec@ds {
       method: test
       tests:
         tests/integration/ds/parse/test_syntax_errors.cpp::TestSyntaxErrors.AWordTheGrammarDoesNotTakeNamesWhatTheModuleTakes
-        tests/integration/ds/parse/test_syntax_errors.cpp::TestSyntaxErrors.ABlockClosedEarlyNamesWhatItWouldHaveTaken
+        tests/integration/ds/parse/test_syntax_errors.cpp::TestSyntaxErrors.ADeclarationAnInterfaceDoesNotHoldNamesWhatItHolds
     }
 
     dataclass ParsedFile {                   // one file read: its path, text, tree and whether it parsed
