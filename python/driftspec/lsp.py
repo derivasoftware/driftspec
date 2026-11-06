@@ -195,9 +195,18 @@ STRUCTURE = {"package", "module", "class", "enum", "function", "method", "attrib
 ARTEFACT = {"requirement", "constraint", "verification", "usecase"}
 
 
-def subject_at(ls: LanguageServer, uri: str, line: int, character: int) -> tuple[str, str]:
-    """('diagram', name) for a diagram under the cursor, ('entity', id) for an entity, or ('', '')."""
-    word = word_at(ls, uri, lsp.Position(line, character))
+def subject_at(ls: LanguageServer, uri: str, line: int, character: int, typed: str = "") -> tuple[str, str]:
+    """('diagram', name) for a diagram under the cursor, ('entity', id) for an entity, or ('', word).
+    The editor may send the word it sees under the cursor too: it is tried when the position finds nothing
+    (a column counted in bytes against one counted in characters, past an accent or an arrow)."""
+    for word in (word_at(ls, uri, lsp.Position(line, character)), WORD.search(typed or "") and WORD.search(typed).group(0) or ""):
+        what, name = subject_of(word)
+        if what:
+            return what, name
+    return "", word_at(ls, uri, lsp.Position(line, character)) or typed
+
+
+def subject_of(word: str) -> tuple[str, str]:
     model: driftspec.Model = state["model"]
     if model and (model.find("diagram:" + word) or model.find(word) and model.find(word).kind == "diagram"):
         return "diagram", word.removeprefix("diagram:")
@@ -216,12 +225,12 @@ def with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], st
 
 
 @server.command("driftspec.draw")
-def draw(ls: LanguageServer, uri: str, line: int, character: int, width: int = 0) -> dict:
+def draw(ls: LanguageServer, uri: str, line: int, character: int, width: int = 0, typed: str = "") -> dict:
     line, character, width = int(line), int(character), int(width)
     ws = use(ls, uri)
-    what, name = subject_at(ls, uri, line, character)
+    what, name = subject_at(ls, uri, line, character, typed)
     if not what:
-        return {"title": "", "text": "nothing to draw here: put the cursor on a diagram or an entity"}
+        return {"title": "", "text": f"nothing in {ws} is named '{name}': put the cursor on a diagram or an entity"}
     files = workspace_files(ls, ws)
     if what == "entity":
         files, diagram = with_focus(files, name)
@@ -243,12 +252,12 @@ def open_in_browser(path: str) -> None:
 
 
 @server.command("driftspec.view")
-def view(ls: LanguageServer, uri: str, line: int, character: int) -> dict:
+def view(ls: LanguageServer, uri: str, line: int, character: int, _width: int = 0, typed: str = "") -> dict:
     import json as _json
 
     line, character = int(line), int(character)
     ws = use(ls, uri)
-    what, name = subject_at(ls, uri, line, character)
+    what, name = subject_at(ls, uri, line, character, typed)
     files = workspace_files(ls, ws)
     if what == "diagram":  # framed on what the diagram shows, as ds render <ws> <diagram> does
         ir = driftspec.render(files, name, "ir", 0)
