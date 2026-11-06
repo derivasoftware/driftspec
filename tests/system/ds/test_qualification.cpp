@@ -173,6 +173,20 @@ TEST_F(TestQualification, TheViewerIsOnePageWithTheWholeModelInside) {
   for (const auto& n : scene["nodes"]) EXPECT_NE(run.out.find("\"" + n["id"].get<std::string>() + "\""), std::string::npos) << n["id"];
 }
 
+// SREQ-00013-1: the viewer embeds into another document as one frame, in the reader's colours
+TEST_F(TestQualification, TheViewerEmbedsAsAFrameInTheReadersColours) {
+  const std::string tmp =
+      std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-theme-" + std::to_string(::getpid()) + ".css";
+  std::ofstream(tmp) << ":root{--bg:#0e1116}";
+  const Outcome run = ds("view " + examples("static") + " --embed --height 420 --css " + tmp);
+  std::remove(tmp.c_str());
+  EXPECT_EQ(run.code, 0);
+  EXPECT_EQ(run.out.rfind("<iframe ", 0), 0u);
+  EXPECT_NE(run.out.find("height:420px"), std::string::npos);
+  EXPECT_NE(run.out.find("--bg:#0e1116"), std::string::npos);
+  EXPECT_EQ(ds("view " + examples("static") + " --css /no/such.css").code, 2);  // a stylesheet that is not there is bad usage
+}
+
 // SREQ-00007-1: the difference between two versions, in the model's terms
 TEST_F(TestQualification, TwoVersionsAreComparedByIdentity) {
   const Outcome same = ds("diff " + examples("static") + " " + examples("static"));

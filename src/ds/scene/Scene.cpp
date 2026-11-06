@@ -337,7 +337,7 @@ std::string Scene::render(bool pretty) const {
   return pretty ? out.dump(2) : out.dump();
 }
 
-std::string Scene::page(const std::string& title) const {
+std::string Scene::page(const std::string& title, const std::string& css) const {
   std::string json = render(false);
   for (size_t at = json.find("</"); at != std::string::npos; at = json.find("</", at + 2))
     json.replace(at, 2, "<\\/");  // never closes the script
@@ -347,9 +347,23 @@ std::string Scene::page(const std::string& title) const {
   const auto put = [&out](const std::string& mark, const std::string& value) {
     for (size_t at = out.find(mark); at != std::string::npos; at = out.find(mark, at + value.size())) out.replace(at, mark.size(), value);
   };
+  std::string style = css;
+  for (size_t at = style.find("</"); at != std::string::npos; at = style.find("</", at + 3)) style.replace(at, 2, "<\\/");
   put("/*SCENE*/", json);
   put("/*TITLE*/", safe);
+  put("/*CSS*/", style);
   return out;
+}
+
+std::string Scene::frame(const std::string& page, const std::string& title, int height) {
+  const auto attribute = [](const std::string& text) {
+    std::string out;
+    out.reserve(text.size() + text.size() / 8);
+    for (const char c : text) out += c == '&' ? "&amp;" : c == '"' ? "&quot;" : c == '<' ? "&lt;" : c == '>' ? "&gt;" : std::string(1, c);
+    return out;
+  };
+  return "<iframe title=\"" + attribute(title) + " \u00b7 DriftSpec\" style=\"width:100%;height:" + std::to_string(height) +
+         "px;border:0;border-radius:8px\" loading=\"lazy\" allowfullscreen srcdoc=\"" + attribute(page) + "\"></iframe>\n";
 }
 
 }  // namespace scene

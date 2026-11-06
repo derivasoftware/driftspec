@@ -46,8 +46,11 @@ class Scene {
   explicit Scene(const model::Model& model);
   SceneDocument build() const;
   std::string render(bool pretty = true) const;
-  /// The viewer as one self-contained HTML page with this scene inside, titled after the workspace.
-  std::string page(const std::string& title) const;
+  /// The viewer as one self-contained HTML page with this scene inside, titled after the workspace;
+  /// css, when given, is the reader's stylesheet, applied after the viewer's.
+  std::string page(const std::string& title, const std::string& css = "") const;
+  /// A page as an iframe that carries it whole (srcdoc), to paste into any HTML document.
+  static std::string frame(const std::string& page, const std::string& title, int height);
 
  private:
   const model::Model& model_;

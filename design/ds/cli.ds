@@ -68,8 +68,8 @@ package driftspec@ds {
 
     operation view(workspace: path) -> none {
       @requirement SREQ-00013-1
-      command: ds view <workspace> > model.html
-      stdout: the viewer page with the whole scene inside, to open in a browser
+      command: ds view <workspace> [--embed [--height N]] [--css file]
+      stdout: the viewer page with the whole scene inside, to open in a browser; with --embed, an iframe carrying it
       exit 0: default
       exit 1: no-workspace
     }

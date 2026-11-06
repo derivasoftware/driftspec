@@ -87,6 +87,7 @@ package driftspec {
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TheViewerIsOnePageWithTheWholeModelInside
+      tests/system/ds/test_qualification.cpp::TestQualification.TheViewerEmbedsAsAFrameInTheReadersColours
   }
 
   verification SVER-00006-1 {

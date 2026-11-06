@@ -85,6 +85,25 @@ TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesI
   EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
 }
 
+TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
+  const std::string page = ds::scene::Scene(model).page("design");
+  const std::string frame = ds::scene::Scene::frame(page, "design", 500);
+  EXPECT_EQ(frame.rfind("<iframe ", 0), 0u);
+  EXPECT_NE(frame.find("height:500px"), std::string::npos);
+  EXPECT_EQ(frame.find('<', 1), frame.rfind("</iframe>"));  // the page travels escaped: no tag of it opens inside the host
+  EXPECT_NE(frame.find("&lt;canvas"), std::string::npos);
+  for (const auto& n : nodes) EXPECT_NE(frame.find("&quot;" + n.id + "&quot;"), std::string::npos) << n.id;
+}
+
+TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
+  const std::string page = ds::scene::Scene(model).page("design", ":root{--k-class:#e06c75}</style><script>bad()</script>");
+  const auto theme = page.find("--k-class:#e06c75");
+  ASSERT_NE(theme, std::string::npos);
+  EXPECT_GT(theme, page.find("--k-class:#3567a0"));                    // after the viewer's own value, so it wins
+  EXPECT_NE(page.find("<\\/style><script>bad()"), std::string::npos);  // left as text inside the style, never a tag
+  EXPECT_EQ(page.find("</style>", theme), page.find("</style>\n</head>"));
+}
+
 TEST_F(TestSceneOfTheDesign, EveryBoxNestsInItsParentApartFromItsSiblings) { nestsAndKeepsApart(false); }
 
 TEST_F(TestSceneOfTheDesign, WithPrivateMembersHiddenEveryBoxStillNestsAndKeepsApart) {

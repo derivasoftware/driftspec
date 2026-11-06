@@ -36,10 +36,15 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.14.0
   GIT_SHALLOW TRUE)
+FetchContent_Declare(
+  cli11
+  GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+  GIT_TAG v2.4.2
+  GIT_SHALLOW TRUE)
 set(JSON_BuildTests
     OFF
     CACHE INTERNAL "")
-FetchContent_MakeAvailable(nlohmann_json googletest)
+FetchContent_MakeAvailable(nlohmann_json googletest cli11)
 FetchContent_GetProperties(tree_sitter)
 if(NOT tree_sitter_POPULATED)
   FetchContent_Populate(tree_sitter)
@@ -78,7 +83,7 @@ target_link_libraries(driftspec PUBLIC driftspec_grammar
 
 # ---- the CLI -----------------------------------------------------------------
 add_executable(ds app/ds/main.cpp)
-target_link_libraries(ds PRIVATE driftspec)
+target_link_libraries(ds PRIVATE driftspec CLI11::CLI11)
 
 # ---- tests: one executable per tests/unit/**/test_*.cpp (argos-test-gtest)
 # ----
