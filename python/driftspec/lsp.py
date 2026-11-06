@@ -22,31 +22,60 @@ import driftspec
 
 server = LanguageServer("driftspec-lsp", "0.0.1")
 WORD = re.compile(r"[A-Za-z_][\w-]*(?:(?:::|@)[A-Za-z_][\w-]*)*")
-state: dict = {"model": None, "published": set()}
+state: dict = {"model": None}       # the model of the workspace the request is about
+models: dict[str, driftspec.Model] = {}  # every workspace open, by its directory
+published: dict[str, set[str]] = {}       # the files of each workspace that carry diagnostics
 
 
 def path_of(uri: str) -> str:
-    return unquote(urlparse(uri).path)
+    return os.path.realpath(unquote(urlparse(uri).path))
 
 
 def uri_of(path: str) -> str:
     return "file://" + os.path.abspath(path)
 
 
-def workspace_files(ls: LanguageServer) -> dict[str, str]:
-    files: dict[str, str] = {}
-    root = ls.workspace.root_path
-    if root and os.path.isdir(root):
-        files.update(driftspec.read(root))
+def holds_ds(directory: str) -> bool:
+    try:
+        return any(name.endswith(".ds") for name in os.listdir(directory))
+    except OSError:
+        return False
+
+
+def workspace_of(ls: LanguageServer, path: str) -> str:
+    """The design a file belongs to: from its folder up while the folder above holds .ds files of
+    its own, never past the project root. design/ds/scene.ds is design/; examples/hola/core/x.ds is
+    examples/hola/, apart from every other example."""
+    top = os.path.realpath(ls.workspace.root_path or "/")
+    here = os.path.dirname(path)
+    while True:
+        up = os.path.dirname(here)
+        if up == here or not up.startswith(top) or not holds_ds(up):
+            return here
+        here = up
+
+
+def workspace_files(ls: LanguageServer, ws: str) -> dict[str, str]:
+    files = {os.path.realpath(p): text for p, text in driftspec.read(ws).items()}
     for uri, doc in ls.workspace.text_documents.items():  # the buffers, saved or not, win over the disk
-        if uri.endswith(".ds"):
-            files[path_of(uri)] = doc.source
+        path = path_of(uri)
+        if path.endswith(".ds") and path.startswith(ws + os.sep):
+            files[path] = doc.source
     return files
 
 
-def refresh(ls: LanguageServer) -> None:
-    files = workspace_files(ls)
-    state["model"] = driftspec.load(files)
+def use(ls: LanguageServer, uri: str) -> str:
+    """The workspace of a document, loaded if it is not yet: the model the request answers from."""
+    ws = workspace_of(ls, path_of(uri))
+    if ws not in models:
+        refresh(ls, ws)
+    state["model"] = models[ws]
+    return ws
+
+
+def refresh(ls: LanguageServer, ws: str) -> None:
+    files = workspace_files(ls, ws)
+    models[ws] = state["model"] = driftspec.load(files)
     by_file: dict[str, list[lsp.Diagnostic]] = {path: [] for path in files}
     for f in state["model"].findings:
         line, col = max(f.location.line - 1, 0), max(f.location.column - 1, 0)
@@ -59,9 +88,9 @@ def refresh(ls: LanguageServer) -> None:
                 source="ds",
             )
         )
-    for path in set(by_file) | state["published"]:  # a file that is clean now is cleared
+    for path in set(by_file) | published.get(ws, set()):  # a file that is clean now is cleared
         ls.text_document_publish_diagnostics(lsp.PublishDiagnosticsParams(uri=uri_of(path), diagnostics=by_file.get(path, [])))
-    state["published"] = {p for p, d in by_file.items() if d}
+    published[ws] = {p for p, d in by_file.items() if d}
 
 
 def word_at(ls: LanguageServer, uri: str, position: lsp.Position) -> str:
@@ -88,25 +117,22 @@ def location_of(e: driftspec.Entity) -> lsp.Location:
     return lsp.Location(uri=uri_of(e.location.file), range=lsp.Range(p, p))
 
 
-@server.feature(lsp.INITIALIZED)
-def initialized(ls: LanguageServer, _params) -> None:
-    refresh(ls)
-
-
 @server.feature(lsp.TEXT_DOCUMENT_DID_OPEN)
 @server.feature(lsp.TEXT_DOCUMENT_DID_CHANGE)
 @server.feature(lsp.TEXT_DOCUMENT_DID_SAVE)
-def changed(ls: LanguageServer, _params) -> None:
-    refresh(ls)
+def changed(ls: LanguageServer, params) -> None:
+    refresh(ls, workspace_of(ls, path_of(params.text_document.uri)))
 
 
 @server.feature(lsp.TEXT_DOCUMENT_DEFINITION)
 def definition(ls: LanguageServer, params: lsp.DefinitionParams) -> list[lsp.Location]:
+    use(ls, params.text_document.uri)
     return [location_of(e) for e in entities_for(word_at(ls, params.text_document.uri, params.position))]
 
 
 @server.feature(lsp.TEXT_DOCUMENT_REFERENCES)
 def references(ls: LanguageServer, params: lsp.ReferenceParams) -> list[lsp.Location]:
+    use(ls, params.text_document.uri)
     model: driftspec.Model = state["model"]
     out = []
     for e in entities_for(word_at(ls, params.text_document.uri, params.position)):
@@ -119,6 +145,7 @@ def references(ls: LanguageServer, params: lsp.ReferenceParams) -> list[lsp.Loca
 
 @server.feature(lsp.TEXT_DOCUMENT_HOVER)
 def hover(ls: LanguageServer, params: lsp.HoverParams) -> lsp.Hover | None:
+    use(ls, params.text_document.uri)
     found = entities_for(word_at(ls, params.text_document.uri, params.position))
     if not found:
         return None
@@ -134,6 +161,7 @@ def hover(ls: LanguageServer, params: lsp.HoverParams) -> lsp.Hover | None:
 
 @server.feature(lsp.TEXT_DOCUMENT_COMPLETION)
 def completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.CompletionList:
+    use(ls, params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     items = [
         lsp.CompletionItem(label=w, kind=lsp.CompletionItemKind.Keyword)
@@ -152,6 +180,7 @@ def completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.Completi
 
 @server.feature(lsp.TEXT_DOCUMENT_DOCUMENT_SYMBOL)
 def symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.SymbolInformation]:
+    use(ls, params.text_document.uri)
     model: driftspec.Model = state["model"]
     kinds = {"package": lsp.SymbolKind.Package, "module": lsp.SymbolKind.Module, "class": lsp.SymbolKind.Class,
              "function": lsp.SymbolKind.Function, "method": lsp.SymbolKind.Method, "interface": lsp.SymbolKind.Interface,
@@ -159,6 +188,80 @@ def symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.Sy
     path = path_of(params.text_document.uri)
     return [lsp.SymbolInformation(name=e.name, kind=kinds.get(e.kind, lsp.SymbolKind.Object), location=location_of(e))
             for e in (model.in_file(path) if model else []) if e.kind in kinds]
+
+
+# ---- seeing it: the diagram or the entity under the cursor, drawn as text or in the viewer ----
+STRUCTURE = {"package", "module", "class", "enum", "function", "method", "attribute", "interface", "operation"}
+ARTEFACT = {"requirement", "constraint", "verification", "usecase"}
+
+
+def subject_at(ls: LanguageServer, uri: str, line: int, character: int) -> tuple[str, str]:
+    """('diagram', name) for a diagram under the cursor, ('entity', id) for an entity, or ('', '')."""
+    word = word_at(ls, uri, lsp.Position(line, character))
+    model: driftspec.Model = state["model"]
+    if model and (model.find("diagram:" + word) or model.find(word) and model.find(word).kind == "diagram"):
+        return "diagram", word.removeprefix("diagram:")
+    found = entities_for(word)
+    return ("entity", found[0].id) if found else ("", "")
+
+
+def with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]:
+    """The workspace with a diagram of one entity and what it relates to, written on the fly."""
+    entity = state["model"].find(identity)
+    kind = "requirement" if entity and entity.kind in ARTEFACT else "class"
+    name = "__Focus"
+    files = dict(files)
+    files["__focus__.ds"] = f"diagram {name} {{\n  kind: {kind}\n  include: {identity}\n  neighbours: 1\n}}\n"
+    return files, name
+
+
+@server.command("driftspec.draw")
+def draw(ls: LanguageServer, uri: str, line: int, character: int, width: int = 0) -> dict:
+    line, character, width = int(line), int(character), int(width)
+    ws = use(ls, uri)
+    what, name = subject_at(ls, uri, line, character)
+    if not what:
+        return {"title": "", "text": "nothing to draw here: put the cursor on a diagram or an entity"}
+    files = workspace_files(ls, ws)
+    if what == "entity":
+        files, diagram = with_focus(files, name)
+    else:
+        diagram = name
+    text = driftspec.render(files, diagram, "text", width)
+    return {"title": name, "text": text or f"{name} draws nothing"}
+
+
+def open_in_browser(path: str) -> None:
+    import shutil
+    import subprocess
+
+    if shutil.which("wslpath") and shutil.which("explorer.exe"):  # WSL: the Windows browser
+        windows = subprocess.run(["wslpath", "-w", path], capture_output=True, text=True).stdout.strip()
+        subprocess.Popen(["explorer.exe", windows], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    elif shutil.which("xdg-open"):
+        subprocess.Popen(["xdg-open", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+@server.command("driftspec.view")
+def view(ls: LanguageServer, uri: str, line: int, character: int) -> dict:
+    import json as _json
+
+    line, character = int(line), int(character)
+    ws = use(ls, uri)
+    what, name = subject_at(ls, uri, line, character)
+    files = workspace_files(ls, ws)
+    if what == "diagram":  # framed on what the diagram shows, as ds render <ws> <diagram> does
+        ir = driftspec.render(files, name, "ir", 0)
+        focus = [n["id"] for n in _json.loads(ir).get("nodes", [])] if ir else []
+    else:
+        focus = [name] if name else []
+    html = driftspec.page(files, os.path.basename(ws), focus)
+    out = os.path.join(os.path.expanduser("~/.cache/driftspec"), "view.html")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as fh:
+        fh.write(html)
+    open_in_browser(out)
+    return {"path": out, "focus": focus}
 
 
 def main() -> None:

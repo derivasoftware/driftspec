@@ -8,6 +8,10 @@
 #include "ds/export/JsonExport.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/render/IrExport.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
+#include "ds/scene/Scene.hpp"
 
 namespace ds {
 namespace api {
@@ -61,6 +65,20 @@ std::string Api::check(const Files& files) {
 }
 
 std::string Api::exportModel(const Files& files) { return exporter::JsonExport().render(load(files), false); }
+
+std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) {
+  const model::Model model = load(files);
+  const std::string id = diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram;
+  const std::string ir = render::IrExport(model).render(id, false);
+  if (ir.empty() || format == "ir") return ir;
+  const render::IrDocument doc = render::IrDocument::parse(ir);
+  return format == "svg" ? render::Svg().render(doc, width) : render::Text().render(doc, false, width);
+}
+
+std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) {
+  const model::Model model = load(files);
+  return scene::Scene(model).page(title, "", focus);
+}
 
 std::string Api::expectedAt(const std::string& text, int line, int column) {
   parse::Parser parser;

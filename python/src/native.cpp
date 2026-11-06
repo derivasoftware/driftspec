@@ -6,6 +6,7 @@
 
 #include <exception>
 #include <string>
+#include <vector>
 
 #include "ds/api/Api.hpp"
 
@@ -67,10 +68,45 @@ PyObject* expectedAt(PyObject*, PyObject* args) {
   return run([&source, line, column] { return ds::api::Api::expectedAt(source, line, column); });
 }
 
+PyObject* render(PyObject*, PyObject* args) {
+  PyObject* dict = nullptr;
+  const char *diagram = nullptr, *format = nullptr;
+  int width = 0;
+  ds::api::Files files;
+  if (!PyArg_ParseTuple(args, "Ossi", &dict, &diagram, &format, &width) || !filesOf(dict, &files)) return nullptr;
+  const std::string d(diagram), f(format);
+  return run([&files, d, f, width] { return ds::api::Api::render(files, d, f, width); });
+}
+
+PyObject* page(PyObject*, PyObject* args) {
+  PyObject *dict = nullptr, *ids = nullptr;
+  const char* title = nullptr;
+  ds::api::Files files;
+  if (!PyArg_ParseTuple(args, "OsO", &dict, &title, &ids) || !filesOf(dict, &files)) return nullptr;
+  std::vector<std::string> focus;
+  PyObject* it = PyObject_GetIter(ids);
+  if (!it) return nullptr;
+  for (PyObject* item = PyIter_Next(it); item; item = PyIter_Next(it)) {
+    Py_ssize_t n = 0;
+    const char* s = PyUnicode_AsUTF8AndSize(item, &n);
+    if (s) focus.emplace_back(s, n);
+    Py_DECREF(item);
+    if (!s) {
+      Py_DECREF(it);
+      return nullptr;
+    }
+  }
+  Py_DECREF(it);
+  const std::string t(title);
+  return run([&files, t, &focus] { return ds::api::Api::page(files, t, focus); });
+}
+
 PyMethodDef kMethods[] = {
     {"check", check, METH_VARARGS, "check(files: dict[str, str]) -> str: the findings and counts, as ds check --json"},
     {"export", exportModel, METH_VARARGS, "export(files: dict[str, str]) -> str: the model, as ds export"},
     {"expected_at", expectedAt, METH_VARARGS, "expected_at(text, line, column) -> str: what the grammar takes there, as JSON"},
+    {"render", render, METH_VARARGS, "render(files, diagram, format, width) -> str: a diagram drawn as text or svg; '' when none"},
+    {"page", page, METH_VARARGS, "page(files, title, focus) -> str: the viewer, framed on the identities given"},
     {nullptr, nullptr, 0, nullptr}};
 
 PyModuleDef kModule = {

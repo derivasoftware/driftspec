@@ -21,7 +21,7 @@ from . import _native
 
 Source = Union[str, os.PathLike, Mapping[str, str]]
 
-__all__ = ["Location", "Entity", "Relation", "Finding", "Model", "Report", "read", "load", "check", "expected_at"]
+__all__ = ["Location", "Entity", "Relation", "Finding", "Model", "Report", "read", "load", "check", "expected_at", "render", "page"]
 
 
 @dataclass(frozen=True)
@@ -136,6 +136,16 @@ def load(source: Source) -> Model:
 def check(source: Source) -> Report:
     data = json.loads(_native.check(read(source)))
     return Report([_finding(f) for f in data["findings"]], data["counts"])
+
+
+def render(source: Source, diagram: str, format: str = "text", width: int = 0) -> str:
+    """A diagram drawn as text or svg, wrapped to a width (0: none); "" when there is no such diagram."""
+    return _native.render(read(source), diagram, format, width)
+
+
+def page(source: Source, title: str, focus: list[str] | tuple[str, ...] = ()) -> str:
+    """The viewer as one self-contained page, framed on the identities given."""
+    return _native.page(read(source), title, list(focus))
 
 
 def expected_at(text: str, line: int, column: int) -> list[str]:

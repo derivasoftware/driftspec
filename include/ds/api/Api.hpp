@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace ds {
 namespace api {
@@ -21,6 +22,11 @@ class Api {
   /// What the grammar takes at a place of a text (0-based line and column): keywords, an
   /// annotation, a field; the words an editor completes with.
   static std::string expectedAt(const std::string& text, int line, int column);
+  /// A diagram of the workspace drawn as text (box characters) or svg, wrapped to a width (0: none);
+  /// empty when there is no such diagram.
+  static std::string render(const Files& files, const std::string& diagram, const std::string& format, int width);
+  /// The viewer as one page, framed on the identities given (a diagram's, an entity's).
+  static std::string page(const Files& files, const std::string& title, const std::vector<std::string>& focus);
 };
 
 }  // namespace api
