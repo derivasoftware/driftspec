@@ -58,6 +58,7 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .card .rel:hover{background:var(--soft)}
 .card .rel .me{color:var(--c,var(--fg));font-weight:600}.card .rel .far{font-weight:600}
 .card .rel .mod{margin-left:auto;color:var(--muted);font-size:11px}
+.card .rid{font-family:var(--mono);color:var(--req);font-weight:600}
 .card .rqs .rq{font-family:var(--sans);font-size:12px;color:var(--fg);margin:3px 0}.card .rqs .rq b{font-family:var(--mono);color:var(--req);font-weight:600}
 .card .acts{display:flex;gap:4px;align-items:center}
 .card .it{font-family:var(--mono);font-size:12px;padding:3px 4px;border-radius:5px;cursor:pointer}
@@ -69,6 +70,33 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 /* the tour plays along the bottom, its controls in one row; the details of a box stay docked on the right */
 .tour{position:fixed;left:0;right:0;bottom:0;height:36%;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(220px,340px) 1fr minmax(160px,220px);grid-template-rows:auto 1fr;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
 .tour .tb{grid-column:1/-1;border-top:1px solid var(--line)}
+/* the bottom panel has two tabs: the tours, and the list of requirements */
+.tour .tabs{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+.tour .tabs button{border:0!important;border-radius:0!important;height:32px!important;min-width:0!important;padding:0 10px;font-size:12.5px!important;background:var(--panel);color:var(--muted)}
+.tour .tabs button[aria-selected=true]{background:var(--accent);color:var(--bg)}
+.tour .rf,.tour #rbody{display:none}
+.tour.listing .rf{display:flex;grid-column:2/-1;gap:8px;align-items:center;padding:8px 12px;min-width:0}
+.tour.listing #rbody{display:block}
+.tour.listing .tc,.tour.listing .td,.tour.listing #tsel,.tour.listing #tbody{display:none}
+.tour .rf input{flex:1;min-width:80px;font:inherit;font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.tour .rf .chips{display:flex;gap:4px;flex-wrap:wrap}
+.tour .rf .chips button{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 9px;background:var(--panel);color:var(--fg);cursor:pointer}
+.tour .rf .chips button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tour .rn{font-size:12px;color:var(--muted);white-space:nowrap}
+.rtab{width:100%;border-collapse:collapse;font-size:12.5px}
+.rtab th{position:sticky;top:0;z-index:1;background:var(--panel);text-align:left;font-weight:600;color:var(--muted);font-size:11.5px;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rtab td{padding:5px 8px;border-bottom:1px solid var(--soft);vertical-align:top}
+.rtab tr.r{cursor:pointer}.rtab tr.r:hover{background:var(--soft)}.rtab tr.on{background:var(--accent-soft)}
+.rtab .id{font-family:var(--mono);white-space:nowrap;color:var(--req)}
+.rtab .t{min-width:200px}.rtab .n{font-family:var(--mono);text-align:right;white-space:nowrap}
+.rtab .grp td{background:var(--bg);color:var(--muted);font-size:11.5px;font-weight:600;padding:4px 8px}
+.badge{display:inline-block;font-size:11px;border-radius:999px;padding:0 7px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.badge.approved{border-color:var(--ok);color:var(--ok)}.badge.obsolete{text-decoration:line-through}
+.vchip{display:inline-block;font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 5px;margin:0 4px 2px 0;cursor:pointer;white-space:nowrap}
+.vchip.test{border-color:var(--ok);color:var(--ok)}.vchip:hover{background:var(--soft)}
+.miss{color:var(--warn);font-size:12px;white-space:nowrap}
+.card .says{font-family:var(--sans);font-size:12.5px;line-height:1.45;margin:0 0 6px}
+.card .tests{font-family:var(--mono);font-size:11px;color:var(--muted);margin:2px 0 6px 12px;word-break:break-all}
 .tour .td{border-bottom:0!important;padding:8px 12px!important}
 .tour[hidden]{display:none}
 body.touring .stage{bottom:36%}
@@ -96,6 +124,11 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 .stage.quiet .rail,.stage.quiet .mini,.stage.quiet .legend{opacity:0;pointer-events:none}
 @media (max-width:700px){
   .tour{height:46%;grid-template-columns:1fr;grid-template-rows:auto auto auto 1fr}
+  .tour.listing{grid-template-rows:auto auto 1fr}.tour.listing .rf{grid-column:1;flex-wrap:wrap}
+  .tour .rf input{flex-basis:100%}
+  .rtab .st,.rtab .n{display:none}.rtab .t{min-width:0}.rtab td,.rtab th{padding:5px 6px}
+  body.carded.touring.listed .stage{z-index:7}  /* the stage is its own layer: lift it so its card covers the list */
+  body.carded.touring.listed .card{display:block;position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;height:46%;z-index:8;border-top:1px solid var(--line)}  /* on a phone the card of a requirement opens over the list; closing it goes back to the list */
   body.carded.touring .tour{right:0}
   body.touring .stage{right:0;bottom:46%}
   body.carded .stage{right:0;bottom:46%}
@@ -126,7 +159,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <canvas class="main" id="cv" aria-label="/*TITLE*/: the whole model, zoomable"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
+  <div class="tools"><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
@@ -134,10 +167,12 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <div class="card" id="card" hidden></div>
 </div>
 <aside class="tour" id="tour" hidden aria-label="Tour">
-  <div class="th"><select id="tsel" aria-label="Tour"></select><button id="tclose" aria-label="Close">×</button></div>
+  <div class="th"><span class="tabs" role="tablist"><button data-tab="tours" role="tab" aria-selected="true">tours</button><button data-tab="reqs" role="tab" aria-selected="false">requirements</button></span><select id="tsel" aria-label="Tour"></select><button id="tclose" aria-label="Close">×</button></div>
+  <div class="rf" id="rfilter"><input type="search" id="rq" placeholder="filter by id or title" aria-label="Filter requirements"><span class="chips"><button data-f="all" aria-pressed="true">all</button><button data-f="unverified" aria-pressed="false">unverified</button><button data-f="unlinked" aria-pressed="false">unlinked</button><button data-f="draft" aria-pressed="false">draft</button></span><span class="rn" id="rcount"></span></div>
   <div class="tc"><button id="tfirst" aria-label="To the start">⏮</button><button id="tprev" aria-label="Previous step">◀</button><button id="tplay" class="play" aria-label="Play">▶</button><button id="tnext" aria-label="Next step">▶|</button><input type="range" id="tscrub" min="0" max="0" value="0" aria-label="Step"><button class="follow" id="tfollow">follow</button></div>
   <label class="td">depth <input type="range" id="tdepth" min="1" max="7" value="3"><b id="tdv">3</b></label>
   <div class="tb" id="tbody"></div>
+  <div class="tb" id="rbody"></div>
 </aside>
 <script>
 (async()=>{
@@ -164,7 +199,13 @@ function decode(r){if(r.version!==2) return r;
     Object.defineProperty(o,'steps',{get(){return this._s||(this._s=expand(t.behaviour,12));}}); return o;});
   return {nodes,world:r.world,lean_world:r.lean_world,titles:r.titles,tours,
     links:r.links.map(col('link')).map(l=>({from:id(l.from),to:id(l.to),kind:l.kind,count:l.count,multiplicity:l.multiplicity,sequences:l.behaviours.map(b=>behaviours[b]?behaviours[b].id:'')})),
-    diagrams:r.diagrams.map(col('diagram')).map(d=>({name:d.name,kind:d.kind,nodes:d.nodes.map(id)}))};}
+    diagrams:r.diagrams.map(col('diagram')).map(d=>({name:d.name,kind:d.kind,nodes:d.nodes.map(id)})),
+    ...trace(r,col,id)};}
+// the requirements and verifications, their ids in place of indices
+function trace(r,col,id){if(!r.requirements) return {requirements:[],verifications:[]};
+  const reqs=r.requirements.map(col('requirement')); const rid=i=>i>=0&&reqs[i]?reqs[i].id:'';
+  return {requirements:reqs.map(q=>({...q,parent:rid(q.parent),scope:id(q.scope),nodes:q.nodes.map(id)})),
+    verifications:r.verifications.map(col('verification')).map(v=>({...v,requirements:v.requirements.map(rid)}))};}
 const FOCUS=/*FOCUS*/;  // the identities a diagram shows: the page opens framed on them
 /* ---------- the scene, as the viewer reads it ---------- */
 const N={}, ORDER=[], KIDS={};
@@ -180,9 +221,12 @@ const LINKS=SCENE.links||[], DIAGS=SCENE.diagrams||[], TITLES=SCENE.titles||{};
 const FAMILY={inherits:'inheritance',realises:'inheritance'};  // the rest is never a line: it lights up when a box is touched
 const FAM={inheritance:true};
 const GROUP={owns:'owns',refs:'agg',shares:'agg',uses:'uses',calls:'calls'};  // the colour each relation lights up in
-const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls'};
+const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls',req:'linked'};
 const GROUP_RANK={owns:0,agg:1,calls:2,uses:3};
-let HLBOX=new Map(), HLROW=new Map(), pills=[];
+let HLBOX=new Map(), HLROW=new Map(), pills=[], REQSEL=null;
+const REQS=SCENE.requirements||[], VERS=SCENE.verifications||[], RBY={}, VBY={};
+REQS.forEach(q=>{RBY[q.id]=q; q.kids=[]; q.vers=[];}); REQS.forEach(q=>{if(RBY[q.parent]) RBY[q.parent].kids.push(q.id);});
+VERS.forEach(v=>{VBY[v.id]=v; v.requirements.forEach(r=>{if(RBY[r]) RBY[r].vers.push(v.id);});});
 const KIND_EN={inherits:'inherits from',realises:'realises',owns:'composes',shares:'shares',refs:'refers to',uses:'uses',calls:'calls','*':'relates to'};
 const unitOf=id=>N[id]&&N[id].kind==='row'?N[id].parent:id;
 const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.kind)) n=N[n.parent]; return n?n.id:null;};
@@ -200,7 +244,7 @@ let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
   K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),ok:g('--ok'),warn:g('--warn'),mono:g('--mono'),sans:g('--sans'),
     kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-class'),abstract:g('--k-class')},
-    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls')}};}
+    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req')}};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
 function resize(){const r=stage.getBoundingClientRect(); DPR=devicePixelRatio||1; U=r.width<560?.6:(r.width<800?.8:1); W=r.width/U; H=r.height/U;
   cv.width=r.width*DPR; cv.height=r.height*DPR; const m=mini.getBoundingClientRect(); mini.width=Math.max(1,m.width*DPR); mini.height=Math.max(1,m.height*DPR); loop();}
@@ -224,13 +268,13 @@ function draw(){
   ctx.setTransform(DPR*U,0,0,DPR*U,0,0); ctx.fillStyle=K.bg; ctx.fillRect(0,0,W,H);
   // packages and modules
   ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='package'&&n.kind!=='module') return; const b=scr(n); if(!onScreen(b)) return;
-    const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:K.fg; ctx.lineWidth=sel?2.6:pkg?1.6:1.3; ctx.stroke();
+    const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id), hl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:hl?K.rc[hl]:K.fg; ctx.lineWidth=sel||hl?2.6:pkg?1.6:1.3; ctx.stroke();
     const px=Math.min(pkg?18:16,Math.max(11,(pkg?30:22)*cam.s)); const room=(pkg?90:46)*cam.s;
     if(room<px+10||b.w<170){ctx.font=`700 ${px}px ${K.mono}`; const tw=ctx.measureText(n.label).width; rr(b.x+2,b.y-px-6,tw+10,px+6,4); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); text(n.label,b.x+7,b.y-5,px,K.fg,'700'); return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
     const st=`«${n.kind}» `; ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+10,b.y+px+8,px*.72,K.muted); text(n.label,b.x+10+off,b.y+px+8,px,K.fg,'700'); ctx.restore();});
   // units with their rows
-  UNITS.forEach(id=>{const n=N[id], b=scr(n); if(!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=SEL&&SEL!==id&&!anc(id).includes(SEL)&&!RELATED.has(id);
+  UNITS.forEach(id=>{const n=N[id], b=scr(n); if(!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=(SEL||REQSEL)&&SEL!==id&&!(SEL&&anc(id).includes(SEL))&&!RELATED.has(id);
     ctx.globalAlpha=(lab?1:.55)*(dim?.35:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
     const hl=HLBOX.get(id); if(hl){ctx.globalAlpha=.13; ctx.fillStyle=K.rc[hl]; ctx.fill(); ctx.globalAlpha=(lab?1:.55)*(dim?.35:1);}
     ctx.setLineDash(n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
@@ -253,11 +297,11 @@ function draw(){
     ctx.restore(); ctx.globalAlpha=1;});
   // interfaces, on their package's border
   ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='iface') return; const b=scr(n); if(!onScreen(b)) return;
-    rr(b.x,b.y,b.w,b.h,8); ctx.fillStyle=K.ifc; ctx.fill(); ctx.strokeStyle=K.accent; ctx.lineWidth=SEL===id?3:1.6; ctx.stroke();
+    const ihl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,8); ctx.fillStyle=K.ifc; ctx.fill(); ctx.strokeStyle=ihl?K.rc[ihl]:K.accent; ctx.lineWidth=SEL===id||ihl?3:1.6; ctx.stroke();
     const px=Math.min(15,Math.max(10,20*cam.s)); ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
     text('«interface»',b.x+10,b.y+px*.8+8,px*.72,K.muted); text(n.label,b.x+10,b.y+px*1.9+8,px,K.fg,'700');
     (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(r.hidden) return; const rb=scr(r); if(rb.h<6) return; const rpx=Math.max(9,Math.min(13,r.h*cam.s*.55));
-      rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=K.accent; ctx.lineWidth=1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg);
+      const orh=HLROW.get(rid); rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); if(orh){ctx.globalAlpha=.2; ctx.fillStyle=K.rc[orh]; ctx.fill(); ctx.globalAlpha=1;} ctx.strokeStyle=orh?K.rc[orh]:K.accent; ctx.lineWidth=orh?2:1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg,orh?'700':'');
       const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.accent; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
     ctx.restore();});
   drawLinks();
@@ -285,7 +329,7 @@ function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: on
     if(!agg.has(k)) agg.set(k,{A,B,kind,n:0,links:[]}); const g=agg.get(k); g.n+=l.count; g.links.push(l);});
   agg.forEach(g=>{const geo=edge(g,!!SEL&&g.links.some(l=>unitOf(l.from)===SEL||unitOf(l.to)===SEL)); if(geo) drawn.push({...geo,g});});}
 // a related box out of sight: a pill on the edge of the screen, in its colour, that flies there
-function drawPills(){pills=[]; if(!SEL) return; const cx=W/2, cy=H/2, m=14;
+function drawPills(){pills=[]; if(!SEL&&!REQSEL) return; const cx=W/2, cy=H/2, m=14;
   HLBOX.forEach((g,id)=>{const n=N[id]; if(!n||n.hidden) return; const b=scr(n); if(b.x<W-40&&b.y<H-40&&b.x+b.w>40&&b.y+b.h>40) return;
     const tx=b.x+b.w/2-cx, ty=b.y+b.h/2-cy, k=Math.min((W/2-m-60)/Math.abs(tx||1e-9),(H/2-m-14)/Math.abs(ty||1e-9));
     const px=cx+tx*k, py=cy+ty*k, t=GROUP_EN[g]+' '+n.label; ctx.font=`600 11.5px ${K.mono}`; const w=ctx.measureText(t).width+26;
@@ -392,7 +436,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault(); anim=null; if(T.idx>=0) rele
   const wmx=wx(mx), wmy=wy(my); cam.s=Math.max(.03,Math.min(10,cam.s*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0012)))); cam.x=wmx-(mx-W/2)/cam.s; cam.y=wmy-(my-H/2)/cam.s; loop();},{passive:false});
 function hit(X,Y){const x=wx(X), y=wy(Y); let best=null;
   ORDER.forEach(id=>{const n=N[id]; if(n.hidden||!(x>=n.x&&x<=n.x+n.w&&y>=n.y&&y<=n.y+n.h)) return; if(!visible(n)) return; if(!best||anc(id).length>=anc(best).length) best=id;}); return best;}
-function tap(X,Y){const pl=pills.find(p=>X>=p.x&&X<=p.x+p.w&&Y>=p.y&&Y<=p.y+p.h); if(pl){fly(fit({x:Math.min(N[pl.id].x,N[SEL].x),y:Math.min(N[pl.id].y,N[SEL].y),w:Math.max(N[pl.id].x+N[pl.id].w,N[SEL].x+N[SEL].w)-Math.min(N[pl.id].x,N[SEL].x),h:Math.max(N[pl.id].y+N[pl.id].h,N[SEL].y+N[SEL].h)-Math.min(N[pl.id].y,N[SEL].y)})); return;}
+function tap(X,Y){const pl=pills.find(p=>X>=p.x&&X<=p.x+p.w&&Y>=p.y&&Y<=p.y+p.h); if(pl&&!SEL){fly(fit(N[pl.id],.6)); return;} if(pl){fly(fit({x:Math.min(N[pl.id].x,N[SEL].x),y:Math.min(N[pl.id].y,N[SEL].y),w:Math.max(N[pl.id].x+N[pl.id].w,N[SEL].x+N[SEL].w)-Math.min(N[pl.id].x,N[SEL].x),h:Math.max(N[pl.id].y+N[pl.id].h,N[SEL].y+N[SEL].h)-Math.min(N[pl.id].y,N[SEL].y)})); return;}
   const d=edgeAt(X,Y); if(d){showPop(d.g,X,Y,true); return;} hidePop(); const id=hit(X,Y); if(!id||N[id].kind==='package'){select(null); return;} const box=N[id].kind==='row'?N[id].parent:id;
   if(SEL===box) fly(fit(N[box])); else select(box);}
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect(); const id=hit((e.clientX-r.left)/U,(e.clientY-r.top)/U); if(id) fly(fit(N[N[id].kind==='row'?N[id].parent:id]));});
@@ -409,7 +453,7 @@ const SECTIONS=[
 const qual=x=>{const n=N[x]; if(!n) return x; if(n.kind!=='row') return n.label; const p=N[n.parent]; return (p?p.label+'.':'')+short(x)+(n.label.includes('(')?'()':'');};
 const memberOf=x=>N[x]&&N[x].kind==='row'?short(x)+(N[x].label.includes('(')?'()':''):'';
 function dock(on){if(document.body.classList.contains('carded')===on) return; document.body.classList.toggle('carded',on); setTimeout(()=>{resize(); if(on&&SEL){const b=scr(N[SEL]); if(!onScreen(b)) fly(fit(N[SEL],.6));}},30);}
-function select(id){SEL=id; RELATED=new Set(); HLBOX=new Map(); HLROW=new Map(); if(!id){card.hidden=true; dock(false); loop(); return;} const n=N[id];
+function select(id){SEL=id; REQSEL=null; markRow(); RELATED=new Set(); HLBOX=new Map(); HLROW=new Map(); if(!id){card.hidden=true; dock(false); loop(); return;} const n=N[id];
   const isUnit=n.kind==='unit'||n.kind==='iface', inside=x=>isUnit?unitOf(x)===id:anc(x).includes(id);
   const mark=(m,k,g)=>{if(!m.has(k)||GROUP_RANK[g]<GROUP_RANK[m.get(k)]) m.set(k,g);};
   const entries=[];
@@ -437,7 +481,7 @@ function select(id){SEL=id; RELATED=new Set(); HLBOX=new Map(); HLROW=new Map();
         return `<div class="rel" data-sel="${esc(e.other)}" data-rows="${esc([e.mine,e.far].join('|'))}">${line}${mult}${cnt}<span class="mod">${esc((N[boxOf(e.other)]||{}).label||'')}</span></div>`;}).join('')+(list.length>14?`<div class="n">and ${list.length-14} more</div>`:'')).join('');};
     h+=`<section style="--c:${col}"><h4>${esc(sec.title)} <span class="n">${es.length}</span></h4>${half(true)}${half(false)}</section>`;});
   if(!sev) h+=`<section><h4>Relations</h4><div class="n">none outside the box</div></section>`;
-  if(reqs.length) h+=`<section class="rqs"><h4>Requirements <span class="n">${reqs.length}</span></h4>`+reqs.map(r=>`<div class="rq"><b>${esc(r)}</b>${TITLES[r]?` ${esc(TITLES[r])}`:''}</div>`).join('')+`</section>`;
+  if(reqs.length) h+=`<section class="rqs"><h4>Requirements <span class="n">${reqs.length}</span></h4>`+reqs.map(r=>`<div class="rq rel" data-req="${esc(r)}"><span><b>${esc(r)}</b>${TITLES[r]?` ${esc(TITLES[r])}`:''}</span></div>`).join('')+`</section>`;
   const inTours=TOURS.map(t=>[t,t.steps.findIndex(s=>!s.ret&&(inside(s.f)||inside(s.t)))]).filter(([,i])=>i>=0);
   if(inTours.length) h+=`<section><h4>Tours <span class="n">${inTours.length}</span></h4>`+inTours.slice(0,8).map(([t,i])=>`<div class="rel" data-tour="${esc(t.id)}" data-i="${i}">▶ ${esc(tourName(t))}<span class="mod">step ${i+1}</span></div>`).join('')+(inTours.length>8?`<div class="n">and ${inTours.length-8} more</div>`:'')+`</section>`;
   const dg=DIAGS.filter(d=>d.nodes.includes(id)).map(d=>d.name);
@@ -446,12 +490,81 @@ function select(id){SEL=id; RELATED=new Set(); HLBOX=new Map(); HLROW=new Map();
 // hovering a relation marks its members on the canvas
 card.addEventListener('pointerover',e=>{const r=e.target.closest('[data-rows]'); ACTIVE=new Set(r?r.dataset.rows.split('|').filter(x=>N[x]).flatMap(x=>[x,unitOf(x)]):[]); loop();});
 card.addEventListener('pointerleave',()=>{if(T.idx<0){ACTIVE=new Set(); loop();}});
-card.addEventListener('click',e=>{if(e.target.closest('[data-close]')) return select(null); if(e.target.closest('[data-zoom]')) return fly(fit(N[SEL]));
+card.addEventListener('click',e=>{if(e.target.closest('[data-close]')) return select(null);
+  const q=e.target.closest('[data-req]'); if(q) return selectReq(q.dataset.req,true);
+  const v=e.target.closest('[data-ver]'); if(v) return selectVer(v.dataset.ver);
+  const nd=e.target.closest('[data-node]'); if(nd){const id=nd.dataset.node, u=N[id].kind==='row'?N[id].parent:id; select(u); fly(fit(N[u])); return;}
+  if(e.target.closest('[data-zoom]')) return SEL?fly(fit(N[SEL])):REQSEL&&frameReq();
   const s=e.target.closest('[data-sel]'); if(s){const o=N[s.dataset.sel], m=N[SEL]; if(e.detail>1){select(s.dataset.sel); fly(fit(o)); return;}
     const x0=Math.min(o.x,m.x), y0=Math.min(o.y,m.y); fly(fit({x:x0,y:y0,w:Math.max(o.x+o.w,m.x+m.w)-x0,h:Math.max(o.y+o.h,m.y+m.h)-y0},.25));}
   const p=e.target.closest('[data-tour]'); if(p) playAt(p.dataset.tour,+p.dataset.i);});
 addEventListener('keydown',e=>{if(e.key==='Escape') select(null);});
-window.dsViewer={box:id=>N[id]&&{...scr(N[id]),U},select};  // where a box is on screen, for tests and for a host page
+/* ---------- requirements: the list in the bottom panel, the card, what lights up ---------- */
+const reqWhere=q=>q.scope&&N[q.scope]?anc(q.scope).reverse().map(a=>N[a].label).join(' › '):'';
+const reqNodes=q=>q.nodes.filter(id=>N[id]);
+function light(ids){HLBOX=new Map(); HLROW=new Map(); RELATED=new Set();
+  ids.forEach(id=>{const n=N[id]; if(!n) return; if(n.kind==='row'){HLROW.set(id,'req'); HLBOX.set(n.parent,'req');} else HLBOX.set(id,'req');
+    anc(n.kind==='row'?n.parent:id).forEach(a=>RELATED.add(a));});}
+function frameReq(){const ids=(REQSEL&&REQSEL.ids||[]).map(id=>N[id].kind==='row'?N[id].parent:id); if(!ids.length) return;
+  const x0=Math.min(...ids.map(i=>N[i].x)), y0=Math.min(...ids.map(i=>N[i].y)), x1=Math.max(...ids.map(i=>N[i].x+N[i].w)), y1=Math.max(...ids.map(i=>N[i].y+N[i].h));
+  fly(fit({x:x0,y:y0,w:x1-x0,h:y1-y0},.35));}
+const nodeLine=id=>{const n=N[id], u=n.kind==='row'?N[n.parent]:n; return `<div class="rel" data-node="${esc(id)}"><span class="far">${esc(n.kind==='row'?qual(id):n.label)}</span><span class="mod">${esc(n.kind==='row'||n.kind==='unit'?(N[boxOf(id)]||{}).label||'':(LEVEL[n.kind]||n.kind))}</span></div>`;};
+const reqLine=id=>{const q=RBY[id]; return `<div class="rel" data-req="${esc(id)}"><span><b class="rid">${esc(id)}</b> ${esc(q?q.title:'')}</span></div>`;};
+const verLine=id=>{const v=VBY[id]; return `<div class="rel" data-ver="${esc(id)}"><span><b class="rid">${esc(id)}</b> ${esc(v.method||'')} <span class="badge ${esc(v.status)}">${esc(v.status||'no status')}</span></span></div>`+
+  (v.tests.length?`<div class="tests">${v.tests.map(t=>esc(t.replace(/^.*\//,''))).join('<br>')}</div>`:`<div class="tests miss">no tests named</div>`);};
+function selectReq(id,frame){const q=RBY[id]; if(!q) return; SEL=null; const ids=reqNodes(q); REQSEL={kind:'req',id,ids}; light(ids); markRow();
+  const verified=q.vers.length;
+  let h=`<div class="hd"><div><div class="st">«${esc(q.kind)}»${reqWhere(q)?' · '+esc(reqWhere(q)):''}</div><b>${esc(q.id)}</b>`+
+    `<div class="sum"><span class="badge ${esc(q.status)}">${esc(q.status||'no status')}</span> · ${ids.length} linked · <span class="${verified?'ok':'warn'}">${verified?verified+' verification'+(verified>1?'s':''):'not verified'}</span></div></div>`+
+    `<span class="acts">${ids.length?'<button data-zoom="1">frame</button>':''}<button class="x" data-close="1" aria-label="Close">×</button></span></div>`;
+  h+=`<p class="says"><b>${esc(q.title)}</b></p>`+(q.text?q.text.split(/\n\s*\n/).map(par=>`<p class="says">${esc(par.replace(/\s*\n\s*/g,' ').trim())}</p>`).join(''):'');
+  if(q.parent) h+=`<section><h4>Refines</h4>${reqLine(q.parent)}</section>`;
+  if(q.kids.length) h+=`<section><h4>Refined by <span class="n">${q.kids.length}</span></h4>${q.kids.map(reqLine).join('')}</section>`;
+  h+=`<section style="--c:var(--req)"><h4>Answered by <span class="n">${ids.length}</span></h4>${ids.length?ids.map(nodeLine).join(''):'<div class="miss">nothing in the design links it</div>'}</section>`;
+  h+=`<section style="--c:var(--ok)"><h4>Verified by <span class="n">${verified}</span></h4>${verified?q.vers.map(verLine).join(''):'<div class="miss">no verification proves it</div>'}</section>`;
+  card.innerHTML=h; card.hidden=false; dock(true); if(frame) frameReq(); loop();}
+function selectVer(id){const v=VBY[id]; if(!v) return; SEL=null; const ids=[...new Set(v.requirements.flatMap(r=>RBY[r]?reqNodes(RBY[r]):[]))]; REQSEL={kind:'ver',id,ids}; light(ids); markRow();
+  let h=`<div class="hd"><div><div class="st">«verification»</div><b>${esc(v.id)}</b><div class="sum"><span class="badge ${esc(v.status)}">${esc(v.status||'no status')}</span> · ${esc(v.method||'no method')} · ${v.tests.length} test${v.tests.length===1?'':'s'}</div></div>`+
+    `<span class="acts">${ids.length?'<button data-zoom="1">frame</button>':''}<button class="x" data-close="1" aria-label="Close">×</button></span></div>`;
+  h+=`<p class="says"><b>${esc(v.title)}</b></p>`;
+  h+=`<section style="--c:var(--req)"><h4>Proves <span class="n">${v.requirements.length}</span></h4>${v.requirements.map(reqLine).join('')}</section>`;
+  h+=`<section style="--c:var(--ok)"><h4>Tests <span class="n">${v.tests.length}</span></h4>${v.tests.length?`<div class="tests" style="margin-left:0">${v.tests.map(esc).join('<br>')}</div>`:'<div class="miss">no tests named</div>'}</section>`;
+  card.innerHTML=h; card.hidden=false; dock(true); frameReq(); loop();}
+
+// the list: a tree of requirements by what they refine, then the constraints
+const R={filter:'all',q:''}; const rbody=document.getElementById('rbody');
+function reqRows(){const out=[], seen=new Set();
+  const walk=(q,depth)=>{if(seen.has(q.id)) return; seen.add(q.id); out.push([q,depth]); q.kids.slice().sort().forEach(k=>walk(RBY[k],depth+1));};
+  REQS.filter(q=>q.kind==='requirement'&&!RBY[q.parent]).sort((a,b)=>a.id.localeCompare(b.id)).forEach(q=>walk(q,0));
+  REQS.filter(q=>q.kind==='requirement'&&!seen.has(q.id)).forEach(q=>walk(q,0));
+  const cs=REQS.filter(q=>q.kind==='constraint').sort((a,b)=>a.id.localeCompare(b.id)); return {reqs:out,cs};}
+function keep(q){const t=R.q.toLowerCase(); if(t&&!(q.id.toLowerCase().includes(t)||q.title.toLowerCase().includes(t))) return false;
+  if(R.filter==='unverified') return !q.vers.length; if(R.filter==='unlinked') return !reqNodes(q).length; if(R.filter==='draft') return q.status!=='approved'; return true;}
+function listReqs(){const {reqs,cs}=reqRows(); let shown=0;
+  const row=(q,depth)=>{if(!keep(q)) return ''; shown++; const ln=reqNodes(q).length;
+    return `<tr class="r" data-req="${esc(q.id)}"><td class="id" style="padding-left:${8+depth*16}px">${depth?'↳ ':''}${esc(q.id)}</td><td class="t">${esc(q.title)}</td>`+
+      `<td class="st"><span class="badge ${esc(q.status)}">${esc(q.status||'—')}</span></td>`+
+      `<td>${q.vers.length?q.vers.map(v=>`<span class="vchip ${VBY[v].method==='test'&&VBY[v].tests.length?'test':''}" data-ver="${esc(v)}" title="${esc(VBY[v].title)}">${esc(v)}</span>`).join(''):'<span class="miss">none</span>'}</td>`+
+      `<td class="n">${ln?ln:'<span class="miss">0</span>'}</td></tr>`;};
+  let h=`<table class="rtab"><thead><tr><th>id</th><th>title</th><th class="st">status</th><th>verified by</th><th class="n">linked</th></tr></thead><tbody>`;
+  const rq=reqs.map(([q,d])=>row(q,d)).join(''); if(rq) h+=`<tr class="grp"><td colspan="5">Requirements</td></tr>`+rq;
+  const cq=cs.map(q=>row(q,0)).join(''); if(cq) h+=`<tr class="grp"><td colspan="5">Constraints</td></tr>`+cq;
+  if(!shown) h+=`<tr><td colspan="5" class="miss" style="padding:14px 8px">nothing matches</td></tr>`;
+  rbody.innerHTML=h+'</tbody></table>'; document.getElementById('rcount').textContent=`${shown} of ${REQS.length}`; markRow();}
+function markRow(){rbody.querySelectorAll('tr.on').forEach(t=>t.classList.remove('on')); if(REQSEL&&REQSEL.kind==='req'){const t=rbody.querySelector(`tr[data-req="${CSS.escape(REQSEL.id)}"]`); if(t) t.classList.add('on');}}
+rbody.addEventListener('click',e=>{const v=e.target.closest('[data-ver]'); if(v){selectVer(v.dataset.ver); return;} const t=e.target.closest('tr[data-req]'); if(t) selectReq(t.dataset.req,true);});
+document.getElementById('rq').oninput=e=>{R.q=e.target.value; listReqs();};
+document.querySelector('#rfilter .chips').addEventListener('click',e=>{const b=e.target.closest('[data-f]'); if(!b) return; R.filter=b.dataset.f;
+  document.querySelectorAll('#rfilter .chips button').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); listReqs();});
+// the tabs of the bottom panel
+function tab(name){const list=name==='reqs'; tourEl.classList.toggle('listing',list); document.body.classList.toggle('listed',list);
+  document.querySelectorAll('.tour .tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===name)));
+  document.getElementById('tours').setAttribute('aria-pressed',String(!tourEl.hidden&&!list)); document.getElementById('reqs').setAttribute('aria-pressed',String(!tourEl.hidden&&list));
+  if(list){play(false); T.idx=-1; ACTIVE=new Set(); FORCED=new Set(); caption.hidden=true; listReqs(); loop();} else seq();}
+document.querySelector('.tour .tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]'); if(!b) return; if(b.dataset.tab==='tours') openTours(); else openReqs();});
+function openReqs(){document.body.classList.add('touring'); tourEl.hidden=false; tab('reqs'); setTimeout(resize,30);}
+document.getElementById('reqs').onclick=()=>(!tourEl.hidden&&tourEl.classList.contains('listing'))?closeTours():openReqs();
+window.dsViewer={box:id=>N[id]&&{...scr(N[id]),U},select,selectReq,selectVer};  // where a box is on screen, for tests and for a host page
 
 /* ---------- private members: in or out, the boxes follow ---------- */
 let showPriv=true;
@@ -478,8 +591,8 @@ tsel.innerHTML=[['interface','interfaces'],['method','methods and functions']].m
 function buildSteps(){const t=TBY[T.id]; steps=t?t.steps.filter(s=>s.d<=T.depth):[]; lanes=[];
   steps.forEach(s=>[s.f,s.t].forEach(n=>{const u=unitOf(n); if(!lanes.includes(u)) lanes.push(u);})); scrub.max=Math.max(0,steps.length-1);}
 function setTour(id){T.id=id; tsel.value=id; const mx=Math.max(1,...TBY[id].steps.map(s=>s.d)); depthEl.max=mx; if(T.depth>mx) T.depth=mx; depthEl.value=T.depth; document.getElementById('tdv').textContent=T.depth; buildSteps();}
-function openTours(id){document.body.classList.add('touring'); tourEl.hidden=false; document.getElementById('tours').setAttribute('aria-pressed','true'); if(id||!T.id) setTour(id||(TOURS.find(t=>t.group==='interface')||TOURS[0]).id); setTimeout(resize,30); go(T.idx);}
-function closeTours(){play(false); document.body.classList.remove('touring'); tourEl.hidden=true; document.getElementById('tours').setAttribute('aria-pressed','false'); T.idx=-1; ACTIVE=new Set(); FORCED=new Set(); caption.hidden=true; setTimeout(resize,30); loop();}
+function openTours(id){document.body.classList.add('touring'); tourEl.hidden=false; tab('tours'); if(id||!T.id) setTour(id||(TOURS.find(t=>t.group==='interface')||TOURS[0]).id); setTimeout(resize,30); go(T.idx);}
+function closeTours(){play(false); document.body.classList.remove('touring'); tourEl.hidden=true; document.getElementById('tours').setAttribute('aria-pressed','false'); document.getElementById('reqs').setAttribute('aria-pressed','false'); document.body.classList.remove('listed'); T.idx=-1; ACTIVE=new Set(); FORCED=new Set(); caption.hidden=true; setTimeout(resize,30); loop();}
 function playAt(id,i){openTours(id); const st=TBY[id].steps[i]; if(st.d>T.depth){T.depth=st.d; depthEl.value=st.d; document.getElementById('tdv').textContent=st.d; buildSteps();} lock(); go(steps.indexOf(st));}
 const focusRect=id=>{const n=N[id]; return n.kind==='row'?N[n.parent]:n;};
 function union(a,b){const x=Math.min(a.x,b.x), y=Math.min(a.y,b.y); return {x,y,w:Math.max(a.x+a.w,b.x+b.w)-x,h:Math.max(a.y+a.h,b.y+b.h)-y};}
@@ -505,7 +618,7 @@ followBtn.onclick=()=>{lock(); if(steps[T.idx]) fly(camFor(steps[T.idx]));};
 tsel.onchange=()=>{play(false); setTour(tsel.value); go(-1);};
 depthEl.oninput=()=>{const cur=steps[T.idx]; T.depth=+depthEl.value; document.getElementById('tdv').textContent=T.depth; buildSteps();
   let i=cur?steps.indexOf(cur):-1; if(cur&&i<0){const all=TBY[T.id].steps; for(let j=all.indexOf(cur);j>=0;j--){i=steps.indexOf(all[j]); if(i>=0) break;}} go(i);};
-document.getElementById('tours').onclick=()=>tourEl.hidden?openTours():closeTours();
+document.getElementById('tours').onclick=()=>(tourEl.hidden||tourEl.classList.contains('listing'))?openTours():closeTours();
 document.getElementById('tclose').onclick=closeTours;
 addEventListener('keydown',e=>{if(tourEl.hidden||['INPUT','SELECT'].includes(e.target.tagName)) return; if(e.key===' '){e.preventDefault(); play(!T.playing);} if(e.key==='ArrowRight'){play(false); lock(); go(T.idx+1);} if(e.key==='ArrowLeft'){play(false); lock(); go(T.idx-1);}});
 function drawTour(){if(T.idx<0) return;

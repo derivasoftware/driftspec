@@ -518,6 +518,7 @@ SceneDocument Scene::build() const {
   doc.leanWorld = bounds(doc.nodes, true);
   relate(doc);
   tour(doc);
+  trace(doc);
   return doc;
 }
 
@@ -545,7 +546,9 @@ std::string Scene::render(bool pretty) const {
                    {"behaviour", {"subject", "scenario", "calls"}},
                    {"call", {"to", "label", "behaviour", "result"}},
                    {"tour", {"behaviour", "group"}},
-                   {"diagram", {"name", "kind", "nodes"}}};
+                   {"diagram", {"name", "kind", "nodes"}},
+                   {"requirement", {"id", "kind", "title", "status", "text", "parent", "scope", "nodes"}},
+                   {"verification", {"id", "title", "status", "method", "tests", "requirements"}}};
   out["nodes"] = nlohmann::json::array();
   for (const auto& n : doc.nodes) {
     out["nodes"].push_back({n.id, n.kind, index(n.parent), n.label, n.stereotype, n.visibility, n.requirements, ints(n.full),
@@ -579,6 +582,22 @@ std::string Scene::render(bool pretty) const {
     out["diagrams"].push_back({d.name, d.kind, shown});
   }
   out["titles"] = doc.titles;
+  std::map<std::string, int> requirementAt;
+  for (size_t i = 0; i < doc.requirements.size(); ++i) requirementAt[doc.requirements[i].id] = static_cast<int>(i);
+  const auto requirement = [&requirementAt](const std::string& id) { return requirementAt.count(id) ? requirementAt.at(id) : -1; };
+  out["requirements"] = nlohmann::json::array();
+  for (const auto& r : doc.requirements) {
+    nlohmann::json shown = nlohmann::json::array();
+    for (const auto& n : r.nodes) shown.push_back(index(n));
+    out["requirements"].push_back({r.id, r.kind, r.title, r.status, r.text, requirement(r.parent), index(r.scope), shown});
+  }
+  out["verifications"] = nlohmann::json::array();
+  for (const auto& v : doc.verifications) {
+    nlohmann::json proves = nlohmann::json::array();
+    for (const auto& r : v.requirements)
+      if (requirement(r) >= 0) proves.push_back(requirement(r));
+    out["verifications"].push_back({v.id, v.title, v.status, v.method, v.tests, proves});
+  }
   return pretty ? out.dump(2) : out.dump();
 }
 
@@ -776,6 +795,27 @@ std::string Scene::page(const std::string& title, const std::string& css, const 
   std::string framed = nlohmann::json(focus).dump();
   for (size_t at = framed.find("</"); at != std::string::npos; at = framed.find("</", at + 3)) framed.replace(at, 2, "<\\/");
   put("/*FOCUS*/", framed);
+  // the viewer's code travels packed as well: the page carries the scene and the code as two packs
+  // and a loader that inflates the code and runs it, so the page stays small as the viewer grows
+  // (the scene and the focus stay outside the pack: they are what changes from one page to another)
+  const std::string open = "<script>", close = "</script>";
+  const std::string mark = "const PACKED='" + json + "';", aim = "const FOCUS=" + framed + ";";
+  const size_t from = out.find(open, out.find("<body>")), to = out.rfind(close);  // a reader's stylesheet may hold "<script>"
+  if (from == std::string::npos || to == std::string::npos || to < from) return out;
+  std::string code = out.substr(from + open.size(), to - from - open.size());
+  for (const std::string* cut : {&mark, &aim}) {
+    const size_t at = code.find(*cut);
+    if (at == std::string::npos) return out;
+    code.erase(at, cut->size());
+  }
+  const std::string loader =
+      "\n" + mark + "\n" + aim + "\nconst VIEWER='" + pack(code) +
+      "';\n(async()=>{try{const b=Uint8Array.from(atob(VIEWER),c=>c.charCodeAt(0));"
+      "const t=await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate'))).text();"
+      "const s=document.createElement('script');s.textContent=t;document.body.appendChild(s);}"
+      "catch(e){document.body.insertAdjacentHTML('beforeend','<p style=\"padding:20px;font-family:sans-serif\">"
+      "This browser cannot inflate the viewer (it lacks DecompressionStream). Open the page in a current one.</p>');}})();\n";
+  out.replace(from + open.size(), to - from - open.size(), loader);
   return out;
 }
 
@@ -788,6 +828,58 @@ std::string Scene::frame(const std::string& page, const std::string& title, int 
   };
   return "<iframe title=\"" + attribute(title) + " \u00b7 DriftSpec\" style=\"width:100%;height:" + std::to_string(height) +
          "px;border:0;border-radius:8px\" loading=\"lazy\" allowfullscreen srcdoc=\"" + attribute(page) + "\"></iframe>\n";
+}
+
+void Scene::trace(SceneDocument& out_document) const {
+  std::set<std::string> ids;
+  for (const auto& n : out_document.nodes) ids.insert(n.id);
+  std::map<std::string, size_t> at;
+  std::map<std::string, size_t> verificationAt;
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.expected) continue;
+    if (e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint) {
+      Requirement r;
+      r.id = e.id;
+      r.kind = e.kind == model::Kind::Requirement ? "requirement" : "constraint";
+      r.title = fieldOf(e, "title");
+      r.status = fieldOf(e, "status");
+      r.text = fieldOf(e, "text");
+      if (!e.scope.empty()) r.scope = nodeFor(ids, e.scope.back() == '@' ? e.scope.substr(0, e.scope.size() - 1) : e.scope);
+      at[r.id] = out_document.requirements.size();
+      out_document.requirements.push_back(r);
+    } else if (e.kind == model::Kind::Verification) {
+      Verification v;
+      v.id = e.id;
+      v.title = fieldOf(e, "title");
+      v.status = fieldOf(e, "status");
+      v.method = fieldOf(e, "method");
+      std::string test;
+      for (const char c : fieldOf(e, "tests") + ",") {  // the tests are written one per line or separated by commas
+        if (c == ',' || c == '\n') {
+          test.erase(0, test.find_first_not_of(" \t"));
+          test.erase(test.find_last_not_of(" \t") + 1);
+          if (!test.empty()) v.tests.push_back(test);
+          test.clear();
+        } else {
+          test += c;
+        }
+      }
+      verificationAt[v.id] = out_document.verifications.size();
+      out_document.verifications.push_back(v);
+    }
+  }
+  for (const auto& r : model_.relations()) {
+    if (r.kind == "refines" && at.count(r.from)) {
+      out_document.requirements[at[r.from]].parent = r.to;
+    } else if (r.kind == "verifies" && verificationAt.count(r.from)) {
+      out_document.verifications[verificationAt[r.from]].requirements.push_back(r.to);
+    } else if ((r.kind == "requires" || r.kind == "constrained-by") && at.count(r.to)) {
+      const std::string node = nodeFor(ids, r.from);
+      auto& nodes = out_document.requirements[at[r.to]].nodes;
+      if (!node.empty() && std::find(nodes.begin(), nodes.end(), node) == nodes.end()) nodes.push_back(node);
+    }
+  }
 }
 
 }  // namespace scene

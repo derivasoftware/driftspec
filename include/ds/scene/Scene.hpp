@@ -84,6 +84,29 @@ struct Tour {
   std::string group;  ///< interface or method
 };
 
+/// A requirement or a constraint as a reader of the viewer lists it: what it says, the one it
+/// refines, where it is written and the nodes that answer to it.
+struct Requirement {
+  std::string id;
+  std::string kind;  ///< requirement or constraint
+  std::string title;
+  std::string status;  ///< draft, approved, obsolete, or empty when not written
+  std::string text;
+  std::string parent;              ///< the requirement it refines; empty at the top
+  std::string scope;               ///< the node it is written in; empty at the top of the workspace
+  std::vector<std::string> nodes;  ///< the nodes whose entities answer to it
+};
+
+/// A verification and what it proves: the requirements and constraints, the method, the tests.
+struct Verification {
+  std::string id;
+  std::string title;
+  std::string status;
+  std::string method;  ///< test, review, analysis or inspection
+  std::vector<std::string> tests;
+  std::vector<std::string> requirements;
+};
+
 /// The whole model laid out once, nested, in two variants: every member, public members only.
 struct SceneDocument {
   std::vector<Node> nodes;
@@ -94,6 +117,8 @@ struct SceneDocument {
   std::map<std::string, std::string> titles;  ///< the title of every requirement and constraint a node links
   std::vector<Behaviour> behaviours;
   std::vector<Tour> tours;
+  std::vector<Requirement> requirements;  ///< every requirement and constraint, by id
+  std::vector<Verification> verifications;
 };
 
 /// Builds the structural scene of a model: every box placed inside its parent, once, so a
@@ -120,8 +145,10 @@ class Scene {
 
  private:
   void relate(SceneDocument& out_document) const;
-  void tour(SceneDocument& out_document) const;  // every public behaviour, expanded through what it calls  // the links between nodes, the
-                                                 // diagrams that show them, the titles of requirements
+  void tour(SceneDocument& out_document) const;
+  void trace(SceneDocument& out_document)
+      const;  // the requirements, what they refine and what answers to and proves them  // every public behaviour, expanded through what it
+              // calls  // the links between nodes, the diagrams that show them, the titles of requirements
 
   const model::Model& model_;
 };
