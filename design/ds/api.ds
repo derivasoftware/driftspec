@@ -1,0 +1,72 @@
+// The engine for a caller in the same process (SREQ-00015-1): a workspace as text in, the JSON
+// of the command line out. The Python face and a language server call it; the command line sees
+// the same model through the same JSON, so every caller reads one contract.
+
+package driftspec@ds {
+
+  module api {
+
+    requirement REQ-00085-1 {
+      status: draft
+      @refines SREQ-00015-1
+      title: The engine shall take a workspace as text, the buffers an editor holds included, and give back the JSON of the command line
+      text:
+        A workspace is a map from each file's path to its text, saved or not. check gives
+        the findings and the counts as ds check --json does, export the model as ds export
+        does, render a diagram drawn as text or svg or its render-IR, page the viewer framed
+        on the identities given, and expectedAt what the grammar takes at a place of a text.
+      rationale:
+        Owner, 2026-11-06 (DS-84): a Python face to depend on, and a language server; text in
+        and JSON out keeps one contract for every caller.
+      tags: api, python
+    }
+
+    class Api {                              // static: the engine, called in process
+      @requirement REQ-00085-1
+      + static check(files: Files) -> std::string
+      + static exportModel(files: Files) -> std::string
+      + static expectedAt(text: std::string, line: int, column: int) -> std::string
+      + static render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string
+      + static page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
+    }
+
+    dataclass Files {                        // each .ds file of a workspace by its path, as an editor holds it
+      @requirement REQ-00085-1
+      + texts: std::map<std::string, std::string>
+    }
+
+    sequence Api::check {
+      local parser: parse::Parser
+      local binder: bind::Binder
+      local checker: check::Checker
+      -> parser.parseText(path, text) -> parsed
+      -> binder.bind(parsed)
+      -> checker.run(binder)
+      return json
+    }
+
+    sequence Api::exportModel {
+      local exporter: exporter::JsonExport
+      -> exporter.render(model, pretty) -> json
+      return json
+    }
+
+    sequence Api::expectedAt {
+      local parser: parse::Parser
+      -> parser.expectedAt(text, line, column) -> words
+      return json
+    }
+
+    sequence Api::render {
+      local ir: render::IrExport
+      -> ir.render(diagram, pretty) -> drawing
+      return drawing
+    }
+
+    sequence Api::page {
+      local scene: scene::Scene
+      -> scene.page(title, css, focus) -> page
+      return page
+    }
+  }
+}
