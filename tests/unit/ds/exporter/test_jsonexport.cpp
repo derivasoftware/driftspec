@@ -58,6 +58,7 @@ TEST_F(TestJsonExport, CarriesTheMetamodelTheModelIsWrittenIn) {
     EXPECT_EQ(k["fields"][0]["type"], "text");
   }
   for (const auto& r : meta["relations"]) {
+    if (r["kind"] == "contains") EXPECT_FALSE(r["pairs"].empty());  // contains is given as the pairs it may join
     if (r["kind"] != "verifies") continue;
     verifies = true;
     EXPECT_EQ(r["from"][0], "verification");

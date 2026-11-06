@@ -275,19 +275,18 @@ model::Model Diff::marked(const model::Model& a, const model::Model& b, const Di
     (c.kind == "removed" ? removedRelations : addedRelations).insert(c.id);
   }
   std::vector<model::Relation> relations = out.relations();
-  // relations are rebuilt with their change in the multiplicity slot's sibling: a marker field is not
-  // on Relation, so the change travels in the kind as "kind+added" and IrExport reads it back
+  // relations are rebuilt with their change marked, for a drawing that shows it
   model::Model rebuilt;
   for (const auto& pair : out.entities()) rebuilt.declare(pair.second);
   for (const auto& r : out.relations()) {
     model::Relation m = r;
-    if (addedRelations.count(relationKey(r))) m.kind = r.kind + "+added";
+    if (addedRelations.count(relationKey(r))) m.change = "added";
     rebuilt.relate(m);
   }
   for (const auto& r : a.relations()) {
     if (removedRelations.count(relationKey(r))) {
       model::Relation m = r;
-      m.kind = r.kind + "+removed";
+      m.change = "removed";
       rebuilt.relate(m);
     }
   }

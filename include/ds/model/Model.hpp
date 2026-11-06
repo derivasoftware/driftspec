@@ -77,6 +77,7 @@ struct Relation {
   std::string to;
   Location location;
   std::string multiplicity;  ///< for owns/refs/shares: "1", "0..1" or "*" (R16); empty otherwise
+  std::string change = {};   ///< set by a diff on the model it marks: "added" or "removed"; empty otherwise
 };
 
 /// One diagnostic of the engine.

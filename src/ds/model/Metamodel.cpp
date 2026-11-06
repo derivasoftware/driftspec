@@ -1,5 +1,6 @@
 #include "ds/model/Metamodel.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace ds {
@@ -150,35 +151,38 @@ std::vector<KindSpec> build() {
   return k;
 }
 
+RelationSpec rel(const char* kind, const char* meaning, std::vector<Kind> from, std::vector<Kind> to) {
+  return {kind, meaning, std::move(from), std::move(to), {}};
+}
+
 std::vector<RelationSpec> buildRelations() {
   const Kind P = Kind::Package, M = Kind::Module, Rq = Kind::Requirement, V = Kind::Verification, Cs = Kind::Constraint;
   const Kind I = Kind::Interface, Op = Kind::Operation, Vw = Kind::View, Cl = Kind::Class, E = Kind::Enum, F = Kind::Function;
-  const Kind Me = Kind::Method, A = Kind::Attribute, O = Kind::Operator, S = Kind::Sequence, Ms = Kind::Message, Fr = Kind::Frame;
+  const Kind Me = Kind::Method, A = Kind::Attribute, O = Kind::Operator, S = Kind::Sequence, Ms = Kind::Message;
   const Kind St = Kind::State;
   return {
-      {"contains", "the parent holds the child", {P, M, Cl, I, S, St}, {P, M, Cl, E, F, Me, A, O, Op, S, Ms, Fr, Vw}},
-      {"exposes", "a package offers an interface", {P}, {I}},
-      {"requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S}, {Rq}},
-      {"constrained-by", "the entity obeys a constraint", {P, M, Cl, F, Me, I, Op, Vw}, {Cs}},
-      {"refines", "a requirement details another", {Rq}, {Rq}},
-      {"verifies", "a verification proves a requirement or a constraint", {V}, {Rq, Cs}},
-      {"about", "an artefact concerns the scope it is declared in", {Rq, V, Cs}, {}},
-      {"realises", "the entity carries out an interface", {Cl, V}, {I}},
-      {"exercised-by", "a behaviour is run by a verification", {S}, {V}},
-      {"inherits", "a class derives from another", {Cl}, {Cl}},
-      {"bounded-by", "a template parameter is bounded by a class", {Cl}, {Cl}},
-      {"owns", "an attribute owns its value", {A}, {Cl, E}},
-      {"refs", "an attribute refers to a value it does not own", {A}, {Cl, E}},
-      {"shares", "an attribute shares ownership of its value", {A}, {Cl, E}},
-      {"uses", "the entity names a type", {A, F, Me, Op, O, S}, {Cl, E}},
-      {"behaviour-of", "a sequence or a state machine is the behaviour of its subject", {S, St}, {Cl, F, Me, Op, I}},
-      {"calls", "a message calls an operation", {Ms}, {F, Me, Op}},
-      {"expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}},
-      {"couples-transient", "a behaviour touches a type for the length of a call", {S}, {Cl, E, F}},
-      {"couples-structural", "a behaviour reaches a type through an attribute", {S}, {Cl, E}},
-      {"on", "a transition fires on an operation", {St}, {Me, Op}},
-      {"does", "a transition runs an operation", {St}, {Me, Op}},
-      {"refers", "an annotation the language gives no meaning to", {}, {}},
+      rel("exposes", "a package offers an interface", {P}, {I}),
+      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S}, {Rq}),
+      rel("constrained-by", "the entity obeys a constraint", {P, M, Cl, F, Me, I, Op, Vw}, {Cs}),
+      rel("refines", "a requirement details another", {Rq}, {Rq}),
+      rel("verifies", "a verification proves a requirement or a constraint", {V}, {Rq, Cs}),
+      rel("about", "an artefact concerns the scope it is declared in", {Rq, V, Cs}, {}),
+      rel("realises", "the entity carries out an interface", {Cl, V}, {I}),
+      rel("exercised-by", "a behaviour is run by a verification", {S}, {V}),
+      rel("inherits", "a class derives from another", {Cl}, {Cl}),
+      rel("bounded-by", "a template parameter is bounded by a class", {Cl}, {Cl}),
+      rel("owns", "an attribute owns its value", {A}, {Cl, E}),
+      rel("refs", "an attribute refers to a value it does not own", {A}, {Cl, E}),
+      rel("shares", "an attribute shares ownership of its value", {A}, {Cl, E}),
+      rel("uses", "the entity names a type", {A, F, Me, Op, O, S}, {Cl, E}),
+      rel("behaviour-of", "a sequence or a state machine is the behaviour of its subject", {S, St}, {Cl, F, Me, Op, I}),
+      rel("calls", "a message calls an operation", {Ms}, {F, Me, Op}),
+      rel("expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}),
+      rel("couples-transient", "a behaviour touches a type for the length of a call", {S}, {Cl, E, F}),
+      rel("couples-structural", "a behaviour reaches a type through an attribute", {S}, {Cl, E}),
+      rel("on", "a transition fires on an operation", {St}, {Me, Op}),
+      rel("does", "a transition runs an operation", {St}, {Me, Op}),
+      rel("refers", "an annotation the language gives no meaning to", {}, {}),
   };
 }
 
@@ -237,8 +241,29 @@ const std::vector<KindSpec>& kinds() {
   return all;
 }
 
+namespace {
+
+// contains goes from a parent to a child exactly where the child may be declared: one pair per parent of each kind
+RelationSpec containment() {
+  RelationSpec contains{"contains", "the parent holds the child", {}, {}, {}};
+  for (const auto& k : kinds()) {
+    for (Kind p : k.parents) {
+      contains.pairs.push_back({p, k.kind});
+      if (std::find(contains.from.begin(), contains.from.end(), p) == contains.from.end()) contains.from.push_back(p);
+      if (std::find(contains.to.begin(), contains.to.end(), k.kind) == contains.to.end()) contains.to.push_back(k.kind);
+    }
+  }
+  return contains;
+}
+
+}  // namespace
+
 const std::vector<RelationSpec>& relations() {
-  static const std::vector<RelationSpec> all = buildRelations();
+  static const std::vector<RelationSpec> all = [] {
+    std::vector<RelationSpec> r{containment()};
+    for (auto& spec : buildRelations()) r.push_back(spec);
+    return r;
+  }();
   return all;
 }
 
@@ -263,7 +288,15 @@ const RelationSpec* relationOf(const std::string& kind) {
   return nullptr;
 }
 
-bool joins(const RelationSpec& relation, Kind from, Kind to) { return among(relation.from, from) && among(relation.to, to); }
+bool joins(const RelationSpec& relation, Kind from, Kind to) {
+  if (!relation.pairs.empty()) {
+    for (const auto& p : relation.pairs) {
+      if (p.first == from && p.second == to) return true;
+    }
+    return false;
+  }
+  return among(relation.from, from) && among(relation.to, to);
+}
 
 }  // namespace model
 }  // namespace ds

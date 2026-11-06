@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <stdexcept>
+
 #include "ds/model/Model.hpp"
 
 namespace {
@@ -72,6 +74,14 @@ TEST_F(TestModel, ARenameOntoADeclaredIdentityIsRefused) {
   model.declare(entity(Kind::Class, "p@m::C", "p@m", true));  // an expected node gives way
   EXPECT_TRUE(model.rename("p@m::A", "p@m::C"));
   EXPECT_FALSE(model.find("p@m::C")->expected);
+}
+
+TEST_F(TestModel, ARelationTheMetamodelDoesNotDeclareIsRefused) {
+  Model model;
+  EXPECT_THROW(model.relate({"depends-on", "p@m::A", "p@m::B", {}, ""}), std::logic_error);
+  EXPECT_TRUE(model.relations().empty());
+  model.relate({"uses", "p@m::A", "p@m::B", {}, ""});
+  EXPECT_EQ(model.relations().size(), 1u);
 }
 
 /// An entity knows the flags it was declared with.
