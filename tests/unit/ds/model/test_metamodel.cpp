@@ -132,8 +132,8 @@ TEST_F(TestManualPage, TheIndexListsTheKindsAndAnUnknownTopicHasNoPage) {
 
 TEST_F(TestManualTopics, TheTopicsAreTheTablesTheKindsAndTheCodes) {
   const auto topics = ds::model::manualTopics();
-  EXPECT_EQ(topics.size(), 3 + ds::model::kinds().size() + ds::model::codes().size());
-  EXPECT_EQ(topics.front(), "commands");
+  EXPECT_EQ(topics.size(), 4 + ds::model::kinds().size() + ds::model::codes().size());
+  EXPECT_EQ(topics.front(), "grammar");
 }
 
 }  // namespace

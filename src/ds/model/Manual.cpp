@@ -150,8 +150,10 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
 
 std::vector<CodeSpec> buildCodes() {
   return {
-      {"E-SYNTAX", "error", "A file does not parse: nothing in it reaches the model.",
-       "Look at the line and column given; ds manual <kind> shows how each thing is written."},
+      {"E-SYNTAX", "error",
+       "A file does not parse at the place shown. What parses around it still reaches the model, so other findings in that file "
+       "may come from the cut rather than from the design.",
+       "Fix this one first and check again. The message says what the place takes; ds manual grammar says what goes where."},
       {"E-DUPLICATE-IDENTITY", "error", "Two declarations name the same identity: one model has one entity per identity.",
        "Rename one, or reopen the scope instead of declaring it again."},
       {"E-MSG-ARITY", "error", "A message passes more or fewer arguments than the operation it calls takes.",
@@ -379,14 +381,56 @@ std::string indexPage() {
     out += name + "  ";
     column += name.size() + 2;
   }
-  out += "\n\nAlso: ds manual annotations · ds manual codes · ds manual <CODE> (E-SYNTAX, W-REF-UNDECLARED...)\n";
+  out +=
+      "\n\nAlso: ds manual grammar (what goes where, identities, annotations) · ds manual annotations · ds manual codes ·\n"
+      "ds manual <CODE> (E-SYNTAX, W-REF-UNDECLARED...)\n";
+  return out;
+}
+
+std::string grammarPage() {
+  std::string out =
+      "How a workspace is written\n\n"
+      "Files\n"
+      "  A workspace is every .ds file under a directory, read as one model; files may split a package or a module any way.\n"
+      "  One thing per line. // starts a comment. A field is key: value to the end of its line; a longer value goes on\n"
+      "  the lines after key:, indented.\n\n"
+      "Identities\n"
+      "  Packages join with @, everything inside a package with ::  —  shop@store::Cart::add\n"
+      "  A package reopens (package shop { } twice, or package shop@store { }); a name is resolved from the innermost\n"
+      "  scope outwards, or qualified: store::Cart. Artefacts (requirements, verifications, constraints) are named by\n"
+      "  their id, which ends in its revision: REQ-00001-1. The prefix (SREQ, REQ, VER, CST...) is a convention; the\n"
+      "  level comes from where it is written.\n\n"
+      "What goes inside what\n";
+  for (const auto& k : kinds()) {
+    std::string inside;
+    for (const auto& other : kinds())
+      for (Kind parent : other.parents)
+        if (parent == k.kind) inside += (inside.empty() ? "" : ", ") + std::string(kindName(other.kind));
+    if (!inside.empty()) out += "  " + pad(kindName(k.kind), 14) + inside + "\n";
+  }
+  out +=
+      "  (and at the top of a file: package, diagram)\n\n"
+      "Annotations\n"
+      "  @<word> <ID> on a line of its own, inside the body of what it is about: a package, a class, a member, a\n"
+      "  function, an enum, an interface, an operation, a sequence, a requirement, a verification, a constraint.\n"
+      "  ds manual annotations says which words mean something.\n\n"
+      "Definitions and extensions\n"
+      "  A body that holds only annotations does not define the entity again: it extends one defined elsewhere\n"
+      "  (W-REF-UNDECLARED when nothing defines it). Give it a member, a field or a value and it is a definition.\n\n"
+      "Behaviour\n"
+      "  A sequence is the behaviour of an operation, a method or a function: sequence Cart::add { ... }. A message\n"
+      "  goes to self, an attribute, a local (local x: Type) or an earlier result: self -> stock.has(item) -> ok.\n"
+      "  A scenario is one path through it, named: written apart (sequence Cart::add / out { ... }) or on a branch\n"
+      "  (opt the item is out / out { ... }). A call names the scenario it enters: -> add(item) / out -> r.\n\n"
+      "The counts ds check prints\n"
+      "  entities · expected (named but declared nowhere: W-REF-UNDECLARED) · relations · findings\n";
   return out;
 }
 
 }  // namespace
 
 std::vector<std::string> manualTopics() {
-  std::vector<std::string> out{"commands", "annotations", "codes"};
+  std::vector<std::string> out{"grammar", "commands", "annotations", "codes"};
   for (const auto& k : kinds()) out.push_back(kindName(k.kind));
   for (const auto& c : codes()) out.push_back(c.code);
   return out;
@@ -394,6 +438,7 @@ std::vector<std::string> manualTopics() {
 
 std::string manualPage(const std::string& topic) {
   if (topic.empty()) return indexPage();
+  if (topic == "grammar") return grammarPage();
   if (const KindSpec* k = kindNamed(topic)) return kindPage(*k);
   if (const CodeSpec* c = codeOf(topic)) return c->code + " (" + c->severity + ")\n\n" + c->meaning + "\n\nWhat to do: " + c->fix + "\n";
   if (topic == "commands") {

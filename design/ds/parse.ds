@@ -42,15 +42,45 @@ package driftspec@ds {
         tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
     }
 
+    requirement REQ-00080-1 {
+      status: approved
+      @refines SREQ-00002-1
+      title: The parser shall say where a syntax error sits and what the grammar takes there
+      text:
+        The detail of a syntax error names the declaration it is in (in a
+        module, in a class, in a sequence...) and the words the grammar takes
+        at that place, read from the parse state: its keywords, an annotation
+        when it takes one, a field when it takes key: value. A block the
+        parser had to close early says what it would have taken. When the
+        parser has lost its place the list is left out, rather than naming
+        the whole language.
+      rationale:
+        Owner, 2026-11-06 (DS-79): a newcomer agent wrote a design in three
+        attempts with the manual, and two of them were spent on syntax errors
+        that said what was wrong but not what was allowed.
+      tags: parse, syntax, manual
+    }
+
+    verification VER-00089-1 {
+      status: approved
+      @requirement REQ-00080-1
+      title: Integration tests confirm a syntax error names the declaration it is in and what the grammar takes there
+      method: test
+      tests:
+        tests/integration/ds/parse/test_syntax_errors.cpp::TestSyntaxErrors.AWordTheGrammarDoesNotTakeNamesWhatTheModuleTakes
+        tests/integration/ds/parse/test_syntax_errors.cpp::TestSyntaxErrors.ABlockClosedEarlyNamesWhatItWouldHaveTaken
+    }
+
     dataclass ParsedFile {                   // one file read: its path, text, tree and whether it parsed
       @requirement REQ-00008-1
+      @requirement REQ-00080-1
       + path: std::string
       + text: std::string
       + owns tree: std::shared_ptr<TSTree>
       + hasSyntaxErrors: bool
       + errorLine: int                       // where it stops parsing (SREQ-00002-1: a finding at its place)
       + errorColumn: int
-      + errorDetail: std::string
+      + errorDetail: std::string             // where it sits and what the grammar takes there (REQ-00080-1)
     }
 
     class Parser {                           // the tree-sitter parser with the DriftSpec language set

@@ -83,6 +83,9 @@ TEST_F(TestManual, EveryTopicHasAPageAndAnUnknownOneHasNone) {
   EXPECT_NE(classPage.find("Example (a workspace that checks clean)"), std::string::npos);
   EXPECT_NE(ds::model::manualPage("W-REF-UNDECLARED").find("What to do:"), std::string::npos);
   EXPECT_NE(ds::model::manualPage("annotations").find("@requirement"), std::string::npos);
+  const std::string grammar = ds::model::manualPage("grammar");  // what goes inside what, from the metamodel
+  EXPECT_NE(grammar.find("What goes inside what"), std::string::npos);
+  EXPECT_NE(grammar.find("class         method, attribute, operator"), std::string::npos);
   EXPECT_TRUE(ds::model::manualPage("weather").empty());
 }
 
