@@ -108,6 +108,8 @@ package driftspec@ds {
       + flags: std::vector<std::string>
       + parents: std::vector<Kind>
       + top: bool
+      + syntax: std::string                  // how it is written (REQ-00079-1)
+      + example: std::string                 // a minimal workspace that declares one and checks clean
     }
 
     dataclass RelationSpec {                 // one relation and the kinds it may join; no ends is any kind
@@ -142,6 +144,89 @@ package driftspec@ds {
     }
     function fieldSourceName(source: FieldSource) -> std::string {
       @requirement REQ-00066-1
+    }
+
+    // ---- the manual ds embeds (REQ-00079-1): written from the metamodel, held to the engine ----
+    requirement REQ-00079-1 {
+      status: approved
+      @refines SREQ-00014-1
+      title: The metamodel shall carry the manual of the language: how each kind is written with a minimal example that checks clean, the catalogue of finding codes, the annotations and the commands
+      text:
+        Every kind of the metamodel says how it is written and gives an
+        example: a workspace of its own that declares one and checks with no
+        finding. The catalogue holds every code the engine reports, with its
+        severity, what it means and what to do, and nothing the engine does
+        not report. The annotations that mean something name the relation
+        they make; the commands say what each exit code means. manualPage
+        renders the index, a kind, a code, the commands, the annotations or
+        the codes, and nothing for a topic it does not know.
+      rationale:
+        Owner, 2026-11-06 (DS-79): as argos embeds its body of knowledge, ds
+        embeds its manual; generated from the metamodel and tested against
+        the engine, it is the one place the language is described.
+      tags: manual, metamodel, language
+    }
+
+    verification VER-00088-1 {
+      status: approved
+      @requirement REQ-00079-1
+      title: Integration tests confirm every kind is written down with an example that checks clean, the catalogue is exactly the codes the engine reports, and every topic has a page
+      method: test
+      tests:
+        tests/integration/ds/model/test_manual.cpp::TestManual.EveryKindIsWrittenDownAndItsExampleChecksClean
+        tests/integration/ds/model/test_manual.cpp::TestManual.TheCatalogueHoldsExactlyTheCodesTheEngineReports
+        tests/integration/ds/model/test_manual.cpp::TestManual.EveryTopicHasAPageAndAnUnknownOneHasNone
+    }
+
+    dataclass CodeSpec {                     // a finding code: what it means and what to do about it
+      @requirement REQ-00079-1
+      + code: std::string
+      + severity: std::string
+      + meaning: std::string
+      + fix: std::string
+    }
+
+    dataclass AnnotationSpec {               // an annotation that means something, and the relation it makes
+      @requirement REQ-00079-1
+      + name: std::string
+      + relation: std::string
+      + meaning: std::string
+    }
+
+    dataclass CommandSpec {                  // a command: how it is invoked, what it does, what each exit code says
+      @requirement REQ-00079-1
+      + name: std::string
+      + synopsis: std::string
+      + does: std::string
+      + exits: std::vector<std::pair<int, std::string>>
+    }
+
+    function codes() -> std::vector<CodeSpec> {
+      @requirement REQ-00079-1
+    }
+    function codeOf(code: std::string) -> CodeSpec {
+      @requirement REQ-00079-1
+    }
+    function annotations() -> std::vector<AnnotationSpec> {
+      @requirement REQ-00079-1
+    }
+    function commands() -> std::vector<CommandSpec> {
+      @requirement REQ-00079-1
+    }
+    function commandOf(name: std::string) -> CommandSpec {
+      @requirement REQ-00079-1
+    }
+    function syntaxOf(kind: Kind) -> std::string {
+      @requirement REQ-00079-1
+    }
+    function exampleOf(kind: Kind) -> std::string {
+      @requirement REQ-00079-1
+    }
+    function manualPage(topic: std::string) -> std::string {
+      @requirement REQ-00079-1
+    }
+    function manualTopics() -> std::vector<std::string> {
+      @requirement REQ-00079-1
     }
 
     enum Kind {

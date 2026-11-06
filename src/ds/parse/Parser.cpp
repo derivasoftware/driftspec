@@ -1,10 +1,14 @@
 #include "ds/parse/Parser.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 extern "C" const TSLanguage* tree_sitter_driftspec(void);
 
@@ -12,6 +16,54 @@ namespace ds {
 namespace parse {
 
 namespace {
+
+// where an error sits, in the reader's words: the nearest declaration around it
+std::string contextOf(TSNode node) {
+  static const std::pair<const char*, const char*> kWhere[] = {
+      {"class_body", "in a class"},        {"member_body", "in the body of a member"},
+      {"module", "in a module"},           {"package", "in a package"},
+      {"interface", "in an interface"},    {"operation", "in an operation"},
+      {"sequence", "in a sequence"},       {"state", "in a state machine"},
+      {"requirement", "in a requirement"}, {"verification", "in a verification"},
+      {"constraint", "in a constraint"},   {"usecase", "in a use case"},
+      {"diagram", "in a diagram"},         {"source_file", "at the top of the file"}};
+  for (TSNode n = ts_node_parent(node); !ts_node_is_null(n); n = ts_node_parent(n)) {
+    const std::string type = ts_node_type(n);
+    for (const auto& w : kWhere)
+      if (type == w.first) return w.second;
+  }
+  return "at the top of the file";
+}
+
+// what the grammar would have taken where the error starts: its keywords, and a field or an
+// annotation when it takes those; a hint, read from the parse state, not a rule of its own
+std::string expectedAt(TSNode node) {
+  const TSLanguage* language = ts_node_language(node);
+  const TSNode before = ts_node_prev_sibling(node);
+  const TSStateId state = ts_node_is_null(before) ? ts_node_parse_state(node) : ts_node_next_parse_state(before);
+  TSLookaheadIterator* it = ts_lookahead_iterator_new(language, state);
+  if (!it) return "";
+  std::vector<std::string> words;
+  bool field = false, annotation = false;
+  while (ts_lookahead_iterator_next(it)) {
+    const TSSymbol symbol = ts_lookahead_iterator_current_symbol(it);
+    const std::string name = ts_lookahead_iterator_current_symbol_name(it);
+    const TSSymbolType type = ts_language_symbol_type(language, symbol);
+    if (name == "name") field = true;
+    if (name == "@") annotation = true;
+    if (type == TSSymbolTypeAnonymous && !name.empty() && std::isalpha(static_cast<unsigned char>(name[0])) &&
+        std::find(words.begin(), words.end(), name) == words.end())
+      words.push_back(name);
+  }
+  ts_lookahead_iterator_delete(it);
+  if (words.size() > 16) return "";  // recovery lost its place: the list would be the whole language, noise
+  std::sort(words.begin(), words.end());
+  std::string out;
+  for (const auto& w : words) out += (out.empty() ? "" : ", ") + w;
+  if (annotation) out += std::string(out.empty() ? "" : ", ") + "@annotation";
+  if (field) out += std::string(out.empty() ? "" : ", ") + "key: value";
+  return out;
+}
 
 // the first place the tree does not parse: an ERROR node (text the grammar did not expect)
 // or a MISSING one (a token it had to invent), searched in document order
@@ -29,12 +81,16 @@ bool firstError(TSNode node, const std::string& text, ParsedFile& file) {
     file.errorLine = static_cast<int>(at.row) + 1;
     file.errorColumn = static_cast<int>(at.column) + 1;
     if (missing) {
-      file.errorDetail = std::string("missing `") + ts_node_type(node) + "`";
+      file.errorDetail = std::string("missing `") + ts_node_type(node) + "` " + contextOf(node);
+      const std::string expected = expectedAt(node);  // the parser closed early: what was written there is not taken
+      if (!expected.empty()) file.errorDetail += ", which takes " + expected;
     } else {
       std::string snippet = text.substr(ts_node_start_byte(node), ts_node_end_byte(node) - ts_node_start_byte(node));
       snippet = snippet.substr(0, snippet.find('\n'));
       if (snippet.size() > 24) snippet = snippet.substr(0, 24) + "...";
-      file.errorDetail = "unexpected `" + snippet + "`";
+      file.errorDetail = "unexpected `" + snippet + "` " + contextOf(node);
+      const std::string expected = expectedAt(node);
+      if (!expected.empty()) file.errorDetail += "; it takes " + expected;
     }
     return true;
   }

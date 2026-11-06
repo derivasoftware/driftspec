@@ -53,6 +53,14 @@ package driftspec@ds {
       exit 0: default
       exit 1: unknown-question
     }
+
+    operation manual(topic: string) -> none {
+      @requirement SREQ-00014-1
+      command: ds manual [topic] [--json]
+      stdout: the index, or the page of a kind, a finding code, the commands, the annotations or the codes
+      exit 0: default
+      exit 1: no-topic
+    }
   }
 
   sequence cli::check {
@@ -97,6 +105,14 @@ package driftspec@ds {
 
   sequence cli::query / unknown-question {
     -> app::main(workspace) / unknown-question -> code
+  }
+
+  sequence cli::manual {
+    -> app::main(topic) / manual -> code
+  }
+
+  sequence cli::manual / no-topic {
+    -> app::main(topic) / no-topic -> code
   }
 }
 

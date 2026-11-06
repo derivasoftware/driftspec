@@ -18,6 +18,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/diff/Diff.hpp"
 #include "ds/export/JsonExport.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
@@ -123,6 +124,37 @@ int emit(const std::string& output, const std::string& text) {
 
 std::string locationJson(const ds::model::Location& l) {
   return nlohmann::json{{"file", l.file}, {"line", l.line}, {"column", l.column}}.dump();
+}
+
+/// A page of the manual ds embeds; an unknown topic lists the ones there are.
+int manual(const std::string& topic, bool json) {
+  const std::string page = ds::model::manualPage(topic);
+  if (page.empty()) {
+    std::cerr << "no page '" << topic << "' in the manual; there are:";
+    for (const auto& t : ds::model::manualTopics()) std::cerr << " " << t;
+    std::cerr << "\n";
+    return 1;
+  }
+  if (!json) {
+    std::cout << page;
+    return 0;
+  }
+  nlohmann::json out{{"topic", topic.empty() ? "index" : topic}, {"text", page}};
+  for (const auto& k : ds::model::kinds()) {
+    if (topic != ds::model::kindName(k.kind)) continue;
+    nlohmann::json fields = nlohmann::json::array();
+    for (const auto& f : k.fields)
+      fields.push_back({{"name", f.name},
+                        {"type", ds::model::fieldTypeName(f.type)},
+                        {"source", ds::model::fieldSourceName(f.source)},
+                        {"meaning", f.meaning}});
+    out["kind"] = {{"meaning", k.meaning}, {"syntax", k.syntax}, {"fields", fields}, {"flags", k.flags}, {"example", k.example}};
+  }
+  if (const ds::model::CodeSpec* c = ds::model::codeOf(topic))
+    out["code"] = {{"code", c->code}, {"severity", c->severity}, {"meaning", c->meaning}, {"fix", c->fix}};
+  if (topic.empty()) out["topics"] = ds::model::manualTopics();
+  std::cout << out.dump(2) << "\n";
+  return 0;
 }
 
 int check(const std::string& dir, bool json) {
@@ -245,7 +277,7 @@ struct Render {
 int main(int argc, char** argv) {
   CLI::App app{"ds: a software design as text, checked, drawn, compared and asked", "ds"};
   app.require_subcommand(1);
-  app.footer("A workspace is a directory of .ds files read as one. Each command takes --help.");
+  app.footer("A workspace is a directory of .ds files read as one. Each command takes --help; ds manual tells the rest.");
   const auto workspace = [](CLI::App* cmd, std::string* dir) {
     cmd->add_option("workspace", *dir, "a directory of .ds files")->required();
   };
@@ -301,6 +333,20 @@ int main(int argc, char** argv) {
   queryCmd->add_option("subject", subject, "what it is asked about");
   queryCmd->add_flag("--json", json, "answer as JSON");
 
+  std::string topic;
+  auto* manualCmd = app.add_subcommand("manual", "this manual: how each kind is written, what each finding means, the commands");
+  manualCmd->add_option("topic", topic, "a kind (class, sequence...), a finding code, commands, annotations or codes");
+  manualCmd->add_flag("--json", json, "the page as JSON");
+
+  // every command says its exit codes, from the one table the manual prints too (DS-79)
+  for (auto* cmd : {checkCmd, exportCmd, renderCmd, diffCmd, queryCmd, manualCmd}) {
+    const ds::model::CommandSpec* spec = ds::model::commandOf(cmd->get_name());
+    if (!spec) continue;
+    std::string exits = "Exit codes:";
+    for (const auto& e : spec->exits) exits += "\n  " + std::to_string(e.first) + "  " + e.second;
+    cmd->footer(exits);
+  }
+
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError& e) {
@@ -308,6 +354,7 @@ int main(int argc, char** argv) {
     return code == 0 ? 0 : 2;  // help is not a failure; a wrong command line is bad usage
   }
 
+  if (manualCmd->parsed()) return manual(topic, json);
   if (checkCmd->parsed()) return check(dir, json);
   if (renderCmd->parsed()) return render.run();
   if (diffCmd->parsed()) {
