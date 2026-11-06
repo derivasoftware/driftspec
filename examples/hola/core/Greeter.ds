@@ -1,0 +1,23 @@
+// Builds the greeting of a name. Knows nothing about processes or exit codes.
+// It owns its history, refers to the locale it was given and shares a cache
+// with whoever else greets.
+
+package hola {
+  module core {
+    class Greeter {
+      @requirement REQ-00001-1
+      - owns style: Style
+      - owns history: list<Greeting>
+      - refs locale: Locale
+      - shares cache: GreetingCache
+      + greet(name: string) -> Greeting
+      + valid(name: string) -> bool
+      - format(name: string) -> string
+    }
+
+    sequence Greeter::greet {
+      -> format(name) -> text
+      -> style.apply(text) -> styled
+    }
+  }
+}

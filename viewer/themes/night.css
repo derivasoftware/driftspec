@@ -1,0 +1,30 @@
+/* A dark theme for the DriftSpec viewer: ds view <workspace> --css viewer/themes/night.css
+   Every variable the viewer draws with is set here; copy the file and change what you like. */
+:root {
+  --bg: #0e1116;          /* the canvas */
+  --panel: #161b22;       /* boxes, cards, buttons */
+  --fg: #e6edf3;          /* text and outlines */
+  --muted: #8b949e;       /* secondary text */
+  --line: #30363d;        /* thin rules */
+  --soft: #1f242c;        /* hover */
+  --accent: #58a6ff;      /* selection, interfaces, the viewport in the minimap */
+  --accent-soft: #1b2b44;
+  --req: #f0a07a;         /* requirement chips */
+  --req-soft: #3a2418;
+  --priv: #7d8590;        /* private members */
+  --pkg: #12161c;         /* a package */
+  --mod: #181d24;         /* a module */
+  --ifc: #15263a;         /* an interface */
+  --k-class: #79b8ff;     /* the stripe of each kind */
+  --k-function: #56d4b0;
+  --k-dataclass: #c297ff;
+  --k-enum: #e3b341;
+  --r-owns: #f778ba;      /* what a touched box composes, aggregates, calls and uses */
+  --r-agg: #39c5cf;
+  --r-uses: #a5b4fc;
+  --r-calls: #ff7b72;
+  --ok: #3fb950;          /* linked to a requirement */
+  --warn: #f0883e;        /* linked to none */
+  --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}

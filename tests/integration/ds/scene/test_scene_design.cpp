@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -57,6 +59,11 @@ class TestSceneOfTheDesign : public ::testing::Test {
         }
     }
   }
+
+  static std::string packedIn(const std::string& page) {
+    const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
+    return ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+  }
 };
 
 TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
@@ -81,8 +88,111 @@ TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
 
 TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript) {
   const std::string page = ds::scene::Scene(model).page("design");
-  for (const auto& n : nodes) EXPECT_NE(page.find("\"" + n.id + "\""), std::string::npos) << n.id;
+  const std::string scene = packedIn(page);
+  for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
   EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
+  EXPECT_LT(page.size(), 100u * 1024u);
+}
+
+TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
+  const std::string page = ds::scene::Scene(model).page("design");
+  const std::string frame = ds::scene::Scene::frame(page, "design", 500);
+  EXPECT_EQ(frame.rfind("<iframe ", 0), 0u);
+  EXPECT_NE(frame.find("height:500px"), std::string::npos);
+  EXPECT_EQ(frame.find('<', 1), frame.rfind("</iframe>"));  // the page travels escaped: no tag of it opens inside the host
+  EXPECT_NE(frame.find("&lt;canvas"), std::string::npos);
+  const std::string scene = packedIn(frame);  // base64 needs no escaping in an attribute: the pack travels as it is
+  for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
+  EXPECT_LT(frame.size(), 120u * 1024u);
+}
+
+TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
+  const std::string page = ds::scene::Scene(model).page("design", ":root{--k-class:#e06c75}</style><script>bad()</script>");
+  const auto theme = page.find("--k-class:#e06c75");
+  ASSERT_NE(theme, std::string::npos);
+  EXPECT_GT(theme, page.find("--k-class:#3567a0"));                    // after the viewer's own value, so it wins
+  EXPECT_NE(page.find("<\\/style><script>bad()"), std::string::npos);  // left as text inside the style, never a tag
+  EXPECT_EQ(page.find("</style>", theme), page.find("</style>\n</head>"));
+}
+
+TEST_F(TestSceneOfTheDesign, EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws) {
+  const auto doc = ds::scene::Scene(model).build();
+  const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "calls"};
+  bool checkerCallsModel = false;
+  for (const auto& l : doc.links) {
+    EXPECT_EQ(byId.count(l.from), 1u) << l.from;
+    EXPECT_EQ(byId.count(l.to), 1u) << l.to;
+    EXPECT_TRUE(kinds.count(l.kind)) << l.kind;
+    EXPECT_GT(l.count, 0);
+    if (l.kind == "calls" && l.from.rfind("driftspec@ds@check::Checker::", 0) == 0 && l.to.rfind("driftspec@ds@model::Model::", 0) == 0) {
+      checkerCallsModel = true;
+      EXPECT_FALSE(l.sequences.empty());
+    }
+  }
+  EXPECT_TRUE(checkerCallsModel);
+  EXPECT_GT(doc.links.size(), 200u);
+}
+
+TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle) {
+  const auto doc = ds::scene::Scene(model).build();
+  bool checkNamespace = false;
+  for (const auto& d : doc.diagrams) {
+    for (const auto& n : d.nodes) EXPECT_EQ(byId.count(n), 1u) << d.name << " " << n;
+    if (d.name == "CL_CheckNamespace")
+      checkNamespace = std::find(d.nodes.begin(), d.nodes.end(), "driftspec@ds@check::Checker") != d.nodes.end();
+  }
+  EXPECT_TRUE(checkNamespace);
+  for (const auto& n : doc.nodes)
+    for (const auto& r : n.requirements) EXPECT_TRUE(doc.titles.count(r)) << r;
+}
+
+TEST_F(TestSceneOfTheDesign, EveryInterfaceCommandIsATourThatReachesTheModelAndComesBack) {
+  const auto doc = ds::scene::Scene(model).build();
+  int check = -1, syntax = -1;
+  for (const auto& t : doc.tours) {
+    const auto& b = doc.behaviours[static_cast<size_t>(t.behaviour)];
+    for (const auto& s : ds::scene::Scene::expand(doc, t.behaviour, 7)) {
+      EXPECT_EQ(byId.count(s.from), 1u) << b.id << " " << s.from;
+      EXPECT_EQ(byId.count(s.to), 1u) << b.id << " " << s.to;
+    }
+    if (b.id == "driftspec@ds@cli::check") {
+      check = t.behaviour;
+      EXPECT_EQ(t.group, "interface");
+    }
+    if (b.id == "driftspec@ds@cli::check / syntax-error") syntax = t.behaviour;
+  }
+  ASSERT_GE(check, 0);
+  ASSERT_GE(syntax, 0);  // a named scenario is a tour of its own
+  const auto steps = ds::scene::Scene::expand(doc, check, 7);
+  bool reachesTheChecker = false;
+  int depth = 0;
+  for (const auto& s : steps) {
+    reachesTheChecker |= s.to.rfind("driftspec@ds@check::Checker::", 0) == 0;
+    depth = std::max(depth, s.depth);
+  }
+  EXPECT_TRUE(reachesTheChecker);
+  EXPECT_GE(depth, 4);
+  EXPECT_TRUE(steps.back().back);  // the command answers
+}
+
+TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce) {
+  const auto doc = ds::scene::Scene(model).build();
+  std::set<std::string> seen;
+  size_t calls = 0, steps = 0;
+  for (const auto& b : doc.behaviours) {
+    EXPECT_TRUE(seen.insert(b.id).second) << b.id;
+    calls += b.calls.size();
+  }
+  for (const auto& t : doc.tours) steps += ds::scene::Scene::expand(doc, t.behaviour, 7).size();
+  EXPECT_LT(calls * 5, steps);                                             // the tours replay many more steps than the calls written
+  EXPECT_LT(ds::scene::Scene(model).page("design").size(), 250u * 1024u);  // the whole viewer of ds's design
+}
+
+TEST_F(TestSceneOfTheDesign, HidingPrivateMembersMakesNoBoxWider) {
+  for (const auto& n : nodes) {
+    if (!n.lean || n.kind == "row") continue;
+    EXPECT_LE(n.leanBox.w, n.full.w + 0.01) << n.id;
+  }
 }
 
 TEST_F(TestSceneOfTheDesign, EveryBoxNestsInItsParentApartFromItsSiblings) { nestsAndKeepsApart(false); }

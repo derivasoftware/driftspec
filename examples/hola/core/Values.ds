@@ -1,0 +1,14 @@
+package hola {
+  module core {
+    dataclass Locale {
+      + language: string
+      + region: string
+    }
+
+    class GreetingCache {
+      + find(name: string) -> optional<Greeting>
+      + keep(greeting: Greeting) -> none
+      - owns entries: map<string, Greeting>
+    }
+  }
+}

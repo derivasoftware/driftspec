@@ -11,8 +11,8 @@ package driftspec@ds {
 
     operation check(workspace: path) -> none {
       @requirement SREQ-00002-1
-      command: ds check <workspace>
-      stdout: one line per finding, then the counts of the model
+      command: ds check <workspace> [--json]
+      stdout: one line per finding, then the counts of the model; with --json, both as JSON
       exit 0: default
       exit 1: syntax-error
       exit 2: bad-usage
@@ -21,63 +21,34 @@ package driftspec@ds {
     operation export(workspace: path) -> none {
       @requirement SREQ-00006-1
       command: ds export <workspace>
-      stdout: the model as JSON, with its relations and findings
+      stdout: the model as JSON, with its relations, findings and metamodel
       exit 0: default
       exit 1: no-workspace
     }
 
-    operation render(workspace: path, diagram: string) -> none {
+    operation render(input: path, diagram: string) -> none {
       @requirement SREQ-00005-1
       @requirement SREQ-00010-1
-      command: ds render <workspace> [diagram] [--svg|--text|--cells|--layout] [--width N]
-      stdout: the render-IR as JSON, or the drawing it is asked for; no diagram lists them
+      @requirement SREQ-00013-1
+      command: ds render <workspace|ir.json> [diagram] [-f html|json|svg|text|cells|ir|layout] [-w N] [-o file] [--embed [--height N]] [--css file]
+      stdout: html, the viewer of the whole model, framed on the diagram when one is named; json, its scene; svg, text or cells, the diagram drawn; ir or layout, its data
       exit 0: default
       exit 1: no-diagram
     }
 
-    operation draw(document: path) -> none {
-      @requirement SREQ-00005-1
-      command: ds draw <render-ir.json> [--svg|--text|--cells] [--width N]
-      stdout: the drawing of any render-IR document
-      exit 0: default
-      exit 1: no-document
-    }
-
-    operation coupling(workspace: path) -> none {
-      @requirement SREQ-00004-1
-      command: ds coupling <workspace>
-      stdout: what every behaviour touches outside its module
-      exit 0: default
-    }
-
     operation diff(before: string, after: string) -> none {
       @requirement SREQ-00007-1
-      command: ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]
+      command: ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]
       stdout: the changes in the terms of the model, or a diagram with them marked
       exit 0: default
       exit 1: findings
     }
 
-    operation scene(workspace: path) -> none {
-      @requirement SREQ-00013-1
-      command: ds scene <workspace>
-      stdout: the whole model laid out once, nested, as JSON for a viewer
-      exit 0: default
-      exit 1: no-workspace
-    }
-
-    operation view(workspace: path) -> none {
-      @requirement SREQ-00013-1
-      command: ds view <workspace> > model.html
-      stdout: the viewer page with the whole scene inside, to open in a browser
-      exit 0: default
-      exit 1: no-workspace
-    }
-
     operation query(workspace: path, question: string, subject: string) -> none {
       @requirement SREQ-00011-1
+      @requirement SREQ-00004-1
       command: ds query <workspace> <question> [subject] [--json]
-      stdout: one answer per line, or JSON
+      stdout: one answer per line, or JSON; coupling answers what every behaviour touches outside its module
       exit 0: default
       exit 1: unknown-question
     }
@@ -104,23 +75,11 @@ package driftspec@ds {
   }
 
   sequence cli::render {
-    -> app::main(workspace) / render -> code
+    -> app::main(input) / render -> code
   }
 
   sequence cli::render / no-diagram {
-    -> app::main(workspace) / no-diagram -> code
-  }
-
-  sequence cli::draw {
-    -> app::main(document) / draw -> code
-  }
-
-  sequence cli::draw / no-document {
-    -> app::main(document) / no-document -> code
-  }
-
-  sequence cli::coupling {
-    -> app::main(workspace) / coupling -> code
+    -> app::main(input) / no-diagram -> code
   }
 
   sequence cli::diff {
@@ -129,22 +88,6 @@ package driftspec@ds {
 
   sequence cli::diff / findings {
     -> app::main(before) / diff-findings -> code
-  }
-
-  sequence cli::scene {
-    -> app::main(workspace) / scene -> code
-  }
-
-  sequence cli::scene / no-workspace {
-    -> app::main(workspace) / no-workspace -> code
-  }
-
-  sequence cli::view {
-    -> app::main(workspace) / view -> code
-  }
-
-  sequence cli::view / no-workspace {
-    -> app::main(workspace) / no-workspace -> code
   }
 
   sequence cli::query {

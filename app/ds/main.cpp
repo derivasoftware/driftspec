@@ -2,12 +2,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <CLI/CLI.hpp>
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -26,19 +28,6 @@
 #include "ds/scene/Scene.hpp"
 
 namespace {
-
-int usage() {
-  std::cerr << "usage: ds check <workspace-dir>\n       ds export <workspace-dir>\n       ds render <workspace-dir> [diagram] "
-               "[--svg|--text|--cells] [--width N]   (render-IR JSON, or the SVG / terminal drawing / cell grid by ds itself; N wraps the "
-               "drawing)\n       ds draw <render-ir.json> [--svg|--text|--cells] [--width N]   (any render-IR document, drawn like a "
-               "workspace diagram)\n       ds coupling <workspace-dir>                   (what every behaviour touches outside its "
-               "module)\n       ds diff <A> <B> [path] [--svg|--text|--cells <diagram>]   (design diff: two directories, or two git "
-               "revisions of <path>)\n       ds query <workspace-dir> <question> [subject] [--json]   (ask the model: diagrams · entities "
-               "<scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings [file])\n"
-               "       ds scene <workspace-dir>                      (the whole model laid out once, nested, as JSON for a viewer)\n"
-               "       ds view <workspace-dir> > model.html          (the viewer page with the scene inside: open it in a browser)\n";
-  return 2;
-}
 
 bool isDirectory(const std::string& path) {
   struct stat st;
@@ -94,207 +83,279 @@ ds::model::Model load(const std::string& dir) {
   return model;
 }
 
+/// The workspace loaded, or nothing when the path is not a directory (reported on stderr).
+bool loadWorkspace(const std::string& dir, ds::model::Model* model) {
+  if (!isDirectory(dir)) {
+    std::cerr << "cannot read " << dir << ": not a directory\n";
+    return false;
+  }
+  *model = load(dir);
+  return true;
+}
+
+std::string titleOf(std::string dir) {
+  while (dir.size() > 1 && dir.back() == '/') dir.pop_back();
+  const auto slash = dir.find_last_of('/');
+  return slash == std::string::npos ? dir : dir.substr(slash + 1);
+}
+
+std::string readFile(const std::string& path) {
+  std::ifstream in(path);
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  return buffer.str();
+}
+
+/// Writes to the file -o names, or to stdout.
+int emit(const std::string& output, const std::string& text) {
+  if (output.empty()) {
+    std::cout << text;
+    return 0;
+  }
+  std::ofstream out(output);
+  if (!out) {
+    std::cerr << "cannot write " << output << "\n";
+    return 1;
+  }
+  out << text;
+  return 0;
+}
+
+std::string locationJson(const ds::model::Location& l) {
+  return nlohmann::json{{"file", l.file}, {"line", l.line}, {"column", l.column}}.dump();
+}
+
+int check(const std::string& dir, bool json) {
+  ds::model::Model model;
+  if (!loadWorkspace(dir, &model)) return 1;
+  int errors = 0;
+  const auto& entities = model.entities();
+  const long expected = std::count_if(entities.begin(), entities.end(), [](const auto& p) { return p.second.expected; });
+  nlohmann::json findings = nlohmann::json::array();
+  for (const auto& f : model.findings()) {
+    if (f.severity == "error") ++errors;
+    if (json) {
+      findings.push_back({{"code", f.code},
+                          {"severity", f.severity},
+                          {"message", f.message},
+                          {"location", nlohmann::json::parse(locationJson(f.location))}});
+    } else {
+      std::cout << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  " << f.message << "\n";
+    }
+  }
+  const long declared = static_cast<long>(entities.size()) - expected;
+  if (json) {
+    std::cout << nlohmann::json{{"findings", findings},
+                                {"entities", declared},
+                                {"expected", expected},
+                                {"relations", model.relations().size()}}
+                     .dump(2)
+              << "\n";
+  } else {
+    std::cout << declared << " entities · " << expected << " expected · " << model.relations().size() << " relations · "
+              << model.findings().size() << " findings\n";
+  }
+  return errors ? 1 : 0;
+}
+
+/// A static drawing of a render-IR document: svg, text for a terminal, or cells.
+std::string drawing(const ds::render::IrDocument& doc, const std::string& format, int width) {
+  if (format == "text") return ds::render::Text().render(doc, isatty(1) != 0, width);
+  if (format == "cells") return ds::render::Text().cells(doc, width) + "\n";
+  return ds::render::Svg().render(doc, width);
+}
+
+std::string layoutJson(const std::string& doc, int width) {
+  // the placed rectangles and routes, in cells: the portable form for hosts that draw themselves
+  const ds::render::IrDocument parsed = ds::render::IrDocument::parse(doc).bundled();
+  const ds::render::LayoutResult lay = ds::render::layout(parsed, ds::render::Metrics::text(), width);
+  nlohmann::json out = {{"nodes", nlohmann::json::array()}, {"routes", nlohmann::json::array()}};
+  for (const auto& p : lay.placed) {
+    out["nodes"].push_back(
+        {{"id", p.node->id}, {"kind", p.node->kind}, {"x", p.rect.x}, {"y", p.rect.y}, {"w", p.rect.w}, {"h", p.rect.h}});
+  }
+  for (const auto& r : lay.routes) {
+    const ds::render::IrEdge& e = parsed.edges[r.first];
+    nlohmann::json points = nlohmann::json::array();
+    for (const auto& pt : r.second.points) points.push_back({pt.x, pt.y});
+    out["routes"].push_back({{"from", e.from}, {"to", e.to}, {"kind", e.kind}, {"points", points}});
+  }
+  return out.dump() + "\n";
+}
+
+std::string diagramId(const std::string& name) { return name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name; }
+
+/// One way to look at the design: the whole model in the viewer (html, or its data as json), or one
+/// diagram drawn still (svg, text, cells) or as its render-IR (ir, layout).
+struct Render {
+  std::string input, diagram, format = "html", output, css;
+  int width = 0, height = 640;
+  bool embed = false;
+
+  int run() const {
+    if (!isDirectory(input)) {  // a render-IR document someone else produced: drawn like a diagram of a workspace
+      std::ifstream probe(input);
+      if (!probe) {
+        std::cerr << "cannot read " << input << "\n";
+        return 1;
+      }
+      const std::string doc = readFile(input);
+      if (format == "html" || format == "json") {
+        std::cerr << "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace\n";
+        return 2;
+      }
+      if (format == "ir") return emit(output, doc);
+      if (format == "layout") return emit(output, layoutJson(doc, width));
+      return emit(output, drawing(ds::render::IrDocument::parse(doc), format, width));
+    }
+    ds::model::Model model;
+    if (!loadWorkspace(input, &model)) return 1;
+    if (format == "html" || format == "json") {
+      if (format == "json") return emit(output, ds::scene::Scene(model).render() + "\n");
+      std::vector<std::string> focus;
+      if (!diagram.empty()) {
+        const auto shown = ds::query::Query(model).ask("shows", diagram);
+        if (!shown.empty() && shown.front().kind == "error") {
+          std::cerr << "no diagram named " << diagram << "\n";
+          return 1;
+        }
+        for (const auto& a : shown) focus.push_back(a.id);
+      }
+      const std::string title = titleOf(input);
+      const std::string page = ds::scene::Scene(model).page(title, css.empty() ? "" : readFile(css), focus);
+      return emit(output, embed ? ds::scene::Scene::frame(page, title, height) : page);
+    }
+    if (diagram.empty()) {
+      std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
+      return 2;
+    }
+    const std::string doc = ds::render::IrExport(model).render(diagramId(diagram), format == "ir");
+    if (doc.empty()) {
+      std::cerr << "no diagram named " << diagram << "\n";
+      return 1;
+    }
+    if (format == "ir") return emit(output, doc + "\n");
+    if (format == "layout") return emit(output, layoutJson(doc, width));
+    return emit(output, drawing(ds::render::IrDocument::parse(doc), format, width));
+  }
+};
+
 }  // namespace
 
 int main(int argc, char** argv) {
-  // --width N (columns for text and cells, pixels for svg) wraps the drawing to the screen
-  int width = 0;
-  std::vector<char*> kept;
-  for (int i = 0; i < argc; ++i) {
-    if (std::string(argv[i]) == "--width" && i + 1 < argc) {
-      width = std::atoi(argv[++i]);
-      continue;
-    }
-    kept.push_back(argv[i]);
+  CLI::App app{"ds: a software design as text, checked, drawn, compared and asked", "ds"};
+  app.require_subcommand(1);
+  app.footer("A workspace is a directory of .ds files read as one. Each command takes --help.");
+  const auto workspace = [](CLI::App* cmd, std::string* dir) {
+    cmd->add_option("workspace", *dir, "a directory of .ds files")->required();
+  };
+  const auto width = [](CLI::App* cmd, int* w) {
+    cmd->add_option("-w,--width", *w, "wrap the drawing: columns for text and cells, pixels for svg")->check(CLI::PositiveNumber);
+  };
+
+  std::string dir, question, subject;
+  bool json = false;
+
+  auto* checkCmd = app.add_subcommand("check", "the findings of a workspace, then the counts of its model");
+  workspace(checkCmd, &dir);
+  checkCmd->add_flag("--json", json, "the findings and the counts as JSON");
+
+  auto* exportCmd = app.add_subcommand("export", "the model as JSON: entities, relations, findings and its metamodel");
+  workspace(exportCmd, &dir);
+
+  Render render;
+  auto* renderCmd = app.add_subcommand("render", "look at the design: the whole model in the viewer, or one diagram drawn");
+  renderCmd->add_option("input", render.input, "a workspace, or a render-IR document to draw")->required();
+  renderCmd->add_option("diagram", render.diagram, "a diagram: the viewer opens framed on it, or it is drawn alone");
+  renderCmd
+      ->add_option("-f,--format", render.format,
+                   "html: the viewer · json: its scene · svg, text, cells: a diagram drawn · ir, layout: its data")
+      ->check(CLI::IsMember({"html", "json", "svg", "text", "cells", "ir", "layout"}))
+      ->capture_default_str();
+  width(renderCmd, &render.width);
+  renderCmd->add_option("-o,--output", render.output, "write to this file instead of stdout");
+  auto* embed = renderCmd->add_flag("--embed", render.embed, "html as an <iframe> carrying the page, to paste into any HTML document");
+  renderCmd->add_option("--height", render.height, "the height of the embedded frame, in pixels")
+      ->check(CLI::PositiveNumber)
+      ->needs(embed)
+      ->capture_default_str();
+  renderCmd->add_option("--css", render.css, "a stylesheet over the viewer's; it may redefine its colour and font variables")
+      ->check(CLI::ExistingFile);
+
+  std::string before, after, path, diagram, format = "text";
+  int diffWidth = 0;
+  auto* diffCmd = app.add_subcommand("diff", "the changes between two versions in the model's terms, or a diagram with them marked");
+  diffCmd->add_option("before", before, "a directory, or a git revision")->required();
+  diffCmd->add_option("after", after, "a directory, or a git revision")->required();
+  diffCmd->add_option("path", path, "with git revisions: the workspace inside the repository; with directories: the diagram");
+  diffCmd->add_option("diagram", diagram, "with git revisions: the diagram to draw with the changes marked");
+  diffCmd->add_option("-f,--format", format, "how to draw the diagram")
+      ->check(CLI::IsMember({"text", "svg", "cells"}))
+      ->capture_default_str();
+  width(diffCmd, &diffWidth);
+
+  auto* queryCmd =
+      app.add_subcommand("query", "ask the model: diagrams · entities · relations · artefacts · behaviours · shows · findings · coupling");
+  workspace(queryCmd, &dir);
+  queryCmd->add_option("question", question, "what to ask")->required();
+  queryCmd->add_option("subject", subject, "what it is asked about");
+  queryCmd->add_flag("--json", json, "answer as JSON");
+
+  try {
+    app.parse(argc, argv);
+  } catch (const CLI::ParseError& e) {
+    const int code = app.exit(e);
+    return code == 0 ? 0 : 2;  // help is not a failure; a wrong command line is bad usage
   }
-  argc = static_cast<int>(kept.size());
-  argv = kept.data();
-  if (argc < 3 || argc > 7) return usage();
-  const std::string verb = argv[1];
-  const std::string dir = argv[2];
-  if (verb == "diff") {
-    if (argc < 4) return usage();
-    std::string a = argv[2], b = argv[3];
-    int next = 4;
-    std::string path = ".";
-    if (argc > next && std::string(argv[next]).rfind("--", 0) != 0) path = argv[next++];
-    if (!isDirectory(a) || !isDirectory(b)) {
-      a = checkout(a, path);
-      b = checkout(b, path);
+
+  if (checkCmd->parsed()) return check(dir, json);
+  if (renderCmd->parsed()) return render.run();
+  if (diffCmd->parsed()) {
+    std::string a = before, b = after;
+    if (isDirectory(a) && isDirectory(b)) {
+      if (diagram.empty()) diagram = path;  // two directories need no path: the third argument is the diagram
+    } else {
+      a = checkout(a, path.empty() ? "." : path);
+      b = checkout(b, path.empty() ? "." : path);
       if (a.empty() || b.empty()) {
         std::cerr << "cannot read both revisions (give two directories, or two git revisions and a path)\n";
         return 1;
       }
     }
-    const ds::model::Model before = load(a);
-    const ds::model::Model after = load(b);
-    const ds::diff::DiffResult result = ds::diff::Diff::compare(before, after);
-    if (argc > next + 1) {
-      const std::string how = argv[next], diagram = argv[next + 1];
-      const ds::model::Model marked = ds::diff::Diff::marked(before, after, result);
-      const std::string doc =
-          ds::render::IrExport(marked).render(diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram, false);
+    const ds::model::Model first = load(a);
+    const ds::model::Model second = load(b);
+    const ds::diff::DiffResult result = ds::diff::Diff::compare(first, second);
+    if (!diagram.empty()) {
+      const ds::model::Model marked = ds::diff::Diff::marked(first, second, result);
+      const std::string doc = ds::render::IrExport(marked).render(diagramId(diagram), false);
       if (doc.empty()) {
         std::cerr << "no diagram named " << diagram << "\n";
         return 1;
       }
-      if (how == "--svg")
-        std::cout << ds::render::Svg().render(ds::render::IrDocument::parse(doc), width);
-      else if (how == "--cells")
-        std::cout << ds::render::Text().cells(ds::render::IrDocument::parse(doc), width) << "\n";
-      else
-        std::cout << ds::render::Text().render(ds::render::IrDocument::parse(doc), isatty(1) != 0, width);
+      std::cout << drawing(ds::render::IrDocument::parse(doc), format, diffWidth);
       return 0;
     }
     std::cout << ds::diff::Diff::report(result);
     return result.findings.empty() ? 0 : 1;
   }
-  if (verb == "draw") {
-    std::ifstream in(dir);
-    if (!in) {
-      std::cerr << "cannot read " << dir << "\n";
-      return 1;
-    }
-    std::stringstream buffer;
-    buffer << in.rdbuf();
-    // any render-IR producer (design-render over argos, plantuml-render) reaches the same drawings as a workspace
-    const ds::render::IrDocument doc = ds::render::IrDocument::parse(buffer.str());
-    const std::string how = argc >= 4 ? argv[3] : "--svg";
-    if (how == "--text")
-      std::cout << ds::render::Text().render(doc, isatty(1) != 0, width);
-    else if (how == "--cells")
-      std::cout << ds::render::Text().cells(doc, width) << "\n";
-    else
-      std::cout << ds::render::Svg().render(doc, width);
-    return 0;
-  }
-  if (!isDirectory(dir)) {
-    std::cerr << "cannot read " << dir << ": not a directory\n";
-    return 1;
-  }
-  const ds::model::Model model = load(dir);
-  if (verb == "render") {
-    ds::render::IrExport ir(model);
-    if (argc == 3) {
-      for (const auto& d : ir.diagrams()) std::cout << d.substr(std::string("diagram:").size()) << "\n";
-      return 0;
-    }
-    const std::string name = argv[3];
-    const bool svg = argc == 5 && std::string(argv[4]) == "--svg";
-    const bool text = argc == 5 && std::string(argv[4]) == "--text";
-    const bool cells = argc == 5 && std::string(argv[4]) == "--cells";
-    const bool layoutOnly = argc == 5 && std::string(argv[4]) == "--layout";
-    const std::string doc = ir.render(name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name, !svg && !text && !cells && !layoutOnly);
-    if (doc.empty()) {
-      std::cerr << "no diagram named " << name << "\n";
-      return 1;
-    }
-    if (svg) {
-      std::cout << ds::render::Svg().render(ds::render::IrDocument::parse(doc), width);
-      return 0;
-    }
-    if (text) {
-      std::cout << ds::render::Text().render(ds::render::IrDocument::parse(doc), isatty(1) != 0, width);
-      return 0;
-    }
-    if (layoutOnly) {
-      // the placed rectangles and routes, in cells: the portable form for hosts that draw themselves
-      const ds::render::IrDocument parsed = ds::render::IrDocument::parse(doc).bundled();
-      const ds::render::LayoutResult lay = ds::render::layout(parsed, ds::render::Metrics::text(), width);
-      std::cout << "{\"nodes\":[";
-      bool first = true;
-      for (const auto& p : lay.placed) {
-        std::cout << (first ? "" : ",") << "{\"id\":\"" << p.node->id << "\",\"kind\":\"" << p.node->kind << "\",\"x\":" << p.rect.x
-                  << ",\"y\":" << p.rect.y << ",\"w\":" << p.rect.w << ",\"h\":" << p.rect.h << "}";
-        first = false;
-      }
-      std::cout << "],\"routes\":[";
-      first = true;
-      for (const auto& r : lay.routes) {
-        const ds::render::IrEdge& e = parsed.edges[r.first];
-        std::cout << (first ? "" : ",") << "{\"from\":\"" << e.from << "\",\"to\":\"" << e.to << "\",\"kind\":\"" << e.kind
-                  << "\",\"points\":[";
-        for (size_t k = 0; k < r.second.points.size(); ++k)
-          std::cout << (k ? "," : "") << "[" << r.second.points[k].x << "," << r.second.points[k].y << "]";
-        std::cout << "]}";
-        first = false;
-      }
-      std::cout << "]}\n";
-      return 0;
-    }
-    if (cells) {
-      std::cout << ds::render::Text().cells(ds::render::IrDocument::parse(doc), width) << "\n";
-      return 0;
-    }
-    std::cout << doc << "\n";
-    return 0;
-  }
-  if (verb == "query") {
-    if (argc < 4) return usage();
-    bool json = false;
-    std::string question = argv[3], subject;
-    for (int i = 4; i < argc; ++i) {
-      if (std::string(argv[i]) == "--json")
-        json = true;
-      else
-        subject = argv[i];
-    }
-    const ds::query::Query query(model);
-    const std::vector<ds::query::Answer> answers = query.ask(question, subject);
-    const bool failed = !answers.empty() && answers.front().kind == "error";
-    if (failed) {
-      std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
-      if (answers.front().detail.find("not a question") != std::string::npos) {
-        std::cerr << "questions:";
-        for (const auto& q : ds::query::Query::questions()) std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
-        std::cerr << "\n";
-      }
-      return 1;
-    }
-    std::cout << (json ? ds::query::Query::json(answers) + "\n" : ds::query::Query::text(answers));
-    return 0;
-  }
-  if (argc != 3) return usage();
-  if (verb == "export") {
+
+  ds::model::Model model;
+  if (!loadWorkspace(dir, &model)) return 1;
+  if (exportCmd->parsed()) {
     std::cout << ds::exporter::JsonExport().render(model) << "\n";
     return 0;
   }
-  if (verb == "scene") {
-    std::cout << ds::scene::Scene(model).render() << "\n";
-    return 0;
-  }
-  if (verb == "view") {
-    std::string title = dir;
-    while (title.size() > 1 && title.back() == '/') title.pop_back();
-    title = title.substr(title.find_last_of('/') == std::string::npos ? 0 : title.find_last_of('/') + 1);
-    std::cout << ds::scene::Scene(model).page(title);
-    return 0;
-  }
-  if (verb == "coupling") {
-    // derived from behaviour: a local or an attribute typed in another module is coupling to it
-    std::map<std::string, std::vector<std::string>> byBehaviour;
-    for (const auto& r : model.relations()) {
-      if (r.kind != "couples-structural" && r.kind != "couples-transient") continue;
-      byBehaviour[r.from].push_back(
-          r.to + (r.kind == "couples-transient" ? "  (transient: created inside)" : "  (structural: an attribute or parameter)"));
+  const ds::query::Query query(model);
+  const std::vector<ds::query::Answer> answers = query.ask(question, subject);
+  if (!answers.empty() && answers.front().kind == "error") {
+    std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
+    if (answers.front().detail.find("not a question") != std::string::npos) {
+      std::cerr << "questions:";
+      for (const auto& q : ds::query::Query::questions()) std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
+      std::cerr << "\n";
     }
-    if (byBehaviour.empty()) std::cout << "no behaviour couples to another module\n";
-    for (const auto& b : byBehaviour) {
-      const ds::model::Entity* seq = model.find(b.first);
-      std::cout << (seq ? seq->name : b.first) << "  (module " << (seq ? seq->scope : "?") << ")\n";
-      for (const auto& t : b.second) std::cout << "  -> " << t << "\n";
-    }
-    return 0;
+    return 1;
   }
-  if (verb != "check") return usage();
-  int errors = 0;
-  for (const auto& f : model.findings()) {
-    std::cout << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  " << f.message << "\n";
-    if (f.severity == "error") ++errors;
-  }
-  const auto& entities = model.entities();
-  const long expected = std::count_if(entities.begin(), entities.end(), [](const auto& p) { return p.second.expected; });
-  std::cout << entities.size() - expected << " entities · " << expected << " expected · " << model.relations().size() << " relations · "
-            << model.findings().size() << " findings\n";
-  return errors ? 1 : 0;
+  std::cout << (json ? ds::query::Query::json(answers) + "\n" : ds::query::Query::text(answers));
+  return 0;
 }

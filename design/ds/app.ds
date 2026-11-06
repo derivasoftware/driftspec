@@ -1,4 +1,6 @@
-// The ds command: reads the verb, loads the workspace and hands it to whoever answers.
+// The ds command: CLI11 reads the command line (five commands: check, export, render, diff,
+// query, each with its options and its help), main loads the workspace and hands it to
+// whoever answers.
 // One scenario of main per thing it can end in; the rest of the tool knows nothing of
 // a command line.
 
@@ -6,13 +8,37 @@ package driftspec@ds {
   module app {
     function main(argv: list<string>) -> int
 
-    - function usage() -> int
     - function load(dir: path) -> model::Model
+    - function loadWorkspace(dir: path, model: model::Model) -> bool
+    - function titleOf(dir: string) -> string
+    - function readFile(path: string) -> string
+    - function emit(output: string, text: string) -> int
+    - function locationJson(location: model::Location) -> string
+    - function check(dir: path, json: bool) -> int
+    - function drawing(doc: render::IrDocument, format: string, width: int) -> string
+    - function layoutJson(doc: string, width: int) -> string
+    - function diagramId(name: string) -> string
     - function isDirectory(path: string) -> bool
     - function checkout(rev: string, path: string) -> string
 
-    sequence usage {
-      return 2
+    sequence loadWorkspace {
+      -> isDirectory(dir) -> found
+      opt the path is not a directory / missing {
+        return false
+      }
+      -> load(dir) -> loaded
+      return true
+    }
+
+    sequence check {
+      local model: model::Model
+      -> loadWorkspace(dir, model) -> found
+      opt --json: the findings and the counts as JSON / as-json {
+        loop each finding {
+          -> locationJson(location) -> where
+        }
+      }
+      return 0
     }
 
     sequence load {
@@ -27,39 +53,25 @@ package driftspec@ds {
     }
 
     sequence main / check {
-      -> isDirectory(argv) -> found
-      -> load(argv) -> model
-      return 0
-    }
-
-    sequence main / check-errors {
-      -> load(argv) -> model
-      return 1
-    }
-
-    sequence main / bad-usage {
-      -> usage() -> code
+      -> check(argv, json) -> code
       return code
     }
 
+    sequence main / check-errors {
+      local model: model::Model
+      -> loadWorkspace(argv, model) -> found
+      return 1
+    }
+
+    sequence main / bad-usage {               // CLI11 says what is wrong with the command line
+      return 2
+    }
+
     sequence main / export {
+      local model: model::Model
       local exporter: exporter::JsonExport
-      -> load(argv) -> model
+      -> loadWorkspace(argv, model) -> found
       -> exporter.render(model, pretty) -> json
-      return 0
-    }
-
-    sequence main / scene {
-      local scene: scene::Scene
-      -> load(argv) -> model
-      -> scene.render(pretty) -> json
-      return 0
-    }
-
-    sequence main / view {
-      local scene: scene::Scene
-      -> load(argv) -> model
-      -> scene.page(title) -> page
       return 0
     }
 
@@ -68,35 +80,59 @@ package driftspec@ds {
       return 1
     }
 
+    // render: the whole model in the viewer (html, or its scene as json), or one diagram drawn
+    // still (svg, text, cells) or as its data (ir, layout); a render-IR file is drawn as it is
     sequence main / render {
+      local model: model::Model
+      local scene: scene::Scene
+      local query: query::Query
+      -> loadWorkspace(argv, model) -> found
+      opt a diagram to open the viewer framed on / framed {
+        -> query.ask(question, diagram) -> shown
+      }
+      -> titleOf(argv) -> title
+      -> readFile(css) -> style
+      -> scene.page(title, style, focus) -> page
+      opt --embed: the page inside an iframe / embedded {
+        -> scene.frame(page, title, height) -> frame
+      }
+      -> emit(output, page) -> written
+      return 0
+    }
+
+    sequence main / render-scene {
+      local model: model::Model
+      local scene: scene::Scene
+      -> loadWorkspace(argv, model) -> found
+      -> scene.render(pretty) -> json
+      -> emit(output, json) -> written
+      return 0
+    }
+
+    sequence main / render-diagram {
+      local model: model::Model
       local ir: render::IrExport
-      local svg: render::Svg
-      -> load(argv) -> model
-      -> ir.render(name, pretty) -> document
-      -> svg.render(document, width) -> drawing
+      -> loadWorkspace(argv, model) -> found
+      -> diagramId(diagram) -> id
+      -> ir.render(id, pretty) -> document
+      -> drawing(parsed, format, width) -> picture
+      -> emit(output, picture) -> written
+      return 0
+    }
+
+    sequence main / render-document {
+      -> readFile(argv) -> document
+      -> drawing(parsed, format, width) -> picture
+      -> emit(output, picture) -> written
       return 0
     }
 
     sequence main / no-diagram {
+      local model: model::Model
       local ir: render::IrExport
-      -> load(argv) -> model
+      -> loadWorkspace(argv, model) -> found
       -> ir.render(name, pretty) / no-diagram -> document
       return 1
-    }
-
-    sequence main / draw {
-      local svg: render::Svg
-      -> svg.render(document, width) -> drawing
-      return 0
-    }
-
-    sequence main / no-document {
-      return 1
-    }
-
-    sequence main / coupling {
-      -> load(argv) -> model
-      return 0
     }
 
     sequence main / diff {
@@ -117,16 +153,18 @@ package driftspec@ds {
     }
 
     sequence main / query {
+      local model: model::Model
       local query: query::Query
-      -> load(argv) -> model
+      -> loadWorkspace(argv, model) -> found
       -> query.ask(question, subject) -> answers
       -> query.text(answers) -> text
       return 0
     }
 
     sequence main / unknown-question {
+      local model: model::Model
       local query: query::Query
-      -> load(argv) -> model
+      -> loadWorkspace(argv, model) -> found
       -> query.ask(question, subject) -> answers
       return 1
     }

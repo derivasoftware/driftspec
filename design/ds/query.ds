@@ -28,6 +28,15 @@ package driftspec@ds {
       tags: query, identity
     }
 
+    verification VER-00079-1 {
+      status: approved
+      @requirement REQ-00003-1
+      title: Integration tests confirm coupling answers, over ds's design, what each behaviour touches outside its module
+      method: test
+      tests:
+        tests/integration/ds/query/test_query.cpp::TestQueryOfTheDesign.CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule
+    }
+
     verification VER-00003-1 {
       status: approved
       @requirement REQ-00003-1
@@ -64,6 +73,7 @@ package driftspec@ds {
       + behaviours(id: std::string) -> std::vector<Answer>
       + shows(diagram: std::string) -> std::vector<Answer>
       + findings(file: std::string) -> std::vector<Answer>
+      + coupling() -> std::vector<Answer>
       + static text(answers: std::vector<Answer>) -> std::string
       + static json(answers: std::vector<Answer>) -> std::string
     }

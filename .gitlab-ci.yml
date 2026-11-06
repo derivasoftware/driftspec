@@ -38,7 +38,7 @@ cpp-test:
 argos-diagnose:
   needs: [cpp-test, cpp-evidence, pre-commit]
   script:
-    - pip install --no-deps "argos-design-driftspec==0.0.7"
+    - pip install --no-deps "argos-design-driftspec==0.0.11"
     - export PATH="$CI_PROJECT_DIR/build-ci:$PATH"
     - ds 2>&1 | head -1 || true
     - !reference [.argos-diagnose-gate, script]

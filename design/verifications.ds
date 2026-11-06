@@ -87,6 +87,25 @@ package driftspec {
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.TheViewerIsOnePageWithTheWholeModelInside
+      tests/system/ds/test_qualification.cpp::TestQualification.TheViewerEmbedsAsAFrameInTheReadersColours
+  }
+
+  verification SVER-00016-1 {
+    status: approved
+    @requirement SREQ-00002-1
+    title: System tests confirm ds check --json gives every finding with its code, severity and location, and the counts
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheFindingsAreJsonForAMachine
+  }
+
+  verification SVER-00017-1 {
+    status: approved
+    @requirement SREQ-00013-1
+    title: System tests confirm ds render with a diagram opens the viewer framed on what that diagram shows
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheViewerOpensFramedOnTheDiagramNamed
   }
 
   verification SVER-00006-1 {

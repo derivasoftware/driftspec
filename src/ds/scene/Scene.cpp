@@ -1,12 +1,19 @@
 #include "ds/scene/Scene.hpp"
 
+#include <miniz.h>
+
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <regex>
+#include <set>
 #include <utility>
+
+#include "ds/render/Ir.hpp"
+#include "ds/render/IrExport.hpp"
 
 namespace ds {
 namespace scene {
@@ -20,6 +27,7 @@ const double kRow = 11, kHead = 22, kUnitPadBottom = 6, kCharWidth = 3.95, kUnit
 const double kModulePad = 24, kModuleHead = 46, kUnitGap = 22;
 const double kPackagePad = 60, kPackageHead = 90, kBoxGap = 70, kLeftForInterfaces = 300;
 const double kInterfaceW = 360, kOperationRow = 30, kTopGap = 120;
+const double kTreeGap = 44;  // between a base and the row of what inherits from it: room for the trunk
 
 /// The size of a box and where its children sit, relative to its top left corner.
 struct Shape {
@@ -92,13 +100,14 @@ void shift(std::vector<std::pair<std::string, std::pair<double, double>>>& kids,
 /// Measures and lays out every box of the model once, for one variant (lean hides private members).
 class Layout {
  public:
-  Layout(const model::Model& model, bool lean) : lean_(lean) {
+  Layout(const model::Model& model, bool lean, std::map<std::string, double>* widths) : lean_(lean), widths_(widths) {
     for (const auto& pair : model.entities()) {
       const model::Entity& e = pair.second;
       if (!e.expected) byScope_[e.scope].push_back(&e);
     }
     for (const auto& r : model.relations()) {
       if (r.kind == "requires" || r.kind == "constrained-by") linked_[r.from].push_back(r.to);
+      if (r.kind == "inherits" || r.kind == "realises") bases_[r.from].push_back(r.to);
     }
   }
 
@@ -111,7 +120,8 @@ class Layout {
     for (const model::Entity* e : children("")) {
       if (e->kind == model::Kind::Package && !e->has("extern")) roots.push_back({package(*e, ""), {0, 0}});
     }
-    const auto size = shelf(roots, shapes, kTopGap, target(roots, shapes, 0, 1.6));
+    const auto size = shelf(roots, shapes, kTopGap, width("", target(roots, shapes, 0, 1.6)));
+    keep("", size.first);
     root_ = {size.first, size.second, roots};
     for (const auto& r : roots) place(r.first, r.second.first, r.second.second);
     for (const auto& r : roots) top.push_back(r.first);
@@ -119,8 +129,67 @@ class Layout {
 
  private:
   bool lean_;
+  std::map<std::string, double>* widths_;  // the shelf width of every box in the full layout, kept by the lean one
+
+  // the lean layout fills its shelves no wider than the full one came out, so hiding private
+  // members never widens a box, only shortens it
+  double width(const std::string& id, double computed) const {
+    if (!lean_) return computed;
+    const auto kept = widths_->find(id);
+    return kept == widths_->end() ? computed : kept->second;
+  }
+  void keep(const std::string& id, double used) {
+    if (!lean_) (*widths_)[id] = used;
+  }
   std::map<std::string, std::vector<const model::Entity*>> byScope_;
   std::map<std::string, std::vector<std::string>> linked_;  // requirements and constraints, by the entity linked to them
+  std::map<std::string, std::vector<std::string>> bases_;   // what each class inherits from or realises
+
+  // the taxonomy of a module: each unit under the first base it has in the same module
+  std::map<std::string, std::string> taxonomy(const std::vector<std::pair<std::string, std::pair<double, double>>>& units) const {
+    std::set<std::string> here;
+    for (const auto& u : units) here.insert(u.first);
+    std::map<std::string, std::string> base;
+    for (const auto& u : units) {
+      const auto it = bases_.find(u.first);
+      if (it == bases_.end()) continue;
+      for (const auto& b : it->second) {
+        if (b == u.first || !here.count(b)) continue;
+        std::string up = b;  // never under one of its own descendants
+        while (base.count(up) && up != u.first) up = base.at(up);
+        if (up == u.first) continue;
+        base[u.first] = b;
+        break;
+      }
+    }
+    return base;
+  }
+
+  // a tree of a taxonomy as one block: the base centred over the row of what inherits from it
+  std::string tree(const std::string& root, const std::map<std::string, std::vector<std::string>>& below) {
+    const auto kids = below.find(root);
+    if (kids == below.end()) return root;
+    Shape block;
+    std::vector<std::pair<std::string, std::pair<double, double>>> row;
+    double x = 0, rowH = 0;
+    for (const auto& k : kids->second) {
+      const std::string b = tree(k, below);
+      row.push_back({b, {x, 0}});
+      x += shapes[b].w + kUnitGap;
+      rowH = std::max(rowH, shapes[b].h);
+    }
+    const double rowW = x - kUnitGap, baseW = shapes[root].w, baseH = shapes[root].h;
+    block.w = std::max(rowW, baseW);
+    block.kids.push_back({root, {(block.w - baseW) / 2, 0}});
+    for (auto& r : row) {
+      r.second = {r.second.first + (block.w - rowW) / 2, baseH + kTreeGap};
+      block.kids.push_back(r);
+    }
+    block.h = baseH + kTreeGap + rowH;
+    const std::string id = root + "#tree";
+    shapes[id] = block;
+    return id;
+  }
   Shape root_;
 
   const std::vector<const model::Entity*>& children(const std::string& scope) {
@@ -147,6 +216,15 @@ class Layout {
            const std::string& vis, const std::string& linkedFrom, double w, double h) {
     node(id, "row", parent, label, stereotype, vis, linkedFrom);
     shapes[id] = {w, h, {}};
+  }
+
+  // what a box says it is: interface and abstract are derived by the checker (R14), never written
+  static std::string stereotypeOf(const model::Entity& e) {
+    if (e.has("dataclass")) return "dataclass";
+    const std::string derived = field(e, "stereotypes");
+    if (derived.find("interface") != std::string::npos) return "interface";
+    if (derived.find("abstract") != std::string::npos) return "abstract";
+    return model::kindName(e.kind);
   }
 
   std::string unit(const model::Entity& e, const std::string& parent) {
@@ -186,7 +264,11 @@ class Layout {
         rows.push_back({m->id, label, model::kindName(m->kind), vis, m->id});
       }
     }
-    double widest = static_cast<double>(characters(e.name)) * 1.6 + 14;
+    double title = static_cast<double>(characters(e.name));
+    const auto bases = bases_.find(e.id);  // a header may name what it inherits from: Console ◁ Channel
+    if (bases != bases_.end())
+      for (const auto& b : bases->second) title += static_cast<double>(characters(b.substr(b.rfind(':') + 1))) * 0.85 + 3;
+    double widest = title * 1.6 + 14;
     for (const auto& r : rows) widest = std::max(widest, static_cast<double>(characters(r.label)));
     const double w = std::max(kUnitMinW, std::min(kUnitMaxW, widest * kCharWidth + 18));
     Shape s{w, kHead + static_cast<double>(rows.size()) * kRow + kUnitPadBottom, {}};
@@ -194,7 +276,7 @@ class Layout {
       row(rows[i].id, e.id, rows[i].label, rows[i].stereotype, rows[i].vis, rows[i].from, w, kRow);
       s.kids.push_back({rows[i].id, {0, kHead + static_cast<double>(i) * kRow}});
     }
-    node(e.id, "unit", parent, e.name, e.has("dataclass") ? "dataclass" : model::kindName(e.kind), visibility(e), e.id);
+    node(e.id, "unit", parent, e.name, stereotypeOf(e), visibility(e), e.id);
     shapes[e.id] = s;
     return e.id;
   }
@@ -216,8 +298,26 @@ class Layout {
         units.push_back({unit(*k, e.id), {0, 0}});
     }
     std::stable_sort(units.begin(), units.end(), [&](const auto& a, const auto& b) { return shapes[a.first].h > shapes[b.first].h; });
+    // the taxonomy shapes the module: every tree of inheritance is one block, base above
+    const auto base = taxonomy(units);
+    std::map<std::string, std::vector<std::string>> below;
+    for (const auto& u : units) {
+      const auto b = base.find(u.first);
+      if (b != base.end()) below[b->second].push_back(u.first);
+    }
+    std::vector<std::pair<std::string, std::pair<double, double>>> blocks;
+    for (const auto& u : units) {
+      if (!base.count(u.first)) blocks.push_back({tree(u.first, below), {0, 0}});
+    }
+    std::stable_sort(blocks.begin(), blocks.end(), [&](const auto& a, const auto& b) {
+      const bool aTree = a.first.size() > 5 && a.first.compare(a.first.size() - 5, 5, "#tree") == 0;
+      const bool bTree = b.first.size() > 5 && b.first.compare(b.first.size() - 5, 5, "#tree") == 0;
+      return aTree != bTree ? aTree : false;
+    });
+    units = blocks;
     units.insert(units.end(), boxes.begin(), boxes.end());
-    const auto size = shelf(units, shapes, kUnitGap, target(units, shapes, 260, 1.5));
+    const auto size = shelf(units, shapes, kUnitGap, width(e.id, target(units, shapes, 260, 1.5)));
+    keep(e.id, size.first);
     shift(units, kModulePad, kModuleHead);
     node(e.id, "module", parent, e.name, "module", visibility(e), e.id);
     shapes[e.id] = {size.first + 2 * kModulePad, size.second + kModuleHead + kModulePad, units};
@@ -249,7 +349,9 @@ class Layout {
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Interface) interfaces.push_back({interface(*k, e.id), {0, 0}});
     }
-    const auto size = shelf(boxes, shapes, kBoxGap, target(boxes, shapes, 0, 1.6));
+    order(boxes);
+    const auto size = shelf(boxes, shapes, kBoxGap, width(e.id, target(boxes, shapes, 0, 1.6)));
+    keep(e.id, size.first);
     const double left = interfaces.empty() ? kPackagePad : kLeftForInterfaces;
     shift(boxes, left, kPackageHead);
     double y = kPackageHead + 40;
@@ -263,17 +365,40 @@ class Layout {
     return e.id;
   }
 
+  // a box whose classes are inherited from comes before the boxes that inherit: bases read first
+  void order(std::vector<std::pair<std::string, std::pair<double, double>>>& boxes) const {
+    const auto inside = [](const std::string& id, const std::string& box) { return id.compare(0, box.size() + 2, box + "::") == 0; };
+    const auto heirOf = [&](const std::string& heir, const std::string& base) {
+      for (const auto& pair : bases_) {
+        if (!inside(pair.first, heir)) continue;
+        for (const auto& b : pair.second)
+          if (inside(b, base)) return true;
+      }
+      return false;
+    };
+    std::vector<std::pair<std::string, std::pair<double, double>>> done;
+    std::vector<bool> taken(boxes.size(), false);
+    while (done.size() < boxes.size()) {
+      size_t pick = boxes.size();
+      for (size_t i = 0; i < boxes.size() && pick == boxes.size(); ++i) {
+        if (taken[i]) continue;
+        bool waits = false;
+        for (size_t j = 0; j < boxes.size() && !waits; ++j) waits = !taken[j] && j != i && heirOf(boxes[i].first, boxes[j].first);
+        if (!waits) pick = i;
+      }
+      if (pick == boxes.size()) pick = std::find(taken.begin(), taken.end(), false) - taken.begin();  // a cycle: keep the order written
+      taken[pick] = true;
+      done.push_back(boxes[pick]);
+    }
+    boxes = done;
+  }
+
   void place(const std::string& id, double x, double y) {
     const Shape& s = shapes.at(id);
-    nodes[id].full = {x, y, s.w, s.h};
+    if (nodes.count(id)) nodes[id].full = {x, y, s.w, s.h};  // a tree of a taxonomy only groups
     for (const auto& k : s.kids) place(k.first, x + k.second.first, y + k.second.second);
   }
 };
-
-nlohmann::json boxJson(const Box& b) {
-  const auto r = [](double v) { return std::round(v * 10) / 10; };
-  return nlohmann::json::array({r(b.x), r(b.y), r(b.w), r(b.h)});
-}
 
 Box bounds(const std::vector<Node>& nodes, bool lean) {
   bool any = false;
@@ -294,13 +419,91 @@ Box bounds(const std::vector<Node>& nodes, bool lean) {
 
 Scene::Scene(const model::Model& model) : model_(model) {}
 
+namespace {
+
+// the node that stands for a model identity: itself, a function's signature row, or the nearest
+// enclosing node; a message stands for the member whose behaviour it is written in
+std::string nodeFor(const std::set<std::string>& ids, std::string id) {
+  const auto sequence = id.find("::sequence");
+  if (sequence != std::string::npos) id = id.substr(0, sequence);
+  for (;;) {
+    if (ids.count(id)) return id;
+    const auto at = id.rfind("::");
+    if (at == std::string::npos) return "";
+    id = id.substr(0, at);
+  }
+}
+
+}  // namespace
+
+void Scene::relate(SceneDocument& out_document) const {
+  std::set<std::string> ids;
+  std::map<std::string, std::string> parent;
+  for (const auto& n : out_document.nodes) {
+    ids.insert(n.id);
+    parent[n.id] = n.parent;
+  }
+  static const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "calls"};
+  std::map<std::tuple<std::string, std::string, std::string>, Link> links;
+  std::map<std::tuple<std::string, std::string, std::string>, std::set<std::string>> sequences;
+  for (const auto& r : model_.relations()) {
+    if (!kinds.count(r.kind)) continue;
+    const std::string from = nodeFor(ids, r.from), to = nodeFor(ids, r.to);
+    if (from.empty() || to.empty() || from == to || parent[from] == to || parent[to] == from) continue;  // within one box
+    // a class that inherits from an interface realises it: the checker derives the interface (R14)
+    const model::Entity* target = model_.find(r.to);
+    const bool realises = r.kind == "inherits" && target && field(*target, "stereotypes").find("interface") != std::string::npos;
+    const std::string kind = realises ? "realises" : r.kind;
+    const auto key = std::make_tuple(from, to, kind);
+    Link& link = links[key];
+    link.from = from;
+    link.to = to;
+    link.kind = kind;
+    ++link.count;
+    if (!r.multiplicity.empty()) link.multiplicity = r.multiplicity;
+    if (r.kind == "calls") sequences[key].insert(r.from.substr(0, r.from.rfind("::")));
+  }
+  for (auto& pair : links) {
+    for (const auto& s : sequences[pair.first]) pair.second.sequences.push_back(s);
+    out_document.links.push_back(pair.second);
+  }
+  // where each box is drawn: every diagram of the workspace, through the projection a drawing uses
+  const render::IrExport ir(model_);
+  for (const auto& id : ir.diagrams()) {
+    const std::string text = ir.render(id, false);
+    if (text.empty()) continue;
+    DiagramView view;
+    view.name = id.substr(std::string("diagram:").size());
+    const model::Entity* diagram = model_.find(id);
+    view.kind = diagram && diagram->fields.count("kind") ? diagram->fields.at("kind") : "";
+    std::set<std::string> shown;
+    for (const auto& n : render::IrDocument::parse(text).bundled().nodes) {
+      const std::string node = nodeFor(ids, n.id);
+      if (!node.empty() && shown.insert(node).second) view.nodes.push_back(node);
+    }
+    if (!view.nodes.empty()) out_document.diagrams.push_back(view);
+  }
+  for (const auto& n : out_document.nodes) {
+    for (const auto& r : n.requirements) {
+      const model::Entity* e = model_.find(r);
+      const auto title = e ? e->fields.find("title") : std::map<std::string, std::string>::const_iterator();
+      if (e && title != e->fields.end()) out_document.titles[r] = title->second;
+    }
+  }
+}
+
 SceneDocument Scene::build() const {
-  Layout full(model_, false), lean(model_, true);
+  std::map<std::string, double> widths;
+  Layout full(model_, false, &widths), lean(model_, true, &widths);
   full.run();
   lean.run();
   SceneDocument doc;
   // nodes in drawing order: parents before children, as the full layout placed them
   std::function<void(const std::string&)> walk = [&](const std::string& id) {
+    if (!full.nodes.count(id)) {  // a tree of a taxonomy groups units without being drawn
+      for (const auto& k : full.shapes.at(id).kids) walk(k.first);
+      return;
+    }
     Node n = full.nodes.at(id);
     const auto l = lean.nodes.find(id);
     if (l != lean.nodes.end()) {
@@ -313,43 +516,278 @@ SceneDocument Scene::build() const {
   for (const auto& t : full.top) walk(t);
   doc.world = bounds(doc.nodes, false);
   doc.leanWorld = bounds(doc.nodes, true);
+  relate(doc);
+  tour(doc);
   return doc;
 }
 
+// The document is compact, and says how to read itself: every record is an array whose
+// columns "fields" names, and a node, a behaviour or a link is named by its index.
 std::string Scene::render(bool pretty) const {
   const SceneDocument doc = build();
+  std::map<std::string, int> at;
+  std::set<std::string> ids;
+  for (size_t i = 0; i < doc.nodes.size(); ++i) {
+    at[doc.nodes[i].id] = static_cast<int>(i);
+    ids.insert(doc.nodes[i].id);
+  }
+  const auto index = [&at](const std::string& id) { return at.count(id) ? at.at(id) : -1; };
+  const auto ints = [](const Box& b) {
+    return nlohmann::json::array({std::lround(b.x), std::lround(b.y), std::lround(b.w), std::lround(b.h)});
+  };
+  std::map<std::string, int> behaviourOf;  // "subject / scenario" -> its index
+  for (size_t i = 0; i < doc.behaviours.size(); ++i) behaviourOf[doc.behaviours[i].id] = static_cast<int>(i);
+
   nlohmann::json out;
+  out["version"] = 2;
+  out["fields"] = {{"node", {"id", "kind", "parent", "label", "stereotype", "visibility", "requirements", "full", "lean"}},
+                   {"link", {"from", "to", "kind", "count", "multiplicity", "behaviours"}},
+                   {"behaviour", {"subject", "scenario", "calls"}},
+                   {"call", {"to", "label", "behaviour", "result"}},
+                   {"tour", {"behaviour", "group"}},
+                   {"diagram", {"name", "kind", "nodes"}}};
   out["nodes"] = nlohmann::json::array();
   for (const auto& n : doc.nodes) {
-    nlohmann::json j = {{"id", n.id},
-                        {"kind", n.kind},
-                        {"parent", n.parent},
-                        {"label", n.label},
-                        {"stereotype", n.stereotype},
-                        {"visibility", n.visibility},
-                        {"requirements", n.requirements},
-                        {"full", boxJson(n.full)}};
-    j["lean"] = n.lean ? boxJson(n.leanBox) : nlohmann::json();
-    out["nodes"].push_back(j);
+    out["nodes"].push_back({n.id, n.kind, index(n.parent), n.label, n.stereotype, n.visibility, n.requirements, ints(n.full),
+                            n.lean ? ints(n.leanBox) : nlohmann::json()});
   }
-  out["world"] = boxJson(doc.world);
-  out["lean_world"] = boxJson(doc.leanWorld);
+  out["world"] = ints(doc.world);
+  out["lean_world"] = ints(doc.leanWorld);
+  out["links"] = nlohmann::json::array();
+  for (const auto& l : doc.links) {
+    nlohmann::json written = nlohmann::json::array();
+    for (const auto& s : l.sequences) {  // a sequence id, X::sequence or X::sequence/scenario, as the behaviour it is
+      const auto cut = s.find("::sequence");
+      const std::string scenario = s.size() > cut + 10 ? s.substr(cut + 11) : "";
+      const auto b = behaviourOf.find(nodeFor(ids, s.substr(0, cut)) + (scenario.empty() ? "" : " / " + scenario));
+      if (b != behaviourOf.end()) written.push_back(b->second);
+    }
+    out["links"].push_back({index(l.from), index(l.to), l.kind, l.count, l.multiplicity, written});
+  }
+  out["behaviours"] = nlohmann::json::array();
+  for (const auto& b : doc.behaviours) {
+    nlohmann::json calls = nlohmann::json::array();
+    for (const auto& c : b.calls) calls.push_back({index(c.to), c.label, c.expands, c.result});
+    out["behaviours"].push_back({index(b.subject), b.scenario, calls});
+  }
+  out["tours"] = nlohmann::json::array();
+  for (const auto& t : doc.tours) out["tours"].push_back({t.behaviour, t.group});
+  out["diagrams"] = nlohmann::json::array();
+  for (const auto& d : doc.diagrams) {
+    nlohmann::json shown = nlohmann::json::array();
+    for (const auto& n : d.nodes) shown.push_back(index(n));
+    out["diagrams"].push_back({d.name, d.kind, shown});
+  }
+  out["titles"] = doc.titles;
   return pretty ? out.dump(2) : out.dump();
 }
 
-std::string Scene::page(const std::string& title) const {
-  std::string json = render(false);
-  for (size_t at = json.find("</"); at != std::string::npos; at = json.find("</", at + 2))
-    json.replace(at, 2, "<\\/");  // never closes the script
+namespace {
+
+const size_t kMaxSteps = 2000;
+
+std::string fieldOf(const model::Entity& e, const std::string& key) {
+  const auto it = e.fields.find(key);
+  return it == e.fields.end() ? "" : it->second;
+}
+
+/// Writes each behaviour once: a sequence along a scenario, its calls in order, each call naming
+/// the behaviour it goes on into (found or written the first time it is reached).
+struct Behaviours {
+  const model::Model& model;
+  const std::set<std::string>& ids;
+  std::map<std::string, std::string> calls;  // message -> the operation it calls
+  std::map<std::pair<std::string, std::string>, int> index;
+  std::vector<Behaviour>& out;
+
+  int of(const std::string& sequence, const std::string& scenario) {
+    const auto key = std::make_pair(sequence, scenario);
+    const auto found = index.find(key);
+    if (found != index.end()) return found->second;
+    const int at = static_cast<int>(out.size());
+    index[key] = at;  // before its calls: a behaviour that reaches itself names itself
+    const auto cut = sequence.find("::sequence");
+    Behaviour b;
+    b.subject = nodeFor(ids, sequence.substr(0, cut));
+    b.scenario = scenario.empty() && sequence.size() > cut + 10 ? sequence.substr(cut + 11) : scenario;
+    b.id = b.subject + (b.scenario.empty() ? "" : " / " + b.scenario);
+    out.push_back(b);
+    std::vector<Call> found_calls;
+    for (const model::Entity* m : model::pathOf(model, sequence, scenario, nullptr)) {
+      const auto call = calls.find(m->id);
+      if (call == calls.end()) continue;
+      const std::string callee = nodeFor(ids, call->second);
+      if (callee.empty()) continue;
+      std::string args;
+      for (const auto& a : m->args) args += (args.empty() ? "" : ", ") + a;
+      const std::string op = fieldOf(*m, "op");
+      Call c{callee, op.substr(op.rfind("::") == std::string::npos ? 0 : op.rfind("::") + 2) + "(" + args + ")", -1, fieldOf(*m, "result")};
+      // a scenario written apart is a sequence of its own; one written as a branch is a path through the base
+      const std::string expands = fieldOf(*m, "expands");
+      if (!expands.empty()) {
+        if (model.find(expands)) {
+          c.expands = of(expands, "");
+        } else if (expands.find('/') != std::string::npos) {
+          const auto slash = expands.find('/');
+          if (model.find(expands.substr(0, slash))) c.expands = of(expands.substr(0, slash), expands.substr(slash + 1));
+        }
+      }
+      found_calls.push_back(c);
+    }
+    out[static_cast<size_t>(at)].calls = found_calls;
+    return at;
+  }
+};
+
+}  // namespace
+
+void Scene::tour(SceneDocument& out_document) const {
+  std::set<std::string> ids;
+  for (const auto& n : out_document.nodes) ids.insert(n.id);
+  Behaviours behaviours{model_, ids, {}, {}, out_document.behaviours};
+  for (const auto& r : model_.relations()) {
+    if (r.kind == "calls") behaviours.calls[r.from] = r.to;
+  }
+  const auto visible = [](const model::Entity* e) { return e && fieldOf(*e, "visibility") != "-"; };
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& seq = pair.second;
+    if (seq.kind != model::Kind::Sequence) continue;
+    const auto at = seq.id.find("::sequence");
+    if (at == std::string::npos) continue;
+    const model::Entity* subject = model_.find(seq.id.substr(0, at));
+    if (!subject) continue;
+    const bool operation = subject->kind == model::Kind::Operation;
+    const bool member = subject->kind == model::Kind::Method && visible(subject) && visible(model_.find(subject->scope));
+    const bool function = subject->kind == model::Kind::Function && visible(subject);
+    if (!operation && !member && !function) continue;  // a private behaviour is replayed inside the public one that reaches it
+    if (nodeFor(ids, subject->id).empty()) continue;
+    // its scenarios: the default path and every branch it names, or the one it is written apart for
+    std::vector<std::string> scenarios{""};
+    if (seq.id.size() == at + 10) {
+      std::set<std::string> named;
+      for (const auto& f : model_.entities()) {
+        if (f.second.kind != model::Kind::Frame || f.second.scope != seq.id) continue;
+        for (const char* key : {"scenario", "else-scenario"}) {
+          const std::string s = fieldOf(f.second, key);
+          if (!s.empty() && named.insert(s).second) scenarios.push_back(s);
+        }
+      }
+    }
+    for (const auto& scenario : scenarios) {
+      const int b = behaviours.of(seq.id, scenario);
+      if (out_document.behaviours[static_cast<size_t>(b)].calls.empty()) continue;
+      out_document.tours.push_back({b, operation ? "interface" : "method"});
+    }
+  }
+}
+
+std::vector<Step> Scene::expand(const SceneDocument& document, int behaviour, int depth) {
+  std::vector<Step> steps;
+  std::set<int> stack;
+  std::function<void(int, const std::string&, int)> walk = [&](int b, const std::string& caller, int level) {
+    stack.insert(b);
+    for (const auto& c : document.behaviours[static_cast<size_t>(b)].calls) {
+      if (steps.size() >= kMaxSteps) break;
+      steps.push_back({caller, c.to, c.label, level, false});
+      if (c.expands < 0 || level >= depth || stack.count(c.expands)) continue;
+      walk(c.expands, c.to, level + 1);
+      steps.push_back({c.to, caller, c.result.empty() ? "\u21a9" : c.result, level, true});
+    }
+    stack.erase(b);
+  };
+  if (behaviour >= 0 && behaviour < static_cast<int>(document.behaviours.size()))
+    walk(behaviour, document.behaviours[static_cast<size_t>(behaviour)].subject, 1);
+  return steps;
+}
+
+namespace {
+
+const char kBase64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+std::string base64(const unsigned char* data, size_t size) {
+  std::string out;
+  out.reserve((size + 2) / 3 * 4);
+  for (size_t i = 0; i < size; i += 3) {
+    const unsigned v = (static_cast<unsigned>(data[i]) << 16) | (i + 1 < size ? static_cast<unsigned>(data[i + 1]) << 8 : 0u) |
+                       (i + 2 < size ? static_cast<unsigned>(data[i + 2]) : 0u);
+    out += kBase64[(v >> 18) & 63];
+    out += kBase64[(v >> 12) & 63];
+    out += i + 1 < size ? kBase64[(v >> 6) & 63] : '=';
+    out += i + 2 < size ? kBase64[v & 63] : '=';
+  }
+  return out;
+}
+
+std::string fromBase64(const std::string& text) {
+  std::string out;
+  unsigned v = 0;
+  int bits = -8;
+  for (const char c : text) {
+    if (c == '=' || c == 0) break;
+    const char* at = std::strchr(kBase64, c);
+    if (!at) break;
+    v = ((v << 6) | static_cast<unsigned>(at - kBase64)) & 0xFFFFFF;
+    bits += 6;
+    if (bits >= 0) {
+      out += static_cast<char>((v >> bits) & 0xFF);
+      bits -= 8;
+    }
+  }
+  return out;
+}
+
+}  // namespace
+
+std::string Scene::pack(const std::string& text) {
+  mz_ulong size = mz_compressBound(static_cast<mz_ulong>(text.size()));
+  std::vector<unsigned char> out(size);
+  if (mz_compress2(out.data(), &size, reinterpret_cast<const unsigned char*>(text.data()), static_cast<mz_ulong>(text.size()),
+                   MZ_BEST_COMPRESSION) != MZ_OK)
+    return "";
+  return base64(out.data(), size);
+}
+
+std::string Scene::unpack(const std::string& packed) {
+  const std::string bytes = fromBase64(packed);
+  for (mz_ulong room = static_cast<mz_ulong>(bytes.size()) * 8 + 1024; room < (1ul << 30); room *= 2) {
+    std::vector<unsigned char> out(room);
+    mz_ulong size = room;
+    const int status =
+        mz_uncompress(out.data(), &size, reinterpret_cast<const unsigned char*>(bytes.data()), static_cast<mz_ulong>(bytes.size()));
+    if (status == MZ_OK) return std::string(out.begin(), out.begin() + static_cast<long>(size));
+    if (status != MZ_BUF_ERROR) return "";
+  }
+  return "";
+}
+
+std::string Scene::page(const std::string& title, const std::string& css, const std::vector<std::string>& focus) const {
+  const std::string json = pack(render(false));  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
   std::string safe;
   for (const char c : title) safe += c == '<' ? "&lt;" : c == '>' ? "&gt;" : c == '&' ? "&amp;" : std::string(1, c);
   std::string out = viewerTemplate();
   const auto put = [&out](const std::string& mark, const std::string& value) {
     for (size_t at = out.find(mark); at != std::string::npos; at = out.find(mark, at + value.size())) out.replace(at, mark.size(), value);
   };
+  std::string style = css;
+  for (size_t at = style.find("</"); at != std::string::npos; at = style.find("</", at + 3)) style.replace(at, 2, "<\\/");
   put("/*SCENE*/", json);
   put("/*TITLE*/", safe);
+  put("/*CSS*/", style);
+  std::string framed = nlohmann::json(focus).dump();
+  for (size_t at = framed.find("</"); at != std::string::npos; at = framed.find("</", at + 3)) framed.replace(at, 2, "<\\/");
+  put("/*FOCUS*/", framed);
   return out;
+}
+
+std::string Scene::frame(const std::string& page, const std::string& title, int height) {
+  const auto attribute = [](const std::string& text) {
+    std::string out;
+    out.reserve(text.size() + text.size() / 8);
+    for (const char c : text) out += c == '&' ? "&amp;" : c == '"' ? "&quot;" : c == '<' ? "&lt;" : c == '>' ? "&gt;" : std::string(1, c);
+    return out;
+  };
+  return "<iframe title=\"" + attribute(title) + " \u00b7 DriftSpec\" style=\"width:100%;height:" + std::to_string(height) +
+         "px;border:0;border-radius:8px\" loading=\"lazy\" allowfullscreen srcdoc=\"" + attribute(page) + "\"></iframe>\n";
 }
 
 }  // namespace scene

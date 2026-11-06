@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <set>
 #include <string>
 
 #include "ds/model/Model.hpp"
@@ -101,13 +103,21 @@ TEST_F(TestSceneDocument, TheWorldHoldsEveryNodeInBothVariants) {
   }
 }
 
-TEST_F(TestScene, TheDocumentCarriesBothPlacesOfEveryNode) {
+TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
   const auto doc = nlohmann::json::parse(ds::scene::Scene(model).render(false));
+  EXPECT_EQ(doc["version"], 2);
+  const auto& fields = doc["fields"]["node"];
+  const auto column = [&fields](const std::string& name) {
+    for (size_t i = 0; i < fields.size(); ++i)
+      if (fields[i] == name) return i;
+    return fields.size();
+  };
   ASSERT_FALSE(doc["nodes"].empty());
   for (const auto& n : doc["nodes"]) {
-    EXPECT_EQ(n["full"].size(), 4u) << n["id"];
-    if (n["id"] == "p@m::A::helper") {
-      EXPECT_TRUE(n["lean"].is_null());
+    EXPECT_EQ(n[column("full")].size(), 4u) << n[column("id")];
+    EXPECT_TRUE(n[column("parent")].is_number_integer());  // a node names its parent by index
+    if (n[column("id")] == "p@m::A::helper") {
+      EXPECT_TRUE(n[column("lean")].is_null());
     }
   }
   EXPECT_EQ(doc["world"].size(), 4u);
@@ -118,10 +128,181 @@ TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
   const std::string page = ds::scene::Scene(model).page("a<b");
   EXPECT_EQ(page.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(page.find("<canvas"), std::string::npos);
-  EXPECT_NE(page.find("\"p@m::A::run\""), std::string::npos);
+  const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
+  const std::string scene = ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+  EXPECT_NE(scene.find("\"p@m::A::run\""), std::string::npos);  // the scene travels packed, and unpacks whole
+  EXPECT_EQ(page.find("\"p@m::A::run\""), std::string::npos);
   EXPECT_NE(page.find("a&lt;b \u00b7 DriftSpec"), std::string::npos);
   EXPECT_EQ(page.find("/*SCENE*/"), std::string::npos);
   EXPECT_EQ(page.find("/*TITLE*/"), std::string::npos);
+}
+
+TEST_F(TestScene, APackUnpacksToTheTextItHolds) {
+  const std::string text = std::string(5000, 'a') + " \u00e1\u00e9 </script> \"quoted\" " + std::string(300, 'z');
+  const std::string packed = ds::scene::Scene::pack(text);
+  EXPECT_LT(packed.size(), text.size() / 4);  // deflate: much smaller, even in base64
+  EXPECT_EQ(packed.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="), std::string::npos);
+  EXPECT_EQ(ds::scene::Scene::unpack(packed), text);
+  EXPECT_EQ(ds::scene::Scene::unpack("not a pack"), "");
+}
+
+/// The links of a scene: each relation of the model between two of its nodes, with what produces it.
+class TestLink : public ::testing::Test {
+ protected:
+  ds::model::Model model;
+  std::vector<ds::scene::Link> links;
+
+  void SetUp() override {
+    model.declare(entity(Kind::Package, "p", "p", ""));
+    model.declare(entity(Kind::Module, "p@m", "m", "p@"));
+    model.declare(entity(Kind::Class, "p@m::A", "A", "p@m"));
+    model.declare(entity(Kind::Class, "p@m::B", "B", "p@m"));
+    Entity run = entity(Kind::Method, "p@m::A::run", "run", "p@m::A");
+    model.declare(run);
+    Entity b = entity(Kind::Attribute, "p@m::A::b_", "b_", "p@m::A");
+    b.fields["type"] = "B";
+    model.declare(b);
+    model.declare(entity(Kind::Method, "p@m::B::go", "go", "p@m::B"));
+    model.relate({"calls", "p@m::A::run::sequence::m0", "p@m::B::go", {}, ""});
+    model.relate({"calls", "p@m::A::run::sequence::m3", "p@m::B::go", {}, ""});
+    model.relate({"owns", "p@m::A::b_", "p@m::B", {}, "*"});
+    model.relate({"uses", "p@m::A::run", "p@m::A", {}, ""});  // a member naming its own class stays inside the box
+    links = ds::scene::Scene(model).build().links;
+  }
+
+  const ds::scene::Link* link(const std::string& kind) const {
+    for (const auto& l : links)
+      if (l.kind == kind) return &l;
+    return nullptr;
+  }
+};
+
+TEST_F(TestLink, ACallGoesFromTheMemberWhoseBehaviourWritesItToTheMemberItCalls) {
+  const auto* call = link("calls");
+  ASSERT_NE(call, nullptr);
+  EXPECT_EQ(call->from, "p@m::A::run");
+  EXPECT_EQ(call->to, "p@m::B::go");
+  EXPECT_EQ(call->count, 2);
+  ASSERT_EQ(call->sequences.size(), 1u);
+  EXPECT_EQ(call->sequences[0], "p@m::A::run::sequence");
+}
+
+TEST_F(TestLink, OwnershipGoesFromTheAttributeWithItsMultiplicity) {
+  const auto* owns = link("owns");
+  ASSERT_NE(owns, nullptr);
+  EXPECT_EQ(owns->from, "p@m::A::b_");
+  EXPECT_EQ(owns->to, "p@m::B");
+  EXPECT_EQ(owns->multiplicity, "*");
+}
+
+TEST_F(TestLink, ARelationInsideOneBoxIsNoLink) { EXPECT_EQ(link("uses"), nullptr); }
+
+/// A diagram of the workspace, as the scene lists it: the nodes it shows.
+class TestDiagramView : public TestScene {};
+
+TEST_F(TestDiagramView, ADiagramListsTheNodesItShows) {
+  Entity diagram = entity(Kind::Diagram, "diagram:CL_M", "CL_M", "");
+  diagram.fields["kind"] = "class";
+  diagram.fields["include"] = "p@m::*";
+  model.declare(diagram);
+  const auto doc = ds::scene::Scene(model).build();
+  ASSERT_EQ(doc.diagrams.size(), 1u);
+  EXPECT_EQ(doc.diagrams[0].name, "CL_M");
+  EXPECT_EQ(doc.diagrams[0].kind, "class");
+  EXPECT_NE(std::find(doc.diagrams[0].nodes.begin(), doc.diagrams[0].nodes.end(), "p@m::A"), doc.diagrams[0].nodes.end());
+}
+
+/// A tour: a public behaviour walked along its scenario, each call expanded into the sequence of what it calls.
+class TestTour : public ::testing::Test {
+ protected:
+  ds::model::Model model;
+  ds::scene::SceneDocument doc;
+
+  static Entity message(const std::string& sequence, int order, const std::string& op, const std::string& expands) {
+    Entity m = entity(Kind::Message, sequence + "::m" + std::to_string(order), op, sequence);
+    m.fields["op"] = op;
+    m.fields["order"] = std::to_string(order);
+    m.fields["result"] = op + "ed";
+    if (!expands.empty()) m.fields["expands"] = expands;
+    return m;
+  }
+
+  void SetUp() override {
+    model.declare(entity(Kind::Package, "p", "p", ""));
+    model.declare(entity(Kind::Module, "p@m", "m", "p@"));
+    model.declare(entity(Kind::Class, "p@m::A", "A", "p@m"));
+    model.declare(entity(Kind::Class, "p@m::B", "B", "p@m"));
+    model.declare(entity(Kind::Method, "p@m::A::run", "run", "p@m::A"));
+    model.declare(entity(Kind::Method, "p@m::B::go", "go", "p@m::B"));
+    model.declare(entity(Kind::Method, "p@m::B::step", "step", "p@m::B"));
+    model.declare(entity(Kind::Sequence, "p@m::A::run::sequence", "run", "p@m"));
+    model.declare(entity(Kind::Sequence, "p@m::B::go::sequence", "go", "p@m"));
+    model.declare(message("p@m::A::run::sequence", 0, "go", "p@m::B::go::sequence"));
+    model.declare(message("p@m::B::go::sequence", 0, "step", ""));
+    model.declare(message("p@m::B::go::sequence", 1, "step", ""));
+    model.relate({"calls", "p@m::A::run::sequence::m0", "p@m::B::go", {}, ""});
+    model.relate({"calls", "p@m::B::go::sequence::m0", "p@m::B::step", {}, ""});
+    model.relate({"calls", "p@m::B::go::sequence::m1", "p@m::B::step", {}, ""});
+    doc = ds::scene::Scene(model).build();
+  }
+
+  int behaviour(const std::string& id) const {
+    for (size_t i = 0; i < doc.behaviours.size(); ++i)
+      if (doc.behaviours[i].id == id) return static_cast<int>(i);
+    return -1;
+  }
+  std::vector<ds::scene::Step> steps(const std::string& id, int depth = 7) const {
+    return ds::scene::Scene::expand(doc, behaviour(id), depth);
+  }
+};
+
+class TestStep : public TestTour {};
+
+TEST_F(TestStep, AStepGoesOneLevelDeeperForEachSequenceExpanded) {
+  const auto run = steps("p@m::A::run");
+  ASSERT_GE(run.size(), 3u);
+  EXPECT_EQ(run[0].depth + 1, run[1].depth);
+  EXPECT_EQ(run[1].label, "step()");
+  EXPECT_FALSE(run[1].back);
+  EXPECT_EQ(steps("p@m::A::run", 1).size(), 1u);  // at depth 1 only the subject's own call
+}
+
+class TestBehaviour : public TestTour {};
+class TestCall : public TestTour {};
+
+TEST_F(TestCall, ACallKeepsItsLabelAndWhatComesBack) {
+  const auto& calls = doc.behaviours[static_cast<size_t>(behaviour("p@m::A::run"))].calls;
+  ASSERT_EQ(calls.size(), 1u);
+  EXPECT_EQ(calls[0].to, "p@m::B::go");
+  EXPECT_EQ(calls[0].label, "go()");
+  EXPECT_EQ(calls[0].result, "goed");
+}
+
+TEST_F(TestBehaviour, EachBehaviourIsWrittenOnceAndACallNamesTheOneItGoesOnInto) {
+  const int run = behaviour("p@m::A::run"), go = behaviour("p@m::B::go");
+  ASSERT_GE(run, 0);
+  ASSERT_GE(go, 0);
+  ASSERT_EQ(doc.behaviours[static_cast<size_t>(run)].calls.size(), 1u);
+  EXPECT_EQ(doc.behaviours[static_cast<size_t>(run)].calls[0].expands, go);
+  EXPECT_EQ(doc.behaviours[static_cast<size_t>(go)].calls.size(), 2u);
+  std::set<std::string> seen;
+  for (const auto& b : doc.behaviours) EXPECT_TRUE(seen.insert(b.id).second) << b.id;
+}
+
+TEST_F(TestTour, ACallExpandsIntoTheSequenceOfWhatItCallsAndItsAnswerComesBack) {
+  const auto run = steps("p@m::A::run");
+  ASSERT_EQ(run.size(), 4u);  // run -> go, go -> step twice, go's answer back to run
+  EXPECT_EQ(run[0].from, "p@m::A::run");
+  EXPECT_EQ(run[0].to, "p@m::B::go");
+  EXPECT_EQ(run[0].depth, 1);
+  EXPECT_EQ(run[1].from, "p@m::B::go");
+  EXPECT_EQ(run[1].depth, 2);
+  EXPECT_TRUE(run[3].back);
+  EXPECT_EQ(run[3].to, "p@m::A::run");
+  EXPECT_EQ(run[3].label, "goed");
+  bool offered = false;
+  for (const auto& t : doc.tours) offered |= t.behaviour == behaviour("p@m::A::run") && t.group == "method";
+  EXPECT_TRUE(offered);
 }
 
 }  // namespace

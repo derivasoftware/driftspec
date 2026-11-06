@@ -6,7 +6,15 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
 - `grammar/` — the tree-sitter grammar (`grammar.js`), the generated parser and
   the external scanner for indented text blocks.
 - `include/ds/`, `src/ds/` — the engine (namespace root `ds`): parse, model, bind, check, render, diff, query, exporter.
-- `app/ds/` — the `ds` command line: `ds check`, `ds export`, `ds render`, `ds draw`, `ds coupling`, `ds diff`, `ds query` (run `ds` for the arguments).
+- `app/ds/` — the `ds` command line, five commands (`ds <command> --help` for each):
+  - `ds check <workspace> [--json]` — the findings, then the counts of the model.
+  - `ds export <workspace>` — the model as JSON, with its metamodel.
+  - `ds render <workspace|ir.json> [diagram] [-f html|json|svg|text|cells|ir|layout] [-w N] [-o file] [--embed [--height N]] [--css file]` — the viewer of the whole model (html, framed on the diagram when one is named), its scene (json), or one diagram drawn still or as its data.
+  - `ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]` — the changes in the model's terms, or a diagram with them marked.
+  - `ds query <workspace> <question> [subject] [--json]` — diagrams, entities, relations, artefacts, behaviours, shows, findings, coupling.
+- `viewer/` — the viewer page compiled into ds (`scene.html`) and its themes (`themes/night.css`, for `--css`).
+  In the viewer, classes sit under the class they inherit from, and inheritance is the only relation drawn as a line; touching a box lights up what it composes, aggregates, calls and uses, each in its colour, and docks its card on the right. Tours play along the bottom.
+- `examples/hola/` — the example the viewer is tried on: `ds render examples/hola -o hola.html`.
 - `examples/diag/` — the reference workspace, one entity per file.
 - `tests/unit/ds/` — GoogleTest suites, mirroring the namespaces; `tests/system/ds/` drives the binary from outside.
 
