@@ -411,7 +411,7 @@ std::string grammarPage() {
   out +=
       "  (and at the top of a file: package, diagram)\n\n"
       "Annotations\n"
-      "  @<word> <ID> on a line of its own, inside the body of what it is about: a package, a class, a member, a\n"
+      "  @<word> <ID> on a line of its own, inside the body of what it is about: a package, a module, a class, a member, a\n"
       "  function, an enum, an interface, an operation, a sequence, a requirement, a verification, a constraint.\n"
       "  ds manual annotations says which words mean something.\n\n"
       "Definitions and extensions\n"

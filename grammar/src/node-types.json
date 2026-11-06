@@ -1012,6 +1012,10 @@
       "required": false,
       "types": [
         {
+          "type": "annotation",
+          "named": true
+        },
+        {
           "type": "class",
           "named": true
         },
