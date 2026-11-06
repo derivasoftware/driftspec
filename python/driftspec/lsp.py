@@ -203,7 +203,26 @@ def subject_at(ls: LanguageServer, uri: str, line: int, character: int, typed: s
         what, name = subject_of(word)
         if what:
             return what, name
+    inside = enclosing(path_of(uri), line)  # no name under the cursor: what it is written in
+    if inside:
+        return ("diagram", inside.name) if inside.kind == "diagram" else ("entity", inside.id)
     return "", word_at(ls, uri, lsp.Position(line, character)) or typed
+
+
+def enclosing(path: str, line: int) -> driftspec.Entity | None:
+    """The declaration a line of a file is written in: the nearest one that opens above it."""
+    model: driftspec.Model = state["model"]
+    if not model:
+        return None
+    candidates = [e for e in model.in_file(path) if e.kind in STRUCTURE | ARTEFACT | {"diagram", "sequence"}
+                  and e.location.line - 1 <= line]
+    if not candidates:
+        return None
+    best = max(candidates, key=lambda e: (e.location.line, e.location.column))
+    if best.kind == "sequence":  # a sequence draws through its subject
+        subject = model.find(best.fields.get("subject", "")) or model.find(best.scope)
+        return subject or best
+    return best
 
 
 def subject_of(word: str) -> tuple[str, str]:
@@ -215,8 +234,12 @@ def subject_of(word: str) -> tuple[str, str]:
 
 
 def with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]:
-    """The workspace with a diagram of one entity and what it relates to, written on the fly."""
+    """The workspace with a diagram of one entity and what it relates to, written on the fly; a member
+    is drawn as the class it belongs to."""
     entity = state["model"].find(identity)
+    while entity and entity.kind in ("attribute", "method", "operator", "outcome") and state["model"].find(entity.scope):
+        entity = state["model"].find(entity.scope)
+        identity = entity.id
     kind = "requirement" if entity and entity.kind in ARTEFACT else "class"
     name = "__Focus"
     files = dict(files)
