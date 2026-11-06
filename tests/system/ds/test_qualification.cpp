@@ -171,8 +171,11 @@ TEST_F(TestQualification, TheViewerIsOnePageWithTheWholeModelInside) {
   EXPECT_EQ(run.code, 0);
   EXPECT_EQ(run.out.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(run.out.find("static \u00b7 DriftSpec"), std::string::npos);
-  const auto scene = nlohmann::json::parse(ds("render " + examples("static") + " -f json").out);
-  for (const auto& n : scene["nodes"]) EXPECT_NE(run.out.find("\"" + n[0].get<std::string>() + "\""), std::string::npos) << n[0];
+  const Outcome scene = ds("render " + examples("static") + " -f json");
+  const auto at = run.out.find("const PACKED='");
+  ASSERT_NE(at, std::string::npos);  // the scene travels packed inside the page
+  EXPECT_GT(run.out.find('\'', at + 14), at + 100);
+  EXPECT_LT(run.out.size(), scene.out.size() + 60u * 1024u);  // the whole viewer costs less than the scene unpacked plus its code
 }
 
 // SREQ-00013-1: the viewer embeds into another document as one frame, in the reader's colours

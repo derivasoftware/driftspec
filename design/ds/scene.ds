@@ -201,6 +201,35 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
     }
 
+    requirement REQ-00075-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The page shall carry its scene deflated and written in base64, and the viewer shall inflate it in the browser
+      text:
+        The scene travels inside the page as zlib-deflated text written in
+        base64, which needs no escaping in a script or in an iframe's srcdoc.
+        The viewer inflates it with the browser's own DecompressionStream and
+        says so when the browser has none. Unpacking a pack gives back the
+        text it was made from. The page of ds's own design stays under 100 KB,
+        and its embedded frame under 120 KB.
+      rationale:
+        Owner, 2026-11-06: keep the page small and usable. After writing each
+        behaviour once the page weighed 147 KB, and the frame 196 KB because
+        every quote of the scene was escaped for the attribute. Packed, the
+        page weighs 77 KB and the frame 82 KB, and no library travels with it.
+      tags: render, scene, size
+    }
+
+    verification VER-00084-1 {
+      status: approved
+      @requirement REQ-00075-1
+      title: Integration tests confirm ds's design page and frame carry a pack that unpacks to the whole scene, within their size bounds
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.TheDesignEmbedsAsOneFrameCarryingTheWholePage
+    }
+
     dataclass Call {                         // one call of a behaviour: whom it calls, the behaviour it goes on into
       @requirement REQ-00074-1
       + to: std::string
@@ -296,6 +325,12 @@ package driftspec@ds {
       + static expand(document: SceneDocument, behaviour: int, depth: int) -> std::vector<Step> {
         @requirement REQ-00073-1
       }
+      + static pack(text: std::string) -> std::string {
+        @requirement REQ-00075-1
+      }
+      + static unpack(packed: std::string) -> std::string {
+        @requirement REQ-00075-1
+      }
     }
 
     // The layout runs twice, once per variant; build keeps the full one's order and adds
@@ -319,10 +354,19 @@ package driftspec@ds {
       return frame
     }
 
+    sequence Scene::pack {
+      return packed
+    }
+
+    sequence Scene::unpack {
+      return text
+    }
+
     // The viewer template is compiled into ds; the scene, the title and the reader's
     // stylesheet go where it marks them.
     sequence Scene::page {
       -> render(pretty) -> json
+      -> pack(json) -> packed
       return page
     }
   }

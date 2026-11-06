@@ -59,6 +59,11 @@ class TestSceneOfTheDesign : public ::testing::Test {
         }
     }
   }
+
+  static std::string packedIn(const std::string& page) {
+    const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
+    return ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+  }
 };
 
 TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
@@ -83,8 +88,10 @@ TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
 
 TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript) {
   const std::string page = ds::scene::Scene(model).page("design");
-  for (const auto& n : nodes) EXPECT_NE(page.find("\"" + n.id + "\""), std::string::npos) << n.id;
+  const std::string scene = packedIn(page);
+  for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
   EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
+  EXPECT_LT(page.size(), 100u * 1024u);
 }
 
 TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
@@ -94,7 +101,9 @@ TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
   EXPECT_NE(frame.find("height:500px"), std::string::npos);
   EXPECT_EQ(frame.find('<', 1), frame.rfind("</iframe>"));  // the page travels escaped: no tag of it opens inside the host
   EXPECT_NE(frame.find("&lt;canvas"), std::string::npos);
-  for (const auto& n : nodes) EXPECT_NE(frame.find("&quot;" + n.id + "&quot;"), std::string::npos) << n.id;
+  const std::string scene = packedIn(frame);  // base64 needs no escaping in an attribute: the pack travels as it is
+  for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
+  EXPECT_LT(frame.size(), 120u * 1024u);
 }
 
 TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {

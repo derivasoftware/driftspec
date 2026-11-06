@@ -1,7 +1,10 @@
 #include "ds/scene/Scene.hpp"
 
+#include <miniz.h>
+
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <nlohmann/json.hpp>
@@ -581,10 +584,68 @@ std::vector<Step> Scene::expand(const SceneDocument& document, int behaviour, in
   return steps;
 }
 
+namespace {
+
+const char kBase64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+std::string base64(const unsigned char* data, size_t size) {
+  std::string out;
+  out.reserve((size + 2) / 3 * 4);
+  for (size_t i = 0; i < size; i += 3) {
+    const unsigned v = (static_cast<unsigned>(data[i]) << 16) | (i + 1 < size ? static_cast<unsigned>(data[i + 1]) << 8 : 0u) |
+                       (i + 2 < size ? static_cast<unsigned>(data[i + 2]) : 0u);
+    out += kBase64[(v >> 18) & 63];
+    out += kBase64[(v >> 12) & 63];
+    out += i + 1 < size ? kBase64[(v >> 6) & 63] : '=';
+    out += i + 2 < size ? kBase64[v & 63] : '=';
+  }
+  return out;
+}
+
+std::string fromBase64(const std::string& text) {
+  std::string out;
+  unsigned v = 0;
+  int bits = -8;
+  for (const char c : text) {
+    if (c == '=' || c == 0) break;
+    const char* at = std::strchr(kBase64, c);
+    if (!at) break;
+    v = ((v << 6) | static_cast<unsigned>(at - kBase64)) & 0xFFFFFF;
+    bits += 6;
+    if (bits >= 0) {
+      out += static_cast<char>((v >> bits) & 0xFF);
+      bits -= 8;
+    }
+  }
+  return out;
+}
+
+}  // namespace
+
+std::string Scene::pack(const std::string& text) {
+  mz_ulong size = mz_compressBound(static_cast<mz_ulong>(text.size()));
+  std::vector<unsigned char> out(size);
+  if (mz_compress2(out.data(), &size, reinterpret_cast<const unsigned char*>(text.data()), static_cast<mz_ulong>(text.size()),
+                   MZ_BEST_COMPRESSION) != MZ_OK)
+    return "";
+  return base64(out.data(), size);
+}
+
+std::string Scene::unpack(const std::string& packed) {
+  const std::string bytes = fromBase64(packed);
+  for (mz_ulong room = static_cast<mz_ulong>(bytes.size()) * 8 + 1024; room < (1ul << 30); room *= 2) {
+    std::vector<unsigned char> out(room);
+    mz_ulong size = room;
+    const int status =
+        mz_uncompress(out.data(), &size, reinterpret_cast<const unsigned char*>(bytes.data()), static_cast<mz_ulong>(bytes.size()));
+    if (status == MZ_OK) return std::string(out.begin(), out.begin() + static_cast<long>(size));
+    if (status != MZ_BUF_ERROR) return "";
+  }
+  return "";
+}
+
 std::string Scene::page(const std::string& title, const std::string& css, const std::vector<std::string>& focus) const {
-  std::string json = render(false);
-  for (size_t at = json.find("</"); at != std::string::npos; at = json.find("</", at + 2))
-    json.replace(at, 2, "<\\/");  // never closes the script
+  const std::string json = pack(render(false));  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
   std::string safe;
   for (const char c : title) safe += c == '<' ? "&lt;" : c == '>' ? "&gt;" : c == '&' ? "&amp;" : std::string(1, c);
   std::string out = viewerTemplate();

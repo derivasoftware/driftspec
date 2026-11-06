@@ -116,8 +116,13 @@ body.touring .stage{right:380px}
   <div class="tb" id="tbody"></div>
 </aside>
 <script>
-(()=>{
-const SCENE=decode(/*SCENE*/);
+(async()=>{
+// the scene travels deflated and in base64; the browser inflates it with its own DecompressionStream
+const PACKED='/*SCENE*/';
+async function unpack(b64){const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate')); return JSON.parse(await new Response(stream).text());}
+if(typeof DecompressionStream==='undefined'){document.getElementById('stage').innerHTML='<p style="padding:20px;font-family:sans-serif">Este navegador no sabe descomprimir la escena (le falta DecompressionStream). Ábrela con uno actual.</p>'; return;}
+const SCENE=decode(await unpack(PACKED));
 // the scene comes compact (version 2): records are arrays whose columns `fields` names, and nodes and
 // behaviours are named by index; a tour is a behaviour expanded through the behaviours its calls go on into
 function decode(r){if(r.version!==2) return r;

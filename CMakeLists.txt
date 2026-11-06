@@ -44,7 +44,28 @@ FetchContent_Declare(
 set(JSON_BuildTests
     OFF
     CACHE INTERNAL "")
-FetchContent_MakeAvailable(nlohmann_json googletest cli11)
+# miniz: zlib-compatible deflate, to pack the scene inside the viewer page (the
+# browser inflates it natively)
+FetchContent_Declare(
+  miniz
+  GIT_REPOSITORY https://github.com/richgel999/miniz.git
+  GIT_TAG 3.0.2
+  GIT_SHALLOW TRUE)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5) # miniz still declares an old minimum,
+                                      # which CMake 4 refuses
+set(BUILD_EXAMPLES
+    OFF
+    CACHE BOOL "" FORCE)
+set(BUILD_FUZZERS
+    OFF
+    CACHE BOOL "" FORCE)
+set(BUILD_TESTS
+    OFF
+    CACHE BOOL "" FORCE)
+set(INSTALL_PROJECT
+    OFF
+    CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(nlohmann_json googletest cli11 miniz)
 FetchContent_GetProperties(tree_sitter)
 if(NOT tree_sitter_POPULATED)
   FetchContent_Populate(tree_sitter)
@@ -78,8 +99,10 @@ set_property(
 add_library(driftspec STATIC ${driftspec_SOURCES}
                              ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp)
 target_include_directories(driftspec PUBLIC include)
-target_link_libraries(driftspec PUBLIC driftspec_grammar
-                                       nlohmann_json::nlohmann_json)
+target_link_libraries(
+  driftspec
+  PUBLIC driftspec_grammar nlohmann_json::nlohmann_json
+  PRIVATE miniz)
 
 # ---- the CLI -----------------------------------------------------------------
 add_executable(ds app/ds/main.cpp)

@@ -112,6 +112,11 @@ class Scene {
   /// The steps of a behaviour expanded through the behaviours its calls go on into, down to a
   /// depth: each call, the steps of what it calls, then its answer. A cycle is not entered twice.
   static std::vector<Step> expand(const SceneDocument& document, int behaviour, int depth);
+  /// Text deflated (zlib format) and written in base64: how the scene travels inside a page, which a
+  /// browser inflates with its own DecompressionStream.
+  static std::string pack(const std::string& text);
+  /// The text a pack holds; empty when it holds none.
+  static std::string unpack(const std::string& packed);
 
  private:
   void relate(SceneDocument& out_document) const;
