@@ -290,11 +290,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   // relations: lifted from members to their class; one edge per (from, to, kind, label)
   std::set<std::string> drawn;
   for (const auto& r : model_.relations()) {
-    // a diff marks a relation as "<kind>+added" / "<kind>+removed"
-    const auto plus = r.kind.find('+');
-    const std::string change = plus == std::string::npos ? "" : r.kind.substr(plus + 1);
-    const std::string baseKind = plus == std::string::npos ? r.kind : r.kind.substr(0, plus);
-    std::string kind = edgeKind(baseKind);
+    const std::string& change = r.change;  // a diff marks a relation as added or removed
+    std::string kind = edgeKind(r.kind);
     if (kind.empty()) continue;
     const model::Entity* from = model_.find(r.from);
     const model::Entity* to = model_.find(r.to);
@@ -303,10 +300,10 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     const std::string fromClass = isBox(*from) ? from->id : from->scope;
     if (!placed.count(fromClass) || !placed.count(r.to) || fromClass == r.to) continue;
     std::string label;
-    if (baseKind == "owns" || baseKind == "refs" || baseKind == "shares") {
+    if (r.kind == "owns" || r.kind == "refs" || r.kind == "shares") {
       if (shows("ownership")) label = from->name;
       if (shows("multiplicity") && !r.multiplicity.empty()) label += (label.empty() ? "" : " ") + r.multiplicity;
-    } else if (baseKind == "bounded-by") {
+    } else if (r.kind == "bounded-by") {
       label = "T: " + model_.find(r.to)->name;
     }
     const std::string key = fromClass + "|" + r.to + "|" + kind + "|" + label + "|" + change;

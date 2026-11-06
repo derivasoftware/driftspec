@@ -36,7 +36,12 @@ nlohmann::json metamodelJson() {
   }
   out["relations"] = nlohmann::json::array();
   for (const auto& r : model::relations()) {
-    out["relations"].push_back({{"kind", r.kind}, {"meaning", r.meaning}, {"from", kindNames(r.from)}, {"to", kindNames(r.to)}});
+    nlohmann::json spec = {{"kind", r.kind}, {"meaning", r.meaning}, {"from", kindNames(r.from)}, {"to", kindNames(r.to)}};
+    if (!r.pairs.empty()) {
+      spec["pairs"] = nlohmann::json::array();
+      for (const auto& p : r.pairs) spec["pairs"].push_back({model::kindName(p.first), model::kindName(p.second)});
+    }
+    out["relations"].push_back(spec);
   }
   return out;
 }

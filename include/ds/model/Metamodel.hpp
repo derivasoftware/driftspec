@@ -2,6 +2,7 @@
 #define DRIFTSPEC_MODEL_METAMODEL_HPP
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ds/model/Model.hpp"
@@ -53,6 +54,8 @@ struct RelationSpec {
   std::string meaning;
   std::vector<Kind> from;  ///< empty: any kind
   std::vector<Kind> to;    ///< empty: any kind
+  /// When set, the only (from, to) pairs it may join: contains is derived from where each kind may be declared.
+  std::vector<std::pair<Kind, Kind>> pairs;
 };
 
 /// The metamodel of DriftSpec, declared once: every kind with its fields, flags and

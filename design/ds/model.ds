@@ -116,6 +116,7 @@ package driftspec@ds {
       + meaning: std::string
       + from: std::vector<Kind>
       + to: std::vector<Kind>
+      + pairs: std::vector<std::pair<Kind, Kind>>
     }
 
     function kinds() -> std::vector<KindSpec> {
@@ -192,6 +193,7 @@ package driftspec@ds {
       + to: std::string
       + owns location: Location
       + multiplicity: std::string
+      + change: std::string
     }
 
     dataclass Finding {                      // one diagnostic of the engine

@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <limits>
 #include <set>
+#include <stdexcept>
+
+#include "ds/model/Metamodel.hpp"
 
 namespace ds {
 namespace model {
@@ -92,7 +95,11 @@ Entity* Model::find(const std::string& id) {
   return it == entities_.end() ? nullptr : &it->second;
 }
 
-void Model::relate(const Relation& relation) { relations_.push_back(relation); }
+void Model::relate(const Relation& relation) {
+  // a relation the metamodel does not declare is a defect of ds, not of the specification read
+  if (!relationOf(relation.kind)) throw std::logic_error("the metamodel does not declare the relation '" + relation.kind + "'");
+  relations_.push_back(relation);
+}
 
 bool Model::rename(const std::string& from, const std::string& to) {
   if (from == to) return true;

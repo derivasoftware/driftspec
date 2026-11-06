@@ -55,6 +55,15 @@ TEST_F(TestJoins, ARelationJoinsOnlyTheKindsItDeclares) {
   EXPECT_FALSE(ds::model::joins(*verifies, Kind::Requirement, Kind::Verification));
 }
 
+TEST_F(TestJoins, ContainsJoinsAParentOnlyWithTheChildrenItMayHold) {
+  const auto* contains = ds::model::relationOf("contains");
+  ASSERT_NE(contains, nullptr);
+  EXPECT_TRUE(ds::model::joins(*contains, Kind::Class, Kind::Method));
+  EXPECT_TRUE(ds::model::joins(*contains, Kind::Package, Kind::Package));
+  EXPECT_FALSE(ds::model::joins(*contains, Kind::Class, Kind::Package));  // both ends are kinds contains knows, not as a pair
+  EXPECT_FALSE(ds::model::joins(*contains, Kind::Sequence, Kind::Method));
+}
+
 TEST_F(TestJoins, ARelationWithNoEndsJoinsAnyKind) {
   const auto* refers = ds::model::relationOf("refers");
   ASSERT_NE(refers, nullptr);
