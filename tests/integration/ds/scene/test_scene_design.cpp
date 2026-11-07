@@ -136,7 +136,7 @@ TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotClos
 
 TEST_F(TestSceneOfTheDesign, EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws) {
   const auto doc = ds::scene::Scene(model).build();
-  const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "calls"};
+  const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "consumes", "calls"};
   bool checkerCallsModel = false;
   for (const auto& l : doc.links) {
     EXPECT_EQ(byId.count(l.from), 1u) << l.from;

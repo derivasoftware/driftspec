@@ -295,6 +295,31 @@ package driftspec@ds {
               tests/integration/ds/bind/test_uses.cpp::TestUses.AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten
           }
         }
+        requirement REQ-00093-1 {
+          tags: language, hld, dependencies
+          status: approved
+          title: A module shall offer interfaces like a package, and a behaviour shall call an interface's operation through a local, a parameter or an attribute typed by it
+          text:
+            interface port { ... } inside module face is p@face::port, offered by the module. A
+            behaviour reaches an interface's operation as it reaches a method: local ds: p@engine
+            then -> ds.check(text), or a parameter or an attribute typed by the interface; the call
+            names the operation, so the consumer depends on the contract and not on the class that
+            realises it. In the viewer a module's interfaces come first inside it.
+          rationale:
+            Owner, 2026-11-07 (DS-92): the Python face called the engine's class Api because a
+            sequence could not call engine; and a dependency between two modules of one package had
+            no interface to go through.
+          verification VER-00102-1 {
+            title: Integration tests confirm a module offers interfaces and a behaviour calls an interface's operation through a local, a parameter or an attribute
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.AModuleDeclaresAnInterfaceAndOffersIt
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.ABehaviourCallsAnInterfaceOperationThroughALocal
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.ThroughAParameterOrAnAttributeTypedByTheInterface
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.TheSceneDrawsAModulesInterfaceInsideIt
+          }
+        }
         requirement REQ-00081-1 {
           tags: language, hld, usecase
           status: approved

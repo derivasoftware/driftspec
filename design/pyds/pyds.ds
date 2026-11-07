@@ -345,6 +345,7 @@ package driftspec@pyds {
   // ---- the extension: C++ inside the Python box --------------------------------------------------
   module native {
     language: cpp
+    @uses driftspec@ds@engine                // DS-92: through the engine's interface
     @requirement REQ-00086-1
 
     function check(files: map<string, string>) -> string
@@ -354,32 +355,32 @@ package driftspec@pyds {
     function page(files: map<string, string>, title: string, focus: list<string>) -> string
 
     sequence check {
-      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
-      -> api.check(files) -> json
+      local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
+      -> ds.check(files) -> json
       return json
     }
 
     sequence export {
-      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
-      -> api.exportModel(files) -> json
+      local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
+      -> ds.export(files) -> json
       return json
     }
 
     sequence expected_at {
-      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
-      -> api.expectedAt(text, line, column) -> json
+      local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
+      -> ds.expectedAt(text, line, column) -> json
       return json
     }
 
     sequence render {
-      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
-      -> api.render(files, diagram, format, width) -> drawing
+      local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
+      -> ds.render(files, diagram, format, width) -> drawing
       return drawing
     }
 
     sequence page {
-      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
-      -> api.page(files, title, focus) -> html
+      local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
+      -> ds.page(files, title, focus) -> html
       return html
     }
   }

@@ -358,8 +358,10 @@ bool Checker::kindAllowed(const bind::Reference& reference, const std::string& t
   const model::Entity* from = model_.find(reference.from);
   const model::Entity* to = model_.find(target);
   if (!spec || !from || !to || to->expected || model::joins(*spec, from->kind, to->kind)) return true;
-  std::string message = reference.from + " " + reference.relation + " " + target + ", a " + model::kindName(to->kind) +
-                        ": the language joins " + reference.relation + " only between other kinds";
+  const std::string kind = model::kindName(to->kind);
+  const std::string article = std::string("aeiou").find(kind[0]) == std::string::npos ? ", a " : ", an ";
+  std::string message = reference.from + " " + reference.relation + " " + target + article + kind + ": the language joins " +
+                        reference.relation + " only between other kinds";
   if (reference.relation == "inherits" && to->kind == model::Kind::Interface)
     message =
         reference.from + " names the interface " + target + " as its base: a class realises an interface, write @interface " + to->name;

@@ -236,6 +236,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "interface"
+        },
+        {
+          "type": "SYMBOL",
           "name": "module"
         },
         {

@@ -282,7 +282,7 @@ class Layout {
   }
 
   std::string module(const model::Entity& e, const std::string& parent) {
-    std::vector<std::pair<std::string, std::pair<double, double>>> units, boxes;
+    std::vector<std::pair<std::string, std::pair<double, double>>> units, boxes, offered;  // offered: the module's own interfaces
     std::vector<const model::Entity*> kids(children(e.id).begin(), children(e.id).end());
     std::stable_sort(kids.begin(), kids.end(), [](const model::Entity* a, const model::Entity* b) {
       const bool aPriv = visibility(*a) == "-", bPriv = visibility(*b) == "-";
@@ -294,6 +294,7 @@ class Layout {
     for (const model::Entity* k : kids) {
       if (k->has("extern")) continue;
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
+      if (k->kind == model::Kind::Interface) offered.push_back({interface(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Class || k->kind == model::Kind::Function || k->kind == model::Kind::Enum)
         units.push_back({unit(*k, e.id), {0, 0}});
     }
@@ -315,6 +316,7 @@ class Layout {
       return aTree != bTree ? aTree : false;
     });
     units = blocks;
+    units.insert(units.begin(), offered.begin(), offered.end());  // what the module offers reads first
     units.insert(units.end(), boxes.begin(), boxes.end());
     const auto size = shelf(units, shapes, kUnitGap, width(e.id, target(units, shapes, 260, 1.5)));
     keep(e.id, size.first);
