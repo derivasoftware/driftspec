@@ -342,12 +342,29 @@ void Checker::resolveReference(const bind::Reference& reference) {
     model_.relate({"contains", target, reference.from, reference.location, ""});
     return;
   }
+  if (!kindAllowed(reference, target)) return;
   model_.relate({reference.relation, reference.from, target, reference.location, reference.multiplicity});
   const std::string& r = reference.relation;
   if (r == "uses" || r == "owns" || r == "refs" || r == "shares" || r == "inherits" || r == "bounded-by") {
     checkVisibility(reference.from, target, reference.location);
     checkLeak(reference.from, target, reference.location);
   }
+}
+
+// A reference binds only into a relation the language declares between those two kinds (REQ-00066-1):
+// a class that names an interface as its base does not inherit from it, it realises it, and is told so.
+bool Checker::kindAllowed(const bind::Reference& reference, const std::string& target) {
+  const model::RelationSpec* spec = model::relationOf(reference.relation);
+  const model::Entity* from = model_.find(reference.from);
+  const model::Entity* to = model_.find(target);
+  if (!spec || !from || !to || to->expected || model::joins(*spec, from->kind, to->kind)) return true;
+  std::string message = reference.from + " " + reference.relation + " " + target + ", a " + model::kindName(to->kind) +
+                        ": the language joins " + reference.relation + " only between other kinds";
+  if (reference.relation == "inherits" && to->kind == model::Kind::Interface)
+    message =
+        reference.from + " names the interface " + target + " as its base: a class realises an interface, write @interface " + to->name;
+  model_.report({"E-RELATION-KIND", "error", message, reference.location});
+  return false;
 }
 
 std::string Checker::privateOnTheWay(const std::string& from, const std::string& target) const {

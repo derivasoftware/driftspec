@@ -31,6 +31,9 @@ package driftspec@ds {
         @requirement REQ-00053-1
         @constraint CST-00006-1
       }
+      - kindAllowed(reference: bind::Reference, target: std::string) -> bool {
+        @requirement REQ-00066-1
+      }
       - checkMessage(message: bind::Message) -> void {
         @requirement REQ-00037-1
         @requirement REQ-00056-1

@@ -31,6 +31,7 @@ class Checker {
 
  private:
   void resolveReference(const bind::Reference& reference);
+  bool kindAllowed(const bind::Reference& reference, const std::string& target);
   void checkMessage(const bind::Message& message);
   void checkEvent(const bind::Event& event);
   void checkLocals();

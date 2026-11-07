@@ -133,4 +133,29 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
   EXPECT_NE(unknown[0].find("'priority'"), std::string::npos);
 }
 
+TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNotBound) {
+  const auto check = [](const std::string& base) {
+    ds::model::Model model;
+    ds::parse::Parser parser;
+    ds::bind::Binder binder(model);
+    binder.bind(parser.parseText(
+        "a.ds", "package p {\n  interface engine {\n    kind: library\n  }\n  module m {\n    class Api" + base + "\n  }\n}\n"));
+    ds::check::Checker(model).run(binder);
+    return model;
+  };
+  const ds::model::Model wrong = check(" : engine { }");  // DS-93: a class that names an interface as its base
+  std::vector<std::string> kind;
+  for (const auto& f : wrong.findings())
+    if (f.code == "E-RELATION-KIND") kind.push_back(f.message);
+  ASSERT_EQ(kind.size(), 1u);
+  EXPECT_NE(kind[0].find("@interface engine"), std::string::npos) << kind[0];
+  for (const auto& r : wrong.relations()) EXPECT_FALSE(r.kind == "inherits" && r.from == "p@m::Api") << r.to;
+
+  const ds::model::Model right = check(" {\n      @interface engine\n    }");  // the way the language realises it
+  for (const auto& f : right.findings()) EXPECT_NE(f.code, "E-RELATION-KIND") << f.message;
+  bool realises = false;
+  for (const auto& r : right.relations()) realises |= r.kind == "realises" && r.from == "p@m::Api" && r.to == "p@engine";
+  EXPECT_TRUE(realises);
+}
+
 }  // namespace
