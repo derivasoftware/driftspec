@@ -172,6 +172,25 @@ std::vector<KindSpec> build() {
        {},
        {},
        true});
+  k.push_back(
+      {Kind::Rule,
+       "a design statement that makes a requirement real: what it speaks about, which of them, what holds or must never happen",
+       {written("title", FieldType::Text, "what it states, in one sentence"),
+        written("for", FieldType::Text, "what it speaks about: every <kind> [in <box>], or a definition"),
+        written("where", FieldType::Text, "which of them, a condition"), written("holds", FieldType::Text, "what holds for each of them"),
+        written("never", FieldType::Text, "what must never happen, instead of holds"),
+        written("verified-by", FieldType::Names, "the tests that prove a rule the model cannot evaluate"),
+        written("rationale", FieldType::Text, "why it is so")},
+       {},
+       {P, M, Kind::Class}});
+  k.push_back(
+      {Kind::Definition,
+       "a concept derived from others: what it ranges over and which of them belong to it",
+       {written("title", FieldType::Text, "what it names, in one sentence"),
+        written("for", FieldType::Text, "what it ranges over: every <kind> [in <box>]"),
+        written("where", FieldType::Text, "which of them belong, a condition"), written("rationale", FieldType::Text, "why it is so")},
+       {},
+       {P, M, Kind::Class}});
   return k;
 }
 
@@ -186,7 +205,7 @@ std::vector<RelationSpec> buildRelations() {
   const Kind St = Kind::State, Uc = Kind::UseCase;
   return {
       rel("exposes", "a package or a module offers an interface", {P, M}, {I}),
-      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S, Uc}, {Rq}),
+      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S, Uc, Kind::Rule, Kind::Definition}, {Rq}),
       rel("constrained-by", "the entity obeys a constraint", {P, M, Cl, F, Me, I, Op, Vw}, {Cs}),
       rel("refines", "a requirement details another", {Rq}, {Rq}),
       rel("verifies", "a verification proves a requirement or a constraint", {V}, {Rq, Cs}),

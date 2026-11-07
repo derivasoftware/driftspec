@@ -180,6 +180,37 @@ void Checker::run(const bind::Binder& binder) {
   checkExtensions();
   checkFields();
   checkLanguages();
+  checkRules();
+}
+
+// A rule makes a requirement real (REQ-00095-1): it answers to one, and says what holds or what must
+// never happen, not both; a definition says what it ranges over. What they say is kept as text until
+// the evaluator reads it.
+void Checker::checkRules() {
+  std::set<std::string> linked;
+  for (const auto& r : model_.relations())
+    if (r.kind == "requires") linked.insert(r.from);
+  const auto said = [](const model::Entity& e, const char* key) {
+    const auto it = e.fields.find(key);
+    return it != e.fields.end() && !it->second.empty();
+  };
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.expected) continue;
+    if (e.kind == model::Kind::Rule) {
+      if (!linked.count(e.id))
+        model_.report({"W-RULE-NO-REQUIREMENT", "warning", e.id + " answers to no requirement: write @requirement <ID>", e.location});
+      if (said(e, "holds") == said(e, "never"))
+        model_.report(
+            {"W-RULE-NO-CLAIM", "warning",
+             e.id + " says " +
+                 (said(e, "holds") ? "both what holds and what must never happen" : "neither what holds nor what must never happen"),
+             e.location});
+    } else if (e.kind == model::Kind::Definition && !said(e, "for")) {
+      model_.report(
+          {"W-DEFINITION-NO-RANGE", "warning", e.id + " says nothing about what it ranges over: write for: every <kind>", e.location});
+    }
+  }
 }
 
 // A package or a module says what its code is written in, or holds the language of the box around

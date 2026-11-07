@@ -33,10 +33,10 @@ module.exports = grammar({
     // (`package app@render {`); every package level adds its name with @ (decided 2026-10-26)
     package: $ => seq(optional(field('visibility', $.visibility)), 'package', repeat(field('prefix', $.package_prefix)), field('name', $.name), '{', repeat($._package_item), '}'),
     // a package is annotated like a class: @requirement for what the box realises, @constraint for what binds it (HLD, 2026-10-26)
-    _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.interface, $.package, $.module, $.sequence, $.state),
+    _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.rule, $.definition, $.interface, $.package, $.module, $.sequence, $.state),
 
     module: $ => seq(optional(field('visibility', $.visibility)), optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
-    _module_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.interface, $.module, $.class, $.enum, $.function, $.sequence, $.state),
+    _module_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.rule, $.definition, $.interface, $.module, $.class, $.enum, $.function, $.sequence, $.state),
 
     // ---- process artefacts ------------------------------------------------
     // a requirement nested in a requirement refines it; a verification nested in one verifies it (R3)
@@ -54,6 +54,11 @@ module.exports = grammar({
       optional(seq(':', field('base', $.qualified_name))),
       '{', repeat(choice($.field, $.annotation, $.outcome)), '}'),
     outcome: $ => seq('outcome', field('name', $.name), optional(seq('->', field('returns', $.type))), ':', field('text', $.line_text)),
+    // a rule makes a requirement real in the box it is written in: what it speaks about (for), which
+    // of them (where), what holds (holds) or must never happen (never); a definition names a concept
+    // derived from others. Design pieces with a name, not artefacts with a revision (DS-94, 2026-11-07)
+    rule: $ => seq('rule', field('name', $.name), '{', repeat(choice($.field, $.annotation)), '}'),
+    definition: $ => seq('definition', field('name', $.name), '{', repeat(choice($.field, $.annotation)), '}'),
     // a constraint is a requirement-like claim; the one-line form carries only its title (R18)
     constraint: $ => choice(
       seq('constraint', field('id', $.name), ':', field('title', $.line_text)),
@@ -94,7 +99,7 @@ module.exports = grammar({
     operator_set: $ => seq('<<', $.operator_item, repeat(seq(',', $.operator_item)), '>>'),
     operator_item: $ => choice($.operator_symbol, field('family', $.name)),
     operator_symbol: $ => token(choice(...OPERATOR_SYMBOLS)),
-    class_body: $ => seq('{', repeat(choice($.field, $.annotation, $.method, $.attribute, $.operator, $.requirement, $.constraint)), '}'),
+    class_body: $ => seq('{', repeat(choice($.field, $.annotation, $.method, $.attribute, $.operator, $.requirement, $.constraint, $.rule, $.definition)), '}'),
 
     method: $ => prec.right(seq(
       field('visibility', $.visibility),

@@ -111,6 +111,9 @@ package driftspec@ds {
       - checkUseCases() -> void {
         @requirement REQ-00082-1
       }
+      - checkRules() -> void {
+        @requirement REQ-00095-1
+      }
       - checkLanguages() -> void {
         @requirement REQ-00084-1
       }
@@ -175,6 +178,7 @@ package driftspec@ds {
       -> checkExtensions()
       -> checkFields()
       -> checkLanguages()
+      -> checkRules()
     }
 
     // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named

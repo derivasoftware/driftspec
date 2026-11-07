@@ -54,6 +54,10 @@ const char* kindName(Kind kind) {
       return "usecase";
     case Kind::Outcome:
       return "outcome";
+    case Kind::Rule:
+      return "rule";
+    case Kind::Definition:
+      return "definition";
   }
   return "?";
 }

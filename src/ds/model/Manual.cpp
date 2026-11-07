@@ -176,6 +176,21 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "obtained instead>\n}\nan interface operation realises it: operation <name>(...) -> <type> : <UC ID>\nit names no "
         "interface: whoever drives the interface, the contract is the same",
         kShopUseCase}},
+      {Kind::Rule,
+       {"rule <name> {\n  title: <what it states>\n  @requirement <ID>\n  for: every <kind> [in <box>]   or a definition\n  where: "
+        "<condition>"
+        "\n  holds: <condition>             or never: <condition>\n  verified-by: <tests>           when the model cannot evaluate it\n}"
+        "\nin the package, module or class it applies to: a design piece with a name, not an artefact",
+        "package shop {\n  requirement REQ-00001-1: The shop shall price every order\n  module store {\n    class Order {\n      + total() "
+        "-> int\n"
+        "    }\n    rule every-order-priced {\n      title: Every order says its total\n      @requirement REQ-00001-1\n"
+        "      for: every class in store\n      where: name == Order\n      holds: some method named total\n    }\n  }\n}\n"}},
+      {Kind::Definition,
+       {"definition <name> {\n  title: <what it names>\n  for: every <kind> [in <box>]\n  where: <condition>\n}\na rule takes it as what "
+        "it "
+        "speaks about: for: every <name>",
+        "package shop {\n  module store {\n    class Order { }\n    definition empty-class {\n      title: A class with no member\n"
+        "      for: every class in store\n      where: no member\n    }\n  }\n}\n"}},
       {Kind::Outcome,
        {"outcome default: <what is obtained>           the ending that goes well\noutcome <scenario> [-> <type>]: <what is "
         "obtained>   any other: every operation that realises the use case handles it as a scenario",
@@ -258,6 +273,11 @@ std::vector<CodeSpec> buildCodes() {
       {"W-DIAGRAM-DEPTH", "warning", "A diagram asks for a depth that is neither a number nor *.", "Write a number, or * for every level."},
       {"W-REQ-NO-VERIFICATION", "warning", "An approved requirement that nothing verifies.", "Nest a verification in it, or link one."},
       {"W-VER-NO-TEST", "warning", "A verification by test names no tests.", "List them under tests: as <file>::<Fixture>.<Test>."},
+      {"W-RULE-NO-REQUIREMENT", "warning", "A rule answers to no requirement: nothing says what it makes real.",
+       "Link it: @requirement <ID> in its body."},
+      {"W-RULE-NO-CLAIM", "warning", "A rule says neither what holds nor what must never happen, or says both.",
+       "Write one of holds: <condition> or never: <condition>."},
+      {"W-DEFINITION-NO-RANGE", "warning", "A definition says nothing about what it ranges over.", "Write for: every <kind> [in <box>]."},
       {"W-LANGUAGE-UNKNOWN", "warning",
        "A package or a module says a language ds does not know, or two at once (two declarations of a box it reopens).",
        "Write one of cpp, c, python, typescript or lua, once."},

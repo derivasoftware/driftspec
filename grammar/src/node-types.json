@@ -350,6 +350,10 @@
           "named": true
         },
         {
+          "type": "definition",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -363,6 +367,10 @@
         },
         {
           "type": "requirement",
+          "named": true
+        },
+        {
+          "type": "rule",
           "named": true
         }
       ]
@@ -452,6 +460,36 @@
         },
         {
           "type": "string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "definition",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
           "named": true
         }
       ]
@@ -1024,6 +1062,10 @@
           "named": true
         },
         {
+          "type": "definition",
+          "named": true
+        },
+        {
           "type": "enum",
           "named": true
         },
@@ -1045,6 +1087,10 @@
         },
         {
           "type": "requirement",
+          "named": true
+        },
+        {
+          "type": "rule",
           "named": true
         },
         {
@@ -1364,6 +1410,10 @@
           "named": true
         },
         {
+          "type": "definition",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -1381,6 +1431,10 @@
         },
         {
           "type": "requirement",
+          "named": true
+        },
+        {
+          "type": "rule",
           "named": true
         },
         {
@@ -1577,6 +1631,36 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "rule",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -2102,6 +2186,10 @@
     "named": false
   },
   {
+    "type": "definition",
+    "named": false
+  },
+  {
     "type": "diagram",
     "named": false
   },
@@ -2207,6 +2295,10 @@
   },
   {
     "type": "return",
+    "named": false
+  },
+  {
+    "type": "rule",
     "named": false
   },
   {

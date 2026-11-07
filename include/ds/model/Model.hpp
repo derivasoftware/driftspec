@@ -38,7 +38,9 @@ enum class Kind {
   State,
   Diagram,
   UseCase,
-  Outcome
+  Outcome,
+  Rule,
+  Definition
 };
 
 const char* kindName(Kind kind);

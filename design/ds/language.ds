@@ -901,6 +901,36 @@ package driftspec@ds {
     }
 
     // ======================= artefacts ====================================
+    // ======================= logic ============================================
+    requirement REQ-00095-1 {
+      tags: language, logic, rules
+      status: approved
+      title: The language shall declare rules and definitions in the box they apply to: what they speak about, which of them, and what holds, answering to a requirement
+      text:
+        rule <name> { @requirement <ID>; for: every <kind> [in <box>]; where: <condition>;
+        holds: <condition> | never: <condition>; verified-by: <tests> } in a package, a module or a
+        class; definition <name> { for: ...; where: ... } names a concept derived from others. A rule
+        is a design piece with a name, not an artefact with a revision: it makes a requirement real
+        in a narrower context and may name the entities of the design, which a requirement does not.
+        Its conditions are kept as text until the evaluator reads them. A rule that answers to no
+        requirement, or says neither or both of holds and never, and a definition that says nothing
+        about what it ranges over, are findings.
+      rationale:
+        Owner, 2026-11-07 (DS-94): the logic perspective of a design, beside its structure and its
+        behaviour; constraints that spoke about the design and design rules hidden in comments get a
+        place where they can be checked.
+      verification VER-00104-1 {
+        title: Integration tests confirm rules and definitions are declared in the box they apply to, link to their requirement, and the ones that say nothing are reported
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rules.cpp::TestRules.ARuleIsADesignPieceInTheBoxItAppliesTo
+          tests/integration/ds/check/test_rules.cpp::TestRules.ADefinitionNamesAConceptWithWhatItRangesOver
+          tests/integration/ds/check/test_rules.cpp::TestRules.ARuleThatAnswersToNothingOrClaimsNothingIsReported
+          tests/integration/ds/check/test_rules.cpp::TestRules.RuleAndDefinitionStayNamesWhereANameIsExpected
+      }
+    }
+
     requirement REQ-00042-1 {
       tags: language, artefacts
       status: approved

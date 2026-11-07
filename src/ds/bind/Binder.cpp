@@ -694,6 +694,20 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
     } else if (is(c, "usecase")) {
       bindUseCase(file, c, scope, owner);
 
+    } else if (is(c, "rule") || is(c, "definition")) {  // a design piece with a name, in the box it applies to (DS-94)
+      model::Entity e;
+      e.kind = is(c, "rule") ? model::Kind::Rule : model::Kind::Definition;
+      e.name = fieldText(file, c, "name");
+      const model::Entity* in = owner.empty() ? nullptr : model_.find(owner);
+      const bool inClass = in && in->kind == model::Kind::Class;  // a rule of a class is named under it: p@m::Order::priced
+      e.id = inClass ? owner + "::" + e.name : qualify(scope, e.name);
+      e.scope = inClass ? owner : scope;
+      e.location = loc;
+      bindFields(file, c, e);
+      model_.declare(e);
+      if (!owner.empty()) model_.relate({"contains", owner, e.id, loc, ""});
+      bindAnnotations(file, c, e.id, scope);
+
     } else if (is(c, "interface")) {
       model::Entity e;
       e.kind = model::Kind::Interface;
