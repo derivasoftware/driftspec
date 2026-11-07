@@ -137,6 +137,21 @@ package driftspec {
     tags: lsp, editor
   }
 
+  requirement SREQ-00017-1 {
+    status: approved
+    title: The system shall show a design live while it is written, to a reader and to an agent who point at the same identities
+    text:
+      A session over a workspace follows its .ds files: on every change the reader sees the design
+      again where they were looking, with what changed marked and the findings beside it. The one
+      who writes, a person or an agent, takes the reader to an identity, highlights identities and
+      puts notes on them; the reader's selection reaches the one who writes. The same contract serves
+      a browser page and an editor's panel, and an agent through MCP.
+    rationale:
+      Owner, 2026-11-07 (DS-95, DS-97): DriftSpec as the medium in which a person and an agent talk
+      about a design and watch it change; tried end to end in a spike before consolidating.
+    tags: live, viewer, mcp
+  }
+
   requirement SREQ-00014-1 {
     status: approved
     title: The system shall carry its own manual: how each kind of the language is written, what each finding means and what each command's exit codes say

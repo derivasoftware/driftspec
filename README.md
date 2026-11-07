@@ -70,3 +70,22 @@ cursor: `driftspec.draw` as text and `driftspec.view` in the viewer.
 
 The Python tests run from a build configured with `-DDS_PYTHON=ON`. ctest
 includes them, and the `pyds` job runs them in CI.
+
+## A design seen live: driftspec-live
+
+`driftspec-live` follows a workspace while it is written. Run `driftspec-live serve <workspace> --open`
+and the viewer opens in the browser: on every save of a `.ds` file it is drawn again where you
+were looking, with what changed marked and the findings beside it.
+
+Whoever writes, a person or an agent, can point at the design. They can take the reader to an
+identity, highlight identities and put notes on them, and they can read what the reader has
+selected. Notes and highlights are kept in `<workspace>/.driftspec/live.json`, outside the design.
+The contract is served at `GET /contract`: the routes a client calls and the events it receives.
+A browser page and an editor's panel rely on that same contract.
+
+For an agent, `driftspec-live mcp` serves the same contract as MCP tools over stdio (`live_open`,
+`live_focus`, `live_note`, `live_highlight`, `live_clear`, `live_selection`, `live_state`):
+
+```bash
+claude mcp add driftspec-live -- driftspec-live mcp
+```

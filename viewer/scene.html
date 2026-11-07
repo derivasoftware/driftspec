@@ -700,7 +700,55 @@ function seq(){const body=document.getElementById('tbody'); if(tourEl.hidden) re
     const a=lanes.indexOf(unitOf(steps[T.idx].t)), x=(40+Math.max(0,a)*gap)*SU; if(x<body.scrollLeft+20||x>body.scrollLeft+body.clientWidth-40) body.scrollLeft=x-body.clientWidth/2;}}
 new ResizeObserver(()=>{clearTimeout(seq._t); seq._t=setTimeout(seq,80);}).observe(document.getElementById('tbody'));
 
+/* ---------- live: a page that embeds the viewer can follow it and steer it ---------- */
+// window.DS_VIEW: read and set the camera, select and frame an identity, mark what changed.
+// The viewer tells its parent what is selected, so a live session knows what the reader points at.
+let CHANGED=new Set(), MARKED_AT=0, HILITE=new Map(), NOTES=[];
+const TONE=()=>({accent:K.accent,info:K.ifc||K.accent,ok:K.ok,bad:K.warn,req:K.req});
+const anchorOf=id=>{let n=N[id]; if(n&&n.hidden&&n.parent) n=N[n.parent]; return n||null;};
+function idsOf(id){ // an identity of any perspective, as the boxes it lights: a node, a requirement's nodes, a tour's units
+  if(N[id]) return [id]; if(RBY[id]) return reqNodes(RBY[id]).filter(i=>N[i]);
+  const t=TBY[id]||TOURS.find(t=>t.subject===id); if(t){const s=new Set(); t.steps.forEach(st=>[st.f,st.t].forEach(x=>s.add(unitOf(x)))); return [...s].filter(i=>N[i]);}
+  return [];}
+function bubble(n,txt,col){const b=scr(n); if(!onScreen(b)) return; const pad=8, maxW=280, px=12.5; ctx.font=`${px}px ${K.mono}`;
+  const words=String(txt).split(/\s+/), lines=[]; let line=''; words.forEach(w=>{const t=line?line+' '+w:w; if(ctx.measureText(t).width>maxW&&line){lines.push(line); line=w;} else line=t;}); if(line) lines.push(line);
+  const w=Math.min(maxW,Math.max(...lines.map(l=>ctx.measureText(l).width)))+pad*2, h=lines.length*(px+5)+pad*2-3;
+  let x=Math.min(W-w-8,Math.max(8,b.x+Math.min(b.w*.55,b.w-20))), y=b.y-h-14; let below=false; if(y<8){y=b.y+b.h+14; below=true;}
+  ctx.save(); ctx.shadowColor='rgba(0,0,0,.18)'; ctx.shadowBlur=10; rr(x,y,w,h,8); ctx.fillStyle=K.panel; ctx.fill(); ctx.restore();
+  rr(x,y,w,h,8); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
+  const ax=Math.max(x+12,Math.min(x+w-12,b.x+Math.min(b.w*.55,b.w-20)+14)); ctx.beginPath();
+  if(below){ctx.moveTo(ax-7,y); ctx.lineTo(ax,y-9); ctx.lineTo(ax+7,y);} else {ctx.moveTo(ax-7,y+h); ctx.lineTo(ax,y+h+9); ctx.lineTo(ax+7,y+h);}
+  ctx.closePath(); ctx.fillStyle=col; ctx.fill();
+  lines.forEach((l,i)=>text(l,x+pad,y+pad+px+i*(px+5)-2,px,K.fg));}
+const drawBase=draw;
+draw=function(){drawBase();
+  if(HILITE.size){ctx.save(); HILITE.forEach((tone,id)=>{const n=anchorOf(id); if(!n) return; const b=scr(n); if(!onScreen(b)) return; const col=TONE()[tone]||K.accent;
+    rr(b.x-5,b.y-5,b.w+10,b.h+10,9); ctx.globalAlpha=.16; ctx.fillStyle=col; ctx.fill(); ctx.globalAlpha=1; ctx.strokeStyle=col; ctx.lineWidth=3.2; ctx.stroke();}); ctx.restore();}
+  if(CHANGED.size){const age=(performance.now()-MARKED_AT)/1000, a=age<6?1:Math.max(.35,1-(age-6)/10);
+    ctx.save(); ctx.globalAlpha=a; ctx.strokeStyle=K.warn||K.accent; ctx.lineWidth=3; ctx.setLineDash([7,4]);
+    CHANGED.forEach(id=>{const n=N[id]; if(!n||n.hidden) return; const b=scr(n); if(!onScreen(b)) return; rr(b.x-4,b.y-4,b.w+8,b.h+8,8); ctx.stroke();});
+    ctx.restore(); if(age<16) loop();}
+  NOTES.forEach(nt=>{const ids=idsOf(nt.id); const n=ids.length?anchorOf(ids[0]):null; if(n) bubble(n,nt.text,TONE()[nt.tone]||K.accent);});};
+const selectBase=select;
+select=function(id){selectBase(id); try{parent!==window&&parent.postMessage({ds:'select',id:id||null,label:id&&N[id]?N[id].label:''},'*');}catch(e){}};
+function frameIds(ids){const hit=ids.map(i=>N[i]).filter(Boolean).map(n=>n.kind==='row'?N[n.parent]:n); if(!hit.length) return false;
+  const r=hit.reduce((u,n)=>union(u,{x:n.x,y:n.y,w:n.w,h:n.h}),{x:hit[0].x,y:hit[0].y,w:hit[0].w,h:hit[0].h}); fly(fit(r,.35)); return true;}
+window.DS_VIEW={
+  get cam(){return {...cam};}, setCam(c){Object.assign(cam,c); loop();},
+  get selected(){return SEL;}, select(id){if(N[id]) select(id); else select(null);},
+  frame(ids){return frameIds([].concat(ids));}, has(id){return !!N[id];},
+  mark(ids){CHANGED=new Set([].concat(ids).filter(i=>N[i])); MARKED_AT=performance.now(); loop(); return CHANGED.size;},
+  label(id){return N[id]?N[id].label:'';},
+  // any perspective: a node is selected, a requirement opens in its list, a sequence opens as its tour
+  show(id){if(N[id]){select(id); frameIds([id]); return 'node';}
+    if(RBY[id]){openReqs(); selectReq(id,true); return 'requirement';}
+    const t=TBY[id]||TOURS.find(t=>t.subject===id); if(t){openTours(t.id); return 'tour';} return '';},
+  highlight(list){HILITE=new Map(); (list||[]).forEach(h=>idsOf(h.id).forEach(i=>HILITE.set(i,h.tone||'accent'))); loop(); return HILITE.size;},
+  notes(list){NOTES=(list||[]).slice(); loop(); return NOTES.length;},
+  frameAny(ids){const all=[].concat(ids).flatMap(idsOf); return frameIds(all);},
+  known(id){return !!(N[id]||RBY[id]||TBY[id]||TOURS.find(t=>t.subject===id));}};
 resize(); const fb=focusBox(); Object.assign(cam,fb?fit(fb,.15):fit(WORLD,.02)); loop();
+try{parent!==window&&parent.postMessage({ds:'ready'},'*');}catch(e){}
 })();
 </script>
 </body>

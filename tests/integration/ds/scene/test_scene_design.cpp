@@ -110,6 +110,17 @@ TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
   EXPECT_LT(frame.size(), page.size() + 16u * 1024u);  // escaped for the attribute, the page grows little
 }
 
+TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
+  const std::string page = ds::scene::Scene(model).page("design");
+  const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
+  const std::string viewer = ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+  EXPECT_NE(viewer.find("window.DS_VIEW="), std::string::npos);
+  for (const char* member : {"setCam(", "select(id)", "show(id)", "frameAny(", "mark(ids)", "highlight(list)", "notes(list)"})
+    EXPECT_NE(viewer.find(member), std::string::npos) << member;
+  EXPECT_NE(viewer.find("{ds:'ready'}"), std::string::npos);      // when a page can steer it
+  EXPECT_NE(viewer.find("{ds:'select',id:"), std::string::npos);  // what the reader selects
+}
+
 TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
   const std::string page = ds::scene::Scene(model).page("design", ":root{--k-class:#e06c75}</style><script>bad()</script>");
   const auto theme = page.find("--k-class:#e06c75");
