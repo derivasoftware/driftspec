@@ -11,9 +11,9 @@ package ds {
       @interface LSP          // this class realises the LSP interface
 
       + send(msg: int) -> bool {
-        [abstract, noexcept]
-        [requires: 0 < msg < 100]
-        [ensures: ret == false on error]
+        // abstract, noexcept
+        // requires: 0 < msg < 100
+        // ensures: ret == false on error
       }
 
       - a: Vector

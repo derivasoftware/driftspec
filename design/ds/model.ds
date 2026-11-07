@@ -291,18 +291,19 @@ package driftspec@ds {
     }
 
     enum LiteralForm {                       // how a literal of a rule reads (DS-94)
-      @requirement REQ-00095-1
-      Relation, Kind, In, Equal, NotEqual, Call
+      @requirement REQ-00095-2
+      Relation, Kind, In, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Call, Arg
     }
 
-    dataclass Term {                         // a variable (a bare name) or an entity (a qualified name), as written
-      @requirement REQ-00095-1
+    dataclass Term {                         // a variable (a bare name), an entity (a qualified name) or a value, as written
+      @requirement REQ-00095-2
       + text: std::string
       + variable: bool
+      + value: bool
     }
 
     dataclass Literal {                      // one literal of a rule or a definition
-      @requirement REQ-00095-1
+      @requirement REQ-00095-2
       + form: LiteralForm
       + negated: bool
       + name: std::string
@@ -311,7 +312,7 @@ package driftspec@ds {
     }
 
     dataclass Range {                        // what a range of for binds: every entity of a kind, optionally inside a box
-      @requirement REQ-00095-1
+      @requirement REQ-00095-2
       + kind: std::string
       + variable: std::string
       + scope: std::string
@@ -319,7 +320,7 @@ package driftspec@ds {
     }
 
     dataclass Formula {                      // what a rule or a definition says, read from its syntax
-      @requirement REQ-00095-1
+      @requirement REQ-00095-2
       + owns ranges: std::vector<Range>
       + owns where: std::vector<Literal>
       + claims: std::vector<std::vector<Literal>>
@@ -354,10 +355,10 @@ package driftspec@ds {
       + relations() -> std::vector<Relation>
       + findings() -> std::vector<Finding>
       + formulas() -> std::map<std::string, Formula> {
-        @requirement REQ-00095-1
+        @requirement REQ-00095-2
       }
       + state(id: std::string, formula: Formula) -> void {
-        @requirement REQ-00095-1
+        @requirement REQ-00095-2
       }
     }
 

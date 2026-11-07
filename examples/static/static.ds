@@ -9,7 +9,7 @@
 //      a vendor SDK). They resolve like any entity but carry no obligations:
 //      no members required, no verification, no diagnostics about their inside.
 //  R12 Any entity, including a member, may open a body { }. A body holds
-//      fields (key: value), notes, annotations (@kind id), contracts ([...])
+//      fields (key: value), notes, annotations (@kind id), rules
 //      and nested process artefacts (requirement, constraint).
 //      Nesting means "about this" (R3).
 //  R13 Comments (//) are not part of the model. Notes are: `note:` is a field
@@ -103,7 +103,7 @@ package ds {
       + name() -> string
       + run(model: Model) -> list<Finding> {
         note: walks the scopes and delegates each one to runScope
-        [ensures: result sorted by location]
+        // ensures: result sorted by location
       }
       # abstract runScope(scope: Scope, model: Model) -> list<Finding>
       - refs scopes: list<Scope>         // aggregation, *: the scopes belong to the model
@@ -141,8 +141,8 @@ package ds {
             The second declaration of an identity already declared in the
             workspace is reported as E-DUPLICATE-IDENTITY at its location.
         }
-        [requires: entity.id is not empty]
-        [ensures: find(entity.id) == entity]
+        // requires: entity.id is not empty
+        // ensures: find(entity.id) == entity
       }
     }
 

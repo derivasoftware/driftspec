@@ -29,7 +29,6 @@ const FieldSpec kVisibility = syntax("visibility", FieldType::Name, "- when priv
 const FieldSpec kParams = syntax("params", FieldType::Params, "the parameters, name: type");
 const FieldSpec kReturns = syntax("returns", FieldType::Type, "what it gives back");
 const FieldSpec kNote = written("note", FieldType::Text, "a remark kept with the declaration");
-const FieldSpec kContract = written("contract.*", FieldType::Text, "a pre- or postcondition, numbered in order");
 const FieldSpec kLanguage = written("language", FieldType::Name,
                                     "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless "
                                     "that says otherwise");
@@ -110,10 +109,10 @@ std::vector<KindSpec> build() {
        {"abstract", "dataclass", "extern", "extension"},
        {P, M}});
   k.push_back({Kind::Enum, "a closed set of values", {kVisibility, syntax("values", FieldType::Names, "its values")}, {}, {P, M}});
-  k.push_back({Kind::Function, "a free function of a module", {kParams, kReturns, kVisibility, kNote, kContract}, {"extern"}, {P, M}});
+  k.push_back({Kind::Function, "a free function of a module", {kParams, kReturns, kVisibility, kNote}, {"extern"}, {P, M}});
   k.push_back({Kind::Method,
                "an operation of a class",
-               {kParams, kReturns, kVisibility, kNote, kContract},
+               {kParams, kReturns, kVisibility, kNote},
                {"abstract", "static", "const", "constructor"},
                {Cl}});
   k.push_back({Kind::Attribute,
@@ -182,7 +181,7 @@ std::vector<KindSpec> build() {
                 written("verified-by", FieldType::Names, "the tests that prove a rule the model cannot evaluate"),
                 written("rationale", FieldType::Text, "why it is so")},
                {},
-               {P, M, Kind::Class}});
+               {P, M, Kind::Class, Kind::Method, Kind::Function, Kind::Operator}});
   k.push_back({Kind::Definition,
                "a relation derived from others: its parameters, and each case in which it holds for them",
                {written("title", FieldType::Text, "what it names, in one sentence"),

@@ -182,9 +182,13 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "relation "
         "of the metamodel: c uses x, m requires r\n  <a> is <kind>         x is class\n  <a> in <b>            containment, at any depth\n "
         " "
-        "<a> = <b>, <a> != <b>\n  <definition>(<a>, ...)\n  not <literal>         once its variables are bound\na bare name is a variable; "
-        "an entity is written qualified: shop@store, shop@store::Order\nevaluated over the model: holds is broken by each binding with no "
-        "answer, never by each binding with one",
+        "<a> = <b>, !=, <, <=, >, >=   entities or values: numbers compare as numbers\n  <definition>(<a>, ...)\n  arg(<call>, <param>, "
+        "<v>)"
+        "   the call passes v, a literal written in its sequence, to param\n  not <literal>         once its variables are bound\na bare "
+        "name "
+        "is a variable; an entity is written qualified: shop@store, shop@store::Order; a value is a number or a \"string\"\nin a package, "
+        "a module, a class or a member: a member's rule speaks about it and its calls, what a precondition says\nevaluated over the "
+        "model: holds is broken by each binding with no answer, never by each binding with one",
         "package shop {\n  requirement REQ-00001-1: The store shall not depend on the web\n  module web {\n    class Page { }\n  }\n"
         "  module store {\n    class Order {\n      + total() -> int\n    }\n    rule store-blind-to-web {\n"
         "      title: Nothing in the store uses the web\n      @requirement REQ-00001-1\n      for class c in shop@store\n"

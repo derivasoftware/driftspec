@@ -141,6 +141,70 @@ TEST_F(TestRuleEvaluation, WhatARuleNamesMustExistAndItsVariablesBeBound) {
   EXPECT_TRUE(messages("E-RULE-BROKEN").empty());   // a rule with an error is not evaluated
 }
 
+const char* const kLink =
+    "package p {\n"
+    "  requirement REQ-00001-1: A message shall fit in a frame\n"
+    "  module m {\n"
+    "    class Link {\n"
+    "      + send(msg: int, tag: string) -> bool {\n"
+    "        rule in-range {\n"
+    "          @requirement REQ-00001-1\n"
+    "          for message k\n"
+    "          where k calls p@m::Link::send, arg(k, msg, v)\n"
+    "          holds v > 0, v < 100\n"
+    "        }\n"
+    "        rule tagged {\n"
+    "          @requirement REQ-00001-1\n"
+    "          for message k\n"
+    "          where k calls p@m::Link::send, arg(k, tag, t)\n"
+    "          never t = \"\"\n"
+    "        }\n"
+    "      }\n"
+    "    }\n"
+    "    class Client {\n"
+    "      - refs link: Link\n"
+    "      + run(n: int) -> none\n"
+    "    }\n"
+    "    sequence Client::run {\n"
+    "      -> link.send(50, \"a\")\n"
+    "      -> link.send(150, \"b\")\n"
+    "      -> link.send(n, \"\")\n"
+    "    }\n"
+    "  }\n"
+    "}\n";
+
+TEST_F(TestRuleEvaluation, ARuleOfAMemberIsKeptOrBrokenByTheLiteralsItsCallsPass) {
+  load(kLink);
+  std::vector<ds::model::Finding> broken;
+  for (const auto& f : model.findings())
+    if (f.code == "E-RULE-BROKEN") broken.push_back(f);
+  // 50 keeps in-range, 150 breaks it, n is a name: left out, undecided in the design;
+  // the empty tag breaks tagged although its message passes a name for msg
+  ASSERT_EQ(broken.size(), 2u);
+  EXPECT_EQ(broken[0].message, "p@m::Link::send::in-range is broken for k = p@m::Client::run::sequence::m1, v = 150");
+  EXPECT_EQ(broken[0].location.line, 26);  // on the call that breaks it, in its sequence
+  EXPECT_EQ(broken[1].message, "p@m::Link::send::tagged is broken for k = p@m::Client::run::sequence::m2, t = \"\"");
+}
+
+TEST_F(TestRuleEvaluation, ValuesCompareNumbersAsNumbersAndTheRestAsWritten) {
+  load(
+      "package p {\n"
+      "  requirement REQ-00001-1: Values compare\n"
+      "  module m {\n"
+      "    class C { }\n"
+      "    rule numbers {\n"
+      "      @requirement REQ-00001-1\n"
+      "      holds 10 > 9, 2.5 <= 2.50, 100 = 100.0, \"b\" != \"a\", \"x\" = \"x\"\n"
+      "    }\n"
+      "    rule text-has-no-order {\n"
+      "      @requirement REQ-00001-1\n"
+      "      holds \"b\" > \"a\"\n"
+      "    }\n"
+      "  }\n"
+      "}\n");
+  EXPECT_EQ(messages("E-RULE-BROKEN"), (std::vector<std::string>{"p@m::text-has-no-order is broken"}));
+}
+
 TEST_F(TestRuleEvaluation, ANegationThroughRecursionIsRejected) {
   load(std::string(kBoxes) +
        "    definition odd(a) {\n"

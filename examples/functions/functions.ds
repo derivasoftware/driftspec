@@ -9,7 +9,7 @@
 //      iris@tasks::gather. Two of one name are E-DUPLICATE-IDENTITY.
 //  F2  Its signature and body are a method's: parameters and the return give
 //      `uses`; the body holds notes, annotations (@requirement, @constraint),
-//      contracts and nested artefacts.
+//      rules and nested artefacts.
 //  F3  Its behaviour is `sequence gather { }`. The participants are its
 //      parameters and the locals written; there is no self. A call with no
 //      target is a function of the module, resolved outward like any name;
@@ -38,7 +38,7 @@ package iris {
     function gather(board: Board, project: string) -> list<Task> {
       @requirement REQ-00900-1
       note: the one door to the board
-      [requires: project is a board identifier]
+      // requires: project is a board identifier
     }
     - function _row_of(task: Task) -> string
     function describe(tasks: list<Task>) -> string

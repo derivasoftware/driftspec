@@ -10,7 +10,7 @@
 
 namespace {
 
-/// Rules and definitions (REQ-00095-1): design pieces with a name, in the box they apply to, that
+/// Rules and definitions (REQ-00095-2): design pieces with a name, in the box they apply to, that
 /// make a requirement real; what they say is formal, read from its syntax and never from prose.
 class TestRules : public ::testing::Test {
  protected:
@@ -154,6 +154,42 @@ TEST_F(TestRules, ProseIsNotARule) {
   EXPECT_FALSE(parses("package p {\n  rule r {\n    never some class with more than 30 members\n  }\n}\n"));
   EXPECT_FALSE(parses("package p {\n  definition d(x) {\n    if x is a big class\n  }\n}\n"));
   EXPECT_TRUE(parses("package p {\n  rule r {\n    for class c\n    holds m in c, m is method\n  }\n}\n"));
+}
+
+TEST_F(TestRules, ARuleOfAMemberIsNamedUnderIt) {
+  load(
+      "package p {\n"
+      "  requirement REQ-00001-1: A message shall fit in a frame\n"
+      "  module m {\n"
+      "    class Link {\n"
+      "      + send(msg: int) -> bool {\n"
+      "        rule in-range {\n"
+      "          @requirement REQ-00001-1\n"
+      "          for message k\n"
+      "          where k calls p@m::Link::send, arg(k, msg, v)\n"
+      "          holds v > 0, v <= 99\n"
+      "        }\n"
+      "      }\n"
+      "    }\n"
+      "  }\n"
+      "}\n");
+  ASSERT_NE(model.find("p@m::Link::send::in-range"), nullptr);
+  EXPECT_TRUE(requires("p@m::Link::send::in-range", "REQ-00001-1"));
+  const auto& f = formula("p@m::Link::send::in-range");
+  ASSERT_EQ(f.where.size(), 2u);
+  EXPECT_EQ(f.where[1].form, ds::model::LiteralForm::Arg);
+  EXPECT_EQ(f.where[1].name, "msg");  // the parameter, by name
+  ASSERT_EQ(f.claims.size(), 1u);
+  EXPECT_EQ(f.claims[0][0].form, ds::model::LiteralForm::Greater);
+  EXPECT_TRUE(f.claims[0][0].terms[1].value);  // 0 is a value, not a name
+  EXPECT_EQ(f.claims[0][1].form, ds::model::LiteralForm::LessEqual);
+  EXPECT_TRUE(codes("RULE").empty());
+}
+
+TEST_F(TestRules, ABracketContractDoesNotParse) {
+  // what a member requires is a rule in its body: one syntax for one thing
+  EXPECT_FALSE(parses("package p {\n  class C {\n    + send(msg: int) -> bool {\n      [requires: 0 < msg < 100]\n    }\n  }\n}\n"));
+  EXPECT_FALSE(parses("package p {\n  class C {\n    + send(msg: int) -> bool {\n      [ensures: ret == false]\n    }\n  }\n}\n"));
 }
 
 TEST_F(TestRules, RuleAndDefinitionStayNamesWhereANameIsExpected) {

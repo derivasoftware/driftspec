@@ -575,17 +575,20 @@ package driftspec@ds {
               tests/integration/ds/check/test_static.cpp::TestStatic.InterfaceAndAbstractAreDerived
           }
         }
-        requirement REQ-00032-1 {
+        requirement REQ-00032-2 {
           tags: language, lld, class
           status: approved
-          title: Any entity or member shall open a body with fields, notes, annotations and contracts kept as text
-          rationale: R8, R12, R13: contracts are for the reader and for argos, not interpreted.
-          verification VER-00025-1 {
-            title: Integration tests confirm any entity or member opens a body with fields, notes, annotations and contracts kept as text
+          title: Any entity or member shall open a body with fields, notes, annotations and nested artefacts, and a member's body with rules
+          rationale:
+            R8, R12, R13. Owner, 2026-11-07 (DS-94): the bracket contracts ([requires: ...]) are gone; what
+            a member requires of its calls is a rule in its body, one syntax for one thing.
+          verification VER-00025-2 {
+            title: Integration tests confirm any entity or member opens a body with fields, notes and annotations, and no prose contract is kept
             status: approved
             method: test
             tests:
-              tests/integration/ds/check/test_static.cpp::TestStatic.NotesAndContractsLiveInMemberBodies
+              tests/integration/ds/check/test_static.cpp::TestStatic.NotesLiveInMemberBodies
+              tests/integration/ds/check/test_rules.cpp::TestRules.ABracketContractDoesNotParse
           }
         }
         requirement REQ-00033-1 {
@@ -649,10 +652,10 @@ package driftspec@ds {
           drifts from it. Migrating iris (2026-10-26) found 133 of its design
           entities were functions.
 
-        requirement REQ-00055-1 {
+        requirement REQ-00055-2 {
           tags: language, lld, function
           title: A function shall carry a method's signature and body
-          text: Parameters and the return give use; the body holds notes, annotations, contracts and nested artefacts.
+          text: Parameters and the return give use; the body holds notes, annotations, rules and nested artefacts.
           verification VER-00059-1 {
             title: Integration tests confirm a function carries a method's signature and body
             method: test
@@ -926,17 +929,19 @@ package driftspec@ds {
     }
 
     // ======================= logic ========================================
-    requirement REQ-00095-1 {
+    requirement REQ-00095-2 {
       tags: language, logic, rules
       status: approved
       title: The language shall declare rules and definitions in the box they apply to, in a formal syntax: what they speak about, which of them, and what holds, answering to a requirement
       text:
         rule <name> { @requirement <ID>; for <kind> <variable> [in <box>], ...; where <literals>;
-        holds <literals> | never <literals> } in a package, a module or a class; definition
-        <name>(<parameters>) { if <literals> ... } names a relation derived from others, one case per
-        if line. A literal is a relation of the metamodel (c uses x), a kind (x is class),
-        containment (x in p@core), equality or inequality, or a definition applied (reaches(c, x)),
-        negated by not; a bare name is a variable and an entity is written qualified. What a rule
+        holds <literals> | never <literals> } in a package, a module, a class or a member;
+        definition <name>(<parameters>) { if <literals> ... } names a relation derived from others,
+        one case per if line. A literal is a relation of the metamodel (c uses x), a kind (x is
+        class), containment (x in p@core), a comparison (=, !=, <, <=, >, >=) of entities or values,
+        a definition applied (reaches(c, x)) or the literal argument of a call (arg(k, msg, v)),
+        negated by not; a bare name is a variable, an entity is written qualified and a value is a
+        number or a string. What a rule
         says is read from this syntax and never from prose: holds: <words> does not parse. A rule
         is a design piece with a name, not an artefact with a revision: it makes a requirement real
         in a narrower context and may name the entities of the design, which a requirement does not.
@@ -946,7 +951,7 @@ package driftspec@ds {
         Owner, 2026-11-07 (DS-94): the logic perspective of a design, beside its structure and its
         behaviour; constraints that spoke about the design and design rules hidden in comments get a
         place where they can be checked.
-      verification VER-00104-1 {
+      verification VER-00104-2 {
         title: Integration tests confirm rules and definitions are declared in the box they apply to, link to their requirement, and the ones that say nothing are reported
         status: approved
         method: test
@@ -955,6 +960,7 @@ package driftspec@ds {
           tests/integration/ds/check/test_rules.cpp::TestRules.ADefinitionIsARelationWithTheCasesInWhichItHolds
           tests/integration/ds/check/test_rules.cpp::TestRules.ARuleThatAnswersToNothingOrClaimsNothingIsReported
           tests/integration/ds/check/test_rules.cpp::TestRules.ProseIsNotARule
+          tests/integration/ds/check/test_rules.cpp::TestRules.ARuleOfAMemberIsNamedUnderIt
           tests/integration/ds/check/test_rules.cpp::TestRules.RuleAndDefinitionStayNamesWhereANameIsExpected
       }
     }
@@ -987,6 +993,31 @@ package driftspec@ds {
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionRecursUntilItsFixpoint
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.WhatARuleNamesMustExistAndItsVariablesBeBound
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationThroughRecursionIsRejected
+      }
+    }
+
+    requirement REQ-00097-1 {
+      tags: language, logic, rules, check, sequence
+      status: approved
+      title: The checker shall decide the rules over the calls of the sequences against the literal arguments they pass, and report each call that breaks one where the call is written
+      text:
+        A call of a sequence is a message entity that calls an operation; arg(k, p, v) holds when
+        the call k passes to the parameter p of what it calls a value v written as a literal in the
+        sequence, a number or a string. Values compare numbers as numbers and anything else as
+        written. A call that passes a name instead of a literal has no arg fact for that parameter,
+        so a rule that asks for one in its where leaves it out: undecided in the design, it is
+        neither kept nor broken. A broken rule is reported at the first thing it ranges over, the
+        call in its sequence.
+      rationale:
+        Owner, 2026-11-07 (DS-94): contracts are rules too, with the rule's syntax; brackets gone,
+        one syntax for one thing.
+      verification VER-00106-1 {
+        title: Integration tests confirm rules over calls are decided against their literal arguments, calls passing names are left out, and the finding sits on the call
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ARuleOfAMemberIsKeptOrBrokenByTheLiteralsItsCallsPass
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ValuesCompareNumbersAsNumbersAndTheRestAsWritten
       }
     }
 

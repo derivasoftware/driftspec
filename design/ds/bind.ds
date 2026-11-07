@@ -68,13 +68,13 @@ package driftspec@ds {
         @requirement REQ-00017-2
       }
       - bindFields(file: parse::ParsedFile, node: TSNode, entity: model::Entity) -> void {
-        @requirement REQ-00032-1
+        @requirement REQ-00032-2
       }
       - bindAnnotations(file: parse::ParsedFile, node: TSNode, from: std::string, scope: std::string) -> void {
         @requirement REQ-00044-1
       }
       - bindFormula(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity) -> void {
-        @requirement REQ-00095-1
+        @requirement REQ-00095-2
       }
       - bindArtefact(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00018-1
@@ -100,10 +100,10 @@ package driftspec@ds {
       }
       - bindSignature(file: parse::ParsedFile, node: TSNode, entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
         @requirement REQ-00028-1
-        @requirement REQ-00055-1
+        @requirement REQ-00055-2
       }
       - bindMemberBody(file: parse::ParsedFile, member: TSNode, entity: model::Entity, scope: std::string) -> void {
-        @requirement REQ-00032-1
+        @requirement REQ-00032-2
       }
       - bindSequence(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00034-1

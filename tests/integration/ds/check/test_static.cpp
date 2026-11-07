@@ -68,10 +68,9 @@ TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
   EXPECT_NE(relation("constrained-by", "ds@ds::Model", "DS-C-0001-0"), nullptr);  // a pinned link
 }
 
-TEST_F(TestStatic, NotesAndContractsLiveInMemberBodies) {
+TEST_F(TestStatic, NotesLiveInMemberBodies) {
   EXPECT_EQ(field("ds@ds::ScopedCheck::run", "note"), "walks the scopes and delegates each one to runScope");
-  EXPECT_EQ(field("ds@ds::ScopedCheck::run", "contract.0"), "ensures: result sorted by location");
-  EXPECT_EQ(field("ds@ds::Model::declare", "contract.1"), "ensures: find(entity.id) == entity");
+  EXPECT_EQ(field("ds@ds::ScopedCheck::run", "contract.0"), "");  // no prose contract: what holds is a rule (DS-94)
 }
 
 TEST_F(TestStatic, InterfaceAndAbstractAreDerived) {

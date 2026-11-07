@@ -73,7 +73,6 @@ TEST_F(TestFunctions, ItsSignatureGivesUseAndItsBodyIsAMethods) {
   EXPECT_TRUE(related("uses", "iris@tasks::gather", "iris@tasks::Task"));  // through list<Task>
   EXPECT_TRUE(related("requires", "iris@tasks::gather", "REQ-00900-1"));
   EXPECT_EQ(field("iris@tasks::gather", "note"), "the one door to the board");
-  EXPECT_EQ(field("iris@tasks::gather", "contract.0"), "requires: project is a board identifier");
 }
 
 TEST_F(TestFunctions, ItsBehaviourRunsOnItsParametersAndCallsItsNeighbours) {

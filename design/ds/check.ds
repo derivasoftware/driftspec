@@ -14,6 +14,7 @@ package driftspec@ds {
     // each binding of its ranges where holds has no answer or never has one.
     class Evaluator {                        // decides the structural rules over the model
       @requirement REQ-00096-1
+      @requirement REQ-00097-1
       - refs model_: model::Model
       - refs checker_: Checker
       - owns parent_: std::map<std::string, std::string>
@@ -149,7 +150,7 @@ package driftspec@ds {
         @requirement REQ-00082-1
       }
       - checkRules() -> void {
-        @requirement REQ-00095-1
+        @requirement REQ-00095-2
       }
       - checkDependencies() -> void {
         @requirement REQ-00094-1

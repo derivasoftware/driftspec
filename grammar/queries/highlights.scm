@@ -66,10 +66,19 @@
 (annotation kind: (name) @attribute)
 (annotation target: (qualified_name) @constant)
 
-(contract "[" @punctuation.bracket)
-(contract "]" @punctuation.bracket)
-(contract key: (name) @keyword.modifier)
-(contract_body) @string.special
+(guard "[" @punctuation.bracket)
+(guard "]" @punctuation.bracket)
+(guard_body) @string.special
+
+; rules and definitions: formal, Datalog over the model (DS-94)
+[ "rule" "definition" "for" "where" "holds" "never" "if" "not" "is" "in" "arg" ] @keyword
+(rule name: (name) @function)
+(definition name: (name) @function)
+(range variable: (name) @variable)
+(relation_atom relation: (name) @function.builtin)
+(call_atom definition: (qualified_name) @function.call)
+(arg_atom parameter: (name) @variable.parameter)
+(compare_atom operator: _ @operator)
 
 (visibility) @operator
 [ "->" "::" "=" "<<" ">>" ] @operator

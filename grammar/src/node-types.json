@@ -146,6 +146,50 @@
     }
   },
   {
+    "type": "arg_atom",
+    "named": true,
+    "fields": {
+      "call": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "parameter": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "qualified_name",
+            "named": true
+          },
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "argument",
     "named": true,
     "fields": {},
@@ -411,7 +455,15 @@
         "required": true,
         "types": [
           {
+            "type": "number",
+            "named": true
+          },
+          {
             "type": "qualified_name",
+            "named": true
+          },
+          {
+            "type": "string",
             "named": true
           }
         ]
@@ -425,7 +477,23 @@
             "named": false
           },
           {
+            "type": "<",
+            "named": false
+          },
+          {
+            "type": "<=",
+            "named": false
+          },
+          {
             "type": "=",
+            "named": false
+          },
+          {
+            "type": ">",
+            "named": false
+          },
+          {
+            "type": ">=",
             "named": false
           }
         ]
@@ -435,7 +503,15 @@
         "required": true,
         "types": [
           {
+            "type": "number",
+            "named": true
+          },
+          {
             "type": "qualified_name",
+            "named": true
+          },
+          {
+            "type": "string",
             "named": true
           }
         ]
@@ -480,32 +556,6 @@
           "named": true
         }
       ]
-    }
-  },
-  {
-    "type": "contract",
-    "named": true,
-    "fields": {
-      "body": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "contract_body",
-            "named": true
-          }
-        ]
-      },
-      "key": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "name",
-            "named": true
-          }
-        ]
-      }
     }
   },
   {
@@ -773,6 +823,22 @@
     }
   },
   {
+    "type": "guard",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "guard_body",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "in_atom",
     "named": true,
     "fields": {
@@ -893,6 +959,10 @@
       "multiple": false,
       "required": true,
       "types": [
+        {
+          "type": "arg_atom",
+          "named": true
+        },
         {
           "type": "call_atom",
           "named": true
@@ -1027,15 +1097,15 @@
           "named": true
         },
         {
-          "type": "contract",
-          "named": true
-        },
-        {
           "type": "field",
           "named": true
         },
         {
           "type": "requirement",
+          "named": true
+        },
+        {
+          "type": "rule",
           "named": true
         }
       ]
@@ -2204,7 +2274,7 @@
         "required": false,
         "types": [
           {
-            "type": "contract",
+            "type": "guard",
             "named": true
           }
         ]
@@ -2456,11 +2526,19 @@
     "named": false
   },
   {
+    "type": "<=",
+    "named": false
+  },
+  {
     "type": "=",
     "named": false
   },
   {
     "type": ">",
+    "named": false
+  },
+  {
+    "type": ">=",
     "named": false
   },
   {
@@ -2488,6 +2566,10 @@
     "named": false
   },
   {
+    "type": "arg",
+    "named": false
+  },
+  {
     "type": "block_text",
     "named": true
   },
@@ -2511,10 +2593,6 @@
   {
     "type": "constraint",
     "named": false
-  },
-  {
-    "type": "contract_body",
-    "named": true
   },
   {
     "type": "dataclass",
@@ -2551,6 +2629,10 @@
   {
     "type": "function",
     "named": false
+  },
+  {
+    "type": "guard_body",
+    "named": true
   },
   {
     "type": "holds",
