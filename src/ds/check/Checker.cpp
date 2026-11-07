@@ -180,6 +180,96 @@ void Checker::run(const bind::Binder& binder) {
   checkExtensions();
   checkFields();
   checkLanguages();
+  checkDependencies();
+}
+
+// A box says what it depends on (@uses <interface>, REQ-00088-1) and its behaviours say what it
+// calls; the two are compared (REQ-00094-1). A call to an interface offered by another box needs a
+// @uses on the caller or on something it lives in; a @uses that none of the box's behaviours calls is
+// dead, said only once the box has behaviours; a call to a class that realises an interface, from
+// outside its module, goes around the contract. An interface's own sequences realise it, and a box
+// calling an interface it offers itself depends on nothing.
+void Checker::checkDependencies() {
+  std::map<std::string, std::set<std::string>> declared;  // a box and the interfaces it uses
+  std::map<std::pair<std::string, std::string>, model::Location> written;
+  std::map<std::string, std::string> offeredBy;           // an interface and the box that offers it
+  std::map<std::string, std::set<std::string>> realised;  // a class and the interfaces it realises
+  for (const auto& r : model_.relations()) {
+    if (r.kind == "consumes") {
+      declared[r.from].insert(r.to);
+      written[{r.from, r.to}] = r.location;
+    } else if (r.kind == "exposes") {
+      offeredBy[r.to] = r.from;
+    } else if (r.kind == "realises") {
+      const model::Entity* from = model_.find(r.from);
+      const model::Entity* to = model_.find(r.to);
+      if (from && to && from->kind == model::Kind::Class && to->kind == model::Kind::Interface) realised[r.from].insert(r.to);
+    }
+  }
+  const auto chain = [](const std::string& id) {  // the identity and every box it lives in: p@m::C::run, p@m::C, p@m, p
+    std::vector<std::string> out;
+    for (std::string s = id; !s.empty(); s = outer(s)) {
+      const std::string box = s.back() == '@' ? s.substr(0, s.size() - 1) : s;
+      if (out.empty() || out.back() != box) out.push_back(box);
+    }
+    return out;
+  };
+  const auto inside = [&chain](const std::string& id, const std::string& box) {
+    const auto boxes = chain(id);
+    return std::find(boxes.begin(), boxes.end(), box) != boxes.end();
+  };
+  std::map<std::string, std::set<std::string>> called;  // a box that declares, and the interfaces its behaviours call
+  for (const auto& r : model_.relations()) {
+    if (r.kind != "calls") continue;
+    const auto at = r.from.find("::sequence");
+    const model::Entity* op = model_.find(r.to);
+    if (at == std::string::npos || !op) continue;
+    const std::string subject = r.from.substr(0, at);
+    const model::Entity* msg = model_.find(r.from);
+    const model::Location location = msg ? msg->location : r.location;
+    if (op->kind == model::Kind::Operation) {
+      const std::string& iface = op->scope;
+      bool declares = false;
+      for (const auto& box : chain(subject)) {
+        const auto d = declared.find(box);
+        if (d == declared.end() || !d->second.count(iface)) continue;
+        declares = true;
+        called[box].insert(iface);
+      }
+      const auto offered = offeredBy.find(iface);
+      if (declares || inside(subject, iface) || (offered != offeredBy.end() && inside(subject, offered->second))) continue;
+      model_.report(
+          {"W-USES-UNDECLARED", "warning", subject + " calls " + op->id + ", and nothing it lives in declares @uses " + iface, location});
+    } else if (op->kind == model::Kind::Method) {
+      const auto r2 = realised.find(op->scope);
+      const model::Entity* cls = model_.find(op->scope);
+      if (r2 == realised.end() || !cls || inside(subject, cls->scope)) continue;  // inside the realiser's module: its own business
+      bool realising = false;
+      for (const auto& iface : r2->second) realising = realising || inside(subject, iface);  // the interface's own sequence
+      if (realising) continue;
+      const std::string iface = *r2->second.begin();
+      model_.report({"W-USES-BYPASS", "warning",
+                     subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
+                         ": call the interface (a local or a parameter typed " + iface + ") and declare @uses " + iface,
+                     location});
+    }
+  }
+  for (const auto& d : declared) {
+    bool behaves = false;
+    for (const auto& pair : model_.entities()) {
+      const auto at = pair.first.find("::sequence");
+      if (pair.second.kind == model::Kind::Sequence && at != std::string::npos && inside(pair.first.substr(0, at), d.first)) {
+        behaves = true;
+        break;
+      }
+    }
+    if (!behaves) continue;  // a box drawn before its behaviour: its uses are a plan, not yet a claim
+    for (const auto& iface : d.second) {
+      if (called[d.first].count(iface)) continue;
+      model_.report({"W-USES-UNUSED", "warning", d.first + " declares @uses " + iface + ", and none of its behaviours calls it",
+                     written[{d.first, iface}]});
+    }
+  }
 }
 
 // A package or a module says what its code is written in, or holds the language of the box around
