@@ -35,6 +35,29 @@ std::string contextOf(TSNode node) {
   return "at the top of the file";
 }
 
+// the words a parse state takes: its keywords, then an annotation and a field when it takes those
+std::vector<std::string> wordsIn(const TSLanguage* language, TSStateId state) {
+  TSLookaheadIterator* it = ts_lookahead_iterator_new(language, state);
+  if (!it) return {};
+  std::vector<std::string> words;
+  bool field = false, annotation = false;
+  while (ts_lookahead_iterator_next(it)) {
+    const TSSymbol symbol = ts_lookahead_iterator_current_symbol(it);
+    const std::string name = ts_lookahead_iterator_current_symbol_name(it);
+    const TSSymbolType type = ts_language_symbol_type(language, symbol);
+    if (name == "name") field = true;
+    if (name == "@") annotation = true;
+    if (type == TSSymbolTypeAnonymous && !name.empty() && std::isalpha(static_cast<unsigned char>(name[0])) &&
+        std::find(words.begin(), words.end(), name) == words.end())
+      words.push_back(name);
+  }
+  ts_lookahead_iterator_delete(it);
+  std::sort(words.begin(), words.end());
+  if (annotation) words.push_back("@annotation");
+  if (field) words.push_back("key: value");
+  return words;
+}
+
 // what the grammar would have taken where the error starts: its keywords, and a field or an
 // annotation when it takes those; a hint, read from the parse state, not a rule of its own
 std::string expectedAt(TSNode node) {
@@ -119,6 +142,38 @@ ParsedFile Parser::parseText(const std::string& path, const std::string& text) {
     file.errorColumn = 1;
   }
   return file;
+}
+
+std::vector<std::string> Parser::expectedAt(const std::string& text, int line, int column) {
+  TSTree* tree = ts_parser_parse_string(parser_, nullptr, text.c_str(), static_cast<uint32_t>(text.size()));
+  const TSNode root = ts_tree_root_node(tree);
+  const TSPoint at{static_cast<uint32_t>(line), static_cast<uint32_t>(column)};
+  // the last token that ends at or before the place: the state after it is what comes next
+  TSNode leaf = ts_node_descendant_for_point_range(root, at, at);
+  while (!ts_node_is_null(leaf) && ts_node_child_count(leaf) > 0) leaf = ts_node_child(leaf, 0);
+  auto before = [&at](TSNode n) {
+    const TSPoint end = ts_node_end_point(n);
+    return end.row < at.row || (end.row == at.row && end.column <= at.column);
+  };
+  TSNode last = {};
+  TSTreeCursor cursor = ts_tree_cursor_new(root);
+  for (bool more = true; more;) {  // walk the leaves in order, keeping the last one before the place
+    const TSNode n = ts_tree_cursor_current_node(&cursor);
+    if (ts_node_child_count(n) == 0 && before(n) && std::string(ts_node_type(n)) != "comment") last = n;
+    if (ts_tree_cursor_goto_first_child(&cursor)) continue;
+    while (!ts_tree_cursor_goto_next_sibling(&cursor)) {
+      if (!ts_tree_cursor_goto_parent(&cursor)) {
+        more = false;
+        break;
+      }
+    }
+  }
+  ts_tree_cursor_delete(&cursor);
+  const TSLanguage* language = ts_tree_language(tree);
+  const TSStateId state = ts_node_is_null(last) ? 1 : ts_node_next_parse_state(last);
+  std::vector<std::string> words = wordsIn(language, state);
+  ts_tree_delete(tree);
+  return words;
 }
 
 ParsedFile Parser::parseFile(const std::string& path) {

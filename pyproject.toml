@@ -1,0 +1,26 @@
+# The Python face of DriftSpec (DS-84, a spike): the engine as a CPython extension (abi3) and a
+# language server on it. pip install . builds pyds._native with the CMake of this repository.
+[build-system]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pyds"
+version = "0.0.49"
+description = "DriftSpec: a software design as text, checked, drawn, compared and asked"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+lsp = ["pygls>=2.0"]
+
+[project.scripts]
+driftspec-lsp = "pyds.lsp:main"
+
+[tool.scikit-build]
+cmake.build-type = "Release"
+cmake.define = { DS_PYTHON = "ON" }
+build.targets = ["_native"]
+install.components = ["python"]
+wheel.packages = ["python/pyds"]
+wheel.py-api = "cp310"

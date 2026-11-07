@@ -275,7 +275,7 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
     }
 
-    requirement REQ-00075-3 {
+    requirement REQ-00075-4 {
       status: approved
       @refines SREQ-00013-1
       title: The page shall carry its scene, the viewer's code and its styles deflated and written in base64, and inflate them in the browser
@@ -286,9 +286,10 @@ package driftspec@ds {
         (the scene, the identities it opens framed on) stays outside the code's
         pack. A short loader inflates the code with the browser's own
         DecompressionStream and runs it, and says so when the browser has
-        none. Unpacking a pack gives back the text it was made from. The page
-        of ds's own design stays under 100 KB, and its embedded frame under
-        120 KB.
+        none. Unpacking a pack gives back the text it was made from. What the
+        page carries beside its scene stays under 40 KB, the scene's pack under
+        128 bytes for each node it lays out, and the embedded frame within 16
+        KB of the page it escapes.
       rationale:
         Owner, 2026-11-06: keep the page small and usable. After writing each
         behaviour once the page weighed 147 KB, and the frame 196 KB because
@@ -297,14 +298,17 @@ package driftspec@ds {
         thirds of it the viewer's code as written; packing the code brings it
         back to 92 KB. Use cases and the manual took it to 104 KB, a seventh of
         it the viewer's styles as written; packed, before the reader's
-        theme so the theme still wins, 95 KB. Revises REQ-00075-2, which left
-        the styles as written.
+        theme so the theme still wins, 95 KB. The design of pyds took it to
+        104 KB with the viewer unchanged: 37 KB of the page is the tool, the
+        rest is the scene, and the scene grows with the design it draws, so
+        each is bounded on its own. Revises REQ-00075-3, which bounded the
+        whole page of ds's design.
       tags: render, scene, size
     }
 
-    verification VER-00084-3 {
+    verification VER-00084-4 {
       status: approved
-      @requirement REQ-00075-3
+      @requirement REQ-00075-4
       title: Integration tests confirm ds's design page and frame carry packs that unpack to the whole scene and to the viewer's code, within their size bounds
       method: test
       tests:
@@ -523,10 +527,10 @@ package driftspec@ds {
         @requirement REQ-00073-1
       }
       + static pack(text: std::string) -> std::string {
-        @requirement REQ-00075-3
+        @requirement REQ-00075-4
       }
       + static unpack(packed: std::string) -> std::string {
-        @requirement REQ-00075-3
+        @requirement REQ-00075-4
       }
     }
 

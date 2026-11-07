@@ -6,6 +6,13 @@
 cmake_minimum_required(VERSION 3.20)
 project(driftspec LANGUAGES C CXX)
 
+option(DS_PYTHON "Build pyds._native, the engine as a Python extension (DS-84)"
+       OFF)
+if(DS_PYTHON)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON) # every static library ends up inside
+                                          # a shared module
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -105,6 +112,37 @@ target_link_libraries(
   PRIVATE miniz)
 
 # ---- the CLI -----------------------------------------------------------------
+# ---- the Python face (pyds, DS-84): the engine as a CPython extension, abi3
+# ----------
+if(DS_PYTHON)
+  find_package(Python 3.10 REQUIRED COMPONENTS Interpreter
+                                               Development.SABIModule)
+  python_add_library(_native MODULE USE_SABI 3.10 WITH_SOABI
+                     python/src/native.cpp)
+  target_link_libraries(_native PRIVATE driftspec)
+  set_target_properties(_native PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                           ${CMAKE_BINARY_DIR}/python/pyds)
+  if(SKBUILD) # pip install .: the module goes into the package of the wheel
+    install(TARGETS _native LIBRARY DESTINATION pyds COMPONENT python)
+  endif()
+  add_custom_target(
+    driftspec_python ALL # the package beside its native module, importable from
+                         # the build
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/pyds
+            ${CMAKE_BINARY_DIR}/python/pyds
+    DEPENDS _native)
+  # pytest drives pyds and its language server from the build (tests/*/python)
+  enable_testing()
+  add_test(
+    NAME pyds
+    COMMAND
+      ${Python_EXECUTABLE} -m pytest -q -p no:cacheprovider
+      ${CMAKE_SOURCE_DIR}/tests/integration/python
+      ${CMAKE_SOURCE_DIR}/tests/system/python)
+  set_tests_properties(pyds PROPERTIES ENVIRONMENT
+                                       PYTHONPATH=${CMAKE_BINARY_DIR}/python)
+endif()
+
 add_executable(ds app/ds/main.cpp)
 target_link_libraries(ds PRIVATE driftspec CLI11::CLI11)
 

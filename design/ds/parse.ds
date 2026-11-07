@@ -93,6 +93,9 @@ package driftspec@ds {
       + parseText(path: std::string, text: std::string) -> ParsedFile
       + parseFile(path: std::string) -> ParsedFile
       + parseDirectory(directory: std::string) -> std::vector<ParsedFile>
+      + expectedAt(text: std::string, line: int, column: int) -> std::vector<std::string> {
+        @requirement REQ-00085-1                 // what the grammar takes at a place: what an editor completes with
+      }
     }
 
     function textOf(file: ParsedFile, node: TSNode) -> std::string

@@ -108,6 +108,35 @@ package driftspec {
     tags: render, scene
   }
 
+  requirement SREQ-00015-1 {
+    status: approved
+    title: The system shall serve its engine in process to Python, as a package to depend on
+    text:
+      pip install driftspec gives a package whose engine runs in the same process: load a
+      workspace, from a directory or from the texts an editor holds, into a typed model; check
+      it; draw a diagram; write the viewer. One native module serves every Python from 3.10
+      on, and it speaks the JSON of the command line, so a tool sees one contract.
+    rationale:
+      Owner, 2026-11-06 (DS-84): argos reads DriftSpec designs through a plugin that ran the
+      binary and parsed its output; a dependency with a pinned version replaces the search for
+      a binary on the PATH, and a language server needs the engine at hand.
+    tags: python, api
+  }
+
+  requirement SREQ-00016-1 {
+    status: approved
+    title: The system shall serve .ds files to an editor through the language server protocol
+    text:
+      driftspec-lsp checks the workspace a file belongs to on every change, with the buffers
+      the editor holds, and publishes each file's findings; it leads from a name to its
+      declaration and to what refers to it, says what an entity is, completes with what the
+      grammar takes and the names the model declares, and draws the entity or the diagram
+      under the cursor, as text or in the viewer.
+    rationale:
+      Owner, 2026-11-06 (DS-85): a server in Python on the Python face; the engine stays C++.
+    tags: lsp, editor
+  }
+
   requirement SREQ-00014-1 {
     status: approved
     title: The system shall carry its own manual: how each kind of the language is written, what each finding means and what each command's exit codes say

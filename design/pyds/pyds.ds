@@ -1,0 +1,362 @@
+// The Python face of DriftSpec (SREQ-00015-1, SREQ-00016-1; DS-84, DS-85): the engine as a library
+// Python depends on, and a language server on it. Written in Python except the extension, which is
+// C++ over the limited CPython API: the box says python, the module native says cpp.
+//
+//   python   a library in process: load, check, render, page, expected_at
+//   editor   the language server protocol over stdio: what an editor asks while a design is typed
+
+package driftspec@pyds {
+
+  extern module typing {                     // what Python and the libraries the server stands on name
+    class object
+  }
+  extern module pygls {
+    class LanguageServer
+  }
+  extern module lsprotocol {
+    class Position
+    class Location
+    class Hover
+    class CompletionList
+    class SymbolInformation
+    class Diagnostic
+  }
+
+  requirement REQ-00086-1 {
+    status: approved
+    @refines SREQ-00015-1
+    title: The Python face shall read a workspace into a typed model through one native module, every Python from 3.10 on
+    text:
+      pyds.load(source) takes a directory or a mapping of path to text and gives a Model:
+      the entities by identity, the relations, the findings and the metamodel, read from the
+      JSON pyds._native returns. check, render, page and expected_at do the same for their
+      answers. The native module is built against the limited API (abi3).
+    tags: python, api
+    verification VER-00095-1 {
+      status: approved
+      title: Integration tests confirm pyds loads a directory or the texts an editor holds into a typed model, checks it, draws and pages it
+      method: test
+      tests:
+        tests/integration/python/test_pyds.py::TestLoad::test_a_directory_loads_into_a_typed_model
+        tests/integration/python/test_pyds.py::TestLoad::test_the_texts_an_editor_holds_load_as_a_workspace
+        tests/integration/python/test_pyds.py::TestLoad::test_a_path_that_is_no_directory_is_refused
+        tests/integration/python/test_pyds.py::TestCheck::test_a_clean_workspace_reports_no_error
+        tests/integration/python/test_pyds.py::TestCheck::test_a_syntax_error_is_a_finding_where_it_is
+        tests/integration/python/test_pyds.py::TestDrawing::test_a_diagram_draws_as_text_and_none_draws_nothing
+        tests/integration/python/test_pyds.py::TestDrawing::test_the_viewer_opens_framed_where_it_is_asked
+        tests/integration/python/test_pyds.py::TestDrawing::test_what_the_grammar_takes_in_a_module
+    }
+  }
+
+  requirement REQ-00087-1 {
+    status: approved
+    @refines SREQ-00016-1
+    title: The language server shall check the design a file belongs to on every change, and lead from a name to what it is
+    text:
+      The design a file belongs to is its folder and the folders above that hold .ds files of
+      their own, never past the project root; each design keeps its model and its diagnostics.
+      Definition, references, hover, completion and symbols answer from that model; draw and
+      view show the diagram or the entity under the cursor, or the declaration the cursor is in.
+    tags: lsp, editor
+    verification VER-00096-1 {
+      status: approved
+      title: Integration tests confirm the language server, driven over stdio, diagnoses a buffer as it is typed, leads a name to its declaration and draws it, and keeps each design apart
+      method: test
+      tests:
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_a_buffer_typed_wrong_is_diagnosed_and_cleared_when_right
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_a_name_leads_to_its_declaration_and_draws
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_a_file_belongs_to_its_own_design_only
+    }
+  }
+
+  // ---- the library: what a Python caller sees -------------------------------------------------
+  interface python {
+    kind: library
+    transport: in process
+    encoding: python objects
+    @requirement REQ-00086-1
+
+    operation check(source: pyds::Source) -> pyds::Report : UC-00001-1
+    operation load(source: pyds::Source) -> pyds::Model : UC-00005-1
+    operation render(source: pyds::Source, diagram: string) -> string : UC-00002-1
+  }
+
+  sequence python::check {
+    -> pyds::check(source) -> report
+    return report
+  }
+
+  sequence python::check / errors {            // the report counts errors: nothing is raised
+    -> pyds::check(source) -> report
+    return report
+  }
+
+  sequence python::check / bad-usage {         // neither a directory nor texts: NotADirectoryError
+    -> pyds::read(source) -> files
+    return none
+  }
+
+  sequence python::load {
+    -> pyds::load(source) -> model
+    return model
+  }
+
+  sequence python::load / no-workspace {
+    -> pyds::read(source) -> files
+    return none
+  }
+
+  sequence python::render {
+    -> pyds::render(source, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence python::render / no-diagram {       // "" for a diagram the workspace does not have
+    -> pyds::render(source, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence python::render / no-workspace {
+    -> pyds::read(source) -> files
+    return none
+  }
+
+  // ---- the language server: what an editor asks -----------------------------------------------
+  interface editor {
+    kind: lsp
+    transport: stdio, json-rpc
+    @requirement REQ-00087-1
+
+    operation did_change(uri: string, text: string) -> none : UC-00007-1
+    operation definition(uri: string, line: int, character: int) -> lsprotocol::Location : UC-00007-1
+    operation references(uri: string, line: int, character: int) -> lsprotocol::Location : UC-00007-1
+    operation hover(uri: string, line: int, character: int) -> lsprotocol::Hover : UC-00007-1
+    operation completion(uri: string, line: int, character: int) -> lsprotocol::CompletionList : UC-00007-1
+    operation draw(uri: string, line: int, character: int) -> string : UC-00007-1
+    operation view(uri: string, line: int, character: int) -> string : UC-00007-1
+  }
+
+  sequence editor::did_change {
+    -> lsp::changed(ls, params)
+  }
+
+  sequence editor::definition {
+    -> lsp::definition(ls, params) -> locations
+    return locations
+  }
+
+  sequence editor::references {
+    -> lsp::references(ls, params) -> locations
+    return locations
+  }
+
+  sequence editor::hover {
+    -> lsp::hover(ls, params) -> hover
+    return hover
+  }
+
+  sequence editor::completion {
+    -> lsp::completion(ls, params) -> items
+    return items
+  }
+
+  sequence editor::draw {
+    -> lsp::draw(ls, uri, line, character, width, typed) -> drawing
+    return drawing
+  }
+
+  sequence editor::view {
+    -> lsp::view(ls, uri, line, character, width, typed) -> opened
+    return opened
+  }
+
+  // ---- the extension: C++ inside the Python box --------------------------------------------------
+  module native {
+    language: cpp
+    @requirement REQ-00086-1
+
+    function check(files: map<string, string>) -> string
+    function export(files: map<string, string>) -> string
+    function expected_at(text: string, line: int, column: int) -> string
+    function render(files: map<string, string>, diagram: string, format: string, width: int) -> string
+    function page(files: map<string, string>, title: string, focus: list<string>) -> string
+
+    sequence check {
+      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
+      -> api.check(files) -> json
+      return json
+    }
+
+    sequence export {
+      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
+      -> api.exportModel(files) -> json
+      return json
+    }
+
+    sequence expected_at {
+      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
+      -> api.expectedAt(text, line, column) -> json
+      return json
+    }
+
+    sequence render {
+      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
+      -> api.render(files, diagram, format, width) -> drawing
+      return drawing
+    }
+
+    sequence page {
+      local api: driftspec@ds@api::Api      // static, called through a local (DS-60)
+      -> api.page(files, title, focus) -> html
+      return html
+    }
+  }
+
+  // ---- the package: the JSON read into a typed model ----------------------------------------------
+  module pyds {
+    @requirement REQ-00086-1
+
+    class Source                               // a directory, or a mapping of path to text
+    dataclass Location {
+      @requirement REQ-00086-1
+      + file: string
+      + line: int
+      + column: int
+    }
+    dataclass Entity {
+      @requirement REQ-00086-1
+      + id: string
+      + kind: string
+      + name: string
+      + scope: string
+      + location: Location
+      + fields: map<string, string>
+      + flags: list<string>
+      + expected: bool
+    }
+    dataclass Relation {
+      @requirement REQ-00086-1
+      + kind: string
+      + source: string
+      + target: string
+      + location: Location
+    }
+    dataclass Finding {
+      @requirement REQ-00086-1
+      + code: string
+      + severity: string
+      + message: string
+      + location: Location
+    }
+    class Model {                              // a workspace loaded: every entity by its identity
+      @requirement REQ-00086-1
+      + entities: map<string, Entity>
+      + relations: list<Relation>
+      + findings: list<Finding>
+      + find(identity: string) -> optional<Entity>
+      + of_kind(kind: string) -> list<Entity>
+      + named(name: string) -> list<Entity>
+      + relations_of(identity: string) -> list<Relation>
+      + in_file(path: string) -> list<Entity>
+    }
+    dataclass Report {
+      @requirement REQ-00086-1
+      + findings: list<Finding>
+      + counts: map<string, int>
+    }
+
+    function read(source: Source) -> map<string, string>
+    function load(source: Source) -> Model
+    function check(source: Source) -> Report
+    function render(source: Source, diagram: string, format: string, width: int) -> string
+    function page(source: Source, title: string, focus: list<string>) -> string
+    function expected_at(text: string, line: int, column: int) -> list<string>
+
+    sequence load {
+      -> read(source) -> files
+      -> native::export(files) -> text
+      return model
+    }
+
+    sequence check {
+      -> read(source) -> files
+      -> native::check(files) -> text
+      return report
+    }
+
+    sequence render {
+      -> read(source) -> files
+      -> native::render(files, diagram, format, width) -> drawing
+      return drawing
+    }
+
+    sequence page {
+      -> read(source) -> files
+      -> native::page(files, title, focus) -> html
+      return html
+    }
+
+    sequence expected_at {
+      -> native::expected_at(text, line, column) -> words
+      return words
+    }
+  }
+
+  // ---- the server: one design per file, its model kept, its findings published -------------------
+  module lsp {
+    @requirement REQ-00087-1
+
+    function changed(ls: pygls::LanguageServer, params: typing::object) -> none
+    function definition(ls: pygls::LanguageServer, params: typing::object) -> list<lsprotocol::Location>
+    function references(ls: pygls::LanguageServer, params: typing::object) -> list<lsprotocol::Location>
+    function hover(ls: pygls::LanguageServer, params: typing::object) -> optional<lsprotocol::Hover>
+    function completion(ls: pygls::LanguageServer, params: typing::object) -> lsprotocol::CompletionList
+    function symbols(ls: pygls::LanguageServer, params: typing::object) -> list<lsprotocol::SymbolInformation>
+    function draw(ls: pygls::LanguageServer, uri: string, line: int, character: int, width: int, typed: string) -> map<string, string>
+    function view(ls: pygls::LanguageServer, uri: string, line: int, character: int, width: int, typed: string) -> map<string, string>
+    function main() -> none
+    - function workspace_of(ls: pygls::LanguageServer, path: string) -> string
+    - function workspace_files(ls: pygls::LanguageServer, ws: string) -> map<string, string>
+    - function use(ls: pygls::LanguageServer, uri: string) -> string
+    - function refresh(ls: pygls::LanguageServer, ws: string) -> none
+    - function entities_for(word: string) -> list<pyds::Entity>
+    - function subject_at(ls: pygls::LanguageServer, uri: string, line: int, character: int, typed: string) -> string
+    - function enclosing(path: string, line: int) -> optional<pyds::Entity>
+    - function with_focus(files: map<string, string>, identity: string) -> map<string, string>
+    - function open_in_browser(path: string) -> none
+
+    sequence changed {
+      -> workspace_of(ls, path) -> ws
+      -> refresh(ls, ws)
+    }
+
+    sequence refresh {
+      -> workspace_files(ls, ws) -> files
+      -> pyds::load(files) -> model
+    }
+
+    sequence definition {
+      -> use(ls, uri) -> ws
+      -> entities_for(word) -> found
+      return locations
+    }
+
+    sequence draw {
+      -> use(ls, uri) -> ws
+      -> subject_at(ls, uri, line, character, typed) -> subject
+      -> workspace_files(ls, ws) -> files
+      -> with_focus(files, identity) -> focused
+      -> pyds::render(focused, diagram, format, width) -> drawing
+      return answer
+    }
+
+    sequence view {
+      -> use(ls, uri) -> ws
+      -> subject_at(ls, uri, line, character, typed) -> subject
+      -> workspace_files(ls, ws) -> files
+      -> pyds::page(files, title, focus) -> html
+      -> open_in_browser(path)
+      return answer
+    }
+  }
+}

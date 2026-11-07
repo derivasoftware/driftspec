@@ -42,3 +42,20 @@ argos-diagnose:
     - export PATH="$CI_PROJECT_DIR/build-ci:$PATH"
     - ds 2>&1 | head -1 || true
     - !reference [.argos-diagnose-gate, script]
+
+# pyds, the Python face (DS-84): the engine built as its CPython extension and
+# driven by pytest, the language server through a real stdio session.
+pyds:
+  extends: [.on-mr]
+  stage: test
+  script:
+    - python3 -m venv .pyds && . .pyds/bin/activate
+    - pip install -q pytest "pygls>=2.0"
+    - cmake -S . -B build-py -DCMAKE_BUILD_TYPE=Release -DDS_PYTHON=ON -DPython_EXECUTABLE="$PWD/.pyds/bin/python"
+    - cmake --build build-py --parallel --target driftspec_python
+    - PYTHONPATH=build-py/python python -m pytest -q -p no:cacheprovider tests/integration/python tests/system/python --junitxml=build-py/pyds.junit.xml
+  artifacts:
+    when: always
+    reports:
+      junit: build-py/pyds.junit.xml
+    expire_in: 1 week

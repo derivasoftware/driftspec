@@ -5,7 +5,7 @@
 
 package driftspec {
 
-  usecase UC-00001-1 check(workspace: path) -> none {
+  usecase UC-00001-1 {
     title: Check a design: load a workspace into one model and report what does not hold
     status: draft
     @requirement SREQ-00001-1
@@ -20,7 +20,7 @@ package driftspec {
     outcome bad-usage: the command is not understood, or the path holds no design; nothing is read
   }
 
-  usecase UC-00002-1 render(input: path, diagram: string) -> none {
+  usecase UC-00002-1 {
     title: See the design: the whole model as one viewer, or one diagram drawn
     status: draft
     @requirement SREQ-00005-1
@@ -32,7 +32,7 @@ package driftspec {
     outcome no-workspace: nothing to read at the path
   }
 
-  usecase UC-00003-1 diff(before: string, after: string, path: string, diagram: string) -> none {
+  usecase UC-00003-1 {
     title: Compare two versions of a design in the terms of the model
     status: draft
     @requirement SREQ-00007-1
@@ -42,7 +42,7 @@ package driftspec {
     outcome no-workspace: a version is no workspace
   }
 
-  usecase UC-00004-1 query(workspace: path, question: string, subject: string) -> none {
+  usecase UC-00004-1 {
     title: Ask the model what exists, what an entity relates to and what a diagram shows
     status: draft
     @requirement SREQ-00011-1
@@ -53,7 +53,7 @@ package driftspec {
     outcome no-workspace: there is no workspace at the path
   }
 
-  usecase UC-00005-1 export(workspace: path) -> none {
+  usecase UC-00005-1 {
     title: Hand the model to another tool, with its relations, findings and metamodel
     status: draft
     @requirement SREQ-00006-1
@@ -62,12 +62,21 @@ package driftspec {
     outcome no-workspace: there is no workspace at the path; nothing is written
   }
 
-  usecase UC-00006-1 manual(topic: string) -> none {
+  usecase UC-00006-1 {
     title: Learn how a design is written, what a finding means and what a command's exit says
     status: draft
     @requirement SREQ-00014-1
 
     outcome default: the page asked for, or the index
     outcome no-topic: there is no such page; the topics are listed
+  }
+
+  usecase UC-00007-1 {
+    title: Edit a design: see its findings as it is typed, and move through it by name
+    status: draft
+    @requirement SREQ-00016-1
+    @requirement SREQ-00008-1
+
+    outcome default: the findings of the design beside its text, and every name leading to what it is
   }
 }

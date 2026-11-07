@@ -30,6 +30,9 @@ class Parser {
   Parser& operator=(const Parser&) = delete;
 
   ParsedFile parseText(const std::string& path, const std::string& text);
+  /// What the grammar takes at a place of a text (0-based line and column), read from the parse state
+  /// after the last token before it: its keywords, "@annotation" and "key: value" (DS-84).
+  std::vector<std::string> expectedAt(const std::string& text, int line, int column);
   ParsedFile parseFile(const std::string& path);
   /// Every *.ds file under `directory`, recursively, in path order.
   std::vector<ParsedFile> parseDirectory(const std::string& directory);

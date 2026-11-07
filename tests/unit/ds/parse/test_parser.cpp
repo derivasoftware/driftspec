@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include "ds/parse/Parser.hpp"
 
 namespace {
@@ -41,6 +43,15 @@ TEST_F(TestParser, AFileThatParsesHasNoErrorPlace) {
   const auto file = parser.parseText("x.ds", "package a { }\n");
   EXPECT_FALSE(file.hasSyntaxErrors);
   EXPECT_EQ(file.errorLine, 0);
+}
+
+TEST_F(TestParser, WhatTheGrammarTakesAtAPlaceFollowsTheTokenBeforeIt) {
+  ds::parse::Parser parser;
+  const auto inModule = parser.expectedAt("package p {\n  module m {\n    \n  }\n}\n", 2, 4);
+  EXPECT_NE(std::find(inModule.begin(), inModule.end(), "class"), inModule.end());
+  EXPECT_NE(std::find(inModule.begin(), inModule.end(), "@annotation"), inModule.end());
+  const auto atTop = parser.expectedAt("", 0, 0);
+  EXPECT_NE(std::find(atTop.begin(), atTop.end(), "package"), atTop.end());
 }
 
 }  // namespace
