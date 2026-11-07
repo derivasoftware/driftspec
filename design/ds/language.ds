@@ -193,6 +193,32 @@ package driftspec@ds {
               tests/integration/ds/bind/test_module_annotations.cpp::TestModuleAnnotations.AModuleAnswersToTheRequirementItsBodyNames
           }
         }
+        requirement REQ-00084-1 {
+          tags: language, hld
+          status: approved
+          title: A package or a module shall say what its code is written in, and what it holds shall be written in the same unless it says otherwise
+          text:
+            language: cpp in a package or a module; cpp, c, python, typescript or lua, the
+            languages argos reads. What a box holds is written in its language unless it says
+            another, and the check fills the language down, so every package and module of the
+            model carries it. One ds does not know, or two at once (a reopened box that says
+            two), is W-LANGUAGE-UNKNOWN. A box that says nothing and is held by nothing that
+            says has no language.
+          rationale:
+            Owner, 2026-11-06 (DS-86): nothing said which technology each package used, and
+            DriftSpec designs both C++ and Python (iris; the Python face of ds itself). Knowing
+            it, argos picks the reader of each box and writes its types the way that language
+            does.
+          verification VER-00093-1 {
+            title: Integration tests confirm a box's language is held by what it holds unless it says otherwise, and an unknown one or two at once is a finding
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_language.cpp::TestLanguage.WhatABoxHoldsIsWrittenInItsLanguageUnlessItSaysOtherwise
+              tests/integration/ds/check/test_language.cpp::TestLanguage.ABoxThatSaysNothingAndHoldsNothingThatSaysHasNoLanguage
+              tests/integration/ds/check/test_language.cpp::TestLanguage.ALanguageDsDoesNotKnowOrTwoAtOnceIsAFinding
+          }
+        }
         requirement REQ-00018-1 {
           tags: language, hld
           status: approved

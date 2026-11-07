@@ -108,6 +108,9 @@ package driftspec@ds {
       - checkUseCases() -> void {
         @requirement REQ-00082-1
       }
+      - checkLanguages() -> void {
+        @requirement REQ-00084-1
+      }
       - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
         @requirement REQ-00060-1
       }
@@ -168,6 +171,7 @@ package driftspec@ds {
       -> checkArtefacts()
       -> checkExtensions()
       -> checkFields()
+      -> checkLanguages()
     }
 
     // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named

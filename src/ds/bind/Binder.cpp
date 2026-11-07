@@ -684,7 +684,15 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       if (!ts_node_is_null(child(c, "extern")) || (ownerEntity && ownerEntity->has("extern"))) e.flags.push_back("extern");  // R11
       const bool isPrivate = fieldText(file, c, "visibility") == "-";
       if (isPrivate) e.fields["visibility"] = "-";
+      bindFields(file, c, e);
       model::Entity& declared = model_.declare(e);
+      for (const auto& f : e.fields) {  // a module reopens: its fields add up, and two that differ are both kept
+        auto& kept = declared.fields[f.first];
+        if (kept.empty())
+          kept = f.second;
+        else if (kept != f.second && (", " + kept + ",").find(", " + f.second + ",") == std::string::npos)
+          kept += ", " + f.second;
+      }
       if (isPrivate) declared.fields["visibility"] = "-";  // a module reopens: any declaration may say it
       if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
       bindAnnotations(file, c, declared.id, declared.id);  // a module answers to its requirements, as a package does
