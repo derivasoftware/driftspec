@@ -92,6 +92,43 @@ struct Finding {
   Location location;
 };
 
+/// One term of a literal: a variable (a bare name) or an entity (a qualified name), as written.
+struct Term {
+  std::string text;
+  bool variable = false;
+};
+
+/// One literal of a rule or a definition (DS-94): a relation of the metamodel, a kind, containment,
+/// (in)equality or a definition applied to terms; negated when written after `not`.
+/// How a literal reads: a relation, a kind, containment, (in)equality or a definition applied.
+enum class LiteralForm { Relation, Kind, In, Equal, NotEqual, Call };
+
+struct Literal {
+  LiteralForm form = LiteralForm::Relation;
+  bool negated = false;
+  std::string name;  ///< the relation, the kind or the definition, as written
+  std::vector<Term> terms;
+  Location location;
+};
+
+/// What a range of `for` binds: every entity of a kind, optionally inside a box.
+struct Range {
+  std::string kind;
+  std::string variable;
+  std::string scope;  ///< as written; "" for the whole model
+  Location location;
+};
+
+/// What a rule or a definition says, read from its syntax and never from prose.
+struct Formula {
+  std::vector<Range> ranges;                 ///< a rule's for
+  std::vector<Literal> where;                ///< a rule's where
+  std::vector<std::vector<Literal>> claims;  ///< a rule's holds or never lines (one is expected)
+  bool never = false;                        ///< the claim is a never
+  std::vector<std::string> parameters;       ///< a definition's parameters
+  std::vector<std::vector<Literal>> cases;   ///< a definition's if lines
+};
+
 /// The resolved workspace: entities by identity, relations and findings.
 class Model {
  public:
@@ -108,11 +145,15 @@ class Model {
   const std::vector<Relation>& relations() const { return relations_; }
   const std::vector<Finding>& findings() const { return findings_; }
   std::vector<Finding>& findings() { return findings_; }
+  /// What the rules and definitions say, by the identity of each.
+  const std::map<std::string, Formula>& formulas() const { return formulas_; }
+  void state(const std::string& id, const Formula& formula) { formulas_[id] = formula; }
 
  private:
   std::map<std::string, Entity> entities_;
   std::vector<Relation> relations_;
   std::vector<Finding> findings_;
+  std::map<std::string, Formula> formulas_;
 };
 
 /// Whether a branch of the behaviour `sequence` is named `scenario` (`opt ... / scenario {`).

@@ -929,16 +929,19 @@ package driftspec@ds {
     requirement REQ-00095-1 {
       tags: language, logic, rules
       status: approved
-      title: The language shall declare rules and definitions in the box they apply to: what they speak about, which of them, and what holds, answering to a requirement
+      title: The language shall declare rules and definitions in the box they apply to, in a formal syntax: what they speak about, which of them, and what holds, answering to a requirement
       text:
-        rule <name> { @requirement <ID>; for: every <kind> [in <box>]; where: <condition>;
-        holds: <condition> | never: <condition>; verified-by: <tests> } in a package, a module or a
-        class; definition <name> { for: ...; where: ... } names a concept derived from others. A rule
+        rule <name> { @requirement <ID>; for <kind> <variable> [in <box>], ...; where <literals>;
+        holds <literals> | never <literals> } in a package, a module or a class; definition
+        <name>(<parameters>) { if <literals> ... } names a relation derived from others, one case per
+        if line. A literal is a relation of the metamodel (c uses x), a kind (x is class),
+        containment (x in p@core), equality or inequality, or a definition applied (reaches(c, x)),
+        negated by not; a bare name is a variable and an entity is written qualified. What a rule
+        says is read from this syntax and never from prose: holds: <words> does not parse. A rule
         is a design piece with a name, not an artefact with a revision: it makes a requirement real
         in a narrower context and may name the entities of the design, which a requirement does not.
-        Its conditions are kept as text until the evaluator reads them. A rule that answers to no
-        requirement, or says neither or both of holds and never, and a definition that says nothing
-        about what it ranges over, are findings.
+        A rule that answers to no requirement, or says no claim or more than one, and a definition
+        with no case, are findings.
       rationale:
         Owner, 2026-11-07 (DS-94): the logic perspective of a design, beside its structure and its
         behaviour; constraints that spoke about the design and design rules hidden in comments get a
@@ -949,9 +952,41 @@ package driftspec@ds {
         method: test
         tests:
           tests/integration/ds/check/test_rules.cpp::TestRules.ARuleIsADesignPieceInTheBoxItAppliesTo
-          tests/integration/ds/check/test_rules.cpp::TestRules.ADefinitionNamesAConceptWithWhatItRangesOver
+          tests/integration/ds/check/test_rules.cpp::TestRules.ADefinitionIsARelationWithTheCasesInWhichItHolds
           tests/integration/ds/check/test_rules.cpp::TestRules.ARuleThatAnswersToNothingOrClaimsNothingIsReported
+          tests/integration/ds/check/test_rules.cpp::TestRules.ProseIsNotARule
           tests/integration/ds/check/test_rules.cpp::TestRules.RuleAndDefinitionStayNamesWhereANameIsExpected
+      }
+    }
+
+    requirement REQ-00096-1 {
+      tags: language, logic, rules, check
+      status: approved
+      title: The checker shall decide every structural rule over the model and report each binding of its ranges that breaks it
+      text:
+        Rules are evaluated as Datalog with stratified negation over the model: the facts are the
+        declared entities with their kinds, every relation of the metamodel and containment at any
+        depth. A definition is computed to its fixpoint, recursion included; a rule's holds is broken
+        by each binding of its ranges and where that has no answer, its never by each binding that
+        has one, reported with the binding and the answer (E-RULE-BROKEN). The model is finite, so
+        every rule is decided. A formula that names an unknown kind, relation, entity or definition
+        (E-RULE-UNKNOWN), applies a definition to the wrong number of arguments (E-RULE-ARITY),
+        tests a variable no positive literal binds (E-RULE-UNSAFE) or negates a definition through
+        its own recursion (E-RULE-UNSTRATIFIED) is reported and not evaluated.
+      rationale:
+        Owner, 2026-11-07 (DS-94): structural rules are always decidable in the design, in a formal
+        or semi-formal syntax; nothing is inferred from prose or keywords. Rules about behaviour wait
+        for contracts and recorded runs.
+      verification VER-00105-1 {
+        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, and malformed or undecidable formulas are rejected
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ARuleIsBrokenByEveryBindingThatBreaksIt
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationTestsWhatIsAlreadyBound
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionRecursUntilItsFixpoint
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.WhatARuleNamesMustExistAndItsVariablesBeBound
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationThroughRecursionIsRejected
       }
     }
 

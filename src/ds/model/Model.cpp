@@ -146,6 +146,14 @@ bool Model::rename(const std::string& from, const std::string& to) {
     else if (id.rfind(from + "::", 0) == 0 || id.rfind(from + "/", 0) == 0)
       id = to + id.substr(from.size());
   };
+  // what a rule of a renamed class says moves with it
+  std::map<std::string, Formula> formulas;
+  for (auto& f : formulas_) {
+    std::string id = f.first;
+    translate(id);
+    formulas.emplace(id, f.second);
+  }
+  formulas_.swap(formulas);
   for (Relation& r : relations_) {
     translate(r.from);
     translate(r.to);

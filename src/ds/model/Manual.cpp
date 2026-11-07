@@ -177,20 +177,23 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "interface: whoever drives the interface, the contract is the same",
         kShopUseCase}},
       {Kind::Rule,
-       {"rule <name> {\n  title: <what it states>\n  @requirement <ID>\n  for: every <kind> [in <box>]   or a definition\n  where: "
-        "<condition>"
-        "\n  holds: <condition>             or never: <condition>\n  verified-by: <tests>           when the model cannot evaluate it\n}"
-        "\nin the package, module or class it applies to: a design piece with a name, not an artefact",
-        "package shop {\n  requirement REQ-00001-1: The shop shall price every order\n  module store {\n    class Order {\n      + total() "
-        "-> int\n"
-        "    }\n    rule every-order-priced {\n      title: Every order says its total\n      @requirement REQ-00001-1\n"
-        "      for: every class in store\n      where: name == Order\n      holds: some method named total\n    }\n  }\n}\n"}},
+       {"rule <name> {\n  title: <what it states>\n  @requirement <ID>\n  for <kind> <variable> [in <box>], ...\n  where <literals>\n"
+        "  holds <literals>               or never <literals>\n}\nliterals joined by commas, each one of:\n  <a> <relation> <b>    a "
+        "relation "
+        "of the metamodel: c uses x, m requires r\n  <a> is <kind>         x is class\n  <a> in <b>            containment, at any depth\n "
+        " "
+        "<a> = <b>, <a> != <b>\n  <definition>(<a>, ...)\n  not <literal>         once its variables are bound\na bare name is a variable; "
+        "an entity is written qualified: shop@store, shop@store::Order\nevaluated over the model: holds is broken by each binding with no "
+        "answer, never by each binding with one",
+        "package shop {\n  requirement REQ-00001-1: The store shall not depend on the web\n  module web {\n    class Page { }\n  }\n"
+        "  module store {\n    class Order {\n      + total() -> int\n    }\n    rule store-blind-to-web {\n"
+        "      title: Nothing in the store uses the web\n      @requirement REQ-00001-1\n      for class c in shop@store\n"
+        "      never c uses x, x in shop@web\n    }\n  }\n}\n"}},
       {Kind::Definition,
-       {"definition <name> {\n  title: <what it names>\n  for: every <kind> [in <box>]\n  where: <condition>\n}\na rule takes it as what "
-        "it "
-        "speaks about: for: every <name>",
-        "package shop {\n  module store {\n    class Order { }\n    definition empty-class {\n      title: A class with no member\n"
-        "      for: every class in store\n      where: no member\n    }\n  }\n}\n"}},
+       {"definition <name>(<parameter>, ...) {\n  title: <what it names>\n  if <literals>             one line per case in which it "
+        "holds\n}\na rule or another definition applies it: <name>(<a>, ...); it may recur, and negate only what does not rest on it",
+        "package shop {\n  module store {\n    class Order {\n      + total() -> int\n    }\n    definition member-of(m, c) {\n"
+        "      title: A member and the class that holds it\n      if m in c, c is class\n    }\n  }\n}\n"}},
       {Kind::Outcome,
        {"outcome default: <what is obtained>           the ending that goes well\noutcome <scenario> [-> <type>]: <what is "
         "obtained>   any other: every operation that realises the use case handles it as a scenario",
@@ -277,7 +280,19 @@ std::vector<CodeSpec> buildCodes() {
        "Link it: @requirement <ID> in its body."},
       {"W-RULE-NO-CLAIM", "warning", "A rule says neither what holds nor what must never happen, or says both.",
        "Write one of holds: <condition> or never: <condition>."},
-      {"W-DEFINITION-NO-RANGE", "warning", "A definition says nothing about what it ranges over.", "Write for: every <kind> [in <box>]."},
+      {"W-DEFINITION-NO-CASE", "warning", "A definition says no case in which it holds: nothing ever belongs to it.",
+       "Write if <literals>."},
+      {"E-RULE-BROKEN", "error", "The model breaks a rule: a binding of its ranges with no answer to holds, or with one to never.",
+       "Change the design so the rule holds, or the rule if it says what nobody meant."},
+      {"E-RULE-UNKNOWN", "error",
+       "A rule or a definition names a kind, a relation, an entity or a definition that the language or the model does not declare.",
+       "Write a kind or a relation of the metamodel, a qualified entity that exists, a definition in scope."},
+      {"E-RULE-ARITY", "error", "A definition is applied to a number of arguments it does not take.", "Pass one per parameter."},
+      {"E-RULE-UNSAFE", "error",
+       "A variable is tested by a negation or a comparison, or is a parameter of a definition, and no positive literal binds it.",
+       "Name it in a relation, a kind, a containment or a definition first."},
+      {"E-RULE-UNSTRATIFIED", "error", "A definition negates itself through recursion: no order of evaluation decides it.",
+       "Break the cycle: negate only definitions that do not rest on the one being defined."},
       {"W-USES-UNDECLARED", "warning",
        "A behaviour calls an operation of an interface another box offers, and neither it nor any box it lives in declares @uses of it.",
        "Declare @uses <interface> on the caller, its module or its package (or in a wiring file), or call something you depend on."},

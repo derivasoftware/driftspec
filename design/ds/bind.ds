@@ -73,6 +73,9 @@ package driftspec@ds {
       - bindAnnotations(file: parse::ParsedFile, node: TSNode, from: std::string, scope: std::string) -> void {
         @requirement REQ-00044-1
       }
+      - bindFormula(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity) -> void {
+        @requirement REQ-00095-1
+      }
       - bindArtefact(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00018-1
         @requirement REQ-00042-1

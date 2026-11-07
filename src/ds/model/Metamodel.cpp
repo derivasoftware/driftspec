@@ -172,25 +172,24 @@ std::vector<KindSpec> build() {
        {},
        {},
        true});
-  k.push_back(
-      {Kind::Rule,
-       "a design statement that makes a requirement real: what it speaks about, which of them, what holds or must never happen",
-       {written("title", FieldType::Text, "what it states, in one sentence"),
-        written("for", FieldType::Text, "what it speaks about: every <kind> [in <box>], or a definition"),
-        written("where", FieldType::Text, "which of them, a condition"), written("holds", FieldType::Text, "what holds for each of them"),
-        written("never", FieldType::Text, "what must never happen, instead of holds"),
-        written("verified-by", FieldType::Names, "the tests that prove a rule the model cannot evaluate"),
-        written("rationale", FieldType::Text, "why it is so")},
-       {},
-       {P, M, Kind::Class}});
-  k.push_back(
-      {Kind::Definition,
-       "a concept derived from others: what it ranges over and which of them belong to it",
-       {written("title", FieldType::Text, "what it names, in one sentence"),
-        written("for", FieldType::Text, "what it ranges over: every <kind> [in <box>]"),
-        written("where", FieldType::Text, "which of them belong, a condition"), written("rationale", FieldType::Text, "why it is so")},
-       {},
-       {P, M, Kind::Class}});
+  k.push_back({Kind::Rule,
+               "a design statement that makes a requirement real: what it speaks about, which of them, what holds or must never happen",
+               {written("title", FieldType::Text, "what it states, in one sentence"),
+                syntax("for", FieldType::Text, "what it speaks about: for <kind> <variable> [in <box>], ..."),
+                syntax("where", FieldType::Text, "which of them: literals over the model"),
+                syntax("holds", FieldType::Text, "what holds for each of them: literals over the model"),
+                syntax("never", FieldType::Text, "what must never happen, instead of holds: literals over the model"),
+                written("verified-by", FieldType::Names, "the tests that prove a rule the model cannot evaluate"),
+                written("rationale", FieldType::Text, "why it is so")},
+               {},
+               {P, M, Kind::Class}});
+  k.push_back({Kind::Definition,
+               "a relation derived from others: its parameters, and each case in which it holds for them",
+               {written("title", FieldType::Text, "what it names, in one sentence"),
+                syntax("if", FieldType::Text, "the cases in which it holds: literals over the model, one line each"),
+                written("rationale", FieldType::Text, "why it is so")},
+               {},
+               {P, M, Kind::Class}});
   return k;
 }
 

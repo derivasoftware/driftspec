@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 
+#include "ds/check/Evaluator.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
@@ -185,8 +186,8 @@ void Checker::run(const bind::Binder& binder) {
 }
 
 // A rule makes a requirement real (REQ-00095-1): it answers to one, and says what holds or what must
-// never happen, not both; a definition says what it ranges over. What they say is kept as text until
-// the evaluator reads it.
+// never happen, once; a definition says in which cases it holds. Then every rule is evaluated over the
+// model (REQ-00096-1).
 void Checker::checkRules() {
   std::set<std::string> linked;
   for (const auto& r : model_.relations())
@@ -201,17 +202,18 @@ void Checker::checkRules() {
     if (e.kind == model::Kind::Rule) {
       if (!linked.count(e.id))
         model_.report({"W-RULE-NO-REQUIREMENT", "warning", e.id + " answers to no requirement: write @requirement <ID>", e.location});
-      if (said(e, "holds") == said(e, "never"))
-        model_.report(
-            {"W-RULE-NO-CLAIM", "warning",
-             e.id + " says " +
-                 (said(e, "holds") ? "both what holds and what must never happen" : "neither what holds nor what must never happen"),
-             e.location});
-    } else if (e.kind == model::Kind::Definition && !said(e, "for")) {
-      model_.report(
-          {"W-DEFINITION-NO-RANGE", "warning", e.id + " says nothing about what it ranges over: write for: every <kind>", e.location});
+      const auto f = model_.formulas().find(e.id);
+      const std::size_t claims = f == model_.formulas().end() ? 0 : f->second.claims.size();
+      if (claims != 1)
+        model_.report({"W-RULE-NO-CLAIM", "warning",
+                       e.id + (claims ? " says more than one claim: write one holds or one never"
+                                      : " says neither what holds nor what must never happen"),
+                       e.location});
+    } else if (e.kind == model::Kind::Definition && !said(e, "if")) {
+      model_.report({"W-DEFINITION-NO-CASE", "warning", e.id + " says no case in which it holds: write if <literals>", e.location});
     }
   }
+  Evaluator(model_, *this).run();
 }
 
 // A box says what it depends on (@uses <interface>, REQ-00088-1) and its behaviours say what it
