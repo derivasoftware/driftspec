@@ -114,6 +114,9 @@ package driftspec@ds {
       - checkRules() -> void {
         @requirement REQ-00095-1
       }
+      - checkDependencies() -> void {
+        @requirement REQ-00094-1
+      }
       - checkLanguages() -> void {
         @requirement REQ-00084-1
       }
@@ -178,6 +181,7 @@ package driftspec@ds {
       -> checkExtensions()
       -> checkFields()
       -> checkLanguages()
+      -> checkDependencies()
       -> checkRules()
     }
 
