@@ -60,10 +60,14 @@ struct CodeSpec {
 };
 
 /// An annotation that means something, and the relation it makes; any other @word refers to nothing in particular.
+/// The binder reads this table: what an annotation means is declared here once, and an annotation binds
+/// the same written in its entity or in an extension block anywhere else.
 struct AnnotationSpec {
   std::string name;
   std::string relation;
   std::string meaning;
+  std::string onVerification = {};  ///< the relation it makes when a verification writes it; empty: the same
+  Kind target = Kind::Class;        ///< what the name it carries is expected to be, when nothing declares it
 };
 
 /// A command of ds: how it is invoked, what it does, what each exit code says.
@@ -96,6 +100,8 @@ const RelationSpec* relationOf(const std::string& kind);
 const std::vector<CodeSpec>& codes();
 const CodeSpec* codeOf(const std::string& code);
 const std::vector<AnnotationSpec>& annotations();
+/// What an annotation means, by its word without the @; the one of any other word when the language gives it none.
+const AnnotationSpec& annotationOf(const std::string& word);
 const std::vector<CommandSpec>& commands();
 const CommandSpec* commandOf(const std::string& name);
 /// How a kind is written and a minimal workspace that declares one (the manual's, DS-79).

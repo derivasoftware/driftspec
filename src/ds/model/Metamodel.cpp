@@ -206,6 +206,7 @@ std::vector<RelationSpec> buildRelations() {
       rel("couples-structural", "a behaviour reaches a type through an attribute", {S}, {Cl, E}),
       rel("on", "a transition fires on an operation", {St}, {Me, Op}),
       rel("does", "a transition runs an operation", {St}, {Me, Op}),
+      rel("consumes", "a box depends on an interface another box offers (@uses)", {P, M, Cl}, {I}),
       rel("refers", "an annotation the language gives no meaning to", {}, {}),
   };
 }

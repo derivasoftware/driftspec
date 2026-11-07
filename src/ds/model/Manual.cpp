@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <map>
 #include <string>
 #include <utility>
@@ -299,15 +300,24 @@ const CodeSpec* codeOf(const std::string& code) {
 
 const std::vector<AnnotationSpec>& annotations() {
   static const std::vector<AnnotationSpec> all = {
-      {"@requirement", "requires", "the entity answers to the requirement; on a verification, verifies it"},
-      {"@constraint", "constrained-by", "the entity obeys the constraint; on a verification, verifies it"},
-      {"@refines", "refines", "the requirement details the one named (nesting says the same)"},
-      {"@interface", "realises", "the class or verification carries out the interface"},
-      {"@verification", "exercised-by", "the sequence is run by the verification"},
+      {"@requirement", "requires", "the entity answers to the requirement; on a verification, verifies it", "verifies", Kind::Requirement},
+      {"@constraint", "constrained-by", "the entity obeys the constraint; on a verification, verifies it", "verifies", Kind::Constraint},
+      {"@refines", "refines", "the requirement details the one named (nesting says the same)", "", Kind::Requirement},
+      {"@interface", "realises", "the class or verification carries out the interface", "", Kind::Interface},
+      {"@uses", "consumes", "the package, module or class depends on an interface another box offers", "", Kind::Interface},
+      {"@verification", "exercised-by", "the sequence is run by the verification", "", Kind::Verification},
       {"@<any other word>", "refers", "kept as a link the language gives no meaning to: no check reads it"},
       {": <UC ID> after an operation", "realises", "not an annotation: an interface operation realises the use case it names"},
   };
   return all;
+}
+
+const AnnotationSpec& annotationOf(const std::string& word) {
+  for (const auto& a : annotations())
+    if (a.name == "@" + word) return a;
+  static const AnnotationSpec& other =
+      *std::find_if(annotations().begin(), annotations().end(), [](const AnnotationSpec& a) { return a.name == "@<any other word>"; });
+  return other;
 }
 
 const std::vector<CommandSpec>& commands() {

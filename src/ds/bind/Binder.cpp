@@ -3,6 +3,8 @@
 #include <cstring>
 #include <map>
 
+#include "ds/model/Metamodel.hpp"
+
 namespace ds {
 namespace bind {
 
@@ -43,22 +45,9 @@ std::string join(const std::vector<std::string>& items, const char* sep) {
   return out;
 }
 
-model::Kind kindForRelation(const std::string& relation) {
-  if (relation == "verifies" || relation == "refines" || relation == "requires") return model::Kind::Requirement;
-  if (relation == "constrained-by") return model::Kind::Constraint;
-  if (relation == "realises") return model::Kind::Interface;
-  if (relation == "exercised-by") return model::Kind::Verification;
-  return model::Kind::Class;
-}
-
-std::string relationForAnnotation(model::Kind from, const std::string& annotation) {
-  if (annotation == "requirement") return from == model::Kind::Verification ? "verifies" : "requires";
-  if (annotation == "refines") return "refines";
-  if (annotation == "constraint")
-    return from == model::Kind::Verification ? "verifies" : "constrained-by";  // a verification verifies a constraint
-  if (annotation == "interface") return "realises";
-  if (annotation == "verification") return "exercised-by";
-  return "refers";
+// what an annotation means comes from the metamodel's table (model::annotations()), declared once
+std::string relationForAnnotation(model::Kind from, const model::AnnotationSpec& spec) {
+  return from == model::Kind::Verification && !spec.onVerification.empty() ? spec.onVerification : spec.relation;
 }
 
 const char* const kPrimitives[] = {"int",  "bool",  "string", "path",   "none",
@@ -133,8 +122,9 @@ void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const s
     TSNode c = ts_node_named_child(node, i);
     if (!is(c, "annotation")) continue;
     const std::string kind = fieldText(file, c, "kind");
-    const std::string relation = relationForAnnotation(entity ? entity->kind : model::Kind::Class, kind);
-    references_.push_back({from, fieldText(file, c, "target"), scope, relation, kindForRelation(relation), locationOf(file, c), "", {}});
+    const model::AnnotationSpec& spec = model::annotationOf(kind);
+    const std::string relation = relationForAnnotation(entity ? entity->kind : model::Kind::Class, spec);
+    references_.push_back({from, fieldText(file, c, "target"), scope, relation, spec.target, locationOf(file, c), "", {}});
   }
 }
 

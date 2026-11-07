@@ -225,14 +225,14 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const LINKS=SCENE.links||[], DIAGS=SCENE.diagrams||[], TITLES=SCENE.titles||{};
 const FAMILY={inherits:'inheritance',realises:'inheritance'};  // the rest is never a line: it lights up when a box is touched
 const FAM={inheritance:true};
-const GROUP={owns:'owns',refs:'agg',shares:'agg',uses:'uses',calls:'calls'};  // the colour each relation lights up in
+const GROUP={owns:'owns',refs:'agg',shares:'agg',uses:'uses',consumes:'uses',calls:'calls'};  // the colour each relation lights up in
 const GROUP_EN={owns:'composes',agg:'aggregates',uses:'uses',calls:'calls',req:'linked',uc:'realises'};
 const GROUP_RANK={owns:0,agg:1,calls:2,uses:3};
 let HLBOX=new Map(), HLROW=new Map(), pills=[], REQSEL=null;
 const REQS=SCENE.requirements||[], VERS=SCENE.verifications||[], RBY={}, VBY={};
 REQS.forEach(q=>{RBY[q.id]=q; q.kids=[]; q.vers=[];}); REQS.forEach(q=>{if(RBY[q.parent]) RBY[q.parent].kids.push(q.id);});
 VERS.forEach(v=>{VBY[v.id]=v; v.requirements.forEach(r=>{if(RBY[r]) RBY[r].vers.push(v.id);});});
-const KIND_EN={inherits:'inherits from',realises:'realises',owns:'composes',shares:'shares',refs:'refers to',uses:'uses',calls:'calls','*':'relates to'};
+const KIND_EN={inherits:'inherits from',realises:'realises',owns:'composes',shares:'shares',refs:'refers to',uses:'uses',consumes:'uses the interface',calls:'calls','*':'relates to'};
 const unitOf=id=>N[id]&&N[id].kind==='row'?N[id].parent:id;
 const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.kind)) n=N[n.parent]; return n?n.id:null;};
 const short=id=>{const n=N[id]; return n?n.label.replace(/^[+-] /,'').split(/[(:]/)[0].trim():id;};
@@ -454,7 +454,7 @@ const SECTIONS=[
   {key:'owns',title:'Composition',kinds:['owns'],out:{owns:'composes'},in:{owns:'composed by'}},
   {key:'agg',title:'Aggregation',kinds:['refs','shares'],out:{refs:'refers to',shares:'shares'},in:{refs:'referred to by',shares:'shared by'}},
   {key:'calls',title:'Calls',kinds:['calls'],out:{calls:'calls'},in:{calls:'called by'}},
-  {key:'uses',title:'Uses',kinds:['uses'],out:{uses:'uses'},in:{uses:'used by'}}];
+  {key:'uses',title:'Uses',kinds:['uses','consumes'],out:{uses:'uses',consumes:'uses the interface'},in:{uses:'used by',consumes:'used through it by'}}];
 const qual=x=>{const n=N[x]; if(!n) return x; if(n.kind!=='row') return n.label; const p=N[n.parent]; return (p?p.label+'.':'')+short(x)+(n.label.includes('(')?'()':'');};
 const memberOf=x=>N[x]&&N[x].kind==='row'?short(x)+(N[x].label.includes('(')?'()':''):'';
 function dock(on){if(document.body.classList.contains('carded')===on) return; document.body.classList.toggle('carded',on); setTimeout(()=>{resize(); if(on&&SEL){const b=scr(N[SEL]); if(!onScreen(b)) fly(fit(N[SEL],.6));}},30);}
