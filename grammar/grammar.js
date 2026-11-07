@@ -73,13 +73,17 @@ module.exports = grammar({
       '{', repeat(choice($.field, $.annotation, $.definition_case)), '}'),
     definition_case: $ => seq('if', $._literals),
     _literals: $ => seq($.literal, repeat(seq(',', $.literal))),
-    literal: $ => seq(optional(field('negated', 'not')), choice($.relation_atom, $.kind_atom, $.in_atom, $.compare_atom, $.call_atom)),
+    literal: $ => seq(optional(field('negated', 'not')), choice($.relation_atom, $.kind_atom, $.in_atom, $.compare_atom, $.call_atom, $.arg_atom)),
     relation_atom: $ => seq(field('left', $.qualified_name), field('relation', $._relation_word), field('right', $.qualified_name)),
     // the relations whose name the language also spells as a keyword
     _relation_word: $ => choice($.name, alias(choice('owns', 'refs', 'shares', 'on'), $.name)),
     kind_atom: $ => seq(field('left', $.qualified_name), 'is', field('kind', $._kind_word)),
     in_atom: $ => seq(field('left', $.qualified_name), 'in', field('right', $.qualified_name)),
-    compare_atom: $ => seq(field('left', $.qualified_name), field('operator', choice('=', '!=')), field('right', $.qualified_name)),
+    // values compare: numbers as numbers, strings as written
+    compare_atom: $ => seq(field('left', $._term), field('operator', choice('=', '!=', '<', '<=', '>', '>=')), field('right', $._term)),
+    _term: $ => choice($.qualified_name, $.number, $.string),
+    // arg(k, p, v): the call k passes v, a literal written in the sequence, to the parameter p of what it calls
+    arg_atom: $ => seq('arg', '(', field('call', $.qualified_name), ',', field('parameter', $.name), ',', field('value', $._term), ')'),
     call_atom: $ => seq(field('definition', $.qualified_name), '(', $.qualified_name, repeat(seq(',', $.qualified_name)), ')'),
     // the kinds the language spells with a keyword are still kind names here
     _kind_word: $ => choice($.name, alias(choice('package', 'module', 'class', 'interface', 'enum', 'function', 'requirement', 'verification',
@@ -155,15 +159,17 @@ module.exports = grammar({
       optional(seq('->', field('returns', $.type))),
       optional(field('body', $.member_body)),
     )),
-    member_body: $ => seq('{', repeat(choice($.field, $.annotation, $.contract, $.requirement, $.constraint)), '}'),
+    // a rule of a member speaks about it and its calls: what was a [requires: ...] in prose (DS-94 phase c, 2026-11-07)
+    member_body: $ => seq('{', repeat(choice($.field, $.annotation, $.rule, $.requirement, $.constraint)), '}'),
     visibility: $ => choice('+', '-', '#'),
     parameters: $ => seq('(', optional(seq($.parameter, repeat(seq(',', $.parameter)))), ')'),
     parameter: $ => seq(field('name', $.name), optional(seq(':', field('type', $.type)))),
     type: $ => seq(field('name', $.qualified_name), optional(field('args', $.type_args))),
     type_args: $ => seq('<', $.type, repeat(seq(',', $.type)), '>'),
     default_value: $ => choice($.number, $.string, 'true', 'false', $.qualified_name),
-    contract: $ => seq('[', optional(seq(field('key', $.name), ':')), field('body', $.contract_body), ']'),
-    contract_body: $ => /[^\]\n]+/,
+    // a transition's guard, as UML writes it; kept as text until a state machine asks for more
+    guard: $ => seq('[', field('body', $.guard_body), ']'),
+    guard_body: $ => /[^\]\n]+/,
 
     // an enum is annotated like a class (@requirement before its values), decided 2026-10-26
     enum: $ => seq(optional(field('visibility', $.visibility)), 'enum', field('name', $.name), '{', repeat($.annotation), optional(seq($.enum_value, repeat(seq(',', $.enum_value)), optional(','))), '}'),
@@ -203,7 +209,7 @@ module.exports = grammar({
     // a state of the navigation of a graphical interface: what it shows, in text, and what binds it (2026-11-05)
     view: $ => seq('view', field('name', $.name), '{', repeat(choice($.field, $.annotation)), '}'),
     initial: $ => seq('initial', field('name', $.name)),
-    transition: $ => seq(field('from', $.name), '->', field('to', $.name), 'on', field('event', $.name), optional(field('guard', $.contract)), optional(seq('/', field('action', $.name)))),
+    transition: $ => seq(field('from', $.name), '->', field('to', $.name), 'on', field('event', $.name), optional(field('guard', $.guard)), optional(seq('/', field('action', $.name)))),
 
     // ---- representations --------------------------------------------------
     diagram: $ => seq('diagram', field('name', $.name), '{', repeat($.field), '}'),

@@ -905,6 +905,10 @@
             {
               "type": "SYMBOL",
               "name": "call_atom"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "arg_atom"
             }
           ]
         }
@@ -1032,7 +1036,7 @@
           "name": "left",
           "content": {
             "type": "SYMBOL",
-            "name": "qualified_name"
+            "name": "_term"
           }
         },
         {
@@ -1048,6 +1052,22 @@
               {
                 "type": "STRING",
                 "value": "!="
+              },
+              {
+                "type": "STRING",
+                "value": "<"
+              },
+              {
+                "type": "STRING",
+                "value": "<="
+              },
+              {
+                "type": "STRING",
+                "value": ">"
+              },
+              {
+                "type": "STRING",
+                "value": ">="
               }
             ]
           }
@@ -1057,8 +1077,74 @@
           "name": "right",
           "content": {
             "type": "SYMBOL",
+            "name": "_term"
+          }
+        }
+      ]
+    },
+    "_term": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "qualified_name"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "number"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "string"
+        }
+      ]
+    },
+    "arg_atom": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "arg"
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "FIELD",
+          "name": "call",
+          "content": {
+            "type": "SYMBOL",
             "name": "qualified_name"
           }
+        },
+        {
+          "type": "STRING",
+          "value": ","
+        },
+        {
+          "type": "FIELD",
+          "name": "parameter",
+          "content": {
+            "type": "SYMBOL",
+            "name": "name"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ","
+        },
+        {
+          "type": "FIELD",
+          "name": "value",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_term"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ")"
         }
       ]
     },
@@ -2249,7 +2335,7 @@
               },
               {
                 "type": "SYMBOL",
-                "name": "contract"
+                "name": "rule"
               },
               {
                 "type": "SYMBOL",
@@ -2456,7 +2542,7 @@
         }
       ]
     },
-    "contract": {
+    "guard": {
       "type": "SEQ",
       "members": [
         {
@@ -2464,36 +2550,11 @@
           "value": "["
         },
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "FIELD",
-                  "name": "key",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "name"
-                  }
-                },
-                {
-                  "type": "STRING",
-                  "value": ":"
-                }
-              ]
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        },
-        {
           "type": "FIELD",
           "name": "body",
           "content": {
             "type": "SYMBOL",
-            "name": "contract_body"
+            "name": "guard_body"
           }
         },
         {
@@ -2502,7 +2563,7 @@
         }
       ]
     },
-    "contract_body": {
+    "guard_body": {
       "type": "PATTERN",
       "value": "[^\\]\\n]+"
     },
@@ -3407,7 +3468,7 @@
               "name": "guard",
               "content": {
                 "type": "SYMBOL",
-                "name": "contract"
+                "name": "guard"
               }
             },
             {

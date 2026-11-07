@@ -91,10 +91,6 @@ std::string Binder::qualify(const std::string& scope, const std::string& name) c
 void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity) {
   if (ts_node_is_null(node)) return;
   const uint32_t count = ts_node_named_child_count(node);
-  int contracts = 0;
-  for (const auto& f : entity.fields) {
-    if (f.first.rfind("contract.", 0) == 0) ++contracts;  // keep numbering across trailing contracts and the body
-  }
   for (uint32_t i = 0; i < count; ++i) {
     TSNode c = ts_node_named_child(node, i);
     if (is(c, "field")) {
@@ -107,9 +103,6 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
       } else {
         existing->second += ", " + value;  // a repeated key accumulates (include: a / include: b)
       }
-    } else if (is(c, "contract")) {
-      const std::string key = fieldText(file, c, "key");
-      entity.fields["contract." + std::to_string(contracts++)] = trim((key.empty() ? "" : key + ": ") + fieldText(file, c, "body"));
     }
   }
 }
@@ -118,8 +111,9 @@ namespace {
 
 model::Term termOf(const parse::ParsedFile& file, TSNode node) {
   const std::string text = parse::textOf(file, node);
+  if (!is(node, "qualified_name")) return {text, false, true};  // a number or a string: a value
   // a bare name is a variable; an entity is always written qualified (the form decides, nothing is guessed)
-  return {text, text.find('@') == std::string::npos && text.find("::") == std::string::npos};
+  return {text, text.find('@') == std::string::npos && text.find("::") == std::string::npos, false};
 }
 
 /// The text of a clause after its keyword, for the card and the export.
@@ -155,8 +149,15 @@ void Binder::bindFormula(const parse::ParsedFile& file, TSNode node, model::Enti
         l.form = model::LiteralForm::In;
         l.terms = {termOf(file, child(atom, "left")), termOf(file, child(atom, "right"))};
       } else if (is(atom, "compare_atom")) {
-        l.form = fieldText(file, atom, "operator") == "=" ? model::LiteralForm::Equal : model::LiteralForm::NotEqual;
+        static const std::map<std::string, model::LiteralForm> kOperators = {
+            {"=", model::LiteralForm::Equal},      {"!=", model::LiteralForm::NotEqual}, {"<", model::LiteralForm::Less},
+            {"<=", model::LiteralForm::LessEqual}, {">", model::LiteralForm::Greater},   {">=", model::LiteralForm::GreaterEqual}};
+        l.form = kOperators.at(fieldText(file, atom, "operator"));
         l.terms = {termOf(file, child(atom, "left")), termOf(file, child(atom, "right"))};
+      } else if (is(atom, "arg_atom")) {
+        l.form = model::LiteralForm::Arg;
+        l.name = fieldText(file, atom, "parameter");
+        l.terms = {termOf(file, child(atom, "call")), termOf(file, child(atom, "value"))};
       } else if (is(atom, "call_atom")) {
         l.form = model::LiteralForm::Call;
         l.name = fieldText(file, atom, "definition");
@@ -411,7 +412,7 @@ void Binder::declareOperator(model::Entity& cls, const std::string& symbol, cons
 }
 
 void Binder::bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope) {
-  bindFields(file, member, entity);  // trailing contracts, if any
+  bindFields(file, member, entity);
   TSNode body = child(member, "body");
   if (!ts_node_is_null(body)) bindFields(file, body, entity);
   model::Entity* declared = model_.find(entity.id);
@@ -520,7 +521,7 @@ void Binder::bindFunction(const parse::ParsedFile& file, TSNode f, const std::st
   bindSignature(file, f, e, scope, {});
   model_.declare(e);
   if (!owner.empty()) model_.relate({"contains", owner, e.id, e.location, ""});
-  bindMemberBody(file, f, e, scope);  // annotations, contracts and nested artefacts, as a method's
+  bindMemberBody(file, f, e, scope);  // annotations, rules and nested artefacts, as a method's
 }
 
 void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::string& scope, const std::string& owner) {
@@ -790,7 +791,9 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.kind = is(c, "rule") ? model::Kind::Rule : model::Kind::Definition;
       e.name = fieldText(file, c, "name");
       const model::Entity* in = owner.empty() ? nullptr : model_.find(owner);
-      const bool inClass = in && in->kind == model::Kind::Class;  // a rule of a class is named under it: p@m::Order::priced
+      // a rule of a class or a member is named under it: p@m::Order::priced, p@m::Link::send::in-range
+      const bool inClass = in && (in->kind == model::Kind::Class || in->kind == model::Kind::Method || in->kind == model::Kind::Function ||
+                                  in->kind == model::Kind::Operator);
       e.id = inClass ? owner + "::" + e.name : qualify(scope, e.name);
       e.scope = inClass ? owner : scope;
       e.location = loc;

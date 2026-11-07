@@ -1,6 +1,7 @@
 #include "ds/check/Evaluator.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <functional>
 
 #include "ds/check/Checker.hpp"
@@ -29,6 +30,46 @@ std::string describe(const std::map<std::string, std::string>& bindings) {
 }
 
 const std::size_t kReportsPerRule = 10;
+
+bool compares(Form form) {
+  return form == Form::NotEqual || form == Form::Less || form == Form::LessEqual || form == Form::Greater || form == Form::GreaterEqual;
+}
+
+/// A number written as such, read whole: 150, -2.5; anything else is not one.
+bool number(const std::string& text, double& out_number) {
+  if (text.empty()) return false;
+  char* end = nullptr;
+  out_number = std::strtod(text.c_str(), &end);
+  return end == text.c_str() + text.size();
+}
+
+/// A value written in a sequence: a number or a string, not a name.
+bool literal(const std::string& text) {
+  double ignored = 0;
+  return number(text, ignored) || (text.size() >= 2 && text.front() == '"' && text.back() == '"');
+}
+
+/// Whether `a` and `z` stand in the comparison: numbers as numbers, anything else equal or not as written.
+bool compare(Form form, const std::string& a, const std::string& z) {
+  double x = 0, y = 0;
+  const bool numbers = number(a, x) && number(z, y);
+  switch (form) {
+    case Form::Equal:
+      return numbers ? x == y : a == z;
+    case Form::NotEqual:
+      return numbers ? x != y : a != z;
+    case Form::Less:
+      return numbers && x < y;
+    case Form::LessEqual:
+      return numbers && x <= y;
+    case Form::Greater:
+      return numbers && x > y;
+    case Form::GreaterEqual:
+      return numbers && x >= y;
+    default:
+      return false;
+  }
+}
 
 }  // namespace
 
@@ -149,7 +190,7 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
       }
     }
     for (const auto& t : l.terms) {
-      if (t.variable) continue;
+      if (t.variable || t.value) continue;
       const std::string entity = checker_.resolve(t.text, scope);
       if (entity.empty()) {
         report("E-RULE-UNKNOWN", id, "names '" + t.text + "', which nothing declares", l.location);
@@ -163,8 +204,8 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
   for (bool changed = true; changed;) {
     changed = false;
     for (const auto& l : body) {
-      if (l.negated || l.form == Form::NotEqual) continue;
-      const bool binds = l.form == Form::Relation || l.form == Form::Kind || l.form == Form::Call ||
+      if (l.negated || compares(l.form)) continue;
+      const bool binds = l.form == Form::Relation || l.form == Form::Kind || l.form == Form::Call || l.form == Form::Arg ||
                          std::any_of(l.terms.begin(), l.terms.end(), known);  // in and = bind one side from the other
       if (!binds) continue;
       for (const auto& t : l.terms)
@@ -296,13 +337,20 @@ void Evaluator::evaluateRule(const std::string& id, const model::Formula& formul
     std::string message = "is broken";
     if (!subject.empty()) message += " for " + describe(subject);
     if (formula.never && !witness.empty()) message += ": " + describe(witness);
-    report("E-RULE-BROKEN", id, message, rule->location);
+    // the finding sits on what breaks the rule, the first thing it ranges over (a call in its sequence,
+    // a class in its file), so the reader lands there; the message names the rule
+    const model::Entity* first = formula.ranges.empty() ? nullptr : model_.find(subject.at(formula.ranges.front().variable));
+    report("E-RULE-BROKEN", id, message, first && !first->location.file.empty() ? first->location : rule->location);
   }
   if (broken > kReportsPerRule)
     report("E-RULE-BROKEN", id, "is broken " + std::to_string(broken - kReportsPerRule) + " more times", rule->location);
 }
 
 bool Evaluator::value(const std::string& owner, const model::Term& term, const Bindings& bindings, std::string& out_value) const {
+  if (term.value) {
+    out_value = term.text;
+    return true;
+  }
   if (term.variable) {
     const auto it = bindings.find(term.text);
     if (it == bindings.end()) return false;
@@ -329,7 +377,7 @@ bool Evaluator::contains(const std::string& outer, const std::string& inner) con
 // one side; a relation, a kind or a definition generates what it does not have
 bool Evaluator::ready(const model::Literal& literal, const Bindings& bindings) const {
   const auto known = [&](const model::Term& t) { return !t.variable || bindings.count(t.text); };
-  if (literal.negated || literal.form == Form::NotEqual) return std::all_of(literal.terms.begin(), literal.terms.end(), known);
+  if (literal.negated || compares(literal.form)) return std::all_of(literal.terms.begin(), literal.terms.end(), known);
   if (literal.form == Form::In || literal.form == Form::Equal) return std::any_of(literal.terms.begin(), literal.terms.end(), known);
   return true;
 }
@@ -439,14 +487,42 @@ std::vector<Bindings> Evaluator::answers(const std::string& owner, const model::
       break;
     }
     case Form::Equal:
-      if (hasA)
+      if (hasA && hasZ) {
+        if (compare(Form::Equal, a, z)) out.push_back(bindings);
+      } else if (hasA) {
         offer({{1, a}});
-      else
+      } else {
         offer({{0, z}});
+      }
       break;
     case Form::NotEqual:
-      if (a != z) out.push_back(bindings);
+    case Form::Less:
+    case Form::LessEqual:
+    case Form::Greater:
+    case Form::GreaterEqual:
+      if (compare(l.form, a, z)) out.push_back(bindings);
       break;
+    case Form::Arg: {  // the literal a call passes to the parameter named, as the sequence writes it
+      std::vector<std::string> calls;
+      if (hasA) {
+        calls.push_back(a);
+      } else {
+        const auto it = byKind_.find("message");
+        if (it != byKind_.end()) calls = it->second;
+      }
+      const auto called = forward_.find("calls");
+      if (called == forward_.end()) break;
+      for (const auto& call : calls) {
+        const model::Entity* message = model_.find(call);
+        const auto target = called->second.find(call);
+        if (!message || target == called->second.end()) continue;
+        const model::Entity* op = model_.find(target->second);
+        if (!op) continue;
+        for (std::size_t i = 0; i < op->params.size() && i < message->args.size(); ++i)
+          if (op->params[i].name == l.name && literal(message->args[i])) offer({{0, call}, {1, message->args[i]}});
+      }
+      break;
+    }
     case Form::Call: {
       const auto ext = extension_.find(definitionOf(owner, l.name));
       if (ext == extension_.end()) break;

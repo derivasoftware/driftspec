@@ -185,7 +185,7 @@ void Checker::run(const bind::Binder& binder) {
   checkRules();
 }
 
-// A rule makes a requirement real (REQ-00095-1): it answers to one, and says what holds or what must
+// A rule makes a requirement real (REQ-00095-2): it answers to one, and says what holds or what must
 // never happen, once; a definition says in which cases it holds. Then every rule is evaluated over the
 // model (REQ-00096-1).
 void Checker::checkRules() {

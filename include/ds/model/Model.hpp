@@ -92,21 +92,24 @@ struct Finding {
   Location location;
 };
 
-/// One term of a literal: a variable (a bare name) or an entity (a qualified name), as written.
+/// One term of a literal: a variable (a bare name), an entity (a qualified name) or a value (a number
+/// or a string), as written.
 struct Term {
   std::string text;
   bool variable = false;
+  bool value = false;
 };
 
 /// One literal of a rule or a definition (DS-94): a relation of the metamodel, a kind, containment,
 /// (in)equality or a definition applied to terms; negated when written after `not`.
-/// How a literal reads: a relation, a kind, containment, (in)equality or a definition applied.
-enum class LiteralForm { Relation, Kind, In, Equal, NotEqual, Call };
+/// How a literal reads: a relation, a kind, containment, a comparison, a definition applied or the
+/// literal argument a call passes.
+enum class LiteralForm { Relation, Kind, In, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Call, Arg };
 
 struct Literal {
   LiteralForm form = LiteralForm::Relation;
   bool negated = false;
-  std::string name;  ///< the relation, the kind or the definition, as written
+  std::string name;  ///< the relation, the kind, the definition or the parameter (arg), as written
   std::vector<Term> terms;
   Location location;
 };
