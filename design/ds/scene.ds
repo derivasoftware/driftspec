@@ -94,6 +94,28 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
     }
 
+    requirement REQ-00092-1 {
+      status: approved
+      @refines SREQ-00017-1
+      title: The viewer shall let a page that embeds it read and set its camera, select and frame any identity, mark what changed, highlight and annotate, and tell the page what the reader selects
+      text:
+        window.DS_VIEW: cam and setCam, selected and select, show (a node is selected, a requirement
+        opens in its list, a sequence opens as its tour), frame and frameAny, mark (what changed,
+        fading), highlight (identities of any perspective, each with a tone), notes (bubbles that
+        follow the camera). The viewer posts {ds: 'ready'} when it can be steered and {ds: 'select',
+        id} whenever the reader selects, so a live session keeps the reader's place and hears them.
+      tags: render, scene, viewer, live
+    }
+
+    verification VER-00101-1 {
+      status: approved
+      @requirement REQ-00092-1
+      title: Integration tests confirm the viewer of ds's design carries the hook a page steers it with, and says when it is ready and what the reader selects
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AnEmbeddingPageSteersTheViewerAndHearsTheReader
+    }
+
     requirement REQ-00072-2 {
       status: approved
       @refines SREQ-00013-1
@@ -509,6 +531,7 @@ package driftspec@ds {
         @requirement REQ-00070-1
         @requirement REQ-00071-2
         @requirement REQ-00077-1
+        @requirement REQ-00092-1
       }
       - relate(out_document: SceneDocument) -> void {
         @requirement REQ-00072-2

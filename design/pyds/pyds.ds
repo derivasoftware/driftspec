@@ -121,6 +121,178 @@ package driftspec@pyds {
     return none
   }
 
+  // ---- the live session: a workspace followed as it is written --------------------------------
+  requirement REQ-00089-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall reload the model on every change of the workspace's files and give every page that follows it the new state, with the identities that changed
+    text:
+      pyds.live watches the .ds files of a workspace; a change loads the model again, compares each
+      identity with the version before (an entity and the relations it makes), and pushes the state
+      (version, changed, removed, findings, counts, history) to every page following the session as
+      server-sent events. A member that changed marks its class too. A half-written file does not
+      stop the session: the error is sent and the next save is read.
+    tags: live, viewer
+    verification VER-00098-1 {
+      status: approved
+      title: Integration tests confirm a change to a file reaches the state with the identities that changed, and a page following the session receives the model
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_a_change_to_a_file_reaches_the_state_with_what_changed
+        tests/integration/python/test_live.py::TestLiveSession::test_a_reader_receives_the_model_and_is_taken_where_it_is_asked
+    }
+  }
+
+  requirement REQ-00090-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall carry focus, notes, highlights and the reader's selection both ways, through a contract with a version, and keep notes and highlights beside the workspace across restarts
+    text:
+      The contract (GET /contract) names the routes a client calls and the events it receives, and
+      the state says the contract's version, so a browser page and an editor's panel rely on the
+      same thing. Focus takes the reader to an identity; a note is a bubble on an identity, replaced
+      by the next one on it and removed by an empty one; a highlight lights identities with a tone;
+      clear removes them. The reader's selection is posted back. Notes and highlights are kept in
+      <workspace>/.driftspec/live.json, never in the design.
+    rationale: Found using the spike (DS-102): notes in memory were lost on every restart.
+    tags: live, viewer
+    verification VER-00099-1 {
+      status: approved
+      title: Integration tests confirm focus, notes, highlights and the selection go both ways through the contract, and notes and highlights survive a restart outside the design
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_the_readers_selection_reaches_the_one_who_writes
+        tests/integration/python/test_live.py::TestLiveSession::test_notes_and_highlights_survive_a_restart_and_stay_out_of_the_design
+        tests/integration/python/test_live.py::TestLiveSession::test_a_note_with_no_text_removes_it_and_clear_removes_them_all
+        tests/integration/python/test_live.py::TestLiveSession::test_the_contract_says_its_routes_and_its_version
+    }
+  }
+
+  requirement REQ-00091-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall offer its contract to an agent as MCP tools over stdio
+    text:
+      python -m pyds.live mcp serves live_open (starting the session if none serves the workspace),
+      live_focus, live_note, live_highlight, live_clear, live_selection and live_state; each answers
+      through the session's routes, so the agent and a page see the same state.
+    tags: live, mcp
+    verification VER-00100-1 {
+      status: approved
+      title: Integration tests confirm an agent calls the contract as MCP tools and an unknown tool is an error
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_an_agent_calls_the_contract_as_mcp_tools
+    }
+  }
+
+  interface session {                          // what a page or an editor's panel relies on
+    kind: http
+    transport: http, server-sent events on localhost
+    encoding: json
+    @requirement REQ-00090-1
+
+    operation state() -> object
+    operation events() -> object
+    operation focus(id: string, also: list<string>) -> object
+    operation note(id: string, text: string, tone: string) -> object
+    operation highlight(ids: list<string>, tone: string, add: bool) -> object
+    operation clear(what: string) -> object
+    operation selection(id: string, label: string) -> object
+  }
+
+  sequence session::state {
+    local s: live::Live
+    -> s.state() -> state
+    return state
+  }
+
+  sequence session::events {
+    local s: live::Live
+    -> s.state() -> state
+    -> s.broadcast(event, data)
+    return state
+  }
+
+  sequence session::focus {
+    local s: live::Live
+    -> s.focus(id, also) -> listeners
+    return listeners
+  }
+
+  sequence session::note {
+    local s: live::Live
+    -> s.note(id, text, tone, frame) -> notes
+    return notes
+  }
+
+  sequence session::highlight {
+    local s: live::Live
+    -> s.highlight(ids, tone, add, frame) -> highlights
+    return highlights
+  }
+
+  sequence session::clear {
+    local s: live::Live
+    -> s.clear(what)
+    return none
+  }
+
+  sequence session::selection {
+    local s: live::Live
+    -> s.select(id, label)
+    return none
+  }
+
+  interface agent {                            // the same contract, for an agent
+    kind: mcp
+    transport: stdio, json-rpc
+    @requirement REQ-00091-1
+
+    operation live_open(workspace: string) -> string
+    operation live_focus(id: string) -> object
+    operation live_note(id: string, text: string) -> object
+    operation live_highlight(ids: list<string>) -> object
+    operation live_clear(what: string) -> object
+    operation live_selection() -> object
+    operation live_state() -> object
+  }
+
+  sequence agent::live_open {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_focus {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_note {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_highlight {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_clear {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_selection {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_state {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
   // ---- the language server: what an editor asks -----------------------------------------------
   interface editor {
     kind: lsp
@@ -358,5 +530,44 @@ package driftspec@pyds {
       -> open_in_browser(path)
       return answer
     }
+  }
+
+  // ---- the live session ---------------------------------------------------------------------------
+  module live {
+    @requirement REQ-00089-1
+    @requirement REQ-00090-1
+    @requirement REQ-00091-1
+
+    class Live {                               // a session over one workspace: its model version by version, and what both sides point at
+      @requirement REQ-00089-1
+      @requirement REQ-00090-1
+      + workspace: string
+      + version: int
+      + changed: list<string>
+      + removed: list<string>
+      + notes: list<object>
+      + highlights: list<object>
+      + selection: map<string, string>
+      + reload() -> bool
+      + state() -> map<string, object>
+      + broadcast(event: string, data: map<string, object>) -> none
+      + watch(every: float) -> none
+      + focus(identity: string, also: list<string>) -> int
+      + note(identity: string, text: string, tone: string, frame: bool) -> int
+      + highlight(ids: list<string>, tone: string, add: bool, frame: bool) -> int
+      + clear(what: string) -> none
+      + select(identity: string, label: string) -> none
+      + load() -> none
+      + save() -> none
+    }
+
+    function serve(workspace: string, port: int, open_browser: bool, block: bool) -> Live
+    function signatures(model: pyds::Model) -> map<string, string>
+    function handler_for(live: Live) -> object
+    function call(port: int, path: string, data: map<string, object>) -> map<string, object>
+    function tool(port: int, name: string, args: map<string, object>, opened: map<string, object>) -> object
+    function mcp(port: int, stdin: object, stdout: object) -> none
+    function browser_open(url: string) -> none
+    function main(argv: list<string>) -> none
   }
 }

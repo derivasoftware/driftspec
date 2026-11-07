@@ -262,4 +262,14 @@ package driftspec {
     tests:
       tests/system/python/test_editor.py::TestEditorSession::test_an_editor_gets_what_it_types_wrong_and_the_drawing_of_what_it_points_at
   }
+
+  verification SVER-00021-1 {
+    status: approved
+    @requirement SREQ-00017-1
+    title: System tests confirm an agent over MCP and a reader in the page share one live session, each pointing at what the other sees
+    method: test
+    tests:
+      tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_points_and_annotates_and_the_reader_sees_it_and_answers
+      tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_finds_every_tool_of_the_contract
+  }
 }
