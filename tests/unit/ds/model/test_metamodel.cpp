@@ -12,7 +12,7 @@ using ds::model::Kind;
 const Kind kAllKinds[] = {Kind::Package,   Kind::Module,     Kind::Requirement, Kind::Verification, Kind::Interface, Kind::Operation,
                           Kind::View,      Kind::Constraint, Kind::Class,       Kind::Enum,         Kind::Function,  Kind::Method,
                           Kind::Attribute, Kind::Operator,   Kind::Sequence,    Kind::Message,      Kind::Frame,     Kind::State,
-                          Kind::Diagram,   Kind::UseCase,    Kind::Outcome};
+                          Kind::Diagram,   Kind::UseCase,    Kind::Outcome,     Kind::Rule,         Kind::Definition};
 
 /// The metamodel declared once (REQ-00066-1). One fixture per unit of ds::model it tests:
 /// the kinds, the fields, the relations and joins.

@@ -67,6 +67,8 @@ class Binder {
   void visit(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity);
   void bindAnnotations(const parse::ParsedFile& file, TSNode node, const std::string& from, const std::string& scope);
+  /// What a rule or a definition says, read from its clauses into the model's formulas (DS-94).
+  void bindFormula(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity);
   void bindArtefact(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindUseCase(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindClass(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);

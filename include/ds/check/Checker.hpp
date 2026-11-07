@@ -38,9 +38,9 @@ class Checker {
   void checkArtefacts();
   void checkExtensions();
   void checkFields();
-  void checkLanguages();
-  void checkDependencies();  // what a box declares it uses against what its behaviours call (DS-96)  // what each package and module is
-                             // written in, held down by containment (DS-86)
+  void checkLanguages();     // what each package and module is written in, held down by containment (DS-86)
+  void checkDependencies();  // what a box declares it uses against what its behaviours call (DS-96)
+  void checkRules();         // a rule answers to a requirement and says what holds; a definition what it ranges over (DS-94)
   /// A behaviour's identity is its resolved subject plus its scenario, wherever it was written.
   void unifyBehaviours();
   std::string current(const std::string& id) const;  ///< an identity after the renames

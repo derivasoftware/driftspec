@@ -8,6 +8,43 @@ package driftspec@ds {
 
   module check {
 
+    // Datalog with stratified negation over the finite model: every structural rule is decided (DS-94).
+    // The facts are the declared entities by kind, every relation both ways and containment; a
+    // definition is computed bottom-up to its fixpoint, stratum by stratum, and a rule is broken by
+    // each binding of its ranges where holds has no answer or never has one.
+    class Evaluator {                        // decides the structural rules over the model
+      @requirement REQ-00096-1
+      - refs model_: model::Model
+      - refs checker_: Checker
+      - owns parent_: std::map<std::string, std::string>
+      - owns children_: std::map<std::string, std::vector<std::string>>
+      - owns byKind_: std::map<std::string, std::vector<std::string>>
+      - owns forward_: std::map<std::string, std::multimap<std::string, std::string>>
+      - owns backward_: std::map<std::string, std::multimap<std::string, std::string>>
+      - owns constants_: std::map<std::string, std::string>
+      - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
+      - stratum_: std::map<std::string, int>
+      - owns invalid_: std::set<std::string>
+      + Evaluator(model: model::Model, checker: Checker)
+      + run() -> void
+      - index() -> void
+      - validate(id: std::string, formula: model::Formula) -> bool
+      - validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>) -> bool
+      - stratify() -> bool
+      - computeDefinitions() -> void
+      - evaluateRule(id: std::string, formula: model::Formula) -> void
+      - solve(owner: std::string, body: std::vector<model::Literal>, bindings: std::map<std::string, std::string>, first: bool) -> std::vector<std::map<std::string, std::string>>
+      - solveFrom(owner: std::string, body: std::vector<model::Literal>, done: std::vector<bool>, bindings: std::map<std::string, std::string>, first: bool, out_answers: std::vector<std::map<std::string, std::string>>) -> void
+      - ready(literal: model::Literal, bindings: std::map<std::string, std::string>) -> bool
+      - answers(owner: std::string, literal: model::Literal, bindings: std::map<std::string, std::string>) -> std::vector<std::map<std::string, std::string>>
+      - value(owner: std::string, term: model::Term, bindings: std::map<std::string, std::string>, out_value: std::string) -> bool
+      - unify(owner: std::string, term: model::Term, entity: std::string, out_bindings: std::map<std::string, std::string>) -> bool
+      - definitionOf(owner: std::string, name: std::string) -> std::string
+      - scopeOf(owner: std::string) -> std::string
+      - contains(outer: std::string, inner: std::string) -> bool
+      - report(code: std::string, owner: std::string, message: std::string, at: model::Location) -> void
+    }
+
     class Checker {                          // realises the language rule by rule: each member names its requirement
       @requirement REQ-00053-1
       @requirement REQ-00012-1
@@ -111,6 +148,9 @@ package driftspec@ds {
       - checkUseCases() -> void {
         @requirement REQ-00082-1
       }
+      - checkRules() -> void {
+        @requirement REQ-00095-1
+      }
       - checkDependencies() -> void {
         @requirement REQ-00094-1
       }
@@ -179,6 +219,7 @@ package driftspec@ds {
       -> checkFields()
       -> checkLanguages()
       -> checkDependencies()
+      -> checkRules()
     }
 
     // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named

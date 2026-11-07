@@ -114,6 +114,97 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
   }
 }
 
+namespace {
+
+model::Term termOf(const parse::ParsedFile& file, TSNode node) {
+  const std::string text = parse::textOf(file, node);
+  // a bare name is a variable; an entity is always written qualified (the form decides, nothing is guessed)
+  return {text, text.find('@') == std::string::npos && text.find("::") == std::string::npos};
+}
+
+/// The text of a clause after its keyword, for the card and the export.
+std::string clauseText(const parse::ParsedFile& file, TSNode clause) {
+  const std::string text = parse::textOf(file, clause);
+  const auto space = text.find_first_of(" \t\r\n");
+  return space == std::string::npos ? "" : trim(text.substr(space));
+}
+
+}  // namespace
+
+void Binder::bindFormula(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity) {
+  model::Formula formula;
+  const auto literals = [&](TSNode clause) {
+    std::vector<model::Literal> out;
+    const uint32_t n = ts_node_named_child_count(clause);
+    for (uint32_t i = 0; i < n; ++i) {
+      TSNode lit = ts_node_named_child(clause, i);
+      if (!is(lit, "literal")) continue;
+      model::Literal l;
+      l.negated = !ts_node_is_null(child(lit, "negated"));
+      l.location = locationOf(file, lit);
+      TSNode atom = ts_node_named_child(lit, 0);
+      if (is(atom, "relation_atom")) {
+        l.form = model::LiteralForm::Relation;
+        l.name = fieldText(file, atom, "relation");
+        l.terms = {termOf(file, child(atom, "left")), termOf(file, child(atom, "right"))};
+      } else if (is(atom, "kind_atom")) {
+        l.form = model::LiteralForm::Kind;
+        l.name = fieldText(file, atom, "kind");
+        l.terms = {termOf(file, child(atom, "left"))};
+      } else if (is(atom, "in_atom")) {
+        l.form = model::LiteralForm::In;
+        l.terms = {termOf(file, child(atom, "left")), termOf(file, child(atom, "right"))};
+      } else if (is(atom, "compare_atom")) {
+        l.form = fieldText(file, atom, "operator") == "=" ? model::LiteralForm::Equal : model::LiteralForm::NotEqual;
+        l.terms = {termOf(file, child(atom, "left")), termOf(file, child(atom, "right"))};
+      } else if (is(atom, "call_atom")) {
+        l.form = model::LiteralForm::Call;
+        l.name = fieldText(file, atom, "definition");
+        const uint32_t count = ts_node_child_count(atom);
+        for (uint32_t j = 0; j < count; ++j) {
+          TSNode arg = ts_node_child(atom, j);
+          if (is(arg, "qualified_name") && !ts_node_field_name_for_child(atom, j)) l.terms.push_back(termOf(file, arg));
+        }
+      } else {
+        continue;
+      }
+      out.push_back(l);
+    }
+    return out;
+  };
+  const auto append = [&](const char* key, const std::string& text) {
+    std::string& field = out_entity.fields[key];
+    field += (field.empty() ? "" : "; ") + text;
+  };
+  const uint32_t count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < count; ++i) {
+    TSNode c = ts_node_child(node, i);
+    if (is(c, "rule_for")) {
+      const uint32_t n = ts_node_named_child_count(c);
+      for (uint32_t j = 0; j < n; ++j) {
+        TSNode r = ts_node_named_child(c, j);
+        if (is(r, "range"))
+          formula.ranges.push_back(
+              {fieldText(file, r, "kind"), fieldText(file, r, "variable"), fieldText(file, r, "scope"), locationOf(file, r)});
+      }
+      append("for", clauseText(file, c));
+    } else if (is(c, "rule_where")) {
+      for (auto& l : literals(c)) formula.where.push_back(l);
+      append("where", clauseText(file, c));
+    } else if (is(c, "rule_holds") || is(c, "rule_never")) {
+      formula.claims.push_back(literals(c));
+      formula.never = is(c, "rule_never");
+      append(formula.never ? "never" : "holds", clauseText(file, c));
+    } else if (is(c, "definition_case")) {
+      formula.cases.push_back(literals(c));
+      append("if", clauseText(file, c));
+    } else if (is(c, "name") && !ts_node_field_name_for_child(node, i)) {
+      formula.parameters.push_back(parse::textOf(file, c));  // a definition's parameters
+    }
+  }
+  model_.state(out_entity.id, formula);
+}
+
 void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const std::string& from, const std::string& scope) {
   if (ts_node_is_null(node)) return;
   const model::Entity* entity = model_.find(from);
@@ -693,6 +784,21 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
 
     } else if (is(c, "usecase")) {
       bindUseCase(file, c, scope, owner);
+
+    } else if (is(c, "rule") || is(c, "definition")) {  // a design piece with a name, in the box it applies to (DS-94)
+      model::Entity e;
+      e.kind = is(c, "rule") ? model::Kind::Rule : model::Kind::Definition;
+      e.name = fieldText(file, c, "name");
+      const model::Entity* in = owner.empty() ? nullptr : model_.find(owner);
+      const bool inClass = in && in->kind == model::Kind::Class;  // a rule of a class is named under it: p@m::Order::priced
+      e.id = inClass ? owner + "::" + e.name : qualify(scope, e.name);
+      e.scope = inClass ? owner : scope;
+      e.location = loc;
+      bindFields(file, c, e);
+      bindFormula(file, c, e);
+      model_.declare(e);
+      if (!owner.empty()) model_.relate({"contains", owner, e.id, loc, ""});
+      bindAnnotations(file, c, e.id, scope);
 
     } else if (is(c, "interface")) {
       model::Entity e;

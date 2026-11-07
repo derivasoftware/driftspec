@@ -8,6 +8,7 @@ package driftspec@ds {
   extern module std {                        // the standard library, names only (R11)
     class string
     class map<K, V>
+    class multimap<K, V>
     class vector<T>
   }
 
@@ -239,7 +240,7 @@ package driftspec@ds {
 
     enum Kind {
       @requirement REQ-00001-1
-      Package, Module, Requirement, Verification, Interface, Operation, View, Constraint, Class, Enum, Function, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram, UseCase, Outcome
+      Package, Module, Requirement, Verification, Interface, Operation, View, Constraint, Class, Enum, Function, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram, UseCase, Outcome, Rule, Definition
     }
 
     dataclass Location {                     // where something was read from: file, 1-based line and column
@@ -289,6 +290,44 @@ package driftspec@ds {
       + change: std::string
     }
 
+    enum LiteralForm {                       // how a literal of a rule reads (DS-94)
+      @requirement REQ-00095-1
+      Relation, Kind, In, Equal, NotEqual, Call
+    }
+
+    dataclass Term {                         // a variable (a bare name) or an entity (a qualified name), as written
+      @requirement REQ-00095-1
+      + text: std::string
+      + variable: bool
+    }
+
+    dataclass Literal {                      // one literal of a rule or a definition
+      @requirement REQ-00095-1
+      + form: LiteralForm
+      + negated: bool
+      + name: std::string
+      + owns terms: std::vector<Term>
+      + owns location: Location
+    }
+
+    dataclass Range {                        // what a range of for binds: every entity of a kind, optionally inside a box
+      @requirement REQ-00095-1
+      + kind: std::string
+      + variable: std::string
+      + scope: std::string
+      + owns location: Location
+    }
+
+    dataclass Formula {                      // what a rule or a definition says, read from its syntax
+      @requirement REQ-00095-1
+      + owns ranges: std::vector<Range>
+      + owns where: std::vector<Literal>
+      + claims: std::vector<std::vector<Literal>>
+      + never: bool
+      + parameters: std::vector<std::string>
+      + cases: std::vector<std::vector<Literal>>
+    }
+
     dataclass Finding {                      // one diagnostic of the engine
       @requirement REQ-00001-1
       + code: std::string
@@ -303,6 +342,7 @@ package driftspec@ds {
       - owns entities_: std::map<std::string, Entity>
       - owns relations_: std::vector<Relation>
       - owns findings_: std::vector<Finding>
+      - owns formulas_: std::map<std::string, Formula>
       + declare(entity: Entity) -> Entity {
         @constraint CST-00002-1
       }
@@ -313,6 +353,12 @@ package driftspec@ds {
       + entities() -> std::map<std::string, Entity>
       + relations() -> std::vector<Relation>
       + findings() -> std::vector<Finding>
+      + formulas() -> std::map<std::string, Formula> {
+        @requirement REQ-00095-1
+      }
+      + state(id: std::string, formula: Formula) -> void {
+        @requirement REQ-00095-1
+      }
     }
 
     // An identity not held: the map keeps a copy of the entity and that copy comes back.

@@ -250,6 +250,32 @@
     }
   },
   {
+    "type": "call_atom",
+    "named": true,
+    "fields": {
+      "definition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "qualified_name",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "class",
     "named": true,
     "fields": {
@@ -350,6 +376,10 @@
           "named": true
         },
         {
+          "type": "definition",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -364,8 +394,52 @@
         {
           "type": "requirement",
           "named": true
+        },
+        {
+          "type": "rule",
+          "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "compare_atom",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "!=",
+            "named": false
+          },
+          {
+            "type": "=",
+            "named": false
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -452,6 +526,59 @@
         },
         {
           "type": "string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "definition",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "definition_case",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "name",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "definition_case",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "literal",
           "named": true
         }
       ]
@@ -646,6 +773,32 @@
     }
   },
   {
+    "type": "in_atom",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "initial",
     "named": true,
     "fields": {
@@ -690,6 +843,74 @@
         },
         {
           "type": "operation",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "kind_atom",
+    "named": true,
+    "fields": {
+      "kind": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "literal",
+    "named": true,
+    "fields": {
+      "negated": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "not",
+            "named": false
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "call_atom",
+          "named": true
+        },
+        {
+          "type": "compare_atom",
+          "named": true
+        },
+        {
+          "type": "in_atom",
+          "named": true
+        },
+        {
+          "type": "kind_atom",
+          "named": true
+        },
+        {
+          "type": "relation_atom",
           "named": true
         }
       ]
@@ -1024,6 +1245,10 @@
           "named": true
         },
         {
+          "type": "definition",
+          "named": true
+        },
+        {
           "type": "enum",
           "named": true
         },
@@ -1045,6 +1270,10 @@
         },
         {
           "type": "requirement",
+          "named": true
+        },
+        {
+          "type": "rule",
           "named": true
         },
         {
@@ -1364,6 +1593,10 @@
           "named": true
         },
         {
+          "type": "definition",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -1381,6 +1614,10 @@
         },
         {
           "type": "requirement",
+          "named": true
+        },
+        {
+          "type": "rule",
           "named": true
         },
         {
@@ -1496,6 +1733,78 @@
     }
   },
   {
+    "type": "range",
+    "named": true,
+    "fields": {
+      "kind": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "scope": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "variable": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "relation_atom",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "relation": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "requirement",
     "named": true,
     "fields": {
@@ -1577,6 +1886,112 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "rule",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "rule_for",
+          "named": true
+        },
+        {
+          "type": "rule_holds",
+          "named": true
+        },
+        {
+          "type": "rule_never",
+          "named": true
+        },
+        {
+          "type": "rule_where",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_for",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "range",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_holds",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "literal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_never",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "literal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_where",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "literal",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1981,6 +2396,10 @@
     "fields": {}
   },
   {
+    "type": "!=",
+    "named": false
+  },
+  {
     "type": "#",
     "named": false
   },
@@ -2102,6 +2521,10 @@
     "named": false
   },
   {
+    "type": "definition",
+    "named": false
+  },
+  {
     "type": "diagram",
     "named": false
   },
@@ -2122,7 +2545,23 @@
     "named": false
   },
   {
+    "type": "for",
+    "named": false
+  },
+  {
     "type": "function",
+    "named": false
+  },
+  {
+    "type": "holds",
+    "named": false
+  },
+  {
+    "type": "if",
+    "named": false
+  },
+  {
+    "type": "in",
     "named": false
   },
   {
@@ -2131,6 +2570,10 @@
   },
   {
     "type": "interface",
+    "named": false
+  },
+  {
+    "type": "is",
     "named": false
   },
   {
@@ -2152,6 +2595,14 @@
   {
     "type": "name",
     "named": true
+  },
+  {
+    "type": "never",
+    "named": false
+  },
+  {
+    "type": "not",
+    "named": false
   },
   {
     "type": "number",
@@ -2210,6 +2661,10 @@
     "named": false
   },
   {
+    "type": "rule",
+    "named": false
+  },
+  {
     "type": "sequence",
     "named": false
   },
@@ -2243,6 +2698,10 @@
   },
   {
     "type": "view",
+    "named": false
+  },
+  {
+    "type": "where",
     "named": false
   },
   {
