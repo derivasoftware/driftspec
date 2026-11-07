@@ -92,7 +92,7 @@ std::vector<KindSpec> build() {
                {written("kind", FieldType::Name, "cli, gui, http, ..."), written("transport", FieldType::Name, "how it travels"),
                 written("encoding", FieldType::Text, "how it is serialised")},
                {},
-               {P}});
+               {P, M}});
   k.push_back({Kind::Operation,
                "an operation an interface offers",
                {kParams, kReturns, written("command", FieldType::Text, "how it is invoked"),
@@ -185,7 +185,7 @@ std::vector<RelationSpec> buildRelations() {
   const Kind Me = Kind::Method, A = Kind::Attribute, O = Kind::Operator, S = Kind::Sequence, Ms = Kind::Message;
   const Kind St = Kind::State, Uc = Kind::UseCase;
   return {
-      rel("exposes", "a package offers an interface", {P}, {I}),
+      rel("exposes", "a package or a module offers an interface", {P, M}, {I}),
       rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S, Uc}, {Rq}),
       rel("constrained-by", "the entity obeys a constraint", {P, M, Cl, F, Me, I, Op, Vw}, {Cs}),
       rel("refines", "a requirement details another", {Rq}, {Rq}),
@@ -196,13 +196,13 @@ std::vector<RelationSpec> buildRelations() {
       rel("inherits", "a class derives from another; a use case specialises another", {Cl, Uc}, {Cl, Uc}),
       rel("bounded-by", "a template parameter is bounded by a class", {Cl}, {Cl}),
       rel("owns", "an attribute owns its value", {A}, {Cl, E}),
-      rel("refs", "an attribute refers to a value it does not own", {A}, {Cl, E}),
+      rel("refs", "an attribute refers to a value it does not own", {A}, {Cl, E, I}),
       rel("shares", "an attribute shares ownership of its value", {A}, {Cl, E}),
-      rel("uses", "the entity names a type", {A, F, Me, Op, O, S, Uc, Kind::Outcome}, {Cl, E}),
+      rel("uses", "the entity names a type", {A, F, Me, Op, O, S, Uc, Kind::Outcome}, {Cl, E, I}),
       rel("behaviour-of", "a sequence or a state machine is the behaviour of its subject", {S, St}, {Cl, F, Me, Op, I}),
       rel("calls", "a message calls an operation", {Ms}, {F, Me, Op}),
       rel("expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}),
-      rel("couples-transient", "a behaviour touches a type for the length of a call", {S}, {Cl, E, F}),
+      rel("couples-transient", "a behaviour touches a type for the length of a call", {S}, {Cl, E, F, I}),
       rel("couples-structural", "a behaviour reaches a type through an attribute", {S}, {Cl, E}),
       rel("on", "a transition fires on an operation", {St}, {Me, Op}),
       rel("does", "a transition runs an operation", {St}, {Me, Op}),

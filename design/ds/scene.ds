@@ -525,6 +525,7 @@ package driftspec@ds {
       + build() -> SceneDocument {
         @requirement REQ-00069-1
         @requirement REQ-00076-1
+        @requirement REQ-00093-1
       }
       + render(pretty: bool) -> std::string
       + page(title: std::string, css: std::string, focus: std::vector<std::string>) -> std::string {

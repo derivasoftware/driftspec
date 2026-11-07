@@ -1036,6 +1036,10 @@
           "named": true
         },
         {
+          "type": "interface",
+          "named": true
+        },
+        {
           "type": "module",
           "named": true
         },
