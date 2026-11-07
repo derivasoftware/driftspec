@@ -269,6 +269,32 @@ package driftspec@ds {
               tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceIsDrawnAsABoxWithItsOperations
           }
         }
+        requirement REQ-00088-1 {
+          tags: language, hld, dependencies
+          status: approved
+          title: A package, a module or a class shall declare that it uses an interface another box offers, in its own body or from another file
+          text:
+            @uses sistema@broker@publish in a box binds a consumes relation from the box to the interface; the
+            box that offers the interface is the provider. Like every annotation it binds the same
+            written in the box or in an extension block anywhere else, so the wiring of a system can
+            live in a file of its own (as design/wiring.ds does for requirements) and a design brought
+            in whole can be connected from above without being touched. What an annotation means is
+            read from the metamodel's table of annotations, declared once.
+          rationale:
+            Owner, 2026-11-07 (DS-96): designing a distributed system live, the high level design could
+            not say that the service uses the broker's publish interface; the boxes stood apart. The
+            Owner asked for the link to be external, like the wiring of requirements.
+          verification VER-00097-1 {
+            title: Integration tests confirm a box uses an interface of another, written in its body or in another file, and a use of something that is no interface is reported
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/bind/test_uses.cpp::TestUses.APackageAModuleOrAClassUsesAnInterfaceOfAnotherBox
+              tests/integration/ds/bind/test_uses.cpp::TestUses.AUseWrittenInAnotherFileBindsTheSame
+              tests/integration/ds/bind/test_uses.cpp::TestUses.AUseOfSomethingThatIsNoInterfaceIsReportedAndNotBound
+              tests/integration/ds/bind/test_uses.cpp::TestUses.AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten
+          }
+        }
         requirement REQ-00081-1 {
           tags: language, hld, usecase
           status: approved

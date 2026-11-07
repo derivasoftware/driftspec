@@ -443,7 +443,7 @@ void Scene::relate(SceneDocument& out_document) const {
     ids.insert(n.id);
     parent[n.id] = n.parent;
   }
-  static const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "calls"};
+  static const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "consumes", "calls"};
   std::map<std::tuple<std::string, std::string, std::string>, Link> links;
   std::map<std::tuple<std::string, std::string, std::string>, std::set<std::string>> sequences;
   for (const auto& r : model_.relations()) {

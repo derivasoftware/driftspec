@@ -188,9 +188,12 @@ package driftspec@ds {
 
     dataclass AnnotationSpec {               // an annotation that means something, and the relation it makes
       @requirement REQ-00079-1
+      @requirement REQ-00088-1
       + name: std::string
       + relation: std::string
       + meaning: std::string
+      + onVerification: std::string
+      + target: Kind
     }
 
     dataclass CommandSpec {                  // a command: how it is invoked, what it does, what each exit code says
@@ -209,6 +212,9 @@ package driftspec@ds {
     }
     function annotations() -> std::vector<AnnotationSpec> {
       @requirement REQ-00079-1
+    }
+    function annotationOf(word: std::string) -> AnnotationSpec {
+      @requirement REQ-00088-1
     }
     function commands() -> std::vector<CommandSpec> {
       @requirement REQ-00079-1
