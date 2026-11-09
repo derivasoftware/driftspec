@@ -26,7 +26,7 @@ package driftspec@ds {
       tags: diff, identity
     }
 
-    verification VER-00004-2 {
+    verification VER-00004-3 {
       status: approved
       @requirement REQ-00004-1
       title: Unit tests cover no-change on moves, add/remove/change, renames by shape and referrers, the stale revision and the marked model
@@ -38,6 +38,7 @@ package driftspec@ds {
         tests/integration/ds/diff/test_diff.cpp::TestDiff.AnArtefactChangedWithoutANewRevisionIsAFinding
         tests/integration/ds/diff/test_diff.cpp::TestDiff.TheMarkedModelCarriesTheChangesForADrawing
         tests/integration/ds/diff/test_diff.cpp::TestDiff.WhatTheCheckDerivesIsNoChangeOfItsOwn
+        tests/integration/ds/diff/test_diff.cpp::TestDiff.AUseCaseChangedWithoutANewRevisionIsAFinding
     }
 
     dataclass Change {                       // one difference: what changed, on which identity, how

@@ -10,6 +10,10 @@
 namespace ds {
 namespace model {
 
+bool isArtefact(Kind kind) {
+  return kind == Kind::Requirement || kind == Kind::Verification || kind == Kind::Constraint || kind == Kind::UseCase;
+}
+
 const char* kindName(Kind kind) {
   switch (kind) {
     case Kind::Package:

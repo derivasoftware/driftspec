@@ -137,6 +137,9 @@ package driftspec@ds {
       @requirement REQ-00066-1
       @requirement REQ-00093-1
     }
+    function isArtefact(kind: Kind) -> bool {
+      @requirement REQ-00043-1
+    }
     function specOf(kind: Kind) -> KindSpec {
       @requirement REQ-00066-1
     }

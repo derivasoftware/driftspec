@@ -421,8 +421,7 @@ void Checker::checkArtefacts() {
 }
 
 void Checker::resolveReference(const bind::Reference& reference) {
-  const bool artefactRef = reference.expectedKind == model::Kind::Requirement || reference.expectedKind == model::Kind::Verification ||
-                           reference.expectedKind == model::Kind::Constraint;
+  const bool artefactRef = model::isArtefact(reference.expectedKind);
   if (artefactRef && looksLikeArtefact(reference.target)) {
     std::smatch m;
     if (!std::regex_match(reference.target, m, kArtefactWithRevision)) {
@@ -461,8 +460,7 @@ void Checker::resolveReference(const bind::Reference& reference) {
     expected.kind = reference.expectedKind;
     expected.name = reference.target;
     expected.scope = reference.scope;
-    const bool artefact = reference.expectedKind == model::Kind::Requirement || reference.expectedKind == model::Kind::Verification ||
-                          reference.expectedKind == model::Kind::Constraint;
+    const bool artefact = model::isArtefact(reference.expectedKind);
     const std::string pkg = reference.scope.substr(
         0, reference.scope.rfind('@') == std::string::npos ? 0 : reference.scope.rfind('@') + 1);  // the innermost package
     if (artefact) {
@@ -478,7 +476,9 @@ void Checker::resolveReference(const bind::Reference& reference) {
     expected.expected = true;
     model_.declare(expected);
     target = expected.id;
-    if (reported_.insert(target).second) {
+    // a use case nobody declares is said once, by the use case check (W-USECASE-UNDECLARED), as before its
+    // links were resolved here (DS-116)
+    if (reference.expectedKind != model::Kind::UseCase && reported_.insert(target).second) {
       model_.report({"W-REF-UNDECLARED", "warning",
                      std::string(model::kindName(expected.kind)) + " '" + reference.target + "' is referenced by " + reference.from +
                          " but declared nowhere in the workspace",

@@ -30,8 +30,6 @@ std::string relationKey(const model::Relation& r) {
   return r.kind + " " + r.from + " -> " + r.to + (r.multiplicity.empty() ? "" : " [" + r.multiplicity + "]");
 }
 
-bool isArtefact(model::Kind k) { return k == model::Kind::Requirement || k == model::Kind::Verification || k == model::Kind::Constraint; }
-
 /// What two declarations of one identity differ in, as "key: a -> b" items.
 std::vector<std::string> differences(const model::Entity& a, const model::Entity& b) {
   std::vector<std::string> out;
@@ -110,7 +108,7 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     Change change{"changed", "entity", ea.id, model::kindName(ea.kind), ea.scope, join(diffs, "; "), "", ""};
     if (ea.kind == model::Kind::Message) change.label = ea.scope + " : " + ea.name;
     out.changes.push_back(change);
-    if (isArtefact(ea.kind)) {
+    if (model::isArtefact(ea.kind)) {
       // the same id with other text: the revision should have moved
       out.findings.push_back(
           {"W-REVISION-STALE", "warning",

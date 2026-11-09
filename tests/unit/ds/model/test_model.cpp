@@ -114,3 +114,14 @@ TEST_F(TestParam, ARenamedEntityCarriesItsParametersAndArguments) {
 }
 
 }  // namespace
+
+namespace {
+
+TEST(TestIsArtefact, TheKindsIdentifiedByTheirRevisionAreTheArtefactsAndTheUseCase) {
+  for (Kind k : {Kind::Requirement, Kind::Verification, Kind::Constraint, Kind::UseCase})
+    EXPECT_TRUE(ds::model::isArtefact(k)) << ds::model::kindName(k);
+  for (Kind k : {Kind::Package, Kind::Module, Kind::Class, Kind::Interface, Kind::Rule, Kind::Outcome})
+    EXPECT_FALSE(ds::model::isArtefact(k)) << ds::model::kindName(k);
+}
+
+}  // namespace

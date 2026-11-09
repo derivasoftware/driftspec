@@ -44,6 +44,9 @@ enum class Kind {
 };
 
 const char* kindName(Kind kind);
+/// Whether a kind is an artefact identified by its id with its revision: requirement, verification,
+/// constraint and use case (R5, DS-116).
+bool isArtefact(Kind kind);
 
 /// Whether `scope` is the inside of an outermost package (`app@`): what is declared there is of the system.
 bool isSystemScope(const std::string& scope);

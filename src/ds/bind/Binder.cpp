@@ -318,7 +318,8 @@ void Binder::bindUseCase(const parse::ParsedFile& file, TSNode node, const std::
   model_.declare(e);
   if (!owner.empty()) model_.relate({"about", e.id, owner, e.location, ""});
   const std::string base = fieldText(file, node, "base");
-  if (!base.empty()) model_.relate({"inherits", e.id, trim(base), e.location, ""});
+  // the use case it specialises is resolved like any artefact link: pinned, followed to its revision (DS-116)
+  if (!base.empty()) references_.push_back({e.id, trim(base), scope, "inherits", model::Kind::UseCase, e.location, "", {}});
   bindAnnotations(file, node, e.id, scope);
   const uint32_t n = ts_node_named_child_count(node);
   for (uint32_t i = 0; i < n; ++i) {
@@ -822,7 +823,8 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
         model_.declare(o);
         model_.relate({"contains", e.id, o.id, o.location, ""});
         const std::string realised = fieldText(file, op, "realises");  // operation greet(...) : UC-00001-1
-        if (!realised.empty()) model_.relate({"realises", o.id, trim(realised), o.location, ""});
+        if (!realised.empty())  // the use case it realises: an artefact link, resolved and pinned (DS-116)
+          references_.push_back({o.id, trim(realised), scope, "realises", model::Kind::UseCase, o.location, "", {}});
         bindAnnotations(file, op, o.id, scope);
       }
 
