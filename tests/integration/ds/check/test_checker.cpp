@@ -48,7 +48,7 @@ TEST_F(TestChecker, ResolvesInnermostScopeFirst) {
   binder.bind(parser.parseText("t.ds", "package p { module a { class X { } module b { class Y : X { } } } }"));
   ds::check::Checker checker(model);
   checker.run(binder);
-  EXPECT_EQ(checker.resolve("X", "p@a::b"), "p@a::X");
+  EXPECT_EQ(checker.resolver().resolve("X", "p@a::b"), "p@a::X");
   EXPECT_EQ(model.findings().size(), 0u);
 }
 

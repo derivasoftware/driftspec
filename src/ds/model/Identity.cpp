@@ -1,10 +1,15 @@
 #include "ds/model/Identity.hpp"
 
+#include <regex>
+
 namespace ds {
 namespace model {
 
 namespace {
 const std::string kSequence = "::sequence";
+// artefact ids: PREFIX(-PART)*-NUMBER-REVISION, e.g. REQ-00001-2, DS-C-0001-0
+const std::regex kArtefactWithRevision("^([A-Z]+(?:-[A-Z]+)*-[0-9]+)-([0-9]+)$");
+const std::regex kArtefactBare("^[A-Z]+(?:-[A-Z]+)*-[0-9]+$");
 const std::string kState = "::state";
 const std::string kDiagram = "diagram:";
 }  // namespace
@@ -77,6 +82,17 @@ std::string scenarioOf(const std::string& id) {
   const std::string behaviour = behaviourOf(id);
   const auto slash = behaviour.find('/', behaviour.find(kSequence));
   return slash == std::string::npos ? "" : behaviour.substr(slash + 1);
+}
+
+bool isArtefactName(const std::string& name) {
+  return std::regex_match(name, kArtefactBare) || std::regex_match(name, kArtefactWithRevision);
+}
+
+bool hasRevision(const std::string& name) { return std::regex_match(name, kArtefactWithRevision); }
+
+std::string withoutRevision(const std::string& id) {
+  std::smatch m;
+  return std::regex_match(id, m, kArtefactWithRevision) ? m[1].str() : id;
 }
 
 std::string arityId(const std::string& name, std::size_t arity) { return name + "<" + std::to_string(arity) + ">"; }

@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "ds/bind/Binder.hpp"
+#include "ds/check/Resolver.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -17,19 +18,10 @@ namespace check {
 /// against the static ones.
 class Checker {
  public:
-  explicit Checker(model::Model& model) : model_(model) {}
+  explicit Checker(model::Model& model) : model_(model), resolver_(model) {}
   void run(const bind::Binder& binder);
-
-  /// Resolve `name` as written in `scope`: innermost scope first, then outward, then global.
-  /// Returns the identity, or "" when nothing declares it.
-  std::string resolve(const std::string& name, const std::string& scope) const;
-  /// The extern entities of a simple name, declared in any extern module (the catalogue, R11).
-  std::vector<std::string> externsNamed(const std::string& name) const;
-
-  /// Whether `derived` is `base` or inherits from it, transitively.
-  bool derives(const std::string& derived, const std::string& base) const;
-  /// The member `name` of a type: its own, else the nearest one it inherits; nullptr when none declares it.
-  const model::Entity* member(const std::string& type, const std::string& name) const;
+  /// What a name means where it is written, and the other read-only questions the checks ask (DS-125).
+  const Resolver& resolver() const { return resolver_; }
 
  private:
   void resolveReference(const bind::Reference& reference);
@@ -48,8 +40,6 @@ class Checker {
   std::string current(const std::string& id) const;  ///< an identity after the renames
 
   std::map<std::string, std::string> renamed_;
-  /// The identity of a type written as text (`list<Scope>` → the class Scope), or "".
-  std::string resolveTypeText(const std::string& text, const std::string& scope) const;
   /// The class a behaviour is about, and whether its subject is a method.
   const model::Entity* subjectClass(const model::Entity& sequence, const model::Entity** subject) const;
   void couple(const model::Entity& sequence, const model::Entity& type, bool transient);
@@ -64,8 +54,6 @@ class Checker {
   void rememberResult(const bind::Message& message);
   void expand(model::Entity& msg, const model::Entity& op, const bind::Message& message);
   void checkReturn(const bind::Message& message);
-  /// What is private on the way from `from` down to `target`; empty when everything crossed is public.
-  std::string privateOnTheWay(const std::string& from, const std::string& target) const;
   void checkVisibility(const std::string& from, const std::string& target, const model::Location& location);
   void checkLeak(const std::string& from, const std::string& target, const model::Location& location);
   void checkInterfaces();
@@ -80,6 +68,7 @@ class Checker {
   void classify();
 
   model::Model& model_;
+  Resolver resolver_;
   std::set<std::string> reported_;
   std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>> results_;  ///< per behaviour, the results so far
 };

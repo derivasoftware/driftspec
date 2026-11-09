@@ -17,7 +17,7 @@ package driftspec@ds {
       @requirement REQ-00097-1
       @requirement REQ-00098-1
       - refs model_: model::Model
-      - refs checker_: Checker
+      - refs resolver_: Resolver
       - owns parent_: std::map<std::string, std::string>
       - owns children_: std::map<std::string, std::vector<std::string>>
       - owns byKind_: std::map<std::string, std::vector<std::string>>
@@ -27,7 +27,7 @@ package driftspec@ds {
       - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
       - stratum_: std::map<std::string, int>
       - owns invalid_: std::set<std::string>
-      + Evaluator(model: model::Model, checker: Checker)
+      + Evaluator(model: model::Model, resolver: Resolver)
       + run() -> void
       - index() -> void
       - validate(id: std::string, formula: model::Formula) -> bool
@@ -47,15 +47,12 @@ package driftspec@ds {
       - report(code: std::string, owner: std::string, message: std::string, at: model::Location) -> void
     }
 
-    class Checker {                          // realises the language rule by rule: each member names its requirement
-      @requirement REQ-00053-1
-      @requirement REQ-00012-1
-      - owns renamed_: std::map<std::string, std::string>
+    // Read-only questions about the model: what a name means where it is written, what a type inherits
+    // and holds, what is private on a way down (DS-125). The checker and the evaluator ask it.
+    class Resolver {
+      @requirement REQ-00023-1
       - refs model_: model::Model
-      - owns reported_: std::set<std::string>
-      - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
-      + Checker(model: model::Model)
-      + run(binder: bind::Binder) -> void
+      + Resolver(model: model::Model)
       + resolve(name: std::string, scope: std::string) -> std::string {
         @requirement REQ-00023-1
       }
@@ -68,6 +65,25 @@ package driftspec@ds {
       + member(type: std::string, name: std::string) -> model::Entity {
         @requirement REQ-00036-2
       }
+      + resolveTypeText(text: std::string, scope: std::string) -> std::string {
+        @requirement REQ-00023-1
+      }
+      + privateOnTheWay(from: std::string, target: std::string) -> std::string {
+        @requirement REQ-00063-1
+      }
+    }
+
+    class Checker {                          // realises the language rule by rule: each member names its requirement
+      @requirement REQ-00053-1
+      @requirement REQ-00012-1
+      - owns renamed_: std::map<std::string, std::string>
+      - refs model_: model::Model
+      - owns reported_: std::set<std::string>
+      - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
+      - owns resolver_: Resolver
+      + Checker(model: model::Model)
+      + run(binder: bind::Binder) -> void
+      + resolver() -> Resolver
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
         @requirement REQ-00053-1
@@ -105,9 +121,6 @@ package driftspec@ds {
       - current(id: std::string) -> std::string {
         @requirement REQ-00035-1
       }
-      - resolveTypeText(text: std::string, scope: std::string) -> std::string {
-        @requirement REQ-00023-1
-      }
       - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
         @requirement REQ-00036-2
       }
@@ -131,9 +144,6 @@ package driftspec@ds {
       }
       - checkReturn(message: bind::Message) -> void {
         @requirement REQ-00059-1
-      }
-      - privateOnTheWay(from: std::string, target: std::string) -> std::string {
-        @requirement REQ-00063-1
       }
       - checkVisibility(from: std::string, target: std::string, location: model::Location) -> void {
         @requirement REQ-00063-1
@@ -259,7 +269,7 @@ package driftspec@ds {
       // A call with no target, from a function always, from a method when its class does
       // not declare the name: a function of the module, resolved outward like any name.
       opt a call to self the class does not declare {
-        -> resolve(message.op, home) -> id
+        self -> resolver_.resolve(message.op, home) -> id
         self -> model_.find(id) -> target
         opt it is a function of the module / function {
           -> couple(seq, target, true)
@@ -280,7 +290,7 @@ package driftspec@ds {
           self -> model_.report(finding)
           return
         }
-        -> resolveTypeText(value.first, value.second) -> typeId
+        self -> resolver_.resolveTypeText(value.first, value.second) -> typeId
       }
 
       opt a primitive or an unknown spelling, nothing to check / no-type {
@@ -304,7 +314,7 @@ package driftspec@ds {
 
     // How a name resolves: one scenario per place it can be found. The default is the
     // common one, found in a scope, walking outward from where it was written.
-    sequence Checker::resolve {
+    sequence Resolver::resolve {
       local bare: std::string
       local s: std::string
       self -> model_.find(name)
@@ -322,9 +332,9 @@ package driftspec@ds {
         return ""
       }
       loop each scope, from the innermost outward, until one declares it {
-        -> qualifyIn(s, name) -> candidate
+        -> model::qualify(s, name) -> candidate
         self -> model_.find(candidate)
-        -> outer(s) -> s
+        -> model::outer(s) -> s
       }
       opt no scope declares it: the extern catalogue {
         -> externsNamed(name) -> externs
@@ -340,7 +350,7 @@ package driftspec@ds {
 
     // Every extern class or enum of that simple name, in any arity. Filling the lists
     // and testing each entity are not messages: a loop variable is not a participant.
-    sequence Checker::externsNamed {
+    sequence Resolver::externsNamed {
       local out: std::vector<std::string>
       local exact: std::vector<std::string>
       opt the name has a path, so it is no extern's simple name / qualified {
@@ -355,7 +365,7 @@ package driftspec@ds {
 
     // Walks the inherits relations up from derived. The stack of pending names and
     // the set of seen ones are std containers, whose operations the design does not have.
-    sequence Checker::derives {
+    sequence Resolver::derives {
       opt derived is base: the first name taken ends the walk / itself {
         return true
       }

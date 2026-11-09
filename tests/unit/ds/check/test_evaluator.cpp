@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "ds/check/Checker.hpp"
 #include "ds/check/Evaluator.hpp"
 #include "ds/model/Model.hpp"
 
@@ -44,8 +43,8 @@ class TestEvaluator : public ::testing::Test {
   }
 
   std::vector<std::string> broken() {
-    ds::check::Checker checker(model);
-    ds::check::Evaluator(model, checker).run();
+    const ds::check::Resolver resolver(model);  // the evaluator needs names resolved, not a checker (DS-125)
+    ds::check::Evaluator(model, resolver).run();
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code == "E-RULE-BROKEN") out.push_back(f.message);

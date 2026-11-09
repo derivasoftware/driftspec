@@ -121,6 +121,15 @@ package driftspec@ds {
     function scenarioOf(id: std::string) -> std::string {
       @requirement REQ-00035-1
     }
+    function isArtefactName(name: std::string) -> bool {
+      @requirement REQ-00043-1
+    }
+    function hasRevision(name: std::string) -> bool {
+      @requirement REQ-00043-1
+    }
+    function withoutRevision(id: std::string) -> std::string {
+      @requirement REQ-00043-1
+    }
     function arityId(name: std::string, arity: std::size_t) -> std::string {
       @requirement REQ-00029-1
     }

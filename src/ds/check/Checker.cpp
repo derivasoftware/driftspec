@@ -17,19 +17,6 @@ namespace check {
 
 namespace {
 
-// process artefact ids: PREFIX(-PART)*-NUMBER-REVISION, e.g. REQ-00001-2, DS-C-0001-0
-const std::regex kArtefactWithRevision("^([A-Z]+(?:-[A-Z]+)*-[0-9]+)-([0-9]+)$");
-const std::regex kArtefactBare("^[A-Z]+(?:-[A-Z]+)*-[0-9]+$");
-
-std::string withoutRevision(const std::string& id) {
-  std::smatch m;
-  return std::regex_match(id, m, kArtefactWithRevision) ? m[1].str() : id;
-}
-
-bool looksLikeArtefact(const std::string& name) {
-  return std::regex_match(name, kArtefactBare) || std::regex_match(name, kArtefactWithRevision);
-}
-
 /// Primitives one converts to the other without saying so; any other pair of primitives is a mismatch.
 int primitiveFamily(const std::string& type) {
   for (const char* t : {"int", "float", "double", "size_t", "char"}) {
@@ -68,71 +55,6 @@ namespace {
 using model::outer;  // identities are written by model/Identity (DS-124)
 
 }  // namespace
-
-std::string Checker::resolve(const std::string& name, const std::string& scope) const {
-  if (model_.find(name)) return name;  // a full id (pkg@mod::Class), a global artefact, a package
-  const std::string bare = withoutRevision(name);
-  if (bare != name && model_.find(bare)) return bare;
-  if (model::isAbsolute(name)) return "";  // absolute, and nobody declares it
-  for (std::string s = scope; !s.empty(); s = outer(s)) {
-    const std::string candidate = model::qualify(s, name);
-    if (model_.find(candidate)) return candidate;
-  }
-  // the extern catalogue (R11): a bare name nobody declares in scope is the one extern
-  // entity of that simple name, declared in any extern module of the workspace
-  const std::vector<std::string> externs = externsNamed(name);
-  return externs.size() == 1 ? externs.front() : "";
-}
-
-std::vector<std::string> Checker::externsNamed(const std::string& name) const {
-  std::vector<std::string> out;
-  if (model::isQualified(name)) return out;
-  // an extern is known by its simple name: a use's template arguments (tuple<2>) are not the
-  // design's to check, so any arity of the use, and of the declaration, finds it (R11)
-  const std::string simple = name.substr(0, name.find('<'));
-  for (const auto& pair : model_.entities()) {
-    const model::Entity& e = pair.second;
-    if (e.has("extern") && (e.kind == model::Kind::Class || e.kind == model::Kind::Enum) && e.name == simple) out.push_back(e.id);
-  }
-  // several declarations of the name (tuple<1>, tuple<2>): the one of the use's arity, when there is one
-  std::vector<std::string> exact;
-  for (const auto& id : out) {
-    if (id.size() >= name.size() + 2 && id.compare(id.size() - name.size() - 2, std::string::npos, "::" + name) == 0) exact.push_back(id);
-  }
-  return exact.size() == 1 ? exact : out;
-}
-
-bool Checker::derives(const std::string& derived, const std::string& base) const {
-  std::vector<std::string> pending{derived};
-  std::set<std::string> seen;
-  while (!pending.empty()) {
-    const std::string current = pending.back();
-    pending.pop_back();
-    if (current == base) return true;
-    if (!seen.insert(current).second) continue;
-    for (const auto& r : model_.relations()) {
-      if (r.kind == "inherits" && r.from == current) pending.push_back(r.to);
-    }
-  }
-  return false;
-}
-
-// a member is found where it is declared, the type first and then its bases, nearest first (DS-105)
-const model::Entity* Checker::member(const std::string& type, const std::string& name) const {
-  std::vector<std::string> level{type};
-  std::set<std::string> seen;
-  while (!level.empty()) {
-    std::vector<std::string> next;
-    for (const auto& t : level) {
-      if (!seen.insert(t).second) continue;
-      if (const model::Entity* m = model_.find(t + "::" + name)) return m;
-      for (const auto& r : model_.relations())
-        if (r.kind == "inherits" && r.from == t) next.push_back(r.to);
-    }
-    level.swap(next);
-  }
-  return nullptr;
-}
 
 std::string Checker::current(const std::string& id) const {
   for (const auto& r : renamed_) {
@@ -215,7 +137,7 @@ void Checker::checkRules() {
       model_.report({"W-DEFINITION-NO-CASE", "warning", e.id + " says no case in which it holds: write if <literals>", e.location});
     }
   }
-  Evaluator(model_, *this).run();
+  Evaluator(model_, resolver_).run();
 }
 
 // A box says what it depends on (@uses <interface>, REQ-00088-1) and its behaviours say what it
@@ -406,9 +328,8 @@ void Checker::checkArtefacts() {
 
 void Checker::resolveReference(const bind::Reference& reference) {
   const bool artefactRef = model::isArtefact(reference.expectedKind);
-  if (artefactRef && looksLikeArtefact(reference.target)) {
-    std::smatch m;
-    if (!std::regex_match(reference.target, m, kArtefactWithRevision)) {
+  if (artefactRef && model::isArtefactName(reference.target)) {
+    if (!model::hasRevision(reference.target)) {
       // a link goes against a revision: an unpinned one says nothing about which text was meant
       model_.report({"E-REF-UNPINNED", "error",
                      reference.from + " refers to " + reference.target + " without a revision; write " + reference.target + "-<revision>",
@@ -416,10 +337,10 @@ void Checker::resolveReference(const bind::Reference& reference) {
       return;
     }
     // the declared revision of that artefact, whatever it is
-    const std::string bare = m[1].str();
+    const std::string bare = model::withoutRevision(reference.target);
     std::string declaredId;
     for (const auto& pair : model_.entities()) {
-      if (!pair.second.expected && withoutRevision(pair.first) == bare) declaredId = pair.first;
+      if (!pair.second.expected && model::withoutRevision(pair.first) == bare) declaredId = pair.first;
     }
     if (!declaredId.empty() && declaredId != reference.target) {
       model_.report({"W-REVISION-DRIFT", "warning",
@@ -430,11 +351,11 @@ void Checker::resolveReference(const bind::Reference& reference) {
       return;
     }
   }
-  std::string target = resolve(reference.target, reference.scope);
-  if (target.empty() && externsNamed(reference.target).size() > 1) {
+  std::string target = resolver_.resolve(reference.target, reference.scope);
+  if (target.empty() && resolver_.externsNamed(reference.target).size() > 1) {
     model_.report({"E-REF-AMBIGUOUS", "error",
-                   reference.from + " refers to " + reference.target + ", which " + std::to_string(externsNamed(reference.target).size()) +
-                       " extern modules declare: qualify it",
+                   reference.from + " refers to " + reference.target + ", which " +
+                       std::to_string(resolver_.externsNamed(reference.target).size()) + " extern modules declare: qualify it",
                    reference.location});
     return;
   }
@@ -447,7 +368,7 @@ void Checker::resolveReference(const bind::Reference& reference) {
     const bool artefact = model::isArtefact(reference.expectedKind);
     const std::string pkg = model::packageOf(reference.scope);  // the innermost package
     if (artefact) {
-      expected.id = withoutRevision(reference.target);
+      expected.id = model::withoutRevision(reference.target);
     } else if (model::isAbsolute(reference.target)) {
       expected.id = reference.target;  // absolute
     } else if (reference.target.find("::") != std::string::npos) {
@@ -499,21 +420,8 @@ bool Checker::kindAllowed(const bind::Reference& reference, const std::string& t
   return false;
 }
 
-std::string Checker::privateOnTheWay(const std::string& from, const std::string& target) const {
-  std::set<std::string> chain;
-  for (std::string s = from; !s.empty(); s = outer(s)) chain.insert(s);
-  // down from the first container they share: a child is seen from inside its parent, so siblings see each other
-  for (std::string t = target; !t.empty() && !chain.count(t); t = outer(t)) {
-    const model::Entity* e = model_.find(t);
-    if (!e || e->has("extern")) return "";
-    const auto visibility = e->fields.find("visibility");
-    if (visibility != e->fields.end() && visibility->second == "-" && !chain.count(outer(t))) return t;
-  }
-  return "";
-}
-
 void Checker::checkVisibility(const std::string& from, const std::string& target, const model::Location& location) {
-  const std::string hidden = privateOnTheWay(from, target);
+  const std::string hidden = resolver_.privateOnTheWay(from, target);
   if (hidden.empty()) return;
   model_.report({"W-NOT-VISIBLE", "warning",
                  from + " reaches " + target + (hidden == target ? ", which is private" : " through " + hidden + ", which is private"),
@@ -545,17 +453,17 @@ void Checker::checkLeak(const std::string& from, const std::string& target, cons
 // Repository<Relation> against class Repository<T: Entity> (R15)
 void Checker::checkTemplateBound(const bind::Reference& reference) {
   if (reference.args.empty()) return;
-  const std::string templateId = resolve(reference.target, reference.scope);
+  const std::string templateId = resolver_.resolve(reference.target, reference.scope);
   const model::Entity* tpl = templateId.empty() ? nullptr : model_.find(templateId);
   if (!tpl || tpl->expected) return;
   const std::vector<model::Param>& params = tpl->params;
   for (size_t i = 0; i < params.size() && i < reference.args.size(); ++i) {
     if (params[i].type.empty()) continue;  // a template parameter with no bound
-    const std::string boundId = resolve(params[i].type, tpl->scope);
-    const std::string argId = resolve(reference.args[i], reference.scope);
+    const std::string boundId = resolver_.resolve(params[i].type, tpl->scope);
+    const std::string argId = resolver_.resolve(reference.args[i], reference.scope);
     const model::Entity* arg = argId.empty() ? nullptr : model_.find(argId);
     if (boundId.empty() || !arg || arg->expected) continue;  // waits for a declaration (R6)
-    if (!derives(argId, boundId)) {
+    if (!resolver_.derives(argId, boundId)) {
       model_.report({"E-TEMPLATE-BOUND", "error",
                      reference.args[i] + " does not satisfy " + params[i].name + ": " + params[i].type + " of " + templateId +
                          " (used by " + reference.from + ")",
@@ -564,52 +472,10 @@ void Checker::checkTemplateBound(const bind::Reference& reference) {
   }
 }
 
-std::string Checker::resolveTypeText(const std::string& text, const std::string& scope) const {
-  const auto trimmed = [](const std::string& s) {
-    const auto b = s.find_first_not_of(' ');
-    return b == std::string::npos ? std::string() : s.substr(b, s.find_last_not_of(' ') - b + 1);
-  };
-  // the arguments between the outer < >, split at their own level: map<string, pair<a, b>> has two
-  const auto arguments = [&trimmed](const std::string& inside) {
-    std::vector<std::string> out;
-    int depth = 0;
-    std::string arg;
-    for (char c : inside) {
-      if (c == '<') ++depth;
-      if (c == '>') --depth;
-      if (c == ',' && depth == 0) {
-        out.push_back(trimmed(arg));
-        arg.clear();
-      } else {
-        arg += c;
-      }
-    }
-    if (!trimmed(arg).empty()) out.push_back(trimmed(arg));
-    return out;
-  };
-  std::string t = trimmed(text);
-  // containers hand over to their element (the value of a map), read from the table the binder reads (R16)
-  for (;;) {
-    const auto lt = t.find('<');
-    const auto gt = t.rfind('>');
-    if (lt == std::string::npos || gt == std::string::npos || gt < lt) break;
-    const std::string head = t.substr(0, lt);
-    const std::vector<std::string> args = arguments(t.substr(lt + 1, gt - lt - 1));
-    if (const model::ContainerSpec* container = model::containerOf(head)) {
-      t = container->element < static_cast<int>(args.size()) ? args[container->element] : "";
-      continue;
-    }
-    t = model::arityId(head, args.size());  // a template use: identity is name + arity (R15)
-    break;
-  }
-  if (t.empty()) return "";
-  return resolve(t, scope);
-}
-
 const model::Entity* Checker::subjectClass(const model::Entity& sequence, const model::Entity** subject) const {
   const auto field = sequence.fields.find("subject");
   if (field == sequence.fields.end()) return nullptr;
-  const std::string id = resolve(field->second, sequence.scope);
+  const std::string id = resolver_.resolve(field->second, sequence.scope);
   const model::Entity* s = id.empty() ? nullptr : model_.find(id);
   if (!s || s->expected) return nullptr;
   *subject = s;
@@ -725,8 +591,8 @@ void Checker::checkMessage(const bind::Message& message) {
   const std::string home = cls ? cls->scope : subject->scope;
   // a call with no target from a function, or one the class does not declare, is a function of the
   // module, resolved outward like any name: a free function calls its neighbours (2026-10-26)
-  if (message.to == "self" && (function || !member(cls->id, message.op))) {
-    const std::string id = resolve(message.op, home);
+  if (message.to == "self" && (function || !resolver_.member(cls->id, message.op))) {
+    const std::string id = resolver_.resolve(message.op, home);
     const model::Entity* target = id.empty() ? nullptr : model_.find(id);
     if (target && target->kind == model::Kind::Function) {
       msg->fields["type"] = target->scope;
@@ -755,7 +621,7 @@ void Checker::checkMessage(const bind::Message& message) {
                      message.location});
       return;
     }
-    typeId = value.first.empty() ? "" : resolveTypeText(value.first, value.second);
+    typeId = value.first.empty() ? "" : resolver_.resolveTypeText(value.first, value.second);
   }
   if (typeId.empty()) return;  // a primitive or an unknown spelling: nothing to check
   const model::Entity* type = model_.find(typeId);
@@ -763,7 +629,7 @@ void Checker::checkMessage(const bind::Message& message) {
   msg->fields["type"] = typeId;
   if (message.to != "self") couple(*seq, *type, transient);
   const std::string opId = typeId + "::" + message.op;
-  const model::Entity* op = member(typeId, message.op);  // its own, or inherited
+  const model::Entity* op = resolver_.member(typeId, message.op);  // its own, or inherited
   if (!op) {
     model_.report(
         {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
@@ -775,7 +641,7 @@ void Checker::checkMessage(const bind::Message& message) {
 bool Checker::typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject, const std::string& name,
                          std::pair<std::string, std::string>* value, bool* transient) const {
   const std::string home = cls ? cls->scope : subject.scope;
-  if (const model::Entity* attribute = cls ? member(cls->id, name) : nullptr) {
+  if (const model::Entity* attribute = cls ? resolver_.member(cls->id, name) : nullptr) {
     const auto type = attribute->fields.find("type");
     *value = {type == attribute->fields.end() ? "" : type->second, cls->scope};
     return true;
@@ -805,13 +671,13 @@ bool Checker::typeOfName(const model::Entity& sequence, const model::Entity* cls
 
 bool Checker::compatible(const std::pair<std::string, std::string>& argument, const std::pair<std::string, std::string>& parameter) const {
   if (argument.first == parameter.first) return true;
-  const std::string argumentId = resolveTypeText(argument.first, argument.second);
-  const std::string parameterId = resolveTypeText(parameter.first, parameter.second);
+  const std::string argumentId = resolver_.resolveTypeText(argument.first, argument.second);
+  const std::string parameterId = resolver_.resolveTypeText(parameter.first, parameter.second);
   const model::Entity* a = argumentId.empty() ? nullptr : model_.find(argumentId);
   const model::Entity* p = parameterId.empty() ? nullptr : model_.find(parameterId);
   // what is not declared, or lives outside the workspace, has no obligations (R6, R11)
   if ((a && (a->expected || a->has("extern"))) || (p && (p->expected || p->has("extern")))) return true;
-  if (a && p) return derives(argumentId, parameterId);
+  if (a && p) return resolver_.derives(argumentId, parameterId);
   const int af = primitiveFamily(argument.first);
   const int pf = primitiveFamily(parameter.first);
   if (a || p) return !(a ? pf : af);
@@ -1124,14 +990,14 @@ void Checker::checkLocals() {
   }
   for (const auto& l : locals) {
     const model::Entity* seq = model_.find(l.first);
-    const std::string typeId = resolveTypeText(l.second, seq->scope);
+    const std::string typeId = resolver_.resolveTypeText(l.second, seq->scope);
     const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
     if (type) couple(*seq, *type, true);
   }
 }
 
 void Checker::checkEvent(const bind::Event& event) {
-  const std::string type = resolve(event.entity, event.scope);
+  const std::string type = resolver_.resolve(event.entity, event.scope);
   const model::Entity* entity = type.empty() ? nullptr : model_.find(type);
   if (!entity || entity->expected) return;
   const std::string op = type + "::" + event.event;

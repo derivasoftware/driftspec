@@ -54,6 +54,16 @@ TEST(TestWithin, AMemberOrAScenarioLiesInside) {
   EXPECT_FALSE(m::within("p@m::Cart", "p@m::C"));
 }
 
+TEST(TestWithoutRevision, AnArtefactIdLosesItsRevisionAndNothingElseDoes) {
+  EXPECT_EQ(m::withoutRevision("REQ-00001-2"), "REQ-00001");
+  EXPECT_EQ(m::withoutRevision("DS-C-0001-0"), "DS-C-0001");
+  EXPECT_EQ(m::withoutRevision("p@m::C"), "p@m::C");
+  EXPECT_TRUE(m::hasRevision("REQ-00001-2"));
+  EXPECT_FALSE(m::hasRevision("REQ-00001"));
+  EXPECT_TRUE(m::isArtefactName("REQ-00001"));
+  EXPECT_FALSE(m::isArtefactName("Greeter"));
+}
+
 TEST(TestArityId, ATemplateCarriesItsArity) { EXPECT_EQ(m::arityId("Index", 2), "Index<2>"); }
 
 TEST(TestDiagramId, ADiagramIsNamedOnce) {
