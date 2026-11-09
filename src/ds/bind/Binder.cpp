@@ -355,22 +355,15 @@ TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::
   }
 
   // built-in generics decide the multiplicity and pass the relation to their element (R16);
-  // a qualified container (std::vector, std::map) is the same container
+  // a qualified container (std::vector, std::map) is the same container, read from one table
   const std::string text = use.text;
-  const std::string base = name.substr(name.rfind("::") == std::string::npos ? 0 : name.rfind("::") + 2);
-  if (base == "list" || base == "set" || base == "vector") {
-    if (!args.empty()) use = bindType(file, args[0], scope, from, relation, "*", params, location);
-    use.text = text;
-    return use;
-  }
-  if (base == "optional") {
-    if (!args.empty()) use = bindType(file, args[0], scope, from, relation, "0..1", params, location);
-    use.text = text;
-    return use;
-  }
-  if (base == "map") {
-    if (args.size() > 0) bindType(file, args[0], scope, from, "uses", "", params, location);
-    if (args.size() > 1) use = bindType(file, args[1], scope, from, relation, "*", params, location);
+  if (const model::ContainerSpec* container = model::containerOf(name)) {
+    for (std::size_t i = 0; i < args.size(); ++i) {
+      if (static_cast<int>(i) == container->element)
+        use = bindType(file, args[i], scope, from, relation, container->multiplicity, params, location);
+      else
+        bindType(file, args[i], scope, from, "uses", "", params, location);  // a map's key is used
+    }
     use.text = text;
     return use;
   }

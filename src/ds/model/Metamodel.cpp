@@ -323,6 +323,20 @@ const FieldSpec* fieldOf(Kind kind, const std::string& key) {
   return nullptr;
 }
 
+const std::vector<ContainerSpec>& containers() {
+  static const std::vector<ContainerSpec> all = {
+      {"list", "*", 0}, {"set", "*", 0}, {"vector", "*", 0}, {"optional", "0..1", 0}, {"map", "*", 1}};
+  return all;
+}
+
+const ContainerSpec* containerOf(const std::string& name) {
+  const auto at = name.rfind("::");
+  const std::string base = at == std::string::npos ? name : name.substr(at + 2);
+  for (const auto& c : containers())
+    if (c.name == base) return &c;
+  return nullptr;
+}
+
 const RelationSpec* relationOf(const std::string& kind) {
   for (const auto& r : relations()) {
     if (r.kind == kind) return &r;

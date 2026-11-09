@@ -113,6 +113,13 @@ package driftspec@ds {
       + example: std::string                 // a minimal workspace that declares one and checks clean
     }
 
+    dataclass ContainerSpec {                // a container the language knows: its multiplicity and its element (R16)
+      @requirement REQ-00028-1
+      + name: std::string
+      + multiplicity: std::string
+      + element: int
+    }
+
     dataclass RelationSpec {                 // one relation and the kinds it may join; no ends is any kind
       @requirement REQ-00066-1
       + kind: std::string
@@ -138,6 +145,12 @@ package driftspec@ds {
     }
     function relationOf(kind: std::string) -> RelationSpec {
       @requirement REQ-00066-1
+    }
+    function containers() -> std::vector<ContainerSpec> {
+      @requirement REQ-00028-1
+    }
+    function containerOf(name: std::string) -> ContainerSpec {
+      @requirement REQ-00028-1
     }
     function joins(relation: RelationSpec, from: Kind, to: Kind) -> bool {
       @requirement REQ-00066-1
