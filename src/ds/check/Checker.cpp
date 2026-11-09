@@ -582,26 +582,42 @@ void Checker::checkTemplateBound(const bind::Reference& reference) {
 }
 
 std::string Checker::resolveTypeText(const std::string& text, const std::string& scope) const {
-  std::string t = text;
-  // containers hand over to their element (the value of a map)
+  const auto trimmed = [](const std::string& s) {
+    const auto b = s.find_first_not_of(' ');
+    return b == std::string::npos ? std::string() : s.substr(b, s.find_last_not_of(' ') - b + 1);
+  };
+  // the arguments between the outer < >, split at their own level: map<string, pair<a, b>> has two
+  const auto arguments = [&trimmed](const std::string& inside) {
+    std::vector<std::string> out;
+    int depth = 0;
+    std::string arg;
+    for (char c : inside) {
+      if (c == '<') ++depth;
+      if (c == '>') --depth;
+      if (c == ',' && depth == 0) {
+        out.push_back(trimmed(arg));
+        arg.clear();
+      } else {
+        arg += c;
+      }
+    }
+    if (!trimmed(arg).empty()) out.push_back(trimmed(arg));
+    return out;
+  };
+  std::string t = trimmed(text);
+  // containers hand over to their element (the value of a map), read from the table the binder reads (R16)
   for (;;) {
     const auto lt = t.find('<');
-    if (lt == std::string::npos) break;
+    const auto gt = t.rfind('>');
+    if (lt == std::string::npos || gt == std::string::npos || gt < lt) break;
     const std::string head = t.substr(0, lt);
-    if (head == "list" || head == "set" || head == "optional") {
-      t = t.substr(lt + 1, t.size() - lt - 2);
-    } else if (head == "map") {
-      const auto comma = t.find(',');
-      t = comma == std::string::npos ? "" : t.substr(comma + 1, t.size() - comma - 2);
-    } else {
-      // a template use: identity is name + arity
-      int arity = 1;
-      for (char c : t.substr(lt)) arity += c == ',' ? 1 : 0;
-      t = head + "<" + std::to_string(arity) + ">";
-      break;
+    const std::vector<std::string> args = arguments(t.substr(lt + 1, gt - lt - 1));
+    if (const model::ContainerSpec* container = model::containerOf(head)) {
+      t = container->element < static_cast<int>(args.size()) ? args[container->element] : "";
+      continue;
     }
-    const auto b = t.find_first_not_of(' ');
-    t = b == std::string::npos ? "" : t.substr(b, t.find_last_not_of(' ') - b + 1);
+    t = head + "<" + std::to_string(args.size()) + ">";  // a template use: identity is name + arity (R15)
+    break;
   }
   if (t.empty()) return "";
   return resolve(t, scope);

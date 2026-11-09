@@ -528,13 +528,14 @@ package driftspec@ds {
             passes the relation to its element. E-OWNERSHIP-CYCLE,
             W-MODIFIER-ON-VALUE.
           rationale: R16.
-          verification VER-00021-1 {
+          verification VER-00021-2 {
             title: Integration tests confirm ownership and multiplicity come from the attribute and its type, and parameters and returns give use
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
               tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
+              tests/integration/ds/check/test_type_reading.cpp::TestTypeReading.AQualifiedContainerHandsTheCallToItsElement
           }
         }
         requirement REQ-00029-1 {
@@ -543,12 +544,13 @@ package driftspec@ds {
           title: A template shall be identified by name and arity and its arguments checked against their bounds
           text: class Repository<T: Entity>; E-TEMPLATE-BOUND.
           rationale: R15.
-          verification VER-00022-1 {
+          verification VER-00022-2 {
             title: Integration tests confirm a template is identified by name and arity and its arguments checked against their bounds
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
+              tests/integration/ds/check/test_type_reading.cpp::TestTypeReading.ATemplatesArityCountsItsOwnArgumentsOnly
           }
         }
         requirement REQ-00030-1 {

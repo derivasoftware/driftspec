@@ -96,6 +96,16 @@ const std::vector<RelationSpec>& relations();
 const KindSpec& specOf(Kind kind);
 /// The field a key names for a kind, families included; nullptr when the kind does not declare it.
 const FieldSpec* fieldOf(Kind kind, const std::string& key);
+
+/// A container the language knows (R16): the multiplicity it gives and which argument is its element.
+struct ContainerSpec {
+  std::string name;
+  std::string multiplicity;  ///< * or 0..1
+  int element = 0;           ///< the argument the relation passes to; the others are used
+};
+const std::vector<ContainerSpec>& containers();
+/// The container a type name is, written plain or qualified (std::vector is vector); nullptr when none.
+const ContainerSpec* containerOf(const std::string& name);
 const RelationSpec* relationOf(const std::string& kind);
 const std::vector<CodeSpec>& codes();
 const CodeSpec* codeOf(const std::string& code);
