@@ -151,7 +151,9 @@ module.exports = grammar({
     ownership: $ => choice('owns', 'refs', 'shares'),
     // a modifier is a word only in front of a name: `+ abstract: bool` is an attribute named abstract,
     // `+ refs: map<..>` one named refs. The parser decides by what follows; nothing is reserved.
-    member_name: $ => choice($.name, alias(choice('abstract', 'static', 'const', 'owns', 'refs', 'shares', 'function'), $.name)),
+    // ~Name is the class's destructor (DS-143): one token, so a tilde is never an operator here
+    member_name: $ => choice($.name, alias(choice('abstract', 'static', 'const', 'owns', 'refs', 'shares', 'function'), $.name),
+      alias(token(seq('~', NAME)), $.name)),
     operator: $ => prec.right(seq(
       'operator',
       field('symbol', $.operator_symbol),

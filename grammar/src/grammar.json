@@ -2244,6 +2244,27 @@
           },
           "named": true,
           "value": "name"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "TOKEN",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "~"
+                },
+                {
+                  "type": "PATTERN",
+                  "value": "[A-Za-z_][A-Za-z0-9_]*(-[A-Za-z0-9_]+)*"
+                }
+              ]
+            }
+          },
+          "named": true,
+          "value": "name"
         }
       ]
     },

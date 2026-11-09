@@ -118,7 +118,7 @@ std::vector<KindSpec> build() {
   k.push_back({Kind::Method,
                "an operation of a class",
                {kParams, kReturns, kVisibility, kNote},
-               {"abstract", "static", "const", "constructor"},
+               {"abstract", "static", "const", "constructor", "destructor"},
                {Cl}});
   k.push_back({Kind::Attribute,
                "a field of a class",
