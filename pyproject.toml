@@ -6,7 +6,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyds"
-version = "0.0.74"
+version = "0.0.75"
 description = "DriftSpec: a software design as text, checked, drawn, compared and asked"
 requires-python = ">=3.10"
 dependencies = []

@@ -10,6 +10,7 @@ package driftspec@ds {
     class map<K, V>
     class multimap<K, V>
     class size_t
+    class unique_ptr<T>
     class vector<T>
   }
 
