@@ -4,13 +4,19 @@
 #include <set>
 #include <sstream>
 
+#include "ds/model/Metamodel.hpp"
+
 namespace ds {
 namespace diff {
 
 namespace {
 
-/// Fields that describe a declaration: the derived ones are consequences, reported through what caused them.
-bool declarative(const std::string& key) { return key != "stereotypes" && key != "expands" && key != "subjectId"; }
+/// Fields that describe a declaration: what the check derives is a consequence, reported through what
+/// caused it. The metamodel says which fields are derived (DS-114); a field it does not declare was written.
+bool declarative(model::Kind kind, const std::string& key) {
+  const model::FieldSpec* spec = model::fieldOf(kind, key);
+  return !spec || spec->source != model::FieldSource::Derived;
+}
 
 std::string joinFlags(const std::vector<std::string>& flags) {
   std::vector<std::string> sorted = flags;
@@ -33,7 +39,7 @@ std::vector<std::string> differences(const model::Entity& a, const model::Entity
   for (const auto& f : a.fields) keys.insert(f.first);
   for (const auto& f : b.fields) keys.insert(f.first);
   for (const auto& key : keys) {
-    if (!declarative(key)) continue;
+    if (!declarative(a.kind, key)) continue;
     const auto fa = a.fields.find(key), fb = b.fields.find(key);
     const std::string va = fa == a.fields.end() ? "" : fa->second;
     const std::string vb = fb == b.fields.end() ? "" : fb->second;

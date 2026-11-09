@@ -167,6 +167,35 @@ TEST_F(TestDiff, AnArtefactChangedWithoutANewRevisionIsAFinding) {
   EXPECT_NE(d.findings[0].message.find("R-0001-0"), std::string::npos);
 }
 
+TEST_F(TestDiff, WhatTheCheckDerivesIsNoChangeOfItsOwn) {
+  // the attribute's type changes; the message's derived type follows it and is not a second change (DS-114)
+  const std::string shop = R"(package p {
+  module m {
+    class Item {
+      + price() -> int
+    }
+    class Product {
+      + price() -> int
+      + abstract name() -> string
+    }
+    class Cart {
+      - owns items: list<Item>
+      + total() -> int
+    }
+    sequence Cart::total {
+      self -> items.price() -> p
+      return p
+    }
+  }
+})";
+  std::string after = shop;
+  after.replace(after.find("list<Item>"), 10, "list<Product>");
+  const auto d = ds::diff::Diff::compare(load(shop), load(after));
+  ASSERT_NE(find(d, "changed", "Cart::items"), nullptr);
+  EXPECT_EQ(find(d, "changed", "Cart::total::sequence::m"), nullptr);  // its type is derived from the attribute
+  EXPECT_EQ(find(d, "changed", "Product"), nullptr);                   // nor is a stereotype the check reads
+}
+
 TEST_F(TestDiff, TheMarkedModelCarriesTheChangesForADrawing) {
   const std::string after = R"(package p {
   module m {

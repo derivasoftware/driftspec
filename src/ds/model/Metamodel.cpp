@@ -103,7 +103,9 @@ std::vector<KindSpec> build() {
   k.push_back(
       {Cl,
        "a class, a dataclass or an extern type",
-       {kVisibility, kNote, syntax("stereotypes", FieldType::Names, "written between guillemets"),
+       {kVisibility, kNote,
+        derived("stereotypes", FieldType::Names,
+                "what the check reads from the declaration: interface, abstract, value, equatable, ordered, hashable, printable, extern"),
         syntax("params", FieldType::Params, "the template parameters"), syntax("operators", FieldType::Names, "the operators it declares"),
         syntax("bound.*", FieldType::Type, "the bound of a template parameter")},
        {"abstract", "dataclass", "extern", "extension"},
