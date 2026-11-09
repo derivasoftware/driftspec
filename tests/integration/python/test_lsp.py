@@ -49,6 +49,25 @@ class TestLanguageServer:
         drawn = s.call("workspace/executeCommand", {"command": "driftspec.draw", "arguments": [uri(path), line, character, 120]})
         assert drawn["title"] == "hola@core::Greeter" and "Greeter" in drawn["text"]
 
+    def test_the_outline_lists_every_declaration_of_the_file(self, server):
+        # every kind the file declares, attributes and outcomes included; no message or frame (DS-122)
+        root, s = server
+        for name, expected in (("core/Style.ds", {"Style", "apply", "emoji"}), ("usecases.ds", {"UC-00001-1", "default", "empty-name"})):
+            path = os.path.join(root, name)
+            open_file(s, path)
+            names = {sym["name"] for sym in s.call("textDocument/documentSymbol", {"textDocument": {"uri": uri(path)}})}
+            assert expected <= names, (name, names)
+
+    def test_completion_offers_every_kind_a_reference_names(self, server):
+        # interfaces too, as the metamodel says a type can be one (DS-122)
+        root, s = server
+        path = os.path.join(root, "server", "Server.ds")
+        open_file(s, path)
+        found = s.call("textDocument/completion", {"textDocument": {"uri": uri(path)}, "position": {"line": 0, "character": 0}})
+        labels = {item["label"]: item.get("detail") for item in found["items"]}
+        assert labels.get("shell") == "interface" and labels.get("Greeter") == "class"
+        assert "apply" not in labels  # a member is named through its class, not offered alone
+
     def test_a_file_belongs_to_its_own_design_only(self, server, tmp_path):
         root, s = server
         other = os.path.join(tmp_path, "other")  # a second design beside: its identities never meet hola's

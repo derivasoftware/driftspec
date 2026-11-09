@@ -103,6 +103,32 @@ class Model:
     def in_file(self, path: str) -> list[Entity]:
         return [e for e in self.entities.values() if e.location.file == path]
 
+    # what the metamodel says about a kind, read instead of listing kinds by hand (DS-122)
+    def parents_of(self, kind: str) -> list[str]:
+        """The kinds a kind may be written in, as the metamodel declares them."""
+        return next((list(k.get("parents", [])) for k in self.metamodel.get("kinds", []) if k.get("kind") == kind), [])
+
+    def in_a_box(self, kind: str) -> bool:
+        """Whether a kind stands in a package or a module (a class, a function, an interface, a requirement),
+        rather than inside another entity (a member, an outcome, an operation)."""
+        return bool({"package", "module"} & set(self.parents_of(kind))) or kind in ("package", "module")
+
+    def laid_out(self, kind: str) -> bool:
+        """Whether a kind is laid out by a behaviour (a message, a frame) rather than declared."""
+        return self.parents_of(kind) == ["sequence"]
+
+    def named_kinds(self) -> set[str]:
+        """The kinds a reference names: targets of a relation of the metamodel that stand in a box."""
+        targets = {t for r in self.metamodel.get("relations", []) for t in r.get("to", [])}
+        return {k for k in targets if self.in_a_box(k) and k not in ("package", "module")}
+
+    def owner(self, entity: Entity) -> Entity:
+        """The entity itself, or what it is drawn inside of when it does not stand in a box: a member's class,
+        an outcome's use case, a rule's class through its method."""
+        while not self.in_a_box(entity.kind) and entity.scope in self.entities:
+            entity = self.entities[entity.scope]
+        return entity
+
 
 @dataclass(frozen=True)
 class Report:
