@@ -327,6 +327,9 @@ function side(s){
 $('side').addEventListener('click',e=>{const r=e.target.closest('[data-rule]'); if(r) activate(r.dataset.rule);});
 $('side').onclick=e=>{const b=e.target.closest('[data-id]'); const v=view(); if(b&&v){const k=v.show(b.dataset.id); if(k!=='node') v.frameAny([b.dataset.id]);}};
 addEventListener('message',e=>{if(e.data&&e.data.ds==='perspective'&&cur&&e.source===cur.contentWindow) perspective(e.data.p);});
+// the viewer's fullscreen button: the whole page, so the side panel stays (DS-141)
+addEventListener('message',e=>{if(e.data&&e.data.ds==='fullscreen'&&cur&&e.source===cur.contentWindow){
+  if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});}});
 addEventListener('message',e=>{if(e.data&&e.data.ds==='select'&&cur&&e.source===cur.contentWindow){keepSel=e.data.id; SELID=e.data.id; if(FILTER==='sel') rules();
   $('sel').hidden=!e.data.id; $('sel').textContent=e.data.id?'◉ '+e.data.id:'';
   fetch('/selection',{method:'POST',body:JSON.stringify({id:e.data.id,label:e.data.label})});}});

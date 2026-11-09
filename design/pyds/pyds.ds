@@ -160,7 +160,7 @@ package driftspec@pyds {
       <workspace>/.driftspec/live.json, never in the design.
     rationale: Found using the spike (DS-102): notes in memory were lost on every restart.
     tags: live, viewer
-    verification VER-00099-1 {
+    verification VER-00099-2 {
       status: approved
       title: Integration tests confirm focus, notes, highlights and the selection go both ways through the contract, and notes and highlights survive a restart outside the design
       method: test
@@ -169,6 +169,7 @@ package driftspec@pyds {
         tests/integration/python/test_live.py::TestLiveSession::test_notes_and_highlights_survive_a_restart_and_stay_out_of_the_design
         tests/integration/python/test_live.py::TestLiveSession::test_a_note_with_no_text_removes_it_and_clear_removes_them_all
         tests/integration/python/test_live.py::TestLiveSession::test_the_contract_says_its_routes_and_its_version
+        tests/integration/python/test_live.py::TestLiveSession::test_the_page_goes_fullscreen_whole_when_the_viewer_asks
     }
   }
 

@@ -85,6 +85,14 @@ class TestLiveSession:
         post(live, "/clear", {"what": "all"})
         assert get(live, "/state")["notes"] == [] and get(live, "/state")["highlights"] == []
 
+    def test_the_page_goes_fullscreen_whole_when_the_viewer_asks(self, session):
+        # the viewer's fullscreen button asks the page, so the side panel stays on screen (DS-141)
+        ws, live = session
+        import urllib.request
+        with urllib.request.urlopen(live.url, timeout=5) as r:
+            page = r.read().decode()
+        assert "e.data.ds==='fullscreen'" in page and "document.documentElement.requestFullscreen()" in page
+
     def test_the_contract_says_its_routes_and_its_version(self, session):
         _, live = session
         contract = get(live, "/contract")
