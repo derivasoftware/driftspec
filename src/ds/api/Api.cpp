@@ -18,13 +18,20 @@ namespace api {
 
 namespace {
 
-// the workspace loaded as the command line loads a directory: parsed, bound, checked, findings in order
-model::Model load(const Files& files) {
-  model::Model model;
+// the texts parsed, then loaded as every caller loads (Api::load)
+model::Model loadTexts(const Files& files) {
   parse::Parser parser;
+  std::vector<parse::ParsedFile> parsed;
+  for (const auto& file : files) parsed.push_back(parser.parseText(file.first, file.second));
+  return Api::load(parsed);
+}
+
+}  // namespace
+
+model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
+  model::Model model;
   bind::Binder binder(model);
-  for (const auto& file : files) {
-    const parse::ParsedFile parsed = parser.parseText(file.first, file.second);
+  for (const auto& parsed : files) {
     if (parsed.hasSyntaxErrors) {
       const std::string detail = parsed.errorDetail.empty() ? "" : ": " + parsed.errorDetail;
       model.report({"E-SYNTAX", "error", "the file does not parse" + detail, {parsed.path, parsed.errorLine, parsed.errorColumn}});
@@ -39,10 +46,7 @@ model::Model load(const Files& files) {
   return model;
 }
 
-}  // namespace
-
-std::string Api::check(const Files& files) {
-  const model::Model model = load(files);
+std::string Api::report(const model::Model& model, bool pretty) {
   nlohmann::json findings = nlohmann::json::array();
   int errors = 0;
   for (const auto& f : model.findings()) {
@@ -54,20 +58,20 @@ std::string Api::check(const Files& files) {
   }
   long expected = 0;
   for (const auto& e : model.entities()) expected += e.second.expected ? 1 : 0;
-  return nlohmann::json{{"findings", findings},
-                        {"counts",
-                         {{"entities", model.entities().size()},
-                          {"expected", expected},
-                          {"relations", model.relations().size()},
-                          {"findings", model.findings().size()},
-                          {"errors", errors}}}}
-      .dump();
+  const nlohmann::json out{{"findings", findings},
+                           {"entities", static_cast<long>(model.entities().size()) - expected},  // declared: what the design says
+                           {"expected", expected},
+                           {"relations", model.relations().size()},
+                           {"errors", errors}};
+  return pretty ? out.dump(2) : out.dump();
 }
 
-std::string Api::exportModel(const Files& files) { return exporter::JsonExport().render(load(files), false); }
+std::string Api::check(const Files& files) { return report(loadTexts(files)); }
+
+std::string Api::exportModel(const Files& files) { return exporter::JsonExport().render(loadTexts(files), false); }
 
 std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) {
-  const model::Model model = load(files);
+  const model::Model model = loadTexts(files);
   const std::string id = diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram;
   const std::string ir = render::IrExport(model).render(id, false);
   if (ir.empty() || format == "ir") return ir;
@@ -76,7 +80,7 @@ std::string Api::render(const Files& files, const std::string& diagram, const st
 }
 
 std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) {
-  const model::Model model = load(files);
+  const model::Model model = loadTexts(files);
   return scene::Scene(model).page(title, "", focus);
 }
 

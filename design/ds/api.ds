@@ -19,12 +19,13 @@ package driftspec@ds {
         Owner, 2026-11-06 (DS-84): a Python face to depend on, and a language server; text in
         and JSON out keeps one contract for every caller.
       tags: api, python
-      verification VER-00094-1 {
+      verification VER-00094-2 {
         status: approved
         title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, and says what the grammar takes at a place
         method: test
         tests:
           tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheExampleChecksCleanAsTheCommandLineSays
+          tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheApiReturnsTheReportTheCommandLinePrints
           tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheModelOfTheExampleExportsByIdentity
           tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.AnUnsavedBufferIsCheckedAsItIsTyped
           tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.ADiagramDrawsAsTextOrAsItsRenderIr
@@ -37,6 +38,8 @@ package driftspec@ds {
       @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-1
       + static check(files: Files) -> std::string
+      + static load(files: std::vector<parse::ParsedFile>) -> model::Model
+      + static report(model: model::Model, pretty: bool) -> std::string
       + static exportModel(files: Files) -> std::string
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
       + static render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string

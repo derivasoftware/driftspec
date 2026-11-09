@@ -149,8 +149,10 @@ def load(source: Source) -> Model:
 
 
 def check(source: Source) -> Report:
-    data = json.loads(_native.check(read(source)))
-    return Report([_finding(f) for f in data["findings"]], data["counts"])
+    data = json.loads(_native.check(read(source)))  # what `ds check --json` prints (DS-120)
+    counts = {k: int(data[k]) for k in ("entities", "expected", "relations", "errors")}
+    counts["findings"] = len(data["findings"])
+    return Report([_finding(f) for f in data["findings"]], counts)
 
 
 def render(source: Source, diagram: str, format: str = "text", width: int = 0) -> str:

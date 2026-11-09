@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "ds/api/Api.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/diff/Diff.hpp"
@@ -67,22 +68,8 @@ std::string checkout(const std::string& rev, const std::string& path) {
 }
 
 ds::model::Model load(const std::string& dir) {
-  ds::model::Model model;
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
-  for (const auto& file : parser.parseDirectory(dir)) {
-    if (file.hasSyntaxErrors) {
-      const std::string detail = file.errorDetail.empty() ? "" : ": " + file.errorDetail;
-      model.report({"E-SYNTAX", "error", "the file does not parse" + detail, {file.path, file.errorLine, file.errorColumn}});
-    }
-    binder.bind(file);
-  }
-  ds::check::Checker(model).run(binder);
-  auto& findings = model.findings();
-  std::stable_sort(findings.begin(), findings.end(), [](const auto& a, const auto& b) {
-    return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;
-  });
-  return model;
+  return ds::api::Api::load(parser.parseDirectory(dir));  // loaded as the Api loads texts (DS-120)
 }
 
 /// Whether any .ds file lies under a directory: a directory with none is no workspace (a mistyped path, most often).
@@ -136,10 +123,6 @@ int emit(const std::string& output, const std::string& text) {
   return 0;
 }
 
-std::string locationJson(const ds::model::Location& l) {
-  return nlohmann::json{{"file", l.file}, {"line", l.line}, {"column", l.column}}.dump();
-}
-
 /// A page of the manual ds embeds; an unknown topic lists the ones there are.
 int manual(const std::string& topic, bool json) {
   const std::string page = ds::model::manualPage(topic);
@@ -174,34 +157,16 @@ int manual(const std::string& topic, bool json) {
 int check(const std::string& dir, bool json) {
   ds::model::Model model;
   if (!loadWorkspace(dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
-  int errors = 0;
-  const auto& entities = model.entities();
-  const long expected = std::count_if(entities.begin(), entities.end(), [](const auto& p) { return p.second.expected; });
-  nlohmann::json findings = nlohmann::json::array();
-  for (const auto& f : model.findings()) {
-    if (f.severity == "error") ++errors;
-    if (json) {
-      findings.push_back({{"code", f.code},
-                          {"severity", f.severity},
-                          {"message", f.message},
-                          {"location", nlohmann::json::parse(locationJson(f.location))}});
-    } else {
-      std::cout << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  " << f.message << "\n";
-    }
-  }
-  const long declared = static_cast<long>(entities.size()) - expected;
+  const auto report = nlohmann::json::parse(ds::api::Api::report(model));  // the one shape of a check (DS-120)
   if (json) {
-    std::cout << nlohmann::json{{"findings", findings},
-                                {"entities", declared},
-                                {"expected", expected},
-                                {"relations", model.relations().size()}}
-                     .dump(2)
-              << "\n";
+    std::cout << report.dump(2) << "\n";
   } else {
-    std::cout << declared << " entities · " << expected << " expected · " << model.relations().size() << " relations · "
-              << model.findings().size() << " findings\n";
+    for (const auto& f : model.findings())
+      std::cout << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  " << f.message << "\n";
+    std::cout << report["entities"].get<long>() << " entities · " << report["expected"].get<long>() << " expected · "
+              << report["relations"].get<long>() << " relations · " << model.findings().size() << " findings\n";
   }
-  return errors ? 1 : 0;
+  return report["errors"].get<int>() ? 1 : 0;
 }
 
 /// A static drawing of a render-IR document: svg, text for a terminal, or cells.
