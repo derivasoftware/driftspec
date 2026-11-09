@@ -174,6 +174,11 @@ class Model {
   std::map<std::string, std::vector<Breach>> breaches_;
 };
 
+/// The relation as the language reads it: a class that inherits from an interface realises it (R14),
+/// the checker having derived the interface; any other relation reads as written. Every drawing asks
+/// here, so the viewer and the diagrams say the same (DS-118).
+std::string readAs(const Model& model, const Relation& relation);
+
 /// Whether a branch of the behaviour `sequence` is named `scenario` (`opt ... / scenario {`).
 bool hasScenario(const Model& model, const std::string& sequence, const std::string& scenario);
 

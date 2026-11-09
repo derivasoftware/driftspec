@@ -274,18 +274,11 @@ void box(Grid& g, const Placed& p) {
   frame(g, r, true, changeColor);
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
-  std::string badge = "C";
-  if (n.abstract && n.classifier.empty())
-    badge = "A";
-  else if (!n.classifier.empty())
-    badge = std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(n.classifier[0]))));
+  const std::string badge = badgeOf(n.classifier, n.abstract);  // the same letter as the SVG
   if (change != n.refs.end()) {
     const std::string mark = change->second == "added" ? "+" : change->second == "removed" ? "-" : change->second == "renamed" ? ">" : "~";
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
-    if (n.classifier == "requirement") badge = "R";
-    if (n.classifier == "verification") badge = "V";
-    if (n.classifier == "constraint") badge = "K";
     g.text(r.x + M.PAD_X, y, badge,
            n.classifier == "interface" || n.classifier == "verification" ? kPublic
            : n.classifier == "enum" || n.classifier == "constraint"      ? kProtected

@@ -74,6 +74,9 @@ package driftspec@ds {
     function isSystemScope(scope: std::string) -> bool
     function lastName(id: std::string) -> std::string
 
+    function readAs(model: Model, relation: Relation) -> std::string {
+      @requirement REQ-00031-1
+    }
     function hasScenario(model: Model, sequence: std::string, scenario: std::string) -> bool {
       @requirement REQ-00065-1
     }
