@@ -117,8 +117,9 @@ TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
   EXPECT_NE(viewer.find("window.DS_VIEW="), std::string::npos);
   for (const char* member : {"setCam(", "select(id)", "show(id)", "frameAny(", "mark(ids)", "highlight(list)", "notes(list)"})
     EXPECT_NE(viewer.find(member), std::string::npos) << member;
-  EXPECT_NE(viewer.find("{ds:'ready'}"), std::string::npos);      // when a page can steer it
-  EXPECT_NE(viewer.find("{ds:'select',id:"), std::string::npos);  // what the reader selects
+  EXPECT_NE(viewer.find("{ds:'ready'}"), std::string::npos);                          // when a page can steer it
+  EXPECT_NE(viewer.find("{ds:'select',id:"), std::string::npos);                      // what the reader selects
+  EXPECT_NE(viewer.find("parent.postMessage({ds:'fullscreen'}"), std::string::npos);  // the page goes fullscreen whole (DS-141)
 }
 
 TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
