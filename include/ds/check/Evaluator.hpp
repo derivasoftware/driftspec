@@ -6,19 +6,18 @@
 #include <string>
 #include <vector>
 
+#include "ds/check/Resolver.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
 namespace check {
-
-class Checker;
 
 /// Evaluates the structural rules over the model (REQ-00096-1): Datalog with stratified negation over
 /// a finite model, so every rule is decided. A definition is computed bottom-up to its fixpoint; a
 /// rule is broken by every binding of its ranges where its holds has no answer, or its never has one.
 class Evaluator {
  public:
-  Evaluator(model::Model& model, const Checker& checker);
+  Evaluator(model::Model& model, const Resolver& resolver);
 
   /// Validate every formula, compute the definitions and report each rule that the model breaks.
   void run();
@@ -51,7 +50,7 @@ class Evaluator {
   void report(const std::string& code, const std::string& owner, const std::string& message, const model::Location& at);
 
   model::Model& model_;
-  const Checker& checker_;
+  const Resolver& resolver_;
   std::map<std::string, std::string> parent_;                                ///< what holds each entity
   std::map<std::string, std::vector<std::string>> children_;                 ///< what each entity holds
   std::map<std::string, std::vector<std::string>> byKind_;                   ///< the declared entities of each kind name

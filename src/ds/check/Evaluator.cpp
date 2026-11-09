@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <functional>
 
-#include "ds/check/Checker.hpp"
 #include "ds/model/Metamodel.hpp"
 
 namespace ds {
@@ -73,7 +72,7 @@ bool compare(Form form, const std::string& a, const std::string& z) {
 
 }  // namespace
 
-Evaluator::Evaluator(model::Model& model, const Checker& checker) : model_(model), checker_(checker) {}
+Evaluator::Evaluator(model::Model& model, const Resolver& resolver) : model_(model), resolver_(resolver) {}
 
 void Evaluator::run() {
   if (model_.formulas().empty()) return;
@@ -132,7 +131,7 @@ bool Evaluator::validate(const std::string& id, const model::Formula& formula) {
       ok = false;
     }
     if (!range.scope.empty()) {
-      const std::string scope = checker_.resolve(range.scope, e->scope);
+      const std::string scope = resolver_.resolve(range.scope, e->scope);
       if (scope.empty()) {
         report("E-RULE-UNKNOWN", id, "ranges inside '" + range.scope + "', which nothing declares", range.location);
         ok = false;
@@ -173,7 +172,7 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
       report("E-RULE-UNKNOWN", id, "names the kind '" + l.name + "', which is no kind of the language", l.location);
       ok = false;
     } else if (l.form == Form::Call) {
-      const std::string d = checker_.resolve(l.name, scope);
+      const std::string d = resolver_.resolve(l.name, scope);
       const model::Entity* def = d.empty() ? nullptr : model_.find(d);
       if (!def || def->kind != model::Kind::Definition) {
         report("E-RULE-UNKNOWN", id, "applies '" + l.name + "', which no definition in scope declares", l.location);
@@ -191,7 +190,7 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
     }
     for (const auto& t : l.terms) {
       if (t.variable || t.value) continue;
-      const std::string entity = checker_.resolve(t.text, scope);
+      const std::string entity = resolver_.resolve(t.text, scope);
       if (entity.empty()) {
         report("E-RULE-UNKNOWN", id, "names '" + t.text + "', which nothing declares", l.location);
         ok = false;

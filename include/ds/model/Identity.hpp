@@ -48,6 +48,13 @@ std::string behaviourOf(const std::string& id);
 /// The scenario a behaviour identity names after /; "" for the default one.
 std::string scenarioOf(const std::string& id);
 
+/// Whether a name is written as an artefact id, PREFIX(-PART)*-NUMBER, with or without its revision (R5).
+bool isArtefactName(const std::string& name);
+/// Whether an artefact id carries its revision: REQ-00001-2 does, REQ-00001 does not.
+bool hasRevision(const std::string& name);
+/// An artefact id without its revision: REQ-00001-2 → REQ-00001 (anything else is kept).
+std::string withoutRevision(const std::string& id);
+
 /// A template's identity: its name and how many parameters it takes (R15): Repository<1>.
 std::string arityId(const std::string& name, std::size_t arity);
 /// A diagram's identity: diagram:NAME (a name already written so is kept).
