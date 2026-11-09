@@ -4,12 +4,12 @@
 #include <stdexcept>
 
 #include "ds/check/Context.hpp"
-#include "ds/check/Steps.hpp"
 
 namespace ds {
 namespace check {
 
-Checker::Checker(model::Model& model) : model_(model), resolver_(model), steps_(steps()) {}
+Checker::Checker(model::Model& model, const std::map<std::string, std::unique_ptr<IStep>>& steps)
+    : model_(model), resolver_(model), steps_(steps) {}
 
 // each step after every step it needs; among the steps ready at once, by key, so the order is one
 std::vector<std::string> Checker::order() const {

@@ -5,6 +5,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -38,7 +39,8 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
     }
     binder.bind(parsed);
   }
-  check::Checker(model).run(binder);
+  const auto steps = check::steps();
+  check::Checker(model, steps).run(binder);
   auto& findings = model.findings();
   std::stable_sort(findings.begin(), findings.end(), [](const model::Finding& a, const model::Finding& b) {
     return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;

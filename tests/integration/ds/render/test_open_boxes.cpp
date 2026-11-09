@@ -5,6 +5,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -18,7 +19,8 @@ class TestOpenBoxes : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/visibility")) binder.bind(f);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
   }
 
   nlohmann::json diagram(const std::string& name) {
@@ -84,7 +86,8 @@ TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
   ds::parse::Parser parser;
   ds::bind::Binder binder(plain);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/static")) binder.bind(f);
-  ds::check::Checker(plain).run(binder);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(plain, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(plain).render("diagram:CL_Model", false));
   EXPECT_EQ(ir["nodes"][0]["kind"], "container");
 }
@@ -94,7 +97,8 @@ TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawin
   ds::parse::Parser parser;
   ds::bind::Binder binder(shop);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/interfaces")) binder.bind(f);
-  ds::check::Checker(shop).run(binder);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(shop, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(shop).render("diagram:HLD_Shop", false));
   bool reached = false;
   for (const auto& e : ir["edges"]) reached = reached || (e["from"] == "shop@shell" && e["to"] == "shop@till");

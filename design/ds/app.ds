@@ -51,6 +51,7 @@ package driftspec@ds {
       loop each file {
         -> binder.bind(file)
       }
+      -> check::steps() -> steps
       -> checker.run(binder)
     }
 

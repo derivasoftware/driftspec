@@ -5,6 +5,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -23,14 +24,16 @@ class TestUseCases : public ::testing::Test {
     const auto file = parser.parseText("u.ds", text);
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
   }
 
   void loadExample() {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola")) binder.bind(f);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
   }
 
   std::vector<std::string> codes() const {

@@ -5,6 +5,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -25,7 +26,8 @@ class TestUses : public ::testing::Test {
       ASSERT_FALSE(parsed.hasSyntaxErrors) << f.first << ": " << parsed.errorDetail;
       binder.bind(parsed);
     }
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
   }
 
   bool consumes(const std::string& from, const std::string& to) const {

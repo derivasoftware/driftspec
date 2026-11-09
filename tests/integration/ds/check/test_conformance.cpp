@@ -7,6 +7,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -22,7 +23,8 @@ class TestMetamodelConformance : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
     for (const auto& f : parser.parseDirectory(dir)) binder.bind(f);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
     return model;
   }
 
@@ -124,7 +126,8 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
                                "    priority: high\n"
                                "  }\n"
                                "}\n"));
-  ds::check::Checker(model).run(binder);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
   std::vector<std::string> unknown;
   for (const auto& f : model.findings()) {
     if (f.code == "W-FIELD-UNKNOWN") unknown.push_back(f.message);
@@ -140,7 +143,8 @@ TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNo
     ds::bind::Binder binder(model);
     binder.bind(parser.parseText(
         "a.ds", "package p {\n  interface engine {\n    kind: library\n  }\n  module m {\n    class Api" + base + "\n  }\n}\n"));
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
     return model;
   };
   const ds::model::Model wrong = check(" : engine { }");  // DS-93: a class that names an interface as its base

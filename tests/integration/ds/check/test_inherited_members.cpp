@@ -5,6 +5,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -52,7 +53,8 @@ class TestInheritedMembers : public ::testing::Test {
                                        "}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
   }
 
   bool calls(const std::string& to) const {

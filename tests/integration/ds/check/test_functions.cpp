@@ -5,6 +5,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -24,7 +25,8 @@ class TestFunctions : public ::testing::Test {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
     for (const auto& f : model.findings()) ++byCode[f.code];
   }
 

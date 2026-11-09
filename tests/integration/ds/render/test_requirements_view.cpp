@@ -4,6 +4,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -19,7 +20,8 @@ class TestRequirementsView : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/artefacts")) binder.bind(f);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
   }
 
   nlohmann::json diagram(const std::string& name) {

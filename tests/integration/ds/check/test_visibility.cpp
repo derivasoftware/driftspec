@@ -6,6 +6,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -21,7 +22,8 @@ class TestVisibility : public ::testing::Test {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
   }
 
@@ -93,7 +95,8 @@ TEST(TestVisibilityAlone, APublicOperatorThatShowsAPrivateTypeIsALeak) {
                                      "}\n");
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  ds::check::Checker(model).run(binder);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
   std::vector<std::string> leaks;
   for (const auto& f : model.findings())
     if (f.code == "W-PRIVATE-LEAK") leaks.push_back(f.message);
