@@ -452,10 +452,8 @@ void Scene::relate(SceneDocument& out_document) const {
     if (!kinds.count(r.kind)) continue;
     const std::string from = nodeFor(ids, r.from), to = nodeFor(ids, r.to);
     if (from.empty() || to.empty() || from == to || parent[from] == to || parent[to] == from) continue;  // within one box
-    // a class that inherits from an interface realises it: the checker derives the interface (R14)
-    const model::Entity* target = model_.find(r.to);
-    const bool realises = r.kind == "inherits" && target && field(*target, "stereotypes").find("interface") != std::string::npos;
-    const std::string kind = realises ? "realises" : r.kind;
+    // a class that inherits from an interface realises it (R14): read as every drawing reads it
+    const std::string kind = model::readAs(model_, r);
     const auto key = std::make_tuple(from, to, kind);
     Link& link = links[key];
     link.from = from;

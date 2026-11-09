@@ -290,8 +290,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   // relations: lifted from members to their class; one edge per (from, to, kind, label)
   std::set<std::string> drawn;
   for (const auto& r : model_.relations()) {
-    const std::string& change = r.change;  // a diff marks a relation as added or removed
-    std::string kind = edgeKind(r.kind);
+    const std::string& change = r.change;                   // a diff marks a relation as added or removed
+    std::string kind = edgeKind(model::readAs(model_, r));  // inheriting an interface is realisation, as in the viewer
     if (kind.empty()) continue;
     const model::Entity* from = model_.find(r.from);
     const model::Entity* to = model_.find(r.to);

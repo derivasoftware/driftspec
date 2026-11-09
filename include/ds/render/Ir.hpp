@@ -54,6 +54,10 @@ struct IrDocument {
   IrDocument bundled() const;
 };
 
+/// The letter a node's badge carries, the same in every drawing (DS-118): by its classifier, A for an
+/// abstract class with none, the classifier's first letter for one the table does not name.
+std::string badgeOf(const std::string& classifier, bool abstract);
+
 }  // namespace render
 }  // namespace ds
 

@@ -160,10 +160,6 @@ const std::map<std::string, std::string> kMarkerByKind = {
     {"inheritance", "tri"},     {"realization", "tri"},  {"composition", "diamond-filled"},
     {"aggregation", "diamond"}, {"dependency", "arrow"}, {"association", "arrow"}};
 
-const std::map<std::string, std::string> kBadge = {{"class", "C"},       {"interface", "I"},  {"enum", "E"},
-                                                   {"dataclass", "D"},   {"function", "f"},   {"struct", "S"},
-                                                   {"requirement", "R"}, {"constraint", "K"}, {"verification", "V"}};
-
 std::vector<std::string> linesOf(const std::string& label) {
   std::vector<std::string> out;
   std::string current;
@@ -289,13 +285,7 @@ std::string emitNode(const Placed& p, const std::string& px) {
           << esc("\xC2\xAB" + n.stereotype + "\xC2\xBB") << "</text>";
       ty += M.LINE_H;
     }
-    std::string letter = "C";
-    if (n.abstract && n.classifier.empty()) {
-      letter = "A";
-    } else if (!n.classifier.empty()) {
-      const auto b = kBadge.find(n.classifier);
-      letter = b != kBadge.end() ? b->second : std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(n.classifier[0]))));
-    }
+    const std::string letter = badgeOf(n.classifier, n.abstract);
     out << "<circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
     out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">" << esc(letter)
         << "</text>";

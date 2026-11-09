@@ -50,7 +50,7 @@ package driftspec@ds {
       tags: render, svg, terminal
     }
 
-    verification VER-00006-1 {
+    verification VER-00006-2 {
       status: approved
       @requirement REQ-00006-1
       title: Unit tests cover the class, requirement and sequence projections of the corpora
@@ -60,6 +60,7 @@ package driftspec@ds {
         tests/integration/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
         tests/integration/ds/render/test_irexport.cpp::TestIrExport.DerivedStereotypesAndMembersArePrinted
         tests/integration/ds/render/test_irexport.cpp::TestIrExport.EdgesAreLiftedFromMembersToClasses
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.TheDiagramReadsARelationAsTheViewerDoes
         tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
         tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
         tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
@@ -119,6 +120,10 @@ package driftspec@ds {
       + dashed: bool
       + order: int
       + refs: std::map<std::string, std::string>
+    }
+
+    function badgeOf(classifier: std::string, abstract: bool) -> std::string {
+      @requirement REQ-00006-1
     }
 
     dataclass IrDocument {

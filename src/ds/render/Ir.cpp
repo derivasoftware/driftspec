@@ -1,5 +1,6 @@
 #include "ds/render/Ir.hpp"
 
+#include <cctype>
 #include <map>
 #include <nlohmann/json.hpp>
 
@@ -88,6 +89,15 @@ IrDocument IrDocument::bundled() const {
     if (!e.title.empty()) first.title += (first.title.empty() ? "" : "\n") + e.title;
   }
   return out;
+}
+
+std::string badgeOf(const std::string& classifier, bool abstract) {
+  static const std::map<std::string, std::string> kBadge = {{"class", "C"},       {"interface", "I"},  {"enum", "E"},
+                                                            {"dataclass", "D"},   {"function", "f"},   {"struct", "S"},
+                                                            {"requirement", "R"}, {"constraint", "K"}, {"verification", "V"}};
+  if (classifier.empty()) return abstract ? "A" : "C";
+  const auto b = kBadge.find(classifier);
+  return b != kBadge.end() ? b->second : std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(classifier[0]))));
 }
 
 }  // namespace render
