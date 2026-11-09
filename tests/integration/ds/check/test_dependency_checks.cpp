@@ -10,7 +10,7 @@
 
 namespace {
 
-/// What a box declares it uses, compared with what its behaviours call (REQ-00094-1).
+/// What a box declares it uses, compared with what its behaviours call (REQ-00094-2).
 class TestDependencyChecks : public ::testing::Test {
  protected:
   ds::model::Model model;
@@ -89,6 +89,37 @@ TEST_F(TestDependencyChecks, AUseNoBehaviourCallsIsDeadOnceTheBoxHasBehaviours) 
 TEST_F(TestDependencyChecks, CallingTheClassBehindAnInterfaceFromOutsideGoesAroundIt) {
   load(face("", "      local api: p@core::Api\n      -> api.check(text) -> json\n"));
   EXPECT_EQ(uses(), std::vector<std::string>{"W-USES-BYPASS"});
+}
+
+TEST_F(TestDependencyChecks, AMethodTheInterfaceDoesNotOfferIsNoBypass) {
+  // Api realises engine, and reset is not one of engine's operations: it cannot be called through it (DS-106)
+  model = ds::model::Model();
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  const auto file = parser.parseText("a.ds",
+                                     "package p {\n"
+                                     "  interface engine {\n"
+                                     "    kind: library\n"
+                                     "    operation check(text: string) -> string\n"
+                                     "  }\n"
+                                     "  sequence engine::check {\n"
+                                     "    local api: core::Api\n"
+                                     "    -> api.check(text) -> json\n"
+                                     "    return json\n"
+                                     "  }\n"
+                                     "  module core {\n"
+                                     "    class Api {\n"
+                                     "      @interface engine\n"
+                                     "      + check(text: string) -> string\n"
+                                     "      + reset() -> none\n"
+                                     "    }\n"
+                                     "  }\n"
+                                     "}\n" +
+                                         face("", "      local api: p@core::Api\n      -> api.reset()\n      local json: string\n"));
+  ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
+  binder.bind(file);
+  ds::check::Checker(model).run(binder);
+  EXPECT_TRUE(uses().empty());
 }
 
 TEST_F(TestDependencyChecks, AnInterfacesOwnSequenceRealisesItAndNothingIsReported) {

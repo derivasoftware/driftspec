@@ -133,6 +133,23 @@ bool Checker::derives(const std::string& derived, const std::string& base) const
   return false;
 }
 
+// a member is found where it is declared, the type first and then its bases, nearest first (DS-105)
+const model::Entity* Checker::member(const std::string& type, const std::string& name) const {
+  std::vector<std::string> level{type};
+  std::set<std::string> seen;
+  while (!level.empty()) {
+    std::vector<std::string> next;
+    for (const auto& t : level) {
+      if (!seen.insert(t).second) continue;
+      if (const model::Entity* m = model_.find(t + "::" + name)) return m;
+      for (const auto& r : model_.relations())
+        if (r.kind == "inherits" && r.from == t) next.push_back(r.to);
+    }
+    level.swap(next);
+  }
+  return nullptr;
+}
+
 std::string Checker::current(const std::string& id) const {
   for (const auto& r : renamed_) {
     if (id == r.first) return r.second;
@@ -217,7 +234,7 @@ void Checker::checkRules() {
 }
 
 // A box says what it depends on (@uses <interface>, REQ-00088-1) and its behaviours say what it
-// calls; the two are compared (REQ-00094-1). A call to an interface offered by another box needs a
+// calls; the two are compared (REQ-00094-2). A call to an interface offered by another box needs a
 // @uses on the caller or on something it lives in; a @uses that none of the box's behaviours calls is
 // dead, said only once the box has behaviours; a call to a class that realises an interface, from
 // outside its module, goes around the contract. An interface's own sequences realise it, and a box
@@ -280,7 +297,14 @@ void Checker::checkDependencies() {
       bool realising = false;
       for (const auto& iface : r2->second) realising = realising || inside(subject, iface);  // the interface's own sequence
       if (realising) continue;
-      const std::string iface = *r2->second.begin();
+      // only a method that answers an operation of the interface goes around it; one the interface does
+      // not offer cannot be called through it (DS-106)
+      std::string iface;
+      for (const auto& i : r2->second) {
+        const model::Entity* operation = model_.find(i + "::" + op->name);
+        if (iface.empty() && operation && operation->kind == model::Kind::Operation) iface = i;
+      }
+      if (iface.empty()) continue;
       model_.report({"W-USES-BYPASS", "warning",
                      subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
                          ": call the interface (a local or a parameter typed " + iface + ") and declare @uses " + iface,
@@ -702,7 +726,7 @@ void Checker::checkMessage(const bind::Message& message) {
   const std::string home = cls ? cls->scope : subject->scope;
   // a call with no target from a function, or one the class does not declare, is a function of the
   // module, resolved outward like any name: a free function calls its neighbours (2026-10-26)
-  if (message.to == "self" && (function || !model_.find(cls->id + "::" + message.op))) {
+  if (message.to == "self" && (function || !member(cls->id, message.op))) {
     const std::string id = resolve(message.op, home);
     const model::Entity* target = id.empty() ? nullptr : model_.find(id);
     if (target && target->kind == model::Kind::Function) {
@@ -740,7 +764,7 @@ void Checker::checkMessage(const bind::Message& message) {
   msg->fields["type"] = typeId;
   if (message.to != "self") couple(*seq, *type, transient);
   const std::string opId = typeId + "::" + message.op;
-  const model::Entity* op = model_.find(opId);
+  const model::Entity* op = member(typeId, message.op);  // its own, or inherited
   if (!op) {
     model_.report(
         {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
@@ -752,7 +776,7 @@ void Checker::checkMessage(const bind::Message& message) {
 bool Checker::typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject, const std::string& name,
                          std::pair<std::string, std::string>* value, bool* transient) const {
   const std::string home = cls ? cls->scope : subject.scope;
-  if (const model::Entity* attribute = cls ? model_.find(cls->id + "::" + name) : nullptr) {
+  if (const model::Entity* attribute = cls ? member(cls->id, name) : nullptr) {
     const auto type = attribute->fields.find("type");
     *value = {type == attribute->fields.end() ? "" : type->second, cls->scope};
     return true;

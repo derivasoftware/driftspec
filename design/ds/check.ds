@@ -65,6 +65,9 @@ package driftspec@ds {
       + derives(derived: std::string, base: std::string) -> bool {
         @requirement REQ-00029-1
       }
+      + member(type: std::string, name: std::string) -> model::Entity {
+        @requirement REQ-00036-2
+      }
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
         @requirement REQ-00053-1
@@ -154,7 +157,7 @@ package driftspec@ds {
         @requirement REQ-00095-2
       }
       - checkDependencies() -> void {
-        @requirement REQ-00094-1
+        @requirement REQ-00094-2
       }
       - checkLanguages() -> void {
         @requirement REQ-00084-1
