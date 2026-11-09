@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Identity.hpp"
+
 namespace ds {
 namespace model {
 
@@ -47,12 +49,6 @@ const char* kindName(Kind kind);
 /// Whether a kind is an artefact identified by its id with its revision: requirement, verification,
 /// constraint and use case (R5, DS-116).
 bool isArtefact(Kind kind);
-
-/// Whether `scope` is the inside of an outermost package (`app@`): what is declared there is of the system.
-bool isSystemScope(const std::string& scope);
-
-/// The simple name at the end of an identity: app@core@model::Entity → Entity, app@core → core.
-std::string lastName(const std::string& id);
 
 /// One declared (or expected, R6) entity of the workspace.
 /// One parameter as the binder read it: its name and its type as written (a template's: its name and bound).

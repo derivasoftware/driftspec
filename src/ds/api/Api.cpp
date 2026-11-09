@@ -72,7 +72,7 @@ std::string Api::exportModel(const Files& files) { return exporter::JsonExport()
 
 std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) {
   const model::Model model = loadTexts(files);
-  const std::string id = diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram;
+  const std::string id = model::diagramId(diagram);
   const std::string ir = render::IrExport(model).render(id, false);
   if (ir.empty() || format == "ir") return ir;
   const render::IrDocument doc = render::IrDocument::parse(ir);

@@ -426,8 +426,7 @@ namespace {
 // the node that stands for a model identity: itself, a function's signature row, or the nearest
 // enclosing node; a message stands for the member whose behaviour it is written in
 std::string nodeFor(const std::set<std::string>& ids, std::string id) {
-  const auto sequence = id.find("::sequence");
-  if (sequence != std::string::npos) id = id.substr(0, sequence);
+  if (const std::string subject = model::subjectOf(id); !subject.empty()) id = subject;  // a behaviour: its subject
   for (;;) {
     if (ids.count(id)) return id;
     const auto at = id.rfind("::");
@@ -473,7 +472,7 @@ void Scene::relate(SceneDocument& out_document) const {
     const std::string text = ir.render(id, false);
     if (text.empty()) continue;
     DiagramView view;
-    view.name = id.substr(std::string("diagram:").size());
+    view.name = model::diagramName(id);
     const model::Entity* diagram = model_.find(id);
     view.kind = diagram && diagram->fields.count("kind") ? diagram->fields.at("kind") : "";
     std::set<std::string> shown;
@@ -563,9 +562,8 @@ std::string Scene::render(bool pretty) const {
   for (const auto& l : doc.links) {
     nlohmann::json written = nlohmann::json::array();
     for (const auto& s : l.sequences) {  // a sequence id, X::sequence or X::sequence/scenario, as the behaviour it is
-      const auto cut = s.find("::sequence");
-      const std::string scenario = s.size() > cut + 10 ? s.substr(cut + 11) : "";
-      const auto b = behaviourOf.find(nodeFor(ids, s.substr(0, cut)) + (scenario.empty() ? "" : " / " + scenario));
+      const std::string scenario = model::scenarioOf(s);
+      const auto b = behaviourOf.find(nodeFor(ids, model::subjectOf(s)) + (scenario.empty() ? "" : " / " + scenario));
       if (b != behaviourOf.end()) written.push_back(b->second);
     }
     out["links"].push_back({index(l.from), index(l.to), l.kind, l.count, l.multiplicity, written});
@@ -642,10 +640,9 @@ struct Behaviours {
     if (found != index.end()) return found->second;
     const int at = static_cast<int>(out.size());
     index[key] = at;  // before its calls: a behaviour that reaches itself names itself
-    const auto cut = sequence.find("::sequence");
     Behaviour b;
-    b.subject = nodeFor(ids, sequence.substr(0, cut));
-    b.scenario = scenario.empty() && sequence.size() > cut + 10 ? sequence.substr(cut + 11) : scenario;
+    b.subject = nodeFor(ids, model::subjectOf(sequence));
+    b.scenario = scenario.empty() ? model::scenarioOf(sequence) : scenario;
     b.id = b.subject + (b.scenario.empty() ? "" : " / " + b.scenario);
     out.push_back(b);
     std::vector<Call> found_calls;
@@ -688,9 +685,9 @@ void Scene::tour(SceneDocument& out_document) const {
   for (const auto& pair : model_.entities()) {
     const model::Entity& seq = pair.second;
     if (seq.kind != model::Kind::Sequence) continue;
-    const auto at = seq.id.find("::sequence");
-    if (at == std::string::npos) continue;
-    const model::Entity* subject = model_.find(seq.id.substr(0, at));
+    const std::string subjectId = model::subjectOf(seq.id);
+    if (subjectId.empty()) continue;
+    const model::Entity* subject = model_.find(subjectId);
     if (!subject) continue;
     const bool operation = subject->kind == model::Kind::Operation;
     const bool member = subject->kind == model::Kind::Method && visible(subject) && visible(model_.find(subject->scope));
@@ -699,7 +696,7 @@ void Scene::tour(SceneDocument& out_document) const {
     if (nodeFor(ids, subject->id).empty()) continue;
     // its scenarios: the default path and every branch it names, or the one it is written apart for
     std::vector<std::string> scenarios{""};
-    if (seq.id.size() == at + 10) {
+    if (model::scenarioOf(seq.id).empty()) {  // the default behaviour, not one written apart for a scenario
       std::set<std::string> named;
       for (const auto& f : model_.entities()) {
         if (f.second.kind != model::Kind::Frame || f.second.scope != seq.id) continue;
@@ -891,7 +888,7 @@ void Scene::trace(SceneDocument& out_document) const {
       r.title = fieldOf(e, "title");
       r.status = fieldOf(e, "status");
       r.text = fieldOf(e, "text");
-      if (!e.scope.empty()) r.scope = nodeFor(ids, e.scope.back() == '@' ? e.scope.substr(0, e.scope.size() - 1) : e.scope);
+      if (!e.scope.empty()) r.scope = nodeFor(ids, model::boxOf(e.scope));
       at[r.id] = out_document.requirements.size();
       out_document.requirements.push_back(r);
     } else if (e.kind == model::Kind::Verification) {
@@ -942,9 +939,8 @@ void Scene::reason(SceneDocument& out_document) const {
   const auto place = [&ids](std::string id) {
     for (;;) {
       if (const std::string node = nodeFor(ids, id); !node.empty()) return node;
-      const auto at = id.rfind('@');  // a package's own entities: outward through the packages
-      if (at == std::string::npos) return std::string();
-      id = id.substr(0, at);
+      if (!model::isAbsolute(id)) return std::string();
+      id = model::boxOf(model::packageOf(id));  // a package's own entities: outward through the packages
     }
   };
   for (const auto& pair : model_.entities()) {

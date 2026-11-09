@@ -65,23 +65,7 @@ std::string join(const std::vector<std::string>& items, const char* sep) {
 
 namespace {
 
-/// The scope outside `scope`: ds@ds::b → ds@ds → ds@ → "" (R10); with nested packages,
-/// app@core@model → app@core@ → app@ → "": every package level adds its name with @.
-std::string outer(const std::string& scope) {
-  const auto cut = scope.rfind("::");
-  if (cut != std::string::npos) return scope.substr(0, cut);
-  std::string s = scope;
-  if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope: step out of that package
-  const auto at = s.rfind('@');
-  if (at != std::string::npos) return s.substr(0, at + 1);
-  return "";
-}
-
-std::string qualifyIn(const std::string& scope, const std::string& name) {
-  if (scope.empty()) return name;
-  if (scope.back() == '@') return scope + name;
-  return scope + "::" + name;
-}
+using model::outer;  // identities are written by model/Identity (DS-124)
 
 }  // namespace
 
@@ -89,9 +73,9 @@ std::string Checker::resolve(const std::string& name, const std::string& scope) 
   if (model_.find(name)) return name;  // a full id (pkg@mod::Class), a global artefact, a package
   const std::string bare = withoutRevision(name);
   if (bare != name && model_.find(bare)) return bare;
-  if (name.find('@') != std::string::npos) return "";  // absolute, and nobody declares it
+  if (model::isAbsolute(name)) return "";  // absolute, and nobody declares it
   for (std::string s = scope; !s.empty(); s = outer(s)) {
-    const std::string candidate = qualifyIn(s, name);
+    const std::string candidate = model::qualify(s, name);
     if (model_.find(candidate)) return candidate;
   }
   // the extern catalogue (R11): a bare name nobody declares in scope is the one extern
@@ -102,7 +86,7 @@ std::string Checker::resolve(const std::string& name, const std::string& scope) 
 
 std::vector<std::string> Checker::externsNamed(const std::string& name) const {
   std::vector<std::string> out;
-  if (name.find("::") != std::string::npos || name.find('@') != std::string::npos) return out;
+  if (model::isQualified(name)) return out;
   // an extern is known by its simple name: a use's template arguments (tuple<2>) are not the
   // design's to check, so any arity of the use, and of the declaration, finds it (R11)
   const std::string simple = name.substr(0, name.find('<'));
@@ -153,7 +137,7 @@ const model::Entity* Checker::member(const std::string& type, const std::string&
 std::string Checker::current(const std::string& id) const {
   for (const auto& r : renamed_) {
     if (id == r.first) return r.second;
-    if (id.rfind(r.first + "::", 0) == 0 || id.rfind(r.first + "/", 0) == 0) return r.second + id.substr(r.first.size());
+    if (model::within(id, r.first)) return r.second + id.substr(r.first.size());
   }
   return id;
 }
@@ -168,9 +152,10 @@ void Checker::unifyBehaviours() {
     const model::Entity* subject = model_.find(r.to);
     if (!seq || !subject || subject->expected) continue;
     if (seq->kind != model::Kind::Sequence && seq->kind != model::Kind::State) continue;
-    const std::string tail = seq->kind == model::Kind::State ? "::state" : "::sequence";
     const auto scenario = seq->fields.find("scenario");
-    const std::string wanted = subject->id + tail + (scenario == seq->fields.end() ? "" : "/" + scenario->second);
+    const std::string wanted = seq->kind == model::Kind::State
+                                   ? model::stateId(subject->id)
+                                   : model::behaviourId(subject->id, scenario == seq->fields.end() ? "" : scenario->second);
     if (wanted != seq->id) moves.push_back({seq->id, wanted});
   }
   for (const auto& m : moves) {
@@ -259,7 +244,7 @@ void Checker::checkDependencies() {
   const auto chain = [](const std::string& id) {  // the identity and every box it lives in: p@m::C::run, p@m::C, p@m, p
     std::vector<std::string> out;
     for (std::string s = id; !s.empty(); s = outer(s)) {
-      const std::string box = s.back() == '@' ? s.substr(0, s.size() - 1) : s;
+      const std::string box = model::boxOf(s);
       if (out.empty() || out.back() != box) out.push_back(box);
     }
     return out;
@@ -271,10 +256,9 @@ void Checker::checkDependencies() {
   std::map<std::string, std::set<std::string>> called;  // a box that declares, and the interfaces its behaviours call
   for (const auto& r : model_.relations()) {
     if (r.kind != "calls") continue;
-    const auto at = r.from.find("::sequence");
+    const std::string subject = model::subjectOf(r.from);
     const model::Entity* op = model_.find(r.to);
-    if (at == std::string::npos || !op) continue;
-    const std::string subject = r.from.substr(0, at);
+    if (subject.empty() || !op) continue;
     const model::Entity* msg = model_.find(r.from);
     const model::Location location = msg ? msg->location : r.location;
     if (op->kind == model::Kind::Operation) {
@@ -314,8 +298,8 @@ void Checker::checkDependencies() {
   for (const auto& d : declared) {
     bool behaves = false;
     for (const auto& pair : model_.entities()) {
-      const auto at = pair.first.find("::sequence");
-      if (pair.second.kind == model::Kind::Sequence && at != std::string::npos && inside(pair.first.substr(0, at), d.first)) {
+      const std::string subject = model::subjectOf(pair.first);
+      if (pair.second.kind == model::Kind::Sequence && !subject.empty() && inside(subject, d.first)) {
         behaves = true;
         break;
       }
@@ -461,16 +445,15 @@ void Checker::resolveReference(const bind::Reference& reference) {
     expected.name = reference.target;
     expected.scope = reference.scope;
     const bool artefact = model::isArtefact(reference.expectedKind);
-    const std::string pkg = reference.scope.substr(
-        0, reference.scope.rfind('@') == std::string::npos ? 0 : reference.scope.rfind('@') + 1);  // the innermost package
+    const std::string pkg = model::packageOf(reference.scope);  // the innermost package
     if (artefact) {
       expected.id = withoutRevision(reference.target);
-    } else if (reference.target.find('@') != std::string::npos) {
+    } else if (model::isAbsolute(reference.target)) {
       expected.id = reference.target;  // absolute
     } else if (reference.target.find("::") != std::string::npos) {
       expected.id = pkg + reference.target;  // module-qualified, in this package
     } else {
-      expected.id = qualifyIn(reference.scope, reference.target);  // bare, in this scope
+      expected.id = model::qualify(reference.scope, reference.target);  // bare, in this scope
     }
     expected.location = reference.location;
     expected.expected = true;
@@ -616,7 +599,7 @@ std::string Checker::resolveTypeText(const std::string& text, const std::string&
       t = container->element < static_cast<int>(args.size()) ? args[container->element] : "";
       continue;
     }
-    t = head + "<" + std::to_string(args.size()) + ">";  // a template use: identity is name + arity (R15)
+    t = model::arityId(head, args.size());  // a template use: identity is name + arity (R15)
     break;
   }
   if (t.empty()) return "";
@@ -678,14 +661,14 @@ void Checker::expand(model::Entity& msg, const model::Entity& op, const bind::Me
   // that names a scenario expands to that one, and one nobody declares is a finding
   const auto scenario = msg.fields.find("scenario");
   const bool named = scenario != msg.fields.end();
-  const std::string id = op.id + "::sequence" + (named ? "/" + scenario->second : "");
+  const std::string id = model::behaviourId(op.id, named ? scenario->second : "");
   if (const model::Entity* child = model_.find(id)) {
     model_.relate({"expands-to", msg.id, child->id, message.location, ""});
     msg.fields["expands"] = child->id;
-  } else if (named && model::hasScenario(model_, op.id + "::sequence", scenario->second)) {
+  } else if (named && model::hasScenario(model_, model::behaviourId(op.id), scenario->second)) {
     // a named branch of the one behaviour: the call enters that path of it
-    model_.relate({"expands-to", msg.id, op.id + "::sequence", message.location, ""});
-    msg.fields["expands"] = op.id + "::sequence";
+    model_.relate({"expands-to", msg.id, model::behaviourId(op.id), message.location, ""});
+    msg.fields["expands"] = model::behaviourId(op.id);
     msg.fields["expands-path"] = scenario->second;
   } else if (named) {
     model_.report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
@@ -881,7 +864,7 @@ void Checker::rememberResult(const bind::Message& message) {
 }
 
 std::string Checker::outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const {
-  if (!seen->insert(sequence + "/" + path).second) return "";
+  if (!seen->insert(model::withScenario(sequence, path)).second) return "";
   const std::vector<const model::Entity*> messages = model::pathOf(model_, sequence, path, nullptr);
   std::string wanted;  // the name of the result the behaviour returns; empty: its last call decides
   for (auto it = messages.rbegin(); it != messages.rend(); ++it) {
@@ -981,15 +964,16 @@ void Checker::checkUseCases() {
                        op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised),
                        r->location});
       }
-      const std::string behaviour = op->id + "::sequence";
+      const std::string behaviour = model::behaviourId(op->id);
       for (const auto& end : ends) {
-        if (end == "default" || model_.find(behaviour + "/" + end) || model::hasScenario(model_, behaviour, end)) continue;
+        if (end == "default" || model_.find(model::withScenario(behaviour, end)) || model::hasScenario(model_, behaviour, end)) continue;
         model_.report({"W-USECASE-OUTCOME-UNHANDLED", "warning",
                        op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r->location});
       }
       for (const auto& other : model_.entities()) {  // a scenario written apart that no outcome names
         const model::Entity& s = other.second;
-        if (s.kind != model::Kind::Sequence || s.id.rfind(behaviour + "/", 0) != 0) continue;
+        if (s.kind != model::Kind::Sequence || model::behaviourId(model::subjectOf(s.id)) != behaviour || model::scenarioOf(s.id).empty())
+          continue;
         const std::string scenario = s.id.substr(behaviour.size() + 1);
         if (!ends.count(scenario)) {
           model_.report({"W-SCENARIO-NO-OUTCOME", "warning",
@@ -1010,19 +994,19 @@ void Checker::checkInterfaces() {
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
     if (e.kind == model::Kind::State) {
-      const auto cut = e.id.rfind("::state");
-      const model::Entity* subject = cut == std::string::npos ? nullptr : model_.find(e.id.substr(0, cut));
+      const std::string subjectId = model::machineSubjectOf(e.id);  // e is a state machine: its id names it
+      const model::Entity* subject = subjectId.empty() ? nullptr : model_.find(subjectId);
       if (subject && subject->kind == model::Kind::Interface) checkViews(e);
     }
     if (e.kind != model::Kind::Operation) continue;
-    const std::string behaviour = e.id + "::sequence";
+    const std::string behaviour = model::behaviourId(e.id);
     if (!model_.find(behaviour)) {
       model_.report({"W-OPERATION-NO-BEHAVIOUR", "warning", e.id + " has no sequence that says how it is handled", e.location});
     }
     for (const auto& field : e.fields) {
       if (field.first.rfind("exit ", 0) != 0) continue;
       const std::string code = field.first.substr(5);
-      std::string id = field.second == "default" ? behaviour : behaviour + "/" + field.second;
+      std::string id = field.second == "default" ? behaviour : model::withScenario(behaviour, field.second);
       std::string path;
       if (!model_.find(id) && model::hasScenario(model_, behaviour, field.second)) {
         id = behaviour;  // a named branch of the one behaviour
@@ -1094,8 +1078,8 @@ void Checker::checkScenarios() {
     for (const char* key : {"scenario", "else-scenario"}) {
       const auto name = f.fields.find(key);
       if (name == f.fields.end()) continue;
-      const std::string base = f.scope.substr(0, f.scope.find("::sequence") + std::string("::sequence").size());
-      if (++named[base + "/" + name->second] == 2 || model_.find(base + "/" + name->second)) {
+      const std::string base = model::behaviourId(model::subjectOf(f.scope));  // the behaviour, whatever scenario holds the frame
+      if (++named[model::withScenario(base, name->second)] == 2 || model_.find(model::withScenario(base, name->second))) {
         model_.report(
             {"W-SCENARIO-TWICE", "warning", base + " names the scenario '" + name->second + "' twice: a scenario is one path", f.location});
       }
@@ -1112,9 +1096,11 @@ void Checker::checkDiagrams() {
       for (const auto& pattern : split(include->second, ',')) {
         const auto slash = pattern.find(" / ");
         if (slash == std::string::npos) continue;
-        const std::string behaviour = pattern.substr(0, slash) + "::sequence";
+        const std::string behaviour = model::behaviourId(pattern.substr(0, slash));
         const std::string scenario = pattern.substr(slash + 3);
-        if (!model_.find(behaviour) || model_.find(behaviour + "/" + scenario) || model::hasScenario(model_, behaviour, scenario)) continue;
+        if (!model_.find(behaviour) || model_.find(model::withScenario(behaviour, scenario)) ||
+            model::hasScenario(model_, behaviour, scenario))
+          continue;
         model_.report({"W-SCENARIO-UNDECLARED", "warning", pair.second.name + " asks for " + pattern + ", a scenario nobody declares",
                        pair.second.location});
       }
