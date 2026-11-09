@@ -320,7 +320,7 @@ package driftspec@ds {
               tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.TheSceneDrawsAModulesInterfaceInsideIt
           }
         }
-        requirement REQ-00094-1 {
+        requirement REQ-00094-2 {
           tags: language, hld, dependencies, check
           status: approved
           title: The checker shall compare what a box declares it uses with what its behaviours call, and report what is not declared, what is declared and never called, and a call that goes around an interface
@@ -329,11 +329,13 @@ package driftspec@ds {
             on the caller or on a box it lives in, written there or in a wiring file
             (W-USES-UNDECLARED). A @uses that none of the box's behaviours calls is dead, said only once
             the box has behaviours (W-USES-UNUSED). A call to a method of a class that realises an
-            interface, from outside the class's module, goes around the contract (W-USES-BYPASS). An
+            interface, from outside the class's module, goes around the contract when the method
+            answers an operation of that interface (W-USES-BYPASS); a method the interface does not
+            offer cannot be called through it and is no bypass (DS-106). An
             interface's own sequences realise it, and a box calling an interface it offers depends on
             nothing.
           rationale: Owner, 2026-11-07 (DS-96, DS-92): declared dependencies are only worth what the behaviour confirms.
-          verification VER-00103-1 {
+          verification VER-00103-2 {
             title: Integration tests confirm undeclared, unused and bypassing dependencies are reported, and what is declared, planned or realised is not
             status: approved
             method: test
@@ -343,6 +345,7 @@ package driftspec@ds {
               tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AUseNoBehaviourCallsIsDeadOnceTheBoxHasBehaviours
               tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.CallingTheClassBehindAnInterfaceFromOutsideGoesAroundIt
               tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AnInterfacesOwnSequenceRealisesItAndNothingIsReported
+              tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AMethodTheInterfaceDoesNotOfferIsNoBypass
           }
         }
         requirement REQ-00081-1 {
@@ -724,7 +727,7 @@ package driftspec@ds {
           status: approved
           title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
           rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
-          verification VER-00028-3 {
+          verification VER-00028-4 {
             title: Integration tests confirm the participants of a sequence are its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
             status: approved
             method: test
@@ -733,6 +736,10 @@ package driftspec@ds {
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
               tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt
               tests/integration/ds/check/test_values.cpp::TestValues.AResultDoesNotExistBeforeItsMessage
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.ASelfCallReachesAMethodTheClassInherits
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.AnInheritedAttributeIsAParticipant
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.ACallOnASubclassReachesTheMethodOfItsBase
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.APrivateMemberOfTheBaseStaysHidden
           }
         }
         requirement REQ-00059-1 {

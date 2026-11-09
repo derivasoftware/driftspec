@@ -28,6 +28,8 @@ class Checker {
 
   /// Whether `derived` is `base` or inherits from it, transitively.
   bool derives(const std::string& derived, const std::string& base) const;
+  /// The member `name` of a type: its own, else the nearest one it inherits; nullptr when none declares it.
+  const model::Entity* member(const std::string& type, const std::string& name) const;
 
  private:
   void resolveReference(const bind::Reference& reference);
