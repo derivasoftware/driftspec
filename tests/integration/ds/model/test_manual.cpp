@@ -85,7 +85,8 @@ TEST_F(TestManual, EveryTopicHasAPageAndAnUnknownOneHasNone) {
   EXPECT_NE(ds::model::manualPage("annotations").find("@requirement"), std::string::npos);
   const std::string grammar = ds::model::manualPage("grammar");  // what goes inside what, from the metamodel
   EXPECT_NE(grammar.find("What goes inside what"), std::string::npos);
-  EXPECT_NE(grammar.find("class         method, attribute, operator, rule, definition"), std::string::npos);
+  EXPECT_NE(grammar.find("class         requirement, constraint, method, attribute, operator, rule, definition"), std::string::npos);
+  EXPECT_NE(grammar.find("method        requirement, constraint, rule"), std::string::npos);  // as the grammar lets it (DS-121)
   EXPECT_TRUE(ds::model::manualPage("weather").empty());
 }
 

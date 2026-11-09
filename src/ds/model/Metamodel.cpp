@@ -43,6 +43,9 @@ std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is wr
 
 std::vector<KindSpec> build() {
   const Kind P = Kind::Package, M = Kind::Module, Cl = Kind::Class, Rq = Kind::Requirement;
+  // an artefact is written in a box, in the requirement it details, or in the class or member it is about (the grammar's
+  // _package_item, _module_item, requirement, class_body and member_body; DS-121)
+  const std::vector<Kind> aboutAnything = {P, M, Rq, Cl, Kind::Method, Kind::Attribute, Kind::Function, Kind::Operator};
   std::vector<KindSpec> k;
   k.push_back(
       {P,
@@ -56,7 +59,7 @@ std::vector<KindSpec> build() {
                "what the system or a module promises",
                plus(artefact(), {written("parent", FieldType::Name, "ignored: nesting or @refines say it (W-PARENT-IGNORED)")}),
                {"extension"},
-               {P, M}});
+               aboutAnything});
   k.push_back(
       {Kind::Verification,
        "how a requirement or a constraint is proved",
@@ -66,14 +69,14 @@ std::vector<KindSpec> build() {
              written("test", FieldType::Text, "one test that proves it"), written("evidence", FieldType::Text, "what was observed"),
              written("level", FieldType::Name, "unit, integration or system"), written("precondition", FieldType::Text, "the state before"),
              written("postcondition", FieldType::Text, "the state after")}),
-       {},
-       {P, M}});
+       {"extension"},
+       {P, M, Rq}});
   k.push_back({Kind::Constraint,
                "a rule every instance of a category obeys",
                plus(artefact(), {written("category", FieldType::Name, "the category it applies to"),
                                  written("bok", FieldType::Names, "the guides that ground it")}),
-               {},
-               {P, M}});
+               {"extension"},
+               aboutAnything});
   k.push_back(
       {Kind::UseCase,
        "a contract an interface operation realises: what goes in, what comes out, the outcomes it ends in",
@@ -108,10 +111,10 @@ std::vector<KindSpec> build() {
                 "what the check reads from the declaration: interface, abstract, value, equatable, ordered, hashable, printable, extern"),
         syntax("params", FieldType::Params, "the template parameters"), syntax("operators", FieldType::Names, "the operators it declares"),
         syntax("bound.*", FieldType::Type, "the bound of a template parameter")},
-       {"abstract", "dataclass", "extern", "extension"},
-       {P, M}});
-  k.push_back({Kind::Enum, "a closed set of values", {kVisibility, syntax("values", FieldType::Names, "its values")}, {}, {P, M}});
-  k.push_back({Kind::Function, "a free function of a module", {kParams, kReturns, kVisibility, kNote}, {"extern"}, {P, M}});
+       {"dataclass", "extern", "extension"},  // abstract is derived into stereotypes, never a flag
+       {M}});
+  k.push_back({Kind::Enum, "a closed set of values", {kVisibility, syntax("values", FieldType::Names, "its values")}, {}, {M}});
+  k.push_back({Kind::Function, "a free function of a module", {kParams, kReturns, kVisibility, kNote}, {"extern"}, {M}});
   k.push_back({Kind::Method,
                "an operation of a class",
                {kParams, kReturns, kVisibility, kNote},
@@ -183,7 +186,7 @@ std::vector<KindSpec> build() {
                 written("verified-by", FieldType::Names, "the tests that prove a rule the model cannot evaluate"),
                 written("rationale", FieldType::Text, "why it is so")},
                {},
-               {P, M, Kind::Class, Kind::Method, Kind::Function, Kind::Operator}});
+               {P, M, Kind::Class, Kind::Method, Kind::Attribute, Kind::Function, Kind::Operator}});
   k.push_back({Kind::Definition,
                "a relation derived from others: its parameters, and each case in which it holds for them",
                {written("title", FieldType::Text, "what it names, in one sentence"),

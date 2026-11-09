@@ -45,13 +45,15 @@ package driftspec@ds {
         binder wrote some fifty field names that nothing declared, and every
         reader parsed them again; the render of the whole model (DS-67) needs
         to know what exists before drawing it.
-      verification VER-00072-2 {
+      verification VER-00072-3 {
         status: approved
-        title: Integration tests confirm that the design of ds and every example corpus are made only of what the metamodel declares, and a relation the language does not allow is reported and not bound
+        title: Integration tests confirm that the design of ds and every example corpus are made only of what the metamodel declares, a relation the language does not allow is reported and not bound, and the metamodel places each kind where the grammar does and declares every flag the binder sets
         method: test
         tests:
           tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.EveryEntityAndRelationIsOneTheMetamodelDeclares
           tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.ARelationTheLanguageDoesNotAllowIsReportedAndNotBound
+          tests/integration/ds/model/test_metamodel_truth.cpp::TestMetamodelTruth.EveryKindIsDeclaredInWhatTheGrammarLetsItBeWrittenIn
+          tests/integration/ds/model/test_metamodel_truth.cpp::TestMetamodelTruth.EveryFlagTheBinderSetsIsOneItsKindDeclares
       }
       verification VER-00075-1 {
         status: approved
