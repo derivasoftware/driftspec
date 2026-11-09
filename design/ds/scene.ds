@@ -84,7 +84,7 @@ package driftspec@ds {
       tags: render, scene, viewer
     }
 
-    verification VER-00078-1 {
+    verification VER-00078-2 {
       status: approved
       @requirement REQ-00071-2
       title: Integration tests confirm ds's design embeds as one frame carrying the whole page, and a reader's stylesheet lands after the viewer's
@@ -92,6 +92,8 @@ package driftspec@ds {
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.TheDesignEmbedsAsOneFrameCarryingTheWholePage
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
+        tests/integration/ds/scene/test_themes.cpp::TestThemes.TheNightThemeSetsEveryVariableTheViewerDrawsWith
+        tests/integration/ds/scene/test_themes.cpp::TestThemes.TheNoteToThemeAuthorsNamesEveryVariable
     }
 
     requirement REQ-00092-1 {
