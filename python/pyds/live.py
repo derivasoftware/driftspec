@@ -35,12 +35,18 @@ import pyds
 
 PORT = 4747
 
+# The fields of the state, in the order a client reads them: the contract says them and state() gives
+# exactly these, so adding one is a new version a client can see (DS-123).
+STATE = ["contract", "workspace", "title", "version", "boot", "changed", "removed", "findings", "counts", "history", "selection",
+         "error", "notes", "highlights", "rules"]
+
 CONTRACT = {
-    "version": 1,
+    "version": 2,  # 2: the state carries workspace, title, boot, error and the rules (DS-108)
+    "state": STATE,
     "routes": {
         "GET /": "the page: the viewer that follows the session",
         "GET /page": "the viewer of the current model, one self-contained page",
-        "GET /state": "the state: version, changed, removed, findings, counts, history, selection, notes, highlights",
+        "GET /state": "the state: " + ", ".join(STATE),
         "GET /events": "server-sent events: model (the state, on every change), focus, annotate, error",
         "GET /selection": "what the reader has selected",
         "GET /contract": "this contract",
@@ -86,6 +92,7 @@ class Live:
         self.selection: dict = {}
         self.notes: list[dict] = []
         self.highlights: list[dict] = []
+        self.rules: list[dict] = []
         self.listeners: list[queue.Queue] = []
         self.stamp = None
         self.error = ""
@@ -214,9 +221,9 @@ class Live:
 
     def state(self) -> dict:
         return {"contract": CONTRACT["version"], "workspace": self.workspace, "title": self.title, "version": self.version,
-                "changed": self.changed, "removed": self.removed, "findings": self.findings, "counts": self.counts,
-                "history": self.history, "selection": self.selection, "error": self.error, "notes": self.notes,
-                "highlights": self.highlights, "boot": self.boot, "rules": getattr(self, "rules", [])}
+                "boot": self.boot, "changed": self.changed, "removed": self.removed, "findings": self.findings,
+                "counts": self.counts, "history": self.history, "selection": self.selection, "error": self.error,
+                "notes": self.notes, "highlights": self.highlights, "rules": self.rules}
 
     def broadcast(self, event: str, data: dict) -> None:
         for q in list(self.listeners):

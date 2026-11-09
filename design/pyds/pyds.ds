@@ -585,6 +585,7 @@ package driftspec@pyds {
       + removed: list<string>
       + notes: list<object>
       + highlights: list<object>
+      + rules: list<object>
       + selection: map<string, string>
       + reload() -> bool
       + rules_of(model: pyds::Model, findings: list<pyds::Finding>) -> list<map<string, object>> {

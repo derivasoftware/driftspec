@@ -88,7 +88,10 @@ class TestLiveSession:
     def test_the_contract_says_its_routes_and_its_version(self, session):
         _, live = session
         contract = get(live, "/contract")
-        assert contract["version"] == get(live, "/state")["contract"] == 1
+        state = get(live, "/state")
+        assert contract["version"] == state["contract"] == 2
+        assert list(state) == contract["state"]  # the state is exactly what the contract says (DS-123)
+        assert ", ".join(contract["state"]) in contract["routes"]["GET /state"]
         for route in ("GET /state", "GET /events", "POST /focus", "POST /note", "POST /highlight", "POST /clear", "POST /selection"):
             assert route in contract["routes"]
 
