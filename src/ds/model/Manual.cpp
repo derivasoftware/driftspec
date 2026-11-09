@@ -144,7 +144,7 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "package shop {\n  module store {\n    function total(cents: list<int>) -> int\n  }\n}\n"}},
       {Kind::Method,
        {"+|-|# [abstract | static | const] <name>(<param>: <type>, ...) [-> <type>] [{ body }]\nin a class; named like the class, "
-        "it is a constructor",
+        "it is a constructor; named ~ and the class, its destructor, which no interface counts against",
         kShopClass}},
       {Kind::Attribute,
        {"+|- [owns | refs | shares] <name>: <type> [= <default>]\nowns (the default) is composition, refs and shares aggregation; "

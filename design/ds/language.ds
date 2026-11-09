@@ -598,6 +598,25 @@ package driftspec@ds {
               tests/integration/ds/check/test_rules.cpp::TestRules.ABracketContractDoesNotParse
           }
         }
+        requirement REQ-00101-1 {
+          tags: language, lld, class
+          status: approved
+          title: A class shall declare its destructor as ~Name(), and an interface may have one
+          text:
+            A method named ~ and the class's name is its destructor (flag destructor). It is no
+            part of the contract: like a constructor, it does not count against the derived
+            interface stereotype, so an interface declares the virtual destructor the C++ guide
+            asks of it.
+          rationale: Found splitting the checker (DS-138, DS-143): IStep needs a virtual destructor and the language could not say it.
+          verification VER-00110-1 {
+            title: Integration tests confirm ~Name() is the destructor and an interface keeps its stereotype with one
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_destructors.cpp::TestDestructors.ATildeAndTheClassNameIsItsDestructor
+              tests/integration/ds/check/test_destructors.cpp::TestDestructors.AnInterfaceKeepsItsDestructorAndStaysAnInterface
+          }
+        }
         requirement REQ-00033-1 {
           tags: language, lld, class
           status: approved

@@ -440,6 +440,7 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
   if (is(m, "method") || is(m, "operator")) {
     for (TSNode mod : childrenNamed(m, "modifier")) member.flags.push_back(parse::textOf(file, mod));
     if (is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
+    if (is(m, "method") && member.name == "~" + cls.name) member.flags.push_back("destructor");  // DS-143
     if (cls.has("dataclass") && member.has("abstract")) {
       model_.report(
           {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});

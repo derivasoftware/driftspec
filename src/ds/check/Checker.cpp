@@ -1070,7 +1070,8 @@ void Checker::classify() {
     for (const auto& pair : model_.entities()) {
       const model::Entity& m = pair.second;
       if (m.scope != id) continue;
-      if (m.kind == model::Kind::Method && !m.has("constructor") && !m.has("static")) {
+      // a constructor, a destructor and a static method are no part of the contract (DS-143)
+      if (m.kind == model::Kind::Method && !m.has("constructor") && !m.has("destructor") && !m.has("static")) {
         ++methods;
         if (m.has("abstract")) ++abstractMethods;
       } else if (m.kind == model::Kind::Attribute && !m.has("static")) {
