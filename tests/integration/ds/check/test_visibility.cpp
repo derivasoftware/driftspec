@@ -74,4 +74,31 @@ TEST_F(TestVisibility, APublicMemberThatShowsAPrivateTypeIsALeak) {
   EXPECT_EQ(lines["W-PRIVATE-LEAK"].size(), 1U);
 }
 
+TEST(TestVisibilityAlone, APublicOperatorThatShowsAPrivateTypeIsALeak) {
+  // an operator is a member with a signature like a method: what it takes and gives is shown (DS-117)
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  const auto file = parser.parseText("a.ds",
+                                     "package p {\n"
+                                     "  module money {\n"
+                                     "    - class Rounding {\n"
+                                     "      + mode: int\n"
+                                     "    }\n"
+                                     "    dataclass Cents <<+>> {\n"
+                                     "      + value: int\n"
+                                     "      operator +(other: Rounding) -> Cents\n"
+                                     "    }\n"
+                                     "  }\n"
+                                     "}\n");
+  ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
+  binder.bind(file);
+  ds::check::Checker(model).run(binder);
+  std::vector<std::string> leaks;
+  for (const auto& f : model.findings())
+    if (f.code == "W-PRIVATE-LEAK") leaks.push_back(f.message);
+  ASSERT_EQ(leaks.size(), 1u);
+  EXPECT_NE(leaks[0].find("p@money::Cents::operator+ is public and shows p@money::Rounding"), std::string::npos) << leaks[0];
+}
+
 }  // namespace

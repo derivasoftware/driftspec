@@ -623,7 +623,7 @@ package driftspec@ds {
           private on its way down is W-NOT-VISIBLE; a public member showing a private type is
           W-PRIVATE-LEAK.
         rationale: Owner, 2026-11-05. There is no port concept: a port is a public child, and an interface is one that crosses a process. Whether the code respects this is argos's job.
-        verification VER-00068-1 {
+        verification VER-00068-2 {
           title: Integration tests confirm any child of a box may be private, and nothing outside its parent reaches it
           status: approved
           method: test
@@ -636,6 +636,7 @@ package driftspec@ds {
             tests/integration/ds/check/test_visibility.cpp::TestVisibility.SiblingsSeeEachOther
             tests/integration/ds/check/test_visibility.cpp::TestVisibility.EveryOtherCrossingIsReportedExactlyAsMarked
             tests/integration/ds/check/test_visibility.cpp::TestVisibility.APublicMemberThatShowsAPrivateTypeIsALeak
+            tests/integration/ds/check/test_visibility.cpp::TestVisibilityAlone.APublicOperatorThatShowsAPrivateTypeIsALeak
         }
       }
       requirement REQ-00054-1 {
