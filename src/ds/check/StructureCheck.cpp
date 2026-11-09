@@ -21,8 +21,8 @@ using model::outer;
 std::string StructureCheck::name() const { return "structure"; }
 
 std::vector<std::string> StructureCheck::needs() const {
-  // today's order, kept so the output stays the same; relaxed when the derivations move (DS-138)
-  return {"derivation"};
+  // the finished model: every field and relation the enriching steps write
+  return {"linker", "behaviour", "derivation"};
 }
 
 std::vector<model::Finding> StructureCheck::check(const Context& context) {

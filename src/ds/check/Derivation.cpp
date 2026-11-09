@@ -21,8 +21,8 @@ using model::outer;
 std::string Derivation::name() const { return "derivation"; }
 
 std::vector<std::string> Derivation::needs() const {
-  // today's order, kept so the output stays the same; relaxed when the derivations move (DS-138)
-  return {"contracts"};
+  // the members and boxes the linker settled; nothing it derives is read by the steps before it
+  return {"linker"};
 }
 
 std::vector<model::Finding> Derivation::run(Context& context) {

@@ -49,11 +49,26 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const auto checkSteps = ds::check::steps();
   const ds::check::Checker checker(model, checkSteps);
   const std::vector<std::string> order = checker.order();
-  EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "contracts", "derivation", "structure", "dependencies", "rules"}));
+  EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "contracts", "dependencies", "derivation", "rules", "structure"}));
   const auto all = ds::check::steps();
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())
       EXPECT_LT(std::find(order.begin(), order.end(), need) - order.begin(), static_cast<long>(i)) << order[i] << " needs " << need;
+}
+
+/// A step needs only the steps that write what it reads (DS-138), not the one before it in a chain:
+/// behaviour typing and derivation both start from the linker and neither reads the other, and a
+/// step that reads the whole model runs after every step that enriches it.
+TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
+  const auto all = ds::check::steps();
+  using Needs = std::vector<std::string>;
+  EXPECT_EQ(all.at("linker")->needs(), Needs{});
+  EXPECT_EQ(all.at("behaviour")->needs(), Needs{"linker"});
+  EXPECT_EQ(all.at("derivation")->needs(), Needs{"linker"});
+  EXPECT_EQ(all.at("contracts")->needs(), (Needs{"linker", "behaviour"}));
+  EXPECT_EQ(all.at("dependencies")->needs(), (Needs{"linker", "behaviour"}));
+  EXPECT_EQ(all.at("structure")->needs(), (Needs{"linker", "behaviour", "derivation"}));
+  EXPECT_EQ(all.at("rules")->needs(), (Needs{"linker", "behaviour", "derivation"}));
 }
 
 /// A step gives back what it found (DS-138): a step that enriches reports to the context, which
