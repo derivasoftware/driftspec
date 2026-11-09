@@ -3,7 +3,8 @@
 *Status: working notes consolidated on 2026-10-24, before the language is frozen.
 Everything here is a decision or a direction already discussed; open points are
 marked as such. This document is the memory of the project: update it when a
-decision changes, do not let it drift from the code.*
+decision changes, do not let it drift from the code. The three perspectives,
+their outer contracts and the rules are in [`perspectives.md`](perspectives.md).*
 
 ## 1. What it is
 

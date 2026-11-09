@@ -14,13 +14,15 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
   - `ds query <workspace> <question> [subject] [--json]` — diagrams, entities, relations, artefacts, behaviours, shows, findings, coupling.
   - `ds manual [topic] [--json]` — the manual ds carries: how each kind is written, with an example that checks clean; what each finding code means; the annotations; the commands and their exit codes.
 - `viewer/` — the viewer page compiled into ds (`scene.html`) and its themes (`themes/night.css`, for `--css`).
-  In the viewer, classes sit under the class they inherit from, and inheritance is the only relation drawn as a line; touching a box lights up what it composes, aggregates, calls and uses, each in its colour, and docks its card on the right. Tours play along the bottom.
+  The viewer reads one map in three perspectives (structure, behaviour, logic), each with its own lines and marks; touching a box lights up what it composes, aggregates, calls and uses, and docks its card on the right. Tours play along the bottom.
 - `examples/hola/` — the example the viewer is tried on: `ds render examples/hola -o hola.html`.
 - `examples/diag/` — the reference workspace, one entity per file.
 - `tests/unit/ds/` — GoogleTest suites, mirroring the namespaces; `tests/system/ds/` drives the binary from outside.
 
 Build: `cmake -S . -B build && cmake --build build -j && ctest --test-dir build`.
 Regenerate the parser after editing the grammar: `tree-sitter generate` in `grammar/`.
+
+How a design is read in three perspectives, the outer contract of each and the rules: [`doc/perspectives.md`](doc/perspectives.md).
 
 Governed by argos (ASIL NA). Rules of the language so far: `examples/diag/ds.package.ds`
 and the R1–R9 notes in `examples/diag/*.ds`.
