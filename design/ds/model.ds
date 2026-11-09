@@ -329,6 +329,13 @@ package driftspec@ds {
       + cases: std::vector<std::vector<Literal>>
     }
 
+    dataclass Breach {                       // one binding that breaks a rule, its answer, where it lands
+      @requirement REQ-00098-1
+      + bindings: std::vector<std::pair<std::string, std::string>>
+      + witness: std::vector<std::pair<std::string, std::string>>
+      + owns location: Location
+    }
+
     dataclass Finding {                      // one diagnostic of the engine
       @requirement REQ-00001-1
       + code: std::string
@@ -344,6 +351,7 @@ package driftspec@ds {
       - owns relations_: std::vector<Relation>
       - owns findings_: std::vector<Finding>
       - owns formulas_: std::map<std::string, Formula>
+      - owns breaches_: std::map<std::string, std::vector<Breach>>
       + declare(entity: Entity) -> Entity {
         @constraint CST-00002-1
       }
@@ -359,6 +367,12 @@ package driftspec@ds {
       }
       + state(id: std::string, formula: Formula) -> void {
         @requirement REQ-00095-2
+      }
+      + breaches() -> std::map<std::string, std::vector<Breach>> {
+        @requirement REQ-00098-1
+      }
+      + breach(rule: std::string, breach: Breach) -> void {
+        @requirement REQ-00098-1
       }
     }
 

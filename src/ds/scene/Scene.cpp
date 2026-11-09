@@ -521,6 +521,7 @@ SceneDocument Scene::build() const {
   relate(doc);
   tour(doc);
   trace(doc);
+  reason(doc);
   return doc;
 }
 
@@ -550,7 +551,9 @@ std::string Scene::render(bool pretty) const {
                    {"tour", {"behaviour", "group"}},
                    {"diagram", {"name", "kind", "nodes"}},
                    {"requirement", {"id", "kind", "title", "status", "text", "parent", "scope", "nodes", "signature", "outcomes", "binds"}},
-                   {"verification", {"id", "title", "status", "method", "tests", "requirements"}}};
+                   {"verification", {"id", "title", "status", "method", "tests", "requirements"}},
+                   {"rule", {"id", "kind", "name", "title", "scope", "lines", "requirements", "breaches", "file", "line"}},
+                   {"breach", {"node", "to", "bindings", "witness", "file", "line"}}};
   out["nodes"] = nlohmann::json::array();
   for (const auto& n : doc.nodes) {
     out["nodes"].push_back({n.id, n.kind, index(n.parent), n.label, n.stereotype, n.visibility, n.requirements, ints(n.full),
@@ -605,6 +608,14 @@ std::string Scene::render(bool pretty) const {
     for (const auto& r : v.requirements)
       if (requirement(r) >= 0) proves.push_back(requirement(r));
     out["verifications"].push_back({v.id, v.title, v.status, v.method, v.tests, proves});
+  }
+  out["rules"] = nlohmann::json::array();
+  for (const auto& r : doc.rules) {
+    nlohmann::json broken = nlohmann::json::array();
+    for (const auto& b : r.breaches) broken.push_back({index(b.node), index(b.to), b.bindings, b.witness, b.file, b.line});
+    nlohmann::json lines = nlohmann::json::array();
+    for (const auto& l : r.lines) lines.push_back({l.first, l.second});
+    out["rules"].push_back({r.id, r.kind, r.name, r.title, index(r.scope), lines, r.requirements, broken, r.file, r.line});
   }
   return pretty ? out.dump(2) : out.dump();
 }
@@ -921,6 +932,57 @@ void Scene::trace(SceneDocument& out_document) const {
       auto& nodes = out_document.requirements[at[r.to]].nodes;
       if (!node.empty() && std::find(nodes.begin(), nodes.end(), node) == nodes.end()) nodes.push_back(node);
     }
+  }
+}
+
+// The rules and the definitions, each placed in the node it is written in, with what breaks it placed on
+// the map: a call lands on the member whose behaviour writes it, an entity on the nearest node that
+// stands for it (DS-108).
+void Scene::reason(SceneDocument& out_document) const {
+  std::set<std::string> ids;
+  for (const auto& n : out_document.nodes) ids.insert(n.id);
+  const auto place = [&ids](std::string id) {
+    for (;;) {
+      if (const std::string node = nodeFor(ids, id); !node.empty()) return node;
+      const auto at = id.rfind('@');  // a package's own entities: outward through the packages
+      if (at == std::string::npos) return std::string();
+      id = id.substr(0, at);
+    }
+  };
+  for (const auto& pair : model_.entities()) {
+    const model::Entity& e = pair.second;
+    if (e.expected || (e.kind != model::Kind::Rule && e.kind != model::Kind::Definition)) continue;
+    RuleView r;
+    r.id = e.id;
+    r.kind = model::kindName(e.kind);
+    r.name = e.name;
+    r.title = fieldOf(e, "title");
+    r.scope = place(e.scope.empty() || e.scope.back() != '@' ? e.scope : e.scope.substr(0, e.scope.size() - 1));
+    for (const char* key : {"for", "where", "holds", "never", "if"}) {
+      std::string text = fieldOf(e, key) + "; ";
+      for (auto at = text.find("; "); at != std::string::npos; at = text.find("; ")) {  // a clause written twice is kept twice
+        if (at) r.lines.push_back({key, text.substr(0, at)});
+        text.erase(0, at + 2);
+      }
+    }
+    for (const auto& rel : model_.relations())
+      if (rel.kind == "requires" && rel.from == e.id) r.requirements.push_back(rel.to);
+    const auto broken = model_.breaches().find(e.id);
+    if (broken != model_.breaches().end())
+      for (const auto& b : broken->second) {
+        BreachView v;
+        v.node = b.bindings.empty() ? r.scope : place(b.bindings.front().second);
+        for (const auto& w : b.witness)
+          if (v.to.empty() && model_.find(w.second)) v.to = place(w.second);
+        v.bindings = b.bindings;
+        v.witness = b.witness;
+        v.file = b.location.file;
+        v.line = b.location.line;
+        r.breaches.push_back(v);
+      }
+    r.file = e.location.file;
+    r.line = e.location.line;
+    out_document.rules.push_back(r);
   }
 }
 

@@ -118,6 +118,32 @@ struct Verification {
   std::vector<std::string> requirements;
 };
 
+/// One binding that breaks a rule, placed: the node it lands on and, for a never, the node of the
+/// answer that breaks it (DS-108).
+struct BreachView {
+  std::string node;  ///< the node of what breaks it, the first thing the rule ranges over
+  std::string to;    ///< the node of the answer that breaks a never; empty when none is drawn
+  std::vector<std::pair<std::string, std::string>> bindings;
+  std::vector<std::pair<std::string, std::string>> witness;
+  std::string file;
+  int line = 0;
+};
+
+/// A rule or a definition as the logic perspective shows it: where it is written, what it says, what it
+/// answers to and what breaks it.
+struct RuleView {
+  std::string id;
+  std::string kind;  ///< rule or definition
+  std::string name;
+  std::string title;
+  std::string scope;                                       ///< the node it is written in
+  std::vector<std::pair<std::string, std::string>> lines;  ///< each clause: its keyword and its text, as written
+  std::vector<std::string> requirements;
+  std::vector<BreachView> breaches;
+  std::string file;
+  int line = 0;
+};
+
 /// The whole model laid out once, nested, in two variants: every member, public members only.
 struct SceneDocument {
   std::vector<Node> nodes;
@@ -130,6 +156,7 @@ struct SceneDocument {
   std::vector<Tour> tours;
   std::vector<Requirement> requirements;  ///< every requirement and constraint, by id
   std::vector<Verification> verifications;
+  std::vector<RuleView> rules;  ///< every rule and definition, with what breaks each
 };
 
 /// Builds the structural scene of a model: every box placed inside its parent, once, so a
@@ -155,11 +182,12 @@ class Scene {
   static std::string unpack(const std::string& packed);
 
  private:
-  void relate(SceneDocument& out_document) const;
-  void tour(SceneDocument& out_document) const;
-  void trace(SceneDocument& out_document)
-      const;  // the requirements, what they refine and what answers to and proves them  // every public behaviour, expanded through what it
-              // calls  // the links between nodes, the diagrams that show them, the titles of requirements
+  // clang-format off
+  void relate(SceneDocument& out_document) const;  // the links between nodes, the diagrams that show them, the titles of requirements
+  void tour(SceneDocument& out_document) const;    // every public behaviour, expanded through what it calls
+  void trace(SceneDocument& out_document) const;   // the requirements, what they refine and what answers to and proves them
+  void reason(SceneDocument& out_document) const;  // the rules and what breaks them (DS-108)
+  // clang-format on
 
   const model::Model& model_;
 };
