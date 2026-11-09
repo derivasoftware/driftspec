@@ -81,13 +81,6 @@ model::Location Binder::locationOf(const parse::ParsedFile& file, TSNode node) c
   return {file.path, static_cast<int>(start.row) + 1, static_cast<int>(start.column) + 1};
 }
 
-std::string Binder::qualify(const std::string& scope, const std::string& name) const {
-  // the package gives its name with @, modules with :: (R4): ds@ds::Model, ds@cli
-  if (scope.empty()) return name;
-  if (scope.back() == '@') return scope + name;
-  return scope + "::" + name;
-}
-
 void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity) {
   if (ts_node_is_null(node)) return;
   const uint32_t count = ts_node_named_child_count(node);
@@ -113,7 +106,7 @@ model::Term termOf(const parse::ParsedFile& file, TSNode node) {
   const std::string text = parse::textOf(file, node);
   if (!is(node, "qualified_name")) return {text, false, true};  // a number or a string: a value
   // a bare name is a variable; an entity is always written qualified (the form decides, nothing is guessed)
-  return {text, text.find('@') == std::string::npos && text.find("::") == std::string::npos, false};
+  return {text, !model::isQualified(text), false};
 }
 
 /// The text of a clause after its keyword, for the card and the export.
@@ -377,7 +370,7 @@ TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::
   use.classLike = true;
   Reference ref;
   ref.from = from;
-  ref.target = args.empty() ? name : name + "<" + std::to_string(args.size()) + ">";  // identity = name + arity (R15)
+  ref.target = args.empty() ? name : model::arityId(name, args.size());  // identity = name + arity (R15)
   ref.scope = scope;
   ref.relation = relation;
   ref.expectedKind = model::Kind::Class;
@@ -505,7 +498,7 @@ void Binder::bindFunction(const parse::ParsedFile& file, TSNode f, const std::st
   model::Entity e;
   e.kind = model::Kind::Function;
   e.name = fieldText(file, f, "name");
-  e.id = qualify(scope, e.name);  // ds@ds::load: a function is named like a class of its module
+  e.id = model::qualify(scope, e.name);  // ds@ds::load: a function is named like a class of its module
   e.scope = scope;
   e.location = locationOf(file, f);
   const std::string visibility = fieldText(file, f, "visibility");
@@ -523,7 +516,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   if (fieldText(file, c, "visibility").empty() && ts_node_is_null(child(c, "params")) && childrenNamed(c, "base").empty() &&
       ts_node_is_null(child(c, "operators")) && annotationsOnly(child(c, "body"))) {
     const std::string name = fieldText(file, c, "name");
-    extend(file, child(c, "body"), qualify(scope, name), model::Kind::Class, name, scope, loc);  // the annotations sit in the body
+    extend(file, child(c, "body"), model::qualify(scope, name), model::Kind::Class, name, scope, loc);  // the annotations sit in the body
     return;
   }
   model::Entity e;
@@ -550,7 +543,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
       if (!bound.empty()) bounds[name] = bound;
     }
   }
-  e.id = qualify(scope, params.empty() ? e.name : e.name + "<" + std::to_string(params.size()) + ">");  // R15
+  e.id = model::qualify(scope, params.empty() ? e.name : model::arityId(e.name, params.size()));  // R15
   if (!params.empty()) e.fields["params"] = join(params, ", ");
   for (const auto& b : bounds) e.fields["bound." + b.first] = b.second;
 
@@ -687,7 +680,7 @@ void Binder::bindSequence(const parse::ParsedFile& file, TSNode c, const std::st
   model::Entity e;
   e.kind = model::Kind::Sequence;
   e.name = subject + (scenario.empty() ? "" : "/" + scenario);
-  e.id = qualify(scope, subject) + "::sequence" + (scenario.empty() ? "" : "/" + scenario);  // identity = the subject (B1)
+  e.id = model::behaviourId(model::qualify(scope, subject), scenario);  // identity = the subject (B1)
   e.scope = scope;
   e.location = loc;
   e.fields["subject"] = subject;
@@ -753,7 +746,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity e;
       e.kind = model::Kind::Module;
       e.name = fieldText(file, c, "name");
-      e.id = qualify(scope, e.name);
+      e.id = model::qualify(scope, e.name);
       e.scope = scope;
       e.location = loc;
       const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
@@ -788,7 +781,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       // a rule of a class or a member is named under it: p@m::Order::priced, p@m::Link::send::in-range
       const bool inClass = in && (in->kind == model::Kind::Class || in->kind == model::Kind::Method || in->kind == model::Kind::Function ||
                                   in->kind == model::Kind::Operator);
-      e.id = inClass ? owner + "::" + e.name : qualify(scope, e.name);
+      e.id = inClass ? owner + "::" + e.name : model::qualify(scope, e.name);
       e.scope = inClass ? owner : scope;
       e.location = loc;
       bindFields(file, c, e);
@@ -801,7 +794,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity e;
       e.kind = model::Kind::Interface;
       e.name = fieldText(file, c, "name");
-      e.id = qualify(scope, e.name);  // hola@shell: an external interface of the box
+      e.id = model::qualify(scope, e.name);  // hola@shell: an external interface of the box
       e.scope = scope;
       e.location = loc;
       bindFields(file, c, e);
@@ -839,7 +832,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.kind = model::Kind::Enum;
       e.name = fieldText(file, c, "name");
       if (fieldText(file, c, "visibility") == "-") e.fields["visibility"] = "-";
-      e.id = qualify(scope, e.name);
+      e.id = model::qualify(scope, e.name);
       e.scope = scope;
       e.location = loc;
       std::vector<std::string> values;
@@ -861,7 +854,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity e;
       e.kind = model::Kind::State;
       e.name = entityName;
-      e.id = qualify(scope, entityName) + "::state";
+      e.id = model::stateId(model::qualify(scope, entityName));
       e.scope = scope;
       e.location = loc;
       bindFields(file, c, e);
@@ -900,7 +893,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       model::Entity e;
       e.kind = model::Kind::Diagram;
       e.name = fieldText(file, c, "name");
-      e.id = "diagram:" + e.name;
+      e.id = model::diagramId(e.name);
       e.location = loc;
       bindFields(file, c, e);
       model_.declare(e);

@@ -147,14 +147,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   // modules of the selected classes become containers (R2), and so do nested packages (the HLD
   // boxes); the outermost package is the drawing itself. A container with nothing drawn in it is not drawn.
   std::set<std::string> containers;
-  auto up = [](const std::string& s) {
-    const auto cut = s.rfind("::");
-    if (cut != std::string::npos) return s.substr(0, cut);  // ds@ds::b → ds@ds
-    std::string t = s;
-    if (!t.empty() && t.back() == '@') t.pop_back();
-    const auto at = t.rfind('@');
-    return at == std::string::npos ? std::string() : t.substr(0, at);  // app@core@model → app@core → app → ""
-  };
+  // the box outside: ds@ds::b → ds@ds, app@core@model → app@core → app → ""
+  auto up = [](const std::string& s) { return model::boxOf(model::outer(s)); };
   for (const auto& id : selected) {
     const model::Entity* e = model_.find(id);
     if (!isBox(*e)) continue;
@@ -172,8 +166,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   std::set<std::string> placed;
 
   auto parentOf = [&](const model::Entity& e) -> std::string {
-    std::string s = e.scope;
-    if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope (app@core@) names the package app@core
+    std::string s = model::boxOf(e.scope);  // a package scope (app@core@) names the package app@core
     for (; !s.empty(); s = up(s)) {
       if (containers.count(s)) return s;
     }
@@ -319,9 +312,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     // depends on whatever they reach. Types alone would leave an interface unconnected to what handles it
     for (const auto& r : model_.relations()) {
       if (r.kind != "couples-transient" && r.kind != "couples-structural") continue;
-      const auto cut = r.from.find("::sequence");
-      if (cut == std::string::npos) continue;
-      const std::string subject = r.from.substr(0, cut);
+      const std::string subject = model::subjectOf(r.from);
+      if (subject.empty()) continue;
       const model::Entity* s = model_.find(subject);
       if (!s || !placed.count(r.to)) continue;
       const std::string owner = placed.count(subject) ? subject : s->scope;
@@ -335,13 +327,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
 }
 
 std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const {
-  auto outerOf = [](const std::string& id) {
-    const auto cut = id.rfind("::");
-    if (cut != std::string::npos) return id.substr(0, cut);
-    const auto at = id.rfind('@');
-    return at == std::string::npos ? std::string() : id.substr(0, at);
-  };
-  auto pathOf = [&](const std::string& id) {  // from the outermost box down to the id
+  auto outerOf = [](const std::string& id) { return model::boxOf(model::outer(id)); };  // the box outside
+  auto pathOf = [&](const std::string& id) {                                            // from the outermost box down to the id
     std::vector<std::string> path;
     for (std::string s = id; !s.empty(); s = outerOf(s)) path.insert(path.begin(), s);
     return path;
@@ -467,7 +454,7 @@ struct SequenceBuilder {
   /// "" for the default path that takes no named branch, or kWhole for every branch, as written.
   void emit(const model::Entity& seq, const std::string& selfLine, const std::string& backLine, const std::string& path, int depth,
             std::set<std::string>& stack) {
-    const std::string key = seq.id + "/" + path;
+    const std::string key = model::withScenario(seq.id, path);
     if (stack.count(key)) return;  // recursion: drawn once
     stack.insert(key);
     std::map<std::string, int> firstOrder, lastOrder, elseOrder;  // by frame id
@@ -610,7 +597,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     for (const auto& pair : model_.entities()) {
       const model::Entity& e = pair.second;
       if (e.kind != model::Kind::Sequence || e.expected) continue;
-      const std::string subjectId = e.id.substr(0, e.id.find("::sequence"));
+      const std::string subjectId = model::subjectOf(e.id);
       const bool prefix = !pattern.empty() && pattern.back() == '*' && e.id.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
       // as it is written: `Class::op` the default, `Class::op / scenario` that one, `Class::op*` them all
       const bool isDefault = e.fields.find("scenario") == e.fields.end();
@@ -619,7 +606,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       // `Class::op / scenario` with no behaviour of its own: a named branch of the default one
       const auto slash = pattern.find(" / ");
       if (isDefault && slash != std::string::npos && pattern.substr(0, slash) == subjectId &&
-          !model_.find(subjectId + "::sequence/" + pattern.substr(slash + 3)) &&
+          !model_.find(model::behaviourId(subjectId, pattern.substr(slash + 3))) &&
           model::hasScenario(model_, e.id, pattern.substr(slash + 3))) {
         selected.push_back(&e);
         pathOf[&e] = pattern.substr(slash + 3);
@@ -634,7 +621,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     // lifting (B9): every message between classes of different modules is a message between the modules
     std::set<std::string> drawn;
     for (const model::Entity* seq : selected) {
-      const std::string subjectId = seq->id.substr(0, seq->id.find("::sequence"));
+      const std::string subjectId = model::subjectOf(seq->id);
       const model::Entity* subject = model_.find(subjectId);
       const bool runsInModule = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Function);
       const model::Entity* cls = runsInModule ? model_.find(subject->scope) : subject;
@@ -657,7 +644,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     }
   } else {
     for (const model::Entity* seq : selected) {
-      const std::string subjectId = seq->id.substr(0, seq->id.find("::sequence"));
+      const std::string subjectId = model::subjectOf(seq->id);
       const model::Entity* subject = model_.find(subjectId);
       // a method runs on its class, a function on its module
       const bool function = subject && subject->kind == model::Kind::Function;
@@ -709,7 +696,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   nlohmann::json edges = nlohmann::json::array();
   std::set<std::string> drawn;
   for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
-    const model::Entity* state = model_.find(pattern + "::state");
+    const model::Entity* state = model_.find(model::stateId(pattern));
     if (!state) state = model_.find(pattern);
     if (!state || state->kind != model::Kind::State) continue;
     const auto box = [&](const std::string& name) {
@@ -859,9 +846,7 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
       if (e.kind == model::Kind::Requirement)
-        stereotype += e.scope.empty() || model::isSystemScope(e.scope)
-                          ? ", system"
-                          : ", " + model::lastName(e.scope.back() == '@' ? e.scope.substr(0, e.scope.size() - 1) : e.scope);
+        stereotype += e.scope.empty() || model::isSystemScope(e.scope) ? ", system" : ", " + model::lastName(model::boxOf(e.scope));
       node["stereotype"] = stereotype;
       if (!lines.empty()) node["sections"] = nlohmann::json::array({lines});
       const std::string text = fieldOf(e, "text");

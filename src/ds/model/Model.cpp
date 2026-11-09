@@ -132,7 +132,7 @@ bool Model::rename(const std::string& from, const std::string& to) {
   // members: everything whose identity or scope begins with the old one
   std::vector<std::pair<std::string, Entity>> members;
   for (auto m = entities_.begin(); m != entities_.end();) {
-    if (m->first.rfind(from + "::", 0) == 0 || m->first.rfind(from + "/", 0) == 0) {
+    if (m->first != from && within(m->first, from)) {  // a member or a scenario of what is renamed
       Entity e = m->second;
       e.id = to + m->first.substr(from.size());
       if (e.scope.rfind(from, 0) == 0) e.scope = to + e.scope.substr(from.size());
@@ -147,7 +147,7 @@ bool Model::rename(const std::string& from, const std::string& to) {
   auto translate = [&](std::string& id) {
     if (id == from)
       id = to;
-    else if (id.rfind(from + "::", 0) == 0 || id.rfind(from + "/", 0) == 0)
+    else if (within(id, from))
       id = to + id.substr(from.size());
   };
   // what a rule of a renamed class says moves with it
@@ -177,13 +177,6 @@ void Model::report(const Finding& finding) { findings_.push_back(finding); }
 
 namespace ds {
 namespace model {
-
-bool isSystemScope(const std::string& scope) { return !scope.empty() && scope.back() == '@' && scope.find('@') == scope.size() - 1; }
-
-std::string lastName(const std::string& id) {
-  const auto cut = id.find_last_of(":@");
-  return cut == std::string::npos ? id : id.substr(cut + 1);
-}
 
 namespace {
 

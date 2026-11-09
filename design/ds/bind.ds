@@ -121,9 +121,6 @@ package driftspec@ds {
         @requirement REQ-00030-1
       }
       - locationOf(file: parse::ParsedFile, node: TSNode) -> model::Location
-      - qualify(scope: std::string, name: std::string) -> std::string {
-        @constraint CST-00004-1
-      }
     }
 
     // Takes the root of the tree and walks it with no scope and no owner. Where the root
@@ -153,7 +150,7 @@ package driftspec@ds {
           }
         }
         opt a module {
-          -> qualify(scope, e.name) -> id
+          -> model::qualify(scope, e.name) -> id
           opt it has an owner {
             self -> model_.find(owner) -> ownerEntity
           }
@@ -170,7 +167,7 @@ package driftspec@ds {
           -> bindUseCase(file, c, scope, owner)
         }
         opt an interface, with its operations {
-          -> qualify(scope, e.name) -> id
+          -> model::qualify(scope, e.name) -> id
           -> bindFields(file, c, e)
           self -> model_.declare(e)
           opt it has an owner {
@@ -194,7 +191,7 @@ package driftspec@ds {
           -> bindFunction(file, c, scope, owner)
         }
         opt an enum, with its values {
-          -> qualify(scope, e.name) -> id
+          -> model::qualify(scope, e.name) -> id
           self -> model_.declare(e)
           opt it has an owner {
             self -> model_.relate(relation)
@@ -206,7 +203,7 @@ package driftspec@ds {
         }
         opt a state machine: its events and actions are kept for the checker {
           local entityName: std::string
-          -> qualify(scope, entityName)
+          -> model::qualify(scope, entityName)
           -> bindFields(file, c, e)
           self -> model_.declare(e)
           -> bindAnnotations(file, c, e.id, scope)

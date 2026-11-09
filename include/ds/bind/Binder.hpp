@@ -91,7 +91,6 @@ class Binder {
                    const model::Location& location);
   void declareOperator(model::Entity& cls, const std::string& symbol, const model::Location& location);
   model::Location locationOf(const parse::ParsedFile& file, TSNode node) const;
-  std::string qualify(const std::string& scope, const std::string& name) const;
 
   model::Model& model_;
   std::vector<Reference> references_;

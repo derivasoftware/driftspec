@@ -52,7 +52,7 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
 
 bool Query::known(const std::string& id) const {
   if (model_.find(id)) return true;
-  const std::string scope = id.back() == '@' ? id : id + "@";  // a package is a scope too: driftspec@ds
+  const std::string scope = model::scopeIn(id);  // a package is a scope too: driftspec@ds
   for (const auto& pair : model_.entities())
     if (pair.second.scope == scope || pair.second.scope == id) return true;
   return false;
@@ -77,7 +77,7 @@ std::vector<Answer> Query::diagrams() const {
   for (const auto& p : model_.entities()) {
     if (p.second.kind != model::Kind::Diagram) continue;
     const auto kind = p.second.fields.find("kind");
-    const std::string name = p.second.id.rfind("diagram:", 0) == 0 ? p.second.id.substr(8) : p.second.id;  // named as the user names it
+    const std::string name = model::diagramName(p.second.id);  // named as the user names it
     out.push_back({model::kindName(p.second.kind), name, kind == p.second.fields.end() ? "class" : kind->second});
   }
   return out;
@@ -131,7 +131,7 @@ std::vector<Answer> Query::behaviours(const std::string& id) const {
 std::vector<Answer> Query::shows(const std::string& diagram) const {
   // what the diagram draws: ask the projection itself, so the answer is what a drawing would show
   std::vector<Answer> out;
-  const std::string doc = render::IrExport(model_).render(diagram.rfind("diagram:", 0) == 0 ? diagram : "diagram:" + diagram, false);
+  const std::string doc = render::IrExport(model_).render(model::diagramId(diagram), false);
   if (doc.empty()) return {{"error", diagram, "no such diagram"}};
   for (const auto& n : render::IrDocument::parse(doc).bundled().nodes) {
     if (n.kind == "note") continue;

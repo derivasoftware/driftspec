@@ -9,6 +9,7 @@ package driftspec@ds {
     class string
     class map<K, V>
     class multimap<K, V>
+    class size_t
     class vector<T>
   }
 
@@ -71,8 +72,60 @@ package driftspec@ds {
     }
 
     function kindName(kind: Kind) -> std::string
+    // identities, written in one place (DS-124): packages join with @, the rest with ::, a behaviour
+    // is its subject with ::sequence[/scenario] or ::state, a template carries its arity
+    function qualify(scope: std::string, name: std::string) -> std::string {
+      @constraint CST-00004-1
+    }
+    function outer(scope: std::string) -> std::string {
+      @constraint CST-00004-1
+    }
+    function isQualified(name: std::string) -> bool {
+      @constraint CST-00004-1
+    }
+    function isAbsolute(name: std::string) -> bool {
+      @constraint CST-00004-1
+    }
+    function boxOf(scope: std::string) -> std::string {
+      @constraint CST-00004-1
+    }
+    function packageOf(scope: std::string) -> std::string {
+      @constraint CST-00004-1
+    }
+    function scopeIn(package: std::string) -> std::string {
+      @constraint CST-00004-1
+    }
     function isSystemScope(scope: std::string) -> bool
     function lastName(id: std::string) -> std::string
+    function within(id: std::string, prefix: std::string) -> bool {
+      @constraint CST-00004-1
+    }
+    function behaviourId(subject: std::string, scenario: std::string) -> std::string {
+      @requirement REQ-00035-1
+    }
+    function stateId(subject: std::string) -> std::string {
+      @requirement REQ-00035-1
+    }
+    function withScenario(behaviour: std::string, scenario: std::string) -> std::string {
+      @requirement REQ-00035-1
+    }
+    function subjectOf(id: std::string) -> std::string {
+      @requirement REQ-00035-1
+    }
+    function machineSubjectOf(stateMachine: std::string) -> std::string {
+      @requirement REQ-00035-1
+    }
+    function behaviourOf(id: std::string) -> std::string {
+      @requirement REQ-00035-1
+    }
+    function scenarioOf(id: std::string) -> std::string {
+      @requirement REQ-00035-1
+    }
+    function arityId(name: std::string, arity: std::size_t) -> std::string {
+      @requirement REQ-00029-1
+    }
+    function diagramId(name: std::string) -> std::string
+    function diagramName(id: std::string) -> std::string
 
     function readAs(model: Model, relation: Relation) -> std::string {
       @requirement REQ-00031-1
