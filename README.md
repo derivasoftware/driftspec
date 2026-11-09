@@ -23,6 +23,7 @@ Build: `cmake -S . -B build && cmake --build build -j && ctest --test-dir build`
 Regenerate the parser after editing the grammar: `tree-sitter generate` in `grammar/`.
 
 How a design is read in three perspectives, the outer contract of each and the rules: [`doc/perspectives.md`](doc/perspectives.md).
+How we design DriftSpec itself, until each practice is a rule: [`doc/design-practices.md`](doc/design-practices.md).
 
 Governed by argos (ASIL NA). Rules of the language so far: `examples/diag/ds.package.ds`
 and the R1–R9 notes in `examples/diag/*.ds`.

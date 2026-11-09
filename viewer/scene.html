@@ -720,7 +720,8 @@ document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttr
   const t0=performance.now(); lanim=now=>{let k=Math.min(1,(now-t0)/450); k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
     moves.forEach(([n,a,b])=>{if(!b) return; n.x=a[0]+(b[0]-a[0])*k; n.y=a[1]+(b[1]-a[1])*k; n.w=a[2]+(b[2]-a[2])*k; n.h=a[3]+(b[3]-a[3])*k;});
     if(k>=1){if(showPriv) ORDER.forEach(id=>{N[id].hidden=false;}); lanim=null; ROUTES=new Map(); if(SEL) select(SEL); return false;} return true;}; loop();};
-document.getElementById('fs').onclick=()=>{if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});};
+// embedded in a page (the live session), the page goes fullscreen whole, its panels with it (DS-141)
+document.getElementById('fs').onclick=()=>{if(parent!==window){try{parent.postMessage({ds:'fullscreen'},'*'); return;}catch(e){}}if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});};
 
 function focusBox(){const ids=new Set(FOCUS); const hit=ORDER.filter(id=>ids.has(id)&&N[id].kind!=='package'); if(!hit.length) return null;
   const x0=Math.min(...hit.map(i=>N[i].x)), y0=Math.min(...hit.map(i=>N[i].y)), x1=Math.max(...hit.map(i=>N[i].x+N[i].w)), y1=Math.max(...hit.map(i=>N[i].y+N[i].h));
