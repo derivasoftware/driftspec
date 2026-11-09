@@ -337,8 +337,9 @@ package driftspec@ds {
       }
     }
 
-    // What ds check does: the steps, each after what it needs. Today the needs keep the order the
-    // checker always had: linker, behaviour, contracts, derivation, structure, dependencies, rules.
+    // What ds check does: the steps, each after the steps that write what it reads. The linker
+    // first; behaviour typing and derivation each need only the linker; the checks of contracts and
+    // dependencies need the calls typing made; structure and rules read the finished model.
     sequence Checker::run {
       local context: Context
       local step: IStep

@@ -21,8 +21,8 @@ using model::outer;
 std::string ContractCheck::name() const { return "contracts"; }
 
 std::vector<std::string> ContractCheck::needs() const {
-  // today's order, kept so the output stays the same; relaxed when the derivations move (DS-138)
-  return {"behaviour"};
+  // the expansions behaviour typing made, over the links the linker made
+  return {"linker", "behaviour"};
 }
 
 std::vector<model::Finding> ContractCheck::check(const Context& context) {

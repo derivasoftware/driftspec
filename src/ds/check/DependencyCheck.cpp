@@ -21,8 +21,8 @@ using model::outer;
 std::string DependencyCheck::name() const { return "dependencies"; }
 
 std::vector<std::string> DependencyCheck::needs() const {
-  // today's order, kept so the output stays the same; relaxed when the derivations move (DS-138)
-  return {"structure"};
+  // the uses the linker made and the calls behaviour typing made
+  return {"linker", "behaviour"};
 }
 
 std::vector<model::Finding> DependencyCheck::check(const Context& context) {

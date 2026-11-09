@@ -21,8 +21,8 @@ using model::outer;
 std::string RuleCheck::name() const { return "rules"; }
 
 std::vector<std::string> RuleCheck::needs() const {
-  // today's order, kept so the output stays the same; relaxed when the derivations move (DS-138)
-  return {"dependencies"};
+  // rules range over the finished model: relations, calls and derived fields
+  return {"linker", "behaviour", "derivation"};
 }
 
 std::vector<model::Finding> RuleCheck::run(Context& context) {
