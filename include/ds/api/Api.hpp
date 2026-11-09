@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Model.hpp"
+#include "ds/parse/Parser.hpp"
+
 namespace ds {
 namespace api {
 
@@ -15,8 +18,14 @@ using Files = std::map<std::string, std::string>;
 /// so a Python face, a language server or the command line itself see one contract.
 class Api {
  public:
-  /// The findings of the workspace, then its counts: what `ds check --json` prints.
+  /// The findings of the workspace, then its counts: what `ds check --json` prints, built by report.
   static std::string check(const Files& files);
+  /// The files parsed, bound and checked, findings in file and line order: how every caller loads a
+  /// workspace, the command line from a directory and the Api from texts (DS-120).
+  static model::Model load(const std::vector<parse::ParsedFile>& files);
+  /// The findings, then the counts: entities declared, expected, relations, errors. The one shape of
+  /// a check, printed by `ds check --json` and returned by check (DS-120).
+  static std::string report(const model::Model& model, bool pretty = false);
   /// The model with its relations, findings and metamodel: what `ds export` prints.
   static std::string exportModel(const Files& files);
   /// What the grammar takes at a place of a text (0-based line and column): keywords, an

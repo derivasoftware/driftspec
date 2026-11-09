@@ -17,8 +17,8 @@ class TestApi : public ::testing::Test {
 TEST_F(TestApi, ACleanWorkspaceChecksWithNoFindingAndItsCounts) {
   const auto out = nlohmann::json::parse(ds::api::Api::check(files));
   EXPECT_TRUE(out["findings"].empty());
-  EXPECT_EQ(out["counts"]["errors"], 0);
-  EXPECT_GT(out["counts"]["entities"].get<int>(), 3);
+  EXPECT_EQ(out["errors"], 0);
+  EXPECT_GT(out["entities"].get<int>(), 3);
 }
 
 TEST_F(TestApi, TheModelExportsItsEntitiesByIdentity) {

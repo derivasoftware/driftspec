@@ -8,6 +8,7 @@
 #include <string>
 
 #include "ds/api/Api.hpp"
+#include "ds/parse/Parser.hpp"
 
 namespace {
 
@@ -32,7 +33,26 @@ class TestApiOverHola : public ::testing::Test {
 TEST_F(TestApiOverHola, TheExampleChecksCleanAsTheCommandLineSays) {
   const auto out = nlohmann::json::parse(ds::api::Api::check(files));
   EXPECT_TRUE(out["findings"].empty());
-  EXPECT_EQ(out["counts"]["findings"], 0);
+  EXPECT_EQ(out["errors"], 0);
+}
+
+TEST_F(TestApiOverHola, TheApiReturnsTheReportTheCommandLinePrints) {
+  // the command line loads the directory and prints Api::report; the Api loads the texts: one report (DS-120)
+  ds::parse::Parser parser;
+  const auto cli = nlohmann::json::parse(
+      ds::api::Api::report(ds::api::Api::load(parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/artefacts"))));
+  ds::api::Files texts;
+  for (const auto& entry : std::filesystem::recursive_directory_iterator(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/artefacts")) {
+    if (entry.path().extension() != ".ds") continue;
+    std::ifstream in(entry.path());
+    std::stringstream text;
+    text << in.rdbuf();
+    texts[entry.path().string()] = text.str();
+  }
+  const auto api = nlohmann::json::parse(ds::api::Api::check(texts));
+  for (const char* count : {"entities", "expected", "relations", "errors"}) EXPECT_EQ(api[count], cli[count]) << count;
+  EXPECT_GT(cli["errors"].get<int>(), 0);  // a workspace with findings, so the comparison says something
+  EXPECT_EQ(api["findings"].size(), cli["findings"].size());
 }
 
 TEST_F(TestApiOverHola, TheModelOfTheExampleExportsByIdentity) {

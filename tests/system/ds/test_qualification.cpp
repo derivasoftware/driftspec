@@ -87,6 +87,15 @@ TEST_F(TestQualification, EveryIncoherenceIsAFindingAtItsLocation) {
 }
 
 // SREQ-00003-2: artefacts linked to the design by revision, boxes and classes alike
+// DS-120: ds check --json prints the one shape of a check, the one pyds.check returns
+TEST_F(TestQualification, TheCheckJsonSaysTheFindingsAndTheCounts) {
+  const Outcome check = ds("check --json " + examples("artefacts"));
+  const auto out = nlohmann::json::parse(check.out);
+  for (const char* key : {"findings", "entities", "expected", "relations", "errors"}) EXPECT_TRUE(out.contains(key)) << key;
+  EXPECT_GT(out["errors"].get<int>(), 0);
+  EXPECT_EQ(check.code, 1);
+}
+
 TEST_F(TestQualification, ArtefactsAreLinkedByRevision) {
   const auto exported = nlohmann::json::parse(ds("export " + examples("artefacts")).out);
   bool refines = false, verifies = false, realises = false;

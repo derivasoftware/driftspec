@@ -17,7 +17,7 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
   }
 
-  verification SVER-00002-2 {
+  verification SVER-00002-3 {
     status: approved
     @requirement SREQ-00002-1
     title: System tests confirm every incoherence is a finding with code, severity and location, and a path that is no workspace is bad usage
@@ -30,6 +30,7 @@ package driftspec {
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
+      tests/system/ds/test_qualification.cpp::TestQualification.TheCheckJsonSaysTheFindingsAndTheCounts
       tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
   }
