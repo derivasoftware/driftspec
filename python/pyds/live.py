@@ -194,8 +194,8 @@ class Live:
             changed = set() if first else {i for i, s in sigs.items() if self.sigs.get(i) != s}
             for i in list(changed):  # a member that changed marks its class too, seen from afar
                 e = model.entities.get(i)
-                if e is not None and e.kind in ("method", "attribute", "operation", "outcome") and e.scope in model.entities:
-                    changed.add(e.scope)
+                if e is not None and model.owner(e).id != e.id:  # what holds it, as the metamodel says (DS-122)
+                    changed.add(model.owner(e).id)
             self.changed = sorted(changed)
             self.removed = [] if first else sorted(i for i in self.sigs if i not in sigs)
             self.sigs, self.page, self.error = sigs, page, ""

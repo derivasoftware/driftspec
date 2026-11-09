@@ -32,7 +32,7 @@ package driftspec@pyds {
       JSON pyds._native returns. check, render, page and expected_at do the same for their
       answers. The native module is built against the limited API (abi3).
     tags: python, api
-    verification VER-00095-1 {
+    verification VER-00095-2 {
       status: approved
       title: Integration tests confirm pyds loads a directory or the texts an editor holds into a typed model, checks it, draws and pages it
       method: test
@@ -45,6 +45,8 @@ package driftspec@pyds {
         tests/integration/python/test_pyds.py::TestDrawing::test_a_diagram_draws_as_text_and_none_draws_nothing
         tests/integration/python/test_pyds.py::TestDrawing::test_the_viewer_opens_framed_where_it_is_asked
         tests/integration/python/test_pyds.py::TestDrawing::test_what_the_grammar_takes_in_a_module
+        tests/integration/python/test_pyds.py::TestModelReadsTheMetamodel::test_a_member_an_outcome_and_a_rule_are_drawn_inside_what_holds_them
+        tests/integration/python/test_pyds.py::TestModelReadsTheMetamodel::test_messages_are_laid_out_and_interfaces_are_named
     }
   }
 
@@ -58,7 +60,7 @@ package driftspec@pyds {
       Definition, references, hover, completion and symbols answer from that model; draw and
       view show the diagram or the entity under the cursor, or the declaration the cursor is in.
     tags: lsp, editor
-    verification VER-00096-1 {
+    verification VER-00096-2 {
       status: approved
       title: Integration tests confirm the language server, driven over stdio, diagnoses a buffer as it is typed, leads a name to its declaration and draws it, and keeps each design apart
       method: test
@@ -66,6 +68,8 @@ package driftspec@pyds {
         tests/integration/python/test_lsp.py::TestLanguageServer::test_a_buffer_typed_wrong_is_diagnosed_and_cleared_when_right
         tests/integration/python/test_lsp.py::TestLanguageServer::test_a_name_leads_to_its_declaration_and_draws
         tests/integration/python/test_lsp.py::TestLanguageServer::test_a_file_belongs_to_its_own_design_only
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_the_outline_lists_every_declaration_of_the_file
+        tests/integration/python/test_lsp.py::TestLanguageServer::test_completion_offers_every_kind_a_reference_names
     }
   }
 
@@ -459,6 +463,11 @@ package driftspec@pyds {
       + named(name: string) -> list<Entity>
       + relations_of(identity: string) -> list<Relation>
       + in_file(path: string) -> list<Entity>
+      + parents_of(kind: string) -> list<string>
+      + in_a_box(kind: string) -> bool
+      + laid_out(kind: string) -> bool
+      + named_kinds() -> set<string>
+      + owner(entity: Entity) -> Entity
     }
     dataclass Report {
       @requirement REQ-00086-1

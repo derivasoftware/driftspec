@@ -48,6 +48,24 @@ RULE = """package p {
 """
 
 
+class TestModelReadsTheMetamodel:
+    """What a kind is and where it stands, read from the metamodel instead of lists of kinds (DS-122)."""
+
+    def test_a_member_an_outcome_and_a_rule_are_drawn_inside_what_holds_them(self, hola):
+        model = pyds.load(hola)
+        assert model.owner(model.find("hola@core::Casual::emoji")).id == "hola@core::Casual"
+        assert model.owner(model.find("hola@core::Style::apply")).id == "hola@core::Style"
+        outcome = next(e for e in model.of_kind("outcome"))
+        assert model.owner(outcome).kind == "usecase"
+        assert model.owner(model.find("hola@core::Style")).id == "hola@core::Style"  # a class stands in its module
+
+    def test_messages_are_laid_out_and_interfaces_are_named(self, hola):
+        model = pyds.load(hola)
+        assert model.laid_out("message") and not model.laid_out("class")
+        assert {"class", "enum", "interface", "function", "requirement", "usecase"} <= model.named_kinds()
+        assert not {"method", "attribute", "message", "package"} & model.named_kinds()
+
+
 class TestRules:
     def test_what_breaks_a_rule_comes_with_its_bindings_and_its_answer(self):
         model = pyds.load({"a.ds": RULE})

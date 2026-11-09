@@ -169,10 +169,11 @@ def completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.Completi
         if w not in ("key: value",)
     ]
     model: pyds.Model = state["model"]
-    if model:  # the names the model declares, for a type or a call
+    if model:  # the names the model declares that a reference can name, as the metamodel says (DS-122)
         seen = set()
+        named = model.named_kinds()
         for e in model.entities.values():
-            if e.kind in ("class", "enum", "function", "requirement", "usecase") and not e.expected and e.name not in seen:
+            if e.kind in named and not e.expected and e.name not in seen:
                 seen.add(e.name)
                 items.append(lsp.CompletionItem(label=e.name, kind=lsp.CompletionItemKind.Class, detail=e.kind))
     return lsp.CompletionList(is_incomplete=False, items=items)
@@ -186,8 +187,9 @@ def symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.Sy
              "function": lsp.SymbolKind.Function, "method": lsp.SymbolKind.Method, "interface": lsp.SymbolKind.Interface,
              "requirement": lsp.SymbolKind.Key, "usecase": lsp.SymbolKind.Event}
     path = path_of(params.text_document.uri)
+    # every declaration of the file; what a behaviour lays out (messages, frames) is no declaration (DS-122)
     return [lsp.SymbolInformation(name=e.name, kind=kinds.get(e.kind, lsp.SymbolKind.Object), location=location_of(e))
-            for e in (model.in_file(path) if model else []) if e.kind in kinds]
+            for e in (model.in_file(path) if model else []) if not e.expected and not model.laid_out(e.kind)]
 
 
 # ---- seeing it: the diagram or the entity under the cursor, drawn as text or in the viewer ----
@@ -237,8 +239,8 @@ def with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], st
     """The workspace with a diagram of one entity and what it relates to, written on the fly; a member
     is drawn as the class it belongs to."""
     entity = state["model"].find(identity)
-    while entity and entity.kind in ("attribute", "method", "operator", "outcome") and state["model"].find(entity.scope):
-        entity = state["model"].find(entity.scope)
+    if entity:  # a member, an outcome, a rule in a member: drawn as what holds it (DS-122)
+        entity = state["model"].owner(entity)
         identity = entity.id
     kind = "requirement" if entity and entity.kind in ARTEFACT else "class"
     name = "__Focus"
