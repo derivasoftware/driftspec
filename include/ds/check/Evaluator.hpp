@@ -20,7 +20,8 @@ class Evaluator {
   Evaluator(model::Model& model, const Resolver& resolver);
 
   /// Validate every formula, compute the definitions and report each rule that the model breaks.
-  void run();
+  /// Evaluate every rule: breaches go into the model, findings come back to the step that runs it.
+  std::vector<model::Finding> run();
 
  private:
   void index();
@@ -50,6 +51,7 @@ class Evaluator {
   void report(const std::string& code, const std::string& owner, const std::string& message, const model::Location& at);
 
   model::Model& model_;
+  std::vector<model::Finding> found_;
   const Resolver& resolver_;
   std::map<std::string, std::string> parent_;                                ///< what holds each entity
   std::map<std::string, std::vector<std::string>> children_;                 ///< what each entity holds

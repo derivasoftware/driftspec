@@ -18,9 +18,8 @@ std::string Context::current(const std::string& id) const {
 void Context::checkVisibility(const std::string& from, const std::string& target, const model::Location& location) {
   const std::string hidden = resolver_.privateOnTheWay(from, target);
   if (hidden.empty()) return;
-  model_.report({"W-NOT-VISIBLE", "warning",
-                 from + " reaches " + target + (hidden == target ? ", which is private" : " through " + hidden + ", which is private"),
-                 location});
+  report({"W-NOT-VISIBLE", "warning",
+          from + " reaches " + target + (hidden == target ? ", which is private" : " through " + hidden + ", which is private"), location});
 }
 
 void Context::checkLeak(const std::string& from, const std::string& target, const model::Location& location) {
@@ -42,7 +41,13 @@ void Context::checkLeak(const std::string& from, const std::string& target, cons
     const auto visibility = e->fields.find("visibility");
     if (visibility != e->fields.end() && visibility->second == "-") return;
   }
-  model_.report({"W-PRIVATE-LEAK", "warning", from + " is public and shows " + target + ", which is private", location});
+  report({"W-PRIVATE-LEAK", "warning", from + " is public and shows " + target + ", which is private", location});
+}
+
+std::vector<model::Finding> Context::take() {
+  std::vector<model::Finding> out;
+  out.swap(found_);
+  return out;
 }
 
 }  // namespace check

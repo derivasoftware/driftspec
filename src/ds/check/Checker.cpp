@@ -34,7 +34,8 @@ std::vector<std::string> Checker::order() const {
 
 void Checker::run(const bind::Binder& binder) {
   Context context(model_, resolver_, binder);
-  for (const auto& key : order()) steps_.at(key)->run(context);
+  for (const auto& key : order())
+    for (const auto& f : steps_.at(key)->run(context)) model_.report(f);  // in the order the steps run
 }
 
 }  // namespace check

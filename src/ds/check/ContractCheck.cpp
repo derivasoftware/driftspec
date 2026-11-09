@@ -25,14 +25,18 @@ std::vector<std::string> ContractCheck::needs() const {
   return {"behaviour"};
 }
 
-void ContractCheck::run(Context& context) {
+std::vector<model::Finding> ContractCheck::check(const Context& context) {
   context_ = &context;
   model_ = &context.model();
   resolver_ = &context.resolver();
+  found_.clear();
   checkInterfaces();
   checkUseCases();
   checkDiagrams();
   checkScenarios();
+  std::vector<model::Finding> out;
+  out.swap(found_);
+  return out;
 }
 
 std::string ContractCheck::outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const {
@@ -77,13 +81,13 @@ void ContractCheck::checkUseCases() {
       if (isUseCase(r.to))
         base[r.from] = r.to;
       else
-        model_->report(
+        found_.push_back(
             {"W-USECASE-UNDECLARED", "warning", r.from + " specialises '" + r.to + "', which is no use case of the workspace", r.location});
     } else if (r.kind == "realises" && from->kind == model::Kind::Operation) {
       if (isUseCase(r.to))
         realisedBy[r.to].push_back(&r);
       else
-        model_->report(
+        found_.push_back(
             {"W-USECASE-UNDECLARED", "warning", r.from + " realises '" + r.to + "', which is no use case of the workspace", r.location});
     }
   }
@@ -118,7 +122,7 @@ void ContractCheck::checkUseCases() {
     const model::Entity* own = model_->find(pair.first);
     const model::Entity* inherited = contract(pair.second);
     if (own && inherited && own->fields.count("operation") && signature(*own) != signature(*inherited)) {
-      model_->report(
+      found_.push_back(
           {"W-USECASE-SIGNATURE", "warning",
            pair.first + " specialises " + pair.second + " but takes and gives " + signature(*own) + ", not " + signature(*inherited),
            own->location});
@@ -132,15 +136,15 @@ void ContractCheck::checkUseCases() {
     for (const model::Relation* r : pair.second) {
       const model::Entity* op = model_->find(r->from);
       if (promised && signature(*op) != signature(*promised)) {
-        model_->report({"W-USECASE-SIGNATURE", "warning",
-                        op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised),
-                        r->location});
+        found_.push_back({"W-USECASE-SIGNATURE", "warning",
+                          op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised),
+                          r->location});
       }
       const std::string behaviour = model::behaviourId(op->id);
       for (const auto& end : ends) {
         if (end == "default" || model_->find(model::withScenario(behaviour, end)) || model::hasScenario(*model_, behaviour, end)) continue;
-        model_->report({"W-USECASE-OUTCOME-UNHANDLED", "warning",
-                        op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r->location});
+        found_.push_back({"W-USECASE-OUTCOME-UNHANDLED", "warning",
+                          op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r->location});
       }
       for (const auto& other : model_->entities()) {  // a scenario written apart that no outcome names
         const model::Entity& s = other.second;
@@ -148,8 +152,8 @@ void ContractCheck::checkUseCases() {
           continue;
         const std::string scenario = s.id.substr(behaviour.size() + 1);
         if (!ends.count(scenario)) {
-          model_->report({"W-SCENARIO-NO-OUTCOME", "warning",
-                          op->id + " handles '" + scenario + "', and " + pair.first + " names no such outcome", s.location});
+          found_.push_back({"W-SCENARIO-NO-OUTCOME", "warning",
+                            op->id + " handles '" + scenario + "', and " + pair.first + " names no such outcome", s.location});
         }
       }
     }
@@ -157,8 +161,8 @@ void ContractCheck::checkUseCases() {
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.kind != model::Kind::UseCase || e.expected || realised.count(e.id)) continue;
-    model_->report({"W-USECASE-UNREALISED", "warning",
-                    e.id + " is realised by no interface operation, nor is any use case that specialises it", e.location});
+    found_.push_back({"W-USECASE-UNREALISED", "warning",
+                      e.id + " is realised by no interface operation, nor is any use case that specialises it", e.location});
   }
 }
 
@@ -173,7 +177,7 @@ void ContractCheck::checkInterfaces() {
     if (e.kind != model::Kind::Operation) continue;
     const std::string behaviour = model::behaviourId(e.id);
     if (!model_->find(behaviour)) {
-      model_->report({"W-OPERATION-NO-BEHAVIOUR", "warning", e.id + " has no sequence that says how it is handled", e.location});
+      found_.push_back({"W-OPERATION-NO-BEHAVIOUR", "warning", e.id + " has no sequence that says how it is handled", e.location});
     }
     for (const auto& field : e.fields) {
       if (field.first.rfind("exit ", 0) != 0) continue;
@@ -185,15 +189,15 @@ void ContractCheck::checkInterfaces() {
         path = field.second;
       }
       if (!model_->find(id)) {
-        model_->report({"W-SCENARIO-UNDECLARED", "warning",
-                        e.id + " exits " + code + " on '" + field.second + "', and it has no such scenario", e.location});
+        found_.push_back({"W-SCENARIO-UNDECLARED", "warning",
+                          e.id + " exits " + code + " on '" + field.second + "', and it has no such scenario", e.location});
         continue;
       }
       std::set<std::string> seen;
       const std::string outcome = outcomeOf(id, path, &seen);
       if (!outcome.empty() && outcome != code) {
-        model_->report({"W-OUTCOME-MISMATCH", "warning",
-                        e.id + " promises exit " + code + " on '" + field.second + "', and that trace ends in " + outcome, e.location});
+        found_.push_back({"W-OUTCOME-MISMATCH", "warning",
+                          e.id + " promises exit " + code + " on '" + field.second + "', and that trace ends in " + outcome, e.location});
       }
     }
   }
@@ -214,8 +218,8 @@ void ContractCheck::checkViews(const model::Entity& state) {
       const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
       for (const std::string& name : {from, to}) {
         if (!views.count(name)) {
-          model_->report({"W-VIEW-UNDECLARED", "warning",
-                          "the navigation of " + state.name + " names '" + name + "', which is not one of its views", state.location});
+          found_.push_back({"W-VIEW-UNDECLARED", "warning",
+                            "the navigation of " + state.name + " names '" + name + "', which is not one of its views", state.location});
         }
       }
       if (from != to) next[from].insert(to);  // staying where you are is no way in or out
@@ -234,9 +238,9 @@ void ContractCheck::checkViews(const model::Entity& state) {
   for (const auto& view : views) {
     const model::Entity* v = model_->find(state.id + "::" + view);
     if (!reached.count(view)) {
-      model_->report({"W-VIEW-UNREACHABLE", "warning", "nothing leads to the view " + view + " of " + state.name, v->location});
+      found_.push_back({"W-VIEW-UNREACHABLE", "warning", "nothing leads to the view " + view + " of " + state.name, v->location});
     } else if (views.size() > 1 && next[view].empty()) {
-      model_->report({"W-VIEW-NO-WAY-OUT", "warning", "nothing leaves the view " + view + " of " + state.name, v->location});
+      found_.push_back({"W-VIEW-NO-WAY-OUT", "warning", "nothing leaves the view " + view + " of " + state.name, v->location});
     }
   }
 }
@@ -252,7 +256,7 @@ void ContractCheck::checkScenarios() {
       if (name == f.fields.end()) continue;
       const std::string base = model::behaviourId(model::subjectOf(f.scope));  // the behaviour, whatever scenario holds the frame
       if (++named[model::withScenario(base, name->second)] == 2 || model_->find(model::withScenario(base, name->second))) {
-        model_->report(
+        found_.push_back(
             {"W-SCENARIO-TWICE", "warning", base + " names the scenario '" + name->second + "' twice: a scenario is one path", f.location});
       }
     }
@@ -273,15 +277,16 @@ void ContractCheck::checkDiagrams() {
         if (!model_->find(behaviour) || model_->find(model::withScenario(behaviour, scenario)) ||
             model::hasScenario(*model_, behaviour, scenario))
           continue;
-        model_->report({"W-SCENARIO-UNDECLARED", "warning", pair.second.name + " asks for " + pattern + ", a scenario nobody declares",
-                        pair.second.location});
+        found_.push_back({"W-SCENARIO-UNDECLARED", "warning", pair.second.name + " asks for " + pattern + ", a scenario nobody declares",
+                          pair.second.location});
       }
     }
     const auto depth = pair.second.fields.find("depth");
     if (depth == pair.second.fields.end() || depth->second == "*") continue;
     if (depth->second.empty() || depth->second.find_first_not_of("0123456789") != std::string::npos) {
-      model_->report({"W-DIAGRAM-DEPTH", "warning",
-                      pair.second.name + " asks for depth '" + depth->second + "': a number, or * for every level", pair.second.location});
+      found_.push_back({"W-DIAGRAM-DEPTH", "warning",
+                        pair.second.name + " asks for depth '" + depth->second + "': a number, or * for every level",
+                        pair.second.location});
     }
   }
 }

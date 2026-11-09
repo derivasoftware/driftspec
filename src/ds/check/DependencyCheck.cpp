@@ -25,11 +25,15 @@ std::vector<std::string> DependencyCheck::needs() const {
   return {"structure"};
 }
 
-void DependencyCheck::run(Context& context) {
+std::vector<model::Finding> DependencyCheck::check(const Context& context) {
   context_ = &context;
   model_ = &context.model();
   resolver_ = &context.resolver();
+  found_.clear();
   checkDependencies();
+  std::vector<model::Finding> out;
+  out.swap(found_);
+  return out;
 }
 
 // A box says what it depends on (@uses <interface>, REQ-00088-1) and its behaviours say what it
@@ -86,7 +90,7 @@ void DependencyCheck::checkDependencies() {
       }
       const auto offered = offeredBy.find(iface);
       if (declares || inside(subject, iface) || (offered != offeredBy.end() && inside(subject, offered->second))) continue;
-      model_->report(
+      found_.push_back(
           {"W-USES-UNDECLARED", "warning", subject + " calls " + op->id + ", and nothing it lives in declares @uses " + iface, location});
     } else if (op->kind == model::Kind::Method) {
       const auto r2 = realised.find(op->scope);
@@ -103,10 +107,10 @@ void DependencyCheck::checkDependencies() {
         if (iface.empty() && operation && operation->kind == model::Kind::Operation) iface = i;
       }
       if (iface.empty()) continue;
-      model_->report({"W-USES-BYPASS", "warning",
-                      subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
-                          ": call the interface (a local or a parameter typed " + iface + ") and declare @uses " + iface,
-                      location});
+      found_.push_back({"W-USES-BYPASS", "warning",
+                        subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
+                            ": call the interface (a local or a parameter typed " + iface + ") and declare @uses " + iface,
+                        location});
     }
   }
   for (const auto& d : declared) {
@@ -121,8 +125,8 @@ void DependencyCheck::checkDependencies() {
     if (!behaves) continue;  // a box drawn before its behaviour: its uses are a plan, not yet a claim
     for (const auto& iface : d.second) {
       if (called[d.first].count(iface)) continue;
-      model_->report({"W-USES-UNUSED", "warning", d.first + " declares @uses " + iface + ", and none of its behaviours calls it",
-                      written[{d.first, iface}]});
+      found_.push_back({"W-USES-UNUSED", "warning", d.first + " declares @uses " + iface + ", and none of its behaviours calls it",
+                        written[{d.first, iface}]});
     }
   }
 }

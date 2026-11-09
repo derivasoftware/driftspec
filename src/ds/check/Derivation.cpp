@@ -25,11 +25,13 @@ std::vector<std::string> Derivation::needs() const {
   return {"contracts"};
 }
 
-void Derivation::run(Context& context) {
+std::vector<model::Finding> Derivation::run(Context& context) {
   context_ = &context;
   model_ = &context.model();
   resolver_ = &context.resolver();
   classify();
+  fillLanguages();
+  return context.take();
 }
 
 // interface / abstract / value and the operator families are derived, never written (R14, R17)
@@ -75,6 +77,49 @@ void Derivation::classify() {
       }
     }
     if (!stereotypes.empty()) cls->fields["stereotypes"] = join(stereotypes, ", ");
+  }
+}
+
+// A package or a module says what its code is written in, or holds the language of the box around
+// it: the field is filled down, so a reader of the model finds it on every package and module. A
+// language ds does not know, or two at once (two declarations of a reopened box), is a finding.
+void Derivation::fillLanguages() {
+  static const std::set<std::string> kKnown{"cpp", "c", "python", "typescript", "lua"};
+  std::map<std::string, std::string> parent;
+  for (const auto& r : model_->relations()) {
+    const model::Entity* from = model_->find(r.from);
+    const model::Entity* to = model_->find(r.to);
+    if (r.kind == "contains" && from && to && (to->kind == model::Kind::Package || to->kind == model::Kind::Module)) parent[r.to] = r.from;
+  }
+  std::vector<std::string> boxes;
+  for (const auto& pair : model_->entities())
+    if (pair.second.kind == model::Kind::Package || pair.second.kind == model::Kind::Module) boxes.push_back(pair.first);
+  std::map<std::string, std::string> own;
+  for (const auto& id : boxes) {
+    model::Entity& e = *model_->find(id);
+    const auto written = e.fields.find("language");
+    if (written == e.fields.end() || written->second.empty()) continue;
+    std::set<std::string> said;
+    for (const auto& item : split(written->second, ',')) said.insert(item);
+    const std::string first = *said.begin();
+    if (said.size() > 1) {
+      context_->report(
+          {"W-LANGUAGE-UNKNOWN", "warning", e.id + " says two languages (" + written->second + "): one box, one language", e.location});
+    } else if (!kKnown.count(first)) {
+      context_->report({"W-LANGUAGE-UNKNOWN", "warning",
+                        e.id + " is written in '" + first + "', which is none of cpp, c, python, typescript, lua", e.location});
+    }
+    own[e.id] = first;
+  }
+  for (const auto& id : boxes) {
+    model::Entity& e = *model_->find(id);
+    std::set<std::string> seen;
+    for (std::string at = e.id; !at.empty() && seen.insert(at).second; at = parent.count(at) ? parent.at(at) : "") {
+      const auto it = own.find(at);
+      if (it == own.end()) continue;
+      e.fields["language"] = it->second;
+      break;
+    }
   }
 }
 

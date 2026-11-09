@@ -27,8 +27,9 @@ package driftspec@ds {
       - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
       - stratum_: std::map<std::string, int>
       - owns invalid_: std::set<std::string>
+      - owns found_: std::vector<model::Finding>
       + Evaluator(model: model::Model, resolver: Resolver)
-      + run() -> void
+      + run() -> std::vector<model::Finding>
       - index() -> void
       - validate(id: std::string, formula: model::Formula) -> bool
       - validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>) -> bool
@@ -73,18 +74,27 @@ package driftspec@ds {
       }
     }
 
-    // One step of the check (DS-138): its key, the steps it needs done before it, what it does to the
-    // model. The checker orders the steps by what they need and runs them, knowing none of them.
+    // One step of the check (DS-138): its key, the steps it needs done before it, and what it found,
+    // which it gives back. The checker orders the steps by what they need and runs them, knowing none of them.
     class IStep {
       @requirement REQ-00012-1
       + ~IStep()
       + abstract name() -> std::string
       + abstract needs() -> std::vector<std::string>
-      + abstract run(context: Context) -> void
+      + abstract run(context: Context) -> std::vector<model::Finding>
+    }
+
+    // A step that only checks (DS-138): run hands check the context to read, whose model is const,
+    // so no check can change the model; what it finds it gives back. The one abstract class here.
+    class ACheck : IStep {
+      @requirement REQ-00012-1
+      + run(context: Context) -> std::vector<model::Finding>
+      - abstract check(context: Context) -> std::vector<model::Finding>
     }
 
     // What every step of one check is given: the model, what the binder collected, the resolver,
-    // the renames linking made and what was already reported as undeclared.
+    // the renames linking made, what was already reported as undeclared, and what the running step
+    // found, until it takes it back.
     class Context {
       @requirement REQ-00012-1
       - refs model_: model::Model
@@ -92,6 +102,7 @@ package driftspec@ds {
       - refs binder_: bind::Binder
       - owns renamed_: std::map<std::string, std::string>
       - owns reported_: std::set<std::string>
+      - owns found_: std::vector<model::Finding>
       + Context(model: model::Model, resolver: Resolver, binder: bind::Binder)
       + model() -> model::Model
       + resolver() -> Resolver
@@ -101,6 +112,8 @@ package driftspec@ds {
       }
       + renamed() -> std::map<std::string, std::string>
       + reported() -> std::set<std::string>
+      + report(finding: model::Finding) -> void
+      + take() -> std::vector<model::Finding>
       + checkVisibility(from: std::string, target: std::string, location: model::Location) -> void {
         @requirement REQ-00063-1
       }
@@ -109,7 +122,8 @@ package driftspec@ds {
       }
     }
 
-    // A runner of steps: it orders them by what each needs and runs them over one context.
+    // A runner of steps: it orders them by what each needs, runs them over one context and adds
+    // what each found to the model when it ends.
     class Checker {                          // realises the language step by step: each step names its requirements
       @requirement REQ-00053-1
       @requirement REQ-00012-1
@@ -139,7 +153,7 @@ package driftspec@ds {
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> void
+      + run(context: Context) -> std::vector<model::Finding>
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
         @requirement REQ-00053-1
@@ -171,7 +185,7 @@ package driftspec@ds {
       - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> void
+      + run(context: Context) -> std::vector<model::Finding>
       - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
         @requirement REQ-00036-2
       }
@@ -212,7 +226,7 @@ package driftspec@ds {
       }
     }
 
-    class ContractCheck : IStep {         // interfaces, use cases, scenarios, outcomes and diagrams
+    class ContractCheck : ACheck {         // interfaces, use cases, scenarios, outcomes and diagrams
       @requirement REQ-00060-1
       @requirement REQ-00082-1
       @requirement REQ-00061-1
@@ -221,9 +235,10 @@ package driftspec@ds {
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
+      - owns found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> void
+      - check(context: Context) -> std::vector<model::Finding>
       - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
         @requirement REQ-00060-1
       }
@@ -244,31 +259,35 @@ package driftspec@ds {
       }
     }
 
-    class Derivation : IStep {            // what the model says without writing it: the stereotypes
+    class Derivation : IStep {            // what the model says without writing it: the stereotypes, the languages
       @requirement REQ-00031-1
-      - refs context_: Context
-      - refs model_: model::Model
-      - refs resolver_: Resolver
-      + name() -> std::string
-      + needs() -> std::vector<std::string>
-      + run(context: Context) -> void
-      - classify() -> void {
-        @requirement REQ-00031-1
-      }
-    }
-
-    class StructureCheck : IStep {        // ownership, artefacts, extensions, fields and languages
-      @requirement REQ-00028-1
-      @requirement REQ-00045-1
-      @constraint CST-00003-1
-      @requirement REQ-00067-1
       @requirement REQ-00084-1
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> void
+      + run(context: Context) -> std::vector<model::Finding>
+      - classify() -> void {
+        @requirement REQ-00031-1
+      }
+      - fillLanguages() -> void {
+        @requirement REQ-00084-1
+      }
+    }
+
+    class StructureCheck : ACheck {        // ownership, artefacts, extensions and fields
+      @requirement REQ-00028-1
+      @requirement REQ-00045-1
+      @constraint CST-00003-1
+      @requirement REQ-00067-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      - owns found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
       - checkOwnershipCycles() -> void {
         @requirement REQ-00028-1
       }
@@ -281,19 +300,17 @@ package driftspec@ds {
       - checkFields() -> void {
         @requirement REQ-00067-1
       }
-      - checkLanguages() -> void {
-        @requirement REQ-00084-1
-      }
     }
 
-    class DependencyCheck : IStep {       // what a box declares it uses against what its behaviours call
+    class DependencyCheck : ACheck {       // what a box declares it uses against what its behaviours call
       @requirement REQ-00094-2
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
+      - owns found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> void
+      - check(context: Context) -> std::vector<model::Finding>
       - checkDependencies() -> void {
         @requirement REQ-00094-2
       }
@@ -306,7 +323,7 @@ package driftspec@ds {
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> void
+      + run(context: Context) -> std::vector<model::Finding>
       - checkRules() -> void {
         @requirement REQ-00095-2
       }
@@ -319,7 +336,10 @@ package driftspec@ds {
       local step: IStep
       self -> order() -> keys
       loop each key, in order {
-        -> step.run(context)
+        -> step.run(context) -> found
+        loop each finding found {
+          self -> model_.report(finding)
+        }
       }
     }
 
@@ -350,19 +370,18 @@ package driftspec@ds {
       }
     }
 
-    sequence ContractCheck::run {
+    sequence ContractCheck::check {
       -> checkInterfaces()
       -> checkUseCases()
       -> checkDiagrams()
       -> checkScenarios()
     }
 
-    sequence StructureCheck::run {
+    sequence StructureCheck::check {
       -> checkOwnershipCycles()
       -> checkArtefacts()
       -> checkExtensions()
       -> checkFields()
-      -> checkLanguages()
     }
 
     // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named
@@ -405,7 +424,7 @@ package driftspec@ds {
           return
         }
         opt the caller is itself a function / no-function {
-          self -> model_.report(finding)
+          self -> context_.report(finding)
           return
         }
       }
@@ -415,7 +434,7 @@ package driftspec@ds {
       } else {
         -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
         opt the context has nothing by that name / unknown-participant {
-          self -> model_.report(finding)
+          self -> context_.report(finding)
           return
         }
         self -> resolver_.resolveTypeText(value.first, value.second) -> typeId
@@ -434,7 +453,7 @@ package driftspec@ds {
       }
       self -> model_.find(opId) -> op
       opt the type does not declare the operation / undeclared-op {
-        self -> model_.report(finding)
+        self -> context_.report(finding)
         return
       }
       -> call(msg, op, message)

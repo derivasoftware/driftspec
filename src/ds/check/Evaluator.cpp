@@ -74,8 +74,8 @@ bool compare(Form form, const std::string& a, const std::string& z) {
 
 Evaluator::Evaluator(model::Model& model, const Resolver& resolver) : model_(model), resolver_(resolver) {}
 
-void Evaluator::run() {
-  if (model_.formulas().empty()) return;
+std::vector<model::Finding> Evaluator::run() {
+  if (model_.formulas().empty()) return {};
   index();
   for (const auto& f : model_.formulas())
     if (!validate(f.first, f.second)) invalid_.insert(f.first);
@@ -85,6 +85,9 @@ void Evaluator::run() {
     const model::Entity* e = model_.find(f.first);
     if (e && e->kind == model::Kind::Rule && !invalid_.count(f.first)) evaluateRule(f.first, f.second);
   }
+  std::vector<model::Finding> out;
+  out.swap(found_);
+  return out;
 }
 
 // What holds what (contains, else the declared scope), the entities of each kind and every relation
@@ -115,7 +118,7 @@ std::string Evaluator::scopeOf(const std::string& owner) const {
 }
 
 void Evaluator::report(const std::string& code, const std::string& owner, const std::string& message, const model::Location& at) {
-  model_.report({code, "error", owner + " " + message, at});
+  found_.push_back({code, "error", owner + " " + message, at});
 }
 
 // Everything a formula names exists in the metamodel or the model, every definition it applies takes
