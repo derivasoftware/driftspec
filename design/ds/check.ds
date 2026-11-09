@@ -73,17 +73,73 @@ package driftspec@ds {
       }
     }
 
-    class Checker {                          // realises the language rule by rule: each member names its requirement
+    // One step of the check (DS-138): its key, the steps it needs done before it, what it does to the
+    // model. The checker orders the steps by what they need and runs them, knowing none of them.
+    class IStep {
+      @requirement REQ-00012-1
+      + ~IStep()
+      + abstract name() -> std::string
+      + abstract needs() -> std::vector<std::string>
+      + abstract run(context: Context) -> void
+    }
+
+    // What every step of one check is given: the model, what the binder collected, the resolver,
+    // the renames linking made and what was already reported as undeclared.
+    class Context {
+      @requirement REQ-00012-1
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      - refs binder_: bind::Binder
+      - owns renamed_: std::map<std::string, std::string>
+      - owns reported_: std::set<std::string>
+      + Context(model: model::Model, resolver: Resolver, binder: bind::Binder)
+      + model() -> model::Model
+      + resolver() -> Resolver
+      + binder() -> bind::Binder
+      + current(id: std::string) -> std::string {
+        @requirement REQ-00035-1
+      }
+      + renamed() -> std::map<std::string, std::string>
+      + reported() -> std::set<std::string>
+      + checkVisibility(from: std::string, target: std::string, location: model::Location) -> void {
+        @requirement REQ-00063-1
+      }
+      + checkLeak(from: std::string, target: std::string, location: model::Location) -> void {
+        @requirement REQ-00063-1
+      }
+    }
+
+    // A runner of steps: it orders them by what each needs and runs them over one context.
+    class Checker {                          // realises the language step by step: each step names its requirements
       @requirement REQ-00053-1
       @requirement REQ-00012-1
-      - owns renamed_: std::map<std::string, std::string>
       - refs model_: model::Model
-      - owns reported_: std::set<std::string>
-      - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
       - owns resolver_: Resolver
+      - owns steps_: std::map<std::string, std::unique_ptr<IStep>>
       + Checker(model: model::Model)
       + run(binder: bind::Binder) -> void
       + resolver() -> Resolver
+      + order() -> std::vector<std::string>
+    }
+
+    // the one place that names each step: it makes them and keys them by name
+    function steps() -> std::map<std::string, std::unique_ptr<IStep>> {
+      @requirement REQ-00012-1
+    }
+
+    class Linker : IStep {                // references become relations, behaviours take their subject's identity
+      @requirement REQ-00043-1
+      @requirement REQ-00053-1
+      @constraint CST-00006-1
+      @requirement REQ-00066-1
+      @requirement REQ-00029-1
+      @requirement REQ-00035-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> void
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
         @requirement REQ-00053-1
@@ -92,19 +148,129 @@ package driftspec@ds {
       - kindAllowed(reference: bind::Reference, target: std::string) -> bool {
         @requirement REQ-00066-1
       }
+      - checkTemplateBound(reference: bind::Reference) -> void {
+        @requirement REQ-00029-1
+      }
+      - unifyBehaviours() -> void {
+        @requirement REQ-00035-1
+      }
+    }
+
+    class BehaviourTyping : IStep {       // messages typed against the static context: calls, types, expansions
+      @requirement REQ-00036-2
+      @requirement REQ-00038-2
+      @requirement REQ-00037-1
+      @requirement REQ-00059-1
+      @requirement REQ-00056-1
+      @requirement REQ-00058-2
+      @requirement REQ-00039-1
+      @requirement REQ-00040-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> void
+      - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
+        @requirement REQ-00036-2
+      }
+      - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
+        @requirement REQ-00038-2
+      }
+      - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00037-1
+      }
+      - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00038-2
+      }
+      - checkReturn(message: bind::Message) -> void {
+        @requirement REQ-00059-1
+      }
       - checkMessage(message: bind::Message) -> void {
         @requirement REQ-00037-1
         @requirement REQ-00056-1
       }
-      - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
-        @requirement REQ-00037-1
+      - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
+        @requirement REQ-00036-2
+      }
+      - compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>) -> bool {
+        @requirement REQ-00058-2
+      }
+      - checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00058-2
+      }
+      - rememberResult(message: bind::Message) -> void {
+        @requirement REQ-00058-2
+      }
+      - checkLocals() -> void {
+        @requirement REQ-00036-2
       }
       - checkEvent(event: bind::Event) -> void {
         @requirement REQ-00039-1
         @requirement REQ-00040-1
       }
-      - checkLocals() -> void {
-        @requirement REQ-00036-2
+    }
+
+    class ContractCheck : IStep {         // interfaces, use cases, scenarios, outcomes and diagrams
+      @requirement REQ-00060-1
+      @requirement REQ-00082-1
+      @requirement REQ-00061-1
+      @requirement REQ-00065-1
+      @requirement REQ-00049-2
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> void
+      - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
+        @requirement REQ-00060-1
+      }
+      - checkUseCases() -> void {
+        @requirement REQ-00082-1
+      }
+      - checkInterfaces() -> void {
+        @requirement REQ-00060-1
+      }
+      - checkViews(state: model::Entity) -> void {
+        @requirement REQ-00061-1
+      }
+      - checkScenarios() -> void {
+        @requirement REQ-00065-1
+      }
+      - checkDiagrams() -> void {
+        @requirement REQ-00049-2
+      }
+    }
+
+    class Derivation : IStep {            // what the model says without writing it: the stereotypes
+      @requirement REQ-00031-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> void
+      - classify() -> void {
+        @requirement REQ-00031-1
+      }
+    }
+
+    class StructureCheck : IStep {        // ownership, artefacts, extensions, fields and languages
+      @requirement REQ-00028-1
+      @requirement REQ-00045-1
+      @constraint CST-00003-1
+      @requirement REQ-00067-1
+      @requirement REQ-00084-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> void
+      - checkOwnershipCycles() -> void {
+        @requirement REQ-00028-1
       }
       - checkArtefacts() -> void {
         @requirement REQ-00045-1
@@ -115,104 +281,63 @@ package driftspec@ds {
       - checkFields() -> void {
         @requirement REQ-00067-1
       }
-      - unifyBehaviours() -> void {
-        @requirement REQ-00035-1
-      }
-      - current(id: std::string) -> std::string {
-        @requirement REQ-00035-1
-      }
-      - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
-        @requirement REQ-00036-2
-      }
-      - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
-        @requirement REQ-00038-2
-      }
-      - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
-        @requirement REQ-00036-2
-      }
-      - checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
-        @requirement REQ-00058-2
-      }
-      - compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>) -> bool {
-        @requirement REQ-00058-2
-      }
-      - rememberResult(message: bind::Message) -> void {
-        @requirement REQ-00058-2
-      }
-      - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
-        @requirement REQ-00038-2
-      }
-      - checkReturn(message: bind::Message) -> void {
-        @requirement REQ-00059-1
-      }
-      - checkVisibility(from: std::string, target: std::string, location: model::Location) -> void {
-        @requirement REQ-00063-1
-      }
-      - checkLeak(from: std::string, target: std::string, location: model::Location) -> void {
-        @requirement REQ-00063-1
-      }
-      - checkScenarios() -> void {
-        @requirement REQ-00065-1
-      }
-      - checkDiagrams() -> void {
-        @requirement REQ-00049-2
-      }
-      - checkInterfaces() -> void {
-        @requirement REQ-00060-1
-      }
-      - checkUseCases() -> void {
-        @requirement REQ-00082-1
-      }
-      - checkRules() -> void {
-        @requirement REQ-00095-2
-      }
-      - checkDependencies() -> void {
-        @requirement REQ-00094-2
-      }
       - checkLanguages() -> void {
         @requirement REQ-00084-1
       }
-      - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
-        @requirement REQ-00060-1
-      }
-      - checkViews(state: model::Entity) -> void {
-        @requirement REQ-00061-1
-      }
-      - checkTemplateBound(reference: bind::Reference) -> void {
-        @requirement REQ-00029-1
-      }
-      - checkOwnershipCycles() -> void {
-        @requirement REQ-00028-1
-      }
-      - classify() -> void {
-        @requirement REQ-00031-1
+    }
+
+    class DependencyCheck : IStep {       // what a box declares it uses against what its behaviours call
+      @requirement REQ-00094-2
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> void
+      - checkDependencies() -> void {
+        @requirement REQ-00094-2
       }
     }
 
-    // Free helpers of resolve, private to the module (anonymous namespace of Checker.cpp).
-    - function withoutRevision(id: std::string) -> std::string {   // REQ-00001-2 becomes REQ-00001
-      @requirement REQ-00023-1
-    }
-    - function outer(scope: std::string) -> std::string {          // the scope one level out: ds@ds::b, ds@ds, ds@, then none
-      @requirement REQ-00023-1
-    }
-    - function qualifyIn(scope: std::string, name: std::string) -> std::string {
-      @requirement REQ-00023-1
+    class RuleCheck : IStep {             // rules and definitions, decided by the evaluator
+      @requirement REQ-00095-2
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> void
+      - checkRules() -> void {
+        @requirement REQ-00095-2
+      }
     }
 
-    // What ds check does, in order: the first behaviour of this design. The results
-    // of the messages are remembered as they go, since each exists only for the
-    // messages after it.
+    // What ds check does: the steps, each after what it needs. Today the needs keep the order the
+    // checker always had: linker, behaviour, contracts, derivation, structure, dependencies, rules.
     sequence Checker::run {
+      local context: Context
+      local step: IStep
+      self -> order() -> keys
+      loop each key, in order {
+        -> step.run(context)
+      }
+    }
+
+    sequence Linker::run {
+      self -> context_.binder() -> binder
       self -> binder.references() -> references
       loop each reference {
         -> resolveReference(reference)
       }
       -> unifyBehaviours()
-      self -> binder.references() -> references
       loop each reference {
         -> checkTemplateBound(reference)
       }
+    }
+
+    // The results of the messages are remembered as they go: each exists only for the messages after it.
+    sequence BehaviourTyping::run {
+      self -> context_.binder() -> binder
       self -> binder.messages() -> messages
       loop each message {
         -> checkMessage(message)
@@ -223,23 +348,26 @@ package driftspec@ds {
       loop each event {
         -> checkEvent(event)
       }
+    }
+
+    sequence ContractCheck::run {
       -> checkInterfaces()
       -> checkUseCases()
       -> checkDiagrams()
       -> checkScenarios()
+    }
+
+    sequence StructureCheck::run {
       -> checkOwnershipCycles()
-      -> classify()
       -> checkArtefacts()
       -> checkExtensions()
       -> checkFields()
       -> checkLanguages()
-      -> checkDependencies()
-      -> checkRules()
     }
 
     // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named
     // branch is a scenario, a path through it; what they all share is written once.
-    sequence Checker::checkMessage {
+    sequence BehaviourTyping::checkMessage {
       local subject: model::Entity
       local value: std::pair<std::string, std::string>
       local transient: bool
@@ -253,9 +381,9 @@ package driftspec@ds {
         return
       }
 
-      -> current(message.sequence) -> sequenceId
+      self -> context_.current(message.sequence) -> sequenceId
       self -> model_.find(sequenceId) -> seq
-      -> current(message.message) -> messageId
+      self -> context_.current(message.message) -> messageId
       self -> model_.find(messageId) -> msg
       opt the behaviour or the message is gone from the model / unknown-message {
         return
@@ -321,7 +449,7 @@ package driftspec@ds {
       opt the model declares it as written: a full id, a global artefact, a package / declared {
         return name
       }
-      -> withoutRevision(name) -> bare
+      -> model::withoutRevision(name) -> bare
       opt the name carries a revision {
         self -> model_.find(bare)
       }

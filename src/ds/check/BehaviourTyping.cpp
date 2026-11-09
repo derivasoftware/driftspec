@@ -1,0 +1,333 @@
+#include <algorithm>
+#include <cctype>
+#include <functional>
+#include <map>
+#include <regex>
+#include <set>
+#include <sstream>
+#include <vector>
+
+#include "Shared.hpp"
+#include "ds/check/Evaluator.hpp"
+#include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
+#include "ds/model/Model.hpp"
+
+namespace ds {
+namespace check {
+
+using model::outer;
+
+std::string BehaviourTyping::name() const { return "behaviour"; }
+
+std::vector<std::string> BehaviourTyping::needs() const { return {"linker"}; }
+
+void BehaviourTyping::run(Context& context) {
+  context_ = &context;
+  model_ = &context.model();
+  resolver_ = &context.resolver();
+  for (const auto& m : context_->binder().messages()) {
+    checkMessage(m);
+    rememberResult(m);  // in order: a result exists for the messages after it
+  }
+  checkLocals();
+  for (const auto& e : context_->binder().events()) checkEvent(e);
+}
+
+const model::Entity* BehaviourTyping::subjectClass(const model::Entity& sequence, const model::Entity** subject) const {
+  const auto field = sequence.fields.find("subject");
+  if (field == sequence.fields.end()) return nullptr;
+  const std::string id = resolver_->resolve(field->second, sequence.scope);
+  const model::Entity* s = id.empty() ? nullptr : model_->find(id);
+  if (!s || s->expected) return nullptr;
+  *subject = s;
+  if (s->kind == model::Kind::Method) return model_->find(s->scope);
+  if (s->kind == model::Kind::Class) return s;
+  return nullptr;  // a function or an interface's operation has no class: its context is its parameters and its scope
+}
+
+void BehaviourTyping::couple(const model::Entity& sequence, const model::Entity& type, bool transient) {
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = subjectClass(sequence, &subject);
+  const bool function = subject && (subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation);
+  if ((!cls && !function) || type.expected || type.has("extern")) return;
+  const std::string home = cls ? cls->scope : subject->scope;
+  if (type.scope == home || (cls && type.id == cls->id)) return;  // inside the module: cohesion, not coupling
+  const std::string kind = transient ? "couples-transient" : "couples-structural";
+  for (const auto& r : model_->relations()) {
+    if (r.kind == kind && r.from == sequence.id && r.to == type.id) return;
+  }
+  model_->relate({kind, sequence.id, type.id, sequence.location, ""});
+}
+
+void BehaviourTyping::call(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+  model_->relate({"calls", msg.id, op.id, message.location, ""});
+  context_->checkVisibility(msg.scope, op.id, message.location);
+  const int expected = static_cast<int>(op.params.size());
+  if (expected != message.argc) {
+    model_->report({"E-MSG-ARITY", "error",
+                    op.id + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
+                        std::to_string(message.argc) + " given",
+                    message.location});
+  }
+  if (expected == message.argc) checkArguments(msg, op, message);
+  const auto returns = op.fields.find("returns");
+  const auto result = msg.fields.find("result");
+  if (returns != op.fields.end()) {
+    if (result != msg.fields.end() && primitiveFamily(returns->second) == 4) {
+      model_->report(
+          {"W-RESULT-NONE", "warning", op.id + " returns nothing, so '" + result->second + "' holds no value", message.location});
+    }
+    msg.fields["result_type"] = returns->second;
+    const model::Entity* owner = op.kind == model::Kind::Method ? model_->find(op.scope) : nullptr;
+    msg.fields["result_scope"] = owner ? owner->scope : op.scope;
+  }
+  expand(msg, op, message);
+}
+
+void BehaviourTyping::expand(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+  // a message to an operation with a behaviour expands to it (B5): derived, never written; a message
+  // that names a scenario expands to that one, and one nobody declares is a finding
+  const auto scenario = msg.fields.find("scenario");
+  const bool named = scenario != msg.fields.end();
+  const std::string id = model::behaviourId(op.id, named ? scenario->second : "");
+  if (const model::Entity* child = model_->find(id)) {
+    model_->relate({"expands-to", msg.id, child->id, message.location, ""});
+    msg.fields["expands"] = child->id;
+  } else if (named && model::hasScenario(*model_, model::behaviourId(op.id), scenario->second)) {
+    // a named branch of the one behaviour: the call enters that path of it
+    model_->relate({"expands-to", msg.id, model::behaviourId(op.id), message.location, ""});
+    msg.fields["expands"] = model::behaviourId(op.id);
+    msg.fields["expands-path"] = scenario->second;
+  } else if (named) {
+    model_->report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
+  }
+}
+
+void BehaviourTyping::checkReturn(const bind::Message& message) {
+  const model::Entity* seq = model_->find(context_->current(message.sequence));
+  const model::Entity* msg = model_->find(context_->current(message.message));
+  if (!seq || !msg) return;
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = subjectClass(*seq, &subject);
+  if (!subject || subject->kind == model::Kind::Class || subject->kind == model::Kind::Operation) return;
+  const auto returns = subject->fields.find("returns");
+  if (returns == subject->fields.end()) return;  // declares no return: nothing to check against
+  const std::string value = msg->fields.count("result") ? msg->fields.at("result") : "";
+  if (value.empty()) {
+    // a bare return ends a branch; it gives nothing back, which only an operation returning none may do at its end
+    return;
+  }
+  const std::string home = cls ? cls->scope : subject->scope;
+  std::string given;
+  bool mismatch = false;
+  if (value.front() == '"' || value == "true" || value == "false" || value.front() == '-' ||
+      std::isdigit(static_cast<unsigned char>(value.front()))) {
+    given = value.front() == '"' ? "string" : (value == "true" || value == "false") ? "bool" : "int";
+    mismatch = !compatible({given, home}, {returns->second, home});
+  } else {
+    std::pair<std::string, std::string> named;
+    bool transient = false;
+    // a name the context does not know is a local of the prose: absence is not an error (B4)
+    if (!typeOfName(*seq, cls, *subject, value, &named, &transient) || named.first.empty()) return;
+    given = named.first;
+    mismatch = !compatible(named, {returns->second, home});
+  }
+  if (mismatch) {
+    model_->report(
+        {"W-RETURN-TYPE", "warning", subject->id + " returns " + returns->second + ", and '" + value + "' is " + given, message.location});
+  }
+}
+
+void BehaviourTyping::checkMessage(const bind::Message& message) {
+  if (message.returns) {
+    checkReturn(message);
+    return;
+  }
+  const model::Entity* seq = model_->find(context_->current(message.sequence));
+  model::Entity* msg = model_->find(context_->current(message.message));
+  if (!seq || !msg) return;
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = subjectClass(*seq, &subject);
+  const bool function = subject && (subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation);
+  if (!cls && !function) return;  // the subject waits for its declaration (R6)
+  const std::string home = cls ? cls->scope : subject->scope;
+  // a call with no target from a function, or one the class does not declare, is a function of the
+  // module, resolved outward like any name: a free function calls its neighbours (2026-10-26)
+  if (message.to == "self" && (function || !resolver_->member(cls->id, message.op))) {
+    const std::string id = resolver_->resolve(message.op, home);
+    const model::Entity* target = id.empty() ? nullptr : model_->find(id);
+    if (target && target->kind == model::Kind::Function) {
+      msg->fields["type"] = target->scope;
+      couple(*seq, *target, true);  // a function of another module couples like a local
+      call(*msg, *target, message);
+      return;
+    }
+    if (function) {
+      model_->report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + message.op + ", which no function of " + home + " declares",
+                      message.location});
+      return;
+    }
+  }
+  // the participant: self, or a name of the behaviour's context (B3)
+  std::string typeId;
+  bool transient = false;
+  if (message.to == "self") {
+    typeId = cls->id;
+  } else {
+    std::pair<std::string, std::string> value;
+    if (!typeOfName(*seq, cls, *subject, message.to, &value, &transient)) {
+      const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
+      model_->report({"W-PARTICIPANT-UNDECLARED", "warning",
+                      "'" + message.to + "' is neither " + context + subject->name + ", a local of " + seq->name +
+                          " nor the result of an earlier message",
+                      message.location});
+      return;
+    }
+    typeId = value.first.empty() ? "" : resolver_->resolveTypeText(value.first, value.second);
+  }
+  if (typeId.empty()) return;  // a primitive or an unknown spelling: nothing to check
+  const model::Entity* type = model_->find(typeId);
+  if (!type || type->expected) return;  // reported once the type is declared (R6)
+  msg->fields["type"] = typeId;
+  if (message.to != "self") couple(*seq, *type, transient);
+  const std::string opId = typeId + "::" + message.op;
+  const model::Entity* op = resolver_->member(typeId, message.op);  // its own, or inherited
+  if (!op) {
+    model_->report(
+        {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
+    return;
+  }
+  call(*msg, *op, message);
+}
+
+bool BehaviourTyping::typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject,
+                                 const std::string& name, std::pair<std::string, std::string>* value, bool* transient) const {
+  const std::string home = cls ? cls->scope : subject.scope;
+  if (const model::Entity* attribute = cls ? resolver_->member(cls->id, name) : nullptr) {
+    const auto type = attribute->fields.find("type");
+    *value = {type == attribute->fields.end() ? "" : type->second, cls->scope};
+    return true;
+  }
+  for (const auto& p : subject.params) {
+    if (p.name != name) continue;
+    *value = {p.type, home};
+    return true;
+  }
+  const auto local = sequence.fields.find("local." + name);
+  if (local != sequence.fields.end()) {
+    *value = {local->second, sequence.scope};
+    *transient = true;
+    return true;
+  }
+  const auto results = results_.find(sequence.id);
+  if (results != results_.end()) {
+    const auto result = results->second.find(name);
+    if (result != results->second.end()) {
+      *value = result->second;
+      *transient = true;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool BehaviourTyping::compatible(const std::pair<std::string, std::string>& argument,
+                                 const std::pair<std::string, std::string>& parameter) const {
+  if (argument.first == parameter.first) return true;
+  const std::string argumentId = resolver_->resolveTypeText(argument.first, argument.second);
+  const std::string parameterId = resolver_->resolveTypeText(parameter.first, parameter.second);
+  const model::Entity* a = argumentId.empty() ? nullptr : model_->find(argumentId);
+  const model::Entity* p = parameterId.empty() ? nullptr : model_->find(parameterId);
+  // what is not declared, or lives outside the workspace, has no obligations (R6, R11)
+  if ((a && (a->expected || a->has("extern"))) || (p && (p->expected || p->has("extern")))) return true;
+  if (a && p) return resolver_->derives(argumentId, parameterId);
+  const int af = primitiveFamily(argument.first);
+  const int pf = primitiveFamily(parameter.first);
+  if (a || p) return !(a ? pf : af);
+  return !af || !pf || af == pf;
+}
+
+void BehaviourTyping::checkArguments(const model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+  if (op.params.empty() || msg.args.empty()) return;
+  const model::Entity* seq = model_->find(context_->current(message.sequence));
+  const model::Entity* subject = nullptr;
+  const model::Entity* cls = seq ? subjectClass(*seq, &subject) : nullptr;
+  if (!subject) return;
+  const std::vector<model::Param>& parameters = op.params;
+  const std::vector<std::string>& arguments = msg.args;
+  const model::Entity* owner = op.kind == model::Kind::Method ? model_->find(op.scope) : nullptr;
+  const std::string scope = owner ? owner->scope : op.scope;
+  for (size_t i = 0; i < parameters.size() && i < arguments.size(); ++i) {
+    if (parameters[i].type.empty()) continue;  // a parameter with no type
+    std::pair<std::string, std::string> argument;
+    bool transient = false;
+    const std::string& written = arguments[i];
+    if (written.front() == '"') {
+      argument = {"string", scope};  // a literal has the type it is written in
+    } else if (std::isdigit(static_cast<unsigned char>(written.front())) || written.front() == '-') {
+      argument = {"int", scope};
+    } else if (written == "true" || written == "false") {
+      argument = {"bool", scope};
+    } else if (!typeOfName(*seq, cls, *subject, written, &argument, &transient) || argument.first.empty()) {
+      continue;
+    }
+    const std::pair<std::string, std::string> parameter{parameters[i].type, scope};
+    if (compatible(argument, parameter)) continue;
+    model_->report(
+        {"W-ARG-TYPE", "warning",
+         op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" + arguments[i] + "' is " + argument.first,
+         message.location});
+  }
+}
+
+void BehaviourTyping::rememberResult(const bind::Message& message) {
+  if (message.returns) return;
+  const model::Entity* seq = model_->find(context_->current(message.sequence));
+  const model::Entity* msg = model_->find(context_->current(message.message));
+  if (!seq || !msg) return;
+  const auto result = msg->fields.find("result");
+  if (result == msg->fields.end()) return;
+  const auto type = msg->fields.find("result_type");
+  const auto scope = msg->fields.find("result_scope");
+  // a call that resolved to nothing leaves a value of unknown type: the name exists, the finding was given
+  results_[seq->id][result->second] = {type == msg->fields.end() ? "" : type->second, scope == msg->fields.end() ? "" : scope->second};
+}
+
+void BehaviourTyping::checkLocals() {
+  std::vector<std::pair<std::string, std::string>> locals;
+  for (const auto& pair : model_->entities()) {
+    if (pair.second.kind != model::Kind::Sequence) continue;
+    for (const auto& f : pair.second.fields) {
+      if (f.first.rfind("local.", 0) == 0) locals.push_back({pair.first, f.second});
+    }
+  }
+  for (const auto& l : locals) {
+    const model::Entity* seq = model_->find(l.first);
+    const std::string typeId = resolver_->resolveTypeText(l.second, seq->scope);
+    const model::Entity* type = typeId.empty() ? nullptr : model_->find(typeId);
+    if (type) couple(*seq, *type, true);
+  }
+}
+
+void BehaviourTyping::checkEvent(const bind::Event& event) {
+  const std::string type = resolver_->resolve(event.entity, event.scope);
+  const model::Entity* entity = type.empty() ? nullptr : model_->find(type);
+  if (!entity || entity->expected) return;
+  const std::string op = type + "::" + event.event;
+  if (const model::Entity* target = model_->find(op)) {
+    model_->relate({event.action ? "does" : "on", context_->current(event.state), target->id, event.location, ""});
+    return;
+  }
+  if (entity->kind == model::Kind::Interface) return;  // a jump with nothing behind it is a label of the navigation
+  if (event.action) {
+    model_->report({"W-ACTION-UNDECLARED", "warning",
+                    "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});
+    return;
+  }
+  model_->report({"W-EVENT-UNDECLARED", "warning",
+                  "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type, event.location});
+}
+
+}  // namespace check
+}  // namespace ds

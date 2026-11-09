@@ -1,0 +1,194 @@
+// PROPOSAL (DS-125, DS-138), not ds's design: the checker split by what each part does.
+// Generic where it makes our own work easier, no further: the rest of the code calls IChecker,
+// every step has the shape of IStep, a check only reads (ACheck), the order comes from needs.
+
+package driftspec@ds {
+  module checkp {
+    requirement REQ-09001-1: The checker shall be a runner of steps it is given, knowing none of them
+
+    // ---- the principles, as rules ----------------------------------------------------------
+    definition isa(x, b) {
+      title: x is b or derives from it, at any depth
+      if x inherits b
+      if x inherits m, isa(m, b)
+    }
+
+    definition depends(a, b) {
+      title: a depends on b through one of its members
+      if m in a, m owns b
+      if m in a, m refs b
+      if m in a, m uses b
+    }
+
+    rule checker-knows-no-step {
+      title: the checker depends on IStep, never on a concrete step
+      @requirement REQ-09001-1
+      for class c in driftspec@ds@checkp
+      where c = driftspec@ds@checkp::Checker
+      never depends(c, x), isa(x, driftspec@ds@checkp::IStep)
+    }
+
+    rule steps-are-steps {
+      title: every step of the module implements IStep, directly or through ACheck
+      @requirement REQ-09001-1
+      for class s in driftspec@ds@checkp
+      where s inherits driftspec@ds@checkp::ACheck
+      holds isa(s, driftspec@ds@checkp::IStep)
+    }
+
+    // not writable yet (DS-107, names and stereotypes): a pure interface is named I..., an abstract class A...
+    //   rule interfaces-named-i { for class c where c.stereotypes has interface holds c.name starts "I" }
+
+    // ---- the contract -----------------------------------------------------------------
+    // what the rest of the code calls: run the steps asked for (all when none is) and get the findings
+    class IChecker {
+      + abstract keys() -> std::vector<std::string>
+      + abstract run(model: model::Model, binder: bind::Binder, only: std::set<std::string>) -> std::vector<model::Finding>
+    }
+
+    // one step of the check: its key, the steps it needs done before it, the codes it may give
+    class IStep {
+      + abstract name() -> std::string
+      + abstract needs() -> std::vector<std::string>
+      + abstract codes() -> std::vector<std::string>
+      + abstract run(context: Context) -> std::vector<model::Finding>
+    }
+
+    // ---- the implementation ----------------------------------------------------------------
+    // the checker knows no step: it is given the map of steps by key, built outside (aggregated, not
+    // owned), orders what is asked for by needs and runs it over a context of its own for each run
+    class Checker : IChecker {
+      - refs steps: std::map<std::string, IStep>
+      + Checker(steps: std::map<std::string, IStep>)
+      + keys() -> std::vector<std::string>
+      + run(model: model::Model, binder: bind::Binder, only: std::set<std::string>) -> std::vector<model::Finding>
+      - order(only: std::set<std::string>) -> std::vector<std::string>
+    }
+
+    class Resolver {                      // read-only questions: what a name means where it is written
+      - refs model_: model::Model
+      + resolve(name: std::string, scope: std::string) -> std::string
+      + externsNamed(name: std::string) -> std::vector<std::string>
+      + derives(derived: std::string, base: std::string) -> bool
+      + member(type: std::string, name: std::string) -> model::Entity
+      + resolveTypeText(text: std::string, scope: std::string) -> std::string
+      + privateOnTheWay(from: std::string, target: std::string) -> std::string
+    }
+
+    class Context {                       // what a step is given: the model, what the binder collected, the resolver
+      - refs model_: model::Model
+      - refs binder_: bind::Binder
+      - owns resolver_: Resolver
+      - renamed: std::map<std::string, std::string>
+      + model() -> model::Model
+      + binder() -> bind::Binder
+      + resolver() -> Resolver
+      + current(id: std::string) -> std::string
+    }
+
+    // the map of every step, made in one place; a configuration that chooses among them comes when a
+    // caller needs another set (the editor without rules, say)
+    function steps() -> std::map<std::string, IStep>
+
+    // a step that only checks: run hands check the model to read, never to change (const in the code),
+    // so a check can be tested alone and two checks never depend on each other
+    class ACheck : IStep {
+      + run(context: Context) -> std::vector<model::Finding>
+      - abstract check(context: Context) -> std::vector<model::Finding>
+    }
+
+    // the steps that enrich the model implement IStep directly
+    class Linker : IStep {              // references to relations, behaviours to their subject
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + codes() -> std::vector<std::string>
+      + run(context: Context) -> std::vector<model::Finding>
+    }
+
+    class Derivation : IStep {          // what the model says without writing it: stereotypes, languages
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + codes() -> std::vector<std::string>
+      + run(context: Context) -> std::vector<model::Finding>
+    }
+
+    class BehaviourTyping : IStep {     // messages typed against the static context: calls, types, expansions
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + codes() -> std::vector<std::string>
+      + run(context: Context) -> std::vector<model::Finding>
+    }
+
+    class ContractCheck : ACheck {      // interfaces, use cases, scenarios and outcomes
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + codes() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
+    class StructureCheck : ACheck {     // visibility, ownership, fields, artefacts, languages
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + codes() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
+    class DependencyCheck : ACheck {    // what a box declares it uses against what it calls
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + codes() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
+    class RuleCheck : ACheck {          // the breaches the evaluator found, as findings
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + codes() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
+    class Evaluator {                   // needs names resolved, not the checker
+      - refs model_: model::Model
+      - refs resolver: Resolver
+      + run() -> std::vector<model::Finding>
+    }
+
+    // needs: linker none; derivation, behaviour linker; contracts, dependencies behaviour;
+    // structure derivation; rules behaviour and derivation
+    sequence Checker::run {
+      local step: IStep
+      local context: Context
+      self -> order(only) -> keys
+      loop each key, in order {
+        -> step.run(context) -> found
+      }
+      return found
+    }
+
+    // the one place that names each step: it makes them and puts them in the map by key; the checker
+    // then runs them through IStep, knowing none of them
+    sequence steps {
+      local linker: Linker
+      local derivation: Derivation
+      local typing: BehaviourTyping
+      local contracts: ContractCheck
+      local structure: StructureCheck
+      local dependencies: DependencyCheck
+      local rules: RuleCheck
+      -> linker.name() -> k1
+      -> derivation.name() -> k2
+      -> typing.name() -> k3
+      -> contracts.name() -> k4
+      -> structure.name() -> k5
+      -> dependencies.name() -> k6
+      -> rules.name() -> k7
+      return map
+    }
+
+    sequence RuleCheck::check {
+      local evaluator: Evaluator
+      -> evaluator.run() -> findings
+      return findings
+    }
+  }
+}

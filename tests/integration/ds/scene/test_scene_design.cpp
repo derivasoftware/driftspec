@@ -138,13 +138,14 @@ TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotClos
 TEST_F(TestSceneOfTheDesign, EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws) {
   const auto doc = ds::scene::Scene(model).build();
   const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "consumes", "calls"};
-  bool checkerCallsModel = false;
+  bool checkerCallsModel = false;  // the step that types behaviour calls the model (DS-138)
   for (const auto& l : doc.links) {
     EXPECT_EQ(byId.count(l.from), 1u) << l.from;
     EXPECT_EQ(byId.count(l.to), 1u) << l.to;
     EXPECT_TRUE(kinds.count(l.kind)) << l.kind;
     EXPECT_GT(l.count, 0);
-    if (l.kind == "calls" && l.from.rfind("driftspec@ds@check::Checker::", 0) == 0 && l.to.rfind("driftspec@ds@model::Model::", 0) == 0) {
+    if (l.kind == "calls" && l.from.rfind("driftspec@ds@check::BehaviourTyping::", 0) == 0 &&
+        l.to.rfind("driftspec@ds@model::Model::", 0) == 0) {
       checkerCallsModel = true;
       EXPECT_FALSE(l.sequences.empty());
     }
