@@ -17,12 +17,23 @@
 namespace ds {
 namespace check {
 
+/// A step that only checks (DS-138): its run hands check the context to read, so the model it is given is
+/// const and no check can change it; it gives back what it found. The one abstract class here, justified
+/// by that guarantee (GUIDE-cpp-design).
+class ACheck : public IStep {
+ public:
+  std::vector<model::Finding> run(Context& context) final;
+
+ private:
+  virtual std::vector<model::Finding> check(const Context& context) = 0;
+};
+
 /// References become relations, behaviours take their subject's identity.
 class Linker : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  void run(Context& context) override;
+  std::vector<model::Finding> run(Context& context) override;
 
  private:
   void resolveReference(const bind::Reference& reference);
@@ -40,7 +51,7 @@ class BehaviourTyping : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  void run(Context& context) override;
+  std::vector<model::Finding> run(Context& context) override;
 
  private:
   /// The class a behaviour is about, and whether its subject is a method.
@@ -67,13 +78,13 @@ class BehaviourTyping : public IStep {
 };
 
 /// Interfaces, use cases, scenarios, outcomes and diagrams.
-class ContractCheck : public IStep {
+class ContractCheck : public ACheck {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  void run(Context& context) override;
 
  private:
+  std::vector<model::Finding> check(const Context& context) override;
   /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
   std::string outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const;
   void checkUseCases();  // a use case is a contract its operations realise, outcomes included (DS-77)
@@ -81,54 +92,57 @@ class ContractCheck : public IStep {
   void checkViews(const model::Entity& state);
   void checkScenarios();
   void checkDiagrams();
-  Context* context_ = nullptr;
-  model::Model* model_ = nullptr;
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  std::vector<model::Finding> found_;
   const Resolver* resolver_ = nullptr;
 };
 
-/// What the model says without writing it: the stereotypes.
+/// What the model says without writing it: the stereotypes and the languages.
 class Derivation : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  void run(Context& context) override;
+  std::vector<model::Finding> run(Context& context) override;
 
  private:
+  void fillLanguages();  // what each package and module is written in, held down by containment (DS-86)
   void classify();
   Context* context_ = nullptr;
   model::Model* model_ = nullptr;
   const Resolver* resolver_ = nullptr;
 };
 
-/// Ownership, artefacts, extensions, fields and languages.
-class StructureCheck : public IStep {
+/// Ownership, artefacts, extensions and fields.
+class StructureCheck : public ACheck {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  void run(Context& context) override;
 
  private:
+  std::vector<model::Finding> check(const Context& context) override;
   void checkOwnershipCycles();
   void checkArtefacts();
   void checkExtensions();
   void checkFields();
-  void checkLanguages();  // what each package and module is written in, held down by containment (DS-86)
-  Context* context_ = nullptr;
-  model::Model* model_ = nullptr;
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  std::vector<model::Finding> found_;
   const Resolver* resolver_ = nullptr;
 };
 
 /// What a box declares it uses against what its behaviours call.
-class DependencyCheck : public IStep {
+class DependencyCheck : public ACheck {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  void run(Context& context) override;
 
  private:
+  std::vector<model::Finding> check(const Context& context) override;
   void checkDependencies();  // what a box declares it uses against what its behaviours call (DS-96)
-  Context* context_ = nullptr;
-  model::Model* model_ = nullptr;
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  std::vector<model::Finding> found_;
   const Resolver* resolver_ = nullptr;
 };
 
@@ -137,7 +151,7 @@ class RuleCheck : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  void run(Context& context) override;
+  std::vector<model::Finding> run(Context& context) override;
 
  private:
   void checkRules();  // a rule answers to a requirement and says what holds; a definition what it ranges over (DS-94)

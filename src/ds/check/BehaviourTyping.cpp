@@ -22,7 +22,7 @@ std::string BehaviourTyping::name() const { return "behaviour"; }
 
 std::vector<std::string> BehaviourTyping::needs() const { return {"linker"}; }
 
-void BehaviourTyping::run(Context& context) {
+std::vector<model::Finding> BehaviourTyping::run(Context& context) {
   context_ = &context;
   model_ = &context.model();
   resolver_ = &context.resolver();
@@ -32,6 +32,7 @@ void BehaviourTyping::run(Context& context) {
   }
   checkLocals();
   for (const auto& e : context_->binder().events()) checkEvent(e);
+  return context.take();
 }
 
 const model::Entity* BehaviourTyping::subjectClass(const model::Entity& sequence, const model::Entity** subject) const {
@@ -65,17 +66,17 @@ void BehaviourTyping::call(model::Entity& msg, const model::Entity& op, const bi
   context_->checkVisibility(msg.scope, op.id, message.location);
   const int expected = static_cast<int>(op.params.size());
   if (expected != message.argc) {
-    model_->report({"E-MSG-ARITY", "error",
-                    op.id + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
-                        std::to_string(message.argc) + " given",
-                    message.location});
+    context_->report({"E-MSG-ARITY", "error",
+                      op.id + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
+                          std::to_string(message.argc) + " given",
+                      message.location});
   }
   if (expected == message.argc) checkArguments(msg, op, message);
   const auto returns = op.fields.find("returns");
   const auto result = msg.fields.find("result");
   if (returns != op.fields.end()) {
     if (result != msg.fields.end() && primitiveFamily(returns->second) == 4) {
-      model_->report(
+      context_->report(
           {"W-RESULT-NONE", "warning", op.id + " returns nothing, so '" + result->second + "' holds no value", message.location});
     }
     msg.fields["result_type"] = returns->second;
@@ -100,7 +101,7 @@ void BehaviourTyping::expand(model::Entity& msg, const model::Entity& op, const 
     msg.fields["expands"] = model::behaviourId(op.id);
     msg.fields["expands-path"] = scenario->second;
   } else if (named) {
-    model_->report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
+    context_->report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
   }
 }
 
@@ -134,7 +135,7 @@ void BehaviourTyping::checkReturn(const bind::Message& message) {
     mismatch = !compatible(named, {returns->second, home});
   }
   if (mismatch) {
-    model_->report(
+    context_->report(
         {"W-RETURN-TYPE", "warning", subject->id + " returns " + returns->second + ", and '" + value + "' is " + given, message.location});
   }
 }
@@ -164,8 +165,8 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
       return;
     }
     if (function) {
-      model_->report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + message.op + ", which no function of " + home + " declares",
-                      message.location});
+      context_->report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + message.op + ", which no function of " + home + " declares",
+                        message.location});
       return;
     }
   }
@@ -178,10 +179,10 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
     std::pair<std::string, std::string> value;
     if (!typeOfName(*seq, cls, *subject, message.to, &value, &transient)) {
       const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
-      model_->report({"W-PARTICIPANT-UNDECLARED", "warning",
-                      "'" + message.to + "' is neither " + context + subject->name + ", a local of " + seq->name +
-                          " nor the result of an earlier message",
-                      message.location});
+      context_->report({"W-PARTICIPANT-UNDECLARED", "warning",
+                        "'" + message.to + "' is neither " + context + subject->name + ", a local of " + seq->name +
+                            " nor the result of an earlier message",
+                        message.location});
       return;
     }
     typeId = value.first.empty() ? "" : resolver_->resolveTypeText(value.first, value.second);
@@ -194,7 +195,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   const std::string opId = typeId + "::" + message.op;
   const model::Entity* op = resolver_->member(typeId, message.op);  // its own, or inherited
   if (!op) {
-    model_->report(
+    context_->report(
         {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
     return;
   }
@@ -274,7 +275,7 @@ void BehaviourTyping::checkArguments(const model::Entity& msg, const model::Enti
     }
     const std::pair<std::string, std::string> parameter{parameters[i].type, scope};
     if (compatible(argument, parameter)) continue;
-    model_->report(
+    context_->report(
         {"W-ARG-TYPE", "warning",
          op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" + arguments[i] + "' is " + argument.first,
          message.location});
@@ -321,12 +322,12 @@ void BehaviourTyping::checkEvent(const bind::Event& event) {
   }
   if (entity->kind == model::Kind::Interface) return;  // a jump with nothing behind it is a label of the navigation
   if (event.action) {
-    model_->report({"W-ACTION-UNDECLARED", "warning",
-                    "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});
+    context_->report({"W-ACTION-UNDECLARED", "warning",
+                      "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});
     return;
   }
-  model_->report({"W-EVENT-UNDECLARED", "warning",
-                  "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type, event.location});
+  context_->report({"W-EVENT-UNDECLARED", "warning",
+                    "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type, event.location});
 }
 
 }  // namespace check

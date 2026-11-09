@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Model.hpp"
+
 namespace ds {
 namespace check {
 
@@ -16,7 +18,8 @@ class IStep {
   virtual ~IStep() = default;
   virtual std::string name() const = 0;
   virtual std::vector<std::string> needs() const = 0;
-  virtual void run(Context& context) = 0;
+  /// Run over the context and give back what was found; the checker adds it to the model, in order.
+  virtual std::vector<model::Finding> run(Context& context) = 0;
 };
 
 }  // namespace check
