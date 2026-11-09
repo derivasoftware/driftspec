@@ -2,6 +2,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/diff/Diff.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -16,7 +17,8 @@ class TestDiff : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
     binder.bind(parser.parseText("t.ds", text));
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
     return model;
   }
 

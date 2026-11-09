@@ -10,6 +10,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -29,7 +30,8 @@ class TestManual : public ::testing::Test {
     std::vector<std::string> out;
     if (file.hasSyntaxErrors) out.push_back("E-SYNTAX at " + std::to_string(file.errorLine) + ":" + std::to_string(file.errorColumn));
     binder.bind(file);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
     for (const auto& f : model.findings()) out.push_back(f.code + " " + f.message);
     return out;
   }

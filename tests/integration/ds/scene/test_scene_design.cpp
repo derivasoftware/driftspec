@@ -8,6 +8,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Scene.hpp"
@@ -26,7 +27,8 @@ class TestSceneOfTheDesign : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
-    ds::check::Checker(model).run(binder);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
     nodes = ds::scene::Scene(model).build().nodes;
     for (const auto& n : nodes) byId[n.id] = &n;
   }

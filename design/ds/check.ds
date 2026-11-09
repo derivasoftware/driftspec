@@ -122,15 +122,23 @@ package driftspec@ds {
       }
     }
 
-    // A runner of steps: it orders them by what each needs, runs them over one context and adds
-    // what each found to the model when it ends.
-    class Checker {                          // realises the language step by step: each step names its requirements
+    // The check module's entry point (DS-138): what the rest of ds asks of a check.
+    class IChecker {
+      @requirement REQ-00053-1
+      + ~IChecker()
+      + abstract run(binder: bind::Binder) -> void
+    }
+
+    // A runner of steps: it orders the steps it is given by what each needs, runs them over one
+    // context and adds what each found to the model when it ends. The map is built outside and
+    // outlives it.
+    class Checker : IChecker {               // realises the language step by step: each step names its requirements
       @requirement REQ-00053-1
       @requirement REQ-00012-1
       - refs model_: model::Model
       - owns resolver_: Resolver
-      - owns steps_: std::map<std::string, std::unique_ptr<IStep>>
-      + Checker(model: model::Model)
+      - refs steps_: std::map<std::string, std::unique_ptr<IStep>>
+      + Checker(model: model::Model, steps: std::map<std::string, std::unique_ptr<IStep>>)
       + run(binder: bind::Binder) -> void
       + resolver() -> Resolver
       + order() -> std::vector<std::string>

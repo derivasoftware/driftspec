@@ -57,6 +57,7 @@ package driftspec@ds {
       local checker: check::Checker
       -> parser.parseText(path, text) -> parsed
       -> binder.bind(parsed)
+      -> check::steps() -> steps
       -> checker.run(binder)
       return json
     }

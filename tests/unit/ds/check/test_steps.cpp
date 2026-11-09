@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <map>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -15,6 +18,24 @@
 
 namespace {
 
+/// A step of a test: it says its name, what it needs, and one finding when it runs.
+class FakeStep : public ds::check::IStep {
+ public:
+  FakeStep(std::string name, std::vector<std::string> needs, std::vector<std::string>& log)
+      : name_(std::move(name)), needs_(std::move(needs)), log_(log) {}
+  std::string name() const override { return name_; }
+  std::vector<std::string> needs() const override { return needs_; }
+  std::vector<ds::model::Finding> run(ds::check::Context&) override {
+    log_.push_back(name_);
+    return {{"W-" + name_, "warning", name_ + " ran", {}}};
+  }
+
+ private:
+  std::string name_;
+  std::vector<std::string> needs_;
+  std::vector<std::string>& log_;
+};
+
 /// The checker is a runner of steps (DS-138): every step is made in one place, keyed by its name,
 /// and run after every step it needs.
 TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
@@ -25,7 +46,8 @@ TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
 
 TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   ds::model::Model model;
-  const ds::check::Checker checker(model);
+  const auto checkSteps = ds::check::steps();
+  const ds::check::Checker checker(model, checkSteps);
   const std::vector<std::string> order = checker.order();
   EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "contracts", "derivation", "structure", "dependencies", "rules"}));
   const auto all = ds::check::steps();
@@ -75,10 +97,50 @@ TEST(TestFindings, TheCheckerAddsTheFindingsOfEachStepInTheOrderTheStepsRun) {
   const auto file = parser.parseText("s.ds", "package shop {\n  language: cobol\n  colour: red\n}\n");
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  ds::check::Checker(model).run(binder);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
   std::vector<std::string> codes;
   for (const auto& f : model.findings()) codes.push_back(f.code);
   EXPECT_EQ(codes, (std::vector<std::string>{"W-LANGUAGE-UNKNOWN", "W-FIELD-UNKNOWN"}));
+}
+
+/// The checker runs the steps it is given (DS-138): the map is built outside, so a test can hand it
+/// steps of its own. It orders them by what they need, not by their keys, and adds each one's
+/// findings to the model in that order.
+TEST(TestChecker, RunsTheStepsItIsGivenAfterWhatEachNeeds) {
+  std::vector<std::string> log;
+  std::map<std::string, std::unique_ptr<ds::check::IStep>> given;
+  given["a"] = std::unique_ptr<ds::check::IStep>(new FakeStep("a", {"c"}, log));
+  given["b"] = std::unique_ptr<ds::check::IStep>(new FakeStep("b", {}, log));
+  given["c"] = std::unique_ptr<ds::check::IStep>(new FakeStep("c", {"b"}, log));
+  ds::model::Model model;
+  ds::bind::Binder binder(model);
+  ds::check::Checker checker(model, given);
+  ds::check::IChecker& entry = checker;  // what the rest of ds sees
+  entry.run(binder);
+  EXPECT_EQ(log, (std::vector<std::string>{"b", "c", "a"}));
+  std::vector<std::string> codes;
+  for (const auto& f : model.findings()) codes.push_back(f.code);
+  EXPECT_EQ(codes, (std::vector<std::string>{"W-b", "W-c", "W-a"}));
+}
+
+TEST(TestChecker, StepsThatNeedEachOtherAreACycleAndNoOrder) {
+  std::vector<std::string> log;
+  std::map<std::string, std::unique_ptr<ds::check::IStep>> given;
+  given["a"] = std::unique_ptr<ds::check::IStep>(new FakeStep("a", {"b"}, log));
+  given["b"] = std::unique_ptr<ds::check::IStep>(new FakeStep("b", {"a"}, log));
+  ds::model::Model model;
+  const ds::check::Checker checker(model, given);
+  EXPECT_THROW(checker.order(), std::logic_error);
+}
+
+/// The checker holds the map by reference, so it refuses a temporary one, which would die first.
+TEST(TestChecker, TakesNoTemporaryMap) {
+  EXPECT_TRUE((std::is_constructible<ds::check::Checker, ds::model::Model&,
+                                     const std::map<std::string, std::unique_ptr<ds::check::IStep>>&>::value));
+  EXPECT_FALSE(
+      (std::is_constructible<ds::check::Checker, ds::model::Model&, std::map<std::string, std::unique_ptr<ds::check::IStep>>&&>::value));
+  EXPECT_TRUE((std::is_base_of<ds::check::IChecker, ds::check::Checker>::value));
 }
 
 }  // namespace

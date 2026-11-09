@@ -14,13 +14,23 @@
 namespace ds {
 namespace check {
 
-/// Resolves the references the Binder collected (R5, R6), checks the static model against its own
-/// rules (R14–R17) and the dynamic specifications against the static ones. It is a runner of steps
-/// (DS-138): it orders them by what each needs and runs them over one context, knowing none of them.
-class Checker {
+/// The check module's entry point (DS-138): what the rest of ds asks of a check. It resolves the
+/// references the Binder collected (R5, R6), checks the static model against its own rules
+/// (R14–R17) and the dynamic specifications against the static ones.
+class IChecker {
  public:
-  explicit Checker(model::Model& model);
-  void run(const bind::Binder& binder);
+  virtual ~IChecker() = default;
+  virtual void run(const bind::Binder& binder) = 0;
+};
+
+/// A runner of steps: it orders the steps it is given by what each needs and runs them over one
+/// context, knowing none of them. The steps, keyed by name, are built outside it, by steps() or by a
+/// test; it holds the map by reference, so the map outlives it.
+class Checker : public IChecker {
+ public:
+  Checker(model::Model& model, const std::map<std::string, std::unique_ptr<IStep>>& steps);
+  Checker(model::Model& model, std::map<std::string, std::unique_ptr<IStep>>&& steps) = delete;  // a temporary map would die before the run
+  void run(const bind::Binder& binder) override;
   /// What a name means where it is written, and the other read-only questions the checks ask (DS-125).
   const Resolver& resolver() const { return resolver_; }
   /// The steps' keys in the order they run: each after every step it needs, ties by key.
@@ -29,7 +39,7 @@ class Checker {
  private:
   model::Model& model_;
   Resolver resolver_;
-  std::map<std::string, std::unique_ptr<IStep>> steps_;
+  const std::map<std::string, std::unique_ptr<IStep>>& steps_;
 };
 
 }  // namespace check

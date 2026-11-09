@@ -10,6 +10,7 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -97,7 +98,8 @@ TEST_F(TestMetamodelTruth, EveryFlagTheBinderSetsIsOneItsKindDeclares) {
   binder.bind(parser.parseText("x.ds",
                                "package x {\n  verification VER-09001-1 {\n    @requirement REQ-09001-1\n  }\n"
                                "  constraint CST-09001-1 {\n    @requirement REQ-09001-1\n  }\n}\n"));
-  ds::check::Checker(model).run(binder);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
   std::size_t flagged = 0;
   for (const auto& pair : model.entities()) {
     const auto& e = pair.second;
