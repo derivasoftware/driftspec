@@ -297,7 +297,7 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
     }
 
-    requirement REQ-00075-4 {
+    requirement REQ-00075-5 {
       status: approved
       @refines SREQ-00013-1
       title: The page shall carry its scene, the viewer's code and its styles deflated and written in base64, and inflate them in the browser
@@ -309,7 +309,7 @@ package driftspec@ds {
         pack. A short loader inflates the code with the browser's own
         DecompressionStream and runs it, and says so when the browser has
         none. Unpacking a pack gives back the text it was made from. What the
-        page carries beside its scene stays under 40 KB, the scene's pack under
+        page carries beside its scene stays under 64 KB, the scene's pack under
         128 bytes for each node it lays out, and the embedded frame within 16
         KB of the page it escapes.
       rationale:
@@ -324,13 +324,16 @@ package driftspec@ds {
         104 KB with the viewer unchanged: 37 KB of the page is the tool, the
         rest is the scene, and the scene grows with the design it draws, so
         each is bounded on its own. Revises REQ-00075-3, which bounded the
-        whole page of ds's design.
+        whole page of ds's design. Owner, 2026-11-09 (DS-108): the three
+        perspectives, the right-angle routes and the rules took the tool from
+        39 KB to 46 KB; the bound goes to 64 KB, room for the rest of the
+        viewer's work (compartments, zoom, visibility).
       tags: render, scene, size
     }
 
-    verification VER-00084-4 {
+    verification VER-00084-5 {
       status: approved
-      @requirement REQ-00075-4
+      @requirement REQ-00075-5
       title: Integration tests confirm ds's design page and frame carry packs that unpack to the whole scene and to the viewer's code, within their size bounds
       method: test
       tests:
@@ -408,6 +411,65 @@ package driftspec@ds {
       method: test
       tests:
         tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealisesIt
+    }
+
+    requirement REQ-00099-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall show one map in three perspectives, structure, behaviour and logic, each with the relations, the marks and the panel of its own
+      text:
+        A switch at the top picks the perspective; the boxes never move. Structure draws what crosses
+        two boxes as one dependency between them, as a component diagram does, and inheritance and
+        ownership inside a module; its lines run at right angles around the boxes in their way, a
+        corridor shared by several lines split into lanes, and a line leaves the box that holds only
+        one end early and enters the other's late. Behaviour draws who calls whom and which interfaces
+        each box consumes, in curves, and opens the tours. Logic draws the rules: each box says how
+        many rules live in it and whether they all hold, what breaks one is ringed, a broken never is
+        a dashed line from what breaks it to its answer, and the requirements open below. The scene
+        carries every rule and definition placed: the node it is written in, its clauses as written,
+        what it answers to, and each breach on the node of what breaks it (a call on the member whose
+        behaviour writes it) with the node of its answer; a host lights one rule, framed, its breaches
+        with their answer.
+      rationale:
+        Owner, 2026-11-09 (DS-101, DS-108): the three perspectives over one map; structure at right
+        angles because it is built, behaviour in curves because it flows; without seeing the rules
+        they cannot be understood.
+      tags: render, viewer, logic
+    }
+
+    verification VER-00108-1 {
+      status: approved
+      @requirement REQ-00099-1
+      title: Integration tests confirm the scene places each rule where it is written with what breaks it on the map, and the page carries the three perspectives and their strokes
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_rules.cpp::TestSceneRules.ARuleIsPlacedWhereItIsWrittenWithWhatItSaysAndAnswersTo
+        tests/integration/ds/scene/test_scene_rules.cpp::TestSceneRules.WhatBreaksARuleIsPlacedOnTheMapWithTheAnswerThatBreaksIt
+        tests/integration/ds/scene/test_scene_rules.cpp::TestSceneRules.TheDocumentCarriesTheRulesAndThePageItsThreePerspectives
+    }
+
+    dataclass BreachView {                   // one breach of a rule, placed on the map
+      @requirement REQ-00099-1
+      + node: std::string
+      + to: std::string
+      + bindings: std::vector<std::pair<std::string, std::string>>
+      + witness: std::vector<std::pair<std::string, std::string>>
+      + file: std::string
+      + line: int
+    }
+
+    dataclass RuleView {                     // a rule or a definition as the logic perspective shows it
+      @requirement REQ-00099-1
+      + id: std::string
+      + kind: std::string
+      + name: std::string
+      + title: std::string
+      + scope: std::string
+      + lines: std::vector<std::pair<std::string, std::string>>
+      + requirements: std::vector<std::string>
+      + breaches: std::vector<BreachView>
+      + file: std::string
+      + line: int
     }
 
     dataclass Outcome {                      // one way a use case may end, as the viewer lists it
@@ -516,6 +578,7 @@ package driftspec@ds {
       + owns tours: std::vector<Tour>
       + owns requirements: std::vector<Requirement>
       + owns verifications: std::vector<Verification>
+      + owns rules: std::vector<RuleView>
     }
 
     class Scene {
@@ -544,6 +607,9 @@ package driftspec@ds {
         @requirement REQ-00078-1
         @requirement REQ-00083-1
       }
+      - reason(out_document: SceneDocument) -> void {
+        @requirement REQ-00099-1
+      }
       + static frame(page: std::string, title: std::string, height: int) -> std::string {
         @requirement REQ-00071-2
       }
@@ -551,10 +617,10 @@ package driftspec@ds {
         @requirement REQ-00073-1
       }
       + static pack(text: std::string) -> std::string {
-        @requirement REQ-00075-4
+        @requirement REQ-00075-5
       }
       + static unpack(packed: std::string) -> std::string {
-        @requirement REQ-00075-4
+        @requirement REQ-00075-5
       }
     }
 

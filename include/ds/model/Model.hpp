@@ -84,6 +84,14 @@ struct Relation {
   std::string change = {};   ///< set by a diff on the model it marks: "added" or "removed"; empty otherwise
 };
 
+/// One binding that breaks a rule (DS-108): its ranges and where as bound, and for a never the answer
+/// that breaks it; where the finding sits.
+struct Breach {
+  std::vector<std::pair<std::string, std::string>> bindings;
+  std::vector<std::pair<std::string, std::string>> witness;
+  Location location;
+};
+
 /// One diagnostic of the engine.
 struct Finding {
   std::string code;
@@ -151,12 +159,16 @@ class Model {
   /// What the rules and definitions say, by the identity of each.
   const std::map<std::string, Formula>& formulas() const { return formulas_; }
   void state(const std::string& id, const Formula& formula) { formulas_[id] = formula; }
+  /// The bindings that break each rule, by the rule's identity, as the evaluator found them.
+  const std::map<std::string, std::vector<Breach>>& breaches() const { return breaches_; }
+  void breach(const std::string& rule, const Breach& breach) { breaches_[rule].push_back(breach); }
 
  private:
   std::map<std::string, Entity> entities_;
   std::vector<Relation> relations_;
   std::vector<Finding> findings_;
   std::map<std::string, Formula> formulas_;
+  std::map<std::string, std::vector<Breach>> breaches_;
 };
 
 /// Whether a branch of the behaviour `sequence` is named `scenario` (`opt ... / scenario {`).

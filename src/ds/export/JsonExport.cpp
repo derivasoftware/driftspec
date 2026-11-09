@@ -72,6 +72,14 @@ std::string JsonExport::render(const model::Model& model, bool pretty) const {
   for (const auto& f : model.findings()) {
     out["findings"].push_back({{"code", f.code}, {"severity", f.severity}, {"message", f.message}, {"location", locationJson(f.location)}});
   }
+  // what breaks each rule, structured (DS-108): a reader lights it without reading the findings' prose
+  out["breaches"] = nlohmann::json::object();
+  for (const auto& rule : model.breaches()) {
+    nlohmann::json list = nlohmann::json::array();
+    for (const auto& b : rule.second)
+      list.push_back({{"bindings", b.bindings}, {"witness", b.witness}, {"location", locationJson(b.location)}});
+    out["breaches"][rule.first] = list;
+  }
   out["metamodel"] = metamodelJson();
   return pretty ? out.dump(2) : out.dump();
 }

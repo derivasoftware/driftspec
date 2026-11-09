@@ -93,8 +93,8 @@ TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesI
   const std::string scene = packedIn(page);
   for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
   EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
-  // REQ-00075-4: what the tool adds to a scene is bounded, the scene grows with the design it draws
-  EXPECT_LT(page.size() - packOf(page).size(), 40u * 1024u);
+  // REQ-00075-5: what the tool adds to a scene is bounded, the scene grows with the design it draws
+  EXPECT_LT(page.size() - packOf(page).size(), 64u * 1024u);
   EXPECT_LT(packOf(page).size(), 128u * nodes.size());  // each node with its relations, artefacts and behaviours
 }
 

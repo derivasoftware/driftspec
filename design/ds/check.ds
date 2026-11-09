@@ -15,6 +15,7 @@ package driftspec@ds {
     class Evaluator {                        // decides the structural rules over the model
       @requirement REQ-00096-1
       @requirement REQ-00097-1
+      @requirement REQ-00098-1
       - refs model_: model::Model
       - refs checker_: Checker
       - owns parent_: std::map<std::string, std::string>

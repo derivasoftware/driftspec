@@ -153,6 +153,26 @@ class Live:
                         pass
         return tuple(sorted(stamp))
 
+    def rules_of(self, model, findings) -> list[dict]:
+        """The rules and definitions as written, what each answers to and what breaks it (DS-108).
+
+        Read from the model: its entities, its relations and the breaches the evaluator recorded."""
+        rel = lambda path: os.path.relpath(path, self.workspace) if path.startswith("/") else path
+        rules = []
+        for e in sorted(model.entities.values(), key=lambda x: x.id):
+            if e.expected or e.kind not in ("rule", "definition"):
+                continue
+            lines = [[key, c.strip()] for key in ("for", "where", "holds", "never", "if")
+                     for c in e.fields.get(key, "").split("; ") if c.strip()]
+            breaches = [{"bindings": [list(p) for p in b.bindings], "witness": [list(p) for p in b.witness],
+                         "file": rel(b.location.file), "line": b.location.line} for b in model.breaches.get(e.id, [])]
+            problems = [{"code": f.code, "message": f.message[len(e.id) + 1:]} for f in findings
+                        if f.message.startswith(e.id + " ") and f.code.startswith(("E-RULE", "W-RULE", "W-DEFINITION")) and f.code != "E-RULE-BROKEN"]
+            rules.append({"id": e.id, "kind": e.kind, "name": e.name, "title": e.fields.get("title", ""), "scope": e.scope.rstrip("@"),
+                          "lines": lines, "requirements": [r.target for r in model.relations if r.kind == "requires" and r.source == e.id],
+                          "broken": breaches, "problems": problems, "file": rel(e.location.file), "line": e.location.line})
+        return rules
+
     def reload(self) -> bool:
         stamp = self.files_stamp()
         if stamp == self.stamp:
@@ -184,6 +204,7 @@ class Live:
                               "file": os.path.relpath(f.location.file, self.workspace) if f.location.file.startswith("/") else f.location.file,
                               "line": f.location.line} for f in report.findings]
             self.counts = dict(report.counts)
+            self.rules = self.rules_of(model, report.findings)
             if not first:
                 self.history.append({"version": self.version, "at": time.strftime("%H:%M:%S"), "changed": self.changed,
                                      "removed": self.removed, "ms": round((time.perf_counter() - t0) * 1000)})
@@ -195,7 +216,7 @@ class Live:
         return {"contract": CONTRACT["version"], "workspace": self.workspace, "title": self.title, "version": self.version,
                 "changed": self.changed, "removed": self.removed, "findings": self.findings, "counts": self.counts,
                 "history": self.history, "selection": self.selection, "error": self.error, "notes": self.notes,
-                "highlights": self.highlights, "boot": self.boot}
+                "highlights": self.highlights, "boot": self.boot, "rules": getattr(self, "rules", [])}
 
     def broadcast(self, event: str, data: dict) -> None:
         for q in list(self.listeners):
@@ -211,7 +232,7 @@ class Live:
 
 
 # ---------------------------------------------------------------- the page around the viewer
-SHELL = r"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+SHELL = r"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>driftspec live · __TITLE__</title>
 <style>
 :root{--bg:#f4f6f8;--panel:#fff;--fg:#1b2129;--muted:#5a6573;--line:#d5dbe2;--accent:#d9822b;--ok:#2f8a4a;--err:#c2410c;--sel:#2f62c9;
@@ -231,13 +252,26 @@ li button{all:unset;cursor:pointer;font-family:ui-monospace,Consolas,monospace;f
 .v{font-size:11px;color:var(--muted)} .ch{color:var(--accent)} .rm{color:var(--err);text-decoration:line-through}
 .f{font-size:12px} .f code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--err)}
 .flash{animation:fl 1.2s ease-out} @keyframes fl{from{background:color-mix(in srgb,var(--accent) 30%,var(--panel))}to{background:var(--panel)}}
+body{grid-template-columns:1fr 380px}
+.rules{gap:8px} .rule{border:1px solid var(--line);border-radius:8px;padding:7px 9px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.rule:hover{border-color:var(--muted)} .rule.on{border-color:var(--sel);box-shadow:0 0 0 1px var(--sel)} .rule.dim{opacity:.45}
+.rule .hd{display:flex;align-items:center;gap:6px;justify-content:space-between} .rule .nm{font-family:ui-monospace,Consolas,monospace;font-weight:600;font-size:12px}
+.st{font-size:11px;border-radius:999px;padding:1px 8px;white-space:nowrap} .st.ok{color:var(--ok);border:1px solid var(--ok)} .st.bad{color:var(--err);border:1px solid var(--err)}
+.st.def{color:var(--muted);border:1px solid var(--line)} .st.warn{color:var(--accent);border:1px solid var(--accent)}
+.fx{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;line-height:1.45;white-space:pre-wrap;margin:0}
+.fx .k{color:var(--sel);font-weight:600} .fx .k.never{color:var(--err)} .fx .k.holds{color:var(--ok)}
+.br{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--err);border-left:2px solid var(--err);padding-left:6px}
+.rq{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:var(--muted)}
+.tabs{display:flex;gap:4px} .tabs button{all:unset;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)} .tabs button.on{border-color:var(--sel);color:var(--sel)}
 @media (max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr 40%} aside{border-left:0;border-top:1px solid var(--line)}}
 </style></head><body>
 <header><span class="dot" id="dot"></span><b>__TITLE__</b><span class="pill" id="ver">v0</span><span class="pill" id="counts"></span>
 <span class="pill" id="find"></span><span class="pill sel" id="sel" hidden></span><span class="v" id="ws">__WS__</span></header>
 <div id="views"></div>
-<aside id="side"><div><h3>Último cambio</h3><ul id="last"><li class="v">esperando cambios en los ficheros…</li></ul></div>
-<div><h3>Notas</h3><ul id="notes"><li class="v">ninguna</li></ul></div><div><h3>Hallazgos</h3><ul id="findings"></ul></div><div><h3>Historia</h3><ul id="hist"></ul></div></aside>
+<aside id="side"><div id="rulesbox" hidden><div class="hd" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Rules</h3>
+<div class="tabs"><button data-f="all" class="on">all</button><button data-f="bad">broken</button><button data-f="sel">selected</button></div></div>
+<ul class="rules" id="rules"><li class="v">none</li></ul></div><div><h3>Last change</h3><ul id="last"><li class="v">waiting for the files to change…</li></ul></div>
+<div><h3>Notes</h3><ul id="notes"><li class="v">none</li></ul></div><div><h3>Findings</h3><ul id="findings"></ul></div><div><h3>History</h3><ul id="hist"></ul></div></aside>
 <script>
 const views=document.getElementById('views'); let cur=null, version=0, keepSel=null, pending=null, busy=false, ann={notes:[],highlights:[]};
 const $=id=>document.getElementById(id); const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -251,20 +285,42 @@ async function swap(state){ // a new viewer loads hidden; it takes the reader's 
   const v=f.contentWindow.DS_VIEW;
   if(v){ if(cam) v.setCam(cam); if(sel&&v.has(sel)) v.select(sel); v.mark(state.changed||[]); v.highlight(ann.highlights); v.notes(ann.notes);
     if(!cam&&state.changed&&state.changed.length) v.frame(state.changed); }
+  if(v){v.perspective_(PERSP); if(ACTIVE) v.lightRule(ACTIVE);}
   f.style.visibility='visible'; if(cur) cur.remove(); cur=f; busy=false;
   if(pending){const p=pending; pending=null; swap(p);} }
-function applyAnn(d){ann={notes:d.notes||[],highlights:d.highlights||[]}; const v=view(); if(v){v.highlight(ann.highlights); v.notes(ann.notes);}
-  $('notes').innerHTML=ann.notes.map(n=>`<li><button data-id="${esc(n.id)}">💬 ${esc(n.id)}</button><div class="f">${esc(n.text)}</div></li>`).join('')||'<li class="v">ninguna</li>';}
+let RULES=[], ACTIVE=null, FILTER='all', SELID=null, PERSP='structure';
+function perspective(p){PERSP=p; $('rulesbox').hidden=p!=='logic'; if(p!=='logic'&&ACTIVE){const v=view(); if(v&&v.rule) v.lightRule(v.rule); ACTIVE=null; rules();}}
+function paint(){const v=view(); if(!v) return; v.highlight(ann.highlights); v.notes(ann.notes);}
+function activate(id){const v=view(); ACTIVE=v&&v.lightRule?v.lightRule(id):null; rules();}
+const short=s=>String(s).replace(/^.*?::sequence::/,'call ').split(/[@:]+/).slice(-2).join('::');
+function applies(r,id){if(!id) return false; const under=x=>x===id||String(x).startsWith(id+'::')||String(x).startsWith(id+'@'); return under(r.scope)||r.broken.some(b=>b.bindings.some(p=>under(p[1])));}
+function rules(){const list=RULES.filter(r=>FILTER==='all'||(FILTER==='bad'&&(r.broken.length||r.problems.length))||(FILTER==='sel'&&applies(r,SELID)));
+  $('rules').innerHTML=list.map(r=>{const n=r.broken.length;
+    const st=r.kind==='definition'?'<span class="st def">definition</span>':r.problems.length?`<span class="st warn">${esc(r.problems[0].code)}</span>`:n?`<span class="st bad">✗ broken ${n}</span>`:'<span class="st ok">✓ holds</span>';
+    const fx=r.lines.map(l=>`<span class="k ${l[0]}">${esc(l[0])}</span> ${esc(l[1])}`).join('\n');
+    const br=r.broken.slice(0,6).map(b=>`<div class="br">${esc(b.bindings.concat(b.witness).map(p=>p[0]+' = '+short(p[1])).join(', '))} · ${esc(b.file.split('/').pop())}:${b.line}</div>`).join('');
+    const pr=r.problems.map(p=>`<div class="br">${esc(p.code)} ${esc(p.message)}</div>`).join('');
+    return `<li class="rule${ACTIVE===r.id?' on':''}${ACTIVE&&ACTIVE!==r.id?' dim':''}" data-rule="${esc(r.id)}"><div class="hd"><span class="nm">${esc(r.name)}</span>${st}</div>`+
+      (r.title?`<div class="v">${esc(r.title)}</div>`:'')+`<pre class="fx">${fx}</pre>`+br+pr+
+      `<div class="rq">${esc(short(r.scope||''))}${r.requirements.length?' · '+esc(r.requirements.join(', ')):''} · ${esc(r.file.split('/').pop())}:${r.line}</div></li>`;}).join('')||
+    `<li class="v">${FILTER==='sel'?(SELID?'no rule speaks of it':'select something in the viewer'):'none'}</li>`;}
+document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('[data-f]'); if(!b) return; FILTER=b.dataset.f;
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); rules();};
+function applyAnn(d){ann={notes:d.notes||[],highlights:d.highlights||[]}; paint();
+  $('notes').innerHTML=ann.notes.map(n=>`<li><button data-id="${esc(n.id)}">💬 ${esc(n.id)}</button><div class="f">${esc(n.text)}</div></li>`).join('')||'<li class="v">none</li>';}
 function side(s){
-  $('ver').textContent='v'+s.version; const c=s.counts||{}; $('counts').textContent=`${c.entities||0} entidades · ${c.relations||0} relaciones`;
-  const n=(s.findings||[]).length; $('find').textContent=n?`${n} hallazgos`:'sin hallazgos'; $('find').className='pill'+(n?' err':'');
+  $('ver').textContent='v'+s.version; const c=s.counts||{}; $('counts').textContent=`${c.entities||0} entities · ${c.relations||0} relations`;
+  const n=(s.findings||[]).length; $('find').textContent=n?`${n} findings`:'no findings'; $('find').className='pill'+(n?' err':'');
   const last=s.history&&s.history.length?s.history[s.history.length-1]:null;
-  $('last').innerHTML=last?[`<li class="v">v${last.version} · ${last.at} · ${last.ms} ms</li>`,...last.changed.slice(0,40).map(i=>`<li><button class="ch" data-id="${esc(i)}">~ ${esc(i)}</button></li>`),...last.removed.slice(0,20).map(i=>`<li class="rm">− ${esc(i)}</li>`),(!last.changed.length&&!last.removed.length?'<li class="v">el modelo no cambió</li>':'')].join(''):'<li class="v">esperando cambios en los ficheros…</li>';
-  $('findings').innerHTML=(s.findings||[]).slice(0,60).map(f=>`<li class="f"><code>${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">ninguno</li>';
-  $('hist').innerHTML=(s.history||[]).slice().reverse().map(h=>`<li class="v">v${h.version} · ${h.at} · ${h.changed.length} cambios${h.removed.length?' · '+h.removed.length+' quitados':''}</li>`).join('');
+  $('last').innerHTML=last?[`<li class="v">v${last.version} · ${last.at} · ${last.ms} ms</li>`,...last.changed.slice(0,40).map(i=>`<li><button class="ch" data-id="${esc(i)}">~ ${esc(i)}</button></li>`),...last.removed.slice(0,20).map(i=>`<li class="rm">− ${esc(i)}</li>`),(!last.changed.length&&!last.removed.length?'<li class="v">the model did not change</li>':'')].join(''):'<li class="v">waiting for the files to change…</li>';
+  $('findings').innerHTML=(s.findings||[]).slice(0,60).map(f=>`<li class="f"><code>${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
+  RULES=s.rules||[]; if(ACTIVE&&!RULES.find(r=>r.id===ACTIVE)) ACTIVE=null; rules();
+  $('hist').innerHTML=(s.history||[]).slice().reverse().map(h=>`<li class="v">v${h.version} · ${h.at} · ${h.changed.length} changed${h.removed.length?' · '+h.removed.length+' removed':''}</li>`).join('');
   $('side').classList.remove('flash'); void $('side').offsetWidth; $('side').classList.add('flash');}
+$('side').addEventListener('click',e=>{const r=e.target.closest('[data-rule]'); if(r) activate(r.dataset.rule);});
 $('side').onclick=e=>{const b=e.target.closest('[data-id]'); const v=view(); if(b&&v){const k=v.show(b.dataset.id); if(k!=='node') v.frameAny([b.dataset.id]);}};
-addEventListener('message',e=>{if(e.data&&e.data.ds==='select'&&cur&&e.source===cur.contentWindow){keepSel=e.data.id;
+addEventListener('message',e=>{if(e.data&&e.data.ds==='perspective'&&cur&&e.source===cur.contentWindow) perspective(e.data.p);});
+addEventListener('message',e=>{if(e.data&&e.data.ds==='select'&&cur&&e.source===cur.contentWindow){keepSel=e.data.id; SELID=e.data.id; if(FILTER==='sel') rules();
   $('sel').hidden=!e.data.id; $('sel').textContent=e.data.id?'◉ '+e.data.id:'';
   fetch('/selection',{method:'POST',body:JSON.stringify({id:e.data.id,label:e.data.label})});}});
 function connect(){const es=new EventSource('/events'); es.onopen=()=>$('dot').className='dot on';

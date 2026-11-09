@@ -186,6 +186,27 @@ package driftspec@pyds {
     }
   }
 
+  requirement REQ-00100-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall list every rule and definition as written, whether it holds, what breaks it and where, and light a rule in the viewer when the reader picks it
+    text:
+      The state carries the rules: each one's clauses as written, its title, what it answers to,
+      where it is written, its breaches with their bindings, answer and location, and the problems
+      the checker found in it. The page shows them in a panel of the logic perspective, filtered by
+      all, broken, or those that speak of what the reader selected; picking one asks the viewer to
+      light it.
+    rationale: Owner, 2026-11-09 (DS-108): without seeing the rules they cannot be understood.
+    tags: live, viewer, logic
+    verification VER-00109-1 {
+      status: approved
+      title: Integration tests confirm the state carries the rules as written with what breaks them and where
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_the_rules_reach_the_state_as_written_with_what_breaks_them
+    }
+  }
+
   interface session {                          // what a page or an editor's panel relies on
     kind: http
     transport: http, server-sent events on localhost
@@ -421,11 +442,18 @@ package driftspec@pyds {
       + message: string
       + location: Location
     }
+    dataclass Breach {                         // one binding that breaks a rule, and its answer
+      @requirement REQ-00098-1
+      + bindings: list<list<string>>
+      + witness: list<list<string>>
+      + location: Location
+    }
     class Model {                              // a workspace loaded: every entity by its identity
       @requirement REQ-00086-1
       + entities: map<string, Entity>
       + relations: list<Relation>
       + findings: list<Finding>
+      + breaches: map<string, list<Breach>>
       + find(identity: string) -> optional<Entity>
       + of_kind(kind: string) -> list<Entity>
       + named(name: string) -> list<Entity>
@@ -550,6 +578,9 @@ package driftspec@pyds {
       + highlights: list<object>
       + selection: map<string, string>
       + reload() -> bool
+      + rules_of(model: pyds::Model, findings: list<pyds::Finding>) -> list<map<string, object>> {
+        @requirement REQ-00100-1
+      }
       + state() -> map<string, object>
       + broadcast(event: string, data: map<string, object>) -> none
       + watch(every: float) -> none

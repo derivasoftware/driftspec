@@ -1021,6 +1021,29 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00098-1 {
+      tags: logic, rules, check, export
+      status: approved
+      title: The engine shall keep every binding that breaks a rule, with its answer and where it lands, and hand it structured to the export and to pyds
+      text:
+        Each breach the evaluator finds is kept by the rule's identity: the variables of its ranges
+        and where as bound, for a never the answer that breaks it, and the location of the first
+        thing the rule ranges over. All of them are kept, although the findings stop at a few per
+        rule. The JSON export carries them under breaches, and pyds loads them as Model.breaches, so
+        a reader lights what breaks a rule without reading the findings' prose.
+      rationale:
+        Owner, 2026-11-09 (DS-108): the rules must be seen to be understood; the prototype read the
+        findings' messages, which is no contract.
+      verification VER-00107-1 {
+        title: Tests confirm every breach is kept with its bindings, its answer and where it lands, and travels structured through the export and pyds
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.EveryBreachIsKeptWithItsBindingsItsAnswerAndWhereItLands
+          tests/integration/python/test_pyds.py::TestRules::test_what_breaks_a_rule_comes_with_its_bindings_and_its_answer
+      }
+    }
+
     // ======================= artefacts ====================================
     requirement REQ-00042-1 {
       tags: language, artefacts

@@ -26,6 +26,37 @@ class TestLoad:
             pyds.load(os.path.join(tmp_path, "nowhere"))
 
 
+RULE = """package p {
+  requirement REQ-00001-1: The core shall own nothing of render
+  module render {
+    class Canvas { }
+  }
+  module core {
+    class Model {
+      + canvas: p@render::Canvas
+    }
+    definition owns-in(a, b) {
+      if m in a, m owns b
+    }
+    rule blind {
+      @requirement REQ-00001-1
+      for class c in p@core
+      never owns-in(c, x), x in p@render
+    }
+  }
+}
+"""
+
+
+class TestRules:
+    def test_what_breaks_a_rule_comes_with_its_bindings_and_its_answer(self):
+        model = pyds.load({"a.ds": RULE})
+        (breach,) = model.breaches["p@core::blind"]
+        assert breach.bindings == (("c", "p@core::Model"),)
+        assert breach.witness == (("x", "p@render::Canvas"),)
+        assert breach.location.line == 7
+
+
 class TestCheck:
     def test_a_clean_workspace_reports_no_error(self, hola):
         report = pyds.check(hola)

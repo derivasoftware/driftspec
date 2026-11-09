@@ -9,7 +9,7 @@
   --bg:#f6f4ef;--panel:#fffdf8;--fg:#1d1c1a;--muted:#6b675f;--line:#d6d0c3;--soft:#ece8de;
   --accent:#2f5d8a;--accent-soft:#d6e4f2;--req:#8a4b2f;--req-soft:#f3e3d8;
   --priv:#8c8579;--pkg:#efe9dc;--mod:#f8f5ee;--ifc:#e3edf7;
-  --k-class:#3567a0;--k-function:#2a8a6e;--k-dataclass:#8a5cb3;--k-enum:#b07a22;--ok:#2f8a4a;--warn:#d9822b;
+  --k-class:#3567a0;--k-function:#2a8a6e;--k-dataclass:#8a5cb3;--k-enum:#b07a22;--ok:#2f8a4a;--warn:#d9822b;--bad:#c0392b;
   --r-owns:#c2185b;--r-agg:#00838f;--r-uses:#5c6bc0;--r-calls:#c62828;
   --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -18,7 +18,7 @@
   --bg:#151618;--panel:#1d1f22;--fg:#e8e6e1;--muted:#9a968d;--line:#3a3d42;--soft:#26292d;
   --accent:#7fb0e0;--accent-soft:#203a55;--req:#e3a27f;--req-soft:#3a271d;
   --priv:#857f75;--pkg:#1a1c1f;--mod:#212427;--ifc:#1c2a37;
-  --k-class:#78a6dc;--k-function:#5cc4a2;--k-dataclass:#b994dc;--k-enum:#ddb25e;--ok:#6cc68a;--warn:#f0a35a;
+  --k-class:#78a6dc;--k-function:#5cc4a2;--k-dataclass:#b994dc;--k-enum:#ddb25e;--ok:#6cc68a;--warn:#f0a35a;--bad:#f07a6a;
   --r-owns:#f06292;--r-agg:#4dd0e1;--r-uses:#9fa8da;--r-calls:#ef7f7f;}}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
@@ -27,6 +27,11 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .tools{position:absolute;right:10px;top:10px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;z-index:3;max-width:calc(100% - 20px)}
 .tools button{height:34px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:inherit;font-size:13px;cursor:pointer}
 .tools button[aria-pressed=true]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+/* three perspectives over one map (DS-101): what there is, what happens, what holds */
+.persp{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.tools .persp button{border:0;border-radius:0;border-right:1px solid var(--line)} .tools .persp button:last-child{border-right:0}
+.tools .persp button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.tools #tours,.tools #reqs,.tools [data-fam]{display:none}
 .crumbs{position:absolute;left:10px;top:10px;right:260px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-family:var(--mono);font-size:12px;pointer-events:none;z-index:2}
 .crumbs button{pointer-events:auto;font:inherit;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:3px 8px;cursor:pointer}
 .crumbs span{color:var(--muted);padding:0 2px}
@@ -163,7 +168,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <canvas class="main" id="cv" aria-label="/*TITLE*/: the whole model, zoomable"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
+  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
@@ -204,7 +209,9 @@ function decode(r){if(r.version!==2) return r;
   return {nodes,world:r.world,lean_world:r.lean_world,titles:r.titles,tours,
     links:r.links.map(col('link')).map(l=>({from:id(l.from),to:id(l.to),kind:l.kind,count:l.count,multiplicity:l.multiplicity,sequences:l.behaviours.map(b=>behaviours[b]?behaviours[b].id:'')})),
     diagrams:r.diagrams.map(col('diagram')).map(d=>({name:d.name,kind:d.kind,nodes:d.nodes.map(id)})),
-    ...trace(r,col,id)};}
+    ...trace(r,col,id),
+    rules:(r.rules||[]).map(col('rule')).map(x=>({...x,scope:id(x.scope),
+      breaches:(x.breaches||[]).map(col('breach')).map(b=>({...b,node:id(b.node),to:id(b.to)}))}))};}
 // the requirements and verifications, their ids in place of indices
 function trace(r,col,id){if(!r.requirements) return {requirements:[],verifications:[]};
   const reqs=r.requirements.map(col('requirement')); const rid=i=>i>=0&&reqs[i]?reqs[i].id:'';
@@ -232,7 +239,7 @@ let HLBOX=new Map(), HLROW=new Map(), pills=[], REQSEL=null;
 const REQS=SCENE.requirements||[], VERS=SCENE.verifications||[], RBY={}, VBY={};
 REQS.forEach(q=>{RBY[q.id]=q; q.kids=[]; q.vers=[];}); REQS.forEach(q=>{if(RBY[q.parent]) RBY[q.parent].kids.push(q.id);});
 VERS.forEach(v=>{VBY[v.id]=v; v.requirements.forEach(r=>{if(RBY[r]) RBY[r].vers.push(v.id);});});
-const KIND_EN={inherits:'inherits from',realises:'realises',owns:'composes',shares:'shares',refs:'refers to',uses:'uses',consumes:'uses the interface',calls:'calls','*':'relates to'};
+const KIND_EN={depends:'depends on',breaks:'breaks a rule through',inherits:'inherits from',realises:'realises',owns:'composes',shares:'shares',refs:'refers to',uses:'uses',consumes:'uses the interface',calls:'calls','*':'relates to'};
 const unitOf=id=>N[id]&&N[id].kind==='row'?N[id].parent:id;
 const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.kind)) n=N[n.parent]; return n?n.id:null;};
 const short=id=>{const n=N[id]; return n?n.label.replace(/^[+-] /,'').split(/[(:]/)[0].trim():id;};
@@ -247,7 +254,7 @@ const stage=document.getElementById('stage'), cv=document.getElementById('cv'), 
 const mini=document.getElementById('mini'), mctx=mini.getContext('2d');
 let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
-  K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),ok:g('--ok'),warn:g('--warn'),mono:g('--mono'),sans:g('--sans'),
+  K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),ok:g('--ok'),warn:g('--warn'),bad:g('--bad'),mono:g('--mono'),sans:g('--sans'),
     kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-class'),abstract:g('--k-class')},
     rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')}};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
@@ -316,22 +323,37 @@ function draw(){
 }
 
 /* ---------- relations, each in its notation, lifted to what can be seen ---------- */
-const STYLE={inherits:{dash:[],end:'tri'},realises:{dash:[6,4],end:'tri'},owns:{dash:[],start:'diamond'},shares:{dash:[],start:'hollow'},
+const OWNED={owns:1,refs:1,shares:1}, KEEP={calls:1,consumes:1,breaks:1};
+const STATIC={owns:1,refs:1,shares:1,uses:1,consumes:1,inherits:1,realises:1};  // far away, these keep their own notation
+const STYLE={depends:{dash:[],end:'open'},breaks:{dash:[6,4],end:'arrow',bad:true},consumes:{dash:[5,4],end:'open',accent:true},inherits:{dash:[],end:'tri'},realises:{dash:[6,4],end:'tri'},owns:{dash:[],start:'diamond'},shares:{dash:[],start:'hollow'},
   refs:{dash:[],end:'open'},uses:{dash:[5,4],end:'open',muted:true},calls:{dash:[],end:'arrow',accent:true},'*':{dash:[],end:'arrow',muted:true}};
 let drawn=[];
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
 function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
   const touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||linksOf(SEL).includes(l));
-  const list=LINKS.filter(l=>FAMILY[l.kind]&&(touched(l)||(FAM.inheritance&&boxOf(l.from)===boxOf(l.to))));  // across modules: written in the header, drawn when touched
+  // each perspective draws its own relations; a touched box still shows its inheritance
+  const inBox=l=>boxOf(l.from)===boxOf(l.to);
+  const shown=l=>PERSP==='structure'?((FAMILY[l.kind]&&FAM.inheritance&&inBox(l))||(OWNED[l.kind]&&inBox(l))||(STATIC[l.kind]&&!inBox(l)))
+    :PERSP==='behaviour'?(l.kind==='calls'||l.kind==='consumes'):false;
+  const list=LINKS.filter(l=>PERSP!=='logic'&&((FAMILY[l.kind]&&touched(l))||shown(l))).concat(PERSP==='logic'?RLINKS:[]);
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
   list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
     let A=repOf(keepRows&&inSel(l.from)?l.from:unitOf(l.from)), B=repOf(keepRows&&inSel(l.to)?l.to:unitOf(l.to)); if(!A||!B) return;
-    const coarse=!SEL&&(['module','package','iface'].includes(A.kind)||['module','package','iface'].includes(B.kind));
+    // structure: what crosses two boxes is one dependency between the boxes, as a component diagram draws it
+    const cross=PERSP==='structure'&&!inBox(l)&&!(SEL&&touched(l));
+    const coarse=cross||(!SEL&&(['module','package','iface'].includes(A.kind)||['module','package','iface'].includes(B.kind)));
     if(coarse){const a=boxOf(l.from), b=boxOf(l.to); if(!a||!b||a===b) return; A=N[a]; B=N[b];}  // far away: one arrow per pair of boxes
     if(A===B||anc(A.id).includes(B.id)||anc(B.id).includes(A.id)) return;
-    const kind=coarse?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
+    const kind=cross?'depends':coarse&&!KEEP[l.kind]?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
     if(!agg.has(k)) agg.set(k,{A,B,kind,n:0,links:[]}); const g=agg.get(k); g.n+=l.count; g.links.push(l);});
+  // each perspective has its stroke: structure is built at right angles, behaviour flows in curves
+  const flow=PERSP==='behaviour';
+  agg.forEach(g=>{g.curve=flow; if(flow){g.route=null; g.lane=null; return;}
+    const tr=(g.kind==='inherits'||g.kind==='realises')&&g.A.kind==='unit'&&g.B.kind==='unit';
+    const a=g.A.kind==='row'?N[g.A.parent]:g.A, b=g.B.kind==='row'?N[g.B.parent]:g.B;
+    g.route=tr?null:(route(a,b)||elbow(a,b));});
+  spreadLanes([...agg.values()]);
   agg.forEach(g=>{const geo=edge(g,!!SEL&&g.links.some(l=>unitOf(l.from)===SEL||unitOf(l.to)===SEL)); if(geo) drawn.push({...geo,g});});}
 // a related box out of sight: a pill on the edge of the screen, in its colour, that flies there
 function drawPills(){pills=[]; if(!SEL&&!REQSEL) return; const cx=W/2, cy=H/2, m=14;
@@ -357,14 +379,94 @@ function trunk(g,emph,st){const a=scr(g.A), b=scr(g.B); if(b.y+b.h>a.y-4) return
   const col=st.muted?K.muted:K.fg; ctx.globalAlpha=emph?1:.75; ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
   const tri=12; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1,ym); ctx.lineTo(x2,ym); ctx.lineTo(x2,y2+tri); ctx.stroke(); ctx.setLineDash([]);
   triangle(x2,y2,-Math.PI/2,col); ctx.globalAlpha=1; return {pts:[[x1,y1],[x1,ym],[x2,ym],[x2,y2]]};}
+/* ---------- orthogonal routes: straight segments at right angles, around the boxes in the way ---------- */
+// Routed once per pair of boxes in world units and kept until the layout changes; a pan or a zoom only redraws.
+let ROUTES=new Map();
+const routeMargin=10;
+function obstaclesFor(A,B){const chain=new Set([...anc(A.id),...anc(B.id)]);
+  return BOXES.map(id=>N[id]).filter(o=>!o.hidden&&!chain.has(o.id)&&(!o.parent||chain.has(o.parent)));}
+function route(A,B){const key=A.id+'>'+B.id+'>'+[A.x,A.y,A.w,A.h,B.x,B.y,B.w,B.h].map(Math.round).join(',')+(showPriv?'':'L');
+  if(ROUTES.has(key)) return ROUTES.get(key);
+  const m=routeMargin, obs=obstaclesFor(A,B).map(o=>({x0:o.x-m,y0:o.y-m,x1:o.x+o.w+m,y1:o.y+o.h+m}));
+  const ca=anc(A.id).slice(1), cb=anc(B.id).slice(1), own=ca.filter(x=>!cb.includes(x)).concat(cb.filter(x=>!ca.includes(x))).map(id=>N[id]);
+  const toll=(x,y)=>own.reduce((t,o)=>t+(x>o.x&&x<o.x+o.w&&y>o.y&&y<o.y+o.h?2:0),1);  // 1 outside, 3 inside one, 5 inside two
+  const ports=n=>[[n.x-m,n.y+n.h/2,'w'],[n.x+n.w+m,n.y+n.h/2,'e'],[n.x+n.w/2,n.y-m,'n'],[n.x+n.w/2,n.y+n.h+m,'s']];
+  const pa=ports(A), pb=ports(B);
+  const xs=new Set(), ys=new Set(); obs.forEach(o=>{xs.add(o.x0); xs.add(o.x1); ys.add(o.y0); ys.add(o.y1);});
+  pa.concat(pb).forEach(p=>{xs.add(p[0]); ys.add(p[1]);});
+  const X=[...xs].sort((a,b)=>a-b), Y=[...ys].sort((a,b)=>a-b);
+  for(let i=X.length-1;i>0;i--) X.splice(i,0,(X[i-1]+X[i])/2);  // channels: the middle of every gap
+  for(let j=Y.length-1;j>0;j--) Y.splice(j,0,(Y[j-1]+Y[j])/2);
+  const nx=X.length, ny=Y.length, inside=(x,y)=>obs.some(o=>x>o.x0+.01&&x<o.x1-.01&&y>o.y0+.01&&y<o.y1-.01);
+  if(nx*ny>250000){ROUTES.set(key,null); return null;}
+  const free=new Uint8Array(nx*ny); for(let j=0;j<ny;j++) for(let i=0;i<nx;i++) free[j*nx+i]=inside(X[i],Y[j])?0:1;
+  const at=(x,y)=>[X.indexOf(x),Y.indexOf(y)];
+  const starts=pa.map(p=>at(p[0],p[1])).filter(([i,j])=>i>=0&&j>=0&&free[j*nx+i]);
+  const goals=new Set(pb.map(p=>at(p[0],p[1])).filter(([i,j])=>i>=0&&j>=0&&free[j*nx+i]).map(([i,j])=>j*nx+i));
+  if(!starts.length||!goals.size){ROUTES.set(key,null); return null;}
+  // A*: length plus a price for every bend; a segment between two grid lines is free when its middle is
+  const bend=(B.w+A.w+B.h+A.h)/8, gx=pb.reduce((s,p)=>s+p[0],0)/4, gy=pb.reduce((s,p)=>s+p[1],0)/4;
+  const cost=new Map(), prev=new Map(), open=[]; const push=(s,c,f)=>{open.push([f,s,c]);};
+  starts.forEach(([i,j])=>{for(let d=0;d<4;d++){const s=(j*nx+i)*4+d; cost.set(s,0); push(s,0,Math.abs(X[i]-gx)+Math.abs(Y[j]-gy));}});
+  const D=[[1,0],[-1,0],[0,1],[0,-1]]; let end=-1, guard=0;
+  while(open.length&&guard++<400000){let bi=0; for(let k=1;k<open.length;k++) if(open[k][0]<open[bi][0]) bi=k; const [,s,c]=open[bi]; open[bi]=open[open.length-1]; open.pop();
+    if(c>cost.get(s)) continue; const cell=s>>2, d=s&3; if(goals.has(cell)){end=s; break;} const i=cell%nx, j=(cell/nx)|0;
+    for(let e=0;e<4;e++){const ni=i+D[e][0], nj=j+D[e][1]; if(ni<0||nj<0||ni>=nx||nj>=ny||!free[nj*nx+ni]) continue;
+      if(inside((X[i]+X[ni])/2,(Y[j]+Y[nj])/2)) continue;
+      const nc=c+(Math.abs(X[ni]-X[i])+Math.abs(Y[nj]-Y[j]))*toll((X[i]+X[ni])/2,(Y[j]+Y[nj])/2)+(e===d?0:bend), ns=(nj*nx+ni)*4+e;
+      if(nc<(cost.has(ns)?cost.get(ns):Infinity)){cost.set(ns,nc); prev.set(ns,s); push(ns,nc,nc+Math.abs(X[ni]-gx)+Math.abs(Y[nj]-gy));}}}
+  if(end<0){ROUTES.set(key,null); return null;}
+  const pts=[]; for(let s=end;s!==undefined;s=prev.get(s)){const cell=s>>2; pts.push([X[cell%nx],Y[(cell/nx)|0]]);} pts.reverse();
+  const clean=pts.filter((p,k)=>k===0||k===pts.length-1||!((pts[k-1][0]===p[0]&&p[0]===pts[k+1][0])||(pts[k-1][1]===p[1]&&p[1]===pts[k+1][1])));
+  const dedup=clean.filter((p,k)=>k===0||p[0]!==clean[k-1][0]||p[1]!==clean[k-1][1]);
+  // from the box's border to the port, and from the last port into the other box
+  const out=(n,p)=>p[0]<n.x?[n.x,p[1]]:p[0]>n.x+n.w?[n.x+n.w,p[1]]:p[1]<n.y?[p[0],n.y]:[p[0],n.y+n.h];
+  const full=straight([out(A,dedup[0]),...dedup,out(B,dedup[dedup.length-1])]);
+  ROUTES.set(key,full); return full;}
+// one point per corner: consecutive segments that run the same way are one segment, and nothing is oblique
+function straight(pts){const q=pts.filter((p,k)=>k===0||Math.abs(p[0]-pts[k-1][0])>.01||Math.abs(p[1]-pts[k-1][1])>.01);
+  return q.filter((p,k)=>k===0||k===q.length-1||!((Math.abs(q[k-1][0]-p[0])<.01&&Math.abs(p[0]-q[k+1][0])<.01)||(Math.abs(q[k-1][1]-p[1])<.01&&Math.abs(p[1]-q[k+1][1])<.01)));}
+// no route around the boxes: still right angles, out of one side and into the other
+function elbow(A,B){const a={x:A.x+A.w/2,y:A.y+A.h/2}, b={x:B.x+B.w/2,y:B.y+B.h/2};
+  if(Math.abs(b.x-a.x)>=Math.abs(b.y-a.y)){const x1=b.x>a.x?A.x+A.w:A.x, x2=b.x>a.x?B.x:B.x+B.w, mx=(x1+x2)/2; return straight([[x1,a.y],[mx,a.y],[mx,b.y],[x2,b.y]]);}
+  const y1=b.y>a.y?A.y+A.h:A.y, y2=b.y>a.y?B.y:B.y+B.h, my=(y1+y2)/2; return straight([[a.x,y1],[a.x,my],[b.x,my],[b.x,y2]]);}
+// Every segment that runs along the same line as another and overlaps it gets its own lane: the
+// lanes of a corridor are spread side by side, centred on it (interval colouring, greedy).
+function spreadLanes(groups){const by=new Map();
+  groups.forEach(g=>{g.lane=null; const p=g.route; if(!p) return; g.lane=new Array(p.length-1).fill(null);
+    for(let k=0;k<p.length-1;k++){const a=p[k], b=p[k+1], v=Math.abs(a[0]-b[0])<.01; if(!v&&Math.abs(a[1]-b[1])>.01) continue;
+      const key=(v?'v':'h')+Math.round(v?a[0]:a[1]), lo=Math.min(v?a[1]:a[0],v?b[1]:b[0]), hi=Math.max(v?a[1]:a[0],v?b[1]:b[0]);
+      if(!by.has(key)) by.set(key,[]); by.get(key).push({g,k,lo,hi,v});}});
+  by.forEach(list=>{list.sort((a,b)=>a.lo-b.lo||a.hi-b.hi); const ends=[];
+    list.forEach(s=>{let i=ends.findIndex(e=>e<s.lo-.5); if(i<0){i=ends.length; ends.push(s.hi);} else ends[i]=s.hi; s.i=i;});
+    list.forEach(s=>{s.g.lane[s.k]={i:s.i-(ends.length-1)/2,n:ends.length,v:s.v};});});}
+function poly(g,pts,emph,st){const P=pts.map(p=>[sx(p[0]),sy(p[1])]);
+  if(g.lane){const gap=k=>{const l=g.lane[k]; return l?l.i*Math.max(2,Math.min(7,routeMargin*cam.s*1.7/Math.max(1,l.n))):0;};
+    const dx=new Array(P.length).fill(0), dy=new Array(P.length).fill(0);
+    g.lane.forEach((l,k)=>{if(!l) return; const o=gap(k); if(l.v){dx[k]=o; dx[k+1]=o;} else {dy[k]=o; dy[k+1]=o;}});
+    P.forEach((p,k)=>{p[0]+=dx[k]; p[1]+=dy[k];});} const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.fg;
+  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.3):.65); ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.3; ctx.setLineDash(st.dash);
+  ctx.lineJoin='miter'; ctx.beginPath(); ctx.moveTo(P[0][0],P[0][1]);
+  for(let k=1;k<P.length;k++) ctx.lineTo(P[k][0],P[k][1]); ctx.stroke(); ctx.setLineDash([]);
+  const L=P.length, endA=Math.atan2(P[L-1][1]-P[L-2][1],P[L-1][0]-P[L-2][0]), startA=Math.atan2(P[1][1]-P[0][1],P[1][0]-P[0][0]);
+  const [x2,y2]=P[L-1];
+  if(st.end==='tri') triangle(x2,y2,endA,col); else if(st.end==='open') openArrow(x2,y2,endA,col); else if(st.end==='arrow') arrow(x2,y2,endA,col);
+  if(st.start) diamond(P[0][0],P[0][1],startA,col,st.start==='hollow');
+  let best=1, bl=-1; for(let k=1;k<L;k++){const l=Math.hypot(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]); if(l>bl){bl=l; best=k;}}
+  const mx=(P[best][0]+P[best-1][0])/2, my=(P[best][1]+P[best-1][1])/2;
+  if(g.n>1&&(emph||cam.s>=.45)){const tg='×'+g.n; ctx.font=`10.5px ${K.mono}`; const w=ctx.measureText(tg).width+10; ctx.globalAlpha=Math.max(ctx.globalAlpha,.8);
+    rr(mx-w/2,my-8,w,16,8); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.lineWidth=1; ctx.stroke(); text(tg,mx-w/2+5,my+4,10.5,col);}
+  ctx.globalAlpha=1; return {pts:P};}
 function edge(g,emph){const A=g.A,B=g.B,st=STYLE[g.kind]||STYLE['*'];
-  if((g.kind==='inherits'||g.kind==='realises')&&A.kind==='unit'&&B.kind==='unit'){const t=trunk(g,emph,st); if(t) return t;}
+  if((g.kind==='inherits'||g.kind==='realises')&&A.kind==='unit'&&B.kind==='unit'){const t=trunk(g,emph,st); if(t) return t;
+    if(!g.curve){g.route=route(A,B)||elbow(A,B); spreadLanes([g]);}}
+  if(!g.curve){const pts=g.route!==undefined?g.route:route(A.kind==='row'?N[A.parent]:A,B.kind==='row'?N[B.parent]:B); if(pts&&pts.length>=2) return poly(g,pts,emph,st);}
   const [a1,a2]=span(A).map(sx), [b1,b2]=span(B).map(sx); let y1=anchorY(A), y2=anchorY(B), x1,x2,c1,c2;
   if((Math.max(a1,b1)>W+300&&Math.max(a2,b2)>W+300)||(Math.min(a2,b2)<-300&&Math.min(a1,b1)<-300)||(y1<-300&&y2<-300)||(y1>H+300&&y2>H+300)) return null;
   if(b1<a2-4&&b2>a1+4){const o=Math.max(24,30*cam.s); x1=a2; x2=b2; c1=[x1+o,y1]; c2=[x2+o,y2];}
   else if(b1>=a2){x1=a2; x2=b1; const d=Math.max(30,(x2-x1)/2); c1=[x1+d,y1]; c2=[x2-d,y2];}
   else {x1=a1; x2=b2; const d=Math.max(30,(x1-x2)/2); c1=[x1-d,y1]; c2=[x2+d,y2];}
-  const col=st.accent?K.accent:st.muted?K.muted:K.fg;
+  const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.fg;
   ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.25):.6); ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
   ctx.beginPath(); ctx.moveTo(x1,y1); ctx.bezierCurveTo(c1[0],c1[1],c2[0],c2[1],x2,y2); ctx.stroke(); ctx.setLineDash([]);
   const endA=Math.atan2(y2-c2[1],x2-c2[0]), startA=Math.atan2(c1[1]-y1,c1[0]-x1);
@@ -386,7 +488,7 @@ const diagramsWith=(...ids)=>DIAGS.filter(d=>ids.every(id=>d.nodes.includes(unit
 const seqName=s=>s.replace(/^.*@/,'');
 function showPop(g,X,Y,pin){popPinned=!!pin; const A=g.A,B=g.B;
   let h=`<div class="ttl"><span>${esc(A.label.replace(/^[+-] /,''))} <span style="font-weight:400;color:var(--muted)">${KIND_EN[g.kind]}</span> ${esc(B.label.replace(/^[+-] /,''))}</span><button class="x" data-close="1" aria-label="Close">×</button></div>`;
-  if(g.kind==='*'){const by={}; g.links.forEach(l=>by[l.kind]=(by[l.kind]||0)+l.count); h+=`<h4>${g.n} relations</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="row"><span>${KIND_EN[k]}</span><span class="n">×${n}</span></div>`).join('');}
+  if(g.kind==='*'||g.kind==='depends'){const by={}; g.links.forEach(l=>by[l.kind]=(by[l.kind]||0)+l.count); h+=`<h4>${g.n} relations</h4>`+Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="row"><span>${KIND_EN[k]}</span><span class="n">×${n}</span></div>`).join('');}
   const rows=g.links.slice().sort((a,b)=>b.count-a.count);
   h+=`<h4>Where it comes from</h4>`+rows.slice(0,12).map(l=>`<div class="row"><span>${esc(short(l.from))} → ${esc(short(l.to))}${g.kind==='*'?` <span class="n">${KIND_EN[l.kind]}</span>`:''}</span><span class="n">${l.multiplicity?'['+esc(l.multiplicity)+'] ':''}${l.count>1?'×'+l.count:''}</span></div>`).join('')+(rows.length>12?`<div class="n">and ${rows.length-12} more</div>`:'');
   const seqs=[...new Set(g.links.flatMap(l=>l.sequences||[]))];
@@ -616,7 +718,7 @@ document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttr
   Object.assign(WORLD,box(showPriv?SCENE.world:SCENE.lean_world));
   const t0=performance.now(); lanim=now=>{let k=Math.min(1,(now-t0)/450); k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
     moves.forEach(([n,a,b])=>{if(!b) return; n.x=a[0]+(b[0]-a[0])*k; n.y=a[1]+(b[1]-a[1])*k; n.w=a[2]+(b[2]-a[2])*k; n.h=a[3]+(b[3]-a[3])*k;});
-    if(k>=1){if(showPriv) ORDER.forEach(id=>{N[id].hidden=false;}); lanim=null; if(SEL) select(SEL); return false;} return true;}; loop();};
+    if(k>=1){if(showPriv) ORDER.forEach(id=>{N[id].hidden=false;}); lanim=null; ROUTES=new Map(); if(SEL) select(SEL); return false;} return true;}; loop();};
 document.getElementById('fs').onclick=()=>{if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});};
 
 function focusBox(){const ids=new Set(FOCUS); const hit=ORDER.filter(id=>ids.has(id)&&N[id].kind!=='package'); if(!hit.length) return null;
@@ -704,7 +806,7 @@ new ResizeObserver(()=>{clearTimeout(seq._t); seq._t=setTimeout(seq,80);}).obser
 // window.DS_VIEW: read and set the camera, select and frame an identity, mark what changed.
 // The viewer tells its parent what is selected, so a live session knows what the reader points at.
 let CHANGED=new Set(), MARKED_AT=0, HILITE=new Map(), NOTES=[];
-const TONE=()=>({accent:K.accent,info:K.ifc||K.accent,ok:K.ok,bad:K.warn,req:K.req});
+const TONE=()=>({accent:K.accent,info:K.ifc||K.accent,ok:K.ok,bad:K.bad,req:K.req});
 const anchorOf=id=>{let n=N[id]; if(n&&n.hidden&&n.parent) n=N[n.parent]; return n||null;};
 function idsOf(id){ // an identity of any perspective, as the boxes it lights: a node, a requirement's nodes, a tour's units
   if(N[id]) return [id]; if(RBY[id]) return reqNodes(RBY[id]).filter(i=>N[i]);
@@ -720,8 +822,35 @@ function bubble(n,txt,col){const b=scr(n); if(!onScreen(b)) return; const pad=8,
   if(below){ctx.moveTo(ax-7,y); ctx.lineTo(ax,y-9); ctx.lineTo(ax+7,y);} else {ctx.moveTo(ax-7,y+h); ctx.lineTo(ax,y+h+9); ctx.lineTo(ax+7,y+h);}
   ctx.closePath(); ctx.fillStyle=col; ctx.fill();
   lines.forEach((l,i)=>text(l,x+pad,y+pad+px+i*(px+5)-2,px,K.fg));}
+let PERSP='structure', RULES=[], RLINKS=[];
+// the rules come placed in the scene: the node each is written in, the node of each breach and of its answer
+function setRules(list){RULES=list||[]; RLINKS=[];
+  RULES.forEach(r=>(r.breaches||[]).forEach(b=>{if(b.node&&b.to&&b.node!==b.to) RLINKS.push({from:b.node,to:b.to,kind:'breaks',count:1,multiplicity:'',sequences:[],rule:r.name});})); loop();}
+let RULE_ON=null;
+const shortId=s=>String(s).replace(/^.*?::sequence::/,'call ').split(/[@:]+/).slice(-2).join('::');
+const said=b=>b.bindings.concat(b.witness).map(p=>p[0]+' = '+(N[p[1]]||/[@:]/.test(p[1])?shortId(p[1]):p[1])).join(', ');
+// one rule lit: the box it lives in, what breaks it ringed with its answer, framed
+function lightRule(id){RULE_ON=RULE_ON===id?null:id; const r=RULES.find(x=>x.id===RULE_ON);
+  if(r){const ids=[r.scope].concat(r.breaches.map(b=>b.node)).filter(Boolean); if(ids.length) frameIds(ids);} loop(); return RULE_ON;}
+function setPersp(p){if(!['structure','behaviour','logic'].includes(p)) return; PERSP=p;
+  document.querySelectorAll('.persp button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p===p)));
+  if(p==='behaviour') openTours(); else if(p==='logic') openReqs(); else closeTours();
+  try{parent!==window&&parent.postMessage({ds:'perspective',p},'*');}catch(e){} loop();}
+document.querySelector('.persp').addEventListener('click',e=>{const b=e.target.closest('[data-p]'); if(b) setPersp(b.dataset.p);});
+// logic: every box says how many rules live in it, green when they all hold; what breaks one is ringed
+function drawLogic(){if(PERSP!=='logic'||!RULES.length) return; const home=new Map(), bad=new Set(), on=RULES.find(x=>x.id===RULE_ON);
+  RULES.forEach(r=>{if(r.kind!=='rule'||(on&&r!==on)) return; const h=r.scope; if(!h||!N[h]) return; const g=home.get(h)||{n:0,broken:0}; g.n++; if(r.breaches.length) g.broken++; home.set(h,g);
+    r.breaches.forEach(b=>{if(N[b.node]) bad.add(b.node);});});
+  if(on&&N[on.scope]){const n=anchorOf(on.scope), b=n&&scr(n); if(b&&onScreen(b)){ctx.save(); rr(b.x-5,b.y-5,b.w+10,b.h+10,9); ctx.strokeStyle=K.ifc||K.accent; ctx.lineWidth=3; ctx.stroke(); ctx.restore();}}
+  ctx.save(); bad.forEach(id=>{const n=anchorOf(id); if(!n) return; const b=scr(n); if(!onScreen(b)) return;
+    rr(b.x-4,b.y-4,b.w+8,b.h+8,8); ctx.globalAlpha=.14; ctx.fillStyle=K.bad; ctx.fill(); ctx.globalAlpha=1; ctx.strokeStyle=K.bad; ctx.lineWidth=2.6; ctx.stroke();});
+  home.forEach((g,id)=>{const n=anchorOf(id); if(!n) return; const b=scr(n); if(!onScreen(b)||b.w<40) return;
+    const t=(g.broken?'✗ ':'✓ ')+g.n+(g.n===1?' rule':' rules'); ctx.font=`600 11px ${K.mono}`; const w=ctx.measureText(t).width+14, x=b.x+b.w-w-6, y=b.y+6;
+    rr(x,y,w,18,9); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=g.broken?K.bad:K.ok; ctx.lineWidth=1.6; ctx.stroke(); text(t,x+7,y+13,11,g.broken?K.bad:K.ok,'600');});
+  ctx.restore();
+  if(on){const seen=new Set(); on.breaches.forEach(b=>{const n=anchorOf(b.node); if(!n||seen.has(n.id)) return; seen.add(n.id); bubble(n,'✗ '+on.name+': '+said(b),K.bad);});}}
 const drawBase=draw;
-draw=function(){drawBase();
+draw=function(){drawBase(); drawLogic();
   if(HILITE.size){ctx.save(); HILITE.forEach((tone,id)=>{const n=anchorOf(id); if(!n) return; const b=scr(n); if(!onScreen(b)) return; const col=TONE()[tone]||K.accent;
     rr(b.x-5,b.y-5,b.w+10,b.h+10,9); ctx.globalAlpha=.16; ctx.fillStyle=col; ctx.fill(); ctx.globalAlpha=1; ctx.strokeStyle=col; ctx.lineWidth=3.2; ctx.stroke();}); ctx.restore();}
   if(CHANGED.size){const age=(performance.now()-MARKED_AT)/1000, a=age<6?1:Math.max(.35,1-(age-6)/10);
@@ -746,7 +875,10 @@ window.DS_VIEW={
   highlight(list){HILITE=new Map(); (list||[]).forEach(h=>idsOf(h.id).forEach(i=>HILITE.set(i,h.tone||'accent'))); loop(); return HILITE.size;},
   notes(list){NOTES=(list||[]).slice(); loop(); return NOTES.length;},
   frameAny(ids){const all=[].concat(ids).flatMap(idsOf); return frameIds(all);},
-  known(id){return !!(N[id]||RBY[id]||TBY[id]||TOURS.find(t=>t.subject===id));}};
+  known(id){return !!(N[id]||RBY[id]||TBY[id]||TOURS.find(t=>t.subject===id));},
+  get perspective(){return PERSP;}, perspective_(p){setPersp(p);}, lightRule(id){return lightRule(id);}, get rule(){return RULE_ON;},
+  get rules(){return RULES.map(r=>({id:r.id,breaches:r.breaches.length}));}};
+setRules(SCENE.rules);
 resize(); const fb=focusBox(); Object.assign(cam,fb?fit(fb,.15):fit(WORLD,.02)); loop();
 try{parent!==window&&parent.postMessage({ds:'ready'},'*');}catch(e){}
 })();

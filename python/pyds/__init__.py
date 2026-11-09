@@ -67,14 +67,25 @@ def _finding(d: Mapping) -> Finding:
     return Finding(d["code"], d["severity"], d["message"], _location(d.get("location", {})))
 
 
+@dataclass(frozen=True)
+class Breach:
+    """One binding that breaks a rule: its variables as bound and, for a never, the answer that breaks it."""
+
+    bindings: tuple[tuple[str, str], ...]
+    witness: tuple[tuple[str, str], ...]
+    location: Location
+
+
 @dataclass
 class Model:
-    """A workspace loaded: every entity by its identity, the relations, the findings, the metamodel."""
+    """A workspace loaded: every entity by its identity, the relations, the findings, the metamodel,
+    and what breaks each rule."""
 
     entities: dict[str, Entity]
     relations: list[Relation]
     findings: list[Finding]
     metamodel: dict
+    breaches: dict[str, list[Breach]] = field(default_factory=dict)
 
     def find(self, identity: str) -> Entity | None:
         return self.entities.get(identity)
@@ -130,7 +141,11 @@ def load(source: Source) -> Model:
         for e in data["entities"]
     }
     relations = [Relation(r["kind"], r["from"], r["to"], _location(r.get("location", {}))) for r in data["relations"]]
-    return Model(entities, relations, [_finding(f) for f in data["findings"]], data.get("metamodel", {}))
+    breaches = {
+        rule: [Breach(tuple(map(tuple, b["bindings"])), tuple(map(tuple, b["witness"])), _location(b.get("location", {}))) for b in list_]
+        for rule, list_ in data.get("breaches", {}).items()
+    }
+    return Model(entities, relations, [_finding(f) for f in data["findings"]], data.get("metamodel", {}), breaches)
 
 
 def check(source: Source) -> Report:

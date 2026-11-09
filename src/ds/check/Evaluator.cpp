@@ -333,14 +333,19 @@ void Evaluator::evaluateRule(const std::string& id, const model::Formula& formul
       for (const auto& v : found.front())
         if (!subject.count(v.first)) witness.insert(v);
     if (answered != formula.never) continue;
+    const model::Entity* first = formula.ranges.empty() ? nullptr : model_.find(subject.at(formula.ranges.front().variable));
+    const model::Location at = first && !first->location.file.empty() ? first->location : rule->location;
+    model_.breach(id, {{subject.begin(), subject.end()},
+                       formula.never ? std::vector<std::pair<std::string, std::string>>(witness.begin(), witness.end())
+                                     : std::vector<std::pair<std::string, std::string>>{},
+                       at});  // every breach is kept, the findings stop at a few
     if (++broken > kReportsPerRule) continue;
     std::string message = "is broken";
     if (!subject.empty()) message += " for " + describe(subject);
     if (formula.never && !witness.empty()) message += ": " + describe(witness);
     // the finding sits on what breaks the rule, the first thing it ranges over (a call in its sequence,
     // a class in its file), so the reader lands there; the message names the rule
-    const model::Entity* first = formula.ranges.empty() ? nullptr : model_.find(subject.at(formula.ranges.front().variable));
-    report("E-RULE-BROKEN", id, message, first && !first->location.file.empty() ? first->location : rule->location);
+    report("E-RULE-BROKEN", id, message, at);
   }
   if (broken > kReportsPerRule)
     report("E-RULE-BROKEN", id, "is broken " + std::to_string(broken - kReportsPerRule) + " more times", rule->location);

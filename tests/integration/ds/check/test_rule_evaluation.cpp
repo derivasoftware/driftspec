@@ -79,6 +79,24 @@ TEST_F(TestRuleEvaluation, ARuleIsBrokenByEveryBindingThatBreaksIt) {
                                       "p@core::owned is broken for c = p@core::Clean"}));  // holds: the binding with no answer
 }
 
+TEST_F(TestRuleEvaluation, EveryBreachIsKeptWithItsBindingsItsAnswerAndWhereItLands) {
+  load(std::string(kBoxes) +
+       "    rule blind {\n"
+       "      @requirement REQ-00001-1\n"
+       "      for class c in p@core\n"
+       "      never depends(c, x), x in p@render\n"
+       "    }\n"
+       "  }\n"
+       "}\n");
+  const auto& all = model.breaches();
+  ASSERT_EQ(all.count("p@core::blind"), 1u);
+  const auto& b = all.at("p@core::blind");
+  ASSERT_EQ(b.size(), 1u);
+  EXPECT_EQ(b[0].bindings, (std::vector<std::pair<std::string, std::string>>{{"c", "p@core::Model"}}));
+  EXPECT_EQ(b[0].witness, (std::vector<std::pair<std::string, std::string>>{{"x", "p@render::Canvas"}}));
+  EXPECT_EQ(b[0].location.line, 7);  // on the class that breaks it
+}
+
 TEST_F(TestRuleEvaluation, ANegationTestsWhatIsAlreadyBound) {
   load(std::string(kBoxes) +
        "    rule traced-methods {\n"

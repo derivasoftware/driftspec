@@ -46,6 +46,16 @@ TEST_F(TestJsonExport, TheThreeArraysWithTheirFields) {
   EXPECT_EQ(f["location"]["file"], "a.ds");
 }
 
+TEST_F(TestJsonExport, WhatBreaksEachRuleTravelsStructured) {
+  model.breach("p@m::r", {{{"c", "p@m::A"}}, {{"x", "p@m::B"}}, {"a.ds", 3, 5}});
+  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model));
+  const auto& b = doc["breaches"]["p@m::r"][0];
+  EXPECT_EQ(b["bindings"][0][0], "c");
+  EXPECT_EQ(b["bindings"][0][1], "p@m::A");
+  EXPECT_EQ(b["witness"][0][1], "p@m::B");
+  EXPECT_EQ(b["location"]["line"], 3);
+}
+
 TEST_F(TestJsonExport, CarriesTheMetamodelTheModelIsWrittenIn) {
   const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model));
   const auto& meta = doc["metamodel"];

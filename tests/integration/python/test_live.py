@@ -31,6 +31,26 @@ class TestLiveSession:
         assert "sistema@core::Broker" not in state["changed"]
         assert state["history"][-1]["changed"] == state["changed"]
 
+    def test_the_rules_reach_the_state_as_written_with_what_breaks_them(self, session):
+        ws, live = session
+        with open(os.path.join(ws, "rules.ds"), "w") as fh:
+            fh.write("package sistema {\n"
+                     "  requirement REQ-00009-1: Every class shall answer to a requirement\n"
+                     "  rule answered {\n"
+                     "    title: every class answers to a requirement\n"
+                     "    @requirement REQ-00009-1\n"
+                     "    for class c\n"
+                     "    holds c requires r\n"
+                     "  }\n"
+                     "}\n")
+        state = until(lambda: (s := get(live, "/state"))["version"] == 2 and s)
+        (rule,) = [r for r in state["rules"] if r["id"] == "sistema@answered"]
+        assert rule["kind"] == "rule" and rule["title"] == "every class answers to a requirement"
+        assert rule["lines"] == [["for", "class c"], ["holds", "c requires r"]]
+        assert rule["requirements"] == ["REQ-00009-1"] and rule["file"] == "rules.ds"
+        assert rule["broken"] and all(b["bindings"][0][0] == "c" for b in rule["broken"])
+        assert rule["problems"] == []
+
     def test_a_reader_receives_the_model_and_is_taken_where_it_is_asked(self, session):
         _, live = session
         reader = Reader(live)
