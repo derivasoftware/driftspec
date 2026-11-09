@@ -1072,12 +1072,15 @@ package driftspec@ds {
         status: approved
         title: An artefact shall be identified by its id with its revision
         text: REQ-00001-2: the revision is part of the identity; a link to a revision no longer declared is W-REVISION-DRIFT, resolved to the declared one.
-        verification VER-00032-1 {
+        verification VER-00032-2 {
           title: Integration tests confirm an artefact is identified by its id with its revision
           status: approved
           method: test
           tests:
             tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
+            tests/integration/ds/check/test_usecase_links.cpp::TestUseCaseLinks.ARealisationBehindTheRevisionIsReportedAndFollowsIt
+            tests/integration/ds/check/test_usecase_links.cpp::TestUseCaseLinks.ASpecialisationThatNamesNoRevisionIsUnpinned
+            tests/integration/ds/check/test_usecase_links.cpp::TestUseCaseLinksAlone.AUseCaseNobodyDeclaresIsSaidOnce
         }
         constraint CST-00006-1 {
           tags: language, artefacts

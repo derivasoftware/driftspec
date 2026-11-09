@@ -196,6 +196,21 @@ TEST_F(TestDiff, WhatTheCheckDerivesIsNoChangeOfItsOwn) {
   EXPECT_EQ(find(d, "changed", "Product"), nullptr);                   // nor is a stereotype the check reads
 }
 
+TEST_F(TestDiff, AUseCaseChangedWithoutANewRevisionIsAFinding) {
+  // a use case is an artefact like a requirement: its text moves its revision (DS-116)
+  const std::string uc = R"(package p {
+  usecase UC-00001-1 greet(name: string) -> string {
+    title: Greet a person by name
+  }
+})";
+  std::string after = uc;
+  after.replace(after.find("by name"), 7, "by their name");
+  const auto d = ds::diff::Diff::compare(load(uc), load(after));
+  ASSERT_EQ(d.findings.size(), 1u);
+  EXPECT_EQ(d.findings[0].code, "W-REVISION-STALE");
+  EXPECT_NE(d.findings[0].message.find("UC-00001-1"), std::string::npos);
+}
+
 TEST_F(TestDiff, TheMarkedModelCarriesTheChangesForADrawing) {
   const std::string after = R"(package p {
   module m {
