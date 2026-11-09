@@ -542,7 +542,7 @@ void Checker::checkLeak(const std::string& from, const std::string& target, cons
   const model::Entity* member = model_.find(from);
   if (!type || !member || type->expected) return;
   if (member->kind != model::Kind::Method && member->kind != model::Kind::Attribute && member->kind != model::Kind::Function &&
-      member->kind != model::Kind::Operation) {
+      member->kind != model::Kind::Operation && member->kind != model::Kind::Operator) {  // an operator has a signature too (DS-117)
     return;
   }
   const auto hidden = type->fields.find("visibility");
