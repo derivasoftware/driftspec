@@ -82,7 +82,9 @@ package driftspec@ds {
 
     sequence Api::page {
       local scene: scene::Scene
-      -> scene.page(title, css, focus) -> page
+      local html: format::SceneHtml
+      -> scene.build() -> document
+      -> html.write(document, options) -> page
       return page
     }
   }

@@ -95,7 +95,7 @@ file(GLOB_RECURSE driftspec_SOURCES CONFIGURE_DEPENDS "src/ds/*.cpp")
 file(READ ${CMAKE_SOURCE_DIR}/viewer/scene.html DS_VIEWER_HTML)
 file(
   WRITE ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
-  "namespace ds {\nnamespace scene {\nconst char* viewerTemplate() {\n  return R\"DSVIEW(${DS_VIEWER_HTML})DSVIEW\";\n}\n}  // namespace scene\n}  // namespace ds\n"
+  "namespace ds {\nnamespace format {\nconst char* viewerTemplate() {\n  return R\"DSVIEW(${DS_VIEWER_HTML})DSVIEW\";\n}\n}  // namespace format\n}  // namespace ds\n"
 )
 configure_file(${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
                ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp COPYONLY)

@@ -1,0 +1,142 @@
+// LLD of the format namespace (ds::format, DS-126): every output of ds is a document written by
+// a format. A document is an information contract; a format is one way to write it, found by name,
+// and it never reads the model. To add one: a class implementing IFormat<its document>, and one
+// line in the map of that document. Today the scene's formats; a diagram's, a query's answers and a
+// check's findings join as their own commands move here.
+
+package driftspec@ds {
+  module format {
+    requirement REQ-00106-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: Each document ds writes shall be written by formats behind one interface, found by name, none of which reads the model
+      text:
+        A format has a name and writes one kind of document with the options it is given (indented,
+        the title, a reader's stylesheet, the identities a page opens framed on, whether a page is
+        embedded and how tall). The formats of a document are named in one map, so a command finds
+        the one asked for by name. A format writes what the document says and never reads the
+        model; what two formats need (packing, the scene's JSON) lives apart and knows none of them.
+      rationale:
+        Owner, 2026-11-10 (DS-126): the scene, a diagram's IR, a query's answers and a check's
+        findings are each written in several forms, each in its own way; one shape for all of them
+        and the command line finding a format by name.
+      tags: format, render, scene
+      verification VER-00115-1 {
+        status: approved
+        title: Unit tests confirm the scene's formats are found by name, write the document they are given with no model, and the page becomes a frame when asked
+        method: test
+        tests:
+          tests/unit/ds/format/test_scene_formats.cpp::TestSceneFormats.EachFormatOfTheSceneIsFoundByItsName
+          tests/unit/ds/format/test_scene_formats.cpp::TestSceneFormats.AFormatWritesTheDocumentItIsGivenWithoutAModel
+          tests/unit/ds/format/test_scene_formats.cpp::TestSceneFormats.ThePageIsAnIframeCarryingItWholeWhenAskedToEmbed
+      }
+    }
+
+    // ---- the principles, as rules ----------------------------------------------------------
+    definition depends(a, b) {
+      title: a depends on b through one of its members or its behaviours
+      if a uses b
+      if m in a, m owns b
+      if m in a, m refs b
+      if m in a, m uses b
+      if m in a, s behaviour-of m, s uses b
+    }
+
+    rule formats-read-no-model {
+      title: a format writes the document it is given; it never reads the model
+      @requirement REQ-00106-1
+      for class c in driftspec@ds@format
+      never depends(c, driftspec@ds@model::Model)
+    }
+
+    rule no-format-uses-another {
+      title: formats are siblings: none uses another; what two of them need goes in common
+      @requirement REQ-00106-1
+      for class a in driftspec@ds@format, class b in driftspec@ds@format
+      where a != b, a inherits x, b inherits y
+      never depends(a, b)
+    }
+
+    rule common-knows-no-format {
+      title: what formats share knows none of them
+      @requirement REQ-00106-1
+      for function f in driftspec@ds@format::common
+      never depends(f, x), x in driftspec@ds@format, not x in driftspec@ds@format::common
+    }
+
+    // ---- the contract ------------------------------------------------------------------------
+    // what every format is given besides its document
+    dataclass FormatOptions {
+      @requirement REQ-00106-1
+      + pretty: bool
+      + title: std::string
+      + css: std::string
+      + focus: std::vector<std::string>
+      + embed: bool
+      + height: int
+    }
+
+    // THE EXTENSION POINT: IFormat<D> in the code, D the document it writes; the grammar cannot yet
+    // write a base's template arguments (DS-150), so the drawing reads IFormat, and D stands below
+    class IFormat {
+      @requirement REQ-00106-1
+      + ~IFormat()
+      + abstract name() -> std::string
+      + abstract write(document: D, options: FormatOptions) -> std::string
+    }
+
+    // D, the template parameter: stands for the document a format writes (the scene today)
+    dataclass D {
+      @requirement REQ-00106-1
+      + kind: std::string
+    }
+
+    // ---- what two formats or more need: knows no format, never reads the model ---------------
+    module common {
+      function pack(text: std::string) -> std::string {
+        @requirement REQ-00075-5
+      }
+      function unpack(packed: std::string) -> std::string {
+        @requirement REQ-00075-5
+      }
+      // compact JSON that says how to read itself: every record an array whose columns fields names
+      function encode(document: scene::SceneDocument, pretty: bool) -> std::string {
+        @requirement REQ-00069-1
+      }
+    }
+
+    // ---- the scene's formats -----------------------------------------------------------------
+    // the one place that names them
+    function sceneFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+      @requirement REQ-00106-1
+    }
+
+    // ds render -f json
+    class SceneJson : IFormat {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: scene::SceneDocument, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f html: the viewer as one page, or that page as an iframe when options.embed asks
+    class SceneHtml : IFormat {
+      @requirement REQ-00070-1
+      @requirement REQ-00071-2
+      @requirement REQ-00077-1
+      @requirement REQ-00092-2
+      + name() -> std::string
+      + write(document: scene::SceneDocument, options: FormatOptions) -> std::string
+    }
+
+    sequence SceneHtml::write {
+      -> common::encode(document, false) -> json
+      -> common::pack(json) -> packed
+      return page
+    }
+  }
+}
+
+diagram CL_Format {
+  kind: class
+  include: driftspec@ds@format::*
+}

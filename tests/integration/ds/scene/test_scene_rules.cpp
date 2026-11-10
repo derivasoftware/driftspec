@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/format/SceneFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Scene.hpp"
@@ -103,15 +104,15 @@ TEST_F(TestSceneRules, WhatBreaksARuleIsPlacedOnTheMapWithTheAnswerThatBreaksIt)
 }
 
 TEST_F(TestSceneRules, TheDocumentCarriesTheRulesAndThePageItsThreePerspectives) {
-  const std::string json = ds::scene::Scene(model).render(false);
+  const std::string json = ds::format::SceneJson().write(ds::scene::Scene(model).build(), {});
   EXPECT_NE(json.find("\"rule\":[\"id\",\"kind\",\"name\",\"title\",\"scope\",\"lines\",\"requirements\",\"breaches\",\"file\",\"line\"]"),
             std::string::npos);
   EXPECT_NE(json.find("\"breach\":[\"node\",\"to\",\"bindings\",\"witness\",\"file\",\"line\"]"), std::string::npos);
-  const std::string page = ds::scene::Scene(model).page("rules");
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "rules"});
   for (const char* p : {"data-p=\"structure\"", "data-p=\"behaviour\"", "data-p=\"logic\""})
     EXPECT_NE(page.find(p), std::string::npos) << p;
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
-  const std::string viewer = ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+  const std::string viewer = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
   for (const char* part : {"function setPersp(", "function route(", "function spreadLanes(", "function drawLogic(", "lightRule(id){"})
     EXPECT_NE(viewer.find(part), std::string::npos) << part;  // the strokes of each perspective, and a host lights one rule
 }
