@@ -76,7 +76,7 @@ class StateFilter : public IFilter {
   explicit StateFilter(std::vector<std::string> include);
   std::set<std::string> select(const model::Model& model) const override;
   /// The machines taken, in the order the patterns name them.
-  std::vector<const model::Entity*> machines(const model::Model& model) const;
+  std::vector<std::string> machines(const model::Model& model) const;
 
  private:
   std::vector<std::string> include_;

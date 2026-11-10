@@ -161,7 +161,7 @@ package driftspec@ds {
       - include_: std::vector<std::string>
       + StateFilter(include: std::vector<std::string>)
       + select(model: model::Model) -> std::set<std::string>
-      + machines(model: model::Model) -> std::vector<model::Entity>
+      + machines(model: model::Model) -> std::vector<std::string>
     }
 
     // the artefacts it names and their umbrella: what refines, verifies and realises them

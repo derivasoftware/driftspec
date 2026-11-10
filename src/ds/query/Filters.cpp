@@ -256,22 +256,22 @@ std::set<std::string> SequenceFilter::select(const model::Model& model) const {
 
 StateFilter::StateFilter(std::vector<std::string> include) : include_(std::move(include)) {}
 
-std::vector<const model::Entity*> StateFilter::machines(const model::Model& model) const {
-  std::vector<const model::Entity*> out;
+std::vector<std::string> StateFilter::machines(const model::Model& model) const {
+  std::vector<std::string> out;
   for (const auto& pattern : include_) {
     const model::Entity* state = model.find(model::stateId(pattern));
     if (!state) state = model.find(pattern);
-    if (state && state->kind == model::Kind::State) out.push_back(state);
+    if (state && state->kind == model::Kind::State) out.push_back(state->id);
   }
   return out;
 }
 
 std::set<std::string> StateFilter::select(const model::Model& model) const {
   std::set<std::string> out;
-  for (const model::Entity* machine : machines(model)) {
-    out.insert(machine->id);
+  for (const auto& machine : machines(model)) {
+    out.insert(machine);
     for (const auto& pair : model.entities())  // the states the design describes
-      if (pair.second.scope == machine->id) out.insert(pair.first);
+      if (pair.second.scope == machine) out.insert(pair.first);
   }
   return out;
 }

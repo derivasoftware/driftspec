@@ -602,7 +602,8 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   nlohmann::json nodes = nlohmann::json::array();
   nlohmann::json edges = nlohmann::json::array();
   std::set<std::string> drawn;
-  for (const model::Entity* state : query::StateFilter(split(fieldOf(diagram, "include"), ',')).machines(model_)) {  // DS-127
+  for (const auto& machine : query::StateFilter(split(fieldOf(diagram, "include"), ',')).machines(model_)) {  // DS-127
+    const model::Entity* state = model_.find(machine);
     const auto box = [&](const std::string& name) {
       const std::string id = state->id + "::" + name;
       if (!drawn.insert(id).second) return id;
