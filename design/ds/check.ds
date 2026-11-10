@@ -74,6 +74,21 @@ package driftspec@ds {
       }
     }
 
+    // What a check of a workspace says: its findings in order and the counts of the model (DS-120);
+    // built once from the model, written by its formats without it (DS-126)
+    dataclass Report {
+      @requirement REQ-00106-1
+      + findings: std::vector<model::Finding>
+      + entities: int
+      + expected: int
+      + relations: int
+      + errors: int
+    }
+
+    function reportOf(model: model::Model) -> Report {
+      @requirement REQ-00106-1
+    }
+
     // One step of the check (DS-138): its key, the steps it needs done before it, and what it found,
     // which it gives back. The checker orders the steps by what they need and runs them, knowing none of them.
     class IStep {

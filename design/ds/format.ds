@@ -1,8 +1,7 @@
 // LLD of the format namespace (ds::format, DS-126): every output of ds is a document written by
 // a format. A document is an information contract; a format is one way to write it, found by name,
 // and it never reads the model. To add one: a class implementing IFormat<its document>, and one
-// line in the map of that document. The scene's formats and a diagram's; a query's answers and a
-// check's findings join next.
+// line in the map of that document: the scene, a diagram, a query's answers, a check's report.
 
 package driftspec@ds {
   module format {
@@ -38,6 +37,15 @@ package driftspec@ds {
           tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.EachFormatOfADiagramIsFoundByItsName
           tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.TheIrIsWrittenAsItCameUnlessAskedToIndent
           tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.EachDrawingFormatDrawsTheSameDiagram
+      }
+      verification VER-00117-1 {
+        status: approved
+        title: Unit tests confirm a query's answers and a check's report are written as text or JSON by name, and the report is built once from the model and read the same either way
+        method: test
+        tests:
+          tests/unit/ds/format/test_text_formats.cpp::TestTextFormats.AnswersAndReportsAreWrittenAsTextOrJsonByName
+          tests/unit/ds/format/test_text_formats.cpp::TestTextFormats.AReportIsBuiltOnceFromTheModelAndCountsWhatItSays
+          tests/unit/ds/format/test_text_formats.cpp::TestTextFormats.AReportReadsTheSameAsTextAndAsJson
       }
     }
 
@@ -178,6 +186,44 @@ package driftspec@ds {
       @requirement REQ-00007-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ---- a query's answers -------------------------------------------------------------------
+    function answerFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+      @requirement REQ-00106-1
+    }
+
+    // ds query: kind  identity  detail, one answer per line
+    class AnswersText : IFormat {
+      @requirement REQ-00003-2
+      + name() -> std::string
+      + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
+    }
+
+    // ds query --json: an array of the same three fields
+    class AnswersJson : IFormat {
+      @requirement REQ-00003-2
+      + name() -> std::string
+      + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
+    }
+
+    // ---- a check's report ---------------------------------------------------------------------
+    function reportFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+      @requirement REQ-00106-1
+    }
+
+    // ds check: each finding where it is, then the counts
+    class ReportText : IFormat {
+      @requirement SREQ-00002-1
+      + name() -> std::string
+      + write(document: check::Report, options: FormatOptions) -> std::string
+    }
+
+    // ds check --json and the API: the one shape every caller reads
+    class ReportJson : IFormat {
+      @requirement SREQ-00002-1
+      + name() -> std::string
+      + write(document: check::Report, options: FormatOptions) -> std::string
     }
 
     sequence SceneHtml::write {

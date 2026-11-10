@@ -13,7 +13,6 @@ package driftspec@ds {
     - function titleOf(dir: string) -> string
     - function readFile(path: string) -> string
     - function emit(output: string, text: string) -> int
-    - function locationJson(location: model::Location) -> string
     - function check(dir: path, json: bool) -> int
     - function holdsDesign(dir: path) -> bool         // a directory with no .ds file under it is no workspace
     - function manual(topic: string, json: bool) -> int
@@ -30,14 +29,14 @@ package driftspec@ds {
       return true
     }
 
+    // the one report of a check, written by the format asked for: text, or JSON with --json (DS-126)
     sequence check {
       local model: model::Model
+      local chosen: format::ReportText
       -> loadWorkspace(dir, model) -> found
-      opt --json: the findings and the counts as JSON / as-json {
-        loop each finding {
-          -> locationJson(location) -> where
-        }
-      }
+      -> check::reportOf(model) -> report
+      -> format::reportFormats() -> formats
+      -> chosen.write(report, options) -> written
       return 0
     }
 
@@ -165,9 +164,11 @@ package driftspec@ds {
     sequence main / query {
       local model: model::Model
       local query: query::Query
+      local chosen: format::AnswersText
       -> loadWorkspace(argv, model) -> found
       -> query.ask(question, subject) -> answers
-      -> query.text(answers) -> text
+      -> format::answerFormats() -> formats
+      -> chosen.write(answers, options) -> text
       return 0
     }
 

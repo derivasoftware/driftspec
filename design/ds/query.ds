@@ -2,7 +2,7 @@
 // DS-127). It answers named questions (ask) and applies a filter it is given (select);
 // both give identities. A diagram's content is one filter, built from the diagram by
 // filterFor(), the one place that names the filter of each kind of diagram. Not its
-// jobs: drawing, writing answers as text or JSON (output, later a format's), changing
+// jobs: drawing, writing answers as text or JSON (their formats', ds::format), changing
 // the model.
 
 package driftspec@ds {
@@ -217,8 +217,6 @@ package driftspec@ds {
       + shows(diagram: std::string) -> std::vector<Answer>
       + findings(file: std::string) -> std::vector<Answer>
       + coupling() -> std::vector<Answer>
-      + static text(answers: std::vector<Answer>) -> std::string
-      + static json(answers: std::vector<Answer>) -> std::string
       - known(id: std::string) -> bool                       // an entity, or a scope something is declared in
       - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
     }
@@ -365,21 +363,6 @@ package driftspec@ds {
         }
       }
       return out
-    }
-
-    sequence Query::text {
-      local out: std::string
-      loop each answer {
-      }
-      return out
-    }
-
-    // The array is an nlohmann::json, a type the design does not know, and what comes
-    // back is its dump(): both go untold.
-    sequence Query::json {
-      loop each answer {
-      }
-      return document
     }
   }
 }

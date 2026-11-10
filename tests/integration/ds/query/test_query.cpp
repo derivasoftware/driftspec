@@ -5,6 +5,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/format/TextFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
@@ -94,8 +95,8 @@ TEST_F(TestQuery, AnUnknownQuestionIsAnError) {
 
 TEST_F(TestQuery, AnswersAsTextAndAsJson) {
   const std::vector<Answer> answers = {{"class", "a@b::C", "x"}, {"package", "a", ""}};
-  EXPECT_EQ(ds::query::Query::text(answers), "class  a@b::C  x\npackage  a\n");
-  const auto parsed = nlohmann::json::parse(ds::query::Query::json(answers));
+  EXPECT_EQ(ds::format::AnswersText().write(answers, {}), "class  a@b::C  x\npackage  a\n");
+  const auto parsed = nlohmann::json::parse(ds::format::AnswersJson().write(answers, {}));
   EXPECT_EQ(parsed.size(), 2u);
   EXPECT_EQ(parsed[0]["id"], "a@b::C");
 }

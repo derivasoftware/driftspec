@@ -5,10 +5,12 @@
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
+#include "ds/format/TextFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -51,23 +53,9 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
 }
 
 std::string Api::report(const model::Model& model, bool pretty) {
-  nlohmann::json findings = nlohmann::json::array();
-  int errors = 0;
-  for (const auto& f : model.findings()) {
-    errors += f.severity == "error" ? 1 : 0;
-    findings.push_back({{"code", f.code},
-                        {"severity", f.severity},
-                        {"message", f.message},
-                        {"location", {{"file", f.location.file}, {"line", f.location.line}, {"column", f.location.column}}}});
-  }
-  long expected = 0;
-  for (const auto& e : model.entities()) expected += e.second.expected ? 1 : 0;
-  const nlohmann::json out{{"findings", findings},
-                           {"entities", static_cast<long>(model.entities().size()) - expected},  // declared: what the design says
-                           {"expected", expected},
-                           {"relations", model.relations().size()},
-                           {"errors", errors}};
-  return pretty ? out.dump(2) : out.dump();
+  format::FormatOptions options;  // the one report of a check (DS-120), as JSON (DS-126)
+  options.pretty = pretty;
+  return format::ReportJson().write(check::reportOf(model), options);
 }
 
 std::string Api::check(const Files& files) { return report(loadTexts(files)); }

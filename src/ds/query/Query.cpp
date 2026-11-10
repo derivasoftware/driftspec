@@ -157,17 +157,5 @@ std::vector<Answer> Query::findings(const std::string& file) const {
   return out;
 }
 
-std::string Query::text(const std::vector<Answer>& answers) {
-  std::string out;
-  for (const auto& a : answers) out += a.kind + "  " + a.id + (a.detail.empty() ? "" : "  " + a.detail) + "\n";
-  return out;
-}
-
-std::string Query::json(const std::vector<Answer>& answers) {
-  nlohmann::json out = nlohmann::json::array();
-  for (const auto& a : answers) out.push_back({{"kind", a.kind}, {"id", a.id}, {"detail", a.detail}});
-  return out.dump();
-}
-
 }  // namespace query
 }  // namespace ds
