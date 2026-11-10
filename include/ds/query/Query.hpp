@@ -1,10 +1,12 @@
 #ifndef DRIFTSPEC_QUERY_QUERY_HPP
 #define DRIFTSPEC_QUERY_QUERY_HPP
 
+#include <set>
 #include <string>
 #include <vector>
 
 #include "ds/model/Model.hpp"
+#include "ds/query/Filter.hpp"
 
 namespace ds {
 namespace query {
@@ -16,25 +18,38 @@ struct Answer {
   std::string detail;  ///< what else the question asked: a direction, a diagram kind, a title, a finding
 };
 
-/// Questions about the model, answered by identity (SREQ-00011-1): what exists,
-/// what an entity relates to, what a diagram shows, what proves a class.
-class Query {
+/// The query module's entry point (DS-127): what the rest of ds asks of the model. A named question
+/// answered by identity, or the model taken through a filter the caller gives.
+class IQuery {
+ public:
+  virtual ~IQuery() = default;
+  virtual std::vector<Answer> ask(const std::string& question, const std::string& subject) const = 0;
+  virtual std::set<std::string> select(const IFilter& filter) const = 0;
+};
+
+/// Questions about the model, answered by identity (SREQ-00011-1): what exists, what an entity
+/// relates to, what a diagram shows, what proves a class; and any filter it is given, which it hands
+/// the model without knowing which filter it is.
+class Query : public IQuery {
  public:
   explicit Query(const model::Model& model) : model_(model) {}
+
+  /// The identities the filter takes from the model.
+  std::set<std::string> select(const IFilter& filter) const override;
 
   /// The questions `ask` understands, with the argument each takes.
   static std::vector<std::pair<std::string, std::string>> questions();
 
   /// Answer `question` about `subject` ("" for the questions that take none); an unknown question,
   /// a missing identity or one the model does not declare yields one answer of kind "error".
-  std::vector<Answer> ask(const std::string& question, const std::string& subject) const;
+  std::vector<Answer> ask(const std::string& question, const std::string& subject) const override;
 
   std::vector<Answer> diagrams() const;                          ///< every diagram, with its kind
   std::vector<Answer> entities(const std::string& scope) const;  ///< the direct members of a scope ("" = the top level)
   std::vector<Answer> relations(const std::string& id) const;    ///< every relation touching `id`, with its direction
   std::vector<Answer> artefacts(const std::string& id) const;    ///< the requirements and constraints on `id`, and what verifies them
   std::vector<Answer> behaviours(const std::string& id) const;   ///< the sequences and state machines of a method or class
-  std::vector<Answer> shows(const std::string& diagram) const;   ///< the entities a diagram draws
+  std::vector<Answer> shows(const std::string& diagram) const;   ///< the entities a diagram takes, by the filter of its kind
   std::vector<Answer> findings(const std::string& file) const;   ///< the findings of a file ("" = all)
   std::vector<Answer> coupling() const;                          ///< what each behaviour touches outside its module, and how
 

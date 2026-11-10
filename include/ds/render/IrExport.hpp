@@ -11,9 +11,8 @@ namespace ds {
 namespace render {
 
 /// Projects one `diagram` of the model onto plantuml-render's render-IR
-/// (schema/render-ir.schema.json, contract v1). The diagram selects
-/// (`include`, `exclude`) and decides what to print (`show`); it never
-/// redraws: if the model changes, the drawing follows.
+/// (schema/render-ir.schema.json, contract v1). What the diagram takes is the query's filter of it
+/// (DS-127); this decides how it is drawn (`show`, `hide`, `open`): if the model changes, the drawing follows.
 class IrExport {
  public:
   explicit IrExport(const model::Model& model) : model_(model) {}
@@ -24,11 +23,7 @@ class IrExport {
   /// The render-IR document of `diagramId` ("diagram:CL_Model"), pretty-printed when asked.
   std::string render(const std::string& diagramId, bool pretty) const;
 
-  /// The entities a selection names: every `include` pattern minus every `exclude` pattern.
-  std::set<std::string> select(const model::Entity& diagram) const;
-
  private:
-  bool matches(const std::string& pattern, const model::Entity& entity) const;
   std::string renderSequence(const model::Entity& diagram, bool pretty) const;
   std::string closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const;
   std::string renderState(const model::Entity& diagram, bool pretty) const;
