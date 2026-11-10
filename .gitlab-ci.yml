@@ -59,3 +59,20 @@ pyds:
     reports:
       junit: build-py/pyds.junit.xml
     expire_in: 1 week
+
+# The viewer's own code (DS-130): the tours it replays, run by node over scenes the
+# ds that cpp-test built writes. cpp-test runs each gtest binary, not ctest, so the
+# viewer's tests need a job of their own.
+viewer-js:
+  extends: [.on-mr]
+  stage: test
+  needs: [cpp-test]
+  script:
+    - node --version
+    - DS="$CI_PROJECT_DIR/build-ci/ds" VIEWER="$CI_PROJECT_DIR/viewer/scene.html" ROOT="$CI_PROJECT_DIR"
+      node --test --test-reporter=spec --test-reporter-destination=stdout
+      --test-reporter=junit --test-reporter-destination=viewer.junit.xml tests/viewer/test_tours.mjs
+  artifacts:
+    when: always
+    reports:
+      junit: viewer.junit.xml
