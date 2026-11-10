@@ -1,7 +1,10 @@
 #ifndef DRIFTSPEC_SCENE_LAYERS_HPP
 #define DRIFTSPEC_SCENE_LAYERS_HPP
 
+#include <map>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "ds/model/Model.hpp"
@@ -27,6 +30,9 @@ class StructureLayer : public ILayer {
   void decorate(SceneDocument& out_document) override;
 
  private:
+  void links(SceneDocument& out_document) const;
+  void diagrams(SceneDocument& out_document) const;
+  void titles(SceneDocument& out_document) const;
   const model::Model& model_;
   const Map& map_;
 };
@@ -38,6 +44,10 @@ class BehaviourLayer : public ILayer {
   void decorate(SceneDocument& out_document) override;
 
  private:
+  void tours(SceneDocument& out_document);
+  int behaviourOf(const std::string& sequence, const std::string& scenario, SceneDocument& out_document);
+  std::map<std::pair<std::string, std::string>, int> index_;
+  std::map<std::string, std::string> calls_;  // message -> the operation it calls
   const model::Model& model_;
   const Map& map_;
 };
@@ -50,6 +60,11 @@ class TraceLayer : public ILayer {
   void decorate(SceneDocument& out_document) override;
 
  private:
+  void requirements(SceneDocument& out_document);
+  void verifications(SceneDocument& out_document);
+  void answers(SceneDocument& out_document) const;
+  std::map<std::string, size_t> at_;
+  std::map<std::string, size_t> verificationAt_;
   const model::Model& model_;
   const Map& map_;
 };
@@ -61,6 +76,7 @@ class RulesLayer : public ILayer {
   void decorate(SceneDocument& out_document) override;
 
  private:
+  std::string place(std::string id) const;
   const model::Model& model_;
   const Map& map_;
 };

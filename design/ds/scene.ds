@@ -696,11 +696,12 @@ package driftspec@ds {
       @requirement REQ-00073-2
       - refs model_: model::Model
       - refs map_: Map
-      - index_: std::map<std::string, int>
+      - index_: std::map<std::pair<std::string, std::string>, int>
+      - calls_: std::map<std::string, std::string>
       + BehaviourLayer(model: model::Model, map: Map)
       + decorate(out_document: SceneDocument) -> void
-      - behaviourOf(sequence: std::string, scenario: std::string, out_document: SceneDocument) -> int
       - tours(out_document: SceneDocument) -> void
+      - behaviourOf(sequence: std::string, scenario: std::string, out_document: SceneDocument) -> int
     }
 
     // trace: requirements, constraints and use cases, what answers to them and what proves them
@@ -711,8 +712,11 @@ package driftspec@ds {
       - refs map_: Map
       + TraceLayer(model: model::Model, map: Map)
       + decorate(out_document: SceneDocument) -> void
+      - at_: std::map<std::string, size_t>
+      - verificationAt_: std::map<std::string, size_t>
       - requirements(out_document: SceneDocument) -> void
       - verifications(out_document: SceneDocument) -> void
+      - answers(out_document: SceneDocument) -> void
     }
 
     // rules: each rule and definition where it is written, and what breaks it, placed on the map

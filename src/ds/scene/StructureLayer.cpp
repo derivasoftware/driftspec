@@ -16,6 +16,13 @@ StructureLayer::StructureLayer(const model::Model& model, const Map& map) : mode
 // the relations between boxes, lifted to what the map draws; where each box is drawn; the titles of what
 // the nodes answer to
 void StructureLayer::decorate(SceneDocument& out_document) {
+  links(out_document);
+  diagrams(out_document);
+  titles(out_document);
+}
+
+// each relation between two boxes, lifted to what the map draws, counted, with the calls that make it
+void StructureLayer::links(SceneDocument& out_document) const {
   static const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "consumes", "calls"};
   std::map<std::tuple<std::string, std::string, std::string>, Link> links;
   std::map<std::tuple<std::string, std::string, std::string>, std::set<std::string>> sequences;
@@ -38,6 +45,9 @@ void StructureLayer::decorate(SceneDocument& out_document) {
     for (const auto& s : sequences[pair.first]) pair.second.sequences.push_back(s);
     out_document.links.push_back(pair.second);
   }
+}
+
+void StructureLayer::diagrams(SceneDocument& out_document) const {
   // where each box is drawn: every diagram of the workspace, taken by the filter of its kind (DS-127)
   const query::Query query(model_);
   for (const auto& pair : model_.entities()) {
@@ -53,6 +63,10 @@ void StructureLayer::decorate(SceneDocument& out_document) {
     }
     if (!view.nodes.empty()) out_document.diagrams.push_back(view);
   }
+}
+
+// the titles of what the nodes answer to
+void StructureLayer::titles(SceneDocument& out_document) const {
   for (const auto& n : out_document.nodes) {
     for (const auto& r : n.requirements) {
       const model::Entity* e = model_.find(r);

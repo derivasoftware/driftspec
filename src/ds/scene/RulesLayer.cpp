@@ -12,14 +12,16 @@ RulesLayer::RulesLayer(const model::Model& model, const Map& map) : model_(model
 // The rules and the definitions, each placed in the node it is written in, with what breaks it placed on
 // the map: a call lands on the member whose behaviour writes it, an entity on the nearest node that
 // stands for it (DS-108).
+// where an identity a rule names lands: on the map, or outward through its packages
+std::string RulesLayer::place(std::string id) const {
+  for (;;) {
+    if (const std::string node = map_.land(id); !node.empty()) return node;
+    if (!model::isAbsolute(id)) return std::string();
+    id = model::boxOf(model::packageOf(id));  // a package's own entities: outward through the packages
+  }
+}
+
 void RulesLayer::decorate(SceneDocument& out_document) {
-  const auto place = [this](std::string id) {
-    for (;;) {
-      if (const std::string node = map_.land(id); !node.empty()) return node;
-      if (!model::isAbsolute(id)) return std::string();
-      id = model::boxOf(model::packageOf(id));  // a package's own entities: outward through the packages
-    }
-  };
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
     if (e.expected || (e.kind != model::Kind::Rule && e.kind != model::Kind::Definition)) continue;
