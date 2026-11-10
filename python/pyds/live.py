@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import os
 import queue
+import subprocess
 import sys
 import threading
 import time
@@ -38,16 +39,16 @@ PORT = 4747
 # The fields of the state, in the order a client reads them: the contract says them and state() gives
 # exactly these, so adding one is a new version a client can see (DS-123).
 STATE = ["contract", "workspace", "title", "version", "boot", "changed", "removed", "findings", "counts", "history", "selection",
-         "error", "notes", "highlights", "rules"]
+         "error", "notes", "highlights", "rules", "comments", "isolated", "baseline", "diff"]
 
 CONTRACT = {
-    "version": 2,  # 2: the state carries workspace, title, boot, error and the rules (DS-108)
+    "version": 3,  # 3: seen notes, the reader's comments, isolation and a baseline diff (DS-102, DS-139, DS-147, DS-148)
     "state": STATE,
     "routes": {
         "GET /": "the page: the viewer that follows the session",
         "GET /page": "the viewer of the current model, one self-contained page",
         "GET /state": "the state: " + ", ".join(STATE),
-        "GET /events": "server-sent events: model (the state, on every change), focus, annotate, error",
+        "GET /events": "server-sent events: model (the state, on every change), focus, annotate, isolate, error",
         "GET /selection": "what the reader has selected",
         "GET /contract": "this contract",
         "POST /selection": "{id, label}: the reader selected an identity",
@@ -55,8 +56,13 @@ CONTRACT = {
         "POST /note": "{id, text, tone}: a bubble on an identity; empty text removes it",
         "POST /highlight": "{ids, tone, add}: light identities; replaces the highlight unless add",
         "POST /clear": "{what}: notes, highlights or all",
+        "POST /seen": "{ids, seen}: the reader marks notes seen (or not)",
+        "POST /comment": "{id, text}: the reader writes a comment on an identity for the agent",
+        "POST /unread": "{mark}: the comments the agent has not read; marked read unless mark is false",
+        "POST /isolate": "{ids, tell}: show only these boxes; empty shows everything",
+        "POST /baseline": "{baseline}: a directory or a git ref to compare the design with; empty stops",
     },
-    "tones": ["accent", "info", "ok", "bad", "req"],
+    "tones": ["accent", "info", "ok", "bad", "req", "you"],
 }
 
 
@@ -93,6 +99,11 @@ class Live:
         self.notes: list[dict] = []
         self.highlights: list[dict] = []
         self.rules: list[dict] = []
+        self.comments: list[dict] = []  # what the reader writes for the agent (DS-147)
+        self.isolated: list[str] = []  # what the reader isolates, kept across reloads (DS-139)
+        self.baseline = ""  # what the design is compared with (DS-148): a directory, or a git ref of the workspace
+        self.base_sigs: dict[str, str] | None = None
+        self.diff: dict = {"added": [], "changed": [], "removed": []}
         self.listeners: list[queue.Queue] = []
         self.stamp = None
         self.error = ""
@@ -106,6 +117,7 @@ class Live:
             with open(self.store) as fh:
                 kept = json.load(fh)
             self.notes, self.highlights = list(kept.get("notes", [])), list(kept.get("highlights", []))
+            self.comments = list(kept.get("comments", []))
         except (OSError, ValueError):
             pass
 
@@ -113,20 +125,22 @@ class Live:
         try:
             os.makedirs(os.path.dirname(self.store), exist_ok=True)
             with open(self.store, "w") as fh:
-                json.dump({"notes": self.notes, "highlights": self.highlights}, fh, indent=1)
+                json.dump({"notes": self.notes, "highlights": self.highlights, "comments": self.comments}, fh, indent=1)
         except OSError:
             pass  # a read-only workspace keeps them for the session only
 
     def annotations(self, frame: list[str]) -> None:
         self.save()
-        self.broadcast("annotate", {"notes": self.notes, "highlights": self.highlights, "frame": frame})
+        self.broadcast("annotate", {"notes": self.notes, "highlights": self.highlights, "comments": self.comments, "frame": frame})
 
     def focus(self, identity: str, also: list[str] | None = None) -> int:
         self.broadcast("focus", {"id": identity, "also": also or []})
         return len(self.listeners)
 
     def note(self, identity: str, text: str, tone: str = "accent", frame: bool = True) -> int:
-        self.notes = [n for n in self.notes if n["id"] != identity] + ([{"id": identity, "text": text, "tone": tone}] if text else [])
+        # a note the agent writes again comes back unseen (DS-102)
+        self.notes = [n for n in self.notes if n["id"] != identity] + (
+            [{"id": identity, "text": text, "tone": tone, "seen": False, "at": time.strftime("%H:%M:%S")}] if text else [])
         self.annotations([identity] if frame and text else [])
         return len(self.notes)
 
@@ -141,6 +155,62 @@ class Live:
         if what in ("all", "highlights"):
             self.highlights = []
         self.annotations([])
+
+    def seen(self, ids: list[str], seen: bool = True) -> int:
+        for n in self.notes:
+            if n["id"] in ids:
+                n["seen"] = seen
+        self.annotations([])
+        return sum(1 for n in self.notes if n.get("seen"))
+
+    def comment(self, identity: str, text: str) -> int:
+        self.comments.append({"n": len(self.comments) + 1, "id": identity, "text": text, "at": time.strftime("%H:%M:%S"), "read": False})
+        self.annotations([])
+        return len(self.comments)
+
+    def unread(self, mark: bool = True) -> list[dict]:
+        out = [c for c in self.comments if not c.get("read")]
+        if mark and out:
+            for c in self.comments:
+                c["read"] = True
+            self.annotations([])
+        return out
+
+    def isolate(self, ids: list[str], tell: bool = True) -> list[str]:
+        self.isolated = list(ids)
+        if tell:
+            self.broadcast("isolate", {"ids": self.isolated})
+        return self.isolated
+
+    def base_files(self) -> dict[str, str]:
+        if os.path.isdir(self.baseline):
+            return pyds.read(os.path.realpath(self.baseline))
+        top = subprocess.run(["git", "-C", self.workspace, "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip()
+        rel = os.path.relpath(self.workspace, top)
+        names = subprocess.run(["git", "-C", top, "ls-tree", "-r", "--name-only", self.baseline, "--", rel], capture_output=True, text=True, check=True).stdout.split()
+        return {os.path.join(top, n): subprocess.run(["git", "-C", top, "show", f"{self.baseline}:{n}"], capture_output=True, text=True, check=True).stdout
+                for n in names if n.endswith(".ds")}
+
+    def set_baseline(self, baseline: str) -> dict:
+        self.baseline, self.base_sigs = baseline, None
+        if baseline:
+            try:
+                self.base_sigs = signatures(pyds.load(self.base_files()))
+            except Exception as exc:  # a baseline that does not load compares with nothing
+                self.error = f"baseline {baseline}: {exc}"
+        self.stamp = None  # compare again on the next reload
+        return {"baseline": self.baseline, "loaded": self.base_sigs is not None}
+
+    def compare(self, model, sigs: dict[str, str]) -> dict:
+        if self.base_sigs is None:
+            return {"added": [], "changed": [], "removed": []}
+        added = {i for i in sigs if i not in self.base_sigs}
+        changed = {i for i, sg in sigs.items() if i in self.base_sigs and self.base_sigs[i] != sg}
+        for i in list(added | changed):  # what changed inside a class changes the class, seen from afar
+            e = model.entities.get(i)
+            if e is not None and model.owner(e).id != e.id and model.owner(e).id not in added:
+                changed.add(model.owner(e).id)
+        return {"added": sorted(added), "changed": sorted(changed - added), "removed": sorted(i for i in self.base_sigs if i not in sigs)}
 
     def select(self, identity: str | None, label: str = "") -> None:
         self.selection = {"id": identity, "label": label, "at": time.strftime("%H:%M:%S")}
@@ -212,6 +282,7 @@ class Live:
                               "line": f.location.line} for f in report.findings]
             self.counts = dict(report.counts)
             self.rules = self.rules_of(model, report.findings)
+            self.diff = self.compare(model, sigs)
             if not first:
                 self.history.append({"version": self.version, "at": time.strftime("%H:%M:%S"), "changed": self.changed,
                                      "removed": self.removed, "ms": round((time.perf_counter() - t0) * 1000)})
@@ -223,7 +294,8 @@ class Live:
         return {"contract": CONTRACT["version"], "workspace": self.workspace, "title": self.title, "version": self.version,
                 "boot": self.boot, "changed": self.changed, "removed": self.removed, "findings": self.findings,
                 "counts": self.counts, "history": self.history, "selection": self.selection, "error": self.error,
-                "notes": self.notes, "highlights": self.highlights, "rules": self.rules}
+                "notes": self.notes, "highlights": self.highlights, "rules": self.rules, "comments": self.comments,
+                "isolated": self.isolated, "baseline": self.baseline, "diff": self.diff}
 
     def broadcast(self, event: str, data: dict) -> None:
         for q in list(self.listeners):
@@ -270,15 +342,31 @@ body{grid-template-columns:1fr 380px}
 .br{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--err);border-left:2px solid var(--err);padding-left:6px}
 .rq{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:var(--muted)}
 .tabs{display:flex;gap:4px} .tabs button{all:unset;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)} .tabs button.on{border-color:var(--sel);color:var(--sel)}
+details{border-top:1px solid var(--line);padding-top:8px} details>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+details>summary::-webkit-details-marker{display:none} details>summary::before{content:'▸';color:var(--muted);font-size:10px} details[open]>summary::before{content:'▾'}
+details>summary h3{flex:1} .n{font-size:11px;color:var(--muted)} .acts{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}
+.acts button,.nt .b{all:unset;cursor:pointer;font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line)} .acts button:hover,.nt .b:hover{border-color:var(--muted)}
+.nt{border:1px solid var(--line);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:4px} .nt.seen{opacity:.5} .nt.you{border-color:var(--sel)}
+.nt .hd{display:flex;gap:6px;align-items:center} .nt .hd button.id{flex:1;text-align:left} .nt .b.on{border-color:var(--ok);color:var(--ok)}
+.thread{display:flex;flex-direction:column;gap:6px} textarea{width:100%;min-height:58px;resize:vertical;font:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);color:var(--fg)}
+.send{display:flex;justify-content:space-between;align-items:center;margin-top:4px} .send button{all:unset;cursor:pointer;font-size:12px;padding:3px 12px;border-radius:999px;background:var(--sel);color:#fff}
+.pill.diff{cursor:pointer} .pill.diff.off{opacity:.45} .pill.iso{cursor:pointer;border-color:var(--accent);color:var(--accent)}
+.add{color:var(--ok)} .chg{color:var(--accent)}
 @media (max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr 40%} aside{border-left:0;border-top:1px solid var(--line)}}
 </style></head><body>
 <header><span class="dot" id="dot"></span><b>__TITLE__</b><span class="pill" id="ver">v0</span><span class="pill" id="counts"></span>
-<span class="pill" id="find"></span><span class="pill sel" id="sel" hidden></span><span class="v" id="ws">__WS__</span></header>
+<span class="pill" id="find"></span><span class="pill diff" id="diffp" hidden title="what the design adds, changes and removes against the baseline; click to hide or show the marks"></span>
+<span class="pill iso" id="isop" hidden title="click to show everything again"></span><span class="pill sel" id="sel" hidden></span><span class="v" id="ws">__WS__</span></header>
 <div id="views"></div>
-<aside id="side"><div id="rulesbox" hidden><div class="hd" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Rules</h3>
+<aside id="side">
+<details open data-k="sel"><summary><h3>Selected</h3><span class="n" id="seln">nothing</span></summary><div class="thread" id="thread"><div class="v">select a box, a member or a note in the viewer</div></div>
+<div id="cbox" hidden><textarea id="ctext" placeholder="a comment for the agent on what is selected (Ctrl+Enter sends)"></textarea><div class="send"><span class="v" id="cto"></span><button id="csend">send</button></div></div></details>
+<details open data-k="notes"><summary><h3>Notes</h3><span class="n" id="notesn"></span></summary><div class="acts"><button id="nfold">fold all</button><button id="nopen">open all</button><button id="nseen">all seen</button><button id="nhide">hide seen</button></div><ul id="notes" style="gap:6px"><li class="v">none</li></ul></details>
+<details open data-k="diff" id="diffbox" hidden><summary><h3>Diff</h3><span class="n" id="diffn"></span></summary><ul id="diffl"></ul></details>
+<div id="rulesbox" hidden><div class="hd" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Rules</h3>
 <div class="tabs"><button data-f="all" class="on">all</button><button data-f="bad">broken</button><button data-f="sel">selected</button></div></div>
-<ul class="rules" id="rules"><li class="v">none</li></ul></div><div><h3>Last change</h3><ul id="last"><li class="v">waiting for the files to change…</li></ul></div>
-<div><h3>Notes</h3><ul id="notes"><li class="v">none</li></ul></div><div><h3>Findings</h3><ul id="findings"></ul></div><div><h3>History</h3><ul id="hist"></ul></div></aside>
+<ul class="rules" id="rules"><li class="v">none</li></ul></div><details data-k="last"><summary><h3>Last change</h3></summary><ul id="last"><li class="v">waiting for the files to change…</li></ul></details>
+<details data-k="find"><summary><h3>Findings</h3><span class="n" id="findn"></span></summary><ul id="findings"></ul></details><details data-k="hist"><summary><h3>History</h3></summary><ul id="hist"></ul></details></aside>
 <script>
 const views=document.getElementById('views'); let cur=null, version=0, keepSel=null, pending=null, busy=false, ann={notes:[],highlights:[]};
 const $=id=>document.getElementById(id); const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -290,14 +378,52 @@ async function swap(state){ // a new viewer loads hidden; it takes the reader's 
   const f=document.createElement('iframe'); f.style.visibility='hidden'; f.srcdoc=html; views.appendChild(f);
   await new Promise(res=>{const on=e=>{if(e.source===f.contentWindow&&e.data&&e.data.ds==='ready'){removeEventListener('message',on); res();}}; addEventListener('message',on); setTimeout(res,4000);});
   const v=f.contentWindow.DS_VIEW;
-  if(v){ if(cam) v.setCam(cam); if(sel&&v.has(sel)) v.select(sel); v.mark(state.changed||[]); v.highlight(ann.highlights); v.notes(ann.notes);
+  if(v){ if(cam) v.setCam(cam); if(sel&&v.has(sel)) v.select(sel); v.mark(state.changed||[]); v.highlight(ann.highlights); v.notes(drawnNotes());
     if(!cam&&state.changed&&state.changed.length) v.frame(state.changed); }
-  if(v){v.perspective_(PERSP); if(ACTIVE) v.lightRule(ACTIVE);}
+  if(v){v.perspective_(PERSP); if(ACTIVE) v.lightRule(ACTIVE); if(v.isolate&&ISOLATED.length) v.isolate(ISOLATED); if(v.diff) v.diff(SHOWDIFF?DIFF:null); paint();}
   f.style.visibility='visible'; if(cur) cur.remove(); cur=f; busy=false;
   if(pending){const p=pending; pending=null; swap(p);} }
 let RULES=[], ACTIVE=null, FILTER='all', SELID=null, PERSP='structure';
 function perspective(p){PERSP=p; $('rulesbox').hidden=p!=='logic'; if(p!=='logic'&&ACTIVE){const v=view(); if(v&&v.rule) v.lightRule(v.rule); ACTIVE=null; rules();}}
-function paint(){const v=view(); if(!v) return; v.highlight(ann.highlights); v.notes(ann.notes);}
+function paint(){const v=view(); if(!v) return; v.highlight(ann.highlights); v.notes(drawnNotes());}
+// ---- the reader's side (DS-102, DS-139, DS-147, DS-148): folded and seen notes, comments, isolation, the diff
+const store={get(k,d){try{return JSON.parse(localStorage.getItem('dslive.'+k))??d;}catch(e){return d;}},set(k,v){try{localStorage.setItem('dslive.'+k,JSON.stringify(v));}catch(e){}}};
+let FOLD=new Set(store.get('fold',[])), OPEN=new Set(store.get('open',[])), HIDESEEN=store.get('hideseen',false), COMMENTS=[], ISOLATED=[], DIFF={added:[],changed:[],removed:[]}, SHOWDIFF=store.get('showdiff',true), BASE='';
+const keyOf=n=>n.n?'c'+n.n:n.id+'@'+(n.at||'');
+const foldedOf=n=>FOLD.has(keyOf(n))||(!OPEN.has(keyOf(n))&&(n.seen||!!n.n));
+function keep(){store.set('fold',[...FOLD]); store.set('open',[...OPEN]); store.set('hideseen',HIDESEEN);}
+function drawnNotes(){const mine=ann.notes.filter(n=>!(HIDESEEN&&n.seen)).map(n=>({id:n.id,text:n.text,tone:n.tone,seen:!!n.seen,folded:foldedOf(n)}));
+  const yours=COMMENTS.map(c=>({id:c.id,text:'you: '+c.text,tone:'you',seen:false,folded:foldedOf(c)})); return mine.concat(yours);}
+function fold(ids,act){ann.notes.concat(COMMENTS).filter(n=>ids.includes(n.id)).forEach(n=>{const k=keyOf(n); if(act==='fold'){FOLD.add(k); OPEN.delete(k);} else {FOLD.delete(k); OPEN.add(k);}}); keep(); paint(); notesList();}
+function seen(ids,on){fetch('/seen',{method:'POST',body:JSON.stringify({ids,seen:on})});}
+function notesList(){const list=ann.notes.filter(n=>!(HIDESEEN&&n.seen)); const unseen=ann.notes.filter(n=>!n.seen).length;
+  $('notesn').textContent=ann.notes.length?`${unseen} unseen of ${ann.notes.length}`:'';
+  $('notes').innerHTML=list.map(n=>`<li class="nt${n.seen?' seen':''}"><div class="hd"><button class="id" data-id="${esc(n.id)}">💬 ${esc(short(n.id))}</button>`+
+    `<button class="b" data-fold="${esc(n.id)}">${foldedOf(n)?'open':'fold'}</button><button class="b${n.seen?' on':''}" data-seen="${esc(n.id)}">${n.seen?'✓ seen':'seen'}</button></div><div class="f">${esc(n.text)}</div></li>`).join('')||'<li class="v">none</li>';
+  $('nhide').textContent=HIDESEEN?'show seen':'hide seen';}
+function thread(){const id=SELID; $('seln').textContent=id?short(id):'nothing'; $('cbox').hidden=!id; $('cto').textContent=id?'on '+short(id):'';
+  if(!id){$('thread').innerHTML='<div class="v">select a box, a member or a note in the viewer</div>'; return;}
+  const on=x=>x===id||String(x).startsWith(id+'::')||String(x).startsWith(id+'@');
+  const items=ann.notes.filter(n=>on(n.id)).map(n=>({at:n.at||'',who:'agent',text:n.text,id:n.id,seen:n.seen})).concat(COMMENTS.filter(c=>on(c.id)).map(c=>({at:c.at,who:'you',text:c.text,id:c.id,read:c.read})))
+    .sort((a,b)=>a.at<b.at?-1:1);
+  $('thread').innerHTML=items.map(i=>`<div class="nt${i.who==='you'?' you':''}${i.seen?' seen':''}"><div class="v">${i.who==='you'?'you':'agent'} · ${esc(i.at)}${i.id!==id?' · '+esc(short(i.id)):''}${i.who==='you'?(i.read?' · read':' · not read yet'):''}</div><div class="f">${esc(i.text)}</div></div>`).join('')||'<div class="v">no notes or comments here yet</div>';}
+async function send(){const t=$('ctext').value.trim(); if(!t||!SELID) return; $('ctext').value=''; await fetch('/comment',{method:'POST',body:JSON.stringify({id:SELID,text:t})});}
+$('csend').onclick=send; $('ctext').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault(); send();}});
+$('nfold').onclick=()=>fold(ann.notes.map(n=>n.id),'fold'); $('nopen').onclick=()=>fold(ann.notes.map(n=>n.id),'open');
+$('nseen').onclick=()=>seen(ann.notes.filter(n=>!n.seen).map(n=>n.id),true); $('nhide').onclick=()=>{HIDESEEN=!HIDESEEN; keep(); paint(); notesList();};
+$('notes').addEventListener('click',e=>{const f=e.target.closest('[data-fold]'); if(f){const n=ann.notes.find(x=>x.id===f.dataset.fold); fold([n.id],foldedOf(n)?'open':'fold'); e.stopPropagation(); return;}
+  const s=e.target.closest('[data-seen]'); if(s){const n=ann.notes.find(x=>x.id===s.dataset.seen); seen([n.id],!n.seen); e.stopPropagation();}},true);
+function isoPill(){$('isop').hidden=!ISOLATED.length; $('isop').textContent=`isolated: ${ISOLATED.map(short).join(', ')} ×`;}
+$('isop').onclick=()=>{ISOLATED=[]; const v=view(); if(v&&v.isolate) v.isolate([]); fetch('/isolate',{method:'POST',body:JSON.stringify({ids:[],tell:false})}); isoPill();};
+function diffSide(s){DIFF=s.diff||{added:[],changed:[],removed:[]}; BASE=s.baseline||''; const n=DIFF.added.length+DIFF.changed.length+DIFF.removed.length;
+  $('diffp').hidden=!BASE; $('diffbox').hidden=!BASE; $('diffp').textContent=`vs ${BASE.split('/').filter(Boolean).pop()||BASE}: +${DIFF.added.length} ~${DIFF.changed.length} −${DIFF.removed.length}`; $('diffp').classList.toggle('off',!SHOWDIFF);
+  $('diffn').textContent=n?`${n} against ${BASE.split('/').filter(Boolean).pop()}`:'no difference';
+  const top=l=>l.filter(i=>!l.some(o=>o!==i&&(i.startsWith(o+'::')||i.startsWith(o+'@'))));  // what is new inside something new is said once
+  $('diffl').innerHTML=[...top(DIFF.added).map(i=>`<li><button class="add" data-id="${esc(i)}">+ ${esc(i)}</button></li>`),...DIFF.changed.map(i=>`<li><button class="chg" data-id="${esc(i)}">~ ${esc(i)}</button></li>`),
+    ...top(DIFF.removed).map(i=>`<li class="rm">− ${esc(i)}</li>`)].join('')||'<li class="v">the design is the baseline</li>';
+  const v=view(); if(v&&v.diff) v.diff(SHOWDIFF?DIFF:null);}
+$('diffp').onclick=()=>{SHOWDIFF=!SHOWDIFF; store.set('showdiff',SHOWDIFF); $('diffp').classList.toggle('off',!SHOWDIFF); const v=view(); if(v&&v.diff) v.diff(SHOWDIFF?DIFF:null);};
+document.querySelectorAll('details[data-k]').forEach(d=>{const o=store.get('open.'+d.dataset.k,null); if(o!==null) d.open=o; d.addEventListener('toggle',()=>store.set('open.'+d.dataset.k,d.open));});
 function activate(id){const v=view(); ACTIVE=v&&v.lightRule?v.lightRule(id):null; rules();}
 const short=s=>String(s).replace(/^.*?::sequence::/,'call ').split(/[@:]+/).slice(-2).join('::');
 function applies(r,id){if(!id) return false; const under=x=>x===id||String(x).startsWith(id+'::')||String(x).startsWith(id+'@'); return under(r.scope)||r.broken.some(b=>b.bindings.some(p=>under(p[1])));}
@@ -313,11 +439,11 @@ function rules(){const list=RULES.filter(r=>FILTER==='all'||(FILTER==='bad'&&(r.
     `<li class="v">${FILTER==='sel'?(SELID?'no rule speaks of it':'select something in the viewer'):'none'}</li>`;}
 document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('[data-f]'); if(!b) return; FILTER=b.dataset.f;
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); rules();};
-function applyAnn(d){ann={notes:d.notes||[],highlights:d.highlights||[]}; paint();
-  $('notes').innerHTML=ann.notes.map(n=>`<li><button data-id="${esc(n.id)}">💬 ${esc(n.id)}</button><div class="f">${esc(n.text)}</div></li>`).join('')||'<li class="v">none</li>';}
+function applyAnn(d){ann={notes:d.notes||[],highlights:d.highlights||[]}; COMMENTS=d.comments||COMMENTS; paint(); notesList(); thread();}
 function side(s){
   $('ver').textContent='v'+s.version; const c=s.counts||{}; $('counts').textContent=`${c.entities||0} entities · ${c.relations||0} relations`;
-  const n=(s.findings||[]).length; $('find').textContent=n?`${n} findings`:'no findings'; $('find').className='pill'+(n?' err':'');
+  const n=(s.findings||[]).length; $('find').textContent=n?`${n} findings`:'no findings'; $('find').className='pill'+(n?' err':''); $('findn').textContent=n?String(n):'';
+  ISOLATED=s.isolated||ISOLATED; isoPill(); diffSide(s);
   const last=s.history&&s.history.length?s.history[s.history.length-1]:null;
   $('last').innerHTML=last?[`<li class="v">v${last.version} · ${last.at} · ${last.ms} ms</li>`,...last.changed.slice(0,40).map(i=>`<li><button class="ch" data-id="${esc(i)}">~ ${esc(i)}</button></li>`),...last.removed.slice(0,20).map(i=>`<li class="rm">− ${esc(i)}</li>`),(!last.changed.length&&!last.removed.length?'<li class="v">the model did not change</li>':'')].join(''):'<li class="v">waiting for the files to change…</li>';
   $('findings').innerHTML=(s.findings||[]).slice(0,60).map(f=>`<li class="f"><code>${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
@@ -330,13 +456,17 @@ addEventListener('message',e=>{if(e.data&&e.data.ds==='perspective'&&cur&&e.sour
 // the viewer's fullscreen button: the whole page, so the side panel stays (DS-141)
 addEventListener('message',e=>{if(e.data&&e.data.ds==='fullscreen'&&cur&&e.source===cur.contentWindow){
   if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});}});
-addEventListener('message',e=>{if(e.data&&e.data.ds==='select'&&cur&&e.source===cur.contentWindow){keepSel=e.data.id; SELID=e.data.id; if(FILTER==='sel') rules();
+addEventListener('message',e=>{if(!e.data||!cur||e.source!==cur.contentWindow) return;
+  if(e.data.ds==='note'){if(e.data.act==='seen'){const n=ann.notes.find(x=>x.id===e.data.ids[0]); if(n) seen([n.id],!n.seen);} else fold(e.data.ids,e.data.act);}
+  if(e.data.ds==='isolate'){ISOLATED=e.data.ids||[]; isoPill(); fetch('/isolate',{method:'POST',body:JSON.stringify({ids:ISOLATED,tell:false})});}});
+addEventListener('message',e=>{if(e.data&&e.data.ds==='select'&&cur&&e.source===cur.contentWindow){keepSel=e.data.id; SELID=e.data.id; if(FILTER==='sel') rules(); thread();
   $('sel').hidden=!e.data.id; $('sel').textContent=e.data.id?'◉ '+e.data.id:'';
   fetch('/selection',{method:'POST',body:JSON.stringify({id:e.data.id,label:e.data.label})});}});
 function connect(){const es=new EventSource('/events'); es.onopen=()=>$('dot').className='dot on';
   es.addEventListener('model',e=>{const s=JSON.parse(e.data); if(window.BOOT&&s.boot!==window.BOOT){location.reload(); return;} window.BOOT=s.boot; side(s); applyAnn(s); if(s.version!==version){version=s.version; swap(s);}});
   es.addEventListener('focus',e=>{const d=JSON.parse(e.data); const v=view(); if(v){const k=v.show(d.id); if(k!=='node') v.frameAny([d.id].concat(d.also||[]));}});
   es.addEventListener('annotate',e=>{const d=JSON.parse(e.data); applyAnn(d); const v=view(); if(v&&d.frame&&d.frame.length) v.frameAny(d.frame);});
+  es.addEventListener('isolate',e=>{const d=JSON.parse(e.data); ISOLATED=d.ids||[]; isoPill(); const v=view(); if(v&&v.isolate) v.isolate(ISOLATED);});
   es.addEventListener('error',e=>{if(e.data){$('dot').className='dot err'; $('last').innerHTML=`<li class="f"><code>error</code> ${esc(JSON.parse(e.data).message)}</li>`;}});
   es.onerror=()=>{$('dot').className='dot'; };}
 connect();
@@ -415,6 +545,16 @@ def handler_for(live: Live):
                 self.json({"notes": live.note(data.get("id", ""), data.get("text", ""), data.get("tone", "accent"), data.get("frame", True))})
             elif self.path == "/highlight":
                 self.json({"highlights": live.highlight(data.get("ids", []), data.get("tone", "accent"), data.get("add", False), data.get("frame", True))})
+            elif self.path == "/seen":
+                self.json({"seen": live.seen(data.get("ids", []), data.get("seen", True))})
+            elif self.path == "/comment":
+                self.json({"comments": live.comment(data.get("id", ""), data.get("text", ""))})
+            elif self.path == "/unread":
+                self.json({"comments": live.unread(data.get("mark", True))})
+            elif self.path == "/isolate":
+                self.json({"isolated": live.isolate(data.get("ids", []), data.get("tell", True))})
+            elif self.path == "/baseline":
+                self.json(live.set_baseline(data.get("baseline", "")))
             elif self.path == "/clear":
                 live.clear(data.get("what", "all"))
                 self.json({})
@@ -434,9 +574,11 @@ def browser_open(url: str) -> None:
         webbrowser.open(url)
 
 
-def serve(workspace: str, port: int = PORT, open_browser: bool = False, block: bool = True) -> Live:
+def serve(workspace: str, port: int = PORT, open_browser: bool = False, block: bool = True, baseline: str = "") -> Live:
     """A session on the workspace, served on the port (0: any free one); the session knows its url and how to stop."""
     live = Live(workspace)
+    if baseline:
+        live.set_baseline(baseline)
     live.reload()
     server = ThreadingHTTPServer(("127.0.0.1", port), handler_for(live))
     server.daemon_threads = True
@@ -480,6 +622,12 @@ TOOLS = [
      "inputSchema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "string"}}, "tone": {"type": "string"}, "add": {"type": "boolean"}}, "required": ["ids"]}},
     {"name": "live_clear", "description": "Clear the notes, the highlights or both (what: notes, highlights, all) in the live viewer.",
      "inputSchema": {"type": "object", "properties": {"what": {"type": "string"}}}},
+    {"name": "live_comments", "description": "What the reader wrote for the agent in the live viewer since the last call: each comment with the identity it is on; they are marked read unless peek is true. Answer with live_note on the same identity.",
+     "inputSchema": {"type": "object", "properties": {"peek": {"type": "boolean"}}}},
+    {"name": "live_isolate", "description": "Show only these boxes in the live viewer, with what they use from outside as ghosts; an empty list shows everything.",
+     "inputSchema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "string"}}}, "required": ["ids"]}},
+    {"name": "live_baseline", "description": "Compare the design with a baseline in the live viewer and mark what it adds, changes and removes: a directory, or a git ref of the workspace (main); empty stops comparing.",
+     "inputSchema": {"type": "object", "properties": {"baseline": {"type": "string"}}, "required": ["baseline"]}},
     {"name": "live_selection", "description": "What the reader has selected in the live viewer.", "inputSchema": {"type": "object", "properties": {}}},
     {"name": "live_state", "description": "The live session: version, what changed last, the findings.", "inputSchema": {"type": "object", "properties": {}}},
 ]
@@ -505,6 +653,12 @@ def tool(port: int, name: str, args: dict, opened: dict) -> object:
         return call(port, "/highlight", {"ids": args["ids"], "tone": args.get("tone", "accent"), "add": args.get("add", False)})
     if name == "live_clear":
         return call(port, "/clear", {"what": args.get("what", "all")})
+    if name == "live_comments":
+        return call(port, "/unread", {"mark": not args.get("peek", False)})
+    if name == "live_isolate":
+        return call(port, "/isolate", {"ids": args.get("ids", [])})
+    if name == "live_baseline":
+        return call(port, "/baseline", {"baseline": args.get("baseline", "")})
     if name == "live_selection":
         return call(port, "/selection")
     if name == "live_state":
@@ -560,11 +714,16 @@ def main(argv: list[str] | None = None) -> None:
         k = args.index("--tone")
         tone = args[k + 1]
         del args[k:k + 2]
+    baseline = ""
+    if "--baseline" in args:
+        k = args.index("--baseline")
+        baseline = args[k + 1]
+        del args[k:k + 2]
     add = "--add" in args
     args = [a for a in args if a != "--add"]
     cmd = args[0] if args else "serve"
     if cmd == "serve":
-        serve(args[1] if len(args) > 1 else ".", port, open_browser="--open" in args)
+        serve(args[1] if len(args) > 1 else ".", port, open_browser="--open" in args, baseline=baseline)
     elif cmd == "focus":
         print(json.dumps(call(port, "/focus", {"id": args[1], "also": args[2:]})))
     elif cmd == "note":
@@ -573,6 +732,12 @@ def main(argv: list[str] | None = None) -> None:
         print(json.dumps(call(port, "/highlight", {"ids": args[1:], "tone": tone, "add": add})))
     elif cmd == "clear":
         print(json.dumps(call(port, "/clear", {"what": args[1] if len(args) > 1 else "all"})))
+    elif cmd == "comments":
+        print(json.dumps(call(port, "/unread", {"mark": "--peek" not in args}), indent=1))
+    elif cmd == "isolate":
+        print(json.dumps(call(port, "/isolate", {"ids": args[1:]})))
+    elif cmd == "baseline":
+        print(json.dumps(call(port, "/baseline", {"baseline": args[1] if len(args) > 1 else ""})))
     elif cmd == "selection":
         print(json.dumps(call(port, "/selection")))
     elif cmd == "state":

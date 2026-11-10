@@ -169,7 +169,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <canvas class="main" id="cv" aria-label="/*TITLE*/: the whole model, zoomable"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
+  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="iso" aria-pressed="false" title="show only the selected box (i adds or removes the selection, Esc with nothing selected shows everything); what it uses from outside stays as ghosts">isolate</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
@@ -280,17 +280,17 @@ function chip(reqs,xr,yb){const px=Math.min(11,Math.max(8,5*cam.s)); ctx.font=`$
 function draw(){
   ctx.setTransform(DPR*U,0,0,DPR*U,0,0); ctx.fillStyle=K.bg; ctx.fillRect(0,0,W,H);
   // packages and modules
-  ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='package'&&n.kind!=='module') return; const b=scr(n); if(!onScreen(b)) return;
+  ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='package'&&n.kind!=='module'||n.hidden) return; const b=scr(n); if(!onScreen(b)) return;
     const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id), hl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:hl?K.rc[hl]:K.fg; ctx.lineWidth=sel||hl?2.6:pkg?1.6:1.3; ctx.stroke();
     const px=Math.min(pkg?18:16,Math.max(11,(pkg?30:22)*cam.s)); const room=(pkg?90:46)*cam.s;
     if(room<px+10||b.w<170){ctx.font=`700 ${px}px ${K.mono}`; const tw=ctx.measureText(n.label).width; rr(b.x+2,b.y-px-6,tw+10,px+6,4); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); text(n.label,b.x+7,b.y-5,px,K.fg,'700'); return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
     const st=`«${n.kind}» `; ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+10,b.y+px+8,px*.72,K.muted); text(n.label,b.x+10+off,b.y+px+8,px,K.fg,'700'); ctx.restore();});
   // units with their rows
-  UNITS.forEach(id=>{const n=N[id], b=scr(n); if(!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=(SEL||REQSEL)&&SEL!==id&&!(SEL&&anc(id).includes(SEL))&&!RELATED.has(id);
-    ctx.globalAlpha=(lab?1:.55)*(dim?.35:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
-    const hl=HLBOX.get(id); if(hl){ctx.globalAlpha=.13; ctx.fillStyle=K.rc[hl]; ctx.fill(); ctx.globalAlpha=(lab?1:.55)*(dim?.35:1);}
-    ctx.setLineDash(n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
+  UNITS.forEach(id=>{const n=N[id], b=scr(n); if(n.hidden||!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=(SEL||REQSEL)&&SEL!==id&&!(SEL&&anc(id).includes(SEL))&&!RELATED.has(id);
+    ctx.globalAlpha=(lab?1:.55)*(dim?.35:1)*(GHOST.has(id)?.38:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
+    const hl=HLBOX.get(id); if(hl){ctx.globalAlpha=.13; ctx.fillStyle=K.rc[hl]; ctx.fill(); ctx.globalAlpha=(lab?1:.55)*(dim?.35:1)*(GHOST.has(id)?.38:1);}
+    ctx.setLineDash(GHOST.has(id)?[3,3]:n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
     const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s)); ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,sw,Math.max(0,b.h-2));
     const dr=Math.max(2.5,Math.min(5.5,4.5*cam.s)); if(b.w>16&&b.h>12){ctx.beginPath(); ctx.arc(b.x+b.w-dr-4,b.y+dr+4,dr,0,7); ctx.fillStyle=hasReq(id)?K.ok:K.warn; ctx.fill();}
     if(!lab){ctx.globalAlpha=1; return;}
@@ -309,7 +309,7 @@ function draw(){
       if(r.reqs.length&&cam.s>2.6) chip(r.reqs,rb.x+rb.w-18,rb.y+rb.h/2+rpx*.36);});
     ctx.restore(); ctx.globalAlpha=1;});
   // interfaces, on their package's border
-  ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='iface') return; const b=scr(n); if(!onScreen(b)) return;
+  ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='iface'||n.hidden) return; const b=scr(n); if(!onScreen(b)) return;
     const ihl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,8); ctx.fillStyle=K.ifc; ctx.fill(); ctx.strokeStyle=ihl?K.rc[ihl]:K.accent; ctx.lineWidth=SEL===id||ihl?3:1.6; ctx.stroke();
     const px=Math.min(15,Math.max(10,20*cam.s)); ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
     text('«interface»',b.x+10,b.y+px*.8+8,px*.72,K.muted); text(n.label,b.x+10,b.y+px*1.9+8,px,K.fg,'700');
@@ -336,7 +336,7 @@ function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: on
   const inBox=l=>boxOf(l.from)===boxOf(l.to);
   const shown=l=>PERSP==='structure'?((FAMILY[l.kind]&&FAM.inheritance&&inBox(l))||(OWNED[l.kind]&&inBox(l))||(STATIC[l.kind]&&!inBox(l)))
     :PERSP==='behaviour'?(l.kind==='calls'||l.kind==='consumes'):false;
-  const list=LINKS.filter(l=>PERSP!=='logic'&&((FAMILY[l.kind]&&touched(l))||shown(l))).concat(PERSP==='logic'?RLINKS:[]);
+  const list=LINKS.filter(l=>PERSP!=='logic'&&((FAMILY[l.kind]&&touched(l))||shown(l))&&isoBoth(l)).concat(PERSP==='logic'?RLINKS.filter(isoBoth):[]);
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
   list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
@@ -807,8 +807,74 @@ new ResizeObserver(()=>{clearTimeout(seq._t); seq._t=setTimeout(seq,80);}).obser
 /* ---------- live: a page that embeds the viewer can follow it and steer it ---------- */
 // window.DS_VIEW: read and set the camera, select and frame an identity, mark what changed.
 // The viewer tells its parent what is selected, so a live session knows what the reader points at.
-let CHANGED=new Set(), MARKED_AT=0, HILITE=new Map(), NOTES=[];
-const TONE=()=>({accent:K.accent,info:K.ifc||K.accent,ok:K.ok,bad:K.bad,req:K.req});
+let CHANGED=new Set(), MARKED_AT=0, HILITE=new Map(), NOTES=[], NOTEHIT=[], DIFF={added:new Set(),changed:new Set()};
+// isolation (DS-139): only the chosen boxes, the boxes around them as frames, and what they use from outside as ghosts
+let ISO=new Set(), ISOSAVE=null, GHOST=new Set(), GLINKS=[], GHOSTHIT=[];
+const isoIn=id=>!ISO.size||anc(id).some(a=>ISO.has(a)); const isoBoth=l=>isoIn(l.from)&&isoIn(l.to);
+// what the isolated boxes use from outside: one stub per outside box on the right edge, a dashed line from each inside end;
+// touching a stub adds that box to the isolation
+function drawGhosts(){GHOSTHIT=[]; if(!ISO.size||!GLINKS.length) return; const boxes=[...ISO].map(i=>N[i]).filter(Boolean); if(!boxes.length) return;
+  const r=boxes.reduce((u,n)=>union(u,{x:n.x,y:n.y,w:n.w,h:n.h}),{x:boxes[0].x,y:boxes[0].y,w:boxes[0].w,h:boxes[0].h});
+  const bx=sx(r.x+r.w)+46, by=Math.max(40,sy(r.y)); const outs=[...new Set(GLINKS.map(g=>g.out))].sort((a,b)=>N[a].y-N[b].y||N[a].x-N[b].x);
+  ctx.save(); ctx.font=`11.5px ${K.mono}`; const at=new Map();
+  outs.forEach((o,i)=>{const n=N[o], lab='«'+n.st+'» '+n.label, path=anc(o).slice(1).reverse().map(a=>N[a].label).slice(-2).join(' › ');
+    const w=Math.max(ctx.measureText(lab).width,ctx.measureText(path).width*.85)+16, y=by+i*40, x=Math.min(bx,W-w-10);
+    ctx.setLineDash([4,3]); rr(x,y,w,32,6); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=K.muted; ctx.lineWidth=1.2; ctx.stroke(); ctx.setLineDash([]);
+    text(lab,x+8,y+14,11.5,K.fg,'600'); text(path,x+8,y+27,10,K.muted); at.set(o,{x,y:y+16}); GHOSTHIT.push({id:o,x,y,w,h:32});});
+  ctx.strokeStyle=K.muted; ctx.lineWidth=1; ctx.setLineDash([4,4]); ctx.globalAlpha=.7; const done=new Set();
+  GLINKS.forEach(g=>{const n=repOf(g.inside); if(!n) return; const k=n.id+'>'+g.out; if(done.has(k)) return; done.add(k); const b=scr(n), t=at.get(g.out); if(!t) return;
+    const y0=n.kind==='row'?b.y+b.h/2:b.y+Math.min(b.h/2,14), xm=Math.max(b.x+b.w+12,t.x-24);
+    ctx.beginPath(); ctx.moveTo(b.x+b.w,y0); ctx.lineTo(xm,y0); ctx.lineTo(xm,t.y); ctx.lineTo(t.x,t.y); ctx.stroke();});
+  ctx.restore();}
+function isolate(ids){
+  if(ISOSAVE){ISOSAVE.forEach((h,id)=>{if(N[id]) N[id].hidden=h;}); ISOSAVE=null;} GHOST=new Set(); GLINKS=[];
+  ISO=new Set([].concat(ids||[]).map(unitOf).filter(i=>N[i]));
+  if(ISO.size){const under=id=>anc(id).some(a=>ISO.has(a)), keep=new Set();
+    ORDER.forEach(id=>{if(under(id)) keep.add(id);});  // what is around it is not drawn: no empty frames
+    LINKS.forEach(l=>{const a=under(l.from), b=under(l.to); if(a===b) return; const out=unitOf(a?l.to:l.from); if(!N[out]||under(out)) return;
+      GHOST.add(out); GLINKS.push({inside:a?l.from:l.to,out,kind:l.kind});});
+    ISOSAVE=new Map(); ORDER.forEach(id=>{ISOSAVE.set(id,N[id].hidden); if(!keep.has(id)) N[id].hidden=true;});}
+  else GLINKS=[];
+  const b=document.getElementById('iso'); if(b){b.setAttribute('aria-pressed',String(ISO.size>0)); b.textContent=ISO.size?`isolated ${ISO.size} ×`:'isolate';}
+  try{parent!==window&&parent.postMessage({ds:'isolate',ids:[...ISO]},'*');}catch(e){}
+  if(ISO.size) frameIds([...ISO]); loop(); return [...ISO];}
+function toggleIso(){const id=SEL?unitOf(SEL):null; if(!id) return isolate([]); const next=new Set(ISO); if(next.has(id)) next.delete(id); else next.add(id); return isolate([...next]);}
+document.getElementById('iso').onclick=()=>{if(!SEL&&ISO.size) isolate([]); else toggleIso();};
+addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+  if(e.key==='i'&&SEL) toggleIso(); if(e.key==='Escape'&&!SEL&&ISO.size) isolate([]);},{capture:true});
+// notes (DS-102): open, folded to a dot, or seen (dimmed and folded); they keep out of each other's way
+function noteBox(b,txt,col,placed,seen){const pad=8, maxW=280, px=12.5; ctx.font=`${px}px ${K.mono}`;
+  const words=String(txt).split(/\s+/), lines=[]; let line=''; words.forEach(w=>{const t=line?line+' '+w:w; if(ctx.measureText(t).width>maxW&&line){lines.push(line); line=w;} else line=t;}); if(line) lines.push(line);
+  const w=Math.min(maxW,Math.max(...lines.map(l=>ctx.measureText(l).width)))+pad*2+18, h=lines.length*(px+5)+pad*2-3;
+  const ax0=b.x+Math.min(b.w*.55,b.w-20); let x=Math.min(W-w-8,Math.max(8,ax0)), y=b.y-h-14, below=false;
+  const hits=r=>placed.some(p=>r.x<p.x+p.w+4&&r.x+r.w+4>p.x&&r.y<p.y+p.h+4&&r.y+r.h+4>p.y);
+  for(let k=0;k<12&&hits({x,y,w,h});k++){const p=placed.find(q=>x<q.x+q.w+4&&x+w+4>q.x&&y<q.y+q.h+4&&y+h+4>q.y); y=p.y-h-8;}
+  if(y<8){below=true; y=b.y+b.h+14; for(let k=0;k<12&&hits({x,y,w,h});k++){const p=placed.find(q=>x<q.x+q.w+4&&x+w+4>q.x&&y<q.y+q.h+4&&y+h+4>q.y); y=p.y+p.h+8;}}
+  ctx.save(); ctx.shadowColor='rgba(0,0,0,.18)'; ctx.shadowBlur=10; rr(x,y,w,h,8); ctx.fillStyle=K.panel; ctx.fill(); ctx.restore();
+  rr(x,y,w,h,8); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
+  const ax=Math.max(x+12,Math.min(x+w-12,ax0+14)), ty=below?b.y+b.h:b.y; ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=1.6;
+  ctx.moveTo(ax,below?y:y+h); ctx.lineTo(Math.max(b.x+4,Math.min(b.x+b.w-4,ax)),ty); ctx.stroke();
+  lines.forEach((l,i)=>text(l,x+pad,y+pad+px+i*(px+5)-2,px,K.fg));
+  const cx=x+w-16, cy=y+5; rr(cx,cy,12,12,3); ctx.strokeStyle=seen?K.ok:K.muted; ctx.lineWidth=1.3; ctx.stroke(); if(seen) text('✓',cx+1.5,cy+10.5,11,K.ok,'700');
+  return {x,y,w,h,check:{x:cx-3,y:cy-3,w:18,h:18}};}
+function noteDot(b,col,n){const x=Math.max(8,Math.min(W-8,b.x+Math.min(b.w-12,Math.max(12,b.w*.55)))), y=Math.max(10,b.y-2);
+  ctx.beginPath(); ctx.arc(x,y,9,0,7); ctx.fillStyle=col; ctx.fill(); ctx.strokeStyle=K.panel; ctx.lineWidth=2; ctx.stroke();
+  text(n>1?String(n):'…',x-(n>1?3.5:5),y+4,11,K.panel,'700'); return {x:x-10,y:y-10,w:20,h:20};}
+function drawNotes(){NOTEHIT=[]; const placed=[], dots=new Map();
+  NOTES.forEach(nt=>{const ids=idsOf(nt.id); if(ISO.size&&ids.length&&ids.every(i=>N[i].hidden)) return; const n=ids.length?anchorOf(ids[0]):null; if(!n) return; const b=scr(n); if(!onScreen(b)) return;
+    const col=TONE()[nt.tone]||K.accent; ctx.save(); if(nt.seen) ctx.globalAlpha=.5;
+    if(nt.folded){const d=dots.get(n.id)||{b,col,ids:[]}; d.ids.push(nt.id); dots.set(n.id,d);}
+    else {const r=noteBox(b,nt.text,col,placed,nt.seen); placed.push(r); NOTEHIT.push({id:nt.id,act:'seen',...r.check}); NOTEHIT.push({id:nt.id,act:'fold',x:r.x,y:r.y,w:r.w,h:r.h});}
+    ctx.restore();});
+  dots.forEach(d=>{const all=NOTES.filter(x=>d.ids.includes(x.id)); ctx.save(); if(all.every(x=>x.seen)) ctx.globalAlpha=.5; const r=noteDot(d.b,d.col,d.ids.length); ctx.restore();
+    d.ids.forEach(id=>NOTEHIT.push({id,act:'unfold',...r}));});}
+const tapBase=tap;
+tap=function(X,Y){const g=GHOSTHIT.find(r=>X>=r.x&&X<=r.x+r.w&&Y>=r.y&&Y<=r.y+r.h); if(g){isolate([...ISO,g.id]); return;}
+  const h=NOTEHIT.find(r=>X>=r.x&&X<=r.x+r.w&&Y>=r.y&&Y<=r.y+r.h);
+  if(h){const ids=h.act==='unfold'?NOTEHIT.filter(r=>r.act==='unfold'&&r.x===h.x&&r.y===h.y).map(r=>r.id):[h.id];
+    try{parent!==window&&parent.postMessage({ds:'note',ids,act:h.act},'*');}catch(e){} return;}
+  tapBase(X,Y);};
+const TONE=()=>({accent:K.accent,info:K.ifc||K.accent,ok:K.ok,bad:K.bad,req:K.req,you:'#2f62c9'});
 const anchorOf=id=>{let n=N[id]; if(n&&n.hidden&&n.parent) n=N[n.parent]; return n||null;};
 function idsOf(id){ // an identity of any perspective, as the boxes it lights: a node, a requirement's nodes, a tour's units
   if(N[id]) return [id]; if(RBY[id]) return reqNodes(RBY[id]).filter(i=>N[i]);
@@ -859,7 +925,15 @@ draw=function(){drawBase(); drawLogic();
     ctx.save(); ctx.globalAlpha=a; ctx.strokeStyle=K.warn||K.accent; ctx.lineWidth=3; ctx.setLineDash([7,4]);
     CHANGED.forEach(id=>{const n=N[id]; if(!n||n.hidden) return; const b=scr(n); if(!onScreen(b)) return; rr(b.x-4,b.y-4,b.w+8,b.h+8,8); ctx.stroke();});
     ctx.restore(); if(age<16) loop();}
-  NOTES.forEach(nt=>{const ids=idsOf(nt.id); const n=ids.length?anchorOf(ids[0]):null; if(n) bubble(n,nt.text,TONE()[nt.tone]||K.accent);});};
+  if(DIFF.added.size||DIFF.changed.size){ctx.save();  // only the outermost of what is new is marked: a thin ring, a tag, a glyph for a member
+    [[DIFF.added,K.ok,'+','new'],[DIFF.changed,K.warn||K.accent,'~','changed']].forEach(([set,col,sig,tag])=>set.forEach(id=>{const n=N[id]; if(!n||n.hidden) return;
+      if(sig==='+'&&n.parent&&DIFF.added.has(n.parent)) return; const b=scr(n); if(!onScreen(b)) return;
+      if(n.kind==='row'){if(!visible(n)) return; const px=Math.max(9,Math.min(13,b.h*.8)); text(sig,b.x-px*.75,b.y+b.h/2+px*.36,px,col,'700'); return;}
+      if(sig==='~'&&(KIDS[id]||[]).some(k=>set.has(k)&&N[k].kind!=='row')) return;  // a box whose changes are inside a box inside it: mark that one
+      ctx.globalAlpha=.9; rr(b.x-3,b.y-3,b.w+6,b.h+6,7); ctx.strokeStyle=col; ctx.lineWidth=1.6; ctx.stroke(); ctx.globalAlpha=1;
+      if(b.w>60){ctx.font=`600 10.5px ${K.mono}`; const tw=ctx.measureText(tag).width+10, tx=b.x+b.w-tw, ty=b.y-17; rr(tx,ty,tw,14,7); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.lineWidth=1.2; ctx.stroke(); text(tag,tx+5,ty+10.5,10.5,col,'600');}}));
+    ctx.restore();}
+  drawGhosts(); drawNotes();};
 const selectBase=select;
 select=function(id){selectBase(id); try{parent!==window&&parent.postMessage({ds:'select',id:id||null,label:id&&N[id]?N[id].label:''},'*');}catch(e){}};
 function frameIds(ids){const hit=ids.map(i=>N[i]).filter(Boolean).map(n=>n.kind==='row'?N[n.parent]:n); if(!hit.length) return false;
@@ -876,6 +950,8 @@ window.DS_VIEW={
     const t=TBY[id]||TOURS.find(t=>t.subject===id); if(t){openTours(t.id); return 'tour';} return '';},
   highlight(list){HILITE=new Map(); (list||[]).forEach(h=>idsOf(h.id).forEach(i=>HILITE.set(i,h.tone||'accent'))); loop(); return HILITE.size;},
   notes(list){NOTES=(list||[]).slice(); loop(); return NOTES.length;},
+  isolate(ids){return isolate(ids);}, get isolated(){return [...ISO];},
+  diff(d){DIFF={added:new Set((d&&d.added||[]).filter(i=>N[i])),changed:new Set((d&&d.changed||[]).filter(i=>N[i]))}; loop(); return DIFF.added.size+DIFF.changed.size;},
   frameAny(ids){const all=[].concat(ids).flatMap(idsOf); return frameIds(all);},
   known(id){return !!(N[id]||RBY[id]||TBY[id]||TOURS.find(t=>t.subject===id));},
   get perspective(){return PERSP;}, perspective_(p){setPersp(p);}, lightRule(id){return lightRule(id);}, get rule(){return RULE_ON;},
