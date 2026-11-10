@@ -160,7 +160,7 @@ package driftspec@ds {
       return out
     }
 
-    class IrExport {                         // the projection: selects, decides what to print, writes the IR
+    class IrExport {                         // the projection: takes what the query's filter of a diagram takes, decides what to print, writes the IR
       @requirement REQ-00006-1
       - refs model_: model::Model
       + IrExport(model: model::Model)
@@ -168,12 +168,6 @@ package driftspec@ds {
       + render(diagramId: std::string, pretty: bool) -> std::string {
         @requirement REQ-00057-1
       }
-      + select(diagram: model::Entity) -> std::set<std::string> {
-        @requirement REQ-00047-1
-        @requirement REQ-00019-1
-        @requirement REQ-00048-1
-      }
-      - matches(pattern: std::string, entity: model::Entity) -> bool
       - closeBoxes(ir: std::string, open: std::vector<std::string>, pretty: bool) -> std::string {
         @requirement REQ-00064-2
       }
@@ -195,29 +189,11 @@ package driftspec@ds {
       return out
     }
 
-    sequence IrExport::select {
-      local selected: std::set<std::string>
-      loop each pattern of include {
-        self -> model_.entities() -> entities
-        loop each entity {
-          opt it is drawable and not expected {
-            -> matches(pattern, entity) -> matched
-          }
-        }
-      }
-      loop each pattern of exclude {
-        loop each selected id {
-          self -> model_.find(id) -> entity
-          -> matches(pattern, entity) -> matched
-        }
-      }
-      return selected
-    }
-
     // The kind written in the diagram picks the scenario. The default is a class diagram
     // with no open: field, told by its main steps. What comes back is the JSON dumped,
     // so a name for it, not a checked value.
     sequence IrExport::render {
+      local filter: query::ClassFilter
       self -> model_.find(diagramId) -> diagram
       opt there is no such diagram / no-diagram {
         return ""
@@ -234,12 +210,9 @@ package driftspec@ds {
         -> renderState(diagram, pretty) -> ir
         return ir
       }
-      -> select(diagram) -> selected
-      opt neighbours is written {
-        loop each step {
-          self -> model_.relations() -> relations
-        }
-      }
+      -> query::filterFor(diagram) -> made
+      -> filter.boxes(model_) -> selected
+      -> filter.containers(model_, selected) -> containers
       loop each selected id {
         self -> model_.find(id) -> entity
       }

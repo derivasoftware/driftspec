@@ -12,8 +12,8 @@
 #include <set>
 #include <utility>
 
+#include "ds/query/Query.hpp"
 #include "ds/render/Ir.hpp"
-#include "ds/render/IrExport.hpp"
 
 namespace ds {
 namespace scene {
@@ -466,18 +466,17 @@ void Scene::relate(SceneDocument& out_document) const {
     for (const auto& s : sequences[pair.first]) pair.second.sequences.push_back(s);
     out_document.links.push_back(pair.second);
   }
-  // where each box is drawn: every diagram of the workspace, through the projection a drawing uses
-  const render::IrExport ir(model_);
-  for (const auto& id : ir.diagrams()) {
-    const std::string text = ir.render(id, false);
-    if (text.empty()) continue;
+  // where each box is drawn: every diagram of the workspace, taken by the filter of its kind (DS-127)
+  const query::Query query(model_);
+  for (const auto& pair : model_.entities()) {
+    const auto filter = query::filterFor(pair.second);
+    if (!filter) continue;
     DiagramView view;
-    view.name = model::diagramName(id);
-    const model::Entity* diagram = model_.find(id);
-    view.kind = diagram && diagram->fields.count("kind") ? diagram->fields.at("kind") : "";
+    view.name = model::diagramName(pair.first);
+    view.kind = pair.second.fields.count("kind") ? pair.second.fields.at("kind") : "";
     std::set<std::string> shown;
-    for (const auto& n : render::IrDocument::parse(text).bundled().nodes) {
-      const std::string node = nodeFor(ids, n.id);
+    for (const auto& id : query.select(*filter)) {
+      const std::string node = nodeFor(ids, id);
       if (!node.empty() && shown.insert(node).second) view.nodes.push_back(node);
     }
     if (!view.nodes.empty()) out_document.diagrams.push_back(view);

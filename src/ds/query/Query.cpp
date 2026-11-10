@@ -2,9 +2,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include "ds/render/Ir.hpp"
-#include "ds/render/IrExport.hpp"
-
 namespace ds {
 namespace query {
 
@@ -128,16 +125,15 @@ std::vector<Answer> Query::behaviours(const std::string& id) const {
   return out;
 }
 
+std::set<std::string> Query::select(const IFilter& filter) const { return filter.select(model_); }
+
 std::vector<Answer> Query::shows(const std::string& diagram) const {
-  // what the diagram draws: ask the projection itself, so the answer is what a drawing would show
+  // what the diagram takes is the filter of its kind, applied to the model: nothing is drawn (DS-127)
+  const model::Entity* d = model_.find(model::diagramId(diagram));
+  const auto filter = d ? filterFor(*d) : nullptr;
+  if (!filter) return {{"error", diagram, "no such diagram"}};
   std::vector<Answer> out;
-  const std::string doc = render::IrExport(model_).render(model::diagramId(diagram), false);
-  if (doc.empty()) return {{"error", diagram, "no such diagram"}};
-  for (const auto& n : render::IrDocument::parse(doc).bundled().nodes) {
-    if (n.kind == "note") continue;
-    const model::Entity* e = model_.find(n.id);
-    out.push_back(e ? entityAnswer(*e) : Answer{n.kind, n.id, ""});
-  }
+  for (const auto& id : select(*filter)) out.push_back(entityAnswer(*model_.find(id)));
   return out;
 }
 
