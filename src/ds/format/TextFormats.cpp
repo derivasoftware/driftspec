@@ -1,0 +1,69 @@
+#include "ds/format/TextFormats.hpp"
+
+#include <nlohmann/json.hpp>
+
+namespace ds {
+namespace format {
+
+std::string AnswersText::name() const { return "text"; }
+
+std::string AnswersText::write(const std::vector<query::Answer>& document, const FormatOptions&) const {
+  std::string out;
+  for (const auto& a : document) out += a.kind + "  " + a.id + (a.detail.empty() ? "" : "  " + a.detail) + "\n";
+  return out;
+}
+
+std::string AnswersJson::name() const { return "json"; }
+
+std::string AnswersJson::write(const std::vector<query::Answer>& document, const FormatOptions&) const {
+  nlohmann::json out = nlohmann::json::array();
+  for (const auto& a : document) out.push_back({{"kind", a.kind}, {"id", a.id}, {"detail", a.detail}});
+  return out.dump();
+}
+
+std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> answerFormats() {
+  std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> out;
+  out["text"] = std::make_unique<AnswersText>();
+  out["json"] = std::make_unique<AnswersJson>();
+  return out;
+}
+
+std::string ReportText::name() const { return "text"; }
+
+std::string ReportText::write(const check::Report& document, const FormatOptions&) const {
+  std::string out;
+  for (const auto& f : document.findings)
+    out += f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column) + "  " + f.code + "  " +
+           f.message + "\n";
+  out += std::to_string(document.entities) + " entities · " + std::to_string(document.expected) + " expected · " +
+         std::to_string(document.relations) + " relations · " + std::to_string(document.findings.size()) + " findings\n";
+  return out;
+}
+
+std::string ReportJson::name() const { return "json"; }
+
+std::string ReportJson::write(const check::Report& document, const FormatOptions& options) const {
+  nlohmann::json findings = nlohmann::json::array();
+  for (const auto& f : document.findings) {
+    findings.push_back({{"code", f.code},
+                        {"severity", f.severity},
+                        {"message", f.message},
+                        {"location", {{"file", f.location.file}, {"line", f.location.line}, {"column", f.location.column}}}});
+  }
+  const nlohmann::json out{{"findings", findings},
+                           {"entities", document.entities},
+                           {"expected", document.expected},
+                           {"relations", document.relations},
+                           {"errors", document.errors}};
+  return options.pretty ? out.dump(2) : out.dump();
+}
+
+std::map<std::string, std::unique_ptr<IFormat<check::Report>>> reportFormats() {
+  std::map<std::string, std::unique_ptr<IFormat<check::Report>>> out;
+  out["text"] = std::make_unique<ReportText>();
+  out["json"] = std::make_unique<ReportJson>();
+  return out;
+}
+
+}  // namespace format
+}  // namespace ds

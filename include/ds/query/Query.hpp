@@ -53,10 +53,6 @@ class Query : public IQuery {
   std::vector<Answer> findings(const std::string& file) const;   ///< the findings of a file ("" = all)
   std::vector<Answer> coupling() const;                          ///< what each behaviour touches outside its module, and how
 
-  /// The answers as lines (`kind  id  detail`) or as a JSON array.
-  static std::string text(const std::vector<Answer>& answers);
-  static std::string json(const std::vector<Answer>& answers);
-
  private:
   bool known(const std::string& id) const;                         // an entity, or a scope something is declared in
   std::vector<std::string> nearTo(const std::string& name) const;  // identities ending in the name, for a hint

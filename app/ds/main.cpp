@@ -18,10 +18,12 @@
 #include "ds/api/Api.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
+#include "ds/check/Report.hpp"
 #include "ds/diff/Diff.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
+#include "ds/format/TextFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -159,16 +161,12 @@ int manual(const std::string& topic, bool json) {
 int check(const std::string& dir, bool json) {
   ds::model::Model model;
   if (!loadWorkspace(dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
-  const auto report = nlohmann::json::parse(ds::api::Api::report(model));  // the one shape of a check (DS-120)
-  if (json) {
-    std::cout << report.dump(2) << "\n";
-  } else {
-    for (const auto& f : model.findings())
-      std::cout << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  " << f.message << "\n";
-    std::cout << report["entities"].get<long>() << " entities · " << report["expected"].get<long>() << " expected · "
-              << report["relations"].get<long>() << " relations · " << model.findings().size() << " findings\n";
-  }
-  return report["errors"].get<int>() ? 1 : 0;
+  // the one report of a check (DS-120), written by the format asked for (DS-126)
+  const ds::check::Report report = ds::check::reportOf(model);
+  ds::format::FormatOptions options;
+  options.pretty = true;
+  std::cout << ds::format::reportFormats().at(json ? "json" : "text")->write(report, options) << (json ? "\n" : "");
+  return report.errors ? 1 : 0;
 }
 
 std::string diagramId(const std::string& name) { return name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name; }
@@ -402,7 +400,7 @@ int main(int argc, char** argv) {
   const ds::query::Query query(model);
   const std::vector<ds::query::Answer> answers = query.ask(question, subject);
   if (!answers.empty() && answers.front().kind == "error") {
-    if (json) std::cout << ds::query::Query::json(answers) << "\n";  // asked for JSON, the error is an answer too
+    if (json) std::cout << ds::format::AnswersJson().write(answers, {}) << "\n";  // asked for JSON, the error is an answer too
     std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
     if (answers.front().detail.find("not a question") != std::string::npos) {
       std::cerr << "questions:";
@@ -411,6 +409,7 @@ int main(int argc, char** argv) {
     }
     return 1;
   }
-  std::cout << (json ? ds::query::Query::json(answers) + "\n" : ds::query::Query::text(answers));
+  // the answers, written by the format asked for (DS-126)
+  std::cout << ds::format::answerFormats().at(json ? "json" : "text")->write(answers, {}) << (json ? "\n" : "");
   return 0;
 }
