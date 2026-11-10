@@ -7,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/export/JsonExport.hpp"
+#include "ds/format/SceneFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -83,7 +84,10 @@ std::string Api::render(const Files& files, const std::string& diagram, const st
 
 std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) {
   const model::Model model = loadTexts(files);
-  return scene::Scene(model).page(title, "", focus);
+  format::FormatOptions options;  // the viewer page: the scene written by its html format (DS-126)
+  options.title = title;
+  options.focus = focus;
+  return format::SceneHtml().write(scene::Scene(model).build(), options);
 }
 
 std::string Api::expectedAt(const std::string& text, int line, int column) {

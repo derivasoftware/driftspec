@@ -589,7 +589,21 @@ package driftspec@ds {
       + owns rules: std::vector<RuleView>
     }
 
-    class Scene {
+    // The scene builds the document and nothing else (DS-126): writing it as JSON or as the viewer
+    // page is the formats' job (ds::format). Next, inside: the layout and the four fillers.
+    class IScene {
+      @requirement REQ-00069-1
+      + ~IScene()
+      + abstract build() -> SceneDocument
+    }
+
+    // the node that stands for a model identity among the nodes: itself, a signature row or the
+    // nearest enclosing node; a behaviour stands for its subject
+    function nodeFor(ids: std::set<std::string>, id: std::string) -> std::string {
+      @requirement REQ-00072-2
+    }
+
+    class Scene : IScene {
       @requirement REQ-00069-1
       - refs model_: model::Model
       + Scene(model: model::Model)
@@ -597,13 +611,6 @@ package driftspec@ds {
         @requirement REQ-00069-1
         @requirement REQ-00076-1
         @requirement REQ-00093-1
-      }
-      + render(pretty: bool) -> std::string
-      + page(title: std::string, css: std::string, focus: std::vector<std::string>) -> std::string {
-        @requirement REQ-00070-1
-        @requirement REQ-00071-2
-        @requirement REQ-00077-1
-        @requirement REQ-00092-2
       }
       - relate(out_document: SceneDocument) -> void {
         @requirement REQ-00072-2
@@ -618,15 +625,6 @@ package driftspec@ds {
       - reason(out_document: SceneDocument) -> void {
         @requirement REQ-00099-1
       }
-      + static frame(page: std::string, title: std::string, height: int) -> std::string {
-        @requirement REQ-00071-2
-      }
-      + static pack(text: std::string) -> std::string {
-        @requirement REQ-00075-5
-      }
-      + static unpack(packed: std::string) -> std::string {
-        @requirement REQ-00075-5
-      }
     }
 
     // The layout runs twice, once per variant; build keeps the full one's order and adds
@@ -638,33 +636,6 @@ package driftspec@ds {
       -> tour(out_document)
       -> trace(out_document)
       return document
-    }
-
-    sequence Scene::render {
-      -> build() -> document
-      return json
-    }
-
-    // An iframe whose srcdoc is the whole page, escaped for an attribute: nothing to fetch, and
-    // neither the host's styles nor the viewer's leak into the other.
-    sequence Scene::frame {
-      return frame
-    }
-
-    sequence Scene::pack {
-      return packed
-    }
-
-    sequence Scene::unpack {
-      return text
-    }
-
-    // The viewer template is compiled into ds; the scene, the title and the reader's
-    // stylesheet go where it marks them.
-    sequence Scene::page {
-      -> render(pretty) -> json
-      -> pack(json) -> packed
-      return page
     }
   }
 }

@@ -85,20 +85,21 @@ package driftspec@ds {
 
     // render: the whole model in the viewer (html, or its scene as json), or one diagram drawn
     // still (svg, text, cells) or as its data (ir, layout); a render-IR file is drawn as it is
+    // the scene builds the document; the format named by -f writes it (DS-126)
     sequence main / render {
       local model: model::Model
       local scene: scene::Scene
       local query: query::Query
+      local html: format::SceneHtml
       -> loadWorkspace(argv, model) -> found
       opt a diagram to open the viewer framed on / framed {
         -> query.ask(question, diagram) -> shown
       }
       -> titleOf(argv) -> title
       -> readFile(css) -> style
-      -> scene.page(title, style, focus) -> page
-      opt --embed: the page inside an iframe / embedded {
-        -> scene.frame(page, title, height) -> frame
-      }
+      -> scene.build() -> document
+      -> format::sceneFormats() -> formats
+      -> html.write(document, options) -> page
       -> emit(output, page) -> written
       return 0
     }
@@ -106,8 +107,11 @@ package driftspec@ds {
     sequence main / render-scene {
       local model: model::Model
       local scene: scene::Scene
+      local json: format::SceneJson
       -> loadWorkspace(argv, model) -> found
-      -> scene.render(pretty) -> json
+      -> scene.build() -> document
+      -> format::sceneFormats() -> formats
+      -> json.write(document, options) -> text
       -> emit(output, json) -> written
       return 0
     }

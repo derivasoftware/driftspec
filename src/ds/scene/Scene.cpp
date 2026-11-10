@@ -1,7 +1,5 @@
 #include "ds/scene/Scene.hpp"
 
-#include <miniz.h>
-
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -18,8 +16,6 @@
 
 namespace ds {
 namespace scene {
-
-const char* viewerTemplate();  // viewer/scene.html, compiled into ds by CMake
 
 namespace {
 
@@ -422,8 +418,6 @@ Box bounds(const std::vector<Node>& nodes, bool lean) {
 
 Scene::Scene(const model::Model& model) : model_(model) {}
 
-namespace {
-
 // the node that stands for a model identity: itself, a function's signature row, or the nearest
 // enclosing node; a message stands for the member whose behaviour it is written in
 std::string nodeFor(const std::set<std::string>& ids, std::string id) {
@@ -435,8 +429,6 @@ std::string nodeFor(const std::set<std::string>& ids, std::string id) {
     id = id.substr(0, at);
   }
 }
-
-}  // namespace
 
 void Scene::relate(SceneDocument& out_document) const {
   std::set<std::string> ids;
@@ -520,100 +512,6 @@ SceneDocument Scene::build() const {
   trace(doc);
   reason(doc);
   return doc;
-}
-
-// The document is compact, and says how to read itself: every record is an array whose
-// columns "fields" names, and a node, a behaviour or a link is named by its index.
-std::string Scene::render(bool pretty) const {
-  const SceneDocument doc = build();
-  std::map<std::string, int> at;
-  std::set<std::string> ids;
-  for (size_t i = 0; i < doc.nodes.size(); ++i) {
-    at[doc.nodes[i].id] = static_cast<int>(i);
-    ids.insert(doc.nodes[i].id);
-  }
-  const auto index = [&at](const std::string& id) { return at.count(id) ? at.at(id) : -1; };
-  const auto ints = [](const Box& b) {
-    return nlohmann::json::array({std::lround(b.x), std::lround(b.y), std::lround(b.w), std::lround(b.h)});
-  };
-  std::map<std::string, int> behaviourOf;  // "subject / scenario" -> its index
-  for (size_t i = 0; i < doc.behaviours.size(); ++i) behaviourOf[doc.behaviours[i].id] = static_cast<int>(i);
-
-  nlohmann::json out;
-  out["version"] = 2;
-  out["fields"] = {{"node", {"id", "kind", "parent", "label", "stereotype", "visibility", "requirements", "full", "lean"}},
-                   {"link", {"from", "to", "kind", "count", "multiplicity", "behaviours"}},
-                   {"behaviour", {"subject", "scenario", "calls"}},
-                   {"call", {"to", "label", "behaviour", "result"}},
-                   {"tour", {"behaviour", "group"}},
-                   {"diagram", {"name", "kind", "nodes"}},
-                   {"requirement", {"id", "kind", "title", "status", "text", "parent", "scope", "nodes", "signature", "outcomes", "binds"}},
-                   {"verification", {"id", "title", "status", "method", "tests", "requirements"}},
-                   {"rule", {"id", "kind", "name", "title", "scope", "lines", "requirements", "breaches", "file", "line"}},
-                   {"breach", {"node", "to", "bindings", "witness", "file", "line"}}};
-  out["nodes"] = nlohmann::json::array();
-  for (const auto& n : doc.nodes) {
-    out["nodes"].push_back({n.id, n.kind, index(n.parent), n.label, n.stereotype, n.visibility, n.requirements, ints(n.full),
-                            n.lean ? ints(n.leanBox) : nlohmann::json()});
-  }
-  out["world"] = ints(doc.world);
-  out["lean_world"] = ints(doc.leanWorld);
-  out["links"] = nlohmann::json::array();
-  for (const auto& l : doc.links) {
-    nlohmann::json written = nlohmann::json::array();
-    for (const auto& s : l.sequences) {  // a sequence id, X::sequence or X::sequence/scenario, as the behaviour it is
-      const std::string scenario = model::scenarioOf(s);
-      const auto b = behaviourOf.find(nodeFor(ids, model::subjectOf(s)) + (scenario.empty() ? "" : " / " + scenario));
-      if (b != behaviourOf.end()) written.push_back(b->second);
-    }
-    out["links"].push_back({index(l.from), index(l.to), l.kind, l.count, l.multiplicity, written});
-  }
-  out["behaviours"] = nlohmann::json::array();
-  for (const auto& b : doc.behaviours) {
-    nlohmann::json calls = nlohmann::json::array();
-    for (const auto& c : b.calls) calls.push_back({index(c.to), c.label, c.expands, c.result});
-    out["behaviours"].push_back({index(b.subject), b.scenario, calls});
-  }
-  out["tours"] = nlohmann::json::array();
-  for (const auto& t : doc.tours) out["tours"].push_back({t.behaviour, t.group});
-  out["diagrams"] = nlohmann::json::array();
-  for (const auto& d : doc.diagrams) {
-    nlohmann::json shown = nlohmann::json::array();
-    for (const auto& n : d.nodes) shown.push_back(index(n));
-    out["diagrams"].push_back({d.name, d.kind, shown});
-  }
-  out["titles"] = doc.titles;
-  std::map<std::string, int> requirementAt;
-  for (size_t i = 0; i < doc.requirements.size(); ++i) requirementAt[doc.requirements[i].id] = static_cast<int>(i);
-  const auto requirement = [&requirementAt](const std::string& id) { return requirementAt.count(id) ? requirementAt.at(id) : -1; };
-  out["requirements"] = nlohmann::json::array();
-  for (const auto& r : doc.requirements) {
-    nlohmann::json shown = nlohmann::json::array();
-    for (const auto& n : r.nodes) shown.push_back(index(n));
-    nlohmann::json ends = nlohmann::json::array();
-    for (const auto& o : r.outcomes) ends.push_back({o.name, o.returns, o.text});
-    nlohmann::json bound = nlohmann::json::array();
-    for (const auto& b : r.binds)
-      if (requirement(b) >= 0) bound.push_back(requirement(b));
-    out["requirements"].push_back(
-        {r.id, r.kind, r.title, r.status, r.text, requirement(r.parent), index(r.scope), shown, r.signature, ends, bound});
-  }
-  out["verifications"] = nlohmann::json::array();
-  for (const auto& v : doc.verifications) {
-    nlohmann::json proves = nlohmann::json::array();
-    for (const auto& r : v.requirements)
-      if (requirement(r) >= 0) proves.push_back(requirement(r));
-    out["verifications"].push_back({v.id, v.title, v.status, v.method, v.tests, proves});
-  }
-  out["rules"] = nlohmann::json::array();
-  for (const auto& r : doc.rules) {
-    nlohmann::json broken = nlohmann::json::array();
-    for (const auto& b : r.breaches) broken.push_back({index(b.node), index(b.to), b.bindings, b.witness, b.file, b.line});
-    nlohmann::json lines = nlohmann::json::array();
-    for (const auto& l : r.lines) lines.push_back({l.first, l.second});
-    out["rules"].push_back({r.id, r.kind, r.name, r.title, index(r.scope), lines, r.requirements, broken, r.file, r.line});
-  }
-  return pretty ? out.dump(2) : out.dump();
 }
 
 namespace {
@@ -703,130 +601,6 @@ void Scene::tour(SceneDocument& out_document) const {
       out_document.tours.push_back({b, operation ? "interface" : "method"});
     }
   }
-}
-
-namespace {
-
-const char kBase64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-std::string base64(const unsigned char* data, size_t size) {
-  std::string out;
-  out.reserve((size + 2) / 3 * 4);
-  for (size_t i = 0; i < size; i += 3) {
-    const unsigned v = (static_cast<unsigned>(data[i]) << 16) | (i + 1 < size ? static_cast<unsigned>(data[i + 1]) << 8 : 0u) |
-                       (i + 2 < size ? static_cast<unsigned>(data[i + 2]) : 0u);
-    out += kBase64[(v >> 18) & 63];
-    out += kBase64[(v >> 12) & 63];
-    out += i + 1 < size ? kBase64[(v >> 6) & 63] : '=';
-    out += i + 2 < size ? kBase64[v & 63] : '=';
-  }
-  return out;
-}
-
-std::string fromBase64(const std::string& text) {
-  std::string out;
-  unsigned v = 0;
-  int bits = -8;
-  for (const char c : text) {
-    if (c == '=' || c == 0) break;
-    const char* at = std::strchr(kBase64, c);
-    if (!at) break;
-    v = ((v << 6) | static_cast<unsigned>(at - kBase64)) & 0xFFFFFF;
-    bits += 6;
-    if (bits >= 0) {
-      out += static_cast<char>((v >> bits) & 0xFF);
-      bits -= 8;
-    }
-  }
-  return out;
-}
-
-}  // namespace
-
-std::string Scene::pack(const std::string& text) {
-  mz_ulong size = mz_compressBound(static_cast<mz_ulong>(text.size()));
-  std::vector<unsigned char> out(size);
-  if (mz_compress2(out.data(), &size, reinterpret_cast<const unsigned char*>(text.data()), static_cast<mz_ulong>(text.size()),
-                   MZ_BEST_COMPRESSION) != MZ_OK)
-    return "";
-  return base64(out.data(), size);
-}
-
-std::string Scene::unpack(const std::string& packed) {
-  const std::string bytes = fromBase64(packed);
-  for (mz_ulong room = static_cast<mz_ulong>(bytes.size()) * 8 + 1024; room < (1ul << 30); room *= 2) {
-    std::vector<unsigned char> out(room);
-    mz_ulong size = room;
-    const int status =
-        mz_uncompress(out.data(), &size, reinterpret_cast<const unsigned char*>(bytes.data()), static_cast<mz_ulong>(bytes.size()));
-    if (status == MZ_OK) return std::string(out.begin(), out.begin() + static_cast<long>(size));
-    if (status != MZ_BUF_ERROR) return "";
-  }
-  return "";
-}
-
-std::string Scene::page(const std::string& title, const std::string& css, const std::vector<std::string>& focus) const {
-  const std::string json = pack(render(false));  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
-  std::string safe;
-  for (const char c : title) safe += c == '<' ? "&lt;" : c == '>' ? "&gt;" : c == '&' ? "&amp;" : std::string(1, c);
-  std::string out = viewerTemplate();
-  const auto put = [&out](const std::string& mark, const std::string& value) {
-    for (size_t at = out.find(mark); at != std::string::npos; at = out.find(mark, at + value.size())) out.replace(at, mark.size(), value);
-  };
-  std::string style = css;
-  for (size_t at = style.find("</"); at != std::string::npos; at = style.find("</", at + 3)) style.replace(at, 2, "<\\/");
-  put("/*SCENE*/", json);
-  put("/*TITLE*/", safe);
-  put("/*CSS*/", style);
-  std::string framed = nlohmann::json(focus).dump();
-  for (size_t at = framed.find("</"); at != std::string::npos; at = framed.find("</", at + 3)) framed.replace(at, 2, "<\\/");
-  put("/*FOCUS*/", framed);
-  // the viewer's code travels packed as well: the page carries the scene and the code as two packs
-  // and a loader that inflates the code and runs it, so the page stays small as the viewer grows
-  // (the scene and the focus stay outside the pack: they are what changes from one page to another)
-  const std::string open = "<script>", close = "</script>";
-  const std::string mark = "const PACKED='" + json + "';", aim = "const FOCUS=" + framed + ";";
-  const size_t from = out.find(open, out.find("<body>")), to = out.rfind(close);  // a reader's stylesheet may hold "<script>"
-  if (from == std::string::npos || to == std::string::npos || to < from) return out;
-  std::string code = out.substr(from + open.size(), to - from - open.size());
-  for (const std::string* cut : {&mark, &aim}) {
-    const size_t at = code.find(*cut);
-    if (at == std::string::npos) return out;
-    code.erase(at, cut->size());
-  }
-  // the viewer's own styles travel packed too, and go in before the reader's (the theme), which wins
-  const std::string styleOpen = "<style>", styleClose = "</style>";
-  const size_t styleFrom = out.find(styleOpen), styleTo = out.find(styleClose, styleFrom);
-  std::string own;
-  if (styleFrom != std::string::npos && styleTo != std::string::npos && styleTo < from) {
-    own = out.substr(styleFrom + styleOpen.size(), styleTo - styleFrom - styleOpen.size());
-    out.erase(styleFrom, styleTo + styleClose.size() - styleFrom);
-  }
-  const size_t codeFrom = out.find(open, out.find("<body>")), codeTo = out.rfind(close);
-  const std::string inflate =
-      "const inflate=async p=>new Response(new Blob([Uint8Array.from(atob(p),c=>c.charCodeAt(0))]).stream()"
-      ".pipeThrough(new DecompressionStream('deflate'))).text();";
-  const std::string loader =
-      "\n" + mark + "\n" + aim + "\nconst STYLE='" + pack(own) + "';\nconst VIEWER='" + pack(code) + "';\n(async()=>{try{" + inflate +
-      "const st=document.createElement('style');st.textContent=await "
-      "inflate(STYLE);document.head.insertBefore(st,document.getElementById('theme'));"
-      "const t=await inflate(VIEWER);"
-      "const s=document.createElement('script');s.textContent=t;document.body.appendChild(s);}"
-      "catch(e){document.body.insertAdjacentHTML('beforeend','<p style=\"padding:20px;font-family:sans-serif\">"
-      "This browser cannot inflate the viewer (it lacks DecompressionStream). Open the page in a current one.</p>');}})();\n";
-  out.replace(codeFrom + open.size(), codeTo - codeFrom - open.size(), loader);
-  return out;
-}
-
-std::string Scene::frame(const std::string& page, const std::string& title, int height) {
-  const auto attribute = [](const std::string& text) {
-    std::string out;
-    out.reserve(text.size() + text.size() / 8);
-    for (const char c : text) out += c == '&' ? "&amp;" : c == '"' ? "&quot;" : c == '<' ? "&lt;" : c == '>' ? "&gt;" : std::string(1, c);
-    return out;
-  };
-  return "<iframe title=\"" + attribute(title) + " \u00b7 DriftSpec\" style=\"width:100%;height:" + std::to_string(height) +
-         "px;border:0;border-radius:8px\" loading=\"lazy\" allowfullscreen srcdoc=\"" + attribute(page) + "\"></iframe>\n";
 }
 
 void Scene::trace(SceneDocument& out_document) const {

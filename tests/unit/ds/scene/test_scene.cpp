@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 
+#include "ds/format/SceneFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/scene/Scene.hpp"
 
@@ -104,7 +105,7 @@ TEST_F(TestSceneDocument, TheWorldHoldsEveryNodeInBothVariants) {
 }
 
 TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
-  const auto doc = nlohmann::json::parse(ds::scene::Scene(model).render(false));
+  const auto doc = nlohmann::json::parse(ds::format::SceneJson().write(ds::scene::Scene(model).build(), {}));
   EXPECT_EQ(doc["version"], 2);
   const auto& fields = doc["fields"]["node"];
   const auto column = [&fields](const std::string& name) {
@@ -125,11 +126,11 @@ TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
 }
 
 TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
-  const std::string page = ds::scene::Scene(model).page("a<b");
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "a<b"});
   EXPECT_EQ(page.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(page.find("<canvas"), std::string::npos);
   const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
-  const std::string scene = ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+  const std::string scene = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
   EXPECT_NE(scene.find("\"p@m::A::run\""), std::string::npos);  // the scene travels packed, and unpacks whole
   EXPECT_EQ(page.find("\"p@m::A::run\""), std::string::npos);
   EXPECT_NE(page.find("a&lt;b \u00b7 DriftSpec"), std::string::npos);
@@ -139,11 +140,11 @@ TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
 
 TEST_F(TestScene, APackUnpacksToTheTextItHolds) {
   const std::string text = std::string(5000, 'a') + " \u00e1\u00e9 </script> \"quoted\" " + std::string(300, 'z');
-  const std::string packed = ds::scene::Scene::pack(text);
+  const std::string packed = ds::format::common::pack(text);
   EXPECT_LT(packed.size(), text.size() / 4);  // deflate: much smaller, even in base64
   EXPECT_EQ(packed.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="), std::string::npos);
-  EXPECT_EQ(ds::scene::Scene::unpack(packed), text);
-  EXPECT_EQ(ds::scene::Scene::unpack("not a pack"), "");
+  EXPECT_EQ(ds::format::common::unpack(packed), text);
+  EXPECT_EQ(ds::format::common::unpack("not a pack"), "");
 }
 
 /// The links of a scene: each relation of the model between two of its nodes, with what produces it.

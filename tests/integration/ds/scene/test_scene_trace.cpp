@@ -8,6 +8,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/format/SceneFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Scene.hpp"
@@ -46,7 +47,7 @@ class TestSceneTrace : public ::testing::Test {
 
   static std::string packedIn(const std::string& page) {
     const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
-    return ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
+    return ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
   }
 };
 
@@ -90,7 +91,7 @@ TEST_F(TestSceneTrace, AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealises
 }
 
 TEST_F(TestSceneTrace, ThePageListsTheRequirementsInTheBottomPanel) {
-  const std::string page = ds::scene::Scene(model).page("hola");
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "hola"});
   EXPECT_NE(page.find("data-tab=\"reqs\""), std::string::npos);  // a tab beside the tours
   const std::string scene = packedIn(page);
   EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\",\"signature\","

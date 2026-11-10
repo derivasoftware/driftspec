@@ -2,6 +2,7 @@
 #define DRIFTSPEC_SCENE_SCENE_HPP
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -150,24 +151,24 @@ struct SceneDocument {
   std::vector<RuleView> rules;  ///< every rule and definition, with what breaks each
 };
 
+/// The node that stands for a model identity among the nodes `ids`: itself, a function's signature
+/// row, or the nearest enclosing node; a behaviour stands for its subject.
+std::string nodeFor(const std::set<std::string>& ids, std::string id);
+
+/// The scene module's entry point (DS-126): what the rest of ds asks of the scene, the document of
+/// the whole model. Writing it (JSON, the viewer page) is a format's job (ds::format).
+class IScene {
+ public:
+  virtual ~IScene() = default;
+  virtual SceneDocument build() const = 0;
+};
+
 /// Builds the structural scene of a model: every box placed inside its parent, once, so a
 /// viewer can zoom from the system down to a member without anything moving.
-class Scene {
+class Scene : public IScene {
  public:
   explicit Scene(const model::Model& model);
-  SceneDocument build() const;
-  std::string render(bool pretty = true) const;
-  /// The viewer as one self-contained HTML page with this scene inside, titled after the workspace;
-  /// css, when given, is the reader's stylesheet, applied after the viewer's.
-  /// focus, when given, are the identities the page opens framed on (what a diagram shows).
-  std::string page(const std::string& title, const std::string& css = "", const std::vector<std::string>& focus = {}) const;
-  /// A page as an iframe that carries it whole (srcdoc), to paste into any HTML document.
-  static std::string frame(const std::string& page, const std::string& title, int height);
-  /// Text deflated (zlib format) and written in base64: how the scene travels inside a page, which a
-  /// browser inflates with its own DecompressionStream.
-  static std::string pack(const std::string& text);
-  /// The text a pack holds; empty when it holds none.
-  static std::string unpack(const std::string& packed);
+  SceneDocument build() const override;
 
  private:
   // clang-format off

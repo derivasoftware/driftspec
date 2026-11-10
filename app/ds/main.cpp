@@ -20,6 +20,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/diff/Diff.hpp"
 #include "ds/export/JsonExport.hpp"
+#include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -222,7 +223,13 @@ struct Render {
     ds::model::Model model;
     if (!loadWorkspace(input, &model)) return 2;
     if (format == "html" || format == "json") {
-      if (format == "json") return emit(output, ds::scene::Scene(model).render() + "\n");
+      // the scene is the document; the format named writes it (DS-126)
+      const auto formats = ds::format::sceneFormats();
+      ds::format::FormatOptions options;
+      if (format == "json") {
+        options.pretty = true;
+        return emit(output, formats.at("json")->write(ds::scene::Scene(model).build(), options) + "\n");
+      }
       std::vector<std::string> focus;
       if (!diagram.empty()) {
         const auto shown = ds::query::Query(model).ask("shows", diagram);
@@ -232,9 +239,12 @@ struct Render {
         }
         for (const auto& a : shown) focus.push_back(a.id);
       }
-      const std::string title = titleOf(input);
-      const std::string page = ds::scene::Scene(model).page(title, css.empty() ? "" : readFile(css), focus);
-      return emit(output, embed ? ds::scene::Scene::frame(page, title, height) : page);
+      options.title = titleOf(input);
+      options.css = css.empty() ? "" : readFile(css);
+      options.focus = focus;
+      options.embed = embed;
+      options.height = height;
+      return emit(output, formats.at("html")->write(ds::scene::Scene(model).build(), options));
     }
     if (diagram.empty()) {
       std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
