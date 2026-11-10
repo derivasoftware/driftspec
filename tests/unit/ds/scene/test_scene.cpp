@@ -251,21 +251,7 @@ class TestTour : public ::testing::Test {
       if (doc.behaviours[i].id == id) return static_cast<int>(i);
     return -1;
   }
-  std::vector<ds::scene::Step> steps(const std::string& id, int depth = 7) const {
-    return ds::scene::Scene::expand(doc, behaviour(id), depth);
-  }
 };
-
-class TestStep : public TestTour {};
-
-TEST_F(TestStep, AStepGoesOneLevelDeeperForEachSequenceExpanded) {
-  const auto run = steps("p@m::A::run");
-  ASSERT_GE(run.size(), 3u);
-  EXPECT_EQ(run[0].depth + 1, run[1].depth);
-  EXPECT_EQ(run[1].label, "step()");
-  EXPECT_FALSE(run[1].back);
-  EXPECT_EQ(steps("p@m::A::run", 1).size(), 1u);  // at depth 1 only the subject's own call
-}
 
 class TestBehaviour : public TestTour {};
 class TestCall : public TestTour {};
@@ -289,20 +275,10 @@ TEST_F(TestBehaviour, EachBehaviourIsWrittenOnceAndACallNamesTheOneItGoesOnInto)
   for (const auto& b : doc.behaviours) EXPECT_TRUE(seen.insert(b.id).second) << b.id;
 }
 
-TEST_F(TestTour, ACallExpandsIntoTheSequenceOfWhatItCallsAndItsAnswerComesBack) {
-  const auto run = steps("p@m::A::run");
-  ASSERT_EQ(run.size(), 4u);  // run -> go, go -> step twice, go's answer back to run
-  EXPECT_EQ(run[0].from, "p@m::A::run");
-  EXPECT_EQ(run[0].to, "p@m::B::go");
-  EXPECT_EQ(run[0].depth, 1);
-  EXPECT_EQ(run[1].from, "p@m::B::go");
-  EXPECT_EQ(run[1].depth, 2);
-  EXPECT_TRUE(run[3].back);
-  EXPECT_EQ(run[3].to, "p@m::A::run");
-  EXPECT_EQ(run[3].label, "goed");
+TEST_F(TestTour, AMethodWithABehaviourIsATourOffered) {
   bool offered = false;
   for (const auto& t : doc.tours) offered |= t.behaviour == behaviour("p@m::A::run") && t.group == "method";
-  EXPECT_TRUE(offered);
+  EXPECT_TRUE(offered);  // how it is replayed: tests/viewer/test_tours.mjs, on the viewer's own code (DS-130)
 }
 
 /// The requirements of a small model as the viewer lists them (REQ-00078-1): R-2 refines R-1,

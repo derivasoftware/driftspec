@@ -63,8 +63,6 @@ class SequenceFilter : public IFilter {
   std::vector<Behaviour> behaviours(const model::Model& model) const;
 
  private:
-  void walk(const model::Model& model, const model::Entity& sequence, const std::string& path, int depth, std::set<std::string>& out_seen,
-            std::set<std::string>& out_ids) const;
   std::vector<std::string> include_;
   int depth_ = 0;
   bool modules_ = false;

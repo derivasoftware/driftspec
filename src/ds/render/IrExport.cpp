@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "ds/query/Filter.hpp"
+#include "ds/query/Walk.hpp"
 
 namespace ds {
 namespace render {
@@ -330,7 +331,7 @@ std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::s
 namespace {
 
 /// The scenario of a behaviour drawn as written: every branch, with its frame.
-const char* const kWhole = "*";
+const char* const kWhole = query::kEveryBranch;
 
 struct SequenceBuilder {
   const model::Model& model;
@@ -355,17 +356,6 @@ struct SequenceBuilder {
     return key;
   }
 
-  std::vector<const model::Entity*> messagesOf(const std::string& sequenceId) const {
-    std::vector<const model::Entity*> out;
-    for (const auto& pair : model.entities()) {
-      if (pair.second.kind == model::Kind::Message && pair.second.scope == sequenceId) out.push_back(&pair.second);
-    }
-    std::sort(out.begin(), out.end(), [](const model::Entity* a, const model::Entity* b) {
-      return std::stoi(fieldOf(*a, "order")) < std::stoi(fieldOf(*b, "order"));
-    });
-    return out;
-  }
-
   std::string shortName(const std::string& id) {
     const auto cut = id.rfind("::");
     return cut == std::string::npos ? id : id.substr(cut + 2);
@@ -383,7 +373,8 @@ struct SequenceBuilder {
     // a path draws only the messages it takes, and only the frames it cannot tell; every branch otherwise
     std::set<std::string> kept;
     const bool whole = path == kWhole;
-    const std::vector<const model::Entity*> messages = whole ? messagesOf(seq.id) : model::pathOf(model, seq.id, path, &kept);
+    // what it takes and where each call goes on: the one walk of a behaviour (DS-130)
+    const std::vector<query::Taken> steps = query::stepsOf(model, seq.id, path, whole ? nullptr : &kept);
     auto drawn = [&](const std::string& frame) { return whole || kept.count(frame); };
     // a frame that holds no message (only prose, or a branch that ends with nothing) still has a row of its own
     std::vector<const model::Entity*> empty;
@@ -407,7 +398,8 @@ struct SequenceBuilder {
         ++order;
       }
     };
-    for (const model::Entity* m : messages) {
+    for (const query::Taken& taken : steps) {
+      const model::Entity* m = model.find(taken.message);
       flushEmpty(std::stoi(fieldOf(*m, "order")));
       if (fieldOf(*m, "return") == "true") {
         // a return inside a frame ends that branch early: it is drawn, so the frame is never empty
@@ -461,7 +453,7 @@ struct SequenceBuilder {
                              {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")" +
                                            (fieldOf(*m, "scenario").empty() ? "" : " / " + fieldOf(*m, "scenario"))}};
       nlohmann::json refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
-      const std::string expands = fieldOf(*m, "expands");
+      const std::string& expands = taken.next;
       std::string title;
       if (!typeId.empty()) title = typeId + "::" + fieldOf(*m, "op");
       const std::string change = fieldOf(*m, "change");  // a diff marks messages too
@@ -480,7 +472,7 @@ struct SequenceBuilder {
       edges.push_back(edge);
       if (!expands.empty() && depth > 0) {
         const int first = order;
-        emit(*model.find(expands), target, selfLine, fieldOf(*m, "expands-path"), depth - 1, stack);
+        emit(*model.find(expands), target, selfLine, taken.nextPath, depth - 1, stack);
         if (order > first) refs["span"] = std::to_string(first) + "-" + std::to_string(order - 1);  // the rows the expansion occupies
       }
       edges[at]["refs"] = refs;
@@ -534,7 +526,8 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const model::Entity* cls = runsInModule ? model_.find(subject->scope) : subject;
       if (!cls) continue;
       const std::string home = subject->kind == model::Kind::Function ? cls->id : cls->scope;  // a function runs in its module
-      for (const model::Entity* m : b.messagesOf(seq->id)) {
+      for (const query::Taken& taken : query::stepsOf(model_, seq->id, kWhole)) {
+        const model::Entity* m = model_.find(taken.message);
         const std::string typeId = fieldOf(*m, "type");
         const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
         const std::string typeHome = type && type->kind == model::Kind::Module ? type->id : type ? type->scope : "";
@@ -577,9 +570,8 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const std::string returns = method ? fieldOf(*subject, "returns") : "";
       if (method && !returns.empty() && returns != "none" && returns != "void") {
         std::string given = returns;  // what its `return` says, or the declared type
-        const std::vector<const model::Entity*> taken =
-            path == kWhole ? b.messagesOf(seq->id) : model::pathOf(model_, seq->id, path, nullptr);
-        for (const model::Entity* m : taken) {
+        for (const query::Taken& taken : query::stepsOf(model_, seq->id, path)) {
+          const model::Entity* m = model_.find(taken.message);
           if (fieldOf(*m, "return") == "true" && !fieldOf(*m, "result").empty()) given = fieldOf(*m, "result");
         }
         b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});

@@ -173,45 +173,15 @@ TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirement
     for (const auto& r : n.requirements) EXPECT_TRUE(doc.titles.count(r)) << r;
 }
 
-TEST_F(TestSceneOfTheDesign, EveryInterfaceCommandIsATourThatReachesTheModelAndComesBack) {
-  const auto doc = ds::scene::Scene(model).build();
-  int check = -1, syntax = -1;
-  for (const auto& t : doc.tours) {
-    const auto& b = doc.behaviours[static_cast<size_t>(t.behaviour)];
-    for (const auto& s : ds::scene::Scene::expand(doc, t.behaviour, 7)) {
-      EXPECT_EQ(byId.count(s.from), 1u) << b.id << " " << s.from;
-      EXPECT_EQ(byId.count(s.to), 1u) << b.id << " " << s.to;
-    }
-    if (b.id == "driftspec@ds@cli::check") {
-      check = t.behaviour;
-      EXPECT_EQ(t.group, "interface");
-    }
-    if (b.id == "driftspec@ds@cli::check / errors") syntax = t.behaviour;
-  }
-  ASSERT_GE(check, 0);
-  ASSERT_GE(syntax, 0);  // a named scenario is a tour of its own
-  const auto steps = ds::scene::Scene::expand(doc, check, 7);
-  bool reachesTheChecker = false;
-  int depth = 0;
-  for (const auto& s : steps) {
-    reachesTheChecker |= s.to.rfind("driftspec@ds@check::Checker::", 0) == 0;
-    depth = std::max(depth, s.depth);
-  }
-  EXPECT_TRUE(reachesTheChecker);
-  EXPECT_GE(depth, 4);
-  EXPECT_TRUE(steps.back().back);  // the command answers
-}
-
 TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce) {
   const auto doc = ds::scene::Scene(model).build();
   std::set<std::string> seen;
-  size_t calls = 0, steps = 0;
+  size_t calls = 0;
   for (const auto& b : doc.behaviours) {
     EXPECT_TRUE(seen.insert(b.id).second) << b.id;
     calls += b.calls.size();
   }
-  for (const auto& t : doc.tours) steps += ds::scene::Scene::expand(doc, t.behaviour, 7).size();
-  EXPECT_LT(calls * 5, steps);                                             // the tours replay many more steps than the calls written
+  EXPECT_GT(calls, 0u);  // how many more steps the tours replay: tests/viewer/test_tours.mjs (DS-130)
   EXPECT_LT(ds::scene::Scene(model).page("design").size(), 250u * 1024u);  // the whole viewer of ds's design
 }
 
