@@ -1,7 +1,8 @@
-"""pyds.live, the live session (REQ-00089-1, REQ-00090-1, REQ-00091-1): a workspace followed as it is written, and
-what the one who writes and the one who reads point at."""
+"""pyds.live, the live session (REQ-00089-1, REQ-00090-1, REQ-00091-2, REQ-00102-1..REQ-00105-1): a workspace
+followed as it is written, and what the one who writes and the one who reads point at."""
 
 import os
+import subprocess
 import sys
 
 import pytest
@@ -71,7 +72,8 @@ class TestLiveSession:
         again = pyds.live.serve(ws, 0, block=False)
         try:
             state = get(again, "/state")
-            assert state["notes"] == [{"id": "sistema@core::Broker", "text": "where the data comes in", "tone": "info"}]
+            (note,) = state["notes"]
+            assert (note["id"], note["text"], note["tone"], note["seen"]) == ("sistema@core::Broker", "where the data comes in", "info", False)
             assert state["highlights"] == [{"id": "sistema@core::Broker::publish", "tone": "ok"}]
             assert sorted(pyds.read(ws)) == [os.path.join(ws, "hld.ds")]  # kept beside the design, not in it
         finally:
@@ -97,10 +99,11 @@ class TestLiveSession:
         _, live = session
         contract = get(live, "/contract")
         state = get(live, "/state")
-        assert contract["version"] == state["contract"] == 2
+        assert contract["version"] == state["contract"] == 3
         assert list(state) == contract["state"]  # the state is exactly what the contract says (DS-123)
         assert ", ".join(contract["state"]) in contract["routes"]["GET /state"]
-        for route in ("GET /state", "GET /events", "POST /focus", "POST /note", "POST /highlight", "POST /clear", "POST /selection"):
+        for route in ("GET /state", "GET /events", "POST /focus", "POST /note", "POST /highlight", "POST /clear", "POST /selection",
+                      "POST /seen", "POST /comment", "POST /unread", "POST /isolate", "POST /baseline"):
             assert route in contract["routes"]
 
     def test_an_agent_calls_the_contract_as_mcp_tools(self, session):
@@ -109,3 +112,105 @@ class TestLiveSession:
         assert replies[1]["result"]["content"][0]["text"] == '{\n "notes": 1\n}'
         assert '"version": 1' in replies[2]["result"]["content"][0]["text"]
         assert replies[3]["error"]["message"] == "no tool live_nothing"
+
+    # ---- what the reader does with the notes (REQ-00102-1, DS-102)
+    def test_the_reader_marks_a_note_seen_and_a_rewritten_note_comes_back_unseen(self, session):
+        ws, live = session
+        post(live, "/note", {"id": "sistema@core::Broker", "text": "first"})
+        post(live, "/note", {"id": "sistema@core", "text": "second"})
+        assert post(live, "/seen", {"ids": ["sistema@core::Broker"], "seen": True})["seen"] == 1
+        seen = {n["id"]: n["seen"] for n in get(live, "/state")["notes"]}
+        assert seen == {"sistema@core::Broker": True, "sistema@core": False}
+        post(live, "/note", {"id": "sistema@core::Broker", "text": "first, said again"})  # the agent writes it again
+        assert {n["id"]: n["seen"] for n in get(live, "/state")["notes"]}["sistema@core::Broker"] is False
+        post(live, "/seen", {"ids": ["sistema@core"], "seen": True})
+        live.stop()
+        again = pyds.live.serve(ws, 0, block=False)  # what was seen is kept with the notes
+        try:
+            assert {n["id"]: n["seen"] for n in get(again, "/state")["notes"]} == {"sistema@core::Broker": False, "sistema@core": True}
+        finally:
+            again.stop()
+
+    def test_the_page_folds_notes_marks_them_seen_and_keeps_them_apart(self, session):
+        _, live = session
+        import urllib.request
+        with urllib.request.urlopen(live.url, timeout=5) as r:
+            page = r.read().decode()
+        for control in ('id="nfold"', 'id="nopen"', 'id="nseen"', 'id="nhide"', "e.data.ds==='note'", "fetch('/seen'"):
+            assert control in page, control
+
+    # ---- what the reader writes for the agent (REQ-00103-1, DS-147)
+    def test_a_comment_reaches_the_agent_once_and_survives_a_restart(self, session):
+        ws, live = session
+        post(live, "/comment", {"id": "sistema@core::Broker", "text": "why does it publish ints?"})
+        post(live, "/comment", {"id": "sistema@core", "text": "split this module"})
+        assert [c["text"] for c in post(live, "/unread", {"mark": False})["comments"]] == ["why does it publish ints?", "split this module"]
+        (first, second) = post(live, "/unread", {"mark": True})["comments"]
+        assert (first["n"], first["id"], second["n"], second["id"]) == (1, "sistema@core::Broker", 2, "sistema@core")
+        assert post(live, "/unread", {})["comments"] == []  # read once
+        post(live, "/comment", {"id": "sistema@core", "text": "and rename it"})
+        live.stop()
+        again = pyds.live.serve(ws, 0, block=False)
+        try:
+            state = get(again, "/state")
+            assert [(c["n"], c["read"]) for c in state["comments"]] == [(1, True), (2, True), (3, False)]
+            assert [c["text"] for c in post(again, "/unread", {})["comments"]] == ["and rename it"]
+            assert sorted(pyds.read(ws)) == [os.path.join(ws, "hld.ds")]  # beside the design, never in it
+        finally:
+            again.stop()
+
+    def test_the_page_lets_the_reader_comment_on_what_is_selected(self, session):
+        _, live = session
+        import urllib.request
+        with urllib.request.urlopen(live.url, timeout=5) as r:
+            page = r.read().decode()
+        assert 'id="ctext"' in page and "fetch('/comment'" in page and "body:JSON.stringify({id:SELID,text:t})" in page
+
+    # ---- what the reader isolates (REQ-00104-1, DS-139)
+    def test_the_isolation_is_kept_and_told_to_every_page(self, session):
+        _, live = session
+        reader = Reader(live)
+        reader.next("model")
+        assert post(live, "/isolate", {"ids": ["sistema@core"]})["isolated"] == ["sistema@core"]
+        assert reader.next("isolate")["ids"] == ["sistema@core"]
+        assert get(live, "/state")["isolated"] == ["sistema@core"]
+        post(live, "/isolate", {"ids": [], "tell": False})  # a page that isolated it itself only tells the session
+        assert get(live, "/state")["isolated"] == []
+
+    # ---- what the design changes against a baseline (REQ-00105-1, DS-148)
+    def test_the_design_is_compared_with_a_baseline_directory(self, session, tmp_path):
+        ws, live = session
+        base = tmp_path / "base"
+        base.mkdir()
+        (base / "hld.ds").write_text(SYSTEM.replace("    class Broker {", "    class Old { }\n    class Broker {").replace("(n: int)", "(n: string)"))
+        assert post(live, "/baseline", {"baseline": str(base)})["loaded"] is True
+        with open(os.path.join(ws, "hld.ds"), "a") as fh:
+            fh.write("package extra { }\n")
+        state = until(lambda: (s := get(live, "/state"))["diff"]["added"] and s)
+        assert state["baseline"] == str(base)
+        assert state["diff"]["added"] == ["extra"]
+        assert "sistema@core::Broker::publish" in state["diff"]["changed"] and "sistema@core::Broker" in state["diff"]["changed"]
+        assert state["diff"]["removed"] == ["sistema@core::Old"]
+        post(live, "/baseline", {"baseline": ""})  # comparing stops
+        assert until(lambda: (s := get(live, "/state"))["diff"] == {"added": [], "changed": [], "removed": []} and s)
+
+    def test_the_design_is_compared_with_a_git_ref(self, session):
+        ws, live = session
+        root = os.path.dirname(ws)
+        git = lambda *a: subprocess.run(["git", "-C", root, *a], check=True, capture_output=True)  # noqa: E731
+        git("init", "-q")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "add", "-A")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "base")
+        with open(os.path.join(ws, "more.ds"), "w") as fh:
+            fh.write("package more { }\n")
+        assert post(live, "/baseline", {"baseline": "HEAD"})["loaded"] is True
+        state = until(lambda: (s := get(live, "/state"))["diff"]["added"] and s)
+        assert state["diff"] == {"added": ["more"], "changed": [], "removed": []}
+
+    def test_an_agent_reads_comments_isolates_and_compares_as_mcp_tools(self, session, tmp_path):
+        ws, live = session
+        post(live, "/comment", {"id": "sistema@core", "text": "look here"})
+        replies = agent(live.port, ("live_comments", {}), ("live_isolate", {"ids": ["sistema@core"]}), ("live_baseline", {"baseline": ws}))
+        assert '"look here"' in replies[1]["result"]["content"][0]["text"]
+        assert get(live, "/state")["isolated"] == ["sistema@core"]
+        assert '"loaded": true' in replies[3]["result"]["content"][0]["text"]

@@ -96,22 +96,29 @@ package driftspec@ds {
         tests/integration/ds/scene/test_themes.cpp::TestThemes.TheNoteToThemeAuthorsNamesEveryVariable
     }
 
-    requirement REQ-00092-1 {
+    requirement REQ-00092-2 {
       status: approved
       @refines SREQ-00017-1
-      title: The viewer shall let a page that embeds it read and set its camera, select and frame any identity, mark what changed, highlight and annotate, and tell the page what the reader selects
+      title: The viewer shall let a page that embeds it read and set its camera, select and frame any identity, mark what changed, highlight, annotate, isolate and mark a diff, and tell the page what the reader does
       text:
         window.DS_VIEW: cam and setCam, selected and select, show (a node is selected, a requirement
         opens in its list, a sequence opens as its tour), frame and frameAny, mark (what changed,
         fading), highlight (identities of any perspective, each with a tone), notes (bubbles that
-        follow the camera). The viewer posts {ds: 'ready'} when it can be steered and {ds: 'select',
-        id} whenever the reader selects, so a live session keeps the reader's place and hears them.
+        follow the camera and keep out of each other's way; a folded one is a dot on its box, a seen
+        one is dimmed), isolate (only the given boxes are drawn, with the relations between them;
+        each box they use from outside is a stub on their right edge, and touching it adds that box)
+        and diff (the outermost added and changed boxes ringed and tagged, a member with a glyph).
+        The viewer posts {ds: 'ready'} when it can be steered, {ds: 'select', id} whenever the reader
+        selects, {ds: 'note', ids, act} when a note is folded, opened or marked seen, and {ds:
+        'isolate', ids} when the reader isolates (the isolate button or i, Esc with nothing selected
+        to undo), so a live session keeps the reader's place and hears them.
+      rationale: Revision 2: notes that fold and are seen, isolation and the diff (DS-102, DS-139, DS-148).
       tags: render, scene, viewer, live
     }
 
-    verification VER-00101-1 {
+    verification VER-00101-2 {
       status: approved
-      @requirement REQ-00092-1
+      @requirement REQ-00092-2
       title: Integration tests confirm the viewer of ds's design carries the hook a page steers it with, and says when it is ready and what the reader selects
       method: test
       tests:
@@ -597,7 +604,7 @@ package driftspec@ds {
         @requirement REQ-00070-1
         @requirement REQ-00071-2
         @requirement REQ-00077-1
-        @requirement REQ-00092-1
+        @requirement REQ-00092-2
       }
       - relate(out_document: SceneDocument) -> void {
         @requirement REQ-00072-2

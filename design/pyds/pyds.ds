@@ -173,14 +173,16 @@ package driftspec@pyds {
     }
   }
 
-  requirement REQ-00091-1 {
+  requirement REQ-00091-2 {
     status: approved
     @refines SREQ-00017-1
     title: The live session shall offer its contract to an agent as MCP tools over stdio
     text:
       python -m pyds.live mcp serves live_open (starting the session if none serves the workspace),
-      live_focus, live_note, live_highlight, live_clear, live_selection and live_state; each answers
+      live_focus, live_note, live_highlight, live_clear, live_selection, live_state, live_comments
+      (what the reader wrote since the last call), live_isolate and live_baseline; each answers
       through the session's routes, so the agent and a page see the same state.
+    rationale: Revision 2 adds the tools of the reader's comments, isolation and the baseline (DS-139, DS-147, DS-148).
     tags: live, mcp
     verification VER-00100-1 {
       status: approved
@@ -188,6 +190,91 @@ package driftspec@pyds {
       method: test
       tests:
         tests/integration/python/test_live.py::TestLiveSession::test_an_agent_calls_the_contract_as_mcp_tools
+        tests/integration/python/test_live.py::TestLiveSession::test_an_agent_reads_comments_isolates_and_compares_as_mcp_tools
+    }
+  }
+
+  requirement REQ-00102-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall keep whether the reader has seen each note, and bring a note the agent writes again back unseen
+    text:
+      A note carries seen and when it was written. The reader marks notes seen or not (POST /seen);
+      what is seen is kept with the notes beside the workspace, so the agent knows what was read. A
+      note written again on the same identity comes back unseen. The page folds a note to a dot on
+      its box and opens it again, folds or opens them all, marks them all seen and hides the seen;
+      a seen note is dimmed and folded; bubbles keep out of each other's way.
+    rationale: Owner, 2026-11-09 and 2026-11-10 (DS-102): the agent's notes are too much to read at once.
+    tags: live, viewer
+    verification VER-00111-1 {
+      status: approved
+      title: Integration tests confirm a note is marked seen, comes back unseen when written again, keeps what was seen across a restart, and the page folds and marks notes
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_the_reader_marks_a_note_seen_and_a_rewritten_note_comes_back_unseen
+        tests/integration/python/test_live.py::TestLiveSession::test_the_page_folds_notes_marks_them_seen_and_keeps_them_apart
+    }
+  }
+
+  requirement REQ-00103-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall carry what the reader writes on an identity to the agent, each comment read once
+    text:
+      The page offers a comment box on what is selected, under the thread of the agent's notes and
+      the reader's comments on it, in the order they were written. A comment (POST /comment) is kept
+      numbered beside the workspace; the agent reads the unread ones (POST /unread, live_comments),
+      which marks them read, and answers with a note on the same identity.
+    rationale: Owner, 2026-11-10 (DS-147): write back to the agent from the viewer.
+    tags: live, viewer, mcp
+    verification VER-00112-1 {
+      status: approved
+      title: Integration tests confirm a comment reaches the agent once, is kept across a restart outside the design, and the page comments on what is selected
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_a_comment_reaches_the_agent_once_and_survives_a_restart
+        tests/integration/python/test_live.py::TestLiveSession::test_the_page_lets_the_reader_comment_on_what_is_selected
+    }
+  }
+
+  requirement REQ-00104-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall keep what the reader isolates across reloads and let the agent isolate it
+    text:
+      What is isolated (POST /isolate, live_isolate) is in the state and told to every page; a page
+      that isolated it itself only tells the session. A new version of the model keeps it isolated.
+      How the viewer isolates is REQ-00092-2.
+    rationale: Owner, 2026-11-09 and 2026-11-10 (DS-139): see only the modules being talked about.
+    tags: live, viewer, mcp
+    verification VER-00113-1 {
+      status: approved
+      title: Integration tests confirm the isolation is kept in the state and told to every page
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_the_isolation_is_kept_and_told_to_every_page
+    }
+  }
+
+  requirement REQ-00105-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall compare the design with a baseline and say what it adds, changes and removes
+    text:
+      A baseline is a directory of .ds files or a git ref of the workspace's repository (serve
+      --baseline, POST /baseline, live_baseline); an empty one stops comparing. On every version
+      the state carries the identities added, changed (a member that changed changes its class)
+      and removed against it, compared as the session compares one version with the next. The page
+      counts them, lists them and asks the viewer to mark them; the marks can be hidden.
+    rationale: Owner, 2026-11-10 (DS-148): compare a proposal with the design on one map.
+    tags: live, viewer, diff
+    verification VER-00114-1 {
+      status: approved
+      title: Integration tests confirm the design is compared with a baseline directory and a git ref, and comparing stops
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSession::test_the_design_is_compared_with_a_baseline_directory
+        tests/integration/python/test_live.py::TestLiveSession::test_the_design_is_compared_with_a_git_ref
     }
   }
 
@@ -225,6 +312,21 @@ package driftspec@pyds {
     operation highlight(ids: list<string>, tone: string, add: bool) -> object
     operation clear(what: string) -> object
     operation selection(id: string, label: string) -> object
+    operation seen(ids: list<string>, seen: bool) -> object {
+      @requirement REQ-00102-1
+    }
+    operation comment(id: string, text: string) -> object {
+      @requirement REQ-00103-1
+    }
+    operation unread(mark: bool) -> object {
+      @requirement REQ-00103-1
+    }
+    operation isolate(ids: list<string>, tell: bool) -> object {
+      @requirement REQ-00104-1
+    }
+    operation baseline(baseline: string) -> object {
+      @requirement REQ-00105-1
+    }
   }
 
   sequence session::state {
@@ -270,10 +372,40 @@ package driftspec@pyds {
     return none
   }
 
+  sequence session::seen {
+    local s: live::Live
+    -> s.seen(ids, seen) -> count
+    return count
+  }
+
+  sequence session::comment {
+    local s: live::Live
+    -> s.comment(id, text) -> count
+    return count
+  }
+
+  sequence session::unread {
+    local s: live::Live
+    -> s.unread(mark) -> comments
+    return comments
+  }
+
+  sequence session::isolate {
+    local s: live::Live
+    -> s.isolate(ids, tell) -> isolated
+    return isolated
+  }
+
+  sequence session::baseline {
+    local s: live::Live
+    -> s.set_baseline(baseline) -> answer
+    return answer
+  }
+
   interface agent {                            // the same contract, for an agent
     kind: mcp
     transport: stdio, json-rpc
-    @requirement REQ-00091-1
+    @requirement REQ-00091-2
 
     operation live_open(workspace: string) -> string
     operation live_focus(id: string) -> object
@@ -282,6 +414,15 @@ package driftspec@pyds {
     operation live_clear(what: string) -> object
     operation live_selection() -> object
     operation live_state() -> object
+    operation live_comments(peek: bool) -> object {
+      @requirement REQ-00103-1
+    }
+    operation live_isolate(ids: list<string>) -> object {
+      @requirement REQ-00104-1
+    }
+    operation live_baseline(baseline: string) -> object {
+      @requirement REQ-00105-1
+    }
   }
 
   sequence agent::live_open {
@@ -315,6 +456,21 @@ package driftspec@pyds {
   }
 
   sequence agent::live_state {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_comments {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_isolate {
+    -> live::tool(port, name, args, opened) -> answer
+    return answer
+  }
+
+  sequence agent::live_baseline {
     -> live::tool(port, name, args, opened) -> answer
     return answer
   }
@@ -575,7 +731,11 @@ package driftspec@pyds {
   module live {
     @requirement REQ-00089-1
     @requirement REQ-00090-1
-    @requirement REQ-00091-1
+    @requirement REQ-00091-2
+    @requirement REQ-00102-1
+    @requirement REQ-00103-1
+    @requirement REQ-00104-1
+    @requirement REQ-00105-1
 
     class Live {                               // a session over one workspace: its model version by version, and what both sides point at
       @requirement REQ-00089-1
@@ -588,6 +748,10 @@ package driftspec@pyds {
       + highlights: list<object>
       + rules: list<object>
       + selection: map<string, string>
+      + comments: list<object>
+      + isolated: list<string>
+      + baseline: string
+      + diff: map<string, list<string>>
       + reload() -> bool
       + rules_of(model: pyds::Model, findings: list<pyds::Finding>) -> list<map<string, object>> {
         @requirement REQ-00100-1
@@ -602,9 +766,30 @@ package driftspec@pyds {
       + select(identity: string, label: string) -> none
       + load() -> none
       + save() -> none
+      + seen(ids: list<string>, seen: bool) -> int {
+        @requirement REQ-00102-1
+      }
+      + comment(identity: string, text: string) -> int {
+        @requirement REQ-00103-1
+      }
+      + unread(mark: bool) -> list<map<string, object>> {
+        @requirement REQ-00103-1
+      }
+      + isolate(ids: list<string>, tell: bool) -> list<string> {
+        @requirement REQ-00104-1
+      }
+      + set_baseline(baseline: string) -> map<string, object> {
+        @requirement REQ-00105-1
+      }
+      + base_files() -> map<string, string> {
+        @requirement REQ-00105-1
+      }
+      + compare(model: pyds::Model, sigs: map<string, string>) -> map<string, list<string>> {
+        @requirement REQ-00105-1
+      }
     }
 
-    function serve(workspace: string, port: int, open_browser: bool, block: bool) -> Live
+    function serve(workspace: string, port: int, open_browser: bool, block: bool, baseline: string) -> Live
     function signatures(model: pyds::Model) -> map<string, string>
     function handler_for(live: Live) -> object
     function call(port: int, path: string, data: map<string, object>) -> map<string, object>

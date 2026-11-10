@@ -117,11 +117,15 @@ TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
   const std::string viewer = ds::scene::Scene::unpack(page.substr(at, page.find('\'', at) - at));
   EXPECT_NE(viewer.find("window.DS_VIEW="), std::string::npos);
-  for (const char* member : {"setCam(", "select(id)", "show(id)", "frameAny(", "mark(ids)", "highlight(list)", "notes(list)"})
+  for (const char* member :
+       {"setCam(", "select(id)", "show(id)", "frameAny(", "mark(ids)", "highlight(list)", "notes(list)", "isolate(ids)", "diff(d)"})
     EXPECT_NE(viewer.find(member), std::string::npos) << member;
-  EXPECT_NE(viewer.find("{ds:'ready'}"), std::string::npos);                          // when a page can steer it
-  EXPECT_NE(viewer.find("{ds:'select',id:"), std::string::npos);                      // what the reader selects
-  EXPECT_NE(viewer.find("parent.postMessage({ds:'fullscreen'}"), std::string::npos);  // the page goes fullscreen whole (DS-141)
+  EXPECT_NE(viewer.find("{ds:'ready'}"), std::string::npos);                                    // when a page can steer it
+  EXPECT_NE(viewer.find("{ds:'select',id:"), std::string::npos);                                // what the reader selects
+  EXPECT_NE(viewer.find("parent.postMessage({ds:'fullscreen'}"), std::string::npos);            // the page goes fullscreen whole (DS-141)
+  EXPECT_NE(viewer.find("parent.postMessage({ds:'note',ids,act:h.act}"), std::string::npos);    // a note folded, opened or seen (DS-102)
+  EXPECT_NE(viewer.find("parent.postMessage({ds:'isolate',ids:[...ISO]}"), std::string::npos);  // what the reader isolates (DS-139)
+  EXPECT_NE(page.find("id=\"iso\""), std::string::npos);                                        // the isolate button, in the toolbar
 }
 
 TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
