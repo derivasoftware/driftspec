@@ -77,16 +77,16 @@ package driftspec@ds {
     }
 
     // THE EXTENSION POINT: IFormat<D> in the code, D the document it writes; the grammar cannot yet
-    // write a base's template arguments (DS-150), so the drawing reads IFormat and Document
+    // write a base's template arguments (DS-150), so the drawing reads IFormat, and D stands below
     class IFormat {
       @requirement REQ-00106-1
       + ~IFormat()
       + abstract name() -> std::string
-      + abstract write(document: Document, options: FormatOptions) -> std::string
+      + abstract write(document: D, options: FormatOptions) -> std::string
     }
 
-    // stands for the document a format writes: the scene today
-    dataclass Document {
+    // D, the template parameter: stands for the document a format writes (the scene today)
+    dataclass D {
       @requirement REQ-00106-1
       + kind: std::string
     }
