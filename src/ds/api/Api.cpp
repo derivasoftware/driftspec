@@ -7,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/export/JsonExport.hpp"
+#include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -77,9 +78,11 @@ std::string Api::render(const Files& files, const std::string& diagram, const st
   const model::Model model = loadTexts(files);
   const std::string id = model::diagramId(diagram);
   const std::string ir = render::IrExport(model).render(id, false);
-  if (ir.empty() || format == "ir") return ir;
-  const render::IrDocument doc = render::IrDocument::parse(ir);
-  return format == "svg" ? render::Svg().render(doc, width) : render::Text().render(doc, false, width);
+  if (ir.empty()) return ir;
+  // the diagram's IR, written by the format named (DS-126): svg, the IR itself, or text for anything else
+  format::FormatOptions options;
+  options.width = width;
+  return format::diagramFormats().at(format == "svg" || format == "ir" ? format : "text")->write({ir}, options);
 }
 
 std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) {

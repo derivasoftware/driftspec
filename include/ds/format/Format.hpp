@@ -17,6 +17,8 @@ struct FormatOptions {
   std::vector<std::string> focus;  ///< the identities a page opens framed on
   bool embed = false;              ///< the page as an iframe that carries it whole
   int height = 640;                ///< the height of that frame, in pixels
+  int width = 0;                   ///< wrap a drawing: columns for text and cells, pixels for svg; 0 lets it be
+  bool color = false;              ///< text for a terminal that shows colour
 };
 
 /// A format writes one kind of document (DS-126): every output of ds is a document written by a

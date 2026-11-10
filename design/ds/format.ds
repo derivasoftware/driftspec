@@ -1,8 +1,8 @@
 // LLD of the format namespace (ds::format, DS-126): every output of ds is a document written by
 // a format. A document is an information contract; a format is one way to write it, found by name,
 // and it never reads the model. To add one: a class implementing IFormat<its document>, and one
-// line in the map of that document. Today the scene's formats; a diagram's, a query's answers and a
-// check's findings join as their own commands move here.
+// line in the map of that document. The scene's formats and a diagram's; a query's answers and a
+// check's findings join next.
 
 package driftspec@ds {
   module format {
@@ -29,6 +29,15 @@ package driftspec@ds {
           tests/unit/ds/format/test_scene_formats.cpp::TestSceneFormats.EachFormatOfTheSceneIsFoundByItsName
           tests/unit/ds/format/test_scene_formats.cpp::TestSceneFormats.AFormatWritesTheDocumentItIsGivenWithoutAModel
           tests/unit/ds/format/test_scene_formats.cpp::TestSceneFormats.ThePageIsAnIframeCarryingItWholeWhenAskedToEmbed
+      }
+      verification VER-00116-1 {
+        status: approved
+        title: Unit tests confirm a diagram's five formats are found by name, the IR is written as it came unless asked to indent, and each drawing format draws the same diagram
+        method: test
+        tests:
+          tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.EachFormatOfADiagramIsFoundByItsName
+          tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.TheIrIsWrittenAsItCameUnlessAskedToIndent
+          tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.EachDrawingFormatDrawsTheSameDiagram
       }
     }
 
@@ -74,6 +83,8 @@ package driftspec@ds {
       + focus: std::vector<std::string>
       + embed: bool
       + height: int
+      + width: int
+      + color: bool
     }
 
     // THE EXTENSION POINT: IFormat<D> in the code, D the document it writes; the grammar cannot yet
@@ -126,6 +137,47 @@ package driftspec@ds {
       @requirement REQ-00092-2
       + name() -> std::string
       + write(document: scene::SceneDocument, options: FormatOptions) -> std::string
+    }
+
+    // ---- a diagram's formats: its IR, as its contract writes it (render::IrText) -------------
+    // the one place that names them
+    function diagramFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+      @requirement REQ-00106-1
+    }
+
+    // ds render -f ir: the IR as it came, indented when asked
+    class DiagramIr : IFormat {
+      @requirement REQ-00006-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
+    class DiagramLayout : IFormat {
+      @requirement REQ-00007-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f svg
+    class DiagramSvg : IFormat {
+      @requirement REQ-00007-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f text: boxes in characters for a terminal
+    class DiagramText : IFormat {
+      @requirement REQ-00007-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f cells: the terminal's coloured cells
+    class DiagramCells : IFormat {
+      @requirement REQ-00007-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     sequence SceneHtml::write {

@@ -126,6 +126,13 @@ package driftspec@ds {
       @requirement REQ-00006-1
     }
 
+    // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
+    // another tool may hand ds; the document a diagram's formats write (DS-126)
+    dataclass IrText {
+      @requirement REQ-00106-1
+      + json: std::string
+    }
+
     dataclass IrDocument {
       @requirement REQ-00006-1
       + title: std::string

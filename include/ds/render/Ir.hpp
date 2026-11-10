@@ -54,6 +54,12 @@ struct IrDocument {
   IrDocument bundled() const;
 };
 
+/// A render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads, and
+/// another tool may hand ds to draw. The document the formats of a diagram write (DS-126).
+struct IrText {
+  std::string json;
+};
+
 /// The letter a node's badge carries, the same in every drawing (DS-118): by its classifier, A for an
 /// abstract class with none, the classifier's first letter for one the table does not name.
 std::string badgeOf(const std::string& classifier, bool abstract);
