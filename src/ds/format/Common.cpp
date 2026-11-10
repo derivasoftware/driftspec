@@ -9,6 +9,7 @@
 
 #include "ds/format/Format.hpp"
 #include "ds/model/Identity.hpp"
+#include "ds/scene/Map.hpp"
 
 namespace ds {
 namespace format {
@@ -77,13 +78,10 @@ std::string unpack(const std::string& packed) {
 // The document is compact, and says how to read itself: every record is an array whose
 // columns "fields" names, and a node, a behaviour or a link is named by its index.
 std::string encode(const scene::SceneDocument& doc, bool pretty) {
-  using namespace scene;  // the document's records, and the node of an identity
+  using namespace scene;  // the document's records, and the map that says where an identity lands
   std::map<std::string, int> at;
-  std::set<std::string> ids;
-  for (size_t i = 0; i < doc.nodes.size(); ++i) {
-    at[doc.nodes[i].id] = static_cast<int>(i);
-    ids.insert(doc.nodes[i].id);
-  }
+  for (size_t i = 0; i < doc.nodes.size(); ++i) at[doc.nodes[i].id] = static_cast<int>(i);
+  const Map landing(doc.nodes);  // where a link's sequence lands: the behaviour it is
   const auto index = [&at](const std::string& id) { return at.count(id) ? at.at(id) : -1; };
   const auto ints = [](const Box& b) {
     return nlohmann::json::array({std::lround(b.x), std::lround(b.y), std::lround(b.w), std::lround(b.h)});
@@ -115,7 +113,7 @@ std::string encode(const scene::SceneDocument& doc, bool pretty) {
     nlohmann::json written = nlohmann::json::array();
     for (const auto& s : l.sequences) {  // a sequence id, X::sequence or X::sequence/scenario, as the behaviour it is
       const std::string scenario = model::scenarioOf(s);
-      const auto b = behaviourOf.find(nodeFor(ids, model::subjectOf(s)) + (scenario.empty() ? "" : " / " + scenario));
+      const auto b = behaviourOf.find(landing.land(model::subjectOf(s)) + (scenario.empty() ? "" : " / " + scenario));
       if (b != behaviourOf.end()) written.push_back(b->second);
     }
     out["links"].push_back({index(l.from), index(l.to), l.kind, l.count, l.multiplicity, written});

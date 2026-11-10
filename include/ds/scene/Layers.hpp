@@ -1,0 +1,74 @@
+#ifndef DRIFTSPEC_SCENE_LAYERS_HPP
+#define DRIFTSPEC_SCENE_LAYERS_HPP
+
+#include <memory>
+#include <vector>
+
+#include "ds/model/Model.hpp"
+#include "ds/scene/Document.hpp"
+#include "ds/scene/Map.hpp"
+
+namespace ds {
+namespace scene {
+
+/// What one perspective draws over the map (DS-126): a layer is built with the model and the map,
+/// keeps them, and adds its part of the document; it knows no other layer.
+class ILayer {
+ public:
+  virtual ~ILayer() = default;
+  virtual void decorate(SceneDocument& out_document) = 0;
+};
+
+/// Structure: the relations between boxes, lifted to what the map draws, what each diagram shows, and
+/// the titles of what the nodes answer to (REQ-00072-2).
+class StructureLayer : public ILayer {
+ public:
+  StructureLayer(const model::Model& model, const Map& map);
+  void decorate(SceneDocument& out_document) override;
+
+ private:
+  const model::Model& model_;
+  const Map& map_;
+};
+
+/// Behaviour: every public behaviour, each written once, and the tours that replay them (REQ-00073-2).
+class BehaviourLayer : public ILayer {
+ public:
+  BehaviourLayer(const model::Model& model, const Map& map);
+  void decorate(SceneDocument& out_document) override;
+
+ private:
+  const model::Model& model_;
+  const Map& map_;
+};
+
+/// Trace: requirements, constraints and use cases, what answers to them and what proves them
+/// (REQ-00078-1, REQ-00083-1).
+class TraceLayer : public ILayer {
+ public:
+  TraceLayer(const model::Model& model, const Map& map);
+  void decorate(SceneDocument& out_document) override;
+
+ private:
+  const model::Model& model_;
+  const Map& map_;
+};
+
+/// Rules: each rule and definition where it is written, and what breaks it, placed on the map (REQ-00099-1).
+class RulesLayer : public ILayer {
+ public:
+  RulesLayer(const model::Model& model, const Map& map);
+  void decorate(SceneDocument& out_document) override;
+
+ private:
+  const model::Model& model_;
+  const Map& map_;
+};
+
+/// The one place that names the layers, in the order they decorate.
+std::vector<std::unique_ptr<ILayer>> layers(const model::Model& model, const Map& map);
+
+}  // namespace scene
+}  // namespace ds
+
+#endif  // DRIFTSPEC_SCENE_LAYERS_HPP
