@@ -4,6 +4,7 @@
 
 #include "ds/model/Identity.hpp"
 #include "ds/query/Filter.hpp"
+#include "ds/query/Walk.hpp"
 
 namespace ds {
 namespace query {
@@ -49,20 +50,8 @@ bool isArtefact(const model::Entity& e) {
   return e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint || e.kind == model::Kind::Verification;
 }
 
-/// The messages of a behaviour, in the order they are written.
-std::vector<const model::Entity*> messagesOf(const model::Model& model, const std::string& sequence) {
-  std::vector<const model::Entity*> out;
-  for (const auto& pair : model.entities()) {
-    if (pair.second.kind == model::Kind::Message && pair.second.scope == sequence) out.push_back(&pair.second);
-  }
-  std::sort(out.begin(), out.end(), [](const model::Entity* a, const model::Entity* b) {
-    return std::stoi(fieldOf(*a, "order")) < std::stoi(fieldOf(*b, "order"));
-  });
-  return out;
-}
-
 /// The scenario of a behaviour taken as written: every branch.
-const char* const kWhole = "*";
+const char* const kWhole = kEveryBranch;
 
 }  // namespace
 
@@ -208,22 +197,6 @@ std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) con
   return out;
 }
 
-void SequenceFilter::walk(const model::Model& model, const model::Entity& sequence, const std::string& path, int depth,
-                          std::set<std::string>& out_seen, std::set<std::string>& out_ids) const {
-  if (!out_seen.insert(model::withScenario(sequence.id, path)).second) return;  // recursion: taken once
-  const std::vector<const model::Entity*> messages =
-      path == kWhole ? messagesOf(model, sequence.id) : model::pathOf(model, sequence.id, path, nullptr);
-  for (const model::Entity* m : messages) {
-    if (fieldOf(*m, "return") == "true") continue;
-    const std::string typeId = fieldOf(*m, "type");
-    if (!typeId.empty() && model.find(typeId)) out_ids.insert(typeId);  // what it calls takes part
-    const std::string expands = fieldOf(*m, "expands");
-    if (!expands.empty() && depth > 0) {
-      if (const model::Entity* child = model.find(expands)) walk(model, *child, fieldOf(*m, "expands-path"), depth - 1, out_seen, out_ids);
-    }
-  }
-}
-
 std::set<std::string> SequenceFilter::select(const model::Model& model) const {
   std::set<std::string> out;
   for (const Behaviour& b : behaviours(model)) {
@@ -236,15 +209,19 @@ std::set<std::string> SequenceFilter::select(const model::Model& model) const {
       // lifted to modules: the module each class lives in, and the one a function runs in
       if (!cls) continue;
       out.insert(function ? cls->id : cls->scope);
-      for (const model::Entity* m : messagesOf(model, b.sequence->id)) {
-        const model::Entity* type = model.find(fieldOf(*m, "type"));
+      for (const Taken& t : stepsOf(model, b.sequence->id, kEveryBranch)) {
+        const model::Entity* type = model.find(fieldOf(*model.find(t.message), "type"));
         if (type) out.insert(type->kind == model::Kind::Module ? type->id : type->scope);
       }
       continue;
     }
     if (cls) out.insert(cls->id);
-    std::set<std::string> seen;
-    walk(model, *b.sequence, b.path, depth_, seen, out);
+    for (const Walked& w : walkOf(model, b.sequence->id, b.path, depth_)) {  // what it calls takes part (DS-130)
+      const model::Entity* m = model.find(w.message);
+      if (fieldOf(*m, "return") == "true") continue;
+      const std::string typeId = fieldOf(*m, "type");
+      if (!typeId.empty() && model.find(typeId)) out.insert(typeId);
+    }
   }
   std::set<std::string> known;
   for (const auto& id : out)

@@ -152,7 +152,6 @@ package driftspec@ds {
       + SequenceFilter(include: std::vector<std::string>, depth: int, modules: bool)
       + select(model: model::Model) -> std::set<std::string>
       + behaviours(model: model::Model) -> std::vector<Behaviour>
-      - walk(model: model::Model, sequence: model::Entity, path: std::string, depth: int, out_seen: std::set<std::string>, out_ids: std::set<std::string>) -> void
     }
 
     // the machines it names and the states of each the design describes
@@ -172,6 +171,33 @@ package driftspec@ds {
       - verifications_: bool
       + RequirementsFilter(include: std::vector<std::string>, design: bool, verifications: bool)
       + select(model: model::Model) -> std::set<std::string>
+    }
+
+    // ---- the one walk of a behaviour (DS-130) ---------------------------------------------------
+    // one message a behaviour takes, and the behaviour its call goes on into with the branch it follows
+    dataclass Taken {
+      @requirement REQ-00073-2
+      + message: std::string
+      + next: std::string
+      + nextPath: std::string
+    }
+
+    // one step of a behaviour walked into what it calls: a message, at the depth it was reached
+    dataclass Walked {
+      @requirement REQ-00073-2
+      + message: std::string
+      + depth: int
+    }
+
+    // the messages a behaviour takes along a scenario, each with where it goes on: the one place that says it
+    function stepsOf(model: model::Model, sequence: std::string, path: std::string, out_kept: std::set<std::string>) -> std::vector<Taken> {
+      @requirement REQ-00073-2
+      @requirement REQ-00049-2
+    }
+
+    // a behaviour walked into what its calls enter, down to a depth; a cycle ends
+    function walkOf(model: model::Model, sequence: std::string, path: std::string, depth: int) -> std::vector<Walked> {
+      @requirement REQ-00049-2
     }
 
     // ---- the engine ---------------------------------------------------------------------------

@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "ds/query/Query.hpp"
+#include "ds/query/Walk.hpp"
 #include "ds/render/Ir.hpp"
 
 namespace ds {
@@ -617,8 +618,6 @@ std::string Scene::render(bool pretty) const {
 
 namespace {
 
-const size_t kMaxSteps = 2000;
-
 std::string fieldOf(const model::Entity& e, const std::string& key) {
   const auto it = e.fields.find(key);
   return it == e.fields.end() ? "" : it->second;
@@ -645,7 +644,8 @@ struct Behaviours {
     b.id = b.subject + (b.scenario.empty() ? "" : " / " + b.scenario);
     out.push_back(b);
     std::vector<Call> found_calls;
-    for (const model::Entity* m : model::pathOf(model, sequence, scenario, nullptr)) {
+    for (const query::Taken& t : query::stepsOf(model, sequence, scenario)) {  // where each call goes on: DS-130
+      const model::Entity* m = model.find(t.message);
       const auto call = calls.find(m->id);
       if (call == calls.end()) continue;
       const std::string callee = nodeFor(ids, call->second);
@@ -655,15 +655,7 @@ struct Behaviours {
       const std::string op = fieldOf(*m, "op");
       Call c{callee, op.substr(op.rfind("::") == std::string::npos ? 0 : op.rfind("::") + 2) + "(" + args + ")", -1, fieldOf(*m, "result")};
       // a scenario written apart is a sequence of its own; one written as a branch is a path through the base
-      const std::string expands = fieldOf(*m, "expands");
-      if (!expands.empty()) {
-        if (model.find(expands)) {
-          c.expands = of(expands, "");
-        } else if (expands.find('/') != std::string::npos) {
-          const auto slash = expands.find('/');
-          if (model.find(expands.substr(0, slash))) c.expands = of(expands.substr(0, slash), expands.substr(slash + 1));
-        }
-      }
+      if (!t.next.empty()) c.expands = of(t.next, t.nextPath);
       found_calls.push_back(c);
     }
     out[static_cast<size_t>(at)].calls = found_calls;
@@ -711,25 +703,6 @@ void Scene::tour(SceneDocument& out_document) const {
       out_document.tours.push_back({b, operation ? "interface" : "method"});
     }
   }
-}
-
-std::vector<Step> Scene::expand(const SceneDocument& document, int behaviour, int depth) {
-  std::vector<Step> steps;
-  std::set<int> stack;
-  std::function<void(int, const std::string&, int)> walk = [&](int b, const std::string& caller, int level) {
-    stack.insert(b);
-    for (const auto& c : document.behaviours[static_cast<size_t>(b)].calls) {
-      if (steps.size() >= kMaxSteps) break;
-      steps.push_back({caller, c.to, c.label, level, false});
-      if (c.expands < 0 || level >= depth || stack.count(c.expands)) continue;
-      walk(c.expands, c.to, level + 1);
-      steps.push_back({c.to, caller, c.result.empty() ? "\u21a9" : c.result, level, true});
-    }
-    stack.erase(b);
-  };
-  if (behaviour >= 0 && behaviour < static_cast<int>(document.behaviours.size()))
-    walk(behaviour, document.behaviours[static_cast<size_t>(behaviour)].subject, 1);
-  return steps;
 }
 
 namespace {

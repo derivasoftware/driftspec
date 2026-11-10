@@ -193,3 +193,22 @@ foreach(test_src IN LISTS driftspec_SYSTEM_TESTS)
   add_dependencies(${test_name} ds)
   add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
+
+# ---- the viewer's own code, run by node (DS-130): the tours it replays from
+# what ds writes ----
+find_program(DS_NODE node)
+if(DS_NODE)
+  add_test(NAME viewer_tours
+           COMMAND ${DS_NODE} --test
+                   ${CMAKE_SOURCE_DIR}/tests/viewer/test_tours.mjs)
+  set_tests_properties(
+    viewer_tours
+    PROPERTIES
+      ENVIRONMENT
+      "DS=$<TARGET_FILE:ds>;VIEWER=${CMAKE_SOURCE_DIR}/viewer/scene.html;ROOT=${CMAKE_SOURCE_DIR}"
+  )
+else()
+  # no node: the test fails rather than vanish, so a runner without it is
+  # noticed
+  add_test(NAME viewer_tours COMMAND ${CMAKE_COMMAND} -E false)
+endif()

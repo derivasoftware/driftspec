@@ -52,15 +52,6 @@ struct DiagramView {
   std::vector<std::string> nodes;
 };
 
-/// One step of a tour: a call from one node to another, or its answer coming back.
-struct Step {
-  std::string from;
-  std::string to;
-  std::string label;  ///< the call as written, op(args), or what comes back
-  int depth = 1;      ///< 1 for the subject's own messages, one more for each sequence expanded
-  bool back = false;  ///< the answer of the call above it
-};
-
 /// One call of a behaviour, as written: whom it calls and which behaviour it goes on into.
 struct Call {
   std::string to;      ///< the node it calls
@@ -172,9 +163,6 @@ class Scene {
   std::string page(const std::string& title, const std::string& css = "", const std::vector<std::string>& focus = {}) const;
   /// A page as an iframe that carries it whole (srcdoc), to paste into any HTML document.
   static std::string frame(const std::string& page, const std::string& title, int height);
-  /// The steps of a behaviour expanded through the behaviours its calls go on into, down to a
-  /// depth: each call, the steps of what it calls, then its answer. A cycle is not entered twice.
-  static std::vector<Step> expand(const SceneDocument& document, int behaviour, int depth);
   /// Text deflated (zlib format) and written in base64: how the scene travels inside a page, which a
   /// browser inflates with its own DecompressionStream.
   static std::string pack(const std::string& text);

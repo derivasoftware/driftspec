@@ -192,8 +192,10 @@ async function unpack(b64){const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate')); return JSON.parse(await new Response(stream).text());}
 if(typeof DecompressionStream==='undefined'){document.getElementById('stage').innerHTML='<p style="padding:20px;font-family:sans-serif">This browser cannot inflate the scene (it lacks DecompressionStream). Open the page in a current one.</p>'; return;}
 const SCENE=decode(await unpack(PACKED));
+// ---- the scene, decoded (tests/viewer runs this part as it is: keep it free of the page) ----
 // the scene comes compact (version 2): records are arrays whose columns `fields` names, and nodes and
-// behaviours are named by index; a tour is a behaviour expanded through the behaviours its calls go on into
+// behaviours are named by index; a tour is a behaviour expanded through the behaviours its calls go on into:
+// where each call goes on is decided by ds (query::stepsOf, DS-130), the viewer only follows it
 function decode(r){if(r.version!==2) return r;
   const col=name=>{const f=r.fields[name]; return row=>{const o={}; f.forEach((k,i)=>{o[k]=row[i];}); return o;};};
   const nodes=r.nodes.map(col('node')); const id=i=>i>=0&&nodes[i]?nodes[i].id:'';
@@ -219,6 +221,7 @@ function trace(r,col,id){if(!r.requirements) return {requirements:[],verificatio
   return {requirements:reqs.map(q=>({...q,parent:rid(q.parent),scope:id(q.scope),nodes:q.nodes.map(id),
       outcomes:(q.outcomes||[]).map(([name,returns,text])=>({name,returns,text})),binds:(q.binds||[]).map(rid)})),
     verifications:r.verifications.map(col('verification')).map(v=>({...v,requirements:v.requirements.map(rid)}))};}
+// ---- the scene, decoded: end ----
 const FOCUS=/*FOCUS*/;  // the identities a diagram shows: the page opens framed on them
 /* ---------- the scene, as the viewer reads it ---------- */
 const N={}, ORDER=[], KIDS={};
