@@ -1,6 +1,9 @@
-// LLD of the query namespace (ds::query): questions about the model answered
-// by identity (SREQ-00011-1). The reader keeps the model it answers about;
-// every answer names an identity the next question or a drawing can take.
+// LLD of the query namespace (ds::query): the engine that asks the model (SREQ-00011-1,
+// DS-127). It answers named questions (ask) and applies a filter it is given (select);
+// both give identities. A diagram's content is one filter, built from the diagram by
+// filterFor(), the one place that names the filter of each kind of diagram. Not its
+// jobs: drawing, writing answers as text or JSON (output, later a format's), changing
+// the model.
 
 package driftspec@ds {
 
@@ -10,7 +13,23 @@ package driftspec@ds {
 
   module query {
 
-    requirement REQ-00003-1 {
+    // ---- the principles, as rules ---------------------------------------------------------------
+    rule query-draws-nothing {
+      title: the query asks the model; it never depends on what draws it
+      @requirement REQ-00003-2
+      for class c in driftspec@ds@query
+      never m in c, s behaviour-of m, s uses x, x in driftspec@ds@render
+    }
+
+    rule query-knows-no-filter {
+      title: the engine takes a filter as IFilter; none of its members names a concrete one
+      @requirement REQ-00003-2
+      for class c in driftspec@ds@query
+      where c = driftspec@ds@query::Query
+      never m in c, m uses x, x inherits driftspec@ds@query::IFilter
+    }
+
+    requirement REQ-00003-2 {
       status: approved
       @refines SREQ-00011-1
       title: The query shall answer each question with answers that name an identity, as text or as JSON
@@ -18,29 +37,34 @@ package driftspec@ds {
         Seven questions: diagrams (each with its kind), entities of a scope (a
         package named plainly or a module), relations of an identity in both
         directions, artefacts a class realises and what verifies them,
-        behaviours of a method or class, what a diagram shows (the projection
-        itself answers), findings of a file. An unknown question is one answer
-        of kind error. The answers print as lines `kind  identity  detail` or
-        as a JSON array of the same three fields.
+        behaviours of a method or class, what a diagram shows (the entities the
+        filter of its kind takes from the model: a class diagram's patterns,
+        neighbours and the boxes around them, a closed box standing for what it
+        holds; who takes part in a sequence; a state machine and its states; a
+        requirement and its umbrella), findings of a file. An unknown question
+        is one answer of kind error. The answers print as lines `kind  identity
+        detail` or as a JSON array of the same three fields.
       rationale:
         The command line, the editor, the agent pane and argos ask the same
         questions; one mechanism with identities as answers serves them all.
+        Revision 2 (DS-127): what a diagram shows is asked of the model, never
+        read back from a drawing, so every answer names an identity.
       tags: query, identity
     }
 
-    verification VER-00079-1 {
+    verification VER-00079-2 {
       status: approved
-      @requirement REQ-00003-1
+      @requirement REQ-00003-2
       title: Integration tests confirm coupling answers, over ds's design, what each behaviour touches outside its module
       method: test
       tests:
         tests/integration/ds/query/test_query.cpp::TestQueryOfTheDesign.CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule
     }
 
-    verification VER-00003-1 {
+    verification VER-00003-2 {
       status: approved
-      @requirement REQ-00003-1
-      title: Unit tests cover the seven questions, the unknown question and both answer forms
+      @requirement REQ-00003-2
+      title: Unit tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram
       method: test
       tests:
         tests/integration/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
@@ -51,19 +75,112 @@ package driftspec@ds {
         tests/integration/ds/query/test_query.cpp::TestQuery.TheFindingsOfAFile
         tests/integration/ds/query/test_query.cpp::TestQuery.AnUnknownQuestionIsAnError
         tests/integration/ds/query/test_query.cpp::TestQuery.AnswersAsTextAndAsJson
+        tests/unit/ds/query/test_filters.cpp::TestFilters.AClassDiagramTakesItsPatternsMinusItsExclusionsAndTheBoxesAround
+        tests/unit/ds/query/test_filters.cpp::TestFilters.NeighboursWidenAClassDiagramByTheRelationsItDraws
+        tests/unit/ds/query/test_filters.cpp::TestFilters.AClosedBoxStandsForWhatItHolds
+        tests/unit/ds/query/test_filters.cpp::TestFilters.ASequenceDiagramTakesWhoTakesPartNotHowItIsDrawn
+        tests/unit/ds/query/test_filters.cpp::TestFilters.ARequirementsDiagramTakesItsRootsAndTheirUmbrella
+        tests/unit/ds/query/test_filters.cpp::TestFilters.EachKindOfDiagramHasItsFilterAndAnythingElseHasNone
+        tests/unit/ds/query/test_filters.cpp::TestFilters.TheQueryAppliesAFilterItIsGivenWithoutKnowingIt
+        tests/unit/ds/query/test_filters.cpp::TestFilters.WhatADiagramShowsIsAnswerdByIdentityOnly
     }
 
     dataclass Answer {                       // one line of an answer: an identity and what the question asked about it
-      @requirement REQ-00003-1
+      @requirement REQ-00003-2
       + kind: std::string
       + id: std::string
       + detail: std::string
     }
 
-    class Query {
-      @requirement REQ-00003-1
+    // ---- the contract ------------------------------------------------------------------------
+    // what the rest of ds asks of the module: a question answered, or the model filtered
+    class IQuery {
+      @requirement REQ-00003-2
+      + ~IQuery()
+      + abstract ask(question: std::string, subject: std::string) -> std::vector<Answer>
+      + abstract select(filter: IFilter) -> std::set<std::string>
+    }
+
+    // ---- filters: what to take from the model, passed into the query ----------------------------
+    // A filter carries its criteria, given when it is built, and reads the model it is handed.
+    // A filter of our own: a class with select(); build it and pass it to IQuery::select.
+    class IFilter {
+      @requirement REQ-00003-2
+      + ~IFilter()
+      + abstract select(model: model::Model) -> std::set<std::string>
+    }
+
+    // the one place that names the filter of each kind of diagram, built from the diagram's fields
+    function filterFor(diagram: model::Entity) -> std::unique_ptr<IFilter> {
+      @requirement REQ-00003-2
+    }
+
+    // include and exclude patterns, the neighbours, the boxes around; a closed box stands for what it holds
+    class ClassFilter : IFilter {
+      @requirement REQ-00047-1
+      @requirement REQ-00019-1
+      @requirement REQ-00048-1
+      @requirement REQ-00064-2
+      - include_: std::vector<std::string>
+      - exclude_: std::vector<std::string>
+      - neighbours_: int
+      - closes_: bool
+      - open_: std::vector<std::string>
+      + ClassFilter(include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, closes: bool, open: std::vector<std::string>)
+      + select(model: model::Model) -> std::set<std::string>
+      + boxes(model: model::Model) -> std::set<std::string>
+      + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
+      + static opened(containers: std::set<std::string>, open: std::vector<std::string>) -> std::set<std::string>
+      + static standsFor(id: std::string, containers: std::set<std::string>, opened: std::set<std::string>) -> std::string
+      - matches(model: model::Model, pattern: std::string, entity: model::Entity) -> bool
+    }
+
+    // a behaviour a sequence diagram takes, and the scenario it follows (* for every branch)
+    dataclass Behaviour {
+      @requirement REQ-00049-2
+      + refs sequence: model::Entity
+      + path: std::string
+    }
+
+    // the behaviours its patterns name (a subject, a scenario, a prefix) and who takes part in them
+    class SequenceFilter : IFilter {
+      @requirement REQ-00049-2
+      @requirement REQ-00056-1
+      - include_: std::vector<std::string>
+      - depth_: int
+      - modules_: bool
+      + SequenceFilter(include: std::vector<std::string>, depth: int, modules: bool)
+      + select(model: model::Model) -> std::set<std::string>
+      + behaviours(model: model::Model) -> std::vector<Behaviour>
+      - walk(model: model::Model, sequence: model::Entity, path: std::string, depth: int, out_seen: std::set<std::string>, out_ids: std::set<std::string>) -> void
+    }
+
+    // the machines it names and the states of each the design describes
+    class StateFilter : IFilter {
+      @requirement REQ-00062-1
+      - include_: std::vector<std::string>
+      + StateFilter(include: std::vector<std::string>)
+      + select(model: model::Model) -> std::set<std::string>
+      + machines(model: model::Model) -> std::vector<std::string>
+    }
+
+    // the artefacts it names and their umbrella: what refines, verifies and realises them
+    class RequirementsFilter : IFilter {
+      @requirement REQ-00050-1
+      - include_: std::vector<std::string>
+      - design_: bool
+      - verifications_: bool
+      + RequirementsFilter(include: std::vector<std::string>, design: bool, verifications: bool)
+      + select(model: model::Model) -> std::set<std::string>
+    }
+
+    // ---- the engine ---------------------------------------------------------------------------
+    // the questions, and any filter it is given, over one model
+    class Query : IQuery {
+      @requirement REQ-00003-2
       - refs model_: model::Model
       + Query(model: model::Model)
+      + select(filter: IFilter) -> std::set<std::string>
       + static questions() -> std::vector<std::pair<std::string, std::string>>
       + ask(question: std::string, subject: std::string) -> std::vector<Answer>
       + diagrams() -> std::vector<Answer>
@@ -190,25 +307,28 @@ package driftspec@ds {
       return out
     }
 
-    // The projection answers. IrDocument::parse is static, so the document the loop
-    // walks is not told, nor its bundled(). When the projection gives back nothing, one
-    // answer of kind error, built in the return itself.
+    // What a diagram shows is the filter of its kind, applied to the model: nothing is drawn (DS-127).
     sequence Query::shows {
       local out: std::vector<Answer>
-      local ir: render::IrExport
-      self -> ir.render(diagram, false) -> document
-      opt the projection gives back nothing / no-such-diagram {
+      local filter: IFilter
+      self -> model_.find(diagram) -> entity
+      opt no diagram has that name / no-such-diagram {
         return error
       }
-      loop each node of the bundled document {
-        opt it is not a note {
-          self -> model_.find(node.id) -> entity
-          opt the model holds it {
-            -> entityAnswer(entity, "") -> answer
-          }
-        }
+      -> filterFor(entity) -> filter
+      -> select(filter) -> ids
+      loop each id {
+        self -> model_.find(id) -> taken
+        -> entityAnswer(taken, "") -> answer
       }
       return out
+    }
+
+    // The engine hands the filter its model; it never knows which filter it is.
+    sequence Query::select {
+      local filter: IFilter
+      -> filter.select(model_) -> ids
+      return ids
     }
 
     sequence Query::findings {

@@ -93,10 +93,18 @@ std::vector<model::Finding> Evaluator::run() {
 // What holds what (contains, else the declared scope), the entities of each kind and every relation
 // both ways: the facts a rule is evaluated over.
 void Evaluator::index() {
+  // what holds what is a tree: a link that would close a cycle (a model a syntax error left half
+  // bound can say a holds b and b holds a) is left out, so every walk up or down it ends
+  const auto above = [this](const std::string& from, const std::string& id) {
+    std::set<std::string> seen;
+    for (auto it = parent_.find(from); it != parent_.end() && seen.insert(it->first).second; it = parent_.find(it->second))
+      if (it->second == id) return true;
+    return from == id;
+  };
   for (const auto& r : model_.relations()) {
     forward_[r.kind].insert({r.from, r.to});
     backward_[r.kind].insert({r.to, r.from});
-    if (r.kind == "contains" && !parent_.count(r.to)) {
+    if (r.kind == "contains" && !parent_.count(r.to) && !above(r.from, r.to)) {
       parent_[r.to] = r.from;
       children_[r.from].push_back(r.to);
     }
@@ -105,7 +113,7 @@ void Evaluator::index() {
     const model::Entity& e = pair.second;
     if (e.expected) continue;
     byKind_[model::kindName(e.kind)].push_back(e.id);
-    if (!parent_.count(e.id) && !e.scope.empty() && e.scope != e.id && model_.find(e.scope)) {
+    if (!parent_.count(e.id) && !e.scope.empty() && e.scope != e.id && model_.find(e.scope) && !above(e.scope, e.id)) {
       parent_[e.id] = e.scope;
       children_[e.scope].push_back(e.id);
     }

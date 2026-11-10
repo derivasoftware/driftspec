@@ -6,6 +6,8 @@
 #include <regex>
 #include <sstream>
 
+#include "ds/query/Filter.hpp"
+
 namespace ds {
 namespace render {
 
@@ -32,8 +34,6 @@ std::string fieldOf(const model::Entity& e, const std::string& key) {
 bool isBox(const model::Entity& e) {
   return e.kind == model::Kind::Class || e.kind == model::Kind::Enum || e.kind == model::Kind::Function || e.kind == model::Kind::Interface;
 }
-
-bool drawable(const model::Entity& e) { return isBox(e) || e.kind == model::Kind::Module; }
 
 /// `Repository<1>` → `Repository<T>`, from the params field.
 std::string displayName(const model::Entity& e) {
@@ -78,38 +78,6 @@ std::vector<std::string> IrExport::diagrams() const {
   return out;
 }
 
-bool IrExport::matches(const std::string& pattern, const model::Entity& entity) const {
-  if (pattern == entity.id) return true;
-  if (entity.has("extern")) return false;  // what lives outside the workspace is drawn only when named
-  // a prefix with *: ds@* is the whole package, ds@ds::* a module and everything inside (full ids, R4)
-  if (!pattern.empty() && pattern.back() == '*') {
-    const std::string prefix = pattern.substr(0, pattern.size() - 1);
-    return entity.id.rfind(prefix, 0) == 0 || entity.scope.rfind(prefix, 0) == 0;
-  }
-  // a module named as such: the module and everything inside
-  if (const model::Entity* m = model_.find(pattern)) {
-    if (m->kind == model::Kind::Module) return entity.scope == pattern || entity.scope.rfind(pattern + "::", 0) == 0;
-  }
-  // a template written without arity: Repository matches Repository<1>
-  const auto lt = entity.id.find('<');
-  return lt != std::string::npos && entity.id.substr(0, lt) == pattern;
-}
-
-std::set<std::string> IrExport::select(const model::Entity& diagram) const {
-  std::set<std::string> selected;
-  for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
-    for (const auto& pair : model_.entities()) {
-      if (drawable(pair.second) && !pair.second.expected && matches(pattern, pair.second)) selected.insert(pair.first);
-    }
-  }
-  for (const auto& pattern : split(fieldOf(diagram, "exclude"), ',')) {
-    for (auto it = selected.begin(); it != selected.end();) {
-      it = matches(pattern, *model_.find(*it)) ? selected.erase(it) : std::next(it);
-    }
-  }
-  return selected;
-}
-
 std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   const model::Entity* diagram = model_.find(diagramId);
   if (!diagram || diagram->kind != model::Kind::Diagram) return "";
@@ -125,38 +93,11 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   auto shows = [&](const char* what) { return show.count(what) > 0; };
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
 
-  std::set<std::string> selected = select(*diagram);
-  // neighbours: n widens the selection to what the selected entities relate to, n steps away
-  const std::string written = fieldOf(*diagram, "neighbours");
-  const int neighbours = std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
-  for (int step = 0; step < neighbours; ++step) {
-    std::set<std::string> grown = selected;
-    for (const auto& r : model_.relations()) {
-      if (edgeKind(r.kind).empty()) continue;
-      const model::Entity* from = model_.find(r.from);
-      const model::Entity* to = model_.find(r.to);
-      if (!from || !to) continue;
-      const std::string fromClass = isBox(*from) ? from->id : from->scope;
-      const model::Entity* fromEntity = model_.find(fromClass);
-      if (!fromEntity || !isBox(*fromEntity) || !isBox(*to) || to->expected || fromEntity->expected) continue;
-      if (selected.count(fromClass) && !to->has("extern")) grown.insert(r.to);
-      if (selected.count(r.to) && !fromEntity->has("extern")) grown.insert(fromClass);
-    }
-    selected = grown;
-  }
-  // modules of the selected classes become containers (R2), and so do nested packages (the HLD
-  // boxes); the outermost package is the drawing itself. A container with nothing drawn in it is not drawn.
-  std::set<std::string> containers;
-  // the box outside: ds@ds::b → ds@ds, app@core@model → app@core → app → ""
+  // what the diagram takes is the query's filter of it (DS-127); the boxes around are drawn here
+  const auto filter = query::filterFor(*diagram);
+  const std::set<std::string> selected = static_cast<const query::ClassFilter&>(*filter).boxes(model_);
+  const std::set<std::string> containers = query::ClassFilter::containers(model_, selected);
   auto up = [](const std::string& s) { return model::boxOf(model::outer(s)); };
-  for (const auto& id : selected) {
-    const model::Entity* e = model_.find(id);
-    if (!isBox(*e)) continue;
-    for (std::string s = e->scope; !s.empty(); s = up(s)) {
-      const model::Entity* m = model_.find(s);
-      if (m && (m->kind == model::Kind::Module || (m->kind == model::Kind::Package && !m->scope.empty()))) containers.insert(s);
-    }
-  }
 
   nlohmann::json out;
   out["ir"] = 1;
@@ -328,33 +269,14 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
 
 std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const {
   auto outerOf = [](const std::string& id) { return model::boxOf(model::outer(id)); };  // the box outside
-  auto pathOf = [&](const std::string& id) {                                            // from the outermost box down to the id
-    std::vector<std::string> path;
-    for (std::string s = id; !s.empty(); s = outerOf(s)) path.insert(path.begin(), s);
-    return path;
-  };
   nlohmann::json doc = nlohmann::json::parse(ir);
   std::set<std::string> containers;
   for (const auto& n : doc["nodes"]) {
     if (n["kind"] == "container") containers.insert(n["id"].get<std::string>());
   }
-  // a box is open when it is named, or when something inside it is: opening a box shows the way to it
-  std::set<std::string> opened;
-  for (const auto& id : containers) {
-    for (const auto& pattern : open) {
-      const bool star = !pattern.empty() && pattern.back() == '*';
-      const std::string prefix = star ? pattern.substr(0, pattern.size() - 1) : pattern;
-      if (id != pattern && !(star && id.rfind(prefix, 0) == 0)) continue;
-      for (const auto& step : pathOf(id)) opened.insert(step);
-    }
-  }
-  // what stands for an id: the outermost closed box around it, or the id itself
-  auto visible = [&](const std::string& id) {
-    for (const auto& step : pathOf(id)) {
-      if (containers.count(step) && !opened.count(step)) return step;
-    }
-    return id;
-  };
+  // which boxes stay open and what stands for an id are the query's, as for what the diagram shows (DS-127)
+  const std::set<std::string> opened = query::ClassFilter::opened(containers, open);
+  auto visible = [&](const std::string& id) { return query::ClassFilter::standsFor(id, containers, opened); };
 
   nlohmann::json nodes = nlohmann::json::array();
   for (auto n : doc["nodes"]) {
@@ -590,28 +512,13 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   // `*` is every level: the guard against recursion is what ends it (a value that is no number is a finding)
   const int depth = written == "*" ? 1000 : std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
   const std::string level = fieldOf(diagram, "level");
-  // the behaviours selected: by subject id, by sequence id, or a namespace
+  // the behaviours selected, by subject id, by sequence id, or a namespace: the query's filter (DS-127)
   std::vector<const model::Entity*> selected;
   std::map<const model::Entity*, std::string> pathOf;  // a named branch asked for: the path of that behaviour
-  for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
-    for (const auto& pair : model_.entities()) {
-      const model::Entity& e = pair.second;
-      if (e.kind != model::Kind::Sequence || e.expected) continue;
-      const std::string subjectId = model::subjectOf(e.id);
-      const bool prefix = !pattern.empty() && pattern.back() == '*' && e.id.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
-      // as it is written: `Class::op` the default, `Class::op / scenario` that one, `Class::op*` them all
-      const bool isDefault = e.fields.find("scenario") == e.fields.end();
-      const bool named = !isDefault && pattern == subjectId + " / " + e.fields.at("scenario");
-      if (pattern == e.id || (pattern == subjectId && isDefault) || named || prefix) selected.push_back(&e);
-      // `Class::op / scenario` with no behaviour of its own: a named branch of the default one
-      const auto slash = pattern.find(" / ");
-      if (isDefault && slash != std::string::npos && pattern.substr(0, slash) == subjectId &&
-          !model_.find(model::behaviourId(subjectId, pattern.substr(slash + 3))) &&
-          model::hasScenario(model_, e.id, pattern.substr(slash + 3))) {
-        selected.push_back(&e);
-        pathOf[&e] = pattern.substr(slash + 3);
-      }
-    }
+  for (const query::Behaviour& taken :
+       query::SequenceFilter(split(fieldOf(diagram, "include"), ','), depth, level == "module").behaviours(model_)) {
+    selected.push_back(taken.sequence);
+    if (taken.path != kWhole) pathOf[taken.sequence] = taken.path;
   }
   SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0};
   nlohmann::json out;
@@ -695,10 +602,8 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   nlohmann::json nodes = nlohmann::json::array();
   nlohmann::json edges = nlohmann::json::array();
   std::set<std::string> drawn;
-  for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
-    const model::Entity* state = model_.find(model::stateId(pattern));
-    if (!state) state = model_.find(pattern);
-    if (!state || state->kind != model::Kind::State) continue;
+  for (const auto& machine : query::StateFilter(split(fieldOf(diagram, "include"), ',')).machines(model_)) {  // DS-127
+    const model::Entity* state = model_.find(machine);
     const auto box = [&](const std::string& name) {
       const std::string id = state->id + "::" + name;
       if (!drawn.insert(id).second) return id;
@@ -797,39 +702,9 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
   const std::set<std::string> show(showList.begin(), showList.end());
   const bool withDesign = show.empty() || show.count("design");
   const bool withVerifications = show.empty() || show.count("verifications");
-  // the roots: artefacts named, or every artefact of a package / module
-  std::set<std::string> roots;
-  for (const auto& pattern : split(fieldOf(diagram, "include"), ',')) {
-    for (const auto& pair : model_.entities()) {
-      const model::Entity& e = pair.second;
-      if (!isArtefact(e) || e.expected) continue;
-      bool hit = pattern == e.id;
-      if (!pattern.empty() && pattern.back() == '*') {
-        // iris@* every artefact of the package (their scope starts with iris@), iris@projection::* those of a module
-        hit |= e.scope.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
-      } else if (const model::Entity* m = model_.find(pattern)) {
-        hit |= m->kind == model::Kind::Module && (e.scope == pattern || e.scope.rfind(pattern + "::", 0) == 0);
-      }
-      if (hit) roots.insert(e.id);
-    }
-  }
-  // the umbrella: what refines a root (down, transitively), what verifies it, what realises it
-  std::set<std::string> selected = roots;
-  bool grew = true;
-  while (grew) {
-    grew = false;
-    for (const auto& r : model_.relations()) {
-      if ((r.kind == "refines" && selected.count(r.to) && !selected.count(r.from)) ||
-          (withVerifications && r.kind == "verifies" && selected.count(r.to) && !selected.count(r.from)) ||
-          (withDesign && (r.kind == "requires" || r.kind == "constrained-by") && selected.count(r.to) && !selected.count(r.from))) {
-        const model::Entity* from = model_.find(r.from);
-        if (!from || from->expected) continue;
-        if (from->kind != model::Kind::Class && !isArtefact(*from)) continue;
-        selected.insert(r.from);
-        grew = true;
-      }
-    }
-  }
+  // the roots and their umbrella are the query's filter of the diagram (DS-127)
+  const std::set<std::string> selected =
+      query::RequirementsFilter(split(fieldOf(diagram, "include"), ','), withDesign, withVerifications).select(model_);
   nlohmann::json out;
   out["ir"] = 1;
   out["title"] = diagram.name;

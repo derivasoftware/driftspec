@@ -60,6 +60,19 @@ TEST_F(TestEvaluator, ANeverIsBrokenByEachBindingWithAnAnswer) {
   EXPECT_EQ(broken(), (std::vector<std::string>{"p@m::r is broken for c = p@m::A: x = p@m::B"}));
 }
 
+// Regression (DS-127): a model a syntax error left half bound can say a holds b and b holds a; the
+// evaluator kept walking that cycle for ever, and the language server hung on a half-typed file.
+TEST_F(TestEvaluator, AContainmentCycleEndsTheWalksInsteadOfLoopingForEver) {
+  model.relate({"contains", "p@m::A", "p@m", {}, ""});  // m holds A, and now A holds m
+  ds::model::Formula f;
+  f.ranges.push_back({"class", "c", "p@m", {}});
+  f.never = true;
+  f.claims.push_back({literal(LiteralForm::In, "", {{"x", true}, {"c", true}}), literal(LiteralForm::In, "", {{"c", true}, {"y", true}})});
+  model.state("p@m::r", f);
+  (void)broken();  // it ends: what it answers on a model this broken does not matter
+  SUCCEED();
+}
+
 TEST_F(TestEvaluator, AHoldsIsBrokenByEachBindingWithNoAnswer) {
   ds::model::Formula f;
   f.ranges.push_back({"class", "c", "p@m", {}});

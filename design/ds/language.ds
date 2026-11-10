@@ -1014,8 +1014,8 @@ package driftspec@ds {
         Owner, 2026-11-07 (DS-94): structural rules are always decidable in the design, in a formal
         or semi-formal syntax; nothing is inferred from prose or keywords. Rules about behaviour wait
         for contracts and recorded runs.
-      verification VER-00105-1 {
-        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, and malformed or undecidable formulas are rejected
+      verification VER-00105-2 {
+        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, malformed or undecidable formulas are rejected, and a containment cycle left by a syntax error ends the evaluation
         status: approved
         method: test
         tests:
@@ -1024,6 +1024,7 @@ package driftspec@ds {
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionRecursUntilItsFixpoint
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.WhatARuleNamesMustExistAndItsVariablesBeBound
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationThroughRecursionIsRejected
+          tests/unit/ds/check/test_evaluator.cpp::TestEvaluator.AContainmentCycleEndsTheWalksInsteadOfLoopingForEver
       }
     }
 
