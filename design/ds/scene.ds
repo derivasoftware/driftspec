@@ -599,42 +599,154 @@ package driftspec@ds {
 
     // the node that stands for a model identity among the nodes: itself, a signature row or the
     // nearest enclosing node; a behaviour stands for its subject
-    function nodeFor(ids: std::set<std::string>, id: std::string) -> std::string {
-      @requirement REQ-00072-2
+    // The scene as a map and the layers over it (DS-126). Layout places
+    // the boxes and gives the base document; the map, built once from them, says where each identity
+    // lands; each layer is an object that adds what its perspective draws over the same boxes. Scene
+    // passes the document through the layers in order. Every layer is a place that can grow private
+    // methods; layers() is the one place that names them.
+
+    // ---- the principles, as rules ----------------------------------------------------------
+    definition depends(a, b) {
+      title: a depends on b through one of its members or its behaviours
+      if m in a, m owns b
+      if m in a, m refs b
+      if m in a, m uses b
+      if m in a, s behaviour-of m, s uses b
     }
 
-    class Scene : IScene {
+    rule no-layer-knows-another {
+      title: a layer adds its own part; it never depends on another layer
       @requirement REQ-00069-1
+      for class a in driftspec@ds@scene, class b in driftspec@ds@scene
+      where a inherits driftspec@ds@scene::ILayer, b inherits driftspec@ds@scene::ILayer, a != b
+      never depends(a, b)
+    }
+
+    rule scene-knows-layers-as-ilayer {
+      title: the scene holds the layers as ILayer; only layers() names a concrete one
+      @requirement REQ-00069-1
+      for class c in driftspec@ds@scene
+      where c = driftspec@ds@scene::Scene
+      never depends(c, x), x inherits driftspec@ds@scene::ILayer
+    }
+
+    // ---- placing the boxes, and the map --------------------------------------------------------
+    // where every box goes, once per variant (lean hides private members): the base document
+    class Layout {
+      @requirement REQ-00069-1
+      @requirement REQ-00076-1
+      @requirement REQ-00093-1
       - refs model_: model::Model
-      + Scene(model: model::Model)
-      + build() -> SceneDocument {
-        @requirement REQ-00069-1
-        @requirement REQ-00076-1
-        @requirement REQ-00093-1
-      }
-      - relate(out_document: SceneDocument) -> void {
+      + Layout(model: model::Model)
+      + place() -> SceneDocument
+    }
+
+    // the boxes placed and where each identity of the model lands among them: built once, read by
+    // every layer
+    class Map {
+      @requirement REQ-00069-1
+      - ids_: std::set<std::string>
+      - parent_: std::map<std::string, std::string>
+      + Map(nodes: std::vector<Node>)
+      + land(id: std::string) -> std::string {
         @requirement REQ-00072-2
       }
-      - tour(out_document: SceneDocument) -> void {
-        @requirement REQ-00073-2
-      }
-      - trace(out_document: SceneDocument) -> void {
-        @requirement REQ-00078-1
-        @requirement REQ-00083-1
-      }
-      - reason(out_document: SceneDocument) -> void {
-        @requirement REQ-00099-1
-      }
+      + has(id: std::string) -> bool
+      + parentOf(id: std::string) -> std::string
     }
 
-    // The layout runs twice, once per variant; build keeps the full one's order and adds
-    // the lean place of every node that has one.
+    // ---- the layers: what each perspective draws over the map ----------------------------------
+    // a layer adds its part of the document; it is built with the model and the map and keeps them
+    class ILayer {
+      @requirement REQ-00069-1
+      + ~ILayer()
+      + abstract decorate(out_document: SceneDocument) -> void
+    }
+
+    // the one place that names the layers, in the order they decorate
+    function layers(model: model::Model, map: Map) -> std::vector<std::unique_ptr<ILayer>> {
+      @requirement REQ-00069-1
+    }
+
+    verification VER-00118-1 {
+      status: approved
+      @requirement REQ-00069-1
+      title: Unit tests confirm the map says where each identity lands, the layers come in order each adding its own part, and the scene builds the same document every time
+      method: test
+      tests:
+        tests/unit/ds/scene/test_layers.cpp::TestMap.AnIdentityLandsOnItselfOrTheNearestBoxThatHoldsIt
+        tests/unit/ds/scene/test_layers.cpp::TestLayers.TheLayersComeInOrderAndEachAddsItsOwnPart
+        tests/unit/ds/scene/test_layers.cpp::TestLayers.TheSceneBuildsTheSameDocumentEveryTime
+    }
+
+    // structure: the relations between boxes and what each diagram shows
+    class StructureLayer : ILayer {
+      @requirement REQ-00072-2
+      - refs model_: model::Model
+      - refs map_: Map
+      + StructureLayer(model: model::Model, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - links(out_document: SceneDocument) -> void
+      - diagrams(out_document: SceneDocument) -> void
+      - titles(out_document: SceneDocument) -> void
+    }
+
+    // behaviour: every public behaviour, each written once, and the tours that replay them
+    class BehaviourLayer : ILayer {
+      @requirement REQ-00073-2
+      - refs model_: model::Model
+      - refs map_: Map
+      - index_: std::map<std::pair<std::string, std::string>, int>
+      - calls_: std::map<std::string, std::string>
+      + BehaviourLayer(model: model::Model, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - tours(out_document: SceneDocument) -> void
+      - behaviourOf(sequence: std::string, scenario: std::string, out_document: SceneDocument) -> int
+    }
+
+    // trace: requirements, constraints and use cases, what answers to them and what proves them
+    class TraceLayer : ILayer {
+      @requirement REQ-00078-1
+      @requirement REQ-00083-1
+      - refs model_: model::Model
+      - refs map_: Map
+      + TraceLayer(model: model::Model, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - at_: std::map<std::string, size_t>
+      - verificationAt_: std::map<std::string, size_t>
+      - requirements(out_document: SceneDocument) -> void
+      - verifications(out_document: SceneDocument) -> void
+      - answers(out_document: SceneDocument) -> void
+    }
+
+    // rules: each rule and definition where it is written, and what breaks it, placed on the map
+    class RulesLayer : ILayer {
+      @requirement REQ-00099-1
+      - refs model_: model::Model
+      - refs map_: Map
+      + RulesLayer(model: model::Model, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - place(id: std::string) -> std::string
+    }
+
+    // ---- the scene: the entry point the rest of ds uses -------------------------------------------
+    // built once: it places, makes the map and takes the layers, and keeps them
+    class Scene : IScene {
+      @requirement REQ-00069-1
+      - owns base_: SceneDocument
+      - owns map_: Map
+      - owns layers_: std::vector<std::unique_ptr<ILayer>>
+      + Scene(model: model::Model)
+      + build() -> SceneDocument
+    }
+
+    // the base document passed through every layer, in order
     sequence Scene::build {
-      loop each variant {
+      local layer: ILayer
+      local document: SceneDocument
+      loop each layer, in order {
+        -> layer.decorate(document)
       }
-      -> relate(out_document)
-      -> tour(out_document)
-      -> trace(out_document)
       return document
     }
   }
