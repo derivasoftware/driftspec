@@ -17,8 +17,6 @@ package driftspec@ds {
     - function check(dir: path, json: bool) -> int
     - function holdsDesign(dir: path) -> bool         // a directory with no .ds file under it is no workspace
     - function manual(topic: string, json: bool) -> int
-    - function drawing(doc: render::IrDocument, format: string, width: int) -> string
-    - function layoutJson(doc: string, width: int) -> string
     - function diagramId(name: string) -> string
     - function isDirectory(path: string) -> bool
     - function checkout(rev: string, path: string) -> string
@@ -116,20 +114,25 @@ package driftspec@ds {
       return 0
     }
 
+    // a diagram is its IR, written by the format named by -f (DS-126)
     sequence main / render-diagram {
       local model: model::Model
       local ir: render::IrExport
+      local chosen: format::DiagramSvg
       -> loadWorkspace(argv, model) -> found
       -> diagramId(diagram) -> id
       -> ir.render(id, pretty) -> document
-      -> drawing(parsed, format, width) -> picture
+      -> format::diagramFormats() -> formats
+      -> chosen.write(document, options) -> picture
       -> emit(output, picture) -> written
       return 0
     }
 
     sequence main / render-document {
+      local chosen: format::DiagramSvg
       -> readFile(argv) -> document
-      -> drawing(parsed, format, width) -> picture
+      -> format::diagramFormats() -> formats
+      -> chosen.write(document, options) -> picture
       -> emit(output, picture) -> written
       return 0
     }

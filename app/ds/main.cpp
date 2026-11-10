@@ -20,6 +20,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/diff/Diff.hpp"
 #include "ds/export/JsonExport.hpp"
+#include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -170,31 +171,6 @@ int check(const std::string& dir, bool json) {
   return report["errors"].get<int>() ? 1 : 0;
 }
 
-/// A static drawing of a render-IR document: svg, text for a terminal, or cells.
-std::string drawing(const ds::render::IrDocument& doc, const std::string& format, int width) {
-  if (format == "text") return ds::render::Text().render(doc, isatty(1) != 0, width);
-  if (format == "cells") return ds::render::Text().cells(doc, width) + "\n";
-  return ds::render::Svg().render(doc, width);
-}
-
-std::string layoutJson(const std::string& doc, int width) {
-  // the placed rectangles and routes, in cells: the portable form for hosts that draw themselves
-  const ds::render::IrDocument parsed = ds::render::IrDocument::parse(doc).bundled();
-  const ds::render::LayoutResult lay = ds::render::layout(parsed, ds::render::Metrics::text(), width);
-  nlohmann::json out = {{"nodes", nlohmann::json::array()}, {"routes", nlohmann::json::array()}};
-  for (const auto& p : lay.placed) {
-    out["nodes"].push_back(
-        {{"id", p.node->id}, {"kind", p.node->kind}, {"x", p.rect.x}, {"y", p.rect.y}, {"w", p.rect.w}, {"h", p.rect.h}});
-  }
-  for (const auto& r : lay.routes) {
-    const ds::render::IrEdge& e = parsed.edges[r.first];
-    nlohmann::json points = nlohmann::json::array();
-    for (const auto& pt : r.second.points) points.push_back({pt.x, pt.y});
-    out["routes"].push_back({{"from", e.from}, {"to", e.to}, {"kind", e.kind}, {"points", points}});
-  }
-  return out.dump() + "\n";
-}
-
 std::string diagramId(const std::string& name) { return name.rfind("diagram:", 0) == 0 ? name : "diagram:" + name; }
 
 /// One way to look at the design: the whole model in the viewer (html, or its data as json), or one
@@ -216,9 +192,7 @@ struct Render {
         std::cerr << "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace\n";
         return 2;
       }
-      if (format == "ir") return emit(output, doc);
-      if (format == "layout") return emit(output, layoutJson(doc, width));
-      return emit(output, drawing(ds::render::IrDocument::parse(doc), format, width));
+      return emit(output, diagramFormat(false)->write({doc}, drawingOptions(false)));  // as it came, drawn by the format named
     }
     ds::model::Model model;
     if (!loadWorkspace(input, &model)) return 2;
@@ -250,14 +224,25 @@ struct Render {
       std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
       return 2;
     }
-    const std::string doc = ds::render::IrExport(model).render(diagramId(diagram), format == "ir");
+    const std::string doc = ds::render::IrExport(model).render(diagramId(diagram), false);
     if (doc.empty()) {
       std::cerr << "no diagram named " << diagram << "\n";
       return 1;
     }
-    if (format == "ir") return emit(output, doc + "\n");
-    if (format == "layout") return emit(output, layoutJson(doc, width));
-    return emit(output, drawing(ds::render::IrDocument::parse(doc), format, width));
+    return emit(output, diagramFormat(true)->write({doc}, drawingOptions(true)) + (format == "ir" ? "\n" : ""));
+  }
+
+  // a diagram is its IR, written by the format named (DS-126); the IR of a workspace is indented
+  std::unique_ptr<ds::format::IFormat<ds::render::IrText>> diagramFormat(bool) const {
+    auto formats = ds::format::diagramFormats();
+    return std::move(formats.at(format));
+  }
+  ds::format::FormatOptions drawingOptions(bool workspace) const {
+    ds::format::FormatOptions options;
+    options.pretty = workspace;
+    options.width = width;
+    options.color = isatty(1) != 0;
+    return options;
   }
 };
 
@@ -395,7 +380,10 @@ int main(int argc, char** argv) {
         std::cerr << "no diagram named " << diagram << "\n";
         return 1;
       }
-      std::cout << drawing(ds::render::IrDocument::parse(doc), format, diffWidth);
+      ds::format::FormatOptions options;  // the marked diagram, written by the format named (DS-126)
+      options.width = diffWidth;
+      options.color = isatty(1) != 0;
+      std::cout << ds::format::diagramFormats().at(format)->write({doc}, options);
       // the drawing is the output; what the diff raises still counts, and goes where it cannot spoil a drawing
       for (const auto& f : result.findings)
         std::cerr << f.location.file << ":" << f.location.line << "  " << f.code << "  " << f.message << "\n";
