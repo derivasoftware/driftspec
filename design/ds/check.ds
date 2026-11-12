@@ -18,8 +18,6 @@ package driftspec@ds {
       @requirement REQ-00098-1
       - refs model_: model::Model
       - refs resolver_: Resolver
-      - owns parent_: std::map<std::string, std::string>
-      - owns children_: std::map<std::string, std::vector<std::string>>
       - owns byKind_: std::map<std::string, std::vector<std::string>>
       - owns forward_: std::map<std::string, std::multimap<std::string, std::string>>
       - owns backward_: std::map<std::string, std::multimap<std::string, std::string>>

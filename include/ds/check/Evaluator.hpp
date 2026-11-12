@@ -53,8 +53,6 @@ class Evaluator {
   model::Model& model_;
   std::vector<model::Finding> found_;
   const Resolver& resolver_;
-  std::map<std::string, std::string> parent_;                                ///< what holds each entity
-  std::map<std::string, std::vector<std::string>> children_;                 ///< what each entity holds
   std::map<std::string, std::vector<std::string>> byKind_;                   ///< the declared entities of each kind name
   std::map<std::string, std::multimap<std::string, std::string>> forward_;   ///< relation, from, to
   std::map<std::string, std::multimap<std::string, std::string>> backward_;  ///< relation, to, from

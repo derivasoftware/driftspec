@@ -36,7 +36,8 @@ have had.
 A refactor keeps the output identical, and we show it: export, scene, check and
 every diagram of every example, of DriftSpec's design and of the sandbox, compared
 byte for byte with `main`. A difference is a defect of the refactor until it is
-explained.
+explained. `tools/same.sh <ds-of-main> <ds-of-the-branch>` does the comparison over
+the design and every example.
 
 ## Draw before building
 

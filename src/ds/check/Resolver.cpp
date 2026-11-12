@@ -51,8 +51,8 @@ bool Resolver::derives(const std::string& derived, const std::string& base) cons
     pending.pop_back();
     if (current == base) return true;
     if (!seen.insert(current).second) continue;
-    for (const auto& r : model_.relations()) {
-      if (r.kind == "inherits" && r.from == current) pending.push_back(r.to);
+    for (const auto& r : model_.index().from(current)) {
+      if (r.kind == "inherits") pending.push_back(r.to);
     }
   }
   return false;
@@ -67,8 +67,8 @@ const model::Entity* Resolver::member(const std::string& type, const std::string
     for (const auto& t : level) {
       if (!seen.insert(t).second) continue;
       if (const model::Entity* m = model_.find(t + "::" + name)) return m;
-      for (const auto& r : model_.relations())
-        if (r.kind == "inherits" && r.from == t) next.push_back(r.to);
+      for (const auto& r : model_.index().from(t))
+        if (r.kind == "inherits") next.push_back(r.to);
     }
     level.swap(next);
   }

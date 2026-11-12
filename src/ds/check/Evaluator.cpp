@@ -92,31 +92,16 @@ std::vector<model::Finding> Evaluator::run() {
 
 // What holds what (contains, else the declared scope), the entities of each kind and every relation
 // both ways: the facts a rule is evaluated over.
+// The joins a rule asks for: its relations by their ends, and the declared entities of each kind.
+// What holds what is the model's own index (DS-171).
 void Evaluator::index() {
-  // what holds what is a tree: a link that would close a cycle (a model a syntax error left half
-  // bound can say a holds b and b holds a) is left out, so every walk up or down it ends
-  const auto above = [this](const std::string& from, const std::string& id) {
-    std::set<std::string> seen;
-    for (auto it = parent_.find(from); it != parent_.end() && seen.insert(it->first).second; it = parent_.find(it->second))
-      if (it->second == id) return true;
-    return from == id;
-  };
   for (const auto& r : model_.relations()) {
     forward_[r.kind].insert({r.from, r.to});
     backward_[r.kind].insert({r.to, r.from});
-    if (r.kind == "contains" && !parent_.count(r.to) && !above(r.from, r.to)) {
-      parent_[r.to] = r.from;
-      children_[r.from].push_back(r.to);
-    }
   }
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
-    if (e.expected) continue;
-    byKind_[model::kindName(e.kind)].push_back(e.id);
-    if (!parent_.count(e.id) && !e.scope.empty() && e.scope != e.id && model_.find(e.scope) && !above(e.scope, e.id)) {
-      parent_[e.id] = e.scope;
-      children_[e.scope].push_back(e.id);
-    }
+    if (!e.expected) byKind_[model::kindName(e.kind)].push_back(e.id);
   }
 }
 
@@ -383,8 +368,9 @@ std::string Evaluator::definitionOf(const std::string& owner, const std::string&
 }
 
 bool Evaluator::contains(const std::string& outer, const std::string& inner) const {
-  for (auto it = parent_.find(inner); it != parent_.end(); it = parent_.find(it->second))
-    if (it->second == outer) return true;
+  const model::Index index = model_.index();
+  for (std::string up = index.parent(inner); !up.empty(); up = index.parent(up))
+    if (up == outer) return true;
   return false;
 }
 
@@ -485,16 +471,14 @@ std::vector<Bindings> Evaluator::answers(const std::string& owner, const model::
     }
     case Form::In: {
       if (hasA) {  // what holds a, outward
-        for (auto it = parent_.find(a); it != parent_.end(); it = parent_.find(it->second)) offer({{1, it->second}});
+        for (std::string up = model_.index().parent(a); !up.empty(); up = model_.index().parent(up)) offer({{1, up}});
         break;
       }
       std::vector<std::string> stack{z};  // what z holds, inward
       while (!stack.empty()) {
         const std::string at = stack.back();
         stack.pop_back();
-        const auto kids = children_.find(at);
-        if (kids == children_.end()) continue;
-        for (const auto& kid : kids->second) {
+        for (const auto& kid : model_.index().children(at)) {
           offer({{0, kid}});
           stack.push_back(kid);
         }

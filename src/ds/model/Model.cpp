@@ -76,12 +76,15 @@ bool Entity::has(const std::string& flag) const {
 Entity& Model::declare(const Entity& entity) {
   auto it = entities_.find(entity.id);
   if (it == entities_.end()) {
+    indexEntity(entity, true);
     return entities_.emplace(entity.id, entity).first->second;
   }
   Entity& existing = it->second;
   if (existing.expected && !entity.expected) {
     // a declaration arrives for something referenced earlier (R6)
+    indexEntity(existing, false);
     existing = entity;
+    indexEntity(existing, true);
     return existing;
   }
   if (entity.expected) {
@@ -111,6 +114,35 @@ void Model::relate(const Relation& relation) {
   // a relation the metamodel does not declare is a defect of ds, not of the specification read
   if (!relationOf(relation.kind)) throw std::logic_error("the metamodel does not declare the relation '" + relation.kind + "'");
   relations_.push_back(relation);
+  const std::size_t position = relations_.size() - 1;
+  indexed_.from[relation.from].push_back(position);
+  indexed_.to[relation.to].push_back(position);
+  indexed_.kind[relation.kind].push_back(position);
+  if (relation.kind == "contains") indexed_.treeStale = true;
+}
+
+void Model::indexEntity(const Entity& entity, bool enters) {
+  indexed_.treeStale = true;
+  auto& members = indexed_.members[entity.scope];
+  auto& revisions = indexed_.revisions[withoutRevision(entity.id)];
+  if (enters) {
+    members.insert(entity.id);
+    if (!entity.expected) revisions.insert(entity.id);
+  } else {
+    members.erase(entity.id);
+    revisions.erase(entity.id);
+  }
+}
+
+void Model::indexAgain() {
+  indexed_ = Indexed();
+  for (const auto& pair : entities_) indexEntity(pair.second, true);
+  for (std::size_t position = 0; position < relations_.size(); ++position) {
+    const Relation& r = relations_[position];
+    indexed_.from[r.from].push_back(position);
+    indexed_.to[r.to].push_back(position);
+    indexed_.kind[r.kind].push_back(position);
+  }
 }
 
 bool Model::rename(const std::string& from, const std::string& to) {
@@ -167,6 +199,7 @@ bool Model::rename(const std::string& from, const std::string& to) {
       if (f.first == "expands" || f.first == "subject-of") translate(f.second);
     }
   }
+  indexAgain();  // identities moved: what was indexed by the old ones is built again
   return true;
 }
 

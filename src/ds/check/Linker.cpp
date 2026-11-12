@@ -44,11 +44,7 @@ void Linker::resolveReference(const bind::Reference& reference) {
       return;
     }
     // the declared revision of that artefact, whatever it is
-    const std::string bare = model::withoutRevision(reference.target);
-    std::string declaredId;
-    for (const auto& pair : model_->entities()) {
-      if (!pair.second.expected && model::withoutRevision(pair.first) == bare) declaredId = pair.first;
-    }
+    const std::string declaredId = model_->index().revisionOf(reference.target);
     if (!declaredId.empty() && declaredId != reference.target) {
       context_->report({"W-REVISION-DRIFT", "warning",
                         reference.from + " refers to " + reference.target + " but the workspace declares " + declaredId +
