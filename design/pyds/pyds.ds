@@ -648,6 +648,7 @@ package driftspec@pyds {
       + source: string
       + target: string
       + location: Location
+      + multiplicity: string
     }
     dataclass Finding {
       @requirement REQ-00086-1

@@ -60,6 +60,7 @@ class Relation:
     source: str
     target: str
     location: Location
+    multiplicity: str = ""  # how many a holding relation holds: "1", "*"; "" for the rest
 
 
 @dataclass(frozen=True)
@@ -185,7 +186,7 @@ def _entity(e: Mapping) -> Entity:
 
 
 def _relation(r: Mapping) -> Relation:
-    return Relation(r["kind"], r["from"], r["to"], _location(r.get("location", {})))
+    return Relation(r["kind"], r["from"], r["to"], _location(r.get("location", {})), r.get("multiplicity", ""))
 
 
 def _model(data: Mapping) -> Model:
