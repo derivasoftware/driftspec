@@ -24,6 +24,7 @@ server = LanguageServer("driftspec-lsp", "0.0.1")
 WORD = re.compile(r"[A-Za-z_][\w-]*(?:(?:::|@)[A-Za-z_][\w-]*)*")
 state: dict = {"model": None}       # the model of the workspace the request is about
 models: dict[str, pyds.Model] = {}  # every workspace open, by its directory
+workspaces: dict[str, pyds.Workspace] = {}  # the same, loaded once in the engine for drawing and the viewer (DS-173)
 published: dict[str, set[str]] = {}       # the files of each workspace that carry diagnostics
 
 
@@ -75,7 +76,8 @@ def use(ls: LanguageServer, uri: str) -> str:
 
 def refresh(ls: LanguageServer, ws: str) -> None:
     files = workspace_files(ls, ws)
-    models[ws] = state["model"] = pyds.load(files)
+    workspaces[ws] = pyds.Workspace(files)  # loaded once: the findings, the drawings and the viewer ask it
+    models[ws] = state["model"] = workspaces[ws].model()
     by_file: dict[str, list[lsp.Diagnostic]] = {path: [] for path in files}
     for f in state["model"].findings:
         line, col = max(f.location.line - 1, 0), max(f.location.column - 1, 0)
@@ -265,12 +267,11 @@ def draw(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
     what, name = subject_at(ls, uri, line, character, typed)
     if not what:
         return {"title": "", "text": f"nothing in {ws} is named '{name}': put the cursor on a diagram or an entity"}
-    files = workspace_files(ls, ws)
-    if what == "entity":
-        files, diagram = with_focus(files, name)
+    if what == "entity":  # a diagram written for the entity: a workspace of its own for this drawing
+        files, diagram = with_focus(workspace_files(ls, ws), name)
+        text = pyds.render(files, diagram, "text", width)
     else:
-        diagram = name
-    text = pyds.render(files, diagram, "text", width)
+        text = workspaces[ws].render(name, "text", width)
     return {"title": name, "text": text or f"{name} draws nothing"}
 
 
@@ -293,13 +294,12 @@ def view(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
     line, character = int(line), int(character)
     ws = use(ls, uri)
     what, name = subject_at(ls, uri, line, character, typed)
-    files = workspace_files(ls, ws)
     if what == "diagram":  # framed on what the diagram shows, as ds render <ws> <diagram> does
-        ir = pyds.render(files, name, "ir", 0)
+        ir = workspaces[ws].render(name, "ir", 0)
         focus = [n["id"] for n in _json.loads(ir).get("nodes", [])] if ir else []
     else:
         focus = [name] if name else []
-    html = pyds.page(files, os.path.basename(ws), focus)
+    html = workspaces[ws].page(os.path.basename(ws), focus)
     out = os.path.join(os.path.expanduser("~/.cache/driftspec"), "view.html")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:

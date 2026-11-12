@@ -5,14 +5,12 @@
 #include <string>
 #include <vector>
 
+#include "ds/api/Workspace.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
 namespace ds {
 namespace api {
-
-/// A workspace as text: each .ds file by its path, as an editor holds it (saved or not).
-using Files = std::map<std::string, std::string>;
 
 /// The engine for a caller in the same process (DS-84): text in, the JSON of the command line out,
 /// so a Python face, a language server or the command line itself see one contract.
