@@ -72,8 +72,7 @@ void DependencyCheck::checkDependencies() {
     return std::find(boxes.begin(), boxes.end(), box) != boxes.end();
   };
   std::map<std::string, std::set<std::string>> called;  // a box that declares, and the interfaces its behaviours call
-  for (const auto& r : model_->relations()) {
-    if (r.kind != "calls") continue;
+  for (const auto& r : model_->index().ofKind("calls")) {
     const std::string subject = model::subjectOf(r.from);
     const model::Entity* op = model_->find(r.to);
     if (subject.empty() || !op) continue;

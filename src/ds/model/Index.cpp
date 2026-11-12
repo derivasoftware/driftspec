@@ -19,6 +19,29 @@ std::vector<Relation> Index::from(const std::string& id) const { return at(model
 
 std::vector<Relation> Index::to(const std::string& id) const { return at(model_.indexed_.to, id); }
 
+std::vector<Relation> Index::touching(const std::string& id) const {
+  // the two lists are in the order stated: merged, a relation from an entity to itself comes once
+  static const std::vector<std::size_t> kNone;
+  const auto leaving = model_.indexed_.from.find(id);
+  const auto reaching = model_.indexed_.to.find(id);
+  const std::vector<std::size_t>& a = leaving == model_.indexed_.from.end() ? kNone : leaving->second;
+  const std::vector<std::size_t>& b = reaching == model_.indexed_.to.end() ? kNone : reaching->second;
+  std::vector<Relation> out;
+  out.reserve(a.size() + b.size());
+  std::size_t i = 0, j = 0;
+  while (i < a.size() || j < b.size()) {
+    if (j == b.size() || (i < a.size() && a[i] < b[j])) {
+      out.push_back(model_.relations_[a[i++]]);
+    } else if (i == a.size() || b[j] < a[i]) {
+      out.push_back(model_.relations_[b[j++]]);
+    } else {  // the same relation, by both ends
+      out.push_back(model_.relations_[a[i++]]);
+      ++j;
+    }
+  }
+  return out;
+}
+
 std::vector<Relation> Index::ofKind(const std::string& kind) const { return at(model_.indexed_.kind, kind); }
 
 std::vector<std::string> Index::members(const std::string& scope) const {

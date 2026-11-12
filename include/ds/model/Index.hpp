@@ -39,6 +39,8 @@ class Index {
   std::vector<Relation> from(const std::string& id) const;
   /// The relations that reach `id`, in the order stated.
   std::vector<Relation> to(const std::string& id) const;
+  /// The relations that leave or reach `id`, each once, in the order stated.
+  std::vector<Relation> touching(const std::string& id) const;
   /// Every relation of one kind, in the order stated.
   std::vector<Relation> ofKind(const std::string& kind) const;
   /// The identities declared in `scope` (their scope is that one), expected ones included, by identity.

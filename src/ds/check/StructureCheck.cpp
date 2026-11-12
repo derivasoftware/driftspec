@@ -46,8 +46,7 @@ void StructureCheck::checkOwnershipCycles() {
     model::Location location;
   };
   std::map<std::string, std::vector<Edge>> owns;
-  for (const auto& r : model_->relations()) {
-    if (r.kind != "owns") continue;
+  for (const auto& r : model_->index().ofKind("owns")) {
     const model::Entity* attribute = model_->find(r.from);
     const model::Entity* part = model_->find(r.to);
     if (!attribute || !part || part->expected) continue;
@@ -86,9 +85,7 @@ void StructureCheck::checkOwnershipCycles() {
 
 void StructureCheck::checkArtefacts() {
   std::set<std::string> verified;
-  for (const auto& r : model_->relations()) {
-    if (r.kind == "verifies") verified.insert(r.to);
-  }
+  for (const auto& r : model_->index().ofKind("verifies")) verified.insert(r.to);
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.expected) continue;
