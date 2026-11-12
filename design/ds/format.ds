@@ -50,15 +50,6 @@ package driftspec@ds {
     }
 
     // ---- the principles, as rules ----------------------------------------------------------
-    definition depends(a, b) {
-      title: a depends on b through one of its members or its behaviours
-      if a uses b
-      if m in a, m owns b
-      if m in a, m refs b
-      if m in a, m uses b
-      if m in a, s behaviour-of m, s uses b
-    }
-
     rule formats-read-no-model {
       title: a format writes the document it is given; it never reads the model
       @requirement REQ-00106-1

@@ -14,6 +14,17 @@ package driftspec@ds {
     class vector<T>
   }
 
+  // What it is to depend, said once for every rule of the tool (a definition of a package is in scope
+  // in its modules): through a member that owns, refers to or uses, or through a behaviour that uses.
+  definition depends(a, b) {
+    title: a depends on b itself, through one of its members or through its behaviours
+    if a uses b
+    if m in a, m owns b
+    if m in a, m refs b
+    if m in a, m uses b
+    if m in a, s behaviour-of m, s uses b
+  }
+
   module model {
 
     requirement REQ-00001-1 {
@@ -428,6 +439,7 @@ package driftspec@ds {
 
     dataclass Indexed {                      // what the model keeps so a question by identity needs no pass over it (DS-171)
       @requirement REQ-00001-1
+      @constraint CST-00008-1
       + from: std::map<std::string, std::vector<std::size_t>>
       + to: std::map<std::string, std::vector<std::size_t>>
       + kind: std::map<std::string, std::vector<std::size_t>>
@@ -438,9 +450,30 @@ package driftspec@ds {
       + treeStale: bool
     }
 
+    constraint CST-00008-1 {
+      tags: model, index
+      status: draft
+      category: design
+      title: What the model keeps to answer by identity shall hold no fact of its own, answer in the order the model states, and never lag a change of the model
+      rationale:
+        The index is a way into the model, not a second model (DS-171). Without it the model says the
+        same, slower; an answer in another order would change what every drawing and export writes; and
+        an index built apart would be stale halfway through a check, which changes the model as it goes.
+        So only declare, relate and rename change it, and nothing outside the module touches what it keeps.
+    }
+
+    rule only-the-model-keeps-the-index {
+      title: what is indexed is the model's own; no class outside the module depends on it
+      @requirement REQ-00001-1
+      for class c in driftspec@ds
+      where not c in driftspec@ds@model
+      never depends(c, driftspec@ds@model::Indexed)
+    }
+
     class Index {                            // the questions the model answers by identity, in the order it states them (DS-171)
       @requirement REQ-00001-1
       @constraint CST-00001-1
+      @constraint CST-00008-1
       - refs model_: Model
       + Index(model: Model)
       + from(id: std::string) -> std::vector<Relation>
@@ -469,6 +502,20 @@ package driftspec@ds {
         tests/unit/ds/model/test_index.cpp::TestIndex.ALinkThatWouldCloseACycleIsLeftOutOfTheTree
         tests/unit/ds/model/test_index.cpp::TestIndex.TheTreeFollowsWhatIsDeclaredAfterItWasAsked
         tests/unit/ds/model/test_index.cpp::TestIndex.AnArtefactIsFoundByAnyRevisionOrNone
+        tests/unit/ds/model/test_index.cpp::TestIndex.ARenameMovesEverythingIndexedByTheOldIdentity
+        tests/unit/ds/model/test_index.cpp::TestIndex.ACopyOfTheModelAnswersForItself
+    }
+
+    verification VER-00120-1 {
+      status: draft
+      @constraint CST-00008-1
+      title: Unit tests hold the index to the order stated, to every change of the model and to a copy that answers for itself; tools/same.sh holds every output to main
+      method: test
+      tests:
+        tests/unit/ds/model/test_index.cpp::TestIndex.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
+        tests/unit/ds/model/test_index.cpp::TestIndex.EveryRelationOfAKindComesInTheOrderStated
+        tests/unit/ds/model/test_index.cpp::TestIndex.ARelationStatedLaterIsAnsweredAtOnce
+        tests/unit/ds/model/test_index.cpp::TestIndex.TheTreeFollowsWhatIsDeclaredAfterItWasAsked
         tests/unit/ds/model/test_index.cpp::TestIndex.ARenameMovesEverythingIndexedByTheOldIdentity
         tests/unit/ds/model/test_index.cpp::TestIndex.ACopyOfTheModelAnswersForItself
     }
@@ -514,6 +561,9 @@ package driftspec@ds {
     sequence Model::declare {
       opt the identity is held {
         opt it was only expected, and this declares it / replaces-expected {
+          // the expected node leaves what is indexed and the declaration enters it: its scope may be another
+          -> indexEntity(existing, false)
+          -> indexEntity(existing, true)
           return existing
         }
         opt this is one more reference / referenced-again {
@@ -526,7 +576,119 @@ package driftspec@ds {
         }
         return existing
       }
+      -> indexEntity(entity, true)
       return entity
+    }
+
+    // A relation is kept where the others are, in the order stated, and what is indexed learns its
+    // position by each end and by its kind: the index never lags the list.
+    sequence Model::relate {
+      -> relationOf(relation.kind) -> declared
+      opt the metamodel does not declare that kind: a defect of ds, not of the design read / undeclared {
+        return
+      }
+      opt it is a contains / contains {
+        // the tree of what holds what is built again at the next question
+      }
+    }
+
+    sequence Model::indexEntity {
+      -> withoutRevision(entity.id) -> bare
+      alt it enters {
+        opt it is declared, not only expected {
+          // its identity is one of the declared revisions of bare
+        }
+      } else / leaves {
+      }
+    }
+
+    sequence Model::indexAgain {
+      loop each entity held {
+        -> indexEntity(entity, true)
+      }
+      loop each relation held, in the order stated {
+        // its position, by each end and by its kind
+      }
+    }
+
+    sequence Model::index {
+      local index: Index
+      return index
+    }
+
+    // ---- the index: one hop, in the order the model states -------------------------------------
+    sequence Index::from {
+      -> at(table, id) -> found
+      return found
+    }
+
+    sequence Index::to {
+      -> at(table, id) -> found
+      return found
+    }
+
+    sequence Index::ofKind {
+      -> at(table, kind) -> found
+      return found
+    }
+
+    sequence Index::at {
+      opt the table holds nothing for the key / none {
+        return found
+      }
+      loop each position the table holds for the key, in the order stated {
+        // the relation the model keeps there
+      }
+      return found
+    }
+
+    sequence Index::members {
+      opt the scope declares nothing / none {
+        return found
+      }
+      return found
+    }
+
+    sequence Index::parent {
+      -> tree()
+      opt nothing holds it / top {
+        return ""
+      }
+      return holder
+    }
+
+    sequence Index::children {
+      -> tree()
+      opt it holds nothing / leaf {
+        return held
+      }
+      return held
+    }
+
+    // What holds what is a tree. The contains relations say it first, in the order stated; then the
+    // scope of what none of them holds. A link that would close a cycle is left out (a model a syntax
+    // error left half bound can say a holds b and b holds a), so every walk up or down ends.
+    sequence Index::tree {
+      opt nothing changed since it was built / fresh {
+        return
+      }
+      loop each contains relation, in the order stated {
+        opt what it holds has no holder yet and the link closes no cycle {
+        }
+      }
+      loop each declared entity, by identity {
+        opt it has no holder yet, its scope is declared and the link closes no cycle {
+        }
+      }
+    }
+
+    sequence Index::revisionOf {
+      -> withoutRevision(artefact) -> bare
+      opt nothing declares that artefact / undeclared {
+        return ""
+      }
+      // the last by identity, as a pass over the entities in their order would leave it
+      return declared
     }
 
     sequence Model::rename {
@@ -564,6 +726,8 @@ package driftspec@ds {
           }
         }
       }
+      // identities moved: what was indexed by the old ones is built again
+      -> indexAgain()
       return true
     }
   }
