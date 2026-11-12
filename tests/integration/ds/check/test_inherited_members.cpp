@@ -58,7 +58,7 @@ class TestInheritedMembers : public ::testing::Test {
   }
 
   bool calls(const std::string& to) const {
-    for (const auto& r : model.relations())
+    for (const auto& r : model.index().all())
       if (r.kind == "calls" && r.to == to) return true;
     return false;
   }

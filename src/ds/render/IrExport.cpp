@@ -222,7 +222,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
 
   // relations: lifted from members to their class; one edge per (from, to, kind, label)
   std::set<std::string> drawn;
-  for (const auto& r : model_.relations()) {
+  for (const auto& r : model_.index().all()) {
     const std::string& change = r.change;                   // a diff marks a relation as added or removed
     std::string kind = edgeKind(model::readAs(model_, r));  // inheriting an interface is realisation, as in the viewer
     if (kind.empty()) continue;
@@ -250,8 +250,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   if (diagram->fields.count("open")) {
     // what a box does counts as much as what it declares: its behaviours cross boxes too, and a closed box
     // depends on whatever they reach. Types alone would leave an interface unconnected to what handles it
-    for (const auto& r : model_.relations()) {
-      if (r.kind != "couples-transient" && r.kind != "couples-structural") continue;
+    for (const auto& r : model_.index().ofKinds({"couples-transient", "couples-structural"})) {
       const std::string subject = model::subjectOf(r.from);
       if (subject.empty()) continue;
       const model::Entity* s = model_.find(subject);
@@ -728,7 +727,7 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
     if (!change.empty()) node["refs"]["change"] = change;
     out["nodes"].push_back(node);
   }
-  for (const auto& r : model_.relations()) {
+  for (const auto& r : model_.index().all()) {
     if (!selected.count(r.from) || !selected.count(r.to)) continue;
     if (r.kind == "refines") {
       out["edges"].push_back({{"from", r.from}, {"to", r.to}, {"kind", "realization"}, {"label", "refines"}});  // the parent above

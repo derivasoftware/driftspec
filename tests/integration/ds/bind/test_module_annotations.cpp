@@ -33,7 +33,7 @@ TEST_F(TestModuleAnnotations, AModuleAnswersToTheRequirementItsBodyNames) {
   bool
     requires
   = false;
-  for (const auto& r : model.relations()) requires |= r.kind == "requires" && r.from == "p@store" && r.to == "REQ-00001-1";
+  for (const auto& r : model.index().all()) requires |= r.kind == "requires" && r.from == "p@store" && r.to == "REQ-00001-1";
   EXPECT_TRUE(requires);
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().code;
 }

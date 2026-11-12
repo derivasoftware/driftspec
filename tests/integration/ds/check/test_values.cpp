@@ -43,7 +43,7 @@ TEST_F(TestValues, AResultIsAParticipantOfTheMessagesAfterIt) {
   EXPECT_FALSE(reported("W-PARTICIPANT-UNDECLARED", "'item'"));
   EXPECT_FALSE(reported("W-PARTICIPANT-UNDECLARED", "'special'"));
   bool called = false;
-  for (const auto& r : model.relations()) {
+  for (const auto& r : model.index().all()) {
     called = called || (r.kind == "calls" && r.to == "shop@store::Item::price");
   }
   EXPECT_TRUE(called);

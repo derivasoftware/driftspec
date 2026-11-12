@@ -63,7 +63,7 @@ std::string JsonExport::render(const model::Model& model, bool pretty) const {
                                {"location", locationJson(e.location)}});
   }
   out["relations"] = nlohmann::json::array();
-  for (const auto& r : model.relations()) {
+  for (const auto& r : model.index().all()) {
     nlohmann::json rel = {{"kind", r.kind}, {"from", r.from}, {"to", r.to}, {"location", locationJson(r.location)}};
     if (!r.multiplicity.empty()) rel["multiplicity"] = r.multiplicity;
     out["relations"].push_back(rel);

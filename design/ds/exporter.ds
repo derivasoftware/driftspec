@@ -70,7 +70,8 @@ package driftspec@ds {
       loop each entity {
         -> model::kindName(entity.kind) -> kind
       }
-      self -> model.relations() -> relations
+      self -> model.index() -> index
+      self -> index.all() -> relations
       loop each relation {
         opt it has a multiplicity {
         }

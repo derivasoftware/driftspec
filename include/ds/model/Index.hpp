@@ -28,10 +28,11 @@ struct Indexed {
   bool treeStale = true;                                     ///< the tree is built again at the next question
 };
 
-/// The questions the model answers by identity (DS-171): what leaves an entity and what reaches
-/// it, every relation of a kind, what a scope declares, what holds what, and the declared revision
-/// of an artefact. The answers come in the order the model states them, so whoever asks here says
-/// what a pass over the whole model said.
+/// The one way into the model's relations (DS-171), whoever asks: the model knows none of its
+/// readers. Every answer is a copy, in the order the model states the relations, so a reader can
+/// neither change the model nor be left holding what a later change moves; and whoever asks here
+/// says what a pass over the whole model said. Besides the relations: what a scope declares, what
+/// holds what, and the declared revision of an artefact.
 class Index {
  public:
   explicit Index(const Model& model) : model_(model) {}
@@ -43,6 +44,12 @@ class Index {
   std::vector<Relation> touching(const std::string& id) const;
   /// Every relation of one kind, in the order stated.
   std::vector<Relation> ofKind(const std::string& kind) const;
+  /// Every relation of any of these kinds, in the order stated.
+  std::vector<Relation> ofKinds(const std::vector<std::string>& kinds) const;
+  /// Every relation, in the order stated: for a reader of the whole model (an export, a diff).
+  std::vector<Relation> all() const;
+  /// How many relations the model states.
+  std::size_t count() const;
   /// The identities declared in `scope` (their scope is that one), expected ones included, by identity.
   std::vector<std::string> members(const std::string& scope) const;
   /// What holds `id`: the box a contains relation names, else its scope when the model declares it;

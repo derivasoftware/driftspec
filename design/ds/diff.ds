@@ -123,9 +123,12 @@ package driftspec@ds {
       loop each entity of b neither expected nor matched by a rename {
         self -> a.find(id) -> counterpart
       }
-      self -> a.relations() -> relationsBefore
-      self -> b.relations() -> relationsAfter
-      self -> a.relations() -> relationsBefore
+      // every relation of each, through the one way into a model's relations (DS-171)
+      self -> a.index() -> indexBefore
+      self -> b.index() -> indexAfter
+      self -> indexBefore.all() -> relationsBefore
+      self -> indexAfter.all() -> relationsAfter
+      self -> indexBefore.all() -> relationsBefore
       loop each relation of a {
         self -> a.find(source) -> sourceEntity
       }
@@ -147,17 +150,18 @@ package driftspec@ds {
           self -> out.declare(ghost)
         }
       }
-      self -> out.relations() -> relations
       local rebuilt: model::Model
       self -> out.entities() -> entities
       loop each entity of out {
         self -> rebuilt.declare(entity)
       }
-      self -> out.relations() -> relations
+      self -> out.index() -> marked
+      self -> marked.all() -> relations
       loop each relation of out {
         self -> rebuilt.relate(relation)
       }
-      self -> a.relations() -> relations
+      self -> a.index() -> before
+      self -> before.all() -> relations
       loop each relation of a {
         opt the diff removed it {
           self -> rebuilt.relate(relation)

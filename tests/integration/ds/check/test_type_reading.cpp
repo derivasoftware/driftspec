@@ -50,7 +50,7 @@ class TestTypeReading : public ::testing::Test {
 
   int calls(const std::string& to) const {
     int n = 0;
-    for (const auto& r : model.relations()) n += r.kind == "calls" && r.to == to ? 1 : 0;
+    for (const auto& r : model.index().all()) n += r.kind == "calls" && r.to == to ? 1 : 0;
     return n;
   }
 };

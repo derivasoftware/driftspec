@@ -439,7 +439,7 @@ package driftspec@ds {
 
     dataclass Indexed {                      // what the model keeps so a question by identity needs no pass over it (DS-171)
       @requirement REQ-00001-1
-      @constraint CST-00008-1
+      @constraint CST-00008-2
       + from: std::map<std::string, std::vector<std::size_t>>
       + to: std::map<std::string, std::vector<std::size_t>>
       + kind: std::map<std::string, std::vector<std::size_t>>
@@ -450,16 +450,21 @@ package driftspec@ds {
       + treeStale: bool
     }
 
-    constraint CST-00008-1 {
+    constraint CST-00008-2 {
       tags: model, index
       status: draft
       category: design
-      title: What the model keeps to answer by identity shall hold no fact of its own, answer in the order the model states, and never lag a change of the model
+      title: The model's relations shall be read only through its index, which answers with copies in the order the model states, holds no fact of its own and never lags a change of the model
       rationale:
-        The index is a way into the model, not a second model (DS-171). Without it the model says the
-        same, slower; an answer in another order would change what every drawing and export writes; and
-        an index built apart would be stale halfway through a check, which changes the model as it goes.
-        So only declare, relate and rename change it, and nothing outside the module touches what it keeps.
+        The model knows none of its readers, so it gives every one the same contract and no exception
+        (Owner, 2026-11-12: a rule with exceptions is no rule). The list it keeps is private: a reader
+        that held it could be left pointing at what a later relation moves, as the use case check and
+        the diff did. The index is a way into the model, not a second model (DS-171): without it the
+        model says the same, slower; an answer in another order would change what every drawing and
+        export writes; and an index built apart would be stale halfway through a check, which changes
+        the model as it goes. So only declare, relate and rename change it, and the visibility of the
+        language says who may read the list: a behaviour outside the model that reaches it is
+        W-NOT-VISIBLE.
     }
 
     rule only-the-model-keeps-the-index {
@@ -473,13 +478,16 @@ package driftspec@ds {
     class Index {                            // the questions the model answers by identity, in the order it states them (DS-171)
       @requirement REQ-00001-1
       @constraint CST-00001-1
-      @constraint CST-00008-1
+      @constraint CST-00008-2
       - refs model_: Model
       + Index(model: Model)
       + from(id: std::string) -> std::vector<Relation>
       + to(id: std::string) -> std::vector<Relation>
       + touching(id: std::string) -> std::vector<Relation>
       + ofKind(kind: std::string) -> std::vector<Relation>
+      + ofKinds(kinds: std::vector<std::string>) -> std::vector<Relation>
+      + all() -> std::vector<Relation>
+      + count() -> std::size_t
       + members(scope: std::string) -> std::vector<std::string>
       + parent(id: std::string) -> std::string
       + children(id: std::string) -> std::vector<std::string>
@@ -506,12 +514,14 @@ package driftspec@ds {
         tests/unit/ds/model/test_index.cpp::TestIndex.AnArtefactIsFoundByAnyRevisionOrNone
         tests/unit/ds/model/test_index.cpp::TestIndex.ARenameMovesEverythingIndexedByTheOldIdentity
         tests/unit/ds/model/test_index.cpp::TestIndex.ACopyOfTheModelAnswersForItself
+        tests/unit/ds/model/test_index.cpp::TestIndex.SeveralKindsAndTheWholeListComeInTheOrderStated
+        tests/unit/ds/model/test_index.cpp::TestIndex.AnAnswerIsACopyThatALaterChangeLeavesAsItWas
     }
 
-    verification VER-00120-1 {
+    verification VER-00120-2 {
       status: draft
-      @constraint CST-00008-1
-      title: Unit tests hold the index to the order stated, to every change of the model and to a copy that answers for itself; tools/same.sh holds every output to main
+      @constraint CST-00008-2
+      title: Unit tests hold the index to the order stated, to every change of the model, to answers a later change leaves as they were and to a copy that answers for itself; tools/same.sh holds every output to main
       method: test
       tests:
         tests/unit/ds/model/test_index.cpp::TestIndex.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
@@ -542,7 +552,7 @@ package driftspec@ds {
       + report(finding: Finding) -> void
       + rename(from: std::string, to: std::string) -> bool
       + entities() -> std::map<std::string, Entity>
-      + relations() -> std::vector<Relation>
+      - relations() -> std::vector<Relation>
       + findings() -> std::vector<Finding>
       + formulas() -> std::map<std::string, Formula> {
         @requirement REQ-00095-2
@@ -654,6 +664,24 @@ package driftspec@ds {
         // the relation the model keeps there
       }
       return found
+    }
+
+    // Each kind's positions are in the order stated: together, sorted, they are again.
+    sequence Index::ofKinds {
+      loop each kind asked {
+        // its positions join the others
+      }
+      // sorted, they are the order stated
+      return found
+    }
+
+    // A copy of the whole list: for a reader of the whole model, an export or a diff.
+    sequence Index::all {
+      return found
+    }
+
+    sequence Index::count {
+      return held
     }
 
     sequence Index::members {

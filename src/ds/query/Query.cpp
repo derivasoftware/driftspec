@@ -140,8 +140,7 @@ std::vector<Answer> Query::shows(const std::string& diagram) const {
 // derived from behaviour: a local or an attribute typed in another module is coupling to it
 std::vector<Answer> Query::coupling() const {
   std::vector<Answer> out;
-  for (const auto& r : model_.relations()) {
-    if (r.kind != "couples-structural" && r.kind != "couples-transient") continue;
+  for (const auto& r : model_.index().ofKinds({"couples-structural", "couples-transient"})) {
     const model::Entity* seq = model_.find(r.from);
     out.push_back({r.kind, r.to, (seq ? seq->name + " in " + seq->scope : r.from)});
   }

@@ -67,6 +67,23 @@ TEST_F(TestIndex, WhatTouchesAnEntityComesOnceInTheOrderStated) {
   EXPECT_TRUE(model.index().touching("p@m::Nobody").empty());
 }
 
+TEST_F(TestIndex, SeveralKindsAndTheWholeListComeInTheOrderStated) {
+  const std::vector<std::string> kinds = {"contains p@m", "inherits p@m::A", "uses p@m::B", "uses p@m::A"};
+  EXPECT_EQ(ends(model.index().ofKinds({"uses", "inherits", "contains"}), true), kinds);  // the order asked does not matter
+  EXPECT_EQ(ends(model.index().all(), true), kinds);
+  EXPECT_EQ(model.index().count(), 4u);
+  EXPECT_TRUE(model.index().ofKinds({"owns", "refs"}).empty());
+}
+
+TEST_F(TestIndex, AnAnswerIsACopyThatALaterChangeLeavesAsItWas) {
+  const std::vector<Relation> held = model.index().all();
+  for (int i = 0; i < 1000; ++i) model.relate({"uses", "p@m::A", "p@m::B", {}, ""});  // the list grows, and moves
+  ASSERT_EQ(held.size(), 4u);
+  EXPECT_EQ(held[1].kind, "inherits");
+  EXPECT_EQ(held[3].to, "p@m::A");
+  EXPECT_EQ(model.index().count(), 1004u);
+}
+
 TEST_F(TestIndex, ARelationStatedLaterIsAnsweredAtOnce) {
   model.relate({"uses", "p@m::B", "p@m::A::run", {}, ""});
   EXPECT_EQ(model.index().from("p@m::B").size(), 3u);

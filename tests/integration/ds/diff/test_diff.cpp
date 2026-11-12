@@ -238,7 +238,7 @@ TEST_F(TestDiff, TheMarkedModelCarriesTheChangesForADrawing) {
   EXPECT_EQ(marked.find("p@m::Text")->fields.at("change"), "removed");
   EXPECT_EQ(marked.find("p@m::Cli::svg")->fields.at("change"), "added");
   bool removedEdge = false, addedEdge = false;
-  for (const auto& r : marked.relations()) {
+  for (const auto& r : marked.index().all()) {
     removedEdge |= r.kind == "owns" && r.change == "removed" && r.from == "p@m::Cli::text";
     addedEdge |= r.kind == "owns" && r.change == "added" && r.from == "p@m::Cli::svg";
   }

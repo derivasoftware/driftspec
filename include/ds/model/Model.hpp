@@ -153,7 +153,6 @@ class Model {
   bool rename(const std::string& from, const std::string& to);
 
   const std::map<std::string, Entity>& entities() const { return entities_; }
-  const std::vector<Relation>& relations() const { return relations_; }
   const std::vector<Finding>& findings() const { return findings_; }
   std::vector<Finding>& findings() { return findings_; }
   /// What the rules and definitions say, by the identity of each.
@@ -167,6 +166,8 @@ class Model {
 
  private:
   friend class Index;
+  /// The relations as the model keeps them: read through index(), the one way in for a reader.
+  const std::vector<Relation>& relations() const { return relations_; }
   /// An entity enters what is indexed, or leaves it.
   void indexEntity(const Entity& entity, bool enters);
   /// Everything indexed, built again from the entities and the relations (after a rename).

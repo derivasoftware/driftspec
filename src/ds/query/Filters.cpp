@@ -123,7 +123,7 @@ std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
   // neighbours: n widens the selection to what the selected entities relate to, n steps away
   for (int step = 0; step < neighbours_; ++step) {
     std::set<std::string> grown = selected;
-    for (const auto& r : model.relations()) {
+    for (const auto& r : model.index().all()) {
       if (!drawnAsEdge(r.kind)) continue;
       const model::Entity* from = model.find(r.from);
       const model::Entity* to = model.find(r.to);
@@ -280,7 +280,7 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
   bool grew = true;
   while (grew) {
     grew = false;
-    for (const auto& r : model.relations()) {
+    for (const auto& r : model.index().ofKinds({"refines", "verifies", "requires", "constrained-by"})) {
       if ((r.kind == "refines" && selected.count(r.to) && !selected.count(r.from)) ||
           (verifications_ && r.kind == "verifies" && selected.count(r.to) && !selected.count(r.from)) ||
           (design_ && (r.kind == "requires" || r.kind == "constrained-by") && selected.count(r.to) && !selected.count(r.from))) {

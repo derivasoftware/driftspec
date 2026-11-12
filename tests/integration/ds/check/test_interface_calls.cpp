@@ -29,7 +29,7 @@ class TestInterfaceCalls : public ::testing::Test {
   }
 
   bool related(const std::string& kind, const std::string& from, const std::string& to) const {
-    for (const auto& r : model.relations())
+    for (const auto& r : model.index().all())
       if (r.kind == kind && r.from == from && r.to == to) return true;
     return false;
   }

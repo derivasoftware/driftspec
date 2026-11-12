@@ -95,7 +95,7 @@ std::vector<model::Finding> Evaluator::run() {
 // The joins a rule asks for: its relations by their ends, and the declared entities of each kind.
 // What holds what is the model's own index (DS-171).
 void Evaluator::index() {
-  for (const auto& r : model_.relations()) {
+  for (const auto& r : model_.index().all()) {
     forward_[r.kind].insert({r.from, r.to});
     backward_[r.kind].insert({r.to, r.from});
   }
