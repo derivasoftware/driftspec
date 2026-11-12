@@ -66,8 +66,13 @@ pyds:
 # keeps each upload new; an upload of a version already there fails rather than replace it.
 # Consumers: pip install driftspec --index-url <the group's PyPI index>; the import is pyds.
 publish-pyds:
-  extends: [.on-mr-and-main]
   stage: deploy
+  # its own rules: .on-mr-and-main is an alias of .on-mr in ci-templates, and main is where it uploads
+  rules:
+    - if: $ARGOS_ON_DEMAND
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   interruptible: false
   script:
     - set -euo pipefail
