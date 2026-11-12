@@ -64,7 +64,7 @@ TEST_F(TestMetamodelConformance, EveryEntityAndRelationIsOneTheMetamodelDeclares
         EXPECT_NE(std::find(spec.parents.begin(), spec.parents.end(), parent), spec.parents.end())
             << dir << " " << e.id << " inside a " << ds::model::kindName(parent);
     }
-    for (const auto& r : model.relations()) {
+    for (const auto& r : model.index().all()) {
       ++relations;
       const ds::model::RelationSpec* spec = ds::model::relationOf(r.kind);
       ASSERT_NE(spec, nullptr) << dir << " relation " << r.kind;
@@ -153,12 +153,12 @@ TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNo
     if (f.code == "E-RELATION-KIND") kind.push_back(f.message);
   ASSERT_EQ(kind.size(), 1u);
   EXPECT_NE(kind[0].find("@interface engine"), std::string::npos) << kind[0];
-  for (const auto& r : wrong.relations()) EXPECT_FALSE(r.kind == "inherits" && r.from == "p@m::Api") << r.to;
+  for (const auto& r : wrong.index().all()) EXPECT_FALSE(r.kind == "inherits" && r.from == "p@m::Api") << r.to;
 
   const ds::model::Model right = check(" {\n      @interface engine\n    }");  // the way the language realises it
   for (const auto& f : right.findings()) EXPECT_NE(f.code, "E-RELATION-KIND") << f.message;
   bool realises = false;
-  for (const auto& r : right.relations()) realises |= r.kind == "realises" && r.from == "p@m::Api" && r.to == "p@engine";
+  for (const auto& r : right.index().all()) realises |= r.kind == "realises" && r.from == "p@m::Api" && r.to == "p@engine";
   EXPECT_TRUE(realises);
 }
 

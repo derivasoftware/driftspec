@@ -23,11 +23,9 @@ void StructureLayer::decorate(SceneDocument& out_document) {
 
 // each relation between two boxes, lifted to what the map draws, counted, with the calls that make it
 void StructureLayer::links(SceneDocument& out_document) const {
-  static const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "consumes", "calls"};
   std::map<std::tuple<std::string, std::string, std::string>, Link> links;
   std::map<std::tuple<std::string, std::string, std::string>, std::set<std::string>> sequences;
-  for (const auto& r : model_.relations()) {
-    if (!kinds.count(r.kind)) continue;
+  for (const auto& r : model_.index().ofKinds({"inherits", "realises", "owns", "shares", "refs", "uses", "consumes", "calls"})) {
     const std::string from = map_.land(r.from), to = map_.land(r.to);
     if (from.empty() || to.empty() || from == to || map_.parentOf(from) == to || map_.parentOf(to) == from) continue;  // within one box
     // a class that inherits from an interface realises it (R14): read as every drawing reads it

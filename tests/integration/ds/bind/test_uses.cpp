@@ -31,7 +31,7 @@ class TestUses : public ::testing::Test {
   }
 
   bool consumes(const std::string& from, const std::string& to) const {
-    for (const auto& r : model.relations())
+    for (const auto& r : model.index().all())
       if (r.kind == "consumes" && r.from == from && r.to == to) return true;
     return false;
   }
@@ -102,7 +102,7 @@ TEST_F(TestUses, AUseOfSomethingThatIsNoInterfaceIsReportedAndNotBound) {
   int kind = 0;
   for (const auto& c : codes()) kind += c == "E-RELATION-KIND" ? 1 : 0;
   EXPECT_EQ(kind, 1);
-  for (const auto& r : model.relations()) EXPECT_FALSE(r.kind == "consumes" && r.from == "sistema@service") << r.to;
+  for (const auto& r : model.index().all()) EXPECT_FALSE(r.kind == "consumes" && r.from == "sistema@service") << r.to;
 }
 
 TEST_F(TestUses, AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten) {

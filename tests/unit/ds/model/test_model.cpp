@@ -62,7 +62,7 @@ TEST_F(TestModel, ARenameCarriesMembersAndRelations) {
   EXPECT_EQ(model.find("p@m::run::sequence"), nullptr);
   ASSERT_NE(model.find("p@m::A::run::sequence::m0"), nullptr);
   EXPECT_EQ(model.find("p@m::A::run::sequence::m0")->scope, "p@m::A::run::sequence");
-  EXPECT_EQ(model.relations().front().from, "p@m::A::run::sequence");
+  EXPECT_EQ(model.index().all().front().from, "p@m::A::run::sequence");
   EXPECT_FALSE(model.rename("nobody", "x"));  // nothing to rename
 }
 
@@ -79,9 +79,9 @@ TEST_F(TestModel, ARenameOntoADeclaredIdentityIsRefused) {
 TEST_F(TestModel, ARelationTheMetamodelDoesNotDeclareIsRefused) {
   Model model;
   EXPECT_THROW(model.relate({"depends-on", "p@m::A", "p@m::B", {}, ""}), std::logic_error);
-  EXPECT_TRUE(model.relations().empty());
+  EXPECT_EQ(model.index().count(), 0u);
   model.relate({"uses", "p@m::A", "p@m::B", {}, ""});
-  EXPECT_EQ(model.relations().size(), 1u);
+  EXPECT_EQ(model.index().count(), 1u);
 }
 
 /// An entity knows the flags it was declared with.

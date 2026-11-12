@@ -31,7 +31,7 @@ class TestBehaviour : public ::testing::Test {
   }
 
   const ds::model::Relation* relation(const std::string& kind, const std::string& from, const std::string& to) const {
-    for (const auto& r : model.relations()) {
+    for (const auto& r : model.index().all()) {
       if (r.kind == kind && r.from == from && r.to == to) return &r;
     }
     return nullptr;
@@ -92,7 +92,7 @@ TEST_F(TestBehaviour, CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule
   EXPECT_NE(relation("couples-structural", "ds@lsp::Publisher::publish::sequence", "ds@ds::Model"), nullptr);
   EXPECT_NE(relation("couples-transient", "ds@lsp::Publisher::publish::sequence", "ds@ds::Checker"), nullptr);
   // inside ds nothing couples: cohesion
-  for (const auto& r : model.relations()) EXPECT_FALSE(r.kind.rfind("couples", 0) == 0 && r.from.rfind("ds@ds::", 0) == 0) << r.from;
+  for (const auto& r : model.index().all()) EXPECT_FALSE(r.kind.rfind("couples", 0) == 0 && r.from.rfind("ds@ds::", 0) == 0) << r.from;
 }
 
 TEST_F(TestBehaviour, StateEventsAndActionsAreOperations) {

@@ -82,7 +82,7 @@ void TraceLayer::verifications(SceneDocument& out_document) {
 
 // what each refines, binds, realises and proves, and the nodes that answer to it
 void TraceLayer::answers(SceneDocument& out_document) const {
-  for (const auto& r : model_.relations()) {
+  for (const auto& r : model_.index().ofKinds({"refines", "inherits", "requires", "realises", "verifies", "constrained-by"})) {
     if ((r.kind == "refines" || r.kind == "inherits") && at_.count(r.from)) {  // or the use case it specialises
       out_document.requirements[at_.at(r.from)].parent = r.to;
     } else if (r.kind == "requires" && at_.count(r.from) && out_document.requirements[at_.at(r.from)].kind == "usecase") {

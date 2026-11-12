@@ -51,7 +51,7 @@ class TestRules : public ::testing::Test {
   bool
     requires(const std::string& from, const std::string& to)
   const {
-    for (const auto& r : model.relations())
+    for (const auto& r : model.index().all())
       if (r.kind == "requires" && r.from == from && r.to == to) return true;
     return false;
   }

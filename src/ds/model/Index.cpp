@@ -1,5 +1,7 @@
 #include "ds/model/Index.hpp"
 
+#include <algorithm>
+
 #include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
 
@@ -43,6 +45,24 @@ std::vector<Relation> Index::touching(const std::string& id) const {
 }
 
 std::vector<Relation> Index::ofKind(const std::string& kind) const { return at(model_.indexed_.kind, kind); }
+
+std::vector<Relation> Index::ofKinds(const std::vector<std::string>& kinds) const {
+  // each kind's positions are in the order stated: together, sorted, they are again
+  std::vector<std::size_t> positions;
+  for (const auto& kind : kinds) {
+    const auto found = model_.indexed_.kind.find(kind);
+    if (found != model_.indexed_.kind.end()) positions.insert(positions.end(), found->second.begin(), found->second.end());
+  }
+  std::sort(positions.begin(), positions.end());
+  std::vector<Relation> out;
+  out.reserve(positions.size());
+  for (const std::size_t position : positions) out.push_back(model_.relations_[position]);
+  return out;
+}
+
+std::vector<Relation> Index::all() const { return model_.relations_; }
+
+std::size_t Index::count() const { return model_.relations_.size(); }
 
 std::vector<std::string> Index::members(const std::string& scope) const {
   const auto found = model_.indexed_.members.find(scope);

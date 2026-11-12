@@ -39,7 +39,7 @@ TEST_F(TestBinder, NestingGivesTheRelation) {
   // a field value runs to the end of its line, so closing braces take their own line
   bindText("package ds {\n requirement R-1 {\n title: t\n verification V-1 {\n test: x\n }\n }\n}\n");
   bool verifies = false;
-  for (const auto& r : model.relations()) verifies |= (r.kind == "verifies" && r.from == "V-1" && r.to == "R-1");
+  for (const auto& r : model.index().all()) verifies |= (r.kind == "verifies" && r.from == "V-1" && r.to == "R-1");
   EXPECT_TRUE(verifies);
   ASSERT_NE(model.find("R-1"), nullptr);
   EXPECT_EQ(model.find("R-1")->fields.at("title"), "t");

@@ -9,7 +9,7 @@ Report reportOf(const model::Model& model) {
   for (const auto& f : out.findings) out.errors += f.severity == "error" ? 1 : 0;
   for (const auto& e : model.entities()) out.expected += e.second.expected ? 1 : 0;
   out.entities = static_cast<int>(model.entities().size()) - out.expected;
-  out.relations = static_cast<int>(model.relations().size());
+  out.relations = static_cast<int>(model.index().count());
   return out;
 }
 

@@ -129,8 +129,8 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
   // who points at a class: the members (not containment) that reference it
   auto referrers = [](const model::Model& m, const std::string& id) {
     std::set<std::string> out;
-    for (const auto& r : m.relations()) {
-      if (r.to == id && r.kind != "contains") out.insert(r.from);
+    for (const auto& r : m.index().to(id)) {
+      if (r.kind != "contains") out.insert(r.from);
     }
     return out;
   };
@@ -216,21 +216,21 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
     return id;
   };
   std::set<std::string> relA, relB;
-  std::map<std::string, const model::Relation*> byKey;
-  for (const auto& r : a.relations()) {
+  std::map<std::string, model::Relation> byKey;  // copies: the index answers with copies
+  for (const auto& r : a.index().all()) {
     if (r.kind == "contains") continue;
     model::Relation t = r;
     t.from = translate(r.from);
     t.to = translate(r.to);
     relA.insert(relationKey(t));
   }
-  for (const auto& r : b.relations()) {
+  for (const auto& r : b.index().all()) {
     if (r.kind == "contains") continue;
     relB.insert(relationKey(r));
-    byKey[relationKey(r)] = &r;
+    byKey[relationKey(r)] = r;
   }
   std::map<std::string, std::string> scopeA;
-  for (const auto& r : a.relations()) {
+  for (const auto& r : a.index().all()) {
     const model::Entity* from = a.find(r.from);
     model::Relation t = r;
     t.from = translate(r.from);
@@ -242,8 +242,8 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
   }
   for (const auto& k : relB) {
     if (!relA.count(k)) {
-      const model::Relation* r = byKey[k];
-      const model::Entity* from = b.find(r->from);
+      const model::Relation& r = byKey[k];
+      const model::Entity* from = b.find(r.from);
       out.changes.push_back({"added", "relation", k, "relation", from ? from->scope : "", "", "", ""});
     }
   }
@@ -278,16 +278,15 @@ model::Model Diff::marked(const model::Model& a, const model::Model& b, const Di
     if (c.what != "relation") continue;
     (c.kind == "removed" ? removedRelations : addedRelations).insert(c.id);
   }
-  std::vector<model::Relation> relations = out.relations();
   // relations are rebuilt with their change marked, for a drawing that shows it
   model::Model rebuilt;
   for (const auto& pair : out.entities()) rebuilt.declare(pair.second);
-  for (const auto& r : out.relations()) {
+  for (const auto& r : out.index().all()) {
     model::Relation m = r;
     if (addedRelations.count(relationKey(r))) m.change = "added";
     rebuilt.relate(m);
   }
-  for (const auto& r : a.relations()) {
+  for (const auto& r : a.index().all()) {
     if (removedRelations.count(relationKey(r))) {
       model::Relation m = r;
       m.change = "removed";

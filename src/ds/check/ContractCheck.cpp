@@ -73,8 +73,8 @@ void ContractCheck::checkUseCases() {
     return e && !e->expected && e->kind == model::Kind::UseCase;
   };
   std::map<std::string, std::string> base;
-  std::map<std::string, std::vector<const model::Relation*>> realisedBy;
-  for (const auto& r : model_->relations()) {
+  std::map<std::string, std::vector<model::Relation>> realisedBy;  // copies: the index answers with copies
+  for (const auto& r : model_->index().all()) {
     const model::Entity* from = model_->find(r.from);
     if (!from) continue;
     if (r.kind == "inherits" && from->kind == model::Kind::UseCase) {
@@ -85,7 +85,7 @@ void ContractCheck::checkUseCases() {
             {"W-USECASE-UNDECLARED", "warning", r.from + " specialises '" + r.to + "', which is no use case of the workspace", r.location});
     } else if (r.kind == "realises" && from->kind == model::Kind::Operation) {
       if (isUseCase(r.to))
-        realisedBy[r.to].push_back(&r);
+        realisedBy[r.to].push_back(r);
       else
         found_.push_back(
             {"W-USECASE-UNDECLARED", "warning", r.from + " realises '" + r.to + "', which is no use case of the workspace", r.location});
@@ -135,18 +135,18 @@ void ContractCheck::checkUseCases() {
     for (const auto& uc : chain(pair.first)) realised.insert(uc);
     const model::Entity* promised = contract(pair.first);
     const std::set<std::string> ends = outcomes(pair.first);
-    for (const model::Relation* r : pair.second) {
-      const model::Entity* op = model_->find(r->from);
+    for (const model::Relation& r : pair.second) {
+      const model::Entity* op = model_->find(r.from);
       if (promised && signature(*op) != signature(*promised)) {
         found_.push_back({"W-USECASE-SIGNATURE", "warning",
                           op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised),
-                          r->location});
+                          r.location});
       }
       const std::string behaviour = model::behaviourId(op->id);
       for (const auto& end : ends) {
         if (end == "default" || model_->find(model::withScenario(behaviour, end)) || model::hasScenario(*model_, behaviour, end)) continue;
         found_.push_back({"W-USECASE-OUTCOME-UNHANDLED", "warning",
-                          op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r->location});
+                          op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r.location});
       }
       for (const auto& other : model_->entities()) {  // a scenario written apart that no outcome names
         const model::Entity& s = other.second;

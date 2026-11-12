@@ -47,7 +47,7 @@ void DependencyCheck::checkDependencies() {
   std::map<std::pair<std::string, std::string>, model::Location> written;
   std::map<std::string, std::string> offeredBy;           // an interface and the box that offers it
   std::map<std::string, std::set<std::string>> realised;  // a class and the interfaces it realises
-  for (const auto& r : model_->relations()) {
+  for (const auto& r : model_->index().ofKinds({"consumes", "exposes", "realises"})) {
     if (r.kind == "consumes") {
       declared[r.from].insert(r.to);
       written[{r.from, r.to}] = r.location;

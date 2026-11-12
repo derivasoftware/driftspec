@@ -237,9 +237,10 @@ package driftspec@ds {
           self -> index.from(id) -> leaving
         }
       }
-      self -> model_.relations() -> relations
+      self -> model_.index() -> all
+      self -> all.all() -> relations
       opt open: is written / open-boxes {
-        self -> model_.relations() -> behaviourCoupling
+        self -> all.ofKinds(coupling) -> behaviourCoupling
         -> closeBoxes(ir, open, pretty) -> closed
         return closed
       }
