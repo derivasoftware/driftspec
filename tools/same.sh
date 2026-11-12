@@ -56,5 +56,15 @@ for ws in "${workspaces[@]}"; do
     done
   done
 done
+# the difference between two versions, as text and drawn: each workspace against the next one
+previous=""
+for ws in "${workspaces[@]}"; do
+  [ -d "$ws" ] || continue
+  if [ -n "$previous" ]; then
+    same "diff $previous $ws" diff "$previous" "$ws"
+    same "diff $previous $ws wrapped" diff "$previous" "$ws" -f text -w 100
+  fi
+  previous=$ws
+done
 echo "$compared outputs compared, $differ differ"
 [ $differ -eq 0 ]

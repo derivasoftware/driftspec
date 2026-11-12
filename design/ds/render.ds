@@ -228,11 +228,13 @@ package driftspec@ds {
       }
       loop each selected box {
         self -> model_.find(id) -> entity
+        // its members and what it answers to are asked of the model's index (DS-171)
+        self -> model_.index() -> index
         opt it is a class or an interface {
-          self -> model_.entities() -> entities
+          self -> index.members(id) -> members
         }
         opt requirements are shown {
-          self -> model_.relations() -> relations
+          self -> index.from(id) -> leaving
         }
       }
       self -> model_.relations() -> relations
