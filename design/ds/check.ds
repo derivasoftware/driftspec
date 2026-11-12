@@ -377,6 +377,78 @@ package driftspec@ds {
       }
     }
 
+    // One reference becomes one relation, or a finding. An artefact is linked by its revision: the
+    // declared one is asked of the model's index, with no pass over the entities (DS-171).
+    sequence Linker::resolveReference {
+      opt it names an artefact by its id {
+        -> model::hasRevision(reference.target) -> pinned
+        opt it carries no revision / unpinned {
+          self -> context_.report(finding)
+          return
+        }
+        self -> model_.index() -> index
+        self -> index.revisionOf(reference.target) -> declared
+        opt the workspace declares another revision of it / drift {
+          self -> context_.report(finding)
+          self -> model_.relate(relation)
+          return
+        }
+      }
+      self -> resolver_.resolve(reference.target, reference.scope) -> target
+      opt nothing declares it and several extern modules name it / ambiguous {
+        self -> resolver_.externsNamed(reference.target) -> externs
+        self -> context_.report(finding)
+        return
+      }
+      opt nothing declares it / undeclared {
+        // an expected node takes its place, and it is said once
+        self -> model_.declare(expected) -> node
+        opt it is no use case and nobody said it yet {
+          self -> context_.report(finding)
+        }
+      }
+      opt a package reopened by its path / part-of {
+        self -> model_.relate(relation)
+        return
+      }
+      -> kindAllowed(reference, target) -> allowed
+      opt the language does not join those two kinds that way / refused {
+        return
+      }
+      self -> model_.relate(relation)
+      opt a relation that reaches into another box {
+        self -> context_.checkVisibility(reference.from, target, reference.location)
+        self -> context_.checkLeak(reference.from, target, reference.location)
+      }
+    }
+
+    // A member is found where it is declared: the type first, then its bases, nearest first (DS-105).
+    sequence Resolver::member {
+      loop each level of types, the type first {
+        loop each type of the level not seen before {
+          self -> model_.find(id) -> found
+          opt the type declares it / found {
+            return found
+          }
+          // its bases are the next level, asked of the index
+          self -> model_.index() -> index
+          self -> index.from(type) -> leaving
+        }
+      }
+      return found
+    }
+
+    sequence Evaluator::contains {
+      self -> model_.index() -> index
+      loop each holder of inner, outward {
+        self -> index.parent(inner) -> up
+        opt it is outer / held {
+          return true
+        }
+      }
+      return false
+    }
+
     // The results of the messages are remembered as they go: each exists only for the messages after it.
     sequence BehaviourTyping::run {
       self -> context_.binder() -> binder
@@ -540,7 +612,9 @@ package driftspec@ds {
       }
       loop while names are pending and the last taken is not base {
         opt the name was not seen before {
-          self -> model_.relations() -> relations
+          // what it inherits from, asked of the index: no pass over the relations
+          self -> model_.index() -> index
+          self -> index.from(name) -> leaving
         }
       }
       opt nothing pending is left and base never came up / unrelated {

@@ -606,14 +606,6 @@ package driftspec@ds {
     // methods; layers() is the one place that names them.
 
     // ---- the principles, as rules ----------------------------------------------------------
-    definition depends(a, b) {
-      title: a depends on b through one of its members or its behaviours
-      if m in a, m owns b
-      if m in a, m refs b
-      if m in a, m uses b
-      if m in a, s behaviour-of m, s uses b
-    }
-
     rule no-layer-knows-another {
       title: a layer adds its own part; it never depends on another layer
       @requirement REQ-00069-1

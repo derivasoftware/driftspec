@@ -1,0 +1,97 @@
+{
+ "notes": [
+  {
+   "id": "driftspec@ds@model::Index",
+   "text": "HECHO (DS-171, MR 88 en pipeline). Pieza nueva: el modelo contesta por identidad sin recorrerse entero. Check del dise\u00f1o: 267 ms \u2192 117 ms.",
+   "tone": "ok",
+   "seen": false,
+   "at": "16:07:31"
+  },
+  {
+   "id": "driftspec@ds@model::Model",
+   "text": "HECHO. Mantiene el \u00edndice al d\u00eda en declare, relate y rename; por eso nunca queda viejo a mitad de la comprobaci\u00f3n.",
+   "tone": "ok",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@check::Linker",
+   "text": "HECHO. Era el punto caliente: 58 % de la carga, una regex sobre cada identidad por cada referencia a un artefacto. Ahora pregunta index.revisionOf.",
+   "tone": "ok",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@check::Resolver",
+   "text": "HECHO. derives y member preguntan index.from en vez de recorrer todas las relaciones.",
+   "tone": "ok",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@check::Evaluator",
+   "text": "A MEDIAS. Ya usa el \u00e1rbol del \u00edndice (perdi\u00f3 el suyo). Conserva sus tablas de cruce para las reglas: es el 25 % del tiempo que queda.",
+   "tone": "warn",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@query::Query",
+   "text": "SIGUIENTE (2\u00aa MR). Siete pasadas completas pasan al \u00edndice. Aqu\u00ed decidiremos si los filtros se vuelven piezas componibles.",
+   "tone": "accent",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@check::StructureCheck",
+   "text": "SIGUIENTE (2\u00aa MR). Con ContractCheck y DependencyCheck: cada uno se construye su \u00edndice privado.",
+   "tone": "accent",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@scene::Scene",
+   "text": "3\u00aa MR. Escena, dibujado (render) y diff dejan sus pasadas e \u00edndices propios.",
+   "tone": "accent",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@bind::Binder",
+   "text": "DESPU\u00c9S (DS-172). La secuencia como \u00e1rbol y la posici\u00f3n con inicio y fin: hoy se aplanan en campos de texto.",
+   "tone": "accent",
+   "seen": false,
+   "at": "16:07:32"
+  },
+  {
+   "id": "driftspec@ds@api::Api",
+   "text": "DESPU\u00c9S (DS-173). Consultas, filtros, recorrido, diff e identidad accesibles desde Python. Hoy son cinco funciones de texto a JSON.",
+   "tone": "accent",
+   "seen": false,
+   "at": "16:07:32"
+  }
+ ],
+ "highlights": [
+  {
+   "id": "driftspec@ds@model::Index",
+   "tone": "ok"
+  },
+  {
+   "id": "driftspec@ds@model::Model",
+   "tone": "ok"
+  },
+  {
+   "id": "driftspec@ds@check::Linker",
+   "tone": "ok"
+  },
+  {
+   "id": "driftspec@ds@check::Resolver",
+   "tone": "ok"
+  },
+  {
+   "id": "driftspec@ds@check::Evaluator",
+   "tone": "ok"
+  }
+ ],
+ "comments": []
+}
