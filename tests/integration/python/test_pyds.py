@@ -14,6 +14,8 @@ class TestLoad:
         assert isinstance(greeter, pyds.Entity) and greeter.kind == "class"
         assert greeter.location.file.endswith("Greeter.ds")
         assert any(r.kind == "realises" and r.target == "UC-00001-1" for r in model.relations)
+        held = {r.source: r.multiplicity for r in model.relations if r.kind == "owns"}
+        assert held["hola@core::Greeter::style"] == "1" and held["hola@core::Greeter::history"] == "*"
         assert model.named("Greeter") == [greeter]
         assert not model.findings
 
