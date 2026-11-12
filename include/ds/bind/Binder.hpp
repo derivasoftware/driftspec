@@ -84,7 +84,10 @@ class Binder {
                      const std::vector<std::string>& params);
   void bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope);
   void bindSequence(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
-  void bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order, int& frames);
+  void bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& holder, int& order, int& frames);
+  /// One side of an alt (DS-172): a frame of kind branch the alt contains, `side` 0 for the first, 1 for the else.
+  std::string branch(const parse::ParsedFile& file, TSNode at, const std::string& sequence, const std::string& alt, int side,
+                     const std::string& scenario);
   /// Relate `from` to every class-like name of a type expression (R15, R16).
   TypeUse bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
                    const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,

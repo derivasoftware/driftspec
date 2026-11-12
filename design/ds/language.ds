@@ -890,12 +890,12 @@ package driftspec@ds {
           tags: language, lld, sequence
           status: approved
           title: A message shall name an operation of its target's type and match its arity, inside loop, alt and opt frames with prose conditions
-          verification VER-00029-1 {
-            title: Integration tests confirm a message names an operation of its target's type and matches its arity, inside loop, alt and opt frames with prose conditions
-            status: approved
+          verification VER-00029-2 {
+            title: Integration tests confirm a message names an operation of its target's type and matches its arity, inside loop, alt and opt frames with prose conditions, each step held by what encloses it
+            status: draft
             method: test
             tests:
-              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.FramesKeepTheirSpanAndElse
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.AnAltHoldsItsSidesAsBranchesAndEachSideItsSteps
               tests/integration/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
           }
         }

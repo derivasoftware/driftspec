@@ -39,10 +39,15 @@ void BehaviourLayer::tours(SceneDocument& out_document) {
     std::vector<std::string> scenarios{""};
     if (model::scenarioOf(seq.id).empty()) {  // the default behaviour, not one written apart for a scenario
       std::set<std::string> named;
-      for (const auto& f : model_.entities()) {
-        if (f.second.kind != model::Kind::Frame || f.second.scope != seq.id) continue;
-        for (const char* key : {"scenario", "else-scenario"}) {
-          const std::string s = fieldOf(f.second, key);
+      for (const auto& member : model_.index().members(seq.id)) {
+        const model::Entity& f = *model_.find(member);
+        if (f.kind != model::Kind::Frame || fieldOf(f, "kind") == "branch") continue;
+        // a loop or an opt names its scenario; an alt's sides name theirs, the first then the else
+        const std::vector<std::string> sides =
+            fieldOf(f, "kind") == "alt" ? std::vector<std::string>{f.id + "::b0", f.id + "::b1"} : std::vector<std::string>{f.id};
+        for (const auto& side : sides) {
+          const model::Entity* namer = model_.find(side);
+          const std::string s = namer ? fieldOf(*namer, "scenario") : "";
           if (!s.empty() && named.insert(s).second) scenarios.push_back(s);
         }
       }

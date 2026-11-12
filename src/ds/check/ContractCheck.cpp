@@ -253,14 +253,18 @@ void ContractCheck::checkScenarios() {
   std::map<std::string, int> named;
   for (const auto& pair : model_->entities()) {
     const model::Entity& f = pair.second;
-    if (f.kind != model::Kind::Frame) continue;
-    for (const char* key : {"scenario", "else-scenario"}) {
-      const auto name = f.fields.find(key);
-      if (name == f.fields.end()) continue;
+    if (f.kind != model::Kind::Frame || f.field("kind") == "branch") continue;
+    // a loop or an opt names its scenario itself; an alt's sides name theirs, where each is written
+    std::vector<const model::Entity*> namers{&f};
+    if (f.field("kind") == "alt") namers = {model_->find(f.id + "::b0"), model_->find(f.id + "::b1")};
+    for (const model::Entity* side : namers) {
+      if (!side) continue;
+      const std::string name = side->field("scenario");
+      if (name.empty()) continue;
       const std::string base = model::behaviourId(model::subjectOf(f.scope));  // the behaviour, whatever scenario holds the frame
-      if (++named[model::withScenario(base, name->second)] == 2 || model_->find(model::withScenario(base, name->second))) {
+      if (++named[model::withScenario(base, name)] == 2 || model_->find(model::withScenario(base, name))) {
         found_.push_back(
-            {"W-SCENARIO-TWICE", "warning", base + " names the scenario '" + name->second + "' twice: a scenario is one path", f.location});
+            {"W-SCENARIO-TWICE", "warning", base + " names the scenario '" + name + "' twice: a scenario is one path", side->location});
       }
     }
   }

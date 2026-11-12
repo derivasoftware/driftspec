@@ -9,7 +9,12 @@ namespace exporter {
 
 namespace {
 
-nlohmann::json locationJson(const model::Location& l) { return {{"file", l.file}, {"line", l.line}, {"column", l.column}}; }
+// where it starts, and where it ends when known: the place right after its last character (DS-172)
+nlohmann::json locationJson(const model::Location& l) {
+  nlohmann::json out = {{"file", l.file}, {"line", l.line}, {"column", l.column}};
+  if (l.endLine > 0) out["end"] = {{"line", l.endLine}, {"column", l.endColumn}};
+  return out;
+}
 
 nlohmann::json kindNames(const std::vector<model::Kind>& kinds) {
   nlohmann::json out = nlohmann::json::array();

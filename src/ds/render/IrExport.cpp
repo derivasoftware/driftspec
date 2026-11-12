@@ -6,6 +6,7 @@
 #include <regex>
 #include <sstream>
 
+#include "ds/model/SequenceTree.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
 
@@ -372,23 +373,22 @@ struct SequenceBuilder {
     const bool whole = path == kWhole;
     // what it takes and where each call goes on: the one walk of a behaviour (DS-130)
     const std::vector<query::Taken> steps = query::stepsOf(model, seq.id, path, whole ? nullptr : &kept);
+    const model::SequenceTree tree(model, seq.id);  // the frame around each step, where an alt's else begins (DS-172)
     auto drawn = [&](const std::string& frame) { return whole || kept.count(frame); };
     // a frame that holds no message (only prose, or a branch that ends with nothing) still has a row of its own
     std::vector<const model::Entity*> empty;
     if (whole) {
-      for (const auto& member : model.index().members(seq.id)) {
-        const model::Entity& f = *model.find(member);
-        if (f.kind == model::Kind::Frame && fieldOf(f, "first").empty()) empty.push_back(&f);
-      }
-      std::sort(empty.begin(), empty.end(),
-                [](const model::Entity* a, const model::Entity* b) { return std::stoi(fieldOf(*a, "at")) < std::stoi(fieldOf(*b, "at")); });
+      for (const auto& f : tree.frames())
+        if (tree.first(f).empty()) empty.push_back(model.find(f));
+      std::stable_sort(empty.begin(), empty.end(),
+                       [&tree](const model::Entity* a, const model::Entity* b) { return tree.at(a->id) < tree.at(b->id); });
     }
     size_t nextEmpty = 0;
     auto flushEmpty = [&](int before) {
-      for (; nextEmpty < empty.size() && std::stoi(fieldOf(*empty[nextEmpty], "at")) <= before; ++nextEmpty) {
+      for (; nextEmpty < empty.size() && tree.at(empty[nextEmpty]->id) <= before; ++nextEmpty) {
         const model::Entity& f = *empty[nextEmpty];
         edges.push_back({{"from", selfLine}, {"to", selfLine}, {"kind", "message"}, {"order", order}, {"label", "..."}, {"dashed", true}});
-        for (std::string id = f.id; !id.empty(); id = fieldOf(*model.find(id), "parent")) {
+        for (std::string id = f.id; !id.empty(); id = tree.frameOf(id)) {
           if (!firstOrder.count(id)) firstOrder[id] = order;
           lastOrder[id] = order;
         }
@@ -397,16 +397,16 @@ struct SequenceBuilder {
     };
     for (const query::Taken& taken : steps) {
       const model::Entity* m = model.find(taken.message);
-      flushEmpty(std::stoi(fieldOf(*m, "order")));
+      flushEmpty(tree.orderOf(m->id));
       if (fieldOf(*m, "return") == "true") {
         // a return inside a frame ends that branch early: it is drawn, so the frame is never empty
-        std::string frame = fieldOf(*m, "frame");
-        while (!frame.empty() && !drawn(frame)) frame = fieldOf(*model.find(frame), "parent");
+        std::string frame = tree.frameOf(m->id);
+        while (!frame.empty() && !drawn(frame)) frame = tree.frameOf(frame);
         if (frame.empty() || backLine.empty()) continue;  // the last return: the arrow back to whoever called tells it
-        for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
+        for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
           if (!drawn(f)) continue;
           if (!firstOrder.count(f)) firstOrder[f] = order;
-          if (fieldOf(*model.find(f), "else") == m->id) elseOrder[f] = order;
+          if (tree.elseOf(f) == m->id) elseOrder[f] = order;
         }
         const std::string value = fieldOf(*m, "result");
         edges.push_back({{"from", selfLine},
@@ -415,7 +415,7 @@ struct SequenceBuilder {
                          {"order", order++},
                          {"label", value.empty() ? "return" : "return " + value},
                          {"dashed", true}});
-        for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
+        for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
           if (drawn(f)) lastOrder[f] = order - 1;
         }
         continue;
@@ -435,12 +435,11 @@ struct SequenceBuilder {
         // two objects of one type are two lifelines: keyed by the name in the context, not by the type alone
         target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId + "|" + to, to + ": " + typeName, "participant", typeId);
       }
-      const std::string frame = fieldOf(*m, "frame");
-      for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent")) {
+      const std::string frame = tree.frameOf(m->id);
+      for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
         if (!drawn(f)) continue;  // a branch the path takes is drawn inline, without its frame
         if (!firstOrder.count(f)) firstOrder[f] = order;
-        const model::Entity* fe = model.find(f);
-        if (fieldOf(*fe, "else") == m->id) elseOrder[f] = order;
+        if (tree.elseOf(f) == m->id) elseOrder[f] = order;
       }
       const int row = order++;
       nlohmann::json edge = {{"from", selfLine},
@@ -476,7 +475,7 @@ struct SequenceBuilder {
       const std::string result = fieldOf(*m, "result");
       if (!result.empty())
         edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
-      for (std::string f = frame; !f.empty(); f = fieldOf(*model.find(f), "parent"))
+      for (std::string f = frame; !f.empty(); f = tree.frameOf(f))
         if (drawn(f)) lastOrder[f] = order - 1;  // after any expansion
     }
     flushEmpty(std::numeric_limits<int>::max());

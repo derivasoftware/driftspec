@@ -29,6 +29,8 @@ class Location:
     file: str
     line: int
     column: int
+    end_line: int = 0  # the place right after its last character; 0 when not known (DS-172)
+    end_column: int = 0
 
 
 @dataclass(frozen=True)
@@ -60,7 +62,14 @@ class Finding:
 
 
 def _location(d: Mapping) -> Location:
-    return Location(d.get("file", ""), int(d.get("line", 0)), int(d.get("column", 0)))
+    end = d.get("end", {})
+    return Location(
+        d.get("file", ""),
+        int(d.get("line", 0)),
+        int(d.get("column", 0)),
+        int(end.get("line", 0)),
+        int(end.get("column", 0)),
+    )
 
 
 def _finding(d: Mapping) -> Finding:
@@ -114,8 +123,10 @@ class Model:
         return bool({"package", "module"} & set(self.parents_of(kind))) or kind in ("package", "module")
 
     def laid_out(self, kind: str) -> bool:
-        """Whether a kind is laid out by a behaviour (a message, a frame) rather than declared."""
-        return self.parents_of(kind) == ["sequence"]
+        """Whether a kind is laid out by a behaviour (a message, a frame) rather than declared: it stands
+        only in a sequence or in a frame of one (DS-172)."""
+        parents = set(self.parents_of(kind))
+        return bool(parents) and parents <= {"sequence", "frame"}
 
     def named_kinds(self) -> set[str]:
         """The kinds a reference names: targets of a relation of the metamodel that stand in a box."""

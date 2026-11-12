@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "ds/model/Identity.hpp"
+#include "ds/model/SequenceTree.hpp"
 
 namespace ds {
 namespace query {
@@ -23,13 +24,8 @@ std::vector<Taken> stepsOf(const model::Model& model, const std::string& sequenc
                            std::set<std::string>* out_kept) {
   std::vector<const model::Entity*> messages;
   if (path == kEveryBranch) {
-    for (const auto& member : model.index().members(sequence)) {
-      const model::Entity* held = model.find(member);
-      if (held->kind == model::Kind::Message) messages.push_back(held);
-    }
-    std::sort(messages.begin(), messages.end(), [](const model::Entity* a, const model::Entity* b) {
-      return std::stoi(fieldOf(*a, "order")) < std::stoi(fieldOf(*b, "order"));
-    });
+    const model::SequenceTree tree(model, sequence);  // every branch, as written; kept while its answer is read
+    for (const auto& id : tree.messages()) messages.push_back(model.find(id));
   } else {
     messages = model::pathOf(model, sequence, path, out_kept);
   }
