@@ -20,8 +20,7 @@ variables:
   # and hands the reach record to the gate, which requires it (DS-11).
   ARGOS_EVIDENCE: "1"
 
-# The Release ds travels to the gate: argos reads this repository's design
-# through argos-design-driftspec, which drives the binary.
+# The Release ds travels to the viewer's tests (viewer-js).
 cpp-test:
   artifacts:
     when: always
@@ -32,15 +31,15 @@ cpp-test:
       junit: $BUILD_DIR/*.junit.xml
     expire_in: 1 week
 
-# The gate installs the DriftSpec reader over the fleet's pinned plugins
-# and finds ds in the build tree. Since DS-4 every class has its design and
-# the gate blocks the merge like everywhere else in the fleet.
+# The gate installs the DriftSpec reader over the fleet's pinned plugins, and
+# this merge request's own engine under it: the reader loads the design through
+# pyds (DS-90), so the wheel pyds-wheel builds from this tree is what reads it.
+# Since DS-4 every class has its design and the gate blocks the merge like
+# everywhere else in the fleet.
 argos-diagnose:
-  needs: [cpp-test, cpp-evidence, pre-commit]
+  needs: [pyds-wheel, cpp-evidence, pre-commit]
   script:
-    - pip install --no-deps "argos-design-driftspec==0.0.19"
-    - export PATH="$CI_PROJECT_DIR/build-ci:$PATH"
-    - ds 2>&1 | head -1 || true
+    - pip install --no-deps "argos-design-driftspec==0.0.20" dist/driftspec-*.whl
     - !reference [.argos-diagnose-gate, script]
 
 # pyds, the Python face (DS-84): the engine built as its CPython extension and
@@ -60,36 +59,45 @@ pyds:
       junit: build-py/pyds.junit.xml
     expire_in: 1 week
 
-# The Python face published (DS-181): the wheel built on every merge request, so a broken build is
-# seen before main, and uploaded to this project's PyPI registry on main, beside argos and its
-# plugins. One abi3 wheel serves every Python from 3.10. The version bump of every merge request
-# keeps each upload new; an upload of a version already there fails rather than replace it.
-# Consumers: pip install driftspec --index-url <the group's PyPI index>; the import is pyds.
-publish-pyds:
-  stage: deploy
+# The Python face as a wheel (DS-181): built on every merge request, so a broken build is seen
+# before main and the gate reads the design with it (DS-90). One abi3 wheel serves every Python
+# from 3.10.
+pyds-wheel:
+  stage: test
   # its own rules: .on-mr-and-main is an alias of .on-mr in ci-templates, and main is where it uploads
   rules:
     - if: $ARGOS_ON_DEMAND
       when: never
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  interruptible: false
   script:
     - set -euo pipefail
-    - rm -rf .publish dist && python3 -m venv .publish && . .publish/bin/activate
-    - pip install -q build 'twine>=6.1' 'packaging>=24.2'
+    - rm -rf .wheel dist && python3 -m venv .wheel && . .wheel/bin/activate
+    - pip install -q build
     - python -m build --wheel
     - ls -l dist/
-    - |
-      if [ "${CI_COMMIT_BRANCH:-}" = "$CI_DEFAULT_BRANCH" ]; then
-        TWINE_USERNAME=gitlab-ci-token TWINE_PASSWORD="$CI_JOB_TOKEN" \
-          twine upload --non-interactive --repository-url "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/pypi" dist/*.whl
-      else
-        echo "a merge request: the wheel builds, main uploads it"
-      fi
   artifacts:
     paths: [dist/]
     expire_in: 1 week
+
+# The wheel uploaded to this project's PyPI registry on main, beside argos and its plugins. The
+# version bump of every merge request keeps each upload new; an upload of a version already there
+# fails rather than replace it. Consumers: pip install driftspec --index-url <the group's PyPI
+# index>; the import is pyds.
+publish-pyds:
+  stage: deploy
+  rules:
+    - if: $ARGOS_ON_DEMAND
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  needs: [pyds-wheel]
+  interruptible: false
+  script:
+    - set -euo pipefail
+    - rm -rf .publish && python3 -m venv .publish && . .publish/bin/activate
+    - pip install -q 'twine>=6.1' 'packaging>=24.2'
+    - TWINE_USERNAME=gitlab-ci-token TWINE_PASSWORD="$CI_JOB_TOKEN"
+      twine upload --non-interactive --repository-url "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/pypi" dist/*.whl
 
 # The viewer's own code (DS-130): the tours it replays, run by node over scenes the
 # ds that cpp-test built writes. cpp-test runs each gtest binary, not ctest, so the
