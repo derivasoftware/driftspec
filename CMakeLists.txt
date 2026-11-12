@@ -33,11 +33,13 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/tree-sitter/tree-sitter.git
   GIT_TAG v0.25.3
   GIT_SHALLOW TRUE)
+# the release archive: the repository's test data makes a clone 25 MB (DS-182)
 FetchContent_Declare(
   nlohmann_json
-  GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.11.3
-  GIT_SHALLOW TRUE)
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+  URL_HASH
+    SHA256=d6c65aca6b1ed68e7a182f4757257b107ae403032760ed6ef121c9d55e81757d
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git

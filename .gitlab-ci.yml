@@ -20,12 +20,6 @@ variables:
   # and hands the reach record to the gate, which requires it (DS-11).
   ARGOS_EVIDENCE: "1"
 
-# The reach is read per test against its own binary and the product's programs
-# (DS-182): the recording takes a third of the time it took on the template's pin.
-cpp-evidence:
-  variables:
-    ARGOS_TEST_GTEST_SPEC: "argos-test-gtest==0.0.17"
-
 # The Release ds travels to the gate: argos reads this repository's design
 # through argos-design-driftspec, which drives the binary.
 cpp-test:
