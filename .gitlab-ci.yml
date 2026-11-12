@@ -60,6 +60,32 @@ pyds:
       junit: build-py/pyds.junit.xml
     expire_in: 1 week
 
+# The Python face published (DS-181): the wheel built on every merge request, so a broken build is
+# seen before main, and uploaded to this project's PyPI registry on main, beside argos and its
+# plugins. One abi3 wheel serves every Python from 3.10. The version bump of every merge request
+# keeps each upload new; an upload of a version already there fails rather than replace it.
+# Consumers: pip install driftspec --index-url <the group's PyPI index>; the import is pyds.
+publish-pyds:
+  extends: [.on-mr-and-main]
+  stage: deploy
+  interruptible: false
+  script:
+    - set -euo pipefail
+    - rm -rf .publish dist && python3 -m venv .publish && . .publish/bin/activate
+    - pip install -q build 'twine>=6.1' 'packaging>=24.2'
+    - python -m build --wheel
+    - ls -l dist/
+    - |
+      if [ "${CI_COMMIT_BRANCH:-}" = "$CI_DEFAULT_BRANCH" ]; then
+        TWINE_USERNAME=gitlab-ci-token TWINE_PASSWORD="$CI_JOB_TOKEN" \
+          twine upload --non-interactive --repository-url "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/pypi" dist/*.whl
+      else
+        echo "a merge request: the wheel builds, main uploads it"
+      fi
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+
 # The viewer's own code (DS-130): the tours it replays, run by node over scenes the
 # ds that cpp-test built writes. cpp-test runs each gtest binary, not ctest, so the
 # viewer's tests need a job of their own.

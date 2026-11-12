@@ -55,6 +55,7 @@ native module (abi3) serves every Python from 3.10 on.
 
 ```bash
 pip install ".[lsp]"            # builds pyds._native with scikit-build-core; lsp adds pygls
+pip install "driftspec[lsp]" --index-url <the group's PyPI index>   # or the wheel main publishes (DS-181)
 ```
 
 ```python

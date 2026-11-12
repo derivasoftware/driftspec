@@ -1,12 +1,14 @@
-# The Python face of DriftSpec (DS-84, a spike): the engine as a CPython extension (abi3) and a
-# language server on it. pip install . builds pyds._native with the CMake of this repository.
+# The Python face of DriftSpec (DS-84): the engine as a CPython extension (abi3) and a language
+# server on it. pip install . builds pyds._native with the CMake of this repository. Published to
+# the registry as driftspec (DS-181): PyPI already serves a pyds, which an install that also reads
+# PyPI would take over this one. The import stays pyds.
 [build-system]
 requires = ["scikit-build-core>=0.10"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "pyds"
-version = "0.0.94"
+name = "driftspec"
+version = "0.0.95"
 description = "DriftSpec: a software design as text, checked, drawn, compared and asked"
 requires-python = ">=3.10"
 dependencies = []
