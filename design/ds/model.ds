@@ -478,6 +478,7 @@ package driftspec@ds {
       + Index(model: Model)
       + from(id: std::string) -> std::vector<Relation>
       + to(id: std::string) -> std::vector<Relation>
+      + touching(id: std::string) -> std::vector<Relation>
       + ofKind(kind: std::string) -> std::vector<Relation>
       + members(scope: std::string) -> std::vector<std::string>
       + parent(id: std::string) -> std::string
@@ -495,6 +496,7 @@ package driftspec@ds {
       tests:
         tests/unit/ds/model/test_index.cpp::TestIndex.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
         tests/unit/ds/model/test_index.cpp::TestIndex.EveryRelationOfAKindComesInTheOrderStated
+        tests/unit/ds/model/test_index.cpp::TestIndex.WhatTouchesAnEntityComesOnceInTheOrderStated
         tests/unit/ds/model/test_index.cpp::TestIndex.ARelationStatedLaterIsAnsweredAtOnce
         tests/unit/ds/model/test_index.cpp::TestIndex.AScopeNamesWhatItDeclaresExpectedOnesIncluded
         tests/unit/ds/model/test_index.cpp::TestIndex.AnExpectedNodeThatIsDeclaredMovesToTheScopeOfItsDeclaration
@@ -624,6 +626,18 @@ package driftspec@ds {
 
     sequence Index::to {
       -> at(table, id) -> found
+      return found
+    }
+
+    // The two lists are in the order stated: merged, a relation from an entity to itself comes once.
+    sequence Index::touching {
+      loop while a position is left in what leaves id or in what reaches it {
+        alt the next one leaves id first {
+        } else / reaches {
+          opt it is the same relation by both ends {
+          }
+        }
+      }
       return found
     }
 

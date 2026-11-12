@@ -86,10 +86,10 @@ void Derivation::classify() {
 void Derivation::fillLanguages() {
   static const std::set<std::string> kKnown{"cpp", "c", "python", "typescript", "lua"};
   std::map<std::string, std::string> parent;
-  for (const auto& r : model_->relations()) {
+  for (const auto& r : model_->index().ofKind("contains")) {
     const model::Entity* from = model_->find(r.from);
     const model::Entity* to = model_->find(r.to);
-    if (r.kind == "contains" && from && to && (to->kind == model::Kind::Package || to->kind == model::Kind::Module)) parent[r.to] = r.from;
+    if (from && to && (to->kind == model::Kind::Package || to->kind == model::Kind::Module)) parent[r.to] = r.from;
   }
   std::vector<std::string> boxes;
   for (const auto& pair : model_->entities())

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Compare what two builds of ds write, byte for byte (doc/design-practices.md: a refactor proves it
 # changed nothing). Every workspace given is put through every output: check, export, the scene,
-# each question of query, and every diagram in every format.
+# each question of query (those about one entity, over a spread of identities), and every diagram
+# in every format.
 #
 #   tools/same.sh <ds-before> <ds-after> [workspace ...]      (default: design and every example)
 #
@@ -41,6 +42,12 @@ for ws in "${workspaces[@]}"; do
   same "$ws page" render "$ws" -f html
   for question in diagrams entities findings coupling; do
     same "$ws query $question" query "$ws" "$question"
+  done
+  # the questions about one entity, over a spread of identities of every kind
+  for id in $("$before" export "$ws" 2>/dev/null | grep -o '"id": *"[^"]*"' | sed 's/.*: *"//; s/"$//' | awk 'NR % 7 == 1' | head -120); do
+    for question in relations artefacts behaviours entities; do
+      same "$ws query $question $id" query "$ws" "$question" "$id"
+    done
   done
   for diagram in $("$before" query "$ws" diagrams 2>/dev/null | awk '{print $2}' | sed 's/^diagram://'); do
     same "$ws shows $diagram" query "$ws" shows "$diagram"

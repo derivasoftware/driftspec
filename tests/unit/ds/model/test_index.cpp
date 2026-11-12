@@ -57,6 +57,16 @@ TEST_F(TestIndex, EveryRelationOfAKindComesInTheOrderStated) {
   EXPECT_TRUE(model.index().ofKind("owns").empty());
 }
 
+TEST_F(TestIndex, WhatTouchesAnEntityComesOnceInTheOrderStated) {
+  model.relate({"uses", "p@m::B", "p@m::B", {}, ""});  // from an entity to itself: once
+  std::vector<std::string> ends;
+  for (const auto& r : model.index().touching("p@m::B")) ends.push_back(r.kind + " " + r.from + " " + r.to);
+  const std::vector<std::string> expected = {"inherits p@m::B p@m::A", "uses p@m::A::run p@m::B", "uses p@m::B p@m::A",
+                                             "uses p@m::B p@m::B"};
+  EXPECT_EQ(ends, expected);
+  EXPECT_TRUE(model.index().touching("p@m::Nobody").empty());
+}
+
 TEST_F(TestIndex, ARelationStatedLaterIsAnsweredAtOnce) {
   model.relate({"uses", "p@m::B", "p@m::A::run", {}, ""});
   EXPECT_EQ(model.index().from("p@m::B").size(), 3u);

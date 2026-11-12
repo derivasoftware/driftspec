@@ -289,14 +289,15 @@ package driftspec@ds {
       return out
     }
 
+    // The questions about one entity ask the model's index: what touches it, what leaves it, what
+    // reaches it. None walks the relations (DS-171).
     sequence Query::relations {
       local out: std::vector<Answer>
-      self -> model_.relations() -> held
-      loop each relation held {
+      self -> model_.index() -> index
+      self -> index.touching(id) -> held
+      loop each relation that leaves or reaches id, in the order stated {
         alt it starts at id {
         } else {
-          opt it ends at id {
-          }
         }
       }
       return out
@@ -304,12 +305,13 @@ package driftspec@ds {
 
     sequence Query::artefacts {
       local out: std::vector<Answer>
-      self -> model_.relations() -> held
-      loop each relation held {
-        opt it starts at id and realises, requires or is constrained by {
-          self -> model_.relations() -> others
-          loop each other relation {
-            opt it verifies the same target {
+      self -> model_.index() -> index
+      self -> index.from(id) -> leaving
+      loop each relation that leaves id {
+        opt it realises, requires or is constrained by {
+          self -> index.to(relation.to) -> reaching
+          loop each relation that reaches the same target {
+            opt it verifies it {
             }
           }
         }
@@ -319,9 +321,10 @@ package driftspec@ds {
 
     sequence Query::behaviours {
       local out: std::vector<Answer>
-      self -> model_.relations() -> held
-      loop each relation held {
-        opt a behaviour-of that ends at id {
+      self -> model_.index() -> index
+      self -> index.to(id) -> reaching
+      loop each relation that reaches id {
+        opt it is a behaviour-of {
           self -> model_.find(relation.from) -> behaviour
           opt the model holds it {
             -> entityAnswer(behaviour, scenario) -> answer
@@ -329,6 +332,22 @@ package driftspec@ds {
         }
       }
       return out
+    }
+
+    // An identity is known when the model declares it, or when something is declared in it as a scope.
+    sequence Query::known {
+      self -> model_.find(id) -> entity
+      opt the model declares it / declared {
+        return true
+      }
+      -> model::scopeIn(id) -> scope
+      self -> model_.index() -> index
+      self -> index.members(scope) -> inPackage
+      self -> index.members(id) -> inScope
+      opt something is declared in it / scope {
+        return true
+      }
+      return false
     }
 
     // What a diagram shows is the filter of its kind, applied to the model: nothing is drawn (DS-127).

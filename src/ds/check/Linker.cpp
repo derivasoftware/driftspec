@@ -149,8 +149,7 @@ void Linker::checkTemplateBound(const bind::Reference& reference) {
 // as one written beside the class: its identity is the subject it resolves to (B1, B2)
 void Linker::unifyBehaviours() {
   std::vector<std::pair<std::string, std::string>> moves;  // old id, new id
-  for (const auto& r : model_->relations()) {
-    if (r.kind != "behaviour-of") continue;
+  for (const auto& r : model_->index().ofKind("behaviour-of")) {
     const model::Entity* seq = model_->find(r.from);
     const model::Entity* subject = model_->find(r.to);
     if (!seq || !subject || subject->expected) continue;

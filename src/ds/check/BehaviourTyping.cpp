@@ -55,8 +55,8 @@ void BehaviourTyping::couple(const model::Entity& sequence, const model::Entity&
   const std::string home = cls ? cls->scope : subject->scope;
   if (type.scope == home || (cls && type.id == cls->id)) return;  // inside the module: cohesion, not coupling
   const std::string kind = transient ? "couples-transient" : "couples-structural";
-  for (const auto& r : model_->relations()) {
-    if (r.kind == kind && r.from == sequence.id && r.to == type.id) return;
+  for (const auto& r : model_->index().from(sequence.id)) {
+    if (r.kind == kind && r.to == type.id) return;
   }
   model_->relate({kind, sequence.id, type.id, sequence.location, ""});
 }

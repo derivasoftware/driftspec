@@ -50,9 +50,8 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
 bool Query::known(const std::string& id) const {
   if (model_.find(id)) return true;
   const std::string scope = model::scopeIn(id);  // a package is a scope too: driftspec@ds
-  for (const auto& pair : model_.entities())
-    if (pair.second.scope == scope || pair.second.scope == id) return true;
-  return false;
+  const model::Index index = model_.index();
+  return !index.members(scope).empty() || !index.members(id).empty();
 }
 
 std::vector<std::string> Query::nearTo(const std::string& name) const {
@@ -94,10 +93,10 @@ std::vector<Answer> Query::entities(const std::string& asked) const {
 
 std::vector<Answer> Query::relations(const std::string& id) const {
   std::vector<Answer> out;
-  for (const auto& r : model_.relations()) {
+  for (const auto& r : model_.index().touching(id)) {
     if (r.from == id)
       out.push_back({r.kind, r.to, "->" + (r.multiplicity.empty() ? "" : " " + r.multiplicity)});
-    else if (r.to == id)
+    else
       out.push_back({r.kind, r.from, "<-"});
   }
   return out;
@@ -106,19 +105,20 @@ std::vector<Answer> Query::relations(const std::string& id) const {
 std::vector<Answer> Query::artefacts(const std::string& id) const {
   // what the entity realises, requires or is bound by, then what verifies each of those
   std::vector<Answer> out;
-  for (const auto& r : model_.relations()) {
-    if (r.from != id || (r.kind != "realises" && r.kind != "requires" && r.kind != "constrained-by")) continue;
+  const model::Index index = model_.index();
+  for (const auto& r : index.from(id)) {
+    if (r.kind != "realises" && r.kind != "requires" && r.kind != "constrained-by") continue;
     out.push_back({r.kind, r.to, ""});
-    for (const auto& v : model_.relations())
-      if (v.kind == "verifies" && v.to == r.to) out.push_back({"verified-by", v.from, r.to});
+    for (const auto& v : index.to(r.to))
+      if (v.kind == "verifies") out.push_back({"verified-by", v.from, r.to});
   }
   return out;
 }
 
 std::vector<Answer> Query::behaviours(const std::string& id) const {
   std::vector<Answer> out;
-  for (const auto& r : model_.relations()) {
-    if (r.kind != "behaviour-of" || r.to != id) continue;
+  for (const auto& r : model_.index().to(id)) {
+    if (r.kind != "behaviour-of") continue;
     const model::Entity* b = model_.find(r.from);
     out.push_back(b ? entityAnswer(*b, b->fields.count("scenario") ? b->fields.at("scenario") : "") : Answer{"behaviour", r.from, ""});
   }
