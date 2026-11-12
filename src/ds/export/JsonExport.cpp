@@ -16,6 +16,23 @@ nlohmann::json locationJson(const model::Location& l) {
   return out;
 }
 
+nlohmann::json entityJson(const model::Entity& e) {
+  return {{"id", e.id},
+          {"kind", model::kindName(e.kind)},
+          {"name", e.name},
+          {"scope", e.scope},
+          {"expected", e.expected},
+          {"fields", e.fields},
+          {"flags", e.flags},
+          {"location", locationJson(e.location)}};
+}
+
+nlohmann::json relationJson(const model::Relation& r) {
+  nlohmann::json rel = {{"kind", r.kind}, {"from", r.from}, {"to", r.to}, {"location", locationJson(r.location)}};
+  if (!r.multiplicity.empty()) rel["multiplicity"] = r.multiplicity;
+  return rel;
+}
+
 nlohmann::json kindNames(const std::vector<model::Kind>& kinds) {
   nlohmann::json out = nlohmann::json::array();
   for (model::Kind k : kinds) out.push_back(model::kindName(k));
@@ -56,23 +73,9 @@ nlohmann::json metamodelJson() {
 std::string JsonExport::render(const model::Model& model, bool pretty) const {
   nlohmann::json out;
   out["entities"] = nlohmann::json::array();
-  for (const auto& pair : model.entities()) {
-    const model::Entity& e = pair.second;
-    out["entities"].push_back({{"id", e.id},
-                               {"kind", model::kindName(e.kind)},
-                               {"name", e.name},
-                               {"scope", e.scope},
-                               {"expected", e.expected},
-                               {"fields", e.fields},
-                               {"flags", e.flags},
-                               {"location", locationJson(e.location)}});
-  }
+  for (const auto& pair : model.entities()) out["entities"].push_back(entityJson(pair.second));
   out["relations"] = nlohmann::json::array();
-  for (const auto& r : model.index().all()) {
-    nlohmann::json rel = {{"kind", r.kind}, {"from", r.from}, {"to", r.to}, {"location", locationJson(r.location)}};
-    if (!r.multiplicity.empty()) rel["multiplicity"] = r.multiplicity;
-    out["relations"].push_back(rel);
-  }
+  for (const auto& r : model.index().all()) out["relations"].push_back(relationJson(r));
   out["findings"] = nlohmann::json::array();
   for (const auto& f : model.findings()) {
     out["findings"].push_back({{"code", f.code}, {"severity", f.severity}, {"message", f.message}, {"location", locationJson(f.location)}});
@@ -87,6 +90,14 @@ std::string JsonExport::render(const model::Model& model, bool pretty) const {
   }
   out["metamodel"] = metamodelJson();
   return pretty ? out.dump(2) : out.dump();
+}
+
+std::string JsonExport::entity(const model::Entity& entity) const { return entityJson(entity).dump(); }
+
+std::string JsonExport::relations(const std::vector<model::Relation>& relations) const {
+  nlohmann::json out = nlohmann::json::array();
+  for (const auto& r : relations) out.push_back(relationJson(r));
+  return out.dump();
 }
 
 }  // namespace exporter

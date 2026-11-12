@@ -22,6 +22,24 @@ package driftspec@pyds {
     class Diagnostic
   }
 
+  // What it is to depend, for the rules of the Python face: through a member or a behaviour.
+  definition depends(a, b) {
+    title: a depends on b itself, through one of its members or through its behaviours
+    if a uses b
+    if m in a, m owns b
+    if m in a, m refs b
+    if m in a, m uses b
+    if m in a, s behaviour-of m, s uses b
+  }
+
+  rule python-asks-the-engine-through-the-workspace {
+    title: what is Python reaches the engine only through the native module; it holds no part of the engine of its own
+    @requirement REQ-00107-1
+    for class c in driftspec@pyds
+    where not c in driftspec@pyds@native
+    never depends(c, x), x in driftspec@ds
+  }
+
   requirement REQ-00086-1 {
     status: approved
     @refines SREQ-00015-1
@@ -535,6 +553,41 @@ package driftspec@pyds {
     function expected_at(text: string, line: int, column: int) -> string
     function render(files: map<string, string>, diagram: string, format: string, width: int) -> string
     function page(files: map<string, string>, title: string, focus: list<string>) -> string
+    function qualify(scope: string, name: string) -> string
+    function outer(scope: string) -> string
+    function box_of(scope: string) -> string
+    function package_of(scope: string) -> string
+    function behaviour_of(id: string) -> string
+    function subject_of(id: string) -> string
+    function scenario_of(id: string) -> string
+    function without_revision(id: string) -> string
+
+    // A workspace loaded once and kept in the engine (DS-173): the native object a Python Workspace
+    // holds; its methods are the engine's Workspace, each answer the JSON the engine writes.
+    class Workspace {
+      @requirement REQ-00107-1
+      @constraint CST-00009-1
+      - owns workspace: driftspec@ds@api::Workspace
+      + Workspace(files: map<string, string>)
+      + export() -> string
+      + report() -> string
+      + find(id: string) -> string
+      + relations_from(id: string) -> string
+      + relations_to(id: string) -> string
+      + touching(id: string) -> string
+      + members(scope: string) -> string
+      + parent(id: string) -> string
+      + children(id: string) -> string
+      + revision_of(artefact: string) -> string
+      + tree(sequence: string) -> string
+      + steps(sequence: string, path: string) -> string
+      + walk(sequence: string, path: string, depth: int) -> string
+      + ask(question: string, subject: string) -> string
+      + shows(diagram: string) -> string
+      + render(diagram: string, format: string, width: int) -> string
+      + page(title: string, focus: list<string>) -> string
+      + diff(before: Workspace) -> string
+    }
 
     sequence check {
       local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
@@ -632,6 +685,96 @@ package driftspec@pyds {
       + counts: map<string, int>
     }
 
+    // ---- what the engine answers about a loaded workspace, read into Python's own types (DS-173) -----
+    dataclass Answer {
+      @requirement REQ-00107-1
+      + kind: string
+      + id: string
+      + detail: string
+    }
+    dataclass Step {
+      @requirement REQ-00107-1
+      + message: string
+      + next: string
+      + next_path: string
+    }
+    dataclass Walked {
+      @requirement REQ-00107-1
+      + message: string
+      + depth: int
+    }
+    dataclass Frame {
+      @requirement REQ-00107-1
+      + id: string
+      + kind: string
+      + frame: string
+      + at: int
+      + first: string
+      + else_: string
+      + two_sides: bool
+      + scenario: string
+      + else_scenario: string
+    }
+    dataclass Tree {
+      @requirement REQ-00107-1
+      + sequence: string
+      + messages: list<list<string>>
+      + frames: list<Frame>
+    }
+    dataclass Change {
+      @requirement REQ-00107-1
+      + kind: string
+      + what: string
+      + id: string
+      + entity: string
+      + scope: string
+      + detail: string
+      + renamed_from: string
+      + label: string
+    }
+    dataclass Diff {
+      @requirement REQ-00107-1
+      + changes: list<Change>
+      + findings: list<Finding>
+    }
+
+    // What Python holds: a workspace loaded once in the engine, asked; it computes nothing the
+    // engine knows. Several may be held at once, each with its own model.
+    class Workspace {
+      @requirement REQ-00107-1
+      @constraint CST-00009-1
+      - owns _native: native::Workspace
+      + Workspace(source: Source)
+      + model() -> Model
+      + report() -> Report
+      + find(identity: string) -> optional<Entity>
+      + relations_from(identity: string) -> list<Relation>
+      + relations_to(identity: string) -> list<Relation>
+      + touching(identity: string) -> list<Relation>
+      + members(scope: string) -> list<string>
+      + parent(identity: string) -> string
+      + children(identity: string) -> list<string>
+      + revision_of(artefact: string) -> string
+      + tree(sequence: string) -> Tree
+      + steps(sequence: string, path: string) -> list<Step>
+      + walk(sequence: string, path: string, depth: int) -> list<Walked>
+      + ask(question: string, subject: string) -> list<Answer>
+      + shows(diagram: string) -> list<Answer>
+      + render(diagram: string, format: string, width: int) -> string
+      + page(title: string, focus: list<string>) -> string
+      + diff(before: Workspace) -> Diff
+    }
+
+    sequence Workspace::relations_from {
+      self -> _native.relations_from(identity) -> text
+      return found
+    }
+
+    sequence Workspace::diff {
+      self -> _native.diff(before) -> text
+      return changes
+    }
+
     function read(source: Source) -> map<string, string>
     function load(source: Source) -> Model
     function check(source: Source) -> Report
@@ -639,15 +782,16 @@ package driftspec@pyds {
     function page(source: Source, title: string, focus: list<string>) -> string
     function expected_at(text: string, line: int, column: int) -> list<string>
 
+    // A workspace loaded for one look at the whole of it (DS-173).
     sequence load {
-      -> read(source) -> files
-      -> native::export(files) -> text
+      local workspace: Workspace
+      -> workspace.model() -> model
       return model
     }
 
     sequence check {
-      -> read(source) -> files
-      -> native::check(files) -> text
+      local workspace: Workspace
+      -> workspace.report() -> report
       return report
     }
 
@@ -697,9 +841,11 @@ package driftspec@pyds {
       -> refresh(ls, ws)
     }
 
+    // The design loaded once in the engine: its findings, its drawings and the viewer ask it (DS-173).
     sequence refresh {
+      local workspace: pyds::Workspace
       -> workspace_files(ls, ws) -> files
-      -> pyds::load(files) -> model
+      -> workspace.model() -> model
     }
 
     sequence definition {

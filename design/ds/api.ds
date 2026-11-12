@@ -34,6 +34,121 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00107-1 {
+      status: draft
+      @refines SREQ-00015-1
+      title: The engine shall load a workspace once and answer every question asked of it, as documents
+      text:
+        A Workspace is a workspace as text loaded once: parsed, bound and checked, its model kept for
+        as many questions as the caller asks. It answers what the engine already knows: one hop by
+        identity (what leaves, reaches or touches an entity, what a scope declares, what holds what,
+        the declared revision of an artefact), a behaviour's tree, the path of a scenario and the walk
+        into what it calls, the questions of ds query and what a diagram takes, a diagram drawn and the
+        viewer, and what changed from another Workspace. How an identity is written is asked too, not
+        copied by the caller. Several Workspaces may be loaded at once, each with its own model.
+      rationale:
+        DS-173: every call from Python read and checked the whole workspace again (about 130 ms on
+        driftspec's design), and what the engine knows (identities, a behaviour's tree, a diff) was
+        derived again in Python by argos's plugin and the live session. One load, many questions, one
+        contract; the place a reload would live.
+      tags: python, api
+    }
+
+    constraint CST-00009-1 {
+      status: draft
+      category: design
+      title: Every answer of the engine to a caller outside it shall be a document it writes, a copy, never a view into a model the caller could keep
+      rationale:
+        The engine knows none of its callers (CST-00008-2 inside it, this one at its edge): a caller that
+        held a view could change the model or be left pointing at what a reload moves. The JSON the
+        engine writes is the same shape the command line prints, so a tool sees one contract.
+      tags: python, api
+    }
+
+    // A workspace loaded once (DS-173): its model kept for every question. When it grows, it becomes a
+    // module of its own with its questions grouped by what they look at.
+    class Workspace {
+      @requirement REQ-00107-1
+      @constraint CST-00009-1
+      - owns model_: model::Model
+      + Workspace(files: Files)
+      + model() -> model::Model
+      + exportModel() -> std::string
+      + report() -> std::string
+      + find(id: std::string) -> std::string
+      + from(id: std::string) -> std::string
+      + to(id: std::string) -> std::string
+      + touching(id: std::string) -> std::string
+      + members(scope: std::string) -> std::string
+      + parent(id: std::string) -> std::string
+      + children(id: std::string) -> std::string
+      + revisionOf(artefact: std::string) -> std::string
+      + tree(sequence: std::string) -> std::string
+      + steps(sequence: std::string, path: std::string) -> std::string
+      + walk(sequence: std::string, path: std::string, depth: int) -> std::string
+      + ask(question: std::string, subject: std::string) -> std::string
+      + shows(diagram: std::string) -> std::string
+      + render(diagram: std::string, format: std::string, width: int) -> std::string
+      + page(title: std::string, focus: std::vector<std::string>) -> std::string
+      + diff(before: Workspace) -> std::string
+    }
+
+    // How an identity is written (model/Identity), asked by another language rather than copied into it.
+    class Identity {
+      @requirement REQ-00107-1
+      + static qualify(scope: std::string, name: std::string) -> std::string
+      + static outer(scope: std::string) -> std::string
+      + static boxOf(scope: std::string) -> std::string
+      + static packageOf(scope: std::string) -> std::string
+      + static behaviourOf(id: std::string) -> std::string
+      + static subjectOf(id: std::string) -> std::string
+      + static scenarioOf(id: std::string) -> std::string
+      + static withoutRevision(id: std::string) -> std::string
+    }
+
+    verification VER-00123-1 {
+      status: draft
+      @requirement REQ-00107-1
+      @constraint CST-00009-1
+      title: Unit and integration tests ask a loaded workspace from C++ and from Python, two at once, and change an answer without changing the model
+      method: test
+      tests:
+        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.ItAnswersWhatTheCommandLineAnswers
+        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.OneHopIsTheIndexOfTheModel
+        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.ABehaviourIsAnsweredAsItsTreePathAndWalk
+        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.ItAsksAsDsQueryAndDrawsAsDsRender
+        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.TwoLoadedAtOnceTellWhatChangedFromOneToTheOther
+        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.AnIdentityIsWrittenAsTheModelWritesIt
+        tests/integration/python/test_workspace.py::TestWorkspace::test_one_load_answers_the_model_the_check_and_one_hop
+        tests/integration/python/test_workspace.py::TestWorkspace::test_a_behaviour_is_read_as_its_tree_path_and_walk
+        tests/integration/python/test_workspace.py::TestWorkspace::test_it_asks_as_ds_query_does_and_draws_as_ds_render_does
+        tests/integration/python/test_workspace.py::TestWorkspace::test_several_are_loaded_at_once_and_one_tells_what_changed_from_another
+        tests/integration/python/test_workspace.py::TestWorkspace::test_an_answer_is_a_copy_the_caller_may_change
+        tests/integration/python/test_workspace.py::TestWorkspace::test_an_identity_is_written_as_the_engine_writes_it
+    }
+
+    // One hop asked of the model's index, written as the export writes it: the caller gets a copy.
+    sequence Workspace::from {
+      local exporter: exporter::JsonExport
+      self -> model_.index() -> index
+      self -> index.from(id) -> leaving
+      -> exporter.relations(leaving) -> document
+      return document
+    }
+
+    sequence Workspace::tree {
+      local tree: model::SequenceTree
+      -> tree.messages() -> messages
+      -> tree.frames() -> frames
+      return document
+    }
+
+    sequence Workspace::diff {
+      local differ: diff::Diff               // compare is static: a call needs a name to go through (DS-60)
+      -> differ.compare(model, model) -> result
+      return document
+    }
+
     class Api {                              // static: the engine, called in process
       @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-1
@@ -51,20 +166,16 @@ package driftspec@ds {
       + texts: std::map<std::string, std::string>
     }
 
+    // The functions of text to JSON: a Workspace loaded for one question (DS-173).
     sequence Api::check {
-      local parser: parse::Parser
-      local binder: bind::Binder
-      local checker: check::Checker
-      -> parser.parseText(path, text) -> parsed
-      -> binder.bind(parsed)
-      -> check::steps() -> steps
-      -> checker.run(binder)
+      local workspace: Workspace
+      -> workspace.report() -> json
       return json
     }
 
     sequence Api::exportModel {
-      local exporter: exporter::JsonExport
-      -> exporter.render(model, pretty) -> json
+      local workspace: Workspace
+      -> workspace.exportModel() -> json
       return json
     }
 
@@ -75,16 +186,14 @@ package driftspec@ds {
     }
 
     sequence Api::render {
-      local ir: render::IrExport
-      -> ir.render(diagram, pretty) -> drawing
+      local workspace: Workspace
+      -> workspace.render(diagram, format, width) -> drawing
       return drawing
     }
 
     sequence Api::page {
-      local scene: scene::Scene
-      local html: format::SceneHtml
-      -> scene.build() -> document
-      -> html.write(document, options) -> page
+      local workspace: Workspace
+      -> workspace.page(title, focus) -> page
       return page
     }
   }

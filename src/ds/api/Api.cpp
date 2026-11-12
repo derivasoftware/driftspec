@@ -7,31 +7,12 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
-#include "ds/export/JsonExport.hpp"
-#include "ds/format/DiagramFormats.hpp"
-#include "ds/format/SceneFormats.hpp"
 #include "ds/format/TextFormats.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
-#include "ds/render/IrExport.hpp"
-#include "ds/render/Svg.hpp"
-#include "ds/render/Text.hpp"
-#include "ds/scene/Scene.hpp"
 
 namespace ds {
 namespace api {
-
-namespace {
-
-// the texts parsed, then loaded as every caller loads (Api::load)
-model::Model loadTexts(const Files& files) {
-  parse::Parser parser;
-  std::vector<parse::ParsedFile> parsed;
-  for (const auto& file : files) parsed.push_back(parser.parseText(file.first, file.second));
-  return Api::load(parsed);
-}
-
-}  // namespace
 
 model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
   model::Model model;
@@ -58,27 +39,18 @@ std::string Api::report(const model::Model& model, bool pretty) {
   return format::ReportJson().write(check::reportOf(model), options);
 }
 
-std::string Api::check(const Files& files) { return report(loadTexts(files)); }
+// the text functions of the command line's contract: a workspace loaded for one question (DS-173)
+std::string Api::check(const Files& files) { return Workspace(files).report(); }
 
-std::string Api::exportModel(const Files& files) { return exporter::JsonExport().render(loadTexts(files), false); }
+std::string Api::exportModel(const Files& files) { return Workspace(files).exportModel(); }
 
 std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) {
-  const model::Model model = loadTexts(files);
-  const std::string id = model::diagramId(diagram);
-  const std::string ir = render::IrExport(model).render(id, false);
-  if (ir.empty()) return ir;
-  // the diagram's IR, written by the format named (DS-126): svg, the IR itself, or text for anything else
-  format::FormatOptions options;
-  options.width = width;
-  return format::diagramFormats().at(format == "svg" || format == "ir" ? format : "text")->write({ir}, options);
+  // svg, the IR itself, or text for anything else
+  return Workspace(files).render(diagram, format == "svg" || format == "ir" ? format : "text", width);
 }
 
 std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) {
-  const model::Model model = loadTexts(files);
-  format::FormatOptions options;  // the viewer page: the scene written by its html format (DS-126)
-  options.title = title;
-  options.focus = focus;
-  return format::SceneHtml().write(scene::Scene(model).build(), options);
+  return Workspace(files).page(title, focus);
 }
 
 std::string Api::expectedAt(const std::string& text, int line, int column) {

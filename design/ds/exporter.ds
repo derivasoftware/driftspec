@@ -61,6 +61,8 @@ package driftspec@ds {
       @requirement REQ-00005-1
       @requirement REQ-00068-1
       + render(model: model::Model, pretty: bool) -> std::string
+      + entity(entity: model::Entity) -> std::string     // one entity, as the whole model writes it (DS-173)
+      + relations(relations: std::vector<model::Relation>) -> std::string
     }
 
     // The document under construction is an nlohmann::json, a type the design does not

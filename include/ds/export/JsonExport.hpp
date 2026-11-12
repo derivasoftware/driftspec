@@ -8,10 +8,15 @@
 namespace ds {
 namespace exporter {
 
-/// Serialises the resolved model (entities, relations, findings) as JSON.
+/// Serialises the resolved model (entities, relations, findings) as JSON. An entity and a list of
+/// relations are written the same way alone as inside the whole model: one shape for every reader.
 class JsonExport {
  public:
   std::string render(const model::Model& model, bool pretty = true) const;
+  /// One entity, as the export writes it.
+  std::string entity(const model::Entity& entity) const;
+  /// Relations, as the export writes them, in the order given.
+  std::string relations(const std::vector<model::Relation>& relations) const;
 };
 
 }  // namespace exporter
