@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "ds/model/Metamodel.hpp"
+#include "ds/model/SequenceTree.hpp"
 
 namespace ds {
 namespace model {
@@ -71,6 +72,11 @@ bool Entity::has(const std::string& flag) const {
     if (f == flag) return true;
   }
   return false;
+}
+
+std::string Entity::field(const std::string& key) const {
+  const auto found = fields.find(key);
+  return found == fields.end() ? "" : found->second;
 }
 
 Entity& Model::declare(const Entity& entity) {
@@ -213,39 +219,22 @@ namespace model {
 
 namespace {
 
-int orderOf(const Model& model, const std::string& messageId) {
-  const Entity* m = messageId.empty() ? nullptr : model.find(messageId);
-  const auto order = m ? m->fields.find("order") : std::map<std::string, std::string>::const_iterator();
-  return m && order != m->fields.end() ? std::stoi(order->second) : -1;
-}
-
 std::string fieldIn(const Entity& e, const std::string& key) {
   const auto f = e.fields.find(key);
   return f == e.fields.end() ? "" : f->second;
 }
 
-/// The frames of one behaviour, and for each what its two sides name.
+/// The frames of one behaviour, read from its tree, and for each what its two sides name.
 struct Branches {
-  const Model& model;
-  std::map<std::string, const Entity*> frames;
-
-  int elseAt(const Entity& f) const {
-    const std::string otherwise = fieldIn(f, "else");
-    return otherwise.empty() ? std::numeric_limits<int>::max() : orderOf(model, otherwise);
-  }
-
-  bool onElse(const Entity& f, int order) const { return order >= elseAt(f); }
+  const SequenceTree& tree;
 
   std::set<std::string> names(const Entity& f, bool elseSide) const {
     std::set<std::string> out;
-    const std::string own = fieldIn(f, elseSide ? "else-scenario" : "scenario");
+    const std::string own = tree.scenario(f.id, elseSide);
     if (!own.empty()) out.insert(own);
-    for (const auto& pair : frames) {
-      const Entity& child = *pair.second;
-      if (fieldIn(child, "parent") != f.id) continue;
-      if (onElse(f, orderOf(model, fieldIn(child, "first"))) != elseSide) continue;
+    for (const auto& child : tree.inside(f.id, elseSide)) {
       for (const bool side : {false, true}) {
-        for (const auto& n : names(child, side)) out.insert(n);
+        for (const auto& n : names(*tree.model().find(child), side)) out.insert(n);
       }
     }
     return out;
@@ -262,8 +251,7 @@ struct Branches {
     if (fieldIn(f, "kind") == "loop") return !scenario.empty() && thenNames.count(scenario) ? Way::Enter : Way::Keep;
     if (!scenario.empty() && thenNames.count(scenario)) return Way::Then;
     if (!scenario.empty() && elseNames.count(scenario)) return Way::Else;
-    const bool twoSides = !fieldIn(f, "else").empty() || !fieldIn(f, "else-scenario").empty();
-    if (twoSides) {
+    if (tree.twoSides(f.id)) {
       if (!thenNames.empty() && elseNames.empty()) return Way::Else;
       if (thenNames.empty() && !elseNames.empty()) return Way::Then;
       return Way::Keep;
@@ -284,37 +272,28 @@ std::string readAs(const Model& model, const Relation& relation) {
 }
 
 bool hasScenario(const Model& model, const std::string& sequence, const std::string& scenario) {
-  for (const auto& pair : model.entities()) {
-    const Entity& f = pair.second;
-    if (f.kind != Kind::Frame || f.scope != sequence) continue;
-    if (fieldIn(f, "scenario") == scenario || fieldIn(f, "else-scenario") == scenario) return true;
+  // a loop, an opt or a side of an alt that names it
+  for (const auto& id : model.index().members(sequence)) {
+    const Entity* f = model.find(id);
+    if (f && f->kind == Kind::Frame && fieldIn(*f, "scenario") == scenario) return true;
   }
   return false;
 }
 
 std::vector<const Entity*> pathOf(const Model& model, const std::string& sequence, const std::string& scenario,
                                   std::set<std::string>* kept) {
-  Branches branches{model, {}};
-  std::vector<const Entity*> messages;
-  for (const auto& pair : model.entities()) {
-    if (pair.second.scope != sequence) continue;
-    if (pair.second.kind == Kind::Frame) branches.frames[pair.first] = &pair.second;
-    if (pair.second.kind == Kind::Message) messages.push_back(&pair.second);
-  }
-  std::sort(messages.begin(), messages.end(),
-            [](const Entity* a, const Entity* b) { return std::stoi(fieldIn(*a, "order")) < std::stoi(fieldIn(*b, "order")); });
+  const SequenceTree tree(model, sequence);
+  const Branches branches{tree};
   std::vector<const Entity*> out;
-  for (const Entity* m : messages) {
-    const int order = std::stoi(fieldIn(*m, "order"));
+  for (const auto& id : tree.messages()) {
+    const Entity* m = model.find(id);
     bool taken = true;
     bool certain = true;  // every frame around it is a side the path takes, none it cannot tell
     std::vector<std::string> around;
-    for (std::string id = fieldIn(*m, "frame"); !id.empty() && taken;) {
-      const auto it = branches.frames.find(id);
-      if (it == branches.frames.end()) break;
-      const Entity& f = *it->second;
+    for (std::string id = tree.frameOf(m->id); !id.empty() && taken; id = tree.frameOf(id)) {
+      const Entity& f = *model.find(id);
       const Branches::Way way = branches.decide(f, scenario);
-      const bool elseSide = branches.onElse(f, order);
+      const bool elseSide = tree.onElse(f.id, m->id);
       if (way == Branches::Way::Skip || (way == Branches::Way::Then && elseSide) || (way == Branches::Way::Else && !elseSide)) {
         taken = false;
       } else if (way == Branches::Way::Keep) {
@@ -323,7 +302,6 @@ std::vector<const Entity*> pathOf(const Model& model, const std::string& sequenc
       } else if (way == Branches::Way::Enter) {
         around.push_back(f.id);
       }
-      id = fieldIn(f, "parent");
     }
     if (!taken) continue;
     if (kept) kept->insert(around.begin(), around.end());

@@ -12,38 +12,41 @@ using ds::model::Entity;
 using ds::model::Kind;
 using ds::model::Model;
 
-/// One behaviour built by hand: m0, an `opt / stop` holding m1 and a return (m2), then m3 and a return (m4).
+/// One behaviour built by hand, as the binder keeps it (DS-172): m0, an `opt / stop` holding m1 and a
+/// return (m2), then m3 and a return (m4); each step contained by what encloses it, in the order written.
 Model behaviour() {
   Model model;
   const std::string seq = "p@m::C::run::sequence";
-  auto message = [&](int order, const std::string& op, const std::string& frame, bool isReturn) {
+  Entity s;
+  s.kind = Kind::Sequence;
+  s.id = seq;
+  model.declare(s);
+  auto message = [&](int order, const std::string& op, const std::string& holder, bool isReturn) {
     Entity m;
     m.kind = Kind::Message;
     m.id = seq + "::m" + std::to_string(order);
     m.scope = seq;
-    m.fields["order"] = std::to_string(order);
     m.fields["op"] = op;
-    if (!frame.empty()) m.fields["frame"] = frame;
     if (isReturn) {
       m.fields["return"] = "true";
       m.fields["result"] = op;
     }
     model.declare(m);
+    model.relate({"contains", holder, m.id, {}, ""});
   };
+  message(0, "a", seq, false);
   Entity f;
   f.kind = Kind::Frame;
   f.id = seq + "::f0";
   f.scope = seq;
   f.fields["kind"] = "opt";
   f.fields["scenario"] = "stop";
-  f.fields["first"] = seq + "::m1";
-  f.fields["last"] = seq + "::m2";
   model.declare(f);
-  message(0, "a", "", false);
+  model.relate({"contains", seq, f.id, {}, ""});
   message(1, "b", f.id, false);
   message(2, "1", f.id, true);
-  message(3, "c", "", false);
-  message(4, "0", "", true);
+  message(3, "c", seq, false);
+  message(4, "0", seq, true);
   return model;
 }
 
@@ -77,44 +80,43 @@ TEST_F(TestPathOf, TheDefaultPathSkipsTheNamedBranch) {
 }
 
 /// A loop holding a named opt: m0 in the loop, the opt / found holding m1 and a return (m2); then m3.
+/// Each step contained by what encloses it, in the order written (DS-172).
 Model loopBehaviour() {
   Model model;
   const std::string seq = "p@m::C::find::sequence";
-  Entity loop;
-  loop.kind = Kind::Frame;
-  loop.id = seq + "::f0";
-  loop.scope = seq;
-  loop.fields["kind"] = "loop";
-  loop.fields["first"] = seq + "::m0";
-  model.declare(loop);
-  Entity opt;
-  opt.kind = Kind::Frame;
-  opt.id = seq + "::f1";
-  opt.scope = seq;
-  opt.fields["kind"] = "opt";
-  opt.fields["scenario"] = "found";
-  opt.fields["parent"] = loop.id;
-  opt.fields["first"] = seq + "::m1";
-  model.declare(opt);
-  auto message = [&](int order, const std::string& op, const std::string& frame, bool isReturn) {
+  Entity s;
+  s.kind = Kind::Sequence;
+  s.id = seq;
+  model.declare(s);
+  auto frame = [&](const std::string& id, const std::string& kind, const std::string& scenario, const std::string& holder) {
+    Entity f;
+    f.kind = Kind::Frame;
+    f.id = id;
+    f.scope = seq;
+    f.fields["kind"] = kind;
+    if (!scenario.empty()) f.fields["scenario"] = scenario;
+    model.declare(f);
+    model.relate({"contains", holder, id, {}, ""});
+  };
+  auto message = [&](int order, const std::string& op, const std::string& holder, bool isReturn) {
     Entity m;
     m.kind = Kind::Message;
     m.id = seq + "::m" + std::to_string(order);
     m.scope = seq;
-    m.fields["order"] = std::to_string(order);
     m.fields["op"] = op;
-    m.fields["frame"] = frame;
     if (isReturn) {
       m.fields["return"] = "true";
       m.fields["result"] = op;
     }
     model.declare(m);
+    model.relate({"contains", holder, m.id, {}, ""});
   };
-  message(0, "next", loop.id, false);
-  message(1, "take", opt.id, false);
-  message(2, "1", opt.id, true);
-  message(3, "after", "", false);
-  model.find(seq + "::m3")->fields.erase("frame");
+  frame(seq + "::f0", "loop", "", seq);
+  message(0, "next", seq + "::f0", false);
+  frame(seq + "::f1", "opt", "found", seq + "::f0");
+  message(1, "take", seq + "::f1", false);
+  message(2, "1", seq + "::f1", true);
+  message(3, "after", seq, false);
   return model;
 }
 

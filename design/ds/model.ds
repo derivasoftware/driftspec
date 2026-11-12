@@ -159,6 +159,80 @@ package driftspec@ds {
       @requirement REQ-00065-1
     }
 
+    // A behaviour's steps are kept as the tree they are written in (DS-172): each message and frame
+    // contained by what encloses it, the sequence or a frame, in the order written; an alt holds its
+    // sides as frames of kind branch. Read once here: whoever asks the order of a message, the frame
+    // around a step or where an alt's else begins asks the same tree, and none rebuilds it.
+    class SequenceTree {
+      @requirement REQ-00065-1
+      @requirement REQ-00049-2
+      - refs model_: Model
+      - messages_: std::vector<std::string>
+      - frames_: std::vector<std::string>
+      - order_: std::map<std::string, int>
+      - frameOf_: std::map<std::string, std::string>
+      - at_: std::map<std::string, int>
+      - first_: std::map<std::string, std::string>
+      + SequenceTree(model: Model, sequence: std::string)
+      + model() -> Model
+      + messages() -> std::vector<std::string>
+      + frames() -> std::vector<std::string>
+      + orderOf(message: std::string) -> int
+      + frameOf(id: std::string) -> std::string
+      + at(frame: std::string) -> int
+      + first(frame: std::string) -> std::string
+      + elseOf(frame: std::string) -> std::string
+      + twoSides(frame: std::string) -> bool
+      + onElse(frame: std::string, id: std::string) -> bool
+      + scenario(frame: std::string, elseSide: bool) -> std::string
+      + inside(frame: std::string, elseSide: bool) -> std::vector<std::string>
+      - walk(holder: std::string, frame: std::string) -> void
+    }
+
+    // What the sequence or a frame holds, asked of the index in the order written: a message takes the
+    // next place, a frame opens before what it holds, a branch is a side of the frame around it.
+    sequence SequenceTree::walk {
+      self -> model_.index() -> index
+      self -> index.children(holder) -> held
+      loop each step held, in the order written {
+        self -> model_.find(id) -> step
+        alt a message / message {
+          // it takes the next place; it is the first of every frame around it that has none yet
+        } else {
+          opt a branch / branch {
+            -> walk(id, frame)
+          }
+          opt a loop, an alt or an opt / frame {
+            -> walk(id, id)
+          }
+        }
+      }
+    }
+
+    verification VER-00121-1 {
+      status: draft
+      @requirement REQ-00065-1
+      @requirement REQ-00049-2
+      title: Unit tests read one behaviour's tree the same for every reader: messages in the order written, the frame around each step, where a frame opens, an alt's sides and what each names
+      method: test
+      tests:
+        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.TheMessagesComeInTheOrderWrittenAtAnyDepth
+        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.TheFramesAreTheLoopsAltsAndOptsNeverTheBranches
+        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.TheFrameAroundAStepIsTheInnermostLoopAltOrOpt
+        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.AFrameKnowsWhereItOpensAndWhatItHoldsFirst
+        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.AnAltKnowsItsElseSideAndWhatEachSideNames
+        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.AnAltWithAnEmptyElseHasOneSide
+    }
+
+    verification VER-00122-1 {
+      status: draft
+      @requirement REQ-00001-1
+      title: An integration test holds every entity to where it ends as well as where it starts
+      method: test
+      tests:
+        tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.EveryEntityKnowsWhereItEndsAsWellAsWhereItStarts
+    }
+
     // ---- the metamodel (REQ-00066-1): the language declared once ----
     enum FieldType {                         // how to read a field's text
       @requirement REQ-00066-1
@@ -336,11 +410,13 @@ package driftspec@ds {
       Package, Module, Requirement, Verification, Interface, Operation, View, Constraint, Class, Enum, Function, Method, Attribute, Operator, Sequence, Message, Frame, State, Diagram, UseCase, Outcome, Rule, Definition
     }
 
-    dataclass Location {                     // where something was read from: file, 1-based line and column
+    dataclass Location {                     // where something was read from: the file, where it starts and where it ends, 1-based
       @requirement REQ-00001-1
       + file: std::string
       + line: int
       + column: int
+      + endLine: int                         // the place right after its last character; 0 when not known (DS-172)
+      + endColumn: int
     }
 
     dataclass Param {                        // one parameter as the binder read it: name and type (a template's: name and bound)
@@ -362,6 +438,7 @@ package driftspec@ds {
       + owns location: Location
       + expected: bool
       + has(flag: std::string) -> bool
+      + field(key: std::string) -> std::string
     }
 
     sequence Entity::has {

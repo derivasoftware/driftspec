@@ -12,11 +12,15 @@
 namespace ds {
 namespace model {
 
-/// Where something was read from: file path and 1-based line and column.
+/// Where something was read from: the file, and where it starts and ends, 1-based (DS-172). The end
+/// is the place right after its last character; 0 when it is not known (a node nothing wrote). Columns
+/// count bytes, as the parser does.
 struct Location {
   std::string file;
   int line = 0;
   int column = 0;
+  int endLine = 0;
+  int endColumn = 0;
 };
 
 /// The kinds of entity the language declares.
@@ -72,6 +76,8 @@ struct Entity {
   bool expected = false;  ///< referenced somewhere but declared nowhere
 
   bool has(const std::string& flag) const;
+  /// The value of a field; "" when it does not carry it.
+  std::string field(const std::string& key) const;
 };
 
 /// A typed relation between two identities.

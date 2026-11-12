@@ -110,7 +110,10 @@ package driftspec@ds {
         @requirement REQ-00035-1
         @requirement REQ-00036-2
       }
-      - bindSteps(file: parse::ParsedFile, node: TSNode, sequence: model::Entity, frame: std::string, order: int, frames: int) -> void {
+      - bindSteps(file: parse::ParsedFile, node: TSNode, sequence: model::Entity, holder: std::string, order: int, frames: int) -> void {
+        @requirement REQ-00037-1
+      }
+      - branch(file: parse::ParsedFile, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
         @requirement REQ-00037-1
       }
       - bindType(file: parse::ParsedFile, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> TypeUse {

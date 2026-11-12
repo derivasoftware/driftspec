@@ -78,7 +78,9 @@ void Binder::bind(const parse::ParsedFile& file) {
 
 model::Location Binder::locationOf(const parse::ParsedFile& file, TSNode node) const {
   const TSPoint start = ts_node_start_point(node);
-  return {file.path, static_cast<int>(start.row) + 1, static_cast<int>(start.column) + 1};
+  const TSPoint end = ts_node_end_point(node);
+  return {file.path, static_cast<int>(start.row) + 1, static_cast<int>(start.column) + 1, static_cast<int>(end.row) + 1,
+          static_cast<int>(end.column) + 1};
 }
 
 void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity) {
@@ -585,24 +587,30 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
 
 // ---- behaviour (block 3): a sequence is the behaviour of its subject ------------
 
-void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& frame, int& order,
+void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& holder, int& order,
                        int& frames) {
+  // The steps are a tree (DS-172): each message and frame is contained by what encloses it, the sequence
+  // or a frame, in the order written; an alt holds its sides as branches. `holder` is that encloser.
+  const std::string sequenceId = sequence.id;
   const uint32_t n = ts_node_child_count(node);
-  bool otherwise = false;
+  std::string current = holder;  // an alt's steps go to its first branch, then to its else branch
   for (uint32_t i = 0; i < n; ++i) {
     TSNode c = ts_node_child(node, i);
     if (!ts_node_is_named(c)) {
-      if (std::strcmp(ts_node_type(c), "else") == 0) otherwise = true;
+      if (std::strcmp(ts_node_type(c), "else") == 0 && is(node, "alt")) {
+        // the else opens the alt's second side; `holder` is its first, alt::b0
+        const std::string alt = holder.substr(0, holder.size() - std::string("::b0").size());
+        current = branch(file, c, sequenceId, alt, 1, fieldText(file, node, "else_scenario"));
+      }
       continue;
     }
     const model::Location loc = locationOf(file, c);
     if (is(c, "message") || is(c, "return")) {
       model::Entity m;
       m.kind = model::Kind::Message;
-      m.id = sequence.id + "::m" + std::to_string(order);
-      m.scope = sequence.id;
+      m.id = sequenceId + "::m" + std::to_string(order);
+      m.scope = sequenceId;
       m.location = loc;
-      m.fields["order"] = std::to_string(order);
       const std::string from = fieldText(file, c, "from");
       const std::string to = fieldText(file, c, "to");
       m.fields["from"] = from.empty() ? "self" : from;
@@ -632,46 +640,44 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       m.fields["args"] = join(args, ", ");
       m.args = args;
       m.fields["argc"] = std::to_string(argc);
-      if (!frame.empty()) m.fields["frame"] = frame;
       m.name = is(c, "return") ? "return" : m.fields["to"] + "." + m.fields["op"];
       model_.declare(m);
-      model_.relate({"contains", sequence.id, m.id, loc, ""});
-      messages_.push_back({sequence.id, m.id, m.fields["to"], m.fields["op"], argc, loc, is(c, "return")});
-      if (!frame.empty()) {
-        model::Entity* f = model_.find(frame);
-        if (f->fields.find("first") == f->fields.end()) f->fields["first"] = m.id;
-        f->fields["last"] = m.id;
-        if (otherwise && f->fields.find("else") == f->fields.end()) f->fields["else"] = m.id;
-      }
+      model_.relate({"contains", current.empty() ? sequenceId : current, m.id, loc, ""});
+      messages_.push_back({sequenceId, m.id, m.fields["to"], m.fields["op"], argc, loc, is(c, "return")});
       ++order;
     } else if (is(c, "loop") || is(c, "alt") || is(c, "opt")) {
       model::Entity f;
       f.kind = model::Kind::Frame;
-      f.id = sequence.id + "::f" + std::to_string(frames++);
-      f.scope = sequence.id;
+      f.id = sequenceId + "::f" + std::to_string(frames++);
+      f.scope = sequenceId;
       f.location = loc;
       f.name = ts_node_type(c);
       f.fields["kind"] = ts_node_type(c);
-      f.fields["at"] = std::to_string(order);  // where it opens: drawn there even when it holds no message
       f.fields["condition"] = trim(fieldText(file, c, "condition"));
       const std::string scenario = fieldText(file, c, "scenario");
-      if (!scenario.empty()) f.fields["scenario"] = scenario;
-      const std::string elseScenario = fieldText(file, c, "else_scenario");
-      if (!elseScenario.empty()) f.fields["else-scenario"] = elseScenario;
-      if (!frame.empty()) f.fields["parent"] = frame;
+      if (!scenario.empty() && !is(c, "alt")) f.fields["scenario"] = scenario;  // an alt's sides name their own
       model_.declare(f);
-      model_.relate({"contains", sequence.id, f.id, loc, ""});
-      bindSteps(file, c, sequence, f.id, order, frames);
-      // a frame's span also covers its parent's
-      model::Entity* child = model_.find(f.id);
-      if (!frame.empty() && child->fields.count("first")) {
-        model::Entity* parent = model_.find(frame);
-        if (parent->fields.find("first") == parent->fields.end()) parent->fields["first"] = child->fields["first"];
-        parent->fields["last"] = child->fields["last"];
-        if (otherwise && parent->fields.find("else") == parent->fields.end()) parent->fields["else"] = child->fields["first"];
-      }
+      model_.relate({"contains", current.empty() ? sequenceId : current, f.id, loc, ""});
+      // an alt holds its first side as a branch; the else, when written, opens the second
+      const std::string inside = is(c, "alt") ? branch(file, c, sequenceId, f.id, 0, scenario) : f.id;
+      bindSteps(file, c, *model_.find(sequenceId), inside, order, frames);
     }
   }
+}
+
+std::string Binder::branch(const parse::ParsedFile& file, TSNode at, const std::string& sequence, const std::string& alt, int side,
+                           const std::string& scenario) {
+  model::Entity b;
+  b.kind = model::Kind::Frame;
+  b.id = alt + "::b" + std::to_string(side);
+  b.scope = sequence;
+  b.location = locationOf(file, at);  // the first side where the alt is written, the else where else is
+  b.name = side == 0 ? "branch" : "else";
+  b.fields["kind"] = "branch";
+  if (!scenario.empty()) b.fields["scenario"] = scenario;
+  model_.declare(b);
+  model_.relate({"contains", alt, b.id, b.location, ""});
+  return b.id;
 }
 
 void Binder::bindSequence(const parse::ParsedFile& file, TSNode c, const std::string& scope, const std::string& owner) {

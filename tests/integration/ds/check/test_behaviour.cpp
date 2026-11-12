@@ -7,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/model/SequenceTree.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
 
@@ -79,13 +80,35 @@ TEST_F(TestBehaviour, AMessageToAnOperationWithABehaviourExpandsToIt) {
   EXPECT_EQ(model.find("ds@ds::Checker::run::sequence::m1")->fields.at("expands"), "ds@ds::Checker::resolveReference::sequence");
 }
 
-TEST_F(TestBehaviour, FramesKeepTheirSpanAndElse) {
-  const ds::model::Entity* alt = model.find("ds@ds::Checker::resolveReference::sequence::f0");
+TEST_F(TestBehaviour, AnAltHoldsItsSidesAsBranchesAndEachSideItsSteps) {
+  const std::string seq = "ds@ds::Checker::resolveReference::sequence";
+  const ds::model::Entity* alt = model.find(seq + "::f0");
   ASSERT_NE(alt, nullptr);
   EXPECT_EQ(alt->fields.at("kind"), "alt");
   EXPECT_EQ(alt->fields.at("condition"), "target is empty");
-  EXPECT_EQ(alt->fields.at("first"), "ds@ds::Checker::resolveReference::sequence::m1");
-  EXPECT_EQ(alt->fields.at("last"), "ds@ds::Checker::resolveReference::sequence::m2");
+  // the tree as written (DS-172): the sequence holds m0, the alt and m3; the alt its two sides; the first side its calls
+  const std::vector<std::string> top = {seq + "::m0", seq + "::f0", seq + "::m3"};
+  EXPECT_EQ(model.index().children(seq), top);
+  const std::vector<std::string> sides = {seq + "::f0::b0", seq + "::f0::b1"};
+  EXPECT_EQ(model.index().children(seq + "::f0"), sides);
+  const std::vector<std::string> first = {seq + "::m1", seq + "::m2"};
+  EXPECT_EQ(model.index().children(seq + "::f0::b0"), first);
+  EXPECT_TRUE(model.index().children(seq + "::f0::b1").empty());  // an else with nothing in it
+  const ds::model::SequenceTree tree(model, seq);
+  EXPECT_EQ(tree.first(seq + "::f0"), seq + "::m1");
+  EXPECT_EQ(tree.elseOf(seq + "::f0"), "");
+  EXPECT_FALSE(tree.twoSides(seq + "::f0"));
+}
+
+TEST_F(TestBehaviour, EveryEntityKnowsWhereItEndsAsWellAsWhereItStarts) {
+  // the place right after its last character, so a tool that edits the text needs no parser of its own (DS-172)
+  const ds::model::Entity* alt = model.find("ds@ds::Checker::resolveReference::sequence::f0");
+  ASSERT_NE(alt, nullptr);
+  EXPECT_GT(alt->location.endLine, alt->location.line);  // the alt spans its two sides
+  const ds::model::Entity* m = model.find("ds@ds::Checker::resolveReference::sequence::m0");
+  ASSERT_NE(m, nullptr);
+  EXPECT_EQ(m->location.endLine, m->location.line);  // a message is one line
+  EXPECT_GT(m->location.endColumn, m->location.column);
 }
 
 TEST_F(TestBehaviour, CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule) {
