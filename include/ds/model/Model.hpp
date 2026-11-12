@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ds/model/Identity.hpp"
+#include "ds/model/Index.hpp"
 
 namespace ds {
 namespace model {
@@ -161,13 +162,21 @@ class Model {
   /// The bindings that break each rule, by the rule's identity, as the evaluator found them.
   const std::map<std::string, std::vector<Breach>>& breaches() const { return breaches_; }
   void breach(const std::string& rule, const Breach& breach) { breaches_[rule].push_back(breach); }
+  /// The questions the model answers by identity, with no pass over it (DS-171).
+  Index index() const { return Index(*this); }
 
  private:
+  friend class Index;
+  /// An entity enters what is indexed, or leaves it.
+  void indexEntity(const Entity& entity, bool enters);
+  /// Everything indexed, built again from the entities and the relations (after a rename).
+  void indexAgain();
   std::map<std::string, Entity> entities_;
   std::vector<Relation> relations_;
   std::vector<Finding> findings_;
   std::map<std::string, Formula> formulas_;
   std::map<std::string, std::vector<Breach>> breaches_;
+  mutable Indexed indexed_;  ///< kept in step by declare, relate and rename; its tree is built when asked
 };
 
 /// The relation as the language reads it: a class that inherits from an interface realises it (R14),

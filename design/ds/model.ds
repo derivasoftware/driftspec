@@ -426,6 +426,53 @@ package driftspec@ds {
       + owns location: Location
     }
 
+    dataclass Indexed {                      // what the model keeps so a question by identity needs no pass over it (DS-171)
+      @requirement REQ-00001-1
+      + from: std::map<std::string, std::vector<std::size_t>>
+      + to: std::map<std::string, std::vector<std::size_t>>
+      + kind: std::map<std::string, std::vector<std::size_t>>
+      + members: std::map<std::string, std::set<std::string>>
+      + revisions: std::map<std::string, std::set<std::string>>
+      + parent: std::map<std::string, std::string>
+      + children: std::map<std::string, std::vector<std::string>>
+      + treeStale: bool
+    }
+
+    class Index {                            // the questions the model answers by identity, in the order it states them (DS-171)
+      @requirement REQ-00001-1
+      @constraint CST-00001-1
+      - refs model_: Model
+      + Index(model: Model)
+      + from(id: std::string) -> std::vector<Relation>
+      + to(id: std::string) -> std::vector<Relation>
+      + ofKind(kind: std::string) -> std::vector<Relation>
+      + members(scope: std::string) -> std::vector<std::string>
+      + parent(id: std::string) -> std::string
+      + children(id: std::string) -> std::vector<std::string>
+      + revisionOf(artefact: std::string) -> std::string
+      - at(table: std::map<std::string, std::vector<std::size_t>>, key: std::string) -> std::vector<Relation>
+      - tree() -> void
+    }
+
+    verification VER-00119-1 {
+      status: draft
+      @requirement REQ-00001-1
+      title: Unit tests cover the questions the model answers by identity, kept in step with every declare, relate and rename
+      method: test
+      tests:
+        tests/unit/ds/model/test_index.cpp::TestIndex.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
+        tests/unit/ds/model/test_index.cpp::TestIndex.EveryRelationOfAKindComesInTheOrderStated
+        tests/unit/ds/model/test_index.cpp::TestIndex.ARelationStatedLaterIsAnsweredAtOnce
+        tests/unit/ds/model/test_index.cpp::TestIndex.AScopeNamesWhatItDeclaresExpectedOnesIncluded
+        tests/unit/ds/model/test_index.cpp::TestIndex.AnExpectedNodeThatIsDeclaredMovesToTheScopeOfItsDeclaration
+        tests/unit/ds/model/test_index.cpp::TestIndex.WhatHoldsWhatIsATreeFromContainsAndThenFromTheScope
+        tests/unit/ds/model/test_index.cpp::TestIndex.ALinkThatWouldCloseACycleIsLeftOutOfTheTree
+        tests/unit/ds/model/test_index.cpp::TestIndex.TheTreeFollowsWhatIsDeclaredAfterItWasAsked
+        tests/unit/ds/model/test_index.cpp::TestIndex.AnArtefactIsFoundByAnyRevisionOrNone
+        tests/unit/ds/model/test_index.cpp::TestIndex.ARenameMovesEverythingIndexedByTheOldIdentity
+        tests/unit/ds/model/test_index.cpp::TestIndex.ACopyOfTheModelAnswersForItself
+    }
+
     class Model {                            // the resolved workspace: entities by identity, relations and findings
       @requirement REQ-00001-1
       @requirement REQ-00002-1
@@ -434,6 +481,10 @@ package driftspec@ds {
       - owns findings_: std::vector<Finding>
       - owns formulas_: std::map<std::string, Formula>
       - owns breaches_: std::map<std::string, std::vector<Breach>>
+      - owns indexed_: Indexed
+      + index() -> Index
+      - indexEntity(entity: Entity, enters: bool) -> void
+      - indexAgain() -> void
       + declare(entity: Entity) -> Entity {
         @constraint CST-00002-1
       }
