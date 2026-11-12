@@ -38,9 +38,10 @@ void TraceLayer::requirements(SceneDocument& out_document) {
         const std::string returns = fieldOf(e, "returns");
         if (!returns.empty()) r.signature += " -> " + returns;
       }
-      for (const auto& other : model_.entities())
-        if (other.second.kind == model::Kind::Outcome && other.second.scope == e.id)
-          r.outcomes.push_back({other.second.name, fieldOf(other.second, "returns"), fieldOf(other.second, "text")});
+      for (const auto& member : model_.index().members(e.id)) {
+        const model::Entity& other = *model_.find(member);
+        if (other.kind == model::Kind::Outcome) r.outcomes.push_back({other.name, fieldOf(other, "returns"), fieldOf(other, "text")});
+      }
       std::stable_sort(r.outcomes.begin(), r.outcomes.end(),
                        [](const Outcome& a, const Outcome& b) { return a.name == "default" && b.name != "default"; });
     }

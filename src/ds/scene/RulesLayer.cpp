@@ -38,8 +38,8 @@ void RulesLayer::decorate(SceneDocument& out_document) {
         text.erase(0, at + 2);
       }
     }
-    for (const auto& rel : model_.relations())
-      if (rel.kind == "requires" && rel.from == e.id) r.requirements.push_back(rel.to);
+    for (const auto& rel : model_.index().from(e.id))
+      if (rel.kind == "requires") r.requirements.push_back(rel.to);
     const auto broken = model_.breaches().find(e.id);
     if (broken != model_.breaches().end())
       for (const auto& b : broken->second) {

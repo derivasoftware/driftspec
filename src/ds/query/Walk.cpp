@@ -23,8 +23,9 @@ std::vector<Taken> stepsOf(const model::Model& model, const std::string& sequenc
                            std::set<std::string>* out_kept) {
   std::vector<const model::Entity*> messages;
   if (path == kEveryBranch) {
-    for (const auto& pair : model.entities()) {
-      if (pair.second.kind == model::Kind::Message && pair.second.scope == sequence) messages.push_back(&pair.second);
+    for (const auto& member : model.index().members(sequence)) {
+      const model::Entity* held = model.find(member);
+      if (held->kind == model::Kind::Message) messages.push_back(held);
     }
     std::sort(messages.begin(), messages.end(), [](const model::Entity* a, const model::Entity* b) {
       return std::stoi(fieldOf(*a, "order")) < std::stoi(fieldOf(*b, "order"));

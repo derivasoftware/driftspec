@@ -16,9 +16,7 @@ BehaviourLayer::BehaviourLayer(const model::Model& model, const Map& map) : mode
 void BehaviourLayer::decorate(SceneDocument& out_document) {
   index_.clear();  // each build writes its behaviours anew
   calls_.clear();
-  for (const auto& r : model_.relations()) {
-    if (r.kind == "calls") calls_[r.from] = r.to;
-  }
+  for (const auto& r : model_.index().ofKind("calls")) calls_[r.from] = r.to;
   tours(out_document);
 }
 

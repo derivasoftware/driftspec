@@ -163,9 +163,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
         node["stereotype"] = st;
       }
       std::vector<const model::Entity*> members;
-      for (const auto& pair : model_.entities()) {
-        if (pair.second.scope == id) members.push_back(&pair.second);
-      }
+      for (const auto& member : model_.index().members(id)) members.push_back(model_.find(member));
       std::sort(members.begin(), members.end(), [](const model::Entity* a, const model::Entity* b) {
         return a->location.line < b->location.line;  // source order, not identity order
       });
@@ -207,8 +205,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     if (shows("requirements")) {
       // the artefacts this entity realises or is bound by, one note
       std::vector<std::string> lines;
-      for (const auto& r : model_.relations()) {
-        if (r.from != id || (r.kind != "requires" && r.kind != "constrained-by")) continue;
+      for (const auto& r : model_.index().from(id)) {
+        if (r.kind != "requires" && r.kind != "constrained-by") continue;
         const model::Entity* a = model_.find(r.to);
         if (!a || a->expected) continue;
         lines.push_back(a->id + "  " + fieldOf(*a, "title"));
@@ -379,9 +377,9 @@ struct SequenceBuilder {
     // a frame that holds no message (only prose, or a branch that ends with nothing) still has a row of its own
     std::vector<const model::Entity*> empty;
     if (whole) {
-      for (const auto& pair : model.entities()) {
-        const model::Entity& f = pair.second;
-        if (f.kind == model::Kind::Frame && f.scope == seq.id && fieldOf(f, "first").empty()) empty.push_back(&f);
+      for (const auto& member : model.index().members(seq.id)) {
+        const model::Entity& f = *model.find(member);
+        if (f.kind == model::Kind::Frame && fieldOf(f, "first").empty()) empty.push_back(&f);
       }
       std::sort(empty.begin(), empty.end(),
                 [](const model::Entity* a, const model::Entity* b) { return std::stoi(fieldOf(*a, "at")) < std::stoi(fieldOf(*b, "at")); });
@@ -610,8 +608,8 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
           kinds.push_back("attributes");
         }
         std::vector<std::string> binds;
-        for (const auto& r : model_.relations()) {
-          if (r.from == id && (r.kind == "requires" || r.kind == "constrained-by")) binds.push_back(r.to);
+        for (const auto& r : model_.index().from(id)) {
+          if (r.kind == "requires" || r.kind == "constrained-by") binds.push_back(r.to);
         }
         if (!binds.empty()) {
           sections.push_back(binds);
@@ -640,8 +638,9 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       const auto end = move.find('>', cut + 1);
       if (end != std::string::npos) box(move.substr(cut + 1, end - cut - 1));
     }
-    for (const auto& pair : model_.entities()) {  // a view no transition names is still drawn: it is the finding
-      if (pair.second.kind == model::Kind::View && pair.second.scope == state->id) box(pair.second.name);
+    for (const auto& member : model_.index().members(state->id)) {  // a view no transition names is still drawn: it is the finding
+      const model::Entity& view = *model_.find(member);
+      if (view.kind == model::Kind::View) box(view.name);
     }
     std::stringstream moves(fieldOf(*state, "transitions"));
     for (std::string move; std::getline(moves, move);) {

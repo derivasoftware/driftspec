@@ -101,8 +101,10 @@ void ContractCheck::checkUseCases() {
   const auto outcomes = [this, &chain](const std::string& id) {
     std::set<std::string> out;
     for (const auto& uc : chain(id))
-      for (const auto& pair : model_->entities())
-        if (pair.second.kind == model::Kind::Outcome && pair.second.scope == uc) out.insert(pair.second.name);
+      for (const auto& member : model_->index().members(uc)) {
+        const model::Entity& held = *model_->find(member);
+        if (held.kind == model::Kind::Outcome) out.insert(held.name);
+      }
     return out;
   };
   const auto contract = [this, &chain](const std::string& id) -> const model::Entity* {  // the nearest that writes a signature
@@ -205,8 +207,9 @@ void ContractCheck::checkInterfaces() {
 
 void ContractCheck::checkViews(const model::Entity& state) {
   std::set<std::string> views;
-  for (const auto& pair : model_->entities()) {
-    if (pair.second.kind == model::Kind::View && pair.second.scope == state.id) views.insert(pair.second.name);
+  for (const auto& member : model_->index().members(state.id)) {
+    const model::Entity& held = *model_->find(member);
+    if (held.kind == model::Kind::View) views.insert(held.name);
   }
   if (views.empty()) return;  // the details of a view are optional: a bare machine asks nothing of them
   std::map<std::string, std::set<std::string>> next;
