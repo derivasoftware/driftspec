@@ -898,7 +898,10 @@ package driftspec@pyds {
       + isolated: list<string>
       + baseline: string
       + diff: map<string, list<string>>
+      - loaded: optional<pyds::Workspace>      // the version shown, loaded once in the engine (DS-173)
+      - base: optional<pyds::Workspace>        // the baseline it is compared with
       + reload() -> bool
+      + files_stamp() -> list<object>          // what the .ds files are now: a save changes it
       + rules_of(model: pyds::Model, findings: list<pyds::Finding>) -> list<map<string, object>> {
         @requirement REQ-00100-1
       }
@@ -930,13 +933,34 @@ package driftspec@pyds {
       + base_files() -> map<string, string> {
         @requirement REQ-00105-1
       }
-      + compare(model: pyds::Model, sigs: map<string, string>) -> map<string, list<string>> {
+      + compare(loaded: pyds::Workspace, model: pyds::Model) -> map<string, list<string>> {
         @requirement REQ-00105-1
       }
     }
 
+    // A save: the version loaded once, its model, its page and its check asked of it, and what changed
+    // from the version before asked of the engine's diff (DS-173).
+    sequence Live::reload {
+      local loaded: pyds::Workspace
+      -> files_stamp() -> stamp
+      opt nothing was saved since / unchanged {
+        return false
+      }
+      -> loaded.model() -> model
+      -> loaded.page(title, focus) -> page
+      -> loaded.report() -> report
+      opt a version was shown before {
+        -> loaded.diff(before) -> diff
+        -> what_changed(diff, model) -> changes
+      }
+      -> rules_of(model, findings) -> rules
+      -> compare(loaded, model) -> compared
+      -> broadcast(event, data)
+      return true
+    }
+
     function serve(workspace: string, port: int, open_browser: bool, block: bool, baseline: string) -> Live
-    function signatures(model: pyds::Model) -> map<string, string>
+    function what_changed(diff: pyds::Diff, model: pyds::Model) -> list<set<string>>
     function handler_for(live: Live) -> object
     function call(port: int, path: string, data: map<string, object>) -> map<string, object>
     function tool(port: int, name: string, args: map<string, object>, opened: map<string, object>) -> object

@@ -67,16 +67,31 @@ CONTRACT = {
 
 
 # ---------------------------------------------------------------- the model, version by version
-def signatures(model: pyds.Model) -> dict[str, str]:
-    """One text per identity that changes whenever the entity or what it relates to changes."""
-    rel: dict[str, list[str]] = {}
-    for r in model.relations:
-        if r.kind not in ("contains", "expands-to", "couples-transient", "couples-structural"):
-            rel.setdefault(r.source, []).append(f"{r.kind}>{r.target}")
-    out = {}
-    for e in model.entities.values():
-        out[e.id] = json.dumps([e.kind, e.name, e.scope, sorted(e.fields.items()), sorted(e.flags), sorted(rel.get(e.id, []))], default=str)
-    return out
+DERIVED = ("expands-to", "couples-transient", "couples-structural")  # relations the check derives: not a change of their own
+
+
+def what_changed(diff: pyds.Diff, model: pyds.Model) -> tuple[set[str], set[str], set[str]]:
+    """What a diff the engine computed added, changed and removed, by identity (DS-173): an entity
+    whose relation to another changed is changed, and what holds a member that changed is too, seen
+    from afar. A rename is the old identity removed and the new one added."""
+    added, changed, removed = set(), set(), set()
+    for c in diff.changes:
+        if c.what == "entity":
+            if c.kind == "renamed":
+                added.add(c.id)
+                removed.add(c.renamed_from)
+            else:
+                {"added": added, "changed": changed, "removed": removed}[c.kind].add(c.id)
+        else:  # a relation, "kind from -> to": its source changed
+            kind, _, ends = c.id.partition(" ")
+            if kind not in DERIVED:
+                changed.add(ends.split(" -> ", 1)[0])
+    for i in list(added | changed):
+        e = model.entities.get(i)
+        if e is not None and model.owner(e).id != e.id and model.owner(e).id not in added:
+            changed.add(model.owner(e).id)  # what holds it, as the metamodel says (DS-122)
+    changed = {i for i in changed - added if i in model.entities}
+    return added, changed, removed
 
 
 class Live:
@@ -89,7 +104,7 @@ class Live:
         self.lock = threading.Lock()
         self.version = 0
         self.page = ""
-        self.sigs: dict[str, str] = {}
+        self.loaded: pyds.Workspace | None = None  # the version shown, loaded once in the engine (DS-173)
         self.changed: list[str] = []
         self.removed: list[str] = []
         self.history: list[dict] = []
@@ -102,7 +117,7 @@ class Live:
         self.comments: list[dict] = []  # what the reader writes for the agent (DS-147)
         self.isolated: list[str] = []  # what the reader isolates, kept across reloads (DS-139)
         self.baseline = ""  # what the design is compared with (DS-148): a directory, or a git ref of the workspace
-        self.base_sigs: dict[str, str] | None = None
+        self.base: pyds.Workspace | None = None
         self.diff: dict = {"added": [], "changed": [], "removed": []}
         self.listeners: list[queue.Queue] = []
         self.stamp = None
@@ -192,25 +207,21 @@ class Live:
                 for n in names if n.endswith(".ds")}
 
     def set_baseline(self, baseline: str) -> dict:
-        self.baseline, self.base_sigs = baseline, None
+        self.baseline, self.base = baseline, None
         if baseline:
             try:
-                self.base_sigs = signatures(pyds.load(self.base_files()))
+                self.base = pyds.Workspace(self.base_files())
             except Exception as exc:  # a baseline that does not load compares with nothing
                 self.error = f"baseline {baseline}: {exc}"
         self.stamp = None  # compare again on the next reload
-        return {"baseline": self.baseline, "loaded": self.base_sigs is not None}
+        return {"baseline": self.baseline, "loaded": self.base is not None}
 
-    def compare(self, model, sigs: dict[str, str]) -> dict:
-        if self.base_sigs is None:
+    def compare(self, loaded: pyds.Workspace, model: pyds.Model) -> dict:
+        """The design against its baseline, as the engine's diff says (DS-148, DS-173)."""
+        if self.base is None:
             return {"added": [], "changed": [], "removed": []}
-        added = {i for i in sigs if i not in self.base_sigs}
-        changed = {i for i, sg in sigs.items() if i in self.base_sigs and self.base_sigs[i] != sg}
-        for i in list(added | changed):  # what changed inside a class changes the class, seen from afar
-            e = model.entities.get(i)
-            if e is not None and model.owner(e).id != e.id and model.owner(e).id not in added:
-                changed.add(model.owner(e).id)
-        return {"added": sorted(added), "changed": sorted(changed - added), "removed": sorted(i for i in self.base_sigs if i not in sigs)}
+        added, changed, removed = what_changed(loaded.diff(self.base), model)
+        return {"added": sorted(added), "changed": sorted(changed), "removed": sorted(removed)}
 
     def select(self, identity: str | None, label: str = "") -> None:
         self.selection = {"id": identity, "label": label, "at": time.strftime("%H:%M:%S")}
@@ -258,31 +269,27 @@ class Live:
         t0 = time.perf_counter()
         try:
             files = pyds.read(self.workspace) if stamp else {}
-            model = pyds.load(files)
-            page = pyds.page(files, self.title, [])
-            report = pyds.check(files)
+            loaded = pyds.Workspace(files)  # once: the model, the page and the check all ask it (DS-173)
+            model = loaded.model()
+            page = loaded.page(self.title, [])
+            report = loaded.report()
         except Exception as exc:  # a half-written file must not stop the session
             self.error = str(exc)
             self.broadcast("error", {"message": self.error})
             return True
-        sigs = signatures(model)
         with self.lock:
             first = self.version == 0
-            changed = set() if first else {i for i, s in sigs.items() if self.sigs.get(i) != s}
-            for i in list(changed):  # a member that changed marks its class too, seen from afar
-                e = model.entities.get(i)
-                if e is not None and model.owner(e).id != e.id:  # what holds it, as the metamodel says (DS-122)
-                    changed.add(model.owner(e).id)
-            self.changed = sorted(changed)
-            self.removed = [] if first else sorted(i for i in self.sigs if i not in sigs)
-            self.sigs, self.page, self.error = sigs, page, ""
+            added, changed, removed = (set(), set(), set()) if first else what_changed(loaded.diff(self.loaded), model)
+            self.changed = sorted(added | changed)
+            self.removed = sorted(removed)
+            self.loaded, self.page, self.error = loaded, page, ""
             self.version += 1
             self.findings = [{"code": f.code, "severity": f.severity, "message": f.message,
                               "file": os.path.relpath(f.location.file, self.workspace) if f.location.file.startswith("/") else f.location.file,
                               "line": f.location.line} for f in report.findings]
             self.counts = dict(report.counts)
             self.rules = self.rules_of(model, report.findings)
-            self.diff = self.compare(model, sigs)
+            self.diff = self.compare(loaded, model)
             if not first:
                 self.history.append({"version": self.version, "at": time.strftime("%H:%M:%S"), "changed": self.changed,
                                      "removed": self.removed, "ms": round((time.perf_counter() - t0) * 1000)})
