@@ -29,10 +29,21 @@ TEST_F(TestBinder, ModulesCanBeReopenedAcrossFilesButClassesCannot) {
   binder.bind(parser.parseText("a.ds", "package ds { module m { class A { } } }"));
   binder.bind(parser.parseText("b.ds", "package ds { module m { class B { } } }"));
   binder.bind(parser.parseText("c.ds", "package ds { module m { class A { } } }"));
+  binder.bind(parser.parseText("d.ds", "package ds { package inner { module n { class C { } } } }"));
+  binder.bind(parser.parseText("e.ds", "package ds { package inner { module n { class D { } } } }"));
   EXPECT_NE(model.find("ds@m::A"), nullptr);
   EXPECT_NE(model.find("ds@m::B"), nullptr);
   ASSERT_EQ(model.findings().size(), 1u);
   EXPECT_EQ(model.findings()[0].code, "E-DUPLICATE-IDENTITY");
+  // a box reopened adds no relation: one contains from its owner, however many files (DS-48)
+  auto contains = [this](const std::string& from, const std::string& to) {
+    int n = 0;
+    for (const auto& r : model.index().all()) n += r.kind == "contains" && r.from == from && r.to == to;
+    return n;
+  };
+  EXPECT_EQ(contains("ds", "ds@m"), 1);
+  EXPECT_EQ(contains("ds", "ds@inner"), 1);
+  EXPECT_EQ(contains("ds@inner", "ds@inner@n"), 1);
 }
 
 TEST_F(TestBinder, NestingGivesTheRelation) {
