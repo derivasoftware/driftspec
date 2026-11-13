@@ -99,7 +99,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   const auto filter = query::filterFor(*diagram);
   const std::set<std::string> selected = static_cast<const query::ClassFilter&>(*filter).boxes(model_);
   const std::set<std::string> containers = query::ClassFilter::containers(model_, selected);
-  auto up = [](const std::string& s) { return model::boxOf(model::outer(s)); };
+  auto up = [](const std::string& s) { return model::Scope(model::Scope(s).outer().text()).box().text(); };
 
   nlohmann::json out;
   out["ir"] = 1;
@@ -109,7 +109,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   std::set<std::string> placed;
 
   auto parentOf = [&](const model::Entity& e) -> std::string {
-    std::string s = model::boxOf(e.scope);  // a package scope (app@core@) names the package app@core
+    std::string s = model::Scope(e.scope).box().text();  // a package scope (app@core@) names the package app@core
     for (; !s.empty(); s = up(s)) {
       if (containers.count(s)) return s;
     }
@@ -252,7 +252,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     // what a box does counts as much as what it declares: its behaviours cross boxes too, and a closed box
     // depends on whatever they reach. Types alone would leave an interface unconnected to what handles it
     for (const auto& r : model_.index().ofKinds({"couples-transient", "couples-structural"})) {
-      const std::string subject = model::subjectOf(r.from);
+      const std::string subject = model::Identity(r.from).subject().text();
       if (subject.empty()) continue;
       const model::Entity* s = model_.find(subject);
       if (!s || !placed.count(r.to)) continue;
@@ -267,7 +267,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
 }
 
 std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const {
-  auto outerOf = [](const std::string& id) { return model::boxOf(model::outer(id)); };  // the box outside
+  auto outerOf = [](const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); };  // the box outside
   nlohmann::json doc = nlohmann::json::parse(ir);
   std::set<std::string> containers;
   for (const auto& n : doc["nodes"]) {
@@ -364,7 +364,7 @@ struct SequenceBuilder {
   /// "" for the default path that takes no named branch, or kWhole for every branch, as written.
   void emit(const model::Entity& seq, const std::string& selfLine, const std::string& backLine, const std::string& path, int depth,
             std::set<std::string>& stack) {
-    const std::string key = model::withScenario(seq.id, path);
+    const std::string key = model::Identity(seq.id).withScenario(path).text();
     if (stack.count(key)) return;  // recursion: drawn once
     stack.insert(key);
     std::map<std::string, int> firstOrder, lastOrder, elseOrder;  // by frame id
@@ -516,7 +516,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     // lifting (B9): every message between classes of different modules is a message between the modules
     std::set<std::string> drawn;
     for (const model::Entity* seq : selected) {
-      const std::string subjectId = model::subjectOf(seq->id);
+      const std::string subjectId = model::Identity(seq->id).subject().text();
       const model::Entity* subject = model_.find(subjectId);
       const bool runsInModule = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Function);
       const model::Entity* cls = runsInModule ? model_.find(subject->scope) : subject;
@@ -540,7 +540,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     }
   } else {
     for (const model::Entity* seq : selected) {
-      const std::string subjectId = model::subjectOf(seq->id);
+      const std::string subjectId = model::Identity(seq->id).subject().text();
       const model::Entity* subject = model_.find(subjectId);
       // a method runs on its class, a function on its module
       const bool function = subject && subject->kind == model::Kind::Function;
@@ -710,7 +710,9 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
       if (e.kind == model::Kind::Requirement)
-        stereotype += e.scope.empty() || model::isSystemScope(e.scope) ? ", system" : ", " + model::lastName(model::boxOf(e.scope));
+        stereotype += e.scope.empty() || model::Scope(e.scope).isSystem()
+                          ? ", system"
+                          : ", " + model::Identity(model::Scope(e.scope).box().text()).lastName();
       node["stereotype"] = stereotype;
       if (!lines.empty()) node["sections"] = nlohmann::json::array({lines});
       const std::string text = fieldOf(e, "text");

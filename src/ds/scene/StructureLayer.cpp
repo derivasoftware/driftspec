@@ -52,7 +52,7 @@ void StructureLayer::diagrams(SceneDocument& out_document) const {
     const auto filter = query::filterFor(pair.second);
     if (!filter) continue;
     DiagramView view;
-    view.name = model::diagramName(pair.first);
+    view.name = model::Identity(pair.first).diagramName();
     view.kind = pair.second.fields.count("kind") ? pair.second.fields.at("kind") : "";
     std::set<std::string> shown;
     for (const auto& id : query.select(*filter)) {

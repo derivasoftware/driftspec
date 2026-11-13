@@ -130,7 +130,7 @@ void Model::relate(const Relation& relation) {
 void Model::indexEntity(const Entity& entity, bool enters) {
   indexed_.treeStale = true;
   auto& members = indexed_.members[entity.scope];
-  auto& revisions = indexed_.revisions[withoutRevision(entity.id)];
+  auto& revisions = indexed_.revisions[model::ArtefactName(entity.id).withoutRevision().text()];
   if (enters) {
     members.insert(entity.id);
     if (!entity.expected) revisions.insert(entity.id);
@@ -170,7 +170,7 @@ bool Model::rename(const std::string& from, const std::string& to) {
   // members: everything whose identity or scope begins with the old one
   std::vector<std::pair<std::string, Entity>> members;
   for (auto m = entities_.begin(); m != entities_.end();) {
-    if (m->first != from && within(m->first, from)) {  // a member or a scenario of what is renamed
+    if (m->first != from && model::Identity(m->first).within(model::Identity(from))) {  // a member or a scenario of what is renamed
       Entity e = m->second;
       e.id = to + m->first.substr(from.size());
       if (e.scope.rfind(from, 0) == 0) e.scope = to + e.scope.substr(from.size());
@@ -185,7 +185,7 @@ bool Model::rename(const std::string& from, const std::string& to) {
   auto translate = [&](std::string& id) {
     if (id == from)
       id = to;
-    else if (within(id, from))
+    else if (model::Identity(id).within(model::Identity(from)))
       id = to + id.substr(from.size());
   };
   // what a rule of a renamed class says moves with it

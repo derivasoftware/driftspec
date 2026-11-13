@@ -393,7 +393,8 @@ package driftspec@ds {
     // declared one is asked of the model's index, with no pass over the entities (DS-171).
     sequence Linker::resolveReference {
       opt it names an artefact by its id {
-        -> model::hasRevision(reference.target) -> pinned
+        local name: model::ArtefactName
+        self -> name.hasRevision() -> pinned
         opt it carries no revision / unpinned {
           self -> context_.report(finding)
           return
@@ -569,12 +570,13 @@ package driftspec@ds {
     // common one, found in a scope, walking outward from where it was written.
     sequence Resolver::resolve {
       local bare: std::string
-      local s: std::string
+      local s: model::Scope
+      local written: model::ArtefactName
       self -> model_.find(name)
       opt the model declares it as written: a full id, a global artefact, a package / declared {
         return name
       }
-      -> model::withoutRevision(name) -> bare
+      self -> written.withoutRevision() -> bare
       opt the name carries a revision {
         self -> model_.find(bare)
       }
@@ -585,9 +587,9 @@ package driftspec@ds {
         return ""
       }
       loop each scope, from the innermost outward, until one declares it {
-        -> model::qualify(s, name) -> candidate
+        self -> s.qualify(name) -> candidate
         self -> model_.find(candidate)
-        -> model::outer(s) -> s
+        self -> s.outer() -> s
       }
       opt no scope declares it: the extern catalogue {
         -> externsNamed(name) -> externs

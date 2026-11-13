@@ -26,7 +26,7 @@ void BehaviourLayer::tours(SceneDocument& out_document) {
   for (const auto& pair : model_.entities()) {
     const model::Entity& seq = pair.second;
     if (seq.kind != model::Kind::Sequence) continue;
-    const std::string subjectId = model::subjectOf(seq.id);
+    const std::string subjectId = model::Identity(seq.id).subject().text();
     if (subjectId.empty()) continue;
     const model::Entity* subject = model_.find(subjectId);
     if (!subject) continue;
@@ -37,7 +37,7 @@ void BehaviourLayer::tours(SceneDocument& out_document) {
     if (map_.land(subject->id).empty()) continue;
     // its scenarios: the default path and every branch it names, or the one it is written apart for
     std::vector<std::string> scenarios{""};
-    if (model::scenarioOf(seq.id).empty()) {  // the default behaviour, not one written apart for a scenario
+    if (model::Identity(seq.id).scenario().empty()) {  // the default behaviour, not one written apart for a scenario
       std::set<std::string> named;
       for (const auto& member : model_.index().members(seq.id)) {
         const model::Entity& f = *model_.find(member);
@@ -69,8 +69,8 @@ int BehaviourLayer::behaviourOf(const std::string& sequence, const std::string& 
   const int at = static_cast<int>(out_document.behaviours.size());
   index_[key] = at;  // before its calls: a behaviour that reaches itself names itself
   Behaviour b;
-  b.subject = map_.land(model::subjectOf(sequence));
-  b.scenario = scenario.empty() ? model::scenarioOf(sequence) : scenario;
+  b.subject = map_.land(model::Identity(sequence).subject().text());
+  b.scenario = scenario.empty() ? model::Identity(sequence).scenario() : scenario;
   b.id = b.subject + (b.scenario.empty() ? "" : " / " + b.scenario);
   out_document.behaviours.push_back(b);
   std::vector<Call> found_calls;

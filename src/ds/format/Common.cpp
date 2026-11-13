@@ -112,8 +112,8 @@ std::string encode(const scene::SceneDocument& doc, bool pretty) {
   for (const auto& l : doc.links) {
     nlohmann::json written = nlohmann::json::array();
     for (const auto& s : l.sequences) {  // a sequence id, X::sequence or X::sequence/scenario, as the behaviour it is
-      const std::string scenario = model::scenarioOf(s);
-      const auto b = behaviourOf.find(landing.land(model::subjectOf(s)) + (scenario.empty() ? "" : " / " + scenario));
+      const std::string scenario = model::Identity(s).scenario();
+      const auto b = behaviourOf.find(landing.land(model::Identity(s).subject().text()) + (scenario.empty() ? "" : " / " + scenario));
       if (b != behaviourOf.end()) written.push_back(b->second);
     }
     out["links"].push_back({index(l.from), index(l.to), l.kind, l.count, l.multiplicity, written});

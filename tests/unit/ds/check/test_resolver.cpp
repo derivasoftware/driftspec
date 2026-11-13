@@ -23,7 +23,7 @@ class TestResolver : public ::testing::Test {
       Entity e;
       e.kind = kind;
       e.id = id;
-      e.name = ds::model::lastName(id);
+      e.name = ds::model::Identity(id).lastName();
       e.scope = scope;
       model.declare(e);
     }

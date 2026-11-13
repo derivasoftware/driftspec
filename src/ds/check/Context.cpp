@@ -5,12 +5,10 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string Context::current(const std::string& id) const {
   for (const auto& r : renamed_) {
     if (id == r.first) return r.second;
-    if (model::within(id, r.first)) return r.second + id.substr(r.first.size());
+    if (model::Identity(id).within(model::Identity(r.first))) return r.second + id.substr(r.first.size());
   }
   return id;
 }
@@ -33,8 +31,8 @@ void Context::checkLeak(const std::string& from, const std::string& target, cons
   const auto hidden = type->fields.find("visibility");
   if (hidden == type->fields.end() || hidden->second != "-") return;
   // the member shows the type to whoever can see the member: from outside the type's parent, if all is public on the way
-  const std::string parent = outer(target);
-  for (std::string s = from; s != parent; s = outer(s)) {
+  const std::string parent = model::Scope(target).outer().text();
+  for (std::string s = from; s != parent; s = model::Scope(s).outer().text()) {
     if (s.empty()) return;  // the member lives elsewhere: that is W-NOT-VISIBLE's
     const model::Entity* e = model_.find(s);
     if (!e) return;

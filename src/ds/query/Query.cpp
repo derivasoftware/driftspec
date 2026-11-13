@@ -49,7 +49,7 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
 
 bool Query::known(const std::string& id) const {
   if (model_.find(id)) return true;
-  const std::string scope = model::scopeIn(id);  // a package is a scope too: driftspec@ds
+  const std::string scope = model::Scope::inside(model::Identity(id)).text();  // a package is a scope too: driftspec@ds
   const model::Index index = model_.index();
   return !index.members(scope).empty() || !index.members(id).empty();
 }
@@ -73,7 +73,7 @@ std::vector<Answer> Query::diagrams() const {
   for (const auto& p : model_.entities()) {
     if (p.second.kind != model::Kind::Diagram) continue;
     const auto kind = p.second.fields.find("kind");
-    const std::string name = model::diagramName(p.second.id);  // named as the user names it
+    const std::string name = model::Identity(p.second.id).diagramName();  // named as the user names it
     out.push_back({model::kindName(p.second.kind), name, kind == p.second.fields.end() ? "class" : kind->second});
   }
   return out;
@@ -136,7 +136,7 @@ std::set<std::string> Query::select(const IFilter& filter) const { return filter
 
 std::vector<Answer> Query::shows(const std::string& diagram) const {
   // what the diagram takes is the filter of its kind, applied to the model: nothing is drawn (DS-127)
-  const model::Entity* d = model_.find(model::diagramId(diagram));
+  const model::Entity* d = model_.find(model::Identity::ofDiagram(diagram).text());
   const auto filter = d ? filterFor(*d) : nullptr;
   if (!filter) return {{"error", diagram, "no such diagram"}};
   std::vector<Answer> out;

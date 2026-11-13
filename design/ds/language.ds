@@ -232,13 +232,13 @@ package driftspec@ds {
           text:
             In the outermost package an artefact is of the system; in an inner
             package or a module, of that level. No keyword, no field.
-          verification VER-00015-1 {
+          verification VER-00015-2 {
             title: Integration tests confirm the outermost package is the system, and the level of an artefact follows from where it is declared
             status: approved
+            text: Revision 2 (DS-184) cites the integration test alone; the unit test of a scope is the class's own.
             method: test
             tests:
               tests/integration/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
-              tests/unit/ds/model/test_scopes.cpp::TestIsSystemScope.OnlyTheOutermostPackageIsTheSystem
           }
         }
         requirement REQ-00019-1 {
@@ -1326,14 +1326,14 @@ package driftspec@ds {
       tests/integration/ds/bind/test_packages.cpp::TestPackages.AnExtensionOfNothingIsExpected
       tests/integration/ds/bind/test_packages.cpp::TestLoneExtension.AClassWithRequirementsAndNoMembersIsADefinitionWhenNothingElseDefinesIt
   }
-  verification VER-00044-1 {
+  verification VER-00044-2 {
     status: approved
     @constraint CST-00004-1
-    title: Unit tests confirm packages qualify with @ and modules with ::
+    title: Integration tests confirm packages qualify with @ and modules with ::
+    text: Revision 2 (DS-184) cites the integration test alone; the unit tests of a name are the class's own.
     method: test
     tests:
       tests/integration/ds/bind/test_binder.cpp::TestBinder.PackagesQualifyWithAtAndModulesWithColons
-      tests/unit/ds/model/test_scopes.cpp::TestLastName.TheNameAfterTheLastSeparator
   }
   verification VER-00045-1 {
     status: approved

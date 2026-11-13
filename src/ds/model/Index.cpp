@@ -71,7 +71,7 @@ std::vector<std::string> Index::members(const std::string& scope) const {
 }
 
 std::string Index::revisionOf(const std::string& artefact) const {
-  const auto found = model_.indexed_.revisions.find(withoutRevision(artefact));
+  const auto found = model_.indexed_.revisions.find(model::ArtefactName(artefact).withoutRevision().text());
   // the last by identity, as a pass over the entities in their order would leave it
   return found == model_.indexed_.revisions.end() || found->second.empty() ? "" : *found->second.rbegin();
 }

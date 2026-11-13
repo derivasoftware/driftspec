@@ -349,7 +349,7 @@ package driftspec@ds {
       opt the model declares it / declared {
         return true
       }
-      -> model::scopeIn(id) -> scope
+      -> model::Scope::inside(id) -> scope
       self -> model_.index() -> index
       self -> index.members(scope) -> inPackage
       self -> index.members(id) -> inScope

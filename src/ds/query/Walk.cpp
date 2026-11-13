@@ -42,7 +42,7 @@ std::vector<Walked> walkOf(const model::Model& model, const std::string& sequenc
   std::vector<Walked> out;
   std::set<std::string> stack;
   std::function<void(const std::string&, const std::string&, int)> walk = [&](const std::string& seq, const std::string& p, int level) {
-    const std::string key = model::withScenario(seq, p);
+    const std::string key = model::Identity(seq).withScenario(p).text();
     if (!stack.insert(key).second) return;  // a behaviour already being walked: the cycle ends here
     for (const Taken& t : stepsOf(model, seq, p)) {
       out.push_back({t.message, level});

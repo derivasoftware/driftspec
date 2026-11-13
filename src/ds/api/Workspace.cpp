@@ -99,7 +99,7 @@ std::string Workspace::shows(const std::string& diagram) const {
 }
 
 std::string Workspace::render(const std::string& diagram, const std::string& format, int width) const {
-  const std::string ir = render::IrExport(model_).render(model::diagramId(diagram), false);
+  const std::string ir = render::IrExport(model_).render(model::Identity::ofDiagram(diagram).text(), false);
   if (ir.empty()) return ir;
   format::FormatOptions options;
   options.width = width;
@@ -138,14 +138,14 @@ std::string Workspace::diff(const Workspace& before) const {
   return nlohmann::json{{"changes", changes}, {"findings", findings}}.dump();
 }
 
-std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::qualify(scope, name); }
-std::string Identity::outer(const std::string& scope) { return model::outer(scope); }
-std::string Identity::boxOf(const std::string& scope) { return model::boxOf(scope); }
-std::string Identity::packageOf(const std::string& scope) { return model::packageOf(scope); }
-std::string Identity::behaviourOf(const std::string& id) { return model::behaviourOf(id); }
-std::string Identity::subjectOf(const std::string& id) { return model::subjectOf(id); }
-std::string Identity::scenarioOf(const std::string& id) { return model::scenarioOf(id); }
-std::string Identity::withoutRevision(const std::string& id) { return model::withoutRevision(id); }
+std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }
+std::string Identity::outer(const std::string& scope) { return model::Scope(scope).outer().text(); }
+std::string Identity::boxOf(const std::string& scope) { return model::Scope(scope).box().text(); }
+std::string Identity::packageOf(const std::string& scope) { return model::Scope(scope).package().text(); }
+std::string Identity::behaviourOf(const std::string& id) { return model::Identity(id).behaviour().text(); }
+std::string Identity::subjectOf(const std::string& id) { return model::Identity(id).subject().text(); }
+std::string Identity::scenarioOf(const std::string& id) { return model::Identity(id).scenario(); }
+std::string Identity::withoutRevision(const std::string& id) { return model::ArtefactName(id).withoutRevision().text(); }
 
 }  // namespace api
 }  // namespace ds

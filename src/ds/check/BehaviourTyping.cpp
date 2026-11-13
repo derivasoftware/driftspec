@@ -16,8 +16,6 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string BehaviourTyping::name() const { return "behaviour"; }
 
 std::vector<std::string> BehaviourTyping::needs() const { return {"linker"}; }
@@ -91,14 +89,14 @@ void BehaviourTyping::expand(model::Entity& msg, const model::Entity& op, const 
   // that names a scenario expands to that one, and one nobody declares is a finding
   const auto scenario = msg.fields.find("scenario");
   const bool named = scenario != msg.fields.end();
-  const std::string id = model::behaviourId(op.id, named ? scenario->second : "");
+  const std::string id = model::Identity(op.id).sequence(named ? scenario->second : "").text();
   if (const model::Entity* child = model_->find(id)) {
     model_->relate({"expands-to", msg.id, child->id, message.location, ""});
     msg.fields["expands"] = child->id;
-  } else if (named && model::hasScenario(*model_, model::behaviourId(op.id), scenario->second)) {
+  } else if (named && model::hasScenario(*model_, model::Identity(op.id).sequence().text(), scenario->second)) {
     // a named branch of the one behaviour: the call enters that path of it
-    model_->relate({"expands-to", msg.id, model::behaviourId(op.id), message.location, ""});
-    msg.fields["expands"] = model::behaviourId(op.id);
+    model_->relate({"expands-to", msg.id, model::Identity(op.id).sequence().text(), message.location, ""});
+    msg.fields["expands"] = model::Identity(op.id).sequence().text();
     msg.fields["expands-path"] = scenario->second;
   } else if (named) {
     context_->report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});

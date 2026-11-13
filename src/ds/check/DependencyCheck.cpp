@@ -16,8 +16,6 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string DependencyCheck::name() const { return "dependencies"; }
 
 std::vector<std::string> DependencyCheck::needs() const {
@@ -61,8 +59,8 @@ void DependencyCheck::checkDependencies() {
   }
   const auto chain = [](const std::string& id) {  // the identity and every box it lives in: p@m::C::run, p@m::C, p@m, p
     std::vector<std::string> out;
-    for (std::string s = id; !s.empty(); s = outer(s)) {
-      const std::string box = model::boxOf(s);
+    for (std::string s = id; !s.empty(); s = model::Scope(s).outer().text()) {
+      const std::string box = model::Scope(s).box().text();
       if (out.empty() || out.back() != box) out.push_back(box);
     }
     return out;
@@ -73,7 +71,7 @@ void DependencyCheck::checkDependencies() {
   };
   std::map<std::string, std::set<std::string>> called;  // a box that declares, and the interfaces its behaviours call
   for (const auto& r : model_->index().ofKind("calls")) {
-    const std::string subject = model::subjectOf(r.from);
+    const std::string subject = model::Identity(r.from).subject().text();
     const model::Entity* op = model_->find(r.to);
     if (subject.empty() || !op) continue;
     const model::Entity* msg = model_->find(r.from);
@@ -115,7 +113,7 @@ void DependencyCheck::checkDependencies() {
   for (const auto& d : declared) {
     bool behaves = false;
     for (const auto& pair : model_->entities()) {
-      const std::string subject = model::subjectOf(pair.first);
+      const std::string subject = model::Identity(pair.first).subject().text();
       if (pair.second.kind == model::Kind::Sequence && !subject.empty() && inside(subject, d.first)) {
         behaves = true;
         break;

@@ -8,15 +8,13 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string Resolver::resolve(const std::string& name, const std::string& scope) const {
   if (model_.find(name)) return name;  // a full id (pkg@mod::Class), a global artefact, a package
-  const std::string bare = model::withoutRevision(name);
+  const std::string bare = model::ArtefactName(name).withoutRevision().text();
   if (bare != name && model_.find(bare)) return bare;
-  if (model::isAbsolute(name)) return "";  // absolute, and nobody declares it
-  for (std::string s = scope; !s.empty(); s = outer(s)) {
-    const std::string candidate = model::qualify(s, name);
+  if (model::Identity(name).isAbsolute()) return "";  // absolute, and nobody declares it
+  for (std::string s = scope; !s.empty(); s = model::Scope(s).outer().text()) {
+    const std::string candidate = model::Scope(s).qualify(name).text();
     if (model_.find(candidate)) return candidate;
   }
   // the extern catalogue (R11): a bare name nobody declares in scope is the one extern
@@ -27,7 +25,7 @@ std::string Resolver::resolve(const std::string& name, const std::string& scope)
 
 std::vector<std::string> Resolver::externsNamed(const std::string& name) const {
   std::vector<std::string> out;
-  if (model::isQualified(name)) return out;
+  if (model::Identity(name).isQualified()) return out;
   // an extern is known by its simple name: a use's template arguments (tuple<2>) are not the
   // design's to check, so any arity of the use, and of the declaration, finds it (R11)
   const std::string simple = name.substr(0, name.find('<'));
@@ -77,13 +75,13 @@ const model::Entity* Resolver::member(const std::string& type, const std::string
 
 std::string Resolver::privateOnTheWay(const std::string& from, const std::string& target) const {
   std::set<std::string> chain;
-  for (std::string s = from; !s.empty(); s = outer(s)) chain.insert(s);
+  for (std::string s = from; !s.empty(); s = model::Scope(s).outer().text()) chain.insert(s);
   // down from the first container they share: a child is seen from inside its parent, so siblings see each other
-  for (std::string t = target; !t.empty() && !chain.count(t); t = outer(t)) {
+  for (std::string t = target; !t.empty() && !chain.count(t); t = model::Scope(t).outer().text()) {
     const model::Entity* e = model_.find(t);
     if (!e || e->has("extern")) return "";
     const auto visibility = e->fields.find("visibility");
-    if (visibility != e->fields.end() && visibility->second == "-" && !chain.count(outer(t))) return t;
+    if (visibility != e->fields.end() && visibility->second == "-" && !chain.count(model::Scope(t).outer().text())) return t;
   }
   return "";
 }
@@ -123,7 +121,7 @@ std::string Resolver::resolveTypeText(const std::string& text, const std::string
       t = container->element < static_cast<int>(args.size()) ? args[container->element] : "";
       continue;
     }
-    t = model::arityId(head, args.size());  // a template use: identity is name + arity (R15)
+    t = model::Identity(head).withArity(args.size()).text();  // a template use: identity is name + arity (R15)
     break;
   }
   if (t.empty()) return "";
