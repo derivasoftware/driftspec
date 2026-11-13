@@ -62,7 +62,7 @@ package driftspec@ds {
     }
 
     verification VER-00003-3 {
-      status: draft
+      status: approved
       @requirement REQ-00003-2
       title: Unit tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram; revision 3 adds that a class answers its machine and its operations' sequences (DS-53)
       method: test

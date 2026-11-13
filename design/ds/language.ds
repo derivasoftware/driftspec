@@ -982,7 +982,7 @@ package driftspec@ds {
 
         requirement REQ-00109-1 {
           tags: language, lld, state, check
-          status: draft
+          status: approved
           title: The checker shall report a state of a class's machine that no transition leads to from its initial state
           text:
             A state named in the transitions that the walk from the initial state never enters is
@@ -992,7 +992,7 @@ package driftspec@ds {
           rationale: DS-53, measured 2026-11-05: `Lost -> Idle on go`, never entered, passed silently.
           verification VER-00125-1 {
             title: Integration tests confirm a state nothing leads to from the initial one is reported, and a machine fully reached or with no initial state says nothing
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_behaviour.cpp::TestStateReach.AStateNothingLeadsToFromTheInitialOneIsAFinding
