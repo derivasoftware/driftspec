@@ -818,6 +818,21 @@
     }
   },
   {
+    "type": "failures",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "qualified_name",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "field",
     "named": true,
     "fields": {
@@ -867,6 +882,16 @@
         "types": [
           {
             "type": "member_body",
+            "named": true
+          }
+        ]
+      },
+      "fails": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "failures",
             "named": true
           }
         ]
@@ -1381,6 +1406,16 @@
           }
         ]
       },
+      "fails": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "failures",
+            "named": true
+          }
+        ]
+      },
       "modifier": {
         "multiple": true,
         "required": false,
@@ -1544,6 +1579,16 @@
     "type": "operation",
     "named": true,
     "fields": {
+      "fails": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "failures",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -2815,6 +2860,10 @@
   },
   {
     "type": "fail",
+    "named": false
+  },
+  {
+    "type": "fails",
     "named": false
   },
   {

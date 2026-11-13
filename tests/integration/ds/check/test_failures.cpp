@@ -46,8 +46,8 @@ class TestFailures : public ::testing::Test {
   }
 };
 
-TEST_F(TestFailures, TheExampleChecksClean) {
-  for (const auto& f : model.findings()) ADD_FAILURE() << f.code << " " << f.message;
+TEST_F(TestFailures, TheExampleReportsNothingButTheFailuresItsSignaturesMisstate) {
+  for (const auto& f : model.findings()) EXPECT_EQ(f.code.rfind("W-FAILURE-", 0), 0u) << f.code << " " << f.message;
 }
 
 TEST_F(TestFailures, APathThatFailsEndsThereWithTheFailuresName) {
@@ -86,7 +86,7 @@ TEST_F(TestFailures, AFailureEscapesEveryCallerThatDoesNotHandleIt) {
   EXPECT_EQ(model.find("shelf@books::Loader::load")->field("escapes"), "LoadError, ParseError");  // IoError is handled
   EXPECT_EQ(model.find("shelf@books::Loader::open")->field("escapes"), "LoadError, ParseError");
   EXPECT_EQ(model.find("shelf@books::Shelf::show")->field("escapes"), "");  // both handled
-  EXPECT_EQ(model.find("shelf@books::Files::read")->field("escapes"), "");  // no behaviour: taken not to fail
+  EXPECT_EQ(model.find("shelf@books::Cache::last")->field("escapes"), "");  // no behaviour, no signature: taken not to fail
 }
 
 TEST_F(TestFailures, EachEscapeKeepsThePathItComesUpByAndTheScenarioItStartsIn) {
@@ -105,6 +105,42 @@ TEST_F(TestFailures, TheQueryAnswersWhatEscapesAnOperationByWhereEachStarts) {
   EXPECT_EQ(answers[0].detail.rfind("LoadError: ", 0), 0u);
   EXPECT_EQ(answers[1].id, "shelf@books::Parser::parse");
   EXPECT_TRUE(ds::query::Query(model).ask("failures", "shelf@books::Shelf::show").empty());
+}
+
+/// What a signature promises (DS-189): fails A, B or fails nothing, held to what escapes.
+class TestFailurePromises : public TestFailures {
+ protected:
+  std::vector<std::string> said(const std::string& code, const std::string& about) const {
+    std::vector<std::string> out;
+    for (const auto& f : model.findings())
+      if (f.code == code && f.message.rfind(about + " ", 0) == 0) out.push_back(f.message);
+    return out;
+  }
+};
+
+TEST_F(TestFailurePromises, WhatEscapesAndTheSignatureDoesNotSayIsAFinding) {
+  const auto open = said("W-FAILURE-UNDECLARED", "shelf@books::Loader::open");
+  ASSERT_EQ(open.size(), 1u);
+  EXPECT_NE(open[0].find("lets ParseError escape"), std::string::npos);
+  EXPECT_TRUE(said("W-FAILURE-UNDECLARED", "shelf@books::Loader::load").empty());  // it says both
+  EXPECT_TRUE(said("W-FAILURE-UNDECLARED", "shelf@books::Shelf::show").empty());   // fails nothing, and nothing escapes
+}
+
+TEST_F(TestFailurePromises, WhatTheSignatureSaysAndNoPathFailsWithIsAFinding) {
+  const auto parse = said("W-FAILURE-UNREACHED", "shelf@books::Parser::parse");
+  ASSERT_EQ(parse.size(), 1u);
+  EXPECT_NE(parse[0].find("Timeout"), std::string::npos);
+}
+
+TEST_F(TestFailurePromises, AnOperationWithNoBehaviourFailsAsItsSignatureSays) {
+  EXPECT_EQ(model.find("shelf@books::Files::read")->field("escapes"), "IoError");
+  EXPECT_TRUE(said("W-FAILURE-UNREACHED", "shelf@books::Files::read").empty());                   // nothing to hold it to
+  EXPECT_EQ(model.find("shelf@books::Loader::load")->field("escapes"), "LoadError, ParseError");  // IoError handled
+}
+
+TEST_F(TestFailurePromises, ABoundarySaysWhatEscapesItOrNothingMay) {
+  EXPECT_EQ(said("W-FAILURE-UNDECLARED", "shelf@library::open").size(), 2u);  // LoadError and ParseError, said by no one
+  EXPECT_TRUE(said("W-FAILURE-UNDECLARED", "shelf@library::show").empty());   // nothing escapes it
 }
 
 }  // namespace

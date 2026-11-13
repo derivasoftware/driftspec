@@ -19,8 +19,8 @@ namespace check {
 std::string ContractCheck::name() const { return "contracts"; }
 
 std::vector<std::string> ContractCheck::needs() const {
-  // the expansions behaviour typing made, over the links the linker made
-  return {"linker", "behaviour"};
+  // the expansions behaviour typing made, over the links the linker made, and what escapes each operation
+  return {"linker", "behaviour", "failures"};
 }
 
 std::vector<model::Finding> ContractCheck::check(const Context& context) {
@@ -32,6 +32,11 @@ std::vector<model::Finding> ContractCheck::check(const Context& context) {
   checkUseCases();
   checkDiagrams();
   checkScenarios();
+  for (const auto& pair : model_->entities()) {
+    const model::Entity& e = pair.second;
+    const bool operation = e.kind == model::Kind::Operation || e.kind == model::Kind::Method || e.kind == model::Kind::Function;
+    if (operation && !e.expected) checkFailures(e);
+  }
   std::vector<model::Finding> out;
   out.swap(found_);
   return out;
@@ -280,6 +285,35 @@ void ContractCheck::checkStates(const model::Entity& state) {
     found_.push_back({"W-STATE-UNREACHABLE", "warning",
                       "nothing leads to the state " + name + " of " + state.name + " from its initial state " + initial->second,
                       state.location});
+  }
+}
+
+void ContractCheck::checkFailures(const model::Entity& op) {
+  // an interface operation is a boundary: what escapes it is said in its signature, or nothing may; any
+  // other operation is held to its signature only when it writes one (DS-189)
+  const bool boundary = op.kind == model::Kind::Operation;
+  const bool promises = op.fields.count("fails") > 0;
+  if (!promises && !boundary) return;
+  std::set<std::string> declared;
+  for (const auto& name : model::split(op.field("fails"), ','))
+    if (name != "nothing") declared.insert(name);
+  std::set<std::string> escaping;
+  for (const auto& name : model::split(op.field("escapes"), ',')) {
+    escaping.insert(name);
+    if (declared.count(name)) continue;
+    const std::string how = op.field("escape." + name);
+    found_.push_back({"W-FAILURE-UNDECLARED", "warning",
+                      op.id + " lets " + name + " escape (" + how + "), and " +
+                          (promises ? "its signature does not say it may fail with it" : "a boundary must say what it fails with"),
+                      op.location});
+  }
+  bool behaviour = false;
+  for (const auto& r : model_->index().to(op.id)) behaviour |= r.kind == "behaviour-of";
+  if (!behaviour) return;  // with no behaviour, the signature is what it fails with
+  for (const auto& name : declared) {
+    if (escaping.count(name)) continue;
+    found_.push_back(
+        {"W-FAILURE-UNREACHED", "warning", op.id + " says it may fail with " + name + ", and no path of its behaviour does", op.location});
   }
 }
 

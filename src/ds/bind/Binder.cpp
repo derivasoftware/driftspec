@@ -493,6 +493,12 @@ void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::En
   entity.fields["params"] = join(paramTexts, ", ");  // parameters and returns give use (R16)
   TypeUse returns = bindType(file, child(node, "returns"), scope, entity.id, "uses", "", params, locationOf(file, node));
   if (!returns.text.empty()) entity.fields["returns"] = returns.text;
+  TSNode fails = child(node, "fails");  // what it promises it may fail with; `fails nothing` promises none (DS-189)
+  if (!ts_node_is_null(fails)) {
+    std::vector<std::string> names;
+    for (uint32_t i = 0; i < ts_node_named_child_count(fails); ++i) names.push_back(trim(file.textOf(ts_node_named_child(fails, i))));
+    entity.fields["fails"] = join(names, ", ");
+  }
 }
 
 void Binder::bindFunction(const parse::ParsedFile& file, TSNode f, const std::string& scope, const std::string& owner) {

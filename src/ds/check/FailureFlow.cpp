@@ -53,6 +53,12 @@ std::string FailureFlow::originOf(const std::string& step, const std::string& se
   return sequence;
 }
 
+bool FailureFlow::hasBehaviour(const std::string& operation) const {
+  for (const auto& r : model_->index().to(operation))
+    if (r.kind == "behaviour-of") return true;
+  return false;
+}
+
 std::string FailureFlow::callee(const std::string& message) const {
   for (const auto& r : model_->index().from(message))
     if (r.kind == "calls") return r.to;
@@ -61,6 +67,16 @@ std::string FailureFlow::callee(const std::string& message) const {
 
 bool FailureFlow::pass(std::map<std::string, std::map<std::string, Escape>>& out_escapes) const {
   bool changed = false;
+  for (const auto& pair : model_->entities()) {  // what has no behaviour fails as its signature says (DS-189)
+    const model::Entity& op = pair.second;
+    const bool operation = op.kind == model::Kind::Method || op.kind == model::Kind::Function || op.kind == model::Kind::Operation;
+    if (!operation || op.expected || op.field("fails").empty() || hasBehaviour(op.id)) continue;
+    for (const auto& name : model::split(op.field("fails"), ',')) {
+      if (name == "nothing" || out_escapes[op.id].count(name)) continue;
+      out_escapes[op.id][name] = Escape{{op.id}, op.id};
+      changed = true;
+    }
+  }
   for (const auto& pair : model_->entities()) {
     const model::Entity& seq = pair.second;
     if (seq.kind != model::Kind::Sequence || seq.expected) continue;

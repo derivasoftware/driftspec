@@ -97,6 +97,8 @@ class ContractCheck : public ACheck {
   void checkViews(const model::Entity& state);
   /// A state of a class's machine that no transition leads to from the initial one.
   void checkStates(const model::Entity& state);
+  /// What an operation lets escape against what its signature promises, and at a boundary (DS-189).
+  void checkFailures(const model::Entity& operation);
   void checkScenarios();
   void checkDiagrams();
   const Context* context_ = nullptr;
@@ -141,6 +143,8 @@ class FailureFlow : public IStep {
   std::set<std::string> handledAround(const std::string& step) const;
   /// Where a failure starts: the scenario of the step that fails, X::sequence/s, or the behaviour itself.
   std::string originOf(const std::string& step, const std::string& sequence) const;
+  /// Whether a behaviour is written for an operation; one with none fails as its signature says.
+  bool hasBehaviour(const std::string& operation) const;
   /// The operation a message calls; "" when it calls none ds knows.
   std::string callee(const std::string& message) const;
   /// One pass over every operation; whether anything new escaped.

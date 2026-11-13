@@ -879,12 +879,13 @@ package driftspec@ds {
             default path does not fail: it takes the attempt's steps and no handler; a handler that
             names a scenario is the path of that failure. The diagram draws the failure and each handler.
           rationale: Owner, 2026-11-13 (DS-180, DS-187). One model of failure for exceptions, error values and error codes; what escapes each operation is computed from where failures start and where they are handled (DS-188).
-          verification VER-00126-1 {
+          verification VER-00126-2 {
             title: Integration tests confirm a path ends failing with its failure's name, an attempt runs on every path and a handler only on the path that names it, and the diagram draws both
-            status: approved
+            status: draft
+            text: Revision 2 (DS-189) holds the example to reporting only the failures its signatures misstate, now that it has some.
             method: test
             tests:
-              tests/integration/ds/check/test_failures.cpp::TestFailures.TheExampleChecksClean
+              tests/integration/ds/check/test_failures.cpp::TestFailures.TheExampleReportsNothingButTheFailuresItsSignaturesMisstate
               tests/integration/ds/check/test_failures.cpp::TestFailures.APathThatFailsEndsThereWithTheFailuresName
               tests/integration/ds/check/test_failures.cpp::TestFailures.AnAttemptRunsOnEveryPathAndAHandlerOnlyOnThePathThatNamesIt
               tests/integration/ds/check/test_failures.cpp::TestFailures.AHandlerKeepsTheFailureItHandles
@@ -916,6 +917,29 @@ package driftspec@ds {
               tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.AFailureInsideAnAttemptThatHandlesItEscapesNothing
               tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.AHandlersOwnFailureIsNotHandledByTheAttemptThatHoldsIt
               tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.CallsThatCallEachOtherEndWithWhatEitherLetsEscape
+          }
+        }
+        requirement REQ-00112-1 {
+          tags: language, lld, failure, check
+          status: draft
+          title: A signature shall say what an operation may fail with, and the checker shall hold it to what escapes, and a boundary to saying it
+          text:
+            + load(path: string) -> Book fails LoadError, ParseError promises what may escape; fails
+            nothing promises none. What escapes and the signature does not say is W-FAILURE-UNDECLARED;
+            what it says and no path of its behaviour fails with is W-FAILURE-UNREACHED. An interface
+            operation is a boundary: what escapes it is said in its signature, or nothing may. Any other
+            operation is held to its signature only when it writes one. An operation with no behaviour
+            fails as its signature says, so a call into a library can be said to fail.
+          rationale: Owner, 2026-11-13 (DS-180, DS-189). noexcept is the promise that nothing escapes, decided per operation by the design, not by a rule over every method.
+          verification VER-00128-1 {
+            title: Tests confirm a signature is held to what escapes, a boundary says what escapes it, and an operation with no behaviour fails as its signature says
+            status: draft
+            method: test
+            tests:
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.WhatEscapesAndTheSignatureDoesNotSayIsAFinding
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.WhatTheSignatureSaysAndNoPathFailsWithIsAFinding
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.AnOperationWithNoBehaviourFailsAsItsSignatureSays
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.ABoundarySaysWhatEscapesItOrNothingMay
           }
         }
         requirement REQ-00058-2 {

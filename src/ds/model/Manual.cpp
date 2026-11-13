@@ -124,7 +124,8 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "  operation ...\n}",
         kShopInterface}},
       {Kind::Operation,
-       {"operation <name>(<param>: <type>, ...) [-> <type>] {\n  command: <how it is invoked>\n  exit <code>: <scenario>     default, "
+       {"operation <name>(<param>: <type>, ...) [-> <type>] [fails <Failure>, ... | fails nothing] {\n  command: <how it is invoked>\n  "
+        "exit <code>: <scenario>     default, "
         "or a scenario of its sequence\n}\nsequence <interface>::<operation> [/ <scenario>] { ... } says how it is handled",
         kShopInterface}},
       {Kind::View,
@@ -140,10 +141,11 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
        {"enum <Name> { <Value>, <Value> = 2, ... }",
         "package shop {\n  module store {\n    enum Status { Open, Paid, Shipped }\n  }\n}\n"}},
       {Kind::Function,
-       {"[-] function <name>(<param>: <type>, ...) [-> <type>] [{ @requirement <ID> }]",
+       {"[-] function <name>(<param>: <type>, ...) [-> <type>] [fails <Failure>, ... | fails nothing] [{ @requirement <ID> }]",
         "package shop {\n  module store {\n    function total(cents: list<int>) -> int\n  }\n}\n"}},
       {Kind::Method,
-       {"+|-|# [abstract | static | const] <name>(<param>: <type>, ...) [-> <type>] [{ body }]\nin a class; named like the class, "
+       {"+|-|# [abstract | static | const] <name>(<param>: <type>, ...) [-> <type>] [fails <Failure>, ... | fails nothing] [{ "
+        "body }]\nin a class; named like the class, "
         "it is a constructor; named ~ and the class, its destructor, which no interface counts against",
         kShopClass}},
       {Kind::Attribute,
@@ -280,6 +282,12 @@ std::vector<CodeSpec> buildCodes() {
        "Add a transition into it, or make it the initial one."},
       {"W-STATE-UNREACHABLE", "warning", "Nothing leads to a state of a class's machine from its initial state.",
        "Add a transition into it, or remove the state."},
+      {"W-FAILURE-UNDECLARED", "warning",
+       "An operation lets a failure escape that its signature does not say it may fail with; an interface operation is a "
+       "boundary and must say it.",
+       "Handle it in an attempt, or add it to the signature: fails <Failure>."},
+      {"W-FAILURE-UNREACHED", "warning", "An operation says it may fail with something no path of its behaviour fails with.",
+       "Remove it from the signature, or write the path that fails with it."},
       {"W-VIEW-NO-WAY-OUT", "warning", "Nothing leaves a view of an interface's navigation.", "Add a transition out of it."},
       {"W-NOT-VISIBLE", "warning", "Something reaches a private member or box from outside it.",
        "Go through a public member, or make it public."},
@@ -552,7 +560,10 @@ std::string grammarPage() {
       "  A path ends failing where a return would go: fail ParseError, the failure's name as text, whatever the\n"
       "  mechanism. An attempt runs its steps and handles what they fail with, one on each: attempt { ... } on IoError\n"
       "  { fail LoadError } translates it, a handler that returns resolves it, a failure no handler names goes on.\n"
-      "  The default path does not fail; a handler that names a scenario is the path of that failure.\n\n"
+      "  The default path does not fail; a handler that names a scenario is the path of that failure.\n"
+      "  What escapes each operation is computed: ds query <workspace> failures <operation>. A signature promises it:\n"
+      "  + load(path: string) -> Book fails LoadError, ParseError, or fails nothing; an interface operation must say it.\n"
+      "  An operation with no behaviour fails as its signature says, so a library call can be said to fail.\n\n"
       "The counts ds check prints\n"
       "  entities · expected (named but declared nowhere: W-REF-UNDECLARED) · relations · findings\n";
   return out;
