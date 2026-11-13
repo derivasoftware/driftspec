@@ -39,7 +39,7 @@ package driftspec@grammar {
   }
 
   verification VER-00047-2 {
-    status: draft
+    status: approved
     @constraint CST-00007-1
     title: Unit tests confirm a file parses as one thing per line and a syntax error is reported where the file stops parsing
     method: test

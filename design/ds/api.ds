@@ -35,7 +35,7 @@ package driftspec@ds {
     }
 
     requirement REQ-00107-1 {
-      status: draft
+      status: approved
       @refines SREQ-00015-1
       title: The engine shall load a workspace once and answer every question asked of it, as documents
       text:
@@ -55,7 +55,7 @@ package driftspec@ds {
     }
 
     constraint CST-00009-1 {
-      status: draft
+      status: approved
       category: design
       title: Every answer of the engine to a caller outside it shall be a document it writes, a copy, never a view into a model the caller could keep
       rationale:
@@ -108,7 +108,7 @@ package driftspec@ds {
     }
 
     verification VER-00123-1 {
-      status: draft
+      status: approved
       @requirement REQ-00107-1
       @constraint CST-00009-1
       title: Unit and integration tests ask a loaded workspace from C++ and from Python, two at once, and change an answer without changing the model
