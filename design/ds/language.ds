@@ -113,7 +113,7 @@ package driftspec@ds {
       }
       constraint CST-00003-2 {
         tags: language, workspace
-        status: draft
+        status: approved
         category: language
         title: Every entity shall be defined once and extended only by blocks of annotations
         text:
@@ -1297,7 +1297,7 @@ package driftspec@ds {
       tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
   }
   verification VER-00043-2 {
-    status: draft
+    status: approved
     @constraint CST-00003-2
     title: Unit tests confirm an extension adds relations without redefining, an extension of nothing is expected, and a lone class of annotations is its definition
     method: test
