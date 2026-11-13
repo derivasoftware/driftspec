@@ -1,0 +1,83 @@
+#include <gtest/gtest.h>
+
+#include <nlohmann/json.hpp>
+#include <string>
+
+#include "ds/bind/Binder.hpp"
+#include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
+#include "ds/model/Model.hpp"
+#include "ds/parse/Parser.hpp"
+#include "ds/render/Ir.hpp"
+#include "ds/render/IrExport.hpp"
+#include "ds/render/Layout.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
+
+namespace {
+
+using ds::render::IrDocument;
+
+/// Each piece of the drawing on its own (DS-186): the IR a diagram exports, the document it parses
+/// into, the metrics of each surface, and the two drawings.
+
+const char* const kIr = R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
+                        R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
+                        R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency","label":"uses"},)"
+                        R"({"from":"p@m::A","to":"p@m::B","kind":"dependency","label":"calls"}]})";
+
+TEST(TestIrExport, ItListsTheDiagramsAndExportsEachAsItsIr) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("a.ds",
+                               "package p {\n  module m {\n    class A {\n      - b: B\n    }\n    class B { }\n  }\n}\n"
+                               "diagram CL_M {\n  kind: class\n  include: p@m::*\n}\n"));
+  const auto steps = ds::check::steps();
+  ds::check::Checker(model, steps).run(binder);
+  const ds::render::IrExport ir(model);
+  EXPECT_EQ(ir.diagrams(), (std::vector<std::string>{"diagram:CL_M"}));
+  const auto json = nlohmann::json::parse(ir.render("diagram:CL_M", false));
+  std::set<std::string> ids;
+  for (const auto& n : json["nodes"]) ids.insert(n["id"].get<std::string>());
+  EXPECT_TRUE(ids.count("p@m::A") && ids.count("p@m::B"));
+}
+
+TEST(TestIrDocument, ItParsesItsContractAndBundlesRelationsThatDifferOnlyInText) {
+  const IrDocument doc = IrDocument::parse(kIr);
+  EXPECT_EQ(doc.title, "T");
+  ASSERT_EQ(doc.nodes.size(), 2u);
+  ASSERT_EQ(doc.edges.size(), 2u);
+  const IrDocument one = doc.bundled();
+  ASSERT_EQ(one.edges.size(), 1u);  // same ends and kind: drawn once
+  EXPECT_NE(one.edges[0].label.find("uses"), std::string::npos);
+  EXPECT_NE(one.edges[0].label.find("calls"), std::string::npos);
+}
+
+TEST(TestMetrics, AScreenCellIsOneCharacterWhereAPixelTableIsWider) {
+  const auto svg = ds::render::Metrics::svg();
+  const auto text = ds::render::Metrics::text();
+  EXPECT_EQ(text.CHAR_W, 1);
+  EXPECT_EQ(text.LINE_H, 1);
+  EXPECT_GT(svg.CHAR_W, text.CHAR_W);
+  EXPECT_GT(svg.LINE_H, text.LINE_H);
+}
+
+TEST(TestSvg, AnSvgOfTheDocumentWithEveryBox) {
+  const std::string svg = ds::render::Svg().render(IrDocument::parse(kIr), 0);
+  EXPECT_NE(svg.find("<svg"), std::string::npos);
+  EXPECT_NE(svg.find(">A<"), std::string::npos);
+  EXPECT_NE(svg.find(">B<"), std::string::npos);
+}
+
+TEST(TestText, TheDocumentInBoxCharactersAndAsCells) {
+  const ds::render::Text text;
+  const std::string drawn = text.render(IrDocument::parse(kIr), false, 0);
+  EXPECT_NE(drawn.find('A'), std::string::npos);
+  EXPECT_NE(drawn.find('B'), std::string::npos);
+  EXPECT_EQ(drawn.find("\x1b["), std::string::npos);  // no colour unless asked
+  const auto cells = nlohmann::json::parse(text.cells(IrDocument::parse(kIr), 0));
+  EXPECT_FALSE(cells.empty());
+}
+
+}  // namespace
