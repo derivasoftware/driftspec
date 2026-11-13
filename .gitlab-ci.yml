@@ -39,7 +39,7 @@ cpp-test:
 argos-diagnose:
   needs: [pyds-wheel, cpp-evidence, pre-commit]
   script:
-    - pip install --no-deps "argos-design-driftspec==0.0.24" dist/driftspec-*.whl
+    - pip install --no-deps "argos-design-driftspec==0.0.25" dist/driftspec-*.whl
     - !reference [.argos-diagnose-gate, script]
 
 # pyds, the Python face (DS-84): the engine built as its CPython extension and
