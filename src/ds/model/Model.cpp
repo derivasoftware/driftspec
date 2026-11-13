@@ -249,6 +249,10 @@ struct Branches {
     const std::set<std::string> elseNames = names(f, true);
     // a loop is not a choice: every path goes through it, and one that names a branch inside goes into it
     if (fieldIn(f, "kind") == "loop") return !scenario.empty() && thenNames.count(scenario) ? Way::Enter : Way::Keep;
+    // an attempt is not a choice either: its steps run on every path (DS-187)
+    if (fieldIn(f, "kind") == "attempt") return Way::Enter;
+    // a handler runs only on a path that fails as it handles: one that names it; the default path does not fail
+    if (fieldIn(f, "kind") == "handler") return !scenario.empty() && thenNames.count(scenario) ? Way::Then : Way::Skip;
     if (!scenario.empty() && thenNames.count(scenario)) return Way::Then;
     if (!scenario.empty() && elseNames.count(scenario)) return Way::Else;
     if (tree.twoSides(f.id)) {

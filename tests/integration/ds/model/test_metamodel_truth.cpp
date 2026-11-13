@@ -50,8 +50,11 @@ class TestMetamodelTruth : public ::testing::Test {
     return rule[0] == '_' || (rule.size() > 5 && rule.compare(rule.size() - 5, 5, "_body") == 0);
   }
 
-  // a loop, an alt and an opt are written by their own rules and are each a frame of the model (DS-172)
-  static std::string kindOfRule(const std::string& rule) { return rule == "alt" || rule == "opt" || rule == "loop" ? "frame" : rule; }
+  // a loop, an alt, an opt, an attempt and its handlers are written by their own rules and are each a
+  // frame of the model (DS-172, DS-187)
+  static std::string kindOfRule(const std::string& rule) {
+    return rule == "alt" || rule == "opt" || rule == "loop" || rule == "attempt" || rule == "handler" ? "frame" : rule;
+  }
 
   // the rules a kind is written in, seen through the lists, bodies and frames between them
   static std::set<std::string> holders(const std::map<std::string, std::set<std::string>>& rules, const std::string& name,

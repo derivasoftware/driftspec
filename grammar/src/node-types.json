@@ -36,6 +36,14 @@
             "named": true
           },
           {
+            "type": "attempt",
+            "named": true
+          },
+          {
+            "type": "fail",
+            "named": true
+          },
+          {
             "type": "field",
             "named": true
           },
@@ -86,6 +94,14 @@
         },
         {
           "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "attempt",
+          "named": true
+        },
+        {
+          "type": "fail",
           "named": true
         },
         {
@@ -222,6 +238,65 @@
       "types": [
         {
           "type": "argument",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "attempt",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "alt",
+          "named": true
+        },
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "attempt",
+          "named": true
+        },
+        {
+          "type": "fail",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "handler",
+          "named": true
+        },
+        {
+          "type": "local",
+          "named": true
+        },
+        {
+          "type": "loop",
+          "named": true
+        },
+        {
+          "type": "message",
+          "named": true
+        },
+        {
+          "type": "opt",
+          "named": true
+        },
+        {
+          "type": "participant",
+          "named": true
+        },
+        {
+          "type": "return",
           "named": true
         }
       ]
@@ -727,6 +802,22 @@
     }
   },
   {
+    "type": "fail",
+    "named": true,
+    "fields": {
+      "failure": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "field",
     "named": true,
     "fields": {
@@ -836,6 +927,82 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "handler",
+    "named": true,
+    "fields": {
+      "failure": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
+      "scenario": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "alt",
+          "named": true
+        },
+        {
+          "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "attempt",
+          "named": true
+        },
+        {
+          "type": "fail",
+          "named": true
+        },
+        {
+          "type": "field",
+          "named": true
+        },
+        {
+          "type": "local",
+          "named": true
+        },
+        {
+          "type": "loop",
+          "named": true
+        },
+        {
+          "type": "message",
+          "named": true
+        },
+        {
+          "type": "opt",
+          "named": true
+        },
+        {
+          "type": "participant",
+          "named": true
+        },
+        {
+          "type": "return",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1047,6 +1214,14 @@
         },
         {
           "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "attempt",
+          "named": true
+        },
+        {
+          "type": "fail",
           "named": true
         },
         {
@@ -1541,6 +1716,14 @@
         },
         {
           "type": "annotation",
+          "named": true
+        },
+        {
+          "type": "attempt",
+          "named": true
+        },
+        {
+          "type": "fail",
           "named": true
         },
         {
@@ -2102,6 +2285,14 @@
           "named": true
         },
         {
+          "type": "attempt",
+          "named": true
+        },
+        {
+          "type": "fail",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -2570,6 +2761,10 @@
     "named": false
   },
   {
+    "type": "attempt",
+    "named": false
+  },
+  {
     "type": "block_text",
     "named": true
   },
@@ -2616,6 +2811,10 @@
   },
   {
     "type": "extern",
+    "named": false
+  },
+  {
+    "type": "fail",
     "named": false
   },
   {

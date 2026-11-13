@@ -157,14 +157,17 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "      operator +(other: Cents) -> Cents\n    }\n  }\n}\n"}},
       {Kind::Sequence,
        {"sequence <Class>::<method> [/ <scenario>] { ... }\nsequence <function> | <interface>::<operation> [/ <scenario>] { ... }\n"
-        "a scenario is a path: written apart, or named on a branch",
+        "a scenario is a path: written apart, or named on a branch\n"
+        "fail <Failure> ends a path failing; attempt { ... } on <Failure> [/ <scenario>] { ... } handles what its steps fail "
+        "with",
         kShopSequence}},
       {Kind::Message,
        {"[<from>] -> [<target>.]<op>(<args>) [/ <scenario>] [-> <result>]\nself -> <attribute>.<op>(<args>) -> <result>\nreturn "
-        "<value>\nlocal <name>: <type>",
+        "<value>\nfail <Failure>\nlocal <name>: <type>",
         kShopSequence}},
       {Kind::Frame,
-       {"loop <prose> { ... }\nopt <prose> [/ <scenario>] { ... }\nalt <prose> [/ <scenario>] { ... } else [/ <scenario>] { ... }",
+       {"loop <prose> { ... }\nopt <prose> [/ <scenario>] { ... }\nalt <prose> [/ <scenario>] { ... } else [/ <scenario>] { ... }\n"
+        "attempt { ... } on <Failure> [/ <scenario>] { ... } [on ...]",
         kShopSequence}},
       {Kind::State,
        {"state <Class | interface> {\n  initial <State>\n  <A> -> <B> on <operation> [<guard, as prose>] / <action>\n}",
@@ -545,7 +548,11 @@ std::string grammarPage() {
       "  A sequence is the behaviour of an operation, a method or a function: sequence Cart::add { ... }. A message\n"
       "  goes to self, an attribute, a local (local x: Type) or an earlier result: self -> stock.has(item) -> ok.\n"
       "  A scenario is one path through it, named: written apart (sequence Cart::add / out { ... }) or on a branch\n"
-      "  (opt the item is out / out { ... }). A call names the scenario it enters: -> add(item) / out -> r.\n\n"
+      "  (opt the item is out / out { ... }). A call names the scenario it enters: -> add(item) / out -> r.\n"
+      "  A path ends failing where a return would go: fail ParseError, the failure's name as text, whatever the\n"
+      "  mechanism. An attempt runs its steps and handles what they fail with, one on each: attempt { ... } on IoError\n"
+      "  { fail LoadError } translates it, a handler that returns resolves it, a failure no handler names goes on.\n"
+      "  The default path does not fail; a handler that names a scenario is the path of that failure.\n\n"
       "The counts ds check prints\n"
       "  entities · expected (named but declared nowhere: W-REF-UNDECLARED) · relations · findings\n";
   return out;
