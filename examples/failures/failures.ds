@@ -8,7 +8,10 @@
 // because no handler names it. The default path does not fail: it runs the attempt's steps and no
 // handler. A handler that names a scenario is the path of that failure.
 //
-// What escapes each operation, and by which path, is computed from these two (DS-188).
+// What escapes each operation, and by which path, is computed from these two (DS-188): a failure
+// goes up to every caller that does not handle it. Loader::open lets both of Loader::load's go up;
+// Shelf::show handles them, and nothing escapes it. A call ds cannot follow (Files::read has no
+// behaviour) is taken not to fail.
 
 package shelf {
   module books {
@@ -33,6 +36,11 @@ package shelf {
       + open(path: string) -> Book
     }
 
+    class Shelf {
+      - loader: Loader
+      + show(path: string) -> string
+    }
+
     // where a failure starts: the path that does not parse ends failing
     sequence Parser::parse {
       opt the text does not parse / broken {
@@ -54,6 +62,24 @@ package shelf {
         return book
       }
       return book
+    }
+
+    // what it calls fails, and it handles nothing: ParseError and LoadError go up through it
+    sequence Loader::open {
+      -> load(path) -> book
+      return book
+    }
+
+    // both handled: nothing escapes
+    sequence Shelf::show {
+      attempt {
+        self -> loader.open(path) -> book
+      } on ParseError {
+        return nothing
+      } on LoadError {
+        return nothing
+      }
+      return title
     }
   }
 }

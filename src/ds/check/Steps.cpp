@@ -16,6 +16,7 @@ std::map<std::string, std::unique_ptr<IStep>> steps() {
   all.push_back(std::make_unique<StructureCheck>());
   all.push_back(std::make_unique<DependencyCheck>());
   all.push_back(std::make_unique<RuleCheck>());
+  all.push_back(std::make_unique<FailureFlow>());
   std::map<std::string, std::unique_ptr<IStep>> out;
   for (auto& s : all) {
     const std::string key = s->name();

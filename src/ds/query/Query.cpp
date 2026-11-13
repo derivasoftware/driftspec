@@ -2,6 +2,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "ds/model/Words.hpp"
+
 namespace ds {
 namespace query {
 
@@ -21,6 +23,7 @@ std::vector<std::pair<std::string, std::string>> Query::questions() {
           {"relations", "<identity>"},
           {"artefacts", "<identity>"},
           {"behaviours", "<identity>"},
+          {"failures", "<identity>"},
           {"shows", "<diagram>"},
           {"findings", "[file]"},
           {"coupling", ""}};
@@ -28,7 +31,7 @@ std::vector<std::pair<std::string, std::string>> Query::questions() {
 
 std::vector<Answer> Query::ask(const std::string& question, const std::string& subject) const {
   // a question about an identity needs one the model declares: an empty answer would read as "it has none"
-  const bool aboutOne = question == "relations" || question == "artefacts" || question == "behaviours";
+  const bool aboutOne = question == "relations" || question == "artefacts" || question == "behaviours" || question == "failures";
   if (aboutOne && subject.empty()) return {{"error", question, "needs an identity: ds query <workspace> " + question + " <identity>"}};
   if ((aboutOne || (question == "entities" && !subject.empty())) && !known(subject)) {
     const std::vector<std::string> near = nearTo(subject);
@@ -41,6 +44,7 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   if (question == "relations") return relations(subject);
   if (question == "artefacts") return artefacts(subject);
   if (question == "behaviours") return behaviours(subject);
+  if (question == "failures") return failures(subject);
   if (question == "shows") return shows(subject);
   if (question == "findings") return findings(subject);
   if (question == "coupling") return coupling();
@@ -128,6 +132,21 @@ std::vector<Answer> Query::behaviours(const std::string& id) const {
     const model::Entity* member = r.kind == "contains" ? model_.find(r.to) : nullptr;
     if (!member || member->kind != model::Kind::Method) continue;
     for (auto& answer : behaviours(member->id)) out.push_back(answer);
+  }
+  return out;
+}
+
+std::vector<Answer> Query::failures(const std::string& id) const {
+  // what the check computed (DS-188): each failure escaping `id`, named by the operation it starts in,
+  // with the path it comes up by
+  std::vector<Answer> out;
+  const model::Entity* e = model_.find(id);
+  if (!e) return out;
+  for (const auto& name : model::split(e->field("escapes"), ',')) {
+    const std::string path = e->field("escape." + name);
+    const std::string through = path.substr(0, path.find(" from "));
+    const auto last = through.rfind(" -> ");
+    out.push_back({"failure", last == std::string::npos ? through : through.substr(last + 4), name + ": " + path});
   }
   return out;
 }

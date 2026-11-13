@@ -120,6 +120,35 @@ class Derivation : public IStep {
   const Resolver* resolver_ = nullptr;
 };
 
+/// One failure escaping an operation: the operations it comes up through, from that one down to where it
+/// starts, and the behaviour (or the scenario of one) that starts it.
+struct Escape {
+  std::vector<std::string> through;
+  std::string origin;
+};
+
+/// What failures escape each operation, and the path each comes by (DS-188): computed from where a
+/// failure starts (fail) and where it is handled (attempt ... on), up through the calls, until nothing
+/// changes; written on the operation as derived fields, escapes and escape.<failure>.
+class FailureFlow : public IStep {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+  std::vector<model::Finding> run(Context& context) override;
+
+ private:
+  /// The failures the attempts around a step handle: a step in an attempt's steps, not in its handlers.
+  std::set<std::string> handledAround(const std::string& step) const;
+  /// Where a failure starts: the scenario of the step that fails, X::sequence/s, or the behaviour itself.
+  std::string originOf(const std::string& step, const std::string& sequence) const;
+  /// The operation a message calls; "" when it calls none ds knows.
+  std::string callee(const std::string& message) const;
+  /// One pass over every operation; whether anything new escaped.
+  bool pass(std::map<std::string, std::map<std::string, Escape>>& out_escapes) const;
+  void write(const std::map<std::string, std::map<std::string, Escape>>& escapes);
+  model::Model* model_ = nullptr;
+};
+
 /// Ownership, artefacts, extensions and fields.
 class StructureCheck : public ACheck {
  public:

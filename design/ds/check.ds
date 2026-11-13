@@ -359,6 +359,38 @@ package driftspec@ds {
       }
     }
 
+    // one failure escaping an operation: the operations it comes up through, and where it starts
+    dataclass Escape {
+      @requirement REQ-00111-1
+      + through: std::vector<std::string>
+      + origin: std::string
+    }
+
+    class FailureFlow : IStep {           // what failures escape each operation, and the path each comes by (DS-188)
+      @requirement REQ-00111-1
+      - refs model_: model::Model
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(context: Context) -> std::vector<model::Finding>
+      - handledAround(step: std::string) -> std::set<std::string>
+      - originOf(step: std::string, sequence: std::string) -> std::string
+      - callee(message: std::string) -> std::string
+      - pass(out_escapes: std::map<std::string, std::map<std::string, Escape>>) -> bool
+      - write(escapes: std::map<std::string, std::map<std::string, Escape>>) -> void
+    }
+
+    // Until nothing changes: a pass over every behaviour adds what starts in it and what its calls
+    // let escape, unless an attempt around the call handles it; then each operation is written.
+    sequence FailureFlow::run {
+      self -> context.model() -> model
+      loop until a pass adds nothing {
+        -> pass(escapes) -> changed
+      }
+      -> write(escapes)
+      self -> context.take() -> found
+      return found
+    }
+
     // What ds check does: the steps, each after the steps that write what it reads. The linker
     // first; behaviour typing and derivation each need only the linker; the checks of contracts and
     // dependencies need the calls typing made; structure and rules read the finished model.
