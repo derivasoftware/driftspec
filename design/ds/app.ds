@@ -145,19 +145,17 @@ package driftspec@ds {
     }
 
     sequence main / diff {
-      local differ: diff::Diff
       -> load(argv) -> before
       -> load(argv) -> after
-      -> differ.compare(before, after) -> result
-      -> differ.report(result) -> text
+      -> diff::Diff::compare(before, after) -> result
+      -> diff::Diff::report(result) -> text
       return 0
     }
 
     sequence main / diff-findings {
-      local differ: diff::Diff
       -> load(argv) -> before
       -> load(argv) -> after
-      -> differ.compare(before, after) -> result
+      -> diff::Diff::compare(before, after) -> result
       return 1
     }
 

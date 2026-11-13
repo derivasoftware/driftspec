@@ -249,6 +249,8 @@ std::vector<CodeSpec> buildCodes() {
       {"W-MODIFIER-ON-VALUE", "warning", "owns, refs or shares on a value type (int, string...) means nothing.", "Drop the modifier."},
       {"W-MSG-UNDECLARED", "warning", "A message calls an operation its target does not declare.",
        "Declare the operation, or correct the name or the target."},
+      {"W-MSG-NOT-STATIC", "warning", "A message calls a class's operation on the class itself, and the operation is not static.",
+       "Make the operation static, or call it through an instance: a local, an attribute or a parameter."},
       {"W-PARTICIPANT-UNDECLARED", "warning",
        "A message is sent to something that is neither the subject, an attribute, a local nor an earlier result.",
        "Declare it with local <name>: <type>, or name an attribute."},

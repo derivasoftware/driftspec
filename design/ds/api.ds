@@ -145,8 +145,7 @@ package driftspec@ds {
     }
 
     sequence Workspace::diff {
-      local differ: diff::Diff               // compare is static: a call needs a name to go through (DS-60)
-      -> differ.compare(model, model) -> result
+      -> diff::Diff::compare(model, model) -> result   // static: called on its class (DS-60)
       return document
     }
 

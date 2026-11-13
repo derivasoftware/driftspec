@@ -164,6 +164,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
       call(*msg, *target, message);
       return;
     }
+    if (callStatic(*seq, *msg, message, home)) return;
     if (function) {
       context_->report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + message.op + ", which no function of " + home + " declares",
                         message.location});
@@ -200,6 +201,27 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
     return;
   }
   call(*msg, *op, message);
+}
+
+bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& msg, const bind::Message& message, const std::string& home) {
+  // `-> diff::Diff::compare(a, b)`: a qualified name with no participant that names a class's operation
+  // calls it on the class itself, as a function of another module is called (DS-60)
+  const auto at = message.op.rfind("::");
+  if (at == std::string::npos) return false;
+  const std::string typeId = resolver_->resolve(message.op.substr(0, at), home);
+  const model::Entity* type = typeId.empty() ? nullptr : model_->find(typeId);
+  if (!type || type->kind != model::Kind::Class) return false;
+  const model::Entity* op = resolver_->member(typeId, message.op.substr(at + 2));
+  if (!op) return false;
+  msg.fields["type"] = typeId;
+  couple(seq, *type, true);  // the class is reached for one call, like a local
+  if (!op->has("static")) {
+    context_->report({"W-MSG-NOT-STATIC", "warning",
+                      seq.name + " calls " + op->id + " on its class, and it is not static: it needs an instance", message.location});
+    return true;
+  }
+  call(msg, *op, message);
+  return true;
 }
 
 bool BehaviourTyping::typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject,
