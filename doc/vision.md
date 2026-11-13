@@ -1,6 +1,7 @@
 # DriftSpec — vision
 
-*Status: working notes consolidated on 2026-10-24, before the language is frozen.
+*Status: working notes consolidated on 2026-10-24 and revised on 2026-11-13
+with the Owner's decisions on the concept (§2a) and the roadmap by rings (§14).
 Everything here is a decision or a direction already discussed; open points are
 marked as such. This document is the memory of the project: update it when a
 decision changes, do not let it drift from the code. The three perspectives,
@@ -20,6 +21,11 @@ editors): having built our own tools around PlantUML's syntax to avoid its core,
 the question was what stops us from owning the syntax too, and designing it for
 specifications instead of for drawing.
 
+DriftSpec is a product of its own, not a PlantUML replacement for argos. Parity
+with PlantUML is the floor it has to reach before argos can rely on it, not the
+goal: where DriftSpec can say more than PlantUML, argos is extended to read it,
+rather than DriftSpec being cut down to what PlantUML says.
+
 ## 2. Thesis, in the terms of the fleet
 
 DriftSpec is a modelling tool based on text: it defines requirements,
@@ -35,7 +41,7 @@ The boundary, stated once:
   every behaviour bound to the static element it describes, every diagram a
   projection of the model. Incoherence inside the model is a finding.
 - **DriftSpec exports.** The model, with its relations, in a form argos can
-  read (`ds export`, later Python bindings).
+  read (`ds export`, and in process through pyds).
 - **argos owns reality.** Declared against implemented, declared against
   tested, declared against observed. If argos writes something back as `.ds`
   files, DriftSpec loads them like any other files; it does not know or care
@@ -45,6 +51,62 @@ A domain earns its place in the tool when it has a coherence check that
 catches something real inside the model; a domain that only draws is PlantUML
 with another syntax.
 
+## 2a. Decisions that set the direction (Owner, 2026-11-12 and 13)
+
+Taken after an analysis of the concept and of where it was drifting. They are
+not to be reopened by accident.
+
+1. **A product with its own identity, without forgetting argos.** When a
+   choice comes up between bending DriftSpec to what argos or PlantUML read
+   today and extending argos, argos is extended (examples: verifications of
+   constraints, argos REQ-01082-1; free functions projected as function
+   sheets).
+2. **The design is still written, member level included.** Design and code
+   have different life cycles: a design is expanded ahead of the code, and
+   argos's warnings are the list of what is left to implement. There is no
+   autofix from design to code. The autofix goes the other way only, code to
+   design, and only for what a machine can settle (a member the code grew, a
+   signature it changed, a base, a module's functions).
+3. **Design anything as code.** To design is to state intention: what and
+   how, independent of the technology. No paradigm (object, functional,
+   static, logic) and no domain is given up.
+4. **The reader is a person and an agent.** The syntax is read like code; a
+   merge request's diff shows what changed in the design, and the drawings
+   exist for the rest. An agent has the queries, the code and argos. The
+   manuals serve both: the grammar written down, skills for agents.
+5. **Diagrams are perspectives.** The same idea as folio: different views
+   over one model, wherever they help someone understand the project.
+
+Decisions taken since, while using it:
+
+- **Types are text, written as their language writes them** (DS-18, stage B).
+  A box that says its language (`language: python`) will write
+  `list[Sample]`, `Entity | None` or `const std::string&` as the code does,
+  parsed with that language's tree-sitter grammar; that text is what argos
+  compares. DriftSpec reads a type only to find the entities it names (the
+  relations, their multiplicity, a template's arity), with a short table per
+  language of its own names and of the marks that mean "one or none". There
+  is no model of type concepts. The neutral types (`string`, `list<T>`) stay
+  for boxes without a language and for interfaces between languages. Writing
+  the concrete type commits the code to it (`std::array` is not
+  `std::vector`); the neutral one commits it to the idea only.
+- **Usage is stated in behaviour, never as a bare arrow** (DS-174). What a
+  class or a free function uses is what its sequences call and declare
+  locally; argos receives that as the subject's dependencies. A call the runs
+  make and no sequence explains is design still to write, so there is no
+  usage autofix.
+- **A name a behaviour does not know stays prose** (DS-64, rule B4 kept). A
+  loop's element or a value derived from a parameter is named without being
+  declared; loose diagrams will often name things nothing declares, and the
+  language stays flexible there.
+- **A static operation is called on its class** (DS-60):
+  `-> diff::Diff::compare(a, b)`, as `-> tasks::gather(x)` calls a function of
+  another module. One that is not static needs an instance
+  (`W-MSG-NOT-STATIC`).
+- **A constraint may be verified, never has to be** (DS-36). Its
+  verification reaches argos as one; a constraint verified otherwise (its BoK
+  guide, a static diagnostic, a review) stays as it is.
+
 ## 3. Principles
 
 - **Workspace, not file.** `ds` loads a directory. A reference `ns::Name`
@@ -52,11 +114,11 @@ with another syntax.
 - **Entity and representation are separate.** Entities live in packages and
   modules; a `diagram` selects and decides what to print. Layout hints are
   the only thing a diagram owns.
-- **One tool, C++.** Grammar (tree-sitter), engine, checks, renders, and later
-  LSP and MCP in one repository and one binary. Python bindings later, so
-  argos can read a whole specification at once through a plugin. Everything
-  runs in milliseconds, which is what makes an editor preview and an agent
-  loop viable.
+- **One engine, C++.** Grammar (tree-sitter), engine, checks and renders in
+  one repository; the command line, the Python face (pyds) and through it the
+  language server, the live session and argos's plugin all ask the same
+  engine. Everything runs in milliseconds, which is what makes an editor
+  preview and an agent loop viable.
 - **Incoherence is a specification error.** A reference nobody declares is a
   finding, a duplicate identity is an error, a message to an operation that
   does not exist is a finding. Loading never fails on dangling references,
@@ -137,32 +199,37 @@ Decisions taken and why (so they are not reopened by accident):
 
 ## 5. Architecture
 
+The architecture is designed in DriftSpec itself (`design/hld.ds` and one
+file per namespace under `design/ds/` and `design/pyds/`); `ds render design
+HLD_Ds` draws it, and that design, not this section, is the reference. In
+short:
+
 ```
-.ds files ─ tree-sitter grammar ─► Parser ─► Binder ─► Model ─► Checker
-                                                         │
-                               JsonExport ◄──────────────┤ (for argos, MCP)
-                               IrExport (diagram → render-IR)
-                                   │
-                        ┌──────────┴──────────┐
-                     Svg (DOM hosts)       Text (terminal)       plantuml-render (oracle)
+.ds files ─ tree-sitter grammar ─► parse ─► bind ─► model ─► check (steps)
+                                                      │
+              query · scene · render (svg, text, cells, ir, layout) · diff · exporter
+                                                      │
+                                   api (Api, Workspace) ─► pyds (CPython extension)
+                                                      │
+                                     ds (command line) · lsp · live viewer · argos plugin
 ```
 
-- **Model** is the only truth: entities (kind, id, name, scope, fields, flags,
-  location, expected), relations (kind, from, to, multiplicity), findings.
-- **Binder** declares; **Checker** resolves references and runs the rules.
-- **IrExport** projects a `diagram` onto plantuml-render's render-IR
-  (contract v1, `schema/render-ir.schema.json` in that repo). The IR is the
-  family's drawing contract; DriftSpec is its third producer. We do not
-  invent a second one.
-- **Two renders of our own, one layout.** `Layout` is a layered (Sugiyama)
-  layout per container with fixed metrics: pixels for SVG (plantuml-render's
-  table, so both drawings are themed and compared alike) and character cells
-  for the terminal. The Text emitter is proof that the layout is independent
-  of SVG.
-- **Core must be domain-neutral.** Today `Kind` is an enum with the
-  development vocabulary. Before consolidation it becomes an open registry so
-  that process and analysis enter as domain packs, not as patches. This is a
-  blocking refactor for consolidation.
+- **model** is the only truth: entities, relations and findings. Relations are
+  read only through its `Index` (one hop, by identity, copies, in the order
+  stated); a behaviour is read through its `SequenceTree`; how an identity is
+  written lives in `Identity`, once.
+- **bind** declares; **check** runs the language's rules as ordered steps.
+- **api** offers the engine in process: one-question functions (`interface
+  engine`) and a `Workspace` loaded once and asked as often as needed
+  (`interface workspace`), each answer the JSON the engine writes.
+- **pyds** is the Python face, published as the `driftspec` package: the
+  native module, typed answers, the language server and the live session.
+  argos-design-driftspec reads designs through it, in process.
+- **Core must be domain-neutral.** The metamodel is already data, but adding
+  a kind of entity still touches the binder, the checker and the drawing. The
+  open core (a kind brings how it binds, checks and draws; languages and
+  perspectives as packs) is stage C of the roadmap; until then no new kind of
+  entity is added.
 
 ## 6. Domains
 
@@ -307,9 +374,9 @@ Priority: development, process, analysis.
   12 px invisible hit path per relation, CSS tokens with light and dark
   palettes inside the file, focus classes (`pr-focusing`, `pr-focus`). Links,
   tooltips and `refs` exist in the IR; `ds render` does not fill them yet.
-- **Layout JSON as the portable thing** (`ds layout`, to do): placed
-  rectangles and routes, so native hosts (Qt, a game engine, anything) draw
-  their own interactive scene from the same positions.
+- **Layout JSON as the portable thing** (`ds render <dir> <diagram> -f
+  layout`): placed rectangles and routes, so native hosts (Qt, a game engine,
+  anything) draw their own interactive scene from the same positions.
 - **Terminal** (`--text`, built): same layout on a character grid; Neovim can
   read it into a buffer today; a cell→id map will give `gd` from a box to its
   declaration.
@@ -317,8 +384,9 @@ Priority: development, process, analysis.
   declaration, cursor in the `.ds` → focus in the webview, save → redraw;
   plantuml-vscode is the precedent. With the LSP behind, the extension knows
   nothing about the language.
-- **`ds serve`** (to do): HTTP preview with reload and focus script; the
-  embryo of the LSP preview.
+- **Live session** (`python -m pyds.live serve <dir>`): the viewer follows
+  the files as they are written, and the reader and an agent leave notes and
+  comments on identities through it (its MCP tools).
 
 ### Semantic diff (built 2026-10-25)
 
@@ -360,46 +428,32 @@ superlinear and does more (exhaustive crossing minimisation, hierarchical
 ports); ours is ~0.07 ms per node. Known weakness of our layout: an edge that
 crosses a container border is routed straight between its ends.
 
-## 9. What exists (commits 12bf729 … 4bba1ec)
+## 9. What exists (2026-11-13)
 
-- Grammar with external scanner for indented text; Neovim plugin
-  (`editors/nvim`, lazy spec in the user's config).
-- Parser, Binder, Checker, JsonExport; `ds check`, `ds export`.
-- Query (2026-10-25): `ds query <ws> diagrams | entities | relations |
-  artefacts | behaviours | shows | findings`, answers by identity, text or
-  `--json`; the same mechanism is meant for the editor, the agent pane and
-  argos.
-- IrExport with `include`/`exclude` (ids, modules, `package:x`), `hide`,
-  `show`; `ds render <dir> [diagram] [-f svg|text|cells|ir]`, `ds render <ir.json> -f svg`.
-- Own SVG engine and terminal engine over one layered layout.
-- Corpora: `examples/diag` (R1–R9), `examples/static` (R10–R19),
-  `examples/packages` (nested packages, 2026-10-26: the HLD layers of the
-  tool itself: grammar, ds, render, diff, query, app under driftspec).
-- `~/code/DriftSpec/` holds the user's original sketches (`CL_Diag.ds`,
-  `CL_Diag.v2.ds`, `static.v3.ds`, `split/`).
+The design of driftspec, written in DriftSpec, is the inventory: `ds query
+design entities`, `ds render design HLD_Ds`. What it covers, in short:
+
+- The language of §4 and §6 with its checks, the semantic diff (§7), the
+  queries, the scene of the whole model for a viewer that zooms, and the
+  drawings in SVG, terminal text and cells.
+- The engine in process (`api`) and its Python face (`driftspec` on the
+  deriva registry, import `pyds`), with a language server and a live session:
+  the viewer follows the files as they are written, with notes and comments
+  for an agent.
+- argos-design-driftspec reads a DriftSpec workspace into argos through pyds:
+  classes, free functions as function sheets, relations, usage from
+  behaviour, the HLD, every sequence as a SEQ_, requirements, verifications
+  and constraints, and the engine's findings. Its autofix writes code-ahead
+  drift, a module's missing functions and a class's bases back into the
+  `.ds` files.
+- driftspec's own design is checked by argos on every merge request, with the
+  merge request's own engine, and the C++ evidence of every test reaches the
+  gate.
 
 ## 10. What is missing
 
-- Language: contracts, boundary/artefact prefixes, a single contract form,
-  the language guide, `E-REF-AMBIGUOUS`, message arity and types,
-  `W-MSG-NO-PATH` (a message with no static path between participants).
-- Render: requirements and constraints on the drawing, component view
-  (package, boundaries, modules), sequence and state drawings, the umbrella
-  of a requirement (what realises it, what verifies it), cross-container
-  routing, `ds layout`.
-- Core: open `Kind` registry; domain packs.
-- Governance: the repos exist since 2026-10-25 (`deriva/apps/driftspec`,
-  `deriva/argos/plugins/argos-design-driftspec`); argos reads the design in
-  DriftSpec through the plugin (system artefacts land in `input/` and
-  `qualification/` as SREQ/SVER, module ones in `requirements/` and
-  `verifications/`). Done since: CI with ci-templates,
-  version manifest, pre-commit, `projects.toml`, the plugin on the registry,
-  the system baseline approved (DS-3), the HLD in `design/hld.ds` (two boxes,
-  `ds` and `grammar`, 2026-10-26; the POC sketch `engine.ds` is gone). Still
-  to do: the LLD per namespace with the module requirements refining the
-  SREQ (DS-4).
-- Surfaces: LSP, MCP, `ds serve`, VS Code, Neovim navigation, Python
-  bindings (deferred), wasm.
+The backlog is the roadmap of §14. Gaps found by use go there as cards, under
+the stage where they appeared.
 
 ## 11. How we will know it works
 
@@ -446,14 +500,44 @@ Recommended order: 1, 2, then 3 and 4 together, then 5.
 
 ## 13. Relationship to the fleet
 
-- **argos**: future plugin reads `ds export` (or the Python bindings) as a
-  design source next to PlantUML; the obligations DriftSpec derives become
-  argos checks against code and tests.
+- **argos**: reads DriftSpec through argos-design-driftspec, which loads the
+  workspace through pyds; the obligations DriftSpec derives become argos
+  checks against code, tests and runs. argos is extended where DriftSpec says
+  more than PlantUML (§2a).
 - **plano**: the type package; DriftSpec's domains mirror its namespaces
   (core, dev, org, analysis).
-- **plantuml-render**: owner of the render-IR contract and the oracle for our
-  engine; plantuml-vscode the precedent for the VS Code integration.
-- **folio**: embeds the SVGs in generated documents.
+- **plantuml-render**: the render-IR contract the drawings started from.
+- **folio**: embeds the drawings in generated documents, and shares the idea
+  of perspectives over one model.
 - **PaC / titere**: the process domain's source of truth and editor.
 - **traza / gafas / prueba**: the right side of the V; DriftSpec never calls
   them and never reads their evidence.
+
+## 14. Roadmap by rings (applied to Plane on 2026-11-12)
+
+The roadmap is planned by rings of use, not by features: a real repository is
+designed in DriftSpec with PlantUML still the gate, and what that use finds is
+the backlog. DriftSpec is not ready to replace PlantUML yet. One ring is
+active at a time, and a language or viewer card is born from real use, under
+the stage where it appeared.
+
+- **A · Solid base and parity (DS-153).** Ring 0: driftspec and its argos
+  plugin. The model offers its index, the behaviour is read as a tree, the
+  engine's questions are asked from Python, the plugin reads through it and
+  offers the reconcilers argos asks for. Python types wait for DS-18, so the
+  Python parts of driftspec and the plugin are not compared with their code
+  in this stage.
+- **B · First repository outside (DS-166).** Ring 1: a Python repository
+  (gafas) designed in DriftSpec beside PlantUML. `ds` writes DriftSpec
+  (model to text, edits through the syntax tree) before any converter; types
+  in their language's syntax (DS-18).
+- **C · Open core (DS-167).** A kind brings how it binds, checks and draws;
+  languages and perspectives become packs. After ring 1, with two languages'
+  needs known.
+- **D · A multi-language application (DS-168).** Ring 2 (ouffroad), and the
+  perspectives (viewpoints, deployment, rules).
+- **E · argos designed in DriftSpec (DS-169).** PlantUML retired, the grammar
+  frozen, argos extended by DriftSpec.
+
+Kept apart: viewer polish and layout (icebox, DS-170) and argos style debt in
+driftspec (DS-111), done when the area is touched.
