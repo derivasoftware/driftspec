@@ -751,11 +751,16 @@ package driftspec@ds {
           status: approved
           title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
           rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
-          verification VER-00028-4 {
-            title: Integration tests confirm the participants of a sequence are its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
-            status: approved
+          verification VER-00028-5 {
+            title: Integration tests confirm the participants of a sequence are its static context: self, the attributes, the parameters, the locals written and the results of earlier messages, scoped as the code scopes them
+            status: draft
+            text:
+              Revision 5 adds how a name resolves when two of them share it (DDEV-1242): a local
+              hides a member of its name, a method is no value a message is sent to, and a result
+              named like an attribute is stored in that attribute.
             method: test
             tests:
+              tests/integration/ds/check/test_values.cpp::TestNameScopes.ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttributeOfItsName
               tests/integration/ds/check/test_values.cpp::TestValues.ALocalInsideAFrameIsALocal
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
               tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt

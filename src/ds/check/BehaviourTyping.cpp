@@ -226,24 +226,28 @@ bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& msg, c
 
 bool BehaviourTyping::typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject,
                                  const std::string& name, std::pair<std::string, std::string>* value, bool* transient) const {
-  const std::string home = cls ? cls->scope : subject.scope;
-  if (const model::Entity* attribute = cls ? resolver_->member(cls->id, name) : nullptr) {
-    const auto type = attribute->fields.find("type");
-    *value = {type == attribute->fields.end() ? "" : type->second, cls->scope};
-    return true;
-  }
-  for (const auto& p : subject.params) {
-    if (p.name != name) continue;
-    *value = {p.type, home};
-    return true;
-  }
+  // as the code scopes a name: a local the behaviour declares hides a member of its name, then a
+  // parameter, then an attribute of the class (a method is no value a message is sent to), then the
+  // result of an earlier message (one named like an attribute is stored in that attribute)
   const auto local = sequence.fields.find("local." + name);
   if (local != sequence.fields.end()) {
     *value = {local->second, sequence.scope};
     *transient = true;
     return true;
   }
-  const auto results = results_.find(sequence.id);
+  const std::string home = cls ? cls->scope : subject.scope;
+  for (const auto& p : subject.params) {
+    if (p.name != name) continue;
+    *value = {p.type, home};
+    return true;
+  }
+  const model::Entity* attribute = cls ? resolver_->member(cls->id, name) : nullptr;
+  if (attribute && attribute->kind == model::Kind::Attribute) {
+    const auto type = attribute->fields.find("type");
+    *value = {type == attribute->fields.end() ? "" : type->second, cls->scope};
+    return true;
+  }
+  const auto results = results_.find(sequence.id);  // a result named like an attribute is stored in it
   if (results != results_.end()) {
     const auto result = results->second.find(name);
     if (result != results->second.end()) {
