@@ -8,6 +8,7 @@
 #include "ds/check/Steps.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/query/Query.hpp"
 #include "ds/query/Walk.hpp"
 #include "ds/render/IrExport.hpp"
 
@@ -65,7 +66,7 @@ TEST_F(TestFailures, AHandlerKeepsTheFailureItHandles) {
   int handlers = 0;
   for (const auto& pair : model.entities()) {
     const ds::model::Entity& f = pair.second;
-    if (f.kind != ds::model::Kind::Frame || f.field("kind") != "handler") continue;
+    if (f.kind != ds::model::Kind::Frame || f.field("kind") != "handler" || f.scope != "shelf@books::Loader::load::sequence") continue;
     ++handlers;
     EXPECT_TRUE(f.field("failure") == "IoError" || f.field("failure") == "Busy") << f.field("failure");
   }
@@ -77,6 +78,33 @@ TEST_F(TestFailures, TheSequenceDiagramDrawsTheFailureAndTheHandlers) {
   EXPECT_NE(ir.find("fail LoadError"), std::string::npos);
   EXPECT_NE(ir.find("on IoError"), std::string::npos);
   EXPECT_NE(ir.find("on Busy"), std::string::npos);
+}
+
+/// What escapes each operation (DS-188): a failure goes up to every caller that does not handle it.
+TEST_F(TestFailures, AFailureEscapesEveryCallerThatDoesNotHandleIt) {
+  EXPECT_EQ(model.find("shelf@books::Parser::parse")->field("escapes"), "ParseError");
+  EXPECT_EQ(model.find("shelf@books::Loader::load")->field("escapes"), "LoadError, ParseError");  // IoError is handled
+  EXPECT_EQ(model.find("shelf@books::Loader::open")->field("escapes"), "LoadError, ParseError");
+  EXPECT_EQ(model.find("shelf@books::Shelf::show")->field("escapes"), "");  // both handled
+  EXPECT_EQ(model.find("shelf@books::Files::read")->field("escapes"), "");  // no behaviour: taken not to fail
+}
+
+TEST_F(TestFailures, EachEscapeKeepsThePathItComesUpByAndTheScenarioItStartsIn) {
+  EXPECT_EQ(model.find("shelf@books::Loader::open")->field("escape.ParseError"),
+            "shelf@books::Loader::open -> shelf@books::Loader::load -> shelf@books::Parser::parse"
+            " from shelf@books::Parser::parse::sequence/broken");
+  EXPECT_EQ(model.find("shelf@books::Loader::load")->field("escape.LoadError"),
+            "shelf@books::Loader::load from shelf@books::Loader::load::sequence/unreadable");  // a handler's own failure
+}
+
+TEST_F(TestFailures, TheQueryAnswersWhatEscapesAnOperationByWhereEachStarts) {
+  const auto answers = ds::query::Query(model).ask("failures", "shelf@books::Loader::open");
+  ASSERT_EQ(answers.size(), 2u);
+  EXPECT_EQ(answers[0].kind, "failure");
+  EXPECT_EQ(answers[0].id, "shelf@books::Loader::load");
+  EXPECT_EQ(answers[0].detail.rfind("LoadError: ", 0), 0u);
+  EXPECT_EQ(answers[1].id, "shelf@books::Parser::parse");
+  EXPECT_TRUE(ds::query::Query(model).ask("failures", "shelf@books::Shelf::show").empty());
 }
 
 }  // namespace

@@ -29,6 +29,10 @@ const FieldSpec kVisibility = syntax("visibility", FieldType::Name, "- when priv
 const FieldSpec kParams = syntax("params", FieldType::Params, "the parameters, name: type");
 const FieldSpec kReturns = syntax("returns", FieldType::Type, "what it gives back");
 const FieldSpec kNote = written("note", FieldType::Text, "a remark kept with the declaration");
+const FieldSpec kEscapes =
+    derived("escapes", FieldType::Names, "the failures that escape it, from where they start and where they are handled (DS-188)");
+const FieldSpec kEscapePath =
+    derived("escape.*", FieldType::Text, "how a failure escapes it: the operations it comes up through, and the behaviour that starts it");
 const FieldSpec kLanguage = written("language", FieldType::Name,
                                     "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless "
                                     "that says otherwise");
@@ -97,7 +101,7 @@ std::vector<KindSpec> build() {
                {P, M}});
   k.push_back({Kind::Operation,
                "an operation an interface offers",
-               {kParams, kReturns, written("command", FieldType::Text, "how it is invoked"),
+               {kParams, kReturns, kEscapes, kEscapePath, written("command", FieldType::Text, "how it is invoked"),
                 written("stdout", FieldType::Text, "what it writes out"), written("stderr", FieldType::Text, "what it writes as errors"),
                 written("exit *", FieldType::Name, "the scenario each exit code stands for")},
                {},
@@ -114,10 +118,11 @@ std::vector<KindSpec> build() {
        {"dataclass", "extern", "extension"},  // abstract is derived into stereotypes, never a flag
        {M}});
   k.push_back({Kind::Enum, "a closed set of values", {kVisibility, syntax("values", FieldType::Names, "its values")}, {}, {M}});
-  k.push_back({Kind::Function, "a free function of a module", {kParams, kReturns, kVisibility, kNote}, {"extern"}, {M}});
+  k.push_back(
+      {Kind::Function, "a free function of a module", {kParams, kReturns, kVisibility, kNote, kEscapes, kEscapePath}, {"extern"}, {M}});
   k.push_back({Kind::Method,
                "an operation of a class",
-               {kParams, kReturns, kVisibility, kNote},
+               {kParams, kReturns, kVisibility, kNote, kEscapes, kEscapePath},
                {"abstract", "static", "const", "constructor", "destructor"},
                {Cl}});
   k.push_back({Kind::Attribute,

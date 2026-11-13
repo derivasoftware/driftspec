@@ -217,6 +217,9 @@ package driftspec@ds {
       + relations(id: std::string) -> std::vector<Answer>
       + artefacts(id: std::string) -> std::vector<Answer>
       + behaviours(id: std::string) -> std::vector<Answer>
+      + failures(id: std::string) -> std::vector<Answer> {   // what escapes an operation, by where each starts (DS-188)
+        @requirement REQ-00111-1
+      }
       + shows(diagram: std::string) -> std::vector<Answer>
       + findings(file: std::string) -> std::vector<Answer>
       + coupling() -> std::vector<Answer>
@@ -254,6 +257,10 @@ package driftspec@ds {
       }
       opt question is behaviours {
         -> behaviours(subject) -> answers
+        return answers
+      }
+      opt question is failures {
+        -> failures(subject) -> answers
         return answers
       }
       opt question is shows {

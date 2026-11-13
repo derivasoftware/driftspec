@@ -869,7 +869,7 @@ package driftspec@ds {
         }
         requirement REQ-00110-1 {
           tags: language, lld, sequence, failure
-          status: draft
+          status: approved
           title: A sequence shall say where a path ends failing and where a failure of what it calls is handled, whatever the mechanism
           text:
             fail ParseError ends a path where a return would go, with the failure's name as text, as a
@@ -881,7 +881,7 @@ package driftspec@ds {
           rationale: Owner, 2026-11-13 (DS-180, DS-187). One model of failure for exceptions, error values and error codes; what escapes each operation is computed from where failures start and where they are handled (DS-188).
           verification VER-00126-1 {
             title: Integration tests confirm a path ends failing with its failure's name, an attempt runs on every path and a handler only on the path that names it, and the diagram draws both
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_failures.cpp::TestFailures.TheExampleChecksClean
@@ -889,6 +889,33 @@ package driftspec@ds {
               tests/integration/ds/check/test_failures.cpp::TestFailures.AnAttemptRunsOnEveryPathAndAHandlerOnlyOnThePathThatNamesIt
               tests/integration/ds/check/test_failures.cpp::TestFailures.AHandlerKeepsTheFailureItHandles
               tests/integration/ds/check/test_failures.cpp::TestFailures.TheSequenceDiagramDrawsTheFailureAndTheHandlers
+          }
+        }
+        requirement REQ-00111-1 {
+          tags: language, lld, sequence, failure, check, query
+          status: draft
+          title: The checker shall compute what failures escape each operation, with the path each comes up by, and the query shall answer it
+          text:
+            A failure starts where a path ends failing and goes up to every caller that does not handle
+            it: an attempt handles, around the steps it runs, what its handlers name; a handler's own
+            steps are not handled by its attempt. Computed until nothing changes, so calls that call
+            each other end. Each operation carries escapes, the failures, and escape.<failure>, the
+            operations it comes up through and the behaviour (or the scenario of one) that starts it.
+            A call ds cannot follow, to an operation with no behaviour, is taken not to fail.
+            ds query <workspace> failures <operation> answers each escaping failure, named by the
+            operation it starts in.
+          rationale: Owner, 2026-11-13 (DS-180, DS-188). The design writes only where a failure starts and where it is handled; what escapes is inferred, for exceptions, error values and codes alike.
+          verification VER-00127-1 {
+            title: Tests confirm a failure escapes every caller that does not handle it, with its path and the scenario it starts in, that a handler's own failure goes on, that calls calling each other end, and that the query answers it
+            status: draft
+            method: test
+            tests:
+              tests/integration/ds/check/test_failures.cpp::TestFailures.AFailureEscapesEveryCallerThatDoesNotHandleIt
+              tests/integration/ds/check/test_failures.cpp::TestFailures.EachEscapeKeepsThePathItComesUpByAndTheScenarioItStartsIn
+              tests/integration/ds/check/test_failures.cpp::TestFailures.TheQueryAnswersWhatEscapesAnOperationByWhereEachStarts
+              tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.AFailureInsideAnAttemptThatHandlesItEscapesNothing
+              tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.AHandlersOwnFailureIsNotHandledByTheAttemptThatHoldsIt
+              tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.CallsThatCallEachOtherEndWithWhatEitherLetsEscape
           }
         }
         requirement REQ-00058-2 {

@@ -40,7 +40,7 @@ class FakeStep : public ds::check::IStep {
 /// and run after every step it needs.
 TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
   const auto all = ds::check::steps();
-  ASSERT_EQ(all.size(), 7u);
+  ASSERT_EQ(all.size(), 8u);
   for (const auto& s : all) EXPECT_EQ(s.first, s.second->name());
 }
 
@@ -49,7 +49,8 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const auto checkSteps = ds::check::steps();
   const ds::check::Checker checker(model, checkSteps);
   const std::vector<std::string> order = checker.order();
-  EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "contracts", "dependencies", "derivation", "rules", "structure"}));
+  EXPECT_EQ(order,
+            (std::vector<std::string>{"linker", "behaviour", "contracts", "dependencies", "derivation", "failures", "rules", "structure"}));
   const auto all = ds::check::steps();
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())
@@ -69,6 +70,7 @@ TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
   EXPECT_EQ(all.at("dependencies")->needs(), (Needs{"linker", "behaviour"}));
   EXPECT_EQ(all.at("structure")->needs(), (Needs{"linker", "behaviour", "derivation"}));
   EXPECT_EQ(all.at("rules")->needs(), (Needs{"linker", "behaviour", "derivation"}));
+  EXPECT_EQ(all.at("failures")->needs(), (Needs{"linker", "behaviour"}));  // the calls resolved (DS-188)
 }
 
 /// A step gives back what it found (DS-138): a step that enriches reports to the context, which
