@@ -104,4 +104,54 @@ TEST_F(TestValues, AFrameWithNoMessageIsStillDrawn) {
   EXPECT_TRUE(receipt);
 }
 
+/// A name in a behaviour resolves as the code scopes it: a local hides a member of its name, a method
+/// is no value a message is sent to, and a result named like an attribute is stored in it.
+TEST(TestNameScopes, ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttributeOfItsName) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  const auto file = parser.parseText("a.ds",
+                                     "package p {\n"
+                                     "  module m {\n"
+                                     "    class Tree {\n"
+                                     "      + frames() -> int\n"
+                                     "    }\n"
+                                     "    class Store {\n"
+                                     "      + keep() -> int\n"
+                                     "    }\n"
+                                     "    class Shelf {\n"
+                                     "      + keep() -> int\n"
+                                     "    }\n"
+                                     "    class Desk {\n"
+                                     "      - shelf: Store\n"
+                                     "      + tree() -> int\n"
+                                     "      + fill() -> int\n"
+                                     "    }\n"
+                                     "    sequence Desk::tree {\n"
+                                     "      local tree: Tree\n"
+                                     "      -> tree.frames() -> n\n"
+                                     "      return n\n"
+                                     "    }\n"
+                                     "    sequence Desk::fill {\n"
+                                     "      local made: Shelf\n"
+                                     "      -> made.keep() -> shelf\n"
+                                     "      -> shelf.keep() -> n\n"
+                                     "      return n\n"
+                                     "    }\n"
+                                     "  }\n"
+                                     "}\n");
+  ASSERT_FALSE(file.hasSyntaxErrors);
+  binder.bind(file);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  auto calls = [&model](const std::string& message, const std::string& op) {
+    for (const auto& r : model.index().all())
+      if (r.kind == "calls" && r.from == message && r.to == op) return true;
+    return false;
+  };
+  EXPECT_TRUE(calls("p@m::Desk::tree::sequence::m0", "p@m::Tree::frames"));  // the local, not the method tree
+  EXPECT_TRUE(calls("p@m::Desk::fill::sequence::m1", "p@m::Store::keep"));   // the attribute shelf holds a Store
+  EXPECT_TRUE(model.findings().empty()) << model.findings().front().code;
+}
+
 }  // namespace
