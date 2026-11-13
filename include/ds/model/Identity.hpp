@@ -58,8 +58,6 @@ class Identity {
   Identity machineSubject() const;
 
   bool operator==(const Identity& other) const { return text_ == other.text_; }
-  bool operator!=(const Identity& other) const { return text_ != other.text_; }
-  bool operator<(const Identity& other) const { return text_ < other.text_; }
 
  private:
   std::string text_;
@@ -86,8 +84,6 @@ class Scope {
   bool isSystem() const;
 
   bool operator==(const Scope& other) const { return text_ == other.text_; }
-  bool operator!=(const Scope& other) const { return text_ != other.text_; }
-  bool operator<(const Scope& other) const { return text_ < other.text_; }
 
  private:
   std::string text_;
@@ -107,7 +103,6 @@ class ArtefactName {
   ArtefactName withoutRevision() const;
 
   bool operator==(const ArtefactName& other) const { return text_ == other.text_; }
-  bool operator<(const ArtefactName& other) const { return text_ < other.text_; }
 
  private:
   std::string text_;

@@ -87,7 +87,7 @@ package driftspec@ds {
     // identities, written in one place (DS-124), as three values (DS-184): packages join with @, the
     // rest with ::, a behaviour is its subject with ::sequence[/scenario] or ::state, a template
     // carries its arity, a diagram is diagram:NAME. An entity keeps its id as text; these wrap it.
-    class Identity <<==, ordered>> {       // what an entity is called: p@m::C, p@m::C::run::sequence/out
+    class Identity <<==>> {       // what an entity is called: p@m::C, p@m::C::run::sequence/out
       @constraint CST-00004-1
       @requirement REQ-00035-1
       - text_: std::string
@@ -112,9 +112,11 @@ package driftspec@ds {
       + scenario() -> std::string
       + subject() -> Identity
       + machineSubject() -> Identity
+      operator ==(other: Identity) -> bool
     }
-    class Scope <<==, ordered>> {          // where a name is written: p@, app@core@, p@m, p@m::C
+    class Scope <<==>> {          // where a name is written: p@, app@core@, p@m, p@m::C
       @constraint CST-00004-1
+      @requirement REQ-00018-1
       - text_: std::string
       + Scope(text: std::string)
       + static inside(package: Identity) -> Scope
@@ -125,8 +127,9 @@ package driftspec@ds {
       + package() -> Scope
       + box() -> Identity
       + isSystem() -> bool
+      operator ==(other: Scope) -> bool
     }
-    class ArtefactName <<==, ordered>> {   // a process artefact's name: REQ-00001-2
+    class ArtefactName <<==>> {   // a process artefact's name: REQ-00001-2
       @requirement REQ-00043-1
       - text_: std::string
       + ArtefactName(text: std::string)
@@ -134,6 +137,7 @@ package driftspec@ds {
       + text() -> std::string
       + hasRevision() -> bool
       + withoutRevision() -> ArtefactName
+      operator ==(other: ArtefactName) -> bool
     }
 
     function readAs(model: Model, relation: Relation) -> std::string {
