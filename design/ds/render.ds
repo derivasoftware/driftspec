@@ -68,7 +68,7 @@ package driftspec@ds {
     }
 
     verification VER-00007-2 {
-      status: draft
+      status: approved
       @requirement REQ-00007-1
       title: Unit tests cover placement, routing, wrapping and the determinism of both drawings
       method: test

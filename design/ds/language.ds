@@ -456,7 +456,7 @@ package driftspec@ds {
         }
         requirement REQ-00024-2 {
           tags: language, lld, module
-          status: draft
+          status: approved
           title: An extern module shall declare names only, with no obligations, and every extern shall join one catalogue
           text:
             A bare name nobody declares in scope resolves to the one extern
@@ -473,7 +473,7 @@ package driftspec@ds {
             undeclared.
           verification VER-00018-2 {
             title: Integration tests confirm an extern module declares names only, with no obligations, and every extern joins one catalogue
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.ExternDeclaresIdentitiesWithoutObligations
@@ -881,7 +881,7 @@ package driftspec@ds {
           rationale: Owner, 2026-11-13 (DS-180, DS-187). One model of failure for exceptions, error values and error codes; what escapes each operation is computed from where failures start and where they are handled (DS-188).
           verification VER-00126-2 {
             title: Integration tests confirm a path ends failing with its failure's name, an attempt runs on every path and a handler only on the path that names it, and the diagram draws both
-            status: draft
+            status: approved
             text: Revision 2 (DS-189) holds the example to reporting only the failures its signatures misstate, now that it has some.
             method: test
             tests:
@@ -894,7 +894,7 @@ package driftspec@ds {
         }
         requirement REQ-00111-1 {
           tags: language, lld, sequence, failure, check, query
-          status: draft
+          status: approved
           title: The checker shall compute what failures escape each operation, with the path each comes up by, and the query shall answer it
           text:
             A failure starts where a path ends failing and goes up to every caller that does not handle
@@ -908,7 +908,7 @@ package driftspec@ds {
           rationale: Owner, 2026-11-13 (DS-180, DS-188). The design writes only where a failure starts and where it is handled; what escapes is inferred, for exceptions, error values and codes alike.
           verification VER-00127-1 {
             title: Tests confirm a failure escapes every caller that does not handle it, with its path and the scenario it starts in, that a handler's own failure goes on, that calls calling each other end, and that the query answers it
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_failures.cpp::TestFailures.AFailureEscapesEveryCallerThatDoesNotHandleIt
@@ -921,7 +921,7 @@ package driftspec@ds {
         }
         requirement REQ-00112-1 {
           tags: language, lld, failure, check
-          status: draft
+          status: approved
           title: A signature shall say what an operation may fail with, and the checker shall hold it to what escapes, and a boundary to saying it
           text:
             + load(path: string) -> Book fails LoadError, ParseError promises what may escape; fails
@@ -933,7 +933,7 @@ package driftspec@ds {
           rationale: Owner, 2026-11-13 (DS-180, DS-189). noexcept is the promise that nothing escapes, decided per operation by the design, not by a rule over every method.
           verification VER-00128-1 {
             title: Tests confirm a signature is held to what escapes, a boundary says what escapes it, and an operation with no behaviour fails as its signature says
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_failures.cpp::TestFailurePromises.WhatEscapesAndTheSignatureDoesNotSayIsAFinding
@@ -975,7 +975,7 @@ package driftspec@ds {
           title: A message shall name an operation of its target's type and match its arity, inside loop, alt and opt frames with prose conditions
           verification VER-00029-2 {
             title: Integration tests confirm a message names an operation of its target's type and matches its arity, inside loop, alt and opt frames with prose conditions, each step held by what encloses it
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.AnAltHoldsItsSidesAsBranchesAndEachSideItsSteps
@@ -984,7 +984,7 @@ package driftspec@ds {
         }
         requirement REQ-00108-1 {
           tags: language, lld, sequence
-          status: draft
+          status: approved
           title: A message shall call a class's static operation by its qualified name, with no instance
           text:
             `-> diff::Diff::compare(a, b)`: a message with no participant whose qualified name
@@ -996,7 +996,7 @@ package driftspec@ds {
             through a participant, so the design declared a local the code does not have.
           verification VER-00124-1 {
             title: Integration tests confirm a method's and a function's behaviour call a static operation on its class, and one that is not static is reported
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static_calls.cpp::TestStaticCalls.AMethodsBehaviourCallsAStaticOperationOnItsClass

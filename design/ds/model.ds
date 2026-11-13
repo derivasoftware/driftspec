@@ -203,7 +203,7 @@ package driftspec@ds {
     }
 
     verification VER-00121-1 {
-      status: draft
+      status: approved
       @requirement REQ-00065-1
       @requirement REQ-00049-2
       title: Unit tests read one behaviour's tree the same for every reader: messages in the order written, the frame around each step, where a frame opens, an alt's sides and what each names
@@ -218,7 +218,7 @@ package driftspec@ds {
     }
 
     verification VER-00122-1 {
-      status: draft
+      status: approved
       @requirement REQ-00001-1
       title: An integration test holds every entity to where it ends as well as where it starts
       method: test
@@ -522,7 +522,7 @@ package driftspec@ds {
 
     constraint CST-00008-2 {
       tags: model, index
-      status: draft
+      status: approved
       category: design
       title: The model's relations shall be read only through its index, which answers with copies in the order the model states, holds no fact of its own and never lags a change of the model
       rationale:
@@ -567,7 +567,7 @@ package driftspec@ds {
     }
 
     verification VER-00119-1 {
-      status: draft
+      status: approved
       @requirement REQ-00001-1
       title: Unit tests cover the questions the model answers by identity, kept in step with every declare, relate and rename
       method: test
@@ -589,7 +589,7 @@ package driftspec@ds {
     }
 
     verification VER-00120-2 {
-      status: draft
+      status: approved
       @constraint CST-00008-2
       title: Unit tests hold the index to the order stated, to every change of the model, to answers a later change leaves as they were and to a copy that answers for itself; tools/same.sh holds every output to main
       method: test
