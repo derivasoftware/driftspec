@@ -73,7 +73,7 @@ int BehaviourLayer::behaviourOf(const std::string& sequence, const std::string& 
   b.id = b.subject + (b.scenario.empty() ? "" : " / " + b.scenario);
   out_document.behaviours.push_back(b);
   std::vector<Call> found_calls;
-  for (const query::Taken& t : query::stepsOf(model_, sequence, scenario)) {  // where each call goes on: DS-130
+  for (const query::Taken& t : query::Walker(model_).steps(sequence, scenario)) {  // where each call goes on: DS-130
     const model::Entity* m = model_.find(t.message);
     const auto call = calls_.find(m->id);
     if (call == calls_.end()) continue;

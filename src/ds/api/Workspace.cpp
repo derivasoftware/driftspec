@@ -79,14 +79,14 @@ std::string Workspace::tree(const std::string& sequence) const {
 
 std::string Workspace::steps(const std::string& sequence, const std::string& path) const {
   nlohmann::json out = nlohmann::json::array();
-  for (const auto& t : query::stepsOf(model_, sequence, path))
+  for (const auto& t : query::Walker(model_).steps(sequence, path))
     out.push_back({{"message", t.message}, {"next", t.next}, {"next_path", t.nextPath}});
   return out.dump();
 }
 
 std::string Workspace::walk(const std::string& sequence, const std::string& path, int depth) const {
   nlohmann::json out = nlohmann::json::array();
-  for (const auto& w : query::walkOf(model_, sequence, path, depth)) out.push_back({{"message", w.message}, {"depth", w.depth}});
+  for (const auto& w : query::Walker(model_).walk(sequence, path, depth)) out.push_back({{"message", w.message}, {"depth", w.depth}});
   return out.dump();
 }
 

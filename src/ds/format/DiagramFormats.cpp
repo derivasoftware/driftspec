@@ -20,7 +20,7 @@ std::string DiagramLayout::name() const { return "layout"; }
 std::string DiagramLayout::write(const render::IrText& document, const FormatOptions& options) const {
   // the placed rectangles and routes, in cells: the portable form for hosts that draw themselves
   const render::IrDocument parsed = render::IrDocument::parse(document.json).bundled();
-  const render::LayoutResult lay = render::layout(parsed, render::Metrics::text(), options.width);
+  const render::LayoutResult lay = render::Layout(render::Metrics::text()).place(parsed, options.width);
   nlohmann::json out = {{"nodes", nlohmann::json::array()}, {"routes", nlohmann::json::array()}};
   for (const auto& p : lay.placed) {
     out["nodes"].push_back(

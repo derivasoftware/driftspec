@@ -359,7 +359,7 @@ struct SequenceBuilder {
     std::set<std::string> kept;
     const bool whole = path == kWhole;
     // what it takes and where each call goes on: the one walk of a behaviour (DS-130)
-    const std::vector<query::Taken> steps = query::stepsOf(model, seq.id, path, whole ? nullptr : &kept);
+    const std::vector<query::Taken> steps = query::Walker(model).steps(seq.id, path, whole ? nullptr : &kept);
     const model::SequenceTree tree(model, seq.id);  // the frame around each step, where an alt's else begins (DS-172)
     auto drawn = [&](const std::string& frame) { return whole || kept.count(frame); };
     // a frame that holds no message (only prose, or a branch that ends with nothing) still has a row of its own
@@ -509,7 +509,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const model::Entity* cls = runsInModule ? model_.find(subject->scope) : subject;
       if (!cls) continue;
       const std::string home = subject->kind == model::Kind::Function ? cls->id : cls->scope;  // a function runs in its module
-      for (const query::Taken& taken : query::stepsOf(model_, seq->id, kWhole)) {
+      for (const query::Taken& taken : query::Walker(model_).steps(seq->id, kWhole)) {
         const model::Entity* m = model_.find(taken.message);
         const std::string typeId = m->field("type");
         const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
@@ -553,7 +553,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const std::string returns = method ? subject->field("returns") : "";
       if (method && !returns.empty() && returns != "none" && returns != "void") {
         std::string given = returns;  // what its `return` says, or the declared type
-        for (const query::Taken& taken : query::stepsOf(model_, seq->id, path)) {
+        for (const query::Taken& taken : query::Walker(model_).steps(seq->id, path)) {
           const model::Entity* m = model_.find(taken.message);
           if (m->field("return") == "true" && !m->field("result").empty()) given = m->field("result");
         }

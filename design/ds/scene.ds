@@ -250,7 +250,7 @@ package driftspec@ds {
         depth of twelve: a step from the caller to the callee, then the steps
         of the callee, then its answer coming back. Each step knows its depth.
         ds decides where each call goes on, in the one walk of a behaviour
-        (query::stepsOf); the scene writes each behaviour once with that link,
+        (query::Walker::steps); the scene writes each behaviour once with that link,
         and the viewer only follows it. Private behaviours are replayed inside the public ones that
         reach them. The viewer replays a tour over the structure: the camera
         frames each call, the member called lights up in its box, a sequence

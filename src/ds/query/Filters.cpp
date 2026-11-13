@@ -198,14 +198,14 @@ std::set<std::string> SequenceFilter::select(const model::Model& model) const {
       // lifted to modules: the module each class lives in, and the one a function runs in
       if (!cls) continue;
       out.insert(function ? cls->id : cls->scope);
-      for (const Taken& t : stepsOf(model, b.sequence->id, kEveryBranch)) {
+      for (const Taken& t : Walker(model).steps(b.sequence->id, kEveryBranch)) {
         const model::Entity* type = model.find(model.find(t.message)->field("type"));
         if (type) out.insert(type->kind == model::Kind::Module ? type->id : type->scope);
       }
       continue;
     }
     if (cls) out.insert(cls->id);
-    for (const Walked& w : walkOf(model, b.sequence->id, b.path, depth_)) {  // what it calls takes part (DS-130)
+    for (const Walked& w : Walker(model).walk(b.sequence->id, b.path, depth_)) {  // what it calls takes part (DS-130)
       const model::Entity* m = model.find(w.message);
       if (m->field("return") == "true") continue;
       const std::string typeId = m->field("type");

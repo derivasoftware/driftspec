@@ -27,15 +27,24 @@ struct Walked {
 /// Every branch of a behaviour, as written: the path a sequence diagram draws whole.
 extern const char* const kEveryBranch;
 
-/// The messages a behaviour takes along a scenario, in the order written (DS-130): every branch for
-/// kEveryBranch, the default path for "", the named one otherwise; out_kept, when given, receives the
-/// frames that scenario cannot tell apart. The one place that says where each call goes on.
-std::vector<Taken> stepsOf(const model::Model& model, const std::string& sequence, const std::string& path,
-                           std::set<std::string>* out_kept = nullptr);
+/// The ways through the behaviours of one model (DS-185).
+class Walker {
+ public:
+  explicit Walker(const model::Model& model) : model_(model) {}
 
-/// A behaviour walked into what its calls enter, down to a depth: each message where it is taken,
-/// a behaviour entered once on each way down, so a cycle ends.
-std::vector<Walked> walkOf(const model::Model& model, const std::string& sequence, const std::string& path, int depth);
+  /// The messages a behaviour takes along a scenario, in the order written (DS-130): every branch
+  /// for kEveryBranch, the default path for "", the named one otherwise; out_kept, when given,
+  /// receives the frames that scenario cannot tell apart. The one place that says where each call
+  /// goes on.
+  std::vector<Taken> steps(const std::string& sequence, const std::string& path, std::set<std::string>* out_kept = nullptr) const;
+
+  /// A behaviour walked into what its calls enter, down to a depth: each message where it is taken,
+  /// a behaviour entered once on each way down, so a cycle ends.
+  std::vector<Walked> walk(const std::string& sequence, const std::string& path, int depth) const;
+
+ private:
+  const model::Model& model_;
+};
 
 }  // namespace query
 }  // namespace ds
