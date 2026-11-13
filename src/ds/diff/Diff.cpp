@@ -5,9 +5,13 @@
 #include <sstream>
 
 #include "ds/model/Metamodel.hpp"
+#include "ds/model/Words.hpp"
 
 namespace ds {
 namespace diff {
+
+using model::join;
+using model::split;
 
 namespace {
 
@@ -63,12 +67,6 @@ std::set<std::string> shapeOf(const model::Model& m, const std::string& classId)
     }
     out.insert(sig);
   }
-  return out;
-}
-
-std::string join(const std::vector<std::string>& items, const char* sep) {
-  std::string out;
-  for (const auto& i : items) out += (out.empty() ? "" : sep) + i;
   return out;
 }
 

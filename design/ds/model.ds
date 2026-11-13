@@ -140,9 +140,10 @@ package driftspec@ds {
       operator ==(other: ArtefactName) -> bool
     }
 
-    function readAs(model: Model, relation: Relation) -> std::string {
-      @requirement REQ-00031-1
-    }
+    // a list written in a field, taken apart and put back, in one place for every module (DS-185)
+    function split(text: std::string, sep: char) -> std::vector<std::string>
+    function join(items: std::vector<std::string>, sep: std::string) -> std::string
+
     function hasScenario(model: Model, sequence: std::string, scenario: std::string) -> bool {
       @requirement REQ-00065-1
     }
@@ -618,6 +619,9 @@ package driftspec@ds {
       }
       + find(id: std::string) -> Entity
       + relate(relation: Relation) -> void
+      + readAs(relation: Relation) -> std::string {  // the relation as the language reads it (R14)
+        @requirement REQ-00031-1
+      }
       + report(finding: Finding) -> void
       + rename(from: std::string, to: std::string) -> bool
       + entities() -> std::map<std::string, Entity>

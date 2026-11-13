@@ -19,6 +19,9 @@ struct ParsedFile {
   int errorLine = 0;  ///< where the file stops parsing, 1-based; 0 when it parses
   int errorColumn = 0;
   std::string errorDetail;  ///< what is wrong there: unexpected `text`, or missing `token`
+
+  /// The text a node of its tree spans.
+  std::string textOf(TSNode node) const;
 };
 
 /// Wraps the tree-sitter parser for the DriftSpec grammar.
@@ -40,9 +43,6 @@ class Parser {
  private:
   TSParser* parser_;
 };
-
-/// The text a node spans.
-std::string textOf(const ParsedFile& file, TSNode node);
 
 }  // namespace parse
 }  // namespace ds

@@ -100,7 +100,10 @@ TEST_F(TestFilters, ARequirementsDiagramTakesItsRootsAndTheirUmbrella) {
   EXPECT_EQ(of("REQ_Sell"), (Ids{"REQ-00001-1", "REQ-00002-1", "p@m::Till"}));
 }
 
-TEST_F(TestFilters, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
+/// filterFor: the one place that names the filter of each kind of diagram.
+class TestFilterFor : public TestFilters {};
+
+TEST_F(TestFilterFor, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   load(std::string(shop()) + "diagram SEQ_Sell {\n  kind: sequence\n  include: shop@till::Till::sell\n}\n" +
        "diagram REQ_None {\n  kind: requirement\n  include: REQ-09999-1\n}\n");
   EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::filterFor(*model.find("diagram:SEQ_Sell")).get()), nullptr);

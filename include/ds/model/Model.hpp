@@ -149,6 +149,10 @@ struct Formula {
 /// The resolved workspace: entities by identity, relations and findings.
 class Model {
  public:
+  /// The relation as the language reads it: a class that inherits from an interface realises it (R14),
+  /// the checker having derived the interface; any other relation reads as written. Every drawing asks
+  /// here, so the viewer and the diagrams say the same (DS-118).
+  std::string readAs(const Relation& relation) const;
   Entity& declare(const Entity& entity);
   const Entity* find(const std::string& id) const;
   Entity* find(const std::string& id);
@@ -185,11 +189,6 @@ class Model {
   std::map<std::string, std::vector<Breach>> breaches_;
   mutable Indexed indexed_;  ///< kept in step by declare, relate and rename; its tree is built when asked
 };
-
-/// The relation as the language reads it: a class that inherits from an interface realises it (R14),
-/// the checker having derived the interface; any other relation reads as written. Every drawing asks
-/// here, so the viewer and the diagrams say the same (DS-118).
-std::string readAs(const Model& model, const Relation& relation);
 
 /// Whether a branch of the behaviour `sequence` is named `scenario` (`opt ... / scenario {`).
 bool hasScenario(const Model& model, const std::string& sequence, const std::string& scenario);

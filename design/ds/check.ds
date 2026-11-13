@@ -81,11 +81,9 @@ package driftspec@ds {
       + expected: int
       + relations: int
       + errors: int
+      + static of(model: model::Model) -> Report  // the report of a checked model
     }
 
-    function reportOf(model: model::Model) -> Report {
-      @requirement REQ-00106-1
-    }
 
     // One step of the check (DS-138): its key, the steps it needs done before it, and what it found,
     // which it gives back. The checker orders the steps by what they need and runs them, knowing none of them.

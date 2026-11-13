@@ -2,7 +2,6 @@
 #include <map>
 #include <set>
 
-#include "Shared.hpp"
 #include "ds/scene/Layers.hpp"
 
 namespace ds {
@@ -29,25 +28,25 @@ void TraceLayer::requirements(SceneDocument& out_document) {
     r.id = e.id;
     r.kind = e.kind == model::Kind::Requirement ? "requirement" : e.kind == model::Kind::Constraint ? "constraint" : "usecase";
     if (e.kind == model::Kind::UseCase) {  // its contract and its outcomes (DS-77)
-      const std::string operation = fieldOf(e, "operation");
+      const std::string operation = e.field("operation");
       if (!operation.empty()) {
         r.signature = operation + "(";
         for (size_t i = 0; i < e.params.size(); ++i)
           r.signature += (i ? ", " : "") + e.params[i].name + (e.params[i].type.empty() ? "" : ": " + e.params[i].type);
         r.signature += ")";
-        const std::string returns = fieldOf(e, "returns");
+        const std::string returns = e.field("returns");
         if (!returns.empty()) r.signature += " -> " + returns;
       }
       for (const auto& member : model_.index().members(e.id)) {
         const model::Entity& other = *model_.find(member);
-        if (other.kind == model::Kind::Outcome) r.outcomes.push_back({other.name, fieldOf(other, "returns"), fieldOf(other, "text")});
+        if (other.kind == model::Kind::Outcome) r.outcomes.push_back({other.name, other.field("returns"), other.field("text")});
       }
       std::stable_sort(r.outcomes.begin(), r.outcomes.end(),
                        [](const Outcome& a, const Outcome& b) { return a.name == "default" && b.name != "default"; });
     }
-    r.title = fieldOf(e, "title");
-    r.status = fieldOf(e, "status");
-    r.text = fieldOf(e, "text");
+    r.title = e.field("title");
+    r.status = e.field("status");
+    r.text = e.field("text");
     if (!e.scope.empty()) r.scope = map_.land(model::Scope(e.scope).box().text());
     at_[r.id] = out_document.requirements.size();
     out_document.requirements.push_back(r);
@@ -61,11 +60,11 @@ void TraceLayer::verifications(SceneDocument& out_document) {
     if (e.expected || e.kind != model::Kind::Verification) continue;
     Verification v;
     v.id = e.id;
-    v.title = fieldOf(e, "title");
-    v.status = fieldOf(e, "status");
-    v.method = fieldOf(e, "method");
+    v.title = e.field("title");
+    v.status = e.field("status");
+    v.method = e.field("method");
     std::string test;
-    for (const char c : fieldOf(e, "tests") + ",") {  // the tests are written one per line or separated by commas
+    for (const char c : e.field("tests") + ",") {  // the tests are written one per line or separated by commas
       if (c == ',' || c == '\n') {
         test.erase(0, test.find_first_not_of(" \t"));
         test.erase(test.find_last_not_of(" \t") + 1);

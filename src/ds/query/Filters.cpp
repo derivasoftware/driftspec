@@ -3,30 +3,17 @@
 #include <sstream>
 
 #include "ds/model/Identity.hpp"
+#include "ds/model/Words.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
 
 namespace ds {
 namespace query {
 
+using model::join;
+using model::split;
+
 namespace {
-
-std::vector<std::string> split(const std::string& text, char sep) {
-  std::vector<std::string> out;
-  std::stringstream in(text);
-  std::string item;
-  while (std::getline(in, item, sep)) {
-    const auto b = item.find_first_not_of(' ');
-    const auto e = item.find_last_not_of(' ');
-    if (b != std::string::npos) out.push_back(item.substr(b, e - b + 1));
-  }
-  return out;
-}
-
-std::string fieldOf(const model::Entity& e, const std::string& key) {
-  const auto it = e.fields.find(key);
-  return it == e.fields.end() ? "" : it->second;
-}
 
 /// What a class diagram draws as a box: a class, an enum, an interface or a function of a module.
 bool isBox(const model::Entity& e) {
@@ -212,7 +199,7 @@ std::set<std::string> SequenceFilter::select(const model::Model& model) const {
       if (!cls) continue;
       out.insert(function ? cls->id : cls->scope);
       for (const Taken& t : stepsOf(model, b.sequence->id, kEveryBranch)) {
-        const model::Entity* type = model.find(fieldOf(*model.find(t.message), "type"));
+        const model::Entity* type = model.find(model.find(t.message)->field("type"));
         if (type) out.insert(type->kind == model::Kind::Module ? type->id : type->scope);
       }
       continue;
@@ -220,8 +207,8 @@ std::set<std::string> SequenceFilter::select(const model::Model& model) const {
     if (cls) out.insert(cls->id);
     for (const Walked& w : walkOf(model, b.sequence->id, b.path, depth_)) {  // what it calls takes part (DS-130)
       const model::Entity* m = model.find(w.message);
-      if (fieldOf(*m, "return") == "true") continue;
-      const std::string typeId = fieldOf(*m, "type");
+      if (m->field("return") == "true") continue;
+      const std::string typeId = m->field("type");
       if (!typeId.empty() && model.find(typeId)) out.insert(typeId);
     }
   }
@@ -301,21 +288,19 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
 
 std::unique_ptr<IFilter> filterFor(const model::Entity& diagram) {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
-  const std::string kind = fieldOf(diagram, "kind");
-  const std::vector<std::string> include = split(fieldOf(diagram, "include"), ',');
+  const std::string kind = diagram.field("kind");
+  const std::vector<std::string> include = split(diagram.field("include"), ',');
   if (kind == "sequence")
-    return std::unique_ptr<IFilter>(
-        new SequenceFilter(include, number(fieldOf(diagram, "depth"), 1000), fieldOf(diagram, "level") == "module"));
+    return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.field("level") == "module"));
   if (kind == "state") return std::unique_ptr<IFilter>(new StateFilter(include));
   if (kind == "requirement") {
-    const std::vector<std::string> shown = split(fieldOf(diagram, "show"), ',');
+    const std::vector<std::string> shown = split(diagram.field("show"), ',');
     const std::set<std::string> show(shown.begin(), shown.end());
     return std::unique_ptr<IFilter>(
         new RequirementsFilter(include, show.empty() || show.count("design"), show.empty() || show.count("verifications")));
   }
-  return std::unique_ptr<IFilter>(new ClassFilter(include, split(fieldOf(diagram, "exclude"), ','),
-                                                  number(fieldOf(diagram, "neighbours"), 0), diagram.fields.count("open") > 0,
-                                                  split(fieldOf(diagram, "open"), ',')));
+  return std::unique_ptr<IFilter>(new ClassFilter(include, split(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0),
+                                                  diagram.fields.count("open") > 0, split(diagram.field("open"), ',')));
 }
 
 }  // namespace query

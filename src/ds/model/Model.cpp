@@ -262,9 +262,9 @@ struct Branches {
 
 }  // namespace
 
-std::string readAs(const Model& model, const Relation& relation) {
+std::string Model::readAs(const Relation& relation) const {
   if (relation.kind != "inherits") return relation.kind;
-  const Entity* target = model.find(relation.to);
+  const Entity* target = find(relation.to);
   if (!target) return relation.kind;
   const auto stereotypes = target->fields.find("stereotypes");
   const bool interface = stereotypes != target->fields.end() && stereotypes->second.find("interface") != std::string::npos;

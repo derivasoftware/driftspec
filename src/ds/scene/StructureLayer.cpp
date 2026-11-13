@@ -3,7 +3,6 @@
 #include <set>
 #include <tuple>
 
-#include "Shared.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/scene/Layers.hpp"
@@ -29,7 +28,7 @@ void StructureLayer::links(SceneDocument& out_document) const {
     const std::string from = map_.land(r.from), to = map_.land(r.to);
     if (from.empty() || to.empty() || from == to || map_.parentOf(from) == to || map_.parentOf(to) == from) continue;  // within one box
     // a class that inherits from an interface realises it (R14): read as every drawing reads it
-    const std::string kind = model::readAs(model_, r);
+    const std::string kind = model_.readAs(r);
     const auto key = std::make_tuple(from, to, kind);
     Link& link = links[key];
     link.from = from;

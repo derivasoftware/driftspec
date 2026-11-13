@@ -22,10 +22,13 @@ ds::model::Finding finding(const std::string& code, const std::string& severity)
   return f;
 }
 
-TEST(TestTextFormats, AnswersAndReportsAreWrittenAsTextOrJsonByName) {
+TEST(TestAnswerFormats, AnswersAreWrittenAsTextOrJsonByName) {
   for (const auto& f : ds::format::answerFormats()) EXPECT_EQ(f.first, f.second->name());
-  for (const auto& f : ds::format::reportFormats()) EXPECT_EQ(f.first, f.second->name());
   EXPECT_EQ(ds::format::answerFormats().size(), 2u);
+}
+
+TEST(TestReportFormats, ReportsAreWrittenAsTextOrJsonByName) {
+  for (const auto& f : ds::format::reportFormats()) EXPECT_EQ(f.first, f.second->name());
   EXPECT_EQ(ds::format::reportFormats().size(), 2u);
 }
 
@@ -37,7 +40,7 @@ TEST(TestTextFormats, AReportIsBuiltOnceFromTheModelAndCountsWhatItSays) {
   model.declare(e);
   model.report(finding("E-X", "error"));
   model.report(finding("W-Y", "warning"));
-  const ds::check::Report report = ds::check::reportOf(model);
+  const ds::check::Report report = ds::check::Report::of(model);
   EXPECT_EQ(report.findings.size(), 2u);
   EXPECT_EQ(report.errors, 1);
   EXPECT_EQ(report.entities, 1);

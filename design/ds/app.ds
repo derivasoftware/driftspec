@@ -34,7 +34,7 @@ package driftspec@ds {
       local model: model::Model
       local chosen: format::ReportText
       -> loadWorkspace(dir, model) -> found
-      -> check::reportOf(model) -> report
+      -> check::Report::of(model) -> report
       -> format::reportFormats() -> formats
       -> chosen.write(report, options) -> written
       return 0
