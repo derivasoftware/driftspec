@@ -50,7 +50,7 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const ds::check::Checker checker(model, checkSteps);
   const std::vector<std::string> order = checker.order();
   EXPECT_EQ(order,
-            (std::vector<std::string>{"linker", "behaviour", "contracts", "dependencies", "derivation", "failures", "rules", "structure"}));
+            (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "contracts", "rules", "structure"}));
   const auto all = ds::check::steps();
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())
@@ -66,7 +66,7 @@ TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
   EXPECT_EQ(all.at("linker")->needs(), Needs{});
   EXPECT_EQ(all.at("behaviour")->needs(), Needs{"linker"});
   EXPECT_EQ(all.at("derivation")->needs(), Needs{"linker"});
-  EXPECT_EQ(all.at("contracts")->needs(), (Needs{"linker", "behaviour"}));
+  EXPECT_EQ(all.at("contracts")->needs(), (Needs{"linker", "behaviour", "failures"}));
   EXPECT_EQ(all.at("dependencies")->needs(), (Needs{"linker", "behaviour"}));
   EXPECT_EQ(all.at("structure")->needs(), (Needs{"linker", "behaviour", "derivation"}));
   EXPECT_EQ(all.at("rules")->needs(), (Needs{"linker", "behaviour", "derivation"}));

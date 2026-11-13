@@ -99,6 +99,7 @@ module.exports = grammar({
     // are data, not grammar: `exit 2: refused` is a field with a code, so a new kind changes nothing here
     interface: $ => seq('interface', field('name', $.name), '{', repeat(choice($.field, $.annotation, $.operation)), '}'),
     operation: $ => seq('operation', field('name', $.name), $.parameters, optional(seq('->', field('returns', $.type))),
+      optional($._fails),
       optional(seq(':', field('realises', $.qualified_name))),
       optional(seq('{', repeat(choice($.field, $.annotation)), '}'))),
 
@@ -121,8 +122,13 @@ module.exports = grammar({
       field('name', $.member_name),
       $.parameters,
       optional(seq('->', field('returns', $.type))),
+      optional($._fails),
       optional(field('body', $.member_body)),
     )),
+    // what an operation promises it may fail with: `fails ParseError, IoError`, or `fails nothing`;
+    // checked against what its behaviour lets escape (DS-189)
+    _fails: $ => seq('fails', field('fails', $.failures)),
+    failures: $ => seq($.qualified_name, repeat(seq(',', $.qualified_name))),
     template_params: $ => seq('<', $.template_param, repeat(seq(',', $.template_param)), '>'),
     template_param: $ => seq(field('name', $.name), optional(seq(':', field('bound', $.qualified_name)))),
     operator_set: $ => seq('<<', $.operator_item, repeat(seq(',', $.operator_item)), '>>'),
@@ -136,6 +142,7 @@ module.exports = grammar({
       field('name', $.member_name),
       $.parameters,
       optional(seq('->', field('returns', $.type))),
+      optional($._fails),
       optional(field('body', $.member_body)),
     )),
     method_modifier: $ => choice('abstract', 'static', 'const'),

@@ -257,6 +257,7 @@ package driftspec@ds {
       @requirement REQ-00082-1
       @requirement REQ-00061-1
       @requirement REQ-00109-1
+      @requirement REQ-00112-1
       @requirement REQ-00065-1
       @requirement REQ-00049-2
       - refs context_: Context
@@ -280,6 +281,9 @@ package driftspec@ds {
       }
       - checkStates(state: model::Entity) -> void {
         @requirement REQ-00109-1
+      }
+      - checkFailures(operation: model::Entity) -> void {
+        @requirement REQ-00112-1
       }
       - checkScenarios() -> void {
         @requirement REQ-00065-1
@@ -374,6 +378,7 @@ package driftspec@ds {
       + run(context: Context) -> std::vector<model::Finding>
       - handledAround(step: std::string) -> std::set<std::string>
       - originOf(step: std::string, sequence: std::string) -> std::string
+      - hasBehaviour(operation: std::string) -> bool
       - callee(message: std::string) -> std::string
       - pass(out_escapes: std::map<std::string, std::map<std::string, Escape>>) -> bool
       - write(escapes: std::map<std::string, std::map<std::string, Escape>>) -> void
@@ -512,6 +517,9 @@ package driftspec@ds {
       -> checkUseCases()
       -> checkDiagrams()
       -> checkScenarios()
+      loop each operation, method and function {
+        -> checkFailures(operation)
+      }
     }
 
     sequence StructureCheck::check {

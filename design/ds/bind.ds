@@ -51,6 +51,7 @@ package driftspec@ds {
       @requirement REQ-00053-1
       @requirement REQ-00021-1
       @requirement REQ-00110-1
+      @requirement REQ-00112-1
       - refs model_: model::Model
       - owns references_: std::vector<Reference>
       - owns messages_: std::vector<Message>
@@ -102,6 +103,7 @@ package driftspec@ds {
       - bindSignature(file: parse::ParsedFile, node: TSNode, entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
         @requirement REQ-00028-1
         @requirement REQ-00055-2
+        @requirement REQ-00112-1
       }
       - bindMemberBody(file: parse::ParsedFile, member: TSNode, entity: model::Entity, scope: std::string) -> void {
         @requirement REQ-00032-2
