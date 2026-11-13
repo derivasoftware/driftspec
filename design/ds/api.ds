@@ -68,6 +68,7 @@ package driftspec@ds {
     // A workspace loaded once (DS-173): its model kept for every question. When it grows, it becomes a
     // module of its own with its questions grouped by what they look at.
     class Workspace {
+      @interface workspace                   // the class the in-process interface is linked against
       @requirement REQ-00107-1
       @constraint CST-00009-1
       - owns model_: model::Model
@@ -214,6 +215,35 @@ package driftspec@ds {
     operation expectedAt(text: string, line: int, column: int) -> string : UC-00007-1
   }
 
+  // A workspace loaded once and asked as often as needed (DS-173): what the engine offers a caller in
+  // the same process beside engine's one-question functions. Each answer is a copy, in the JSON the
+  // engine writes (CST-00009-1); the Python face's native Workspace holds one (DS-90).
+  interface workspace {
+    kind: library
+    transport: in process, linked
+    encoding: json text
+    @requirement REQ-00107-1
+    @constraint CST-00009-1
+    operation export() -> string
+    operation report() -> string
+    operation find(id: string) -> string
+    operation from(id: string) -> string
+    operation to(id: string) -> string
+    operation touching(id: string) -> string
+    operation members(scope: string) -> string
+    operation parent(id: string) -> string
+    operation children(id: string) -> string
+    operation revisionOf(artefact: string) -> string
+    operation tree(sequence: string) -> string
+    operation steps(sequence: string, path: string) -> string
+    operation walk(sequence: string, path: string, depth: int) -> string
+    operation ask(question: string, subject: string) -> string
+    operation shows(diagram: string) -> string
+    operation render(diagram: string, format: string, width: int) -> string
+    operation page(title: string, focus: list<string>) -> string
+    operation diff(before: api::Workspace) -> string
+  }
+
   sequence engine::check {
     local api: api::Api
     -> api.check(files) -> json
@@ -284,5 +314,113 @@ package driftspec@ds {
     local api: api::Api
     -> api.expectedAt(text, line, column) -> words
     return words
+  }
+
+  sequence workspace::export {
+    local loaded: api::Workspace
+    -> loaded.exportModel() -> json
+    return json
+  }
+
+  sequence workspace::report {
+    local loaded: api::Workspace
+    -> loaded.report() -> json
+    return json
+  }
+
+  sequence workspace::find {
+    local loaded: api::Workspace
+    -> loaded.find(id) -> json
+    return json
+  }
+
+  sequence workspace::from {
+    local loaded: api::Workspace
+    -> loaded.from(id) -> json
+    return json
+  }
+
+  sequence workspace::to {
+    local loaded: api::Workspace
+    -> loaded.to(id) -> json
+    return json
+  }
+
+  sequence workspace::touching {
+    local loaded: api::Workspace
+    -> loaded.touching(id) -> json
+    return json
+  }
+
+  sequence workspace::members {
+    local loaded: api::Workspace
+    -> loaded.members(scope) -> json
+    return json
+  }
+
+  sequence workspace::parent {
+    local loaded: api::Workspace
+    -> loaded.parent(id) -> json
+    return json
+  }
+
+  sequence workspace::children {
+    local loaded: api::Workspace
+    -> loaded.children(id) -> json
+    return json
+  }
+
+  sequence workspace::revisionOf {
+    local loaded: api::Workspace
+    -> loaded.revisionOf(artefact) -> json
+    return json
+  }
+
+  sequence workspace::tree {
+    local loaded: api::Workspace
+    -> loaded.tree(sequence) -> json
+    return json
+  }
+
+  sequence workspace::steps {
+    local loaded: api::Workspace
+    -> loaded.steps(sequence, path) -> json
+    return json
+  }
+
+  sequence workspace::walk {
+    local loaded: api::Workspace
+    -> loaded.walk(sequence, path, depth) -> json
+    return json
+  }
+
+  sequence workspace::ask {
+    local loaded: api::Workspace
+    -> loaded.ask(question, subject) -> json
+    return json
+  }
+
+  sequence workspace::shows {
+    local loaded: api::Workspace
+    -> loaded.shows(diagram) -> json
+    return json
+  }
+
+  sequence workspace::render {
+    local loaded: api::Workspace
+    -> loaded.render(diagram, format, width) -> json
+    return json
+  }
+
+  sequence workspace::page {
+    local loaded: api::Workspace
+    -> loaded.page(title, focus) -> json
+    return json
+  }
+
+  sequence workspace::diff {
+    local loaded: api::Workspace
+    -> loaded.diff(before) -> json
+    return json
   }
 }

@@ -546,6 +546,7 @@ package driftspec@pyds {
   module native {
     language: cpp
     @uses driftspec@ds@engine                // DS-92: through the engine's interface
+    @uses driftspec@ds@workspace             // DS-90: a workspace loaded once, through its interface
     @requirement REQ-00086-1
 
     function check(files: map<string, string>) -> string
@@ -563,7 +564,8 @@ package driftspec@pyds {
     function without_revision(id: string) -> string
 
     // A workspace loaded once and kept in the engine (DS-173): the native object a Python Workspace
-    // holds; its methods are the engine's Workspace, each answer the JSON the engine writes.
+    // holds; its methods are the operations of the engine's workspace interface, each answer the JSON
+    // the engine writes. No reader sees a CPython type yet: argos holds it to no code (DS-90).
     class Workspace {
       @requirement REQ-00107-1
       @constraint CST-00009-1
@@ -587,6 +589,114 @@ package driftspec@pyds {
       + render(diagram: string, format: string, width: int) -> string
       + page(title: string, focus: list<string>) -> string
       + diff(before: Workspace) -> string
+    }
+
+    sequence Workspace::export {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.export() -> json
+      return json
+    }
+
+    sequence Workspace::report {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.report() -> json
+      return json
+    }
+
+    sequence Workspace::find {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.find(id) -> json
+      return json
+    }
+
+    sequence Workspace::relations_from {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.from(id) -> json
+      return json
+    }
+
+    sequence Workspace::relations_to {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.to(id) -> json
+      return json
+    }
+
+    sequence Workspace::touching {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.touching(id) -> json
+      return json
+    }
+
+    sequence Workspace::members {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.members(scope) -> json
+      return json
+    }
+
+    sequence Workspace::parent {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.parent(id) -> json
+      return json
+    }
+
+    sequence Workspace::children {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.children(id) -> json
+      return json
+    }
+
+    sequence Workspace::revision_of {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.revisionOf(artefact) -> json
+      return json
+    }
+
+    sequence Workspace::tree {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.tree(sequence) -> json
+      return json
+    }
+
+    sequence Workspace::steps {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.steps(sequence, path) -> json
+      return json
+    }
+
+    sequence Workspace::walk {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.walk(sequence, path, depth) -> json
+      return json
+    }
+
+    sequence Workspace::ask {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.ask(question, subject) -> json
+      return json
+    }
+
+    sequence Workspace::shows {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.shows(diagram) -> json
+      return json
+    }
+
+    sequence Workspace::render {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.render(diagram, format, width) -> json
+      return json
+    }
+
+    sequence Workspace::page {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.page(title, focus) -> json
+      return json
+    }
+
+    sequence Workspace::diff {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.diff(before.workspace) -> json
+      return json
     }
 
     sequence check {
