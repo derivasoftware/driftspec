@@ -191,15 +191,16 @@ package driftspec@ds {
       + depth: int
     }
 
-    // the messages a behaviour takes along a scenario, each with where it goes on: the one place that says it
-    function stepsOf(model: model::Model, sequence: std::string, path: std::string, out_kept: std::set<std::string>) -> std::vector<Taken> {
+    // the ways through the behaviours of one model (DS-185)
+    class Walker {
       @requirement REQ-00073-2
       @requirement REQ-00049-2
-    }
-
-    // a behaviour walked into what its calls enter, down to a depth; a cycle ends
-    function walkOf(model: model::Model, sequence: std::string, path: std::string, depth: int) -> std::vector<Walked> {
-      @requirement REQ-00049-2
+      - refs model_: model::Model
+      + Walker(model: model::Model)
+      // the messages a behaviour takes along a scenario, each with where it goes on: the one place that says it
+      + steps(sequence: std::string, path: std::string, out_kept: std::set<std::string>) -> std::vector<Taken>
+      // a behaviour walked into what its calls enter, down to a depth; a cycle ends
+      + walk(sequence: std::string, path: std::string, depth: int) -> std::vector<Walked>
     }
 
     // ---- the engine ---------------------------------------------------------------------------

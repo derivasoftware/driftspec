@@ -80,16 +80,25 @@ struct LayoutResult {
   std::map<size_t, Route> routes;  ///< by edge index; absent when an end was not placed
 };
 
-/// The size a node takes, from its text alone.
-Rect sizeOf(const IrNode& node, const Metrics& m);
+/// The layout of a document in one table of metrics (DS-185).
+class Layout {
+ public:
+  explicit Layout(const Metrics& m = Metrics::svg()) : m_(m) {}
 
-/// Layered layout (Sugiyama) per container: bases above subtypes, wholes above
-/// parts, components packed towards a readable aspect, orthogonal routes.
-/// With `maxWidth` (in the metrics' units; 0 = unbounded) a layer that does not
-/// fit wraps onto further lines and components pack to that width, so the
-/// drawing adapts to the screen instead of asking the reader to pan.
-/// Deterministic: same document, metrics and width, same coordinates.
-LayoutResult layout(const IrDocument& doc, const Metrics& m = Metrics::svg(), int maxWidth = 0);
+  /// The size a node takes, from its text alone.
+  Rect sizeOf(const IrNode& node) const;
+
+  /// Layered layout (Sugiyama) per container: bases above subtypes, wholes above
+  /// parts, components packed towards a readable aspect, orthogonal routes.
+  /// With `maxWidth` (in the metrics' units; 0 = unbounded) a layer that does not
+  /// fit wraps onto further lines and components pack to that width, so the
+  /// drawing adapts to the screen instead of asking the reader to pan.
+  /// Deterministic: same document, metrics and width, same coordinates.
+  LayoutResult place(const IrDocument& doc, int maxWidth = 0) const;
+
+ private:
+  Metrics m_;
+};
 
 }  // namespace render
 }  // namespace ds

@@ -11,10 +11,8 @@ namespace query {
 
 const char* const kEveryBranch = "*";
 
-namespace {}  // namespace
-
-std::vector<Taken> stepsOf(const model::Model& model, const std::string& sequence, const std::string& path,
-                           std::set<std::string>* out_kept) {
+std::vector<Taken> Walker::steps(const std::string& sequence, const std::string& path, std::set<std::string>* out_kept) const {
+  const model::Model& model = model_;
   std::vector<const model::Entity*> messages;
   if (path == kEveryBranch) {
     const model::SequenceTree tree(model, sequence);  // every branch, as written; kept while its answer is read
@@ -31,13 +29,13 @@ std::vector<Taken> stepsOf(const model::Model& model, const std::string& sequenc
   return out;
 }
 
-std::vector<Walked> walkOf(const model::Model& model, const std::string& sequence, const std::string& path, int depth) {
+std::vector<Walked> Walker::walk(const std::string& sequence, const std::string& path, int depth) const {
   std::vector<Walked> out;
   std::set<std::string> stack;
   std::function<void(const std::string&, const std::string&, int)> walk = [&](const std::string& seq, const std::string& p, int level) {
     const std::string key = model::Identity(seq).withScenario(p).text();
     if (!stack.insert(key).second) return;  // a behaviour already being walked: the cycle ends here
-    for (const Taken& t : stepsOf(model, seq, p)) {
+    for (const Taken& t : steps(seq, p)) {
       out.push_back({t.message, level});
       if (!t.next.empty() && level <= depth) walk(t.next, t.nextPath, level + 1);
     }

@@ -95,7 +95,7 @@ TEST(TestSelfLoop, ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack) {
   loop.to = "a";
   loop.kind = "association";
   doc.edges.push_back(loop);
-  const ds::render::LayoutResult out = ds::render::layout(doc);
+  const ds::render::LayoutResult out = ds::render::Layout().place(doc);
   ASSERT_EQ(out.routes.count(0), 1U);
   ASSERT_EQ(out.routes.at(0).points.size(), 4U);
   EXPECT_EQ(out.routes.at(0).points.front().x, out.routes.at(0).points.back().x);

@@ -2,7 +2,7 @@
 // and decides what to print (IrExport → the render-IR of the plantuml family,
 // SREQ-00006-1, SREQ-00010-1); the IR is laid out once and drawn twice, as SVG
 // and as terminal text, wrapping to a width (SREQ-00005-1). Layout itself is the
-// function layout, over the types below.
+// class Layout, over the types below.
 
 package driftspec@ds {
 
@@ -301,9 +301,14 @@ package driftspec@ds {
       + static text() -> Metrics
     }
 
-    // The layout itself: two public functions of Layout.hpp.
-    function sizeOf(node: IrNode, m: Metrics) -> Rect
-    function layout(doc: IrDocument, m: Metrics, maxWidth: int) -> LayoutResult
+    // The layout itself, in one table of metrics (DS-185).
+    class Layout {
+      @requirement REQ-00007-1
+      - m_: Metrics
+      + Layout(m: Metrics)
+      + sizeOf(node: IrNode) -> Rect                                  // from its text alone
+      + place(doc: IrDocument, maxWidth: int) -> LayoutResult         // layered, wrapped to the width
+    }
 
     class Svg {                              // the SVG drawing, with its links, tooltips and script
       @requirement REQ-00007-1
@@ -340,7 +345,8 @@ package driftspec@ds {
         return drawing
       }
       self -> doc.bundled() -> bundled
-      -> layout(bundled, metrics, maxWidth) -> lay
+      local layout: Layout
+      self -> layout.place(bundled, maxWidth) -> lay
       return drawing
     }
 
@@ -353,7 +359,8 @@ package driftspec@ds {
         return drawing
       }
       self -> doc.bundled() -> bundled
-      -> layout(bundled, metrics, width) -> lay
+      local layout: Layout
+      self -> layout.place(bundled, width) -> lay
       return drawing
     }
 
@@ -363,7 +370,8 @@ package driftspec@ds {
       alt a node of the document is a lifeline / sequence-document {
         -> sequenceGrid(doc) -> grid         // bundled all the same, and not used
       } else {
-        -> layout(bundled, metrics, width) -> lay
+        local layout: Layout
+        self -> layout.place(bundled, width) -> lay
         -> classGrid(bundled, lay) -> grid
       }
       self -> grid.columns() -> columns

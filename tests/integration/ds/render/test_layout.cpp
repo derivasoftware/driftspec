@@ -53,7 +53,7 @@ class TestLayout : public ::testing::Test {
 TEST_F(TestLayout, EveryNodeIsPlacedAndNoTwoLeavesOverlap) {
   for (const char* name : {"CL_Model", "CL_Values", "CL_Templates", "CL_Package_ds"}) {
     const IrDocument doc = document(name);
-    const LayoutResult lay = ds::render::layout(doc);
+    const LayoutResult lay = ds::render::Layout().place(doc);
     EXPECT_EQ(lay.placed.size(), doc.nodes.size()) << name;
     for (size_t i = 0; i < lay.placed.size(); ++i) {
       if (lay.placed[i].node->kind == "container") continue;
@@ -69,7 +69,7 @@ TEST_F(TestLayout, EveryNodeIsPlacedAndNoTwoLeavesOverlap) {
 
 TEST_F(TestLayout, ChildrenSitInsideTheirContainer) {
   const IrDocument doc = document("CL_Package_ds");
-  const LayoutResult lay = ds::render::layout(doc);
+  const LayoutResult lay = ds::render::Layout().place(doc);
   const auto placed = byId(lay);
   for (const auto& p : lay.placed) {
     if (p.node->parent.empty()) continue;
@@ -80,14 +80,14 @@ TEST_F(TestLayout, ChildrenSitInsideTheirContainer) {
 
 TEST_F(TestLayout, BasesAreDrawnAboveSubtypesAndWholesAboveParts) {
   const IrDocument doc = document("CL_Model");
-  const auto placed = byId(ds::render::layout(doc));
+  const auto placed = byId(ds::render::Layout().place(doc));
   EXPECT_LT(placed.at("ds@ds::Check")->rect.y + placed.at("ds@ds::Check")->rect.h, placed.at("ds@ds::ScopedCheck")->rect.y);
   EXPECT_LT(placed.at("ds@ds::Finding")->rect.y + placed.at("ds@ds::Finding")->rect.h, placed.at("ds@ds::Location")->rect.y);
 }
 
 TEST_F(TestLayout, EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute) {
   const IrDocument doc = document("CL_Package_ds");
-  const LayoutResult lay = ds::render::layout(doc);
+  const LayoutResult lay = ds::render::Layout().place(doc);
   EXPECT_EQ(lay.routes.size(), doc.edges.size());
   for (const auto& r : lay.routes) {
     ASSERT_GE(r.second.points.size(), 2u);
@@ -102,7 +102,7 @@ TEST_F(TestLayout, EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute) {
 TEST_F(TestLayout, LongEdgesStepAroundTheNodesTheyCross) {
   // Check -> Finding spans the layer of ScopedCheck: the route must not cut through it
   const IrDocument doc = document("CL_Model");
-  const LayoutResult lay = ds::render::layout(doc);
+  const LayoutResult lay = ds::render::Layout().place(doc);
   const auto placed = byId(lay);
   const Rect scoped = placed.at("ds@ds::ScopedCheck")->rect;
   for (size_t i = 0; i < doc.edges.size(); ++i) {

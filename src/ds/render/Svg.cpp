@@ -740,7 +740,7 @@ std::string Svg::render(const IrDocument& doc, int maxWidth) const {
     if (n.kind == "lifeline") return sequenceSvg(doc);
   }
   const IrDocument bundled = doc.bundled();
-  return render(bundled, layout(bundled, Metrics::svg(), maxWidth));
+  return render(bundled, Layout(Metrics::svg()).place(bundled, maxWidth));
 }
 
 std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {

@@ -1,0 +1,59 @@
+#include <gtest/gtest.h>
+
+#include "ds/bind/Binder.hpp"
+#include "ds/check/Checker.hpp"
+#include "ds/check/Steps.hpp"
+#include "ds/model/Model.hpp"
+#include "ds/parse/Parser.hpp"
+#include "ds/query/Walk.hpp"
+
+namespace {
+
+/// The ways through the behaviours of one model (DS-185): Till::sell calls Stock::take, whose own
+/// sequence calls Stock::count.
+class TestWalker : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    ds::parse::Parser parser;
+    ds::bind::Binder binder(model);
+    binder.bind(parser.parseText("shop.ds",
+                                 "package shop {\n"
+                                 "  module till {\n"
+                                 "    class Stock {\n"
+                                 "      + take() -> none\n"
+                                 "      + count() -> int\n"
+                                 "    }\n"
+                                 "    class Till {\n"
+                                 "      - stock: Stock\n"
+                                 "      + sell() -> none\n"
+                                 "    }\n"
+                                 "    sequence Till::sell {\n"
+                                 "      self -> stock.take()\n"
+                                 "    }\n"
+                                 "    sequence Stock::take {\n"
+                                 "      -> count() -> n\n"
+                                 "    }\n"
+                                 "  }\n"
+                                 "}\n"));
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, checkSteps).run(binder);
+  }
+  ds::model::Model model;
+};
+
+TEST_F(TestWalker, TheStepsOfABehaviourSayWhereEachCallGoesOn) {
+  const auto steps = ds::query::Walker(model).steps("shop@till::Till::sell::sequence", "");
+  ASSERT_EQ(steps.size(), 1u);
+  EXPECT_EQ(steps[0].next, "shop@till::Stock::take::sequence");  // the behaviour the call enters
+}
+
+TEST_F(TestWalker, AWalkGoesDownIntoWhatTheCallsEnterAsDeepAsAsked) {
+  const ds::query::Walker walker(model);
+  const auto shallow = walker.walk("shop@till::Till::sell::sequence", "", 0);
+  const auto deep = walker.walk("shop@till::Till::sell::sequence", "", 1);
+  EXPECT_EQ(shallow.size(), 1u);  // its own message only
+  ASSERT_EQ(deep.size(), 2u);     // and the one of the behaviour it enters
+  EXPECT_EQ(deep[1].depth, 2);
+}
+
+}  // namespace

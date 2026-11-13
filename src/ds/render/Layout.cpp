@@ -137,7 +137,7 @@ class Engine {
       if (doc_.nodes[k].kind == "container") {
         frame(k, inner);
       } else {
-        rel_[k] = sizeOf(doc_.nodes[k], M);
+        rel_[k] = Layout(M).sizeOf(doc_.nodes[k]);
       }
     }
     if (kids.empty()) {
@@ -697,7 +697,8 @@ class Engine {
 
 }  // namespace
 
-Rect sizeOf(const IrNode& node, const Metrics& M) {
+Rect Layout::sizeOf(const IrNode& node) const {
+  const Metrics& M = m_;
   Rect r;
   if (node.kind == "note") {
     const auto lines = linesOf(node.label);
@@ -718,7 +719,7 @@ Rect sizeOf(const IrNode& node, const Metrics& M) {
   return r;
 }
 
-LayoutResult layout(const IrDocument& doc, const Metrics& m, int maxWidth) { return Engine(doc, m, maxWidth).run(); }
+LayoutResult Layout::place(const IrDocument& doc, int maxWidth) const { return Engine(doc, m_, maxWidth).run(); }
 
 }  // namespace render
 }  // namespace ds
