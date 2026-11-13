@@ -26,10 +26,27 @@ std::vector<model::Finding> Linker::run(Context& context) {
   context_ = &context;
   model_ = &context.model();
   resolver_ = &context.resolver();
+  defineLoneExtensions();
   for (const auto& r : context_->binder().references()) resolveReference(r);
   unifyBehaviours();
   for (const auto& r : context_->binder().references()) checkTemplateBound(r);
   return context.take();
+}
+
+void Linker::defineLoneExtensions() {
+  // a class body with only its requirements reads as an extension; when no other block of the
+  // workspace defines that class, it is the class, empty, and its scope contains it (DS-20)
+  std::vector<model::Entity> lone;
+  for (const auto& pair : model_->entities()) {
+    const model::Entity& e = pair.second;
+    if (e.expected && e.kind == model::Kind::Class && e.has("extension")) lone.push_back(e);
+  }
+  for (model::Entity e : lone) {
+    e.expected = false;
+    e.flags.erase(std::remove(e.flags.begin(), e.flags.end(), "extension"), e.flags.end());
+    model_->declare(e);
+    if (model_->find(e.scope)) model_->relate({"contains", e.scope, e.id, e.location, ""});
+  }
 }
 
 void Linker::resolveReference(const bind::Reference& reference) {

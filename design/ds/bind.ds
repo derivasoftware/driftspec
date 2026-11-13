@@ -90,7 +90,7 @@ package driftspec@ds {
         @requirement REQ-00033-1
       }
       - extend(file: parse::ParsedFile, node: TSNode, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
-        @constraint CST-00003-1
+        @constraint CST-00003-2
       }
       - bindMember(file: parse::ParsedFile, node: TSNode, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
         @requirement REQ-00026-1

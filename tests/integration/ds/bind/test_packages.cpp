@@ -143,3 +143,60 @@ TEST_F(TestPackages, NestedPackagesAreContainersOfTheDrawing) {
 }
 
 }  // namespace
+
+namespace {
+
+/// DS-20: a class written with its requirements and no members, where no other block defines it.
+ds::model::Model loneClass() {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("errors.ds",
+                               "package app {\n"
+                               "  requirement REQ-00001-1 {\n"
+                               "    title: The app shall refuse what it does not allow\n"
+                               "  }\n"
+                               "  module errors {\n"
+                               "    class NotAllowed {\n"
+                               "      @requirement REQ-00001-1\n"
+                               "    }\n"
+                               "    class Store {\n"
+                               "      + put(key: string)\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"));
+  binder.bind(parser.parseText("wiring.ds",
+                               "package app {\n"
+                               "  module errors {\n"
+                               "    class Store {\n"
+                               "      @requirement REQ-00001-1\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  return model;
+}
+
+}  // namespace
+
+TEST(TestLoneExtension, AClassWithRequirementsAndNoMembersIsADefinitionWhenNothingElseDefinesIt) {
+  const ds::model::Model model = loneClass();
+  const auto* lone = model.find("app@errors::NotAllowed");
+  ASSERT_NE(lone, nullptr);
+  EXPECT_FALSE(lone->expected);
+  EXPECT_FALSE(lone->has("extension"));
+  bool contained = false, required = false;
+  for (const auto& r : model.index().all()) {
+    contained |= r.kind == "contains" && r.from == "app@errors" && r.to == "app@errors::NotAllowed";
+    required |= r.kind == "requires" && r.from == "app@errors::NotAllowed" && r.to == "REQ-00001-1";
+  }
+  EXPECT_TRUE(contained);
+  EXPECT_TRUE(required);
+  for (const auto& f : model.findings()) EXPECT_NE(f.code, "W-REF-UNDECLARED") << f.message;
+  // a block of annotations of a class defined elsewhere stays an extension: one definition, with its member
+  const auto* store = model.find("app@errors::Store");
+  ASSERT_NE(store, nullptr);
+  EXPECT_FALSE(store->expected);
+  EXPECT_NE(model.find("app@errors::Store::put"), nullptr);
+}

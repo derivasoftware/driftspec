@@ -41,6 +41,8 @@ class Linker : public IStep {
   void checkTemplateBound(const bind::Reference& reference);
   /// A behaviour's identity is its resolved subject plus its scenario, wherever it was written.
   void unifyBehaviours();
+  /// A class written with annotations only that nothing else defines is the definition, not an extension.
+  void defineLoneExtensions();
   Context* context_ = nullptr;
   model::Model* model_ = nullptr;
   const Resolver* resolver_ = nullptr;

@@ -111,12 +111,15 @@ package driftspec@ds {
         title: Every entity shall have one identity, and a second declaration of it shall be E-DUPLICATE-IDENTITY
         rationale: R5: identity across the workspace is what makes references, diagrams and diffs mean the same entity everywhere.
       }
-      constraint CST-00003-1 {
+      constraint CST-00003-2 {
         tags: language, workspace
-        status: approved
+        status: draft
         category: language
         title: Every entity shall be defined once and extended only by blocks of annotations
-        text: An extension adds relations and never touches the definition; an extension of nothing is an expected node.
+        text:
+          An extension adds relations and never touches the definition; an extension of nothing is an expected node,
+          except a class: written with annotations only and defined by no other block, it is the class, empty, and its
+          scope contains it (revision 2, DS-20: an exception class that only carries its requirements).
         rationale: A box writes its requirements without knowing who consumes them (2026-10-26).
       }
     }
@@ -1293,14 +1296,15 @@ package driftspec@ds {
       tests/unit/ds/model/test_model.cpp::TestModel.ASecondDeclarationIsReportedExceptForReopenableScopes
       tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
   }
-  verification VER-00043-1 {
-    status: approved
-    @constraint CST-00003-1
-    title: Unit tests confirm an extension adds relations without redefining and an extension of nothing is expected
+  verification VER-00043-2 {
+    status: draft
+    @constraint CST-00003-2
+    title: Unit tests confirm an extension adds relations without redefining, an extension of nothing is expected, and a lone class of annotations is its definition
     method: test
     tests:
       tests/integration/ds/bind/test_packages.cpp::TestPackages.AnExtensionAddsRelationsWithoutRedefining
       tests/integration/ds/bind/test_packages.cpp::TestPackages.AnExtensionOfNothingIsExpected
+      tests/integration/ds/bind/test_packages.cpp::TestLoneExtension.AClassWithRequirementsAndNoMembersIsADefinitionWhenNothingElseDefinesIt
   }
   verification VER-00044-1 {
     status: approved
