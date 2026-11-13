@@ -95,6 +95,8 @@ class ContractCheck : public ACheck {
   void checkUseCases();  // a use case is a contract its operations realise, outcomes included (DS-77)
   void checkInterfaces();
   void checkViews(const model::Entity& state);
+  /// A state of a class's machine that no transition leads to from the initial one.
+  void checkStates(const model::Entity& state);
   void checkScenarios();
   void checkDiagrams();
   const Context* context_ = nullptr;

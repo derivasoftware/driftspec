@@ -175,6 +175,7 @@ void ContractCheck::checkInterfaces() {
       const std::string subjectId = model::machineSubjectOf(e.id);  // e is a state machine: its id names it
       const model::Entity* subject = subjectId.empty() ? nullptr : model_->find(subjectId);
       if (subject && subject->kind == model::Kind::Interface) checkViews(e);
+      if (subject && subject->kind == model::Kind::Class) checkStates(e);
     }
     if (e.kind != model::Kind::Operation) continue;
     const std::string behaviour = model::behaviourId(e.id);
@@ -245,6 +246,39 @@ void ContractCheck::checkViews(const model::Entity& state) {
     } else if (views.size() > 1 && next[view].empty()) {
       found_.push_back({"W-VIEW-NO-WAY-OUT", "warning", "nothing leaves the view " + view + " of " + state.name, v->location});
     }
+  }
+}
+
+void ContractCheck::checkStates(const model::Entity& state) {
+  // a state of a class's machine that no transition leads to from the initial one is never entered (DS-53);
+  // with no initial state written, where the machine starts cannot be told
+  const auto initial = state.fields.find("initial");
+  const auto moves = state.fields.find("transitions");
+  if (initial == state.fields.end() || moves == state.fields.end()) return;
+  std::vector<std::string> states{initial->second};
+  std::map<std::string, std::set<std::string>> next;
+  for (const auto& move : split(moves->second, '\n')) {
+    const auto gt = move.find('>');
+    if (gt == std::string::npos) continue;
+    const std::string from = move.substr(0, gt);
+    const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
+    for (const std::string& name : {from, to})
+      if (std::find(states.begin(), states.end(), name) == states.end()) states.push_back(name);
+    next[from].insert(to);
+  }
+  std::set<std::string> reached;
+  std::vector<std::string> pending{initial->second};
+  while (!pending.empty()) {
+    const std::string at = pending.back();
+    pending.pop_back();
+    if (!reached.insert(at).second) continue;
+    for (const auto& to : next[at]) pending.push_back(to);
+  }
+  for (const auto& name : states) {
+    if (reached.count(name)) continue;
+    found_.push_back({"W-STATE-UNREACHABLE", "warning",
+                      "nothing leads to the state " + name + " of " + state.name + " from its initial state " + initial->second,
+                      state.location});
   }
 }
 
