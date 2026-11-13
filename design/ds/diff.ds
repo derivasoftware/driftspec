@@ -125,9 +125,10 @@ package driftspec@ds {
       }
       // every relation of each, through the one way into a model's relations (DS-171)
       self -> a.index() -> indexBefore
-      self -> b.index() -> indexAfter
       self -> indexBefore.all() -> relationsBefore
+      self -> b.index() -> indexAfter
       self -> indexAfter.all() -> relationsAfter
+      self -> a.index() -> indexBefore
       self -> indexBefore.all() -> relationsBefore
       loop each relation of a {
         self -> a.find(source) -> sourceEntity
