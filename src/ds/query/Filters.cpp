@@ -62,8 +62,8 @@ ClassFilter::ClassFilter(std::vector<std::string> include, std::vector<std::stri
     : include_(std::move(include)), exclude_(std::move(exclude)), neighbours_(neighbours), closes_(closes), open_(std::move(open)) {}
 
 namespace {
-std::string outerOf(const std::string& id) { return model::boxOf(model::outer(id)); }  // the box outside
-std::vector<std::string> pathTo(const std::string& id) {                               // from the outermost box down to the id
+std::string outerOf(const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); }  // the box outside
+std::vector<std::string> pathTo(const std::string& id) {  // from the outermost box down to the id
   std::vector<std::string> path;
   for (std::string s = id; !s.empty(); s = outerOf(s)) path.insert(path.begin(), s);
   return path;
@@ -143,7 +143,9 @@ std::set<std::string> ClassFilter::containers(const model::Model& model, const s
   // modules of the selected classes become containers (R2), and so do nested packages (the HLD
   // boxes); the outermost package is the drawing itself
   std::set<std::string> out;
-  auto up = [](const std::string& s) { return model::boxOf(model::outer(s)); };  // ds@ds::b → ds@ds, app@core@model → app@core
+  auto up = [](const std::string& s) {
+    return model::Scope(model::Scope(s).outer().text()).box().text();
+  };  // ds@ds::b → ds@ds, app@core@model → app@core
   for (const auto& id : taken) {
     const model::Entity* e = model.find(id);
     if (!isBox(*e)) continue;
@@ -179,7 +181,7 @@ std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) con
     for (const auto& pair : model.entities()) {
       const model::Entity& e = pair.second;
       if (e.kind != model::Kind::Sequence || e.expected) continue;
-      const std::string subjectId = model::subjectOf(e.id);
+      const std::string subjectId = model::Identity(e.id).subject().text();
       const bool prefix = !pattern.empty() && pattern.back() == '*' && e.id.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
       // as it is written: `Class::op` the default, `Class::op / scenario` that one, `Class::op*` them all
       const bool isDefault = e.fields.find("scenario") == e.fields.end();
@@ -188,7 +190,7 @@ std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) con
       // `Class::op / scenario` with no behaviour of its own: a named branch of the default one
       const auto slash = pattern.find(" / ");
       if (isDefault && slash != std::string::npos && pattern.substr(0, slash) == subjectId &&
-          !model.find(model::behaviourId(subjectId, pattern.substr(slash + 3))) &&
+          !model.find(model::Identity(subjectId).sequence(pattern.substr(slash + 3)).text()) &&
           model::hasScenario(model, e.id, pattern.substr(slash + 3))) {
         out.push_back({&e, pattern.substr(slash + 3)});
       }
@@ -200,7 +202,7 @@ std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) con
 std::set<std::string> SequenceFilter::select(const model::Model& model) const {
   std::set<std::string> out;
   for (const Behaviour& b : behaviours(model)) {
-    const std::string subjectId = model::subjectOf(b.sequence->id);
+    const std::string subjectId = model::Identity(b.sequence->id).subject().text();
     const model::Entity* subject = model.find(subjectId);
     const bool function = subject && subject->kind == model::Kind::Function;
     const bool method = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Operation || function);
@@ -236,7 +238,7 @@ StateFilter::StateFilter(std::vector<std::string> include) : include_(std::move(
 std::vector<std::string> StateFilter::machines(const model::Model& model) const {
   std::vector<std::string> out;
   for (const auto& pattern : include_) {
-    const model::Entity* state = model.find(model::stateId(pattern));
+    const model::Entity* state = model.find(model::Identity(pattern).state().text());
     if (!state) state = model.find(pattern);
     if (state && state->kind == model::Kind::State) out.push_back(state->id);
   }

@@ -15,7 +15,7 @@ Map::Map(const std::vector<Node>& nodes) {
 // the node that stands for a model identity: itself, a function's signature row, or the nearest
 // enclosing node; a message stands for the member whose behaviour it is written in
 std::string Map::land(std::string id) const {
-  if (const std::string subject = model::subjectOf(id); !subject.empty()) id = subject;  // a behaviour: its subject
+  if (const std::string subject = model::Identity(id).subject().text(); !subject.empty()) id = subject;  // a behaviour: its subject
   for (;;) {
     if (ids_.count(id)) return id;
     const auto at = id.rfind("::");

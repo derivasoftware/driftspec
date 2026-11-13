@@ -48,7 +48,7 @@ void TraceLayer::requirements(SceneDocument& out_document) {
     r.title = fieldOf(e, "title");
     r.status = fieldOf(e, "status");
     r.text = fieldOf(e, "text");
-    if (!e.scope.empty()) r.scope = map_.land(model::boxOf(e.scope));
+    if (!e.scope.empty()) r.scope = map_.land(model::Scope(e.scope).box().text());
     at_[r.id] = out_document.requirements.size();
     out_document.requirements.push_back(r);
   }

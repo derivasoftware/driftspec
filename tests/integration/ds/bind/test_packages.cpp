@@ -122,8 +122,8 @@ TEST_F(TestPackages, AnExtensionOfNothingIsExpected) {
 TEST_F(TestPackages, LevelByPlacementThroughTheLevels) {
   EXPECT_EQ(model.find("SREQ-00001-1")->scope, "app@");      // the outermost package: system
   EXPECT_EQ(model.find("REQ-00001-1")->scope, "app@core@");  // the inner package: its own level
-  EXPECT_TRUE(ds::model::isSystemScope("app@"));
-  EXPECT_FALSE(ds::model::isSystemScope("app@core@"));
+  EXPECT_TRUE(ds::model::Scope("app@").isSystem());
+  EXPECT_FALSE(ds::model::Scope("app@core@").isSystem());
   EXPECT_TRUE(related("refines", "REQ-00001-1", "SREQ-00001-1"));
 }
 

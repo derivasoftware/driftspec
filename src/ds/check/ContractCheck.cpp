@@ -16,8 +16,6 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string ContractCheck::name() const { return "contracts"; }
 
 std::vector<std::string> ContractCheck::needs() const {
@@ -40,7 +38,7 @@ std::vector<model::Finding> ContractCheck::check(const Context& context) {
 }
 
 std::string ContractCheck::outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const {
-  if (!seen->insert(model::withScenario(sequence, path)).second) return "";
+  if (!seen->insert(model::Identity(sequence).withScenario(path).text()).second) return "";
   const std::vector<const model::Entity*> messages = model::pathOf(*model_, sequence, path, nullptr);
   std::string wanted;  // the name of the result the behaviour returns; empty: its last call decides
   for (auto it = messages.rbegin(); it != messages.rend(); ++it) {
@@ -116,9 +114,9 @@ void ContractCheck::checkUseCases() {
   };
   const auto signature = [](const model::Entity& e) {
     std::string out = "(";
-    for (size_t i = 0; i < e.params.size(); ++i) out += (i ? ", " : "") + model::lastName(e.params[i].type);
+    for (size_t i = 0; i < e.params.size(); ++i) out += (i ? ", " : "") + model::Identity(e.params[i].type).lastName();
     const auto returns = e.fields.find("returns");
-    return out + ") -> " + (returns == e.fields.end() ? std::string("none") : model::lastName(returns->second));
+    return out + ") -> " + (returns == e.fields.end() ? std::string("none") : model::Identity(returns->second).lastName());
   };
   for (const auto& pair : base) {  // a specific use case keeps the contract of its base
     const model::Entity* own = model_->find(pair.first);
@@ -142,15 +140,18 @@ void ContractCheck::checkUseCases() {
                           op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised),
                           r.location});
       }
-      const std::string behaviour = model::behaviourId(op->id);
+      const std::string behaviour = model::Identity(op->id).sequence().text();
       for (const auto& end : ends) {
-        if (end == "default" || model_->find(model::withScenario(behaviour, end)) || model::hasScenario(*model_, behaviour, end)) continue;
+        if (end == "default" || model_->find(model::Identity(behaviour).withScenario(end).text()) ||
+            model::hasScenario(*model_, behaviour, end))
+          continue;
         found_.push_back({"W-USECASE-OUTCOME-UNHANDLED", "warning",
                           op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r.location});
       }
       for (const auto& other : model_->entities()) {  // a scenario written apart that no outcome names
         const model::Entity& s = other.second;
-        if (s.kind != model::Kind::Sequence || model::behaviourId(model::subjectOf(s.id)) != behaviour || model::scenarioOf(s.id).empty())
+        if (s.kind != model::Kind::Sequence || model::Identity(model::Identity(s.id).subject().text()).sequence().text() != behaviour ||
+            model::Identity(s.id).scenario().empty())
           continue;
         const std::string scenario = s.id.substr(behaviour.size() + 1);
         if (!ends.count(scenario)) {
@@ -172,20 +173,20 @@ void ContractCheck::checkInterfaces() {
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.kind == model::Kind::State) {
-      const std::string subjectId = model::machineSubjectOf(e.id);  // e is a state machine: its id names it
+      const std::string subjectId = model::Identity(e.id).machineSubject().text();  // e is a state machine: its id names it
       const model::Entity* subject = subjectId.empty() ? nullptr : model_->find(subjectId);
       if (subject && subject->kind == model::Kind::Interface) checkViews(e);
       if (subject && subject->kind == model::Kind::Class) checkStates(e);
     }
     if (e.kind != model::Kind::Operation) continue;
-    const std::string behaviour = model::behaviourId(e.id);
+    const std::string behaviour = model::Identity(e.id).sequence().text();
     if (!model_->find(behaviour)) {
       found_.push_back({"W-OPERATION-NO-BEHAVIOUR", "warning", e.id + " has no sequence that says how it is handled", e.location});
     }
     for (const auto& field : e.fields) {
       if (field.first.rfind("exit ", 0) != 0) continue;
       const std::string code = field.first.substr(5);
-      std::string id = field.second == "default" ? behaviour : model::withScenario(behaviour, field.second);
+      std::string id = field.second == "default" ? behaviour : model::Identity(behaviour).withScenario(field.second).text();
       std::string path;
       if (!model_->find(id) && model::hasScenario(*model_, behaviour, field.second)) {
         id = behaviour;  // a named branch of the one behaviour
@@ -295,8 +296,9 @@ void ContractCheck::checkScenarios() {
       if (!side) continue;
       const std::string name = side->field("scenario");
       if (name.empty()) continue;
-      const std::string base = model::behaviourId(model::subjectOf(f.scope));  // the behaviour, whatever scenario holds the frame
-      if (++named[model::withScenario(base, name)] == 2 || model_->find(model::withScenario(base, name))) {
+      const std::string base =
+          model::Identity(model::Identity(f.scope).subject().text()).sequence().text();  // the behaviour, whatever scenario holds the frame
+      if (++named[model::Identity(base).withScenario(name).text()] == 2 || model_->find(model::Identity(base).withScenario(name).text())) {
         found_.push_back(
             {"W-SCENARIO-TWICE", "warning", base + " names the scenario '" + name + "' twice: a scenario is one path", side->location});
       }
@@ -313,9 +315,9 @@ void ContractCheck::checkDiagrams() {
       for (const auto& pattern : split(include->second, ',')) {
         const auto slash = pattern.find(" / ");
         if (slash == std::string::npos) continue;
-        const std::string behaviour = model::behaviourId(pattern.substr(0, slash));
+        const std::string behaviour = model::Identity(pattern.substr(0, slash)).sequence().text();
         const std::string scenario = pattern.substr(slash + 3);
-        if (!model_->find(behaviour) || model_->find(model::withScenario(behaviour, scenario)) ||
+        if (!model_->find(behaviour) || model_->find(model::Identity(behaviour).withScenario(scenario).text()) ||
             model::hasScenario(*model_, behaviour, scenario))
           continue;
         found_.push_back({"W-SCENARIO-UNDECLARED", "warning", pair.second.name + " asks for " + pattern + ", a scenario nobody declares",

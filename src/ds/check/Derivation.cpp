@@ -16,8 +16,6 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string Derivation::name() const { return "derivation"; }
 
 std::vector<std::string> Derivation::needs() const {

@@ -16,8 +16,6 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string StructureCheck::name() const { return "structure"; }
 
 std::vector<std::string> StructureCheck::needs() const {

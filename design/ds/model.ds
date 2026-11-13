@@ -84,69 +84,57 @@ package driftspec@ds {
     }
 
     function kindName(kind: Kind) -> std::string
-    // identities, written in one place (DS-124): packages join with @, the rest with ::, a behaviour
-    // is its subject with ::sequence[/scenario] or ::state, a template carries its arity
-    function qualify(scope: std::string, name: std::string) -> std::string {
+    // identities, written in one place (DS-124), as three values (DS-184): packages join with @, the
+    // rest with ::, a behaviour is its subject with ::sequence[/scenario] or ::state, a template
+    // carries its arity, a diagram is diagram:NAME. An entity keeps its id as text; these wrap it.
+    class Identity <<==, ordered>> {       // what an entity is called: p@m::C, p@m::C::run::sequence/out
       @constraint CST-00004-1
-    }
-    function outer(scope: std::string) -> std::string {
-      @constraint CST-00004-1
-    }
-    function isQualified(name: std::string) -> bool {
-      @constraint CST-00004-1
-    }
-    function isAbsolute(name: std::string) -> bool {
-      @constraint CST-00004-1
-    }
-    function boxOf(scope: std::string) -> std::string {
-      @constraint CST-00004-1
-    }
-    function packageOf(scope: std::string) -> std::string {
-      @constraint CST-00004-1
-    }
-    function scopeIn(package: std::string) -> std::string {
-      @constraint CST-00004-1
-    }
-    function isSystemScope(scope: std::string) -> bool
-    function lastName(id: std::string) -> std::string
-    function within(id: std::string, prefix: std::string) -> bool {
-      @constraint CST-00004-1
-    }
-    function behaviourId(subject: std::string, scenario: std::string) -> std::string {
       @requirement REQ-00035-1
+      - text_: std::string
+      + Identity(text: std::string)
+      + static ofDiagram(name: std::string) -> Identity
+      + text() -> std::string
+      + empty() -> bool
+      + lastName() -> std::string
+      + scope() -> Scope
+      + asScope() -> Scope
+      + isQualified() -> bool
+      + isAbsolute() -> bool
+      + within(outer: Identity) -> bool
+      + withArity(arity: std::size_t) -> Identity {
+        @requirement REQ-00029-1
+      }
+      + diagramName() -> std::string
+      + sequence(scenario: std::string) -> Identity
+      + state() -> Identity
+      + withScenario(scenario: std::string) -> Identity
+      + behaviour() -> Identity
+      + scenario() -> std::string
+      + subject() -> Identity
+      + machineSubject() -> Identity
     }
-    function stateId(subject: std::string) -> std::string {
-      @requirement REQ-00035-1
+    class Scope <<==, ordered>> {          // where a name is written: p@, app@core@, p@m, p@m::C
+      @constraint CST-00004-1
+      - text_: std::string
+      + Scope(text: std::string)
+      + static inside(package: Identity) -> Scope
+      + text() -> std::string
+      + empty() -> bool
+      + qualify(name: std::string) -> Identity
+      + outer() -> Scope
+      + package() -> Scope
+      + box() -> Identity
+      + isSystem() -> bool
     }
-    function withScenario(behaviour: std::string, scenario: std::string) -> std::string {
-      @requirement REQ-00035-1
-    }
-    function subjectOf(id: std::string) -> std::string {
-      @requirement REQ-00035-1
-    }
-    function machineSubjectOf(stateMachine: std::string) -> std::string {
-      @requirement REQ-00035-1
-    }
-    function behaviourOf(id: std::string) -> std::string {
-      @requirement REQ-00035-1
-    }
-    function scenarioOf(id: std::string) -> std::string {
-      @requirement REQ-00035-1
-    }
-    function isArtefactName(name: std::string) -> bool {
+    class ArtefactName <<==, ordered>> {   // a process artefact's name: REQ-00001-2
       @requirement REQ-00043-1
+      - text_: std::string
+      + ArtefactName(text: std::string)
+      + static matches(text: std::string) -> bool
+      + text() -> std::string
+      + hasRevision() -> bool
+      + withoutRevision() -> ArtefactName
     }
-    function hasRevision(name: std::string) -> bool {
-      @requirement REQ-00043-1
-    }
-    function withoutRevision(id: std::string) -> std::string {
-      @requirement REQ-00043-1
-    }
-    function arityId(name: std::string, arity: std::size_t) -> std::string {
-      @requirement REQ-00029-1
-    }
-    function diagramId(name: std::string) -> std::string
-    function diagramName(id: std::string) -> std::string
 
     function readAs(model: Model, relation: Relation) -> std::string {
       @requirement REQ-00031-1
@@ -682,7 +670,8 @@ package driftspec@ds {
     }
 
     sequence Model::indexEntity {
-      -> withoutRevision(entity.id) -> bare
+      local name: ArtefactName
+      self -> name.withoutRevision() -> bare
       alt it enters {
         opt it is declared, not only expected {
           // its identity is one of the declared revisions of bare
@@ -802,7 +791,8 @@ package driftspec@ds {
     }
 
     sequence Index::revisionOf {
-      -> withoutRevision(artefact) -> bare
+      local name: ArtefactName
+      self -> name.withoutRevision() -> bare
       opt nothing declares that artefact / undeclared {
         return ""
       }

@@ -16,8 +16,8 @@ RulesLayer::RulesLayer(const model::Model& model, const Map& map) : model_(model
 std::string RulesLayer::place(std::string id) const {
   for (;;) {
     if (const std::string node = map_.land(id); !node.empty()) return node;
-    if (!model::isAbsolute(id)) return std::string();
-    id = model::boxOf(model::packageOf(id));  // a package's own entities: outward through the packages
+    if (!model::Identity(id).isAbsolute()) return std::string();
+    id = model::Scope(model::Scope(id).package().text()).box().text();  // a package's own entities: outward through the packages
   }
 }
 

@@ -16,8 +16,6 @@
 namespace ds {
 namespace check {
 
-using model::outer;
-
 std::string Linker::name() const { return "linker"; }
 
 std::vector<std::string> Linker::needs() const { return {}; }
@@ -51,8 +49,8 @@ void Linker::defineLoneExtensions() {
 
 void Linker::resolveReference(const bind::Reference& reference) {
   const bool artefactRef = model::isArtefact(reference.expectedKind);
-  if (artefactRef && model::isArtefactName(reference.target)) {
-    if (!model::hasRevision(reference.target)) {
+  if (artefactRef && model::ArtefactName::matches(reference.target)) {
+    if (!model::ArtefactName(reference.target).hasRevision()) {
       // a link goes against a revision: an unpinned one says nothing about which text was meant
       context_->report(
           {"E-REF-UNPINNED", "error",
@@ -86,15 +84,15 @@ void Linker::resolveReference(const bind::Reference& reference) {
     expected.name = reference.target;
     expected.scope = reference.scope;
     const bool artefact = model::isArtefact(reference.expectedKind);
-    const std::string pkg = model::packageOf(reference.scope);  // the innermost package
+    const std::string pkg = model::Scope(reference.scope).package().text();  // the innermost package
     if (artefact) {
-      expected.id = model::withoutRevision(reference.target);
-    } else if (model::isAbsolute(reference.target)) {
+      expected.id = model::ArtefactName(reference.target).withoutRevision().text();
+    } else if (model::Identity(reference.target).isAbsolute()) {
       expected.id = reference.target;  // absolute
     } else if (reference.target.find("::") != std::string::npos) {
       expected.id = pkg + reference.target;  // module-qualified, in this package
     } else {
-      expected.id = model::qualify(reference.scope, reference.target);  // bare, in this scope
+      expected.id = model::Scope(reference.scope).qualify(reference.target).text();  // bare, in this scope
     }
     expected.location = reference.location;
     expected.expected = true;
@@ -173,8 +171,8 @@ void Linker::unifyBehaviours() {
     if (seq->kind != model::Kind::Sequence && seq->kind != model::Kind::State) continue;
     const auto scenario = seq->fields.find("scenario");
     const std::string wanted = seq->kind == model::Kind::State
-                                   ? model::stateId(subject->id)
-                                   : model::behaviourId(subject->id, scenario == seq->fields.end() ? "" : scenario->second);
+                                   ? model::Identity(subject->id).state().text()
+                                   : model::Identity(subject->id).sequence(scenario == seq->fields.end() ? "" : scenario->second).text();
     if (wanted != seq->id) moves.push_back({seq->id, wanted});
   }
   for (const auto& m : moves) {
