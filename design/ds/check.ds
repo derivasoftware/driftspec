@@ -226,6 +226,9 @@ package driftspec@ds {
         @requirement REQ-00037-1
         @requirement REQ-00056-1
       }
+      - callStatic(seq: model::Entity, msg: model::Entity, message: bind::Message, home: std::string) -> bool {
+        @requirement REQ-00108-1
+      }
       - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
         @requirement REQ-00036-2
       }

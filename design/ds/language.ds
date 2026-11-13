@@ -899,6 +899,28 @@ package driftspec@ds {
               tests/integration/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
           }
         }
+        requirement REQ-00108-1 {
+          tags: language, lld, sequence
+          status: draft
+          title: A message shall call a class's static operation by its qualified name, with no instance
+          text:
+            `-> diff::Diff::compare(a, b)`: a message with no participant whose qualified name
+            names an operation of a class calls it on the class itself, as `-> tasks::gather(x)`
+            calls a function of another module. The operation must be static; one that is not
+            is W-MSG-NOT-STATIC, since it needs an instance: a local, an attribute or a parameter.
+          rationale:
+            DS-60 (Owner, 2026-11-13): Diff::compare is static, and a sequence could only call
+            through a participant, so the design declared a local the code does not have.
+          verification VER-00124-1 {
+            title: Integration tests confirm a method's and a function's behaviour call a static operation on its class, and one that is not static is reported
+            status: draft
+            method: test
+            tests:
+              tests/integration/ds/check/test_static_calls.cpp::TestStaticCalls.AMethodsBehaviourCallsAStaticOperationOnItsClass
+              tests/integration/ds/check/test_static_calls.cpp::TestStaticCalls.AFunctionsBehaviourCallsAStaticOperationOnItsClass
+              tests/integration/ds/check/test_static_calls.cpp::TestStaticCalls.AnOperationThatIsNotStaticNeedsAnInstance
+          }
+        }
         requirement REQ-00038-2 {
           tags: language, lld, sequence
           status: approved
