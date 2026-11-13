@@ -275,6 +275,8 @@ std::vector<CodeSpec> buildCodes() {
        "Declare the view, or correct the name."},
       {"W-VIEW-UNREACHABLE", "warning", "Nothing leads to a view of an interface's navigation.",
        "Add a transition into it, or make it the initial one."},
+      {"W-STATE-UNREACHABLE", "warning", "Nothing leads to a state of a class's machine from its initial state.",
+       "Add a transition into it, or remove the state."},
       {"W-VIEW-NO-WAY-OUT", "warning", "Nothing leaves a view of an interface's navigation.", "Add a transition out of it."},
       {"W-NOT-VISIBLE", "warning", "Something reaches a private member or box from outside it.",
        "Go through a public member, or make it public."},

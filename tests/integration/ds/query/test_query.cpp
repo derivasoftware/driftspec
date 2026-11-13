@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <nlohmann/json.hpp>
+#include <set>
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
@@ -124,3 +125,47 @@ TEST_F(TestQueryOfTheDesign, CouplingAnswersWhatEachBehaviourTouchesOutsideItsMo
 }
 
 }  // namespace
+
+namespace {
+
+/// DS-53: a class and its operations, one with a sequence, the class with a state machine.
+ds::model::Model aMachine() {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("door.ds",
+                               "package app {\n"
+                               "  module shop {\n"
+                               "    class Door {\n"
+                               "      + open() -> none\n"
+                               "      + close() -> none\n"
+                               "    }\n"
+                               "    sequence Door::open {\n"
+                               "      -> close()\n"
+                               "    }\n"
+                               "    state Door {\n"
+                               "      initial Shut\n"
+                               "      Shut -> Open on open\n"
+                               "      Open -> Shut on close\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  return model;
+}
+
+}  // namespace
+
+TEST(TestQueryOfAClass, TheBehavioursOfAClassAreItsMachineAndTheSequencesOfItsOperations) {
+  const ds::model::Model model = aMachine();
+  const auto answers = ds::query::Query(model).ask("behaviours", "app@shop::Door");
+  std::set<std::string> ids;
+  for (const auto& a : answers) ids.insert(a.id);
+  EXPECT_TRUE(ids.count("app@shop::Door::state"));
+  EXPECT_TRUE(ids.count("app@shop::Door::open::sequence"));
+  EXPECT_EQ(answers.size(), 2U);
+  const auto ofMethod = ds::query::Query(model).ask("behaviours", "app@shop::Door::open");
+  ASSERT_EQ(ofMethod.size(), 1U);  // a method answers its own, as before
+  EXPECT_EQ(ofMethod[0].id, "app@shop::Door::open::sequence");
+}

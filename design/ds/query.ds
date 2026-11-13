@@ -61,10 +61,10 @@ package driftspec@ds {
         tests/integration/ds/query/test_query.cpp::TestQueryOfTheDesign.CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule
     }
 
-    verification VER-00003-2 {
-      status: approved
+    verification VER-00003-3 {
+      status: draft
       @requirement REQ-00003-2
-      title: Unit tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram
+      title: Unit tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram; revision 3 adds that a class answers its machine and its operations' sequences (DS-53)
       method: test
       tests:
         tests/integration/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
@@ -75,6 +75,7 @@ package driftspec@ds {
         tests/integration/ds/query/test_query.cpp::TestQuery.TheFindingsOfAFile
         tests/integration/ds/query/test_query.cpp::TestQuery.AnUnknownQuestionIsAnError
         tests/integration/ds/query/test_query.cpp::TestQuery.AnswersAsTextAndAsJson
+        tests/integration/ds/query/test_query.cpp::TestQueryOfAClass.TheBehavioursOfAClassAreItsMachineAndTheSequencesOfItsOperations
         tests/unit/ds/query/test_filters.cpp::TestFilters.AClassDiagramTakesItsPatternsMinusItsExclusionsAndTheBoxesAround
         tests/unit/ds/query/test_filters.cpp::TestFilters.NeighboursWidenAClassDiagramByTheRelationsItDraws
         tests/unit/ds/query/test_filters.cpp::TestFilters.AClosedBoxStandsForWhatItHolds
@@ -329,6 +330,14 @@ package driftspec@ds {
           opt the model holds it {
             -> entityAnswer(behaviour, scenario) -> answer
           }
+        }
+      }
+      self -> model_.find(id) -> asked
+      opt it is a class {
+        self -> index.from(id) -> held
+        loop each method the class contains {
+          self -> model_.find(relation.to) -> member
+          -> behaviours(member.id) -> ofMember
         }
       }
       return out

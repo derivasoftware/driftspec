@@ -154,3 +154,52 @@ TEST_F(TestBehaviour, LiftingToModuleLevelKeepsOnlyCrossModuleMessages) {
 }
 
 }  // namespace
+
+namespace {
+
+std::vector<std::string> unreachable(const std::string& machine) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("door.ds",
+                               "package app {\n"
+                               "  module shop {\n"
+                               "    class Door {\n"
+                               "      + open() -> none\n"
+                               "      + close() -> none\n"
+                               "    }\n"
+                               "    state Door {\n" +
+                                   machine +
+                                   "    }\n"
+                                   "  }\n"
+                                   "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  std::vector<std::string> out;
+  for (const auto& f : model.findings())
+    if (f.code == "W-STATE-UNREACHABLE") out.push_back(f.message);
+  return out;
+}
+
+}  // namespace
+
+TEST(TestStateReach, AStateNothingLeadsToFromTheInitialOneIsAFinding) {
+  // DS-53: Lost leaves for Shut, but no transition enters it
+  const auto found = unreachable(
+      "      initial Shut\n"
+      "      Shut -> Open on open\n"
+      "      Open -> Shut on close\n"
+      "      Lost -> Shut on close\n");
+  ASSERT_EQ(found.size(), 1U);
+  EXPECT_NE(found[0].find("the state Lost of Door"), std::string::npos) << found[0];
+}
+
+TEST(TestStateReach, AMachineEveryStateOfWhichIsReachedOrWithNoInitialStateSaysNothing) {
+  EXPECT_TRUE(unreachable("      initial Shut\n"
+                          "      Shut -> Open on open\n"
+                          "      Open -> Shut on close\n")
+                  .empty());
+  EXPECT_TRUE(unreachable("      Shut -> Open on open\n"
+                          "      Lost -> Shut on close\n")
+                  .empty());  // where it starts cannot be told
+}

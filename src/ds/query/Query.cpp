@@ -122,6 +122,13 @@ std::vector<Answer> Query::behaviours(const std::string& id) const {
     const model::Entity* b = model_.find(r.from);
     out.push_back(b ? entityAnswer(*b, b->fields.count("scenario") ? b->fields.at("scenario") : "") : Answer{"behaviour", r.from, ""});
   }
+  const model::Entity* asked = model_.find(id);
+  if (!asked || asked->kind != model::Kind::Class) return out;
+  for (const auto& r : model_.index().from(id)) {  // a class's behaviours are its machine's and its operations' (DS-53)
+    const model::Entity* member = r.kind == "contains" ? model_.find(r.to) : nullptr;
+    if (!member || member->kind != model::Kind::Method) continue;
+    for (auto& answer : behaviours(member->id)) out.push_back(answer);
+  }
   return out;
 }
 
