@@ -166,6 +166,7 @@ package driftspec@ds {
       @requirement REQ-00043-1
       @requirement REQ-00053-1
       @constraint CST-00006-1
+      @constraint CST-00003-2
       @requirement REQ-00066-1
       @requirement REQ-00029-1
       @requirement REQ-00035-1
@@ -188,6 +189,9 @@ package driftspec@ds {
       }
       - unifyBehaviours() -> void {
         @requirement REQ-00035-1
+      }
+      - defineLoneExtensions() -> void {  // a class of annotations only that nothing else defines is the class (DS-20)
+        @constraint CST-00003-2
       }
     }
 
@@ -303,7 +307,7 @@ package driftspec@ds {
     class StructureCheck : ACheck {        // ownership, artefacts, extensions and fields
       @requirement REQ-00028-1
       @requirement REQ-00045-1
-      @constraint CST-00003-1
+      @constraint CST-00003-2
       @requirement REQ-00067-1
       - refs context_: Context
       - refs model_: model::Model
@@ -319,7 +323,7 @@ package driftspec@ds {
         @requirement REQ-00045-1
       }
       - checkExtensions() -> void {
-        @constraint CST-00003-1
+        @constraint CST-00003-2
       }
       - checkFields() -> void {
         @requirement REQ-00067-1
@@ -369,6 +373,7 @@ package driftspec@ds {
     }
 
     sequence Linker::run {
+      -> defineLoneExtensions()
       self -> context_.binder() -> binder
       self -> binder.references() -> references
       loop each reference {
