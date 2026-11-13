@@ -195,10 +195,10 @@ std::vector<ParsedFile> Parser::parseDirectory(const std::string& directory) {
   return files;
 }
 
-std::string textOf(const ParsedFile& file, TSNode node) {
+std::string ParsedFile::textOf(TSNode node) const {
   const uint32_t start = ts_node_start_byte(node);
   const uint32_t end = ts_node_end_byte(node);
-  return file.text.substr(start, end - start);
+  return text.substr(start, end - start);
 }
 
 }  // namespace parse

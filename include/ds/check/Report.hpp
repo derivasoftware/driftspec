@@ -16,10 +16,10 @@ struct Report {
   int expected = 0;  ///< named but declared nowhere
   int relations = 0;
   int errors = 0;  ///< findings of severity error: what makes the check fail
-};
 
-/// The report of a checked model.
-Report reportOf(const model::Model& model);
+  /// The report of a checked model.
+  static Report of(const model::Model& model);
+};
 
 }  // namespace check
 }  // namespace ds

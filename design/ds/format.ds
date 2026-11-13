@@ -38,12 +38,14 @@ package driftspec@ds {
           tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.TheIrIsWrittenAsItCameUnlessAskedToIndent
           tests/unit/ds/format/test_diagram_formats.cpp::TestDiagramFormats.EachDrawingFormatDrawsTheSameDiagram
       }
-      verification VER-00117-1 {
+      verification VER-00117-2 {
         status: approved
+        text: Revision 2 (DS-185) gives the formats of an answer and of a report a test each, named after their factory.
         title: Unit tests confirm a query's answers and a check's report are written as text or JSON by name, and the report is built once from the model and read the same either way
         method: test
         tests:
-          tests/unit/ds/format/test_text_formats.cpp::TestTextFormats.AnswersAndReportsAreWrittenAsTextOrJsonByName
+          tests/unit/ds/format/test_text_formats.cpp::TestAnswerFormats.AnswersAreWrittenAsTextOrJsonByName
+          tests/unit/ds/format/test_text_formats.cpp::TestReportFormats.ReportsAreWrittenAsTextOrJsonByName
           tests/unit/ds/format/test_text_formats.cpp::TestTextFormats.AReportIsBuiltOnceFromTheModelAndCountsWhatItSays
           tests/unit/ds/format/test_text_formats.cpp::TestTextFormats.AReportReadsTheSameAsTextAndAsJson
       }

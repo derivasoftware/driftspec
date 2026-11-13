@@ -162,7 +162,7 @@ int check(const std::string& dir, bool json) {
   ds::model::Model model;
   if (!loadWorkspace(dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
   // the one report of a check (DS-120), written by the format asked for (DS-126)
-  const ds::check::Report report = ds::check::reportOf(model);
+  const ds::check::Report report = ds::check::Report::of(model);
   ds::format::FormatOptions options;
   options.pretty = true;
   std::cout << ds::format::reportFormats().at(json ? "json" : "text")->write(report, options) << (json ? "\n" : "");

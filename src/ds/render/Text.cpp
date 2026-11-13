@@ -626,10 +626,10 @@ bool isSequence(const IrDocument& doc) {
   return false;
 }
 
-}  // namespace
-
 /// The grid keeps a one-cell margin on each side: the layout gets the rest.
 int contentWidth(int maxWidth) { return maxWidth > 0 ? std::max(10, maxWidth - 2) : 0; }
+
+}  // namespace
 
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
   if (isSequence(doc)) return sequenceGrid(doc).dump(color);

@@ -4,9 +4,13 @@
 #include <map>
 
 #include "ds/model/Metamodel.hpp"
+#include "ds/model/Words.hpp"
 
 namespace ds {
 namespace bind {
+
+using model::join;
+using model::split;
 
 namespace {
 
@@ -18,7 +22,7 @@ TSNode child(TSNode node, const char* fieldName) {
 
 std::string fieldText(const parse::ParsedFile& file, TSNode node, const char* fieldName) {
   TSNode c = child(node, fieldName);
-  return ts_node_is_null(c) ? std::string() : parse::textOf(file, c);
+  return ts_node_is_null(c) ? std::string() : file.textOf(c);
 }
 
 /// Every child carrying `fieldName` (a field may repeat: bases, modifiers).
@@ -37,12 +41,6 @@ std::string trim(const std::string& text) {
   if (begin == std::string::npos) return "";
   const auto end = text.find_last_not_of(" \t\r\n");
   return text.substr(begin, end - begin + 1);
-}
-
-std::string join(const std::vector<std::string>& items, const char* sep) {
-  std::string out;
-  for (const auto& i : items) out += (out.empty() ? "" : sep) + i;
-  return out;
 }
 
 // what an annotation means comes from the metamodel's table (model::annotations()), declared once
@@ -105,7 +103,7 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
 namespace {
 
 model::Term termOf(const parse::ParsedFile& file, TSNode node) {
-  const std::string text = parse::textOf(file, node);
+  const std::string text = file.textOf(node);
   if (!is(node, "qualified_name")) return {text, false, true};  // a number or a string: a value
   // a bare name is a variable; an entity is always written qualified (the form decides, nothing is guessed)
   return {text, !model::Identity(text).isQualified(), false};
@@ -113,7 +111,7 @@ model::Term termOf(const parse::ParsedFile& file, TSNode node) {
 
 /// The text of a clause after its keyword, for the card and the export.
 std::string clauseText(const parse::ParsedFile& file, TSNode clause) {
-  const std::string text = parse::textOf(file, clause);
+  const std::string text = file.textOf(clause);
   const auto space = text.find_first_of(" \t\r\n");
   return space == std::string::npos ? "" : trim(text.substr(space));
 }
@@ -195,7 +193,7 @@ void Binder::bindFormula(const parse::ParsedFile& file, TSNode node, model::Enti
       formula.cases.push_back(literals(c));
       append("if", clauseText(file, c));
     } else if (is(c, "name") && !ts_node_field_name_for_child(node, i)) {
-      formula.parameters.push_back(parse::textOf(file, c));  // a definition's parameters
+      formula.parameters.push_back(file.textOf(c));  // a definition's parameters
     }
   }
   model_.state(out_entity.id, formula);
@@ -341,7 +339,7 @@ TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::
                          const model::Location& location) {
   TypeUse use;
   if (ts_node_is_null(type)) return use;
-  use.text = trim(parse::textOf(file, type));
+  use.text = trim(file.textOf(type));
   const std::string name = fieldText(file, type, "name");
   std::vector<TSNode> args;
   TSNode argsNode = child(type, "args");
@@ -379,7 +377,7 @@ TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::
   ref.location = location;
   ref.multiplicity = isOwnership(relation) ? (multiplicity.empty() ? "1" : multiplicity) : "";
   for (TSNode a : args) {
-    ref.args.push_back(trim(parse::textOf(file, a)));
+    ref.args.push_back(trim(file.textOf(a)));
     bindType(file, a, scope, from, "uses", "", params, location);  // the argument is used by the holder
   }
   references_.push_back(ref);
@@ -440,7 +438,7 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
   }
 
   if (is(m, "method") || is(m, "operator")) {
-    for (TSNode mod : childrenNamed(m, "modifier")) member.flags.push_back(parse::textOf(file, mod));
+    for (TSNode mod : childrenNamed(m, "modifier")) member.flags.push_back(file.textOf(mod));
     if (is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
     if (is(m, "method") && member.name == "~" + cls.name) member.flags.push_back("destructor");  // DS-143
     if (cls.has("dataclass") && member.has("abstract")) {
@@ -486,9 +484,9 @@ void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::En
     const uint32_t n = ts_node_named_child_count(parameters);
     for (uint32_t i = 0; i < n; ++i) {
       TSNode p = ts_node_named_child(parameters, i);
-      paramTexts.push_back(trim(parse::textOf(file, p)));
+      paramTexts.push_back(trim(file.textOf(p)));
       TSNode type = child(p, "type");
-      entity.params.push_back({fieldText(file, p, "name"), ts_node_is_null(type) ? "" : trim(parse::textOf(file, type))});
+      entity.params.push_back({fieldText(file, p, "name"), ts_node_is_null(type) ? "" : trim(file.textOf(type))});
       bindType(file, child(p, "type"), scope, entity.id, "uses", "", params, locationOf(file, p));
     }
   }
@@ -558,7 +556,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
     const uint32_t n = ts_node_named_child_count(opSet);
     for (uint32_t i = 0; i < n; ++i) {
       TSNode item = ts_node_named_child(opSet, i);
-      const std::string text = trim(parse::textOf(file, item));
+      const std::string text = trim(file.textOf(item));
       operatorTexts.push_back(text);
       if (ts_node_is_null(child(item, "family"))) operators.insert(text);
     }
@@ -570,7 +568,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   model::Entity& declared = model_.declare(e);
   if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
   for (TSNode base : childrenNamed(c, "base")) {
-    references_.push_back({declared.id, parse::textOf(file, base), scope, "inherits", model::Kind::Class, loc, "", {}});
+    references_.push_back({declared.id, file.textOf(base), scope, "inherits", model::Kind::Class, loc, "", {}});
   }
   for (const auto& b : bounds) {
     references_.push_back({declared.id, b.second, scope, "bounded-by", model::Kind::Class, loc, "", {}});
@@ -634,7 +632,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
         if (!is(a, "arguments")) continue;
         const uint32_t na = ts_node_named_child_count(a);
         for (uint32_t x = 0; x < na; ++x) {
-          args.push_back(trim(parse::textOf(file, ts_node_named_child(a, x))));
+          args.push_back(trim(file.textOf(ts_node_named_child(a, x))));
           ++argc;
         }
       }
@@ -731,7 +729,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       const uint32_t parts = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < parts; ++j) {
         TSNode part = ts_node_named_child(c, j);
-        if (is(part, "package_prefix")) prefix += parse::textOf(file, part);
+        if (is(part, "package_prefix")) prefix += file.textOf(part);
       }
       model::Entity e;
       e.kind = model::Kind::Package;
@@ -849,7 +847,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
         TSNode v = ts_node_named_child(c, j);
-        if (is(v, "enum_value")) values.push_back(trim(parse::textOf(file, v)));
+        if (is(v, "enum_value")) values.push_back(trim(file.textOf(v)));
       }
       e.fields["values"] = join(values, ", ");
       model_.declare(e);

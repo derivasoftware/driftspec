@@ -3,7 +3,7 @@
 namespace ds {
 namespace check {
 
-Report reportOf(const model::Model& model) {
+Report Report::of(const model::Model& model) {
   Report out;
   out.findings = model.findings();
   for (const auto& f : out.findings) out.errors += f.severity == "error" ? 1 : 0;

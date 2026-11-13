@@ -81,6 +81,7 @@ package driftspec@ds {
       + errorLine: int                       // where it stops parsing (SREQ-00002-1: a finding at its place)
       + errorColumn: int
       + errorDetail: std::string             // where it sits and what the grammar takes there (REQ-00080-1)
+      + textOf(node: TSNode) -> std::string  // the text a node of its tree spans
     }
 
     class Parser {                           // the tree-sitter parser with the DriftSpec language set
@@ -98,7 +99,6 @@ package driftspec@ds {
       }
     }
 
-    function textOf(file: ParsedFile, node: TSNode) -> std::string
     - function firstError(node: TSNode, text: std::string, file: ParsedFile) -> bool
 
     // Most of parsing is the tree-sitter C API, whose functions the design does not declare: what

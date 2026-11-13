@@ -11,14 +11,7 @@ namespace query {
 
 const char* const kEveryBranch = "*";
 
-namespace {
-
-std::string fieldOf(const model::Entity& e, const std::string& key) {
-  const auto it = e.fields.find(key);
-  return it == e.fields.end() ? "" : it->second;
-}
-
-}  // namespace
+namespace {}  // namespace
 
 std::vector<Taken> stepsOf(const model::Model& model, const std::string& sequence, const std::string& path,
                            std::set<std::string>* out_kept) {
@@ -32,8 +25,8 @@ std::vector<Taken> stepsOf(const model::Model& model, const std::string& sequenc
   std::vector<Taken> out;
   for (const model::Entity* m : messages) {
     // where a call goes on is derived by the checker: the behaviour it enters, and the named branch of it
-    const std::string next = fieldOf(*m, "expands");
-    out.push_back({m->id, model.find(next) ? next : "", model.find(next) ? fieldOf(*m, "expands-path") : ""});
+    const std::string next = m->field("expands");
+    out.push_back({m->id, model.find(next) ? next : "", model.find(next) ? m->field("expands-path") : ""});
   }
   return out;
 }

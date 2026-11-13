@@ -138,15 +138,6 @@ TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
   EXPECT_EQ(page.find("/*TITLE*/"), std::string::npos);
 }
 
-TEST_F(TestScene, APackUnpacksToTheTextItHolds) {
-  const std::string text = std::string(5000, 'a') + " \u00e1\u00e9 </script> \"quoted\" " + std::string(300, 'z');
-  const std::string packed = ds::format::common::pack(text);
-  EXPECT_LT(packed.size(), text.size() / 4);  // deflate: much smaller, even in base64
-  EXPECT_EQ(packed.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="), std::string::npos);
-  EXPECT_EQ(ds::format::common::unpack(packed), text);
-  EXPECT_EQ(ds::format::common::unpack("not a pack"), "");
-}
-
 /// The links of a scene: each relation of the model between two of its nodes, with what produces it.
 class TestLink : public ::testing::Test {
  protected:

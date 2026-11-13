@@ -3,7 +3,6 @@
 #include <set>
 #include <utility>
 
-#include "Shared.hpp"
 #include "ds/query/Walk.hpp"
 #include "ds/scene/Layers.hpp"
 
@@ -22,7 +21,7 @@ void BehaviourLayer::decorate(SceneDocument& out_document) {
 
 // the tours a viewer offers: every public behaviour along each of its scenarios
 void BehaviourLayer::tours(SceneDocument& out_document) {
-  const auto visible = [](const model::Entity* e) { return e && fieldOf(*e, "visibility") != "-"; };
+  const auto visible = [](const model::Entity* e) { return e && e->field("visibility") != "-"; };
   for (const auto& pair : model_.entities()) {
     const model::Entity& seq = pair.second;
     if (seq.kind != model::Kind::Sequence) continue;
@@ -41,13 +40,13 @@ void BehaviourLayer::tours(SceneDocument& out_document) {
       std::set<std::string> named;
       for (const auto& member : model_.index().members(seq.id)) {
         const model::Entity& f = *model_.find(member);
-        if (f.kind != model::Kind::Frame || fieldOf(f, "kind") == "branch") continue;
+        if (f.kind != model::Kind::Frame || f.field("kind") == "branch") continue;
         // a loop or an opt names its scenario; an alt's sides name theirs, the first then the else
         const std::vector<std::string> sides =
-            fieldOf(f, "kind") == "alt" ? std::vector<std::string>{f.id + "::b0", f.id + "::b1"} : std::vector<std::string>{f.id};
+            f.field("kind") == "alt" ? std::vector<std::string>{f.id + "::b0", f.id + "::b1"} : std::vector<std::string>{f.id};
         for (const auto& side : sides) {
           const model::Entity* namer = model_.find(side);
-          const std::string s = namer ? fieldOf(*namer, "scenario") : "";
+          const std::string s = namer ? namer->field("scenario") : "";
           if (!s.empty() && named.insert(s).second) scenarios.push_back(s);
         }
       }
@@ -82,8 +81,8 @@ int BehaviourLayer::behaviourOf(const std::string& sequence, const std::string& 
     if (callee.empty()) continue;
     std::string args;
     for (const auto& a : m->args) args += (args.empty() ? "" : ", ") + a;
-    const std::string op = fieldOf(*m, "op");
-    Call c{callee, op.substr(op.rfind("::") == std::string::npos ? 0 : op.rfind("::") + 2) + "(" + args + ")", -1, fieldOf(*m, "result")};
+    const std::string op = m->field("op");
+    Call c{callee, op.substr(op.rfind("::") == std::string::npos ? 0 : op.rfind("::") + 2) + "(" + args + ")", -1, m->field("result")};
     // a scenario written apart is a sequence of its own; one written as a branch is a path through the base
     if (!t.next.empty()) c.expands = behaviourOf(t.next, t.nextPath, out_document);
     found_calls.push_back(c);

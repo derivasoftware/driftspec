@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <set>
 
-#include "Shared.hpp"
 #include "ds/scene/Layers.hpp"
 
 namespace ds {
@@ -29,10 +28,10 @@ void RulesLayer::decorate(SceneDocument& out_document) {
     r.id = e.id;
     r.kind = model::kindName(e.kind);
     r.name = e.name;
-    r.title = fieldOf(e, "title");
+    r.title = e.field("title");
     r.scope = place(e.scope.empty() || e.scope.back() != '@' ? e.scope : e.scope.substr(0, e.scope.size() - 1));
     for (const char* key : {"for", "where", "holds", "never", "if"}) {
-      std::string text = fieldOf(e, key) + "; ";
+      std::string text = e.field(key) + "; ";
       for (auto at = text.find("; "); at != std::string::npos; at = text.find("; ")) {  // a clause written twice is kept twice
         if (at) r.lines.push_back({key, text.substr(0, at)});
         text.erase(0, at + 2);

@@ -61,10 +61,11 @@ package driftspec@ds {
         tests/integration/ds/query/test_query.cpp::TestQueryOfTheDesign.CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule
     }
 
-    verification VER-00003-3 {
+    verification VER-00003-4 {
       status: approved
       @requirement REQ-00003-2
       title: Unit tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram; revision 3 adds that a class answers its machine and its operations' sequences (DS-53)
+      text: Revision 4 (DS-185) names the test of the filter of each kind after filterFor, the one it covers.
       method: test
       tests:
         tests/integration/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
@@ -81,7 +82,7 @@ package driftspec@ds {
         tests/unit/ds/query/test_filters.cpp::TestFilters.AClosedBoxStandsForWhatItHolds
         tests/unit/ds/query/test_filters.cpp::TestFilters.ASequenceDiagramTakesWhoTakesPartNotHowItIsDrawn
         tests/unit/ds/query/test_filters.cpp::TestFilters.ARequirementsDiagramTakesItsRootsAndTheirUmbrella
-        tests/unit/ds/query/test_filters.cpp::TestFilters.EachKindOfDiagramHasItsFilterAndAnythingElseHasNone
+        tests/unit/ds/query/test_filters.cpp::TestFilterFor.EachKindOfDiagramHasItsFilterAndAnythingElseHasNone
         tests/unit/ds/query/test_filters.cpp::TestFilters.TheQueryAppliesAFilterItIsGivenWithoutKnowingIt
         tests/unit/ds/query/test_filters.cpp::TestFilters.WhatADiagramShowsIsAnswerdByIdentityOnly
     }

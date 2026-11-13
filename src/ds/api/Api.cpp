@@ -36,7 +36,7 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
 std::string Api::report(const model::Model& model, bool pretty) {
   format::FormatOptions options;  // the one report of a check (DS-120), as JSON (DS-126)
   options.pretty = pretty;
-  return format::ReportJson().write(check::reportOf(model), options);
+  return format::ReportJson().write(check::Report::of(model), options);
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)

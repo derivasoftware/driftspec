@@ -7,30 +7,17 @@
 #include <sstream>
 
 #include "ds/model/SequenceTree.hpp"
+#include "ds/model/Words.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
 
 namespace ds {
 namespace render {
 
+using model::join;
+using model::split;
+
 namespace {
-
-std::vector<std::string> split(const std::string& text, char sep) {
-  std::vector<std::string> out;
-  std::stringstream in(text);
-  std::string item;
-  while (std::getline(in, item, sep)) {
-    const auto b = item.find_first_not_of(' ');
-    const auto e = item.find_last_not_of(' ');
-    if (b != std::string::npos) out.push_back(item.substr(b, e - b + 1));
-  }
-  return out;
-}
-
-std::string fieldOf(const model::Entity& e, const std::string& key) {
-  auto it = e.fields.find(key);
-  return it == e.fields.end() ? "" : it->second;
-}
 
 /// What a class diagram draws as a box: a class, an enum, or a function of a module (one box each, «function»).
 bool isBox(const model::Entity& e) {
@@ -39,24 +26,24 @@ bool isBox(const model::Entity& e) {
 
 /// `Repository<1>` → `Repository<T>`, from the params field.
 std::string displayName(const model::Entity& e) {
-  const std::string params = e.kind == model::Kind::Class ? fieldOf(e, "params") : "";  // a function's params are its signature
+  const std::string params = e.kind == model::Kind::Class ? e.field("params") : "";  // a function's params are its signature
   return params.empty() ? e.name : e.name + "<" + params + ">";
 }
 
 std::string memberLine(const model::Entity& m) {
-  std::string line = fieldOf(m, "visibility");
+  std::string line = m.field("visibility");
   if (!line.empty()) line += " ";
   for (const auto& f : m.flags) {
     if (f == "abstract" || f == "static" || f == "const") line += f + " ";
   }
   if (m.kind == model::Kind::Attribute) {
-    line += m.name + ": " + fieldOf(m, "type");
-    const std::string def = fieldOf(m, "default");
+    line += m.name + ": " + m.field("type");
+    const std::string def = m.field("default");
     if (!def.empty()) line += " = " + def;
     return line;
   }
-  line += m.name + "(" + fieldOf(m, "params") + ")";
-  const std::string returns = fieldOf(m, "returns");
+  line += m.name + "(" + m.field("params") + ")";
+  const std::string returns = m.field("returns");
   if (!returns.empty()) line += " -> " + returns;
   return line;
 }
@@ -83,14 +70,14 @@ std::vector<std::string> IrExport::diagrams() const {
 std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   const model::Entity* diagram = model_.find(diagramId);
   if (!diagram || diagram->kind != model::Kind::Diagram) return "";
-  if (fieldOf(*diagram, "kind") == "sequence") return renderSequence(*diagram, pretty);
-  if (fieldOf(*diagram, "kind") == "requirement") return renderRequirements(*diagram, pretty);
-  if (fieldOf(*diagram, "kind") == "state") return renderState(*diagram, pretty);
+  if (diagram->field("kind") == "sequence") return renderSequence(*diagram, pretty);
+  if (diagram->field("kind") == "requirement") return renderRequirements(*diagram, pretty);
+  if (diagram->field("kind") == "state") return renderState(*diagram, pretty);
   // `show` adds optional detail (ownership, multiplicity, operators, notes, derived-stereotypes);
   // `hide` removes compartments (fields, methods). Nothing written = members only.
-  const std::vector<std::string> showList = split(fieldOf(*diagram, "show"), ',');
+  const std::vector<std::string> showList = split(diagram->field("show"), ',');
   const std::set<std::string> show(showList.begin(), showList.end());
-  const std::vector<std::string> hideList = split(fieldOf(*diagram, "hide"), ',');
+  const std::vector<std::string> hideList = split(diagram->field("hide"), ',');
   const std::set<std::string> hide(hideList.begin(), hideList.end());
   auto shows = [&](const char* what) { return show.count(what) > 0; };
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
@@ -133,7 +120,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", displayName(e)}};
     const std::string parent = parentOf(e);
     if (!parent.empty()) node["parent"] = parent;
-    const std::string stereotypes = fieldOf(e, "stereotypes");
+    const std::string stereotypes = e.field("stereotypes");
     if (e.kind == model::Kind::Function) {
       node["classifier"] = "function";
       node["stereotype"] = "function";
@@ -144,7 +131,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     } else if (e.kind == model::Kind::Enum) {
       node["classifier"] = "enum";
       node["stereotype"] = "enum";
-      node["sections"] = nlohmann::json::array({split(fieldOf(e, "values"), ',')});
+      node["sections"] = nlohmann::json::array({split(e.field("values"), ',')});
       node["sectionKinds"] = nlohmann::json::array({"attributes"});
     } else {
       const bool interface = e.kind == model::Kind::Interface || stereotypes.find("interface") != std::string::npos;
@@ -154,7 +141,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
       std::vector<std::string> badges;
       if (shows("derived-stereotypes")) badges = split(stereotypes, ',');
       if (shows("operators")) {
-        for (const auto& op : split(fieldOf(e, "operators"), ',')) {
+        for (const auto& op : split(e.field("operators"), ',')) {
           if (op != "==" && op != "!=" && op != "ordered" && op != "hash" && op != "print") badges.push_back(op);
         }
       }
@@ -172,7 +159,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
       for (const model::Entity* m : members) {
         if (m->kind == model::Kind::Attribute) attributes.push_back(memberLine(*m));
         if (m->kind == model::Kind::Method || m->kind == model::Kind::Operation) methods.push_back(memberLine(*m));
-        if (m->kind == model::Kind::Operator && shows("operators") && !fieldOf(*m, "params").empty()) methods.push_back(memberLine(*m));
+        if (m->kind == model::Kind::Operator && shows("operators") && !m->field("params").empty()) methods.push_back(memberLine(*m));
       }
       nlohmann::json sections = nlohmann::json::array();
       nlohmann::json kinds = nlohmann::json::array();
@@ -189,12 +176,12 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
         node["sectionKinds"] = kinds;
       }
     }
-    const std::string note = fieldOf(e, "note");
-    const std::string change = fieldOf(e, "change");
+    const std::string note = e.field("note");
+    const std::string change = e.field("change");
     if (!change.empty()) {
       node["refs"] = {{"change", change}};
-      const std::string detail = fieldOf(e, "change-detail");
-      const std::string from = fieldOf(e, "change-from");
+      const std::string detail = e.field("change-detail");
+      const std::string from = e.field("change-from");
       node["title"] = change + (from.empty() ? "" : " from " + from) + (detail.empty() ? "" : ": " + detail);
     }
     out["nodes"].push_back(node);
@@ -210,7 +197,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
         if (r.kind != "requires" && r.kind != "constrained-by") continue;
         const model::Entity* a = model_.find(r.to);
         if (!a || a->expected) continue;
-        lines.push_back(a->id + "  " + fieldOf(*a, "title"));
+        lines.push_back(a->id + "  " + a->field("title"));
       }
       if (!lines.empty()) {
         std::string text;
@@ -224,8 +211,8 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   // relations: lifted from members to their class; one edge per (from, to, kind, label)
   std::set<std::string> drawn;
   for (const auto& r : model_.index().all()) {
-    const std::string& change = r.change;                   // a diff marks a relation as added or removed
-    std::string kind = edgeKind(model::readAs(model_, r));  // inheriting an interface is realisation, as in the viewer
+    const std::string& change = r.change;           // a diff marks a relation as added or removed
+    std::string kind = edgeKind(model_.readAs(r));  // inheriting an interface is realisation, as in the viewer
     if (kind.empty()) continue;
     const model::Entity* from = model_.find(r.from);
     const model::Entity* to = model_.find(r.to);
@@ -261,7 +248,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
       if (!drawn.insert(owner + "|" + r.to + "|dependency||").second) continue;
       out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}});
     }
-    return closeBoxes(out.dump(), split(fieldOf(*diagram, "open"), ','), pretty);
+    return closeBoxes(out.dump(), split(diagram->field("open"), ','), pretty);
   }
   return pretty ? out.dump(2) : out.dump();
 }
@@ -291,7 +278,7 @@ std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::s
             e.kind != model::Kind::Class && e.kind != model::Kind::Enum && e.kind != model::Kind::Function) {
           continue;
         }
-        if (fieldOf(e, "visibility") != "-") children.push_back(&e);
+        if (e.field("visibility") != "-") children.push_back(&e);
       }
       std::sort(children.begin(), children.end(),
                 [](const model::Entity* a, const model::Entity* b) { return a->location.line < b->location.line; });
@@ -398,7 +385,7 @@ struct SequenceBuilder {
     for (const query::Taken& taken : steps) {
       const model::Entity* m = model.find(taken.message);
       flushEmpty(tree.orderOf(m->id));
-      if (fieldOf(*m, "return") == "true") {
+      if (m->field("return") == "true") {
         // a return inside a frame ends that branch early: it is drawn, so the frame is never empty
         std::string frame = tree.frameOf(m->id);
         while (!frame.empty() && !drawn(frame)) frame = tree.frameOf(frame);
@@ -408,7 +395,7 @@ struct SequenceBuilder {
           if (!firstOrder.count(f)) firstOrder[f] = order;
           if (tree.elseOf(f) == m->id) elseOrder[f] = order;
         }
-        const std::string value = fieldOf(*m, "result");
+        const std::string value = m->field("result");
         edges.push_back({{"from", selfLine},
                          {"to", backLine},
                          {"kind", "message"},
@@ -420,8 +407,8 @@ struct SequenceBuilder {
         }
         continue;
       }
-      const std::string to = fieldOf(*m, "to");
-      const std::string typeId = fieldOf(*m, "type");
+      const std::string to = m->field("to");
+      const std::string typeId = m->field("type");
       std::string target = selfLine;
       if (to == "self" && !typeId.empty() && typeId != selfLine) {
         // a function of another module (or of the class's module, called from a method) runs on that module's lifeline
@@ -442,20 +429,20 @@ struct SequenceBuilder {
         if (tree.elseOf(f) == m->id) elseOrder[f] = order;
       }
       const int row = order++;
-      nlohmann::json edge = {{"from", selfLine},
-                             {"to", target},
-                             {"kind", "message"},
-                             {"order", row},
-                             {"label", fieldOf(*m, "op") + "(" + fieldOf(*m, "args") + ")" +
-                                           (fieldOf(*m, "scenario").empty() ? "" : " / " + fieldOf(*m, "scenario"))}};
+      nlohmann::json edge = {
+          {"from", selfLine},
+          {"to", target},
+          {"kind", "message"},
+          {"order", row},
+          {"label", m->field("op") + "(" + m->field("args") + ")" + (m->field("scenario").empty() ? "" : " / " + m->field("scenario"))}};
       nlohmann::json refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
       const std::string& expands = taken.next;
       std::string title;
-      if (!typeId.empty()) title = typeId + "::" + fieldOf(*m, "op");
-      const std::string change = fieldOf(*m, "change");  // a diff marks messages too
+      if (!typeId.empty()) title = typeId + "::" + m->field("op");
+      const std::string change = m->field("change");  // a diff marks messages too
       if (!change.empty()) {
         refs["change"] = change;
-        const std::string detail = fieldOf(*m, "change-detail");
+        const std::string detail = m->field("change-detail");
         title = change + (detail.empty() ? "" : ": " + detail) + (title.empty() ? "" : "\n" + title);
       }
       if (!expands.empty()) {
@@ -472,7 +459,7 @@ struct SequenceBuilder {
         if (order > first) refs["span"] = std::to_string(first) + "-" + std::to_string(order - 1);  // the rows the expansion occupies
       }
       edges[at]["refs"] = refs;
-      const std::string result = fieldOf(*m, "result");
+      const std::string result = m->field("result");
       if (!result.empty())
         edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
       for (std::string f = frame; !f.empty(); f = tree.frameOf(f))
@@ -483,8 +470,8 @@ struct SequenceBuilder {
       const model::Entity* fe = model.find(f.first);
       nlohmann::json frame = {{"id", f.first},
                               {"kind", "frame"},
-                              {"label", fieldOf(*fe, "kind") + " " + fieldOf(*fe, "condition")},
-                              {"classifier", fieldOf(*fe, "kind")},
+                              {"label", fe->field("kind") + " " + fe->field("condition")},
+                              {"classifier", fe->field("kind")},
                               {"span", nlohmann::json::array({f.second, lastOrder[f.first]})}};
       if (elseOrder.count(f.first)) frame["dividers"] = nlohmann::json::array({{{"at", elseOrder[f.first]}, {"label", "else"}}});
       nodes.push_back(frame);
@@ -496,15 +483,15 @@ struct SequenceBuilder {
 }  // namespace
 
 std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) const {
-  const std::string written = fieldOf(diagram, "depth");
+  const std::string written = diagram.field("depth");
   // `*` is every level: the guard against recursion is what ends it (a value that is no number is a finding)
   const int depth = written == "*" ? 1000 : std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
-  const std::string level = fieldOf(diagram, "level");
+  const std::string level = diagram.field("level");
   // the behaviours selected, by subject id, by sequence id, or a namespace: the query's filter (DS-127)
   std::vector<const model::Entity*> selected;
   std::map<const model::Entity*, std::string> pathOf;  // a named branch asked for: the path of that behaviour
   for (const query::Behaviour& taken :
-       query::SequenceFilter(split(fieldOf(diagram, "include"), ','), depth, level == "module").behaviours(model_)) {
+       query::SequenceFilter(split(diagram.field("include"), ','), depth, level == "module").behaviours(model_)) {
     selected.push_back(taken.sequence);
     if (taken.path != kWhole) pathOf[taken.sequence] = taken.path;
   }
@@ -524,7 +511,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       const std::string home = subject->kind == model::Kind::Function ? cls->id : cls->scope;  // a function runs in its module
       for (const query::Taken& taken : query::stepsOf(model_, seq->id, kWhole)) {
         const model::Entity* m = model_.find(taken.message);
-        const std::string typeId = fieldOf(*m, "type");
+        const std::string typeId = m->field("type");
         const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
         const std::string typeHome = type && type->kind == model::Kind::Module ? type->id : type ? type->scope : "";
         if (!type || typeHome == home) continue;
@@ -533,7 +520,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
         };
         const std::string from = b.lifeline(home, moduleLabel(home), "namespace");
         const std::string to = b.lifeline(typeHome, moduleLabel(typeHome), "namespace");
-        const std::string label = (type->kind == model::Kind::Module ? "" : b.shortName(typeId) + "::") + fieldOf(*m, "op");
+        const std::string label = (type->kind == model::Kind::Module ? "" : b.shortName(typeId) + "::") + m->field("op");
         if (!drawn.insert(from + "|" + to + "|" + label).second) continue;
         b.edges.push_back({{"from", from}, {"to", to}, {"kind", "message"}, {"order", b.order++}, {"label", label}});
       }
@@ -555,7 +542,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
                            {"to", self},
                            {"kind", "message"},
                            {"order", b.order++},
-                           {"label", subject->name + "(" + fieldOf(*subject, "params") + ")"},
+                           {"label", subject->name + "(" + subject->field("params") + ")"},
                            {"title", subject->id},
                            {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
       }
@@ -563,12 +550,12 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       // a behaviour asked for by its subject is drawn whole; a scenario of it, as its path
       const std::string path = pathOf.count(seq) ? pathOf[seq] : kWhole;
       b.emit(*seq, self, caller, path, depth, stack);
-      const std::string returns = method ? fieldOf(*subject, "returns") : "";
+      const std::string returns = method ? subject->field("returns") : "";
       if (method && !returns.empty() && returns != "none" && returns != "void") {
         std::string given = returns;  // what its `return` says, or the declared type
         for (const query::Taken& taken : query::stepsOf(model_, seq->id, path)) {
           const model::Entity* m = model_.find(taken.message);
-          if (fieldOf(*m, "return") == "true" && !fieldOf(*m, "result").empty()) given = fieldOf(*m, "result");
+          if (m->field("return") == "true" && !m->field("result").empty()) given = m->field("result");
         }
         b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});
       }
@@ -590,7 +577,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   nlohmann::json nodes = nlohmann::json::array();
   nlohmann::json edges = nlohmann::json::array();
   std::set<std::string> drawn;
-  for (const auto& machine : query::StateFilter(split(fieldOf(diagram, "include"), ',')).machines(model_)) {  // DS-127
+  for (const auto& machine : query::StateFilter(split(diagram.field("include"), ',')).machines(model_)) {  // DS-127
     const model::Entity* state = model_.find(machine);
     const auto box = [&](const std::string& name) {
       const std::string id = state->id + "::" + name;
@@ -600,7 +587,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
         node["refs"] = {{"location", view->location.file + ":" + std::to_string(view->location.line)}};
         nlohmann::json sections = nlohmann::json::array();
         nlohmann::json kinds = nlohmann::json::array();
-        const std::string text = fieldOf(*view, "text");
+        const std::string text = view->field("text");
         if (!text.empty()) {
           sections.push_back(wrap(text, 36));
           kinds.push_back("attributes");
@@ -622,13 +609,13 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       return id;
     };
     // the machine reads from where it starts: first in the document, so the layout flows down from it
-    const std::string initial = fieldOf(*state, "initial");
+    const std::string initial = state->field("initial");
     if (!initial.empty()) {
       const std::string start = state->id + "::initial";
       nodes.push_back({{"id", start}, {"kind", "box"}, {"label", "start"}, {"classifier", "initial"}});
       edges.push_back({{"from", start}, {"to", box(initial)}, {"kind", "association"}});
     }
-    std::stringstream first(fieldOf(*state, "transitions"));
+    std::stringstream first(state->field("transitions"));
     for (std::string move; std::getline(first, move);) {  // in the order written: the first jumps go down
       const auto cut = move.find('>');
       if (cut == std::string::npos) continue;
@@ -640,7 +627,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       const model::Entity& view = *model_.find(member);
       if (view.kind == model::Kind::View) box(view.name);
     }
-    std::stringstream moves(fieldOf(*state, "transitions"));
+    std::stringstream moves(state->field("transitions"));
     for (std::string move; std::getline(moves, move);) {
       const auto first = move.find('>');
       const auto second = move.find('>', first + 1);
@@ -687,13 +674,13 @@ bool isArtefact(const model::Entity& e) {
 }  // namespace
 
 std::string IrExport::renderRequirements(const model::Entity& diagram, bool pretty) const {
-  const std::vector<std::string> showList = split(fieldOf(diagram, "show"), ',');
+  const std::vector<std::string> showList = split(diagram.field("show"), ',');
   const std::set<std::string> show(showList.begin(), showList.end());
   const bool withDesign = show.empty() || show.count("design");
   const bool withVerifications = show.empty() || show.count("verifications");
   // the roots and their umbrella are the query's filter of the diagram (DS-127)
   const std::set<std::string> selected =
-      query::RequirementsFilter(split(fieldOf(diagram, "include"), ','), withDesign, withVerifications).select(model_);
+      query::RequirementsFilter(split(diagram.field("include"), ','), withDesign, withVerifications).select(model_);
   nlohmann::json out;
   out["ir"] = 1;
   out["title"] = diagram.name;
@@ -703,9 +690,9 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
     const model::Entity& e = *model_.find(id);
     nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", isArtefact(e) ? e.id : e.name}, {"classifier", model::kindName(e.kind)}};
     if (isArtefact(e)) {
-      std::vector<std::string> lines = wrap(fieldOf(e, "title"), 44);
-      const std::string status = fieldOf(e, "status");
-      const std::string method = fieldOf(e, "method");
+      std::vector<std::string> lines = wrap(e.field("title"), 44);
+      const std::string status = e.field("status");
+      const std::string method = e.field("method");
       std::string stereotype = model::kindName(e.kind);
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
@@ -715,16 +702,16 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
                           : ", " + model::Identity(model::Scope(e.scope).box().text()).lastName();
       node["stereotype"] = stereotype;
       if (!lines.empty()) node["sections"] = nlohmann::json::array({lines});
-      const std::string text = fieldOf(e, "text");
+      const std::string text = e.field("text");
       if (!text.empty()) node["title"] = text;
       if (!e.location.file.empty()) node["refs"] = {{"location", e.location.file + ":" + std::to_string(e.location.line)}};
     } else {
       node["parent"] = nlohmann::json();  // no containers in this view
       node.erase("parent");
-      node["stereotype"] = fieldOf(e, "stereotypes");
+      node["stereotype"] = e.field("stereotypes");
       if (node["stereotype"].get<std::string>().empty()) node.erase("stereotype");
     }
-    const std::string change = fieldOf(e, "change");
+    const std::string change = e.field("change");
     if (!change.empty()) node["refs"]["change"] = change;
     out["nodes"].push_back(node);
   }
