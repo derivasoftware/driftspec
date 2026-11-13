@@ -740,12 +740,13 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       if (fieldText(file, c, "visibility") == "-") e.fields["visibility"] = "-";
       e.location = loc;
       bindFields(file, c, e);
+      const bool reopened = model_.find(e.id) != nullptr;  // a box reopened adds no relation (DS-48)
       model::Entity& declared = model_.declare(e);
       for (const auto& f : e.fields) declared.fields[f.first] = f.second;
       bindAnnotations(file, c, declared.id, declared.id + "@");  // an HLD box realises requirements like a class does
-      if (!owner.empty())
+      if (!reopened && !owner.empty())
         model_.relate({"contains", owner, declared.id, loc, ""});
-      else if (!prefix.empty())  // the outer package must be declared somewhere; the checker turns part-of into contains
+      else if (!reopened && !prefix.empty())  // the outer package must be declared somewhere; the checker turns part-of into contains
         references_.push_back({declared.id, prefix.substr(0, prefix.size() - 1), "", "part-of", model::Kind::Package, loc, "", {}});
       visit(file, c, declared.id + "@", declared.id);
 
@@ -761,6 +762,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       const bool isPrivate = fieldText(file, c, "visibility") == "-";
       if (isPrivate) e.fields["visibility"] = "-";
       bindFields(file, c, e);
+      const bool reopened = model_.find(e.id) != nullptr;  // a module reopened adds no relation (DS-48)
       model::Entity& declared = model_.declare(e);
       for (const auto& f : e.fields) {  // a module reopens: its fields add up, and two that differ are both kept
         auto& kept = declared.fields[f.first];
@@ -770,7 +772,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
           kept += ", " + f.second;
       }
       if (isPrivate) declared.fields["visibility"] = "-";  // a module reopens: any declaration may say it
-      if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
+      if (!owner.empty() && !reopened) model_.relate({"contains", owner, declared.id, loc, ""});
       bindAnnotations(file, c, declared.id, declared.id);  // a module answers to its requirements, as a package does
       visit(file, c, declared.id, declared.id);
 
