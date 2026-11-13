@@ -604,7 +604,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       continue;
     }
     const model::Location loc = locationOf(file, c);
-    if (is(c, "message") || is(c, "return")) {
+    if (is(c, "message") || is(c, "return") || is(c, "fail")) {
       model::Entity m;
       m.kind = model::Kind::Message;
       m.id = sequenceId + "::m" + std::to_string(order);
@@ -617,6 +617,9 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       m.fields["op"] = fieldText(file, c, "op");
       if (is(c, "return")) {
         m.fields["result"] = fieldText(file, c, "value");
+        m.fields["return"] = "true";
+      } else if (is(c, "fail")) {  // the path ends, failing: an ending like a return, with the failure's name
+        m.fields["fails"] = fieldText(file, c, "failure");
         m.fields["return"] = "true";
       } else {
         const std::string result = fieldText(file, c, "result");
@@ -639,12 +642,12 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       m.fields["args"] = join(args, ", ");
       m.args = args;
       m.fields["argc"] = std::to_string(argc);
-      m.name = is(c, "return") ? "return" : m.fields["to"] + "." + m.fields["op"];
+      m.name = is(c, "return") ? "return" : is(c, "fail") ? "fail" : m.fields["to"] + "." + m.fields["op"];
       model_.declare(m);
       model_.relate({"contains", current.empty() ? sequenceId : current, m.id, loc, ""});
-      messages_.push_back({sequenceId, m.id, m.fields["to"], m.fields["op"], argc, loc, is(c, "return")});
+      messages_.push_back({sequenceId, m.id, m.fields["to"], m.fields["op"], argc, loc, is(c, "return") || is(c, "fail")});
       ++order;
-    } else if (is(c, "loop") || is(c, "alt") || is(c, "opt")) {
+    } else if (is(c, "loop") || is(c, "alt") || is(c, "opt") || is(c, "attempt") || is(c, "handler")) {
       model::Entity f;
       f.kind = model::Kind::Frame;
       f.id = sequenceId + "::f" + std::to_string(frames++);
@@ -653,6 +656,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       f.name = ts_node_type(c);
       f.fields["kind"] = ts_node_type(c);
       f.fields["condition"] = trim(fieldText(file, c, "condition"));
+      if (is(c, "handler")) f.fields["failure"] = fieldText(file, c, "failure");  // the failure it handles (DS-187)
       const std::string scenario = fieldText(file, c, "scenario");
       if (!scenario.empty() && !is(c, "alt")) f.fields["scenario"] = scenario;  // an alt's sides name their own
       model_.declare(f);
@@ -704,7 +708,7 @@ void Binder::bindSequence(const parse::ParsedFile& file, TSNode c, const std::st
     const uint32_t n = ts_node_named_child_count(node);
     for (uint32_t j = 0; j < n; ++j) {
       TSNode s = ts_node_named_child(node, j);
-      if (is(s, "loop") || is(s, "alt") || is(s, "opt")) pending.push_back(s);
+      if (is(s, "loop") || is(s, "alt") || is(s, "opt") || is(s, "attempt") || is(s, "handler")) pending.push_back(s);
       if (!is(s, "local") && !is(s, "participant")) continue;
       const std::string name = fieldText(file, s, "name");
       TypeUse use = bindType(file, child(s, "type"), scope, declared.id, "uses", "", {}, locationOf(file, s));

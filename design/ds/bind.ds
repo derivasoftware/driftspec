@@ -50,6 +50,7 @@ package driftspec@ds {
     class Binder {                           // realises the language rule by rule: each member names its requirement
       @requirement REQ-00053-1
       @requirement REQ-00021-1
+      @requirement REQ-00110-1
       - refs model_: model::Model
       - owns references_: std::vector<Reference>
       - owns messages_: std::vector<Message>
@@ -112,6 +113,7 @@ package driftspec@ds {
       }
       - bindSteps(file: parse::ParsedFile, node: TSNode, sequence: model::Entity, holder: std::string, order: int, frames: int) -> void {
         @requirement REQ-00037-1
+        @requirement REQ-00110-1
       }
       - branch(file: parse::ParsedFile, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
         @requirement REQ-00037-1

@@ -867,6 +867,30 @@ package driftspec@ds {
               tests/integration/ds/check/test_branches.cpp::TestBranches.AnUnnamedCallFollowsTheDefaultPath
           }
         }
+        requirement REQ-00110-1 {
+          tags: language, lld, sequence, failure
+          status: draft
+          title: A sequence shall say where a path ends failing and where a failure of what it calls is handled, whatever the mechanism
+          text:
+            fail ParseError ends a path where a return would go, with the failure's name as text, as a
+            type is written. attempt { ... } on IoError / unreadable { ... } runs its steps and handles
+            what they fail with, one on each: a handler that fails with another translates the failure,
+            one that returns resolves it, and a failure no handler names goes on to the caller. The
+            default path does not fail: it takes the attempt's steps and no handler; a handler that
+            names a scenario is the path of that failure. The diagram draws the failure and each handler.
+          rationale: Owner, 2026-11-13 (DS-180, DS-187). One model of failure for exceptions, error values and error codes; what escapes each operation is computed from where failures start and where they are handled (DS-188).
+          verification VER-00126-1 {
+            title: Integration tests confirm a path ends failing with its failure's name, an attempt runs on every path and a handler only on the path that names it, and the diagram draws both
+            status: draft
+            method: test
+            tests:
+              tests/integration/ds/check/test_failures.cpp::TestFailures.TheExampleChecksClean
+              tests/integration/ds/check/test_failures.cpp::TestFailures.APathThatFailsEndsThereWithTheFailuresName
+              tests/integration/ds/check/test_failures.cpp::TestFailures.AnAttemptRunsOnEveryPathAndAHandlerOnlyOnThePathThatNamesIt
+              tests/integration/ds/check/test_failures.cpp::TestFailures.AHandlerKeepsTheFailureItHandles
+              tests/integration/ds/check/test_failures.cpp::TestFailures.TheSequenceDiagramDrawsTheFailureAndTheHandlers
+          }
+        }
         requirement REQ-00058-2 {
           tags: language, lld, sequence
           status: approved

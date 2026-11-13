@@ -181,7 +181,7 @@ module.exports = grammar({
     // a behaviour's identity is its subject: the method, class or module it describes;
     // participants are the static context (self, attributes, parameters); only locals are written
     sequence: $ => seq('sequence', field('subject', $.qualified_name), optional(seq('/', field('scenario', $.name))), '{', repeat($._sequence_item), '}'),
-    _sequence_item: $ => choice($.field, $.annotation, $.participant, $.local, $.message, $.return, $.loop, $.alt, $.opt),
+    _sequence_item: $ => choice($.field, $.annotation, $.participant, $.local, $.message, $.return, $.fail, $.loop, $.alt, $.opt, $.attempt),
     participant: $ => seq('participant', field('name', $.name), ':', field('type', $.type)),  // kept for older files: the same as local
     local: $ => seq('local', field('name', $.name), ':', field('type', $.type)),
     message: $ => seq(
@@ -196,6 +196,8 @@ module.exports = grammar({
     // what the behaviour gives back: a name or a literal, never an expression (2026-11-05)
     // a bare return ends a branch of the behaviour with nothing given back (2026-11-05)
     return: $ => prec.right(seq('return', optional(field('value', choice($.name, $.number, $.string, 'true', 'false'))))),
+    // a path that ends failing, with the failure's name: whatever the mechanism, written as text (DS-187)
+    fail: $ => seq('fail', field('failure', $.qualified_name)),
     arguments: $ => seq('(', optional(seq($.argument, repeat(seq(',', $.argument)))), ')'),
     // a name, or a literal: `visit(file, root, "", "")` says what the code passes (2026-11-05)
     argument: $ => choice(seq($.name, repeat(seq('.', $.name))), $.number, $.string),
@@ -205,6 +207,10 @@ module.exports = grammar({
       optional(seq('else', optional(seq('/', field('else_scenario', $.name))), '{', repeat(field('otherwise', $._sequence_item)), '}'))),
     opt: $ => seq('opt', field('condition', $.condition), optional($._branch_name), '{', repeat($._sequence_item), '}'),
     _branch_name: $ => seq('/', field('scenario', $.name)),
+    // what the steps of an attempt may fail with, each handled on its own: resolved, translated
+    // into another failure, or let go by not being named (DS-187)
+    attempt: $ => seq('attempt', '{', repeat($._sequence_item), '}', repeat1($.handler)),
+    handler: $ => seq('on', field('failure', $.qualified_name), optional($._branch_name), '{', repeat($._sequence_item), '}'),
     condition: $ => /[^{\/\n]+/,
 
     state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.view, $.transition)), '}'),

@@ -389,7 +389,8 @@ struct SequenceBuilder {
         // a return inside a frame ends that branch early: it is drawn, so the frame is never empty
         std::string frame = tree.frameOf(m->id);
         while (!frame.empty() && !drawn(frame)) frame = tree.frameOf(frame);
-        if (frame.empty() || backLine.empty()) continue;  // the last return: the arrow back to whoever called tells it
+        const std::string fails = m->field("fails");                         // a path that ends failing is drawn wherever it ends (DS-187)
+        if (backLine.empty() || (frame.empty() && fails.empty())) continue;  // the last return: the arrow back tells it
         for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
           if (!drawn(f)) continue;
           if (!firstOrder.count(f)) firstOrder[f] = order;
@@ -400,7 +401,9 @@ struct SequenceBuilder {
                          {"to", backLine},
                          {"kind", "message"},
                          {"order", order++},
-                         {"label", value.empty() ? "return" : "return " + value},
+                         {"label", !fails.empty()  ? "fail " + fails
+                                   : value.empty() ? "return"
+                                                   : "return " + value},
                          {"dashed", true}});
         for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
           if (drawn(f)) lastOrder[f] = order - 1;
@@ -468,11 +471,12 @@ struct SequenceBuilder {
     flushEmpty(std::numeric_limits<int>::max());
     for (const auto& f : firstOrder) {
       const model::Entity* fe = model.find(f.first);
-      nlohmann::json frame = {{"id", f.first},
-                              {"kind", "frame"},
-                              {"label", fe->field("kind") + " " + fe->field("condition")},
-                              {"classifier", fe->field("kind")},
-                              {"span", nlohmann::json::array({f.second, lastOrder[f.first]})}};
+      nlohmann::json frame = {
+          {"id", f.first},
+          {"kind", "frame"},
+          {"label", fe->field("kind") == "handler" ? "on " + fe->field("failure") : fe->field("kind") + " " + fe->field("condition")},
+          {"classifier", fe->field("kind")},
+          {"span", nlohmann::json::array({f.second, lastOrder[f.first]})}};
       if (elseOrder.count(f.first)) frame["dividers"] = nlohmann::json::array({{{"at", elseOrder[f.first]}, {"label", "else"}}});
       nodes.push_back(frame);
     }

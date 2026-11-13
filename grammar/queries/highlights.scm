@@ -4,7 +4,7 @@
 
 [ "package" "module" "extern" "requirement" "constraint" "verification" "interface" "view" "operation"
   "class" "dataclass" "enum" "function" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "on" "return"
-  "loop" "alt" "opt" "else" ] @keyword
+  "loop" "alt" "opt" "else" "fail" "attempt" ] @keyword
 
 (method_modifier) @keyword.modifier
 (ownership) @keyword.modifier

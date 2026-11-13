@@ -1,0 +1,65 @@
+// failures.ds: how a behaviour fails, whatever the mechanism (DS-187).
+//
+// A path ends failing with the failure's name: `fail ParseError`, where a return would go. The name
+// is text, as a type is: an exception class, an error value, an error code.
+//
+// An attempt runs its steps and handles what they fail with, one `on` each: a handler resolves the
+// failure (it returns), translates it (it fails with another), or the failure goes on to the caller
+// because no handler names it. The default path does not fail: it runs the attempt's steps and no
+// handler. A handler that names a scenario is the path of that failure.
+//
+// What escapes each operation, and by which path, is computed from these two (DS-188).
+
+package shelf {
+  module books {
+    class Files {
+      + read(path: string) -> string
+    }
+    class Parser {
+      + parse(text: string) -> Book
+    }
+    class Book {
+      + title: string
+    }
+    class Cache {
+      + last() -> Book
+    }
+
+    class Loader {
+      - files: Files
+      - parser: Parser
+      - cache: Cache
+      + load(path: string) -> Book
+      + open(path: string) -> Book
+    }
+
+    // where a failure starts: the path that does not parse ends failing
+    sequence Parser::parse {
+      opt the text does not parse / broken {
+        fail ParseError
+      }
+      return book
+    }
+
+    // where it is handled: a read that fails is translated, a busy disk is resolved from the cache,
+    // and a parse error, named by no handler, goes on to the caller
+    sequence Loader::load {
+      attempt {
+        self -> files.read(path) -> text
+        self -> parser.parse(text) -> book
+      } on IoError / unreadable {
+        fail LoadError
+      } on Busy / busy {
+        self -> cache.last() -> book
+        return book
+      }
+      return book
+    }
+  }
+}
+
+diagram SEQ_Load {
+  kind: sequence
+  include: shelf@books::Loader::load
+  depth: 1
+}

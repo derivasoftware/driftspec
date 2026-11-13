@@ -140,6 +140,7 @@ std::vector<KindSpec> build() {
         syntax("op", FieldType::Name, "the operation called"), syntax("args", FieldType::Names, "the arguments"),
         syntax("argc", FieldType::Number, "how many arguments"), syntax("result", FieldType::Name, "the value it produces"),
         syntax("return", FieldType::Text, "what a return gives back"),
+        syntax("fails", FieldType::Name, "the failure a path ends with: fail <Failure>"),
         syntax("scenario", FieldType::Name, "the scenario of the callee it follows"),
         derived("type", FieldType::Type, "the type of its target"), derived("result_type", FieldType::Type, "the type of its result"),
         derived("result_scope", FieldType::Name, "where that type resolves"),
@@ -148,9 +149,11 @@ std::vector<KindSpec> build() {
        {},
        {Kind::Sequence, Kind::Frame}});
   k.push_back({Kind::Frame,
-               "a loop, alt or opt around the steps it holds, in the order written; an alt holds its sides as branches",
-               {syntax("kind", FieldType::Name, "loop, alt, opt, or branch for a side of an alt"),
+               "a loop, alt, opt or attempt around the steps it holds, in the order written; an alt holds its sides as "
+               "branches, an attempt its handlers",
+               {syntax("kind", FieldType::Name, "loop, alt, opt, attempt, branch for a side of an alt, handler of an attempt"),
                 syntax("condition", FieldType::Text, "its guard, as prose"),
+                syntax("failure", FieldType::Name, "the failure a handler handles: on <Failure>"),
                 syntax("scenario", FieldType::Name, "the scenario a loop, an opt or a branch names")},
                {},
                {Kind::Sequence, Kind::Frame}});
