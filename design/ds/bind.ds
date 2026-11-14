@@ -69,7 +69,7 @@ package driftspec@ds {
         @requirement REQ-00022-1
         @requirement REQ-00017-2
       }
-      - bindFields(file: parse::ParsedFile, node: TSNode, entity: model::Entity) -> void {
+      - bindFields(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity) -> void {
         @requirement REQ-00032-2
       }
       - bindAnnotations(file: parse::ParsedFile, node: TSNode, from: std::string, scope: std::string) -> void {
@@ -94,18 +94,18 @@ package driftspec@ds {
       - extend(file: parse::ParsedFile, node: TSNode, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
         @constraint CST-00003-2
       }
-      - bindMember(file: parse::ParsedFile, node: TSNode, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
+      - bindMember(file: parse::ParsedFile, node: TSNode, out_cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
         @requirement REQ-00026-1
       }
       - bindFunction(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00054-1
       }
-      - bindSignature(file: parse::ParsedFile, node: TSNode, entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
+      - bindSignature(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
         @requirement REQ-00028-1
         @requirement REQ-00055-2
         @requirement REQ-00112-1
       }
-      - bindMemberBody(file: parse::ParsedFile, member: TSNode, entity: model::Entity, scope: std::string) -> void {
+      - bindMemberBody(file: parse::ParsedFile, member: TSNode, out_entity: model::Entity, scope: std::string) -> void {
         @requirement REQ-00032-2
       }
       - bindSequence(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
@@ -113,7 +113,7 @@ package driftspec@ds {
         @requirement REQ-00035-1
         @requirement REQ-00036-2
       }
-      - bindSteps(file: parse::ParsedFile, node: TSNode, sequence: model::Entity, holder: std::string, order: int, frames: int) -> void {
+      - bindSteps(file: parse::ParsedFile, node: TSNode, out_sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
         @requirement REQ-00037-1
         @requirement REQ-00110-1
       }
@@ -124,7 +124,7 @@ package driftspec@ds {
         @requirement REQ-00028-1
         @requirement REQ-00024-2
       }
-      - declareOperator(cls: model::Entity, symbol: std::string, location: model::Location) -> void {
+      - declareOperator(out_cls: model::Entity, symbol: std::string, location: model::Location) -> void {
         @requirement REQ-00030-1
       }
       - locationOf(file: parse::ParsedFile, node: TSNode) -> model::Location

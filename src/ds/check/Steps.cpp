@@ -3,7 +3,7 @@
 namespace ds {
 namespace check {
 
-std::vector<model::Finding> ACheck::run(Context& context) { return check(context); }  // read only
+std::vector<model::Finding> ACheck::run(Context& out_context) { return check(out_context); }  // read only
 
 // the one place that names each step: it makes them and keys them by name; the checker runs them
 // through IStep, knowing none of them

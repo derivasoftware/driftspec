@@ -22,7 +22,7 @@ namespace check {
 /// by that guarantee (GUIDE-cpp-design).
 class ACheck : public IStep {
  public:
-  std::vector<model::Finding> run(Context& context) final;
+  std::vector<model::Finding> run(Context& out_context) final;
 
  private:
   virtual std::vector<model::Finding> check(const Context& context) = 0;
@@ -33,7 +33,7 @@ class Linker : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& context) override;
+  std::vector<model::Finding> run(Context& out_context) override;
 
  private:
   void resolveReference(const bind::Reference& reference);
@@ -53,20 +53,20 @@ class BehaviourTyping : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& context) override;
+  std::vector<model::Finding> run(Context& out_context) override;
 
  private:
   /// The class a behaviour is about, and whether its subject is a method.
   const model::Entity* subjectClass(const model::Entity& sequence, const model::Entity** subject) const;
   void couple(const model::Entity& sequence, const model::Entity& type, bool transient);
   /// A message that reached its operation: the call, its arity, and its expansion (B5).
-  void call(model::Entity& msg, const model::Entity& op, const bind::Message& message);
-  void expand(model::Entity& msg, const model::Entity& op, const bind::Message& message);
+  void call(model::Entity& out_msg, const model::Entity& op, const bind::Message& message);
+  void expand(model::Entity& out_msg, const model::Entity& op, const bind::Message& message);
   void checkReturn(const bind::Message& message);
   void checkMessage(const bind::Message& message);
   /// A message with no participant that names a class's operation by its qualified name: a call on the
   /// class itself, which the operation must be static to take (DS-60). False when it names none.
-  bool callStatic(const model::Entity& seq, model::Entity& msg, const bind::Message& message, const std::string& home);
+  bool callStatic(const model::Entity& seq, model::Entity& out_msg, const bind::Message& message, const std::string& home);
   /// The type a name has in a behaviour: attribute, parameter, local or an earlier result (B3). A value is
   /// a pair: the type as written and the scope that resolves it; an empty type is an unknown one.
   bool typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject, const std::string& name,
@@ -112,7 +112,7 @@ class Derivation : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& context) override;
+  std::vector<model::Finding> run(Context& out_context) override;
 
  private:
   void fillLanguages();  // what each package and module is written in, held down by containment (DS-86)
@@ -136,7 +136,7 @@ class FailureFlow : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& context) override;
+  std::vector<model::Finding> run(Context& out_context) override;
 
  private:
   /// The failures the attempts around a step handle: a step in an attempt's steps, not in its handlers.
@@ -191,7 +191,7 @@ class RuleCheck : public IStep {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& context) override;
+  std::vector<model::Finding> run(Context& out_context) override;
 
  private:
   void checkRules();  // a rule answers to a requirement and says what holds; a definition what it ranges over (DS-94)

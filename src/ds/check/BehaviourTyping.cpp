@@ -20,17 +20,17 @@ std::string BehaviourTyping::name() const { return "behaviour"; }
 
 std::vector<std::string> BehaviourTyping::needs() const { return {"linker"}; }
 
-std::vector<model::Finding> BehaviourTyping::run(Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  resolver_ = &context.resolver();
+std::vector<model::Finding> BehaviourTyping::run(Context& out_context) {
+  context_ = &out_context;
+  model_ = &out_context.model();
+  resolver_ = &out_context.resolver();
   for (const auto& m : context_->binder().messages()) {
     checkMessage(m);
     rememberResult(m);  // in order: a result exists for the messages after it
   }
   checkLocals();
   for (const auto& e : context_->binder().events()) checkEvent(e);
-  return context.take();
+  return out_context.take();
 }
 
 const model::Entity* BehaviourTyping::subjectClass(const model::Entity& sequence, const model::Entity** subject) const {
@@ -59,9 +59,9 @@ void BehaviourTyping::couple(const model::Entity& sequence, const model::Entity&
   model_->relate({kind, sequence.id, type.id, sequence.location, ""});
 }
 
-void BehaviourTyping::call(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
-  model_->relate({"calls", msg.id, op.id, message.location, ""});
-  context_->checkVisibility(msg.scope, op.id, message.location);
+void BehaviourTyping::call(model::Entity& out_msg, const model::Entity& op, const bind::Message& message) {
+  model_->relate({"calls", out_msg.id, op.id, message.location, ""});
+  context_->checkVisibility(out_msg.scope, op.id, message.location);
   const int expected = static_cast<int>(op.params.size());
   if (expected != message.argc) {
     context_->report({"E-MSG-ARITY", "error",
@@ -69,35 +69,35 @@ void BehaviourTyping::call(model::Entity& msg, const model::Entity& op, const bi
                           std::to_string(message.argc) + " given",
                       message.location});
   }
-  if (expected == message.argc) checkArguments(msg, op, message);
+  if (expected == message.argc) checkArguments(out_msg, op, message);
   const auto returns = op.fields.find("returns");
-  const auto result = msg.fields.find("result");
+  const auto result = out_msg.fields.find("result");
   if (returns != op.fields.end()) {
-    if (result != msg.fields.end() && primitiveFamily(returns->second) == 4) {
+    if (result != out_msg.fields.end() && primitiveFamily(returns->second) == 4) {
       context_->report(
           {"W-RESULT-NONE", "warning", op.id + " returns nothing, so '" + result->second + "' holds no value", message.location});
     }
-    msg.fields["result_type"] = returns->second;
+    out_msg.fields["result_type"] = returns->second;
     const model::Entity* owner = op.kind == model::Kind::Method ? model_->find(op.scope) : nullptr;
-    msg.fields["result_scope"] = owner ? owner->scope : op.scope;
+    out_msg.fields["result_scope"] = owner ? owner->scope : op.scope;
   }
-  expand(msg, op, message);
+  expand(out_msg, op, message);
 }
 
-void BehaviourTyping::expand(model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+void BehaviourTyping::expand(model::Entity& out_msg, const model::Entity& op, const bind::Message& message) {
   // a message to an operation with a behaviour expands to it (B5): derived, never written; a message
   // that names a scenario expands to that one, and one nobody declares is a finding
-  const auto scenario = msg.fields.find("scenario");
-  const bool named = scenario != msg.fields.end();
+  const auto scenario = out_msg.fields.find("scenario");
+  const bool named = scenario != out_msg.fields.end();
   const std::string id = model::Identity(op.id).sequence(named ? scenario->second : "").text();
   if (const model::Entity* child = model_->find(id)) {
-    model_->relate({"expands-to", msg.id, child->id, message.location, ""});
-    msg.fields["expands"] = child->id;
+    model_->relate({"expands-to", out_msg.id, child->id, message.location, ""});
+    out_msg.fields["expands"] = child->id;
   } else if (named && model::hasScenario(*model_, model::Identity(op.id).sequence().text(), scenario->second)) {
     // a named branch of the one behaviour: the call enters that path of it
-    model_->relate({"expands-to", msg.id, model::Identity(op.id).sequence().text(), message.location, ""});
-    msg.fields["expands"] = model::Identity(op.id).sequence().text();
-    msg.fields["expands-path"] = scenario->second;
+    model_->relate({"expands-to", out_msg.id, model::Identity(op.id).sequence().text(), message.location, ""});
+    out_msg.fields["expands"] = model::Identity(op.id).sequence().text();
+    out_msg.fields["expands-path"] = scenario->second;
   } else if (named) {
     context_->report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
   }
@@ -201,7 +201,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   call(*msg, *op, message);
 }
 
-bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& msg, const bind::Message& message, const std::string& home) {
+bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& out_msg, const bind::Message& message, const std::string& home) {
   // `-> diff::Diff::compare(a, b)`: a qualified name with no participant that names a class's operation
   // calls it on the class itself, as a function of another module is called (DS-60)
   const auto at = message.op.rfind("::");
@@ -211,14 +211,14 @@ bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& msg, c
   if (!type || type->kind != model::Kind::Class) return false;
   const model::Entity* op = resolver_->member(typeId, message.op.substr(at + 2));
   if (!op) return false;
-  msg.fields["type"] = typeId;
+  out_msg.fields["type"] = typeId;
   couple(seq, *type, true);  // the class is reached for one call, like a local
   if (!op->has("static")) {
     context_->report({"W-MSG-NOT-STATIC", "warning",
                       seq.name + " calls " + op->id + " on its class, and it is not static: it needs an instance", message.location});
     return true;
   }
-  call(msg, *op, message);
+  call(out_msg, *op, message);
   return true;
 }
 

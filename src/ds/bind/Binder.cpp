@@ -81,7 +81,7 @@ model::Location Binder::locationOf(const parse::ParsedFile& file, TSNode node) c
           static_cast<int>(end.column) + 1};
 }
 
-void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity) {
+void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity) {
   if (ts_node_is_null(node)) return;
   const uint32_t count = ts_node_named_child_count(node);
   for (uint32_t i = 0; i < count; ++i) {
@@ -90,9 +90,9 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
       const std::string code = fieldText(file, c, "code");
       const std::string key = fieldText(file, c, "key") + (code.empty() ? "" : " " + code);
       const std::string value = trim(fieldText(file, c, "value"));
-      auto existing = entity.fields.find(key);
-      if (existing == entity.fields.end() || existing->second.empty()) {
-        entity.fields[key] = value;
+      auto existing = out_entity.fields.find(key);
+      if (existing == out_entity.fields.end() || existing->second.empty()) {
+        out_entity.fields[key] = value;
       } else {
         existing->second += ", " + value;  // a repeated key accumulates (include: a / include: b)
       }
@@ -386,64 +386,64 @@ TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::
 
 // ---- classes (R14, R15, R17, R19) ----------------------------------------------
 
-void Binder::declareOperator(model::Entity& cls, const std::string& symbol, const model::Location& location) {
+void Binder::declareOperator(model::Entity& out_cls, const std::string& symbol, const model::Location& location) {
   model::Entity op;
   op.kind = model::Kind::Operator;
   op.name = "operator" + symbol;
-  op.id = cls.id + "::" + op.name;
-  op.scope = cls.id;
+  op.id = out_cls.id + "::" + op.name;
+  op.scope = out_cls.id;
   op.location = location;
   op.fields["symbol"] = symbol;
   model_.declare(op);
-  model_.relate({"contains", cls.id, op.id, location, ""});
+  model_.relate({"contains", out_cls.id, op.id, location, ""});
 }
 
-void Binder::bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope) {
-  bindFields(file, member, entity);
+void Binder::bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& out_entity, const std::string& scope) {
+  bindFields(file, member, out_entity);
   TSNode body = child(member, "body");
-  if (!ts_node_is_null(body)) bindFields(file, body, entity);
-  model::Entity* declared = model_.find(entity.id);
+  if (!ts_node_is_null(body)) bindFields(file, body, out_entity);
+  model::Entity* declared = model_.find(out_entity.id);
   // only the declaration the model kept takes the fields: a duplicate is reported and leaves the first as it was
-  const model::Location& at = declared ? declared->location : entity.location;
-  if (declared && at.file == entity.location.file && at.line == entity.location.line && at.column == entity.location.column)
-    declared->fields = entity.fields;
+  const model::Location& at = declared ? declared->location : out_entity.location;
+  if (declared && at.file == out_entity.location.file && at.line == out_entity.location.line && at.column == out_entity.location.column)
+    declared->fields = out_entity.fields;
   if (ts_node_is_null(body)) return;
-  bindAnnotations(file, body, entity.id, scope);
-  visit(file, body, scope, entity.id);  // nested requirements and constraints are about the member (R12)
+  bindAnnotations(file, body, out_entity.id, scope);
+  visit(file, body, scope, out_entity.id);  // nested requirements and constraints are about the member (R12)
 }
 
-void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& cls, const std::vector<std::string>& params,
+void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& out_cls, const std::vector<std::string>& params,
                         const std::set<std::string>& operators) {
   const model::Location loc = locationOf(file, m);
-  const std::string scope = cls.scope;
+  const std::string scope = out_cls.scope;
   model::Entity member;
-  member.scope = cls.id;
+  member.scope = out_cls.id;
   member.location = loc;
 
   if (is(m, "operator")) {
     const std::string symbol = fieldText(file, m, "symbol");
     member.kind = model::Kind::Operator;
     member.name = "operator" + symbol;
-    member.id = cls.id + "::" + member.name;
+    member.id = out_cls.id + "::" + member.name;
     member.fields["symbol"] = symbol;
     if (operators.count(symbol) == 0) {
       model_.report({"E-OPERATOR-UNDECLARED", "error",
-                     "operator " + symbol + " is refined in the body of " + cls.id + " but is not in its header set", loc});
+                     "operator " + symbol + " is refined in the body of " + out_cls.id + " but is not in its header set", loc});
     }
   } else {
     member.kind = is(m, "method") ? model::Kind::Method : model::Kind::Attribute;
     member.name = fieldText(file, m, "name");
-    member.id = cls.id + "::" + member.name;
+    member.id = out_cls.id + "::" + member.name;
     member.fields["visibility"] = fieldText(file, m, "visibility");
   }
 
   if (is(m, "method") || is(m, "operator")) {
     for (TSNode mod : childrenNamed(m, "modifier")) member.flags.push_back(file.textOf(mod));
-    if (is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
-    if (is(m, "method") && member.name == "~" + cls.name) member.flags.push_back("destructor");  // DS-143
-    if (cls.has("dataclass") && member.has("abstract")) {
-      model_.report(
-          {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
+    if (is(m, "method") && member.name == out_cls.name) member.flags.push_back("constructor");
+    if (is(m, "method") && member.name == "~" + out_cls.name) member.flags.push_back("destructor");  // DS-143
+    if (out_cls.has("dataclass") && member.has("abstract")) {
+      model_.report({"E-DATACLASS-ABSTRACT", "error",
+                     out_cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
     }
     bindSignature(file, m, member, scope, params);
   } else {
@@ -468,12 +468,12 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
     declared->location = loc;
   } else {
     model_.declare(member);
-    model_.relate({"contains", cls.id, member.id, loc, ""});
+    model_.relate({"contains", out_cls.id, member.id, loc, ""});
   }
   bindMemberBody(file, m, member, scope);
 }
 
-void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::Entity& entity, const std::string& scope,
+void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity, const std::string& scope,
                            const std::vector<std::string>& params) {
   TSNode parameters{};
   for (uint32_t i = 0; i < ts_node_named_child_count(node); ++i) {
@@ -486,18 +486,18 @@ void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::En
       TSNode p = ts_node_named_child(parameters, i);
       paramTexts.push_back(trim(file.textOf(p)));
       TSNode type = child(p, "type");
-      entity.params.push_back({fieldText(file, p, "name"), ts_node_is_null(type) ? "" : trim(file.textOf(type))});
-      bindType(file, child(p, "type"), scope, entity.id, "uses", "", params, locationOf(file, p));
+      out_entity.params.push_back({fieldText(file, p, "name"), ts_node_is_null(type) ? "" : trim(file.textOf(type))});
+      bindType(file, child(p, "type"), scope, out_entity.id, "uses", "", params, locationOf(file, p));
     }
   }
-  entity.fields["params"] = join(paramTexts, ", ");  // parameters and returns give use (R16)
-  TypeUse returns = bindType(file, child(node, "returns"), scope, entity.id, "uses", "", params, locationOf(file, node));
-  if (!returns.text.empty()) entity.fields["returns"] = returns.text;
+  out_entity.fields["params"] = join(paramTexts, ", ");  // parameters and returns give use (R16)
+  TypeUse returns = bindType(file, child(node, "returns"), scope, out_entity.id, "uses", "", params, locationOf(file, node));
+  if (!returns.text.empty()) out_entity.fields["returns"] = returns.text;
   TSNode fails = child(node, "fails");  // what it promises it may fail with; `fails nothing` promises none (DS-189)
   if (!ts_node_is_null(fails)) {
     std::vector<std::string> names;
     for (uint32_t i = 0; i < ts_node_named_child_count(fails); ++i) names.push_back(trim(file.textOf(ts_node_named_child(fails, i))));
-    entity.fields["fails"] = join(names, ", ");
+    out_entity.fields["fails"] = join(names, ", ");
   }
 }
 
@@ -592,11 +592,11 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
 
 // ---- behaviour (block 3): a sequence is the behaviour of its subject ------------
 
-void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& holder, int& order,
-                       int& frames) {
+void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& out_sequence, const std::string& holder, int& out_order,
+                       int& out_frames) {
   // The steps are a tree (DS-172): each message and frame is contained by what encloses it, the sequence
   // or a frame, in the order written; an alt holds its sides as branches. `holder` is that encloser.
-  const std::string sequenceId = sequence.id;
+  const std::string sequenceId = out_sequence.id;
   const uint32_t n = ts_node_child_count(node);
   std::string current = holder;  // an alt's steps go to its first branch, then to its else branch
   for (uint32_t i = 0; i < n; ++i) {
@@ -613,7 +613,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
     if (is(c, "message") || is(c, "return") || is(c, "fail")) {
       model::Entity m;
       m.kind = model::Kind::Message;
-      m.id = sequenceId + "::m" + std::to_string(order);
+      m.id = sequenceId + "::m" + std::to_string(out_order);
       m.scope = sequenceId;
       m.location = loc;
       const std::string from = fieldText(file, c, "from");
@@ -652,11 +652,11 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       model_.declare(m);
       model_.relate({"contains", current.empty() ? sequenceId : current, m.id, loc, ""});
       messages_.push_back({sequenceId, m.id, m.fields["to"], m.fields["op"], argc, loc, is(c, "return") || is(c, "fail")});
-      ++order;
+      ++out_order;
     } else if (is(c, "loop") || is(c, "alt") || is(c, "opt") || is(c, "attempt") || is(c, "handler")) {
       model::Entity f;
       f.kind = model::Kind::Frame;
-      f.id = sequenceId + "::f" + std::to_string(frames++);
+      f.id = sequenceId + "::f" + std::to_string(out_frames++);
       f.scope = sequenceId;
       f.location = loc;
       f.name = ts_node_type(c);
@@ -669,7 +669,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       model_.relate({"contains", current.empty() ? sequenceId : current, f.id, loc, ""});
       // an alt holds its first side as a branch; the else, when written, opens the second
       const std::string inside = is(c, "alt") ? branch(file, c, sequenceId, f.id, 0, scenario) : f.id;
-      bindSteps(file, c, *model_.find(sequenceId), inside, order, frames);
+      bindSteps(file, c, *model_.find(sequenceId), inside, out_order, out_frames);
     }
   }
 }
