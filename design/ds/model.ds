@@ -62,25 +62,25 @@ package driftspec@ds {
       tags: identity, behaviour
     }
 
-    verification VER-00001-1 {
+    verification VER-00001-2 {
       status: approved
       @requirement REQ-00001-1
-      title: Unit tests cover declaring once, merging the expected node and reporting the duplicate
+      title: Integration tests cover declaring once, a name used before its declaration ending as one declared entity, and the duplicate reported with where the first is
       method: test
       tests:
-        tests/unit/ds/model/test_model.cpp::TestModel.ADeclarationTakesThePlaceOfTheExpectedNode
-        tests/unit/ds/model/test_model.cpp::TestModel.ASecondDeclarationIsReportedExceptForReopenableScopes
-        tests/unit/ds/model/test_model.cpp::TestEntity.HasAFlagItWasDeclaredWith
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.WhatIsNamedBeforeItIsDeclaredIsOneEntityAndNotExpected
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.ASecondDeclarationIsReportedWithWhereTheFirstIs
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.AnEntityKeepsTheFlagsItWasDeclaredWith
     }
 
-    verification VER-00002-1 {
+    verification VER-00002-2 {
       status: approved
       @requirement REQ-00002-1
-      title: Unit tests cover renaming with members and relations, and the refused rename
+      title: Integration tests cover a behaviour renamed onto its subject with its steps and relations, and the rename refused onto a declared identity
       method: test
       tests:
-        tests/unit/ds/model/test_model.cpp::TestModel.ARenameCarriesMembersAndRelations
-        tests/unit/ds/model/test_model.cpp::TestModel.ARenameOntoADeclaredIdentityIsRefused
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.ABehaviourWrittenInAnotherModuleIsRenamedOntoItsSubjectWithItsStepsAndRelations
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.ARenameOntoADeclaredIdentityIsRefused
     }
 
     function kindName(kind: Kind) -> std::string
@@ -202,19 +202,17 @@ package driftspec@ds {
       }
     }
 
-    verification VER-00121-1 {
+    verification VER-00121-2 {
       status: approved
       @requirement REQ-00065-1
       @requirement REQ-00049-2
-      title: Unit tests read one behaviour's tree the same for every reader: messages in the order written, the frame around each step, where a frame opens, an alt's sides and what each names
+      title: Integration tests read one behaviour's tree the same for every reader: messages in the order written, the frame around each step, where a frame opens, an alt's sides and what each names
       method: test
       tests:
-        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.TheMessagesComeInTheOrderWrittenAtAnyDepth
-        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.TheFramesAreTheLoopsAltsAndOptsNeverTheBranches
-        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.TheFrameAroundAStepIsTheInnermostLoopAltOrOpt
-        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.AFrameKnowsWhereItOpensAndWhatItHoldsFirst
-        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.AnAltKnowsItsElseSideAndWhatEachSideNames
-        tests/unit/ds/model/test_sequence_tree.cpp::TestSequenceTree.AnAltWithAnEmptyElseHasOneSide
+        tests/integration/ds/model/test_sequence_tree_of_a_design.cpp::TestSequenceTreeOfADesign.TheMessagesComeInTheOrderWrittenAtAnyDepth
+        tests/integration/ds/model/test_sequence_tree_of_a_design.cpp::TestSequenceTreeOfADesign.TheFramesAreTheLoopsAltsAndOptsAndEachStepKnowsTheInnermostAroundIt
+        tests/integration/ds/model/test_sequence_tree_of_a_design.cpp::TestSequenceTreeOfADesign.AFrameKnowsWhereItOpensAndWhatItHoldsFirst
+        tests/integration/ds/model/test_sequence_tree_of_a_design.cpp::TestSequenceTreeOfADesign.AnAltKnowsItsElseSideAndWhatEachSideNames
     }
 
     verification VER-00122-1 {
@@ -566,40 +564,35 @@ package driftspec@ds {
       - tree() -> void
     }
 
-    verification VER-00119-1 {
+    verification VER-00119-2 {
       status: approved
       @requirement REQ-00001-1
-      title: Unit tests cover the questions the model answers by identity, kept in step with every declare, relate and rename
+      title: Integration tests cover the questions the model answers by identity, kept in step with every file bound and every rename
       method: test
       tests:
-        tests/unit/ds/model/test_index.cpp::TestIndex.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
-        tests/unit/ds/model/test_index.cpp::TestIndex.EveryRelationOfAKindComesInTheOrderStated
-        tests/unit/ds/model/test_index.cpp::TestIndex.WhatTouchesAnEntityComesOnceInTheOrderStated
-        tests/unit/ds/model/test_index.cpp::TestIndex.ARelationStatedLaterIsAnsweredAtOnce
-        tests/unit/ds/model/test_index.cpp::TestIndex.AScopeNamesWhatItDeclaresExpectedOnesIncluded
-        tests/unit/ds/model/test_index.cpp::TestIndex.AnExpectedNodeThatIsDeclaredMovesToTheScopeOfItsDeclaration
-        tests/unit/ds/model/test_index.cpp::TestIndex.WhatHoldsWhatIsATreeFromContainsAndThenFromTheScope
-        tests/unit/ds/model/test_index.cpp::TestIndex.ALinkThatWouldCloseACycleIsLeftOutOfTheTree
-        tests/unit/ds/model/test_index.cpp::TestIndex.TheTreeFollowsWhatIsDeclaredAfterItWasAsked
-        tests/unit/ds/model/test_index.cpp::TestIndex.AnArtefactIsFoundByAnyRevisionOrNone
-        tests/unit/ds/model/test_index.cpp::TestIndex.ARenameMovesEverythingIndexedByTheOldIdentity
-        tests/unit/ds/model/test_index.cpp::TestIndex.ACopyOfTheModelAnswersForItself
-        tests/unit/ds/model/test_index.cpp::TestIndex.SeveralKindsAndTheWholeListComeInTheOrderStated
-        tests/unit/ds/model/test_index.cpp::TestIndex.AnAnswerIsACopyThatALaterChangeLeavesAsItWas
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.EveryRelationOfAKindAndOfSeveralKindsComesInTheOrderStated
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatTouchesAnEntityComesOnce
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatHoldsWhatIsATreeAndAScopeNamesWhatItDeclares
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.AnArtefactIsFoundByAnyRevisionOrNone
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatAFileBoundLaterDeclaresIsAnsweredAtOnce
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.ARenameMovesEverythingIndexedByTheOldIdentity
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.AnAnswerIsACopyThatALaterChangeLeavesAsItWas
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.ACopyOfTheModelAnswersForItself
     }
 
-    verification VER-00120-2 {
+    verification VER-00120-3 {
       status: approved
       @constraint CST-00008-2
-      title: Unit tests hold the index to the order stated, to every change of the model, to answers a later change leaves as they were and to a copy that answers for itself; tools/same.sh holds every output to main
+      title: Integration tests hold the index to the order stated, to every change of the model, to answers a later change leaves as they were and to a copy that answers for itself; tools/same.sh holds every output to main
       method: test
       tests:
-        tests/unit/ds/model/test_index.cpp::TestIndex.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
-        tests/unit/ds/model/test_index.cpp::TestIndex.EveryRelationOfAKindComesInTheOrderStated
-        tests/unit/ds/model/test_index.cpp::TestIndex.ARelationStatedLaterIsAnsweredAtOnce
-        tests/unit/ds/model/test_index.cpp::TestIndex.TheTreeFollowsWhatIsDeclaredAfterItWasAsked
-        tests/unit/ds/model/test_index.cpp::TestIndex.ARenameMovesEverythingIndexedByTheOldIdentity
-        tests/unit/ds/model/test_index.cpp::TestIndex.ACopyOfTheModelAnswersForItself
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.EveryRelationOfAKindAndOfSeveralKindsComesInTheOrderStated
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatAFileBoundLaterDeclaresIsAnsweredAtOnce
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.ARenameMovesEverythingIndexedByTheOldIdentity
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.AnAnswerIsACopyThatALaterChangeLeavesAsItWas
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.ACopyOfTheModelAnswersForItself
     }
 
     class Model {                            // the resolved workspace: entities by identity, relations and findings

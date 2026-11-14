@@ -21,14 +21,14 @@ package driftspec@ds {
       tags: export, json
     }
 
-    verification VER-00005-1 {
+    verification VER-00005-2 {
       status: approved
       @requirement REQ-00005-1
-      title: Unit tests cover the three arrays, their fields and the compact form
+      title: Integration tests cover the three arrays, their fields and the compact form
       method: test
       tests:
-        tests/unit/ds/exporter/test_jsonexport.cpp::TestJsonExport.TheThreeArraysWithTheirFields
-        tests/unit/ds/exporter/test_jsonexport.cpp::TestJsonExport.CompactOnRequest
+        tests/integration/ds/exporter/test_export_of_a_design.cpp::TestExportOfADesign.TheThreeArraysCarryWhatTheTextDeclaresRelatesAndGetsWrong
+        tests/integration/ds/exporter/test_export_of_a_design.cpp::TestExportOfADesign.TheCompactFormSaysTheSameOnOneLine
     }
 
     requirement REQ-00068-1 {

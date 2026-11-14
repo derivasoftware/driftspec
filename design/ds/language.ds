@@ -96,13 +96,14 @@ package driftspec@ds {
       rationale:
         A specification that lives per file cannot say that two files talk
         about the same thing (R1, R6).
-      verification VER-00041-1 {
+      verification VER-00041-2 {
         title: Integration tests confirm a specification is a directory of .ds files read as one, in any order
         status: approved
         method: test
         tests:
           tests/integration/ds/check/test_checker.cpp::TestChecker.UndeclaredReferencesBecomeExpectedNodesReportedOnce
-          tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
+          tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.TheFilesOfADirectoryAreReadAsOneInAnyOrder
+          tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AFileThatParsesReportsNoSyntaxErrorBesideOneThatDoesNot
       }
       constraint CST-00002-1 {
         tags: language, workspace
@@ -911,7 +912,7 @@ package driftspec@ds {
             ds query <workspace> failures <operation> answers each escaping failure, named by the
             operation it starts in.
           rationale: Owner, 2026-11-13 (DS-180, DS-188). The design writes only where a failure starts and where it is handled; what escapes is inferred, for exceptions, error values and codes alike.
-          verification VER-00127-1 {
+          verification VER-00127-2 {
             title: Tests confirm a failure escapes every caller that does not handle it, with its path and the scenario it starts in, that a handler's own failure goes on, that calls calling each other end, and that the query answers it
             status: approved
             method: test
@@ -919,9 +920,9 @@ package driftspec@ds {
               tests/integration/ds/check/test_failures.cpp::TestFailures.AFailureEscapesEveryCallerThatDoesNotHandleIt
               tests/integration/ds/check/test_failures.cpp::TestFailures.EachEscapeKeepsThePathItComesUpByAndTheScenarioItStartsIn
               tests/integration/ds/check/test_failures.cpp::TestFailures.TheQueryAnswersWhatEscapesAnOperationByWhereEachStarts
-              tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.AFailureInsideAnAttemptThatHandlesItEscapesNothing
-              tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.AHandlersOwnFailureIsNotHandledByTheAttemptThatHoldsIt
-              tests/unit/ds/check/test_failure_flow.cpp::TestFailureFlow.CallsThatCallEachOtherEndWithWhatEitherLetsEscape
+              tests/integration/ds/check/test_failure_escapes.cpp::TestFailureEscapes.AFailureInsideAnAttemptThatHandlesItEscapesNothing
+              tests/integration/ds/check/test_failure_escapes.cpp::TestFailureEscapes.AHandlersOwnFailureIsNotHandledByTheAttemptThatHoldsIt
+              tests/integration/ds/check/test_failure_escapes.cpp::TestFailureEscapes.CallsThatCallEachOtherEndWithWhatEitherLetsEscape
           }
         }
         requirement REQ-00112-1 {
@@ -1144,8 +1145,8 @@ package driftspec@ds {
         Owner, 2026-11-07 (DS-94): structural rules are always decidable in the design, in a formal
         or semi-formal syntax; nothing is inferred from prose or keywords. Rules about behaviour wait
         for contracts and recorded runs.
-      verification VER-00105-2 {
-        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, malformed or undecidable formulas are rejected, and a containment cycle left by a syntax error ends the evaluation
+      verification VER-00105-3 {
+        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, malformed or undecidable formulas are rejected, and the rules of a file that stops parsing are decided to the end
         status: approved
         method: test
         tests:
@@ -1154,7 +1155,8 @@ package driftspec@ds {
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionRecursUntilItsFixpoint
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.WhatARuleNamesMustExistAndItsVariablesBeBound
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationThroughRecursionIsRejected
-          tests/unit/ds/check/test_evaluator.cpp::TestEvaluator.AContainmentCycleEndsTheWalksInsteadOfLoopingForEver
+          tests/integration/ds/check/test_half_typed.cpp::TestHalfTypedFile.TheRulesOfAFileThatStopsParsingAreDecidedAndTheCheckEnds
+          tests/integration/ds/check/test_half_typed.cpp::TestHalfTypedFile.TheSameRulesAreDecidedOnceTheFileParses
       }
     }
 
@@ -1387,14 +1389,14 @@ package driftspec@ds {
 
   }
 
-  verification VER-00042-1 {
+  verification VER-00042-2 {
     status: approved
     @constraint CST-00002-1
-    title: Unit tests confirm a second declaration of one identity is reported and reopenable scopes are not
+    title: Integration tests confirm a second declaration of one identity is reported and reopenable scopes are not
     method: test
     tests:
-      tests/unit/ds/model/test_model.cpp::TestModel.ASecondDeclarationIsReportedExceptForReopenableScopes
       tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+      tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.ASecondDeclarationIsReportedWithWhereTheFirstIs
   }
   verification VER-00043-2 {
     status: approved

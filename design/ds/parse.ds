@@ -33,14 +33,14 @@ package driftspec@ds {
       tags: parse, workspace
     }
 
-    verification VER-00008-1 {
+    verification VER-00008-2 {
       status: approved
       @requirement REQ-00008-1
-      title: Unit tests cover a whole workspace parsed without errors and a syntax error marked
+      title: Integration tests cover a whole workspace parsed without errors and a syntax error marked
       method: test
       tests:
-        tests/unit/ds/parse/test_parser.cpp::TestParser.ParsesAWholeWorkspaceWithoutSyntaxErrors
-        tests/unit/ds/parse/test_parser.cpp::TestParser.ReportsSyntaxErrors
+        tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AWholeWorkspaceIsReadWithoutSyntaxErrors
+        tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.ASyntaxErrorIsReportedWhereTheFileStopsParsing
     }
 
     requirement REQ-00080-1 {
