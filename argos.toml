@@ -39,3 +39,14 @@ reason = "Parser owns a TSParser: its destructor and deleted copy assignment are
 code = "W-CPP-FORBIDDEN-STDLIB"
 workspace = true
 reason = "DriftSpec is an NA desktop tool: its engine holds the model in std:: maps and vectors and hands them across its interfaces by design; the high-integrity ban on standard containers in signatures does not apply here (Owner decision, DS-134)."
+
+# Marking every method noexcept is a rule of certified code, where no dynamic
+# memory is used and a method cannot throw. For DriftSpec the rule that holds is
+# the derived one: a method is noexcept when no exception can escape it,
+# directly or through what it calls. The design can compute that from its
+# failure model (DS-190, parked); until then the blanket rule is set aside for
+# the whole workspace (Owner, 2026-11-14, DS-133).
+[[diagnose.exempt]]
+code = "W-CPP-METHOD-NOT-NOEXCEPT"
+workspace = true
+reason = "The blanket noexcept rule matters for certified code; DriftSpec is an NA desktop tool whose engine allocates in almost every method. What holds here is the derived rule (noexcept when nothing can escape, directly or transitively), to be checked from the design's failure model when DS-190 is taken up (Owner decision, DS-133)."
