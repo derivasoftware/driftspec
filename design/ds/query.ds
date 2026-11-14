@@ -12,6 +12,7 @@ package driftspec@ds {
   }
 
   module query {
+    @requirement REQ-00003-2
 
     // ---- the principles, as rules ---------------------------------------------------------------
     rule query-draws-nothing {

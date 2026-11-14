@@ -5,6 +5,7 @@
 package driftspec@ds {
 
   module diff {
+    @requirement REQ-00004-1
 
     requirement REQ-00004-1 {
       status: approved
