@@ -274,7 +274,7 @@ package driftspec {
       tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_finds_every_tool_of_the_contract
   }
   verification SVER-00022-1 {
-    status: draft
+    status: approved
     @requirement SREQ-00018-1
     title: System tests drive the ds binary by its verbs and read its exit codes
     method: test
