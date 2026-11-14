@@ -664,6 +664,7 @@ package driftspec@ds {
         }
       }
       requirement REQ-00054-1 {
+        status: approved
         tags: language, lld, function
         verification VER-00058-1 {
           title: Unit tests confirm a function is an operation of its module: the functions oracle
@@ -683,6 +684,8 @@ package driftspec@ds {
           entities were functions.
 
         requirement REQ-00055-2 {
+
+          status: approved
           tags: language, lld, function
           title: A function shall carry a method's signature and body
           text: Parameters and the return give use; the body holds notes, annotations, rules and nested artefacts.
@@ -695,6 +698,7 @@ package driftspec@ds {
           }
         }
         requirement REQ-00056-1 {
+          status: approved
           tags: language, lld, function
           title: The behaviour of a function shall run on its parameters and locals, and a call with no target shall reach a function of the module
           text:
@@ -711,6 +715,7 @@ package driftspec@ds {
           }
         }
         requirement REQ-00057-1 {
+          status: approved
           tags: language, lld, function
           title: A class diagram shall draw each function as a box of its own, stereotyped function
           verification VER-00061-1 {
