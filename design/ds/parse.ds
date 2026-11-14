@@ -15,6 +15,8 @@ package driftspec@ds {
   }
 
   module parse {
+    @requirement REQ-00008-1
+    @requirement REQ-00080-1
 
     requirement REQ-00008-1 {
       status: approved
