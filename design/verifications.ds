@@ -273,4 +273,17 @@ package driftspec {
       tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_points_and_annotates_and_the_reader_sees_it_and_answers
       tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_finds_every_tool_of_the_contract
   }
+  verification SVER-00022-1 {
+    status: draft
+    @requirement SREQ-00018-1
+    title: System tests drive the ds binary by its verbs and read its exit codes
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
+      tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
+      tests/system/ds/test_qualification.cpp::TestQualification.AVersionThatDoesNotLoadIsComparedToNothing
+      tests/system/ds/test_qualification.cpp::TestQualification.ADiffThatDrawsStillCountsItsFindings
+      tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
+  }
+
 }
