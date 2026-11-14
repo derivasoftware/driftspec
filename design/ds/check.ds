@@ -92,14 +92,14 @@ package driftspec@ds {
       + ~IStep()
       + abstract name() -> std::string
       + abstract needs() -> std::vector<std::string>
-      + abstract run(context: Context) -> std::vector<model::Finding>
+      + abstract run(out_context: Context) -> std::vector<model::Finding>
     }
 
     // A step that only checks (DS-138): run hands check the context to read, whose model is const,
     // so no check can change the model; what it finds it gives back. The one abstract class here.
     class ACheck : IStep {
       @requirement REQ-00012-1
-      + run(context: Context) -> std::vector<model::Finding>
+      + run(out_context: Context) -> std::vector<model::Finding>
       - abstract check(context: Context) -> std::vector<model::Finding>
     }
 
@@ -173,7 +173,7 @@ package driftspec@ds {
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> std::vector<model::Finding>
+      + run(out_context: Context) -> std::vector<model::Finding>
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
         @requirement REQ-00053-1
@@ -208,17 +208,17 @@ package driftspec@ds {
       - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> std::vector<model::Finding>
+      + run(out_context: Context) -> std::vector<model::Finding>
       - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
         @requirement REQ-00036-2
       }
       - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
         @requirement REQ-00038-2
       }
-      - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+      - call(out_msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00037-1
       }
-      - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+      - expand(out_msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00038-2
       }
       - checkReturn(message: bind::Message) -> void {
@@ -228,7 +228,7 @@ package driftspec@ds {
         @requirement REQ-00037-1
         @requirement REQ-00056-1
       }
-      - callStatic(seq: model::Entity, msg: model::Entity, message: bind::Message, home: std::string) -> bool {
+      - callStatic(seq: model::Entity, out_msg: model::Entity, message: bind::Message, home: std::string) -> bool {
         @requirement REQ-00108-1
       }
       - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
@@ -301,7 +301,7 @@ package driftspec@ds {
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> std::vector<model::Finding>
+      + run(out_context: Context) -> std::vector<model::Finding>
       - classify() -> void {
         @requirement REQ-00031-1
       }
@@ -357,7 +357,7 @@ package driftspec@ds {
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> std::vector<model::Finding>
+      + run(out_context: Context) -> std::vector<model::Finding>
       - checkRules() -> void {
         @requirement REQ-00095-2
       }
@@ -375,7 +375,7 @@ package driftspec@ds {
       - refs model_: model::Model
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(context: Context) -> std::vector<model::Finding>
+      + run(out_context: Context) -> std::vector<model::Finding>
       - handledAround(step: std::string) -> std::set<std::string>
       - originOf(step: std::string, sequence: std::string) -> std::string
       - hasBehaviour(operation: std::string) -> bool
@@ -387,12 +387,12 @@ package driftspec@ds {
     // Until nothing changes: a pass over every behaviour adds what starts in it and what its calls
     // let escape, unless an attempt around the call handles it; then each operation is written.
     sequence FailureFlow::run {
-      self -> context.model() -> model
+      self -> out_context.model() -> model
       loop until a pass adds nothing {
         -> pass(escapes) -> changed
       }
       -> write(escapes)
-      self -> context.take() -> found
+      self -> out_context.take() -> found
       return found
     }
 

@@ -20,15 +20,15 @@ std::string Linker::name() const { return "linker"; }
 
 std::vector<std::string> Linker::needs() const { return {}; }
 
-std::vector<model::Finding> Linker::run(Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  resolver_ = &context.resolver();
+std::vector<model::Finding> Linker::run(Context& out_context) {
+  context_ = &out_context;
+  model_ = &out_context.model();
+  resolver_ = &out_context.resolver();
   defineLoneExtensions();
   for (const auto& r : context_->binder().references()) resolveReference(r);
   unifyBehaviours();
   for (const auto& r : context_->binder().references()) checkTemplateBound(r);
-  return context.take();
+  return out_context.take();
 }
 
 void Linker::defineLoneExtensions() {

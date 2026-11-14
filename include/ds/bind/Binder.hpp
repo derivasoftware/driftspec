@@ -65,7 +65,7 @@ class Binder {
  private:
   /// What a type expression contributed: whether it named something class-like, and its text.
   void visit(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
-  void bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& entity);
+  void bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity);
   void bindAnnotations(const parse::ParsedFile& file, TSNode node, const std::string& from, const std::string& scope);
   /// What a rule or a definition says, read from its clauses into the model's formulas (DS-94).
   void bindFormula(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity);
@@ -75,16 +75,17 @@ class Binder {
   /// An extension block (annotations only) adds relations to an entity defined elsewhere, or expects it.
   void extend(const parse::ParsedFile& file, TSNode node, const std::string& id, model::Kind kind, const std::string& name,
               const std::string& scope, const model::Location& loc);
-  void bindMember(const parse::ParsedFile& file, TSNode node, model::Entity& cls, const std::vector<std::string>& params,
+  void bindMember(const parse::ParsedFile& file, TSNode node, model::Entity& out_cls, const std::vector<std::string>& params,
                   const std::set<std::string>& operators);
   /// A function of a module: a method's signature and body with the module as its scope.
   void bindFunction(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   /// The parameters and the return of a method or a function: their text, and the use they give.
-  void bindSignature(const parse::ParsedFile& file, TSNode node, model::Entity& entity, const std::string& scope,
+  void bindSignature(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity, const std::string& scope,
                      const std::vector<std::string>& params);
-  void bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& entity, const std::string& scope);
+  void bindMemberBody(const parse::ParsedFile& file, TSNode member, model::Entity& out_entity, const std::string& scope);
   void bindSequence(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
-  void bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& sequence, const std::string& holder, int& order, int& frames);
+  void bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity& out_sequence, const std::string& holder, int& out_order,
+                 int& out_frames);
   /// One side of an alt (DS-172): a frame of kind branch the alt contains, `side` 0 for the first, 1 for the else.
   std::string branch(const parse::ParsedFile& file, TSNode at, const std::string& sequence, const std::string& alt, int side,
                      const std::string& scenario);
@@ -92,7 +93,7 @@ class Binder {
   TypeUse bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
                    const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
                    const model::Location& location);
-  void declareOperator(model::Entity& cls, const std::string& symbol, const model::Location& location);
+  void declareOperator(model::Entity& out_cls, const std::string& symbol, const model::Location& location);
   model::Location locationOf(const parse::ParsedFile& file, TSNode node) const;
 
   model::Model& model_;

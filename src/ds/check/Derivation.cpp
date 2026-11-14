@@ -23,13 +23,13 @@ std::vector<std::string> Derivation::needs() const {
   return {"linker"};
 }
 
-std::vector<model::Finding> Derivation::run(Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  resolver_ = &context.resolver();
+std::vector<model::Finding> Derivation::run(Context& out_context) {
+  context_ = &out_context;
+  model_ = &out_context.model();
+  resolver_ = &out_context.resolver();
   classify();
   fillLanguages();
-  return context.take();
+  return out_context.take();
 }
 
 // interface / abstract / value and the operator families are derived, never written (R14, R17)

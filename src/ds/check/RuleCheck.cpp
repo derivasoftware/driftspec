@@ -23,12 +23,12 @@ std::vector<std::string> RuleCheck::needs() const {
   return {"linker", "behaviour", "derivation"};
 }
 
-std::vector<model::Finding> RuleCheck::run(Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  resolver_ = &context.resolver();
+std::vector<model::Finding> RuleCheck::run(Context& out_context) {
+  context_ = &out_context;
+  model_ = &out_context.model();
+  resolver_ = &out_context.resolver();
   checkRules();
-  return context.take();
+  return out_context.take();
 }
 
 // A rule makes a requirement real (REQ-00095-2): it answers to one, and says what holds or what must
