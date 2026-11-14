@@ -107,19 +107,19 @@ package driftspec@ds {
       + static withoutRevision(id: std::string) -> std::string
     }
 
-    verification VER-00123-1 {
+    verification VER-00123-2 {
       status: approved
       @requirement REQ-00107-1
       @constraint CST-00009-1
-      title: Unit and integration tests ask a loaded workspace from C++ and from Python, two at once, and change an answer without changing the model
+      title: Integration tests ask a loaded workspace from C++ and from Python, two at once, and change an answer without changing the model
       method: test
       tests:
-        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.ItAnswersWhatTheCommandLineAnswers
-        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.OneHopIsTheIndexOfTheModel
-        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.ABehaviourIsAnsweredAsItsTreePathAndWalk
-        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.ItAsksAsDsQueryAndDrawsAsDsRender
-        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.TwoLoadedAtOnceTellWhatChangedFromOneToTheOther
-        tests/unit/ds/api/test_workspace.cpp::TestWorkspace.AnIdentityIsWrittenAsTheModelWritesIt
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ItAnswersWhatTheCommandLineAnswers
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.OneHopIsTheIndexOfTheModel
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ABehaviourIsAnsweredAsItsTreePathAndWalk
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ItAsksAsDsQueryAndDrawsAsDsRender
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.TwoLoadedAtOnceTellWhatChangedFromOneToTheOther
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.AnIdentityIsWrittenAsTheModelWritesIt
         tests/integration/python/test_workspace.py::TestWorkspace::test_one_load_answers_the_model_the_check_and_one_hop
         tests/integration/python/test_workspace.py::TestWorkspace::test_a_behaviour_is_read_as_its_tree_path_and_walk
         tests/integration/python/test_workspace.py::TestWorkspace::test_it_asks_as_ds_query_does_and_draws_as_ds_render_does

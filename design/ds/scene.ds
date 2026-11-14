@@ -660,15 +660,15 @@ package driftspec@ds {
       @requirement REQ-00069-1
     }
 
-    verification VER-00118-1 {
+    verification VER-00118-2 {
       status: approved
       @requirement REQ-00069-1
-      title: Unit tests confirm the map says where each identity lands, the layers come in order each adding its own part, and the scene builds the same document every time
+      title: Integration tests confirm the map says where each identity lands, the layers come in order each adding its own part, and the scene builds the same document every time
       method: test
       tests:
-        tests/unit/ds/scene/test_layers.cpp::TestMap.AnIdentityLandsOnItselfOrTheNearestBoxThatHoldsIt
-        tests/unit/ds/scene/test_layers.cpp::TestLayers.TheLayersComeInOrderAndEachAddsItsOwnPart
-        tests/unit/ds/scene/test_layers.cpp::TestLayers.TheSceneBuildsTheSameDocumentEveryTime
+        tests/integration/ds/scene/test_scene_layers.cpp::TestSceneLayersOfADesign.EveryIdentityOfTheDesignLandsOnItselfOrTheNearestBoxThatHoldsIt
+        tests/integration/ds/scene/test_scene_layers.cpp::TestSceneLayersOfADesign.TheLayersComeInOrderAndEachAddsItsOwnPartOfTheDesign
+        tests/integration/ds/scene/test_scene_layers.cpp::TestSceneLayersOfADesign.TheSceneBuildsTheSameDocumentEveryTime
     }
 
     // structure: the relations between boxes and what each diagram shows
