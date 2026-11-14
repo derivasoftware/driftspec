@@ -16,7 +16,6 @@ package driftspec@ds {
 
   module parse {
     @requirement REQ-00008-1
-    @requirement REQ-00080-1
 
     requirement REQ-00008-1 {
       status: approved
@@ -101,7 +100,9 @@ package driftspec@ds {
       }
     }
 
-    - function firstError(node: TSNode, text: std::string, file: ParsedFile) -> bool
+    - function firstError(node: TSNode, text: std::string, file: ParsedFile) -> bool {
+      @requirement REQ-00080-1
+    }
 
     // Most of parsing is the tree-sitter C API, whose functions the design does not declare: what
     // is left of parseText is the file it fills and, when the tree has an error, where it is.

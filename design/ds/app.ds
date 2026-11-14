@@ -6,6 +6,7 @@
 
 package driftspec@ds {
   module app {
+    @requirement SREQ-00018-1
     function main(argv: list<string>) -> int
 
     - function load(dir: path) -> model::Model

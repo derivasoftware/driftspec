@@ -152,6 +152,26 @@ package driftspec {
     tags: live, viewer, mcp
   }
 
+  requirement SREQ-00018-1 {
+    status: draft
+    title: The system shall be driven by one command, ds, with a verb for each use case and an exit code that names how it ended
+    text:
+      A person at a terminal and a script drive the tool the same way: ds, a verb (check, export,
+      render, diff, query, manual), the workspace and the options of that verb. What is asked for
+      goes to standard output, why nothing was done to standard error, and the exit code names the
+      outcome of the use case the verb serves: 0 when it went well, another for each way it may
+      end. The command reads the arguments, loads the workspace and hands it to whoever answers;
+      nothing else in the tool knows of a command line.
+    rationale:
+      The command line was there and nothing asked for it: the use cases say what goes in and what
+      comes out, the operations of the cli interface say how each is typed, and no requirement said
+      that a command exists and owns the arguments and the exits (found by argos as diagrams with no
+      requirement, DS-137). It is the owner of the app module in the sense of bottom-up ownership:
+      why the module exists; what it does are the use cases, which hang from the requirements they
+      serve.
+    tags: cli, app
+  }
+
   requirement SREQ-00014-1 {
     status: approved
     title: The system shall carry its own manual: how each kind of the language is written, what each finding means and what each command's exit codes say
