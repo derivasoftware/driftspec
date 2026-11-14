@@ -123,6 +123,11 @@ package driftspec@ds {
       @requirement REQ-00106-1
     }
 
+    // the page ds carries inside: viewer/scene.html compiled in, with the places the scene fills
+    function viewerTemplate() -> std::string {
+      @requirement REQ-00070-1
+    }
+
     // ds render -f json
     class SceneJson : IFormat {
       @requirement REQ-00106-1

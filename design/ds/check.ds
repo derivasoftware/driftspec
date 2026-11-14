@@ -160,6 +160,11 @@ package driftspec@ds {
       @requirement REQ-00012-1
     }
 
+    // primitives one converts to the other without saying so; any other pair of primitives is a mismatch
+    function primitiveFamily(type: std::string) -> int {
+      @requirement REQ-00058-2
+    }
+
     class Linker : IStep {                // references become relations, behaviours take their subject's identity
       @requirement REQ-00043-1
       @requirement REQ-00053-1
