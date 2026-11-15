@@ -113,6 +113,7 @@ package iris {
 
     class Projection {
       @requirement REQ-00001-2                   // the class realises it
+      @requirment REQ-00001-2                    // ! W-ANNOTATION-UNKNOWN: a typo traces nothing
       @constraint CST-00002-1                    // the rule applies here
       + sync(app: string) -> Report                                      // ! W-REF-UNDECLARED: Report is declared nowhere
     }

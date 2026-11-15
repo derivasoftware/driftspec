@@ -50,7 +50,8 @@ TEST_F(TestArtefacts, TheOracleFindingsAndNothingElse) {
   EXPECT_EQ(byCode["W-PARENT-IGNORED"], 1);       // REQ-00003-1
   EXPECT_EQ(byCode["W-VER-NO-TEST"], 1);          // VER-00004-3
   EXPECT_EQ(byCode["W-REF-UNDECLARED"], 1);       // Report
-  EXPECT_EQ(model.findings().size(), 6u);
+  EXPECT_EQ(byCode["W-ANNOTATION-UNKNOWN"], 1);   // @requirment on Projection
+  EXPECT_EQ(model.findings().size(), 7u);
 }
 
 TEST_F(TestArtefacts, TheRevisionIsPartOfTheIdentityAndLinksNameIt) {
