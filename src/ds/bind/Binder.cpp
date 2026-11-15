@@ -208,6 +208,14 @@ void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const s
     if (!is(c, "annotation")) continue;
     const std::string kind = fieldText(file, c, "kind");
     const model::AnnotationSpec& spec = model::annotationOf(kind);
+    if (spec.relation == "refers") {  // a word the language gives no meaning to: kept as a link, and said (DS-210)
+      std::string known;
+      for (const auto& a : model::annotations())
+        if (a.name.rfind("@", 0) == 0 && a.name.find('<') == std::string::npos) known += (known.empty() ? "" : ", ") + a.name;
+      model_.report({"W-ANNOTATION-UNKNOWN", "warning",
+                     "@" + kind + " is no annotation the language knows (" + known + "); it is kept as a link nothing reads",
+                     locationOf(file, c)});
+    }
     const std::string relation = relationForAnnotation(entity ? entity->kind : model::Kind::Class, spec);
     references_.push_back({from, fieldText(file, c, "target"), scope, relation, spec.target, locationOf(file, c), "", {}});
   }

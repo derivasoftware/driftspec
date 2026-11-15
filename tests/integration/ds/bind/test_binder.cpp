@@ -56,4 +56,12 @@ TEST_F(TestBinder, NestingGivesTheRelation) {
   EXPECT_EQ(model.find("R-1")->fields.at("title"), "t");
 }
 
+TEST_F(TestBinder, AnAnnotationWordTheLanguageDoesNotKnowIsReportedAndKept) {
+  bindText("package ds {\n  module m {\n    class C {\n      @requirment R-1\n      @requirement R-1\n    }\n  }\n}\n");
+  ASSERT_EQ(model.findings().size(), 1u);
+  EXPECT_EQ(model.findings()[0].code, "W-ANNOTATION-UNKNOWN");
+  EXPECT_NE(model.findings()[0].message.find("@requirment"), std::string::npos);
+  EXPECT_EQ(model.findings()[0].location.line, 4);
+}
+
 }  // namespace

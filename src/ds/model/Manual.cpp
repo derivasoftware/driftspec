@@ -251,6 +251,9 @@ std::vector<CodeSpec> buildCodes() {
       {"W-FIELD-UNKNOWN", "warning",
        "A field that its kind does not declare in the metamodel: a typo, or a field the language does not know.",
        "ds manual <kind> lists the fields of each kind."},
+      {"W-ANNOTATION-UNKNOWN", "warning",
+       "An annotation word the language gives no meaning to: a typo, or a word no check reads. It is kept as a link.",
+       "ds manual annotations lists the words that mean something."},
       {"W-MODIFIER-ON-VALUE", "warning", "owns, refs or shares on a value type (int, string...) means nothing.", "Drop the modifier."},
       {"W-MSG-UNDECLARED", "warning", "A message calls an operation its target does not declare.",
        "Declare the operation, or correct the name or the target."},
@@ -368,7 +371,7 @@ const std::vector<AnnotationSpec>& annotations() {
       {"@interface", "realises", "the class or verification carries out the interface", "", Kind::Interface},
       {"@uses", "consumes", "the package, module or class depends on an interface another box offers", "", Kind::Interface},
       {"@verification", "exercised-by", "the sequence is run by the verification", "", Kind::Verification},
-      {"@<any other word>", "refers", "kept as a link the language gives no meaning to: no check reads it"},
+      {"@<any other word>", "refers", "kept as a link the language gives no meaning to, and reported (W-ANNOTATION-UNKNOWN)"},
       {": <UC ID> after an operation", "realises", "not an annotation: an interface operation realises the use case it names"},
   };
   return all;

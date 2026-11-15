@@ -1261,6 +1261,27 @@ package driftspec@ds {
             tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheSeparateFileIsTheNormalPlace
         }
       }
+      requirement REQ-00114-1 {
+        tags: language, artefacts, annotations
+        status: approved
+        title: An annotation word the language gives no meaning to shall be reported as W-ANNOTATION-UNKNOWN
+        text:
+          A @word outside the table of annotations is a warning where it is written,
+          naming the word and the words the language knows. The link it makes is kept
+          (refers): the warning does not drop it, and loading never fails on it.
+        rationale:
+          Model audit 2026-11, finding G2 (DS-210): @requirment REQ-1 traced nothing and
+          reported nothing, the easiest silent failure of the language and in its
+          traceability. No design of the fleet uses a free annotation word.
+        verification VER-00130-1 {
+          status: approved
+          title: Integration tests confirm an unknown annotation word is reported where it is written and its link is kept, and the artefacts corpus marks one
+          method: test
+          tests:
+            tests/integration/ds/bind/test_binder.cpp::TestBinder.AnAnnotationWordTheLanguageDoesNotKnowIsReportedAndKept
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+        }
+      }
       requirement REQ-00045-1 {
         tags: language, artefacts
         status: approved
