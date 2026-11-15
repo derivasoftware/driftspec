@@ -50,3 +50,13 @@ reason = "DriftSpec is an NA desktop tool: its engine holds the model in std:: m
 code = "W-CPP-METHOD-NOT-NOEXCEPT"
 workspace = true
 reason = "The blanket noexcept rule matters for certified code; DriftSpec is an NA desktop tool whose engine allocates in almost every method. What holds here is the derived rule (noexcept when nothing can escape, directly or transitively), to be checked from the design's failure model when DS-190 is taken up (Owner decision, DS-133)."
+
+# An orphan class is one with no coupling inside the workspace. argos counts
+# that coupling from the edges its extractor finds by tracking imports, which it
+# does for Python; for C++ it finds none, so every class of the engine that is
+# not a data carrier reads as an orphan, the facade the whole engine goes
+# through among them.
+[[diagnose.exempt]]
+code = "W-ORPHAN-CLASS"
+workspace = true
+reason = "The check does not apply to C++ yet: argos builds class coupling from import-tracked edges, which its extractor produces for Python and not for C++, so the count is zero for every engine class and the finding says nothing about use (Owner decision, DS-199). Lift it when argos extracts C++ edges."
