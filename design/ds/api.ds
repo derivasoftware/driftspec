@@ -55,7 +55,7 @@ package driftspec@ds {
     }
 
     requirement REQ-00113-1 {
-      status: draft
+      status: approved
       @refines SREQ-00015-1
       title: The engine shall answer a page in a browser in one call, with what the page shows after an edit
       text:
@@ -72,7 +72,7 @@ package driftspec@ds {
         keeps one contract between the engine and the page, as REQ-00085-1 does for a caller in process.
       tags: api, browser
       verification VER-00129-1 {
-        status: draft
+        status: approved
         title: Unit and integration tests confirm one call answers the report, the identities and their places, the artefacts as rows and the diagrams drawn in order, and an error for a request that cannot be read
         method: test
         tests:
