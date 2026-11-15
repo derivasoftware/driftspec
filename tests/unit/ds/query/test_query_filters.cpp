@@ -114,6 +114,27 @@ TEST_F(TestRequirementsFilter, ItTakesItsRootsWhatRefinesThemAndAsAskedWhatReali
   EXPECT_EQ(bare, (Ids{"REQ-00001-1", "REQ-00002-1"}));
 }
 
+TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnderIt) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  const auto file = parser.parseText("shop.ds",
+                                     "package shop {\n"
+                                     "  requirement SREQ-00001-1: The shop shall sell an item\n"
+                                     "  usecase UC-00001-1 buy(item: string) -> int {\n"
+                                     "    title: Buy an item\n"
+                                     "    @requirement SREQ-00001-1\n"
+                                     "    outcome default: the order\n"
+                                     "  }\n"
+                                     "}\n");
+  ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
+  binder.bind(file);
+  const auto steps = ds::check::steps();
+  ds::check::Checker(model, steps).run(binder);
+  EXPECT_TRUE(ds::query::RequirementsFilter({"shop@*"}, true, true).select(model).count("UC-00001-1"));
+  EXPECT_FALSE(ds::query::RequirementsFilter({"shop@*"}, false, true).select(model).count("UC-00001-1"));  // design hidden
+}
+
 class TestQuery : public Shop {};
 
 TEST_F(TestQuery, ANamedQuestionIsAnsweredByIdentityAndAnUnknownOneIsAnError) {

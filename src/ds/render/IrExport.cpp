@@ -692,8 +692,10 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
   out["edges"] = nlohmann::json::array();
   for (const auto& id : selected) {
     const model::Entity& e = *model_.find(id);
-    nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", isArtefact(e) ? e.id : e.name}, {"classifier", model::kindName(e.kind)}};
-    if (isArtefact(e)) {
+    // an artefact, or a use case, is drawn as its card: id, stereotype with its status, title
+    const bool card = isArtefact(e) || e.kind == model::Kind::UseCase;
+    nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", card ? e.id : e.name}, {"classifier", model::kindName(e.kind)}};
+    if (card) {
       std::vector<std::string> lines = wrap(e.field("title"), 44);
       const std::string status = e.field("status");
       const std::string method = e.field("method");
