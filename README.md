@@ -1,4 +1,7 @@
-# driftspec
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="doc/assets/driftspec-lockup-h.svg">
+  <img src="doc/assets/driftspec-lockup-h-light.svg" alt="driftspec" width="320">
+</picture>
 
 A workspace-level specification language for design, requirements and
 behaviour, with its engine, language server and MCP surface in one C++ binary.
