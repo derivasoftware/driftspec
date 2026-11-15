@@ -55,12 +55,12 @@ std::vector<KindSpec> build() {
   std::vector<KindSpec> k;
   k.push_back(
       {P,
-       "a namespace of the system; packages nest and reopen",
+       "a box of the system: organisation above the code; packages nest and reopen",
        {written("title", FieldType::Text, "what the package is"), written("owner", FieldType::Name, "who answers for it"), kLanguage},
        {},
        {P},
        true});
-  k.push_back({M, "a unit of the design inside a package; modules nest and reopen", {kVisibility, kLanguage}, {"extern"}, {P, M}});
+  k.push_back({M, "a namespace of the code inside a package; modules nest and reopen", {kVisibility, kLanguage}, {"extern"}, {P, M}});
   k.push_back({Rq,
                "what the system or a module promises",
                plus(artefact(), {written("parent", FieldType::Name, "ignored: nesting or @refines say it (W-PARENT-IGNORED)")}),
@@ -177,11 +177,11 @@ std::vector<KindSpec> build() {
        "a view asked of the model",
        {written("kind", FieldType::Name, "class, sequence, state, requirement or interface"),
         written("include", FieldType::Patterns, "what it shows"), written("exclude", FieldType::Patterns, "what it leaves out"),
-        written("open", FieldType::Patterns, "the boxes it closes, lifting their edges"),
+        written("open", FieldType::Patterns, "the boxes it keeps open; every other closes and its edges are lifted to it"),
         written("depth", FieldType::Number, "how deep a sequence expands, or *"), written("show", FieldType::Names, "the extras it draws"),
         written("hide", FieldType::Names, "the compartments it leaves out"),
         written("neighbours", FieldType::Number, "how many steps of neighbours it adds"),
-        written("level", FieldType::Name, "the level of the verifications it shows")},
+        written("level", FieldType::Name, "the level a sequence is lifted to: module")},
        {},
        {},
        true});

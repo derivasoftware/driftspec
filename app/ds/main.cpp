@@ -298,8 +298,8 @@ int main(int argc, char** argv) {
       ->capture_default_str();
   width(diffCmd, &diffWidth);
 
-  auto* queryCmd =
-      app.add_subcommand("query", "ask the model: diagrams · entities · relations · artefacts · behaviours · shows · findings · coupling");
+  auto* queryCmd = app.add_subcommand(
+      "query", "ask the model: diagrams · entities · relations · artefacts · behaviours · shows · findings · coupling · failures");
   workspace(queryCmd, &dir);
   queryCmd->add_option("question", question, "what to ask")->required();
   queryCmd->add_option("subject", subject, "what it is asked about");

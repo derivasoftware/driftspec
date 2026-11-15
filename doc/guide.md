@@ -59,9 +59,8 @@ them. The vision (`vision.md`) says why; this says what.*
   annotations, contracts and nested requirements or constraints; nesting
   means "about this" (R12, R13). Braces enclose, one thing per line, a field
   value runs to the end of its line and `//` always starts a comment.
-- Contracts (`[requires: …]`, `[ensures: …]`, `[flags]`) are written only in
-  the body and kept as text: semantic constraints for the reader and for
-  argos, not interpreted by the tool (R8, decided 2026-10-25).
+- Contracts are rules in the member's body (`perspectives.md`, DS-94). The
+  bracket contracts (`[requires: …]`) of R8 are gone: one syntax for one thing.
 - `extern` declares names only, never signatures: what lives outside the
   workspace is not checked (R11).
 - Members: visibility (`+ # -`), then `abstract | static | const` for
@@ -178,8 +177,13 @@ them. The vision (`vision.md`) says why; this says what.*
   `REQ`/`VER` in a module), but the language reads the level from the
   placement, never from the prefix.
 - **Fields.** `title` (the shall sentence), `text` and `rationale`
-  (multiline), `status: draft | approved` (draft when absent), `tags` (free,
+  (multiline), `status: draft | approved | obsolete` (draft when absent), `tags` (free,
   one line). No `asil`: the team classifies with tags.
+- **Nesting and annotating are the same relation (Owner, 2026-11-15).** Two
+  syntaxes that only change where an artefact is filed: nested in the same
+  file, or written elsewhere and linked with an annotation. Today the engine
+  keeps it for `refines` and `verifies`; a requirement nested in a class still
+  binds `about` instead of `requires` (DS-217).
 - **Parent.** A requirement nested in a requirement refines it; elsewhere,
   `@refines`. A `parent:` field is ignored with `W-PARENT-IGNORED`: one
   representation per concept.
@@ -236,8 +240,9 @@ them. The vision (`vision.md`) says why; this says what.*
 ## 5. Diagrams
 
 - `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes; depth: n; level: module }`.
-- `include` takes ids, a module (`ds` or `ds::*`) or a package
-  (`package:ds`); extern entities only when named.
+- `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
+  (`ds@*`); extern entities only when named. (A requirement diagram takes a
+  module as `ds@ds`, not `ds@ds::*`: DS-212 makes the patterns one.)
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
 - `open:` says which boxes of a class diagram stay open and closes the rest:
@@ -264,6 +269,7 @@ them. The vision (`vision.md`) says why; this says what.*
   multiplicity), `artefacts <id>` (what a class realises, requires or is bound
   by, and what verifies each), `behaviours <id>` (the sequences and state
   machines of a method or class), `shows <diagram>` (what the drawing would
-  show: the projection itself answers), `findings [file]`.
+  show: the projection itself answers), `findings [file]`, `coupling`, and
+  `failures <operation>` (what escapes it and the way it comes up).
 - An unknown question fails with the list of questions; `--json` gives the
   same answers as an array of `{kind, id, detail}`.
