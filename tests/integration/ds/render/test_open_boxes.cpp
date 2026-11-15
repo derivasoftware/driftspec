@@ -117,4 +117,42 @@ TEST_F(TestOpenBoxes, ADepthThatIsNoNumberIsAFindingAndStillDraws) {
   EXPECT_FALSE(diagram("HLD_Bad")["edges"].empty());
 }
 
+TEST_F(TestOpenBoxes, APatternThatNamesWhatNothingDeclaresIsAFinding) {
+  int found = 0;
+  for (const auto& f : model.findings())
+    found += f.code == "W-DIAGRAM-UNDECLARED" && f.message.find("shop@store@shelf::*") != std::string::npos;
+  EXPECT_EQ(found, 1);
+}
+
+TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramDoes) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("a.ds",
+                               "package shop {\n"
+                               "  module store {\n"
+                               "    requirement REQ-00001-1: The store shall keep its items\n"
+                               "    class Cart {\n"
+                               "      @requirement REQ-00001-1\n"
+                               "    }\n"
+                               "  }\n"
+                               "  module empty { }\n"
+                               "}\n"
+                               "diagram REQ_Store {\n"
+                               "  kind: requirement\n"
+                               "  include: shop@store::*\n"
+                               "}\n"
+                               "diagram REQ_Empty {\n"
+                               "  kind: requirement\n"
+                               "  include: shop@empty::*\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Store", false));
+  bool requirement = false;
+  for (const auto& n : ir["nodes"]) requirement = requirement || n["id"] == "REQ-00001-1";
+  EXPECT_TRUE(requirement);
+  for (const auto& f : model.findings()) EXPECT_NE(f.code, "W-DIAGRAM-UNDECLARED") << f.message;  // an empty box is no broken name
+}
+
 }  // namespace

@@ -42,6 +42,24 @@ const char* const kWhole = kEveryBranch;
 
 }  // namespace
 
+// one reading of a pattern for every kind of diagram (DS-212): an identity; a prefix with * over the
+// identity or the scope (`p@m::*` is the module p@m and everything in it); a module named as such; a
+// template written without its arity
+bool inPattern(const model::Model& model, const std::string& pattern, const model::Entity& entity) {
+  if (pattern == entity.id) return true;
+  if (!pattern.empty() && pattern.back() == '*') {
+    const std::string prefix = pattern.substr(0, pattern.size() - 1);
+    if (entity.id.rfind(prefix, 0) == 0 || entity.scope.rfind(prefix, 0) == 0) return true;
+    const bool modulePrefix = prefix.size() > 2 && prefix.compare(prefix.size() - 2, 2, "::") == 0;
+    return modulePrefix && entity.scope == prefix.substr(0, prefix.size() - 2);
+  }
+  if (const model::Entity* m = model.find(pattern)) {
+    if (m->kind == model::Kind::Module) return entity.scope == pattern || entity.scope.rfind(pattern + "::", 0) == 0;
+  }
+  const auto lt = entity.id.find('<');
+  return lt != std::string::npos && entity.id.substr(0, lt) == pattern;
+}
+
 // ---- class diagrams --------------------------------------------------------------------------
 
 ClassFilter::ClassFilter(std::vector<std::string> include, std::vector<std::string> exclude, int neighbours, bool closes,
@@ -81,18 +99,7 @@ std::string ClassFilter::standsFor(const std::string& id, const std::set<std::st
 bool ClassFilter::matches(const model::Model& model, const std::string& pattern, const model::Entity& entity) const {
   if (pattern == entity.id) return true;
   if (entity.has("extern")) return false;  // what lives outside the workspace is drawn only when named
-  // a prefix with *: ds@* is the whole package, ds@ds::* a module and everything inside (full ids, R4)
-  if (!pattern.empty() && pattern.back() == '*') {
-    const std::string prefix = pattern.substr(0, pattern.size() - 1);
-    return entity.id.rfind(prefix, 0) == 0 || entity.scope.rfind(prefix, 0) == 0;
-  }
-  // a module named as such: the module and everything inside
-  if (const model::Entity* m = model.find(pattern)) {
-    if (m->kind == model::Kind::Module) return entity.scope == pattern || entity.scope.rfind(pattern + "::", 0) == 0;
-  }
-  // a template written without arity: Repository matches Repository<1>
-  const auto lt = entity.id.find('<');
-  return lt != std::string::npos && entity.id.substr(0, lt) == pattern;
+  return inPattern(model, pattern, entity);
 }
 
 std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
@@ -254,14 +261,7 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
     for (const auto& pair : model.entities()) {
       const model::Entity& e = pair.second;
       if (!isArtefact(e) || e.expected) continue;
-      bool hit = pattern == e.id;
-      if (!pattern.empty() && pattern.back() == '*') {
-        // iris@* every artefact of the package (their scope starts with iris@), iris@projection::* those of a module
-        hit |= e.scope.rfind(pattern.substr(0, pattern.size() - 1), 0) == 0;
-      } else if (const model::Entity* m = model.find(pattern)) {
-        hit |= m->kind == model::Kind::Module && (e.scope == pattern || e.scope.rfind(pattern + "::", 0) == 0);
-      }
-      if (hit) roots.insert(e.id);
+      if (inPattern(model, pattern, e)) roots.insert(e.id);  // the same reading as a class diagram's (DS-212)
     }
   }
   // the umbrella: what refines a root (down, transitively), what verifies it, what realises it

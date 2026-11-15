@@ -696,10 +696,10 @@ diagram CL_CheckNamespace {
 
 diagram SEQ_CheckMessage {                 // the whole behaviour, every branch with its frame
   kind: sequence
-  include: driftspec@ds@check::Checker::checkMessage
+  include: driftspec@ds@check::BehaviourTyping::checkMessage
 }
 
 diagram SEQ_CheckMessageUndeclared {       // one scenario: what is shared, then its branch
   kind: sequence
-  include: driftspec@ds@check::Checker::checkMessage / undeclared-op
+  include: driftspec@ds@check::BehaviourTyping::checkMessage / undeclared-op
 }

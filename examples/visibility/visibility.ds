@@ -85,6 +85,11 @@ diagram HLD_Store {                    // open the store, and see into stock
   open: shop@store@stock
 }
 
+diagram HLD_Gone {
+  kind: class
+  include: shop@store@shelf::*        // ! W-DIAGRAM-UNDECLARED: no box shelf in the store
+}
+
 diagram HLD_Bad {
   kind: sequence
   include: shop@front@till::Till::sell
