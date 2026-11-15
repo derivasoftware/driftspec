@@ -130,4 +130,33 @@ TEST_F(TestDependencyChecks, AnInterfacesOwnSequenceRealisesItAndNothingIsReport
   EXPECT_TRUE(uses().empty());
 }
 
+TEST(TestRealisation, AMethodThatAnswersAnInterfaceOperationWithAnotherSignatureIsReported) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("a.ds",
+                               "package zoo {\n"
+                               "  interface keeper {\n"
+                               "    kind: library\n"
+                               "    operation feed(animal: string) -> none\n"
+                               "    operation clean(cage: int) -> none\n"
+                               "    operation count(names: list<string>) -> int\n"
+                               "  }\n"
+                               "  module animals {\n"
+                               "    class Staff {\n"
+                               "      @interface keeper\n"
+                               "      + feed(animal: int, extra: bool) -> none\n"
+                               "      + count(names: std::vector<std::string>) -> int\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  std::vector<std::string> found;
+  for (const auto& f : model.findings())
+    if (f.code == "W-INTERFACE-SIGNATURE") found.push_back(f.message);
+  ASSERT_EQ(found.size(), 1u);  // clean, which Staff does not declare, is no finding; count says the same idea
+  EXPECT_EQ(found[0].rfind("zoo@animals::Staff::feed", 0), 0u);
+}
+
 }  // namespace

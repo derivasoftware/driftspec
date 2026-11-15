@@ -94,6 +94,8 @@ class ContractCheck : public ACheck {
   std::string outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const;
   void checkUseCases();  // a use case is a contract its operations realise, outcomes included (DS-77)
   void checkInterfaces();
+  /// A class's method against the operation of the interface it realises, when the class declares it.
+  void checkRealisations();
   void checkViews(const model::Entity& state);
   /// A state of a class's machine that no transition leads to from the initial one.
   void checkStates(const model::Entity& state);
