@@ -16,6 +16,30 @@
 namespace ds {
 namespace check {
 
+namespace {
+
+// whether a pattern of a diagram names something the workspace declares: an identity, a prefix of one, a
+// template written without its arity, the subject of a scenario (DS-212)
+bool namesSomething(const model::Model& model, const std::string& written) {
+  std::string pattern = written;
+  const auto slash = pattern.find(" / ");
+  if (slash != std::string::npos) pattern = pattern.substr(0, slash);  // a scenario: its behaviour's subject
+  if (pattern.empty()) return true;
+  std::string base = pattern;
+  if (base.back() == '*') base.pop_back();
+  while (!base.empty() && (base.back() == '@' || base.back() == ':')) base.pop_back();
+  if (base.empty() || model.find(base)) return true;
+  for (const auto& pair : model.entities()) {
+    if (pair.second.expected) continue;
+    const std::string& id = pair.first;
+    if (pattern.back() == '*' && id.rfind(base, 0) == 0) return true;                              // a prefix of something declared
+    if (id.size() > base.size() && id.rfind(base, 0) == 0 && id[base.size()] == '<') return true;  // a template
+  }
+  return false;
+}
+
+}  // namespace
+
 std::string ContractCheck::name() const { return "contracts"; }
 
 std::vector<std::string> ContractCheck::needs() const {
@@ -356,6 +380,15 @@ void ContractCheck::checkDiagrams() {
           continue;
         found_.push_back({"W-SCENARIO-UNDECLARED", "warning", pair.second.name + " asks for " + pattern + ", a scenario nobody declares",
                           pair.second.location});
+      }
+    }
+    // a pattern that names what nothing declares is a broken reference, as in the model (DS-212); a box that
+    // exists and is empty is not: a level with no children is valid
+    for (const char* key : {"include", "exclude", "open"}) {
+      for (const auto& pattern : split(pair.second.field(key), ',')) {
+        if (namesSomething(*model_, pattern)) continue;
+        found_.push_back({"W-DIAGRAM-UNDECLARED", "warning",
+                          pair.second.name + " " + key + "s " + pattern + ", which the workspace declares nowhere", pair.second.location});
       }
     }
     const auto depth = pair.second.fields.find("depth");

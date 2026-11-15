@@ -241,8 +241,8 @@ them. The vision (`vision.md`) says why; this says what.*
 
 - `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes; depth: n; level: module }`.
 - `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
-  (`ds@*`); extern entities only when named. (A requirement diagram takes a
-  module as `ds@ds`, not `ds@ds::*`: DS-212 makes the patterns one.)
+  (`ds@*`), read alike by every kind of diagram; extern entities only when
+  named. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
 - `open:` says which boxes of a class diagram stay open and closes the rest:

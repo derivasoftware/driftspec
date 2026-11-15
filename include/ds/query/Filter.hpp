@@ -93,6 +93,10 @@ class RequirementsFilter : public IFilter {
   bool verifications_ = true;
 };
 
+/// Whether an entity falls under a pattern of include, exclude or open: one reading for every kind of
+/// diagram (DS-212).
+bool inPattern(const model::Model& model, const std::string& pattern, const model::Entity& entity);
+
 /// The one place that names the filter of each kind of diagram, built from the diagram's fields;
 /// null when the entity is no diagram.
 std::unique_ptr<IFilter> filterFor(const model::Entity& diagram);

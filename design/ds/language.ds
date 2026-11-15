@@ -1350,6 +1350,32 @@ package driftspec@ds {
             tests/integration/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
         }
       }
+      requirement REQ-00116-1 {
+        tags: language, diagrams
+        status: approved
+        title: A diagram pattern shall read the same in every kind of diagram, and one that names what nothing declares shall be reported as W-DIAGRAM-UNDECLARED
+        text:
+          include, exclude and open take an identity, a prefix with * over the identity or
+          the scope (p@m::* is the module p@m and everything in it), a module named as such,
+          or a template written without its arity, read alike by class, sequence, state and
+          requirement diagrams. A pattern that names nothing the workspace declares is a
+          warning at the diagram. A pattern over a box that exists and is empty is not: a
+          level with no children is valid.
+        rationale:
+          Model audit 2026-11, findings G3 and I9 (DS-212): a diagram whose include named a
+          class that had been moved drew less and said nothing, while the same broken
+          reference in the model is a finding; p@m::* selected a module in a class diagram and
+          nothing in a requirement diagram; package:x, documented, selected nothing anywhere.
+          The check found two such diagrams in driftspec's own design.
+        verification VER-00132-1 {
+          status: approved
+          title: Integration tests confirm a pattern that names nothing is reported and an empty box is not, and a requirement diagram reads a module pattern as a class diagram does
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.APatternThatNamesWhatNothingDeclaresIsAFinding
+            tests/integration/ds/render/test_open_boxes.cpp::TestDiagramPatterns.ARequirementDiagramReadsAModulePatternAsAClassDiagramDoes
+        }
+      }
       requirement REQ-00049-2 {
         tags: language, diagrams
         status: approved

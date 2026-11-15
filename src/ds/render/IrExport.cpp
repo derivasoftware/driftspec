@@ -733,7 +733,7 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "constrains"}});
     }
   }
-  if (out["nodes"].empty()) out["notice"] = "No artefact selected: include names a requirement, a package (package:x) or a module.";
+  if (out["nodes"].empty()) out["notice"] = "No artefact selected: include names a requirement, a package (p@*) or a module (p@m).";
   return pretty ? out.dump(2) : out.dump();
 }
 
