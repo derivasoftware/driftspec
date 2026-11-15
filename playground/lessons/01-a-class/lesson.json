@@ -1,0 +1,169 @@
+{
+  "title": {
+    "en": "1 · A class and its diagram",
+    "es": "1 · Una clase y su diagrama"
+  },
+  "version": 2,
+  "steps": [
+    {
+      "write": {
+        "file": "shop.ds",
+        "end": true,
+        "text": "package shop {\n  module store {\n    class Cart {\n      + total() -> int\n    }\n  }\n}"
+      },
+      "at": {
+        "file": "shop.ds",
+        "find": "class Cart"
+      },
+      "text": {
+        "en": "A package is the whole thing you build. A module is a namespace inside it. A class lives in a module, so this one is `shop@store::Cart`: every entity is declared once and has one identity.",
+        "es": "Un paquete es todo lo que construyes. Un módulo es un espacio de nombres dentro de él. Una clase vive en un módulo, así que esta es `shop@store::Cart`: cada entidad se declara una vez y tiene una sola identidad."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "shop.ds",
+        "end": true,
+        "text": "diagram CL_Store {\n  kind: class\n  include: shop@store::*\n}"
+      },
+      "at": {
+        "pane": "CL_Store"
+      },
+      "text": {
+        "en": "Nobody draws this. A diagram is a question asked of the model: `include: shop@store::*` shows everything in the module. Change the model and the drawing follows.",
+        "es": "Esto no lo dibuja nadie. Un diagrama es una pregunta al modelo: `include: shop@store::*` muestra todo lo del módulo. Cambia el modelo y el dibujo lo sigue."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Cart",
+        "after": "}"
+      },
+      "text": {
+        "en": "Your turn. Below `Cart`, inside the module, declare a second class:\n`class Line {`\n`}`",
+        "es": "Te toca. Debajo de `Cart`, dentro del módulo, declara una segunda clase:\n`class Line {`\n`}`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "below": {
+          "find": "class Cart",
+          "after": "}"
+        },
+        "text": "class Line {\n}"
+      },
+      "done": {
+        "entity": "shop@store::Line"
+      }
+    },
+    {
+      "at": {
+        "pane": "CL_Store"
+      },
+      "text": {
+        "en": "`Line` is in the diagram already. Now say that a cart holds its lines: add this member inside `Cart`:\n`- owns lines: list<Line>`",
+        "es": "`Line` ya está en el diagrama. Ahora di que un carrito tiene sus líneas: añade este miembro dentro de `Cart`:\n`- owns lines: list<Line>`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Cart",
+          "first": true
+        },
+        "text": "- owns lines: list<Line>"
+      },
+      "done": {
+        "edge": {
+          "diagram": "CL_Store",
+          "from": "shop@store::Cart",
+          "to": "shop@store::Line"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Cart"
+      },
+      "text": {
+        "en": "A filled diamond: `owns` is composition, the cart's lines live and die with it. `refs` would draw a hollow one. The relation comes from the member, not from an arrow you draw.",
+        "es": "Un rombo relleno: `owns` es composición, las líneas del carrito nacen y mueren con él. `refs` dibujaría uno hueco. La relación sale del miembro, no de una flecha que dibujes tú."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Line"
+      },
+      "text": {
+        "en": "Now make a mistake on purpose. Give `Line` a price inside its braces:\n`- price: Money`",
+        "es": "Ahora equivócate a propósito. Ponle precio a `Line` dentro de sus llaves:\n`- price: Money`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Line"
+        },
+        "text": "- price: Money"
+      },
+      "done": {
+        "finding": "W-REF-UNDECLARED"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "The engine noticed: `Money` is declared nowhere. A reference to nothing is a finding, never a silent gap. Fix it: declare `Money` in the module, below `Line`:\n`dataclass Money {`\n`  - cents: int`\n`}`",
+        "es": "El motor se ha dado cuenta: `Money` no está declarado en ningún sitio. Una referencia a nada es un aviso, nunca un hueco silencioso. Arréglalo: declara `Money` en el módulo, debajo de `Line`:\n`dataclass Money {`\n`  - cents: int`\n`}`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "below": {
+          "find": "class Line",
+          "after": "}"
+        },
+        "text": "dataclass Money {\n  - cents: int\n}"
+      },
+      "done": {
+        "entity": "shop@store::Money",
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Line"
+      },
+      "text": {
+        "en": "Clean again, and `Money` joined the diagram on its own. That is the whole idea of DriftSpec: you write the model, and the drawings and the checks follow it.",
+        "es": "Limpio otra vez, y `Money` ha entrado solo en el diagrama. Esa es toda la idea de DriftSpec: tú escribes el modelo, y los dibujos y las comprobaciones lo siguen."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

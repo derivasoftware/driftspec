@@ -1,0 +1,1409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DriftSpec Playground</title>
+<link rel="icon" type="image/svg+xml" href="brand/driftspec-tile.svg">
+<link rel="apple-touch-icon" href="brand/driftspec-icon-180.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<style>
+/* The look chosen for the viewer (DS-192/193, viewer/lab): dark first, grey surfaces,
+   colour spent on meaning only. Neutral greys (g-neutral), one colour per concept
+   (c-vivid), one per kind of entity (k-apart), signatures as code (x-vivid). */
+:root {
+  --page: #111111; --bg: #171717; --panel: #202020; --raised: #2a2a2a; --line: #333333;
+  --rule: #5a5a5a; --fg: #e9e9e9; --muted: #929292; --faint: #676767; --soft: #2a2a2a;
+  --accent: #e9e9e9;
+  --c-req: #4fd08a; --c-cst: #b58cff; --c-rule: #f0cd3c; --c-seq: #5aa9ff; --c-state: #36c9d6; --c-fail: #ff8552;
+  --k-class: #8794ff; --k-interface: #e67cf5; --k-dataclass: #ffa238; --k-enum: #ff6f9f;
+  --s-fn: #dcdcaa; --s-pn: #9cdcfe; --s-ty: #4ec9b0; --s-kw: #c586c0; --s-str: #ce9178;
+  --v-pub: #56c271; --v-prot: #e6c84a; --v-priv: #f0616d;
+  --r-inherits: #c9a8ff; --r-has: #ffd166; --r-refers: #6fd6c4; --r-uses: #8fbcff;
+  --err: var(--c-fail); --warn: var(--c-rule); --info: var(--c-seq);
+  --kw: var(--s-kw); --ty: var(--s-ty); --id: var(--c-req); --com: var(--faint); --str: var(--s-str);
+  --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --page: #f7f7f7; --bg: #eeeeee; --panel: #ffffff; --raised: #ffffff; --line: #dcdcdc;
+  --rule: #9a9a9a; --fg: #1d1d1d; --muted: #6a6a6a; --faint: #9e9e9e; --soft: #f2f2f2;
+  --accent: #1d1d1d;
+  --c-req: #168a4d; --c-cst: #7a3fd6; --c-rule: #a47a00; --c-seq: #1f6fd6; --c-state: #0b8794; --c-fail: #cf4a14;
+  --k-class: #4a55d9; --k-interface: #b02fc4; --k-dataclass: #c46a00; --k-enum: #d6336c;
+  --s-fn: #795e26; --s-pn: #001080; --s-ty: #267f99; --s-kw: #af00db; --s-str: #a31515;
+  --v-pub: #1e8e3e; --v-prot: #a67c00; --v-priv: #d1343f;
+  --r-inherits: #6b46c1; --r-has: #9a6b00; --r-refers: #0f766e; --r-uses: #1d5fbf;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.4 var(--sans); display: flex; flex-direction: column; overflow: hidden; }
+
+header { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--page); flex: none; }
+header .logo { display: flex; align-items: center; padding: 4px 6px 4px 0; }
+header .logo img { height: 22px; width: auto; display: block; }
+header .logo .light { display: none; }
+:root[data-theme="light"] header .logo .dark { display: none; }
+:root[data-theme="light"] header .logo .light { display: block; }
+header select, header button { font: inherit; color: var(--fg); background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+[hidden] { display: none !important; }
+header #relesson { width: 28px; height: 28px; margin-left: -6px; padding: 0; border: 1px solid var(--line); background: var(--soft); color: var(--muted); }
+header #relesson:hover { color: var(--fg); }
+header .spacer { flex: 1; }
+.count { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.count .e { color: var(--err); } .count .w { color: var(--warn); }
+
+main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#work { flex: 1; display: flex; min-height: 0; }
+#left { display: flex; flex-direction: column; min-width: 240px; width: 40%; }
+.vsplit { width: 5px; cursor: col-resize; background: var(--line); flex: none; touch-action: none; }
+.hsplit { height: 5px; cursor: row-resize; background: var(--line); flex: none; touch-action: none; }
+.vsplit:hover, .vsplit.drag, .hsplit:hover, .hsplit.drag { background: var(--rule); }
+#right { flex: 1; min-width: 240px; overflow: auto; padding: 12px; }
+
+/* the file tree of the workspace */
+#tree { width: 210px; min-width: 140px; flex: none; display: flex; flex-direction: column; background: var(--page); }
+#tree.hidden, #tree.hidden + .vsplit { display: none; }
+#tree .head { display: flex; align-items: center; gap: 6px; padding: 7px 8px 7px 12px; font: 600 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); }
+#tree .head .spacer { flex: 1; }
+.icon-btn { display: inline-grid; place-items: center; width: 22px; height: 22px; color: var(--muted); background: none; border: 0; border-radius: 5px; cursor: pointer; padding: 0; }
+.icon-btn:hover { color: var(--fg); background: var(--soft); }
+.icon-btn svg { width: 14px; height: 14px; }
+#files { flex: 1; overflow: auto; padding: 4px 0; font: 12.5px/1 var(--mono); }
+.node { display: flex; align-items: center; gap: 6px; height: 24px; padding-right: 10px; cursor: pointer; color: var(--fg); white-space: nowrap; user-select: none; }
+.node:hover { background: var(--soft); }
+.node.on { background: var(--raised); box-shadow: inset 2px 0 var(--fg); }
+.node .chev { width: 10px; height: 10px; flex: none; color: var(--muted); transition: transform .12s; }
+.node.folded .chev { transform: rotate(-90deg); }
+.node .label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.node.dir .label { color: var(--muted); }
+.node .sev { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+#tabs { display: flex; overflow-x: auto; background: var(--soft); border-bottom: 1px solid var(--line); flex: none; }
+#tabs button { font: 12px var(--mono); color: var(--muted); background: none; border: 0; border-right: 1px solid var(--line); padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+#tabs button.on { color: var(--fg); background: var(--panel); box-shadow: inset 0 -2px var(--fg); }
+#tabs button { display: inline-flex; align-items: center; gap: 6px; }
+#tabs button .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+#tabs button .x { width: 16px; height: 16px; display: inline-grid; place-items: center; border-radius: 4px; color: var(--faint); visibility: hidden; }
+#tabs button.on .x, #tabs button:hover .x { visibility: visible; }
+#tabs button .x:hover { color: var(--fg); background: var(--raised); }
+#tabs button .x svg { width: 9px; height: 9px; }
+#tabs:empty { display: none; }
+
+#editor { flex: 1; min-height: 0; }
+.CodeMirror { height: 100%; font: 13px/1.5 var(--mono); background: var(--panel); color: var(--fg); }
+.CodeMirror-gutters { background: var(--panel); border-right: 1px solid var(--line); }
+.CodeMirror-linenumber { color: var(--muted); }
+.CodeMirror-cursor { border-left-color: var(--fg); }
+.CodeMirror-selected, .CodeMirror-focused .CodeMirror-selected { background: var(--soft) !important; }
+.CodeMirror-matchingbracket { color: var(--accent) !important; text-decoration: underline; }
+.cm-s-default .cm-keyword { color: var(--kw); font-weight: 600; }
+.cm-s-default .cm-type { color: var(--ty); }
+.cm-s-default .cm-variable-2 { color: var(--id); }
+.cm-s-default .cm-comment { color: var(--com); font-style: italic; }
+.cm-s-default .cm-string { color: var(--str); }
+.cm-s-default .cm-operator { color: var(--muted); }
+.cm-s-default .cm-def { color: var(--s-fn); }
+.cm-s-default .cm-variable, .cm-s-default .cm-property { color: var(--fg); }
+.squiggle-error { text-decoration: wavy underline var(--err); text-underline-offset: 3px; }
+.squiggle-warning { text-decoration: wavy underline var(--warn); text-underline-offset: 3px; }
+.squiggle-info { text-decoration: dotted underline var(--info); text-underline-offset: 3px; }
+.gutter-mark { width: 8px; height: 8px; border-radius: 50%; margin: 6px 0 0 3px; }
+.diag-gutter { width: 14px; }
+.flash { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+
+/* the problems panel: its own strip at the bottom, sized by its splitter, folds to its head */
+#problems { flex: none; height: 180px; min-height: 30px; display: flex; flex-direction: column; background: var(--panel); }
+#problems.folded { height: auto !important; min-height: 0; }
+#problems.folded #findings { display: none; }
+#problems .chev-btn svg { display: block; transform-origin: 50% 50%; transform-box: fill-box; transition: transform .12s; }
+#problems.folded .chev-btn svg { transform: rotate(180deg); }
+#problems .head { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 12px; height: 30px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; }
+#problems.folded .head { border-bottom: 0; }
+#problems .head .title { font: 600 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+#problems .head .spacer { flex: 1; }
+.tally { display: inline-flex; align-items: center; gap: 5px; font: 12px var(--mono); color: var(--muted); }
+.tally .shape { width: 8px; height: 8px; border-radius: 50%; }
+#findings { flex: 1; overflow: auto; font: 12px var(--mono); padding: 4px 0; }
+#findings .file { display: flex; align-items: center; gap: 8px; padding: 5px 12px 3px; color: var(--muted); font-weight: 600; cursor: pointer; }
+#findings .file .n { font-weight: 400; color: var(--faint); }
+#findings .row { padding: 3px 12px 3px 28px; cursor: pointer; display: flex; gap: 10px; align-items: baseline; }
+#findings .row:hover, #findings .file:hover { background: var(--soft); }
+#findings .row .shape { width: 7px; height: 7px; border-radius: 50%; flex: none; align-self: center; }
+#findings .code { flex: none; }
+#findings .msg { color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+#findings .where { color: var(--faint); flex: none; }
+#findings .none { color: var(--muted); padding: 8px 12px; }
+.sev-error .code { color: var(--err); } .sev-warning .code { color: var(--warn); } .sev-info .code { color: var(--info); }
+
+#panes { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; align-items: start; }
+#panes.solo { grid-template-columns: 1fr; }
+#panes.solo .pane:not(.max) { display: none; }
+.pane { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.pane.stale { opacity: .45; }
+.pane h3 { margin: 0; display: flex; align-items: center; gap: 8px; padding: 6px 10px; font: 600 12px var(--mono); border-bottom: 1px solid var(--line); }
+.pane h3 .name { cursor: pointer; }
+.pane h3 .name:hover { color: var(--accent); }
+.pane h3 .kind { font-weight: 400; color: var(--muted); }
+.pane h3 .spacer { flex: 1; }
+.pane h3 button { font: inherit; font-weight: 400; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 0 2px; }
+.pane h3 button:hover { color: var(--fg); }
+.pane .body { padding: 10px; overflow: auto; }
+.pane.max .body { max-height: none; }
+.pane .body svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.pane .empty { color: var(--muted); font-style: italic; padding: 12px; text-align: center; }
+
+/* the diagrams in the same look: cards on the grey stage, the kind in its colour, signatures as code */
+.pane .body { background: var(--bg); }
+.pane svg.pr-diagram {
+  --pr-text: var(--fg); --pr-muted: var(--muted); --pr-stroke: var(--rule); --pr-edge: var(--rule); --pr-edge-width: 1;
+  --pr-box-fill: var(--panel); --pr-container-fill: color-mix(in srgb, var(--panel) 45%, var(--bg)); --pr-container-stroke: var(--line);
+  --pr-note-fill: var(--raised); --pr-note-stroke: var(--line);
+  --pr-head-class: var(--panel); --pr-head-interface: var(--panel); --pr-head-enum: var(--panel); --pr-head-function: var(--panel); --pr-head-abstract: var(--panel);
+  --pr-badge-class: var(--k-class); --pr-badge-interface: var(--k-interface); --pr-badge-enum: var(--k-enum); --pr-badge-function: var(--muted); --pr-badge-abstract: var(--k-class);
+  --pr-name: var(--fg); --pr-type: var(--s-ty); --pr-param: var(--s-pn); --pr-punct: var(--muted);
+  --pr-vis-public: var(--v-pub); --pr-vis-protected: var(--v-prot); --pr-vis-private: var(--v-priv); --pr-vis-package: var(--muted);
+  --pr-font: var(--mono);
+}
+/* relations on a class diagram (DS-193): at rest only what derives from what; the rest
+   lights up, in the colour of its kind, when one of its ends is touched or selected */
+.pane svg .pr-classifier-dataclass { --pr-badge-class: var(--k-dataclass); }
+.pane svg .pr-classifier-interface { --pr-badge-abstract: var(--k-interface); }
+/* the line under a card's name wears the colour of its kind (the chosen class widget) */
+.pane svg .pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--k-class); }
+.pane svg .pr-classifier-interface .pr-header + .pr-sep { stroke: var(--k-interface); }
+.pane svg .pr-classifier-dataclass .pr-header + .pr-sep { stroke: var(--k-dataclass); }
+.pane svg .pr-classifier-enum .pr-header + .pr-sep { stroke: var(--k-enum); }
+.pane svg .pr-classifier-namespace .pr-header + .pr-sep { stroke: var(--rule); stroke-width: 1; }
+.pane svg .pr-classifier-requirement .pr-header + .pr-sep { stroke: var(--c-req); }
+.pane svg .pr-classifier-constraint .pr-header + .pr-sep { stroke: var(--c-cst); }
+.pane svg .pr-classifier-usecase .pr-header + .pr-sep { stroke: var(--c-state); }
+.pane svg .pr-classifier-verification .pr-header + .pr-sep { stroke: var(--c-seq); }  /* an abstract class keeps the class colour; italics say what it lacks */
+.pane svg .pr-edge-group.quiet { display: none; }
+.pane svg .pr-edge-group[data-rk="inherits"] { --rc: var(--r-inherits); }
+.pane svg .pr-edge-group[data-rk="has"] { --rc: var(--r-has); }
+.pane svg .pr-edge-group[data-rk="refers"] { --rc: var(--r-refers); }
+.pane svg .pr-edge-group[data-rk="uses"] { --rc: var(--r-uses); }
+.pane svg .pr-edge-group.lit .pr-edge { stroke: var(--rc); stroke-width: 1.6; }
+.pane svg .pr-edge-group.lit .pr-edge-label { fill: var(--rc); }
+.pane svg.quietable .pr-box { cursor: pointer; }
+.pane svg .pr-box, .pane svg .pr-lifeline-head, .pane svg .pr-msg-group[data-ref-location] { cursor: pointer; }
+.pane svg .pr-msg-group[data-ref-location]:hover text { fill: var(--fg); text-decoration: underline; }
+.pane svg .go-diagram { cursor: pointer; }
+.pane svg .go-diagram circle { fill: var(--bg); stroke: var(--c-seq); stroke-width: 1.2; }
+.pane svg .go-diagram path { fill: var(--c-seq); }
+.pane svg .go-diagram:hover circle { fill: var(--c-seq); }
+.pane svg .go-diagram:hover path { fill: var(--bg); }
+.reqtable { width: 100%; border-collapse: collapse; font: 12px/1.45 var(--sans); }
+.reqtable th { text-align: left; font: 600 10.5px var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
+.reqtable td { padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.reqtable tr:hover td { background: var(--soft); }
+.reqtable .rid { font: 12px var(--mono); white-space: nowrap; cursor: pointer; }
+.reqtable .rid:hover { text-decoration: underline; }
+.reqtable .shape { display: inline-block; width: 8px; height: 8px; margin-right: 6px; vertical-align: 0; }
+.reqtable .k-requirement { background: var(--c-req); border-radius: 50%; }
+.reqtable .k-constraint { background: var(--c-cst); transform: rotate(45deg) scale(.85); }
+.reqtable .k-usecase { background: var(--c-state); border-radius: 2px; }
+.reqtable .status { font: 11px var(--mono); color: var(--muted); }
+.reqtable .status.approved { color: var(--v-pub); }
+.reqtable .status.obsolete { color: var(--faint); text-decoration: line-through; }
+.reqtable .level { font: 11px var(--mono); color: var(--muted); }
+.reqtable td:nth-child(2) { min-width: 180px; }
+.reqtable .links { max-width: 200px; }
+.reqtable .links a { display: inline-block; font: 11.5px var(--mono); color: var(--s-ty); cursor: pointer; margin-right: 8px; overflow-wrap: anywhere; }
+.reqtable .links a:hover { text-decoration: underline; }
+.reqtable .none { color: var(--faint); }
+.reqtable .missing { color: var(--warn); }
+.reveal-line { background: color-mix(in srgb, var(--c-seq) 18%, transparent); }
+.pane.arrived { box-shadow: 0 0 0 2px var(--c-seq); transition: box-shadow .3s; }
+.pane svg .pr-box.sel > rect { stroke: var(--fg); stroke-width: 1.6; }
+.pane svg .pr-box.rel > rect { stroke: var(--rc); stroke-width: 1.6; }
+/* the coach: a lesson's steps, one floating card at a time, anchored to what it talks about */
+:root { --coach: #b79cf0; }
+:root[data-theme="light"] { --coach: #6b3fb8; }
+.coach { position: fixed; z-index: 50; width: 320px; background: var(--raised); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35); font: 13px/1.5 var(--sans); visibility: hidden; }
+.coach.placed { visibility: visible; }
+.coach::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 10px 0 0 10px; background: var(--coach); }
+.coach .c-head { display: flex; align-items: center; gap: 8px; padding: 9px 8px 0 16px; font: 11px var(--mono); color: var(--muted); }
+.coach .c-head .spacer { flex: 1; }
+.coach .c-dots { display: inline-flex; gap: 3px; }
+.coach .c-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--line); }
+.coach .c-dots i.on { background: var(--coach); }
+.coach p { margin: 6px 16px 0; white-space: pre-line; }
+.coach code { font: 12px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--s-fn); }
+.coach .c-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 10px 12px 12px 16px; }
+.coach .c-wait { margin-right: auto; display: inline-flex; align-items: center; gap: 7px; font: 11.5px var(--sans); color: var(--muted); }
+.coach .c-wait i { width: 7px; height: 7px; border-radius: 50%; background: var(--coach); animation: coachpulse 1.4s ease-in-out infinite; }
+.coach.ok .c-wait i { animation: none; background: var(--v-pub); }
+@keyframes coachpulse { 50% { opacity: .25; } }
+.coach .c-ack { font: 600 12px var(--sans); color: #151618; background: var(--coach); border: 0; border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+:root[data-theme="light"] .coach .c-ack { color: #f6f4ef; }
+.coach-line { background: color-mix(in srgb, var(--coach) 14%, transparent); }
+.coach-typed { background: color-mix(in srgb, var(--coach) 22%, transparent); border-radius: 2px; }
+.coach .c-for-me { margin-right: auto; font: 12px var(--sans); color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.coach .c-for-me:hover { color: var(--fg); }
+.coach .c-ack:disabled { opacity: .45; cursor: default; }
+.coach.next p b { font-weight: 600; }
+.coach.typing .c-wait span::after { content: "…"; }
+.pane.coached { box-shadow: 0 0 0 2px var(--coach); }
+#problems.coached { box-shadow: inset 0 2px 0 var(--coach); }
+#tree.coached { box-shadow: inset -2px 0 0 var(--coach); }
+@media (prefers-reduced-motion: reduce) { .coach .c-wait i { animation: none; } }
+@media (max-width: 760px) {
+  #work { flex-direction: column; }
+  #tree { display: none; }
+  #left { width: auto !important; height: 50%; min-width: 0; }
+  .vsplit { display: none; }
+  #right { min-width: 0; }
+  #panes { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="./" title="DriftSpec"><img class="dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec"></a>
+  <select id="example" title="Example"></select>
+  <button class="icon-btn" id="relesson" title="Restart the lesson" hidden><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7a4.5 4.5 0 1 0 1.4-3.3"/><path d="M2.5 2v2.6h2.6"/></svg></button>
+  <span class="spacer"></span>
+  <span class="count" id="count"></span>
+  <span class="count" id="backend"></span>
+  <button id="lang" title="Language / Idioma">ES</button>
+  <button id="theme" title="Theme">◐</button>
+</header>
+<main>
+  <div id="work">
+    <aside id="tree">
+      <div class="head"><span id="wsname">workspace</span><span class="spacer"></span>
+        <button class="icon-btn" id="newfile" title="New file"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg></button>
+      </div>
+      <div id="files"></div>
+    </aside>
+    <div class="vsplit" id="tsplit"></div>
+    <section id="left">
+      <nav id="tabs"></nav>
+      <div id="editor"></div>
+    </section>
+    <div class="vsplit" id="split"></div>
+    <section id="right"><div id="panes"></div></section>
+  </div>
+  <div class="hsplit" id="psplit"></div>
+  <section id="problems">
+    <div class="head" id="phead" title="Show or hide (Ctrl+J)">
+      <span class="title" id="ptitle">Problems</span>
+      <span class="tally" id="tally"></span>
+      <span class="spacer"></span>
+      <button class="icon-btn chev-btn" id="pfold" title="Hide (Ctrl+J)">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5L7 9l3.5-3.5"/></svg>
+      </button>
+    </div>
+    <div id="findings"></div>
+  </section>
+</main>
+
+<script type="module">
+import { start, ds } from "./engine.js";
+
+const KEYWORDS = "package module class dataclass enum interface function extern sequence state diagram requirement verification constraint usecase outcome operation view rule definition loop alt opt else return on initial attempt fail fails failure realises from to in is not where for holds never otherwise scenario event";
+const FIELDS = "kind include exclude open depth show hide neighbours level title text status category language note test tests method actor goal subject";
+
+CodeMirror.defineSimpleMode("driftspec", {
+  start: [
+    { regex: /\/\/.*/, token: "comment" },
+    { regex: /"(?:[^\\"]|\\.)*"/, token: "string" },
+    { regex: /\b(?:REQ|SREQ|VER|SVER|CST|UC)-\d+-\d+\b/, token: "variable-2" },
+    { regex: /@[A-Za-z_][\w-]*/, token: "variable-2" },
+    { regex: new RegExp(`\\b(?:${FIELDS.split(" ").join("|")})(?=\\s*:)`), token: "type" },
+    { regex: new RegExp(`\\b(?:${KEYWORDS.split(" ").join("|")})\\b`), token: "keyword" },
+    { regex: /\b(?:owns|refs|shares|static|abstract|const)\b/, token: "keyword" },
+    { regex: /\b[A-Z][\w]*\b/, token: "type" },
+    { regex: /\b[a-z_~][\w]*(?=\()/, token: "def" },
+    { regex: /->|::|[{}()<>\[\]:,+\-#~]/, token: "operator" },
+  ],
+  meta: { lineComment: "//" },
+});
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+const $ = (id) => document.getElementById(id);
+
+// ---- two languages: the lessons and what the page says (DS-204) ----------------------------
+const UI = {
+  en: { waiting: "Waiting for you", writeForMe: "Write it for me", showMe: "Show me", writing: "Writing", done: "Done",
+        leave: "Leave the lesson (restart it with the button beside the list)", close: "Close", next: "Done. Next:",
+        last: "Done: that was the last lesson.",
+        cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
+        requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES" },
+  es: { waiting: "Esperándote", writeForMe: "Escríbelo por mí", showMe: "Muéstramelo", writing: "Escribiendo", done: "Hecho",
+        leave: "Dejar la lección (vuelve a empezarla con el botón junto a la lista)", close: "Cerrar", next: "Hecho. Siguiente:",
+        last: "Hecho: era la última lección.",
+        cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
+        requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN" },
+};
+let lang = (() => {
+  const asked = new URLSearchParams(location.search).get("lang");
+  if (asked === "en" || asked === "es") return asked;
+  try { const kept = localStorage.getItem("ds-playground-lang"); if (kept === "en" || kept === "es") return kept; } catch {}
+  return (navigator.language || "").toLowerCase().startsWith("es") ? "es" : "en";
+})();
+const ui = (k) => UI[lang][k];
+const t = (x) => (x == null ? "" : typeof x === "string" ? x : x[lang] ?? x.en);
+const state = { name: "", files: {}, docs: {}, current: null, open: [], folded: new Set(), examples: [], panes: new Map(), solo: null, marks: [] };
+const EMPTY = CodeMirror.Doc("", "driftspec");
+const SEV = { error: 3, warning: 2, info: 1 };
+const SEVCOL = ["", "var(--info)", "var(--warn)", "var(--err)"];
+const CHEV = '<svg class="chev" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5L5 6l2.5-2.5"/></svg>';
+const XMARK = '<svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l6 6M8 2l-6 6"/></svg>';
+
+const editor = CodeMirror($("editor"), {
+  mode: "driftspec", lineNumbers: true, indentUnit: 2, tabSize: 2,
+  gutters: ["diag-gutter", "CodeMirror-linenumbers"],
+  matchBrackets: true, autoCloseBrackets: true,
+  extraKeys: { Tab: (cm) => cm.replaceSelection("  ") },
+});
+
+// ---- files, tree and tabs ---------------------------------------------------------------
+function makeDoc(path, text) {
+  const doc = CodeMirror.Doc(text, "driftspec");
+  doc.on("change", () => { state.files[path] = doc.getValue(); if (!coach.typing) schedule(); });
+  state.docs[path] = doc;
+}
+
+function load(example) {
+  state.example = example;
+  state.name = example.name;
+  state.files = { ...example.files };  // a lesson always starts from the beginning: they are short
+  state.docs = {};
+  for (const [path, text] of Object.entries(state.files)) makeDoc(path, text);
+  state.open = [];
+  state.current = null;
+  state.folded = new Set();
+  state.panes.clear();
+  $("panes").innerHTML = "";
+  setSolo(null);  // a pane shown alone belongs to the workspace that is going away
+  $("wsname").textContent = example.lesson ? "lesson" : example.name;
+  $("relesson").hidden = !example.lesson;
+  startLesson(example);
+  const first = (example.lesson?.open && state.files[example.lesson.open] != null) ? example.lesson.open : Object.keys(state.files).sort(byTree)[0];
+  if (first) open(first); else showNothing();
+  run();
+}
+
+function open(path) {
+  if (!state.docs[path]) return;
+  if (!state.open.includes(path)) state.open.push(path);
+  state.current = path;
+  editor.setOption("readOnly", false);
+  editor.swapDoc(state.docs[path]);
+  // the folders above an opened file unfold
+  const parts = path.split("/");
+  for (let i = 1; i < parts.length; i++) state.folded.delete(parts.slice(0, i).join("/"));
+  renderTree();
+  renderTabs();
+  paintFindings();
+  uiChanged();
+}
+
+function close(path) {
+  const i = state.open.indexOf(path);
+  if (i < 0) return;
+  state.open.splice(i, 1);
+  if (state.current === path) {
+    const next = state.open[i] || state.open[i - 1];
+    if (next) return open(next);
+    showNothing();
+  }
+  renderTree();
+  renderTabs();
+}
+
+function showNothing() {
+  state.current = null;
+  editor.swapDoc(EMPTY);
+  editor.setOption("readOnly", "nocursor");
+  renderTree();
+  renderTabs();
+  paintFindings();
+}
+
+// a file the lesson empties out of the workspace: its tab closes, the tree forgets it
+function removeFile(path) {
+  if (!(path in state.files)) return;
+  delete state.files[path];
+  delete state.docs[path];
+  const i = state.open.indexOf(path);
+  if (i >= 0) state.open.splice(i, 1);
+  if (state.current === path) { const next = state.open[i] || state.open[i - 1]; next ? open(next) : showNothing(); }
+  renderTree(); renderTabs();
+}
+
+function addFile() {
+  let name = prompt("New file (a path, folders with /)", "new.ds");
+  if (!name) return;
+  name = name.replace(/^\/+/, "");
+  if (!name.endsWith(".ds")) name += ".ds";
+  if (!state.docs[name]) { state.files[name] = ""; makeDoc(name, ""); }
+  open(name);
+  editor.focus();
+}
+
+function worstByPath() {
+  const worst = {};
+  for (const f of state.report?.findings || []) {
+    const p = f.location?.file;
+    if (!p) continue;
+    const r = SEV[f.severity] || 0;
+    const parts = p.split("/");
+    for (let i = 1; i <= parts.length; i++) {
+      const key = parts.slice(0, i).join("/");
+      if (r > (worst[key] || 0)) worst[key] = r;
+    }
+  }
+  return worst;
+}
+
+// folders first, then files, each alphabetical
+function byTree(a, b) {
+  const pa = a.split("/"), pb = b.split("/");
+  for (let i = 0; i < Math.min(pa.length, pb.length); i++) {
+    if (pa[i] === pb[i]) continue;
+    const da = i < pa.length - 1, db = i < pb.length - 1;
+    if (da !== db) return da ? -1 : 1;
+    return pa[i].localeCompare(pb[i]);
+  }
+  return pa.length - pb.length;
+}
+
+function renderTree() {
+  const worst = worstByPath();
+  const box = $("files");
+  box.innerHTML = "";
+  const seenDirs = new Set();
+  for (const path of Object.keys(state.files).sort(byTree)) {
+    const parts = path.split("/");
+    // hidden when any folder above it is folded
+    let hidden = false;
+    for (let i = 1; i < parts.length; i++) {
+      const dir = parts.slice(0, i).join("/");
+      if (!seenDirs.has(dir)) {
+        seenDirs.add(dir);
+        if (!hidden) box.append(treeRow(dir, parts[i - 1], i - 1, true, worst[dir]));
+      }
+      if (state.folded.has(dir)) hidden = true;
+    }
+    if (!hidden) box.append(treeRow(path, parts[parts.length - 1], parts.length - 1, false, worst[path]));
+  }
+}
+
+function treeRow(key, label, depth, dir, sev) {
+  const row = document.createElement("div");
+  row.className = "node" + (dir ? " dir" : "") + (dir && state.folded.has(key) ? " folded" : "") + (!dir && key === state.current ? " on" : "");
+  row.style.paddingLeft = 10 + depth * 14 + "px";
+  row.innerHTML = (dir ? CHEV : '<span style="width:10px;flex:none"></span>') + `<span class="label">${escapeHtml(label)}</span>`;
+  if (sev) { const d = document.createElement("span"); d.className = "sev"; d.style.background = SEVCOL[sev]; row.append(d); }
+  row.title = key;
+  row.onclick = () => {
+    if (dir) { state.folded.has(key) ? state.folded.delete(key) : state.folded.add(key); renderTree(); }
+    else open(key);
+  };
+  return row;
+}
+
+function renderTabs() {
+  const worst = worstByPath();
+  $("tabs").innerHTML = "";
+  for (const path of state.open) {
+    const b = document.createElement("button");
+    b.className = path === state.current ? "on" : "";
+    b.title = path;
+    b.append(path.split("/").pop());
+    if (worst[path]) {
+      const d = document.createElement("span");
+      d.className = "dot"; d.style.background = SEVCOL[worst[path]];
+      b.append(d);
+    }
+    const x = document.createElement("span");
+    x.className = "x"; x.title = "Close"; x.innerHTML = XMARK;
+    x.onclick = (e) => { e.stopPropagation(); close(path); };
+    b.append(x);
+    b.onclick = () => open(path);
+    b.onauxclick = (e) => { if (e.button === 1) close(path); };
+    $("tabs").append(b);
+  }
+}
+
+// ---- the engine --------------------------------------------------------------------------
+let timer = null, running = false, again = false;
+function schedule() { clearTimeout(timer); timer = setTimeout(run, 180); }
+
+async function run() {
+  if (running) { again = true; return; }
+  running = true;
+  const t0 = performance.now();
+  try {
+    const out = await ds(state.files);
+    const ms = Math.round(performance.now() - t0);
+    if (out.error) throw new Error(out.error);
+    state.report = out.report;
+    paintCount(ms);
+    paintFindings();
+    renderTree();
+    renderTabs();
+    paintPanes(out.diagrams, out.report.findings.some((f) => f.code === "E-SYNTAX"));
+    paintTable(out.artefacts || []);
+    state.out = out;
+    coachCheck();
+  } catch (e) {
+    $("count").innerHTML = `<span class="e">${escapeHtml(String(e.message || e))}</span>`;
+  } finally {
+    running = false;
+    if (again) { again = false; run(); }
+  }
+}
+
+function paintCount(ms) {
+  const fs = state.report.findings;
+  const n = (s) => fs.filter((f) => f.severity === s).length;
+  $("count").innerHTML = `<span class="e">${n("error")} errors</span> · <span class="w">${n("warning")} warnings</span> · ${state.report.entities} entities · ${ms} ms`;
+}
+
+// ---- findings in the editor --------------------------------------------------------------
+function paintFindings() {
+  for (const m of state.marks) m.clear();
+  state.marks = [];
+  editor.clearGutter("diag-gutter");
+  const list = $("findings");
+  list.innerHTML = "";
+  const fs = state.report?.findings || [];
+  const here = state.current ? fs.filter((f) => f.location?.file === state.current) : [];
+  for (const f of here) {
+    const line = Math.max(0, (f.location.line || 1) - 1);
+    const text = editor.getLine(line) ?? "";
+    const from = Math.max(0, (f.location.column || 1) - 1);
+    const word = text.slice(from).match(/^[\w@:.<>-]+/);
+    const to = word ? from + word[0].length : text.length;
+    state.marks.push(editor.markText({ line, ch: from }, { line, ch: Math.max(to, from + 1) }, { className: `squiggle-${f.severity}`, title: `${f.code}  ${f.message}` }));
+    const dot = document.createElement("div");
+    dot.className = "gutter-mark";
+    dot.style.background = `var(--${f.severity === "error" ? "err" : f.severity === "warning" ? "warn" : "info"})`;
+    dot.title = `${f.code}  ${f.message}`;
+    editor.setGutterMarker(line, "diag-gutter", dot);
+  }
+  const n = (s) => fs.filter((f) => f.severity === s).length;
+  $("tally").innerHTML = ["error", "warning", "info"].map((s) =>
+    `<span class="tally"><span class="shape" style="background:${SEVCOL[SEV[s]]}"></span>${n(s)}</span>`).join("");
+  if (!fs.length) { list.innerHTML = `<div class="none">${ui("noProblems")}</div>`; return; }
+  const byFile = new Map();
+  for (const f of fs) {
+    const file = f.location?.file || "";
+    if (!byFile.has(file)) byFile.set(file, []);
+    byFile.get(file).push(f);
+  }
+  for (const file of [...byFile.keys()].sort(byTree)) {
+    const items = byFile.get(file);
+    const head = document.createElement("div");
+    head.className = "file";
+    head.innerHTML = `<span>${escapeHtml(file || "workspace")}</span><span class="n">${items.length}</span>`;
+    head.onclick = () => file && open(file);
+    list.append(head);
+    for (const f of items) {
+      const row = document.createElement("div");
+      row.className = `row sev-${f.severity}`;
+      row.innerHTML = `<span class="shape" style="background:${SEVCOL[SEV[f.severity] || 1]}"></span><span class="code">${f.code}</span><span class="msg">${escapeHtml(f.message)}</span><span class="where">${f.location?.line || ""}:${f.location?.column || ""}</span>`;
+      row.title = f.message;
+      row.onclick = () => jump(f.location?.file, f.location?.line, f.location?.column);
+      list.append(row);
+    }
+  }
+}
+
+function jump(file, line, column = 1) {
+  if (!file || !state.docs[file]) return;
+  if (file !== state.current) open(file);
+  const pos = { line: Math.max(0, line - 1), ch: Math.max(0, column - 1) };
+  editor.setCursor(pos);
+  editor.scrollIntoView(pos, 120);
+  const mark = editor.addLineClass(pos.line, "background", "flash");
+  setTimeout(() => editor.removeLineClass(mark, "background", "flash"), 900);
+  editor.focus();
+}
+
+// ---- the coach: a lesson's steps, checked by the engine, remembered once done ------------
+const coach = { lesson: null, id: null, step: 0, written: -1, el: null, mark: null, timer: null, typing: false, typed: [] };
+
+function startLesson(ex) {
+  hideCoach();
+  coach.shown = -1;
+  coach.lesson = ex.lesson || null;
+  if (!coach.lesson) return;
+  coach.step = 0;
+  coach.written = -1;
+}
+
+function restartLesson() {
+  const ex = state.example;
+  if (!ex?.lesson) return;
+  load(ex);
+}
+
+const fmt = (t) => escapeHtml(t).replace(/`([^`]+)`/g, "<code>$1</code>");
+
+function coachCheck() {  // one check at a time: placing a card can open a file, which tells the lesson
+  if (coach.inCheck) return;
+  coach.inCheck = true;
+  try { checkStep(); } finally { coach.inCheck = false; }
+}
+
+function checkStep() {
+  if (!coach.lesson) return;
+  const steps = coach.lesson.steps;
+  if (coach.step >= steps.length) {
+    hideCoach();
+    if (coach.finished) { coach.finished = false; showNext(); }
+    return;
+  }
+  const st = steps[coach.step];
+  if (coach.typing) return;
+  if (st.write && coach.written !== coach.step) return writeStep(st);
+  if (passed(st.done)) return advance(true);
+  showCoach(st);
+}
+
+// ---- the lesson writes: a snippet typed into its place, in front of the reader ----------
+function locate(doc, at) {
+  let line = -1;
+  if (at.line != null) return at.line;
+  doc.eachLine((h) => { if (line < 0 && h.text.includes(at.find)) line = doc.getLineNumber(h); });
+  if (line >= 0 && at.after) {
+    // the closing line at the same depth as the line found: the end of its own block
+    const head = indentOf(doc.getLine(line));
+    for (let i = line + 1; i < doc.lineCount(); i++) if (doc.getLine(i).trim() === at.after && indentOf(doc.getLine(i)) === head) { line = i; break; }
+  }
+  return line;
+}
+const indentOf = (t) => t.match(/^\s*/)[0];
+
+async function writeStep(st) {
+  coach.written = coach.step;
+  coach.typing = true;  // before the card shows: nothing advances while the lesson types
+  showCoach(st);
+  placeAtWrite([].concat(st.write)[0]);
+  await typeAll([].concat(st.write));
+  run();
+}
+
+async function typeAll(writes) {
+  coach.typing = true;
+  coach.el?.classList.add("typing");
+  for (const m of coach.typed) m.clear();
+  coach.typed = [];
+  try { for (const w of writes) await typeOne(w); }
+  finally {
+    coach.typing = false; coach.el?.classList.remove("typing");
+    const ack = coach.el?.querySelector(".c-ack"); if (ack) ack.disabled = false;
+    const wait = coach.el?.querySelector(".c-wait"); if (wait && coach.el.querySelector(".c-ack")) wait.style.display = "none";
+  }
+}
+
+// a step may leave out the file: the one that holds its anchor, in the order of the tree
+function fileOf(o) {
+  if (o.file) return o.file;
+  const text = o.replace ?? o.find ?? (o.below || o.into)?.find;
+  return text == null ? null : Object.keys(state.files).sort(byTree).find((f) => state.files[f].includes(text)) || null;
+}
+const withFile = (w) => (w.file ? w : { ...w, file: fileOf(w) });
+
+async function typeOne(w) {
+  w = withFile(w);
+  if (!w.file) return;
+  if (w.remove) { removeFile(w.file); return; }
+  if (!state.docs[w.file]) { state.files[w.file] = ""; makeDoc(w.file, ""); }
+  open(w.file);
+  const doc = state.docs[w.file];
+  if (w.replace != null) return replaceOne(doc, w);
+  // where it goes, and with which indentation
+  let line, indent, lead = "";
+  if (w.end) {
+    line = doc.lastLine();
+    const last = doc.getLine(line);
+    indent = "";
+    lead = last.trim() === "" ? (line > 0 && doc.getLine(line - 1).trim() !== "" ? "" : "") : "\n\n";
+    if (last.trim() === "" && line > 0 && doc.getLine(line - 1).trim() !== "") lead = "\n";
+  } else {
+    const at = w.below || w.into;
+    line = locate(doc, at);
+    if (line < 0) line = doc.lastLine();
+    // into a block written on one line ("class Line { }"): open it first
+    if (w.into && /\{\s*\}\s*$/.test(doc.getLine(line))) {
+      const t = doc.getLine(line);
+      const open_ = t.replace(/\{\s*\}\s*$/, "{");
+      doc.replaceRange(open_ + "\n" + indentOf(t) + "}", { line, ch: 0 }, { line, ch: t.length });
+    }
+    // into a block: at its end, before the brace that closes it, unless the step asks for the first line
+    if (w.into && !w.into.first) {
+      const head = indentOf(doc.getLine(line));
+      for (let i = line + 1; i < doc.lineCount(); i++) {
+        const t = doc.getLine(i);
+        if (t.trim() === "}" && indentOf(t) === head) { line = i - 1; break; }
+      }
+    }
+    indent = indentOf(doc.getLine(locate(doc, { find: at.find }) >= 0 ? locate(doc, { find: at.find }) : line)) + (w.into ? "  " : "");
+    lead = "\n";
+  }
+  let pos = { line, ch: doc.getLine(line).length };
+  const start = pos;
+  const lines = w.text.split("\n");
+  const delay = Math.max(6, Math.min(22, 900 / w.text.length));
+  if (w.instant) {  // a move of many blocks at once: placed whole, not typed
+    doc.replaceRange(lead + lines.map((l) => indent + l).join("\n"), pos);
+    pos = doc.posFromIndex(doc.indexFromPos(pos) + lead.length + lines.map((l) => indent + l).join("\n").length);
+    coach.typed.push(doc.markText({ line: start.line + 1, ch: 0 }, pos, { className: "coach-typed" }));
+    setTimeout(() => { for (const m of coach.typed) m.clear(); coach.typed = []; }, 2500);
+    return;
+  }
+  doc.replaceRange(lead, pos); pos = doc.posFromIndex(doc.indexFromPos(pos) + lead.length);
+  for (let i = 0; i < lines.length; i++) {
+    if (i > 0) { doc.replaceRange("\n", pos); pos = { line: pos.line + 1, ch: 0 }; }
+    doc.replaceRange(indent, pos); pos = { line: pos.line, ch: pos.ch + indent.length };
+    for (const ch of lines[i]) {
+      doc.replaceRange(ch, pos); pos = { line: pos.line, ch: pos.ch + 1 };
+      editor.setCursor(pos);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  coach.typed.push(doc.markText({ line: start.line + 1, ch: 0 }, pos, { className: "coach-typed" }));
+  setTimeout(() => { for (const m of coach.typed) m.clear(); coach.typed = []; }, 2500);
+}
+
+// a word changed in place: the old text goes, the new one is typed where it was
+async function replaceOne(doc, w) {
+  const at = doc.getValue().indexOf(w.replace);
+  if (at < 0) return;
+  const from = doc.posFromIndex(at);
+  if (w.instant) { doc.replaceRange(w.text, from, doc.posFromIndex(at + w.replace.length)); return; }
+  const sel = doc.markText(from, doc.posFromIndex(at + w.replace.length), { className: "coach-typed" });
+  await new Promise((r) => setTimeout(r, 450));
+  sel.clear();
+  doc.replaceRange("", from, doc.posFromIndex(at + w.replace.length));
+  let pos = from;
+  for (const ch of w.text) {
+    doc.replaceRange(ch, pos);
+    pos = ch === "\n" ? { line: pos.line + 1, ch: 0 } : { line: pos.line, ch: pos.ch + 1 };
+    editor.setCursor(pos);
+    await new Promise((r) => setTimeout(r, ch === " " ? 4 : 30));
+  }
+  coach.typed.push(doc.markText(from, pos, { className: "coach-typed" }));
+  setTimeout(() => { for (const m of coach.typed) m.clear(); coach.typed = []; }, 2500);
+}
+
+// a step the reader completes on the page itself rather than in the text
+function uiChanged() {
+  if (!coach.lesson || coach.typing || !state.out) return;
+  coachCheck();
+}
+
+function passed(d) {
+  const out = state.out;
+  if (!out || d.ack) return false;
+  if (d.opened && state.current !== d.opened) return false;
+  if (d.selected && !state.panes.get(d.selected)?.selected) return false;
+  if ("solo" in d && (state.solo || false) !== d.solo) return false;
+  const fs = out.report.findings;
+  if (d.entity && !out.entities.includes(d.entity)) return false;
+  if (d.inFile && out.locations?.[d.inFile.entity]?.[0] !== d.inFile.file) return false;
+  if (d.kept && !(out.artefacts || []).find((a) => a.id === d.kept.artefact)?.keptBy.includes(d.kept.by)) return false;
+  if (d.finding && !fs.some((f) => f.code === d.finding)) return false;
+  if (d.clean && fs.some((f) => f.severity !== "info")) return false;
+  if (d.drawnAs) {  // how the engine classified an entity, read from the classes of its box
+    const m = (out.diagrams.find((x) => x.id === d.drawnAs.diagram)?.svg || "").match(new RegExp(`data-id="${d.drawnAs.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}" class="([^"]*)"`));
+    const classes = m ? m[1].split(" ") : [];
+    if (![].concat(d.drawnAs.has || []).every((c) => classes.includes(c))) return false;
+    if ([].concat(d.drawnAs.not || []).some((c) => classes.includes(c))) return false;
+  }
+  if (d.draws && !(out.diagrams.find((x) => x.id === d.draws.diagram)?.svg || "").includes(d.draws.text)) return false;
+  if (d.edge) {
+    const svg = out.diagrams.find((x) => x.id === d.edge.diagram)?.svg || "";
+    const a = `data-from="${d.edge.from}" data-to="${d.edge.to}"`, b = `data-from="${d.edge.to}" data-to="${d.edge.from}"`;
+    if (!svg.includes(a) && !svg.includes(b)) return false;
+  }
+  return true;
+}
+
+function advance(byEngine) {
+  if (coach.timer || coach.typing) return;
+  const go = () => {
+    coach.timer = null; coach.step++;
+    if (coach.step >= coach.lesson.steps.length) coach.finished = true;
+    coachCheck();
+  };
+  if (byEngine && coach.el) { coach.el.classList.add("ok"); coach.el.querySelector(".c-wait span").textContent = ui("done"); coach.timer = setTimeout(go, 900); }
+  else go();
+}
+
+// a lesson just finished: a card offers the next one
+function showNext() {
+  const i = state.examples.indexOf(state.example);
+  const next = state.examples.slice(i + 1).find((e) => e.lesson);
+  const el = document.createElement("div");
+  el.className = "coach next";
+  el.setAttribute("role", "dialog");
+  el.innerHTML = `<div class="c-head"><span>${escapeHtml(t(state.example.lesson.title))}</span><span class="spacer"></span>
+    <button class="icon-btn c-x" title="${ui("close")}">${XMARK}</button></div>
+    <p>${next ? `${ui("next")} <b>${escapeHtml(t(next.lesson.title))}</b>` : ui("last")}</p>
+    <div class="c-foot">${next ? `<button class="c-ack c-next">${ui("cont")}</button>` : ""}</div>`;
+  el.querySelector(".c-x").onclick = () => el.remove();
+  const go = el.querySelector(".c-next");
+  if (go) go.onclick = () => { el.remove(); $("example").value = next.name; store.set("ds-playground-example", next.name); load(next); };
+  document.body.append(el);
+  el.style.left = (innerWidth - el.offsetWidth) / 2 + "px";
+  el.style.top = Math.max(80, innerHeight * 0.3) + "px";
+  el.classList.add("placed");
+  coach.next = el;
+}
+
+function hideCoach() {
+  coach.next?.remove(); coach.next = null;
+
+  coach.el?.remove(); coach.el = null;
+  unmark();
+}
+function unmark() {
+  if (coach.mark?.line != null) state.docs[coach.mark.file]?.removeLineClass(coach.mark.line, "background", "coach-line");
+  coach.mark?.el?.classList.remove("coached");
+  coach.mark = null;
+}
+
+function showCoach(st) {
+  const steps = coach.lesson.steps;
+  if (!coach.el || coach.el.dataset.step !== String(coach.step)) {
+    coach.el?.remove();
+    const el = document.createElement("div");
+    el.className = "coach"; el.dataset.step = coach.step;
+    el.setAttribute("role", "dialog");
+    const dots = steps.map((_, i) => `<i class="${i <= coach.step ? "on" : ""}"></i>`).join("");
+    const writing = st.write && coach.written === coach.step && coach.typing;
+    const foot = st.done.ack
+      ? (st.write ? `<span class="c-wait"><i></i><span>${ui("writing")}</span></span>` : "") + `<button class="c-ack">${escapeHtml(t(st.done.ack))}</button>`
+      : (st.solution ? `<button class="c-for-me">${[].concat(st.solution)[0].ui ? ui("showMe") : ui("writeForMe")}</button>` : "") + `<span class="c-wait"><i></i><span>${ui("waiting")}</span></span>`;
+    el.innerHTML = `<div class="c-head"><span class="c-dots">${dots}</span><span>${coach.step + 1} / ${steps.length}</span><span class="spacer"></span>
+      <button class="icon-btn c-x" title="${ui("leave")}">${XMARK}</button></div><p>${fmt(t(st.text))}</p><div class="c-foot">${foot}</div>`;
+    el.querySelector(".c-x").onclick = () => { coach.step = steps.length; hideCoach(); };
+    const ack = el.querySelector(".c-ack");
+    if (ack) ack.onclick = () => advance(false);
+    const forMe = el.querySelector(".c-for-me");
+    if (forMe) forMe.onclick = async () => {
+      if (coach.typing) return;
+      forMe.remove();
+      const sol = [].concat(st.solution);
+      if (sol[0].ui) { for (const a of sol) doOnPage(a); return; }
+      await typeAll(sol); run();
+    };
+    document.body.append(el);
+    coach.el = el;
+    coach.placed = -1;
+    // a card whose subject never shows up still shows, in the middle
+    setTimeout(() => { if (coach.el === el && !el.classList.contains("placed")) fix(el, null); }, 1500);
+  }
+  // while the lesson types, the card says so and waits; after, it says what to do
+  const ack = coach.el.querySelector(".c-ack");
+  if (ack) ack.disabled = coach.typing;
+  const wait = st.write && st.done.ack && coach.el.querySelector(".c-wait");
+  if (wait) wait.style.display = coach.typing ? "" : "none";
+  placeCoach(st);
+}
+
+// what "Show me" does for a step done on the page
+function doOnPage(a) {
+  if (a.ui === "open") open(a.file);
+  else if (a.ui === "select") state.panes.get(a.pane)?.light?.(a.id), uiChanged();
+  else if (a.ui === "solo") setSolo(a.pane);
+  else if (a.ui === "unsolo") setSolo(null);
+}
+
+function placeCoach(st) {
+  if (!coach.el) return;
+  unmark();
+  const at = st.at || {};
+  const first = coach.shown !== coach.step;  // the view goes to what a step talks about once, as soon as it exists
+  const shown = () => { coach.shown = coach.step; };
+  const free = coach.placed !== coach.step;  // the card is placed once per step, and then stays still
+  if (at.file || at.find) {
+    const file = fileOf(at);
+    if (first && file && state.current !== file && state.docs[file] && !coach.typing) open(file);
+    const doc = state.docs[file];
+    const line = doc ? locate(doc, at) : -1;
+    if (line >= 0) {
+      doc.addLineClass(line, "background", "coach-line");
+      coach.mark = { file, line };
+      if (first && state.current === file) { editor.scrollIntoView({ line, ch: 0 }, 80); shown(); }
+      if (free && state.current === file) fix(coach.el, besideLine(line));
+    }
+  } else if (at.pane) {
+    const p = state.panes.get(at.pane);
+    if (p && state.solo && state.solo !== at.pane) setSolo(null);  // the step talks about a pane: it must be in view
+    if (p && at.select && p.selected !== at.select) p.light?.(at.select);
+    if (p) {
+      p.el.classList.add("coached"); coach.mark = { el: p.el };
+      if (first) { p.el.scrollIntoView({ block: "nearest" }); shown(); }
+      if (free) { const b = p.el.getBoundingClientRect(); fix(coach.el, { x: b.left - coach.el.offsetWidth - 14, y: b.top + 40, alt: { x: b.left + 16, y: b.top + 48 } }); }
+    }
+  } else if (at.panel === "tree") {
+    const el = $("tree"); el.classList.add("coached"); coach.mark = { el };
+    shown();
+    if (free) { const b = el.getBoundingClientRect(); fix(coach.el, { x: b.right + 16, y: b.bottom - coach.el.offsetHeight - 24 }); }  // low, where the code rarely reaches
+  } else if (at.panel === "problems") {
+    if ($("problems").classList.contains("folded")) foldProblems(false);
+    const el = $("problems"); el.classList.add("coached"); coach.mark = { el };
+    shown();
+    if (free) { const b = el.getBoundingClientRect(); fix(coach.el, { x: b.left + 260, y: b.top - coach.el.offsetHeight - 12 }); }
+  }
+}
+
+// beside a line of the editor: to the right of the widest line, at that line's height
+function besideLine(line) {
+  const doc = editor.getDoc();
+  const c = editor.charCoords({ line: Math.min(line, doc.lastLine()), ch: 0 }, "window");
+  let widest = 0;
+  for (let i = 0; i < doc.lineCount(); i++) widest = Math.max(widest, editor.charCoords({ line: i, ch: doc.getLine(i).length }, "window").right);
+  return { x: widest + 40, y: c.top - 8 };
+}
+
+// where a write will land, so its card can stand there before the first character
+function placeAtWrite(w) {
+  if (!w || !coach.el) return;
+  w = withFile(w);
+  if (!w.file) return;
+  if (!state.docs[w.file]) { state.files[w.file] = ""; makeDoc(w.file, ""); }
+  if (state.current !== w.file) open(w.file);
+  const doc = state.docs[w.file];
+  let line;
+  if (w.end) line = doc.lastLine();
+  else if (w.replace != null) line = doc.posFromIndex(Math.max(0, doc.getValue().indexOf(w.replace))).line;
+  else line = Math.max(0, locate(doc, w.below || w.into));
+  editor.scrollIntoView({ line, ch: 0 }, 120);
+  fix(coach.el, besideLine(line + 1));
+}
+
+// a new window size places the card again, once: it moves because the reader resized, never on its own
+let resizing = null;
+addEventListener("resize", () => {
+  clearTimeout(resizing);
+  resizing = setTimeout(() => { if (coach.el && coach.lesson) { coach.placed = -1; placeCoach(coach.lesson.steps[coach.step]); } }, 150);
+});
+
+function fix(el, p) {
+  const w = el.offsetWidth, h = el.offsetHeight, W = innerWidth, H = innerHeight;
+  let x = p ? p.x : (W - w) / 2, y = p ? p.y : H / 3;
+  if (p?.alt && x < 12) { x = p.alt.x; y = p.alt.y; }
+  el.style.left = Math.max(12, Math.min(W - w - 12, x)) + "px";
+  el.style.top = Math.max(56, Math.min(H - h - 12, y)) + "px";
+  el.classList.add("placed");
+  if (el === coach.el) coach.placed = coach.step;
+}
+
+// ---- the panes: one per diagram, in the order they are written --------------------------
+function paintPanes(diagrams, syntaxBroken) {
+  const panes = $("panes");
+  const seen = new Set();
+  let before = null;
+  for (const d of diagrams) {
+    seen.add(d.id);
+    let p = state.panes.get(d.id);
+    if (!p) {
+      p = makePane(d.id);
+      state.panes.set(d.id, p);
+      if (state.solo) setSolo(null);  // a new diagram is shown, never born hidden behind another one alone
+    }
+    p.el.classList.remove("stale");
+    p.file = d.file; p.line = d.line; p.include = d.include; p.kind_ = d.kind;
+    p.kind.textContent = d.kind;
+    if (p.svg !== d.svg) {
+      p.svg = d.svg;
+      p.body.innerHTML = d.svg || `<div class="empty">${escapeHtml(d.error || "nothing to draw")}</div>`;
+      p.wire = true;
+    }
+    if (d.svg && p.wired !== d.svg) p.wire = true;
+    // keep the written order
+    const next = before ? before.nextSibling : panes.firstChild;
+    if (p.el !== next) panes.insertBefore(p.el, next);
+    before = p.el;
+    // wired once in the page: the tips are measured on the drawing, which needs layout
+    if (p.wire) { p.wire = false; p.wired = p.svg; wireRelations(p); wireNavigation(p); if (p.selected) p.light?.(p.selected); }
+  }
+  titleMarks();
+  for (const [id, p] of state.panes) {
+    if (seen.has(id) || id.startsWith("table:")) continue;
+    if (syntaxBroken) { p.el.classList.add("stale"); p.el.title = "a file does not parse: last drawing kept"; }
+    else { p.el.remove(); state.panes.delete(id); if (state.solo === id) setSolo(null); }
+  }
+}
+
+// ---- the requirements as a table: a view of its own, beside the diagrams -----------------
+function paintTable(rows) {
+  const id = "table:requirements";
+  let p = state.panes.get(id);
+  if (!rows.length) { if (p) { p.el.remove(); state.panes.delete(id); } return; }
+  if (!p) {
+    p = makePane(ui("requirements"));
+    p.kind.textContent = ui("table");
+    p.kind_ = "table";
+    state.panes.set(id, p);
+    p.el.querySelector("h3 button").onclick = () => setSolo(state.solo === id ? null : id);
+    p.el.querySelector("h3 .name").onclick = null;
+  }
+  $("panes").append(p.el);  // always after the diagrams
+  const key = JSON.stringify(rows);
+  if (p.svg === key) return;
+  p.svg = key;
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const order = { requirement: 0, usecase: 1, constraint: 2 };
+  const sorted = (list) => list.sort((a, b) => (order[a.kind] - order[b.kind]) || a.id.localeCompare(b.id));
+  const kids = new Map();
+  for (const r of rows) {
+    const parent = byId.has(r.parent) ? r.parent : "";
+    if (!kids.has(parent)) kids.set(parent, []);
+    kids.get(parent).push(r);
+  }
+  const short = (id) => id.split(/::|@/).pop();
+  const link = (id) => `<a data-go="${escapeHtml(id)}" title="${escapeHtml(id)}">${escapeHtml(short(id))}</a>`;
+  const lines = [];
+  const walk = (parent, depth) => {
+    for (const r of sorted(kids.get(parent) || [])) {
+      const kept = r.keptBy.length ? r.keptBy.map(link).join("") : `<span class="${r.kind === "constraint" ? "none" : "missing"}">none</span>`;
+      const proved = r.provedBy.length ? r.provedBy.map(link).join("") : `<span class="none">none</span>`;
+      lines.push(`<tr><td class="rid" data-go="${escapeHtml(r.id)}" style="padding-left:${8 + depth * 16}px"><span class="shape k-${r.kind}"></span>${escapeHtml(r.id)}</td>
+        <td>${escapeHtml(r.title)}</td><td class="status ${escapeHtml(r.status)}">${escapeHtml(r.status || "")}</td>
+        <td class="level">${escapeHtml(r.level || "")}</td><td class="links">${kept}</td><td class="links">${proved}</td></tr>`);
+      walk(r.id, depth + 1);
+    }
+  };
+  walk("", 0);
+  p.body.innerHTML = `<table class="reqtable"><thead><tr>${ui("cols").map((c) => `<th>${c}</th>`).join("")}</tr></thead><tbody>${lines.join("")}</tbody></table>`;
+  for (const el of p.body.querySelectorAll("[data-go]")) el.addEventListener("click", () => reveal(el.dataset.go));
+}
+
+// ---- relations at rest and lit -----------------------------------------------------------
+const EDGE_KIND = { inheritance: "inherits", realization: "inherits", composition: "has", aggregation: "refers", dependency: "uses" };
+const UNIT = /pr-classifier-(class|dataclass|enum)\b/;
+
+function wireRelations(pane) {
+  const svg = pane.body.querySelector("svg");
+  if (!svg) return;
+  const box = (id) => svg.querySelector(`.pr-box[data-id="${CSS.escape(id)}"]`);
+  let quietable = false;
+  for (const g of svg.querySelectorAll(".pr-edge-group")) {
+    const edge = g.querySelector(".pr-edge");
+    const k = edge && [...edge.classList].map((c) => c.replace("pr-edge-", "")).find((c) => EDGE_KIND[c]);
+    g.dataset.rk = EDGE_KIND[k] || "uses";
+    // a relation between classes waits to be asked; one between packages or interfaces stays
+    const a = box(g.dataset.from), b = box(g.dataset.to);
+    const betweenUnits = (a && UNIT.test(a.getAttribute("class"))) || (b && UNIT.test(b.getAttribute("class")));
+    g.dataset.quiet = betweenUnits && g.dataset.rk !== "inherits" ? "1" : "";
+    if (g.dataset.quiet) quietable = true;
+  }
+  tintTips(svg, box);
+  svg.classList.toggle("quietable", quietable);
+  if (!quietable) return;
+  const light = (id) => {
+    for (const el of svg.querySelectorAll(".pr-box.sel, .pr-box.rel")) { el.classList.remove("sel", "rel"); el.style.removeProperty("--rc"); }
+    for (const g of svg.querySelectorAll(".pr-edge-group")) {
+      const touches = id && (g.dataset.from === id || g.dataset.to === id);
+      g.classList.toggle("lit", !!touches);
+      g.classList.toggle("quiet", !!g.dataset.quiet && !touches);
+      if (touches) {
+        const other = box(g.dataset.from === id ? g.dataset.to : g.dataset.from);
+        if (other && other.dataset.id !== id) {
+          other.classList.add("rel");
+          other.style.setProperty("--rc", getComputedStyle(g).getPropertyValue("--rc"));
+        }
+      }
+    }
+    if (id) box(id)?.classList.add("sel");
+  };
+  for (const b of svg.querySelectorAll(".pr-box")) {
+    if (!UNIT.test(b.getAttribute("class"))) continue;
+    b.addEventListener("mouseenter", () => light(b.dataset.id));
+    b.addEventListener("mouseleave", () => light(pane.selected));
+    b.addEventListener("click", (e) => { e.stopPropagation(); pane.selected = pane.selected === b.dataset.id ? null : b.dataset.id; light(pane.selected); uiChanged(); });
+  }
+  svg.addEventListener("click", () => { pane.selected = null; light(null); });
+  pane.light = (id) => { pane.selected = id; light(id); };
+  if (pane.selected && !box(pane.selected)) pane.selected = null;
+  light(pane.selected);
+}
+
+// ---- from a drawing to its text, and from a call to the diagram of what it calls --------
+// the identity behind a drawn thing: a lifeline of a local is "Class|name", its class is the part before "|"
+const entityOf = (id) => (id || "").split("|")[0];
+
+function reveal(id, ref) {
+  let file, line, end;
+  const loc = state.out?.locations?.[entityOf(id)];
+  if (loc) [file, line, end] = loc;
+  else if (ref) { const m = /^(.*):(\d+)$/.exec(ref); if (m) { file = m[1]; line = end = +m[2]; } }
+  if (!file || !state.docs[file]) return;
+  if (state.current !== file) open(file);
+  const doc = state.docs[file];
+  const from = Math.max(0, line - 1), to = Math.max(from, (end || line) - 1);
+  editor.setCursor({ line: from, ch: 0 });
+  editor.scrollIntoView({ from: { line: from, ch: 0 }, to: { line: to, ch: 0 } }, 60);
+  for (let i = from; i <= to; i++) doc.addLineClass(i, "background", "reveal-line");
+  setTimeout(() => { for (let i = from; i <= to; i++) doc.removeLineClass(i, "background", "reveal-line"); }, 1800);
+}
+
+// the diagram that draws a behaviour: its include names the subject, and the scenario after "/"
+function diagramOf(sequence) {
+  const m = /^(.*)::sequence(?:\/(.+))?$/.exec(sequence || "");
+  if (!m) return null;
+  const want = m[1] + (m[2] ? "/" + m[2] : "");
+  for (const [id, p] of state.panes) {
+    if (p.kind_ !== "sequence") continue;
+    if ((p.include || "").replace(/\s*\/\s*/, "/").trim() === want) return id;
+  }
+  return null;
+}
+
+// once every pane exists, each call mark says where it leads
+function titleMarks() {
+  for (const m of document.querySelectorAll("#panes .go-diagram")) {
+    const to = diagramOf(m.dataset.target);
+    m.querySelector("title").textContent = to ? "Open " + to : "Go to its behaviour";
+  }
+}
+
+function goToPane(id) {
+  const p = state.panes.get(id);
+  if (!p) return;
+  if (state.solo && state.solo !== id) setSolo(id);
+  p.el.scrollIntoView({ block: "nearest" });
+  p.el.classList.add("arrived");
+  setTimeout(() => p.el.classList.remove("arrived"), 1400);
+}
+
+function wireNavigation(pane) {
+  const svg = pane.body.querySelector("svg");
+  if (!svg) return;
+  // a box of any diagram: to its declaration (a class box also lights its relations, see wireRelations)
+  for (const b of svg.querySelectorAll(".pr-box[data-id]")) {
+    b.addEventListener("click", () => reveal(b.dataset.id, b.dataset.refLocation));
+  }
+  // a lifeline: to the class it stands for
+  for (const l of svg.querySelectorAll(".pr-lifeline[data-id]")) {
+    const head = l.querySelector(".pr-lifeline-head") || l;
+    head.addEventListener("click", (e) => { e.stopPropagation(); reveal(l.dataset.id, l.dataset.refLocation); });
+  }
+  // a message: to the line that writes it; a call into a behaviour of its own gets a mark that leads there
+  const NS = "http://www.w3.org/2000/svg";
+  for (const g of svg.querySelectorAll(".pr-msg-group[data-ref-location]")) {
+    g.addEventListener("click", (e) => { if (!e.target.closest(".go-diagram")) reveal(null, g.dataset.refLocation); });
+    const target = g.dataset.refExpands;
+    if (!target) continue;
+    const label = [...g.querySelectorAll("text")].find((t) => !/fold/.test(t.textContent));
+    if (!label) continue;
+    const bb = label.getBBox();
+    const mark = document.createElementNS(NS, "g");
+    mark.setAttribute("class", "go-diagram");
+    mark.dataset.target = target;
+    mark.setAttribute("transform", `translate(${bb.x + bb.width + 9},${bb.y + bb.height / 2})`);
+    mark.innerHTML = `<title></title><circle r="6"/><path d="M-1.8,-3 L3,0 L-1.8,3 Z"/>`;
+    mark.addEventListener("click", (e) => { e.stopPropagation(); const now = diagramOf(target); now ? goToPane(now) : reveal(target); });
+    g.append(mark);
+  }
+}
+
+// the tip of a relation wears the colour of the kind of the card it touches (DS-193):
+// each marker is copied once per kind and the end points at its copy
+const CARD_COLOUR = { class: "--k-class", dataclass: "--k-dataclass", enum: "--k-enum", interface: "--k-interface" };
+function cardColour(el) {
+  const m = el && /pr-classifier-(\w+)/.exec(el.getAttribute("class"));
+  return m && CARD_COLOUR[m[1]];
+}
+// the engine's tips are sized for print and grow with the line: here they are smaller, and fixed
+const TIP_SCALE = 0.75;
+function shrinkTips(svg) {
+  for (const m of svg.querySelectorAll("marker")) {
+    if (m.dataset.shrunk) continue;
+    m.setAttribute("markerUnits", "userSpaceOnUse");
+    m.setAttribute("markerWidth", (parseFloat(m.getAttribute("markerWidth")) || 12) * TIP_SCALE);
+    m.setAttribute("markerHeight", (parseFloat(m.getAttribute("markerHeight")) || 12) * TIP_SCALE);
+    m.dataset.shrunk = "1";
+  }
+}
+
+function tintTips(svg, box) {
+  shrinkTips(svg);
+  const defs = svg.querySelector("defs") || svg.insertBefore(document.createElementNS("http://www.w3.org/2000/svg", "defs"), svg.firstChild);
+  for (const g of svg.querySelectorAll(".pr-edge-group")) {
+    const ends = [box(g.dataset.from), box(g.dataset.to)].filter(Boolean);
+    for (const path of g.querySelectorAll(".pr-edge")) {
+      for (const [attr, atEnd] of [["marker-start", false], ["marker-end", true]]) {
+        const ref = path.getAttribute(attr);
+        const id = ref && /url\(#([^)]+)\)/.exec(ref)?.[1];
+        if (!id || !ends.length) continue;
+        let p;
+        try { p = path.getPointAtLength(atEnd ? path.getTotalLength() : 0); } catch { continue; }
+        // the card the tip touches is the nearer end
+        const dist = (el) => { const b = el.getBBox(); const dx = Math.max(b.x - p.x, 0, p.x - b.x - b.width); const dy = Math.max(b.y - p.y, 0, p.y - b.y - b.height); return dx * dx + dy * dy; };
+        const touched = ends.reduce((a, b) => (dist(b) < dist(a) ? b : a));
+        const colour = cardColour(touched);
+        if (!colour) continue;
+        const copy = `${id}--${colour.slice(4)}`;
+        if (!svg.getElementById(copy)) {
+          const src = svg.getElementById(id);
+          if (!src) continue;
+          const m = src.cloneNode(true);
+          m.id = copy;
+          for (const shape of m.querySelectorAll("path, polygon, polyline")) {
+            shape.style.stroke = `var(${colour})`;
+            if (shape.classList.contains("pr-filled")) shape.style.fill = `var(${colour})`;
+          }
+          defs.append(m);
+        }
+        path.setAttribute(attr, `url(#${copy})`);
+      }
+    }
+  }
+}
+
+function makePane(id) {
+  const el = document.createElement("article");
+  el.className = "pane";
+  const h = document.createElement("h3");
+  const name = document.createElement("span");
+  name.className = "name"; name.textContent = id; name.title = "Go to its declaration";
+  const kind = document.createElement("span");
+  kind.className = "kind";
+  const spacer = document.createElement("span");
+  spacer.className = "spacer";
+  const max = document.createElement("button");
+  max.textContent = "⤢"; max.title = "Show alone";
+  const body = document.createElement("div");
+  body.className = "body";
+  h.append(name, kind, spacer, max);
+  el.append(h, body);
+  const pane = { el, body, kind, svg: null, file: null, line: 0, selected: null };
+  name.onclick = () => jump(pane.file, pane.line);
+  max.onclick = () => setSolo(state.solo === id ? null : id);
+  return pane;
+}
+
+function setSolo(id) {
+  state.solo = id;
+  setTimeout(uiChanged);
+  $("panes").classList.toggle("solo", !!id);
+  for (const [pid, p] of state.panes) {
+    p.el.classList.toggle("max", pid === id);
+    p.el.querySelector("h3 button").textContent = pid === id ? "⤡" : "⤢";
+  }
+}
+
+// ---- splitters, the problems panel, theme, examples -------------------------------------
+// one drag for every splitter: it sets a size on its target and remembers it
+function splitter(bar, target, { axis, key, min, max, size }) {
+  const saved = parseFloat(store.get(key));
+  if (saved >= min && saved <= max) target.style[axis === "x" ? "width" : "height"] = saved + "px";
+  bar.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    bar.setPointerCapture(e.pointerId); bar.classList.add("drag");
+    const move = (ev) => {
+      const v = Math.min(max, Math.max(min, size(ev)));
+      target.style[axis === "x" ? "width" : "height"] = v + "px";
+      editor.refresh();
+    };
+    const up = () => {
+      bar.classList.remove("drag");
+      bar.removeEventListener("pointermove", move);
+      store.set(key, parseFloat(target.style[axis === "x" ? "width" : "height"]));
+    };
+    bar.addEventListener("pointermove", move);
+    bar.addEventListener("pointerup", up, { once: true });
+  });
+}
+splitter($("tsplit"), $("tree"), { axis: "x", key: "ds-playground-tree", min: 140, max: 480, size: (e) => e.clientX - $("tree").getBoundingClientRect().left });
+splitter($("split"), $("left"), { axis: "x", key: "ds-playground-left", min: 240, max: 1600, size: (e) => e.clientX - $("left").getBoundingClientRect().left });
+splitter($("psplit"), $("problems"), { axis: "y", key: "ds-playground-problems", min: 60, max: 900, size: (e) => $("problems").getBoundingClientRect().bottom - e.clientY });
+
+function foldProblems(fold) {
+  const p = $("problems");
+  fold = fold ?? !p.classList.contains("folded");
+  p.classList.toggle("folded", fold);
+  $("psplit").style.display = fold ? "none" : "";
+  $("pfold").title = fold ? "Show (Ctrl+J)" : "Hide (Ctrl+J)";
+  store.set("ds-playground-problems-folded", fold ? "1" : "0");
+  editor.refresh();
+}
+$("phead").onclick = () => foldProblems();
+foldProblems(new URLSearchParams(location.search).get("problems") === "hidden" || store.get("ds-playground-problems-folded") === "1");
+$("count").style.cursor = "pointer";
+$("count").title = "Problems (Ctrl+J)";
+$("count").onclick = () => foldProblems();
+$("newfile").onclick = addFile;
+$("relesson").onclick = restartLesson;
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") { e.preventDefault(); foldProblems(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") { e.preventDefault(); $("tree").classList.toggle("hidden"); editor.refresh(); }
+});
+
+(function theme() {
+  const root = document.documentElement;
+  const saved = new URLSearchParams(location.search).get("theme") || store.get("ds-playground-theme");
+  if (saved) root.dataset.theme = saved;
+  $("theme").onclick = () => {
+    root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+    store.set("ds-playground-theme", root.dataset.theme);
+  };
+})();
+
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+
+// what the browser checks read: the files and where the lesson stands (no state is kept between visits)
+window.dsPlayground = { files: () => ({ ...state.files }), done: () => !!coach.lesson && coach.step >= coach.lesson.steps.length };
+
+// switching language redraws what speaks: the card, the list, the table, the panel's name
+function applyLanguage() {
+  $("lang").textContent = ui("other");
+  $("ptitle").textContent = ui("problems");
+  $("relesson").title = ui("restart");
+  document.documentElement.lang = lang;
+  if (typeof labelExamples === "function" && state.examples.length) labelExamples();
+  const tp = state.panes.get("table:requirements");
+  if (tp) { tp.el.querySelector("h3 .name").textContent = ui("requirements"); tp.kind.textContent = ui("table"); tp.svg = null; paintTable(state.out?.artefacts || []); }
+  if (coach.el) { coach.el.remove(); coach.el = null; coach.placed = -1; coachCheck(); }
+  if (state.out) paintFindings();
+}
+$("lang").onclick = () => {
+  lang = lang === "en" ? "es" : "en";
+  try { localStorage.setItem("ds-playground-lang", lang); } catch {}
+  applyLanguage();
+};
+applyLanguage();
+
+const backend = await start().catch((e) => { $("count").innerHTML = `<span class="e">no engine: ${escapeHtml(e.message)}</span>`; throw e; });
+$("backend").textContent = backend === "wasm" ? "engine: wasm" : "engine: dev server";
+state.examples = await (await fetch("examples.json", { cache: "no-cache" })).json();
+const sel = $("example");
+function labelExamples() {
+  for (const o of sel.options) { const ex = state.examples.find((e) => e.name === o.value); o.textContent = ex?.lesson ? t(ex.lesson.title) : o.value; }
+}
+for (const ex of state.examples) sel.add(new Option(ex.name, ex.name));
+labelExamples();
+const want = new URLSearchParams(location.search).get("example") || store.get("ds-playground-example") || state.examples[0].name;
+const byId = state.examples.find((e) => e.id === want);
+sel.value = byId ? byId.name : state.examples.some((e) => e.name === want) ? want : state.examples[0].name;
+sel.onchange = () => { store.set("ds-playground-example", sel.value); load(state.examples.find((e) => e.name === sel.value)); };
+load(state.examples.find((e) => e.name === sel.value));
+const pick = new URLSearchParams(location.search).get("select");
+if (pick) setTimeout(() => { for (const p of state.panes.values()) { const b = p.body.querySelector(`.pr-box[data-id="${CSS.escape(pick)}"]`); if (b) b.dispatchEvent(new MouseEvent("click", { bubbles: true })); } }, 600);
+const at = location.hash.match(/^#(?:(.+):)?L(\d+)$/);  // #L82 or #core/Greeter.ds:L12
+if (at) setTimeout(() => jump(at[1] ? decodeURIComponent(at[1]) : state.current, +at[2]), 300);
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+{
+  "title": {
+    "en": "8 · State machines",
+    "es": "8 · Máquinas de estados"
+  },
+  "version": 3,
+  "open": "store/Cart.ds",
+  "steps": [
+    {
+      "write": {
+        "below": {
+          "find": "sequence Cart::checkout / declined",
+          "after": "}"
+        },
+        "text": "state Cart {\n  initial Open\n  Open -> Paid on checkout [the card accepts]\n}"
+      },
+      "at": {
+        "find": "state Cart"
+      },
+      "text": {
+        "en": "A state machine says how a cart changes over its life. It starts `Open`; it moves to `Paid` on `checkout`, when the card accepts. The guard in brackets is prose, like a branch; the event is an operation of the class.",
+        "es": "Una máquina de estados dice cómo cambia un carrito a lo largo de su vida. Empieza en `Open`; pasa a `Paid` con `checkout`, cuando la tarjeta acepta. La guarda entre corchetes es prosa, como una rama; el evento es una operación de la clase."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "diagrams/behaviour.ds",
+        "end": true,
+        "text": "diagram ST_Cart {\n  kind: state\n  include: shop@store::Cart\n}"
+      },
+      "at": {
+        "pane": "ST_Cart"
+      },
+      "text": {
+        "en": "Its diagram, asked like any other: `kind: state` and the class whose life it draws.",
+        "es": "Su diagrama, que se pide como cualquier otro: `kind: state` y la clase cuya vida dibuja."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "Open -> Paid"
+      },
+      "text": {
+        "en": "Once paid, a cart is shipped. Add a move inside `state Cart`:\n`Paid -> Shipped on ship`",
+        "es": "Una vez pagado, un carrito se envía. Añade una transición dentro de `state Cart`:\n`Paid -> Shipped on ship`"
+      },
+      "solution": {
+        "into": {
+          "find": "state Cart"
+        },
+        "text": "Paid -> Shipped on ship"
+      },
+      "done": {
+        "finding": "W-EVENT-UNDECLARED"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "A move fires on something the cart can do, and `Cart` has no `ship`. The machine just found a gap in the class. Declare it in `Cart`:\n`+ ship() -> none`",
+        "es": "Una transición se dispara con algo que el carrito sabe hacer, y `Cart` no tiene `ship`. La máquina acaba de encontrar un hueco en la clase. Decláralo en `Cart`:\n`+ ship() -> none`"
+      },
+      "solution": {
+        "into": {
+          "find": "class Cart"
+        },
+        "text": "+ ship() -> none"
+      },
+      "done": {
+        "clean": true,
+        "entity": "shop@store::Cart::ship"
+      }
+    },
+    {
+      "at": {
+        "find": "Paid -> Shipped"
+      },
+      "text": {
+        "en": "A move can also do something. While open, adding a line makes the cart recalculate: after `/` comes the operation it runs. Add:\n`Open -> Open on add / recalculate`",
+        "es": "Una transición también puede hacer algo. Mientras está abierto, añadir una línea hace que el carrito recalcule: después de `/` va la operación que ejecuta. Añade:\n`Open -> Open on add / recalculate`"
+      },
+      "solution": {
+        "into": {
+          "find": "state Cart"
+        },
+        "text": "Open -> Open on add / recalculate"
+      },
+      "done": {
+        "clean": true,
+        "draws": {
+          "diagram": "ST_Cart",
+          "text": "recalculate"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "ST_Cart"
+      },
+      "text": {
+        "en": "The enum `Status` is the data a cart keeps; the machine is the rule for how it may change. Events and actions are operations of the class, so the machine and the class can never drift apart.",
+        "es": "El enumerado `Status` son los datos que guarda un carrito; la máquina es la regla de cómo pueden cambiar. Los eventos y las acciones son operaciones de la clase, así que la máquina y la clase nunca pueden separarse."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

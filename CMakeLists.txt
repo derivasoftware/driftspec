@@ -175,6 +175,14 @@ if(DS_PYTHON)
                                        PYTHONPATH=${CMAKE_BINARY_DIR}/python)
 endif()
 
+# the engine's one call for a page as a shared library, for the playground's
+# lesson replay (DS-204): built beside the Python face, whose static libraries
+# are position independent
+if(DS_PYTHON)
+  add_library(ds_browser SHARED app/wasm/main.cpp)
+  target_link_libraries(ds_browser PRIVATE driftspec)
+endif()
+
 add_executable(ds app/ds/main.cpp)
 target_link_libraries(ds PRIVATE driftspec CLI11::CLI11)
 

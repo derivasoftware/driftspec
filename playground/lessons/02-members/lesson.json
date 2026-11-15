@@ -1,0 +1,250 @@
+{
+  "title": {
+    "en": "2 · Members",
+    "es": "2 · Miembros"
+  },
+  "version": 3,
+  "steps": [
+    {
+      "write": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Cart"
+        },
+        "text": "+ add(line: Line) -> none\n- recalculate() -> none"
+      },
+      "at": {
+        "file": "shop.ds",
+        "find": "recalculate"
+      },
+      "text": {
+        "en": "Every member starts with who may use it: `+` public, `-` private, `#` protected. A method lists its parameters, and after `->` what it gives back. The dots in the diagram say the same in colour.",
+        "es": "Cada miembro empieza diciendo quién puede usarlo: `+` público, `-` privado, `#` protegido. Un método lista sus parámetros y, después de `->`, lo que devuelve. Los puntos del diagrama dicen lo mismo con color."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Line"
+      },
+      "text": {
+        "en": "A line has a quantity, and it starts at one. Add an attribute with a default value inside `Line`:\n`- count: int = 1`",
+        "es": "Una línea tiene una cantidad, y empieza en uno. Añade dentro de `Line` un atributo con valor por defecto:\n`- count: int = 1`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Line",
+          "first": true
+        },
+        "text": "- count: int = 1"
+      },
+      "done": {
+        "entity": "shop@store::Line::count"
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "shop.ds",
+          "into": {
+            "find": "class Line"
+          },
+          "text": "- gift: bool = false\n- note: string = \"\""
+        },
+        {
+          "file": "shop.ds",
+          "into": {
+            "find": "dataclass Money"
+          },
+          "text": "- currency: string = \"EUR\""
+        }
+      ],
+      "at": {
+        "file": "shop.ds",
+        "find": "currency"
+      },
+      "text": {
+        "en": "A default is not only a number. It can be a number (`1`, `-1`, `2.5`), a text in quotes (`\"EUR\"`), `true` or `false`, or a name, such as a value of an enum, which comes next. It is always a value, never a calculation: `= 1 + 1` is not allowed.",
+        "es": "Un valor por defecto no es solo un número. Puede ser un número (`1`, `-1`, `2.5`), un texto entre comillas (`\"EUR\"`), `true` o `false`, o un nombre, como un valor de un enumerado, que viene a continuación. Siempre es un valor, nunca un cálculo: `= 1 + 1` no se admite."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "shop.ds",
+          "below": {
+            "find": "dataclass Money",
+            "after": "}"
+          },
+          "text": "enum Status { Open, Paid, Shipped }"
+        },
+        {
+          "file": "shop.ds",
+          "into": {
+            "find": "class Cart",
+            "first": true
+          },
+          "text": "- status: Status = Open"
+        }
+      ],
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Status"
+      },
+      "text": {
+        "en": "An `enum` is a closed set of values. The cart now keeps its status, and the diagram links the two: a member whose type is an entity of the model is a relation.",
+        "es": "Un `enum` es un conjunto cerrado de valores. El carrito guarda ahora su estado, y el diagrama une los dos: un miembro cuyo tipo es una entidad del modelo es una relación."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "shop.ds",
+        "below": {
+          "find": "enum Status"
+        },
+        "text": "dataclass Coupon {\n  - code: string\n  - percent: int\n}"
+      },
+      "at": {
+        "file": "shop.ds",
+        "find": "dataclass Coupon"
+      },
+      "text": {
+        "en": "A `dataclass` only carries data: no behaviour of its own, and the diagram marks it apart.",
+        "es": "Una `dataclass` solo lleva datos: no tiene comportamiento propio, y el diagrama la marca aparte."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Cart"
+      },
+      "text": {
+        "en": "A cart may carry a coupon, or none. Say so inside `Cart`:\n`- refs coupon: optional<Coupon>`",
+        "es": "Un carrito puede llevar un cupón, o ninguno. Dilo dentro de `Cart`:\n`- refs coupon: optional<Coupon>`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Cart",
+          "first": true
+        },
+        "text": "- refs coupon: optional<Coupon>"
+      },
+      "done": {
+        "edge": {
+          "diagram": "CL_Store",
+          "from": "shop@store::Cart",
+          "to": "shop@store::Coupon"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Cart"
+      },
+      "text": {
+        "en": "How many is never written apart: it comes from the type. `optional<T>` is zero or one, `list<T>` any number, a plain type exactly one. `refs` means the cart points at a coupon it does not own.",
+        "es": "El cuántos nunca se escribe aparte: sale del tipo. `optional<T>` es cero o uno, `list<T>` cualquier número y un tipo simple exactamente uno. `refs` significa que el carrito apunta a un cupón que no es suyo."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "shop.ds",
+        "below": {
+          "find": "dataclass Coupon",
+          "after": "}"
+        },
+        "text": "class PaymentMethod {\n  + abstract pay(amount: Money) -> bool\n}"
+      },
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::PaymentMethod"
+      },
+      "text": {
+        "en": "Nobody wrote the word interface. A class whose methods are all abstract is one, and the engine derives it: look at its badge, `I`. What the members already say is never declared again, so it can never contradict them.",
+        "es": "Nadie ha escrito la palabra interfaz. Una clase con todos sus métodos abstractos lo es, y el motor lo deduce: mira su distintivo, `I`. Lo que ya dicen los miembros nunca se vuelve a declarar, así que nunca puede contradecirlos."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class PaymentMethod",
+        "after": "}"
+      },
+      "text": {
+        "en": "Not every method has to be abstract. Below `PaymentMethod`, write a pricing policy that leaves one method to whoever derives from it and does the other itself:\n`class Pricing {`\n`  + abstract rate() -> int`\n`  + apply(amount: Money) -> Money`\n`}`",
+        "es": "No todos los métodos tienen que ser abstractos. Debajo de `PaymentMethod`, escribe una política de precios que deje un método a quien derive de ella y haga el otro ella misma:\n`class Pricing {`\n`  + abstract rate() -> int`\n`  + apply(amount: Money) -> Money`\n`}`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "below": {
+          "find": "class PaymentMethod",
+          "after": "}"
+        },
+        "text": "class Pricing {\n  + abstract rate() -> int\n  + apply(amount: Money) -> Money\n}"
+      },
+      "done": {
+        "drawnAs": {
+          "diagram": "CL_Store",
+          "id": "shop@store::Pricing",
+          "has": "pr-abstract",
+          "not": "pr-classifier-interface"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Pricing"
+      },
+      "text": {
+        "en": "Some methods abstract, some not: `Pricing` is an abstract class. It stays a class, `C`, but nobody can create one, and its name and the method it lacks go in italics. All abstract: an interface. None: a class you can create. Derived from the members, never written.",
+        "es": "Unos métodos abstractos y otros no: `Pricing` es una clase abstracta. Sigue siendo una clase, `C`, pero nadie puede crear una, y su nombre y el método que le falta van en cursiva. Todos abstractos: una interfaz. Ninguno: una clase que se puede crear. Se deduce de los miembros, nunca se escribe."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

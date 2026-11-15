@@ -1,0 +1,166 @@
+{
+  "title": {
+    "en": "9 · Functions",
+    "es": "9 · Funciones"
+  },
+  "version": 3,
+  "open": "billing/Numbering.ds",
+  "steps": [
+    {
+      "write": {
+        "file": "billing/functions.ds",
+        "end": true,
+        "text": "package shop {\n  module billing {\n    function invoice(cart: store::Cart) -> Invoice\n  }\n}"
+      },
+      "at": {
+        "find": "function invoice"
+      },
+      "text": {
+        "en": "Not everything is a class. A `function` belongs to its module, as a method belongs to its class: `shop@billing::invoice`. The functions of a module share a file, `billing/functions.ds`, and in the diagram it sits in the module's own compartment.",
+        "es": "No todo es una clase. Una `function` pertenece a su módulo, como un método pertenece a su clase: `shop@billing::invoice`. Las funciones de un módulo comparten fichero, `billing/functions.ds`, y en el diagrama la función ocupa el compartimento propio del módulo."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "below": {
+          "find": "function invoice"
+        },
+        "text": "sequence invoice {\n  local numbering: Numbering\n  self -> numbering.next() -> number\n  return number\n}"
+      },
+      "at": {
+        "find": "return number"
+      },
+      "text": {
+        "en": "Its behaviour, with a slip: it returns the number, but promised an `Invoice`. What a sequence returns is checked against the signature. Make it build one: add `local invoice: Invoice` at the top of the sequence, and change the last line to `return invoice`.",
+        "es": "Su comportamiento, con un despiste: devuelve el número, pero prometió una `Invoice`. Lo que devuelve una secuencia se comprueba contra su firma. Haz que construya una: añade `local invoice: Invoice` al principio de la secuencia y cambia la última línea por `return invoice`."
+      },
+      "solution": [
+        {
+          "into": {
+            "find": "sequence invoice",
+            "first": true
+          },
+          "text": "local invoice: Invoice"
+        },
+        {
+          "replace": "return number",
+          "text": "return invoice"
+        }
+      ],
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "find": "self -> method.pay(amount) -> paid"
+      },
+      "text": {
+        "en": "Bill the cart once it is paid. In `sequence Cart::checkout`, below the payment, call the function of the other module:\n`-> billing::invoice(self) -> bill`",
+        "es": "Factura el carrito una vez pagado. En `sequence Cart::checkout`, debajo del pago, llama a la función del otro módulo:\n`-> billing::invoice(self) -> bill`"
+      },
+      "solution": {
+        "below": {
+          "find": "self -> method.pay(amount) -> paid"
+        },
+        "text": "-> billing::invoice(self) -> bill"
+      },
+      "done": {
+        "clean": true,
+        "draws": {
+          "diagram": "SEQ_Checkout",
+          "text": "invoice"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "into": {
+            "find": "class Numbering"
+          },
+          "text": "+ static today() -> string"
+        },
+        {
+          "below": {
+            "find": "self -> numbering.next() -> number"
+          },
+          "text": "-> Numbering::today() -> date"
+        }
+      ],
+      "at": {
+        "find": "Numbering::today()"
+      },
+      "text": {
+        "en": "A `static` operation belongs to the class, not to one numbering, so it is called on the class: `Numbering::today()`.",
+        "es": "Una operación `static` pertenece a la clase, no a una numeración concreta, así que se llama sobre la clase: `Numbering::today()`."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "Numbering::today()"
+      },
+      "text": {
+        "en": "Try the same with an operation that is not static. Below it, write:\n`-> Numbering::next() -> serial`",
+        "es": "Prueba lo mismo con una operación que no es estática. Debajo, escribe:\n`-> Numbering::next() -> serial`"
+      },
+      "solution": {
+        "below": {
+          "find": "Numbering::today()"
+        },
+        "text": "-> Numbering::next() -> serial"
+      },
+      "done": {
+        "finding": "W-MSG-NOT-STATIC"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "`next` works on one numbering, so it needs an instance. Send it to the local instead:\n`self -> numbering.next() -> serial`",
+        "es": "`next` trabaja sobre una numeración concreta, así que necesita una instancia. Envíaselo a la variable local:\n`self -> numbering.next() -> serial`"
+      },
+      "solution": {
+        "replace": "-> Numbering::next() -> serial",
+        "text": "self -> numbering.next() -> serial"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "write": {
+        "file": "diagrams/behaviour.ds",
+        "end": true,
+        "text": "diagram SEQ_Invoice {\n  kind: sequence\n  include: shop@billing::invoice\n}"
+      },
+      "at": {
+        "pane": "SEQ_Invoice"
+      },
+      "text": {
+        "en": "A function's behaviour is drawn like a method's. Classes, functions and their sequences: that is the whole static and dynamic design of the parts. Next comes the shop seen from outside.",
+        "es": "El comportamiento de una función se dibuja como el de un método. Clases, funciones y sus secuencias: ese es todo el diseño estático y dinámico de las piezas. Lo siguiente es la tienda vista desde fuera."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

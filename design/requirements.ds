@@ -172,6 +172,25 @@ package driftspec {
     tags: cli, app
   }
 
+  requirement SREQ-00019-1 {
+    status: approved
+    title: The system shall come with a page that edits a workspace in a browser, draws its diagrams beside the text as it is typed, and teaches the language in guided lessons in English and Spanish
+    text:
+      The playground is a static page over the engine compiled to WebAssembly (REQ-00113-1): the
+      files of a workspace in a tree, the text in an editor, one pane per diagram and a table of the
+      requirements beside it, the problems below, and a click on a drawing leading to where it is
+      written. Fifteen lessons, from the page itself to rules, grow one example from a class to a
+      small system: the lesson types its own code in front of the reader, asks the reader to write
+      the rest and says when the engine sees it done, offers to write a step for a reader who is
+      stuck, and starts again whenever it is chosen. Each lesson is a test too: replayed with its
+      solutions, it ends with a clean model.
+    rationale:
+      Owner, 2026-11-15 (DS-201): the way into DriftSpec for a person who has never seen it, and the
+      place to review the syntax by writing the tutorial from the bottom up. Designed in the spike
+      spike/wasm-playground and consolidated in DS-202, DS-203 and DS-204.
+    tags: playground, browser, tutorial
+  }
+
   requirement SREQ-00014-1 {
     status: approved
     title: The system shall carry its own manual: how each kind of the language is written, what each finding means and what each command's exit codes say

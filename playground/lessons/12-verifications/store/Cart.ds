@@ -1,0 +1,49 @@
+package shop {
+  module store {
+    class Cart {
+      @requirement REQ-00001-2
+      - refs numbering: billing::Numbering
+      - shares stock: Stock
+      - refs coupon: optional<Coupon>
+      - status: Status = Open
+      - owns lines: list<Line>
+      + total() -> Money
+      + add(line: Line) -> none
+      - recalculate(line: Line) -> none
+      + checkout(method: PaymentMethod) -> bool
+      + ship() -> none
+    }
+    sequence Cart::add {
+      self -> stock.has(line) -> available
+      opt the line is not in stock / sold-out {
+        return
+      }
+      self -> stock.reserve(line)
+      -> recalculate(line)
+    }
+    sequence Cart::total {
+      local line: Line
+      loop each line {
+        self -> line.subtotal() -> part
+      }
+      return sum
+    }
+    sequence Cart::checkout {
+      -> total() -> amount
+      self -> method.pay(amount) -> paid
+      -> billing::invoice(self) -> bill
+      return paid
+    }
+    sequence Cart::checkout / declined {
+      -> total() -> amount
+      self -> method.pay(amount) -> paid
+      return false
+    }
+    state Cart {
+      initial Open
+      Open -> Paid on checkout [the card accepts]
+      Paid -> Shipped on ship
+      Open -> Open on add / recalculate
+    }
+  }
+}

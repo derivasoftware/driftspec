@@ -1,0 +1,14 @@
+package shop {
+  module store {
+    class Cart {
+      - refs numbering: billing::Numbering
+      - shares stock: Stock
+      - refs coupon: optional<Coupon>
+      - status: Status = Open
+      - owns lines: list<Line>
+      + total() -> int
+      + add(line: Line) -> none
+      - recalculate() -> none
+    }
+  }
+}

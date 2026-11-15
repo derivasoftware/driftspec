@@ -1,0 +1,299 @@
+{
+  "title": {
+    "en": "14 · Rules",
+    "es": "14 · Reglas"
+  },
+  "version": 4,
+  "open": "shop.ds",
+  "steps": [
+    {
+      "at": {
+        "pane": "HLD_Shop"
+      },
+      "text": {
+        "en": "Remember this: store and billing use each other, both ways. A cycle between modules is a design decision nobody wrote down. Let's write the one we want instead.",
+        "es": "Recuerda esto: el almacén y la facturación se usan el uno al otro, en los dos sentidos. Un ciclo entre módulos es una decisión de diseño que nadie ha escrito. Vamos a escribir la que queremos."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "requirements.ds",
+          "below": {
+            "find": "constraint CST-00001-1"
+          },
+          "text": "requirement REQ-00002-1: The store shall not depend on billing"
+        },
+        {
+          "file": "shop.ds",
+          "into": {
+            "find": "package shop"
+          },
+          "text": "rule store-calls-no-billing {\n  title: No message of the store calls billing\n  @requirement REQ-00002-1\n  for message m in shop@store\n  never m calls f, f in shop@billing\n}"
+        }
+      ],
+      "at": {
+        "find": "rule store-calls-no-billing"
+      },
+      "text": {
+        "en": "A rule is a design statement the engine proves over the model. `for` says what it speaks about, `never` what must not happen (or `holds`, what must), and it answers to the requirement it makes real.",
+        "es": "Una regla es una afirmación de diseño que el motor demuestra sobre el modelo. `for` dice de qué habla, `never` lo que no debe pasar (o `holds`, lo que debe cumplirse), y responde al requisito que hace realidad."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "Broken, and the engine says where: `checkout` sends a message to `billing::invoice`. Billing is the shell's business, not the cart's. Move the call: delete `-> billing::invoice(self) -> bill` from `checkout`, and in `sequence shell::buy`, below the checkout message, write:\n`-> billing::invoice(cart) -> bill`",
+        "es": "Rota, y el motor dice dónde: `checkout` envía un mensaje a `billing::invoice`. Facturar es cosa del shell, no del carrito. Mueve la llamada: borra `-> billing::invoice(self) -> bill` de `checkout` y, en `sequence shell::buy`, debajo del mensaje de checkout, escribe:\n`-> billing::invoice(cart) -> bill`"
+      },
+      "solution": [
+        {
+          "replace": "      -> billing::invoice(self) -> bill\n",
+          "text": ""
+        },
+        {
+          "below": {
+            "find": "self -> cart.checkout(card) -> paid"
+          },
+          "text": "-> billing::invoice(cart) -> bill"
+        }
+      ],
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "pane": "HLD_Shop"
+      },
+      "text": {
+        "en": "The rule holds, yet the high-level design still draws an arrow from the store to billing. The rule only speaks about messages; something else crosses. Write a second rule below the first, about attributes:\n`rule store-refers-to-no-billing {`\n`  title: No attribute of the store refers to billing`\n`  @requirement REQ-00002-1`\n`  for attribute a in shop@store`\n`  never a refs t, t in shop@billing`\n`}`",
+        "es": "La regla se cumple, pero el diseño de alto nivel sigue dibujando una flecha del almacén a la facturación. La regla solo habla de mensajes; algo más cruza. Escribe una segunda regla debajo de la primera, sobre atributos:\n`rule store-refers-to-no-billing {`\n`  title: No attribute of the store refers to billing`\n`  @requirement REQ-00002-1`\n`  for attribute a in shop@store`\n`  never a refs t, t in shop@billing`\n`}`"
+      },
+      "solution": {
+        "below": {
+          "find": "rule store-calls-no-billing",
+          "after": "}"
+        },
+        "text": "rule store-refers-to-no-billing {\n  title: No attribute of the store refers to billing\n  @requirement REQ-00002-1\n  for attribute a in shop@store\n  never a refs t, t in shop@billing\n}"
+      },
+      "done": {
+        "finding": "E-RULE-BROKEN"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "Found it: `Cart` still keeps the `numbering` it borrowed from billing back in lesson 4. The cart does not need it. Delete that member from `Cart`.",
+        "es": "Encontrado: `Cart` todavía guarda el `numbering` que tomó prestado de la facturación en la lección 4. El carrito no lo necesita. Borra ese miembro de `Cart`."
+      },
+      "solution": {
+        "replace": "      - refs numbering: billing::Numbering\n",
+        "text": ""
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "pane": "HLD_Shop"
+      },
+      "text": {
+        "en": "Both rules hold, and the high-level design shows it: one arrow left between the two, from billing to the store. Rules keep holding as the design grows: the next message or member that breaks one is reported at once.",
+        "es": "Las dos reglas se cumplen, y el diseño de alto nivel lo muestra: entre los dos queda una sola flecha, de la facturación al almacén. Las reglas siguen cumpliéndose mientras el diseño crece: el próximo mensaje o miembro que rompa una se avisa al momento."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "requirements.ds",
+          "below": {
+            "find": "requirement REQ-00002-1"
+          },
+          "text": "requirement REQ-00003-1: Every requirement of the store shall be kept by the design\nrequirement REQ-00004-1: The shell shall reach the store only through the cart"
+        },
+        {
+          "file": "shop.ds",
+          "below": {
+            "find": "rule store-refers-to-no-billing",
+            "after": "}"
+          },
+          "text": "rule store-requirements-kept {\n  title: Every requirement of the store is kept by something\n  @requirement REQ-00003-1\n  for requirement r in shop@store\n  holds x requires r\n}\nrule shell-through-cart {\n  title: The shell reaches the store only through the cart\n  @requirement REQ-00004-1\n  for message m in shop@shell\n  never m calls x, x in shop@store, not x in shop@store::Cart\n}"
+        }
+      ],
+      "at": {
+        "file": "shop.ds",
+        "find": "rule store-requirements-kept"
+      },
+      "text": {
+        "en": "Rules say more than who depends on whom. `holds x requires r` asks that something exist: every requirement of the store is kept by some part of the design. `not x in ...` leaves something out: the shell may reach the store, but only through the cart. Both hold today.",
+        "es": "Las reglas dicen más que quién depende de quién. `holds x requires r` pide que algo exista: cada requisito del almacén lo cumple alguna parte del diseño. `not x in ...` deja algo fuera: el shell puede llegar al almacén, pero solo a través del carrito. Las dos se cumplen hoy."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "requirements.ds",
+        "find": "requirement REQ-00002-1"
+      },
+      "text": {
+        "en": "Put the first one to the test. The cart should also keep its coupon: inside `module store` in `requirements.ds`, add a requirement nobody keeps yet:\n`requirement REQ-00005-1: The cart shall keep at most one coupon`",
+        "es": "Pon a prueba la primera. El carrito también debería guardar su cupón: dentro de `module store` en `requirements.ds`, añade un requisito que todavía no cumple nadie:\n`requirement REQ-00005-1: The cart shall keep at most one coupon`"
+      },
+      "solution": {
+        "file": "requirements.ds",
+        "into": {
+          "find": "module store"
+        },
+        "text": "requirement REQ-00005-1: The cart shall keep at most one coupon"
+      },
+      "done": {
+        "finding": "E-RULE-BROKEN"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "The rule caught a promise with nobody to keep it. `Cart` keeps it: at the top of `class Cart`, link it:\n`@requirement REQ-00005-1`",
+        "es": "La regla ha cazado una promesa sin nadie que la cumpla. La cumple `Cart`: al principio de `class Cart`, enlázala:\n`@requirement REQ-00005-1`"
+      },
+      "solution": {
+        "into": {
+          "find": "class Cart",
+          "first": true
+        },
+        "text": "@requirement REQ-00005-1"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "write": {
+        "file": "rules/design.ds",
+        "end": true,
+        "text": "package design {\n  requirement LIB-00001-1: Modules shall not depend on each other both ways\n\n  definition depends(a, b) {\n    title: a depends on b through one of its members or its behaviour\n    if a uses b\n    if m in a, m owns b\n    if m in a, m refs b\n    if m in a, m uses b\n    if m in a, s behaviour-of m, s uses b\n  }\n\n  definition module-depends(m, n) {\n    title: something in module m depends on something in module n\n    if c in m, x in n, depends(c, x)\n  }\n\n  rule no-module-cycles {\n    title: Two modules never depend on each other both ways\n    @requirement LIB-00001-1\n    for module m, module n\n    where m != n\n    never module-depends(m, n), module-depends(n, m)\n  }\n}",
+        "instant": true
+      },
+      "at": {
+        "file": "rules/design.ds",
+        "find": "rule no-module-cycles"
+      },
+      "text": {
+        "en": "Some rules are worth keeping for every project. This file is a library of design rules: a package of its own, written once and copied into any workspace. Its rule speaks about every module there is, whatever the package, through two definitions it brings along: no two modules depend on each other both ways. The shop obeys it already: that is the work of this lesson.",
+        "es": "Algunas reglas merecen conservarse para todos los proyectos. Este fichero es una librería de reglas de diseño: un paquete propio, escrito una vez y copiado en cualquier workspace. Su regla habla de todos los módulos que haya, sea cual sea el paquete, a través de dos definiciones que trae consigo: dos módulos nunca dependen el uno del otro en los dos sentidos. La tienda ya la cumple: es el trabajo de esta lección."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "store/Cart.ds",
+        "find": "class Cart"
+      },
+      "text": {
+        "en": "See it guard the shop. Give the cart a reference back into billing, at the top of `class Cart`:\n`- refs invoice: billing::Invoice`",
+        "es": "Mira cómo protege la tienda. Dale al carrito una referencia de vuelta a la facturación, al principio de `class Cart`:\n`- refs invoice: billing::Invoice`"
+      },
+      "solution": {
+        "into": {
+          "find": "class Cart",
+          "first": true
+        },
+        "text": "- refs invoice: billing::Invoice"
+      },
+      "done": {
+        "finding": "E-RULE-BROKEN"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "Two rules object: the shop's own, about attributes, and the library's, which knows nothing about this shop. Delete that member again.",
+        "es": "Protestan dos reglas: la de la propia tienda, sobre atributos, y la de la librería, que no sabe nada de esta tienda. Borra ese miembro otra vez."
+      },
+      "solution": {
+        "replace": "      - refs invoice: billing::Invoice\n",
+        "text": ""
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "package shop"
+      },
+      "text": {
+        "en": "Last, say that the shop adopts the library's rule: link to its requirement from the shop's own package, as to any artefact. At the top of `package shop` in `shop.ds`, write:\n`@requirement LIB-00001-1`",
+        "es": "Por último, di que la tienda adopta la regla de la librería: enlaza con su requisito desde el propio paquete de la tienda, como con cualquier artefacto. Al principio de `package shop` en `shop.ds`, escribe:\n`@requirement LIB-00001-1`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "package shop",
+          "first": true
+        },
+        "text": "@requirement LIB-00001-1"
+      },
+      "done": {
+        "kept": {
+          "artefact": "LIB-00001-1",
+          "by": "shop"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "table:requirements"
+      },
+      "text": {
+        "en": "The table shows the library's requirement kept by the shop. Rules about this project and rules you carry from project to project, all proved over the same model, every time you type.",
+        "es": "La tabla muestra el requisito de la librería cumplido por la tienda. Reglas sobre este proyecto y reglas que llevas de proyecto en proyecto, todas demostradas sobre el mismo modelo, cada vez que escribes."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

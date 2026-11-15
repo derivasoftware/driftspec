@@ -1,0 +1,147 @@
+{
+  "title": {
+    "en": "10 · Interfaces and the high-level design",
+    "es": "10 · Interfaces y diseño de alto nivel"
+  },
+  "version": 3,
+  "open": "shop.ds",
+  "steps": [
+    {
+      "write": {
+        "file": "shop.ds",
+        "into": {
+          "find": "package shop"
+        },
+        "text": "interface shell {\n  kind: cli\n  operation buy(item: string) -> int {\n    command: shop buy <item>\n    exit 0: default\n  }\n}"
+      },
+      "at": {
+        "find": "interface shell"
+      },
+      "text": {
+        "en": "Step outside. The package is what you deliver, a black box, and an `interface` is how the world reaches it: here a command line. Each `operation` says how it is invoked and what each exit code means; `default` is its usual path. The problems already notice that nothing says how `buy` is handled yet.",
+        "es": "Sal fuera. El paquete es lo que entregas, una caja negra, y una `interface` es cómo llega a él el mundo: aquí, una línea de comandos. Cada `operation` dice cómo se invoca y qué significa cada código de salida; `default` es su camino habitual. Los problemas ya avisan de que nada dice todavía cómo se atiende `buy`."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "below": {
+          "find": "interface shell",
+          "after": "}"
+        },
+        "text": "sequence shell::buy {\n  local cart: store::Cart\n  local card: store::Card\n  self -> cart.checkout(card) -> paid\n  return 0\n}"
+      },
+      "at": {
+        "find": "sequence shell::buy"
+      },
+      "text": {
+        "en": "Behind the door, a sequence like any other: buying is checking out a cart with a card. The operation is the contract; the sequence is how the package keeps it.",
+        "es": "Detrás de la puerta, una secuencia como cualquier otra: comprar es cerrar un carrito con una tarjeta. La operación es el contrato; la secuencia es cómo lo cumple el paquete."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "diagrams/structure.ds",
+        "end": true,
+        "text": "diagram HLD_Shop {\n  kind: class\n  include: shop@*\n  open:\n}"
+      },
+      "at": {
+        "pane": "HLD_Shop"
+      },
+      "text": {
+        "en": "The high-level design: `open:` with nothing after it keeps every module closed, and the arrows are lifted to the boxes. The shell reaches the store. And look: store and billing depend on each other, both ways. Keep that in mind for later.",
+        "es": "El diseño de alto nivel: `open:` sin nada detrás mantiene cerrados todos los módulos, y las flechas suben hasta las cajas. El shell llega al almacén. Y mira: el almacén y la facturación dependen el uno del otro, en los dos sentidos. Tenlo en cuenta para más adelante."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "diagram HLD_Shop",
+        "after": "}"
+      },
+      "text": {
+        "en": "Now open one box. Write a second diagram that opens the store and keeps the rest closed:\n`diagram HLD_Store {`\n`  kind: class`\n`  include: shop@*`\n`  open: shop@store`\n`}`",
+        "es": "Ahora abre una caja. Escribe un segundo diagrama que abra el almacén y deje cerrado el resto:\n`diagram HLD_Store {`\n`  kind: class`\n`  include: shop@*`\n`  open: shop@store`\n`}`"
+      },
+      "solution": {
+        "file": "diagrams/structure.ds",
+        "end": true,
+        "text": "diagram HLD_Store {\n  kind: class\n  include: shop@*\n  open: shop@store\n}"
+      },
+      "done": {
+        "draws": {
+          "diagram": "HLD_Store",
+          "text": "PaymentMethod"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "exit 0: default"
+      },
+      "text": {
+        "en": "When the card is declined, `buy` should exit with 2. Inside the operation, add:\n`exit 2: declined`",
+        "es": "Cuando se rechace la tarjeta, `buy` debe salir con 2. Dentro de la operación, añade:\n`exit 2: declined`"
+      },
+      "solution": {
+        "into": {
+          "find": "operation buy"
+        },
+        "text": "exit 2: declined"
+      },
+      "done": {
+        "finding": "W-SCENARIO-UNDECLARED"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "An exit code names a scenario, and `buy` has no `declined` yet. Write it. Its call follows checkout's own declined path, named after the call:\n`sequence shell::buy / declined {`\n`  local cart: store::Cart`\n`  local card: store::Card`\n`  self -> cart.checkout(card) / declined -> paid`\n`  return 2`\n`}`",
+        "es": "Un código de salida nombra un escenario, y `buy` todavía no tiene `declined`. Escríbelo. Su llamada sigue el propio camino rechazado de checkout, que se nombra después de la llamada:\n`sequence shell::buy / declined {`\n`  local cart: store::Cart`\n`  local card: store::Card`\n`  self -> cart.checkout(card) / declined -> paid`\n`  return 2`\n`}`"
+      },
+      "solution": {
+        "below": {
+          "find": "sequence shell::buy",
+          "after": "}"
+        },
+        "text": "sequence shell::buy / declined {\n  local cart: store::Cart\n  local card: store::Card\n  self -> cart.checkout(card) / declined -> paid\n  return 2\n}"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "pane": "HLD_Shop"
+      },
+      "text": {
+        "en": "The contract seen from outside, every exit code backed by a path inside, and the boxes that carry it. Next: what the shop promises, written as requirements.",
+        "es": "El contrato visto desde fuera, cada código de salida respaldado por un camino dentro, y las cajas que lo llevan. Lo siguiente: lo que promete la tienda, escrito como requisitos."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

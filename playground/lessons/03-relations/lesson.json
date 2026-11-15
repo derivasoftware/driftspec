@@ -1,0 +1,175 @@
+{
+  "title": {
+    "en": "3 · Relations",
+    "es": "3 · Relaciones"
+  },
+  "version": 2,
+  "steps": [
+    {
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Cart"
+      },
+      "text": {
+        "en": "Every line of this diagram comes from something you wrote. `owns` is composition, a filled diamond. `refs` is a reference, a hollow one. A parameter or a return is a use, a dashed arrow. The diagram has grown: the ⤢ at the top right of its pane shows it alone, and the same mark brings the others back.",
+        "es": "Cada línea de este diagrama sale de algo que has escrito. `owns` es composición, un rombo relleno. `refs` es una referencia, uno hueco. Un parámetro o un valor devuelto es un uso, una flecha discontinua. El diagrama ha crecido: el ⤢ de la esquina superior derecha de su panel lo muestra solo, y la misma marca devuelve los demás."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class PaymentMethod",
+        "after": "}"
+      },
+      "text": {
+        "en": "A card is one way to pay. Below `PaymentMethod`, declare a class that derives from it, and give it the method it promises:\n`class Card : PaymentMethod {`\n`  + pay(amount: Money) -> bool`\n`}`",
+        "es": "Una tarjeta es una forma de pagar. Debajo de `PaymentMethod`, declara una clase que derive de ella y dale el método que promete:\n`class Card : PaymentMethod {`\n`  + pay(amount: Money) -> bool`\n`}`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "below": {
+          "find": "class PaymentMethod",
+          "after": "}"
+        },
+        "text": "class Card : PaymentMethod {\n  + pay(amount: Money) -> bool\n}"
+      },
+      "done": {
+        "edge": {
+          "diagram": "CL_Store",
+          "from": "shop@store::Card",
+          "to": "shop@store::PaymentMethod"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Card"
+      },
+      "text": {
+        "en": "After `:` come the bases. `PaymentMethod` is an interface, so `Card` realises it: a dashed line with a hollow triangle. Derivation is the one relation drawn at rest; the others light up only for the class you select, here `Card`. Rest the pointer on any other class to see its own.",
+        "es": "Detrás de `:` van las bases. `PaymentMethod` es una interfaz, así que `Card` la realiza: una línea discontinua con un triángulo hueco. La derivación es la única relación que se dibuja en reposo; las demás solo se encienden para la clase que seleccionas, aquí `Card`. Pasa el ratón por cualquier otra clase para ver las suyas."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "shop.ds",
+        "below": {
+          "find": "class Card",
+          "after": "}"
+        },
+        "text": "class Stock {\n  + has(line: Line) -> bool\n}"
+      },
+      "at": {
+        "file": "shop.ds",
+        "find": "class Stock"
+      },
+      "text": {
+        "en": "Here is the shop's stock. Every cart looks at the same one, and none of them owns it.",
+        "es": "Aquí está el almacén de la tienda. Todos los carritos miran el mismo, y ninguno es su dueño."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Cart"
+      },
+      "text": {
+        "en": "Give `Cart` a share of it, at the top of the class:\n`- shares stock: Stock`",
+        "es": "Dale a `Cart` una parte de él, al principio de la clase:\n`- shares stock: Stock`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Cart",
+          "first": true
+        },
+        "text": "- shares stock: Stock"
+      },
+      "done": {
+        "edge": {
+          "diagram": "CL_Store",
+          "from": "shop@store::Cart",
+          "to": "shop@store::Stock"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Line"
+      },
+      "text": {
+        "en": "Now break a rule. A line wants to know its cart: make it own one, at the top of `Line`:\n`- owns cart: Cart`",
+        "es": "Ahora rompe una regla. Una línea quiere conocer su carrito: haz que sea dueña de uno, al principio de `Line`:\n`- owns cart: Cart`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Line",
+          "first": true
+        },
+        "text": "- owns cart: Cart"
+      },
+      "done": {
+        "finding": "E-OWNERSHIP-CYCLE"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "An error: the cart owns its lines and now a line owns the cart, so each would outlive the other. Ownership has to be a tree. A line only points at its cart: change `owns` to `refs` in that member.",
+        "es": "Un error: el carrito es dueño de sus líneas y ahora una línea es dueña del carrito, así que cada uno sobreviviría al otro. La propiedad tiene que ser un árbol. Una línea solo apunta a su carrito: cambia `owns` por `refs` en ese miembro."
+      },
+      "solution": {
+        "file": "shop.ds",
+        "replace": "owns cart: Cart",
+        "text": "refs cart: Cart"
+      },
+      "done": {
+        "clean": true,
+        "edge": {
+          "diagram": "CL_Store",
+          "from": "shop@store::Line",
+          "to": "shop@store::Cart"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "CL_Store",
+        "select": "shop@store::Line"
+      },
+      "text": {
+        "en": "Clean. A line refers to its cart, the cart owns its lines, and the engine keeps ownership a tree for you.",
+        "es": "Limpio. Una línea apunta a su carrito, el carrito es dueño de sus líneas, y el motor mantiene la propiedad como un árbol por ti."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

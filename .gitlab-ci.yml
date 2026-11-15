@@ -55,7 +55,7 @@ pyds:
     - python3 -m venv .pyds && . .pyds/bin/activate
     - pip install -q pytest "pygls>=2.0"
     - cmake -S . -B build-py -DCMAKE_BUILD_TYPE=Release -DDS_PYTHON=ON -DPython_EXECUTABLE="$PWD/.pyds/bin/python"
-    - cmake --build build-py --parallel --target driftspec_python
+    - cmake --build build-py --parallel --target driftspec_python ds_browser
     - PYTHONPATH=build-py/python python -m pytest -q -p no:cacheprovider tests/integration/python tests/system/python --junitxml=build-py/pyds.junit.xml
   artifacts:
     when: always
@@ -89,6 +89,24 @@ wasm:
   artifacts:
     paths: [build-wasm/ds.js, build-wasm/ds.wasm]
     expire_in: 1 week
+
+# The playground as a static site (DS-204): the page, the engine the wasm job built, the lessons and
+# the examples, ready to serve as files. The lessons themselves are replayed by the pyds job
+# (tests/system/python/test_playground.py).
+playground-site:
+  stage: test
+  needs: [wasm]
+  rules:
+    - if: $ARGOS_ON_DEMAND
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - python3 playground/build.py --wasm build-wasm --out playground/site
+    - ls playground/site
+  artifacts:
+    paths: [playground/site/]
+    expire_in: 1 month
 
 # The Python face as a wheel (DS-181): built on every merge request, so a broken build is seen
 # before main and the gate reads the design with it (DS-90). One abi3 wheel serves every Python

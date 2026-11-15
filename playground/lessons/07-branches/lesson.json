@@ -1,0 +1,173 @@
+{
+  "title": {
+    "en": "7 · Branches and scenarios",
+    "es": "7 · Ramas y escenarios"
+  },
+  "version": 3,
+  "open": "store/Cart.ds",
+  "steps": [
+    {
+      "write": {
+        "below": {
+          "find": "stock.has(line)"
+        },
+        "text": "opt the line is not in stock / sold-out {\n  return\n}"
+      },
+      "at": {
+        "find": "opt the line"
+      },
+      "text": {
+        "en": "A branch states its condition in prose: the model says that a choice exists, not how it is computed. `/ sold-out` names the path through that branch. It is a scenario of `add`, and the bare `return` ends it there.",
+        "es": "Una rama dice su condición en prosa: el modelo dice que existe una elección, no cómo se calcula. `/ sold-out` nombra el camino por esa rama. Es un escenario de `add`, y el `return` solo lo termina ahí."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "SEQ_Add"
+      },
+      "text": {
+        "en": "The diagram frames the branch with its condition. `alt ... { } else { }` writes two ways, and `loop` repeats.",
+        "es": "El diagrama enmarca la rama con su condición. `alt ... { } else { }` escribe dos caminos, y `loop` repite."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "into": {
+            "find": "class Line"
+          },
+          "text": "+ subtotal() -> Money"
+        },
+        {
+          "below": {
+            "find": "sequence Cart::add",
+            "after": "}"
+          },
+          "text": "sequence Cart::total {\n  loop each line {\n    self -> line.subtotal() -> part\n  }\n  return sum\n}"
+        }
+      ],
+      "at": {
+        "find": "loop each line"
+      },
+      "text": {
+        "en": "Here is how a cart adds up: a loop over its lines, each asked for its subtotal. Look at the problems: the engine does not know who `line` is. The loop's prose names it, but nothing declares it.",
+        "es": "Así suma un carrito: un bucle por sus líneas, a cada una se le pide su subtotal. Mira los problemas: el motor no sabe quién es `line`. La prosa del bucle lo nombra, pero nada lo declara."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "sequence Cart::total"
+      },
+      "text": {
+        "en": "A name a sequence uses must be an attribute, a parameter, an earlier result or a local. Declare it as the first line of the sequence:\n`local line: Line`",
+        "es": "Un nombre que use una secuencia tiene que ser un atributo, un parámetro, un resultado anterior o una variable local. Declárala en la primera línea de la secuencia:\n`local line: Line`"
+      },
+      "solution": {
+        "into": {
+          "find": "sequence Cart::total",
+          "first": true
+        },
+        "text": "local line: Line"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "write": {
+        "below": {
+          "find": "sequence Cart::checkout",
+          "after": "}"
+        },
+        "text": "sequence Cart::checkout / declined {\n  -> total() -> amount\n  self -> method.pay(amount) -> paid\n  return false\n}"
+      },
+      "at": {
+        "find": "checkout / declined"
+      },
+      "text": {
+        "en": "A scenario can also be written apart, as a whole path: the card declines, and checkout gives back `false`. Same subject, another path, its own name.",
+        "es": "Un escenario también se puede escribir aparte, como un camino entero: la tarjeta se rechaza y checkout devuelve `false`. El mismo sujeto, otro camino, su propio nombre."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "diagrams/behaviour.ds",
+        "end": true,
+        "text": "diagram SEQ_Declined {\n  kind: sequence\n  include: shop@store::Cart::checkout / declined\n}"
+      },
+      "at": {
+        "pane": "SEQ_Declined"
+      },
+      "text": {
+        "en": "A diagram picks the scenario after `/`. The two paths of checkout now sit side by side.",
+        "es": "Un diagrama elige el escenario después de `/`. Los dos caminos de checkout quedan uno al lado del otro."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "SEQ_Checkout"
+      },
+      "text": {
+        "en": "`checkout` calls `total()`, which has a behaviour of its own. Ask the diagram to open the calls it makes: inside `diagram SEQ_Checkout`, add\n`depth: 1`",
+        "es": "`checkout` llama a `total()`, que tiene su propio comportamiento. Pide al diagrama que abra las llamadas que hace: dentro de `diagram SEQ_Checkout`, añade\n`depth: 1`"
+      },
+      "solution": {
+        "into": {
+          "find": "diagram SEQ_Checkout"
+        },
+        "text": "depth: 1"
+      },
+      "done": {
+        "draws": {
+          "diagram": "SEQ_Checkout",
+          "text": "each line"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "SEQ_Checkout"
+      },
+      "text": {
+        "en": "The loop of `total` now plays inside checkout. Behaviours are written once, where they belong, and composed by the diagram that asks for them.",
+        "es": "El bucle de `total` se reproduce ahora dentro de checkout. Los comportamientos se escriben una vez, donde corresponden, y los compone el diagrama que los pide."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

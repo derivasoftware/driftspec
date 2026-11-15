@@ -1,0 +1,20 @@
+// Lesson 0 · Where things are
+
+package shop {
+  module store {
+    class Cart {
+      - owns lines: list<Line>
+      + total() -> int
+      + pay(method: PaymentMethod) -> bool
+    }
+    class Line {
+      - count: int = 1
+    }
+    class PaymentMethod {
+      + abstract pay(amount: int) -> bool
+    }
+    class Card : PaymentMethod {
+      + pay(amount: int) -> bool
+    }
+  }
+}
