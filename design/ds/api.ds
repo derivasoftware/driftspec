@@ -192,6 +192,7 @@ package driftspec@ds {
     // The engine for a page in a browser (DS-203): one request of texts in, one document out, a copy
     // (CST-00009-1); app/wasm exports it as the function ds.wasm offers.
     class Browser {
+      @interface browser                     // the class ds.wasm's one function is linked against
       @requirement REQ-00113-1
       @constraint CST-00009-1
       + static answer(request: std::string) -> std::string
@@ -284,6 +285,23 @@ package driftspec@ds {
     operation render(diagram: string, format: string, width: int) -> string
     operation page(title: string, focus: list<string>) -> string
     operation diff(before: api::Workspace) -> string
+  }
+
+  // The engine for a page in a browser (DS-203): one call per edit, the whole of what the page shows
+  // after it, as one document (CST-00009-1); compiled to WebAssembly it is the one function ds.wasm
+  // exports, and a shared library beside the Python face for the playground's lesson checks.
+  interface browser {
+    kind: library
+    transport: webassembly, in the page
+    encoding: json text
+    @requirement REQ-00113-1
+    @constraint CST-00009-1
+    operation answer(request: string) -> string
+  }
+
+  sequence browser::answer {
+    -> api::Browser::answer(request) -> json      // static: called on its class (DS-60)
+    return json
   }
 
   sequence engine::check {
