@@ -72,4 +72,39 @@ TEST_F(TestRequirementsView, AClassDiagramHangsItsArtefactsAsANote) {
   EXPECT_TRUE(note);
 }
 
+/// A use case that answers to a requirement realises it: the umbrella takes it, drawn as its card.
+TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsItsCard) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  const auto file = parser.parseText("shop.ds",
+                                     "package shop {\n"
+                                     "  requirement SREQ-00001-1: The shop shall sell an item\n"
+                                     "  usecase UC-00001-1 buy(item: string) -> int {\n"
+                                     "    title: Buy an item\n"
+                                     "    status: draft\n"
+                                     "    @requirement SREQ-00001-1\n"
+                                     "    outcome default: the order\n"
+                                     "  }\n"
+                                     "}\n"
+                                     "diagram REQ_Shop {\n"
+                                     "  kind: requirement\n"
+                                     "  include: shop@*\n"
+                                     "}\n");
+  ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
+  binder.bind(file);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
+  bool card = false;
+  for (const auto& n : doc["nodes"])
+    if (n["id"] == "UC-00001-1")
+      card = n["classifier"] == "usecase" && n["stereotype"] == "usecase, draft" && n.contains("sections") &&
+             n["sections"][0][0] == "Buy an item";
+  EXPECT_TRUE(card);
+  bool realised = false;
+  for (const auto& e : doc["edges"]) realised |= e["from"] == "SREQ-00001-1" && e.value("label", "") == "realised by";
+  EXPECT_TRUE(realised);
+}
+
 }  // namespace

@@ -275,7 +275,8 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
           (design_ && (r.kind == "requires" || r.kind == "constrained-by") && selected.count(r.to) && !selected.count(r.from))) {
         const model::Entity* from = model.find(r.from);
         if (!from || from->expected) continue;
-        if (from->kind != model::Kind::Class && !isArtefact(*from)) continue;
+        // a class or a use case answers to a requirement: both are drawn under it
+        if (from->kind != model::Kind::Class && from->kind != model::Kind::UseCase && !isArtefact(*from)) continue;
         selected.insert(r.from);
         grew = true;
       }

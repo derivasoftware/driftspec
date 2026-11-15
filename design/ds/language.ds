@@ -1383,6 +1383,7 @@ package driftspec@ds {
           method: test
           tests:
             tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
+            tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsViewOfAUseCase.AUseCaseThatRealisesARequirementIsDrawnAsItsCard
         }
       }
     }
