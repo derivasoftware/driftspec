@@ -173,7 +173,7 @@ package driftspec {
   }
 
   requirement SREQ-00019-1 {
-    status: draft
+    status: approved
     title: The system shall come with a page that edits a workspace in a browser, draws its diagrams beside the text as it is typed, and teaches the language in guided lessons in English and Spanish
     text:
       The playground is a static page over the engine compiled to WebAssembly (REQ-00113-1): the
