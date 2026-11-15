@@ -1330,6 +1330,30 @@ package driftspec@ds {
             tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
         }
       }
+      requirement REQ-00118-1 {
+        tags: language, artefacts, static
+        status: approved
+        title: A cycle of refines or of inherits shall be an error, and a requirement that refines one written inside its own box shall be reported as W-REFINES-UPWARD
+        text:
+          Requirements that refine each other through any chain are E-REFINES-CYCLE; classes or
+          use cases that derive from each other are E-INHERITANCE-CYCLE; each cycle is said once.
+          A requirement whose refined requirement is written inside its own box, further down the
+          containment axis, is a warning: the detail stands above what it details. The axis is
+          read from where each is written, never from the prefix of its id.
+        rationale:
+          Model audit 2026-11, finding G10 (DS-214): only the ownership cycle was reported. A
+          cycle is a contradiction between written things, not an absence. Reporting a
+          requirement that nothing answers to stays out on purpose: that is absence (DS-216).
+        verification VER-00134-1 {
+          status: approved
+          title: Integration tests confirm refines and inherits cycles are errors, a tree is not, and an upward refinement is reported while a downward one is not
+          method: test
+          tests:
+            tests/integration/ds/check/test_cycles.cpp::TestCycles.RequirementsThatRefineEachOtherAreACycleAndTheUpwardOneIsSaid
+            tests/integration/ds/check/test_cycles.cpp::TestCycles.ClassesThatDeriveFromEachOtherAreACycleAndATreeIsNot
+            tests/integration/ds/check/test_cycles.cpp::TestCycles.ARequirementThatRefinesOneOfTheSystemIsNoFinding
+        }
+      }
       requirement REQ-00045-1 {
         tags: language, artefacts
         status: approved
