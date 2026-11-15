@@ -241,6 +241,7 @@ package driftspec@ds {
       + type: FieldType
       + source: FieldSource
       + meaning: std::string
+      + values: std::vector<std::string>
     }
 
     dataclass KindSpec {                     // one kind: its fields, the flags it takes, what it may be declared inside

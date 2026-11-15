@@ -100,10 +100,10 @@ package driftspec@ds {
           level: package was ignored in silence.
         verification VER-00131-1 {
           status: approved
-          title: Integration tests confirm a closed field with a value it does not take is reported and an empty one is not, and the diag corpus marks a component kind
+          title: Integration tests confirm a closed field with a value it does not take is reported and one it takes is not, and the diag corpus marks a component kind
           method: test
           tests:
-            tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AClosedFieldWithAValueItDoesNotTakeIsReportedAndAnEmptyOneIsNot
+            tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AClosedFieldWithAValueItDoesNotTakeIsReportedAndOneItTakesIsNot
         }
       }
     }

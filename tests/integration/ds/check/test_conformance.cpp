@@ -136,7 +136,7 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
   EXPECT_NE(unknown[0].find("'priority'"), std::string::npos);
 }
 
-TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAndAnEmptyOneIsNot) {
+TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAndOneItTakesIsNot) {
   ds::model::Model model;
   ds::parse::Parser parser;
   ds::bind::Binder binder(model);
@@ -153,7 +153,7 @@ TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAn
                                "  }\n"
                                "  requirement REQ-00002-1 {\n"
                                "    title: The tool shall do another\n"
-                               "    status:\n"
+                               "    status: approved\n"
                                "  }\n"
                                "}\n"
                                "diagram SEQ_X {\n"
