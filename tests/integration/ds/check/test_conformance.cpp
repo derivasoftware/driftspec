@@ -136,6 +136,44 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
   EXPECT_NE(unknown[0].find("'priority'"), std::string::npos);
 }
 
+TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAndAnEmptyOneIsNot) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("a.ds",
+                               "package p {\n"
+                               "  requirement REQ-00001-1 {\n"
+                               "    title: The tool shall do one thing\n"
+                               "    status: aproved\n"
+                               "    verification VER-00001-1 {\n"
+                               "      title: Someone looks\n"
+                               "      method: telepathy\n"
+                               "      level: unit\n"
+                               "    }\n"
+                               "  }\n"
+                               "  requirement REQ-00002-1 {\n"
+                               "    title: The tool shall do another\n"
+                               "    status:\n"
+                               "  }\n"
+                               "}\n"
+                               "diagram SEQ_X {\n"
+                               "  kind: sequence\n"
+                               "  level: package\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  std::vector<std::string> wrong;
+  for (const auto& f : model.findings())
+    if (f.code == "W-FIELD-VALUE") wrong.push_back(f.message);
+  ASSERT_EQ(wrong.size(), 3u);
+  const auto said = [&wrong](const std::string& text) {
+    return std::any_of(wrong.begin(), wrong.end(), [&text](const std::string& m) { return m.find(text) != std::string::npos; });
+  };
+  EXPECT_TRUE(said("level: package"));
+  EXPECT_TRUE(said("status: aproved"));
+  EXPECT_TRUE(said("method: telepathy"));
+}
+
 TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNotBound) {
   const auto check = [](const std::string& base) {
     ds::model::Model model;

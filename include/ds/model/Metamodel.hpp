@@ -38,6 +38,7 @@ struct FieldSpec {
   FieldType type = FieldType::Text;
   FieldSource source = FieldSource::Written;
   std::string meaning;
+  std::vector<std::string> values = {};  ///< when not empty, the only values it takes (a closed field, DS-211)
 };
 
 struct KindSpec {

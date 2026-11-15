@@ -82,6 +82,30 @@ package driftspec@ds {
             tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AFieldItsKindDoesNotDeclareIsReportedAndADeclaredOneIsNot
         }
       }
+
+      requirement REQ-00115-1 {
+        tags: language, metamodel, fields
+        status: approved
+        title: A closed field carrying a value it does not take shall be reported as W-FIELD-VALUE
+        text:
+          The metamodel names the values of its closed fields: status (draft,
+          approved, obsolete), a verification's method and level, a diagram's
+          kind and level. Any other value is a warning at the entity, naming the
+          field, the value and the values it takes; an empty value is left alone.
+          The value is kept in the model.
+        rationale:
+          Model audit 2026-11, findings G4 and G3 (DS-211): status: aproved
+          passed, stopped counting as approved and so switched
+          W-REQ-NO-VERIFICATION off; kind: clas fell back to a class diagram and
+          level: package was ignored in silence.
+        verification VER-00131-1 {
+          status: approved
+          title: Integration tests confirm a closed field with a value it does not take is reported and an empty one is not, and the diag corpus marks a component kind
+          method: test
+          tests:
+            tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AClosedFieldWithAValueItDoesNotTakeIsReportedAndAnEmptyOneIsNot
+        }
+      }
     }
 
     // ======================= workspace ====================================

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ds/model/Metamodel.hpp"
+#include "ds/model/Words.hpp"
 
 // The manual ds embeds (DS-79): how each kind is written with a minimal example that checks
 // clean, every finding code with what it means and what to do, the annotations that mean
@@ -254,6 +255,9 @@ std::vector<CodeSpec> buildCodes() {
       {"W-ANNOTATION-UNKNOWN", "warning",
        "An annotation word the language gives no meaning to: a typo, or a word no check reads. It is kept as a link.",
        "ds manual annotations lists the words that mean something."},
+      {"W-FIELD-VALUE", "warning",
+       "A closed field (status, method, a verification's level, a diagram's kind or level) carries a value it does not take.",
+       "ds manual <kind> lists the values of each closed field."},
       {"W-MODIFIER-ON-VALUE", "warning", "owns, refs or shares on a value type (int, string...) means nothing.", "Drop the modifier."},
       {"W-MSG-UNDECLARED", "warning", "A message calls an operation its target does not declare.",
        "Declare the operation, or correct the name or the target."},
@@ -475,7 +479,8 @@ std::string kindPage(const KindSpec& k) {
   if (!k.fields.empty()) {
     out += "Fields\n";
     for (const auto& f : k.fields)
-      out += "  " + pad(f.name, 14) + pad(fieldTypeName(f.type), 9) + pad(fieldSourceName(f.source), 9) + f.meaning + "\n";
+      out += "  " + pad(f.name, 14) + pad(fieldTypeName(f.type), 9) + pad(fieldSourceName(f.source), 9) + f.meaning +
+             (f.values.empty() ? "" : " (one of: " + model::join(f.values, ", ") + ")") + "\n";
     out += "  (written: you write it as key: value; syntax: read from how it is declared; derived: computed by the check)\n\n";
   }
   if (!k.flags.empty()) {
