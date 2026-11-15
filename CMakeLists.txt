@@ -22,6 +22,12 @@ endif()
 add_compile_options(
   $<$<COMPILE_LANGUAGE:CXX>:-Wall> $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
   $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>)
+# Built with Emscripten (emcmake), the tree gives the engine for a page in a
+# browser and nothing else (REQ-00113-1); the engine throws and catches, and
+# WebAssembly exceptions keep that.
+if(EMSCRIPTEN)
+  add_compile_options(-fwasm-exceptions)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(argos-coverage OPTIONAL)
@@ -74,7 +80,11 @@ set(BUILD_TESTS
 set(INSTALL_PROJECT
     OFF
     CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(nlohmann_json googletest cli11 miniz)
+if(EMSCRIPTEN)
+  FetchContent_MakeAvailable(nlohmann_json miniz)
+else()
+  FetchContent_MakeAvailable(nlohmann_json googletest cli11 miniz)
+endif()
 FetchContent_GetProperties(tree_sitter)
 if(NOT tree_sitter_POPULATED)
   FetchContent_Populate(tree_sitter)
@@ -112,6 +122,26 @@ target_link_libraries(
   driftspec
   PUBLIC driftspec_grammar nlohmann_json::nlohmann_json
   PRIVATE miniz)
+
+# ---- the engine for a page in a browser (REQ-00113-1): ds.js and ds.wasm
+# -------
+if(EMSCRIPTEN)
+  add_executable(ds_wasm app/wasm/main.cpp)
+  target_link_libraries(ds_wasm PRIVATE driftspec)
+  target_link_options(
+    ds_wasm
+    PRIVATE
+    -fwasm-exceptions
+    -sMODULARIZE=1
+    -sEXPORT_ES6=1
+    -sEXPORT_NAME=createDs
+    -sENVIRONMENT=web,worker
+    -sALLOW_MEMORY_GROWTH=1
+    -sEXPORTED_FUNCTIONS=_ds_playground
+    -sEXPORTED_RUNTIME_METHODS=ccall)
+  set_target_properties(ds_wasm PROPERTIES OUTPUT_NAME ds)
+  return()
+endif()
 
 # ---- the CLI -----------------------------------------------------------------
 # ---- the Python face (pyds, DS-84): the engine as a CPython extension, abi3
