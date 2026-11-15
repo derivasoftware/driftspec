@@ -148,7 +148,8 @@ int manual(const std::string& topic, bool json) {
       fields.push_back({{"name", f.name},
                         {"type", ds::model::fieldTypeName(f.type)},
                         {"source", ds::model::fieldSourceName(f.source)},
-                        {"meaning", f.meaning}});
+                        {"meaning", f.meaning},
+                        {"values", f.values}});
     out["kind"] = {{"meaning", k.meaning}, {"syntax", k.syntax}, {"fields", fields}, {"flags", k.flags}, {"example", k.example}};
   }
   if (const ds::model::CodeSpec* c = ds::model::codeOf(topic))

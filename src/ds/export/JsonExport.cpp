@@ -46,8 +46,11 @@ nlohmann::json metamodelJson() {
   for (const auto& k : model::kinds()) {
     nlohmann::json fields = nlohmann::json::array();
     for (const auto& f : k.fields) {
-      fields.push_back(
-          {{"name", f.name}, {"type", model::fieldTypeName(f.type)}, {"source", model::fieldSourceName(f.source)}, {"meaning", f.meaning}});
+      fields.push_back({{"name", f.name},
+                        {"type", model::fieldTypeName(f.type)},
+                        {"source", model::fieldSourceName(f.source)},
+                        {"meaning", f.meaning},
+                        {"values", f.values}});
     }
     out["kinds"].push_back({{"kind", model::kindName(k.kind)},
                             {"meaning", k.meaning},

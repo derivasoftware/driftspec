@@ -11,13 +11,19 @@ namespace {
 FieldSpec written(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Written, meaning}; }
 FieldSpec syntax(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Syntax, meaning}; }
 FieldSpec derived(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Derived, meaning}; }
+// a field written with one of a closed set of values: any other is W-FIELD-VALUE (DS-211)
+FieldSpec closed(const char* name, FieldType type, const char* meaning, std::vector<std::string> values) {
+  return {name, type, FieldSource::Written, meaning, std::move(values)};
+}
 
 // The fields every artefact carries (REQ-00045-1).
 std::vector<FieldSpec> artefact() {
-  return {
-      written("title", FieldType::Text, "one sentence that names it"), written("text", FieldType::Text, "what it says, in full"),
-      written("rationale", FieldType::Text, "why it is so"),           written("status", FieldType::Status, "draft, approved or obsolete"),
-      written("tags", FieldType::Names, "words to find it by"),        written("owner", FieldType::Name, "who answers for it")};
+  return {written("title", FieldType::Text, "one sentence that names it"),
+          written("text", FieldType::Text, "what it says, in full"),
+          written("rationale", FieldType::Text, "why it is so"),
+          closed("status", FieldType::Status, "draft, approved or obsolete", {"draft", "approved", "obsolete"}),
+          written("tags", FieldType::Names, "words to find it by"),
+          written("owner", FieldType::Name, "who answers for it")};
 }
 
 std::vector<FieldSpec> plus(std::vector<FieldSpec> base, const std::vector<FieldSpec>& more) {
@@ -70,11 +76,11 @@ std::vector<KindSpec> build() {
       {Kind::Verification,
        "how a requirement or a constraint is proved",
        plus(artefact(),
-            {written("method", FieldType::Name, "test, review, analysis or inspection"),
+            {closed("method", FieldType::Name, "test, review, analysis or inspection", {"test", "review", "analysis", "inspection"}),
              written("tests", FieldType::Names, "the tests that prove it, file::test"),
              written("test", FieldType::Text, "one test that proves it"), written("evidence", FieldType::Text, "what was observed"),
-             written("level", FieldType::Name, "unit, integration or system"), written("precondition", FieldType::Text, "the state before"),
-             written("postcondition", FieldType::Text, "the state after")}),
+             closed("level", FieldType::Name, "unit, integration or system", {"unit", "integration", "system"}),
+             written("precondition", FieldType::Text, "the state before"), written("postcondition", FieldType::Text, "the state after")}),
        {"extension"},
        {P, M, Rq}});
   k.push_back({Kind::Constraint,
@@ -175,13 +181,14 @@ std::vector<KindSpec> build() {
   k.push_back(
       {Kind::Diagram,
        "a view asked of the model",
-       {written("kind", FieldType::Name, "class, sequence, state, requirement or interface"),
+       {closed("kind", FieldType::Name, "class, sequence, state, requirement or interface",
+               {"class", "sequence", "state", "requirement", "interface"}),
         written("include", FieldType::Patterns, "what it shows"), written("exclude", FieldType::Patterns, "what it leaves out"),
         written("open", FieldType::Patterns, "the boxes it keeps open; every other closes and its edges are lifted to it"),
         written("depth", FieldType::Number, "how deep a sequence expands, or *"), written("show", FieldType::Names, "the extras it draws"),
         written("hide", FieldType::Names, "the compartments it leaves out"),
         written("neighbours", FieldType::Number, "how many steps of neighbours it adds"),
-        written("level", FieldType::Name, "the level a sequence is lifted to: module")},
+        closed("level", FieldType::Name, "the level a sequence is lifted to: module", {"module"})},
        {},
        {},
        true});
