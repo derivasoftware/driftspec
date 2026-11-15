@@ -1151,6 +1151,30 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00117-1 {
+      tags: language, logic, rules, check
+      status: approved
+      title: A relation literal that binds an end to a kind the relation never joins there shall be reported as W-RULE-NEVER-MATCHES
+      text:
+        The kind of a variable is read from its range or from a positive kind literal, and the kind
+        of an entity from the model. When a relation literal binds its source to a kind the relation
+        never leaves, or its target to a kind it never reaches, by the metamodel, the literal matches
+        nothing: the rule is decided by vacuity. It is a warning at the literal; the rule is still
+        evaluated.
+      rationale:
+        Model audit 2026-11, finding G1 (DS-213): for class c ... never c uses x could never be
+        broken, since uses leaves members and never a class, and it was the example of ds manual
+        rule. A vacuous rule stands as the verification of a requirement and is always green. The
+        manual's example now speaks about the members.
+      verification VER-00133-1 {
+        status: approved
+        title: Integration tests confirm a literal that can never match is reported and the member-level rule is broken where the design breaks it
+        method: test
+        tests:
+          tests/integration/ds/check/test_rules.cpp::TestRules.ALiteralThatCanNeverMatchIsReported
+      }
+    }
+
     requirement REQ-00096-1 {
       tags: language, logic, rules, check
       status: approved

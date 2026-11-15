@@ -77,8 +77,10 @@ Evaluator::Evaluator(model::Model& model, const Resolver& resolver) : model_(mod
 std::vector<model::Finding> Evaluator::run() {
   if (model_.formulas().empty()) return {};
   index();
-  for (const auto& f : model_.formulas())
+  for (const auto& f : model_.formulas()) {
     if (!validate(f.first, f.second)) invalid_.insert(f.first);
+    checkVacuity(f.first, f.second);
+  }
   stratify();
   computeDefinitions();
   for (const auto& f : model_.formulas()) {
@@ -155,6 +157,72 @@ bool Evaluator::validate(const std::string& id, const model::Formula& formula) {
     }
   }
   return ok;
+}
+
+namespace {
+
+const model::KindSpec* kindNamed(const std::string& name) {
+  for (const auto& spec : model::kinds())
+    if (name == model::kindName(spec.kind)) return &spec;
+  return nullptr;
+}
+
+/// Whether a relation of the metamodel may leave (or reach) an entity of a kind.
+bool joinsAtEnd(const model::RelationSpec& spec, model::Kind kind, bool from) {
+  if (!spec.pairs.empty()) {
+    for (const auto& p : spec.pairs)
+      if ((from ? p.first : p.second) == kind) return true;
+    return false;
+  }
+  const auto& ends = from ? spec.from : spec.to;
+  return ends.empty() || std::find(ends.begin(), ends.end(), kind) != ends.end();
+}
+
+}  // namespace
+
+// A relation literal whose end is bound to a kind the relation never leaves or reaches can never match: a rule
+// that rests on it is decided by vacuity, always holding or never broken (DS-213). Reported, not refused.
+void Evaluator::checkVacuity(const std::string& id, const model::Formula& formula) {
+  std::map<std::string, model::Kind> kindOf;  // variable -> the kind its range or a kind literal binds it to
+  for (const auto& r : formula.ranges)
+    if (const model::KindSpec* k = kindNamed(r.kind)) kindOf[r.variable] = k->kind;
+  std::vector<const std::vector<model::Literal>*> bodies{&formula.where};
+  for (const auto& c : formula.claims) bodies.push_back(&c);
+  for (const auto& c : formula.cases) bodies.push_back(&c);
+  for (const auto* body : bodies)
+    for (const auto& l : *body)
+      if (l.form == Form::Kind && !l.negated && !l.terms.empty() && l.terms[0].variable)
+        if (const model::KindSpec* k = kindNamed(l.name)) kindOf.emplace(l.terms[0].text, k->kind);
+  const std::string scope = scopeOf(id);
+  const auto kindOfTerm = [&](const model::Term& t, model::Kind* out) {
+    if (t.value) return false;
+    if (t.variable) {
+      const auto it = kindOf.find(t.text);
+      if (it == kindOf.end()) return false;
+      *out = it->second;
+      return true;
+    }
+    const model::Entity* e = model_.find(resolver_.resolve(t.text, scope));
+    if (!e) return false;
+    *out = e->kind;
+    return true;
+  };
+  for (const auto* body : bodies)
+    for (const auto& l : *body) {
+      if (l.form != Form::Relation || l.terms.size() != 2) continue;
+      const model::RelationSpec* spec = model::relationOf(l.name);
+      if (!spec) continue;
+      for (int end = 0; end < 2; ++end) {
+        model::Kind kind;
+        if (!kindOfTerm(l.terms[end], &kind) || joinsAtEnd(*spec, kind, end == 0)) continue;
+        found_.push_back({"W-RULE-NEVER-MATCHES", "warning",
+                          id + " writes '" + l.terms[0].text + " " + l.name + " " + l.terms[1].text + "', and " + l.name +
+                              (end == 0 ? " never leaves " : " never reaches ") + std::string(model::kindName(kind)) + " (" +
+                              l.terms[end].text + "): the literal matches nothing",
+                          l.location});
+        break;
+      }
+    }
 }
 
 bool Evaluator::validateBody(const std::string& id, const std::vector<model::Literal>& body, std::set<std::string>& out_bound) {

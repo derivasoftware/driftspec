@@ -197,8 +197,8 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "model: holds is broken by each binding with no answer, never by each binding with one",
         "package shop {\n  requirement REQ-00001-1: The store shall not depend on the web\n  module web {\n    class Page { }\n  }\n"
         "  module store {\n    class Order {\n      + total() -> int\n    }\n    rule store-blind-to-web {\n"
-        "      title: Nothing in the store uses the web\n      @requirement REQ-00001-1\n      for class c in shop@store\n"
-        "      never c uses x, x in shop@web\n    }\n  }\n}\n"}},
+        "      title: No member of the store names a type of the web\n      @requirement REQ-00001-1\n      for class c in shop@store\n"
+        "      never m in c, m uses x, x in shop@web\n    }\n  }\n}\n"}},
       {Kind::Definition,
        {"definition <name>(<parameter>, ...) {\n  title: <what it names>\n  if <literals>             one line per case in which it "
         "holds\n}\na rule or another definition applies it: <name>(<a>, ...); it may recur, and negate only what does not rest on it",
@@ -258,6 +258,9 @@ std::vector<CodeSpec> buildCodes() {
       {"W-DIAGRAM-UNDECLARED", "warning",
        "A diagram's include, exclude or open names something the workspace declares nowhere: it draws less and says nothing.",
        "Correct the pattern, or declare what it names."},
+      {"W-RULE-NEVER-MATCHES", "warning",
+       "A relation literal binds an end to a kind the relation never joins there, so it matches nothing and the rule holds by vacuity.",
+       "Name the members: m in c, m uses x. ds manual <kind> lists the relations of each kind."},
       {"W-FIELD-VALUE", "warning",
        "A closed field (status, method, a verification's level, a diagram's kind or level) carries a value it does not take.",
        "ds manual <kind> lists the values of each closed field."},

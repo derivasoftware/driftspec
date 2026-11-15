@@ -27,6 +27,8 @@ class Evaluator {
   void index();
   bool validate(const std::string& id, const model::Formula& formula);
   bool validateBody(const std::string& id, const std::vector<model::Literal>& body, std::set<std::string>& out_bound);
+  /// A relation literal whose bound end is a kind the relation never joins there (W-RULE-NEVER-MATCHES).
+  void checkVacuity(const std::string& id, const model::Formula& formula);
   bool stratify();
   void computeDefinitions();
   void evaluateRule(const std::string& id, const model::Formula& formula);
