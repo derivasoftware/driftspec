@@ -13,6 +13,10 @@ include:
       - /templates/argos-gate.yml
 
 variables:
+  # The runners share one host: every job that compiles (cmake --build --parallel, the wheel's
+  # scikit-build, the Emscripten build) takes at most two processes, so the jobs of a pipeline
+  # running side by side do not take every core between them.
+  CMAKE_BUILD_PARALLEL_LEVEL: "2"
   # The grammar's manifest carries the version of the whole tool.
   VERSION_MANIFEST: grammar/tree-sitter.json
   # The execution evidence, as gafas and prueba give it to a Python repository:
