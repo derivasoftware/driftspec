@@ -18,3 +18,4 @@ build/
 build-*.log
 build-*/
 .driftspec/
+.emsdk/

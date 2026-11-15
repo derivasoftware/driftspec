@@ -54,6 +54,34 @@ package driftspec@ds {
       tags: python, api
     }
 
+    requirement REQ-00113-1 {
+      status: draft
+      @refines SREQ-00015-1
+      title: The engine shall answer a page in a browser in one call, with what the page shows after an edit
+      text:
+        The request is the texts of a workspace by path and a width. The answer is one document: the
+        report of ds check --json; the identities the workspace declares, each with the file and the
+        lines where it is written; its requirements, constraints and use cases as rows, each with what
+        it refines, what keeps it and what proves it; and its diagrams in the order they are written,
+        each with its kind, what it asks for, what it takes and its drawing as svg. A request that
+        cannot be read is answered with an error, never with a crash. Compiled to WebAssembly, this is
+        the one function a page calls (ds.js, ds.wasm).
+      rationale:
+        DS-203 (epic DS-201, the playground): a page that edits a workspace and draws it as it is
+        typed needs the whole picture after each keystroke in milliseconds, with no server; one call
+        keeps one contract between the engine and the page, as REQ-00085-1 does for a caller in process.
+      tags: api, browser
+      verification VER-00129-1 {
+        status: draft
+        title: Unit and integration tests confirm one call answers the report, the identities and their places, the artefacts as rows and the diagrams drawn in order, and an error for a request that cannot be read
+        method: test
+        tests:
+          tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.TheExampleIsCleanAndEachOfItsDiagramsIsDrawnInTheOrderItIsWritten
+          tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.TheArtefactsOfTheExampleComeAsRowsNestedByWhatTheyRefine
+          tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.AClassOfTheExampleIsFoundWhereItIsWritten
+      }
+    }
+
     constraint CST-00009-1 {
       status: approved
       category: design
@@ -161,6 +189,14 @@ package driftspec@ds {
       + static page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
     }
 
+    // The engine for a page in a browser (DS-203): one request of texts in, one document out, a copy
+    // (CST-00009-1); app/wasm exports it as the function ds.wasm offers.
+    class Browser {
+      @requirement REQ-00113-1
+      @constraint CST-00009-1
+      + static answer(request: std::string) -> std::string
+    }
+
     dataclass Files {                        // each .ds file of a workspace by its path, as an editor holds it
       @requirement REQ-00085-1
       + texts: std::map<std::string, std::string>
@@ -189,6 +225,13 @@ package driftspec@ds {
       local workspace: Workspace
       -> workspace.render(diagram, format, width) -> drawing
       return drawing
+    }
+
+    sequence Browser::answer {
+      local workspace: Workspace
+      -> workspace.report() -> report
+      -> workspace.render(diagram, format, width) -> drawing
+      return json
     }
 
     sequence Api::page {
