@@ -7,15 +7,14 @@ as it is typed, with fifteen guided lessons in English and Spanish (SREQ-00019-1
 |---|---|
 | `web/` | The page (`index.html`) and its engine loader (`engine.js`). |
 | `lessons/NN-*/` | One lesson each: the workspace it starts from and `lesson.json`, its steps. `lessons/README.md` is the curriculum and the step format. |
-| `starter/` | A small workspace offered after the lessons. |
-| `build.py` | Assembles the static site in `site/`: the page, `ds.js` + `ds.wasm`, the brand from `doc/assets`, and `examples.json` (lessons, starter, `examples/*`). |
+| `build.py` | Assembles the static site in `site/`: the page, `ds.js` + `ds.wasm`, the brand from `doc/assets`, and `examples.json` (the lessons). |
 
 The engine is `ds::api::Browser` (REQ-00113-1) compiled to WebAssembly by the tree itself:
 
 ```bash
 emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release && cmake --build build-wasm
 python3 playground/build.py                      # -> playground/site
-python3 -m http.server 8766 -d playground/site   # http://localhost:8766/  (?lang=es, ?example=hola, ?theme=light)
+python3 -m http.server 8766 -d playground/site   # http://localhost:8766/  (?lang=es, ?example=06-sequence, ?theme=light)
 ```
 
 CI builds both on every merge request: the `wasm` job gives `ds.js` and `ds.wasm`, the

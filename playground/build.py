@@ -3,8 +3,7 @@
     python3 playground/build.py [--wasm build-wasm] [--out playground/site]
 
 Writes the page, the engine (ds.js, ds.wasm from an Emscripten build of the tree, see
-REQ-00113-1), the brand, and examples.json: the lessons first, then the starter and the
-repository's example workspaces. Serve the folder as static files, for instance
+REQ-00113-1), the brand, and examples.json: the lessons, in order. Serve the folder as static files, for instance
 `python3 -m http.server -d playground/site`.
 """
 
@@ -24,15 +23,11 @@ def workspace(folder: pathlib.Path) -> dict[str, str]:
 
 
 def examples() -> list[dict]:
+    """The lessons the page offers, in their order."""
     out = []
     for folder in sorted(p for p in (HERE / "lessons").iterdir() if (p / "lesson.json").exists()):
         lesson = json.loads((folder / "lesson.json").read_text())
         out.append({"name": lesson["title"]["en"], "id": folder.name, "files": workspace(folder), "lesson": lesson})
-    out.append({"name": "starter", "files": workspace(HERE / "starter")})
-    for folder in sorted(p for p in (ROOT / "examples").iterdir() if p.is_dir()):
-        files = workspace(folder)
-        if files:
-            out.append({"name": folder.name, "files": files})
     return out
 
 
