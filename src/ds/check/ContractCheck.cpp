@@ -53,6 +53,7 @@ std::vector<model::Finding> ContractCheck::check(const Context& context) {
   resolver_ = &context.resolver();
   found_.clear();
   checkInterfaces();
+  checkRealisations();
   checkUseCases();
   checkDiagrams();
   checkScenarios();
@@ -232,6 +233,40 @@ void ContractCheck::checkInterfaces() {
         found_.push_back({"W-OUTCOME-MISMATCH", "warning",
                           e.id + " promises exit " + code + " on '" + field.second + "', and that trace ends in " + outcome, e.location});
       }
+    }
+  }
+}
+
+// A class that realises an interface and declares one of its operations declares it with the same
+// signature: two written facts that must agree (DS-215). What the class does not declare is no finding.
+void ContractCheck::checkRealisations() {
+  // a type as the idea it commits to: no qualifiers, std::vector read as the neutral list, void as none
+  const auto idea = [](const std::string& text) {
+    std::string t = std::regex_replace(text, std::regex(R"(\b[A-Za-z_][A-Za-z0-9_]*::)"), "");
+    t = std::regex_replace(t, std::regex(R"(\bvector\b)"), "list");
+    t = std::regex_replace(t, std::regex(R"(\s+)"), "");
+    return t.empty() || t == "void" ? std::string("none") : t;
+  };
+  const auto signature = [&idea](const model::Entity& e) {
+    std::string out = "(";
+    for (size_t i = 0; i < e.params.size(); ++i) out += (i ? ", " : "") + idea(e.params[i].type);
+    const auto returns = e.fields.find("returns");
+    return out + ") -> " + idea(returns == e.fields.end() ? "" : returns->second);
+  };
+  for (const auto& r : model_->index().ofKind("realises")) {
+    const model::Entity* cls = model_->find(r.from);
+    const model::Entity* iface = model_->find(r.to);
+    if (!cls || !iface || cls->kind != model::Kind::Class || iface->kind != model::Kind::Interface || iface->expected) continue;
+    for (const auto& id : model_->index().members(iface->id)) {
+      const model::Entity* op = model_->find(id);
+      if (!op || op->kind != model::Kind::Operation) continue;
+      const model::Entity* method = resolver_->member(cls->id, op->name);
+      if (!method || method->kind != model::Kind::Method) continue;
+      if (signature(*method) == signature(*op)) continue;
+      found_.push_back({"W-INTERFACE-SIGNATURE", "warning",
+                        method->id + " takes and gives " + signature(*method) + ", and " + op->id + ", which " + cls->id +
+                            " realises, takes and gives " + signature(*op),
+                        method->location});
     }
   }
 }

@@ -378,6 +378,29 @@ package driftspec@ds {
               tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AMethodTheInterfaceDoesNotOfferIsNoBypass
           }
         }
+        requirement REQ-00119-1 {
+          tags: language, hld, interfaces, check
+          status: approved
+          title: A method that answers an operation of an interface its class realises shall take and give what the operation does, or be reported as W-INTERFACE-SIGNATURE
+          text:
+            When a class realises an interface (@interface) and declares, or inherits, a method named
+            like one of the interface's operations, their parameters and returns are compared as the
+            idea each type commits to: qualifiers dropped, std::vector read as the neutral list, void
+            as none. A difference is a warning at the method. An operation the class does not declare
+            is no finding: that is absence.
+          rationale:
+            Model audit 2026-11, finding G5 (DS-215): a class realising keeper declared feed(animal:
+            int, extra: bool) against feed(animal: string) and nothing was said, while between an
+            operation and its use case the signatures were compared. It is the link from the
+            high-level design to the low-level one.
+          verification VER-00135-1 {
+            title: Integration tests confirm a method that answers an interface operation with another signature is reported, one that says the same idea is not, and an operation the class does not declare is no finding
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_dependency_checks.cpp::TestRealisation.AMethodThatAnswersAnInterfaceOperationWithAnotherSignatureIsReported
+          }
+        }
         requirement REQ-00081-1 {
           tags: language, hld, usecase
           status: approved

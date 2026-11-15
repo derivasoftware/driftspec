@@ -260,6 +260,7 @@ package driftspec@ds {
 
     class ContractCheck : ACheck {         // interfaces, use cases, scenarios, outcomes and diagrams
       @requirement REQ-00060-1
+      @requirement REQ-00119-1
       @requirement REQ-00082-1
       @requirement REQ-00061-1
       @requirement REQ-00109-1
@@ -281,6 +282,9 @@ package driftspec@ds {
       }
       - checkInterfaces() -> void {
         @requirement REQ-00060-1
+      }
+      - checkRealisations() -> void {
+        @requirement REQ-00119-1
       }
       - checkViews(state: model::Entity) -> void {
         @requirement REQ-00061-1
