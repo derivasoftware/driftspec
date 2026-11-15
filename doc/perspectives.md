@@ -101,6 +101,9 @@ Built: a switch picks the perspective over the same map.
 
 ## Not yet
 
+- Coverage per perspective is a question, not a finding (Owner, 2026-11-15):
+  a constraint with no rule, or a use case nothing realises, is answered when
+  asked (DS-110, DS-216).
 - The functional perspective inside a box: the data that travels between
   steps, and a state lane. Waits for a real case that needs it.
 - Relative identities: today an entity in a rule or a reference is written

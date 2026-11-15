@@ -107,6 +107,35 @@ Decisions taken since, while using it:
   verification reaches argos as one; a constraint verified otherwise (its BoK
   guide, a static diagnostic, a review) stays as it is.
 
+## 2b. Decisions on the audit of the model (Owner, 2026-11-15)
+
+Taken as comments on the audit of the model (DS-206); the work they lead to is
+in Plane, epics DS-206 and DS-205.
+
+1. **A partial specification is a complete one.** Every abstraction level
+   stands on its own: drawn and checked with what it has, whether or not it has
+   children. Nothing forces anyone to specify everything; a metaspecification
+   represents what is pragmatic to represent. Only the high-level design, only
+   the low-level one, or the sequences of two methods out of a thousand are
+   valid designs.
+2. **The mechanism punishes inconsistency, never missing information.** A
+   finding needs two written facts that clash; one fact and a gap is coverage,
+   asked for apart. The structure and the behaviour are written as far as it
+   pays, and the rules sit on top giving consistency to what is there. Six
+   warnings break this today (DS-216).
+3. **Nesting and annotating are the same relation.** Two syntaxes that only
+   change where an artefact is filed (DS-217).
+4. **Relations are never merged.** Using, composing, aggregating and
+   inheriting mean different things and do not weigh the same. What is missing
+   is one rule to lift them from members to classes, modules and boxes, read by
+   every view (DS-230).
+5. **The abstraction axis is elastic.** No fixed number of levels: one part of
+   a system may need one step down and another twenty, and a rigid frame grows
+   sublevels where it does not fit. A flat layer is a cut through containment,
+   named by its boxes or by the roles they carry, never by a number. Behaviour
+   is written at any cut, and two cuts that are both written are checked for
+   coherence (epic DS-205; the words are chosen in DS-228).
+
 ## 3. Principles
 
 - **Workspace, not file.** `ds` loads a directory. A reference `ns::Name`
@@ -157,12 +186,11 @@ whose `!` comments are the oracle of the test suite. In short:
   `W-REF-UNDECLARED`; checks that depend on it wait for the declaration.
 - **R7** Multiline text by indentation. Field values run to the end of the
   line; closing braces go on their own line.
-- **R8** Contracts (`[requires: …]`, `[ensures: …]`, flags) are text, in
-  the member's body only, never interpreted (decided 2026-10-25).
+- **R8** Contracts are rules in the member's body (DS-94, 2026-11-07); the
+  bracket contracts of 2026-10-25 are gone.
 - **R10** No includes, no using; bare names resolve innermost scope outward,
-  qualified names cross modules; two candidates at the same depth should be
-  `E-REF-AMBIGUOUS` (not implemented: the scope scheme makes it unreachable
-  today).
+  qualified names cross modules; two extern entities of one simple name make a
+  bare reference `E-REF-AMBIGUOUS`.
 - **R11** `extern module` declares identities outside the workspace (std, Qt)
   with no obligations.
 - **R12** Any entity, including a member, may open a body with fields, notes,
@@ -262,13 +290,13 @@ derives the links.
   (`action parse: Parser::parseFile`) and link the same way.
 - One subject may have several scenarios (syntax open: `sequence
   Model::declare / duplicate`); the default one is the unnamed.
-- Checks this enables: a message with no static path between the caller's
-  type and the callee (`W-MSG-NO-PATH`), a participant typed differently from
-  the subject's class, a method with no behaviour (informative), a behaviour
-  whose subject nobody declares (expected node), recursion made visible.
+- Checks this enables: a message to an operation its target does not declare
+  (`W-MSG-UNDECLARED`), arity and argument types, a behaviour whose subject
+  nobody declares (expected node), recursion made visible.
 - **The abstraction level is given by the subject, never declared.** A
   behaviour whose subject is a method is at method level; of a class, class
-  level; of a module or a package, that level. A lower-level behaviour
+  level. A module or a package as subject is the direction (DS-232), not built:
+  the engine rejects it today. A lower-level behaviour
   projects upward by lifting: a call between methods of two modules is, at
   module level, a message between the modules. One behaviour feeds every
   level above it; nothing is drawn twice.
@@ -297,10 +325,10 @@ derives the links.
   everything else. Two grains are kept apart: structural coupling (an
   attribute typed elsewhere) and transient coupling (a local created and
   dropped inside a method), because the second is the one that usually hides
-  a missing injection. If a module declares what it may depend on
-  (syntax open, e.g. `module lsp { depends: ds }`), a behaviour that couples to
-  an undeclared module is an incoherence of the model (`W-COUPLING-UNDECLARED`);
-  without the declaration it is a derived fact, reported, never a finding.
+  a missing injection. What a box may depend on is declared towards an
+  interface, `@uses` (DS-96), and checked against what its behaviours call
+  (`W-USES-UNDECLARED`, `W-USES-UNUSED`, `W-USES-BYPASS`); without the
+  declaration coupling is a derived fact, reported, never a finding.
 - **Observed sequences stay in argos (decided 2026-11-05, DS-16).** What the tests
   of a requirement did, with modules as participants, is reality, and reality is
   argos's. The design's trace from the top is the sequence of an operation of an
@@ -491,7 +519,8 @@ corpus the same day.
 4. **Black box**: closed or free boundary `kind`; typed operation parameters;
    a class realising one operation rather than a whole boundary; system
    requirements that only see boundaries.
-5. **Diagrams**: kinds (class, component, sequence, state, requirement);
+5. **Diagrams**: kinds (class, sequence, state, requirement, interface; the
+   component view is a class diagram with `open:`);
    closed `include/exclude/show/hide`; minimal layout hints (direction,
    grouping, positions saved by an editor); diagrams inside modules or only
    at top level.

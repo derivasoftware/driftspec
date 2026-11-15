@@ -412,7 +412,7 @@ const std::vector<CommandSpec>& commands() {
       {"query",
        "ds query <workspace> <question> [subject] [--json]",
        "ask the model: diagrams · entities <scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings "
-       "[file] · coupling",
+       "[file] · coupling · failures <operation>",
        {{0, "answered"}, {1, "not a question, or an identity the model does not declare"}, {2, "bad usage, or no workspace at the path"}}},
       {"manual",
        "ds manual [topic] [--json]",
