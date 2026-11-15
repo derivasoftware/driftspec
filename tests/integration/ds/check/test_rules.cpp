@@ -67,7 +67,7 @@ TEST_F(TestRules, ARuleIsADesignPieceInTheBoxItAppliesTo) {
       "    @requirement REQ-00001-1\n"
       "    for class c in p@core, method m\n"
       "    where m in c, not m is attribute\n"
-      "    never c uses x, x in p@face\n"
+      "    never m uses x, x in p@face\n"
       "  }\n"
       "  module core {\n"
       "    class Checker {\n"
@@ -97,7 +97,7 @@ TEST_F(TestRules, ARuleIsADesignPieceInTheBoxItAppliesTo) {
   EXPECT_EQ(f.claims[0][0].name, "uses");
   EXPECT_TRUE(f.claims[0][0].terms[1].variable);                       // a bare name is a variable
   EXPECT_FALSE(f.claims[0][1].terms[1].variable);                      // a qualified name is an entity
-  EXPECT_EQ(field("p@core-blind", "never"), "c uses x, x in p@face");  // the card shows it as written
+  EXPECT_EQ(field("p@core-blind", "never"), "m uses x, x in p@face");  // the card shows it as written
   EXPECT_NE(model.find("p@core::Checker::named"), nullptr);            // a class's rule is named under it
   EXPECT_TRUE(requires("p@core-blind", "REQ-00001-1"));
   EXPECT_TRUE(requires("p@core::Checker::named", "REQ-00001-1"));
@@ -215,6 +215,37 @@ TEST_F(TestRules, RuleAndDefinitionStayNamesWhereANameIsExpected) {
   EXPECT_NE(model.find("p@m::definition"), nullptr);
   EXPECT_NE(model.find("p@m::in::is"), nullptr);
   EXPECT_NE(model.find("p@m::in::holds"), nullptr);
+}
+
+TEST_F(TestRules, ALiteralThatCanNeverMatchIsReported) {
+  load(
+      "package p {\n"
+      "  requirement REQ-00001-1: The core shall not depend on the face\n"
+      "  module face {\n"
+      "    class Page { }\n"
+      "  }\n"
+      "  module core {\n"
+      "    class Order {\n"
+      "      + show(p: p@face::Page) -> none\n"
+      "    }\n"
+      "  }\n"
+      "  rule by-class {\n"
+      "    @requirement REQ-00001-1\n"
+      "    for class c in p@core\n"
+      "    never c uses x, x in p@face\n"
+      "  }\n"
+      "  rule by-member {\n"
+      "    @requirement REQ-00001-1\n"
+      "    for class c in p@core\n"
+      "    never m in c, m uses x, x in p@face\n"
+      "  }\n"
+      "}\n");
+  std::vector<std::string> never;
+  for (const auto& f : model.findings())
+    if (f.code == "W-RULE-NEVER-MATCHES") never.push_back(f.message);
+  ASSERT_EQ(never.size(), 1u);
+  EXPECT_NE(never[0].find("p@by-class"), std::string::npos);
+  EXPECT_EQ(codes("E-RULE-BROKEN").size(), 1u);  // the member-level rule sees the parameter
 }
 
 }  // namespace
