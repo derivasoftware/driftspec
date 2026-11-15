@@ -321,6 +321,7 @@ package driftspec@ds {
       @requirement REQ-00045-1
       @constraint CST-00003-2
       @requirement REQ-00067-1
+      @requirement REQ-00118-1
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
@@ -330,6 +331,12 @@ package driftspec@ds {
       - check(context: Context) -> std::vector<model::Finding>
       - checkOwnershipCycles() -> void {
         @requirement REQ-00028-1
+      }
+      - checkCycles(relation: std::string, code: std::string, verb: std::string) -> void {
+        @requirement REQ-00118-1
+      }
+      - checkRefinesUpward() -> void {
+        @requirement REQ-00118-1
       }
       - checkArtefacts() -> void {
         @requirement REQ-00045-1

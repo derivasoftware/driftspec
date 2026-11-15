@@ -162,6 +162,10 @@ class StructureCheck : public ACheck {
  private:
   std::vector<model::Finding> check(const Context& context) override;
   void checkOwnershipCycles();
+  /// A chain of one relation that comes back to where it starts (refines, inherits).
+  void checkCycles(const std::string& relation, const std::string& code, const std::string& verb);
+  /// A requirement that refines one written inside its own box.
+  void checkRefinesUpward();
   void checkArtefacts();
   void checkExtensions();
   void checkFields();

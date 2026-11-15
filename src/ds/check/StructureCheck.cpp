@@ -29,6 +29,9 @@ std::vector<model::Finding> StructureCheck::check(const Context& context) {
   resolver_ = &context.resolver();
   found_.clear();
   checkOwnershipCycles();
+  checkCycles("refines", "E-REFINES-CYCLE", "refines");
+  checkCycles("inherits", "E-INHERITANCE-CYCLE", "derives from");
+  checkRefinesUpward();
   checkArtefacts();
   checkExtensions();
   checkFields();
@@ -78,6 +81,60 @@ void StructureCheck::checkOwnershipCycles() {
   };
   for (const auto& pair : owns) {
     if (!done.count(pair.first)) walk(pair.first);
+  }
+}
+
+// A requirement that refines itself through others, a class that derives from itself: a chain of the relation
+// that comes back to where it starts is a contradiction between written things (DS-214). Reported once per cycle.
+void StructureCheck::checkCycles(const std::string& relation, const std::string& code, const std::string& verb) {
+  std::map<std::string, std::vector<std::pair<std::string, model::Location>>> next;
+  for (const auto& r : model_->index().ofKind(relation)) {
+    const model::Entity* to = model_->find(r.to);
+    if (!to || to->expected || r.from == r.to) continue;
+    next[r.from].push_back({r.to, r.location});
+  }
+  std::set<std::string> reported, done, onPath;
+  std::vector<std::string> path;
+  std::function<void(const std::string&)> walk = [&](const std::string& node) {
+    path.push_back(node);
+    onPath.insert(node);
+    for (const auto& edge : next[node]) {
+      if (onPath.count(edge.first)) {
+        std::vector<std::string> cycle(std::find(path.begin(), path.end(), edge.first), path.end());
+        std::vector<std::string> key = cycle;
+        std::sort(key.begin(), key.end());
+        if (reported.insert(join(key, "|")).second)
+          found_.push_back({code, "error", "a cycle: " + join(cycle, " " + verb + " ") + " " + verb + " " + edge.first, edge.second});
+      } else if (!done.count(edge.first)) {
+        walk(edge.first);
+      }
+    }
+    onPath.erase(node);
+    path.pop_back();
+    done.insert(node);
+  };
+  for (const auto& pair : next)
+    if (!done.count(pair.first)) walk(pair.first);
+}
+
+// A requirement refines one written further down the containment axis: the box of the refined requirement lies
+// inside the box of the one that refines it, the detail above what it details (DS-214).
+void StructureCheck::checkRefinesUpward() {
+  const auto inside = [](const std::string& inner, const std::string& outer) {
+    if (inner.size() <= outer.size() || inner.compare(0, outer.size(), outer) != 0) return false;
+    const char after = inner[outer.size()];
+    return outer.back() == '@' || after == '@' || after == ':';
+  };
+  for (const auto& r : model_->index().ofKind("refines")) {
+    const model::Entity* child = model_->find(r.from);
+    const model::Entity* parent = model_->find(r.to);
+    if (!child || !parent || parent->expected || child->scope.empty() || parent->scope.empty()) continue;
+    if (!inside(parent->scope, child->scope)) continue;
+    found_.push_back({"W-REFINES-UPWARD", "warning",
+                      child->id + " (in " + model::Scope(child->scope).box().text() + ") refines " + parent->id +
+                          ", which is written inside it (in " + model::Scope(parent->scope).box().text() +
+                          "): the detail stands above what it details",
+                      r.location});
   }
 }
 
