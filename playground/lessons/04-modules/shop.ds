@@ -1,0 +1,49 @@
+// Lesson 4 · Modules and names
+
+package shop {
+  module store {
+    class Cart {
+      - shares stock: Stock
+      - refs coupon: optional<Coupon>
+      - status: Status = Open
+      - owns lines: list<Line>
+      + total() -> int
+      + add(line: Line) -> none
+      - recalculate() -> none
+    }
+    class Line {
+      - refs cart: Cart
+      - count: int = 1
+      - price: Money
+      - gift: bool = false
+      - note: string = ""
+    }
+    dataclass Money {
+      - cents: int
+      - currency: string = "EUR"
+    }
+    enum Status { Open, Paid, Shipped }
+    dataclass Coupon {
+      - code: string
+      - percent: int
+    }
+    class PaymentMethod {
+      + abstract pay(amount: Money) -> bool
+    }
+    class Card : PaymentMethod {
+      + pay(amount: Money) -> bool
+    }
+    class Stock {
+      + has(line: Line) -> bool
+    }
+    class Pricing {
+      + abstract rate() -> int
+      + apply(amount: Money) -> Money
+    }
+  }
+}
+
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}

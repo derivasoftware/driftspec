@@ -1,0 +1,28 @@
+// Lesson 12 · Verifications and use cases
+
+package shop {
+  extern module bank {
+    class Gateway
+  }
+  interface shell {
+    kind: cli
+    @requirement SREQ-00001-1
+    operation buy(item: string) -> int {
+      command: shop buy <item>
+      exit 0: default
+      exit 2: declined
+    }
+  }
+  sequence shell::buy {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) -> paid
+    return 0
+  }
+  sequence shell::buy / declined {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) / declined -> paid
+    return 2
+  }
+}

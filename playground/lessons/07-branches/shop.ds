@@ -1,0 +1,7 @@
+// Lesson 7 · Branches and scenarios
+
+package shop {
+  extern module bank {
+    class Gateway
+  }
+}

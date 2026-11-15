@@ -19,3 +19,4 @@ build-*.log
 build-*/
 .driftspec/
 .emsdk/
+playground/site/

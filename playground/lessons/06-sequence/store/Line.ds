@@ -1,0 +1,11 @@
+package shop {
+  module store {
+    class Line {
+      - refs cart: Cart
+      - count: int = 1
+      - price: Money
+      - gift: bool = false
+      - note: string = ""
+    }
+  }
+}

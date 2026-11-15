@@ -1,0 +1,8 @@
+package shop {
+  module store {
+    dataclass Money {
+      - cents: int
+      - currency: string = "EUR"
+    }
+  }
+}

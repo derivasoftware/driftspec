@@ -1,0 +1,15 @@
+diagram SEQ_Add {
+  kind: sequence
+  include: shop@store::Cart::add
+}
+
+diagram SEQ_Checkout {
+  kind: sequence
+  include: shop@store::Cart::checkout
+  depth: 1
+}
+
+diagram SEQ_Declined {
+  kind: sequence
+  include: shop@store::Cart::checkout / declined
+}

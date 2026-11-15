@@ -1,0 +1,101 @@
+{
+  "title": {
+    "en": "13 · Failures",
+    "es": "13 · Fallos"
+  },
+  "version": 3,
+  "open": "store/Stock.ds",
+  "steps": [
+    {
+      "write": [
+        {
+          "replace": "+ reserve(line: Line) -> none",
+          "text": "+ reserve(line: Line) -> none fails SoldOut"
+        },
+        {
+          "below": {
+            "find": "class Stock",
+            "after": "}"
+          },
+          "text": "sequence Stock::reserve {\n  opt nothing is left / empty {\n    fail SoldOut\n  }\n}"
+        }
+      ],
+      "at": {
+        "find": "fail SoldOut"
+      },
+      "text": {
+        "en": "A failure starts where a path ends with `fail`. `SoldOut` is a name, whatever the mechanism behind it: an exception, an error value, a code. The signature of `reserve` says it may fail with it.",
+        "es": "Un fallo empieza donde un camino termina con `fail`. `SoldOut` es un nombre, sea cual sea el mecanismo que hay detrás: una excepción, un valor de error, un código. La firma de `reserve` dice que puede fallar con él."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "The engine follows the failure up every caller that does not handle it: `reserve`, then `add`, then `buy`, out through the shell. An interface is a boundary, and what escapes it must be said. Better to handle it in `add`: wrap the reservation in an `attempt` that returns on `SoldOut`:\n`attempt {`\n`  self -> stock.reserve(line)`\n`} on SoldOut {`\n`  return`\n`}`",
+        "es": "El motor sigue el fallo por cada llamante que no lo atiende: `reserve`, luego `add`, luego `buy`, y sale por el shell. Una interfaz es una frontera, y lo que escapa por ella hay que decirlo. Mejor atenderlo en `add`: envuelve la reserva en un `attempt` que vuelve con `SoldOut`:\n`attempt {`\n`  self -> stock.reserve(line)`\n`} on SoldOut {`\n`  return`\n`}`"
+      },
+      "solution": {
+        "replace": "      self -> stock.reserve(line)\n",
+        "text": "      attempt {\n        self -> stock.reserve(line)\n      } on SoldOut {\n        return\n      }\n"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "find": "+ add(line: Line)"
+      },
+      "text": {
+        "en": "A signature can promise what may escape. Promise too much on purpose: change `+ add(line: Line) -> none` to\n`+ add(line: Line) -> none fails Timeout`",
+        "es": "Una firma puede prometer lo que puede escapar. Promete de más a propósito: cambia `+ add(line: Line) -> none` por\n`+ add(line: Line) -> none fails Timeout`"
+      },
+      "solution": {
+        "replace": "+ add(line: Line) -> none",
+        "text": "+ add(line: Line) -> none fails Timeout"
+      },
+      "done": {
+        "finding": "W-FAILURE-UNREACHED"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "No path of `add` times out, and the engine knows it. Now that `add` handles what it calls, promise the truth:\n`fails nothing`",
+        "es": "Ningún camino de `add` agota el tiempo, y el motor lo sabe. Ahora que `add` atiende lo que llama, promete la verdad:\n`fails nothing`"
+      },
+      "solution": {
+        "replace": "fails Timeout",
+        "text": "fails nothing"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "pane": "SEQ_Add"
+      },
+      "text": {
+        "en": "Where a failure starts, where it is handled, and what each signature promises: the engine computes the paths in between, so a promise of `fails nothing` is checked, not hoped.",
+        "es": "Dónde empieza un fallo, dónde se atiende y qué promete cada firma: el motor calcula los caminos entre medias, así que una promesa de `fails nothing` se comprueba, no se espera."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

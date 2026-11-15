@@ -1,0 +1,195 @@
+{
+  "title": {
+    "en": "12 · Verifications and use cases",
+    "es": "12 · Verificaciones y casos de uso"
+  },
+  "version": 4,
+  "open": "shop.ds",
+  "steps": [
+    {
+      "write": {
+        "into": {
+          "find": "requirement REQ-00001-2"
+        },
+        "text": "verification VER-00001-1 {\n  title: Unit tests confirm the cart totals its lines\n  method: test\n  tests:\n    tests/test_cart.cpp::TestCart.Totals\n}",
+        "file": "requirements.ds"
+      },
+      "at": {
+        "find": "verification VER-00001-1"
+      },
+      "text": {
+        "en": "A verification says how a promise is proved: its method, and the tests as the test runner names them. Nested in a requirement, it verifies it. Running those tests is argos's job; DriftSpec keeps the claim and checks it is coherent.",
+        "es": "Una verificación dice cómo se prueba una promesa: su método y las pruebas tal como las nombra quien las ejecuta. Anidada en un requisito, lo verifica. Ejecutar esas pruebas es trabajo de argos; DriftSpec guarda lo que se afirma y comprueba que es coherente."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "REQ_Shop"
+      },
+      "text": {
+        "en": "The tree now says who keeps each promise and how it is proved: realised by, verified by.",
+        "es": "El árbol dice ahora quién cumple cada promesa y cómo se prueba: realised by, verified by."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "verifications.ds",
+          "end": true,
+          "text": "package shop {\n  verification VER-00001-1 {\n    @requirement REQ-00001-2\n    title: Unit tests confirm the cart totals its lines\n    method: test\n    tests:\n      tests/test_cart.cpp::TestCart.Totals\n  }\n}"
+        },
+        {
+          "file": "requirements.ds",
+          "replace": "      verification VER-00001-1 {\n        title: Unit tests confirm the cart totals its lines\n        method: test\n        tests:\n          tests/test_cart.cpp::TestCart.Totals\n      }\n",
+          "text": "",
+          "instant": true
+        }
+      ],
+      "at": {
+        "file": "verifications.ds",
+        "find": "@requirement REQ-00001-2"
+      },
+      "text": {
+        "en": "A verification can also stand apart and point at what it proves, with `@requirement`. Many teams keep the proofs in a file of their own, next to the tests, and link them from outside. It is the same relation: the tree still says verified by, the table still says proved by.",
+        "es": "Una verificación también puede ir aparte y apuntar a lo que prueba, con `@requirement`. Muchos equipos guardan las pruebas en su propio fichero, junto a los tests, y las enlazan desde fuera. Es la misma relación: el árbol sigue diciendo verified by y la tabla, proved by."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "verifications.ds",
+        "find": "package shop"
+      },
+      "text": {
+        "en": "Prove the system's promise too. Inside `package shop` in `verifications.ds`, write a second verification that links to it from outside, and name the test that runs it:\n`verification VER-00002-1 {`\n`  @requirement SREQ-00001-1`\n`  title: A system test buys an item from the command line`\n`  method: test`\n`  tests:`\n`    tests/system/test_buy.py::test_buy_an_item`\n`}`",
+        "es": "Prueba también la promesa del sistema. Dentro de `package shop` en `verifications.ds`, escribe una segunda verificación que la enlace desde fuera, y nombra la prueba que la ejecuta:\n`verification VER-00002-1 {`\n`  @requirement SREQ-00001-1`\n`  title: A system test buys an item from the command line`\n`  method: test`\n`  tests:`\n`    tests/system/test_buy.py::test_buy_an_item`\n`}`"
+      },
+      "solution": {
+        "file": "verifications.ds",
+        "into": {
+          "find": "package shop"
+        },
+        "text": "verification VER-00002-1 {\n  @requirement SREQ-00001-1\n  title: A system test buys an item from the command line\n  method: test\n  tests:\n    tests/system/test_buy.py::test_buy_an_item\n}"
+      },
+      "done": {
+        "entity": "VER-00002-1",
+        "clean": true
+      }
+    },
+    {
+      "write": {
+        "below": {
+          "find": "requirement SREQ-00001-1",
+          "after": "}"
+        },
+        "text": "usecase UC-00001-1 buy(item: string) -> int {\n  title: Buy an item\n  status: draft\n  @requirement SREQ-00001-1\n  outcome default: the number of the order\n  outcome declined: nothing is bought\n}"
+      },
+      "at": {
+        "find": "usecase UC-00001-1"
+      },
+      "text": {
+        "en": "A use case is the contract of a goal: what goes in, what comes out, and every outcome it can end in. It names no interface: whoever drives the shop, the contract is the same. The problems notice that nothing carries it out yet.",
+        "es": "Un caso de uso es el contrato de un objetivo: lo que entra, lo que sale y cada desenlace en el que puede terminar. No nombra ninguna interfaz: lleve quien lleve la tienda, el contrato es el mismo. Los problemas avisan de que todavía nada lo lleva a cabo."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "operation buy"
+      },
+      "text": {
+        "en": "The shell's `buy` is how it is carried out. Name the use case after the operation's signature:\n`operation buy(item: string) -> int : UC-00001-1 {`",
+        "es": "El `buy` del shell es cómo se lleva a cabo. Nombra el caso de uso después de la firma de la operación:\n`operation buy(item: string) -> int : UC-00001-1 {`"
+      },
+      "solution": {
+        "replace": "operation buy(item: string) -> int {",
+        "text": "operation buy(item: string) -> int : UC-00001-1 {"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "find": "outcome declined"
+      },
+      "text": {
+        "en": "A shop can also run out of an item. Add a third outcome to the use case:\n`outcome sold-out: the item is not in stock`",
+        "es": "A una tienda también se le puede agotar un artículo. Añade un tercer desenlace al caso de uso:\n`outcome sold-out: the item is not in stock`"
+      },
+      "solution": {
+        "into": {
+          "find": "usecase UC-00001-1"
+        },
+        "text": "outcome sold-out: the item is not in stock"
+      },
+      "done": {
+        "finding": "W-USECASE-OUTCOME-UNHANDLED"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "Every outcome of the contract needs a path through the operation that realises it. Give `buy` its exit code, `exit 3: sold-out`, and its path, which follows the sold-out branch of `add`:\n`sequence shell::buy / sold-out {`\n`  local cart: store::Cart`\n`  local line: store::Line`\n`  self -> cart.add(line) / sold-out`\n`  return 3`\n`}`",
+        "es": "Cada desenlace del contrato necesita un camino por la operación que lo realiza. Dale a `buy` su código de salida, `exit 3: sold-out`, y su camino, que sigue la rama agotada de `add`:\n`sequence shell::buy / sold-out {`\n`  local cart: store::Cart`\n`  local line: store::Line`\n`  self -> cart.add(line) / sold-out`\n`  return 3`\n`}`"
+      },
+      "solution": [
+        {
+          "into": {
+            "find": "operation buy"
+          },
+          "text": "exit 3: sold-out"
+        },
+        {
+          "below": {
+            "find": "sequence shell::buy / declined",
+            "after": "}"
+          },
+          "text": "sequence shell::buy / sold-out {\n  local cart: store::Cart\n  local line: store::Line\n  self -> cart.add(line) / sold-out\n  return 3\n}"
+        }
+      ],
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "pane": "REQ_Shop"
+      },
+      "text": {
+        "en": "From the promise to the contract, to the operation, to the path through the design, to the test that proves it: one chain, checked end to end.",
+        "es": "De la promesa al contrato, a la operación, al camino por el diseño y a la prueba que lo demuestra: una sola cadena, comprobada de punta a punta."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

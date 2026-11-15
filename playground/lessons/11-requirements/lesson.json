@@ -1,0 +1,264 @@
+{
+  "title": {
+    "en": "11 · Requirements",
+    "es": "11 · Requisitos"
+  },
+  "version": 3,
+  "open": "shop.ds",
+  "steps": [
+    {
+      "write": {
+        "into": {
+          "find": "package shop",
+          "first": true
+        },
+        "text": "requirement SREQ-00001-1 {\n  title: The shop shall sell an item from the command line\n  status: draft\n}",
+        "file": "shop.ds"
+      },
+      "at": {
+        "find": "requirement SREQ-00001-1"
+      },
+      "text": {
+        "en": "A requirement is a promise, written once with an id that ends in its revision: `-1`. Written in the package, it is a promise of the whole system. The prefix is a convention; the level comes from where it is written.",
+        "es": "Un requisito es una promesa, que se escribe una vez con un identificador que termina en su revisión: `-1`. Escrito en el paquete, es una promesa de todo el sistema. El prefijo es una convención; el nivel sale de dónde se escribe."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "store/requirements.ds",
+        "end": true,
+        "text": "package shop {\n  module store {\n    requirement REQ-00001-1 {\n      @refines SREQ-00001-1\n      title: The cart shall total the price of its lines\n      status: draft\n    }\n  }\n}"
+      },
+      "at": {
+        "file": "store/requirements.ds",
+        "find": "requirement REQ-00001-1"
+      },
+      "text": {
+        "en": "A module's requirement details the system's; it lives with its module, in `store/requirements.ds`. `@refines` says which one. Nested inside it would say the same.",
+        "es": "El requisito de un módulo detalla el del sistema; vive con su módulo, en `store/requirements.ds`. `@refines` dice cuál. Anidado dentro de él diría lo mismo."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "diagrams/structure.ds",
+        "end": true,
+        "text": "diagram REQ_Shop {\n  kind: requirement\n  include: shop@*\n}"
+      },
+      "at": {
+        "pane": "REQ_Shop"
+      },
+      "text": {
+        "en": "The tree of promises. So far nothing in the design answers to them.",
+        "es": "El árbol de promesas. De momento nada del diseño responde a ellas."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "table:requirements"
+      },
+      "text": {
+        "en": "The same artefacts, as a table: every requirement with its level, what keeps it and what proves it, nested by what it refines. What nothing keeps yet shows `none` in orange. Click any id to go to where it is written.",
+        "es": "Los mismos artefactos, como tabla: cada requisito con su nivel, lo que lo cumple y lo que lo prueba, anidado según lo que refina. Lo que todavía no cumple nadie aparece como `none` en naranja. Haz clic en cualquier identificador para ir a donde está escrito."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "class Cart"
+      },
+      "text": {
+        "en": "Say which class keeps the module's promise. At the top of `Cart`, write the link, without its revision for now:\n`@requirement REQ-00001`",
+        "es": "Di qué clase cumple la promesa del módulo. Al principio de `Cart`, escribe el enlace, de momento sin su revisión:\n`@requirement REQ-00001`"
+      },
+      "solution": {
+        "into": {
+          "find": "class Cart",
+          "first": true
+        },
+        "text": "@requirement REQ-00001"
+      },
+      "done": {
+        "finding": "E-REF-UNPINNED"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "A link names one revision. When a requirement changes, its id changes, and every link that was not reviewed is left behind, visibly. Pin it:\n`@requirement REQ-00001-1`",
+        "es": "Un enlace nombra una revisión. Cuando un requisito cambia, cambia su identificador, y cada enlace que no se haya revisado se queda atrás, a la vista. Fíjalo:\n`@requirement REQ-00001-1`"
+      },
+      "solution": {
+        "replace": "@requirement REQ-00001\n",
+        "text": "@requirement REQ-00001-1\n"
+      },
+      "done": {
+        "clean": true,
+        "draws": {
+          "diagram": "REQ_Shop",
+          "text": "Cart"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "interface shell"
+      },
+      "text": {
+        "en": "The shell keeps the system's promise, so it answers to it too. A link goes inside the body of whatever answers: a package, a module, a class, a member, an interface, an operation, a sequence.",
+        "es": "El shell cumple la promesa del sistema, así que también responde a ella. Un enlace va dentro del cuerpo de lo que responde: un paquete, un módulo, una clase, un miembro, una interfaz, una operación, una secuencia."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      },
+      "write": {
+        "below": {
+          "find": "kind: cli"
+        },
+        "text": "@requirement SREQ-00001-1"
+      }
+    },
+    {
+      "write": [
+        {
+          "below": {
+            "find": "requirement SREQ-00001-1",
+            "after": "}"
+          },
+          "text": "constraint CST-00001-1: Every price shall be kept in cents",
+          "file": "shop.ds"
+        },
+        {
+          "into": {
+            "find": "dataclass Money",
+            "first": true
+          },
+          "text": "@constraint CST-00001-1"
+        }
+      ],
+      "at": {
+        "file": "shop.ds",
+        "find": "constraint CST-00001-1"
+      },
+      "text": {
+        "en": "A `constraint` is a rule that a whole category obeys rather than a promise of one feature. `Money` answers to it.",
+        "es": "Una `constraint` es una regla que cumple toda una categoría, más que la promesa de una funcionalidad. `Money` responde a ella."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "store/requirements.ds",
+        "find": "requirement REQ-00001-1"
+      },
+      "text": {
+        "en": "Requirements change. The cart now also applies its coupon: revise the requirement by changing its id to\n`REQ-00001-2`",
+        "es": "Los requisitos cambian. El carrito ahora también aplica su cupón: revisa el requisito cambiando su identificador por\n`REQ-00001-2`"
+      },
+      "solution": {
+        "replace": "requirement REQ-00001-1 {",
+        "text": "requirement REQ-00001-2 {"
+      },
+      "done": {
+        "finding": "W-REVISION-DRIFT"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "`Cart` still points at revision 1: the model tells you exactly what to review. Once it is reviewed, move the link on:\n`@requirement REQ-00001-2`",
+        "es": "`Cart` sigue apuntando a la revisión 1: el modelo te dice exactamente qué revisar. Una vez revisado, avanza el enlace:\n`@requirement REQ-00001-2`"
+      },
+      "solution": {
+        "replace": "@requirement REQ-00001-1",
+        "text": "@requirement REQ-00001-2"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "requirements.ds",
+          "end": true,
+          "text": "package shop {\n  requirement SREQ-00001-1 {\n    title: The shop shall sell an item from the command line\n    status: draft\n  }\n  constraint CST-00001-1: Every price shall be kept in cents\n  module store {\n    requirement REQ-00001-2 {\n      @refines SREQ-00001-1\n      title: The cart shall total the price of its lines\n      status: draft\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "  requirement SREQ-00001-1 {\n    title: The shop shall sell an item from the command line\n    status: draft\n  }\n  constraint CST-00001-1: Every price shall be kept in cents\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "store/requirements.ds",
+          "remove": true
+        }
+      ],
+      "at": {
+        "file": "requirements.ds",
+        "find": "requirement SREQ-00001-1"
+      },
+      "text": {
+        "en": "Where a requirement lives in the model comes from where it is written, the package or a module, never from its file. So all of them can move to one file, `requirements.ds`, for whoever reads them as a list: `module store { }` inside it keeps the store's requirement the store's. Same tree, same table, same links.",
+        "es": "Dónde vive un requisito en el modelo sale de dónde se escribe, el paquete o un módulo, nunca de su fichero. Así que todos pueden ir a un solo fichero, `requirements.ds`, para quien los lee como una lista: `module store { }` dentro de él mantiene el requisito del almacén como del almacén. El mismo árbol, la misma tabla, los mismos enlaces."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "REQ_Shop"
+      },
+      "text": {
+        "en": "Promises, who keeps them, and which revision each one has reviewed. Next: how each promise is proved.",
+        "es": "Las promesas, quién las cumple y qué revisión ha revisado cada uno. Lo siguiente: cómo se prueba cada promesa."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

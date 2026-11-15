@@ -1,0 +1,9 @@
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}
+
+diagram CL_Shop {
+  kind: class
+  include: shop@*
+}

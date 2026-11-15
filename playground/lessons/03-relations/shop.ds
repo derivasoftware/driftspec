@@ -1,0 +1,41 @@
+// Lesson 3 · Relations
+
+package shop {
+  module store {
+    class Cart {
+      - refs coupon: optional<Coupon>
+      - status: Status = Open
+      - owns lines: list<Line>
+      + total() -> int
+      + add(line: Line) -> none
+      - recalculate() -> none
+    }
+    class Line {
+      - count: int = 1
+      - price: Money
+      - gift: bool = false
+      - note: string = ""
+    }
+    dataclass Money {
+      - cents: int
+      - currency: string = "EUR"
+    }
+    enum Status { Open, Paid, Shipped }
+    dataclass Coupon {
+      - code: string
+      - percent: int
+    }
+    class PaymentMethod {
+      + abstract pay(amount: Money) -> bool
+    }
+    class Pricing {
+      + abstract rate() -> int
+      + apply(amount: Money) -> Money
+    }
+  }
+}
+
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}

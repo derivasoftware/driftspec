@@ -1,0 +1,7 @@
+package shop {
+  module billing {
+    + class Numbering {
+      + next() -> int
+    }
+  }
+}

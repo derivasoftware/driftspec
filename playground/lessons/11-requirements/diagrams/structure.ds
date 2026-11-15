@@ -1,0 +1,21 @@
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}
+
+diagram CL_Shop {
+  kind: class
+  include: shop@*
+}
+
+diagram HLD_Shop {
+  kind: class
+  include: shop@*
+  open:
+}
+
+diagram HLD_Store {
+  kind: class
+  include: shop@*
+  open: shop@store
+}

@@ -1,0 +1,35 @@
+// Lesson 13 · Failures
+
+package shop {
+  extern module bank {
+    class Gateway
+  }
+  interface shell {
+    kind: cli
+    @requirement SREQ-00001-1
+    operation buy(item: string) -> int : UC-00001-1 {
+      command: shop buy <item>
+      exit 0: default
+      exit 2: declined
+      exit 3: sold-out
+    }
+  }
+  sequence shell::buy {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) -> paid
+    return 0
+  }
+  sequence shell::buy / declined {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) / declined -> paid
+    return 2
+  }
+  sequence shell::buy / sold-out {
+    local cart: store::Cart
+    local line: store::Line
+    self -> cart.add(line) / sold-out
+    return 3
+  }
+}

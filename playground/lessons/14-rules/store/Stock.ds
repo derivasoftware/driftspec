@@ -1,0 +1,13 @@
+package shop {
+  module store {
+    class Stock {
+      + has(line: Line) -> bool
+      + reserve(line: Line) -> none fails SoldOut
+    }
+    sequence Stock::reserve {
+      opt nothing is left / empty {
+        fail SoldOut
+      }
+    }
+  }
+}

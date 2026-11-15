@@ -1,0 +1,21 @@
+// Lesson 2 · Members
+
+package shop {
+  module store {
+    class Cart {
+      - owns lines: list<Line>
+      + total() -> int
+    }
+    class Line {
+      - price: Money
+    }
+    dataclass Money {
+      - cents: int
+    }
+  }
+}
+
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}

@@ -1,0 +1,191 @@
+{
+  "title": {
+    "en": "4 · Modules and names",
+    "es": "4 · Módulos y nombres"
+  },
+  "version": 2,
+  "steps": [
+    {
+      "write": {
+        "file": "shop.ds",
+        "below": {
+          "find": "module store",
+          "after": "}"
+        },
+        "text": "module billing {\n  class Invoice {\n    - refs cart: store::Cart\n  }\n}"
+      },
+      "at": {
+        "file": "shop.ds",
+        "find": "refs cart: store::Cart"
+      },
+      "text": {
+        "en": "A second module, `billing`. From inside it, `store::Cart` names a class of another module. A name is looked for from where you are outwards; to reach into a sibling, you qualify it.",
+        "es": "Un segundo módulo, `billing`. Desde dentro de él, `store::Cart` nombra una clase de otro módulo. Un nombre se busca desde donde estás hacia fuera; para llegar a un módulo hermano, lo cualificas."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "shop.ds",
+        "end": true,
+        "text": "diagram CL_Shop {\n  kind: class\n  include: shop@*\n}"
+      },
+      "at": {
+        "pane": "CL_Shop",
+        "select": "shop@billing::Invoice"
+      },
+      "text": {
+        "en": "This diagram asks for the whole package, `shop@*`: each module is a box, and the reference from `Invoice` to `Cart` crosses from one box to the other.",
+        "es": "Este diagrama pide el paquete entero, `shop@*`: cada módulo es una caja, y la referencia de `Invoice` a `Cart` cruza de una caja a la otra."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Invoice"
+      },
+      "text": {
+        "en": "An invoice is paid with a card. Inside `Invoice`, write:\n`- refs payer: Card`",
+        "es": "Una factura se paga con una tarjeta. Dentro de `Invoice`, escribe:\n`- refs payer: Card`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Invoice"
+        },
+        "text": "- refs payer: Card"
+      },
+      "done": {
+        "finding": "W-REF-UNDECLARED"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "Not found. A bare `Card` is looked for in `billing`, then in `shop`, never inside a sibling module. Qualify it: `store::Card`.",
+        "es": "No se encuentra. Un `Card` sin cualificar se busca en `billing` y luego en `shop`, nunca dentro de un módulo hermano. Cualifícalo: `store::Card`."
+      },
+      "solution": {
+        "file": "shop.ds",
+        "replace": "payer: Card",
+        "text": "payer: store::Card"
+      },
+      "done": {
+        "clean": true,
+        "edge": {
+          "diagram": "CL_Shop",
+          "from": "shop@billing::Invoice",
+          "to": "shop@store::Card"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "shop.ds",
+        "into": {
+          "find": "module billing"
+        },
+        "text": "- class Numbering {\n  + next() -> int\n}"
+      },
+      "at": {
+        "file": "shop.ds",
+        "find": "class Numbering"
+      },
+      "text": {
+        "en": "A `-` before `class` keeps it private to its module: only `billing` may use `Numbering`.",
+        "es": "Un `-` delante de `class` la hace privada de su módulo: solo `billing` puede usar `Numbering`."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "class Cart"
+      },
+      "text": {
+        "en": "Try to reach it from the store anyway. At the top of `Cart`:\n`- refs numbering: billing::Numbering`",
+        "es": "Intenta alcanzarla de todos modos desde el almacén. Al principio de `Cart`:\n`- refs numbering: billing::Numbering`"
+      },
+      "solution": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Cart",
+          "first": true
+        },
+        "text": "- refs numbering: billing::Numbering"
+      },
+      "done": {
+        "finding": "W-NOT-VISIBLE"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "The engine refuses the shortcut: `Numbering` is private. Either the store stops using it, or billing offers it. Make it public: change the `-` before `class Numbering` to `+`.",
+        "es": "El motor rechaza el atajo: `Numbering` es privada. O el almacén deja de usarla, o la facturación la ofrece. Hazla pública: cambia el `-` delante de `class Numbering` por `+`."
+      },
+      "solution": {
+        "file": "shop.ds",
+        "replace": "- class Numbering",
+        "text": "+ class Numbering"
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "shop.ds",
+          "below": {
+            "find": "module billing",
+            "after": "}"
+          },
+          "text": "extern module bank {\n  class Gateway\n}"
+        },
+        {
+          "file": "shop.ds",
+          "into": {
+            "find": "class Card",
+            "first": true
+          },
+          "text": "- refs gateway: bank::Gateway"
+        }
+      ],
+      "at": {
+        "file": "shop.ds",
+        "find": "extern module bank"
+      },
+      "text": {
+        "en": "What lives outside your workspace is declared `extern`: a name with no obligations, so the model can point at it. The bank's gateway is not yours to design, and the diagrams leave it out.",
+        "es": "Lo que vive fuera de tu workspace se declara `extern`: un nombre sin obligaciones, para que el modelo pueda apuntar a él. La pasarela del banco no la diseñas tú, y los diagramas la dejan fuera."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

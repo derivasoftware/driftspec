@@ -1,0 +1,7 @@
+// Lesson 8 · State machines
+
+package shop {
+  extern module bank {
+    class Gateway
+  }
+}

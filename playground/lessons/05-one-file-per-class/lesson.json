@@ -1,0 +1,264 @@
+{
+  "title": {
+    "en": "5 · One class per file",
+    "es": "5 · Una clase por fichero"
+  },
+  "version": 1,
+  "open": "shop.ds",
+  "steps": [
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "package shop"
+      },
+      "text": {
+        "en": "Four lessons in, one file holds everything, and it will only grow. Before the shop gets behaviour, give it a shape you can find your way in: one class per file, the diagrams apart. Nothing in the model changes, and no diagram moves.",
+        "es": "Llevamos cuatro lecciones, un solo fichero lo guarda todo y no va a dejar de crecer. Antes de que la tienda tenga comportamiento, dale una forma en la que orientarse: una clase por fichero y los diagramas aparte. En el modelo no cambia nada, y ningún diagrama se mueve."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "store/Cart.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    class Cart {\n      - refs numbering: billing::Numbering\n      - shares stock: Stock\n      - refs coupon: optional<Coupon>\n      - status: Status = Open\n      - owns lines: list<Line>\n      + total() -> int\n      + add(line: Line) -> none\n      - recalculate() -> none\n    }\n  }\n}"
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    class Cart {\n      - refs numbering: billing::Numbering\n      - shares stock: Stock\n      - refs coupon: optional<Coupon>\n      - status: Status = Open\n      - owns lines: list<Line>\n      + total() -> int\n      + add(line: Line) -> none\n      - recalculate() -> none\n    }\n",
+          "text": ""
+        }
+      ],
+      "at": {
+        "file": "store/Cart.ds",
+        "find": "class Cart"
+      },
+      "text": {
+        "en": "A new file, `store/Cart.ds`, reopens the package and the module and holds one class; then the class leaves `shop.ds`. Its identity is still `shop@store::Cart`: an identity says where a thing is in the model, not in which file.",
+        "es": "Un fichero nuevo, `store/Cart.ds`, reabre el paquete y el módulo y guarda una clase; después la clase sale de `shop.ds`. Su identidad sigue siendo `shop@store::Cart`: una identidad dice dónde está algo en el modelo, no en qué fichero."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "tree"
+      },
+      "text": {
+        "en": "Your turn with `Line`. Create `store/Line.ds` with the + of the tree, write the package and the module around the class, and delete the class from `shop.ds`:\n`package shop {`\n`  module store {`\n`    class Line { ... }`\n`  }`\n`}`",
+        "es": "Te toca con `Line`. Crea `store/Line.ds` con el + del árbol, escribe el paquete y el módulo alrededor de la clase, y borra la clase de `shop.ds`:\n`package shop {`\n`  module store {`\n`    class Line { ... }`\n`  }`\n`}`"
+      },
+      "solution": [
+        {
+          "file": "store/Line.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    class Line {\n      - refs cart: Cart\n      - count: int = 1\n      - price: Money\n      - gift: bool = false\n      - note: string = \"\"\n    }\n  }\n}"
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    class Line {\n      - refs cart: Cart\n      - count: int = 1\n      - price: Money\n      - gift: bool = false\n      - note: string = \"\"\n    }\n",
+          "text": ""
+        }
+      ],
+      "done": {
+        "inFile": {
+          "entity": "shop@store::Line",
+          "file": "store/Line.ds"
+        },
+        "clean": true
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "store/Money.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    dataclass Money {\n      - cents: int\n      - currency: string = \"EUR\"\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    dataclass Money {\n      - cents: int\n      - currency: string = \"EUR\"\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "store/Status.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    enum Status { Open, Paid, Shipped }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    enum Status { Open, Paid, Shipped }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "store/Coupon.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    dataclass Coupon {\n      - code: string\n      - percent: int\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    dataclass Coupon {\n      - code: string\n      - percent: int\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "store/PaymentMethod.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    class PaymentMethod {\n      + abstract pay(amount: Money) -> bool\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    class PaymentMethod {\n      + abstract pay(amount: Money) -> bool\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "store/Card.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    class Card : PaymentMethod {\n      - refs gateway: bank::Gateway\n      + pay(amount: Money) -> bool\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    class Card : PaymentMethod {\n      - refs gateway: bank::Gateway\n      + pay(amount: Money) -> bool\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "store/Stock.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    class Stock {\n      + has(line: Line) -> bool\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    class Stock {\n      + has(line: Line) -> bool\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "store/Pricing.ds",
+          "end": true,
+          "text": "package shop {\n  module store {\n    class Pricing {\n      + abstract rate() -> int\n      + apply(amount: Money) -> Money\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    class Pricing {\n      + abstract rate() -> int\n      + apply(amount: Money) -> Money\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "billing/Invoice.ds",
+          "end": true,
+          "text": "package shop {\n  module billing {\n    class Invoice {\n      - refs cart: store::Cart\n      - refs payer: store::Card\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    class Invoice {\n      - refs cart: store::Cart\n      - refs payer: store::Card\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "billing/Numbering.ds",
+          "end": true,
+          "text": "package shop {\n  module billing {\n    + class Numbering {\n      + next() -> int\n    }\n  }\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "    + class Numbering {\n      + next() -> int\n    }\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "  module store {\n  }\n  module billing {\n  }\n",
+          "text": "",
+          "instant": true
+        }
+      ],
+      "at": {
+        "panel": "tree"
+      },
+      "text": {
+        "en": "The rest, the same way, in one go: a file per class in `store/` and `billing/`. `shop.ds` keeps what belongs to the whole package, like the bank it points at.",
+        "es": "El resto, igual, de una vez: un fichero por clase en `store/` y `billing/`. `shop.ds` se queda con lo que es de todo el paquete, como el banco al que apunta."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": [
+        {
+          "file": "diagrams/structure.ds",
+          "end": true,
+          "text": "diagram CL_Store {\n  kind: class\n  include: shop@store::*\n}\n\ndiagram CL_Shop {\n  kind: class\n  include: shop@*\n}",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "\ndiagram CL_Store {\n  kind: class\n  include: shop@store::*\n}\n",
+          "text": "",
+          "instant": true
+        },
+        {
+          "file": "shop.ds",
+          "replace": "\ndiagram CL_Shop {\n  kind: class\n  include: shop@*\n}\n",
+          "text": "",
+          "instant": true
+        }
+      ],
+      "at": {
+        "file": "diagrams/structure.ds",
+        "find": "diagram CL_Store"
+      },
+      "text": {
+        "en": "Diagrams are views, so they get a folder of their own.",
+        "es": "Los diagramas son vistas, así que tienen su propia carpeta."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "tree"
+      },
+      "text": {
+        "en": "Same model, same diagrams, same checks: only the files changed. From here on each lesson writes where things belong: a class's behaviour in its own file, diagrams in `diagrams/`, what concerns the whole package in `shop.ds`.",
+        "es": "El mismo modelo, los mismos diagramas, las mismas comprobaciones: solo han cambiado los ficheros. A partir de aquí cada lección escribe donde corresponde: el comportamiento de una clase en su propio fichero, los diagramas en `diagrams/` y lo que es de todo el paquete en `shop.ds`."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

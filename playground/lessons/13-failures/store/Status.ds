@@ -1,0 +1,5 @@
+package shop {
+  module store {
+    enum Status { Open, Paid, Shipped }
+  }
+}
