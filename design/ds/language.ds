@@ -1559,6 +1559,28 @@ package driftspec@ds {
             tests/integration/ds/render/test_state_view.cpp::TestSelfLoop.ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack
         }
       }
+      requirement REQ-00122-1 {
+        tags: language, diagrams, artefacts
+        status: approved
+        title: A requirement diagram shall draw whatever answers to a requirement, a member through the class or interface that holds it
+        text:
+          Every source of requires and constrained-by is drawn under the artefact: a package, a module,
+          an interface, a class, an enum, a function, a use case, a rule. A method, an attribute, an
+          operator or an operation answers through the class or the interface that holds it, and a
+          holder and its member that answer the same artefact draw one edge.
+        rationale:
+          Model audit 2026-11, finding G11 (DS-220): nine pieces answered to one requirement and the
+          diagram drew one, the class. The high-level design was the most affected: the box that says
+          which requirements of the system it realises was not drawn under them. Members are lifted so
+          the whole system's diagram stays readable.
+        verification VER-00138-1 {
+          title: Integration tests confirm whatever answers to a requirement is drawn and a member answers through its holder, once
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsViewOfAnyAnswer.WhateverAnswersToARequirementIsDrawnAndAMemberThroughItsHolder
+        }
+      }
       requirement REQ-00050-1 {
         tags: language, diagrams
         status: approved

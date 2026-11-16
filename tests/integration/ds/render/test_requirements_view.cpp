@@ -107,4 +107,47 @@ TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsIt
   EXPECT_TRUE(realised);
 }
 
+TEST(TestRequirementsViewOfAnyAnswer, WhateverAnswersToARequirementIsDrawnAndAMemberThroughItsHolder) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  const auto file = parser.parseText("shop.ds",
+                                     "package shop {\n"
+                                     "  @requirement SREQ-00001-1\n"
+                                     "  requirement SREQ-00001-1: The shop shall sell an item\n"
+                                     "  interface shell {\n"
+                                     "    kind: cli\n"
+                                     "    operation buy(item: string) -> int {\n"
+                                     "      @requirement SREQ-00001-1\n"
+                                     "    }\n"
+                                     "  }\n"
+                                     "  module store {\n"
+                                     "    function price(item: string) -> int {\n"
+                                     "      @requirement SREQ-00001-1\n"
+                                     "    }\n"
+                                     "    class Cart {\n"
+                                     "      @requirement SREQ-00001-1\n"
+                                     "      + add(item: string) -> bool {\n"
+                                     "        @requirement SREQ-00001-1\n"
+                                     "      }\n"
+                                     "    }\n"
+                                     "  }\n"
+                                     "}\n"
+                                     "diagram REQ_Shop {\n"
+                                     "  kind: requirement\n"
+                                     "  include: SREQ-00001-1\n"
+                                     "}\n");
+  ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
+  binder.bind(file);
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
+  std::set<std::string> nodes;
+  for (const auto& n : doc["nodes"]) nodes.insert(n["id"].get<std::string>());
+  EXPECT_EQ(nodes, (std::set<std::string>{"SREQ-00001-1", "shop", "shop@shell", "shop@store::price", "shop@store::Cart"}));
+  int toCart = 0;
+  for (const auto& e : doc["edges"]) toCart += e["to"] == "shop@store::Cart";
+  EXPECT_EQ(toCart, 1);  // the class and its method answer once
+}
+
 }  // namespace

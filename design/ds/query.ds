@@ -180,6 +180,7 @@ package driftspec@ds {
     // the artefacts it names and their umbrella: what refines, verifies and realises them
     class RequirementsFilter : IFilter {
       @requirement REQ-00050-1
+      @requirement REQ-00122-1
       - include_: std::vector<std::string>
       - design_: bool
       - verifications_: bool

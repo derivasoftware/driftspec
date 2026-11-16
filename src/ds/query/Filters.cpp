@@ -291,9 +291,13 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
           (design_ && (r.kind == "requires" || r.kind == "constrained-by") && selected.count(r.to) && !selected.count(r.from))) {
         const model::Entity* from = model.find(r.from);
         if (!from || from->expected) continue;
-        // a class or a use case answers to a requirement: both are drawn under it
-        if (from->kind != model::Kind::Class && from->kind != model::Kind::UseCase && !isArtefact(*from)) continue;
-        selected.insert(r.from);
+        // whatever answers to a requirement is drawn under it: a box, an interface, a function, a rule; a member or
+        // an operation is lifted to the class or the interface that holds it (DS-220)
+        if (from->kind == model::Kind::Method || from->kind == model::Kind::Attribute || from->kind == model::Kind::Operator ||
+            from->kind == model::Kind::Operation)
+          from = model.find(from->scope);
+        if (!from || from->expected || selected.count(from->id)) continue;
+        selected.insert(from->id);
         grew = true;
       }
     }
