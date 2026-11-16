@@ -52,6 +52,8 @@ const char* const kStyle = R"CSS(
   .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
   .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
   .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
   .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
   .pr-diagram .pr-abstract .pr-header { font-style: italic; }
   .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
@@ -291,11 +293,22 @@ std::string emitNode(const Placed& p, const std::string& px) {
         << "</text>";
     out << "<text class=\"pr-header\" x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << esc(n.label) << "</text>";
     ty += M.LINE_H;
-    for (const auto& section : n.sections) {
+    for (size_t s = 0; s < n.sections.size(); ++s) {
+      const auto& section = n.sections[s];
       const int sepY = ty - M.LINE_H + M.SECTION_GAP + 6;
       out << "<line class=\"pr-sep\" x1=\"" << r.x << "\" y1=\"" << sepY << "\" x2=\"" << r.x + r.w << "\" y2=\"" << sepY << "\"/>";
       ty += M.SECTION_GAP;
+      // what a closed box offers, all of one kind: each name with the badge a box of its own would carry (DS-244)
+      const std::string offered = s < n.sectionKinds.size() && !holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
       for (const auto& line : section) {
+        if (!offered.empty()) {
+          out << "<g class=\"pr-offered pr-classifier-" << offered << "\"><circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 6
+              << "\" cy=\"" << ty - 4 << "\" r=\"6\"/><text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 6 << "\" y=\"" << ty - 1
+              << "\" text-anchor=\"middle\">" << esc(badgeOf(offered, false)) << "</text></g>";
+          out << "<text x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << esc(line) << "</text>";
+          ty += M.LINE_H;
+          continue;
+        }
         // only class members are tokenised; an artefact's title is prose and stays plain
         const auto marked = n.sectionKinds.empty() ? std::make_pair(std::string(), esc(line)) : memberMarkup(line);
         if (!marked.first.empty()) {

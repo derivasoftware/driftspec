@@ -133,7 +133,7 @@ package driftspec@ds {
       @requirement REQ-00047-1
       @requirement REQ-00019-1
       @requirement REQ-00048-1
-      @requirement REQ-00064-4
+      @requirement REQ-00064-5
       @requirement REQ-00120-1
       - include_: std::vector<std::string>
       - exclude_: std::vector<std::string>

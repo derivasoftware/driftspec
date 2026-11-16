@@ -709,8 +709,11 @@ Rect Layout::sizeOf(const IrNode& node) const {
   int textW = static_cast<int>(node.label.size()) * M.CHAR_W + (node.kind == "box" ? M.BADGE_W : 0);
   textW = std::max(textW, static_cast<int>(node.stereotype.size()) * M.CHAR_W + 16);
   int sectionLines = 0;
-  for (const auto& s : node.sections) {
-    for (const auto& line : s) textW = std::max(textW, static_cast<int>(line.size()) * M.CHAR_W + M.DOT_W);
+  for (size_t i = 0; i < node.sections.size(); ++i) {
+    const auto& s = node.sections[i];
+    // a row of what a closed box offers carries a badge, wider than the dot of a member's visibility (DS-244)
+    const bool offered = i < node.sectionKinds.size() && !holdsMembers(node.sectionKinds[i]);
+    for (const auto& line : s) textW = std::max(textW, static_cast<int>(line.size()) * M.CHAR_W + (offered ? M.BADGE_W : M.DOT_W));
     sectionLines += static_cast<int>(s.size());
   }
   const int headerLines = node.stereotype.empty() ? 1 : 2;

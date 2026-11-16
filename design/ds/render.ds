@@ -126,6 +126,12 @@ package driftspec@ds {
       @requirement REQ-00006-1
     }
 
+    // whether a section of a box holds members, written as signatures; any other holds what a closed box
+    // offers, all of one kind (DS-244)
+    function holdsMembers(sectionKind: std::string) -> bool {
+      @requirement REQ-00064-5
+    }
+
     // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
     // another tool may hand ds; the document a diagram's formats write (DS-126)
     dataclass IrText {
@@ -177,7 +183,7 @@ package driftspec@ds {
         @requirement REQ-00057-1
       }
       - closeBoxes(ir: std::string, cut: axis::Cut, pretty: bool) -> std::string {
-        @requirement REQ-00064-4
+        @requirement REQ-00064-5
         @requirement REQ-00126-1
         @requirement REQ-00137-1
       }

@@ -1839,7 +1839,7 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestDependencyDrawing.OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclaredUseIsDrawn
         }
       }
-      requirement REQ-00064-4 {
+      requirement REQ-00064-5 {
         tags: language, diagrams, visibility
         status: approved
         title: A class diagram shall open the boxes it names and close the rest, each closed box showing only its public children
@@ -1854,8 +1854,12 @@ package driftspec@ds {
           REQ-00127-1, REQ-00128-1); alone it means what it meant.
           Revision 4 (DS-230): a lifted edge no longer says only that one box depends on the other;
           it is a structural bond or a use (REQ-00137-1).
+          Revision 5 (DS-244): a closed box lists what it offers as a class lists its members, a
+          compartment for each kind of thing in one order (packages, modules, interfaces, classes,
+          dataclasses, enums, functions), each by name and each marked with the badge a box of
+          its own would carry.
         rationale: Owner, 2026-11-05. Encapsulation has to be seen: which box holds what, and what each one offers.
-        verification VER-00069-3 {
+        verification VER-00069-4 {
           title: Integration tests confirm a class diagram opens the boxes it names and closes the rest, each closed box showing only its public children
           status: approved
           method: test
@@ -1863,6 +1867,7 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxesBehaviour.ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawing
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpenAloneClosesEveryBox
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AClosedBoxShowsOnlyItsPublicChildren
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AClosedBoxListsWhatItOffersByKindEachMarkedWithWhatItIs
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.EdgesLiftToTheBoxesThatAreSeenAndOnlyOnceForEachBond
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpeningABoxShowsTheWayToItAndClosesTheRest
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AnEdgeReachesInsideAnOpenBoxFromAClosedOne

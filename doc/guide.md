@@ -299,7 +299,10 @@ them. The vision (`vision.md`) says why; this says what.*
   - `cut: HLD_Till` takes the cut of that diagram, and what the diagram writes itself is added.
   - A diagram that writes none of them draws everything open. The outermost package is the
     drawing itself and never closes.
-  A closed box shows only its public children. An edge that loses an end to it is lifted, and
+  A closed box shows only its public children, as a class shows its members (DS-244): a
+  compartment for each kind of thing it offers, packages, modules, interfaces, classes,
+  dataclasses, enums and functions, each by name and with the badge a box of its own would
+  carry. An edge that loses an end to it is lifted, and
   between boxes it is one of two things (2026-11-16, DS-230): a structural bond, a solid arrow,
   when one owns, refers to, derives from or realises something of the other; a use, a dashed
   arrow, when it names a type of the other, calls it, sends it a message or declares its use.

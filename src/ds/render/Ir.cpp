@@ -91,6 +91,8 @@ IrDocument IrDocument::bundled() const {
   return out;
 }
 
+bool holdsMembers(const std::string& sectionKind) { return sectionKind == "attributes" || sectionKind == "methods"; }
+
 std::string badgeOf(const std::string& classifier, bool abstract) {
   static const std::map<std::string, std::string> kBadge = {{"class", "C"},       {"interface", "I"},  {"enum", "E"},
                                                             {"dataclass", "D"},   {"function", "f"},   {"struct", "S"},
