@@ -101,6 +101,7 @@ package driftspec@ds {
       + parent: std::string
       + title: std::string
       + href: std::string
+      + part: std::string                   // the part of the drawing it belongs to, in a drawing made of several
       + abstract: bool
       + refs: std::map<std::string, std::string>
       + sections: std::vector<std::vector<std::string>>
@@ -117,6 +118,7 @@ package driftspec@ds {
       + label: std::string
       + title: std::string
       + href: std::string
+      + part: std::string                   // the part of the drawing it belongs to, in a drawing made of several
       + dashed: bool
       + order: int
       + refs: std::map<std::string, std::string>
@@ -145,7 +147,10 @@ package driftspec@ds {
       + notice: std::string
       + owns nodes: std::vector<IrNode>
       + owns edges: std::vector<IrEdge>
+      // a drawing made of several, each drawn as itself and placed beside the last: a tour (DS-245)
+      + parts: std::vector<std::string>
       + static parse(json: std::string) -> IrDocument
+      + part(name: std::string) -> IrDocument
       + bundled() -> IrDocument
     }
 
@@ -197,6 +202,14 @@ package driftspec@ds {
         @requirement REQ-00130-1
         @requirement REQ-00134-1
       }
+      // the boxes that take part in a behaviour and its sequence, two parts of one drawing on one cut (DS-245)
+      - renderTour(tour: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00139-1
+      }
+      // a class diagram: the boxes a diagram takes, and the cut it is lifted onto
+      - renderBoxes(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00057-1
+      }
       - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00050-1
         @requirement REQ-00131-1
@@ -230,6 +243,23 @@ package driftspec@ds {
         -> renderState(diagram, pretty) -> ir
         return ir
       }
+      opt it is a tour / tour {
+        -> renderTour(diagram, pretty) -> ir
+        return ir
+      }
+      -> renderBoxes(diagram, pretty) -> ir
+      return ir
+    }
+
+    // a tour: the sequence of the same fields, and who takes part in it drawn as boxes on the same cut
+    sequence IrExport::renderTour {
+      -> renderSequence(tour, pretty) -> sequence
+      -> renderBoxes(boxes, pretty) -> drawn
+      return ir
+    }
+
+    sequence IrExport::renderBoxes {
+      local filter: query::ClassFilter
       -> query::filterFor(diagram) -> made
       -> filter.boxes(model_) -> selected
       -> filter.containers(model_, selected) -> containers

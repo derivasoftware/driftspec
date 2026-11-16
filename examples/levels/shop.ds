@@ -186,3 +186,8 @@ diagram SEQ_Sales {                      // the scenario of a box
   kind: sequence
   include: shop@sales
 }
+
+diagram TOUR_Purchase {                  // a tour of the high level alone: its boxes, joined by what it says
+  kind: tour
+  include: UC-00001-1
+}

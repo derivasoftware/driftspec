@@ -59,6 +59,13 @@ std::string classifierOf(const model::Entity& e) {
   return e.has("dataclass") ? "dataclass" : "class";
 }
 
+/// How deep a diagram follows the calls: `depth: n`, `*` for every level (the guard against recursion is what ends
+/// it), none when it is not written or is no number (a finding).
+int levelsOf(const model::Entity& diagram) {
+  const std::string written = diagram.field("depth");
+  return written == "*" ? 1000 : std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
+}
+
 std::string edgeKind(const std::string& relation) {
   if (relation == "inherits") return "inheritance";
   if (relation == "owns") return "composition";
@@ -83,8 +90,54 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   const model::Entity* diagram = model_.find(diagramId);
   if (!diagram || diagram->kind != model::Kind::Diagram) return "";
   if (diagram->field("kind") == "sequence") return renderSequence(*diagram, pretty);
+  if (diagram->field("kind") == "tour") return renderTour(*diagram, pretty);
   if (diagram->field("kind") == "requirement") return renderRequirements(*diagram, pretty);
   if (diagram->field("kind") == "state") return renderState(*diagram, pretty);
+  return renderBoxes(*diagram, pretty);
+}
+
+std::string IrExport::renderTour(const model::Entity& tour, bool pretty) const {
+  // the sequence, as a sequence diagram of the same fields draws it
+  const nlohmann::json sequence = nlohmann::json::parse(renderSequence(tour, false));
+  // who takes part, drawn as boxes on the same cut: each lifeline is one box, with the relations between them
+  const std::set<std::string> who = query::SequenceFilter(split(tour.field("include"), ','), levelsOf(tour), tour.id).select(model_);
+  model::Entity boxes = tour;
+  boxes.fields["kind"] = "class";
+  std::vector<std::string> taken, closed;
+  for (const auto& id : who) {
+    taken.push_back(id);
+    const model::Entity* e = model_.find(id);
+    if (!e || (e->kind != model::Kind::Package && e->kind != model::Kind::Module)) continue;
+    // a box takes part as one box, with everything it holds: what it holds is not drawn, and its relations are
+    // lifted to it. That is so whether the cut closes it or a scenario written between boxes names it
+    closed.push_back(id);
+    if (e->kind == model::Kind::Package) taken.push_back(id + "@*");
+  }
+  boxes.fields["include"] = join(taken, ", ");
+  boxes.fields.erase("open");
+  boxes.fields.erase("cut");
+  boxes.fields.erase("close");
+  if (!closed.empty()) boxes.fields["close"] = join(closed, ", ");
+  if (!tour.fields.count("hide") && !tour.fields.count("show")) boxes.fields["hide"] = "fields, methods";
+  const nlohmann::json drawn = nlohmann::json::parse(renderBoxes(boxes, false));
+  // one document: its parts named in the order they are drawn, each node and edge saying which one it is of
+  nlohmann::json out = {{"ir", 1}, {"title", tour.name}, {"parts", {"boxes", "sequence"}}};
+  out["nodes"] = nlohmann::json::array();
+  out["edges"] = nlohmann::json::array();
+  for (const auto& part : {std::make_pair("boxes", &drawn), std::make_pair("sequence", &sequence)}) {
+    for (const char* list : {"nodes", "edges"}) {
+      for (nlohmann::json item : (*part.second)[list]) {
+        item["part"] = part.first;
+        out[list].push_back(item);
+      }
+    }
+  }
+  if (sequence.contains("notice")) out["notice"] = sequence["notice"];
+  return pretty ? out.dump(2) : out.dump();
+}
+
+std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) const {
+  const model::Entity* diagram = &entity;
   // `show` adds optional detail (ownership, multiplicity, operators, notes, derived-stereotypes);
   // `hide` removes compartments (fields, methods). Nothing written = members only.
   const std::vector<std::string> showList = split(diagram->field("show"), ',');
@@ -566,9 +619,7 @@ struct SequenceBuilder {
 }  // namespace
 
 std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) const {
-  const std::string written = diagram.field("depth");
-  // `*` is every level: the guard against recursion is what ends it (a value that is no number is a finding)
-  const int depth = written == "*" ? 1000 : std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
+  const int depth = levelsOf(diagram);
   // the behaviours selected, by subject id, by sequence id, or a namespace: the query's filter (DS-127)
   std::vector<const model::Entity*> selected;
   std::map<const model::Entity*, std::string> pathOf;  // a named branch asked for: the path of that behaviour

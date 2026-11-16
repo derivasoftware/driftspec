@@ -283,7 +283,8 @@ std::unique_ptr<IFilter> filterFor(const model::Entity& diagram) {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
   const std::string kind = diagram.field("kind");
   const std::vector<std::string> include = split(diagram.field("include"), ',');
-  if (kind == "sequence") return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.id));
+  if (kind == "sequence" || kind == "tour")
+    return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.id));
   if (kind == "state") return std::unique_ptr<IFilter>(new StateFilter(include));
   if (kind == "requirement") {
     const std::vector<std::string> shown = split(diagram.field("show"), ',');

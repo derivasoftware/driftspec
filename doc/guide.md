@@ -278,7 +278,7 @@ them. The vision (`vision.md`) says why; this says what.*
 
 ## 5. Diagrams
 
-- `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
+- `diagram CL_X { kind: class | sequence | requirement | state | interface | tour; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
 - `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
   (`ds@*`), read alike by every kind of diagram; extern entities only when
   named. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
@@ -317,6 +317,11 @@ them. The vision (`vision.md`) says why; this says what.*
   is kept around what crosses inside it. In a requirement diagram what answers to a requirement
   is the box that stands for it. `cut: HLD_Shop` in either makes them agree with the boxes
   drawn. `level: module` is gone: it is written `close: module`.
+- **A tour (2026-11-16, DS-245)** is one diagram that relates a behaviour to the boxes it crosses:
+  `diagram TOUR_Buy { kind: tour; include: shop@shell::buy; close: module }`, with the fields of
+  a sequence diagram. It draws two parts on one cut: who takes part, as boxes with the relations
+  between them, and the sequence. Each lifeline is one box of the other part. The playground
+  plays it step by step: the message in the sequence, and the two boxes it joins.
 - **The calls a sequence follows (DS-231)** are a cut of their own, written the same way.
   - `fold:` names the calls that are not followed: `fold: shop@warehouse` every call that lands
     in that box, `fold: shop@sales@till::Till::charge` one operation. Every other call is followed.

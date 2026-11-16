@@ -27,6 +27,10 @@ class IrExport {
 
  private:
   std::string renderSequence(const model::Entity& diagram, bool pretty) const;
+  /// A tour (DS-245): the boxes that take part in a behaviour and its sequence, two parts of one drawing on one cut.
+  std::string renderTour(const model::Entity& tour, bool pretty) const;
+  /// A class diagram: the boxes a diagram takes, and the cut it is lifted onto.
+  std::string renderBoxes(const model::Entity& diagram, bool pretty) const;
   std::string closeBoxes(const std::string& ir, const axis::Cut& cut, bool pretty) const;
   std::string renderState(const model::Entity& diagram, bool pretty) const;
   std::string renderRequirements(const model::Entity& diagram, bool pretty) const;

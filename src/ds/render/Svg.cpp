@@ -748,7 +748,45 @@ std::string sequenceSvg(const IrDocument& doc) {
 
 }  // namespace
 
+namespace {
+/// Several drawings in one (DS-245): each keeps its own drawing and is placed beside the last, or under it when
+/// the width asked for does not hold them side by side. Each is a nested svg that says which part it is.
+std::string besideEachOther(const std::vector<std::pair<std::string, std::string>>& drawings, int maxWidth) {
+  static const std::regex size(R"re(width="([0-9.]+)" height="([0-9.]+)")re");
+  const int gap = 32;
+  std::vector<std::pair<double, double>> sizes;
+  double all = 0;
+  for (const auto& drawing : drawings) {
+    std::smatch m;
+    const std::string head = drawing.second.substr(0, drawing.second.find('>'));
+    sizes.push_back(std::regex_search(head, m, size) ? std::make_pair(std::stod(m[1].str()), std::stod(m[2].str()))
+                                                     : std::make_pair(0.0, 0.0));
+    all += sizes.back().first + (all > 0 ? gap : 0);
+  }
+  const bool under = maxWidth > 0 && all > maxWidth;
+  double width = 0, height = 0;
+  std::string inside;
+  for (size_t i = 0; i < drawings.size(); ++i) {
+    const double x = under || width == 0 ? 0 : width + gap, y = under && height > 0 ? height + gap : 0;
+    std::string placed = drawings[i].second;
+    placed.insert(placed.find("<svg ") + 5, "x=\"" + num(x) + "\" y=\"" + num(y) + "\" data-part=\"" + drawings[i].first + "\" ");
+    inside += placed;
+    width = under ? std::max(width, sizes[i].first) : x + sizes[i].first;
+    height = under ? y + sizes[i].second : std::max(height, sizes[i].second);
+  }
+  std::ostringstream out;
+  out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " << num(width) << " " << num(height) << "\" width=\"" << num(width)
+      << "\" height=\"" << num(height) << "\" class=\"pr-parts\">" << inside << "</svg>";
+  return out.str();
+}
+}  // namespace
+
 std::string Svg::render(const IrDocument& doc, int maxWidth) const {
+  if (!doc.parts.empty()) {
+    std::vector<std::pair<std::string, std::string>> drawings;
+    for (const auto& name : doc.parts) drawings.push_back({name, render(doc.part(name), maxWidth)});
+    return besideEachOther(drawings, maxWidth);
+  }
   for (const auto& n : doc.nodes) {
     if (n.kind == "lifeline") return sequenceSvg(doc);
   }
