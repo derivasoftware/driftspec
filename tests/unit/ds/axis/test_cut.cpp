@@ -193,4 +193,14 @@ TEST(TestStandsAmong, WhatStandsForAnIdIsTheOutermostOfTheBoxesAroundItOrNothing
   EXPECT_EQ(ds::axis::standsAmong("shop@warehouse@stock::Shelf", boxes), "");      // none of them holds it
 }
 
+/// bondOf alone: the two things a relation reads as between boxes.
+TEST(TestBondOf, ARelationReadsBetweenBoxesAsAStructuralBondOrAUseOrNothing) {
+  for (const char* structural : {"owns", "refs", "shares", "inherits", "realises"})
+    EXPECT_EQ(ds::axis::bondOf(structural), "structural") << structural;
+  for (const char* use : {"uses", "bounded-by", "consumes", "calls", "sends", "couples-transient", "couples-structural"})
+    EXPECT_EQ(ds::axis::bondOf(use), "uses") << use;
+  for (const char* none : {"contains", "refines", "verifies", "requires", "behaviour-of", "expands-to"})
+    EXPECT_EQ(ds::axis::bondOf(none), "") << none;
+}
+
 }  // namespace

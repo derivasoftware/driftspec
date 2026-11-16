@@ -29,7 +29,7 @@ bool drawable(const model::Entity& e) { return isBox(e) || isContainer(e); }
 /// The relations a class diagram draws as edges, the ones its neighbours follow.
 bool drawnAsEdge(const std::string& relation) {
   return relation == "inherits" || relation == "owns" || relation == "refs" || relation == "shares" || relation == "uses" ||
-         relation == "bounded-by" || relation == "realises" || relation == "consumes";
+         relation == "bounded-by" || relation == "realises" || relation == "consumes" || relation == "sends";
 }
 
 int number(const std::string& written, int every) {

@@ -18,8 +18,13 @@ package driftspec@ds {
 
     // the cut of a diagram (DS-229): what closes and what opens. close: draws the line (a name, a
     // prefix, a kind of box), open: goes through it, cut: adds another diagram's
+    // how a relation reads between two boxes once lifted: a structural bond, a use, or nothing (DS-230)
+    function bondOf(relation: std::string) -> std::string {
+      @requirement REQ-00137-1
+    }
+
     class Cut {
-      @requirement REQ-00064-3
+      @requirement REQ-00064-4
       @requirement REQ-00126-1
       @requirement REQ-00127-1
       @requirement REQ-00128-1

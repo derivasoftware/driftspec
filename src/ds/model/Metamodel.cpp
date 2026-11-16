@@ -253,6 +253,7 @@ std::vector<RelationSpec> buildRelations() {
       rel("on", "a transition fires on an operation", {St}, {Me, Op}),
       rel("does", "a transition runs an operation", {St}, {Me, Op}),
       rel("consumes", "a box depends on an interface another box offers (@uses)", {P, M, Cl}, {I}),
+      rel("sends", "in a scenario written between them, one participant sends a message to another", {P, M, I, Cl}, {P, M, I, Cl, E, F}),
       rel("refers", "an annotation the language gives no meaning to", {}, {}),
   };
 }

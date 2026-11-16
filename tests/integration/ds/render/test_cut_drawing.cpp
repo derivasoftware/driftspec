@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
@@ -124,6 +125,61 @@ TEST_F(TestCutDrawing, TheQueryShowsWhatTheDrawingDrawsUnderEveryCut) {
     const auto filter = ds::query::filterFor(*model.find(std::string("diagram:") + name));
     EXPECT_EQ(filter->select(model), ids(diagram(name))) << name;
   }
+}
+
+TEST_F(TestCutDrawing, ARelationLiftedOntoClosedBoxesIsOneOfTwoBondsAndOneArrowOfEachAtMost) {
+  const auto ir = diagram("HLD_Packages");  // close: package
+  std::multiset<std::string> salesToWarehouse, shellToSales;
+  for (const auto& e : ir["edges"]) {
+    if (e["from"] == "shop@sales" && e["to"] == "shop@warehouse") salesToWarehouse.insert(e["kind"].get<std::string>());
+    if (e["from"] == "shop@shell" && e["to"] == "shop@sales") shellToSales.insert(e["kind"].get<std::string>());
+  }
+  // the desk keeps a reference to the counter, and calls it: a structural bond and a use, once each
+  EXPECT_EQ(salesToWarehouse, (std::multiset<std::string>{"association", "dependency"}));
+  EXPECT_EQ(shellToSales, (std::multiset<std::string>{"dependency"}));  // the shell only calls the desk
+  for (const auto& e : ir["edges"]) EXPECT_TRUE(e["refs"]["bond"] == "structural" || e["refs"]["bond"] == "uses");
+}
+
+TEST_F(TestCutDrawing, WithTheBoxesOpenEveryRelationKeepsItsOwnKind) {
+  const auto ir = diagram("CL_Everything");
+  std::set<std::string> kinds;
+  for (const auto& e : ir["edges"]) kinds.insert(e["kind"].get<std::string>());
+  EXPECT_EQ(kinds.count("composition"), 1U);  // the desk owns its price list
+  EXPECT_EQ(kinds.count("aggregation"), 1U);  // and refers to the counter
+  EXPECT_EQ(kinds.count("association"), 0U);  // nothing is lifted
+}
+
+/// A design with only its high level: three boxes and one scenario between them (DS-230).
+TEST(TestWrittenLevel, AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfTheBoxes) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("shop.ds",
+                               "package shop {\n"
+                               "  usecase UC-00001-1 buy(item: string) -> int {\n"
+                               "    title: Buy an item\n"
+                               "    outcome default: bought\n"
+                               "  }\n"
+                               "  package sales { }\n"
+                               "  package warehouse { }\n"
+                               "  package bank { }\n"
+                               "  sequence UC-00001-1 {\n"
+                               "    -> sales.sell(item)\n"
+                               "    sales -> warehouse.take(item)\n"
+                               "    sales -> bank.pay(price)\n"
+                               "  }\n"
+                               "}\n"
+                               "diagram HLD {\n  kind: class\n  include: shop@*\n}\n"));
+  const auto steps = ds::check::steps();
+  ds::check::Checker(model, steps).run(binder);
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:HLD", false));
+  std::set<std::pair<std::string, std::string>> arrows;
+  for (const auto& e : ir["edges"]) {
+    EXPECT_EQ(e["kind"], "dependency");  // a message is a use
+    arrows.insert({e["from"].get<std::string>(), e["to"].get<std::string>()});
+  }
+  // whoever asks for the use case is outside the design: no arrow into the sales from nowhere
+  EXPECT_EQ(arrows, (std::set<std::pair<std::string, std::string>>{{"shop@sales", "shop@warehouse"}, {"shop@sales", "shop@bank"}}));
 }
 
 }  // namespace

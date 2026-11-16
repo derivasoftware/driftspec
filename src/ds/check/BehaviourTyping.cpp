@@ -203,6 +203,15 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   if (!type || type->expected) return;  // reported once the type is declared (R6)
   msg->fields["type"] = typeId;
   if (message.to != "self") couple(*seq, *type, transient);
+  // a message written between two participants says that the one uses the other (DS-230): the sender written,
+  // or the box a scenario is of; whoever asks for a use case is outside the design
+  std::string sender = msg->field("from-type");
+  if (sender.empty() && box && subject->kind != model::Kind::UseCase) sender = subject->id;
+  if (!sender.empty() && sender != typeId) {
+    bool said = false;
+    for (const auto& r : model_->index().from(sender)) said = said || (r.kind == "sends" && r.to == typeId);
+    if (!said) model_->relate({"sends", sender, typeId, message.location, ""});
+  }
   const std::string opId = typeId + "::" + message.op;
   const model::Entity* op = resolver_->member(typeId, message.op);  // its own, or inherited
   const bool aBox = type->kind == model::Kind::Package || type->kind == model::Kind::Module;

@@ -152,6 +152,8 @@ them. The vision (`vision.md`) says why; this says what.*
     has to declare its use, and it expands to the behaviour below. With no such operation it is a
     label, listed as coverage (`W-MESSAGE-NO-OPERATION`) and never a finding: that level is not
     written yet.
+  A message written between two participants says that the sender uses the receiver (`sends`,
+  DS-230): a design that has only its high level draws its boxes connected.
   Either level stands alone. Where both are written, the high level and the detail lifted onto
   its boxes (`close: package`) draw the same crossings.
 - **The two levels are held to each other (2026-11-16, DS-233).** The level below a scenario of a
@@ -297,8 +299,11 @@ them. The vision (`vision.md`) says why; this says what.*
   - `cut: HLD_Till` takes the cut of that diagram, and what the diagram writes itself is added.
   - A diagram that writes none of them draws everything open. The outermost package is the
     drawing itself and never closes.
-  A closed box shows only its public children. An edge that loses an end to it says only that
-  one box depends on the other, and what stays inside it is not drawn. A behaviour that crosses
+  A closed box shows only its public children. An edge that loses an end to it is lifted, and
+  between boxes it is one of two things (2026-11-16, DS-230): a structural bond, a solid arrow,
+  when one owns, refers to, derives from or realises something of the other; a use, a dashed
+  arrow, when it names a type of the other, calls it, sends it a message or declares its use.
+  Each is drawn once between two boxes, and what stays inside a closed box is not drawn. A behaviour that crosses
   boxes counts too, so an interface reaches what handles it: the component view is derived,
   never written. `ds query <workspace> shows <diagram>` answers with the same cut. A pattern
   that names no box, or a `cut:` that names no diagram, is `W-DIAGRAM-UNDECLARED`.

@@ -966,6 +966,29 @@ package driftspec@ds {
               tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioWhoseLevelBelowIsNotWrittenIsHeldToNothing
           }
         }
+        requirement REQ-00138-1 {
+          tags: language, behaviour, levels, relations
+          status: approved
+          title: A message written between two participants shall say that the sender uses the receiver
+          text:
+            sales -> warehouse.take(item) gives the relation sends from the sales to the warehouse,
+            once, however many messages say it. The sender is the participant written before the
+            arrow, or the box a scenario is of; whoever asks for a use case is outside the design
+            and gives none. Between boxes it is a use (REQ-00137-1), so a design that has only its
+            high level draws its boxes connected by what its scenarios say.
+          rationale:
+            Owner, 2026-11-16 (DS-230, DS-232). A design with only its high level drew its boxes
+            unconnected, though its scenarios said who calls whom: the drawing of the boxes knew
+            only the relations of the detail.
+          verification VER-00154-1 {
+            title: Integration tests confirm a message written between two participants gives one sends relation from its sender, and that a design with only its high level draws its boxes connected
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AMessageWrittenBetweenTwoParticipantsSaysTheSenderUsesTheReceiver
+              tests/integration/ds/render/test_cut_drawing.cpp::TestWrittenLevel.AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfTheBoxes
+          }
+        }
         requirement REQ-00059-1 {
           tags: language, lld, sequence
           status: approved
@@ -1816,21 +1839,23 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestDependencyDrawing.OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclaredUseIsDrawn
         }
       }
-      requirement REQ-00064-3 {
+      requirement REQ-00064-4 {
         tags: language, diagrams, visibility
         status: approved
         title: A class diagram shall open the boxes it names and close the rest, each closed box showing only its public children
         text:
           open: shop@store@stock opens that box and the way to it; open: written alone closes every
           other box, and open: with nothing after it closes them all; a diagram that writes no cut
-          draws everything open. An edge that loses an end to a closed box says only that one box
-          depends on the other, once, and what stays inside a closed box is not drawn. A behaviour
-          that crosses boxes counts too, so an interface reaches what handles it though no type says
-          so. The component view is derived, never written.
+          draws everything open. An edge that loses an end to a closed box is lifted to it, and what
+          stays inside a closed box is not drawn. A behaviour that crosses boxes counts too, so an
+          interface reaches what handles it though no type says so. The component view is derived,
+          never written.
           Revision 3 (DS-229): open: is one of the ways a cut is written (REQ-00126-1,
           REQ-00127-1, REQ-00128-1); alone it means what it meant.
+          Revision 4 (DS-230): a lifted edge no longer says only that one box depends on the other;
+          it is a structural bond or a use (REQ-00137-1).
         rationale: Owner, 2026-11-05. Encapsulation has to be seen: which box holds what, and what each one offers.
-        verification VER-00069-2 {
+        verification VER-00069-3 {
           title: Integration tests confirm a class diagram opens the boxes it names and closes the rest, each closed box showing only its public children
           status: approved
           method: test
@@ -1838,7 +1863,7 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxesBehaviour.ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawing
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpenAloneClosesEveryBox
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AClosedBoxShowsOnlyItsPublicChildren
-            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.EdgesLiftToTheBoxesThatAreSeenAndOnlyOnce
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.EdgesLiftToTheBoxesThatAreSeenAndOnlyOnceForEachBond
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpeningABoxShowsTheWayToItAndClosesTheRest
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AnEdgeReachesInsideAnOpenBoxFromAClosedOne
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADiagramThatDoesNotSayOpenDrawsEverythingOpen
@@ -1913,6 +1938,32 @@ package driftspec@ds {
           tests:
             tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ADiagramDrawsTheCutItTakesFromAnotherAndAddsItsOwn
             tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ACutTakenFromADiagramNobodyDeclaresIsAFindingAndStillDraws
+        }
+      }
+      requirement REQ-00137-1 {
+        tags: language, diagrams, cut, relations
+        status: approved
+        title: A relation lifted onto a closed box shall read as one of two bonds, structural or uses, with one arrow of each at most between two boxes
+        text:
+          Between classes a relation keeps its own kind: composition, aggregation, inheritance,
+          realisation, use. When an end of it is lost to a closed box it is lifted, and between
+          boxes it is one of two things. A structural bond: one owns, refers to, derives from or
+          realises something of the other; drawn as a solid arrow. A use: it names a type of the
+          other, calls it, sends it a message or declares its use; drawn as a dashed arrow. Each
+          is drawn once between two boxes, however many relations of the detail make it, and what
+          stays inside a closed box is not drawn. With the boxes open nothing changes.
+        rationale:
+          Owner, 2026-11-15 and 16 (DS-230, model audit findings I2 and G1). Relations are never
+          merged: using is not composing, aggregating or inheriting, and a closed box turned them
+          all into one dependency. Asked which kinds to keep once lifted: use and structural,
+          nothing more. A reference a class keeps to something of another box is structural.
+        verification VER-00153-1 {
+          title: Integration tests confirm a relation lifted onto closed boxes is a structural bond or a use, drawn once each, and that with the boxes open every relation keeps its own kind
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ARelationLiftedOntoClosedBoxesIsOneOfTwoBondsAndOneArrowOfEachAtMost
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.WithTheBoxesOpenEveryRelationKeepsItsOwnKind
         }
       }
       requirement REQ-00062-1 {
