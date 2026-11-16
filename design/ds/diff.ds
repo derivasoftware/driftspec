@@ -34,6 +34,7 @@ package driftspec@ds {
       method: test
       tests:
         tests/integration/ds/diff/test_diff.cpp::TestDiff.AMovedOrReorderedDeclarationIsNoChange
+        tests/integration/ds/diff/test_diff.cpp::TestDiff.AStepInsertedInABehaviourIsOneStepAddedAndMovesNoOther
         tests/integration/ds/diff/test_diff.cpp::TestDiff.AddedRemovedAndChangedByIdentity
         tests/integration/ds/diff/test_diff.cpp::TestDiff.ARenameIsRecognisedByShapeAndByWhoFollows
         tests/integration/ds/diff/test_diff.cpp::TestDiff.AnArtefactChangedWithoutANewRevisionIsAFinding

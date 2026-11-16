@@ -142,6 +142,39 @@ TEST_F(TestDiff, ARenameIsRecognisedByShapeAndByWhoFollows) {
   EXPECT_EQ(find(d, "changed", "p@m::Terminal::render"), nullptr);  // and a move is not a change
 }
 
+TEST_F(TestDiff, AStepInsertedInABehaviourIsOneStepAddedAndMovesNoOther) {
+  const std::string shape = R"(package p {
+  module m {
+    class Stock {
+      + has(item: string) -> bool
+      + reserve(item: string) -> none
+      + log(item: string) -> none
+    }
+    class Cart {
+      - stock: Stock
+      + add(item: string) -> bool
+    }
+    sequence Cart::add {
+STEPS    }
+  }
+})";
+  const auto with = [&shape](const std::string& steps) { return std::string(shape).replace(shape.find("STEPS"), 5, steps); };
+  const std::string steps = "      self -> stock.has(item) -> ok\n      self -> stock.reserve(item)\n      return ok\n";
+  const auto d = ds::diff::Diff::compare(load(with(steps)), load(with("      self -> stock.log(item)\n" + steps)));
+  int added = 0, removed = 0, changed = 0;
+  for (const auto& c : d.changes) {
+    if (c.what != "entity") continue;
+    added += c.kind == "added";
+    removed += c.kind == "removed";
+    changed += c.kind == "changed";
+  }
+  EXPECT_EQ(added, 1);
+  EXPECT_EQ(removed, 0);
+  EXPECT_EQ(changed, 0);
+  EXPECT_NE(find(d, "added", "calls p@m::Cart::add::sequence::m0 -> p@m::Stock::log"), nullptr);
+  EXPECT_EQ(find(d, "removed", "calls"), nullptr);  // has and reserve are still called, by the steps they were
+}
+
 TEST_F(TestDiff, AnArtefactChangedWithoutANewRevisionIsAFinding) {
   const std::string after = R"(package p {
   module m {
