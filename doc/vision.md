@@ -121,8 +121,9 @@ in Plane, epics DS-206 and DS-205.
 2. **The mechanism punishes inconsistency, never missing information.** A
    finding needs two written facts that clash; one fact and a gap is coverage,
    asked for apart. The structure and the behaviour are written as far as it
-   pays, and the rules sit on top giving consistency to what is there. Six
-   warnings break this today (DS-216).
+   pays, and the rules sit on top giving consistency to what is there. What is
+   not yet written is coverage, kept apart from the findings and answered by
+   `ds query <workspace> coverage` (DS-216).
 3. **Nesting and annotating are the same relation.** Two syntaxes that only
    change where an artefact is filed (DS-217).
 4. **Relations are never merged.** Using, composing, aggregating and

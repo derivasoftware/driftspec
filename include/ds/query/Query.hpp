@@ -44,15 +44,16 @@ class Query : public IQuery {
   /// a missing identity or one the model does not declare yields one answer of kind "error".
   std::vector<Answer> ask(const std::string& question, const std::string& subject) const override;
 
-  std::vector<Answer> diagrams() const;                          ///< every diagram, with its kind
-  std::vector<Answer> entities(const std::string& scope) const;  ///< the direct members of a scope ("" = the top level)
-  std::vector<Answer> relations(const std::string& id) const;    ///< every relation touching `id`, with its direction
-  std::vector<Answer> artefacts(const std::string& id) const;    ///< the requirements and constraints on `id`, and what verifies them
-  std::vector<Answer> behaviours(const std::string& id) const;   ///< the sequences and state machines of a method or class
-  std::vector<Answer> failures(const std::string& id) const;     ///< the failures escaping an operation, by where each starts
-  std::vector<Answer> shows(const std::string& diagram) const;   ///< the entities a diagram takes, by the filter of its kind
-  std::vector<Answer> findings(const std::string& file) const;   ///< the findings of a file ("" = all)
-  std::vector<Answer> coupling() const;                          ///< what each behaviour touches outside its module, and how
+  std::vector<Answer> diagrams() const;                             ///< every diagram, with its kind
+  std::vector<Answer> entities(const std::string& scope) const;     ///< the direct members of a scope ("" = the top level)
+  std::vector<Answer> relations(const std::string& id) const;       ///< every relation touching `id`, with its direction
+  std::vector<Answer> artefacts(const std::string& id) const;       ///< the requirements and constraints on `id`, and what verifies them
+  std::vector<Answer> behaviours(const std::string& id) const;      ///< the sequences and state machines of a method or class
+  std::vector<Answer> failures(const std::string& id) const;        ///< the failures escaping an operation, by where each starts
+  std::vector<Answer> shows(const std::string& diagram) const;      ///< the entities a diagram takes, by the filter of its kind
+  std::vector<Answer> findings(const std::string& file) const;      ///< the findings of a file ("" = all)
+  std::vector<Answer> coverage(const std::string& identity) const;  ///< what is not yet written ("" = all, DS-216)
+  std::vector<Answer> coupling() const;                             ///< what each behaviour touches outside its module, and how
 
  private:
   bool known(const std::string& id) const;                         // an entity, or a scope something is declared in

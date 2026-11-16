@@ -26,6 +26,7 @@ std::vector<std::pair<std::string, std::string>> Query::questions() {
           {"failures", "<identity>"},
           {"shows", "<diagram>"},
           {"findings", "[file]"},
+          {"coverage", "[identity]"},
           {"coupling", ""}};
 }
 
@@ -47,6 +48,7 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   if (question == "failures") return failures(subject);
   if (question == "shows") return shows(subject);
   if (question == "findings") return findings(subject);
+  if (question == "coverage") return coverage(subject);
   if (question == "coupling") return coupling();
   return {{"error", question, "not a question ds answers"}};
 }
@@ -177,6 +179,16 @@ std::vector<Answer> Query::findings(const std::string& file) const {
   std::vector<Answer> out;
   for (const auto& f : model_.findings()) {
     if (!file.empty() && !endsWith(f.location.file, file)) continue;
+    out.push_back({f.code, f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column), f.message});
+  }
+  return out;
+}
+
+// What is not yet written (DS-216): every absence the check keeps apart, or those that name an identity.
+std::vector<Answer> Query::coverage(const std::string& identity) const {
+  std::vector<Answer> out;
+  for (const auto& f : model_.coverage()) {
+    if (!identity.empty() && f.message.find(identity) == std::string::npos) continue;
     out.push_back({f.code, f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column), f.message});
   }
   return out;

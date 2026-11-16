@@ -408,24 +408,35 @@ TEST_F(TestQualification, AQuestionAboutTheModelIsAnsweredByIdentity) {
   EXPECT_EQ(ds("query " + examples("artefacts") + " weather").code, 1);
 }
 
-// SREQ-00012-1: the language is formal: every oracle corpus means exactly the findings it marks
+// SREQ-00012-1: the language is formal: every oracle corpus means exactly the findings it marks with // !, and
+// what is not yet written exactly the coverage it marks with // ? (DS-216)
 TEST_F(TestQualification, EveryCorpusMeansExactlyTheFindingsItMarks) {
   const std::regex code(R"([EW]-[A-Z][A-Z-]+)");
   int corpora = 0;
   for (const auto& dir : std::filesystem::directory_iterator(std::string(DRIFTSPEC_EXAMPLES_DIR))) {
     if (!dir.is_directory()) continue;
     ++corpora;
-    std::set<std::string> marked, reported;
+    std::set<std::string> marked, reported, markedCoverage, reportedCoverage;
     for (const auto& f : std::filesystem::recursive_directory_iterator(dir.path())) {
       if (f.path().extension() != ".ds") continue;
       std::ifstream in(f.path());
       for (std::string line; std::getline(in, line);) {
-        const auto mark = line.find("// !");
-        if (mark == std::string::npos) continue;
-        for (std::sregex_iterator it(line.begin() + static_cast<long>(mark), line.end(), code), end; it != end; ++it)
-          marked.insert(it->str());
+        for (const auto& [sign, into] :
+             {std::make_pair(std::string("// !"), &marked), std::make_pair(std::string("// ?"), &markedCoverage)}) {
+          const auto mark = line.find(sign);
+          if (mark == std::string::npos) continue;
+          for (std::sregex_iterator it(line.begin() + static_cast<long>(mark), line.end(), code), end; it != end; ++it)
+            into->insert(it->str());
+        }
       }
     }
+    const Outcome asked = ds("query " + dir.path().string() + " coverage");
+    std::istringstream coverage(asked.out);
+    for (std::string line; std::getline(coverage, line);) {
+      std::smatch m;
+      if (std::regex_search(line, m, code) && m.position(0) == 0) reportedCoverage.insert(m.str());
+    }
+    EXPECT_EQ(reportedCoverage, markedCoverage) << dir.path().filename() << " (coverage)";
     const Outcome check = ds("check " + dir.path().string());
     std::istringstream out(check.out);
     for (std::string line; std::getline(out, line);) {

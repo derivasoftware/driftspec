@@ -11,5 +11,8 @@ export async function start() {
 }
 
 export async function ds(files, width = 0) {
-  return JSON.parse(call(JSON.stringify({ files, width })));
+  const out = JSON.parse(call(JSON.stringify({ files, width })));
+  // what is not yet written is no problem (DS-216): the page lists it as information, what is left to write
+  if (out.report) out.report.findings = out.report.findings.concat((out.report.coverage || []).map((f) => ({ ...f, severity: "info" })));
+  return out;
 }

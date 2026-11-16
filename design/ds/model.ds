@@ -602,6 +602,7 @@ package driftspec@ds {
       - owns entities_: std::map<std::string, Entity>
       - owns relations_: std::vector<Relation>
       - owns findings_: std::vector<Finding>
+      - owns coverage_: std::vector<Finding>
       - owns formulas_: std::map<std::string, Formula>
       - owns breaches_: std::map<std::string, std::vector<Breach>>
       - owns indexed_: Indexed
@@ -621,6 +622,9 @@ package driftspec@ds {
       + entities() -> std::map<std::string, Entity>
       - relations() -> std::vector<Relation>
       + findings() -> std::vector<Finding>
+      + coverage() -> std::vector<Finding> {
+        @requirement REQ-00124-1
+      }
       + formulas() -> std::map<std::string, Formula> {
         @requirement REQ-00095-2
       }

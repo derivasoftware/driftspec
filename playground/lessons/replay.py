@@ -27,7 +27,12 @@ _lib.ds_playground.argtypes = [ctypes.c_char_p]
 
 
 def engine(files: dict[str, str]) -> dict:
-    return json.loads(_lib.ds_playground(json.dumps({"files": files}).encode()))
+    out = json.loads(_lib.ds_playground(json.dumps({"files": files}).encode()))
+    # what is not yet written is no problem (DS-216): read as information, as the page does
+    report = out.get("report")
+    if report:
+        report["findings"] = report["findings"] + [{**f, "severity": "info"} for f in report.get("coverage", [])]
+    return out
 
 
 def indent_of(text: str) -> str:

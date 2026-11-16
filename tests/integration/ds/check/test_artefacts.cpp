@@ -26,6 +26,7 @@ class TestArtefacts : public ::testing::Test {
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
     for (const auto& f : model.findings()) ++byCode[f.code];
+    for (const auto& f : model.coverage()) ++byCode[f.code];  // what is not yet written, kept apart (DS-216)
   }
 
   const ds::model::Relation* relation(const std::string& kind, const std::string& from, const std::string& to) const {
@@ -51,7 +52,8 @@ TEST_F(TestArtefacts, TheOracleFindingsAndNothingElse) {
   EXPECT_EQ(byCode["W-VER-NO-TEST"], 1);          // VER-00004-3
   EXPECT_EQ(byCode["W-REF-UNDECLARED"], 1);       // Report
   EXPECT_EQ(byCode["W-ANNOTATION-UNKNOWN"], 1);   // @requirment on Projection
-  EXPECT_EQ(model.findings().size(), 7u);
+  EXPECT_EQ(model.findings().size(), 5u);
+  EXPECT_EQ(model.coverage().size(), 2u);  // W-REQ-NO-VERIFICATION and W-VER-NO-TEST are no findings (DS-216)
 }
 
 TEST_F(TestArtefacts, TheRevisionIsPartOfTheIdentityAndLinksNameIt) {

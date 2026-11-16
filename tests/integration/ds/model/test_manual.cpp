@@ -68,7 +68,8 @@ TEST_F(TestManual, TheCatalogueHoldsExactlyTheCodesTheEngineReports) {
   std::set<std::string> catalogued;
   for (const auto& c : ds::model::codes()) {
     EXPECT_TRUE(catalogued.insert(c.code).second) << c.code << " is catalogued twice";
-    EXPECT_EQ(c.severity, c.code[0] == 'E' ? "error" : "warning") << c.code;
+    // a coverage code is a W- that names something not yet written (DS-216)
+    EXPECT_EQ(c.severity == "coverage" ? "warning" : c.severity, c.code[0] == 'E' ? "error" : "warning") << c.code;
     EXPECT_FALSE(c.meaning.empty() || c.fix.empty()) << c.code;
   }
   for (const auto& code : codesInTheSource()) EXPECT_TRUE(catalogued.count(code)) << code << " is reported but not in the manual";

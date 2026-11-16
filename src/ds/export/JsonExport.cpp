@@ -79,6 +79,9 @@ std::string JsonExport::render(const model::Model& model, bool pretty) const {
   for (const auto& pair : model.entities()) out["entities"].push_back(entityJson(pair.second));
   out["relations"] = nlohmann::json::array();
   for (const auto& r : model.index().all()) out["relations"].push_back(relationJson(r));
+  out["coverage"] = nlohmann::json::array();
+  for (const auto& f : model.coverage())
+    out["coverage"].push_back({{"code", f.code}, {"severity", f.severity}, {"message", f.message}, {"location", locationJson(f.location)}});
   out["findings"] = nlohmann::json::array();
   for (const auto& f : model.findings()) {
     out["findings"].push_back({{"code", f.code}, {"severity", f.severity}, {"message", f.message}, {"location", locationJson(f.location)}});

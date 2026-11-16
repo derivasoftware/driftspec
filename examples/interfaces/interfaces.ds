@@ -29,7 +29,7 @@ package shop {
       exit 7: default                    // ! W-OUTCOME-MISMATCH: the trace ends in 0
     }
 
-    operation forgotten() -> none        // ! W-OPERATION-NO-BEHAVIOUR: no sequence says how
+    operation forgotten() -> none        // ? W-OPERATION-NO-BEHAVIOUR: no sequence says how
   }
 
   sequence shell::buy {

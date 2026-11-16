@@ -50,7 +50,15 @@ std::string ReportJson::write(const check::Report& document, const FormatOptions
                         {"message", f.message},
                         {"location", {{"file", f.location.file}, {"line", f.location.line}, {"column", f.location.column}}}});
   }
+  nlohmann::json coverage = nlohmann::json::array();
+  for (const auto& f : document.coverage) {
+    coverage.push_back({{"code", f.code},
+                        {"severity", f.severity},
+                        {"message", f.message},
+                        {"location", {{"file", f.location.file}, {"line", f.location.line}, {"column", f.location.column}}}});
+  }
   const nlohmann::json out{{"findings", findings},
+                           {"coverage", coverage},
                            {"entities", document.entities},
                            {"expected", document.expected},
                            {"relations", document.relations},
