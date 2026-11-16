@@ -6,13 +6,15 @@
 #include <vector>
 
 #include "ds/model/Model.hpp"
+#include "ds/query/Cut.hpp"
 
 namespace ds {
 namespace render {
 
 /// Projects one `diagram` of the model onto plantuml-render's render-IR
 /// (schema/render-ir.schema.json, contract v1). What the diagram takes is the query's filter of it
-/// (DS-127); this decides how it is drawn (`show`, `hide`, `open`): if the model changes, the drawing follows.
+/// (DS-127); this decides how it is drawn (`show`, `hide`, and the cut of `open`, `close` and `cut`): if the model changes, the drawing
+/// follows.
 class IrExport {
  public:
   explicit IrExport(const model::Model& model) : model_(model) {}
@@ -25,7 +27,7 @@ class IrExport {
 
  private:
   std::string renderSequence(const model::Entity& diagram, bool pretty) const;
-  std::string closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const;
+  std::string closeBoxes(const std::string& ir, const query::Cut& cut, bool pretty) const;
   std::string renderState(const model::Entity& diagram, bool pretty) const;
   std::string renderRequirements(const model::Entity& diagram, bool pretty) const;
 

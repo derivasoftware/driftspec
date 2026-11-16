@@ -248,27 +248,23 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     drawn.insert(pair + "dependency||");
     out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}});
   }
-  // `open:` written says which boxes stay open, and every other closes: `open:` alone closes them all
-  if (diagram->fields.count("open")) return closeBoxes(out.dump(), split(diagram->field("open"), ','), pretty);
+  // a cut written (`open:`, `close:`, `cut:`) says which boxes close: the drawing is lifted onto it (DS-229)
+  const query::Cut cut(model_, *diagram);
+  if (cut.written()) return closeBoxes(out.dump(), cut, pretty);
   return pretty ? out.dump(2) : out.dump();
 }
 
-std::string IrExport::closeBoxes(const std::string& ir, const std::vector<std::string>& open, bool pretty) const {
+std::string IrExport::closeBoxes(const std::string& ir, const query::Cut& cut, bool pretty) const {
   auto outerOf = [](const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); };  // the box outside
   nlohmann::json doc = nlohmann::json::parse(ir);
-  std::set<std::string> containers;
-  for (const auto& n : doc["nodes"]) {
-    if (n["kind"] == "container") containers.insert(n["id"].get<std::string>());
-  }
-  // which boxes stay open and what stands for an id are the query's, as for what the diagram shows (DS-127)
-  const std::set<std::string> opened = query::ClassFilter::opened(containers, open);
-  auto visible = [&](const std::string& id) { return query::ClassFilter::standsFor(id, containers, opened); };
+  // which boxes close and what stands for an id are the query's, as for what the diagram shows (DS-127)
+  auto visible = [&](const std::string& id) { return cut.standsFor(id); };
 
   nlohmann::json nodes = nlohmann::json::array();
   for (auto n : doc["nodes"]) {
     const std::string id = n["id"];
     if (visible(id) != id) continue;
-    if (containers.count(id) && !opened.count(id)) {
+    if (cut.closed(id)) {
       // closed: a box that shows only what it offers, its public children
       std::vector<const model::Entity*> children;
       for (const auto& pair : model_.entities()) {

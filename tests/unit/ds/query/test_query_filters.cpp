@@ -76,12 +76,9 @@ TEST_F(TestClassFilter, ItsBoxesAreThePatternsLessTheExclusionsAndTheModulesArou
   EXPECT_EQ(filter.select(model), (Ids{"shop@store", "shop@store::Item", "shop@store::Stock"}));
 }
 
-TEST_F(TestClassFilter, AClosedBoxStandsForWhatItHoldsUnlessItIsOpened) {
-  const Ids containers{"shop@store", "shop@till"};
-  const Ids opened = ds::query::ClassFilter::opened(containers, {"shop@till"});
-  EXPECT_EQ(opened, (Ids{"shop", "shop@till"}));  // the box opened and every box on the way to it
-  EXPECT_EQ(ds::query::ClassFilter::standsFor("shop@store::Stock", containers, opened), "shop@store");
-  EXPECT_EQ(ds::query::ClassFilter::standsFor("shop@till::Till", containers, opened), "shop@till::Till");
+TEST_F(TestClassFilter, WithNoDiagramToTakeACutFromItShowsEveryBox) {
+  const ds::query::ClassFilter filter({"shop@*"}, {}, 0, "diagram:Nowhere");  // the cut itself is TestCut's
+  EXPECT_EQ(filter.select(model), ds::query::ClassFilter({"shop@*"}, {}, 0).select(model));
 }
 
 class TestSequenceFilter : public Shop {};

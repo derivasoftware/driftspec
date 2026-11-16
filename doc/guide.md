@@ -240,19 +240,32 @@ them. The vision (`vision.md`) says why; this says what.*
 
 ## 5. Diagrams
 
-- `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes; depth: n; level: module }`.
+- `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; open: …; close: …; cut: …; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes; depth: n; level: module }`.
 - `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
   (`ds@*`), read alike by every kind of diagram; extern entities only when
   named. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
-- `open:` says which boxes of a class diagram stay open and closes the rest:
-  `open: shop@store@stock` opens that box and the way to it, `open:` alone closes
-  them all, and a diagram that does not say it draws everything open. A closed box
-  shows only its public children. An edge that loses an end to it says only that
-  one box depends on the other, and what stays inside it is not drawn. A behaviour
-  that crosses boxes counts too, so an interface reaches what handles it: the
-  component view is derived, never written.
+- **The cut (decided 2026-11-16, DS-229, `examples/cut`).** A cut is a set of boxes none of
+  which holds another: what is above it stays open, and everything below it is drawn as the
+  outermost closed box around it. It is written as what closes and what opens, never as its
+  frontier, so whatever is written is a cut, and one branch may go down to its classes while
+  another stays one box. There are no numbered levels.
+  - `close:` names the boxes that close: a name (`close: shop@warehouse`), a prefix
+    (`close: shop@sales@*`) or a kind of box (`close: module`, `close: package`), so a cut runs at
+    one kind of box wherever each one is. Every other box stays open.
+  - `open:` names the boxes that stay open, with the way to each, whatever `close:` says:
+    `close: module` with `open: shop@sales@till` closes every module but the till.
+  - `open:` written alone closes every other box: `open: shop@store@stock` opens that box and the
+    way to it, and `open:` with nothing after it closes them all.
+  - `cut: HLD_Till` takes the cut of that diagram, and what the diagram writes itself is added.
+  - A diagram that writes none of them draws everything open. The outermost package is the
+    drawing itself and never closes.
+  A closed box shows only its public children. An edge that loses an end to it says only that
+  one box depends on the other, and what stays inside it is not drawn. A behaviour that crosses
+  boxes counts too, so an interface reaches what handles it: the component view is derived,
+  never written. `ds query <workspace> shows <diagram>` answers with the same cut. A pattern
+  that names no box, or a `cut:` that names no diagram, is `W-DIAGRAM-UNDECLARED`.
 - `depth` and `level` belong to sequences: `depth: 2`, `depth: *` for every level
   (`W-DIAGRAM-DEPTH` for anything else), `level: module` for only what crosses
   modules. A class diagram ignores them.

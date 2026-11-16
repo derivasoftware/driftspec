@@ -1593,16 +1593,19 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestDependencyDrawing.OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclaredUseIsDrawn
         }
       }
-      requirement REQ-00064-2 {
+      requirement REQ-00064-3 {
         tags: language, diagrams, visibility
         status: approved
         title: A class diagram shall open the boxes it names and close the rest, each closed box showing only its public children
         text:
-          open: shop@store@stock opens that box and the way to it; open: alone closes them all; a
-          diagram that does not say open draws everything open. An edge that loses an end to a closed
-          box says only that one box depends on the other, once, and what stays inside a closed box
-          is not drawn. A behaviour that crosses boxes counts too, so an interface reaches what
-          handles it though no type says so. The component view is derived, never written.
+          open: shop@store@stock opens that box and the way to it; open: written alone closes every
+          other box, and open: with nothing after it closes them all; a diagram that writes no cut
+          draws everything open. An edge that loses an end to a closed box says only that one box
+          depends on the other, once, and what stays inside a closed box is not drawn. A behaviour
+          that crosses boxes counts too, so an interface reaches what handles it though no type says
+          so. The component view is derived, never written.
+          Revision 3 (DS-229): open: is one of the ways a cut is written (REQ-00126-1,
+          REQ-00127-1, REQ-00128-1); alone it means what it meant.
         rationale: Owner, 2026-11-05. Encapsulation has to be seen: which box holds what, and what each one offers.
         verification VER-00069-2 {
           title: Integration tests confirm a class diagram opens the boxes it names and closes the rest, each closed box showing only its public children
@@ -1616,6 +1619,77 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpeningABoxShowsTheWayToItAndClosesTheRest
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AnEdgeReachesInsideAnOpenBoxFromAClosedOne
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADiagramThatDoesNotSayOpenDrawsEverythingOpen
+        }
+      }
+      requirement REQ-00126-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A diagram shall close the boxes close: names, by name, by prefix or by kind, and leave every other box open
+        text:
+          close: shop@warehouse closes that box; close: shop@sales@* every box that begins so;
+          close: module every module wherever it is, and close: package every package below the
+          outermost one, so a cut runs at one kind of box without counting levels. What a closed box
+          holds is lifted to it, as with open:. The outermost package is the drawing itself and
+          never closes. The drawing and ds query shows read the same cut. A pattern that names no
+          box is W-DIAGRAM-UNDECLARED; a kind names no box and is none.
+        rationale:
+          Owner, 2026-11-16 (DS-229), on a sketch run over a shop and over driftspec's own design.
+          The abstraction axis is elastic (vision 2b.5): a cut is written as what closes and what
+          opens, never as its frontier, so whatever is written is a cut, one branch may go down to
+          its classes while another stays one box, and nothing has to be written to make it valid.
+        verification VER-00142-1 {
+          title: Integration tests confirm a diagram closes the boxes close: names by name or by kind, lifts what they hold, and is asked with the same cut it is drawn with
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.CloseClosesTheBoxItNamesAndTheRestStaysOpen
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AnEdgeThatLosesAnEndToAClosedBoxIsLiftedToIt
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AKindClosesTheBoxesOfThatKindWhereverTheyAre
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ACloseThatNamesNoBoxIsAFindingAndAKindIsNone
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.TheQueryShowsWhatTheDrawingDrawsUnderEveryCut
+        }
+      }
+      requirement REQ-00127-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A box that open: names shall stay open, with the way to it, whatever close: closes
+        text:
+          With both written, close: draws the line and open: goes through it: close: module with
+          open: shop@sales@till closes every module but the till. One rule for the two fields, with
+          no order between patterns to learn. open: written alone keeps its meaning (REQ-00064-3).
+        rationale:
+          Owner, 2026-11-16 (DS-229). The sketch first let the pattern that named a box more closely
+          win, and a kind leave the rest open; that was a rule to learn, and the Owner asked for a
+          cut that is easy to understand.
+        verification VER-00143-1 {
+          title: Integration tests confirm open: goes through what close: closes, and that open: alone still closes every other box
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.OpenGoesThroughWhatCloseCloses
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.OpenAloneStillClosesEveryOtherBox
+        }
+      }
+      requirement REQ-00128-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A diagram shall take the cut of the diagram cut: names and add what it writes itself
+        text:
+          cut: HLD_Till takes the open: and close: of that diagram, and what the diagram writes
+          itself is added to them, so several drawings share one cut written once. A diagram named
+          that nothing declares is W-DIAGRAM-UNDECLARED, and the diagram is drawn with what it
+          writes itself. Diagrams that take each other's cut are read once each.
+        rationale:
+          Owner, 2026-11-16 (DS-229): is a cut declared once and cited, or written by each diagram.
+          Both: each diagram writes its cut and another may take it, with no new kind of artefact;
+          a cut with a name of its own waits for the open core.
+        verification VER-00144-1 {
+          title: Integration tests confirm a diagram draws the cut it takes from another with its own added, and that a cut taken from a diagram nobody declares is reported
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ADiagramDrawsTheCutItTakesFromAnotherAndAddsItsOwn
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ACutTakenFromADiagramNobodyDeclaresIsAFindingAndStillDraws
         }
       }
       requirement REQ-00062-1 {

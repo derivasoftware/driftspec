@@ -128,24 +128,36 @@ package driftspec@ds {
       @requirement REQ-00121-1
     }
 
+    // the cut of a diagram (DS-229): what closes and what opens, read once for the drawing and for the query.
+    // close: draws the line (a name, a prefix, a kind of box), open: goes through it, cut: adds another diagram's
+    class Cut {
+      @requirement REQ-00064-3
+      @requirement REQ-00126-1
+      @requirement REQ-00127-1
+      @requirement REQ-00128-1
+      - written_: bool
+      - closed_: std::set<std::string>
+      + Cut(model: model::Model, diagram: model::Entity)
+      + written() -> bool
+      + closed(box: std::string) -> bool
+      + standsFor(id: std::string) -> std::string
+    }
+
     // include and exclude patterns, the neighbours, the boxes around; a closed box stands for what it holds
     class ClassFilter : IFilter {
       @requirement REQ-00047-1
       @requirement REQ-00019-1
       @requirement REQ-00048-1
-      @requirement REQ-00064-2
+      @requirement REQ-00064-3
       @requirement REQ-00120-1
       - include_: std::vector<std::string>
       - exclude_: std::vector<std::string>
       - neighbours_: int
-      - closes_: bool
-      - open_: std::vector<std::string>
-      + ClassFilter(include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, closes: bool, open: std::vector<std::string>)
+      - cutOf_: std::string
+      + ClassFilter(include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
       + boxes(model: model::Model) -> std::set<std::string>
       + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
-      + static opened(containers: std::set<std::string>, open: std::vector<std::string>) -> std::set<std::string>
-      + static standsFor(id: std::string, containers: std::set<std::string>, opened: std::set<std::string>) -> std::string
       - matches(model: model::Model, pattern: std::string, entity: model::Entity) -> bool
     }
 
