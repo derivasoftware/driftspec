@@ -41,6 +41,8 @@ that shows what it taught.
 | 13 | Failures | `fail`, `attempt` / `on`, `fails` promises, what escapes through a boundary | `fails nothing`, checked |
 | 14 | Rules | `rule` with `for` / `never` / `holds`, `not`, containment; a rule about messages misses attributes; a library of generic rules (`rules/design.ds`, its own package, definitions included) adopted by linking to its requirement | one arrow left between store and billing, a library rule guarding it |
 | 15 | Depth | `depth: 0`, `1` and `*` over one operation: a call to an operation with a sequence is a link at depth 0 and opens one level per step; nothing is written twice | `SEQ_Buy` from the shell down to the subtotal of each line |
+| 16 | The cut | depth counts calls, a cut counts boxes: `close: module` makes each module one lifeline and keeps only what crosses; `open:` goes through it; `fold:` stops following a call; `cut:` takes the cut of the boxes already drawn | `SEQ_Buy` with the store open, `SEQ_BuyBoxes` on the cut of `HLD_Shop` |
+| 17 | Two levels | a scenario of the use case written in one block between the boxes: boxes named as participants, the sender before the arrow, a message bound to what a box offers or a label; the level below is held to it (`W-LEVEL-NO-CROSSING`), and what is not written yet is information | `SEQ_Purchase` beside `SEQ_BuyBoxes`: the same crossings |
 
 Notes for writing a lesson:
 
@@ -66,7 +68,7 @@ Notes for writing a lesson:
 | `solution` | the same shapes, typed when the reader asks the lesson to write it |
 | `open` (lesson) | the file the lesson opens first |
 | `title`, `text`, `done.ack` | each `{"en": ..., "es": ...}`; the code between backquotes is the same in both |
-| `done` | `{ack}` a button; `opened`, `selected` (a pane), `solo` (a pane or `false`) for steps done on the page, with a `solution` of `{ui: open|select|solo|unsolo}` behind "Show me"; otherwise every condition given must hold: `entity`, `edge {diagram, from, to}`, `draws {diagram, text}`, `finding`, `gone` (a code that must have left the problems: what was left to write is written), `clean`; what is not yet written (coverage) reads as information, never as a problem |
+| `done` | `{ack}` a button; `opened`, `selected` (a pane), `solo` (a pane or `false`) for steps done on the page, with a `solution` of `{ui: open|select|solo|unsolo}` behind "Show me"; otherwise every condition given must hold: `entity`, `edge {diagram, from, to}`, `draws {diagram, text}`, `hides {diagram, text}` (the diagram is drawn and no longer shows it), `finding`, `gone` (a code that must have left the problems: what was left to write is written), `clean`; what is not yet written (coverage) reads as information, never as a problem |
 
 What the curriculum met while being written, kept for whoever writes the next lesson:
 the requirement diagram draws the classes that realise a requirement but not the

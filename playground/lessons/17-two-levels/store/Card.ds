@@ -1,0 +1,8 @@
+package shop {
+  module store {
+    class Card : PaymentMethod {
+      - refs gateway: bank::Gateway
+      + pay(amount: Money) -> bool
+    }
+  }
+}

@@ -132,6 +132,11 @@ def passed(done: dict, out: dict) -> bool:
         d = done["draws"]
         if d["text"] not in next((x["svg"] for x in out["diagrams"] if x["id"] == d["diagram"]), ""):
             return False
+    if done.get("hides"):  # the diagram is drawn and no longer shows it: what a cut closes, what a fold stops at
+        d = done["hides"]
+        svg = next((x["svg"] for x in out["diagrams"] if x["id"] == d["diagram"]), None)
+        if svg is None or d["text"] in svg:
+            return False
     if done.get("edge"):
         e = done["edge"]
         svg = next((d["svg"] for d in out["diagrams"] if d["id"] == e["diagram"]), "")

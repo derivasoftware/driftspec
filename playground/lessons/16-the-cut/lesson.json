@@ -1,0 +1,126 @@
+{
+  "title": {
+    "en": "16 · The cut",
+    "es": "16 · El corte"
+  },
+  "version": 1,
+  "open": "diagrams/behaviour.ds",
+  "steps": [
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "diagram SEQ_Buy"
+      },
+      "text": {
+        "en": "Depth counts calls. A cut counts boxes: it says which boxes are closed, and a closed box is drawn as one thing, whatever it holds. Lesson 10 closed the boxes of a class diagram with `open:`. The same works on a sequence, and it answers another question than depth: not how far down, but between whom.",
+        "es": "La profundidad cuenta llamadas. Un corte cuenta cajas: dice qué cajas están cerradas, y una caja cerrada se dibuja como una sola cosa, contenga lo que contenga. La lección 10 cerró las cajas de un diagrama de clases con `open:`. Lo mismo vale en una secuencia, y responde a otra pregunta que la profundidad: no hasta dónde bajar, sino entre quiénes."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "depth: *"
+      },
+      "text": {
+        "en": "In `SEQ_Buy`, change `depth: *` to `close: module`. Every module closes and becomes one lifeline. A message between two things of the same module is not drawn; one that crosses is, and it says which class takes it: `Cart::checkout(card)`. With a cut written, every call is followed, so nothing that crosses is missed.",
+        "es": "En `SEQ_Buy`, cambia `depth: *` por `close: module`. Cada módulo se cierra y pasa a ser una línea de vida. Un mensaje entre dos cosas del mismo módulo no se dibuja; uno que cruza sí, y dice qué clase lo recibe: `Cart::checkout(card)`. Con un corte escrito se siguen todas las llamadas, así que no se pierde nada de lo que cruza."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "replace": "  include: shop@shell::buy\n  depth: *",
+        "text": "  include: shop@shell::buy\n  close: module"
+      },
+      "done": {
+        "draws": {
+          "diagram": "SEQ_Buy",
+          "text": "Cart::checkout(card)"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "close: module"
+      },
+      "text": {
+        "en": "A cut does not have to run at one level. Below `close: module`, add `open: shop@store`: `close:` draws the line and `open:` goes through it. The store opens down to its objects, and the payment shows again, while billing stays one box.",
+        "es": "Un corte no tiene que pasar por un solo nivel. Debajo de `close: module`, añade `open: shop@store`: `close:` traza la línea y `open:` la atraviesa. La tienda se abre hasta sus objetos y el pago vuelve a verse, mientras la facturación sigue siendo una caja."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "replace": "  include: shop@shell::buy\n  close: module",
+        "text": "  include: shop@shell::buy\n  close: module\n  open: shop@store"
+      },
+      "done": {
+        "draws": {
+          "diagram": "SEQ_Buy",
+          "text": "pay(amount)"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "open: shop@store"
+      },
+      "text": {
+        "en": "The calls have a cut of their own. Add `fold: shop@store::Cart::total`: the total is still called, and what it does to answer is no longer followed, so the subtotal of each line leaves the drawing. `fold:` names the calls that are not followed; `unfold:` names the ones that are, whatever `fold:` says.",
+        "es": "Las llamadas tienen su propio corte. Añade `fold: shop@store::Cart::total`: el total se sigue llamando, pero lo que hace para responder ya no se sigue, así que el subtotal de cada línea sale del dibujo. `fold:` nombra las llamadas que no se siguen; `unfold:` las que sí, diga lo que diga `fold:`."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "replace": "  close: module\n  open: shop@store",
+        "text": "  close: module\n  open: shop@store\n  fold: shop@store::Cart::total"
+      },
+      "done": {
+        "hides": {
+          "diagram": "SEQ_Buy",
+          "text": "subtotal()"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "diagram SEQ_Buy",
+        "after": "}"
+      },
+      "text": {
+        "en": "A sequence can take the cut of boxes already drawn, so the two drawings agree. `HLD_Shop` closes every box. Add a diagram at the end of the file:\n`diagram SEQ_BuyBoxes {`\n`  kind: sequence`\n`  include: shop@shell::buy`\n`  cut: HLD_Shop`\n`}`\nIts lifelines are the boxes of `HLD_Shop`, and its arrows are the purchase between them.",
+        "es": "Una secuencia puede tomar el corte de unas cajas ya dibujadas, para que los dos dibujos coincidan. `HLD_Shop` cierra todas las cajas. Añade un diagrama al final del fichero:\n`diagram SEQ_BuyBoxes {`\n`  kind: sequence`\n`  include: shop@shell::buy`\n`  cut: HLD_Shop`\n`}`\nSus líneas de vida son las cajas de `HLD_Shop`, y sus flechas, la compra entre ellas."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "end": true,
+        "text": "diagram SEQ_BuyBoxes {\n  kind: sequence\n  include: shop@shell::buy\n  cut: HLD_Shop\n}"
+      },
+      "done": {
+        "draws": {
+          "diagram": "SEQ_BuyBoxes",
+          "text": "Cart::checkout(card)"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "SEQ_BuyBoxes"
+      },
+      "text": {
+        "en": "Nothing was written twice: the high-level view is the detail seen through a cut, so the two cannot disagree. A cut is written as what closes and what opens, never as a list of levels: one branch may go down to its classes while another stays one box.",
+        "es": "Nada se ha escrito dos veces: la vista de alto nivel es el detalle visto a través de un corte, así que no pueden contradecirse. Un corte se escribe como lo que se cierra y lo que se abre, nunca como una lista de niveles: una rama puede bajar hasta sus clases mientras otra sigue siendo una caja."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

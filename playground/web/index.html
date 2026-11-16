@@ -832,6 +832,10 @@ function passed(d) {
     if ([].concat(d.drawnAs.not || []).some((c) => classes.includes(c))) return false;
   }
   if (d.draws && !(out.diagrams.find((x) => x.id === d.draws.diagram)?.svg || "").includes(d.draws.text)) return false;
+  if (d.hides) {  // the diagram is drawn and no longer shows it: what a cut closes, what a fold stops at
+    const drawn = out.diagrams.find((x) => x.id === d.hides.diagram)?.svg;
+    if (drawn === undefined || drawn.includes(d.hides.text)) return false;
+  }
   if (d.edge) {
     const svg = out.diagrams.find((x) => x.id === d.edge.diagram)?.svg || "";
     const a = `data-from="${d.edge.from}" data-to="${d.edge.to}"`, b = `data-from="${d.edge.to}" data-to="${d.edge.from}"`;
