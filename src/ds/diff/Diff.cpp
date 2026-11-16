@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "ds/model/Metamodel.hpp"
+#include "ds/model/SequenceTree.hpp"
 #include "ds/model/Words.hpp"
 
 namespace ds {
@@ -54,6 +55,35 @@ std::vector<std::string> differences(const model::Entity& a, const model::Entity
   return out;
 }
 
+/// What a step of a behaviour says, without where it stands: two versions of a sequence are aligned by it.
+std::string stepOf(const model::Entity& m) {
+  std::string out;
+  for (const char* k : {"from", "to", "op", "args", "result", "return", "fails", "scenario"}) out += m.field(k) + "\x1f";
+  return out;
+}
+
+/// The messages of a sequence of both versions paired by the longest common run of what they say (DS-223): a step
+/// inserted at the top moves no other. Pairs go into `out_pairs`, old id to new id.
+void alignSteps(const model::Model& a, const model::Model& b, const std::string& sequence, std::map<std::string, std::string>& out_pairs) {
+  const std::vector<std::string> x = model::SequenceTree(a, sequence).messages();
+  const std::vector<std::string> y = model::SequenceTree(b, sequence).messages();
+  std::vector<std::string> sx, sy;
+  for (const auto& id : x) sx.push_back(stepOf(*a.find(id)));
+  for (const auto& id : y) sy.push_back(stepOf(*b.find(id)));
+  std::vector<std::vector<int>> lcs(x.size() + 1, std::vector<int>(y.size() + 1, 0));
+  for (size_t i = x.size(); i-- > 0;)
+    for (size_t j = y.size(); j-- > 0;) lcs[i][j] = sx[i] == sy[j] ? lcs[i + 1][j + 1] + 1 : std::max(lcs[i + 1][j], lcs[i][j + 1]);
+  for (size_t i = 0, j = 0; i < x.size() && j < y.size();) {
+    if (sx[i] == sy[j]) {
+      out_pairs[x[i++]] = y[j++];
+    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
+      ++i;
+    } else {
+      ++j;
+    }
+  }
+}
+
 /// A class's shape: its members' names and signatures, to recognise a rename.
 std::set<std::string> shapeOf(const model::Model& m, const std::string& classId) {
   std::set<std::string> out;
@@ -91,11 +121,33 @@ int DiffResult::changed() const {
 DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
   DiffResult out;
   std::map<std::string, std::string> renamed;  // old id -> new id
+  // the steps of a behaviour in both versions are aligned by what they say, not by where they stand (DS-223)
+  std::map<std::string, std::string> steps;  // old message -> new message
+  std::set<std::string> aligned;             // the sequences whose messages the alignment answers for
+  for (const auto& pair : a.entities()) {
+    const model::Entity* eb = b.find(pair.first);
+    if (pair.second.kind != model::Kind::Sequence || pair.second.expected || !eb || eb->expected) continue;
+    aligned.insert(pair.first);
+    alignSteps(a, b, pair.first, steps);
+  }
+  const auto inAligned = [&aligned](const model::Entity& e) {
+    return e.kind == model::Kind::Message && aligned.count(model::Identity(e.id).behaviour().text());
+  };
+  std::set<std::string> pairedNew;
+  for (const auto& s : steps) pairedNew.insert(s.second);
+  for (const auto& s : steps) {
+    const model::Entity& ma = *a.find(s.first);
+    const model::Entity& mb = *b.find(s.second);
+    const auto diffs = differences(ma, mb);  // the same step: only what is not what it says may differ
+    if (!diffs.empty())
+      out.changes.push_back(
+          {"changed", "entity", mb.id, model::kindName(mb.kind), mb.scope, join(diffs, "; "), "", mb.scope + " : " + mb.name});
+  }
   // entities: by identity; expected nodes are not declarations
   std::vector<const model::Entity*> removedClasses, addedClasses;
   for (const auto& pair : a.entities()) {
     const model::Entity& ea = pair.second;
-    if (ea.expected) continue;
+    if (ea.expected || inAligned(ea)) continue;
     const model::Entity* eb = b.find(ea.id);
     if (!eb || eb->expected) {
       if (ea.kind == model::Kind::Class) removedClasses.push_back(&ea);
@@ -187,6 +239,11 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
   for (const auto& pair : a.entities()) {
     const model::Entity& ea = pair.second;
     if (ea.expected || renamed.count(ea.id)) continue;
+    if (inAligned(ea)) {  // a step of an aligned behaviour is removed when nothing pairs with it
+      if (!steps.count(ea.id))
+        out.changes.push_back({"removed", "entity", ea.id, model::kindName(ea.kind), ea.scope, "", "", ea.scope + " : " + ea.name});
+      continue;
+    }
     const model::Entity* eb = b.find(ea.id);
     if (eb && !eb->expected) continue;
     // members of a renamed class are not removals
@@ -198,6 +255,11 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
   for (const auto& pair : b.entities()) {
     const model::Entity& eb = pair.second;
     if (eb.expected || matched.count(eb.id)) continue;
+    if (inAligned(eb)) {
+      if (!pairedNew.count(eb.id))
+        out.changes.push_back({"added", "entity", eb.id, model::kindName(eb.kind), eb.scope, "", "", eb.scope + " : " + eb.name});
+      continue;
+    }
     const model::Entity* ea = a.find(eb.id);
     if (ea && !ea->expected) continue;
     bool insideRenamed = false;
@@ -207,6 +269,8 @@ DiffResult Diff::compare(const model::Model& a, const model::Model& b) {
   }
   // relations: by their key, with renamed ids translated; containment is implied by the entities
   auto translate = [&](std::string id) {
+    const auto step = steps.find(id);  // a message under the identity of the step it is aligned with
+    if (step != steps.end()) return step->second;
     for (const auto& r : renamed) {
       if (id == r.first) return r.second;
       if (id.rfind(r.first + "::", 0) == 0) return r.second + id.substr(r.first.size());
