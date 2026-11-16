@@ -61,7 +61,7 @@
       },
       "text": {
         "en": "The high-level design: `open:` with nothing after it keeps every module closed, and the arrows are lifted to the boxes. The shell reaches the store. And look: store and billing depend on each other, both ways. Keep that in mind for later.",
-        "es": "El diseño de alto nivel: `open:` sin nada detrás mantiene cerrados todos los módulos, y las flechas suben hasta las cajas. El shell llega al almacén. Y mira: el almacén y la facturación dependen el uno del otro, en los dos sentidos. Tenlo en cuenta para más adelante."
+        "es": "El diseño de alto nivel: `open:` sin nada detrás mantiene cerrados todos los módulos, y las flechas se alzan hasta las cajas. El shell llega al almacén. Y mira: el almacén y la facturación dependen el uno del otro, en los dos sentidos. Tenlo en cuenta para más adelante."
       },
       "done": {
         "ack": {

@@ -137,7 +137,11 @@ in Plane, epics DS-206 and DS-205.
    sublevels where it does not fit. A flat layer is a cut through containment,
    named by its boxes or by the roles they carry, never by a number. Behaviour
    is written at any cut, and two cuts that are both written are checked for
-   coherence (epic DS-205; the words are chosen in DS-228). A cut is written as
+   coherence (epic DS-205). The words, chosen on 2026-11-16 (DS-228): a cut,
+   boxes open and close, calls unfold and fold, what is below a cut is lifted
+   onto it, and the two ends are the high level and the detail, with no number.
+   A role a box carries (system, service, library) waits for a real use
+   (DS-247). A cut is written as
    what closes and what opens, `close:`, `open:` and `cut:` in a diagram, never
    as its frontier, so whatever is written is a cut (DS-229, decided on a
    sketch on 2026-11-16; guide §5). Boxes, sequences and requirements stand on
