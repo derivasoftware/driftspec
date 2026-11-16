@@ -27,6 +27,7 @@ Regenerate the parser after editing the grammar: `tree-sitter generate` in `gram
 
 How a design is read in three perspectives, the outer contract of each and the rules: [`doc/perspectives.md`](doc/perspectives.md).
 How we design DriftSpec itself, until each practice is a rule: [`doc/design-practices.md`](doc/design-practices.md).
+How the engine runs in a browser, what its WebAssembly build needs and the traps it met: [`doc/webassembly.md`](doc/webassembly.md).
 
 Governed by argos (ASIL NA). Rules of the language so far: `examples/diag/ds.package.ds`
 and the R1–R9 notes in `examples/diag/*.ds`.
