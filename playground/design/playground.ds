@@ -1,0 +1,222 @@
+// The playground (DS-204, DS-238): a static page that edits a workspace and draws it as it is typed.
+// No server: the page calls the ds engine compiled to WebAssembly, once per edit. Its code is plain
+// JavaScript that argos does not read, so this design is offered as an example of the page itself.
+
+package playground {
+  requirement REQ-00001-1 {
+    title: The lessons shall know nothing of the page that shows them
+    status: approved
+    rationale:
+      A lesson is data and a coach that decides what comes next; the page decides how it is shown.
+      The page may change its look without touching a lesson.
+  }
+
+  // the engine, as the page reaches it: one function of ds.wasm (REQ-00113-1)
+  interface wasm {
+    kind: library
+    transport: webassembly, in the page
+    encoding: json text
+    operation ds_playground(request: string) -> string
+  }
+
+  sequence wasm::ds_playground {
+    return answer
+  }
+
+  module engine {
+    // engine.js: loads ds.js + ds.wasm and makes the one call
+    class Engine {
+      @uses playground@wasm
+      + start() -> none
+      + ds(files: Files, width: int) -> Answer
+    }
+    dataclass Files {
+      + texts: map<string, string>
+    }
+    // what the engine answers after an edit: everything the page paints
+    dataclass Answer {
+      + report: Report
+      + entities: list<string>
+      + locations: map<string, Location>
+      + artefacts: list<Artefact>
+      + diagrams: list<Drawn>
+    }
+    dataclass Report {
+      + findings: list<Finding>
+      + coverage: list<Finding>             // what is not yet written, shown as information (DS-216)
+    }
+    dataclass Finding {
+      + code: string
+      + message: string
+      + at: Location
+    }
+    dataclass Location {
+      + file: string
+      + line: int
+      + endLine: int
+    }
+    dataclass Artefact {
+      + id: string
+      + title: string
+      + keptBy: list<string>
+      + provedBy: list<string>
+    }
+    dataclass Drawn {
+      + id: string
+      + kind: string
+      + include: string
+      + svg: string
+    }
+    sequence Engine::ds {
+      local wasm: playground@wasm             // the engine's function in ds.wasm, not the C++ behind it
+      -> wasm.ds_playground(request) -> json
+      return answer
+    }
+  }
+
+  module page {
+    // index.html: the whole page, one module of plain JavaScript over CodeMirror
+    class Page {
+      - owns engine: engine::Engine
+      - owns editor: Editor
+      - owns tree: Tree
+      - owns panes: Panes
+      - owns table: Table
+      - owns problems: Problems
+      - owns coach: lessons::Coach
+      + load(lesson: lessons::Lesson) -> none
+      + onEdit() -> none
+    }
+    class Editor {
+      + open(file: string) -> none
+      + type(step: lessons::Step) -> none
+      + reveal(file: string, line: int, endLine: int) -> none
+      + underline(findings: list<engine::Finding>) -> none
+    }
+    class Tree {
+      + paint(files: engine::Files, findings: list<engine::Finding>) -> none
+    }
+    class Problems {
+      + paint(findings: list<engine::Finding>) -> none
+      + fold() -> none
+    }
+    class Panes {
+      - owns panes: list<Pane>
+      + paint(diagrams: list<engine::Drawn>) -> none
+      + solo(diagram: string) -> none
+    }
+    class Pane {
+      - refs editor: Editor
+      + draw(drawn: engine::Drawn) -> none
+      + light(entity: string) -> none
+      + reveal(entity: string) -> none
+    }
+    class Table {
+      - refs editor: Editor
+      + paint(rows: list<engine::Artefact>) -> none
+    }
+
+    sequence Page::onEdit {
+      self -> engine.ds(files, width) -> answer
+      self -> editor.underline(findings)
+      self -> tree.paint(files, findings)
+      self -> problems.paint(findings)
+      self -> panes.paint(diagrams)
+      self -> table.paint(rows)
+      self -> coach.check(answer) -> next
+      opt a step has its code to type {
+        self -> editor.type(next)
+      }
+    }
+
+    sequence Pane::reveal {
+      self -> editor.reveal(file, line, endLine)
+    }
+  }
+
+  module lessons {
+    // a lesson: its starting files and its steps (lessons/NN-*/lesson.json), in two languages
+    dataclass Lesson {
+      + title: Text
+      + steps: list<Step>
+    }
+    dataclass Step {
+      + text: Text
+      + write: list<Write>
+      + solution: list<Write>
+      + done: Check
+    }
+    dataclass Text {
+      + en: string
+      + es: string
+    }
+    dataclass Write {
+      + file: string
+      + anchor: string
+      + text: string
+    }
+    dataclass Check {
+      + ack: optional<Text>
+      + entity: optional<string>
+      + finding: optional<string>
+      + gone: optional<string>
+      + clean: bool
+    }
+    // the card beside what a step talks about: decides when a step is done and which comes next; the page
+    // types its code (the lessons know nothing of the page, REQ-00001-1)
+    class Coach {
+      - refs lesson: Lesson
+      + check(answer: engine::Answer) -> optional<Step>
+      + passed(check: Check, answer: engine::Answer) -> bool
+    }
+
+    sequence Coach::check {
+      self -> passed(check, answer) -> ok
+      alt the step is done {
+        return next
+      } else {
+        return
+      }
+    }
+
+    rule lessons-blind-to-page {
+      title: No member of the lessons names a type of the page
+      @requirement REQ-00001-1
+      for class c in playground@lessons
+      never m in c, m uses x, x in playground@page
+    }
+    rule lessons-hold-no-page {
+      title: No attribute of the lessons refers to the page
+      @requirement REQ-00001-1
+      for class c in playground@lessons
+      never a in c, a refs x, x in playground@page
+    }
+  }
+}
+
+diagram HLD_Playground {
+  kind: class
+  include: playground@*
+  open:
+}
+
+diagram CL_Page {
+  kind: class
+  include: playground@page::*
+}
+
+diagram CL_Engine {
+  kind: class
+  include: playground@engine::*
+}
+
+diagram CL_Lessons {
+  kind: class
+  include: playground@lessons::*
+}
+
+diagram SEQ_Edit {
+  kind: sequence
+  include: playground@page::Page::onEdit
+  depth: 1
+}

@@ -38,7 +38,7 @@ class TestPlayground:
         build = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(build)
         offered = build.showcases()
-        assert {e["id"] for e in offered} >= {"driftspec", "hola", "shop"}
+        assert {e["id"] for e in offered} >= {"driftspec", "hola", "shop", "playground"}
         for example in offered:
             assert set(example["title"]) == {"en", "es"}, example["id"]
             out = replay.engine(example["files"])

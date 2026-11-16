@@ -37,6 +37,7 @@ EXAMPLES = [
      HERE / "examples" / "shop"),
     ("hola", {"en": "Example: hola, a greeting service in four boxes", "es": "Ejemplo: hola, un servicio de saludos en cuatro cajas"},
      ROOT / "examples" / "hola"),
+    ("playground", {"en": "Example: the design of this playground", "es": "Ejemplo: el diseño de este playground"}, HERE / "design"),
     ("driftspec", {"en": "Example: the design of DriftSpec itself", "es": "Ejemplo: el diseño del propio DriftSpec"}, ROOT / "design"),
 ]
 

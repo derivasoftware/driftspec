@@ -7,7 +7,7 @@ as it is typed, with sixteen guided lessons in English and Spanish (SREQ-00019-1
 |---|---|
 | `web/` | The page (`index.html`) and its engine loader (`engine.js`). |
 | `lessons/NN-*/` | One lesson each: the workspace it starts from and `lesson.json`, its steps. `lessons/README.md` is the curriculum and the step format. |
-| `build.py` | Assembles the static site in `site/`: the page, `ds.js` + `ds.wasm`, the brand from `doc/assets`, and `examples.json`: the lessons, then three whole examples (the shop of `examples/shop`, `examples/hola`, and driftspec's own design). |
+| `build.py` | Assembles the static site in `site/`: the page, `ds.js` + `ds.wasm`, the brand from `doc/assets`, and `examples.json`: the lessons, then three whole examples (the shop of `examples/shop`, `examples/hola`, the design of this playground in `design/`, and driftspec's own design). |
 
 The engine is `ds::api::Browser` (REQ-00113-1) compiled to WebAssembly by the tree itself:
 
