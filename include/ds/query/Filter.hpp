@@ -49,10 +49,12 @@ struct Behaviour {
 };
 
 /// A sequence diagram: the behaviours its patterns name (a subject, a scenario, a prefix), and
-/// who takes part in them, walked into what they call down to a depth.
+/// who takes part in them, walked into what they call as far as the diagram says; on a cut, each
+/// one is the box that stands for it.
 class SequenceFilter : public IFilter {
  public:
-  SequenceFilter(std::vector<std::string> include, int depth, bool modules);
+  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none.
+  SequenceFilter(std::vector<std::string> include, int depth, std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
   /// The behaviours taken, in the order the patterns name them.
   std::vector<Behaviour> behaviours(const model::Model& model) const;
@@ -60,7 +62,7 @@ class SequenceFilter : public IFilter {
  private:
   std::vector<std::string> include_;
   int depth_ = 0;
-  bool modules_ = false;
+  std::string cutOf_;
 };
 
 /// A state diagram: the machines it names and the states of each that the design describes.
@@ -76,16 +78,19 @@ class StateFilter : public IFilter {
 };
 
 /// A requirements diagram: the artefacts its patterns name and their umbrella: what refines them,
-/// and, as shown, what verifies and what realises them.
+/// and, as shown, what verifies and what realises them; on a cut, what realises is the box that
+/// stands for it.
 class RequirementsFilter : public IFilter {
  public:
-  RequirementsFilter(std::vector<std::string> include, bool design, bool verifications);
+  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none.
+  RequirementsFilter(std::vector<std::string> include, bool design, bool verifications, std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
 
  private:
   std::vector<std::string> include_;
   bool design_ = true;
   bool verifications_ = true;
+  std::string cutOf_;
 };
 
 /// Whether an entity falls under a pattern of include, exclude or open: one reading for every kind of

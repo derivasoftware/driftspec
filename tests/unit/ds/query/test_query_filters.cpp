@@ -84,7 +84,7 @@ TEST_F(TestClassFilter, WithNoDiagramToTakeACutFromItShowsEveryBox) {
 class TestSequenceFilter : public Shop {};
 
 TEST_F(TestSequenceFilter, ItTakesTheBehavioursItsPatternsNameAndWhoTakesPart) {
-  const ds::query::SequenceFilter filter({"shop@till::Till::sell"}, 1, false);
+  const ds::query::SequenceFilter filter({"shop@till::Till::sell"}, 1);
   const auto taken = filter.behaviours(model);
   ASSERT_EQ(taken.size(), 1u);
   EXPECT_EQ(taken[0].sequence->id, "shop@till::Till::sell::sequence");

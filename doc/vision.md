@@ -138,7 +138,9 @@ in Plane, epics DS-206 and DS-205.
    coherence (epic DS-205; the words are chosen in DS-228). A cut is written as
    what closes and what opens, `close:`, `open:` and `cut:` in a diagram, never
    as its frontier, so whatever is written is a cut (DS-229, decided on a
-   sketch on 2026-11-16; guide §5).
+   sketch on 2026-11-16; guide §5). Boxes, sequences and requirements stand on
+   the same cut, and the calls a sequence follows are written the same way,
+   `fold:` and `unfold:` (DS-231).
 
 ## 3. Principles
 
@@ -239,7 +241,7 @@ short:
 ```
 .ds files ─ tree-sitter grammar ─► parse ─► bind ─► model ─► check (steps)
                                                       │
-              query · scene · render (svg, text, cells, ir, layout) · diff · exporter
+              query · axis · scene · render (svg, text, cells, ir, layout) · diff · exporter
                                                       │
                                    api (Api, Workspace) ─► pyds (CPython extension)
                                                       │

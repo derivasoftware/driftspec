@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "ds/axis/Cut.hpp"
 #include "ds/model/Model.hpp"
-#include "ds/query/Cut.hpp"
 
 namespace ds {
 namespace render {
@@ -27,7 +27,7 @@ class IrExport {
 
  private:
   std::string renderSequence(const model::Entity& diagram, bool pretty) const;
-  std::string closeBoxes(const std::string& ir, const query::Cut& cut, bool pretty) const;
+  std::string closeBoxes(const std::string& ir, const axis::Cut& cut, bool pretty) const;
   std::string renderState(const model::Entity& diagram, bool pretty) const;
   std::string renderRequirements(const model::Entity& diagram, bool pretty) const;
 

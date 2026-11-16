@@ -1,8 +1,11 @@
-// The cut of a diagram (DS-229): one shop, drawn through several cuts. A cut is written as what closes
-// and what opens, never as its frontier, so whatever is written is a cut; one branch may go down to
-// its classes while another stays one box.
+// The cut of a diagram (DS-229, DS-231): one shop and one purchase, drawn through several cuts. A cut is
+// written as what closes and what opens, never as its frontier, so whatever is written is a cut; one
+// branch may go down to its classes while another stays one box. Boxes, sequences and requirements
+// stand on the same cut.
 
 package shop {
+  requirement SREQ-00001-1: The shop shall sell an item that is in stock
+
   interface shell {
     kind: cli
     operation buy(item: string) -> int
@@ -19,7 +22,13 @@ package shop {
     @uses shop@bank@gateway
 
     module desk {
+      requirement REQ-00001-1 {
+        title: The desk shall refuse an item the warehouse does not hold
+        @refines SREQ-00001-1
+      }
+
       class Desk {
+        @requirement REQ-00001-1
         - refs counter: shop@warehouse@counter
         - owns till: shop@sales@till::Till
         - owns prices: PriceList
@@ -77,9 +86,16 @@ package shop {
     }
 
     module stock {
+      requirement REQ-00002-1 {
+        title: The stock shall hand over an item it holds
+        @refines SREQ-00001-1
+      }
+
       class Shelf {
         - owns boxes: list<Box>
-        + pick(item: string) -> bool
+        + pick(item: string) -> bool {
+          @requirement REQ-00002-1
+        }
       }
       dataclass Box {
         + item: string
@@ -168,4 +184,91 @@ diagram HLD_Cellar {
   kind: class
   include: shop@*
   close: shop@cellar                     // ! W-DIAGRAM-UNDECLARED: no box cellar in the shop
+}
+
+// ---- behaviour: the same purchase, on the same cuts ------------------------------------------------
+
+diagram SEQ_Classes {                    // no cut: every object its lifeline, as deep as depth: says
+  kind: sequence
+  include: shop@shell::buy
+  depth: *
+}
+
+diagram SEQ_Open {                       // on a cut each closed box is one lifeline, and every call is followed
+  kind: sequence
+  include: shop@shell::buy
+  open: shop@sales
+}
+
+diagram SEQ_Modules {                    // the cut at the modules: what crosses from one to another
+  kind: sequence
+  include: shop@shell::buy
+  close: module
+}
+
+diagram SEQ_Borrowed {                   // the cut of the boxes drawn above, so the two drawings agree
+  kind: sequence
+  include: shop@shell::buy
+  cut: HLD_Till
+}
+
+diagram SEQ_AsWritten {                  // unfold: alone folds every call: only what the behaviour itself writes
+  kind: sequence
+  include: shop@shell::buy
+  close: module
+  unfold:
+}
+
+diagram SEQ_UnfoldSales {                // unfold: a box. Only the calls that land in the sales are followed
+  kind: sequence
+  include: shop@shell::buy
+  close: module
+  unfold: shop@sales
+}
+
+diagram SEQ_FoldSupply {                 // fold: the reorder is seen, what the supply does to answer is not
+  kind: sequence
+  include: shop@shell::buy
+  close: module
+  fold: shop@warehouse@supply
+}
+
+diagram SEQ_Through {                    // unfold: goes through fold:, as open: goes through close:
+  kind: sequence
+  include: shop@shell::buy
+  close: module
+  fold: shop@sales
+  unfold: shop@sales@desk
+}
+
+diagram SEQ_OneLevel {                   // depth: is the uniform case
+  kind: sequence
+  include: shop@shell::buy
+  close: module
+  depth: 1
+}
+
+diagram SEQ_Cellar {
+  kind: sequence
+  include: shop@shell::buy
+  unfold: shop@cellar                    // ! W-DIAGRAM-UNDECLARED: no box cellar in the shop
+}
+
+diagram SEQ_Level {
+  kind: sequence
+  include: shop@shell::buy
+  level: module                          // ! W-FIELD-UNKNOWN: a cut is written with close: module
+}
+
+// ---- requirements: what answers to each, on the same cut -------------------------------------------
+
+diagram REQ_Classes {                    // no cut: the class that answers
+  kind: requirement
+  include: shop@*
+}
+
+diagram REQ_Modules {                    // the cut at the modules: the module that stands for it
+  kind: requirement
+  include: shop@*
+  close: module
 }

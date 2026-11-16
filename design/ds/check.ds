@@ -270,7 +270,7 @@ package driftspec@ds {
       @requirement REQ-00109-1
       @requirement REQ-00112-1
       @requirement REQ-00065-1
-      @requirement REQ-00049-2
+      @requirement REQ-00049-3
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
@@ -306,7 +306,7 @@ package driftspec@ds {
         @requirement REQ-00065-1
       }
       - checkDiagrams() -> void {
-        @requirement REQ-00049-2
+        @requirement REQ-00049-3
       }
     }
 
@@ -357,7 +357,7 @@ package driftspec@ds {
       }
       - checkFields() -> void {
         @requirement REQ-00067-1
-        @requirement REQ-00115-1
+        @requirement REQ-00115-2
       }
     }
 

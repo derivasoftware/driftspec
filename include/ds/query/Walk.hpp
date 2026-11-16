@@ -8,6 +8,10 @@
 #include "ds/model/Model.hpp"
 
 namespace ds {
+namespace axis {
+class Cut;
+}  // namespace axis
+
 namespace query {
 
 /// One message a behaviour takes, and where it goes on: the behaviour its call enters and the
@@ -39,8 +43,9 @@ class Walker {
   std::vector<Taken> steps(const std::string& sequence, const std::string& path, std::set<std::string>* out_kept = nullptr) const;
 
   /// A behaviour walked into what its calls enter, down to a depth: each message where it is taken,
-  /// a behaviour entered once on each way down, so a cycle ends.
-  std::vector<Walked> walk(const std::string& sequence, const std::string& path, int depth) const;
+  /// a behaviour entered once on each way down, so a cycle ends. With a cut, the calls it follows
+  /// are the ones the cut says (DS-231).
+  std::vector<Walked> walk(const std::string& sequence, const std::string& path, int depth, const axis::Cut* cut = nullptr) const;
 
  private:
   const model::Model& model_;

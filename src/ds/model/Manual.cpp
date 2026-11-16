@@ -260,7 +260,8 @@ std::vector<CodeSpec> buildCodes() {
        "An annotation word the language gives no meaning to: a typo, or a word no check reads. It is kept as a link.",
        "ds manual annotations lists the words that mean something."},
       {"W-DIAGRAM-UNDECLARED", "warning",
-       "A diagram's include, exclude, open, close or cut names something the workspace declares nowhere: it draws less and says nothing.",
+       "A diagram's include, exclude, open, close, cut, unfold or fold names something the workspace declares nowhere: it draws less and "
+       "says nothing.",
        "Correct the pattern, or declare what it names."},
       {"W-RULE-NEVER-MATCHES", "warning",
        "A relation literal binds an end to a kind the relation never joins there, so it matches nothing and the rule holds by vacuity.",

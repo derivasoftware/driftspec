@@ -8,7 +8,7 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
 
 - `grammar/` — the tree-sitter grammar (`grammar.js`), the generated parser and
   the external scanner for indented text blocks.
-- `include/ds/`, `src/ds/` — the engine (namespace root `ds`): parse, model, bind, check, render, diff, query, exporter.
+- `include/ds/`, `src/ds/` — the engine (namespace root `ds`): parse, model, bind, check, render, diff, query, axis, exporter.
 - `app/ds/` — the `ds` command line, five commands (`ds <command> --help` for each):
   - `ds check <workspace> [--json]` — the findings, then the counts of the model.
   - `ds export <workspace>` — the model as JSON, with its metamodel.

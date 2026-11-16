@@ -240,7 +240,7 @@ them. The vision (`vision.md`) says why; this says what.*
 
 ## 5. Diagrams
 
-- `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; open: …; close: …; cut: …; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes; depth: n; level: module }`.
+- `diagram CL_X { kind: class | sequence | requirement | state | interface; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
 - `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
   (`ds@*`), read alike by every kind of diagram; extern entities only when
   named. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
@@ -266,9 +266,24 @@ them. The vision (`vision.md`) says why; this says what.*
   boxes counts too, so an interface reaches what handles it: the component view is derived,
   never written. `ds query <workspace> shows <diagram>` answers with the same cut. A pattern
   that names no box, or a `cut:` that names no diagram, is `W-DIAGRAM-UNDECLARED`.
-- `depth` and `level` belong to sequences: `depth: 2`, `depth: *` for every level
-  (`W-DIAGRAM-DEPTH` for anything else), `level: module` for only what crosses
-  modules. A class diagram ignores them.
+- **A sequence and a requirement diagram stand on the same cut (2026-11-16, DS-231).** In a
+  sequence diagram a closed box is one lifeline for everything inside it. A message between two
+  things of one closed box is not drawn; one that crosses is drawn between the two lifelines,
+  and into a closed box it says which child takes it (`Desk::sell(item)`). A frame of the detail
+  is kept around what crosses inside it. In a requirement diagram what answers to a requirement
+  is the box that stands for it. `cut: HLD_Shop` in either makes them agree with the boxes
+  drawn. `level: module` is gone: it is written `close: module`.
+- **The calls a sequence follows (DS-231)** are a cut of their own, written the same way.
+  - `fold:` names the calls that are not followed: `fold: shop@warehouse` every call that lands
+    in that box, `fold: shop@sales@till::Till::charge` one operation. Every other call is followed.
+  - `unfold:` names the calls that are followed, whatever `fold:` says. Written alone it folds
+    every other call, and `unfold:` with nothing after it draws only what the behaviour writes.
+  - `depth: 2` is the uniform case for the calls neither names, `depth: *` every level
+    (`W-DIAGRAM-DEPTH` for anything else).
+  - With none of the three, a diagram that writes a cut follows every call, since what a closed
+    box does inside is seen only through what crosses out of it; one that writes no cut follows
+    none, as before.
+  A class diagram ignores them.
 - `kind: state` draws a machine, `include: shop@web` naming its class or interface:
   from the initial state down, a jump with its event and guard, a jump to the same
   state as a loop, and of a view its text and what binds it.
