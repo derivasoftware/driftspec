@@ -52,7 +52,8 @@ std::string edgeKind(const std::string& relation) {
   if (relation == "inherits") return "inheritance";
   if (relation == "owns") return "composition";
   if (relation == "refs" || relation == "shares") return "aggregation";
-  if (relation == "uses" || relation == "bounded-by" || relation == "consumes") return "dependency";  // @uses is drawn (DS-219)
+  if (relation == "uses" || relation == "bounded-by" || relation == "consumes" || relation == "sends")
+    return "dependency";  // @uses is drawn (DS-219)
   if (relation == "realises") return "realization";
   return "";
 }
@@ -232,6 +233,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     nlohmann::json edge = {{"from", fromClass}, {"to", r.to}, {"kind", kind}};
     if (!label.empty()) edge["label"] = label;
     if (!change.empty()) edge["refs"] = {{"change", change}};
+    edge["refs"]["bond"] = axis::bondOf(r.kind);  // what it reads as between boxes, once lifted (DS-230)
     out["edges"].push_back(edge);
   }
   // what a box does counts as much as what it declares, with or without open: (DS-219): its behaviours cross
@@ -246,7 +248,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     const auto at = drawn.lower_bound(pair);
     if (at != drawn.end() && at->compare(0, pair.size(), pair) == 0) continue;
     drawn.insert(pair + "dependency||");
-    out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}});
+    out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}, {"refs", {{"bond", axis::bondOf(r.kind)}}}});
   }
   // a cut written (`open:`, `close:`, `cut:`) says which boxes close: the drawing is lifted onto it (DS-229)
   const axis::Cut cut(model_, *diagram);
@@ -289,7 +291,7 @@ std::string IrExport::closeBoxes(const std::string& ir, const axis::Cut& cut, bo
     nodes.push_back(n);
   }
 
-  // an edge that loses an end to a closed box says only that one box depends on the other
+  // an edge that loses an end to a closed box is lifted to it, and says which of the two bonds it is
   nlohmann::json edges = nlohmann::json::array();
   std::set<std::string> lifted;
   for (auto e : doc["edges"]) {
@@ -297,8 +299,10 @@ std::string IrExport::closeBoxes(const std::string& ir, const axis::Cut& cut, bo
     const std::string to = visible(e["to"]);
     if (from == to) continue;  // what happens inside a closed box stays inside it
     if (from != e["from"].get<std::string>() || to != e["to"].get<std::string>()) {
-      if (!lifted.insert(from + "|" + to).second) continue;
-      e = {{"from", from}, {"to", to}, {"kind", "dependency"}};
+      // lifted, a relation is one of two things, a use or a structural bond: one arrow of each at most (DS-230)
+      const std::string bond = e.contains("refs") ? e["refs"].value("bond", "uses") : std::string("uses");
+      if (!lifted.insert(from + "|" + to + "|" + bond).second) continue;
+      e = {{"from", from}, {"to", to}, {"kind", bond == "structural" ? "association" : "dependency"}, {"refs", {{"bond", bond}}}};
     }
     edges.push_back(e);
   }

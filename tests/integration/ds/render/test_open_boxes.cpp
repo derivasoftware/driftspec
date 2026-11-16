@@ -60,11 +60,13 @@ TEST_F(TestOpenBoxes, AClosedBoxShowsOnlyItsPublicChildren) {
   EXPECT_EQ(shown.find("internal"), std::string::npos);  // a private module
 }
 
-TEST_F(TestOpenBoxes, EdgesLiftToTheBoxesThatAreSeenAndOnlyOnce) {
+TEST_F(TestOpenBoxes, EdgesLiftToTheBoxesThatAreSeenAndOnlyOnceForEachBond) {
   const auto ir = diagram("HLD_Shop");
   EXPECT_TRUE(edge(ir, "shop@front", "shop@store"));
-  EXPECT_EQ(ir["edges"].size(), 1U);  // what stays inside a closed box is not drawn
-  EXPECT_EQ(ir["edges"][0]["kind"], "dependency");
+  ASSERT_EQ(ir["edges"].size(), 2U);  // what stays inside a closed box is not drawn, and the rest is said twice at most
+  std::set<std::string> kinds;
+  for (const auto& e : ir["edges"]) kinds.insert(e["kind"].get<std::string>());
+  EXPECT_EQ(kinds, (std::set<std::string>{"association", "dependency"}));  // a structural bond and a use (DS-230)
 }
 
 TEST_F(TestOpenBoxes, OpeningABoxShowsTheWayToItAndClosesTheRest) {

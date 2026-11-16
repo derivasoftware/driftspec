@@ -212,6 +212,7 @@ package driftspec@ds {
       @requirement REQ-00039-1
       @requirement REQ-00040-1
       @requirement REQ-00132-1
+      @requirement REQ-00138-1
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver

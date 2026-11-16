@@ -80,6 +80,14 @@ Cut::Cut(const model::Model& model, const model::Entity& diagram)
   }
 }
 
+std::string bondOf(const std::string& relation) {
+  for (const char* structural : {"owns", "refs", "shares", "inherits", "realises"})
+    if (relation == structural) return "structural";
+  for (const char* use : {"uses", "bounded-by", "consumes", "calls", "sends", "couples-transient", "couples-structural"})
+    if (relation == use) return "uses";
+  return "";
+}
+
 std::string standsAmong(const std::string& id, const std::set<std::string>& boxes) {
   for (const auto& step : pathTo(id)) {
     if (boxes.count(step)) return step;

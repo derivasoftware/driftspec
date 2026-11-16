@@ -157,4 +157,14 @@ TEST_F(TestLevels, AScenarioWhoseLevelBelowIsNotWrittenIsHeldToNothing) {
       EXPECT_EQ(found(*in, code, "UC-00002-1 has"), 0) << code;
 }
 
+TEST_F(TestLevels, AMessageWrittenBetweenTwoParticipantsSaysTheSenderUsesTheReceiver) {
+  EXPECT_TRUE(related("sends", "shop@sales", "shop@warehouse"));
+  EXPECT_TRUE(related("sends", "shop@shell", "shop@sales"));            // an interface named as a participant sends too
+  EXPECT_TRUE(related("sends", "shop@sales@desk", "shop@sales@till"));  // in the scenario of a box, between what it names
+  EXPECT_FALSE(related("sends", "UC-00001-1", "shop@shell"));           // whoever asks for the use case is outside the design
+  int twice = 0;
+  for (const auto& r : model.index().from("shop@sales")) twice += r.kind == "sends" && r.to == "shop@warehouse";
+  EXPECT_EQ(twice, 1);  // said once, however many messages say it
+}
+
 }  // namespace

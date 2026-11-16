@@ -177,8 +177,9 @@ package driftspec@ds {
         @requirement REQ-00057-1
       }
       - closeBoxes(ir: std::string, cut: axis::Cut, pretty: bool) -> std::string {
-        @requirement REQ-00064-3
+        @requirement REQ-00064-4
         @requirement REQ-00126-1
+        @requirement REQ-00137-1
       }
       - renderState(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00062-1

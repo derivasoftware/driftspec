@@ -1124,7 +1124,7 @@ function paintTable(rows) {
 }
 
 // ---- relations at rest and lit -----------------------------------------------------------
-const EDGE_KIND = { inheritance: "inherits", realization: "inherits", composition: "has", aggregation: "refers", dependency: "uses" };
+const EDGE_KIND = { inheritance: "inherits", realization: "inherits", composition: "has", aggregation: "refers", dependency: "uses", association: "has" };  // association: a structural bond between closed boxes (DS-230)
 const UNIT = /pr-classifier-(class|dataclass|enum)\b/;
 
 function wireRelations(pane) {

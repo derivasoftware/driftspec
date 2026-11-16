@@ -129,7 +129,9 @@ in Plane, epics DS-206 and DS-205.
 4. **Relations are never merged.** Using, composing, aggregating and
    inheriting mean different things and do not weigh the same. What is missing
    is one rule to lift them from members to classes, modules and boxes, read by
-   every view (DS-230).
+   every view (DS-230). Decided on 2026-11-16: lifted onto a closed box, a
+   relation is one of two bonds, structural or use, and nothing more; between
+   classes each keeps its own kind.
 5. **The abstraction axis is elastic.** No fixed number of levels: one part of
    a system may need one step down and another twenty, and a rigid frame grows
    sublevels where it does not fit. A flat layer is a cut through containment,

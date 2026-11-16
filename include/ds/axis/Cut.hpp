@@ -15,6 +15,13 @@ namespace axis {
 /// and the participants of a scenario written between boxes (DS-233).
 std::string standsAmong(const std::string& id, const std::set<std::string>& boxes);
 
+/// How a relation reads between two boxes, once what they hold is not looked at (DS-230): "structural" (one
+/// owns, refers to, derives from or realises something of the other), "uses" (it names a type of the other,
+/// calls it, sends it a message or declares its use), or empty when it is no relation between boxes. Two
+/// bonds and no more: lifted, the kinds of a relation between classes do not weigh the same, and more than
+/// two would be noise between boxes.
+std::string bondOf(const std::string& relation);
+
 /// The cut of a diagram (DS-229): a set of boxes none of which holds another. Every entity below it
 /// has one representative on it, the outermost closed box around it, and what is above it stays open.
 /// It is written as what closes and what opens, never as its frontier, so whatever is written is a
