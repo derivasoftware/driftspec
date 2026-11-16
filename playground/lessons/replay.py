@@ -164,6 +164,10 @@ def replay(folder: pathlib.Path, show: bool) -> bool:
                 write(files, w)
             out = engine(files)
         good = passed(done, out)
+        missing = [d for d in ([st["shows"]] if isinstance(st.get("shows"), str) else st.get("shows", [])) if d not in [x["id"] for x in out["diagrams"]]]
+        if missing:  # the diagrams a step says it is about are drawn by the time it is done (DS-242)
+            print(f"  {i}: shows {', '.join(missing)}, which is not drawn")
+            good = False
         codes = sorted({f["code"] for f in out["report"]["findings"]})
         print(f"  {i}: {'ok ' if good else 'FAIL'} {', '.join(codes) or 'clean'}  diagrams={[d['id'] for d in out['diagrams']]}")
         ok &= good

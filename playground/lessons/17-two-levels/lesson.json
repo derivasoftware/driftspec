@@ -11,6 +11,9 @@
         "file": "shop.ds",
         "find": "sequence UC-00001-1 {"
       },
+      "shows": [
+        "SEQ_Purchase"
+      ],
       "write": [
         {
           "file": "shop.ds",
@@ -98,6 +101,10 @@
       "at": {
         "pane": "SEQ_Purchase"
       },
+      "shows": [
+        "SEQ_Purchase",
+        "SEQ_BuyBoxes"
+      ],
       "text": {
         "en": "Compare `SEQ_Purchase`, written between the boxes, with `SEQ_BuyBoxes`, the detail seen through the cut of the same boxes: the same crossings in the same order. That is what is checked. The high level may leave a crossing out, because an abstraction omits; it may not add one, nor turn two around.",
         "es": "Compara `SEQ_Purchase`, escrito entre las cajas, con `SEQ_BuyBoxes`, el detalle visto a través del corte de esas mismas cajas: los mismos cruces en el mismo orden. Eso es lo que se comprueba. El nivel alto puede omitir un cruce, porque una abstracción omite; no puede añadir uno ni dar la vuelta a dos."

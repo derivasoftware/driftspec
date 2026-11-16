@@ -64,6 +64,7 @@ Notes for writing a lesson:
 | Key | What it does |
 |---|---|
 | `at` | what the card points at: `{file, find[, after]}` a line (`after: "}"` the end of that line's block), `{pane[, select]}` a diagram (and the class whose relations light up), `{panel: "problems"}` |
+| `shows` | the diagrams the step is about, when they are not the pane the card points at or the one its check looks at: one or a list. The page shows the diagrams of a step alone while it lasts (DS-242); a lesson with a step done on the page itself moves nothing |
 | `write` | what the lesson types before the card asks anything: one or a list of `{file, end}`, `{file, below: {find[, after]}}`, `{file, into: {find[, first]}}` (end of the block, or its first line), `{file, replace, text}` |
 | `solution` | the same shapes, typed when the reader asks the lesson to write it |
 | `open` (lesson) | the file the lesson opens first |
