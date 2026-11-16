@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <map>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -153,6 +154,37 @@ TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramD
   for (const auto& n : ir["nodes"]) requirement = requirement || n["id"] == "REQ-00001-1";
   EXPECT_TRUE(requirement);
   for (const auto& f : model.findings()) EXPECT_NE(f.code, "W-DIAGRAM-UNDECLARED") << f.message;  // an empty box is no broken name
+}
+
+TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("a.ds",
+                               "package shop {\n"
+                               "  package sales {\n"
+                               "    @uses shop@warehouse@counter\n"
+                               "  }\n"
+                               "  package warehouse {\n"
+                               "    interface counter {\n"
+                               "      kind: library\n"
+                               "      operation take(item: string) -> bool\n"
+                               "    }\n"
+                               "  }\n"
+                               "  module empty { }\n"
+                               "}\n"
+                               "diagram HLD_Shop {\n"
+                               "  kind: class\n"
+                               "  include: shop@*\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:HLD_Shop", false));
+  std::map<std::string, std::string> parentOf;
+  for (const auto& n : ir["nodes"]) parentOf[n["id"]] = n.contains("parent") ? n["parent"].get<std::string>() : "";
+  EXPECT_TRUE(parentOf.count("shop@sales"));                        // a box with nothing inside
+  EXPECT_TRUE(parentOf.count("shop@empty"));                        // a module with nothing inside
+  EXPECT_EQ(parentOf["shop@warehouse@counter"], "shop@warehouse");  // an interface sits in its box
 }
 
 }  // namespace

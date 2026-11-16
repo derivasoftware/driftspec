@@ -1468,6 +1468,27 @@ package driftspec@ds {
             tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
         }
       }
+      requirement REQ-00120-1 {
+        tags: language, diagrams, hld
+        status: approved
+        title: A class diagram shall draw every box it includes, whatever the box holds
+        text:
+          A package below the system or a module that a pattern takes is drawn as a box, with or
+          without children, and an entity is drawn inside the box its scope names, a package scope
+          included: an interface declared in a package sits in that package. Nothing below a box is
+          needed to see the box.
+        rationale:
+          Model audit 2026-11, finding I3 (DS-218), and the Owner's decision of 2026-11-15: every
+          abstraction level stands on its own. A design that had only its high level drew two loose
+          interfaces and no box, and a package with nothing inside did not appear.
+        verification VER-00136-1 {
+          title: Integration tests confirm a box with nothing inside is drawn and an interface sits in the package that declares it
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestEveryBox.ABoxIsDrawnWithOrWithoutChildren
+        }
+      }
       requirement REQ-00064-2 {
         tags: language, diagrams, visibility
         status: approved
