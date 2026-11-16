@@ -1,0 +1,17 @@
+// e29: protected (DS-224). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e29shop {
+  module store {
+    class Vault {
+      # secret() -> int
+      - hidden() -> int
+    }
+    class Thief {
+      - vault: Vault
+      + steal() -> none
+    }
+    sequence Thief::steal {
+      self -> vault.secret() -> a  // ! W-NOT-VISIBLE
+      self -> vault.hidden() -> b  // ! W-NOT-VISIBLE
+    }
+  }
+}

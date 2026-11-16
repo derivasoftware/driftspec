@@ -1,0 +1,25 @@
+// e51: an attribute that owns an interface (DS-224). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e51shop {
+  package back {
+    interface orders {
+      kind: http
+      operation find(id: string) -> string
+    }
+    sequence orders::find {
+      return "x"
+    }
+  }
+  package front {
+    @uses e51shop@back@orders
+    module web {
+      class Page {
+        - api: e51shop@back@orders  // ! E-RELATION-KIND
+        - refs api2: e51shop@back@orders
+        + show(id: string) -> none
+      }
+      sequence Page::show {
+        self -> api2.find(id) -> order
+      }
+    }
+  }
+}

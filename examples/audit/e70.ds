@@ -1,0 +1,37 @@
+// e70: only the HLD: coverage, no finding (DS-216, DS-218). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+// Only the HLD: the boxes, what each offers and consumes, and what the system promises.
+package e70shop {
+  requirement SREQ-70001-1 {  // ? W-REQ-NO-VERIFICATION
+    title: The shop shall sell an item that is in stock
+    status: approved
+  }
+  usecase UC-70001-1 buy(item: string) -> int {
+    title: Buy an item
+    @requirement SREQ-70001-1
+    outcome default: the item is bought
+    outcome sold-out: nothing is bought
+  }
+  interface shell {
+    kind: cli
+    operation buy(item: string) -> int : UC-70001-1  // ? W-OPERATION-NO-BEHAVIOUR, W-USECASE-OUTCOME-UNHANDLED
+    operation help() -> none  // ? W-OPERATION-NO-BEHAVIOUR
+  }
+  package sales {
+    @requirement SREQ-70001-1
+    @uses e70shop@warehouse@counter
+  }
+  package warehouse {
+    interface counter {
+      kind: library
+      operation take(item: string) -> bool  // ? W-OPERATION-NO-BEHAVIOUR
+    }
+  }
+}
+diagram HLD_Shop_e70 {
+  kind: class
+  include: e70shop@*
+}
+diagram REQ_Shop_e70 {
+  kind: requirement
+  include: e70shop@*
+}

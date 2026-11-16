@@ -1,0 +1,20 @@
+// e19: a handler that handles nothing (DS-224). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e19shop {
+  module store {
+    class Disk {
+      + read(path: string) -> string fails IoError
+    }
+    class Book {
+      - disk: Disk
+      + load(path: string) -> string fails nothing  // ! W-FAILURE-UNDECLARED
+    }
+    sequence Book::load {
+      attempt {
+        self -> disk.read(path) -> text
+      } on IoErorr {  // ! W-HANDLER-UNREACHED
+        return "empty"
+      }
+      return text
+    }
+  }
+}

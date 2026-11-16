@@ -1,0 +1,34 @@
+// e37: nesting is annotating (DS-217). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e37shop {
+  module store {
+    class Cart {
+      requirement REQ-37001-1: The cart shall total its items
+      + total() -> int
+    }
+    class Basket {
+      @requirement REQ-37002-1
+      + total() -> int
+    }
+    requirement REQ-37002-1: The basket shall total its items
+  }
+}
+diagram REQ_Store_e37 {
+  kind: requirement
+  include: e37shop@store::*
+}
+diagram REQ_Module_e37 {
+  kind: requirement
+  include: e37shop@store
+}
+diagram REQ_Pkg_e37 {
+  kind: requirement
+  include: e37shop@*
+}
+diagram REQ_PkgForm_e37 {  // ! W-DIAGRAM-UNDECLARED
+  kind: requirement
+  include: package:shop
+}
+diagram CL_PkgForm_e37 {  // ! W-DIAGRAM-UNDECLARED
+  kind: class
+  include: package:shop
+}

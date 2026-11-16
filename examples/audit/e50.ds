@@ -1,0 +1,27 @@
+// e50: cycles and upward refinement (DS-214). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e50shop {
+  requirement SREQ-50001-1 {
+    title: The shop shall take an order
+    @refines REQ-50001-1  // ! E-REFINES-CYCLE, W-REFINES-UPWARD
+  }
+  module store {
+    requirement REQ-50001-1 {
+      title: The cart shall total its items
+      @refines SREQ-50001-1
+    }
+    class A : B {
+      + go() -> none
+    }
+    class B : A {  // ! E-INHERITANCE-CYCLE
+      + stop() -> none
+    }
+    class Cart {
+      @requirement SREQ-50001-1
+      - owns self_ref: Cart
+      - other: Basket  // ! E-OWNERSHIP-CYCLE
+    }
+    class Basket {
+      - back: Cart
+    }
+  }
+}

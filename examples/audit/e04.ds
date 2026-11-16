@@ -1,0 +1,21 @@
+// e04: diagram patterns (DS-212). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e04shop {
+  module store {
+    class Cart {
+      + add(item: string) -> bool
+    }
+  }
+}
+diagram CL_Ghost_e04 {  // ! W-DIAGRAM-UNDECLARED, W-FIELD-VALUE
+  kind: clas
+  include: e04shop@warehouse::*
+  include: e04shop@store::Basket
+}
+diagram SEQ_Ghost_e04 {  // ! W-DIAGRAM-UNDECLARED
+  kind: sequence
+  include: e04shop@store::Cart::remove
+}
+diagram REQ_Ghost_e04 {  // ! W-DIAGRAM-UNDECLARED
+  kind: requirement
+  include: REQ-4999-1
+}

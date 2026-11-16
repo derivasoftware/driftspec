@@ -1,0 +1,14 @@
+// e25: unknown annotation (DS-210). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e25shop {
+  requirement REQ-25001-1 {  // ? W-REQ-NO-VERIFICATION
+    title: The cart shall total its items
+    status: approved
+  }
+  module store {
+    class Cart {
+      @requirment REQ-25001-1  // ! W-ANNOTATION-UNKNOWN
+      @verifies REQ-25001-1  // ! W-ANNOTATION-UNKNOWN
+      + total() -> int
+    }
+  }
+}

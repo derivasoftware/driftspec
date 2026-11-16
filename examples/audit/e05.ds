@@ -1,0 +1,16 @@
+// e05: closed field values (DS-211). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e05shop {
+  requirement REQ-5001-1 {  // ! W-FIELD-VALUE
+    title: The cart shall total its items
+    status: aproved
+  }
+  verification VER-5001-1 {  // ! W-FIELD-VALUE
+    @requirement REQ-5001-1
+    title: Someone looks at it
+    method: telepathy
+    level: cosmic
+  }
+  module store {  // ! W-LANGUAGE-UNKNOWN
+    language: cobol
+  }
+}

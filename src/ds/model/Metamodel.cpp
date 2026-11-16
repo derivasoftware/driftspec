@@ -244,7 +244,7 @@ std::vector<RelationSpec> buildRelations() {
       rel("calls", "a message calls an operation", {Ms}, {F, Me, Op}),
       rel("expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}),
       rel("couples-transient", "a behaviour touches a type for the length of a call", {S}, {Cl, E, F, I}),
-      rel("couples-structural", "a behaviour reaches a type through an attribute", {S}, {Cl, E}),
+      rel("couples-structural", "a behaviour reaches a type through an attribute", {S}, {Cl, E, I}),  // an interface held by refs (DS-209)
       rel("on", "a transition fires on an operation", {St}, {Me, Op}),
       rel("does", "a transition runs an operation", {St}, {Me, Op}),
       rel("consumes", "a box depends on an interface another box offers (@uses)", {P, M, Cl}, {I}),
