@@ -977,6 +977,7 @@ function focusStep(st) {
   if (!ids || !ids.length || !ids.every((id) => state.panes.has(id))) return;
   coach.focused = coach.step;
   setSolo(ids[0], ids.slice(1));
+  if (state.panes.get(ids[0])?.kind_ === "tour") playTour(ids[0]);  // a tour is there to be played (DS-246)
 }
 
 function placeCoach(st) {
