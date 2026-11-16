@@ -289,6 +289,12 @@ them. The vision (`vision.md`) says why; this says what.*
   outermost closed box around it. It is written as what closes and what opens, never as its
   frontier, so whatever is written is a cut, and one branch may go down to its classes while
   another stays one box. There are no numbered levels.
+  The words (decided 2026-11-16, DS-228), one for each thing: a **cut** is the flat layer; boxes
+  **open** and **close**; calls **unfold** and **fold**; what lies below a cut is **lifted** onto
+  it (a relation, a message, what answers to a requirement). The two ends of the axis are the
+  **high level** and the **detail**, never a level with a number; and depth counts calls, so it
+  is not said of boxes. In Spanish: corte, abrir y cerrar, desplegar y plegar, alzar, nivel alto
+  y detalle.
   - `close:` names the boxes that close: a name (`close: shop@warehouse`), a prefix
     (`close: shop@sales@*`) or a kind of box (`close: module`, `close: package`), so a cut runs at
     one kind of box wherever each one is. Every other box stays open.

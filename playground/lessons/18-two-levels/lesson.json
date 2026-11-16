@@ -144,7 +144,7 @@
       },
       "text": {
         "en": "A tour is played step by step: each message of the scenario, and the box that sends it and the one that receives it. The arrows between the boxes are what the design says of them, lifted onto these three: the dashed one from the shell to the store is a use, and this scenario alone would draw it; billing has a solid one too, because below it an invoice keeps a reference to the cart.",
-        "es": "Un tour se reproduce paso a paso: cada mensaje del escenario, y la caja que lo envía y la que lo recibe. Las flechas entre las cajas son lo que el diseño dice de ellas, subido a estas tres: la discontinua del shell a la tienda es un uso, y este escenario solo ya la dibujaría; la facturación tiene además una continua, porque por debajo una factura guarda una referencia al carrito."
+        "es": "Un tour se reproduce paso a paso: cada mensaje del escenario, y la caja que lo envía y la que lo recibe. Las flechas entre las cajas son lo que el diseño dice de ellas, alzado a estas tres: la discontinua del shell a la tienda es un uso, y este escenario solo ya la dibujaría; la facturación tiene además una continua, porque por debajo una factura guarda una referencia al carrito."
       },
       "done": {
         "ack": {

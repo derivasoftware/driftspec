@@ -113,7 +113,7 @@
       },
       "text": {
         "en": "Look at the arrows that reach a closed box. Between classes a relation is a composition, an aggregation, an inheritance or a use. Lifted onto a closed box it is one of two things: a solid arrow is a structural bond, a dashed one is a use. `tracking` has both: a solid one to the courier it keeps a reference to, and a dashed one to the parcel it only takes as a parameter.",
-        "es": "Fíjate en las flechas que llegan a una caja cerrada. Entre clases una relación es una composición, una agregación, una herencia o un uso. Al subir a una caja cerrada es una de dos cosas: una flecha continua es un vínculo estructural y una discontinua es un uso. `tracking` tiene las dos: una continua hacia el transportista del que guarda una referencia, y una discontinua hacia el paquete que solo recibe como parámetro."
+        "es": "Fíjate en las flechas que llegan a una caja cerrada. Entre clases una relación es una composición, una agregación, una herencia o un uso. Alzada a una caja cerrada, es una de dos cosas: una flecha continua es un vínculo estructural y una discontinua es un uso. `tracking` tiene las dos: una continua hacia el transportista del que guarda una referencia, y una discontinua hacia el paquete que solo recibe como parámetro."
       },
       "done": {
         "ack": {
