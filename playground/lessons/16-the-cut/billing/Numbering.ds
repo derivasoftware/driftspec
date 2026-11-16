@@ -1,0 +1,8 @@
+package shop {
+  module billing {
+    + class Numbering {
+      + next() -> int
+      + static today() -> string
+    }
+  }
+}

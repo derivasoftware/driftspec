@@ -1,0 +1,128 @@
+{
+  "title": {
+    "en": "17 · Two levels",
+    "es": "17 · Dos niveles"
+  },
+  "version": 1,
+  "open": "shop.ds",
+  "steps": [
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "sequence UC-00001-1 {"
+      },
+      "write": [
+        {
+          "file": "shop.ds",
+          "below": {
+            "find": "sequence shell::buy / sold-out",
+            "after": "}"
+          },
+          "text": "sequence UC-00001-1 {\n  -> shell.buy(item)\n  shell -> store.checkout(card)\n  shell -> billing.invoice(cart)\n  return 0\n}"
+        },
+        {
+          "file": "diagrams/behaviour.ds",
+          "end": true,
+          "text": "diagram SEQ_Purchase {\n  kind: sequence\n  include: UC-00001-1\n}"
+        }
+      ],
+      "text": {
+        "en": "Until now a sequence was the behaviour of one operation, and a view from the top was that detail seen through a cut. The top can also be written first. This is a scenario of the use case, in one block, between the boxes: a box takes part by being named, whoever is written before the arrow sends, and with nobody there it is whoever asks for the use case. Nothing below it has to exist.",
+        "es": "Hasta ahora una secuencia era el comportamiento de una operación, y la vista desde arriba era ese detalle visto a través de un corte. Lo de arriba también se puede escribir primero. Esto es un escenario del caso de uso, en un solo bloque, entre las cajas: una caja participa con solo nombrarla, envía quien está escrito delante de la flecha, y si no hay nadie es quien pide el caso de uso. No hace falta que exista nada por debajo."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "A message to a box goes down by itself when it can. `billing` offers a function called `invoice`, so that message is bound to it and checked like any call. `store` offers no operation called `checkout` (it is the cart's): the message is a label for now, listed as information and never as a problem. That level is simply not written yet.",
+        "es": "Un mensaje a una caja baja solo cuando puede. `billing` ofrece una función llamada `invoice`, así que ese mensaje queda enlazado a ella y se comprueba como cualquier llamada. `store` no ofrece ninguna operación llamada `checkout` (es del carrito): el mensaje es por ahora una etiqueta, que aparece como información y nunca como problema. Ese nivel, sencillamente, aún no está escrito."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "sequence UC-00001-1 {",
+        "after": "}"
+      },
+      "text": {
+        "en": "Where both levels are written they are held to each other. Write the scenario of a declined purchase below this one, and say, wrongly, that it is invoiced too:\n`sequence UC-00001-1 / declined {`\n`  -> shell.buy(item)`\n`  shell -> store.checkout(card)`\n`  shell -> billing.invoice(cart)`\n`  return 2`\n`}`\nThe detail below, `shell::buy / declined`, never invoices. Two written facts clash, and that is a finding.",
+        "es": "Donde los dos niveles están escritos, se comparan. Escribe debajo de este el escenario de una compra rechazada y di, a propósito mal, que también se factura:\n`sequence UC-00001-1 / declined {`\n`  -> shell.buy(item)`\n`  shell -> store.checkout(card)`\n`  shell -> billing.invoice(cart)`\n`  return 2`\n`}`\nEl detalle de debajo, `shell::buy / declined`, nunca factura. Dos hechos escritos chocan, y eso es un hallazgo."
+      },
+      "solution": {
+        "file": "shop.ds",
+        "below": {
+          "find": "sequence UC-00001-1 {",
+          "after": "}"
+        },
+        "text": "sequence UC-00001-1 / declined {\n  -> shell.buy(item)\n  shell -> store.checkout(card)\n  shell -> billing.invoice(cart)\n  return 2\n}"
+      },
+      "done": {
+        "finding": "W-LEVEL-NO-CROSSING"
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "sequence UC-00001-1 / declined"
+      },
+      "text": {
+        "en": "One of the two levels is wrong, and the design says which only if you do. Here it is the scenario: a declined purchase is not invoiced. Remove its `shell -> billing.invoice(cart)` line.",
+        "es": "Uno de los dos niveles está mal, y cuál lo decides tú. Aquí es el escenario: una compra rechazada no se factura. Quita su línea `shell -> billing.invoice(cart)`."
+      },
+      "solution": {
+        "file": "shop.ds",
+        "replace": "  shell -> store.checkout(card)\n    shell -> billing.invoice(cart)\n    return 2",
+        "text": "  shell -> store.checkout(card)\n    return 2"
+      },
+      "done": {
+        "gone": "W-LEVEL-NO-CROSSING",
+        "clean": true,
+        "entity": "UC-00001-1::sequence/declined"
+      }
+    },
+    {
+      "at": {
+        "pane": "SEQ_Purchase"
+      },
+      "text": {
+        "en": "Compare `SEQ_Purchase`, written between the boxes, with `SEQ_BuyBoxes`, the detail seen through the cut of the same boxes: the same crossings in the same order. That is what is checked. The high level may leave a crossing out, because an abstraction omits; it may not add one, nor turn two around.",
+        "es": "Compara `SEQ_Purchase`, escrito entre las cajas, con `SEQ_BuyBoxes`, el detalle visto a través del corte de esas mismas cajas: los mismos cruces en el mismo orden. Eso es lo que se comprueba. El nivel alto puede omitir un cruce, porque una abstracción omite; no puede añadir uno ni dar la vuelta a dos."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "So the top can be written first and the detail implemented later: as it is written, it is matched. What is missing below is never a problem. It is listed as information, and it tells which steps of the high level have their detail beneath.",
+        "es": "Así que lo de arriba se puede escribir primero e implementar el detalle después: según se escribe, se compara. Lo que falta por debajo nunca es un problema. Aparece como información, y dice qué pasos del nivel alto tienen ya su detalle debajo."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

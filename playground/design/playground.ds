@@ -160,6 +160,7 @@ package playground {
       + entity: optional<string>
       + finding: optional<string>
       + gone: optional<string>
+      + hides: optional<string>             // a text a diagram no longer draws: what a cut closes, what a fold stops at
       + clean: bool
     }
     // the card beside what a step talks about: decides when a step is done and which comes next; the page
