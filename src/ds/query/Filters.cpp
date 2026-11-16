@@ -4,6 +4,7 @@
 
 #include "ds/model/Identity.hpp"
 #include "ds/model/Words.hpp"
+#include "ds/query/Cut.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
 
@@ -65,39 +66,8 @@ bool inPattern(const model::Model& model, const std::string& pattern, const mode
 
 // ---- class diagrams --------------------------------------------------------------------------
 
-ClassFilter::ClassFilter(std::vector<std::string> include, std::vector<std::string> exclude, int neighbours, bool closes,
-                         std::vector<std::string> open)
-    : include_(std::move(include)), exclude_(std::move(exclude)), neighbours_(neighbours), closes_(closes), open_(std::move(open)) {}
-
-namespace {
-std::string outerOf(const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); }  // the box outside
-std::vector<std::string> pathTo(const std::string& id) {  // from the outermost box down to the id
-  std::vector<std::string> path;
-  for (std::string s = id; !s.empty(); s = outerOf(s)) path.insert(path.begin(), s);
-  return path;
-}
-}  // namespace
-
-std::set<std::string> ClassFilter::opened(const std::set<std::string>& containers, const std::vector<std::string>& open) {
-  // a box is open when it is named, or when something inside it is: opening a box shows the way to it
-  std::set<std::string> out;
-  for (const auto& id : containers) {
-    for (const auto& pattern : open) {
-      const bool star = !pattern.empty() && pattern.back() == '*';
-      const std::string prefix = star ? pattern.substr(0, pattern.size() - 1) : pattern;
-      if (id != pattern && !(star && id.rfind(prefix, 0) == 0)) continue;
-      for (const auto& step : pathTo(id)) out.insert(step);
-    }
-  }
-  return out;
-}
-
-std::string ClassFilter::standsFor(const std::string& id, const std::set<std::string>& containers, const std::set<std::string>& opened) {
-  for (const auto& step : pathTo(id)) {
-    if (containers.count(step) && !opened.count(step)) return step;
-  }
-  return id;
-}
+ClassFilter::ClassFilter(std::vector<std::string> include, std::vector<std::string> exclude, int neighbours, std::string cutOf)
+    : include_(std::move(include)), exclude_(std::move(exclude)), neighbours_(neighbours), cutOf_(std::move(cutOf)) {}
 
 std::string drawnFrom(const model::Model& model, const model::Entity& entity) {
   if (isBox(entity) || entity.kind == model::Kind::Module || entity.kind == model::Kind::Package) return entity.id;  // a box's own @uses
@@ -172,11 +142,13 @@ std::set<std::string> ClassFilter::select(const model::Model& model) const {
   const std::set<std::string> around = containers(model, taken);
   std::set<std::string> out = taken;
   for (const auto& c : around) out.insert(c);
-  if (!closes_) return out;
-  const std::set<std::string> open = opened(around, open_);
+  const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);
+  if (!diagram) return out;
+  const Cut cut(model, *diagram);
+  if (!cut.written()) return out;
   std::set<std::string> shown;
   for (const auto& id : out)
-    if (standsFor(id, around, open) == id) shown.insert(id);  // what a closed box holds, the box stands for
+    if (cut.standsFor(id) == id) shown.insert(id);  // what a closed box holds, the box stands for
   return shown;
 }
 
@@ -320,8 +292,8 @@ std::unique_ptr<IFilter> filterFor(const model::Entity& diagram) {
     return std::unique_ptr<IFilter>(
         new RequirementsFilter(include, show.empty() || show.count("design"), show.empty() || show.count("verifications")));
   }
-  return std::unique_ptr<IFilter>(new ClassFilter(include, split(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0),
-                                                  diagram.fields.count("open") > 0, split(diagram.field("open"), ',')));
+  return std::unique_ptr<IFilter>(
+      new ClassFilter(include, split(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0), diagram.id));
 }
 
 }  // namespace query

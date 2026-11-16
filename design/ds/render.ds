@@ -176,8 +176,9 @@ package driftspec@ds {
       + render(diagramId: std::string, pretty: bool) -> std::string {
         @requirement REQ-00057-1
       }
-      - closeBoxes(ir: std::string, open: std::vector<std::string>, pretty: bool) -> std::string {
-        @requirement REQ-00064-2
+      - closeBoxes(ir: std::string, cut: query::Cut, pretty: bool) -> std::string {
+        @requirement REQ-00064-3
+        @requirement REQ-00126-1
       }
       - renderState(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00062-1
@@ -240,9 +241,9 @@ package driftspec@ds {
       }
       self -> model_.index() -> all
       self -> all.all() -> relations
-      opt open: is written / open-boxes {
+      opt a cut is written / open-boxes {
         self -> all.ofKinds(coupling) -> behaviourCoupling
-        -> closeBoxes(ir, open, pretty) -> closed
+        -> closeBoxes(ir, cut, pretty) -> closed
         return closed
       }
       return ir

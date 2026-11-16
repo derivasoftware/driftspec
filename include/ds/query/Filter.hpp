@@ -22,29 +22,24 @@ class IFilter {
 };
 
 /// A class diagram: its include patterns minus its exclude patterns, grown by its neighbours,
-/// and the modules and packages around what it holds; when it closes boxes (`open:` written),
-/// what a closed box holds is not shown, the box stands for it.
+/// and the modules and packages around what it holds; when the diagram it is built for writes a
+/// cut (`open:`, `close:`, `cut:`), what a closed box holds is not shown, the box stands for it.
 class ClassFilter : public IFilter {
  public:
-  ClassFilter(std::vector<std::string> include, std::vector<std::string> exclude, int neighbours, bool closes = false,
-              std::vector<std::string> open = {});
+  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none.
+  ClassFilter(std::vector<std::string> include, std::vector<std::string> exclude, int neighbours, std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
   /// What the patterns and the neighbours take, without the boxes around it.
   std::set<std::string> boxes(const model::Model& model) const;
   /// The modules and nested packages that hold what is taken: drawn around it.
   static std::set<std::string> containers(const model::Model& model, const std::set<std::string>& taken);
-  /// The boxes that stay open: those `open` names, and every box on the way to one.
-  static std::set<std::string> opened(const std::set<std::string>& containers, const std::vector<std::string>& open);
-  /// What stands for an id: the outermost closed box around it, or the id itself.
-  static std::string standsFor(const std::string& id, const std::set<std::string>& containers, const std::set<std::string>& opened);
 
  private:
   bool matches(const model::Model& model, const std::string& pattern, const model::Entity& entity) const;
   std::vector<std::string> include_;
   std::vector<std::string> exclude_;
   int neighbours_ = 0;
-  bool closes_ = false;
-  std::vector<std::string> open_;
+  std::string cutOf_;
 };
 
 /// A behaviour a sequence diagram takes, and the scenario it follows ("*" for every branch).

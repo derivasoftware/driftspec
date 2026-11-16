@@ -464,12 +464,23 @@ void ContractCheck::checkDiagrams() {
     }
     // a pattern that names what nothing declares is a broken reference, as in the model (DS-212); a box that
     // exists and is empty is not: a level with no children is valid
-    for (const char* key : {"include", "exclude", "open"}) {
+    for (const char* key : {"include", "exclude", "open", "close"}) {
       for (const auto& pattern : split(pair.second.field(key), ',')) {
-        if (namesSomething(*model_, pattern)) continue;
+        // a cut may name a kind of box instead of a box (DS-229)
+        const bool kind = key != std::string("include") && key != std::string("exclude") &&
+                          (pattern == model::kindName(model::Kind::Module) || pattern == model::kindName(model::Kind::Package));
+        if (kind || namesSomething(*model_, pattern)) continue;
         found_.push_back({"W-DIAGRAM-UNDECLARED", "warning",
                           pair.second.name + " " + key + "s " + pattern + ", which the workspace declares nowhere", pair.second.location});
       }
+    }
+    // the diagram a cut is taken from is a reference like any other
+    const std::string lender = pair.second.field("cut");
+    const model::Entity* lent = lender.empty() ? nullptr : model_->find("diagram:" + lender);
+    if (!lender.empty() && (!lent || lent->kind != model::Kind::Diagram)) {
+      found_.push_back({"W-DIAGRAM-UNDECLARED", "warning",
+                        pair.second.name + " takes the cut of " + lender + ", a diagram the workspace declares nowhere",
+                        pair.second.location});
     }
     const auto depth = pair.second.fields.find("depth");
     if (depth == pair.second.fields.end() || depth->second == "*") continue;
