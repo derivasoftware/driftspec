@@ -10,6 +10,11 @@
 namespace ds {
 namespace axis {
 
+/// What stands for an id among a set of boxes: the outermost of them around it, or the id when it is one of
+/// them; empty when none of them holds it. The one way anything is lifted onto a cut: the cut of a diagram,
+/// and the participants of a scenario written between boxes (DS-233).
+std::string standsAmong(const std::string& id, const std::set<std::string>& boxes);
+
 /// The cut of a diagram (DS-229): a set of boxes none of which holds another. Every entity below it
 /// has one representative on it, the outermost closed box around it, and what is above it stays open.
 /// It is written as what closes and what opens, never as its frontier, so whatever is written is a

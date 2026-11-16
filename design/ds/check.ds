@@ -374,6 +374,15 @@ package driftspec@ds {
       }
     }
 
+    // two levels of one behaviour, both written, agree (DS-233): the scenario of a use case is held to the
+    // behaviour of the operation it is asked through, unfolded and lifted onto the scenario's participants
+    class LevelCoherence : ACheck {
+      @requirement REQ-00136-1
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
     class DependencyCheck : ACheck {       // what a box declares it uses against what its behaviours call
       @requirement REQ-00094-2
       - refs context_: Context

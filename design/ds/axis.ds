@@ -1,12 +1,20 @@
 // LLD of the axis namespace (ds::axis): the abstraction axis of a design (vision 2b.5, epic
 // DS-205). Containment is the axis; a cut is a flat layer through it. This namespace says what a
 // diagram's cut is and what stands for each entity on it, once, for everything that reads a
-// design at a cut: the query that says what a diagram shows and the drawing of it. Not its jobs:
+// design at a cut: the query that says what a diagram shows, the drawing of it, and the check
+// that holds a scenario written between boxes to the behaviour below it. Not its jobs:
 // selecting what a diagram takes (ds::query), drawing (ds::render), checking.
 
 package driftspec@ds {
 
   module axis {
+
+    // what stands for an id among a set of boxes: the outermost of them around it. The one way anything is
+    // lifted: onto the cut of a diagram, onto the participants of a scenario (DS-233)
+    function standsAmong(id: std::string, boxes: std::set<std::string>) -> std::string {
+      @requirement REQ-00126-1
+      @requirement REQ-00136-1
+    }
 
     // the cut of a diagram (DS-229): what closes and what opens. close: draws the line (a name, a
     // prefix, a kind of box), open: goes through it, cut: adds another diagram's

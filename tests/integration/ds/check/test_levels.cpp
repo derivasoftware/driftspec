@@ -112,7 +112,7 @@ TEST_F(TestLevels, WhatClashesWithTheLevelBelowIsAFinding) {
   EXPECT_EQ(found(model.findings(), "W-USES-UNDECLARED", "shop@bank calls shop@warehouse@counter::take"), 1);  // the sender is who calls
   EXPECT_EQ(found(model.findings(), "W-MSG-UNDECLARED", "shop@shell::refund"), 1);  // an interface is written: what it lacks, it lacks
   EXPECT_EQ(found(model.findings(), "W-PARTICIPANT-UNDECLARED", "'courier' sends a message"), 1);
-  EXPECT_EQ(model.findings().size(), 4U);  // and nothing else: the use case that asks from outside declares no use
+  EXPECT_EQ(found(model.findings(), "W-USES-UNDECLARED", ""), 1);  // and no other: whoever asks from outside declares no use
 }
 
 TEST_F(TestLevels, TheWrittenLevelAndTheDetailLiftedOntoItsBoxesDrawTheSameCrossings) {
@@ -130,6 +130,31 @@ TEST_F(TestLevels, AScenarioOfABoxIsDrawnBetweenWhatItNames) {
 TEST_F(TestLevels, TheQueryShowsWhoTakesPartInAWrittenScenario) {
   const auto filter = ds::query::filterFor(*model.find("diagram:SEQ_Written"));
   EXPECT_EQ(filter->select(model), (std::set<std::string>{"shop@bank", "shop@sales", "shop@shell", "shop@warehouse"}));
+}
+
+TEST_F(TestLevels, AScenarioAndTheBehaviourBelowItThatCrossAlikeAgree) {
+  // the purchase: written between four boxes, and its detail crosses them the same way in the same order
+  for (const auto* in : {&model.findings(), &model.coverage()})
+    for (const char* code : {"W-LEVEL-NO-CROSSING", "W-LEVEL-ORDER", "W-LEVEL-NOT-BELOW"})
+      EXPECT_EQ(found(*in, code, "UC-00001-1 has"), 0) << code;
+}
+
+TEST_F(TestLevels, ACrossingTheBehaviourBelowNeverMakesAndTwoTurnedAroundAreFindings) {
+  EXPECT_EQ(found(model.findings(), "W-LEVEL-NO-CROSSING", "UC-00003-1 has shop@sales send pay to shop@bank"), 1);
+  EXPECT_EQ(found(model.findings(), "W-LEVEL-ORDER", "UC-00003-1 has shop@warehouse send pay to shop@bank here"), 1);
+  EXPECT_EQ(found(model.findings(), "W-LEVEL-NO-CROSSING", "") + found(model.findings(), "W-LEVEL-ORDER", ""), 2);  // and no other
+}
+
+TEST_F(TestLevels, ACrossingWhoseSenderIsNotAllWrittenBelowIsCoverage) {
+  EXPECT_EQ(found(model.coverage(), "W-LEVEL-NOT-BELOW", "UC-00003-1 has shop@bank send refund to shop@sales"), 1);
+  EXPECT_EQ(found(model.findings(), "W-LEVEL-NOT-BELOW", ""), 0);
+}
+
+TEST_F(TestLevels, AScenarioWhoseLevelBelowIsNotWrittenIsHeldToNothing) {
+  // UC-00002-1 is realised by no operation: nothing below it to compare with
+  for (const auto* in : {&model.findings(), &model.coverage()})
+    for (const char* code : {"W-LEVEL-NO-CROSSING", "W-LEVEL-ORDER", "W-LEVEL-NOT-BELOW"})
+      EXPECT_EQ(found(*in, code, "UC-00002-1 has"), 0) << code;
 }
 
 }  // namespace

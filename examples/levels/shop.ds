@@ -1,6 +1,7 @@
-// Behaviour at two levels (DS-232): one shop, its purchase written once between the boxes, in one block,
-// and once more in detail, method by method. Either level stands alone; where both are written, a message
-// of the high level that names an operation a box offers is bound to it and checked against it.
+// Behaviour at two levels (DS-232, DS-233): one shop, its purchase written once between the boxes, in one
+// block, and once more in detail, method by method. Either level stands alone; where both are written, a
+// message of the high level that names an operation a box offers is bound to it and checked against it, and
+// the scenario of a use case is held to the behaviour below it: the same crossings, in the same order.
 
 package shop {
   usecase UC-00001-1 buy(item: string) -> int {
@@ -13,9 +14,15 @@ package shop {
     outcome default: the item is back on its shelf
   }
 
+  usecase UC-00003-1 restock(item: string) -> int {
+    title: Fill a shelf again
+    outcome default: the shelf holds the item
+  }
+
   interface shell {
     kind: cli
     operation buy(item: string) -> int : UC-00001-1
+    operation restock(item: string) -> int : UC-00003-1
   }
 
   // ---- the high level: a scenario of a use case, between the boxes of the shop ------------------------
@@ -43,6 +50,18 @@ package shop {
     return 0
   }
 
+  // the two levels of one behaviour are compared: the detail of restock, below, is lifted onto these boxes.
+  // The high level may leave a crossing out; it may not add one, nor turn two around
+  sequence UC-00003-1 {
+    -> shell.restock(item)
+    shell -> sales.restock(item)                       // ? W-MESSAGE-NO-OPERATION: a label, as in the purchase
+    warehouse -> bank.pay(cost)                        // ! W-LEVEL-ORDER: below, the warehouse pays after it is asked
+    sales -> bank.pay(price)                           // ! W-LEVEL-NO-CROSSING: the sales are all written below, and never pay
+    sales -> warehouse.take(item)
+    bank -> sales.refund(item)                         // ? W-MESSAGE-NO-OPERATION W-LEVEL-NOT-BELOW: the bank is not designed
+    return 0
+  }
+
   // a box as subject: what the sales do, between their modules
   sequence sales {
     desk -> till.charge(price)                         // ? W-MESSAGE-NO-OPERATION: the till offers no function of that name
@@ -56,6 +75,12 @@ package shop {
     return code
   }
 
+  sequence shell::restock {
+    local desk: shop@sales@desk::Desk
+    self -> desk.restock(item) -> code
+    return code
+  }
+
   package sales {
     @uses shop@warehouse@counter
     @uses shop@bank@gateway
@@ -66,6 +91,7 @@ package shop {
         - owns till: shop@sales@till::Till
         - owns prices: PriceList
         + sell(item: string) -> int
+        + restock(item: string) -> int
       }
       class PriceList {
         + priceOf(item: string) -> int
@@ -75,6 +101,11 @@ package shop {
         self -> prices.priceOf(item) -> price
         self -> counter.take(item) -> held
         self -> till.charge(price) -> paid
+        return 0
+      }
+
+      sequence Desk::restock {
+        self -> counter.take(item) -> held
         return 0
       }
     }
@@ -113,6 +144,10 @@ package shop {
     module stock {
       class Shelf {
         + pick(item: string) -> bool
+      }
+
+      sequence Shelf::pick {                         // written, and it calls nothing: the warehouse is all written
+        return true
       }
     }
 

@@ -931,6 +931,41 @@ package driftspec@ds {
               tests/integration/ds/check/test_levels.cpp::TestLevels.TheWrittenLevelAndTheDetailLiftedOntoItsBoxesDrawTheSameCrossings
           }
         }
+        requirement REQ-00136-1 {
+          tags: language, behaviour, levels, coverage
+          status: approved
+          title: The scenario of a use case and the behaviour below it shall agree on what crosses between the participants of the scenario, and in what order
+          text:
+            The level below a scenario of a use case is the behaviour of the operation it is asked
+            through: a message nobody sends, bound to an operation that has a behaviour (the scenario
+            of the same name, when the operation has one). That behaviour is unfolded and lifted onto
+            the participants of the scenario: whatever one of them holds, it stands for. The crossings
+            the scenario writes have to be found among those of the level below, in order: a message
+            bound to an operation finds a call of that operation, a label a crossing between the same
+            two. The higher level may leave crossings out. One it writes that the level below never
+            makes, or makes fewer times, is W-LEVEL-NO-CROSSING; one made at another place is
+            W-LEVEL-ORDER. Both need the sender to be all written below: something is seen to happen
+            in it, and every call made in it has a behaviour. Otherwise what the sender does is not
+            known yet and the crossing is W-LEVEL-NOT-BELOW in the coverage (REQ-00124-1), which says
+            which steps of the high level have their detail beneath. A scenario with no behaviour
+            below it is held to nothing.
+          rationale:
+            Owner, 2026-11-15 and 16 (DS-233, model audit finding G18): with behaviour at every level
+            the coherence between the levels can be checked; write the high level and, when the low
+            one is implemented, the two are matched. A finding needs two written facts that clash, so
+            a level that is not written is never one. On a crossing of the finer level that the
+            coarser does not show: no finding, an abstraction omits.
+          verification VER-00152-1 {
+            title: Integration tests confirm a scenario and the behaviour below it that cross alike agree, that a crossing never made and two turned around are findings, that one whose sender is not all written is coverage, and that a scenario with nothing below is held to nothing
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioAndTheBehaviourBelowItThatCrossAlikeAgree
+              tests/integration/ds/check/test_levels.cpp::TestLevels.ACrossingTheBehaviourBelowNeverMakesAndTwoTurnedAroundAreFindings
+              tests/integration/ds/check/test_levels.cpp::TestLevels.ACrossingWhoseSenderIsNotAllWrittenBelowIsCoverage
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioWhoseLevelBelowIsNotWrittenIsHeldToNothing
+          }
+        }
         requirement REQ-00059-1 {
           tags: language, lld, sequence
           status: approved

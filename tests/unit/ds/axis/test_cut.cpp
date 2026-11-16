@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <set>
 #include <string>
 
 #include "ds/axis/Cut.hpp"
@@ -180,6 +181,16 @@ TEST_F(TestCut, DepthSaysHowFarForTheCallsNeitherNames) {
   EXPECT_FALSE(mixed.follows("shop@sales@desk::Desk::sell", 0));
   EXPECT_FALSE(mixed.follows("shop@warehouse@stock::Shelf::pick", 1));  // folded, whatever is left
   EXPECT_TRUE(mixed.follows("shop@sales@till::Till::charge", 0));       // unfolded, whatever is left
+}
+
+/// standsAmong alone: the one way anything is lifted onto a set of boxes.
+TEST(TestStandsAmong, WhatStandsForAnIdIsTheOutermostOfTheBoxesAroundItOrNothing) {
+  const std::set<std::string> boxes{"shop@sales", "shop@sales@till", "shop@shell"};
+  EXPECT_EQ(ds::axis::standsAmong("shop@sales@desk::Desk::sell", boxes), "shop@sales");
+  EXPECT_EQ(ds::axis::standsAmong("shop@sales@till::Till", boxes), "shop@sales");  // the outermost, not the till
+  EXPECT_EQ(ds::axis::standsAmong("shop@shell::buy", boxes), "shop@shell");        // an interface holds its operations
+  EXPECT_EQ(ds::axis::standsAmong("shop@sales", boxes), "shop@sales");             // one of them stands for itself
+  EXPECT_EQ(ds::axis::standsAmong("shop@warehouse@stock::Shelf", boxes), "");      // none of them holds it
 }
 
 }  // namespace
