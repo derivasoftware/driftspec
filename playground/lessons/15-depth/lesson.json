@@ -1,0 +1,105 @@
+{
+  "title": {
+    "en": "15 · Depth",
+    "es": "15 · Profundidad"
+  },
+  "version": 1,
+  "open": "diagrams/behaviour.ds",
+  "steps": [
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "diagram SEQ_Checkout"
+      },
+      "text": {
+        "en": "A sequence is written once, for one operation, and calls others. How far a sequence diagram follows those calls into what they call is its `depth`: `SEQ_Checkout` says `depth: 1`, so the checkout draws its own steps and, one level down, the steps of what it calls. Nothing is written twice: each level is the sequence of the operation called.",
+        "es": "Una secuencia se escribe una vez, para una operación, y llama a otras. Hasta dónde sigue un diagrama de secuencia esas llamadas dentro de lo llamado es su `depth`: `SEQ_Checkout` dice `depth: 1`, así que el checkout dibuja sus pasos y, un nivel más abajo, los de lo que llama. Nada se escribe dos veces: cada nivel es la secuencia de la operación llamada."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "diagram SEQ_Invoice",
+        "after": "}"
+      },
+      "text": {
+        "en": "Draw the shell's `buy` from the top, stopping at its own calls. Add a diagram at the end of the file:\n`diagram SEQ_Buy {`\n`  kind: sequence`\n`  include: shop@shell::buy`\n`  depth: 0`\n`}`\nAt depth 0 a call to an operation that has a sequence is a link: the checkout is one arrow.",
+        "es": "Dibuja el `buy` del shell desde arriba, deteniéndote en sus propias llamadas. Añade un diagrama al final del fichero:\n`diagram SEQ_Buy {`\n`  kind: sequence`\n`  include: shop@shell::buy`\n`  depth: 0`\n`}`\nA profundidad 0 una llamada a una operación que tiene secuencia es un enlace: el checkout es una flecha."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "end": true,
+        "text": "diagram SEQ_Buy {\n  kind: sequence\n  include: shop@shell::buy\n  depth: 0\n}"
+      },
+      "done": {
+        "draws": {
+          "diagram": "SEQ_Buy",
+          "text": "checkout(card)"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "depth: 0"
+      },
+      "text": {
+        "en": "Go one level down: change it to `depth: 1`. The checkout opens into its own steps, the total and the payment, written once in `Cart::checkout`.",
+        "es": "Baja un nivel: cámbialo a `depth: 1`. El checkout se abre en sus propios pasos, el total y el pago, escritos una vez en `Cart::checkout`."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "replace": "  include: shop@shell::buy\n  depth: 0",
+        "text": "  include: shop@shell::buy\n  depth: 1"
+      },
+      "done": {
+        "draws": {
+          "diagram": "SEQ_Buy",
+          "text": "pay(amount)"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "depth: 1"
+      },
+      "text": {
+        "en": "`depth: *` follows every call as far as there are sequences to follow. Write it, and the total opens too, down to the subtotal of each line.",
+        "es": "`depth: *` sigue cada llamada hasta donde haya secuencias que seguir. Escríbelo, y el total también se abre, hasta el subtotal de cada línea."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "replace": "  include: shop@shell::buy\n  depth: 1",
+        "text": "  include: shop@shell::buy\n  depth: *"
+      },
+      "done": {
+        "draws": {
+          "diagram": "SEQ_Buy",
+          "text": "subtotal()"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "SEQ_Buy"
+      },
+      "text": {
+        "en": "Depth counts calls, not boxes: the same sequences give the view from the top and the view of every detail, and a person picks the depth that pays. Two operations at depth `*` can be a page; at depth 0 the flow of a whole system fits in one.",
+        "es": "La profundidad cuenta llamadas, no cajas: las mismas secuencias dan la vista desde arriba y la de cada detalle, y quien lee elige la profundidad que le sirve. Dos operaciones a profundidad `*` pueden ocupar una página; a profundidad 0 cabe en una el flujo de todo un sistema."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

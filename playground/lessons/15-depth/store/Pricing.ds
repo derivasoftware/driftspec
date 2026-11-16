@@ -1,0 +1,8 @@
+package shop {
+  module store {
+    class Pricing {
+      + abstract rate() -> int
+      + apply(amount: Money) -> Money
+    }
+  }
+}

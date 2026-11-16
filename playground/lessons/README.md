@@ -40,6 +40,7 @@ that shows what it taught.
 | **Further** ||||
 | 13 | Failures | `fail`, `attempt` / `on`, `fails` promises, what escapes through a boundary | `fails nothing`, checked |
 | 14 | Rules | `rule` with `for` / `never` / `holds`, `not`, containment; a rule about messages misses attributes; a library of generic rules (`rules/design.ds`, its own package, definitions included) adopted by linking to its requirement | one arrow left between store and billing, a library rule guarding it |
+| 15 | Depth | `depth: 0`, `1` and `*` over one operation: a call to an operation with a sequence is a link at depth 0 and opens one level per step; nothing is written twice | `SEQ_Buy` from the shell down to the subtotal of each line |
 
 Notes for writing a lesson:
 

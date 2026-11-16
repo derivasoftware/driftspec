@@ -27,7 +27,7 @@ class TestPlayground:
     def test_every_lesson_plays_to_a_clean_end(self) -> None:
         replay = _replay()
         folders = sorted(p for p in LESSONS.iterdir() if (p / "lesson.json").exists())
-        assert len(folders) == 15
+        assert len(folders) == 16
         failed = [f.name for f in folders if not replay.replay(f, False)]
         assert failed == []
 
