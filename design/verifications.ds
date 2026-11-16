@@ -283,6 +283,15 @@ package driftspec {
       tests/system/python/test_playground.py::TestPlayground::test_every_lesson_speaks_english_and_spanish
   }
 
+  verification SVER-00024-1 {
+    status: approved
+    @requirement SREQ-00019-1
+    title: System tests confirm every example the playground offers after its lessons checks clean, draws its diagrams and is named in English and Spanish
+    method: test
+    tests:
+      tests/system/python/test_playground.py::TestPlayground::test_every_example_checks_clean_and_has_a_title_in_both_languages
+  }
+
   verification SVER-00022-1 {
     status: approved
     @requirement SREQ-00018-1
