@@ -224,11 +224,14 @@ std::vector<RelationSpec> buildRelations() {
   const Kind St = Kind::State, Uc = Kind::UseCase;
   return {
       rel("exposes", "a package or a module offers an interface", {P, M}, {I}),
-      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, I, Op, Vw, S, Uc, Kind::Rule, Kind::Definition}, {Rq}),
-      rel("constrained-by", "the entity obeys a constraint", {P, M, Cl, F, Me, I, Op, Vw}, {Cs}),
+      // whatever may nest an artefact may annotate it, and one source set for both (DS-217)
+      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, A, O, I, Op, Vw, S, St, Uc, Kind::Rule, Kind::Definition},
+          {Rq}),
+      rel("constrained-by", "the entity obeys a constraint", {P, M, Cl, E, F, Me, A, O, I, Op, Vw, S, St, Uc, Kind::Rule, Kind::Definition},
+          {Cs}),
       rel("refines", "a requirement details another", {Rq}, {Rq}),
       rel("verifies", "a verification proves a requirement or a constraint", {V}, {Rq, Cs}),
-      rel("about", "an artefact concerns the scope it is declared in", {Rq, V, Cs, Uc}, {}),
+      rel("about", "an artefact concerns the box it is declared in, where it gives its level", {Rq, V, Cs, Uc}, {}),
       rel("realises", "the entity carries out an interface, or an interface operation a use case", {Cl, V, Op}, {I, Uc}),
       rel("exercised-by", "a behaviour is run by a verification", {S}, {V}),
       rel("inherits", "a class derives from another; a use case specialises another", {Cl, Uc}, {Cl, Uc}),

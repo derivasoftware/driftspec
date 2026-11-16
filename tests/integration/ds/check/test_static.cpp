@@ -65,9 +65,47 @@ TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
   EXPECT_EQ(field("DS-C-0001-0", "title"), "The diagnostics core shall not depend on any I/O library");
   EXPECT_EQ(field("DS-C-0002-1", "title"), "Finding codes are stable");
   EXPECT_NE(relation("about", "DS-C-0001-0", "ds"), nullptr);
-  EXPECT_NE(relation("about", "DS-C-0003-0", "ds@ds::Vector"), nullptr);          // nested in a class
-  EXPECT_NE(relation("about", "DS-0003-0", "ds@ds::Model::declare"), nullptr);    // requirement nested in a member body (R12)
+  // nested in a class or a member body (R12) says what annotating says (DS-217)
+  EXPECT_NE(relation("constrained-by", "ds@ds::Vector", "DS-C-0003-0"), nullptr);
+  EXPECT_NE(relation("requires", "ds@ds::Model::declare", "DS-0003-0"), nullptr);
   EXPECT_NE(relation("constrained-by", "ds@ds::Model", "DS-C-0001-0"), nullptr);  // a pinned link
+}
+
+TEST(TestNesting, NestingAnArtefactInADesignEntityIsAnnotatingIt) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("a.ds",
+                               "package shop {\n"
+                               "  module store {\n"
+                               "    requirement REQ-00002-1: The store shall keep its items\n"
+                               "    class Cart {\n"
+                               "      requirement REQ-00001-1: The cart shall total its items\n"
+                               "      - cents: int {\n"
+                               "        constraint CST-00001-1: Every price shall be kept in cents\n"
+                               "      }\n"
+                               "    }\n"
+                               "    class Basket {\n"
+                               "      @requirement REQ-00002-1\n"
+                               "      - cents: int {\n"
+                               "        @constraint CST-00001-1\n"
+                               "      }\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  EXPECT_TRUE(model.findings().empty()) << model.findings().front().message;  // an attribute may annotate, as it may nest
+  const auto has = [&model](const std::string& kind, const std::string& from, const std::string& to) {
+    for (const auto& r : model.index().from(from))
+      if (r.kind == kind && r.to == to) return true;
+    return false;
+  };
+  EXPECT_TRUE(has("requires", "shop@store::Cart", "REQ-00001-1"));
+  EXPECT_TRUE(has("constrained-by", "shop@store::Cart::cents", "CST-00001-1"));
+  EXPECT_TRUE(has("requires", "shop@store::Basket", "REQ-00002-1"));
+  EXPECT_TRUE(has("constrained-by", "shop@store::Basket::cents", "CST-00001-1"));
+  EXPECT_TRUE(has("about", "REQ-00002-1", "shop@store"));  // in a box it still gives its level
 }
 
 TEST_F(TestStatic, NotesLiveInMemberBodies) {
