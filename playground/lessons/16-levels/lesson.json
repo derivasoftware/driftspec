@@ -1,0 +1,141 @@
+{
+  "title": {
+    "en": "16 · Levels",
+    "es": "16 · Niveles"
+  },
+  "version": 1,
+  "open": "diagrams/structure.ds",
+  "steps": [
+    {
+      "at": {
+        "file": "shipping.ds",
+        "find": "package shop@shipping"
+      },
+      "shows": [
+        "HLD_Levels"
+      ],
+      "write": [
+        {
+          "file": "shipping.ds",
+          "end": true,
+          "text": "package shop@shipping {\n  module carrier {\n    class Courier {\n      - owns route: Route\n      + deliver(parcel: Parcel) -> bool\n    }\n    class Route {\n      + next() -> string\n    }\n    dataclass Parcel {\n      + address: string\n    }\n  }\n  module tracking {\n    class Tracker {\n      - refs courier: carrier::Courier\n      + where(parcel: carrier::Parcel) -> string\n    }\n  }\n}"
+        },
+        {
+          "file": "store/Cart.ds",
+          "below": {
+            "find": "- owns lines: list<Line>"
+          },
+          "text": "- refs courier: shop@shipping@carrier::Courier"
+        },
+        {
+          "file": "diagrams/structure.ds",
+          "end": true,
+          "text": "diagram HLD_Levels {\n  kind: class\n  include: shop@*\n}"
+        }
+      ],
+      "text": {
+        "en": "The shop grows a shipping department: a package inside the package, with two modules of its own. Boxes hold boxes, as deep as each part of a system needs, and that is the abstraction axis. `HLD_Levels` draws all of it open, down to every class.",
+        "es": "La tienda crece con un departamento de envíos: un paquete dentro del paquete, con dos módulos propios. Las cajas contienen cajas, tan hondo como necesite cada parte de un sistema, y ese es el eje de abstracción. `HLD_Levels` lo dibuja todo abierto, hasta cada clase."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/structure.ds",
+        "find": "diagram HLD_Levels"
+      },
+      "text": {
+        "en": "A drawing does not have to look all the way down. In `HLD_Levels`, add `close: package`: every package below the shop closes. Shipping becomes one box that shows only what it offers, while the store and billing, which are modules, stay open.",
+        "es": "Un dibujo no tiene por qué mirar hasta el fondo. En `HLD_Levels`, añade `close: package`: se cierra cada paquete que hay bajo la tienda. Envíos pasa a ser una caja que solo enseña lo que ofrece, mientras la tienda y la facturación, que son módulos, siguen abiertas."
+      },
+      "solution": {
+        "file": "diagrams/structure.ds",
+        "replace": "diagram HLD_Levels {\n  kind: class\n  include: shop@*",
+        "text": "diagram HLD_Levels {\n  kind: class\n  include: shop@*\n  close: package"
+      },
+      "done": {
+        "hides": {
+          "diagram": "HLD_Levels",
+          "text": "Tracker"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/structure.ds",
+        "find": "close: package"
+      },
+      "text": {
+        "en": "Now cut at the modules: change it to `close: module`. Every module closes wherever it is, one step down in the shop and two steps down inside shipping. A cut is not a level number. It is the boxes that are closed.",
+        "es": "Ahora corta por los módulos: cámbialo por `close: module`. Se cierra cada módulo, esté donde esté: a un paso en la tienda y a dos dentro de envíos. Un corte no es un número de nivel. Son las cajas que están cerradas."
+      },
+      "solution": {
+        "file": "diagrams/structure.ds",
+        "replace": "  include: shop@*\n  close: package",
+        "text": "  include: shop@*\n  close: module"
+      },
+      "done": {
+        "hides": {
+          "diagram": "HLD_Levels",
+          "text": "recalculate"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "diagrams/structure.ds",
+        "find": "close: module"
+      },
+      "text": {
+        "en": "One branch can go further down than the rest. Below `close: module`, add `open: shop@shipping@carrier`: `close:` draws the line and `open:` goes through it. The carrier shows its classes while every other module stays one box.",
+        "es": "Una rama puede bajar más que las demás. Debajo de `close: module`, añade `open: shop@shipping@carrier`: `close:` traza la línea y `open:` la atraviesa. El transportista enseña sus clases mientras los demás módulos siguen siendo una caja."
+      },
+      "solution": {
+        "file": "diagrams/structure.ds",
+        "replace": "  include: shop@*\n  close: module",
+        "text": "  include: shop@*\n  close: module\n  open: shop@shipping@carrier"
+      },
+      "done": {
+        "draws": {
+          "diagram": "HLD_Levels",
+          "text": "deliver"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "HLD_Levels"
+      },
+      "text": {
+        "en": "Look at the arrows that reach a closed box. Between classes a relation is a composition, an aggregation, an inheritance or a use. Lifted onto a closed box it is one of two things: a solid arrow is a structural bond, a dashed one is a use. `tracking` has both: a solid one to the courier it keeps a reference to, and a dashed one to the parcel it only takes as a parameter.",
+        "es": "Fíjate en las flechas que llegan a una caja cerrada. Entre clases una relación es una composición, una agregación, una herencia o un uso. Al subir a una caja cerrada es una de dos cosas: una flecha continua es un vínculo estructural y una discontinua es un uso. `tracking` tiene las dos: una continua hacia el transportista del que guarda una referencia, y una discontinua hacia el paquete que solo recibe como parámetro."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "HLD_Levels"
+      },
+      "text": {
+        "en": "The same boxes, drawn three ways, and nothing was written twice: a cut only chooses what to look at. It is written as what closes and what opens, never as a list of levels. The next lesson puts behaviour on the same cut.",
+        "es": "Las mismas cajas, dibujadas de tres maneras, y nada se ha escrito dos veces: un corte solo elige qué mirar. Se escribe como lo que se cierra y lo que se abre, nunca como una lista de niveles. La lección siguiente pone el comportamiento sobre el mismo corte."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

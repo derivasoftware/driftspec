@@ -1,7 +1,7 @@
 {
   "title": {
-    "en": "16 · The cut",
-    "es": "16 · El corte"
+    "en": "17 · The cut",
+    "es": "17 · El corte"
   },
   "version": 1,
   "open": "diagrams/behaviour.ds",
@@ -12,8 +12,8 @@
         "find": "diagram SEQ_Buy"
       },
       "text": {
-        "en": "Depth counts calls. A cut counts boxes: it says which boxes are closed, and a closed box is drawn as one thing, whatever it holds. Lesson 10 closed the boxes of a class diagram with `open:`. The same works on a sequence, and it answers another question than depth: not how far down, but between whom.",
-        "es": "La profundidad cuenta llamadas. Un corte cuenta cajas: dice qué cajas están cerradas, y una caja cerrada se dibuja como una sola cosa, contenga lo que contenga. La lección 10 cerró las cajas de un diagrama de clases con `open:`. Lo mismo vale en una secuencia, y responde a otra pregunta que la profundidad: no hasta dónde bajar, sino entre quiénes."
+        "en": "Depth counts calls. A cut counts boxes: it says which boxes are closed, and a closed box is drawn as one thing, whatever it holds. Lesson 16 cut the boxes of the shop. The same cut works on a sequence, and it answers another question than depth: not how far down, but between whom.",
+        "es": "La profundidad cuenta llamadas. Un corte cuenta cajas: dice qué cajas están cerradas, y una caja cerrada se dibuja como una sola cosa, contenga lo que contenga. La lección 16 cortó las cajas de la tienda. El mismo corte vale en una secuencia, y responde a otra pregunta que la profundidad: no hasta dónde bajar, sino entre quiénes."
       },
       "done": {
         "ack": {

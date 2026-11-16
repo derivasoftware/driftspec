@@ -7,6 +7,7 @@ package shop {
       - refs coupon: optional<Coupon>
       - status: Status = Open
       - owns lines: list<Line>
+      - refs courier: shop@shipping@carrier::Courier
       + total() -> Money
       + add(line: Line) -> none fails nothing
       - recalculate(line: Line) -> none
