@@ -1,0 +1,161 @@
+// A shop, from the system's promise to the code: a use case, the interface that realises it, the
+// boxes of the high-level design, the class that answers, the scenario of each outcome and a rule.
+
+package shop {
+  requirement SREQ-00001-1 {
+    title: The shop shall sell an item that is in stock
+    status: approved
+    verification SVER-00001-1 {
+      title: A system test buys an item, and is refused one that is sold out
+      status: approved
+      method: test
+      tests:
+        tests/system/test_shop.py::test_buy
+        tests/system/test_shop.py::test_sold_out
+    }
+  }
+  requirement SREQ-00002-1 {
+    title: The sales shall reach the warehouse through its counter
+    status: approved
+    verification SVER-00002-1 {
+      title: The rule sales-knows-no-shelf holds over the design
+      status: approved
+      method: analysis
+    }
+  }
+
+  usecase UC-00001-1 buy(item: string) -> int {
+    title: Buy an item
+    status: approved
+    @requirement SREQ-00001-1
+    outcome default: the item is bought
+    outcome sold-out: nothing is bought
+  }
+
+  interface shell {
+    kind: cli
+    operation buy(item: string) -> int : UC-00001-1 {
+      command: shop buy <item>
+      exit 0: default
+      exit 1: sold-out
+    }
+  }
+
+  sequence shell::buy {
+    local desk: shop@sales@desk::Desk
+    self -> desk.sell(item) -> code
+    return code
+  }
+
+  sequence shell::buy / sold-out {
+    local desk: shop@sales@desk::Desk
+    self -> desk.sell(item) / sold-out -> code
+    return code
+  }
+
+  package sales {
+    @requirement SREQ-00001-1
+    @uses shop@warehouse@counter
+
+    module desk {
+      requirement REQ-00001-1 {
+        title: The desk shall refuse an item the warehouse does not hold
+        status: approved
+        @refines SREQ-00001-1
+        verification VER-00001-1 {
+          title: Unit tests confirm the desk refuses what the counter does not hand over
+          status: approved
+          method: test
+          tests:
+            tests/unit/test_desk.py::TestDesk::test_refuses
+        }
+      }
+
+      class Desk {
+        @requirement REQ-00001-1
+        - refs counter: shop@warehouse@counter
+        + sell(item: string) -> int
+      }
+
+      sequence Desk::sell {
+        self -> counter.take(item) -> held
+        opt the warehouse does not hold it / sold-out {
+          return 1
+        }
+        return 0
+      }
+
+      rule sales-knows-no-shelf {
+        title: Nothing in the sales names a class of the stock
+        @requirement SREQ-00002-1
+        for class c in shop@sales
+        never m in c, m uses x, x in shop@warehouse@stock
+      }
+    }
+  }
+
+  package warehouse {
+    interface counter {
+      kind: library
+      operation take(item: string) -> bool
+    }
+
+    sequence counter::take {
+      local shelf: shop@warehouse@stock::Shelf
+      self -> shelf.pick(item) -> held
+      return held
+    }
+
+    - module stock {
+      class Shelf {
+        - owns boxes: list<Box>
+        + pick(item: string) -> bool
+      }
+      dataclass Box {
+        + item: string
+        + units: int
+      }
+    }
+  }
+}
+
+diagram HLD_Shop {
+  kind: class
+  include: shop@*
+  open:
+}
+
+diagram HLD_ShopSales {
+  kind: class
+  include: shop@*
+  open: shop@sales@desk
+}
+
+diagram CL_Shop {
+  kind: class
+  include: shop@*
+  show: ownership, multiplicity
+}
+
+diagram SEQ_Buy {
+  kind: sequence
+  include: shop@shell::buy
+  depth: *
+}
+
+diagram SEQ_BuySoldOut {
+  kind: sequence
+  include: shop@shell::buy / sold-out
+  depth: *
+}
+
+diagram SEQ_BuyModules {
+  kind: sequence
+  include: shop@shell::buy
+  level: module
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}

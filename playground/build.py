@@ -3,7 +3,7 @@
     python3 playground/build.py [--wasm build-wasm] [--out playground/site]
 
 Writes the page, the engine (ds.js, ds.wasm from an Emscripten build of the tree, see
-REQ-00113-1), the brand, and examples.json: the lessons, in order. Serve the folder as static files, for instance
+REQ-00113-1), the brand, and examples.json: the lessons, in order, then the examples (DS-236). Serve the folder as static files, for instance
 `python3 -m http.server -d playground/site`.
 """
 
@@ -31,6 +31,22 @@ def examples() -> list[dict]:
     return out
 
 
+# whole workspaces offered after the lessons: a small system, the shop of the model audit, and driftspec's own design
+EXAMPLES = [
+    ("shop", {"en": "Example: a shop, from the promise to the code", "es": "Ejemplo: una tienda, de la promesa al código"},
+     HERE / "examples" / "shop"),
+    ("hola", {"en": "Example: hola, a greeting service in four boxes", "es": "Ejemplo: hola, un servicio de saludos en cuatro cajas"},
+     ROOT / "examples" / "hola"),
+    ("driftspec", {"en": "Example: the design of DriftSpec itself", "es": "Ejemplo: el diseño del propio DriftSpec"}, ROOT / "design"),
+]
+
+
+def showcases() -> list[dict]:
+    """The examples the page offers after the lessons: whole workspaces that check clean."""
+    return [{"name": title["en"], "id": key, "title": title, "files": workspace(folder), "group": "examples"}
+            for key, title, folder in EXAMPLES]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--wasm", default=str(ROOT / "build-wasm"), help="the Emscripten build that holds ds.js and ds.wasm")
@@ -45,7 +61,7 @@ def main() -> None:
     (out / "brand").mkdir()
     for name in ("driftspec-lockup-h.svg", "driftspec-lockup-h-light.svg", "driftspec-tile.svg", "driftspec-icon-180.png"):
         shutil.copy(ROOT / "doc" / "assets" / name, out / "brand" / name)
-    (out / "examples.json").write_text(json.dumps(examples()))
+    (out / "examples.json").write_text(json.dumps(examples() + showcases()))
     print(f"playground site in {out}")
 
 

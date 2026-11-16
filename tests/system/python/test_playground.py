@@ -31,6 +31,20 @@ class TestPlayground:
         failed = [f.name for f in folders if not replay.replay(f, False)]
         assert failed == []
 
+    def test_every_example_checks_clean_and_has_a_title_in_both_languages(self) -> None:
+        # the whole workspaces offered after the lessons (DS-236): driftspec's own design among them
+        replay = _replay()
+        spec = importlib.util.spec_from_file_location("build", ROOT / "playground" / "build.py")
+        build = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(build)
+        offered = build.showcases()
+        assert {e["id"] for e in offered} >= {"driftspec", "hola", "shop"}
+        for example in offered:
+            assert set(example["title"]) == {"en", "es"}, example["id"]
+            out = replay.engine(example["files"])
+            assert not [f for f in out["report"]["findings"] if f["severity"] != "info"], example["id"]
+            assert out["diagrams"], example["id"]
+
     def test_every_lesson_speaks_english_and_spanish(self) -> None:
         import json
 

@@ -137,6 +137,8 @@ if(EMSCRIPTEN)
     -sEXPORT_NAME=createDs
     -sENVIRONMENT=web,worker
     -sALLOW_MEMORY_GROWTH=1
+    -sSTACK_SIZE=8MB # the design of driftspec itself recurses deeper than the
+                     # default 64 KB (DS-236)
     -sEXPORTED_FUNCTIONS=_ds_playground
     -sEXPORTED_RUNTIME_METHODS=ccall)
   set_target_properties(ds_wasm PROPERTIES OUTPUT_NAME ds)

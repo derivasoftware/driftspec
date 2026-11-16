@@ -341,12 +341,14 @@ const UI = {
         leave: "Leave the lesson (restart it with the button beside the list)", close: "Close", next: "Done. Next:",
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
-        requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES" },
+        requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
+        lessons: "Lessons", examples: "Examples" },
   es: { waiting: "Esperándote", writeForMe: "Escríbelo por mí", showMe: "Muéstramelo", writing: "Escribiendo", done: "Hecho",
         leave: "Dejar la lección (vuelve a empezarla con el botón junto a la lista)", close: "Cerrar", next: "Hecho. Siguiente:",
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
-        requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN" },
+        requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
+        lessons: "Lecciones", examples: "Ejemplos" },
 };
 let lang = (() => {
   const asked = new URLSearchParams(location.search).get("lang");
@@ -389,7 +391,7 @@ function load(example) {
   state.panes.clear();
   $("panes").innerHTML = "";
   setSolo(null);  // a pane shown alone belongs to the workspace that is going away
-  $("wsname").textContent = example.lesson ? "lesson" : example.name;
+  $("wsname").textContent = example.lesson ? "lesson" : t(example.title) || example.name;
   $("relesson").hidden = !example.lesson;
   startLesson(example);
   const first = (example.lesson?.open && state.files[example.lesson.open] != null) ? example.lesson.open : Object.keys(state.files).sort(byTree)[0];
@@ -1391,10 +1393,18 @@ const backend = await start().catch((e) => { $("count").innerHTML = `<span class
 $("backend").textContent = backend === "wasm" ? "engine: wasm" : "engine: dev server";
 state.examples = await (await fetch("examples.json", { cache: "no-cache" })).json();
 const sel = $("example");
+// the lessons first, then whole examples (DS-236), each in a group of the list
+const groups = { lessons: document.createElement("optgroup"), examples: document.createElement("optgroup") };
 function labelExamples() {
-  for (const o of sel.options) { const ex = state.examples.find((e) => e.name === o.value); o.textContent = ex?.lesson ? t(ex.lesson.title) : o.value; }
+  for (const o of sel.options) {
+    const ex = state.examples.find((e) => e.name === o.value);
+    o.textContent = ex?.lesson ? t(ex.lesson.title) : ex?.title ? t(ex.title) : o.value;
+  }
+  groups.lessons.label = ui("lessons");
+  groups.examples.label = ui("examples");
 }
-for (const ex of state.examples) sel.add(new Option(ex.name, ex.name));
+for (const ex of state.examples) groups[ex.group === "examples" ? "examples" : "lessons"].append(new Option(ex.name, ex.name));
+for (const g of Object.values(groups)) if (g.children.length) sel.append(g);
 labelExamples();
 const want = new URLSearchParams(location.search).get("example") || store.get("ds-playground-example") || state.examples[0].name;
 const byId = state.examples.find((e) => e.id === want);
