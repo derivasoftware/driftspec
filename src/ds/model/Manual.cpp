@@ -294,6 +294,10 @@ std::vector<CodeSpec> buildCodes() {
        "Write that scenario (sequence X / name, or a branch / name), or correct the name."},
       {"W-SCENARIO-TWICE", "warning", "One behaviour names the same scenario on two branches: a scenario is one path.",
        "Give each path its own name."},
+      {"W-MESSAGE-NO-OPERATION", "coverage",
+       "A scenario sends a message to a box that offers no operation of that name: the message is a label, and the level below is not "
+       "written yet.",
+       "Declare the operation in an interface of the box (a function, in a module) when that level is designed."},
       {"W-OPERATION-NO-BEHAVIOUR", "coverage", "An interface operation has no sequence that says how it is handled.",
        "Write sequence <interface>::<operation> { ... }."},
       {"W-OUTCOME-MISMATCH", "warning", "An operation promises an exit code on a scenario whose trace ends in another.",
@@ -584,6 +588,10 @@ std::string grammarPage() {
       "  goes to self, an attribute, a local (local x: Type) or an earlier result: self -> stock.has(item) -> ok.\n"
       "  A scenario is one path through it, named: written apart (sequence Cart::add / out { ... }) or on a branch\n"
       "  (opt the item is out / out { ... }). A call names the scenario it enters: -> add(item) / out -> r.\n"
+      "  A scenario may be written at any cut, in one block: its subject a use case or a box (sequence UC-00001-1\n"
+      "  { ... }, sequence sales { ... }), its participants named as what they are, a package, a module, an interface\n"
+      "  or a class, and whoever is written before the arrow sending: sales -> warehouse.take(item). A message to a\n"
+      "  box is bound to the operation the box offers under that name, or is a label until that level is written.\n"
       "  A path ends failing where a return would go: fail ParseError, the failure's name as text, whatever the\n"
       "  mechanism. An attempt runs its steps and handles what they fail with, one on each: attempt { ... } on IoError\n"
       "  { fail LoadError } translates it, a handler that returns resolves it, a failure no handler names goes on.\n"

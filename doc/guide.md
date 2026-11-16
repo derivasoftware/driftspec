@@ -130,6 +130,30 @@ them. The vision (`vision.md`) says why; this says what.*
   the parameters of the method, by name; only what the method creates is
   written, `local parser: Parser`. The result of a message is one too, for the
   messages after it. `W-PARTICIPANT-UNDECLARED`.
+- **Behaviour at any cut (decided 2026-11-16, DS-232, `examples/levels`).** A scenario is written
+  in one block, between whatever takes part, without a sequence for every operation on the way:
+  ```
+  sequence UC-00001-1 {
+    -> shell.buy(item)
+    shell -> sales.sell(item)
+    sales -> warehouse.take(item) -> held
+    return 0
+  }
+  ```
+  - The subject may be a use case, a package or a module, as well as a class, a method, a
+    function or an operation: `sequence UC-00001-1 { }`, `sequence UC-00001-1 / sold-out { }`,
+    `sequence sales { }`.
+  - A participant may be named as what it is: a package, a module, an interface or a class the
+    behaviour sees, resolved like any name. No `local` declares it.
+  - The participant written before the arrow sends the message; with none, the subject does, and
+    in a scenario of a use case whoever asks for it, from outside.
+  - A message to a box is bound to the operation the box offers under that name (an operation of
+    one of a package's interfaces, a function of a module): its arguments are checked, the sender
+    has to declare its use, and it expands to the behaviour below. With no such operation it is a
+    label, listed as coverage (`W-MESSAGE-NO-OPERATION`) and never a finding: that level is not
+    written yet.
+  Either level stands alone. Where both are written, the high level and the detail lifted onto
+  its boxes (`close: package`) draw the same crossings.
 - A branch names a scenario, a path through one behaviour (decided 2026-11-05,
   `examples/branches`): `opt the account is frozen / frozen { ... return 3 }`, and a
   bare `return` ends a branch. What every scenario shares is written once. The path

@@ -67,6 +67,13 @@ class BehaviourTyping : public IStep {
   /// A message with no participant that names a class's operation by its qualified name: a call on the
   /// class itself, which the operation must be static to take (DS-60). False when it names none.
   bool callStatic(const model::Entity& seq, model::Entity& out_msg, const bind::Message& message, const std::string& home);
+  /// The box, interface or class a participant is named as (DS-232); empty when the name is none of them.
+  std::string namedEntity(const std::string& name, const std::string& home) const;
+  /// Types who sends a message, the participant written before its arrow; false when that name is nobody.
+  bool typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
+                  const std::string& home, const model::Location& location);
+  /// The operation a box offers under a name: a function of a module, an operation of one interface of a package.
+  const model::Entity* offered(const model::Entity& box, const std::string& op) const;
   /// The type a name has in a behaviour: attribute, parameter, local or an earlier result (B3). A value is
   /// a pair: the type as written and the scope that resolves it; an empty type is an unknown one.
   bool typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject, const std::string& name,

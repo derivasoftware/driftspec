@@ -61,7 +61,8 @@ void BehaviourTyping::couple(const model::Entity& sequence, const model::Entity&
 
 void BehaviourTyping::call(model::Entity& out_msg, const model::Entity& op, const bind::Message& message) {
   model_->relate({"calls", out_msg.id, op.id, message.location, ""});
-  context_->checkVisibility(out_msg.scope, op.id, message.location);
+  // seen from who sends it: the sender written, or the behaviour itself (DS-232)
+  context_->checkVisibility(out_msg.field("from-type").empty() ? out_msg.scope : out_msg.field("from-type"), op.id, message.location);
   const int expected = static_cast<int>(op.params.size());
   if (expected != message.argc) {
     context_->report({"E-MSG-ARITY", "error",
@@ -149,11 +150,18 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(*seq, &subject);
   const bool function = subject && (subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation);
-  if (!cls && !function) return;  // the subject waits for its declaration (R6)
-  const std::string home = cls ? cls->scope : subject->scope;
+  // a use case, a package or a module as subject: a scenario written at its cut, between the boxes it sees (DS-232)
+  const bool box =
+      subject && (subject->kind == model::Kind::Package || subject->kind == model::Kind::Module || subject->kind == model::Kind::UseCase);
+  if (!cls && !function && !box) return;  // the subject waits for its declaration (R6)
+  // where its names resolve from: a class's module, a box's inside, the scope a function or a use case is declared in
+  std::string home = cls ? cls->scope : subject->scope;
+  if (subject->kind == model::Kind::Package) home = subject->id + "@";
+  if (subject->kind == model::Kind::Module) home = subject->id;
+  if (!typeSender(*seq, cls, *subject, *msg, home, message.location)) return;
   // a call with no target from a function, or one the class does not declare, is a function of the
   // module, resolved outward like any name: a free function calls its neighbours (2026-10-26)
-  if (message.to == "self" && (function || !resolver_->member(cls->id, message.op))) {
+  if (!box && message.to == "self" && (function || !resolver_->member(cls->id, message.op))) {
     const std::string id = resolver_->resolve(message.op, home);
     const model::Entity* target = id.empty() ? nullptr : model_->find(id);
     if (target && target->kind == model::Kind::Function) {
@@ -173,18 +181,22 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   std::string typeId;
   bool transient = false;
   if (message.to == "self") {
-    typeId = cls->id;
+    typeId = cls ? cls->id : subject->id;
   } else {
     std::pair<std::string, std::string> value;
-    if (!typeOfName(*seq, cls, *subject, message.to, &value, &transient)) {
-      const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
-      context_->report({"W-PARTICIPANT-UNDECLARED", "warning",
-                        "'" + message.to + "' is neither " + context + subject->name + ", a local of " + seq->name +
-                            " nor the result of an earlier message",
-                        message.location});
-      return;
+    if (typeOfName(*seq, cls, *subject, message.to, &value, &transient)) {
+      typeId = value.first.empty() ? "" : resolver_->resolveTypeText(value.first, value.second);
+    } else {
+      typeId = namedEntity(message.to, home);  // a box, an interface or a class named as such is the participant (DS-232)
+      if (typeId.empty()) {
+        const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
+        context_->report({"W-PARTICIPANT-UNDECLARED", "warning",
+                          "'" + message.to + "' is neither " + context + subject->name + ", a local of " + seq->name +
+                              " nor the result of an earlier message",
+                          message.location});
+        return;
+      }
     }
-    typeId = value.first.empty() ? "" : resolver_->resolveTypeText(value.first, value.second);
   }
   if (typeId.empty()) return;  // a primitive or an unknown spelling: nothing to check
   const model::Entity* type = model_->find(typeId);
@@ -193,12 +205,73 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   if (message.to != "self") couple(*seq, *type, transient);
   const std::string opId = typeId + "::" + message.op;
   const model::Entity* op = resolver_->member(typeId, message.op);  // its own, or inherited
+  const bool aBox = type->kind == model::Kind::Package || type->kind == model::Kind::Module;
+  if (aBox) op = offered(*type, message.op);  // a message to a box goes down to the operation the box offers under that name
+  if (!op && aBox) {
+    // and when it offers none the message is a label: the level below is not written yet, which is coverage, no finding
+    context_->report({"W-MESSAGE-NO-OPERATION", "coverage",
+                      seq->name + " sends " + message.op + " to " + typeId + ", which offers no operation of that name", message.location});
+    return;
+  }
   if (!op) {
     context_->report(
         {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
     return;
   }
   call(*msg, *op, message);
+}
+
+std::string BehaviourTyping::namedEntity(const std::string& name, const std::string& home) const {
+  // a participant may be named as what it is: a box, an interface or a class seen from the behaviour (DS-232)
+  const std::string id = resolver_->resolve(name, home);
+  const model::Entity* e = id.empty() ? nullptr : model_->find(id);
+  if (!e || e->expected) return "";
+  const bool named = e->kind == model::Kind::Package || e->kind == model::Kind::Module || e->kind == model::Kind::Interface ||
+                     e->kind == model::Kind::Class;
+  return named ? id : "";
+}
+
+bool BehaviourTyping::typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
+                                 const std::string& home, const model::Location& location) {
+  // who sends is the participant written before the arrow, typed like the receiver; with none, the subject (DS-232)
+  const std::string sender = out_msg.field("from");
+  if (sender.empty() || sender == "self") return true;
+  std::pair<std::string, std::string> value;
+  bool transient = false;
+  std::string type;
+  if (typeOfName(seq, cls, subject, sender, &value, &transient)) {
+    type = value.first.empty() ? "" : resolver_->resolveTypeText(value.first, value.second);
+  } else {
+    type = namedEntity(sender, home);
+    if (type.empty()) {
+      context_->report({"W-PARTICIPANT-UNDECLARED", "warning",
+                        "'" + sender + "' sends a message in " + seq.name +
+                            ", and it is neither a value of its context nor a box, an interface or a class it sees",
+                        location});
+      return false;
+    }
+  }
+  if (!type.empty()) out_msg.fields["from-type"] = type;
+  return true;
+}
+
+const model::Entity* BehaviourTyping::offered(const model::Entity& box, const std::string& op) const {
+  // a module offers its functions; a package, the operations of its interfaces: one of that name, or none
+  if (box.kind == model::Kind::Module) {
+    const model::Entity* function = model_->find(box.id + "::" + op);
+    return function && function->kind == model::Kind::Function ? function : nullptr;
+  }
+  const model::Entity* found = nullptr;
+  int count = 0;
+  for (const auto& pair : model_->entities()) {
+    const model::Entity& interface = pair.second;
+    if (interface.kind != model::Kind::Interface || interface.expected || model::Scope(interface.scope).box().text() != box.id) continue;
+    if (const model::Entity* operation = resolver_->member(interface.id, op)) {
+      found = operation;
+      ++count;
+    }
+  }
+  return count == 1 ? found : nullptr;
 }
 
 bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& out_msg, const bind::Message& message, const std::string& home) {

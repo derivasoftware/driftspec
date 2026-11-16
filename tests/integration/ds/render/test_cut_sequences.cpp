@@ -105,7 +105,7 @@ TEST_F(TestCutSequences, AFrameIsKeptAroundWhatCrossesInsideIt) {
 
 TEST_F(TestCutSequences, TheCutRunsAtAKindOfBoxAndWhatIsAboveItStaysOpen) {
   const auto ir = diagram("SEQ_Modules");  // close: module
-  EXPECT_EQ(lifelines(ir), (Labels{"caller", "self: shell", "desk", "counter: counter", "stock", "supply", "bank: gateway", "till"}));
+  EXPECT_EQ(lifelines(ir), (Labels{"caller", "self: shell", "desk", "counter", "stock", "supply", "bank: gateway", "till"}));
   EXPECT_TRUE(message(ir, "shop@warehouse@counter|counter", "shop@warehouse@stock", "Shelf::pick(item)"));
 }
 
