@@ -176,7 +176,7 @@ package driftspec@ds {
       + render(diagramId: std::string, pretty: bool) -> std::string {
         @requirement REQ-00057-1
       }
-      - closeBoxes(ir: std::string, cut: query::Cut, pretty: bool) -> std::string {
+      - closeBoxes(ir: std::string, cut: axis::Cut, pretty: bool) -> std::string {
         @requirement REQ-00064-3
         @requirement REQ-00126-1
       }
@@ -184,11 +184,14 @@ package driftspec@ds {
         @requirement REQ-00062-1
       }
       - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00049-2
+        @requirement REQ-00049-3
         @requirement REQ-00056-1
+        @requirement REQ-00129-1
+        @requirement REQ-00130-1
       }
       - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00050-1
+        @requirement REQ-00131-1
       }
     }
 

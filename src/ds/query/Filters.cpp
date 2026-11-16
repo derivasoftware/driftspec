@@ -2,9 +2,9 @@
 #include <regex>
 #include <sstream>
 
+#include "ds/axis/Cut.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Words.hpp"
-#include "ds/query/Cut.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
 
@@ -144,7 +144,7 @@ std::set<std::string> ClassFilter::select(const model::Model& model) const {
   for (const auto& c : around) out.insert(c);
   const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);
   if (!diagram) return out;
-  const Cut cut(model, *diagram);
+  const axis::Cut cut(model, *diagram);
   if (!cut.written()) return out;
   std::set<std::string> shown;
   for (const auto& id : out)
@@ -154,8 +154,8 @@ std::set<std::string> ClassFilter::select(const model::Model& model) const {
 
 // ---- sequence diagrams -----------------------------------------------------------------------
 
-SequenceFilter::SequenceFilter(std::vector<std::string> include, int depth, bool modules)
-    : include_(std::move(include)), depth_(depth), modules_(modules) {}
+SequenceFilter::SequenceFilter(std::vector<std::string> include, int depth, std::string cutOf)
+    : include_(std::move(include)), depth_(depth), cutOf_(std::move(cutOf)) {}
 
 std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) const {
   std::vector<Behaviour> out;
@@ -183,28 +183,22 @@ std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) con
 
 std::set<std::string> SequenceFilter::select(const model::Model& model) const {
   std::set<std::string> out;
+  // on a cut each participant is the box that stands for it, and the calls followed are the ones it says (DS-231)
+  const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);
+  const std::unique_ptr<axis::Cut> cut(diagram ? new axis::Cut(model, *diagram) : nullptr);
+  auto on = [&cut](const std::string& id) { return cut ? cut->standsFor(id) : id; };
   for (const Behaviour& b : behaviours(model)) {
     const std::string subjectId = model::Identity(b.sequence->id).subject().text();
     const model::Entity* subject = model.find(subjectId);
     const bool function = subject && subject->kind == model::Kind::Function;
     const bool method = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Operation || function);
     const model::Entity* cls = method ? model.find(subject->scope) : subject;
-    if (modules_) {
-      // lifted to modules: the module each class lives in, and the one a function runs in
-      if (!cls) continue;
-      out.insert(function ? cls->id : cls->scope);
-      for (const Taken& t : Walker(model).steps(b.sequence->id, kEveryBranch)) {
-        const model::Entity* type = model.find(model.find(t.message)->field("type"));
-        if (type) out.insert(type->kind == model::Kind::Module ? type->id : type->scope);
-      }
-      continue;
-    }
-    if (cls) out.insert(cls->id);
-    for (const Walked& w : Walker(model).walk(b.sequence->id, b.path, depth_)) {  // what it calls takes part (DS-130)
+    if (cls) out.insert(on(cls->id));
+    for (const Walked& w : Walker(model).walk(b.sequence->id, b.path, depth_, cut.get())) {  // what it calls takes part (DS-130)
       const model::Entity* m = model.find(w.message);
       if (m->field("return") == "true") continue;
       const std::string typeId = m->field("type");
-      if (!typeId.empty() && model.find(typeId)) out.insert(typeId);
+      if (!typeId.empty() && model.find(typeId)) out.insert(on(typeId));
     }
   }
   std::set<std::string> known;
@@ -239,8 +233,8 @@ std::set<std::string> StateFilter::select(const model::Model& model) const {
 
 // ---- requirements diagrams -------------------------------------------------------------------
 
-RequirementsFilter::RequirementsFilter(std::vector<std::string> include, bool design, bool verifications)
-    : include_(std::move(include)), design_(design), verifications_(verifications) {}
+RequirementsFilter::RequirementsFilter(std::vector<std::string> include, bool design, bool verifications, std::string cutOf)
+    : include_(std::move(include)), design_(design), verifications_(verifications), cutOf_(std::move(cutOf)) {}
 
 std::set<std::string> RequirementsFilter::select(const model::Model& model) const {
   // the roots: artefacts named, or every artefact of a package / module
@@ -252,6 +246,9 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
       if (inPattern(model, pattern, e)) roots.insert(e.id);  // the same reading as a class diagram's (DS-212)
     }
   }
+  // on a cut, what answers to a requirement is the box that stands for it (DS-231)
+  const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);
+  const std::unique_ptr<axis::Cut> cut(diagram ? new axis::Cut(model, *diagram) : nullptr);
   // the umbrella: what refines a root (down, transitively), what verifies it, what realises it
   std::set<std::string> selected = roots;
   bool grew = true;
@@ -268,6 +265,7 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
         if (from->kind == model::Kind::Method || from->kind == model::Kind::Attribute || from->kind == model::Kind::Operator ||
             from->kind == model::Kind::Operation)
           from = model.find(from->scope);
+        if (from && cut && !isArtefact(*from)) from = model.find(cut->standsFor(from->id));
         if (!from || from->expected || selected.count(from->id)) continue;
         selected.insert(from->id);
         grew = true;
@@ -283,14 +281,13 @@ std::unique_ptr<IFilter> filterFor(const model::Entity& diagram) {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
   const std::string kind = diagram.field("kind");
   const std::vector<std::string> include = split(diagram.field("include"), ',');
-  if (kind == "sequence")
-    return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.field("level") == "module"));
+  if (kind == "sequence") return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.id));
   if (kind == "state") return std::unique_ptr<IFilter>(new StateFilter(include));
   if (kind == "requirement") {
     const std::vector<std::string> shown = split(diagram.field("show"), ',');
     const std::set<std::string> show(shown.begin(), shown.end());
     return std::unique_ptr<IFilter>(
-        new RequirementsFilter(include, show.empty() || show.count("design"), show.empty() || show.count("verifications")));
+        new RequirementsFilter(include, show.empty() || show.count("design"), show.empty() || show.count("verifications"), diagram.id));
   }
   return std::unique_ptr<IFilter>(
       new ClassFilter(include, split(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0), diagram.id));

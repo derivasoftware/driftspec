@@ -249,12 +249,12 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}});
   }
   // a cut written (`open:`, `close:`, `cut:`) says which boxes close: the drawing is lifted onto it (DS-229)
-  const query::Cut cut(model_, *diagram);
+  const axis::Cut cut(model_, *diagram);
   if (cut.written()) return closeBoxes(out.dump(), cut, pretty);
   return pretty ? out.dump(2) : out.dump();
 }
 
-std::string IrExport::closeBoxes(const std::string& ir, const query::Cut& cut, bool pretty) const {
+std::string IrExport::closeBoxes(const std::string& ir, const axis::Cut& cut, bool pretty) const {
   auto outerOf = [](const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); };  // the box outside
   nlohmann::json doc = nlohmann::json::parse(ir);
   // which boxes close and what stands for an id are the query's, as for what the diagram shows (DS-127)
@@ -320,6 +320,28 @@ struct SequenceBuilder {
   nlohmann::json edges = nlohmann::json::array();
   std::map<std::string, std::string> lifelineOf;  // key → lifeline id
   int order = 0;
+  const axis::Cut* cut = nullptr;  // the cut the lifelines stand on, and the calls it follows (DS-231)
+  std::set<std::string> boxLines;  // the lifelines that are closed boxes
+
+  /// The closed box that stands for a type on the cut; empty when the type draws a lifeline of its own.
+  std::string closedAround(const std::string& typeId) const {
+    if (!cut || typeId.empty()) return "";
+    const std::string box = cut->standsFor(typeId);
+    return cut->closed(box) ? box : "";  // a module that runs functions is a closed box itself
+  }
+
+  /// The lifeline of a closed box: one for everything inside it.
+  std::string boxLine(const std::string& box) {
+    boxLines.insert(box);
+    const model::Entity* e = model.find(box);
+    return lifeline(box, box.substr(box.find_last_of('@') == std::string::npos ? 0 : box.find_last_of('@') + 1),
+                    e && e->kind == model::Kind::Package ? "package" : "namespace", box);
+  }
+
+  /// Whether the call that enters `behaviour` is followed into it.
+  bool followed(const std::string& behaviour, int depth) const {
+    return cut ? cut->follows(model::Identity(behaviour).subject().text(), depth) : depth > 0;
+  }
 
   std::string lifeline(const std::string& key, const std::string& label, const std::string& classifier, const std::string& typeId = "") {
     auto it = lifelineOf.find(key);
@@ -387,6 +409,7 @@ struct SequenceBuilder {
         while (!frame.empty() && !drawn(frame)) frame = tree.frameOf(frame);
         const std::string fails = m->field("fails");                         // a path that ends failing is drawn wherever it ends (DS-187)
         if (backLine.empty() || (frame.empty() && fails.empty())) continue;  // the last return: the arrow back tells it
+        if (selfLine == backLine && boxLines.count(selfLine)) continue;      // inside a closed box: nothing crosses
         for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
           if (!drawn(f)) continue;
           if (!firstOrder.count(f)) firstOrder[f] = order;
@@ -409,7 +432,10 @@ struct SequenceBuilder {
       const std::string to = m->field("to");
       const std::string typeId = m->field("type");
       std::string target = selfLine;
-      if (to == "self" && !typeId.empty() && typeId != selfLine) {
+      const std::string box = closedAround(typeId);
+      if (!box.empty()) {
+        target = boxLine(box);  // what a closed box holds, the box stands for
+      } else if (to == "self" && !typeId.empty() && typeId != selfLine) {
         // a function of another module (or of the class's module, called from a method) runs on that module's lifeline
         target =
             lifeline(typeId, shortName(typeId.substr(typeId.find_last_of('@') == std::string::npos ? 0 : typeId.find_last_of('@') + 1)),
@@ -417,11 +443,28 @@ struct SequenceBuilder {
       } else if (to != "self") {
         // one lifeline per entity of the static context: the same attribute reached from two
         // behaviours of one class is one participant; an unresolved name stays local to its behaviour
-        const std::string typeName = typeId.empty() ? "?" : shortName(typeId);
+        const std::string typeName = typeId.empty() ? "?" : model::Identity(typeId).lastName();  // an interface has no ::
         // two objects of one type are two lifelines: keyed by the name in the context, not by the type alone
         target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId + "|" + to, to + ": " + typeName, "participant", typeId);
       }
       const std::string frame = tree.frameOf(m->id);
+      const std::string& entered = taken.next;
+      const bool goesOn = !entered.empty() && followed(entered, depth);
+      if (target == selfLine && boxLines.count(selfLine)) {
+        // both ends have the same representative: the message is internal and is not drawn. What it calls may
+        // still cross, so it is followed like any other, and a frame is drawn around what crosses inside it
+        const int before = order;
+        if (goesOn) emit(*model.find(entered), target, selfLine, taken.nextPath, depth - 1, stack);
+        if (order > before) {
+          for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
+            if (!drawn(f)) continue;
+            if (!firstOrder.count(f)) firstOrder[f] = before;
+            if (tree.elseOf(f) == m->id) elseOrder[f] = before;
+            lastOrder[f] = order - 1;
+          }
+        }
+        continue;
+      }
       for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
         if (!drawn(f)) continue;  // a branch the path takes is drawn inline, without its frame
         if (!firstOrder.count(f)) firstOrder[f] = order;
@@ -433,7 +476,9 @@ struct SequenceBuilder {
           {"to", target},
           {"kind", "message"},
           {"order", row},
-          {"label", m->field("op") + "(" + m->field("args") + ")" + (m->field("scenario").empty() ? "" : " / " + m->field("scenario"))}};
+          // a message to a closed box says which of its children takes it
+          {"label", (box.empty() || box == typeId ? "" : model::Identity(typeId).lastName() + "::") + m->field("op") + "(" +
+                        m->field("args") + ")" + (m->field("scenario").empty() ? "" : " / " + m->field("scenario"))}};
       nlohmann::json refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
       const std::string& expands = taken.next;
       std::string title;
@@ -446,13 +491,13 @@ struct SequenceBuilder {
       }
       if (!expands.empty()) {
         refs["expands"] = expands;
-        title += (title.empty() ? "" : "\n") + std::string(depth > 0 ? "expanded below: " : "expands to: ") + model.find(expands)->name;
-        if (depth <= 0) edge["href"] = "#" + expands;  // a page that also shows the child lands on it
+        title += (title.empty() ? "" : "\n") + std::string(goesOn ? "expanded below: " : "expands to: ") + model.find(expands)->name;
+        if (!goesOn) edge["href"] = "#" + expands;  // a page that also shows the child lands on it
       }
       if (!title.empty()) edge["title"] = title;
       const size_t at = edges.size();
       edges.push_back(edge);
-      if (!expands.empty() && depth > 0) {
+      if (goesOn) {
         const int first = order;
         emit(*model.find(expands), target, selfLine, taken.nextPath, depth - 1, stack);
         if (order > first) refs["span"] = std::to_string(first) + "-" + std::to_string(order - 1);  // the rows the expansion occupies
@@ -486,79 +531,55 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   const std::string written = diagram.field("depth");
   // `*` is every level: the guard against recursion is what ends it (a value that is no number is a finding)
   const int depth = written == "*" ? 1000 : std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
-  const std::string level = diagram.field("level");
   // the behaviours selected, by subject id, by sequence id, or a namespace: the query's filter (DS-127)
   std::vector<const model::Entity*> selected;
   std::map<const model::Entity*, std::string> pathOf;  // a named branch asked for: the path of that behaviour
-  for (const query::Behaviour& taken :
-       query::SequenceFilter(split(diagram.field("include"), ','), depth, level == "module").behaviours(model_)) {
+  for (const query::Behaviour& taken : query::SequenceFilter(split(diagram.field("include"), ','), depth, diagram.id).behaviours(model_)) {
     selected.push_back(taken.sequence);
     if (taken.path != kWhole) pathOf[taken.sequence] = taken.path;
   }
-  SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0};
+  SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0, nullptr, {}};
+  // the lifelines stand on the cut the diagram writes, and the calls followed are the ones it says (DS-231)
+  const axis::Cut cut(model_, diagram);
+  b.cut = &cut;
   nlohmann::json out;
   out["ir"] = 1;
   out["title"] = diagram.name;
-  if (level == "module") {
-    // lifting (B9): every message between classes of different modules is a message between the modules
-    std::set<std::string> drawn;
-    for (const model::Entity* seq : selected) {
-      const std::string subjectId = model::Identity(seq->id).subject().text();
-      const model::Entity* subject = model_.find(subjectId);
-      const bool runsInModule = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Function);
-      const model::Entity* cls = runsInModule ? model_.find(subject->scope) : subject;
-      if (!cls) continue;
-      const std::string home = subject->kind == model::Kind::Function ? cls->id : cls->scope;  // a function runs in its module
-      for (const query::Taken& taken : query::Walker(model_).steps(seq->id, kWhole)) {
-        const model::Entity* m = model_.find(taken.message);
-        const std::string typeId = m->field("type");
-        const model::Entity* type = typeId.empty() ? nullptr : model_.find(typeId);
-        const std::string typeHome = type && type->kind == model::Kind::Module ? type->id : type ? type->scope : "";
-        if (!type || typeHome == home) continue;
-        auto moduleLabel = [](const std::string& id) {
-          return id.substr(id.find_last_of('@') == std::string::npos ? 0 : id.find_last_of('@') + 1);
-        };
-        const std::string from = b.lifeline(home, moduleLabel(home), "namespace");
-        const std::string to = b.lifeline(typeHome, moduleLabel(typeHome), "namespace");
-        const std::string label = (type->kind == model::Kind::Module ? "" : b.shortName(typeId) + "::") + m->field("op");
-        if (!drawn.insert(from + "|" + to + "|" + label).second) continue;
-        b.edges.push_back({{"from", from}, {"to", to}, {"kind", "message"}, {"order", b.order++}, {"label", label}});
-      }
+  for (const model::Entity* seq : selected) {
+    const std::string subjectId = model::Identity(seq->id).subject().text();
+    const model::Entity* subject = model_.find(subjectId);
+    // a method runs on its class, a function on its module
+    const bool function = subject && subject->kind == model::Kind::Function;
+    const bool method = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Operation || function);
+    const model::Entity* cls = method ? model_.find(subject->scope) : subject;
+    // the caller, leftmost, invokes the entry operation on the subject: what is being looked at is the first thing drawn
+    const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";
+    const std::string selfLabel = cls ? (function ? cls->name : "self: " + cls->name) : "self: " + subjectId;
+    const std::string around = cls ? b.closedAround(cls->id) : "";
+    const std::string self =
+        !around.empty() ? b.boxLine(around) : b.lifeline(cls ? cls->id : subjectId, selfLabel, "participant", cls ? cls->id : "");
+    if (method) {
+      b.edges.push_back(
+          {{"from", caller},
+           {"to", self},
+           {"kind", "message"},
+           {"order", b.order++},
+           {"label", (around.empty() || around == cls->id ? "" : cls->name + "::") + subject->name + "(" + subject->field("params") + ")"},
+           {"title", subject->id},
+           {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
     }
-  } else {
-    for (const model::Entity* seq : selected) {
-      const std::string subjectId = model::Identity(seq->id).subject().text();
-      const model::Entity* subject = model_.find(subjectId);
-      // a method runs on its class, a function on its module
-      const bool function = subject && subject->kind == model::Kind::Function;
-      const bool method = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Operation || function);
-      const model::Entity* cls = method ? model_.find(subject->scope) : subject;
-      // the caller, leftmost, invokes the entry operation on the subject: what is being looked at is the first thing drawn
-      const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";
-      const std::string selfLabel = cls ? (function ? cls->name : "self: " + cls->name) : "self: " + subjectId;
-      const std::string self = b.lifeline(cls ? cls->id : subjectId, selfLabel, "participant", cls ? cls->id : "");
-      if (method) {
-        b.edges.push_back({{"from", caller},
-                           {"to", self},
-                           {"kind", "message"},
-                           {"order", b.order++},
-                           {"label", subject->name + "(" + subject->field("params") + ")"},
-                           {"title", subject->id},
-                           {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
+    std::set<std::string> stack;
+    // a behaviour asked for by its subject is drawn whole; a scenario of it, as its path
+    const std::string path = pathOf.count(seq) ? pathOf[seq] : kWhole;
+    b.emit(*seq, self, caller, path, depth, stack);
+    const std::string returns = method ? subject->field("returns") : "";
+    if (method && !returns.empty() && returns != "none" && returns != "void") {
+      std::string given = returns;  // what its `return` says, or the declared type
+      for (const query::Taken& taken : query::Walker(model_).steps(seq->id, path)) {
+        const model::Entity* m = model_.find(taken.message);
+        if (m->field("return") == "true" && !m->field("result").empty()) given = m->field("result");
       }
-      std::set<std::string> stack;
-      // a behaviour asked for by its subject is drawn whole; a scenario of it, as its path
-      const std::string path = pathOf.count(seq) ? pathOf[seq] : kWhole;
-      b.emit(*seq, self, caller, path, depth, stack);
-      const std::string returns = method ? subject->field("returns") : "";
-      if (method && !returns.empty() && returns != "none" && returns != "void") {
-        std::string given = returns;  // what its `return` says, or the declared type
-        for (const query::Taken& taken : query::Walker(model_).steps(seq->id, path)) {
-          const model::Entity* m = model_.find(taken.message);
-          if (m->field("return") == "true" && !m->field("result").empty()) given = m->field("result");
-        }
-        b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});
-      }
+      b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});
     }
   }
   if (b.edges.empty()) out["notice"] = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
@@ -680,7 +701,8 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
   const bool withVerifications = show.empty() || show.count("verifications");
   // the roots and their umbrella are the query's filter of the diagram (DS-127)
   const std::set<std::string> selected =
-      query::RequirementsFilter(split(diagram.field("include"), ','), withDesign, withVerifications).select(model_);
+      query::RequirementsFilter(split(diagram.field("include"), ','), withDesign, withVerifications, diagram.id).select(model_);
+  const axis::Cut cut(model_, diagram);  // what answers to a requirement is the box that stands for it (DS-231)
   nlohmann::json out;
   out["ir"] = 1;
   out["title"] = diagram.name;
@@ -721,7 +743,11 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
   for (model::Relation r : model_.index().all()) {
     if ((r.kind == "requires" || r.kind == "constrained-by") && !selected.count(r.from)) {
       const model::Entity* from = model_.find(r.from);  // a member answers through the class that holds it (DS-220)
-      if (from && selected.count(from->scope)) r.from = from->scope;
+      if (from && selected.count(from->scope)) {
+        r.from = from->scope;
+      } else if (selected.count(cut.standsFor(r.from))) {
+        r.from = cut.standsFor(r.from);  // and on a cut, through the box that stands for it (DS-231)
+      }
     }
     if (!selected.count(r.from) || !selected.count(r.to)) continue;
     if (!said.insert(r.kind + "|" + r.from + "|" + r.to).second) continue;

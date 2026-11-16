@@ -464,10 +464,10 @@ void ContractCheck::checkDiagrams() {
     }
     // a pattern that names what nothing declares is a broken reference, as in the model (DS-212); a box that
     // exists and is empty is not: a level with no children is valid
-    for (const char* key : {"include", "exclude", "open", "close"}) {
+    for (const char* key : {"include", "exclude", "open", "close", "unfold", "fold"}) {
       for (const auto& pattern : split(pair.second.field(key), ',')) {
         // a cut may name a kind of box instead of a box (DS-229)
-        const bool kind = key != std::string("include") && key != std::string("exclude") &&
+        const bool kind = (key == std::string("open") || key == std::string("close")) &&
                           (pattern == model::kindName(model::Kind::Module) || pattern == model::kindName(model::Kind::Package));
         if (kind || namesSomething(*model_, pattern)) continue;
         found_.push_back({"W-DIAGRAM-UNDECLARED", "warning",

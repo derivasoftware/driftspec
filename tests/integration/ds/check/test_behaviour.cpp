@@ -145,12 +145,22 @@ TEST_F(TestBehaviour, ASequenceDiagramExpandsByDepthAndLinksAtDepthZero) {
   EXPECT_EQ(shallow["edges"][0]["label"], "run(binder: Binder)");
 }
 
-TEST_F(TestBehaviour, LiftingToModuleLevelKeepsOnlyCrossModuleMessages) {
-  const nlohmann::json lifted = diagram("SEQ_Modules");
-  EXPECT_EQ(lifted["nodes"].size(), 2u);  // lsp, ds
-  EXPECT_EQ(lifted["edges"].size(), 2u);  // Model::find, Checker::resolve
-  EXPECT_EQ(lifted["edges"][0]["from"], "ds@lsp");
-  EXPECT_EQ(lifted["edges"][0]["to"], "ds@ds");
+TEST_F(TestBehaviour, ADiagramThatClosesTheModulesKeepsOnlyWhatCrossesThem) {
+  const nlohmann::json lifted = diagram("SEQ_Modules");  // close: module, over every behaviour of ds and lsp
+  bool ds = false, lsp = false, aClass = false, inside = false, crossing = false;
+  for (const auto& n : lifted["nodes"]) {
+    ds = ds || n["id"] == "ds@ds";
+    lsp = lsp || n["id"] == "ds@lsp";
+    aClass = aClass || n["id"] == "ds@ds::Checker" || n["id"] == "ds@lsp::Publisher";
+  }
+  for (const auto& e : lifted["edges"]) {
+    inside = inside || (e["from"] == "ds@ds" && e["to"] == "ds@ds");
+    crossing = crossing || (e["from"] == "ds@lsp" && e["to"] == "ds@ds" && e["label"] == "Model::find(id)");
+  }
+  EXPECT_TRUE(ds && lsp);  // one lifeline for each module
+  EXPECT_FALSE(aClass);    // and none for a class inside one
+  EXPECT_FALSE(inside);    // what a module does inside is not drawn
+  EXPECT_TRUE(crossing);   // the publisher asks the model: it says which class takes it
 }
 
 }  // namespace

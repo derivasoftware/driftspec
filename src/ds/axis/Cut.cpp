@@ -1,4 +1,4 @@
-#include "ds/query/Cut.hpp"
+#include "ds/axis/Cut.hpp"
 
 #include <vector>
 
@@ -6,7 +6,7 @@
 #include "ds/model/Words.hpp"
 
 namespace ds {
-namespace query {
+namespace axis {
 
 namespace {
 
@@ -35,9 +35,25 @@ bool namedBy(const std::vector<std::string>& patterns, const model::Entity& box)
   return false;
 }
 
+/// Whether a pattern reaches a call: its operation, a prefix of it with * (`*` alone is every call), or a box
+/// or a class the operation lives in.
+bool reaches(const std::vector<std::string>& patterns, const std::string& operation) {
+  for (const auto& p : patterns) {
+    if (p == operation) return true;
+    if (!p.empty() && p.back() == '*' && operation.compare(0, p.size() - 1, p, 0, p.size() - 1) == 0) return true;
+    if (operation.rfind(p + "::", 0) == 0 || operation.rfind(p + "@", 0) == 0) return true;
+  }
+  return false;
+}
+
 }  // namespace
 
-Cut::Cut(const model::Model& model, const model::Entity& diagram) {
+Cut::Cut(const model::Model& model, const model::Entity& diagram)
+    : unfold_(model::split(diagram.field("unfold"), ',')),
+      fold_(model::split(diagram.field("fold"), ',')),
+      unfolds_(diagram.fields.count("unfold") > 0),
+      folds_(diagram.fields.count("fold") > 0),
+      deep_(diagram.fields.count("depth") > 0) {
   // what the diagram writes, and what the diagram it takes its cut from writes, and so on: each once
   std::vector<std::string> open, close;
   bool opens = false, closesSome = false;
@@ -71,5 +87,14 @@ std::string Cut::standsFor(const std::string& id) const {
   return id;
 }
 
-}  // namespace query
+bool Cut::follows(const std::string& operation, int left) const {
+  if (reaches(unfold_, operation)) return true;  // unfold: goes through fold:
+  if (reaches(fold_, operation)) return false;
+  if (deep_) return left > 0;  // the uniform case
+  if (folds_) return true;     // fold: draws the line: every other call is followed
+  if (unfolds_) return false;  // unfold: alone folds every other call
+  return written_;             // with a cut to stand on, every call is followed
+}
+
+}  // namespace axis
 }  // namespace ds

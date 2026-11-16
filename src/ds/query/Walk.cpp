@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <functional>
 
+#include "ds/axis/Cut.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/SequenceTree.hpp"
 
@@ -29,7 +30,7 @@ std::vector<Taken> Walker::steps(const std::string& sequence, const std::string&
   return out;
 }
 
-std::vector<Walked> Walker::walk(const std::string& sequence, const std::string& path, int depth) const {
+std::vector<Walked> Walker::walk(const std::string& sequence, const std::string& path, int depth, const axis::Cut* cut) const {
   std::vector<Walked> out;
   std::set<std::string> stack;
   std::function<void(const std::string&, const std::string&, int)> walk = [&](const std::string& seq, const std::string& p, int level) {
@@ -37,7 +38,9 @@ std::vector<Walked> Walker::walk(const std::string& sequence, const std::string&
     if (!stack.insert(key).second) return;  // a behaviour already being walked: the cycle ends here
     for (const Taken& t : steps(seq, p)) {
       out.push_back({t.message, level});
-      if (!t.next.empty() && level <= depth) walk(t.next, t.nextPath, level + 1);
+      if (t.next.empty()) continue;
+      const int left = depth - level + 1;  // the levels of the depth asked for that are left
+      if (cut ? cut->follows(model::Identity(t.next).subject().text(), left) : left > 0) walk(t.next, t.nextPath, level + 1);
     }
     stack.erase(key);
   };

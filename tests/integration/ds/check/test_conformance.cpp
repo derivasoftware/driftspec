@@ -157,8 +157,7 @@ TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAn
                                "  }\n"
                                "}\n"
                                "diagram SEQ_X {\n"
-                               "  kind: sequence\n"
-                               "  level: package\n"
+                               "  kind: sequense\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, checkSteps).run(binder);
@@ -169,7 +168,7 @@ TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAn
   const auto said = [&wrong](const std::string& text) {
     return std::any_of(wrong.begin(), wrong.end(), [&text](const std::string& m) { return m.find(text) != std::string::npos; });
   };
-  EXPECT_TRUE(said("level: package"));
+  EXPECT_TRUE(said("kind: sequense"));
   EXPECT_TRUE(said("status: aproved"));
   EXPECT_TRUE(said("method: telepathy"));
 }

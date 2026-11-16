@@ -29,6 +29,7 @@ package driftspec {
     module render { }
     module diff { }
     module query { }
+    module axis { }                         // the abstraction axis: the cut of a diagram, read by query and render
     module exporter { }
     module scene { }
     module api { }                          // the engine in process, for the Python face (SREQ-00015-1)

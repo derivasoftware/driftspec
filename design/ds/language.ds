@@ -84,16 +84,18 @@ package driftspec@ds {
         }
       }
 
-      requirement REQ-00115-1 {
+      requirement REQ-00115-2 {
         tags: language, metamodel, fields
         status: approved
         title: A closed field carrying a value it does not take shall be reported as W-FIELD-VALUE
         text:
           The metamodel names the values of its closed fields: status (draft,
           approved, obsolete), a verification's method and level, a diagram's
-          kind and level. Any other value is a warning at the entity, naming the
+          kind. Any other value is a warning at the entity, naming the
           field, the value and the values it takes; an empty value is left alone.
           The value is kept in the model.
+          Revision 2 (DS-231): a diagram has no level any more; the cut is written
+          with close: (REQ-00126-1).
         rationale:
           Model audit 2026-11, findings G4 and G3 (DS-211): status: aproved
           passed, stopped counting as approved and so switched
@@ -1528,12 +1530,16 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestDiagramPatterns.ARequirementDiagramReadsAModulePatternAsAClassDiagramDoes
         }
       }
-      requirement REQ-00049-2 {
+      requirement REQ-00049-3 {
         tags: language, diagrams
         status: approved
-        title: A sequence diagram shall select a behaviour as it is written, expand by depth and lift to the level asked for
-        verification VER-00037-4 {
-          title: Integration tests confirm a sequence diagram selects a behaviour as it is written, expands by depth and lifts to the level asked for
+        title: A sequence diagram shall select a behaviour as it is written and expand by depth
+        text:
+          Revision 3 (DS-231): it no longer lifts to a level asked for with level: module;
+          it stands on the cut the diagram writes (REQ-00129-1), and the calls it follows
+          are said with unfold:, fold: and depth: (REQ-00130-1).
+        verification VER-00037-5 {
+          title: Integration tests confirm a sequence diagram selects a behaviour as it is written and expands by depth
           status: approved
           method: test
           tests:
@@ -1546,7 +1552,92 @@ package driftspec@ds {
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AStarSelectsEveryScenario
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.TheArrowBackCarriesWhatTheBehaviourReturns
             tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ASequenceDiagramExpandsByDepthAndLinksAtDepthZero
-            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.LiftingToModuleLevelKeepsOnlyCrossModuleMessages
+        }
+      }
+      requirement REQ-00129-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A sequence diagram shall stand on the cut the diagram writes: one lifeline for each closed box, and the messages that cross from one to another
+        text:
+          The open:, close: and cut: of a class diagram mean the same in a sequence diagram. Every
+          participant is drawn as what stands for it on the cut: a closed box is one lifeline for
+          everything inside it, and what no closed box holds keeps a lifeline of its own. A message
+          whose two ends have the same representative is internal and is not drawn; one that
+          crosses is drawn between the representatives, and into a closed box it says which of its
+          children takes it (Desk::sell). A frame of the detail is kept around what crosses inside
+          it, and one in which nothing crosses is not drawn. ds query shows answers the same
+          participants. It replaces level: module, which lifted to one fixed rung, drew only the
+          direct calls and ignored depth; a diagram that still writes it is told so
+          (W-FIELD-UNKNOWN).
+        rationale:
+          Owner, 2026-11-16 (DS-229, DS-231), model audit finding I13. The sketch showed the same
+          purchase on ten lifelines with every class, on six with the sales open, and on eight at
+          the modules, the conditions of the detail still framing what crosses; driftspec's own
+          check went from twenty lifelines to eight. A high-level view of behaviour is the detail
+          lifted, so the two cannot disagree.
+        verification VER-00145-1 {
+          title: Integration tests confirm a sequence diagram draws one lifeline for each closed box and only the messages that cross, keeps the frames around them, takes the cut of another diagram, and is asked with the same cut
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.WithNoCutEveryObjectIsALifelineAndDepthSaysHowFar
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.EachClosedBoxIsOneLifelineForEverythingInsideIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.AMessageInsideAClosedBoxIsNotDrawnAndOneThatCrossesSaysWhoTakesIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.AFrameIsKeptAroundWhatCrossesInsideIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.TheCutRunsAtAKindOfBoxAndWhatIsAboveItStaysOpen
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.ASequenceTakesTheCutOfTheBoxesDrawnAndStandsOnIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.TheQueryShowsWhoTakesPartOnTheCut
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ADiagramThatClosesTheModulesKeepsOnlyWhatCrossesThem
+        }
+      }
+      requirement REQ-00130-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A sequence diagram shall follow the calls that unfold:, fold: and depth: say, and every call when it stands on a cut and they say nothing
+        text:
+          The calls have a cut of their own, written like the cut of the boxes. fold: names the
+          calls that are not followed (* for every call, a box for every call that lands in it, an
+          operation), and every other call is followed. unfold: names the calls that are followed,
+          whatever fold: says; written alone it folds every other call, and with nothing after it
+          the diagram draws only what the behaviour itself writes. depth: n is the uniform case
+          for the calls neither names. With none of the three, a diagram that writes a cut follows
+          every call, since what a closed box does inside is seen only through what crosses out of
+          it, and a diagram that writes no cut follows none, as before. A pattern that names
+          nothing is W-DIAGRAM-UNDECLARED.
+        rationale:
+          Owner, 2026-11-16 (DS-229, DS-231): depth defined formally. depth: n counts calls and is
+          as rigid as a numbered level; the calls worth following are named by where they land.
+          The sketch drew a cut at the modules with nothing unfolded and it showed almost nothing,
+          which is why a cut follows every call unless told otherwise.
+        verification VER-00146-1 {
+          title: Integration tests confirm a sequence diagram follows the calls unfold: names, stops at those fold: names, lets unfold: go through fold:, keeps depth: as the uniform case and reports a pattern that names nothing
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.UnfoldAloneFoldsEveryOtherCall
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.FoldStopsAtWhatItNamesAndEveryOtherCallIsFollowed
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.UnfoldGoesThroughWhatFoldFolds
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.DepthIsTheUniformCaseOnACutToo
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.ACallPatternThatNamesNothingAndTheRetiredLevelAreReported
+        }
+      }
+      requirement REQ-00131-1 {
+        tags: language, diagrams, cut, artefacts
+        status: approved
+        title: A requirement diagram shall draw what answers to a requirement as the box that stands for it on the cut the diagram writes
+        text:
+          With close: module, a requirement a class answers to is drawn realised by the module
+          that holds the class, once. The artefacts themselves are never lifted. ds query shows
+          answers the same boxes.
+        rationale:
+          Model audit finding G9 (DS-231): a requirement diagram had no cut at all, so the trace
+          from a requirement of the system could only be read down to the classes.
+        verification VER-00147-1 {
+          title: Integration tests confirm a requirement diagram draws what answers to a requirement as the box that stands for it, and is asked with the same cut
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.WhatAnswersToARequirementIsTheBoxThatStandsForIt
         }
       }
       requirement REQ-00120-1 {

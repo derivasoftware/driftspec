@@ -63,7 +63,7 @@
 //      Lanes: lane <Class or module> { actions }  — derived from the actions'
 //      operations when omitted. (open: is activity needed in block 3 or later?)
 //  B9  lifting (derived): a method-level sequence projects to class, module and
-//      package level; a diagram asks for a level:  level: module
+//      package level; a diagram asks for a cut:  close: module
 //  B10 diagrams of behaviour
 //      diagram SEQ_Run { kind: sequence; include: ds::Checker::run; depth: 1; level: method }
 //      diagram STM_Checker { kind: state; include: ds::Checker }
@@ -185,7 +185,7 @@ diagram SEQ_Run_Overview {
 diagram SEQ_Modules {
   kind: sequence
   include: ds@ds::*, ds@lsp::*
-  level: module                // B9: every method sequence lifted to module ↔ module messages
+  close: module                // B9: every method sequence lifted to module ↔ module messages
 }
 
 diagram SEQ_Publish {

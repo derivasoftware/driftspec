@@ -152,7 +152,7 @@ diagram SEQ_BuySoldOut {
 diagram SEQ_BuyModules {
   kind: sequence
   include: shop@shell::buy
-  level: module
+  close: module
 }
 
 diagram REQ_Shop {

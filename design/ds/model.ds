@@ -158,7 +158,7 @@ package driftspec@ds {
     // around a step or where an alt's else begins asks the same tree, and none rebuilds it.
     class SequenceTree {
       @requirement REQ-00065-1
-      @requirement REQ-00049-2
+      @requirement REQ-00049-3
       - refs model_: Model
       - messages_: std::vector<std::string>
       - frames_: std::vector<std::string>
@@ -205,7 +205,7 @@ package driftspec@ds {
     verification VER-00121-2 {
       status: approved
       @requirement REQ-00065-1
-      @requirement REQ-00049-2
+      @requirement REQ-00049-3
       title: Integration tests read one behaviour's tree the same for every reader: messages in the order written, the frame around each step, where a frame opens, an alt's sides and what each names
       method: test
       tests:
