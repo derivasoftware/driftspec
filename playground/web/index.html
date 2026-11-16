@@ -644,6 +644,7 @@ const coach = { lesson: null, id: null, step: 0, written: -1, el: null, mark: nu
 function startLesson(ex) {
   hideCoach();
   coach.shown = -1;
+  coach.focused = -1;
   coach.lesson = ex.lesson || null;
   if (!coach.lesson) return;
   coach.step = 0;
@@ -935,9 +936,34 @@ function doOnPage(a) {
   else if (a.ui === "unsolo") setSolo(null);
 }
 
+// what a step is about, read from the step itself (DS-242): the diagrams it names (`shows`), or the pane its
+// card points at with the ones its check looks at, or the diagram whose line it points at. A lesson that
+// teaches the page (a step done by opening, selecting or showing a pane alone) moves nothing by itself.
+function diagramsOf(st) {
+  const onThePage = (x) => ["opened", "selected", "solo"].some((k) => k in (x.done || {}));
+  if (coach.lesson.steps.some(onThePage)) return null;
+  if (st.shows) return [].concat(st.shows);
+  const d = st.done || {}, at = st.at || {};
+  const ids = [at.pane, d.draws?.diagram, d.hides?.diagram, d.edge?.diagram, d.drawnAs?.diagram].filter(Boolean);
+  const named = !at.after && /^diagram (\w+)/.exec(at.find || "");
+  if (!ids.length && named) ids.push(named[1]);
+  return [...new Set(ids)];
+}
+
+// the diagrams a step is about are shown alone while it lasts: once, as soon as they exist, so the reader may
+// bring the others back
+function focusStep(st) {
+  if (coach.focused === coach.step) return;
+  const ids = diagramsOf(st);
+  if (!ids || !ids.length || !ids.every((id) => state.panes.has(id))) return;
+  coach.focused = coach.step;
+  setSolo(ids[0], ids.slice(1));
+}
+
 function placeCoach(st) {
   if (!coach.el) return;
   unmark();
+  focusStep(st);
   const at = st.at || {};
   const first = coach.shown !== coach.step;  // the view goes to what a step talks about once, as soon as it exists
   const shown = () => { coach.shown = coach.step; };
@@ -955,7 +981,7 @@ function placeCoach(st) {
     }
   } else if (at.pane) {
     const p = state.panes.get(at.pane);
-    if (p && state.solo && state.solo !== at.pane) setSolo(null);  // the step talks about a pane: it must be in view
+    if (p && state.solo && !p.el.classList.contains("max")) setSolo(null);  // the step talks about a pane: it must be in view
     if (p && at.select && p.selected !== at.select) p.light?.(at.select);
     if (p) {
       p.el.classList.add("coached"); coach.mark = { el: p.el };
@@ -1302,13 +1328,14 @@ function makePane(id) {
   return pane;
 }
 
-function setSolo(id) {
+function setSolo(id, beside = []) {  // one pane alone, or it and the ones a step compares it with
   state.solo = id;
   setTimeout(uiChanged);
   $("panes").classList.toggle("solo", !!id);
   for (const [pid, p] of state.panes) {
-    p.el.classList.toggle("max", pid === id);
-    p.el.querySelector("h3 button").textContent = pid === id ? "⤡" : "⤢";
+    const shown = !!id && (pid === id || beside.includes(pid));
+    p.el.classList.toggle("max", shown);
+    p.el.querySelector("h3 button").textContent = shown ? "⤡" : "⤢";
   }
 }
 

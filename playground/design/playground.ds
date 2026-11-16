@@ -11,6 +11,19 @@ package playground {
       The page may change its look without touching a lesson.
   }
 
+  requirement REQ-00002-1 {
+    title: The page shall show alone the diagrams a step of a lesson is about, while the step lasts
+    status: approved
+    text:
+      A step says what it is about in its own terms: the diagrams it names, the pane its card
+      points at, the diagram its check looks at. The page shows those alone, once, as soon as
+      they exist, so the reader may bring the others back; two that are compared stay one above
+      the other. A lesson that teaches the page itself moves nothing.
+    rationale:
+      Owner, 2026-11-16 (DS-242): with a dozen diagrams side by side a reader does not know which
+      one a step is changing. The lesson still knows nothing of the page (REQ-00001-1).
+  }
+
   // the engine, as the page reaches it: one function of ds.wasm (REQ-00113-1)
   interface wasm {
     kind: library
@@ -86,6 +99,10 @@ package playground {
       - owns coach: lessons::Coach
       + load(lesson: lessons::Lesson) -> none
       + onEdit() -> none
+      // the diagrams a step is about, shown alone while it lasts
+      + focus(step: lessons::Step) -> none {
+        @requirement REQ-00002-1
+      }
     }
     class Editor {
       + open(file: string) -> none
@@ -103,7 +120,8 @@ package playground {
     class Panes {
       - owns panes: list<Pane>
       + paint(diagrams: list<engine::Drawn>) -> none
-      + solo(diagram: string) -> none
+      // one pane alone, or it and the ones a step compares it with
+      + solo(diagram: string, beside: list<string>) -> none
     }
     class Pane {
       - refs editor: Editor
@@ -127,6 +145,14 @@ package playground {
       opt a step has its code to type {
         self -> editor.type(next)
       }
+      -> focus(next)
+    }
+
+    sequence Page::focus {
+      self -> coach.about(step) -> diagrams
+      opt the step is about some diagrams, and they are drawn {
+        self -> panes.solo(first, others)
+      }
     }
 
     sequence Pane::reveal {
@@ -142,6 +168,7 @@ package playground {
     }
     dataclass Step {
       + text: Text
+      + shows: list<string>                  // the diagrams it is about, when its card and its check do not say
       + write: list<Write>
       + solution: list<Write>
       + done: Check
@@ -169,6 +196,8 @@ package playground {
       - refs lesson: Lesson
       + check(answer: engine::Answer) -> optional<Step>
       + passed(check: Check, answer: engine::Answer) -> bool
+      // what a step is about: the diagrams it names, or the ones its card and its check look at
+      + about(step: Step) -> list<string>
     }
 
     sequence Coach::check {
