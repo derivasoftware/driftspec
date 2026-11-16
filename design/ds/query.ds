@@ -118,6 +118,16 @@ package driftspec@ds {
       @requirement REQ-00003-2
     }
 
+    // one reading of a pattern of include, exclude or open for every kind of diagram (DS-212)
+    function inPattern(model: model::Model, pattern: std::string, entity: model::Entity) -> bool {
+      @requirement REQ-00116-1
+    }
+
+    // the box a relation is drawn from: a behaviour's is its subject's, a box's is its own (DS-219)
+    function drawnFrom(model: model::Model, entity: model::Entity) -> std::string {
+      @requirement REQ-00121-1
+    }
+
     // include and exclude patterns, the neighbours, the boxes around; a closed box stands for what it holds
     class ClassFilter : IFilter {
       @requirement REQ-00047-1

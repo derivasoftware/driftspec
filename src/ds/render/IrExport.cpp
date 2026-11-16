@@ -52,7 +52,7 @@ std::string edgeKind(const std::string& relation) {
   if (relation == "inherits") return "inheritance";
   if (relation == "owns") return "composition";
   if (relation == "refs" || relation == "shares") return "aggregation";
-  if (relation == "uses" || relation == "bounded-by") return "dependency";
+  if (relation == "uses" || relation == "bounded-by" || relation == "consumes") return "dependency";  // @uses is drawn (DS-219)
   if (relation == "realises") return "realization";
   return "";
 }
@@ -218,7 +218,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     const model::Entity* to = model_.find(r.to);
     if (!from || !to) continue;
     if (to->kind == model::Kind::Enum && kind == "composition") kind = "association";  // a value has no lifetime to own
-    const std::string fromClass = isBox(*from) ? from->id : from->scope;
+    const std::string fromClass = query::drawnFrom(model_, *from);                     // a behaviour's relation is its subject's (DS-219)
     if (!placed.count(fromClass) || !placed.count(r.to) || fromClass == r.to) continue;
     std::string label;
     if (r.kind == "owns" || r.kind == "refs" || r.kind == "shares") {
@@ -234,22 +234,22 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
     if (!change.empty()) edge["refs"] = {{"change", change}};
     out["edges"].push_back(edge);
   }
-  // `open:` written says which boxes stay open, and every other closes: `open:` alone closes them all
-  if (diagram->fields.count("open")) {
-    // what a box does counts as much as what it declares: its behaviours cross boxes too, and a closed box
-    // depends on whatever they reach. Types alone would leave an interface unconnected to what handles it
-    for (const auto& r : model_.index().ofKinds({"couples-transient", "couples-structural"})) {
-      const std::string subject = model::Identity(r.from).subject().text();
-      if (subject.empty()) continue;
-      const model::Entity* s = model_.find(subject);
-      if (!s || !placed.count(r.to)) continue;
-      const std::string owner = placed.count(subject) ? subject : s->scope;
-      if (!placed.count(owner) || owner == r.to) continue;
-      if (!drawn.insert(owner + "|" + r.to + "|dependency||").second) continue;
-      out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}});
-    }
-    return closeBoxes(out.dump(), split(diagram->field("open"), ','), pretty);
+  // what a box does counts as much as what it declares, with or without open: (DS-219): its behaviours cross
+  // boxes too. Types alone would leave an interface unconnected to what handles it
+  for (const auto& r : model_.index().ofKinds({"couples-transient", "couples-structural"})) {
+    const model::Entity* seq = model_.find(r.from);
+    if (!seq || !placed.count(r.to)) continue;
+    const std::string owner = query::drawnFrom(model_, *seq);
+    if (!placed.count(owner) || owner == r.to) continue;
+    // an edge between the two already says it (an attribute's ownership, a type used): no second arrow
+    const std::string pair = owner + "|" + r.to + "|";
+    const auto at = drawn.lower_bound(pair);
+    if (at != drawn.end() && at->compare(0, pair.size(), pair) == 0) continue;
+    drawn.insert(pair + "dependency||");
+    out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}});
   }
+  // `open:` written says which boxes stay open, and every other closes: `open:` alone closes them all
+  if (diagram->fields.count("open")) return closeBoxes(out.dump(), split(diagram->field("open"), ','), pretty);
   return pretty ? out.dump(2) : out.dump();
 }
 

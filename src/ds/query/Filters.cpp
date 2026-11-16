@@ -28,7 +28,7 @@ bool drawable(const model::Entity& e) { return isBox(e) || isContainer(e); }
 /// The relations a class diagram draws as edges, the ones its neighbours follow.
 bool drawnAsEdge(const std::string& relation) {
   return relation == "inherits" || relation == "owns" || relation == "refs" || relation == "shares" || relation == "uses" ||
-         relation == "bounded-by" || relation == "realises";
+         relation == "bounded-by" || relation == "realises" || relation == "consumes";
 }
 
 int number(const std::string& written, int every) {
@@ -99,6 +99,16 @@ std::string ClassFilter::standsFor(const std::string& id, const std::set<std::st
   return id;
 }
 
+std::string drawnFrom(const model::Model& model, const model::Entity& entity) {
+  if (isBox(entity) || entity.kind == model::Kind::Module || entity.kind == model::Kind::Package) return entity.id;  // a box's own @uses
+  if (entity.kind == model::Kind::Sequence || entity.kind == model::Kind::State) {
+    const model::Entity* subject = model.find(model::Identity(entity.id).subject().text());
+    if (!subject && entity.kind == model::Kind::State) subject = model.find(model::Identity(entity.id).machineSubject().text());
+    if (subject) return isBox(*subject) ? subject->id : subject->scope;
+  }
+  return entity.scope;
+}
+
 bool ClassFilter::matches(const model::Model& model, const std::string& pattern, const model::Entity& entity) const {
   if (pattern == entity.id) return true;
   if (entity.has("extern")) return false;  // what lives outside the workspace is drawn only when named
@@ -125,7 +135,7 @@ std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
       const model::Entity* from = model.find(r.from);
       const model::Entity* to = model.find(r.to);
       if (!from || !to) continue;
-      const std::string fromClass = isBox(*from) ? from->id : from->scope;
+      const std::string fromClass = drawnFrom(model, *from);
       const model::Entity* fromEntity = model.find(fromClass);
       if (!fromEntity || !isBox(*fromEntity) || !isBox(*to) || to->expected || fromEntity->expected) continue;
       if (selected.count(fromClass) && !to->has("extern")) grown.insert(r.to);

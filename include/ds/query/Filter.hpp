@@ -97,6 +97,11 @@ class RequirementsFilter : public IFilter {
 /// diagram (DS-212).
 bool inPattern(const model::Model& model, const std::string& pattern, const model::Entity& entity);
 
+/// The box a class diagram draws a relation of `entity` from (DS-219): a box, a module or a package is itself; a member is its
+/// class; a behaviour is its subject's box (a method's class, a function, an operation's interface), not the
+/// module it is written in; anything else is its scope.
+std::string drawnFrom(const model::Model& model, const model::Entity& entity);
+
 /// The one place that names the filter of each kind of diagram, built from the diagram's fields;
 /// null when the entity is no diagram.
 std::unique_ptr<IFilter> filterFor(const model::Entity& diagram);
