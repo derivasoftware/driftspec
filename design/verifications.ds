@@ -273,10 +273,10 @@ package driftspec {
       tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_points_and_annotates_and_the_reader_sees_it_and_answers
       tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_finds_every_tool_of_the_contract
   }
-  verification SVER-00023-3 {
+  verification SVER-00023-4 {
     status: approved
     @requirement SREQ-00019-1
-    title: System tests replay the eighteen lessons of the playground against the engine to a clean end, and find each of them in English and Spanish
+    title: System tests replay the nineteen lessons of the playground against the engine to a clean end, and find each of them in English and Spanish
     method: test
     tests:
       tests/system/python/test_playground.py::TestPlayground::test_every_lesson_plays_to_a_clean_end

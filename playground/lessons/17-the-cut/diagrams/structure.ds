@@ -24,3 +24,10 @@ diagram REQ_Shop {
   kind: requirement
   include: shop@*
 }
+
+diagram HLD_Levels {
+  kind: class
+  include: shop@*
+  close: module
+  open: shop@shipping@carrier
+}

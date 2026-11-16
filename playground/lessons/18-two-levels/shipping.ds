@@ -1,0 +1,20 @@
+package shop@shipping {
+  module carrier {
+    class Courier {
+      - owns route: Route
+      + deliver(parcel: Parcel) -> bool
+    }
+    class Route {
+      + next() -> string
+    }
+    dataclass Parcel {
+      + address: string
+    }
+  }
+  module tracking {
+    class Tracker {
+      - refs courier: carrier::Courier
+      + where(parcel: carrier::Parcel) -> string
+    }
+  }
+}
