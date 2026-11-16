@@ -3511,7 +3511,7 @@
     },
     "condition": {
       "type": "PATTERN",
-      "value": "[^{\\/\\n]+"
+      "value": "([^{\\/\\n]|\\/[^\\s{\\/])+"
     },
     "state": {
       "type": "SEQ",

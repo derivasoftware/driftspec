@@ -16,8 +16,10 @@ std::string Context::current(const std::string& id) const {
 void Context::checkVisibility(const std::string& from, const std::string& target, const model::Location& location) {
   const std::string hidden = resolver_.privateOnTheWay(from, target);
   if (hidden.empty()) return;
+  const model::Entity* h = model_.find(hidden);
+  const std::string what = h && h->field("visibility") == "#" ? "protected" : "private";
   report({"W-NOT-VISIBLE", "warning",
-          from + " reaches " + target + (hidden == target ? ", which is private" : " through " + hidden + ", which is private"), location});
+          from + " reaches " + target + (hidden == target ? ", which is " + what : " through " + hidden + ", which is " + what), location});
 }
 
 void Context::checkLeak(const std::string& from, const std::string& target, const model::Location& location) {

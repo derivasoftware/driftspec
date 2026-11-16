@@ -89,8 +89,20 @@ TEST_F(TestInheritedMembers, ACallOnASubclassReachesTheMethodOfItsBase) {
 TEST_F(TestInheritedMembers, APrivateMemberOfTheBaseStaysHidden) {
   EXPECT_TRUE(calls("p@m::Route::secret"));
   const auto hidden = codes("W-NOT-VISIBLE");
-  ASSERT_EQ(hidden.size(), 1u);
+  ASSERT_EQ(hidden.size(), 2u);
   EXPECT_NE(hidden[0].find("p@m::Route::secret, which is private"), std::string::npos);
+}
+
+TEST_F(TestInheritedMembers, AProtectedMemberIsSeenFromADerivedClassAndHiddenFromAnyOther) {
+  // LatestRoute derives from Route and calls encode: seen. Server calls route.encode from outside: hidden (DS-224)
+  const auto hidden = codes("W-NOT-VISIBLE");
+  int fromServer = 0, fromDerived = 0;
+  for (const auto& m : hidden) {
+    fromServer += m.find("Server::serve") != std::string::npos && m.find("Route::encode, which is protected") != std::string::npos;
+    fromDerived += m.find("LatestRoute::handle") != std::string::npos && m.find("encode") != std::string::npos;
+  }
+  EXPECT_EQ(fromServer, 1);
+  EXPECT_EQ(fromDerived, 0);
 }
 
 }  // namespace

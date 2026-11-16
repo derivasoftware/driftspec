@@ -806,7 +806,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       const model::Entity* in = owner.empty() ? nullptr : model_.find(owner);
       // a rule of a class or a member is named under it: p@m::Order::priced, p@m::Link::send::in-range
       const bool inClass = in && (in->kind == model::Kind::Class || in->kind == model::Kind::Method || in->kind == model::Kind::Function ||
-                                  in->kind == model::Kind::Operator);
+                                  in->kind == model::Kind::Operator || in->kind == model::Kind::Attribute);  // DS-224
       e.id = inClass ? owner + "::" + e.name : model::Scope(scope).qualify(e.name).text();
       e.scope = inClass ? owner : scope;
       e.location = loc;

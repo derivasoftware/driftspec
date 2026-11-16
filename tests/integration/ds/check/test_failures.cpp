@@ -133,7 +133,7 @@ TEST_F(TestFailurePromises, WhatTheSignatureSaysAndNoPathFailsWithIsAFinding) {
 }
 
 TEST_F(TestFailurePromises, AnOperationWithNoBehaviourFailsAsItsSignatureSays) {
-  EXPECT_EQ(model.find("shelf@books::Files::read")->field("escapes"), "IoError");
+  EXPECT_EQ(model.find("shelf@books::Files::read")->field("escapes"), "Busy, IoError");
   EXPECT_TRUE(said("W-FAILURE-UNREACHED", "shelf@books::Files::read").empty());                   // nothing to hold it to
   EXPECT_EQ(model.find("shelf@books::Loader::load")->field("escapes"), "LoadError, ParseError");  // IoError handled
 }

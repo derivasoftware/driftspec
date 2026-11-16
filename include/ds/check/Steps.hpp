@@ -102,6 +102,8 @@ class ContractCheck : public ACheck {
   /// What an operation lets escape against what its signature promises, and at a boundary (DS-189).
   void checkFailures(const model::Entity& operation);
   void checkScenarios();
+  /// A handler of a failure no step of its attempt can fail with.
+  void checkHandlers();
   void checkDiagrams();
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
