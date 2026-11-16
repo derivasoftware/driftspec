@@ -1995,13 +1995,14 @@ package driftspec@ds {
           merged: using is not composing, aggregating or inheriting, and a closed box turned them
           all into one dependency. Asked which kinds to keep once lifted: use and structural,
           nothing more. A reference a class keeps to something of another box is structural.
-        verification VER-00153-1 {
+        verification VER-00153-2 {
           title: Integration tests confirm a relation lifted onto closed boxes is a structural bond or a use, drawn once each, and that with the boxes open every relation keeps its own kind
           status: approved
           method: test
           tests:
             tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ARelationLiftedOntoClosedBoxesIsOneOfTwoBondsAndOneArrowOfEachAtMost
             tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.WithTheBoxesOpenEveryRelationKeepsItsOwnKind
+            tests/integration/ds/check/test_levels.cpp::TestLevels.AUseSaidByAScenarioAndByTheDetailBelowIsDrawnOnceBetweenTwoBoxes
         }
       }
       requirement REQ-00062-1 {

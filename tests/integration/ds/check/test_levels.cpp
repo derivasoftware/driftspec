@@ -167,4 +167,17 @@ TEST_F(TestLevels, AMessageWrittenBetweenTwoParticipantsSaysTheSenderUsesTheRece
   EXPECT_EQ(twice, 1);  // said once, however many messages say it
 }
 
+TEST_F(TestLevels, AUseSaidByAScenarioAndByTheDetailBelowIsDrawnOnceBetweenTwoBoxes) {
+  // the scenario writes sales -> warehouse.take, and below the desk calls the counter: one use between the two boxes
+  const auto tour = diagram("TOUR_Purchase");
+  int uses = 0, bonds = 0;
+  for (const auto& e : tour["edges"]) {
+    if (e["part"] != "boxes" || e["from"] != "shop@sales" || e["to"] != "shop@warehouse") continue;
+    uses += e["kind"] == "dependency";
+    bonds += e["kind"] == "association";
+  }
+  EXPECT_EQ(uses, 1);
+  EXPECT_EQ(bonds, 1);  // and the reference the desk keeps to the counter, apart
+}
+
 }  // namespace

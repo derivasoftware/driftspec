@@ -43,7 +43,7 @@ that shows what it taught.
 | 15 | Depth | `depth: 0`, `1` and `*` over one operation: a call to an operation with a sequence is a link at depth 0 and opens one level per step; nothing is written twice | `SEQ_Buy` from the shell down to the subtotal of each line |
 | 16 | Levels | boxes hold boxes: a package inside the shop with two modules; `close: package`, `close: module`, and `open:` through it so one branch goes down to its classes; lifted onto a closed box a relation is a structural bond (solid) or a use (dashed) | `HLD_Levels`: the carrier open, every other module one box |
 | 17 | The cut | depth counts calls, a cut counts boxes: `close: module` makes each module one lifeline and keeps only what crosses; `open:` goes through it; `fold:` stops following a call; `cut:` takes the cut of the boxes already drawn | `SEQ_Buy` with the store open, `SEQ_BuyBoxes` on the cut of `HLD_Shop` |
-| 18 | Two levels | a scenario of the use case written in one block between the boxes: boxes named as participants, the sender before the arrow, a message bound to what a box offers or a label; the level below is held to it (`W-LEVEL-NO-CROSSING`), and what is not written yet is information | `SEQ_Purchase` beside `SEQ_BuyBoxes`: the same crossings |
+| 18 | Two levels | a scenario of the use case written in one block between the boxes: boxes named as participants, the sender before the arrow, a message bound to what a box offers or a label; the level below is held to it (`W-LEVEL-NO-CROSSING`), and what is not written yet is information; a `kind: tour` holds the boxes that take part and the sequence in one diagram, and the page plays it | `SEQ_Purchase` beside `SEQ_BuyBoxes`: the same crossings, and `TOUR_Purchase` played over the boxes |
 
 Notes for writing a lesson:
 
@@ -65,7 +65,7 @@ Notes for writing a lesson:
 | Key | What it does |
 |---|---|
 | `at` | what the card points at: `{file, find[, after]}` a line (`after: "}"` the end of that line's block), `{pane[, select]}` a diagram (and the class whose relations light up), `{panel: "problems"}` |
-| `shows` | the diagrams the step is about, when they are not the pane the card points at or the one its check looks at: one or a list. The page shows the diagrams of a step alone while it lasts (DS-242); a lesson with a step done on the page itself moves nothing |
+| `shows` | the diagrams the step is about, when they are not the pane the card points at or the one its check looks at: one or a list. The page shows the diagrams of a step alone while it lasts (DS-242), and plays the one that is a tour (DS-246); a lesson with a step done on the page itself moves nothing |
 | `write` | what the lesson types before the card asks anything: one or a list of `{file, end}`, `{file, below: {find[, after]}}`, `{file, into: {find[, first]}}` (end of the block, or its first line), `{file, replace, text}` |
 | `solution` | the same shapes, typed when the reader asks the lesson to write it |
 | `open` (lesson) | the file the lesson opens first |

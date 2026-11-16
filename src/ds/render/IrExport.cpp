@@ -367,6 +367,13 @@ std::string IrExport::closeBoxes(const std::string& ir, const axis::Cut& cut, bo
   // an edge that loses an end to a closed box is lifted to it, and says which of the two bonds it is
   nlohmann::json edges = nlohmann::json::array();
   std::set<std::string> lifted;
+  // what two drawn things already say of each other as they are is not said again by what is lifted to them: a
+  // message written between two boxes and a call of the detail below are one use (DS-246)
+  for (const auto& e : doc["edges"]) {
+    const std::string from = e["from"], to = e["to"];
+    if (visible(from) == from && visible(to) == to && e.contains("refs") && e["refs"].contains("bond"))
+      lifted.insert(from + "|" + to + "|" + e["refs"]["bond"].get<std::string>());
+  }
   for (auto e : doc["edges"]) {
     const std::string from = visible(e["from"]);
     const std::string to = visible(e["to"]);

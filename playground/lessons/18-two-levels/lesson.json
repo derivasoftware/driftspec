@@ -118,6 +118,43 @@
     },
     {
       "at": {
+        "file": "diagrams/behaviour.ds",
+        "find": "diagram SEQ_Purchase",
+        "after": "}"
+      },
+      "text": {
+        "en": "One diagram can hold both sides: who takes part, and what happens between them. Add a tour of the scenario at the end of the file:\n`diagram TOUR_Purchase {`\n`  kind: tour`\n`  include: UC-00001-1`\n`}`\nA tour takes the fields of a sequence diagram and draws two parts on one cut: the boxes that take part, and the sequence. Each lifeline is one box of the other part.",
+        "es": "Un solo diagrama puede llevar las dos caras: quién participa y qué pasa entre ellos. Añade un tour del escenario al final del fichero:\n`diagram TOUR_Purchase {`\n`  kind: tour`\n`  include: UC-00001-1`\n`}`\nUn tour lleva los campos de un diagrama de secuencia y dibuja dos partes sobre un mismo corte: las cajas que participan y la secuencia. Cada línea de vida es una caja de la otra parte."
+      },
+      "solution": {
+        "file": "diagrams/behaviour.ds",
+        "end": true,
+        "text": "diagram TOUR_Purchase {\n  kind: tour\n  include: UC-00001-1\n}"
+      },
+      "done": {
+        "draws": {
+          "diagram": "TOUR_Purchase",
+          "text": "invoice(cart)"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "TOUR_Purchase"
+      },
+      "text": {
+        "en": "A tour is played step by step: each message of the scenario, and the box that sends it and the one that receives it. The arrows between the boxes are what the design says of them, lifted onto these three: the dashed one from the shell to the store is a use, and this scenario alone would draw it; billing has a solid one too, because below it an invoice keeps a reference to the cart.",
+        "es": "Un tour se reproduce paso a paso: cada mensaje del escenario, y la caja que lo envía y la que lo recibe. Las flechas entre las cajas son lo que el diseño dice de ellas, subido a estas tres: la discontinua del shell a la tienda es un uso, y este escenario solo ya la dibujaría; la facturación tiene además una continua, porque por debajo una factura guarda una referencia al carrito."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
         "panel": "problems"
       },
       "text": {
