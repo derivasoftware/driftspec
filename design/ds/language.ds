@@ -1489,6 +1489,29 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestEveryBox.ABoxIsDrawnWithOrWithoutChildren
         }
       }
+      requirement REQ-00121-1 {
+        tags: language, diagrams, dependencies
+        status: approved
+        title: A class diagram shall draw a behaviour's dependencies from its subject, count behaviour with or without open, and draw a declared @uses
+        text:
+          What a sequence uses or couples to is drawn from its subject's box (a method's class, a
+          function, an operation's interface), not from the module it is written in. Behaviour that
+          crosses boxes is drawn whether or not the diagram writes open:, so a diagram that does not
+          write open: draws what one that opens every box draws; a coupling an edge between the
+          two already says gives no second arrow. A box's @uses of an interface is drawn as a
+          dependency, before any behaviour confirms it.
+        rationale:
+          Model audit 2026-11, finding I2 (DS-219): one dependency was drawn three ways. Without
+          open: the arrow left the module; with open: a second arrow appeared; a declared @uses was
+          drawn by the viewer and by no diagram. The single rule for lifting relations is DS-230.
+        verification VER-00137-1 {
+          title: Integration tests confirm one dependency is drawn alike with or without open, from the subject of its behaviour, and a declared use is drawn
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestDependencyDrawing.OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclaredUseIsDrawn
+        }
+      }
       requirement REQ-00064-2 {
         tags: language, diagrams, visibility
         status: approved

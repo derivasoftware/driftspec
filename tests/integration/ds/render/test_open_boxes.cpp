@@ -2,6 +2,7 @@
 
 #include <map>
 #include <nlohmann/json.hpp>
+#include <set>
 #include <string>
 
 #include "ds/bind/Binder.hpp"
@@ -185,6 +186,60 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
   EXPECT_TRUE(parentOf.count("shop@sales"));                        // a box with nothing inside
   EXPECT_TRUE(parentOf.count("shop@empty"));                        // a module with nothing inside
   EXPECT_EQ(parentOf["shop@warehouse@counter"], "shop@warehouse");  // an interface sits in its box
+}
+
+TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclaredUseIsDrawn) {
+  ds::model::Model model;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model);
+  binder.bind(parser.parseText("a.ds",
+                               "package shop {\n"
+                               "  package front {\n"
+                               "    @uses shop@back@orders\n"
+                               "    module web {\n"
+                               "      class Page {\n"
+                               "        + show(id: string) -> none\n"
+                               "      }\n"
+                               "      sequence Page::show {\n"
+                               "        local ledger: shop@back@store::Ledger\n"
+                               "        self -> ledger.find(id) -> order\n"
+                               "      }\n"
+                               "    }\n"
+                               "  }\n"
+                               "  package back {\n"
+                               "    interface orders {\n"
+                               "      kind: library\n"
+                               "      operation find(id: string) -> string\n"
+                               "    }\n"
+                               "    module store {\n"
+                               "      class Ledger {\n"
+                               "        + find(id: string) -> string\n"
+                               "      }\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"
+                               "diagram CL_Open {\n"
+                               "  kind: class\n"
+                               "  include: shop@*\n"
+                               "}\n"
+                               "diagram CL_Named {\n"
+                               "  kind: class\n"
+                               "  include: shop@*\n"
+                               "  open: shop@front, shop@front@web, shop@back, shop@back@store\n"
+                               "}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(model, checkSteps).run(binder);
+  const auto edges = [&model](const std::string& d) {
+    std::set<std::string> out;
+    const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + d, false));
+    for (const auto& e : ir["edges"]) out.insert(e["from"].get<std::string>() + " -> " + e["to"].get<std::string>());
+    return out;
+  };
+  const auto open = edges("CL_Open");
+  EXPECT_EQ(open, edges("CL_Named"));
+  EXPECT_TRUE(open.count("shop@front@web::Page -> shop@back@store::Ledger"));  // the subject, not its module
+  EXPECT_FALSE(open.count("shop@front@web -> shop@back@store::Ledger"));
+  EXPECT_TRUE(open.count("shop@front -> shop@back@orders"));  // the declared @uses
 }
 
 }  // namespace
