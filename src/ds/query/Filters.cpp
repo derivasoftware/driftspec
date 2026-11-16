@@ -20,7 +20,10 @@ bool isBox(const model::Entity& e) {
   return e.kind == model::Kind::Class || e.kind == model::Kind::Enum || e.kind == model::Kind::Function || e.kind == model::Kind::Interface;
 }
 
-bool drawable(const model::Entity& e) { return isBox(e) || e.kind == model::Kind::Module; }
+/// A box that holds others: a module, or a package below the system (the outermost package is the drawing).
+bool isContainer(const model::Entity& e) { return e.kind == model::Kind::Module || (e.kind == model::Kind::Package && !e.scope.empty()); }
+
+bool drawable(const model::Entity& e) { return isBox(e) || isContainer(e); }
 
 /// The relations a class diagram draws as edges, the ones its neighbours follow.
 bool drawnAsEdge(const std::string& relation) {
@@ -140,12 +143,15 @@ std::set<std::string> ClassFilter::containers(const model::Model& model, const s
   auto up = [](const std::string& s) {
     return model::Scope(model::Scope(s).outer().text()).box().text();
   };  // ds@ds::b → ds@ds, app@core@model → app@core
+  // every box is drawn, with or without children (DS-218): a container taken is drawn itself, and the boxes
+  // around anything taken are drawn around it; a package scope (p@q@) names the package p@q
   for (const auto& id : taken) {
     const model::Entity* e = model.find(id);
-    if (!isBox(*e)) continue;
-    for (std::string s = e->scope; !s.empty(); s = up(s)) {
+    if (!e || (!isBox(*e) && !isContainer(*e))) continue;
+    const std::string start = isContainer(*e) ? id : model::Scope(e->scope).box().text();
+    for (std::string s = start; !s.empty(); s = up(s)) {
       const model::Entity* m = model.find(s);
-      if (m && (m->kind == model::Kind::Module || (m->kind == model::Kind::Package && !m->scope.empty()))) out.insert(s);
+      if (m && isContainer(*m)) out.insert(s);
     }
   }
   return out;
