@@ -14,4 +14,11 @@ TEST(TestBadgeOf, EachClassifierHasOneLetterInEveryDrawing) {
   EXPECT_EQ(ds::render::badgeOf("usecase", false), "U");  // one the table does not name: its first letter
 }
 
+TEST(TestHoldsMembers, ASectionHoldsMembersOrWhatAClosedBoxOffers) {
+  EXPECT_TRUE(ds::render::holdsMembers("attributes"));
+  EXPECT_TRUE(ds::render::holdsMembers("methods"));
+  for (const char* offered : {"package", "namespace", "interface", "class", "dataclass", "enum", "function"})
+    EXPECT_FALSE(ds::render::holdsMembers(offered)) << offered;  // a compartment of a closed box: names, all of that kind
+}
+
 }  // namespace

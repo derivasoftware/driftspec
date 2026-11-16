@@ -149,6 +149,24 @@ TEST_F(TestCutDrawing, WithTheBoxesOpenEveryRelationKeepsItsOwnKind) {
   EXPECT_EQ(kinds.count("association"), 0U);  // nothing is lifted
 }
 
+TEST_F(TestCutDrawing, AClosedBoxListsWhatItOffersByKindEachMarkedWithWhatItIs) {
+  const auto modules = diagram("HLD_Modules");    // close: module
+  const auto packages = diagram("HLD_Packages");  // close: package
+  const auto listed = [](const nlohmann::json& ir, const std::string& id) {
+    for (const auto& n : ir["nodes"])
+      if (n["id"] == id) return std::make_pair(n["sections"].dump(), n["sectionKinds"].dump());
+    return std::make_pair(std::string(), std::string());
+  };
+  // a module: its classes, then its dataclasses, a compartment each
+  EXPECT_EQ(listed(modules, "shop@warehouse@stock"),
+            (std::make_pair(std::string(R"([["Shelf"],["Box"]])"), std::string(R"(["class","dataclass"])"))));
+  // each compartment by name
+  EXPECT_EQ(listed(modules, "shop@sales@till"), (std::make_pair(std::string(R"([["Ledger","Till"]])"), std::string(R"(["class"])"))));
+  // a package: its modules, then its interfaces
+  EXPECT_EQ(listed(packages, "shop@warehouse"),
+            (std::make_pair(std::string(R"([["stock","supply"],["counter"]])"), std::string(R"(["namespace","interface"])"))));
+}
+
 /// A design with only its high level: three boxes and one scenario between them (DS-230).
 TEST(TestWrittenLevel, AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfTheBoxes) {
   ds::model::Model model;

@@ -288,13 +288,19 @@ void box(Grid& g, const Placed& p) {
   ++y;
   // only class members are tokenised; an artefact's title is prose and stays plain
   const bool members = !n.sectionKinds.empty();
-  for (const auto& section : n.sections) {
+  for (size_t s = 0; s < n.sections.size(); ++s) {
+    const auto& section = n.sections[s];
     g.put(r.x, y, "\xE2\x94\x9C");  // ├
     for (int x = r.x + 1; x < r.x + r.w - 1; ++x) g.put(x, y, "\xE2\x94\x80");
     g.put(r.x + r.w - 1, y, "\xE2\x94\xA4");  // ┤
     ++y;
+    // what a closed box offers, all of one kind: each name with the letter a box of its own would carry (DS-244)
+    const std::string offered = s < n.sectionKinds.size() && !holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
     for (const auto& line : section) {
-      if (members)
+      if (!offered.empty()) {
+        g.text(r.x + M.PAD_X, y, badgeOf(offered, false), offered == "interface" ? kPublic : offered == "enum" ? kProtected : "35");
+        g.text(r.x + M.PAD_X + M.BADGE_W, y++, line);
+      } else if (members)
         member(g, r.x + M.PAD_X, y++, line);
       else
         g.text(r.x + M.PAD_X, y++, line);

@@ -48,6 +48,17 @@ std::string memberLine(const model::Entity& m) {
   return line;
 }
 
+/// What a box is drawn as, the word its badge is read from: the same for a box of its own and for a row of the
+/// closed box that holds it (DS-244).
+std::string classifierOf(const model::Entity& e) {
+  if (e.kind == model::Kind::Package) return "package";
+  if (e.kind == model::Kind::Module) return "namespace";
+  if (e.kind == model::Kind::Function) return "function";
+  if (e.kind == model::Kind::Enum) return "enum";
+  if (e.kind == model::Kind::Interface || e.field("stereotypes").find("interface") != std::string::npos) return "interface";
+  return e.has("dataclass") ? "dataclass" : "class";
+}
+
 std::string edgeKind(const std::string& relation) {
   if (relation == "inherits") return "inheritance";
   if (relation == "owns") return "composition";
@@ -278,14 +289,23 @@ std::string IrExport::closeBoxes(const std::string& ir, const axis::Cut& cut, bo
         }
         if (e.field("visibility") != "-") children.push_back(&e);
       }
-      std::sort(children.begin(), children.end(),
-                [](const model::Entity* a, const model::Entity* b) { return a->location.line < b->location.line; });
-      std::vector<std::string> names;
-      for (const model::Entity* c : children) names.push_back(displayName(*c));
+      // grouped by what they are, in one order for every box, and each group by name: a closed box reads as a
+      // class does, a compartment for each kind of thing it offers (DS-244)
       n["kind"] = "box";
-      if (!names.empty()) {
-        n["sections"] = nlohmann::json::array({names});
-        n["sectionKinds"] = nlohmann::json::array({"methods"});
+      nlohmann::json sections = nlohmann::json::array();
+      nlohmann::json kinds = nlohmann::json::array();
+      for (const char* kind : {"package", "namespace", "interface", "class", "dataclass", "enum", "function"}) {
+        std::vector<std::string> names;
+        for (const model::Entity* c : children)
+          if (classifierOf(*c) == kind) names.push_back(displayName(*c));
+        if (names.empty()) continue;
+        std::sort(names.begin(), names.end());
+        sections.push_back(names);
+        kinds.push_back(kind);
+      }
+      if (!sections.empty()) {
+        n["sections"] = sections;
+        n["sectionKinds"] = kinds;
       }
     }
     nodes.push_back(n);
