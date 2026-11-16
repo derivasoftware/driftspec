@@ -1,0 +1,31 @@
+// e60: rule literal that never matches (DS-213). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e60shop {
+  requirement REQ-60001-1: The store shall not depend on the web
+  module web {
+    class Page { }
+  }
+  module store {
+    class Order {  // ! E-RULE-BROKEN
+      - page: e60shop@web::Page
+      + total(p: e60shop@web::Page) -> int
+    }
+    rule store-blind-to-web {
+      title: Nothing in the store uses the web
+      @requirement REQ-60001-1
+      for class c in e60shop@store
+      never c uses x, x in e60shop@web  // ! W-RULE-NEVER-MATCHES
+    }
+    rule store-blind-members {
+      title: No member of the store names a type of the web in a signature
+      @requirement REQ-60001-1
+      for class c in e60shop@store
+      never m in c, m uses x, x in e60shop@web
+    }
+    rule store-blind-typo {
+      title: A relation the language does not have
+      @requirement REQ-60001-1
+      for class c in e60shop@store
+      never c usess x, x in e60shop@web  // ! E-RULE-UNKNOWN
+    }
+  }
+}

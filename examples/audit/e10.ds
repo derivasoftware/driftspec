@@ -1,0 +1,32 @@
+// e10: class against the interface it realises (DS-215). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e10zoo {
+  interface keeper {
+    kind: library
+    operation feed(animal: string) -> none
+    operation clean(cage: int) -> none
+  }
+  sequence keeper::feed {
+  }
+  sequence keeper::clean {
+  }
+  module animals {
+    class Animal {
+      + abstract speak() -> string
+      + abstract eat(food: string) -> none
+    }
+    class Dog : Animal {
+      + bark() -> none
+    }
+    class Staff {
+      @interface keeper
+      + feed(animal: int, extra: bool) -> none  // ! W-INTERFACE-SIGNATURE
+    }
+    class Kennel {
+      - dog: Dog
+      + open() -> none
+    }
+    sequence Kennel::open {
+      self -> dog.speak() -> noise
+    }
+  }
+}

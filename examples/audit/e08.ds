@@ -1,0 +1,50 @@
+// e08: whatever answers to a requirement (DS-220). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e08shop {
+  @requirement SREQ-8001-1
+  requirement SREQ-8001-1 {
+    title: The shop shall take an order
+    status: approved
+    verification SVER-8001-1 {
+      title: A system test buys an item
+      method: test
+      tests:
+        tests/test_shop.py::test_buy
+    }
+  }
+  interface shell {
+    kind: cli
+    @requirement SREQ-8001-1
+    operation buy(item: string) -> int {
+      @requirement SREQ-8001-1
+      exit 0: default
+    }
+  }
+  sequence shell::buy {
+    return 0
+  }
+  module store {
+    @requirement SREQ-8001-1
+    function price(item: string) -> int {
+      @requirement SREQ-8001-1
+    }
+    enum Status {
+      @requirement SREQ-8001-1
+      Open, Paid
+    }
+    class Cart {
+      @requirement SREQ-8001-1
+      + add(item: string) -> bool {
+        @requirement SREQ-8001-1
+      }
+    }
+    rule cart-small {
+      @requirement SREQ-8001-1
+      for class c in e08shop@store
+      holds c in e08shop@store
+    }
+  }
+}
+diagram REQ_Shop_e08 {
+  kind: requirement
+  include: SREQ-8001-1
+}

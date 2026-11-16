@@ -1,0 +1,14 @@
+// e11: a slash in prose (DS-224). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e11shop {
+  module store {
+    class Cart {
+      + add(item: string) -> bool
+    }
+    sequence Cart::add {
+      opt the path is /tmp or the ratio a/b is low {
+        return false
+      }
+      return true
+    }
+  }
+}
