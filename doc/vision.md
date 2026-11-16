@@ -143,7 +143,10 @@ in Plane, epics DS-206 and DS-205.
    `fold:` and `unfold:` (DS-231). A scenario is written in one block at any
    cut, with a use case or a box as its subject, boxes as participants and the
    sender before the arrow; a message to a box is bound to the operation the
-   box offers, or is a label until that level is written (DS-232).
+   box offers, or is a label until that level is written (DS-232). The scenario
+   of a use case is held to the behaviour below it: the same crossings in the
+   same order, omissions allowed, and what is not written yet is coverage
+   (DS-233).
 
 ## 3. Principles
 

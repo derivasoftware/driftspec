@@ -80,11 +80,16 @@ Cut::Cut(const model::Model& model, const model::Entity& diagram)
   }
 }
 
-std::string Cut::standsFor(const std::string& id) const {
+std::string standsAmong(const std::string& id, const std::set<std::string>& boxes) {
   for (const auto& step : pathTo(id)) {
-    if (closed_.count(step)) return step;
+    if (boxes.count(step)) return step;
   }
-  return id;
+  return "";
+}
+
+std::string Cut::standsFor(const std::string& id) const {
+  const std::string box = standsAmong(id, closed_);
+  return box.empty() ? id : box;
 }
 
 bool Cut::follows(const std::string& operation, int left) const {

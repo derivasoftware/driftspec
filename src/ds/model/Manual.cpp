@@ -294,6 +294,17 @@ std::vector<CodeSpec> buildCodes() {
        "Write that scenario (sequence X / name, or a branch / name), or correct the name."},
       {"W-SCENARIO-TWICE", "warning", "One behaviour names the same scenario on two branches: a scenario is one path.",
        "Give each path its own name."},
+      {"W-LEVEL-NO-CROSSING", "warning",
+       "A scenario of a use case has one participant send to another, and the behaviour below it, all written for that sender, never "
+       "crosses between the two.",
+       "Make the two levels agree: correct the scenario, or the behaviour of the operation it is asked through."},
+      {"W-LEVEL-ORDER", "warning",
+       "A scenario of a use case and the behaviour below it show the same crossings between its participants in another order.",
+       "Make the two levels agree on the order."},
+      {"W-LEVEL-NOT-BELOW", "coverage",
+       "A scenario of a use case has one participant send to another, and the behaviour below it does not show it yet: what the "
+       "sender does is not all written.",
+       "Write the behaviours the sender still lacks; an empty sequence says an operation calls nothing."},
       {"W-MESSAGE-NO-OPERATION", "coverage",
        "A scenario sends a message to a box that offers no operation of that name: the message is a label, and the level below is not "
        "written yet.",
@@ -592,6 +603,8 @@ std::string grammarPage() {
       "  { ... }, sequence sales { ... }), its participants named as what they are, a package, a module, an interface\n"
       "  or a class, and whoever is written before the arrow sending: sales -> warehouse.take(item). A message to a\n"
       "  box is bound to the operation the box offers under that name, or is a label until that level is written.\n"
+      "  The scenario of a use case is held to the behaviour below it, the one of the operation it is asked through:\n"
+      "  what it says crosses between its participants has to happen below, in that order; it may leave crossings out.\n"
       "  A path ends failing where a return would go: fail ParseError, the failure's name as text, whatever the\n"
       "  mechanism. An attempt runs its steps and handles what they fail with, one on each: attempt { ... } on IoError\n"
       "  { fail LoadError } translates it, a handler that returns resolves it, a failure no handler names goes on.\n"

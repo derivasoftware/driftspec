@@ -164,6 +164,19 @@ class FailureFlow : public IStep {
   model::Model* model_ = nullptr;
 };
 
+/// Two levels of one behaviour, both written, agree (DS-233). A scenario of a use case says what crosses between
+/// its participants; the behaviour of the operation it is asked through, unfolded and lifted onto those
+/// participants, has to cross the same way in the same order. The higher level may leave crossings out; it may
+/// not add one or turn two around. What the level below does not say yet is coverage, never a finding.
+class LevelCoherence : public ACheck {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check(const Context& context) override;
+};
+
 /// Ownership, artefacts, extensions and fields.
 class StructureCheck : public ACheck {
  public:

@@ -154,6 +154,18 @@ them. The vision (`vision.md`) says why; this says what.*
     written yet.
   Either level stands alone. Where both are written, the high level and the detail lifted onto
   its boxes (`close: package`) draw the same crossings.
+- **The two levels are held to each other (2026-11-16, DS-233).** The level below a scenario of a
+  use case is the behaviour of the operation it is asked through (`-> shell.buy(item)`), unfolded
+  and lifted onto the scenario's participants. Write the high level first; as the detail is
+  implemented it is matched against it.
+  - The crossings the scenario writes have to be found below, in order. It may leave crossings
+    out: an abstraction omits.
+  - A crossing the level below never makes is `W-LEVEL-NO-CROSSING`; one it makes at another
+    place is `W-LEVEL-ORDER`. Both need the sender to be all written below: every call made in
+    it has a behaviour (an empty sequence says an operation calls nothing).
+  - Otherwise the crossing is coverage, `W-LEVEL-NOT-BELOW`: `ds query <workspace> coverage`
+    lists which steps of the high level have no detail beneath yet.
+  - A scenario with no behaviour below it is held to nothing.
 - A branch names a scenario, a path through one behaviour (decided 2026-11-05,
   `examples/branches`): `opt the account is frozen / frozen { ... return 3 }`, and a
   bare `return` ends a branch. What every scenario shares is written once. The path
