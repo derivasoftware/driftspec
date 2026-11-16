@@ -17,10 +17,20 @@ std::string DiagramIr::write(const render::IrText& document, const FormatOptions
 
 std::string DiagramLayout::name() const { return "layout"; }
 
-std::string DiagramLayout::write(const render::IrText& document, const FormatOptions& options) const {
-  // the placed rectangles and routes, in cells: the portable form for hosts that draw themselves
-  const render::IrDocument parsed = render::IrDocument::parse(document.json).bundled();
-  const render::LayoutResult lay = render::Layout(render::Metrics::text()).place(parsed, options.width);
+namespace {
+/// The placed rectangles and routes of one drawing, in cells; of a drawing made of parts, those of each part.
+nlohmann::json placedOf(const render::IrDocument& document, int width) {
+  if (!document.parts.empty()) {
+    nlohmann::json parts = nlohmann::json::array();
+    for (const auto& name : document.parts) {
+      nlohmann::json placed = placedOf(document.part(name), width);
+      placed["part"] = name;
+      parts.push_back(placed);
+    }
+    return {{"parts", parts}};
+  }
+  const render::IrDocument parsed = document.bundled();
+  const render::LayoutResult lay = render::Layout(render::Metrics::text()).place(parsed, width);
   nlohmann::json out = {{"nodes", nlohmann::json::array()}, {"routes", nlohmann::json::array()}};
   for (const auto& p : lay.placed) {
     out["nodes"].push_back(
@@ -32,7 +42,13 @@ std::string DiagramLayout::write(const render::IrText& document, const FormatOpt
     for (const auto& pt : r.second.points) points.push_back({pt.x, pt.y});
     out["routes"].push_back({{"from", e.from}, {"to", e.to}, {"kind", e.kind}, {"points", points}});
   }
-  return out.dump() + "\n";
+  return out;
+}
+}  // namespace
+
+std::string DiagramLayout::write(const render::IrText& document, const FormatOptions& options) const {
+  // the portable form for hosts that draw themselves
+  return placedOf(render::IrDocument::parse(document.json), options.width).dump() + "\n";
 }
 
 std::string DiagramSvg::name() const { return "svg"; }

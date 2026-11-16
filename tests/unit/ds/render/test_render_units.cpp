@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <string>
+#include <vector>
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
@@ -78,6 +79,38 @@ TEST(TestText, TheDocumentInBoxCharactersAndAsCells) {
   EXPECT_EQ(drawn.find("\x1b["), std::string::npos);  // no colour unless asked
   const auto cells = nlohmann::json::parse(text.cells(IrDocument::parse(kIr), 0));
   EXPECT_FALSE(cells.empty());
+}
+
+const char* const kParts = R"({"ir":1,"title":"T","parts":["boxes","again"],)"
+                           R"("nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class","part":"boxes"},)"
+                           R"({"id":"p@m::A","kind":"box","label":"A","classifier":"class","part":"again"},)"
+                           R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class","part":"again"}],)"
+                           R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency","part":"again"}]})";
+
+TEST(TestIrDocument, ADocumentMadeOfPartsGivesEachAsADocumentOfItsOwn) {
+  const IrDocument doc = IrDocument::parse(kParts);
+  EXPECT_EQ(doc.parts, (std::vector<std::string>{"boxes", "again"}));
+  EXPECT_EQ(doc.part("boxes").nodes.size(), 1u);
+  EXPECT_EQ(doc.part("again").nodes.size(), 2u);  // the same entity may be drawn in two parts
+  EXPECT_EQ(doc.part("again").edges.size(), 1u);
+  EXPECT_TRUE(doc.part("boxes").edges.empty());
+  EXPECT_NE(doc.part("boxes").title, doc.part("again").title);  // each its own identity
+}
+
+TEST(TestSvg, ADocumentMadeOfPartsIsOneSvgThatHoldsOneForEachPart) {
+  const std::string svg = ds::render::Svg().render(IrDocument::parse(kParts));
+  EXPECT_EQ(svg.find("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox="), 0u);
+  EXPECT_NE(svg.find("data-part=\"boxes\""), std::string::npos);
+  EXPECT_NE(svg.find("data-part=\"again\""), std::string::npos);
+}
+
+TEST(TestText, ADocumentMadeOfPartsIsDrawnOnePartUnderTheOther) {
+  const IrDocument doc = IrDocument::parse(kParts);
+  const std::string text = ds::render::Text().render(doc, false);
+  const auto first = text.find("C A");
+  ASSERT_NE(first, std::string::npos);
+  EXPECT_NE(text.find("C A", first + 1), std::string::npos);  // the same box twice: once for each part
+  EXPECT_NE(ds::render::Text().cells(doc).find("\"rows\""), std::string::npos);
 }
 
 }  // namespace

@@ -1795,6 +1795,39 @@ package driftspec@ds {
             tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.WhatAnswersToARequirementIsTheBoxThatStandsForIt
         }
       }
+      requirement REQ-00139-1 {
+        tags: language, diagrams, cut, behaviour
+        status: approved
+        title: A tour shall draw, in one diagram and on one cut, the boxes that take part in a behaviour and the sequence between them
+        text:
+          diagram TOUR_Buy { kind: tour; include: shop@shell::buy; close: module } takes the fields
+          of a sequence diagram: the behaviour it follows, the cut, and the calls it follows. It is
+          one drawing of two parts. The sequence, as a sequence diagram of the same fields draws
+          it. And who takes part, drawn as boxes: each lifeline of the sequence is one box of the
+          other part, whether the cut closes it or a scenario written between boxes names it, with
+          the relations between them lifted (REQ-00137-1) and the boxes around them as open
+          context. The parts are drawn side by side, and one under the other where the width asked
+          for does not hold them, or in a terminal. ds query shows answers who takes part.
+        rationale:
+          Owner, 2026-11-16 (DS-245). A sequence says who talks to whom and a drawing of boxes says
+          how they are held and related; reading one against the other by eye, when each is cut its
+          own way, was confusing. One diagram relates the two, so that a step of the behaviour can
+          be shown on the boxes it joins: the playground plays it.
+        verification VER-00155-1 {
+          title: Integration tests confirm a tour is one drawing of two parts on one cut, each lifeline of its sequence one box of the other part with the relations between them, drawn side by side or one under the other, and asked by who takes part
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_tour.cpp::TestTour.ATourIsOneDrawingOfTwoPartsTheBoxesAndTheSequence
+            tests/integration/ds/render/test_tour.cpp::TestTour.EachLifelineOfTheSequenceIsOneBoxOfTheOtherPart
+            tests/integration/ds/render/test_tour.cpp::TestTour.TheBoxesAreJoinedByTheRelationsBetweenThem
+            tests/integration/ds/render/test_tour.cpp::TestTour.TheSequencePartIsTheSequenceDiagramOfTheSameFields
+            tests/integration/ds/render/test_tour.cpp::TestTour.ABoxNamedInAScenarioTakesPartAsOneBoxWithNoCutWritten
+            tests/integration/ds/render/test_tour.cpp::TestTour.TheQueryShowsWhoTakesPart
+            tests/integration/ds/render/test_tour.cpp::TestTour.ItsPartsAreDrawnSideBySideAndOneUnderTheOtherWhenTheWidthAsksForIt
+            tests/integration/ds/render/test_tour.cpp::TestTour.InATerminalTheBoxesComeAboveTheSequence
+        }
+      }
       requirement REQ-00120-1 {
         tags: language, diagrams, hld
         status: approved

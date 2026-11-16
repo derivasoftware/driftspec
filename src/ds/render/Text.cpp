@@ -123,6 +123,13 @@ class Grid {
   int columns() const { return w_; }
   int rows() const { return h_; }
 
+  /// Another grid copied onto this one, its first row at `row`: the parts of a drawing, one under the other.
+  void paste(const Grid& other, int row) {
+    for (int y = 0; y < other.h_ && row + y < h_; ++y)
+      for (int x = 0; x < other.w_ && x < w_; ++x)
+        cells_[static_cast<size_t>(row + y) * w_ + x] = other.cells_[static_cast<size_t>(y) * other.w_ + x];
+  }
+
   std::string dump(bool color) const {
     std::string out;
     for (int y = 0; y < h_; ++y) {
@@ -637,7 +644,30 @@ int contentWidth(int maxWidth) { return maxWidth > 0 ? std::max(10, maxWidth - 2
 
 }  // namespace
 
+namespace {
+/// The parts of a drawing (DS-245), one under the other with a line between: a terminal reads down.
+Grid partsGrid(const IrDocument& doc, int maxWidth) {
+  std::vector<Grid> grids;
+  int w = 1, h = 0;
+  for (const auto& name : doc.parts) {
+    const IrDocument part = doc.part(name);
+    const IrDocument bundled = part.bundled();
+    grids.push_back(isSequence(part) ? sequenceGrid(part) : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth))));
+    w = std::max(w, grids.back().columns());
+    h += grids.back().rows() + (h ? 1 : 0);
+  }
+  Grid all(0, 0, w, std::max(1, h));
+  int row = 0;
+  for (const auto& g : grids) {
+    all.paste(g, row);
+    row += g.rows() + 1;
+  }
+  return all;
+}
+}  // namespace
+
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
+  if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
   if (isSequence(doc)) return sequenceGrid(doc).dump(color);
   const IrDocument bundled = doc.bundled();
   return render(bundled, Layout(M).place(bundled, contentWidth(maxWidth)), color);
@@ -650,7 +680,9 @@ std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool co
 
 std::string Text::cells(const IrDocument& doc, int maxWidth) const {
   const IrDocument bundled = doc.bundled();
-  const Grid g = isSequence(doc) ? sequenceGrid(doc) : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth)));
+  const Grid g = !doc.parts.empty() ? partsGrid(doc, maxWidth)
+                 : isSequence(doc)  ? sequenceGrid(doc)
+                                    : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth)));
   nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode()}, {"text", g.dump(false)}};
   return out.dump();
 }

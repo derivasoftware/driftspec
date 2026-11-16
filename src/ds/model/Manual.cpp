@@ -210,7 +210,7 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         kShopUseCase}},
       {Kind::Diagram,
        {"diagram <Name> {            at the top of a file, outside any package\n  kind: class | sequence | state | requirement | "
-        "interface\n  include: <patterns>      shop@*, shop@store::*, shop@store::Cart\n  exclude, open, depth, show, hide: ...\n}",
+        "interface | tour\n  include: <patterns>      shop@*, shop@store::*, shop@store::Cart\n  exclude, open, depth, show, hide: ...\n}",
         "package shop {\n  module store {\n    class Cart { }\n  }\n}\n\ndiagram CL_Store {\n  kind: class\n  include: "
         "shop@store::*\n}\n"}},
   };

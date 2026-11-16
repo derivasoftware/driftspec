@@ -24,6 +24,21 @@ package playground {
       one a step is changing. The lesson still knows nothing of the page (REQ-00001-1).
   }
 
+  requirement REQ-00003-1 {
+    title: The page shall play a tour step by step: the message in its sequence, and the two boxes it joins
+    status: approved
+    text:
+      A tour is one diagram of two parts on one cut (the engine's REQ-00139-1): who takes part,
+      as boxes, and the sequence between them. Its pane carries the controls: play and pause,
+      one step back and forward, a bar to jump, the step it is at. At each step the message is
+      lit in the sequence, the box that sends and the one that receives are lit in the other
+      part, and a mark travels along the arrow between them. Played, a tour is shown alone. An
+      address may ask for one to be played (?play=TOUR_Buy).
+    rationale:
+      Owner, 2026-11-16 (DS-245): the live viewer's replay of a behaviour over the map, in the
+      playground, and in one diagram that already relates the two, so nothing is paired by eye.
+  }
+
   // the engine, as the page reaches it: one function of ds.wasm (REQ-00113-1)
   interface wasm {
     kind: library
@@ -122,6 +137,13 @@ package playground {
       + paint(diagrams: list<engine::Drawn>) -> none
       // one pane alone, or it and the ones a step compares it with
       + solo(diagram: string, beside: list<string>) -> none
+      // a tour played: the step it is at, lit in its two parts
+      + play(tour: string) -> none {
+        @requirement REQ-00003-1
+      }
+      + step(tour: string, at: int) -> none {
+        @requirement REQ-00003-1
+      }
     }
     class Pane {
       - refs editor: Editor

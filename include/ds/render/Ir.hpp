@@ -19,6 +19,7 @@ struct IrNode {
   std::string parent;
   std::string title;
   std::string href;
+  std::string part;  ///< the part of the drawing it belongs to, in a drawing made of several (DS-245)
   bool abstract = false;
   std::map<std::string, std::string> refs;  ///< named references (emitted as data-ref-<key>); not `refs`: a modifier keyword in DriftSpec
   std::vector<std::vector<std::string>> sections;
@@ -35,6 +36,7 @@ struct IrEdge {
   std::string label;
   std::string title;
   std::string href;
+  std::string part;  ///< the part of the drawing it belongs to, in a drawing made of several (DS-245)
   bool dashed = false;
   int order = -1;                           ///< sequence row of a message
   std::map<std::string, std::string> refs;  ///< named references: expands, span, location
@@ -46,8 +48,15 @@ struct IrDocument {
   std::string notice;
   std::vector<IrNode> nodes;
   std::vector<IrEdge> edges;
+  /// A drawing made of several, each drawn as itself and laid out beside the last (DS-245): a tour holds the
+  /// boxes a behaviour crosses and its sequence. The parts are named in the order they are drawn, and each
+  /// node and edge says which one it belongs to.
+  std::vector<std::string> parts;
 
   static IrDocument parse(const std::string& json);
+
+  /// One part of a drawing made of several, as a document of its own: the nodes and edges that belong to it.
+  IrDocument part(const std::string& name) const;
 
   /// Relations that differ only in their text, drawn as one: same ends, kind,
   /// dash and link; the labels are joined one per line (as plantuml-render does).

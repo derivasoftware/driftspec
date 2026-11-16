@@ -1,7 +1,9 @@
 # Playground
 
 A page that edits a DriftSpec workspace in the browser and draws every diagram beside the text
-as it is typed, with nineteen guided lessons in English and Spanish (SREQ-00019-1, DS-201).
+as it is typed, with nineteen guided lessons in English and Spanish (SREQ-00019-1, DS-201). A diagram of
+`kind: tour` is played step by step in its pane: the message in the sequence, and the two boxes
+it joins (DS-245); `?play=<diagram>` in the address starts one.
 
 | Path | What it is |
 |---|---|

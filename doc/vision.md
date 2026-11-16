@@ -142,7 +142,8 @@ in Plane, epics DS-206 and DS-205.
    as its frontier, so whatever is written is a cut (DS-229, decided on a
    sketch on 2026-11-16; guide §5). Boxes, sequences and requirements stand on
    the same cut, and the calls a sequence follows are written the same way,
-   `fold:` and `unfold:` (DS-231). A scenario is written in one block at any
+   `fold:` and `unfold:` (DS-231). A tour is one diagram that holds both, the
+   boxes that take part in a behaviour and its sequence, on one cut (DS-245). A scenario is written in one block at any
    cut, with a use case or a box as its subject, boxes as participants and the
    sender before the arrow; a message to a box is bound to the operation the
    box offers, or is a label until that level is written (DS-232). The scenario

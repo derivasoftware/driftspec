@@ -272,3 +272,17 @@ diagram REQ_Modules {                    // the cut at the modules: the module t
   include: shop@*
   close: module
 }
+
+// ---- a tour: the boxes that take part and the sequence between them, in one drawing, on one cut -------
+
+diagram TOUR_Modules {                   // each lifeline of the sequence is one box of the other part
+  kind: tour
+  include: shop@shell::buy
+  close: module
+}
+
+diagram TOUR_Packages {                  // the same purchase, between the packages
+  kind: tour
+  include: shop@shell::buy
+  close: package
+}

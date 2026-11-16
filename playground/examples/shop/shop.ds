@@ -159,3 +159,15 @@ diagram REQ_Shop {
   kind: requirement
   include: shop@*
 }
+
+diagram TOUR_Buy {
+  kind: tour
+  include: shop@shell::buy
+  close: module
+}
+
+diagram TOUR_BuyBoxes {
+  kind: tour
+  include: shop@shell::buy
+  close: package
+}

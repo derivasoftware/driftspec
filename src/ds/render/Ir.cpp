@@ -31,6 +31,7 @@ IrDocument IrDocument::parse(const std::string& json) {
   IrDocument doc;
   doc.title = text(j, "title");
   doc.notice = text(j, "notice");
+  for (const auto& part : j.value("parts", nlohmann::json::array())) doc.parts.push_back(part.get<std::string>());
   for (const auto& n : j.value("nodes", nlohmann::json::array())) {
     IrNode node;
     node.id = text(n, "id");
@@ -42,6 +43,7 @@ IrDocument IrDocument::parse(const std::string& json) {
     node.title = text(n, "title");
     node.href = text(n, "href");
     node.abstract = n.value("abstract", false);
+    node.part = text(n, "part");
     node.refs = refsOf(n);
     for (const auto& section : n.value("sections", nlohmann::json::array())) {
       std::vector<std::string> lines;
@@ -62,12 +64,24 @@ IrDocument IrDocument::parse(const std::string& json) {
     edge.label = text(e, "label");
     edge.title = text(e, "title");
     edge.href = text(e, "href");
+    edge.part = text(e, "part");
     edge.dashed = e.value("dashed", false);
     edge.order = e.value("order", -1);
     edge.refs = refsOf(e);
     doc.edges.push_back(edge);
   }
   return doc;
+}
+
+IrDocument IrDocument::part(const std::string& name) const {
+  IrDocument out;
+  out.title = title + " " + name;  // its own identity: two parts may draw the same entity
+  for (const auto& n : nodes)
+    if (n.part == name) out.nodes.push_back(n);
+  for (const auto& e : edges)
+    if (e.part == name) out.edges.push_back(e);
+  if (out.nodes.empty()) out.notice = notice;
+  return out;
 }
 
 IrDocument IrDocument::bundled() const {

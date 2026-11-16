@@ -145,6 +145,23 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #panes { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; align-items: start; }
 #panes.solo { grid-template-columns: 1fr; }
 #panes.solo .pane:not(.max) { display: none; }
+/* a tour (DS-245): one diagram that holds the boxes a behaviour crosses and its sequence, played step by step */
+.pane .replay-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 5px 10px; border-bottom: 1px solid var(--line); font: 12px var(--mono); color: var(--muted); }
+.pane .replay-bar button { font: inherit; color: var(--fg); background: var(--raised); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; min-width: 28px; height: 24px; padding: 0 6px; }
+.pane .replay-bar button:hover { border-color: var(--c-seq); }
+.pane .replay-bar input { flex: 1; min-width: 60px; accent-color: var(--c-seq); }
+.pane .replay-bar select { font: inherit; color: var(--fg); background: var(--raised); border: 1px solid var(--line); border-radius: 6px; height: 24px; max-width: 150px; }
+.pane .replay-bar .cap { flex: 0 0 100%; order: 9; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+.pane svg.replaying .pr-row { opacity: .3; transition: opacity .15s; }
+.pane svg.replaying .pr-row.played { opacity: .75; }
+.pane svg.replaying .pr-row.playing { opacity: 1; }
+.pane svg .pr-row.playing .pr-msg { stroke: var(--c-seq); stroke-width: 2.2; }
+.pane svg .pr-row.playing .pr-msg-label { fill: var(--c-seq); font-weight: 700; }
+.pane svg .replay-from > rect, .pane svg .replay-to > rect { stroke: var(--c-seq); stroke-width: 2; }
+.pane svg .replay-to > rect { fill: color-mix(in srgb, var(--c-seq) 14%, var(--panel)); }
+.pane svg .replay-trail { stroke: var(--c-seq); stroke-width: 2.2; fill: none; stroke-dasharray: 5 4; opacity: .85; pointer-events: none; }
+.pane svg .replay-token { fill: var(--c-seq); stroke: var(--panel); stroke-width: 1.5; pointer-events: none; }
+.pane svg .replay-label { fill: var(--c-seq); font: 600 11.5px var(--mono); text-anchor: middle; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; pointer-events: none; }
 .pane { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .pane.stale { opacity: .45; }
 .pane h3 { margin: 0; display: flex; align-items: center; gap: 8px; padding: 6px 10px; font: 600 12px var(--mono); border-bottom: 1px solid var(--line); }
@@ -156,7 +173,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .pane h3 button:hover { color: var(--fg); }
 .pane .body { padding: 10px; overflow: auto; }
 .pane.max .body { max-height: none; }
-.pane .body svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.pane .body > svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
 .pane .empty { color: var(--muted); font-style: italic; padding: 12px; text-align: center; }
 
 /* the diagrams in the same look: cards on the grey stage, the kind in its colour, signatures as code */
@@ -342,13 +359,15 @@ const UI = {
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
         requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
-        lessons: "Lessons", examples: "Examples" },
+        lessons: "Lessons", examples: "Examples",
+        play: "Play" },
   es: { waiting: "Esperándote", writeForMe: "Escríbelo por mí", showMe: "Muéstramelo", writing: "Escribiendo", done: "Hecho",
         leave: "Dejar la lección (vuelve a empezarla con el botón junto a la lista)", close: "Cerrar", next: "Hecho. Siguiente:",
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
         requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
-        lessons: "Lecciones", examples: "Ejemplos" },
+        lessons: "Lecciones", examples: "Ejemplos",
+        play: "Reproducir" },
 };
 let lang = (() => {
   const asked = new URLSearchParams(location.search).get("lang");
@@ -1069,7 +1088,7 @@ function paintPanes(diagrams, syntaxBroken) {
     if (p.el !== next) panes.insertBefore(p.el, next);
     before = p.el;
     // wired once in the page: the tips are measured on the drawing, which needs layout
-    if (p.wire) { p.wire = false; p.wired = p.svg; wireRelations(p); wireNavigation(p); if (p.selected) p.light?.(p.selected); }
+    if (p.wire) { p.wire = false; p.wired = p.svg; wireRelations(p); wireNavigation(p); if (p.selected) p.light?.(p.selected); wireTour(d.id, p); }
   }
   titleMarks();
   for (const [id, p] of state.panes) {
@@ -1077,6 +1096,134 @@ function paintPanes(diagrams, syntaxBroken) {
     if (syntaxBroken) { p.el.classList.add("stale"); p.el.title = "a file does not parse: last drawing kept"; }
     else { p.el.remove(); state.panes.delete(id); if (state.solo === id) setSolo(null); }
   }
+}
+
+// ---- a tour (DS-245): a behaviour played step by step over the boxes it crosses -----------
+// `kind: tour` is one drawing of two parts, on one cut: the boxes that take part and the sequence between them.
+// Each lifeline of the sequence is one box of the other part, so a step lights a row and the two boxes it joins.
+const tour = { id: null, step: -1, timer: null };
+const svgOf = (id) => state.panes.get(id)?.body.querySelector("svg") || null;
+const partOf = (id, part) => svgOf(id)?.querySelector(`svg[data-part="${part}"]`) || null;
+const whoOf = (line) => (line === "caller" ? "" : line.split("|")[0]);
+function stepsOf(id) {
+  const seq = partOf(id, "sequence");
+  if (!seq) return [];
+  return [...seq.querySelectorAll(".pr-row[data-from][data-to]")]
+    .sort((a, b) => a.dataset.row - b.dataset.row)
+    .map((el) => ({ el, from: whoOf(el.dataset.from), to: whoOf(el.dataset.to), label: el.querySelector(".pr-msg-label")?.textContent || "" }));
+}
+function wireTour(id, p) {  // a tour's drawing was painted: its controls, and the step it was at
+  if (p.kind_ !== "tour") { p.bar?.remove(); p.bar = null; return; }
+  if (!p.bar) {
+    p.bar = document.createElement("div");
+    p.bar.className = "replay-bar";
+    p.bar.innerHTML = `<button data-do="first">⏮</button><button data-do="prev">◀</button><button data-do="play" title="${ui("play")}">⏵</button><button data-do="next">▶</button>
+      <input type="range" min="0" value="0"><span class="cap"></span>`;
+    p.bar.addEventListener("click", (e) => {
+      const what = e.target.dataset?.do;
+      if (what === "first") { pauseTour(); showStep(id, 0); }
+      if (what === "prev") { pauseTour(); showStep(id, (tour.id === id ? tour.step : 0) - 1); }
+      if (what === "next") { pauseTour(); showStep(id, (tour.id === id ? tour.step : -1) + 1); }
+      if (what === "play") (tour.timer && tour.id === id ? pauseTour() : playTour(id));
+    });
+    p.bar.querySelector("input").addEventListener("input", (e) => { pauseTour(); showStep(id, +e.target.value); });
+    p.el.insertBefore(p.bar, p.body);
+  }
+  const steps = stepsOf(id);
+  p.bar.querySelector("input").max = Math.max(0, steps.length - 1);
+  if (tour.id === id && tour.step >= 0) showStep(id, Math.min(tour.step, steps.length - 1), true);
+}
+function playTour(id) {
+  pauseTour();
+  if (state.solo !== id) setSolo(id);  // played, a tour is looked at alone: its two parts need the room
+  const steps = stepsOf(id);
+  if (!steps.length) return;
+  showStep(id, tour.id === id && tour.step < steps.length - 1 ? tour.step + 1 : 0);
+  tour.timer = setInterval(() => { if (tour.step >= stepsOf(id).length - 1) pauseTour(); else showStep(id, tour.step + 1); }, 1500);
+  state.panes.get(id).bar.querySelector('[data-do="play"]').textContent = "⏸";
+}
+function pauseTour() {
+  clearInterval(tour.timer); tour.timer = null;
+  const bar = tour.id && state.panes.get(tour.id)?.bar;
+  if (bar) bar.querySelector('[data-do="play"]').textContent = "⏵";
+}
+function clearTour(id) {
+  const root = svgOf(id);
+  if (!root) return;
+  for (const el of root.querySelectorAll(".replaying, .playing, .played, .replay-from, .replay-to")) el.classList.remove("replaying", "playing", "played", "replay-from", "replay-to");
+  root.querySelector(".replay-layer")?.remove();
+}
+const SVG_NS = "http://www.w3.org/2000/svg";
+function centreOf(svg, el) {
+  const b = (el.querySelector(":scope > rect") || el).getBoundingClientRect();
+  const at = svg.createSVGPoint();
+  at.x = b.left + b.width / 2; at.y = b.top + b.height / 2;
+  return at.matrixTransform(svg.getScreenCTM().inverse());
+}
+function showStep(id, i, still) {
+  if (tour.id && tour.id !== id) clearTour(tour.id);
+  const steps = stepsOf(id), bar = state.panes.get(id)?.bar;
+  if (!steps.length) return;
+  i = Math.max(0, Math.min(steps.length - 1, i));
+  Object.assign(tour, { id, step: i });
+  clearTour(id);
+  const st = steps[i];
+  partOf(id, "sequence").classList.add("replaying");
+  steps.forEach((s, k) => s.el.classList.toggle("played", k < i));
+  st.el.classList.add("playing");
+  if (bar) {
+    bar.querySelector("input").value = i;
+    const who = (e) => (e ? e.split(/@|::/).pop() : "·");
+    bar.querySelector(".cap").textContent = `${i + 1}/${steps.length} · ${who(st.from)} → ${who(st.to)} · ${st.label}`;
+  }
+  const svg = partOf(id, "boxes");
+  if (!svg) return;
+  const boxOf = (e) => (e ? svg.querySelector(`.pr-box[data-id="${CSS.escape(e)}"], .pr-container[data-id="${CSS.escape(e)}"]`) : null);
+  const from = boxOf(st.from), to = boxOf(st.to);
+  from?.classList.add("replay-from");
+  to?.classList.add("replay-to");
+  if (!to && !from) return;
+  const layer = document.createElementNS(SVG_NS, "g");
+  layer.setAttribute("class", "replay-layer");
+  svg.append(layer);
+  const b = centreOf(svg, to || from);
+  // the way the message goes: along the arrow the drawing has between the two boxes, or straight across; a
+  // message that stays in one box, or comes from whoever asks, drops onto it
+  let pointAt;
+  if (from && to && from !== to) {
+    const a = centreOf(svg, from);
+    const edge = svg.querySelector(`.pr-edge-group[data-from="${CSS.escape(from.dataset.id)}"][data-to="${CSS.escape(to.dataset.id)}"] .pr-edge,` +
+                                   `.pr-edge-group[data-from="${CSS.escape(to.dataset.id)}"][data-to="${CSS.escape(from.dataset.id)}"] .pr-edge`);
+    if (edge && edge.getTotalLength) {
+      const len = edge.getTotalLength(), start = edge.getPointAtLength(0);
+      const forward = Math.hypot(start.x - a.x, start.y - a.y) <= Math.hypot(start.x - b.x, start.y - b.y);
+      pointAt = (t) => edge.getPointAtLength(forward ? t * len : (1 - t) * len);
+    } else {
+      pointAt = (t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    }
+  } else {
+    pointAt = (t) => ({ x: b.x, y: b.y - 46 * (1 - t) });
+  }
+  const trail = document.createElementNS(SVG_NS, "path");
+  trail.setAttribute("class", "replay-trail");
+  const token = document.createElementNS(SVG_NS, "circle");
+  token.setAttribute("class", "replay-token"); token.setAttribute("r", 5.5);
+  const label = document.createElementNS(SVG_NS, "text");
+  label.setAttribute("class", "replay-label"); label.textContent = st.label;
+  layer.append(trail, token, label);
+  const began = performance.now(), takes = still ? 0 : 750;
+  const frame = (now) => {
+    if (!layer.isConnected) return;
+    const t = takes ? Math.min(1, (now - began) / takes) : 1, eased = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    let d = "";
+    for (let k = 0; k <= 24; k++) { const q = pointAt((eased * k) / 24); d += (k ? " L" : "M") + q.x.toFixed(1) + "," + q.y.toFixed(1); }
+    trail.setAttribute("d", d);
+    const at = pointAt(eased);
+    token.setAttribute("cx", at.x); token.setAttribute("cy", at.y);
+    label.setAttribute("x", at.x); label.setAttribute("y", at.y - 11);
+    if (t < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
 }
 
 // ---- the requirements as a table: a view of its own, beside the diagrams -----------------
@@ -1329,6 +1476,7 @@ function makePane(id) {
 }
 
 function setSolo(id, beside = []) {  // one pane alone, or it and the ones a step compares it with
+  if (tour.id && id && id !== tour.id) pauseTour();  // another diagram is looked at: the tour waits
   state.solo = id;
   setTimeout(uiChanged);
   $("panes").classList.toggle("solo", !!id);
@@ -1442,6 +1590,12 @@ const byId = state.examples.find((e) => e.id === want);
 sel.value = byId ? byId.name : state.examples.some((e) => e.name === want) ? want : state.examples[0].name;
 sel.onchange = () => { store.set("ds-playground-example", sel.value); load(state.examples.find((e) => e.name === sel.value)); };
 load(state.examples.find((e) => e.name === sel.value));
+// ?play=SEQ_Buy starts the replay of that sequence once it is drawn, so a link can show a behaviour moving
+const playing = new URLSearchParams(location.search).get("play");
+if (playing) {
+  const wait = setInterval(() => { if (state.panes.get(playing)?.bar) { clearInterval(wait); playTour(playing); } }, 300);
+  setTimeout(() => clearInterval(wait), 15000);
+}
 const pick = new URLSearchParams(location.search).get("select");
 if (pick) setTimeout(() => { for (const p of state.panes.values()) { const b = p.body.querySelector(`.pr-box[data-id="${CSS.escape(pick)}"]`); if (b) b.dispatchEvent(new MouseEvent("click", { bubbles: true })); } }, 600);
 const at = location.hash.match(/^#(?:(.+):)?L(\d+)$/);  // #L82 or #core/Greeter.ds:L12

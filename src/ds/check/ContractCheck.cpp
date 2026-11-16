@@ -449,7 +449,8 @@ void ContractCheck::checkDiagrams() {
     if (pair.second.kind != model::Kind::Diagram) continue;
     // a sequence diagram that asks for a scenario: it is a behaviour of its own, or a named branch of one
     const auto include = pair.second.fields.find("include");
-    if (include != pair.second.fields.end() && pair.second.fields.count("kind") && pair.second.fields.at("kind") == "sequence") {
+    if (include != pair.second.fields.end() && pair.second.fields.count("kind") &&
+        (pair.second.fields.at("kind") == "sequence" || pair.second.fields.at("kind") == "tour")) {
       for (const auto& pattern : split(include->second, ',')) {
         const auto slash = pattern.find(" / ");
         if (slash == std::string::npos) continue;
