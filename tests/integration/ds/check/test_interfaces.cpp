@@ -27,6 +27,7 @@ class TestInterfaces : public ::testing::Test {
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
+    for (const auto& f : model.coverage()) lines[f.code].push_back(f.message);  // kept apart (DS-216)
   }
 
   bool reported(const std::string& code, const std::string& text) const {

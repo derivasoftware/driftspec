@@ -78,6 +78,7 @@ package driftspec@ds {
     dataclass Report {
       @requirement REQ-00106-1
       + findings: std::vector<model::Finding>
+      + coverage: std::vector<model::Finding>
       + entities: int
       + expected: int
       + relations: int

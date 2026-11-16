@@ -165,6 +165,9 @@ class Model {
   const std::map<std::string, Entity>& entities() const { return entities_; }
   const std::vector<Finding>& findings() const { return findings_; }
   std::vector<Finding>& findings() { return findings_; }
+  /// What is not yet written, kept apart from the findings: absence is no finding (DS-216); ds query coverage asks it.
+  const std::vector<Finding>& coverage() const { return coverage_; }
+  std::vector<Finding>& coverage() { return coverage_; }
   /// What the rules and definitions say, by the identity of each.
   const std::map<std::string, Formula>& formulas() const { return formulas_; }
   void state(const std::string& id, const Formula& formula) { formulas_[id] = formula; }
@@ -185,6 +188,7 @@ class Model {
   std::map<std::string, Entity> entities_;
   std::vector<Relation> relations_;
   std::vector<Finding> findings_;
+  std::vector<Finding> coverage_;
   std::map<std::string, Formula> formulas_;
   std::map<std::string, std::vector<Breach>> breaches_;
   mutable Indexed indexed_;  ///< kept in step by declare, relate and rename; its tree is built when asked

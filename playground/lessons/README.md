@@ -65,7 +65,7 @@ Notes for writing a lesson:
 | `solution` | the same shapes, typed when the reader asks the lesson to write it |
 | `open` (lesson) | the file the lesson opens first |
 | `title`, `text`, `done.ack` | each `{"en": ..., "es": ...}`; the code between backquotes is the same in both |
-| `done` | `{ack}` a button; `opened`, `selected` (a pane), `solo` (a pane or `false`) for steps done on the page, with a `solution` of `{ui: open|select|solo|unsolo}` behind "Show me"; otherwise every condition given must hold: `entity`, `edge {diagram, from, to}`, `draws {diagram, text}`, `finding`, `clean` |
+| `done` | `{ack}` a button; `opened`, `selected` (a pane), `solo` (a pane or `false`) for steps done on the page, with a `solution` of `{ui: open|select|solo|unsolo}` behind "Show me"; otherwise every condition given must hold: `entity`, `edge {diagram, from, to}`, `draws {diagram, text}`, `finding`, `gone` (a code that must have left the problems: what was left to write is written), `clean`; what is not yet written (coverage) reads as information, never as a problem |
 
 What the curriculum met while being written, kept for whoever writes the next lesson:
 the requirement diagram draws the classes that realise a requirement but not the

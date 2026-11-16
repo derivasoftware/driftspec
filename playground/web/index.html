@@ -821,6 +821,7 @@ function passed(d) {
   if (d.inFile && out.locations?.[d.inFile.entity]?.[0] !== d.inFile.file) return false;
   if (d.kept && !(out.artefacts || []).find((a) => a.id === d.kept.artefact)?.keptBy.includes(d.kept.by)) return false;
   if (d.finding && !fs.some((f) => f.code === d.finding)) return false;
+  if (d.gone && fs.some((f) => f.code === d.gone)) return false;  // what is left to write is written (DS-216)
   if (d.clean && fs.some((f) => f.severity !== "info")) return false;
   if (d.drawnAs) {  // how the engine classified an entity, read from the classes of its box
     const m = (out.diagrams.find((x) => x.id === d.drawnAs.diagram)?.svg || "").match(new RegExp(`data-id="${d.drawnAs.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}" class="([^"]*)"`));

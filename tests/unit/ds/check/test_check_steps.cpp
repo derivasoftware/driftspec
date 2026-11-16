@@ -38,6 +38,7 @@ std::vector<std::string> codesOf(const std::string& text, const std::string& ste
   ds::check::Checker(model, chosen).run(binder);
   std::vector<std::string> out;
   for (const auto& f : model.findings()) out.push_back(f.code);
+  for (const auto& f : model.coverage()) out.push_back(f.code);  // what is not yet written, kept apart (DS-216)
   return out;
 }
 

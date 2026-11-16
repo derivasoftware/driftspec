@@ -190,7 +190,7 @@ them. The vision (`vision.md`) says why; this says what.*
 - **Verification.** Nested in its requirement, or `@requirement` from
   elsewhere; `@constraint` from a verification verifies the constraint. `method: test | review | inspection | analysis`. `tests:` lists
   the ids as the runner names them, one per line; `evidence:` lists paths for
-  the other methods. `W-VER-NO-TEST` for a test verification without tests.
+  the other methods. A test verification without tests is coverage (`W-VER-NO-TEST`).
   The outcome is never in the language.
 - **Constraint.** `category:` (argos's subdirectory), `bok:` for the articles
   that ground it. Applies to entities through `@constraint`.
@@ -198,8 +198,9 @@ them. The vision (`vision.md`) says why; this says what.*
   `constraint CST-00009-1: title`; a body can be added later.
 - **Where.** A separate file that reopens the package is the normal place;
   nesting is for ad-hoc views.
-- **Checks.** `W-REQ-NO-VERIFICATION` for an approved requirement nothing
-  verifies. The semantic diff adds `W-REVISION-STALE` for an artefact whose
+- **Checks.** An approved requirement nothing verifies, and a verification by
+  test with no tests, are coverage, not findings: what is not yet written
+  (DS-216), answered by `ds query <workspace> coverage`. The semantic diff adds `W-REVISION-STALE` for an artefact whose
   text changed under the same revision.
 
 ## 3b. Visibility (`examples/visibility`, decided 2026-11-05)
@@ -270,6 +271,10 @@ them. The vision (`vision.md`) says why; this says what.*
   by, and what verifies each), `behaviours <id>` (the sequences and state
   machines of a method or class), `shows <diagram>` (what the drawing would
   show: the projection itself answers), `findings [file]`, `coupling`, and
-  `failures <operation>` (what escapes it and the way it comes up).
+  `failures <operation>` (what escapes it and the way it comes up), and
+  `coverage [identity]`: what is not yet written, which the check does not
+  report (an operation with no sequence, an outcome with no scenario, a use
+  case nothing realises, a requirement nothing verifies, a verification with no
+  tests, a rule with no requirement). An oracle corpus marks coverage `// ?`.
 - An unknown question fails with the list of questions; `--json` gives the
   same answers as an array of `{kind, id, detail}`.

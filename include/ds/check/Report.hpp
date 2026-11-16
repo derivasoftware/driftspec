@@ -12,8 +12,9 @@ namespace check {
 /// model they were found in. Built once from the model; its formats write it without the model.
 struct Report {
   std::vector<model::Finding> findings;
-  int entities = 0;  ///< declared: what the design says
-  int expected = 0;  ///< named but declared nowhere
+  std::vector<model::Finding> coverage;  ///< what is not yet written: no finding, answered apart (DS-216)
+  int entities = 0;                      ///< declared: what the design says
+  int expected = 0;                      ///< named but declared nowhere
   int relations = 0;
   int errors = 0;  ///< findings of severity error: what makes the check fail
 

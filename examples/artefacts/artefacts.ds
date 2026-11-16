@@ -37,7 +37,7 @@ package iris {
     }
   }
 
-  // ! W-REQ-NO-VERIFICATION: approved and nothing verifies it
+  // ? W-REQ-NO-VERIFICATION: approved and nothing verifies it
   requirement SREQ-00002-1 {
     title: The system shall read the tracker without a token in the command line
     status: approved
@@ -108,7 +108,7 @@ package iris {
     verification VER-00004-3 {
       @requirement REQ-00003-1
       title: Unit tests cover the identifier builder
-      method: test                               // ! W-VER-NO-TEST: no tests: block
+      method: test                               // ? W-VER-NO-TEST: no tests: block
     }
 
     class Projection {

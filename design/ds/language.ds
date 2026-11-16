@@ -1405,6 +1405,34 @@ package driftspec@ds {
             tests/integration/ds/check/test_cycles.cpp::TestCycles.ARequirementThatRefinesOneOfTheSystemIsNoFinding
         }
       }
+      requirement REQ-00124-1 {
+        tags: language, check, coverage
+        status: approved
+        title: What is not yet written shall be no finding, kept apart as coverage and answered when asked
+        text:
+          Six codes say that something is not yet written: an interface operation with no
+          sequence (W-OPERATION-NO-BEHAVIOUR), an outcome with no scenario
+          (W-USECASE-OUTCOME-UNHANDLED), a use case nothing realises (W-USECASE-UNREALISED), an
+          approved requirement nothing verifies (W-REQ-NO-VERIFICATION), a verification by test
+          with no tests (W-VER-NO-TEST), a rule that answers to no requirement
+          (W-RULE-NO-REQUIREMENT). They are of severity coverage: ds check does not report or
+          count them, the check's JSON and the export carry them apart, and ds query <workspace>
+          coverage [identity] lists them. An oracle corpus marks them with // ? as it marks a
+          finding with // !.
+        rationale:
+          Owner, 2026-11-15, on the model audit (finding I12, DS-216): the mechanism punishes
+          information that is not consistent, never information that is missing. A finding needs
+          two written facts that clash. A design with only its high level drew five warnings and no
+          contradiction. Where else coverage is asked (argos's report) is left open.
+        verification VER-00140-1 {
+          title: Integration and system tests confirm the six absences are kept apart as coverage, not reported by the check, and every corpus means exactly the coverage it marks
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+            tests/integration/ds/check/test_coverage.cpp::TestCoverage.AnAbsenceIsNoFindingAndTheQueryAnswersIt
+        }
+      }
       requirement REQ-00045-1 {
         tags: language, artefacts
         status: approved

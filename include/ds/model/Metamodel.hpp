@@ -55,7 +55,7 @@ struct KindSpec {
 /// A finding code ds reports: what it means and what to do about it.
 struct CodeSpec {
   std::string code;
-  std::string severity;  ///< error or warning
+  std::string severity;  ///< error, warning, or coverage: something not yet written, answered when asked (DS-216)
   std::string meaning;
   std::string fix;
 };

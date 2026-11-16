@@ -39,12 +39,13 @@ class TestUseCases : public ::testing::Test {
   std::vector<std::string> codes() const {
     std::vector<std::string> out;
     for (const auto& f : model.findings()) out.push_back(f.code);
+    for (const auto& f : model.coverage()) out.push_back(f.code);  // kept apart (DS-216)
     return out;
   }
 
   bool has(const std::string& code) const {
-    for (const auto& f : model.findings())
-      if (f.code == code) return true;
+    for (const auto& c : codes())
+      if (c == code) return true;
     return false;
   }
 

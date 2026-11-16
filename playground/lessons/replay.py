@@ -27,7 +27,12 @@ _lib.ds_playground.argtypes = [ctypes.c_char_p]
 
 
 def engine(files: dict[str, str]) -> dict:
-    return json.loads(_lib.ds_playground(json.dumps({"files": files}).encode()))
+    out = json.loads(_lib.ds_playground(json.dumps({"files": files}).encode()))
+    # what is not yet written is no problem (DS-216): read as information, as the page does
+    report = out.get("report")
+    if report:
+        report["findings"] = report["findings"] + [{**f, "severity": "info"} for f in report.get("coverage", [])]
+    return out
 
 
 def indent_of(text: str) -> str:
@@ -109,6 +114,8 @@ def passed(done: dict, out: dict) -> bool:
     if done.get("inFile") and (out.get("locations", {}).get(done["inFile"]["entity"]) or [None])[0] != done["inFile"]["file"]:
         return False
     if done.get("finding") and not any(f["code"] == done["finding"] for f in fs):
+        return False
+    if done.get("gone") and any(f["code"] == done["gone"] for f in fs):  # what is left to write is written (DS-216)
         return False
     if done.get("clean") and any(f["severity"] != "info" for f in fs):
         return False
