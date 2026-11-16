@@ -57,6 +57,7 @@ std::vector<model::Finding> ContractCheck::check(const Context& context) {
   checkUseCases();
   checkDiagrams();
   checkScenarios();
+  checkHandlers();
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     const bool operation = e.kind == model::Kind::Operation || e.kind == model::Kind::Method || e.kind == model::Kind::Function;
@@ -373,6 +374,50 @@ void ContractCheck::checkFailures(const model::Entity& op) {
     if (escaping.count(name)) continue;
     found_.push_back(
         {"W-FAILURE-UNREACHED", "warning", op.id + " says it may fail with " + name + ", and no path of its behaviour does", op.location});
+  }
+}
+
+// A handler names a failure that none of the steps of its attempt can fail with: it handles nothing, most often
+// a misspelt name (DS-224). Said only when every call in the attempt says what it fails with.
+void ContractCheck::checkHandlers() {
+  const model::Index index = model_->index();
+  for (const auto& pair : model_->entities()) {
+    const model::Entity& handler = pair.second;
+    if (handler.kind != model::Kind::Frame || handler.field("kind") != "handler") continue;
+    const std::string attempt = index.parent(handler.id);
+    std::set<std::string> possible;
+    bool known = true;
+    std::vector<std::string> pending{attempt};
+    while (!pending.empty()) {
+      const std::string at = pending.back();
+      pending.pop_back();
+      for (const auto& child : index.children(at)) {
+        const model::Entity* c = model_->find(child);
+        if (!c) continue;
+        if (c->kind == model::Kind::Frame) {
+          if (!(at == attempt && c->field("kind") == "handler")) pending.push_back(child);  // the handlers are not its steps
+          continue;
+        }
+        if (c->kind != model::Kind::Message) continue;
+        if (!c->field("fails").empty()) possible.insert(c->field("fails"));
+        for (const auto& r : index.from(child)) {
+          if (r.kind != "calls") continue;
+          const model::Entity* op = model_->find(r.to);
+          if (!op) continue;
+          bool behaves = false;
+          for (const auto& b : index.to(op->id)) behaves = behaves || b.kind == "behaviour-of";
+          if (!behaves && op->fields.count("fails") == 0) known = false;  // says nothing of how it fails
+          for (const auto& f : split(op->field("escapes"), ',')) possible.insert(f);
+        }
+      }
+    }
+    const std::string failure = handler.field("failure");
+    if (!known || failure.empty() || possible.count(failure)) continue;
+    found_.push_back(
+        {"W-HANDLER-UNREACHED", "warning",
+         "the handler of " + failure + " handles nothing: no step of its attempt fails with it" +
+             (possible.empty() ? "" : " (they fail with " + join(std::vector<std::string>(possible.begin(), possible.end()), ", ") + ")"),
+         handler.location});
   }
 }
 

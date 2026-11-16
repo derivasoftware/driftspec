@@ -52,6 +52,7 @@ package driftspec@ds {
         tests:
           tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.EveryEntityAndRelationIsOneTheMetamodelDeclares
           tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.ARelationTheLanguageDoesNotAllowIsReportedAndNotBound
+          tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AnAttributeThatOwnsAnInterfaceIsToldToWriteRefs
           tests/integration/ds/model/test_metamodel_truth.cpp::TestMetamodelTruth.EveryKindIsDeclaredInWhatTheGrammarLetsItBeWrittenIn
           tests/integration/ds/model/test_metamodel_truth.cpp::TestMetamodelTruth.EveryFlagTheBinderSetsIsOneItsKindDeclares
       }
@@ -498,6 +499,7 @@ package driftspec@ds {
             method: test
             tests:
               tests/integration/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
+              tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.ABareNameFindsTheClassBesideItBeforeARootPackageOfItsName
               tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesNeedTheModuleNotAnInclude
               tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
           }
@@ -691,9 +693,10 @@ package driftspec@ds {
           One rule at every level: a box connects to another through a public child. A package's
           public children are its interfaces and modules, a module's its classes and functions, a
           class's its methods and attributes. A child is public unless it says -, and is seen from
-          inside its parent, so siblings see each other. A call or a type that crosses anything
-          private on its way down is W-NOT-VISIBLE; a public member showing a private type is
-          W-PRIVATE-LEAK.
+          inside its parent, so siblings see each other. A member that says # is protected: seen
+          from inside its class and from a class that derives from it (DS-224). A call or a type
+          that crosses anything private or protected on its way down is W-NOT-VISIBLE; a public
+          member showing a private type is W-PRIVATE-LEAK.
         rationale: Owner, 2026-11-05. There is no port concept: a port is a public child, and an interface is one that crosses a process. Whether the code respects this is argos's job.
         verification VER-00068-2 {
           title: Integration tests confirm any child of a box may be private, and nothing outside its parent reaches it
@@ -709,6 +712,8 @@ package driftspec@ds {
             tests/integration/ds/check/test_visibility.cpp::TestVisibility.EveryOtherCrossingIsReportedExactlyAsMarked
             tests/integration/ds/check/test_visibility.cpp::TestVisibility.APublicMemberThatShowsAPrivateTypeIsALeak
             tests/integration/ds/check/test_visibility.cpp::TestVisibilityAlone.APublicOperatorThatShowsAPrivateTypeIsALeak
+            tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AProtectedMemberIsHiddenFromAClassThatDoesNotDeriveFromIt
+            tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.AProtectedMemberIsSeenFromADerivedClassAndHiddenFromAnyOther
         }
       }
       requirement REQ-00054-1 {
@@ -995,6 +1000,27 @@ package driftspec@ds {
               tests/integration/ds/check/test_failures.cpp::TestFailurePromises.ABoundarySaysWhatEscapesItOrNothingMay
           }
         }
+        requirement REQ-00123-1 {
+          tags: language, lld, failure, check
+          status: approved
+          title: A handler of a failure that no step of its attempt can fail with shall be reported as W-HANDLER-UNREACHED
+          text:
+            The failures the steps of an attempt can raise are those its messages fail with and those
+            that escape the operations they call. A handler that names none of them handles nothing.
+            Said only when every operation called in the attempt says how it fails, by a behaviour or by
+            a signature; a call that says nothing leaves the handler alone.
+          rationale:
+            Model audit 2026-11, finding G17 (DS-224): on IoErorr handled nothing and was reported only
+            when the operation happened to promise what it fails with. The failures corpus handled Busy,
+            which no step raised; its read now says it may fail with Busy.
+          verification VER-00139-1 {
+            title: Integration tests confirm a handler of a failure no step raises is reported and the one that handles a raised failure is not
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AHandlerOfAFailureNoStepRaisesHandlesNothing
+          }
+        }
         requirement REQ-00058-2 {
           tags: language, lld, sequence
           status: approved
@@ -1033,6 +1059,7 @@ package driftspec@ds {
             tests:
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.AnAltHoldsItsSidesAsBranchesAndEachSideItsSteps
               tests/integration/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
+              tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.ASlashFollowedByTextStaysInTheProseOfACondition
           }
         }
         requirement REQ-00108-1 {
@@ -1170,6 +1197,7 @@ package driftspec@ds {
           tests/integration/ds/check/test_rules.cpp::TestRules.ARuleThatAnswersToNothingOrClaimsNothingIsReported
           tests/integration/ds/check/test_rules.cpp::TestRules.ProseIsNotARule
           tests/integration/ds/check/test_rules.cpp::TestRules.ARuleOfAMemberIsNamedUnderIt
+          tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.ARuleOfAnAttributeIsNamedUnderTheAttribute
           tests/integration/ds/check/test_rules.cpp::TestRules.RuleAndDefinitionStayNamesWhereANameIsExpected
       }
     }

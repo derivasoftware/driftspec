@@ -131,7 +131,10 @@ bool Linker::kindAllowed(const bind::Reference& reference, const std::string& ta
   const std::string article = std::string("aeiou").find(kind[0]) == std::string::npos ? ", a " : ", an ";
   std::string message = reference.from + " " + reference.relation + " " + target + article + kind + ": the language joins " +
                         reference.relation + " only between other kinds";
-  if (reference.relation == "inherits" && to->kind == model::Kind::Interface)
+  if (reference.relation == "owns" && to->kind == model::Kind::Interface)  // DS-224: owns is the default of an attribute
+    message = reference.from + " owns the interface " + target + ": an attribute refers to an interface, write - refs " + from->name +
+              ": " + to->name;
+  else if (reference.relation == "inherits" && to->kind == model::Kind::Interface)
     message =
         reference.from + " names the interface " + target + " as its base: a class realises an interface, write @interface " + to->name;
   context_->report({"E-RELATION-KIND", "error", message, reference.location});

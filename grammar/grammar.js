@@ -218,7 +218,8 @@ module.exports = grammar({
     // into another failure, or let go by not being named (DS-187)
     attempt: $ => seq('attempt', '{', repeat($._sequence_item), '}', repeat1($.handler)),
     handler: $ => seq('on', field('failure', $.qualified_name), optional($._branch_name), '{', repeat($._sequence_item), '}'),
-    condition: $ => /[^{\/\n]+/,
+    // prose; a slash starts the scenario's name only when a space follows it: `the ratio a/b` and `/tmp` stay prose (DS-224)
+    condition: $ => /([^{\/\n]|\/[^\s{\/])+/,
 
     state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.view, $.transition)), '}'),
     // a state of the navigation of a graphical interface: what it shows, in text, and what binds it (2026-11-05)

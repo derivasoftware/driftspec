@@ -9,6 +9,14 @@ namespace ds {
 namespace check {
 
 std::string Resolver::resolve(const std::string& name, const std::string& scope) const {
+  // a bare name is looked for from the innermost scope outward first: a class Cart beside its user wins over
+  // a root package named Cart (DS-224); a qualified name, an artefact or a root package is found as written
+  if (!model::Identity(name).isQualified() && !model::ArtefactName::matches(name)) {
+    for (std::string s = scope; !s.empty(); s = model::Scope(s).outer().text()) {
+      const std::string candidate = model::Scope(s).qualify(name).text();
+      if (candidate != name && model_.find(candidate)) return candidate;
+    }
+  }
   if (model_.find(name)) return name;  // a full id (pkg@mod::Class), a global artefact, a package
   const std::string bare = model::ArtefactName(name).withoutRevision().text();
   if (bare != name && model_.find(bare)) return bare;
@@ -81,7 +89,14 @@ std::string Resolver::privateOnTheWay(const std::string& from, const std::string
     const model::Entity* e = model_.find(t);
     if (!e || e->has("extern")) return "";
     const auto visibility = e->fields.find("visibility");
-    if (visibility != e->fields.end() && visibility->second == "-" && !chain.count(model::Scope(t).outer().text())) return t;
+    const std::string parent = model::Scope(t).outer().text();
+    if (visibility != e->fields.end() && visibility->second == "-" && !chain.count(parent)) return t;
+    // protected: seen from inside its class and from a class that derives from it (DS-224)
+    if (visibility != e->fields.end() && visibility->second == "#" && !chain.count(parent)) {
+      bool derived = false;
+      for (const auto& s : chain) derived = derived || (model_.find(s) && model_.find(s)->kind == model::Kind::Class && derives(s, parent));
+      if (!derived) return t;
+    }
   }
   return "";
 }

@@ -20,7 +20,7 @@
 package shelf {
   module books {
     class Files {
-      + read(path: string) -> string fails IoError
+      + read(path: string) -> string fails IoError, Busy
     }
     class Parser {
       + parse(text: string) -> Book fails ParseError, Timeout   // ! W-FAILURE-UNREACHED: no path times out
