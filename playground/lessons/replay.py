@@ -115,6 +115,8 @@ def passed(done: dict, out: dict) -> bool:
         return False
     if done.get("finding") and not any(f["code"] == done["finding"] for f in fs):
         return False
+    if done.get("gone") and any(f["code"] == done["gone"] for f in fs):  # what is left to write is written (DS-216)
+        return False
     if done.get("clean") and any(f["severity"] != "info" for f in fs):
         return False
     if done.get("drawnAs"):

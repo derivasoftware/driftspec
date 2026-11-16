@@ -128,7 +128,8 @@
         "text": "operation buy(item: string) -> int : UC-00001-1 {"
       },
       "done": {
-        "clean": true
+        "clean": true,
+        "gone": "W-USECASE-UNREALISED"
       }
     },
     {
@@ -173,7 +174,8 @@
         }
       ],
       "done": {
-        "clean": true
+        "clean": true,
+        "gone": "W-USECASE-OUTCOME-UNHANDLED"
       }
     },
     {
