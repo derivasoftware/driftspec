@@ -721,8 +721,14 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
     if (!change.empty()) node["refs"]["change"] = change;
     out["nodes"].push_back(node);
   }
-  for (const auto& r : model_.index().all()) {
+  std::set<std::string> said;  // one edge per pair: a class and its method that answer the same requirement draw once
+  for (model::Relation r : model_.index().all()) {
+    if ((r.kind == "requires" || r.kind == "constrained-by") && !selected.count(r.from)) {
+      const model::Entity* from = model_.find(r.from);  // a member answers through the class that holds it (DS-220)
+      if (from && selected.count(from->scope)) r.from = from->scope;
+    }
     if (!selected.count(r.from) || !selected.count(r.to)) continue;
+    if (!said.insert(r.kind + "|" + r.from + "|" + r.to).second) continue;
     if (r.kind == "refines") {
       out["edges"].push_back({{"from", r.from}, {"to", r.to}, {"kind", "realization"}, {"label", "refines"}});  // the parent above
     } else if (r.kind == "verifies") {
