@@ -31,7 +31,9 @@ package driftspec@ds {
       - index() -> void
       - validate(id: std::string, formula: model::Formula) -> bool
       - validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>) -> bool
-      - checkVacuity(id: std::string, formula: model::Formula) -> void
+      - checkVacuity(id: std::string, formula: model::Formula) -> void {
+        @requirement REQ-00117-1
+      }
       - stratify() -> bool
       - computeDefinitions() -> void
       - evaluateRule(id: std::string, formula: model::Formula) -> void
@@ -355,6 +357,7 @@ package driftspec@ds {
       }
       - checkFields() -> void {
         @requirement REQ-00067-1
+        @requirement REQ-00115-1
       }
     }
 

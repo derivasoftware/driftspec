@@ -1345,6 +1345,31 @@ package driftspec@ds {
           rationale: Pinning links to a revision is what lets the tool tell who stayed behind when an artefact moved (block 1).
         }
       }
+      requirement REQ-00125-1 {
+        tags: language, artefacts
+        status: approved
+        title: Nesting an artefact in a design entity shall say what annotating it says, and whatever may nest an artefact may annotate it
+        text:
+          A requirement nested in a class, a member, a function or another design entity binds
+          requires from the entity, and a nested constraint binds constrained-by, as @requirement
+          and @constraint do: two syntaxes that only change where the artefact is filed. Every kind
+          that may nest an artefact, an attribute and an operator among them, may carry either
+          annotation, and requires and constrained-by leave the same kinds, a state machine
+          included. In a package or a module a nested artefact still gives its level.
+        rationale:
+          Owner, 2026-11-15, on the model audit (findings I7 and I6, DS-217): nesting and annotating
+          mean exactly the same. A requirement nested in a class bound about, which no step read, so
+          the class answered to nothing. Whether a requirement written in a box also means the box
+          answers to it is left to the Owner.
+        verification VER-00141-1 {
+          title: Integration tests confirm nesting in a design entity gives requires or constrained-by, an attribute annotates as it nests, and a box keeps the level
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_static.cpp::TestNesting.NestingAnArtefactInADesignEntityIsAnnotatingIt
+            tests/integration/ds/check/test_static.cpp::TestStatic.ConstraintsAreArtefactsInBothForms
+        }
+      }
       requirement REQ-00044-1 {
         tags: language, artefacts
         status: approved

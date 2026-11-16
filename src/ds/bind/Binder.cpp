@@ -287,10 +287,20 @@ void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std:
     // a requirement refines the requirement it is in, anything else is about its owner
     const model::Entity* ownerEntity = model_.find(owner);
     const bool inRequirement = ownerEntity && ownerEntity->kind == model::Kind::Requirement;
-    std::string relation = "about";
-    if (inRequirement && e.kind == model::Kind::Verification) relation = "verifies";
-    if (inRequirement && e.kind == model::Kind::Requirement) relation = "refines";
-    model_.relate({relation, e.id, owner, loc, ""});
+    // nesting an artefact in a class, a member or a function says what annotating it says: the entity answers
+    // to the requirement or obeys the constraint (Owner, 2026-11-15; DS-217). In a box it gives its level
+    const bool inDesign = ownerEntity && ownerEntity->kind != model::Kind::Package && ownerEntity->kind != model::Kind::Module &&
+                          ownerEntity->kind != model::Kind::Requirement;
+    if (inDesign && e.kind == model::Kind::Requirement) {
+      model_.relate({"requires", owner, e.id, loc, ""});
+    } else if (inDesign && e.kind == model::Kind::Constraint) {
+      model_.relate({"constrained-by", owner, e.id, loc, ""});
+    } else {
+      std::string relation = "about";
+      if (inRequirement && e.kind == model::Kind::Verification) relation = "verifies";
+      if (inRequirement && e.kind == model::Kind::Requirement) relation = "refines";
+      model_.relate({relation, e.id, owner, loc, ""});
+    }
   }
   if (e.fields.count("parent")) {
     // one representation per concept: nesting or @refines, never a field
