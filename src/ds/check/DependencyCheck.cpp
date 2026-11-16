@@ -71,10 +71,22 @@ void DependencyCheck::checkDependencies() {
   };
   std::map<std::string, std::set<std::string>> called;  // a box that declares, and the interfaces its behaviours call
   for (const auto& r : model_->index().ofKind("calls")) {
-    const std::string subject = model::Identity(r.from).subject().text();
+    std::string subject = model::Identity(r.from).subject().text();
     const model::Entity* op = model_->find(r.to);
     if (subject.empty() || !op) continue;
     const model::Entity* msg = model_->find(r.from);
+    // who calls is the sender written (DS-232); in a scenario of a use case, with none, it is whoever asks
+    // from outside, who declares nothing
+    if (msg && !msg->field("from-type").empty()) {
+      subject = msg->field("from-type");
+    } else if (msg) {
+      bool outside = false;
+      for (const auto& b : model_->index().from(msg->scope)) {
+        const model::Entity* of = b.kind == "behaviour-of" ? model_->find(b.to) : nullptr;
+        outside = outside || (of && of->kind == model::Kind::UseCase);
+      }
+      if (outside) continue;
+    }
     const model::Location location = msg ? msg->location : r.location;
     if (op->kind == model::Kind::Operation) {
       const std::string& iface = op->scope;

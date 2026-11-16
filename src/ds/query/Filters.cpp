@@ -188,17 +188,19 @@ std::set<std::string> SequenceFilter::select(const model::Model& model) const {
   const std::unique_ptr<axis::Cut> cut(diagram ? new axis::Cut(model, *diagram) : nullptr);
   auto on = [&cut](const std::string& id) { return cut ? cut->standsFor(id) : id; };
   for (const Behaviour& b : behaviours(model)) {
-    const std::string subjectId = model::Identity(b.sequence->id).subject().text();
-    const model::Entity* subject = model.find(subjectId);
+    const model::Entity* subject = model.find(model::Identity(b.sequence->id).subject().text());
     const bool function = subject && subject->kind == model::Kind::Function;
     const bool method = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Operation || function);
     const model::Entity* cls = method ? model.find(subject->scope) : subject;
-    if (cls) out.insert(on(cls->id));
+    // a scenario of a use case starts from whoever asks, who is no part of the design (DS-232)
+    if (cls && cls->kind != model::Kind::UseCase) out.insert(on(cls->id));
     for (const Walked& w : Walker(model).walk(b.sequence->id, b.path, depth_, cut.get())) {  // what it calls takes part (DS-130)
       const model::Entity* m = model.find(w.message);
       if (m->field("return") == "true") continue;
-      const std::string typeId = m->field("type");
-      if (!typeId.empty() && model.find(typeId)) out.insert(on(typeId));
+      for (const char* end : {"type", "from-type"}) {  // who receives, and who sends when it is written
+        const std::string typeId = m->field(end);
+        if (!typeId.empty() && model.find(typeId)) out.insert(on(typeId));
+      }
     }
   }
   std::set<std::string> known;

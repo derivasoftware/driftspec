@@ -834,6 +834,103 @@ package driftspec@ds {
               tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.APrivateMemberOfTheBaseStaysHidden
           }
         }
+        requirement REQ-00132-1 {
+          tags: language, behaviour, levels
+          status: approved
+          title: A sequence shall be the behaviour of a use case, a package or a module as well: a scenario written at their cut
+          text:
+            sequence UC-00001-1 { } is a scenario of the use case, and sequence UC-00001-1 / sold-out
+            another; sequence sales { } is what a box does. Its names resolve from the scope the use
+            case is declared in, or from inside the box. In a scenario of a use case a message with
+            nobody written before its arrow is sent by whoever asks for the use case, from outside the
+            design; in one of a box, by the box. A level written alone is a complete design: nothing
+            below it has to exist.
+          rationale:
+            Owner, 2026-11-15 and 16 (DS-232; model audit findings G18, G6 and G9, probes e03 and
+            e82): a sequence between packages, another between modules, another between classes, each
+            written on its own, without defining every method in between. A calls B and B calls C
+            took two sequences and a diagram with depth, so a high-level flow was as many sequences
+            as hops. The vision said a module or a package could be a subject and the engine refused it.
+          verification VER-00148-1 {
+            title: Integration tests confirm a use case, a package or a module is the subject of a scenario, and that the scenario of a box is drawn between what it names
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AUseCaseOrABoxIsTheSubjectOfAScenario
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioOfABoxIsDrawnBetweenWhatItNames
+          }
+        }
+        requirement REQ-00133-1 {
+          tags: language, behaviour, levels
+          status: approved
+          title: A participant of a sequence shall be nameable as what it is: a package, a module, an interface or a class the behaviour sees
+          text:
+            sales in shell -> sales.sell(item) is the package shop@sales, resolved like any name, from
+            the innermost scope outward; no local declares it. A value of the static context of that
+            name comes first (REQ-00036-2). A name that is neither, the sender's included, is
+            W-PARTICIPANT-UNDECLARED. In a drawing a box that is named is one lifeline, the same one
+            a closed box has on a cut (REQ-00129-1), and ds query shows answers it.
+          rationale:
+            Owner, 2026-11-15 (DS-232, probe e80): a box could not be a participant, so a scenario
+            between boxes needed an interface in every box and a sequence for every operation on the way.
+          verification VER-00149-1 {
+            title: Integration tests confirm a package and a module take part in a scenario by being named, and that the query answers them
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.ABoxTakesPartByBeingNamed
+              tests/integration/ds/check/test_levels.cpp::TestLevels.TheQueryShowsWhoTakesPartInAWrittenScenario
+          }
+        }
+        requirement REQ-00134-1 {
+          tags: language, behaviour, levels
+          status: approved
+          title: A message shall be sent by the participant written before its arrow, and by the subject of the behaviour when none is written
+          text:
+            sales -> warehouse.take(item) leaves the sales. The sender is who calls: what it may see
+            (W-NOT-VISIBLE) and what it declares to use (W-USES-UNDECLARED) are checked from it, and
+            it is where the message leaves in a drawing. A message with no sender written is the
+            subject's, as before.
+          rationale:
+            Owner, 2026-11-15 (DS-232, probe e80). The grammar kept the sender of a message from the
+            proof of concept and the engine ignored it: written in one block, every message left the
+            first participant.
+          verification VER-00150-1 {
+            title: Integration tests confirm a message leaves the participant written before its arrow, in the model and in the drawing
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.TheParticipantWrittenBeforeTheArrowSendsTheMessage
+          }
+        }
+        requirement REQ-00135-1 {
+          tags: language, behaviour, levels, coverage
+          status: approved
+          title: A message to a box shall be bound to the operation the box offers under that name, and be kept as a label, listed as coverage, when it offers none
+          text:
+            A package offers the operations of its interfaces, a module its functions. Bound, the
+            message is a call like any other: its arguments are checked (E-MSG-ARITY, W-ARG-TYPE), it
+            expands to the behaviour of the operation, one step below, and the box stays the
+            participant. With no operation of that name, or with more than one, the message is a
+            label: the level below is not written yet, which is W-MESSAGE-NO-OPERATION in the coverage
+            (REQ-00124-1) and never a finding. A message to an interface or a class that lacks the
+            operation is still W-MSG-UNDECLARED: what is written is written.
+          rationale:
+            Owner, 2026-11-16 (DS-232): write the high level, and when the level below is implemented
+            the two are matched. The link needs nothing written: the message names what the box
+            offers. A written purchase and its detail lifted onto the same boxes draw the same
+            crossings in the same order, which is what DS-233 will check.
+          verification VER-00151-1 {
+            title: Integration tests confirm a message to a box is bound to the operation the box offers, that one no operation answers is a label listed as coverage, that what clashes with the level below is a finding, and that the written level and the lifted detail draw the same crossings
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AMessageToABoxIsBoundToTheOperationTheBoxOffers
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AMessageNoOperationAnswersIsALabelListedAsCoverage
+              tests/integration/ds/check/test_levels.cpp::TestLevels.WhatClashesWithTheLevelBelowIsAFinding
+              tests/integration/ds/check/test_levels.cpp::TestLevels.TheWrittenLevelAndTheDetailLiftedOntoItsBoxesDrawTheSameCrossings
+          }
+        }
         requirement REQ-00059-1 {
           tags: language, lld, sequence
           status: approved

@@ -211,6 +211,7 @@ package driftspec@ds {
       @requirement REQ-00058-2
       @requirement REQ-00039-1
       @requirement REQ-00040-1
+      @requirement REQ-00132-1
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
@@ -239,6 +240,18 @@ package driftspec@ds {
       }
       - callStatic(seq: model::Entity, out_msg: model::Entity, message: bind::Message, home: std::string) -> bool {
         @requirement REQ-00108-1
+      }
+      // a participant named as what it is: a box, an interface or a class the behaviour sees (DS-232)
+      - namedEntity(name: std::string, home: std::string) -> std::string {
+        @requirement REQ-00133-1
+      }
+      // who sends: the participant written before the arrow, typed like the receiver
+      - typeSender(seq: model::Entity, cls: model::Entity, subject: model::Entity, out_msg: model::Entity, home: std::string, location: model::Location) -> bool {
+        @requirement REQ-00134-1
+      }
+      // the operation a box offers under a name: a function of a module, an operation of one interface of a package
+      - offered(box: model::Entity, op: std::string) -> model::Entity {
+        @requirement REQ-00135-1
       }
       - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
         @requirement REQ-00036-2

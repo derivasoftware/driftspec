@@ -188,6 +188,7 @@ package driftspec@ds {
         @requirement REQ-00056-1
         @requirement REQ-00129-1
         @requirement REQ-00130-1
+        @requirement REQ-00134-1
       }
       - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00050-1

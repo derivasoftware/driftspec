@@ -1,0 +1,153 @@
+// Behaviour at two levels (DS-232): one shop, its purchase written once between the boxes, in one block,
+// and once more in detail, method by method. Either level stands alone; where both are written, a message
+// of the high level that names an operation a box offers is bound to it and checked against it.
+
+package shop {
+  usecase UC-00001-1 buy(item: string) -> int {
+    title: Buy an item
+    outcome default: the item is bought
+  }
+
+  usecase UC-00002-1 refund(item: string) -> int {     // ? W-USECASE-UNREALISED: no operation takes it yet
+    title: Take an item back
+    outcome default: the item is back on its shelf
+  }
+
+  interface shell {
+    kind: cli
+    operation buy(item: string) -> int : UC-00001-1
+  }
+
+  // ---- the high level: a scenario of a use case, between the boxes of the shop ------------------------
+
+  // a box takes part by being named; whoever is written before the arrow sends, and with nobody there it is
+  // whoever asks for the use case, from outside
+  sequence UC-00001-1 {
+    -> shell.buy(item)
+    shell -> sales.sell(item)                          // ? W-MESSAGE-NO-OPERATION: the sales offer no interface yet: a label
+    sales -> warehouse.take(item) -> held              // the counter of the warehouse offers take: bound to it
+    opt it was the last one {
+      warehouse -> bank.pay(cost)                      // and the gateway of the bank offers pay
+    }
+    sales -> bank.pay(price) -> paid
+    return 0
+  }
+
+  // what clashes with the design below is a finding; what the design does not say yet is not
+  sequence UC-00002-1 {
+    -> shell.refund(item)                              // ! W-MSG-UNDECLARED: the shell is written, and has no refund
+    sales -> warehouse.take(item, 1)                   // ! E-MSG-ARITY: the counter's take takes one argument
+    bank -> warehouse.take(item)                       // ! W-USES-UNDECLARED: the bank does not say it uses the counter
+    courier -> sales.sell(item)                        // ! W-PARTICIPANT-UNDECLARED: nobody is called courier
+    sales -> warehouse.restock(item)                   // ? W-MESSAGE-NO-OPERATION: not designed yet
+    return 0
+  }
+
+  // a box as subject: what the sales do, between their modules
+  sequence sales {
+    desk -> till.charge(price)                         // ? W-MESSAGE-NO-OPERATION: the till offers no function of that name
+  }
+
+  // ---- the detail: the same purchase, method by method -------------------------------------------------
+
+  sequence shell::buy {
+    local desk: shop@sales@desk::Desk
+    self -> desk.sell(item) -> code
+    return code
+  }
+
+  package sales {
+    @uses shop@warehouse@counter
+    @uses shop@bank@gateway
+
+    module desk {
+      class Desk {
+        - refs counter: shop@warehouse@counter
+        - owns till: shop@sales@till::Till
+        - owns prices: PriceList
+        + sell(item: string) -> int
+      }
+      class PriceList {
+        + priceOf(item: string) -> int
+      }
+
+      sequence Desk::sell {
+        self -> prices.priceOf(item) -> price
+        self -> counter.take(item) -> held
+        self -> till.charge(price) -> paid
+        return 0
+      }
+    }
+
+    module till {
+      class Till {
+        - refs bank: shop@bank@gateway
+        + charge(amount: int) -> bool
+      }
+
+      sequence Till::charge {
+        self -> bank.pay(amount) -> ok
+        return ok
+      }
+    }
+  }
+
+  package warehouse {
+    @uses shop@bank@gateway
+
+    interface counter {
+      kind: library
+      operation take(item: string) -> bool
+    }
+
+    sequence counter::take {
+      local shelf: shop@warehouse@stock::Shelf
+      local buyer: shop@warehouse@supply::Buyer
+      self -> shelf.pick(item) -> held
+      opt it was the last one {
+        self -> buyer.reorder(item)
+      }
+      return held
+    }
+
+    module stock {
+      class Shelf {
+        + pick(item: string) -> bool
+      }
+    }
+
+    module supply {
+      class Buyer {
+        - refs bank: shop@bank@gateway
+        + reorder(item: string)
+      }
+
+      sequence Buyer::reorder {
+        self -> bank.pay(cost) -> ok
+      }
+    }
+  }
+
+  package bank {
+    interface gateway {
+      kind: library
+      operation pay(amount: int) -> bool               // ? W-OPERATION-NO-BEHAVIOUR: the bank is not designed here
+    }
+  }
+}
+
+diagram SEQ_Written {                    // the high level, as it is written
+  kind: sequence
+  include: UC-00001-1
+}
+
+diagram SEQ_Lifted {                     // the detail, lifted onto the same boxes: the same crossings in the same order
+  kind: sequence
+  include: shop@shell::buy
+  close: package
+}
+
+diagram SEQ_Sales {                      // the scenario of a box
+  kind: sequence
+  include: shop@sales
+}

@@ -338,6 +338,22 @@ struct SequenceBuilder {
                     e && e->kind == model::Kind::Package ? "package" : "namespace", box);
   }
 
+  /// The lifeline of a participant (DS-232): the closed box that stands for it, the box itself when a box is
+  /// named as a participant, or one lifeline for each object of the context.
+  std::string lineOf(const std::string& typeId, const std::string& name, const std::string& behaviour) {
+    const std::string box = closedAround(typeId);
+    if (!box.empty()) return boxLine(box);
+    const model::Entity* type = typeId.empty() ? nullptr : model.find(typeId);
+    if (type && (type->kind == model::Kind::Package || type->kind == model::Kind::Module)) {
+      return lifeline(typeId, type->name, type->kind == model::Kind::Package ? "package" : "namespace", typeId);
+    }
+    const std::string typeName = typeId.empty() ? "?" : model::Identity(typeId).lastName();  // an interface has no ::
+    // two objects of one type are two lifelines: keyed by the name in the context, not by the type alone; a
+    // participant named as what it is (an interface, a class) says it once
+    return lifeline(typeId.empty() ? behaviour + "::" + name : typeId + "|" + name, name == typeName ? name : name + ": " + typeName,
+                    "participant", typeId);
+  }
+
   /// Whether the call that enters `behaviour` is followed into it.
   bool followed(const std::string& behaviour, int depth) const {
     return cut ? cut->follows(model::Identity(behaviour).subject().text(), depth) : depth > 0;
@@ -431,30 +447,28 @@ struct SequenceBuilder {
       }
       const std::string to = m->field("to");
       const std::string typeId = m->field("type");
+      // who sends is the sender written, a participant like any other; the subject when none is (DS-232)
+      const std::string sender = m->field("from");
+      const std::string from =
+          sender.empty() || sender == "self" || m->field("from-type").empty() ? selfLine : lineOf(m->field("from-type"), sender, seq.id);
       std::string target = selfLine;
       const std::string box = closedAround(typeId);
-      if (!box.empty()) {
-        target = boxLine(box);  // what a closed box holds, the box stands for
-      } else if (to == "self" && !typeId.empty() && typeId != selfLine) {
+      if (to == "self" && box.empty() && !typeId.empty() && typeId != selfLine) {
         // a function of another module (or of the class's module, called from a method) runs on that module's lifeline
         target =
             lifeline(typeId, shortName(typeId.substr(typeId.find_last_of('@') == std::string::npos ? 0 : typeId.find_last_of('@') + 1)),
                      "participant", typeId);
-      } else if (to != "self") {
-        // one lifeline per entity of the static context: the same attribute reached from two
-        // behaviours of one class is one participant; an unresolved name stays local to its behaviour
-        const std::string typeName = typeId.empty() ? "?" : model::Identity(typeId).lastName();  // an interface has no ::
-        // two objects of one type are two lifelines: keyed by the name in the context, not by the type alone
-        target = lifeline(typeId.empty() ? seq.id + "::" + to : typeId + "|" + to, to + ": " + typeName, "participant", typeId);
+      } else if (to != "self" || !box.empty()) {
+        target = lineOf(typeId, to, seq.id);  // what a closed box holds, the box stands for
       }
       const std::string frame = tree.frameOf(m->id);
       const std::string& entered = taken.next;
       const bool goesOn = !entered.empty() && followed(entered, depth);
-      if (target == selfLine && boxLines.count(selfLine)) {
+      if (target == from && boxLines.count(from)) {
         // both ends have the same representative: the message is internal and is not drawn. What it calls may
         // still cross, so it is followed like any other, and a frame is drawn around what crosses inside it
         const int before = order;
-        if (goesOn) emit(*model.find(entered), target, selfLine, taken.nextPath, depth - 1, stack);
+        if (goesOn) emit(*model.find(entered), target, from, taken.nextPath, depth - 1, stack);
         if (order > before) {
           for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
             if (!drawn(f)) continue;
@@ -472,7 +486,7 @@ struct SequenceBuilder {
       }
       const int row = order++;
       nlohmann::json edge = {
-          {"from", selfLine},
+          {"from", from},
           {"to", target},
           {"kind", "message"},
           {"order", row},
@@ -499,13 +513,13 @@ struct SequenceBuilder {
       edges.push_back(edge);
       if (goesOn) {
         const int first = order;
-        emit(*model.find(expands), target, selfLine, taken.nextPath, depth - 1, stack);
+        emit(*model.find(expands), target, from, taken.nextPath, depth - 1, stack);
         if (order > first) refs["span"] = std::to_string(first) + "-" + std::to_string(order - 1);  // the rows the expansion occupies
       }
       edges[at]["refs"] = refs;
       const std::string result = m->field("result");
       if (!result.empty())
-        edges.push_back({{"from", target}, {"to", selfLine}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
+        edges.push_back({{"from", target}, {"to", from}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
       for (std::string f = frame; !f.empty(); f = tree.frameOf(f))
         if (drawn(f)) lastOrder[f] = order - 1;  // after any expansion
     }
@@ -545,9 +559,12 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   nlohmann::json out;
   out["ir"] = 1;
   out["title"] = diagram.name;
+  std::set<std::string> subjects;  // the lifelines of the boxes and use cases whose scenarios are drawn
   for (const model::Entity* seq : selected) {
     const std::string subjectId = model::Identity(seq->id).subject().text();
     const model::Entity* subject = model_.find(subjectId);
+    const bool written =
+        subject && (subject->kind == model::Kind::Package || subject->kind == model::Kind::Module || subject->kind == model::Kind::UseCase);
     // a method runs on its class, a function on its module
     const bool function = subject && subject->kind == model::Kind::Function;
     const bool method = subject && (subject->kind == model::Kind::Method || subject->kind == model::Kind::Operation || function);
@@ -556,8 +573,12 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     const std::string caller = method ? b.lifeline("caller", "caller", "actor") : "";
     const std::string selfLabel = cls ? (function ? cls->name : "self: " + cls->name) : "self: " + subjectId;
     const std::string around = cls ? b.closedAround(cls->id) : "";
-    const std::string self =
-        !around.empty() ? b.boxLine(around) : b.lifeline(cls ? cls->id : subjectId, selfLabel, "participant", cls ? cls->id : "");
+    // a scenario of a use case starts from whoever asks; one of a box runs on the box (DS-232)
+    const std::string self = written && subject->kind == model::Kind::UseCase ? b.lifeline("caller", "caller", "actor")
+                             : written                                        ? b.lineOf(subjectId, subject->name, seq->id)
+                             : !around.empty()                                ? b.boxLine(around)
+                                               : b.lifeline(cls ? cls->id : subjectId, selfLabel, "participant", cls ? cls->id : "");
+    if (written) subjects.insert(self);
     if (method) {
       b.edges.push_back(
           {{"from", caller},
@@ -582,6 +603,17 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
       b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});
     }
   }
+  // a scenario written between boxes may never send from its own subject: that lifeline is drawn when a message
+  // touches it (DS-232)
+  std::set<std::string> touched;
+  for (const auto& e : b.edges) {
+    touched.insert(e["from"].get<std::string>());
+    touched.insert(e["to"].get<std::string>());
+  }
+  nlohmann::json kept = nlohmann::json::array();
+  for (const auto& n : b.nodes)
+    if (!subjects.count(n["id"].get<std::string>()) || touched.count(n["id"].get<std::string>())) kept.push_back(n);
+  b.nodes = kept;
   if (b.edges.empty()) out["notice"] = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
   out["nodes"] = b.nodes;
   out["edges"] = b.edges;
