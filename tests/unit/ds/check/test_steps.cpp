@@ -40,7 +40,7 @@ class FakeStep : public ds::check::IStep {
 /// and run after every step it needs.
 TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
   const auto all = ds::check::steps();
-  ASSERT_EQ(all.size(), 9u);
+  ASSERT_EQ(all.size(), 10u);
   for (const auto& s : all) EXPECT_EQ(s.first, s.second->name());
 }
 
@@ -50,7 +50,7 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const ds::check::Checker checker(model, checkSteps);
   const std::vector<std::string> order = checker.order();
   EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "contracts", "levels",
-                                             "rules", "structure"}));
+                                             "rules", "states", "structure"}));
   const auto all = ds::check::steps();
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())

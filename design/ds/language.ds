@@ -1311,6 +1311,98 @@ package driftspec@ds {
               tests/integration/ds/check/test_behaviour.cpp::TestStateReach.AMachineEveryStateOfWhichIsReachedOrWithNoInitialStateSaysNothing
           }
         }
+
+        requirement REQ-00140-1 {
+          tags: language, lld, state, logic
+          status: approved
+          title: A state of a machine shall be written with the rule that computes it over what its subject holds
+          text:
+            Paid if status = Paid, not cancelled. A state is computed, not kept: its rule says when the
+            subject of the machine is in it, over what the subject holds. The literals are joined by
+            commas and all hold. A literal is an attribute compared with a value (=, !=), or a name
+            alone: a boolean attribute, or a condition with a name when the subject holds nothing so
+            called; `not` turns a literal round. A state may have several rules, each one way of being
+            in it. The jumps are written beside the rules as they always were (REQ-00040-1), and a
+            state with no rule is a name, as before.
+          rationale:
+            Owner, 2026-11-16 and 17 (DS-249). The states of a machine are a layer above the structure
+            and the behaviour: neither has to name them, and real code keeps its state in several
+            places. The author writes the machine whole, and what he writes is then held to the rest.
+          verification VER-00156-1 {
+            title: Integration tests confirm a state is written with the rule that computes it, over an enum value, a boolean and a difference, that a state takes several rules and that a name the subject does not hold is a condition
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.AStateIsWrittenWithTheRuleThatComputesItOverWhatItsSubjectHolds
+              tests/integration/ds/check/test_states.cpp::TestStates.SeveralRulesOfOneStateAndAConditionWithANameAreNoFinding
+          }
+        }
+
+        requirement REQ-00141-1 {
+          tags: language, lld, state, logic, check
+          status: approved
+          title: The checker shall report two states of a machine that can hold at once, with a context in which both do
+          text:
+            The rules of a machine exclude each other, so that whatever its subject holds it is in one
+            state. Two rules of different states that some context satisfies together are
+            W-STATE-OVERLAP, and the finding says one such context: Lamps can be Left and Both at once:
+            when hazard = true, lever = Left. It is read from the rules alone: two rules exclude each
+            other when they ask one name for values that cannot both be. Two rules of one state may
+            hold together. What no rule covers is nothing to report: a machine that says less is
+            complete.
+          rationale:
+            Owner, 2026-11-17 (DS-249): at any moment the machine is computed again and falls into one
+            state. Measured on a sketch: rules read in order, with one that takes the rest, hide every
+            context their author did not think of; rules that each stand alone show them.
+          verification VER-00157-1 {
+            title: Integration tests confirm two states that can hold at once are a finding that says a context in which both do
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.TwoStatesThatCanHoldAtOnceAreAFindingThatSaysAContextInWhichTheyDo
+          }
+        }
+
+        requirement REQ-00142-1 {
+          tags: language, lld, state, logic, check
+          status: approved
+          title: The checker shall report a rule of a state that cannot hold as it is written
+          text:
+            A comparison with a value the type of the attribute does not have is W-STATE-VALUE, and it
+            says the values the type has. A comparison of something the subject does not hold is
+            W-STATE-UNDECLARED. A rule whose literals exclude each other is W-STATE-IMPOSSIBLE: the
+            subject can never be in that state. A rule reported so is said once and is not held to the
+            others. An attribute whose values cannot be listed (a number, a text) is compared as
+            written.
+          rationale:
+            DS-249. Probe s01 of the model audit: an enum of Open, Paid and Sent beside a machine of
+            Open, Paid and Shipped passed in silence.
+          verification VER-00158-1 {
+            title: Integration tests confirm a value its type lacks, an attribute the subject lacks and a rule that excludes itself are findings, each said once
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.AValueItsTypeLacksAnAttributeTheSubjectLacksAndARuleThatExcludesItselfAreFindings
+          }
+        }
+
+        requirement REQ-00143-1 {
+          tags: language, lld, state, logic
+          status: approved
+          title: A machine shall start in the state the defaults of its subject are in, when its start is not written
+          text:
+            The start of a machine whose states have rules is derived: the state in which the defaults
+            of the attributes its rules read are. A start that is written is the start. Defaults that
+            are in no state, and an attribute with no default, give no start.
+          rationale: DS-249. Derived things are never written (vision 3): the defaults already say where the subject starts.
+          verification VER-00159-1 {
+            title: Integration tests confirm a machine with no start written starts in the state its subject's defaults are in
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/render/test_state_view.cpp::TestStateView.AMachineWithNoStartWrittenStartsWhereTheDefaultsOfItsSubjectAre
+          }
+        }
       }
 
       // ---- activity ----
@@ -2025,6 +2117,24 @@ package driftspec@ds {
             tests/integration/ds/render/test_state_view.cpp::TestStateView.AViewNoJumpNamesIsStillDrawn
             tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineOfAClassIsDrawnFromItsTransitionsAlone
             tests/integration/ds/render/test_state_view.cpp::TestSelfLoop.ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack
+        }
+      }
+      requirement REQ-00144-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A state diagram shall draw each state with the rule that computes it
+        text:
+          A state a rule computes shows its rule under its name, one line for each rule it has, and
+          is drawn though no jump names it. The arrow from the start goes to the state the machine
+          starts in (REQ-00143-1).
+        rationale: DS-249. The rule is what the state means, so it is read where the state is.
+        verification VER-00160-1 {
+          title: Integration tests confirm a state diagram draws each state with the rule that computes it, one line for each rule, and a state no jump names
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateIsDrawnWithTheRuleThatComputesIt
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateWithNoJumpIsStillDrawnAndOneWithTwoRulesShowsBoth
         }
       }
       requirement REQ-00122-1 {

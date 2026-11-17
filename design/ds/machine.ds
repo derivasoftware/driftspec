@@ -1,0 +1,36 @@
+// LLD of the machine namespace (ds::machine): a state machine as its author wrote it (DS-249).
+// A state is computed by a rule over what the subject of the machine holds, and the rules of a machine
+// exclude each other. This namespace reads a machine once for whoever needs it: the check that holds
+// its rules to each other and to the structure, and the drawing of it. Not its jobs: running the
+// check (ds::check), drawing (ds::render).
+
+package driftspec@ds {
+
+  module machine {
+
+    // a machine read from the model: its states in the order written, the rules that compute each,
+    // where it starts, and what its rules say that cannot be
+    class Machine {
+      @requirement REQ-00140-1
+      @requirement REQ-00141-1
+      @requirement REQ-00142-1
+      @requirement REQ-00143-1
+      - refs model_: model::Model
+      - refs machine_: model::Entity
+      - subject_: std::string
+      + Machine(model: model::Model, machine: model::Entity)
+      + states() -> std::vector<std::string>
+      + rules(state: std::string) -> std::vector<std::string>
+      // the state written, else the one the defaults of the subject are in
+      + initial() -> std::string
+      // an attribute the subject lacks, a value its type lacks, a rule that excludes itself, two states at once
+      + faults() -> std::vector<model::Finding>
+    }
+
+  }
+}
+
+diagram CL_MachineNamespace {
+  kind: class
+  include: driftspec@ds@machine::*
+}

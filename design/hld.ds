@@ -30,6 +30,7 @@ package driftspec {
     module diff { }
     module query { }
     module axis { }                         // the abstraction axis: the cut of a diagram, read by query and render
+    module machine { }                      // a state machine as written: its states and the rules that compute them
     module exporter { }
     module scene { }
     module api { }                          // the engine in process, for the Python face (SREQ-00015-1)

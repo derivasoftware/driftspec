@@ -194,6 +194,8 @@ package driftspec@ds {
       }
       - renderState(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00062-1
+        @requirement REQ-00143-1
+        @requirement REQ-00144-1
       }
       - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00049-3

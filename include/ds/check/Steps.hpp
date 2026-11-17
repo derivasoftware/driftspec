@@ -177,6 +177,18 @@ class LevelCoherence : public ACheck {
   std::vector<model::Finding> check(const Context& context) override;
 };
 
+/// The states of a machine, written as rules over the context of its subject (DS-249), held to each other
+/// and to the structure: two that can hold at once, a value a type does not have, an attribute the subject
+/// does not hold, a rule that excludes itself.
+class StateRules : public ACheck {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check(const Context& context) override;
+};
+
 /// Ownership, artefacts, extensions and fields.
 class StructureCheck : public ACheck {
  public:
