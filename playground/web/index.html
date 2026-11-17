@@ -399,7 +399,7 @@ main { flex: 1; display: flex; min-height: 0; }
 #left.coached, #right.coached { position: relative; }
 #left.coached::after, #right.coached::after { content: ""; position: absolute; inset: 0; border: 2px solid var(--coach); pointer-events: none; z-index: 6; }
 @media (prefers-reduced-motion: reduce) { .coach .c-wait i { animation: none; } }
-#narrow { display: none; }
+#narrow, #nsplit { display: none; }
 /* a phone (DS-273): nobody edits here, a lesson is read. The diagram the step is about on top, the code at the line
    it speaks of under it, and the card docked at the bottom; the problems show only when there are some */
 @media (max-width: 760px) {
@@ -411,8 +411,12 @@ main { flex: 1; display: flex; min-height: 0; }
   header #relesson { order: 11; margin-left: 0; }
   #work { flex-direction: column; }
   #tree, .vsplit, .hsplit { display: none; }
-  #right { order: 1; flex: none; height: 38%; min-width: 0; padding: 6px; }
-  #left { order: 2; flex: 1; width: auto !important; height: auto; min-width: 0; min-height: 0; }
+  #right { order: 1; flex: none; height: var(--narrow-top, 38%); min-width: 0; padding: 6px; }
+  /* the line between the diagram and the code, dragged with a finger: how much of the screen each one takes */
+  #nsplit { display: flex; order: 2; flex: none; height: 18px; align-items: center; justify-content: center; background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); cursor: row-resize; touch-action: none; }
+  #nsplit::before { content: ""; width: 44px; height: 4px; border-radius: 2px; background: var(--muted); opacity: .6; }
+  #nsplit.drag::before { background: var(--coach); opacity: 1; }
+  #left { order: 3; flex: 1; width: auto !important; height: auto; min-width: 0; min-height: 0; }
   #panes { grid-template-columns: 1fr; }
   #problems { height: auto !important; max-height: 24%; }
   #problems:not(.some) { display: none; }
@@ -719,6 +723,7 @@ definition module-depends(m, n) {
       <div id="editor"></div>
     </section>
     <div class="vsplit" id="split"></div>
+    <div id="nsplit"></div>
     <section id="right"><div id="panes"></div></section>
   </div>
   <div class="hsplit" id="psplit"></div>
@@ -773,7 +778,7 @@ const UI = {
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
         requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
-        narrow: "A phone is enough to read a lesson. To write a design, open it on a computer.", tabHome: "Home", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Open in the editor", go: "Open the editor",
+        narrow: "For a better experience, open the editor on a large screen.", tabHome: "Home", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Open in the editor", go: "Open the editor",
         homeTitle: "Design specifications as code.",
         homeText: "DriftSpec is a tool for writing the design of a piece of software as text and keeping it consistent. It checks every contradiction, draws the diagrams, and joins requirements, design and tests in one model.",
         kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Kept by",
@@ -790,7 +795,7 @@ const UI = {
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
         requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
-        narrow: "En el teléfono se puede leer una lección. Para escribir un diseño, ábrelo en un ordenador.", tabHome: "Inicio", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Abrir en el editor", go: "Abrir el editor",
+        narrow: "Para una mejor experiencia, abre el editor en una pantalla grande.", tabHome: "Inicio", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Abrir en el editor", go: "Abrir el editor",
         homeTitle: "Especificaciones de diseño como código.",
         homeText: "DriftSpec es una herramienta para escribir el diseño de un software como texto y mantenerlo consistente. Comprueba cada contradicción, dibuja los diagramas y une requisitos, diseño y pruebas en un solo modelo.",
         kClass: "clases", kSequence: "secuencia", cTitle: "Título", cKept: "Lo cumple",
@@ -2162,6 +2167,28 @@ function exampleOf(code, title) {
   open.onclick = () => { load({ name: title, id: "docs", title: { en: title, es: title }, files: { "example.ds": code } }); showTab("editor", true); };
   el.querySelector(".ex-code").append(open);
   return el;
+}
+
+// on a phone the diagram and the code share the height: the line between them is dragged, and where it was left
+// is kept (DS-274). A variable of the page, so nothing of it reaches the layout of a wide screen
+{
+  const bar = $("nsplit"), top = () => $("right").getBoundingClientRect().top;
+  const set = (px) => document.documentElement.style.setProperty("--narrow-top", px + "px");
+  const saved = parseFloat(store.get("ds-playground-narrow-top"));
+  if (saved >= 60) set(saved);
+  bar.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    bar.setPointerCapture(e.pointerId); bar.classList.add("drag");
+    let at = saved;
+    const move = (ev) => {
+      const room = $("work").getBoundingClientRect().height;
+      at = Math.min(room - 90, Math.max(60, ev.clientY - top()));  // each of the two keeps a strip
+      set(at); editor.refresh();
+    };
+    const up = () => { bar.classList.remove("drag"); bar.removeEventListener("pointermove", move); if (at >= 60) store.set("ds-playground-narrow-top", at); };
+    bar.addEventListener("pointermove", move);
+    bar.addEventListener("pointerup", up, { once: true });
+  });
 }
 
 // on a phone the editor says once that it is for reading (DS-273); closed, it stays closed
