@@ -1,0 +1,213 @@
+{
+  "title": {
+    "en": "19 · A machine that is checked",
+    "es": "19 · Una máquina que se comprueba"
+  },
+  "version": 1,
+  "open": "store/Cart.ds",
+  "steps": [
+    {
+      "write": [
+        {
+          "into": {
+            "find": "class Cart"
+          },
+          "text": "- cancelled: bool = false\n+ cancel() -> none"
+        },
+        {
+          "into": {
+            "find": "state Cart"
+          },
+          "text": "Open -> Cancelled on cancel\nPaid -> Cancelled on cancel"
+        }
+      ],
+      "at": {
+        "find": "Open -> Cancelled"
+      },
+      "shows": "ST_Cart",
+      "text": {
+        "en": "The cart learns to be cancelled, while it is open or paid. It keeps that apart from its status, in a boolean, and `cancel` is the event of two new moves. So far `Cancelled` is what every state has been until now: a name.",
+        "es": "El carrito aprende a cancelarse, mientras está abierto o pagado. Lo guarda aparte de su estado, en un booleano, y `cancel` es el evento de dos transiciones nuevas. De momento `Cancelled` es lo que ha sido hasta ahora cada estado: un nombre."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "below": {
+          "find": "initial Open"
+        },
+        "text": "Open if status = Open, not cancelled\nPaid if status = Paid, not cancelled\nShipped if status = Shipped"
+      },
+      "at": {
+        "find": "Open if status"
+      },
+      "shows": "ST_Cart",
+      "text": {
+        "en": "A state can be computed. A rule says when the cart is in it, over what the cart holds: `Paid if status = Paid, not cancelled`. The parts are joined by commas and all of them hold; `not` turns one round. The state is not kept anywhere: it is read off the cart. The diagram draws each state with its rule.",
+        "es": "Un estado se puede calcular. Una regla dice cuándo está el carrito en él, a partir de lo que el carrito guarda: `Paid if status = Paid, not cancelled`. Las partes se unen con comas y se cumplen todas; `not` le da la vuelta a una. El estado no se guarda en ningún sitio: se lee del carrito. El diagrama dibuja cada estado con su regla."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "Shipped if status"
+      },
+      "text": {
+        "en": "Give the new state its rule too. Inside `state Cart`:\n`Cancelled if cancelled`",
+        "es": "Dale también su regla al estado nuevo. Dentro de `state Cart`:\n`Cancelled if cancelled`"
+      },
+      "solution": {
+        "below": {
+          "find": "Shipped if status"
+        },
+        "text": "Cancelled if cancelled"
+      },
+      "done": {
+        "finding": "W-STATE-OVERLAP"
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "The rules of a machine exclude each other: whatever the cart holds, it is in one state. The finding says a cart that would be in two, shipped and cancelled at once. A cart already shipped is not cancelled, so say it. Change the rule to:\n`Cancelled if cancelled, status != Shipped`",
+        "es": "Las reglas de una máquina se excluyen entre sí: guarde lo que guarde el carrito, está en un solo estado. El aviso dice un carrito que estaría en dos, enviado y cancelado a la vez. Un carrito ya enviado no se cancela, así que dilo. Cambia la regla a:\n`Cancelled if cancelled, status != Shipped`"
+      },
+      "solution": {
+        "replace": "Cancelled if cancelled",
+        "text": "Cancelled if cancelled, status != Shipped"
+      },
+      "done": {
+        "clean": true,
+        "gone": "W-STATE-OVERLAP"
+      }
+    },
+    {
+      "write": {
+        "replace": "      initial Open\n",
+        "text": ""
+      },
+      "at": {
+        "pane": "ST_Cart"
+      },
+      "shows": "ST_Cart",
+      "text": {
+        "en": "The start is no longer written. A new cart has `status = Open` and is not cancelled, and those defaults are in `Open`: the machine starts there, and the arrow from the start has not moved.",
+        "es": "El inicio ya no se escribe. Un carrito nuevo tiene `status = Open` y no está cancelado, y esos valores por defecto caen en `Open`: la máquina empieza ahí, y la flecha del inicio no se ha movido."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "below": {
+          "find": "self -> cart.checkout(card) -> paid"
+        },
+        "text": "self -> cart.ship()"
+      },
+      "at": {
+        "find": "self -> cart.ship()"
+      },
+      "text": {
+        "en": "The behaviours call the events of the machine, and the machine says in which order they can happen. Here the shell ships the cart it has just charged. `checkout` leaves the cart `Paid`, or still `Open` if the card does not accept, and `ship` can happen from `Paid`: nothing to report. Nothing was asked of the behaviour; it is read as it is.",
+        "es": "Los comportamientos llaman a los eventos de la máquina, y la máquina dice en qué orden pueden ocurrir. Aquí la consola envía el carrito que acaba de cobrar. `checkout` deja el carrito en `Paid`, o todavía en `Open` si la tarjeta no acepta, y `ship` puede ocurrir desde `Paid`: nada que avisar. Al comportamiento no se le ha pedido nada; se lee tal como está."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "find": "self -> cart.ship()"
+      },
+      "text": {
+        "en": "Now let the shell cancel what it has just shipped. Under `self -> cart.ship()` write:\n`self -> cart.cancel()`",
+        "es": "Ahora haz que la consola cancele lo que acaba de enviar. Debajo de `self -> cart.ship()` escribe:\n`self -> cart.cancel()`"
+      },
+      "solution": {
+        "below": {
+          "find": "self -> cart.ship()"
+        },
+        "text": "self -> cart.cancel()"
+      },
+      "done": {
+        "finding": "W-STATE-ORDER"
+      }
+    },
+    {
+      "write": {
+        "file": "diagrams/behaviour.ds",
+        "end": true,
+        "text": "diagram MX_Cart {\n  kind: matrix\n  include: shop@store::Cart\n}"
+      },
+      "at": {
+        "pane": "MX_Cart"
+      },
+      "shows": "MX_Cart",
+      "text": {
+        "en": "The same machine as a table, `kind: matrix`: its events down, its states across, and in each cell where the event takes the state. An empty cell is a pair the machine says nothing of. The cell of `cancel` under `Shipped` is where the behaviour and the machine disagree: it names `shell::buy`.",
+        "es": "La misma máquina como tabla, `kind: matrix`: sus eventos hacia abajo, sus estados a lo ancho, y en cada casilla adónde lleva el evento desde ese estado. Una casilla vacía es una pareja de la que la máquina no dice nada. La casilla de `cancel` bajo `Shipped` es donde el comportamiento y la máquina no coinciden: nombra a `shell::buy`."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "One of the two is wrong. It could be the machine, missing a move from `Shipped`; here it is the behaviour: a shipped cart is not cancelled. Delete the line `self -> cart.cancel()`.",
+        "es": "Uno de los dos se equivoca. Podría ser la máquina, a la que le faltase una transición desde `Shipped`; aquí es el comportamiento: un carrito enviado no se cancela. Borra la línea `self -> cart.cancel()`."
+      },
+      "solution": {
+        "replace": "    self -> cart.cancel()\n",
+        "text": ""
+      },
+      "done": {
+        "clean": true,
+        "gone": "W-STATE-ORDER"
+      }
+    },
+    {
+      "at": {
+        "pane": "MX_Cart"
+      },
+      "shows": [
+        "MX_Cart",
+        "ST_Cart"
+      ],
+      "text": {
+        "en": "The cell is empty again. A machine written like this is held three ways: its rules exclude each other, every state can be reached from where it starts, and the behaviours call its events in an order it allows. What it does not say is never a problem.",
+        "es": "La casilla vuelve a estar vacía. Una máquina escrita así se comprueba de tres maneras: sus reglas se excluyen entre sí, a cada estado se llega desde donde empieza, y los comportamientos llaman a sus eventos en un orden que ella permite. Lo que no dice nunca es un problema."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

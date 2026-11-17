@@ -1,0 +1,13 @@
+package shop {
+  module billing {
+    function invoice(cart: store::Cart) -> Invoice
+    sequence invoice {
+      local invoice: Invoice
+      local numbering: Numbering
+      self -> numbering.next() -> number
+      -> Numbering::today() -> date
+      self -> numbering.next() -> serial
+      return invoice
+    }
+  }
+}

@@ -1,0 +1,25 @@
+package design {
+  requirement LIB-00001-1: Modules shall not depend on each other both ways
+
+  definition depends(a, b) {
+    title: a depends on b through one of its members or its behaviour
+    if a uses b
+    if m in a, m owns b
+    if m in a, m refs b
+    if m in a, m uses b
+    if m in a, s behaviour-of m, s uses b
+  }
+
+  definition module-depends(m, n) {
+    title: something in module m depends on something in module n
+    if c in m, x in n, depends(c, x)
+  }
+
+  rule no-module-cycles {
+    title: Two modules never depend on each other both ways
+    @requirement LIB-00001-1
+    for module m, module n
+    where m != n
+    never module-depends(m, n), module-depends(n, m)
+  }
+}

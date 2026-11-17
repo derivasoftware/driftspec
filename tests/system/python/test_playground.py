@@ -27,7 +27,7 @@ class TestPlayground:
     def test_every_lesson_plays_to_a_clean_end(self) -> None:
         replay = _replay()
         folders = sorted(p for p in LESSONS.iterdir() if (p / "lesson.json").exists())
-        assert len(folders) == 19
+        assert len(folders) == 20
         failed = [f.name for f in folders if not replay.replay(f, False)]
         assert failed == []
 
@@ -38,7 +38,7 @@ class TestPlayground:
         build = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(build)
         offered = build.showcases()
-        assert {e["id"] for e in offered} >= {"driftspec", "hola", "shop", "playground"}
+        assert {e["id"] for e in offered} >= {"driftspec", "hola", "shop", "playground", "states"}
         for example in offered:
             assert set(example["title"]) == {"en", "es"}, example["id"]
             out = replay.engine(example["files"])

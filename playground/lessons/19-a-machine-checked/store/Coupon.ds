@@ -1,0 +1,8 @@
+package shop {
+  module store {
+    dataclass Coupon {
+      - code: string
+      - percent: int
+    }
+  }
+}
