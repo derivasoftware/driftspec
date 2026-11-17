@@ -1,7 +1,7 @@
 # Playground
 
 A page that edits a DriftSpec workspace in the browser and draws every diagram beside the text
-as it is typed, with nineteen guided lessons in English and Spanish (SREQ-00019-1, DS-201). A diagram of
+as it is typed, with twenty guided lessons in English and Spanish (SREQ-00019-1, DS-201). A diagram of
 `kind: tour` is played step by step in its pane: the message in the sequence, and the two boxes
 it joins (DS-245); `?play=<diagram>` in the address starts one.
 
@@ -24,7 +24,7 @@ CI builds both on every merge request: the `wasm` job gives `ds.js` and `ds.wasm
 
 ## Checks
 
-- `tests/system/python/test_playground.py` (SVER-00023-1, run by the `pyds` job) replays every lesson
+- `tests/system/python/test_playground.py` (SVER-00023-5, run by the `pyds` job) replays every lesson
   through the same engine built as `build-py/libds_browser.so` beside the Python face:
   `cmake -S . -B build-py -DDS_PYTHON=ON && cmake --build build-py --target driftspec_python ds_browser`.
 - `lessons/replay.py` is that replay by hand, with `--print` for the final files; `lessons/chain.py --from NN --bump`

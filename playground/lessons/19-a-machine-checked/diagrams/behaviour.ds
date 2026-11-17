@@ -1,0 +1,49 @@
+diagram SEQ_Add {
+  kind: sequence
+  include: shop@store::Cart::add
+}
+
+diagram SEQ_Checkout {
+  kind: sequence
+  include: shop@store::Cart::checkout
+  depth: 1
+}
+
+diagram SEQ_Declined {
+  kind: sequence
+  include: shop@store::Cart::checkout / declined
+}
+
+diagram ST_Cart {
+  kind: state
+  include: shop@store::Cart
+}
+
+diagram SEQ_Invoice {
+  kind: sequence
+  include: shop@billing::invoice
+}
+
+diagram SEQ_Buy {
+  kind: sequence
+  include: shop@shell::buy
+  close: module
+  open: shop@store
+  fold: shop@store::Cart::total
+}
+
+diagram SEQ_BuyBoxes {
+  kind: sequence
+  include: shop@shell::buy
+  cut: HLD_Shop
+}
+
+diagram SEQ_Purchase {
+  kind: sequence
+  include: UC-00001-1
+}
+
+diagram TOUR_Purchase {
+  kind: tour
+  include: UC-00001-1
+}

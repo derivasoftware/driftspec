@@ -1,0 +1,72 @@
+// Lesson 19 · A machine that is checked
+
+package shop {
+  @requirement LIB-00001-1
+  extern module bank {
+    class Gateway
+  }
+  interface shell {
+    kind: cli
+    @requirement SREQ-00001-1
+    operation buy(item: string) -> int : UC-00001-1 {
+      command: shop buy <item>
+      exit 0: default
+      exit 2: declined
+      exit 3: sold-out
+    }
+  }
+  sequence shell::buy {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) -> paid
+    -> billing::invoice(cart) -> bill
+    return 0
+  }
+  sequence shell::buy / declined {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) / declined -> paid
+    return 2
+  }
+  sequence shell::buy / sold-out {
+    local cart: store::Cart
+    local line: store::Line
+    self -> cart.add(line) / sold-out
+    return 3
+  }
+  sequence UC-00001-1 {
+    -> shell.buy(item)
+    shell -> store.checkout(card)
+    shell -> billing.invoice(cart)
+    return 0
+  }
+  sequence UC-00001-1 / declined {
+    -> shell.buy(item)
+    shell -> store.checkout(card)
+    return 2
+  }
+  rule store-calls-no-billing {
+    title: No message of the store calls billing
+    @requirement REQ-00002-1
+    for message m in shop@store
+    never m calls f, f in shop@billing
+  }
+  rule store-refers-to-no-billing {
+    title: No attribute of the store refers to billing
+    @requirement REQ-00002-1
+    for attribute a in shop@store
+    never a refs t, t in shop@billing
+  }
+  rule store-requirements-kept {
+    title: Every requirement of the store is kept by something
+    @requirement REQ-00003-1
+    for requirement r in shop@store
+    holds x requires r
+  }
+  rule shell-through-cart {
+    title: The shell reaches the store only through the cart
+    @requirement REQ-00004-1
+    for message m in shop@shell
+    never m calls x, x in shop@store, not x in shop@store::Cart
+  }
+}

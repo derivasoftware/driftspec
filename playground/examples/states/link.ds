@@ -1,0 +1,101 @@
+// A connection that comes and goes: a machine that is checked.
+//
+// The link keeps four things: whether somebody wants it up, whether a retry is pending, whether it has
+// retried already, and what its line is doing. None of them is "the state". The state is computed from
+// them, by rules that exclude each other: whatever the link holds, it is in one state. The jumps say
+// which event takes which state where, and the behaviours of the session are held to them.
+//
+// Three things to try, each a finding:
+//   - loosen a rule (take `not retryPending` out of Connected): two states at once, with the link that is in both;
+//   - in Session::close, call `self -> link.retry()` after the disconnect: a call the machine does not allow there;
+//   - add `Lost -> Disconnected on disconnect`: a state nothing leads to.
+
+package net {
+  module link {
+
+    enum Line { Closed, Opening, Open }
+
+    class Link {
+      - wanted: bool = false          // somebody has asked for it to be up
+      - retryPending: bool = false    // a retry is scheduled
+      - retried: bool = false         // it has retried at least once
+      - line: Line = Closed           // the line: closed, opening or open
+      + connect() -> none
+      + opened() -> none              // the answer arrives: the line opened
+      + lost() -> none                // the line dropped
+      + retry() -> none               // the time to retry has come
+      + disconnect() -> none
+    }
+
+    state Link {
+      // the states: each computed by a rule over what the link holds. The start is not written: a new
+      // link is not wanted, has nothing pending and its line is closed, so it starts Disconnected
+      Disconnected  if not wanted, not retryPending, not retried, line = Closed
+      Connecting    if wanted, not retryPending, not retried, line = Opening
+      Reconnecting  if wanted, not retryPending, retried, line = Opening
+      Connected     if wanted, not retryPending, line = Open
+      TimedOut      if wanted, retryPending
+
+      // the jumps: which event takes which state where
+      Disconnected -> Connecting    on connect
+      Connecting   -> Connected     on opened
+      Reconnecting -> Connected     on opened
+      Connecting   -> TimedOut      on lost
+      Reconnecting -> TimedOut      on lost
+      Connected    -> TimedOut      on lost
+      TimedOut     -> Reconnecting  on retry
+      Connecting   -> Disconnected  on disconnect
+      Reconnecting -> Disconnected  on disconnect
+      Connected    -> Disconnected  on disconnect
+      TimedOut     -> Disconnected  on disconnect
+    }
+
+    // who uses the link: its behaviours call the events of the machine, in an order the machine allows
+    class Session {
+      - owns link: Link
+      + open() -> none
+      + lifetime() -> none
+      + close() -> none
+    }
+
+    sequence Session::open {
+      self -> link.connect()
+    }
+
+    // a whole life: it connects, the line drops once, it comes back, and it is closed
+    sequence Session::lifetime {
+      self -> link.connect()
+      self -> link.opened()
+      self -> link.lost()
+      self -> link.retry()
+      self -> link.opened()
+      self -> link.disconnect()
+    }
+
+    sequence Session::close {
+      self -> link.disconnect()
+    }
+  }
+}
+
+// the machine as a table: its events down, its states across; an empty cell is a pair it says nothing of
+diagram MX_Link {
+  kind: matrix
+  include: net@link::Link
+}
+
+// the same machine as its states and the ways between them, each state with its rule
+diagram ST_Link {
+  kind: state
+  include: net@link::Link
+}
+
+diagram SEQ_Lifetime {
+  kind: sequence
+  include: net@link::Session::lifetime
+}
+
+diagram CL_Link {
+  kind: class
+  include: net@link::*
+}
