@@ -399,13 +399,32 @@ main { flex: 1; display: flex; min-height: 0; }
 #left.coached, #right.coached { position: relative; }
 #left.coached::after, #right.coached::after { content: ""; position: absolute; inset: 0; border: 2px solid var(--coach); pointer-events: none; z-index: 6; }
 @media (prefers-reduced-motion: reduce) { .coach .c-wait i { animation: none; } }
+#narrow { display: none; }
+/* a phone (DS-273): nobody edits here, a lesson is read. The diagram the step is about on top, the code at the line
+   it speaks of under it, and the card docked at the bottom; the problems show only when there are some */
 @media (max-width: 760px) {
+  header { flex-wrap: wrap; gap: 6px 8px; padding: 6px 10px; }
+  header .logo img { height: 18px; }
+  header .count { display: none; }
+  header nav#site a { padding: 4px 8px; }
+  header #example { order: 10; flex: 1 1 60%; min-width: 0; }
+  header #relesson { order: 11; margin-left: 0; }
   #work { flex-direction: column; }
-  #tree { display: none; }
-  #left { width: auto !important; height: 50%; min-width: 0; }
-  .vsplit { display: none; }
-  #right { min-width: 0; }
+  #tree, .vsplit, .hsplit { display: none; }
+  #right { order: 1; flex: none; height: 38%; min-width: 0; padding: 6px; }
+  #left { order: 2; flex: 1; width: auto !important; height: auto; min-width: 0; min-height: 0; }
   #panes { grid-template-columns: 1fr; }
+  #problems { height: auto !important; max-height: 24%; }
+  #problems:not(.some) { display: none; }
+  main { padding-bottom: var(--coach-h, 0px); }
+  .coach { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: auto; max-height: 46%; border-radius: 14px 14px 0 0; border-width: 1px 0 0; font-size: 14px; }
+  .coach::before { border-radius: 14px 0 0 0; }
+  .coach p { max-height: 30vh; overflow: auto; }
+  .coach .c-ack, .coach .c-for-me { padding: 8px 16px; font-size: 13px; }
+  .coach .c-back { padding: 8px 4px; font-size: 13px; }
+  #via { display: none !important; }
+  #narrow:not([hidden]) { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 12px; font: 12.5px/1.35 var(--sans); color: var(--muted); background: var(--panel); border-bottom: 1px solid var(--line); flex: none; }
+  #narrow span { flex: 1; }
 }
 </style>
 </head>
@@ -421,6 +440,7 @@ main { flex: 1; display: flex; min-height: 0; }
   <button id="lang" title="Language / Idioma">ES</button>
   <button id="theme" title="Theme">◐</button>
 </header>
+<div class="editor-only" id="narrow" hidden><span></span><button class="icon-btn" title="Close">✕</button></div>
 <section class="page" id="docs" hidden>
   <div class="docs"><nav id="docnav"></nav><article id="docpage"></article></div>
 </section>
@@ -753,7 +773,7 @@ const UI = {
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
         requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
-        tabHome: "Home", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Open in the editor", go: "Open the editor",
+        narrow: "A phone is enough to read a lesson. To write a design, open it on a computer.", tabHome: "Home", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Open in the editor", go: "Open the editor",
         homeTitle: "Design specifications as code.",
         homeText: "DriftSpec is a tool for writing the design of a piece of software as text and keeping it consistent. It checks every contradiction, draws the diagrams, and joins requirements, design and tests in one model.",
         kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Kept by",
@@ -770,7 +790,7 @@ const UI = {
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
         requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
-        tabHome: "Inicio", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Abrir en el editor", go: "Abrir el editor",
+        narrow: "En el teléfono se puede leer una lección. Para escribir un diseño, ábrelo en un ordenador.", tabHome: "Inicio", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Abrir en el editor", go: "Abrir el editor",
         homeTitle: "Especificaciones de diseño como código.",
         homeText: "DriftSpec es una herramienta para escribir el diseño de un software como texto y mantenerlo consistente. Comprueba cada contradicción, dibuja los diagramas y une requisitos, diseño y pruebas en un solo modelo.",
         kClass: "clases", kSequence: "secuencia", cTitle: "Título", cKept: "Lo cumple",
@@ -1034,6 +1054,7 @@ function paintFindings() {
     editor.setGutterMarker(line, "diag-gutter", dot);
   }
   const n = (s) => fs.filter((f) => f.severity === s).length;
+  $("problems").classList.toggle("some", ["error", "warning", "info"].some((s) => n(s) > 0));  // a phone shows them only then
   $("tally").innerHTML = ["error", "warning", "info"].map((s) =>
     `<span class="tally"><span class="shape" style="background:${SEVCOL[SEV[s]]}"></span>${n(s)}</span>`).join("");
   if (!fs.length) { list.innerHTML = `<div class="none">${ui("noProblems")}</div>`; return; }
@@ -1326,6 +1347,7 @@ function hideCoach() {
   coach.next?.remove(); coach.next = null;
 
   coach.el?.remove(); coach.el = null;
+  document.documentElement.style.setProperty("--coach-h", "0px");
   unmark();
 }
 function unmark() {
@@ -1522,6 +1544,8 @@ function fix(el, p) {
   el.style.top = Math.max(56, Math.min(H - h - 12, y)) + "px";
   el.classList.add("placed");
   if (el === coach.el) coach.placed = coach.step;
+  // docked at the bottom of a phone, the card takes its room from the page above it (DS-273)
+  if (el === coach.el) document.documentElement.style.setProperty("--coach-h", matchMedia("(max-width: 760px)").matches ? el.offsetHeight + "px" : "0px");
 }
 
 // ---- the panes: one per diagram, in the order they are written --------------------------
@@ -2026,6 +2050,7 @@ function applyLanguage() {
   for (const a of document.querySelectorAll("nav#site a")) a.textContent = ui("tab" + a.dataset.tab[0].toUpperCase() + a.dataset.tab.slice(1));
   for (const el of document.querySelectorAll("#home [data-t]")) el.textContent = ui(el.dataset.t);
   $("ptitle").textContent = ui("problems");
+  $("narrow").querySelector("span").textContent = ui("narrow");
   $("relesson").title = ui("restart");
   document.documentElement.lang = lang;
   if (typeof labelExamples === "function" && state.examples.length) labelExamples();
@@ -2138,6 +2163,10 @@ function exampleOf(code, title) {
   el.querySelector(".ex-code").append(open);
   return el;
 }
+
+// on a phone the editor says once that it is for reading (DS-273); closed, it stays closed
+$("narrow").hidden = store.get("ds-playground-narrow") === "1";
+$("narrow").querySelector("button").onclick = () => { $("narrow").hidden = true; store.set("ds-playground-narrow", "1"); };
 
 // The site's tabs (DS-257). A link that names something of the editor (an example, a replay, a line) opens it;
 // otherwise ?tab= says which page, and the home page is the default. The tab is kept in the address.
