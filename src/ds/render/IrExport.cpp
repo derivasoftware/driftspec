@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "ds/machine/Machine.hpp"
+#include "ds/machine/Matrix.hpp"
 #include "ds/model/SequenceTree.hpp"
 #include "ds/model/Words.hpp"
 #include "ds/query/Filter.hpp"
@@ -94,6 +95,7 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   if (diagram->field("kind") == "tour") return renderTour(*diagram, pretty);
   if (diagram->field("kind") == "requirement") return renderRequirements(*diagram, pretty);
   if (diagram->field("kind") == "state") return renderState(*diagram, pretty);
+  if (diagram->field("kind") == "matrix") return renderMatrix(*diagram, pretty);
   return renderBoxes(*diagram, pretty);
 }
 
@@ -802,6 +804,46 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   if (nodes.empty()) out["notice"] = "No state machine selected: include names its class or interface (shop@web)";
   out["nodes"] = nodes;
   out["edges"] = edges;
+  return pretty ? out.dump(2) : out.dump();
+}
+
+// ---- a machine as a table -----------------------------------------------------------------
+// What the matrix says is ds::machine's; here it becomes the table of the IR: a cell that is a jump, one
+// where the machine has none, and one in which a behaviour calls the event against the machine.
+
+std::string IrExport::renderMatrix(const model::Entity& diagram, bool pretty) const {
+  nlohmann::json out = {{"ir", 1}, {"title", diagram.name}, {"nodes", nlohmann::json::array()}, {"edges", nlohmann::json::array()}};
+  const auto listed = [](const std::vector<std::string>& names) {
+    std::string all;
+    for (const std::string& name : names) all += (all.empty() ? "" : ", ") + name;
+    return all;
+  };
+  for (const auto& id : query::StateFilter(split(diagram.field("include"), ',')).machines(model_)) {
+    const machine::Matrix matrix(model_, *model_.find(id));
+    nlohmann::json rows = nlohmann::json::array();
+    for (const machine::Row& row : matrix.rows()) {
+      nlohmann::json cells = nlohmann::json::array();
+      for (std::size_t i = 0; i < row.cells.size(); ++i) {
+        const machine::Cell& cell = row.cells[i];
+        const std::string& state = matrix.states()[i];
+        if (!cell.against.empty())
+          cells.push_back(
+              {{"text", listed(cell.against)},
+               {"kind", "against"},
+               {"title", listed(cell.against) + " calls " + row.event + " when it can be " + state + ": the machine has no jump here"}});
+        else if (cell.to.empty())
+          cells.push_back({{"text", ""}, {"kind", "none"}, {"title", ""}});
+        else
+          cells.push_back({{"text", cell.to}, {"kind", "jump"}, {"title", row.event + " takes " + state + " to " + cell.to}});
+      }
+      rows.push_back({{"label", row.event},
+                      {"title", row.callers.empty() ? "" : row.event + " is called in " + listed(row.callers)},
+                      {"cells", cells}});
+    }
+    out["table"] = {{"corner", matrix.subject()}, {"columns", matrix.states()}, {"rows", rows}};
+    break;  // one machine is one table
+  }
+  if (!out.contains("table")) out["notice"] = "No state machine selected: include names what it is of (shop@order::Order)";
   return pretty ? out.dump(2) : out.dump();
 }
 

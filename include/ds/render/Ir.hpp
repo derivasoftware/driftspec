@@ -42,10 +42,33 @@ struct IrEdge {
   std::map<std::string, std::string> refs;  ///< named references: expands, span, location
 };
 
+/// One cell of a table: its text, what it is (the renderers draw each kind its own way) and what it says
+/// when pointed at.
+struct IrCell {
+  std::string text;
+  std::string kind;
+  std::string title;
+};
+
+/// One row of a table: its heading and a cell under each column.
+struct IrRow {
+  std::string label;
+  std::string title;
+  std::vector<IrCell> cells;
+};
+
+/// A drawing that is a table (DS-251): a corner, the headings of its columns, and its rows.
+struct IrTable {
+  std::string corner;
+  std::vector<std::string> columns;
+  std::vector<IrRow> rows;
+};
+
 /// A render-IR document, read from JSON; what `ds render` emits and plantuml-render consumes.
 struct IrDocument {
   std::string title;
   std::string notice;
+  IrTable table;  ///< when it has columns, the document is drawn as this table
   std::vector<IrNode> nodes;
   std::vector<IrEdge> edges;
   /// A drawing made of several, each drawn as itself and laid out beside the last (DS-245): a tour holds the

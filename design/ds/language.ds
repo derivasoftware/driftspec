@@ -2182,6 +2182,48 @@ package driftspec@ds {
             tests/integration/ds/render/test_state_view.cpp::TestStateView.AJumpSaysTheBehavioursThatCallItsEventAndOneNobodyCallsSaysNothing
         }
       }
+      requirement REQ-00147-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A matrix diagram shall draw a machine as a table: its events down, its states across, and in each cell where the event takes the state
+        text:
+          diagram MX_Order { kind: matrix; include: shop@order::Order }. The events and the states
+          are in the order the machine writes them. A cell says the state the jumps on the event
+          lead to from the state above it, with the guard of a jump that has one and every jump when
+          there are several; where the machine has no jump the cell is empty. It is drawn as SVG and
+          as terminal text, like every diagram.
+        rationale:
+          Owner, 2026-11-16 and 17 (DS-251): the machine seen as a matrix, the states across and the
+          operations down. The state diagram shows the ways through; the matrix shows what is not
+          there: every pair of an event and a state the machine says nothing of.
+        verification VER-00163-1 {
+          title: Integration tests confirm a matrix diagram is a table of the events of a machine down and its states across with where each event takes each state, drawn as SVG and as text, and that one that names no machine says so
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_matrix_view.cpp::TestMatrixView.AMatrixDiagramIsATableOfTheEventsOfAMachineDownItsStatesAcrossAndWhereEachEventTakesEachState
+            tests/integration/ds/render/test_matrix_view.cpp::TestMatrixView.TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineMarked
+            tests/integration/ds/render/test_matrix_view.cpp::TestMatrixView.AMatrixThatNamesNoMachineSaysSo
+        }
+      }
+      requirement REQ-00148-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A matrix diagram shall say who calls each event, and the cell in which a behaviour calls one against the machine
+        text:
+          The heading of a row says the behaviours written that call its event. A call the machine
+          lets happen from no state its receiver may be in (REQ-00145-1) is said in the cell of each
+          of those states, with the behaviour that makes it: the place in the table where the
+          behaviours and the machine disagree.
+        rationale: DS-251. The finding says the call; the matrix shows which jump the author of one of the two left out.
+        verification VER-00164-1 {
+          title: Integration tests confirm the matrix says who calls each event and marks the cell in which a behaviour calls one against the machine
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_matrix_view.cpp::TestMatrixView.TheMatrixSaysWhoCallsEachEventAndTheCellInWhichABehaviourCallsOneAgainstTheMachine
+        }
+      }
       requirement REQ-00122-1 {
         tags: language, diagrams, artefacts
         status: approved

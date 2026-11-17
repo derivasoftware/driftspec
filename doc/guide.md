@@ -306,7 +306,7 @@ them. The vision (`vision.md`) says why; this says what.*
 
 ## 5. Diagrams
 
-- `diagram CL_X { kind: class | sequence | requirement | state | interface | tour; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
+- `diagram CL_X { kind: class | sequence | requirement | state | matrix | interface | tour; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
 - `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
   (`ds@*`), read alike by every kind of diagram; extern entities only when
   named. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
@@ -351,6 +351,13 @@ them. The vision (`vision.md`) says why; this says what.*
   is kept around what crosses inside it. In a requirement diagram what answers to a requirement
   is the box that stands for it. `cut: HLD_Shop` in either makes them agree with the boxes
   drawn. `level: module` is gone: it is written `close: module`.
+- **A matrix (2026-11-17, DS-251)** draws a machine as a table:
+  `diagram MX_Order { kind: matrix; include: shop@order::Order }`. Its events go down and its
+  states across, in the order the machine writes them; a cell says where the event takes the state
+  (`Paid`, `Paid [enough]`, `Paid / Held`), and is empty where the machine has no jump. Over it,
+  what the behaviours written do: the heading of a row says who calls its event, and a cell in
+  which a behaviour calls an event against the machine (`W-STATE-ORDER`) names that behaviour.
+  The state diagram shows the ways through; the matrix shows every pair the machine says nothing of.
 - **A tour (2026-11-16, DS-245)** is one diagram that relates a behaviour to the boxes it crosses:
   `diagram TOUR_Buy { kind: tour; include: shop@shell::buy; close: module }`, with the fields of
   a sequence diagram. It draws two parts on one cut: who takes part, as boxes with the relations

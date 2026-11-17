@@ -197,7 +197,7 @@ struct Jump {
   std::string from;
   std::string to;
   std::string event;
-  bool guarded = false;
+  std::string guard;  ///< as written; "" when it has none
 };
 
 std::vector<Jump> jumpsOf(const model::Entity& machine) {
@@ -207,8 +207,11 @@ std::vector<Jump> jumpsOf(const model::Entity& machine) {
     const auto second = line.find('>', first + 1);
     if (first == std::string::npos || second == std::string::npos) continue;
     const std::string label = line.substr(second + 1);  // event [guard] / action
+    const auto open = label.find('[');
+    const auto close = label.find(']', open == std::string::npos ? 0 : open);
+    const bool guarded = open != std::string::npos && close != std::string::npos;
     out.push_back({line.substr(0, first), line.substr(first + 1, second - first - 1), label.substr(0, label.find_first_of(" [")),
-                   label.find('[') != std::string::npos});
+                   guarded ? label.substr(open + 1, close - open - 1) : ""});
   }
   return out;
 }
@@ -304,7 +307,7 @@ class Calls {
     for (const Jump& jump : jumps_) {
       if (jump.event != event || !now.count(jump.from)) continue;
       next.insert(jump.to);
-      if (jump.guarded) next.insert(jump.from);  // the guard may not hold: it stays
+      if (!jump.guard.empty()) next.insert(jump.from);  // the guard may not hold: it stays
     }
     Call made{named(sequence), m.id, receiver, event, {}, !next.empty()};
     for (const std::string& state : states_)  // in the order the machine writes its states
@@ -417,6 +420,13 @@ std::vector<model::Finding> Machine::faults() const {
 std::vector<std::string> Machine::events() const {
   std::vector<std::string> out;
   for (const Jump& jump : jumpsOf(machine_)) note(out, jump.event);
+  return out;
+}
+
+std::vector<std::string> Machine::targets(const std::string& event, const std::string& from) const {
+  std::vector<std::string> out;
+  for (const Jump& jump : jumpsOf(machine_))
+    if (jump.event == event && jump.from == from) note(out, jump.to + (jump.guard.empty() ? "" : " [" + jump.guard + "]"));
   return out;
 }
 

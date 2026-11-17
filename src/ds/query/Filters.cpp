@@ -285,7 +285,7 @@ std::unique_ptr<IFilter> filterFor(const model::Entity& diagram) {
   const std::vector<std::string> include = split(diagram.field("include"), ',');
   if (kind == "sequence" || kind == "tour")
     return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.id));
-  if (kind == "state") return std::unique_ptr<IFilter>(new StateFilter(include));
+  if (kind == "state" || kind == "matrix") return std::unique_ptr<IFilter>(new StateFilter(include));  // both are of a machine
   if (kind == "requirement") {
     const std::vector<std::string> shown = split(diagram.field("show"), ',');
     const std::set<std::string> show(shown.begin(), shown.end());

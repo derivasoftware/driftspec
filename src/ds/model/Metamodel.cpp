@@ -183,8 +183,8 @@ std::vector<KindSpec> build() {
   k.push_back(
       {Kind::Diagram,
        "a view asked of the model",
-       {closed("kind", FieldType::Name, "class, sequence, state, requirement, interface or tour",
-               {"class", "sequence", "state", "requirement", "interface", "tour"}),
+       {closed("kind", FieldType::Name, "class, sequence, state, matrix, requirement, interface or tour",
+               {"class", "sequence", "state", "matrix", "requirement", "interface", "tour"}),
         written("include", FieldType::Patterns, "what it shows"), written("exclude", FieldType::Patterns, "what it leaves out"),
         written("open", FieldType::Patterns, "the boxes it keeps open, and the way to each; alone, every other box closes"),
         written("close", FieldType::Patterns,

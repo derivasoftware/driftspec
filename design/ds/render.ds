@@ -141,10 +141,34 @@ package driftspec@ds {
       + json: std::string
     }
 
+    // a drawing that is a table (DS-251): a corner, the headings of its columns, and its rows; a cell
+    // says what it is, and the renderers draw each kind its own way
+    dataclass IrCell {
+      @requirement REQ-00006-1
+      + text: std::string
+      + kind: std::string
+      + title: std::string
+    }
+
+    dataclass IrRow {
+      @requirement REQ-00006-1
+      + label: std::string
+      + title: std::string
+      + owns cells: std::vector<IrCell>
+    }
+
+    dataclass IrTable {
+      @requirement REQ-00006-1
+      + corner: std::string
+      + columns: std::vector<std::string>
+      + owns rows: std::vector<IrRow>
+    }
+
     dataclass IrDocument {
       @requirement REQ-00006-1
       + title: std::string
       + notice: std::string
+      + owns table: IrTable                 // when it has columns, the document is drawn as this table
       + owns nodes: std::vector<IrNode>
       + owns edges: std::vector<IrEdge>
       // a drawing made of several, each drawn as itself and placed beside the last: a tour (DS-245)
@@ -197,6 +221,10 @@ package driftspec@ds {
         @requirement REQ-00144-1
         @requirement REQ-00146-1
       }
+      // a machine as a table: what machine::Matrix says, written as the table of the IR
+      - renderMatrix(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00006-1
+      }
       - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00049-3
         @requirement REQ-00056-1
@@ -243,6 +271,10 @@ package driftspec@ds {
       }
       opt it is a state diagram / state-diagram {
         -> renderState(diagram, pretty) -> ir
+        return ir
+      }
+      opt it is a matrix / matrix-diagram {
+        -> renderMatrix(diagram, pretty) -> ir
         return ir
       }
       opt it is a tour / tour {
@@ -369,6 +401,7 @@ package driftspec@ds {
     // ---- what the drawings keep to their source files ----
 
     - function sequenceSvg(doc: IrDocument) -> std::string     // a sequence document, drawn without the layout
+    - function tableSvg(doc: IrDocument) -> std::string        // a table document, drawn cell by cell
 
     - class Grid {                           // the character grid Text fills, cell by cell
       @requirement REQ-00007-1
@@ -380,11 +413,16 @@ package driftspec@ds {
 
     - function sequenceGrid(doc: IrDocument) -> Grid
     - function classGrid(doc: IrDocument, lay: LayoutResult) -> Grid
+    - function tableGrid(doc: IrDocument) -> Grid
 
     // metrics is the pixel table, Metrics::svg(), a static call. The drawing over the
     // layout is the second render, an overload: neither can be told, so the drawing of a
     // class document comes back as a name.
     sequence Svg::render {
+      opt the document is a table / table-document {
+        -> tableSvg(doc) -> drawing
+        return drawing
+      }
       opt a node of the document is a lifeline / sequence-document {
         -> sequenceSvg(doc) -> drawing
         return drawing
@@ -398,6 +436,11 @@ package driftspec@ds {
     // metrics is the cell table, Metrics::text(), and width is maxWidth less the grid's
     // margin. The drawing over the layout is the second render, an overload.
     sequence Text::render {
+      opt the document is a table / table-document {
+        -> tableGrid(doc) -> grid
+        self -> grid.dump(color) -> drawing
+        return drawing
+      }
       opt a node of the document is a lifeline / sequence-document {
         -> sequenceGrid(doc) -> grid
         self -> grid.dump(color) -> drawing
@@ -433,7 +476,7 @@ package driftspec@ds {
 // in one aggregate; splitting the namespace is a backlog task.
 diagram CL_RenderIr {
   kind: class
-  include: driftspec@ds@render::IrNode, driftspec@ds@render::IrEdge, driftspec@ds@render::IrDocument, driftspec@ds@render::IrExport
+  include: driftspec@ds@render::IrNode, driftspec@ds@render::IrEdge, driftspec@ds@render::IrDocument, driftspec@ds@render::IrExport, driftspec@ds@render::IrTable, driftspec@ds@render::IrRow, driftspec@ds@render::IrCell
   show: ownership
 }
 
