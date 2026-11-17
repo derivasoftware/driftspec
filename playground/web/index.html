@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DriftSpec Playground</title>
+<title>DriftSpec</title>
 <link rel="icon" type="image/svg+xml" href="brand/driftspec-tile.svg">
 <link rel="apple-touch-icon" href="brand/driftspec-icon-180.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -56,6 +56,23 @@ header select, header button { font: inherit; color: var(--fg); background: var(
 header #relesson { width: 28px; height: 28px; margin-left: -6px; padding: 0; border: 1px solid var(--line); background: var(--soft); color: var(--muted); }
 header #relesson:hover { color: var(--fg); }
 header .spacer { flex: 1; }
+/* the site (DS-257): a tab per page, the editor one of them; what only the editor uses shows only there */
+header nav#site { display: flex; gap: 2px; }
+header nav#site a { color: var(--muted); text-decoration: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+header nav#site a:hover { color: var(--fg); }
+header nav#site a.on { color: var(--fg); background: var(--soft); }
+body:not([data-tab="editor"]) .editor-only { display: none !important; }
+body:not([data-tab="editor"]) > main { display: none; }
+body:not([data-tab="editor"]) .coach { display: none !important; }
+.page { flex: 1; min-height: 0; overflow: auto; background: var(--page); }
+.page[hidden] { display: none; }
+#home .hero { max-width: 760px; margin: 0 auto; padding: 14vh 24px 40px; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
+#home .hero img { height: 56px; width: auto; }
+#home .hero .light { display: none; }
+:root[data-theme="light"] #home .hero .dark { display: none; }
+:root[data-theme="light"] #home .hero .light { display: block; }
+#home .hero p { margin: 0; font-size: 22px; line-height: 1.35; color: var(--fg); max-width: 32ch; }
+#home .hero a.go { font: 600 14px var(--sans); color: var(--page); background: var(--fg); border-radius: 8px; padding: 9px 16px; text-decoration: none; }
 .count { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .count .e { color: var(--err); } .count .w { color: var(--warn); }
 
@@ -285,14 +302,22 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 <body>
 <header>
   <a class="logo" href="./" title="DriftSpec"><img class="dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec"></a>
-  <select id="example" title="Example"></select>
-  <button class="icon-btn" id="relesson" title="Restart the lesson" hidden><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7a4.5 4.5 0 1 0 1.4-3.3"/><path d="M2.5 2v2.6h2.6"/></svg></button>
+  <nav id="site"><a data-tab="home"></a><a data-tab="editor"></a></nav>
+  <select class="editor-only" id="example" title="Example"></select>
+  <button class="icon-btn editor-only" id="relesson" title="Restart the lesson" hidden><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7a4.5 4.5 0 1 0 1.4-3.3"/><path d="M2.5 2v2.6h2.6"/></svg></button>
   <span class="spacer"></span>
-  <span class="count" id="count"></span>
-  <span class="count" id="backend"></span>
+  <span class="count editor-only" id="count"></span>
+  <span class="count editor-only" id="backend"></span>
   <button id="lang" title="Language / Idioma">ES</button>
   <button id="theme" title="Theme">◐</button>
 </header>
+<section class="page" id="home" hidden>
+  <div class="hero">
+    <img class="dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec">
+    <p id="tagline"></p>
+    <a class="go" data-tab="editor" id="go"></a>
+  </div>
+</section>
 <main>
   <div id="work">
     <aside id="tree">
@@ -359,6 +384,7 @@ const UI = {
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
         requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
+        tabHome: "Home", tabEditor: "Editor", tagline: "A software design as text: checked, drawn, compared and asked.", go: "Open the editor",
         lessons: "Lessons", examples: "Examples",
         play: "Play" },
   es: { waiting: "Esperándote", writeForMe: "Escríbelo por mí", showMe: "Muéstramelo", writing: "Escribiendo", done: "Hecho",
@@ -366,6 +392,7 @@ const UI = {
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
         requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
+        tabHome: "Inicio", tabEditor: "Editor", tagline: "Un diseño de software como texto: comprobado, dibujado, comparado y consultado.", go: "Abrir el editor",
         lessons: "Lecciones", examples: "Ejemplos",
         play: "Reproducir" },
 };
@@ -1553,6 +1580,9 @@ window.dsPlayground = { files: () => ({ ...state.files }), done: () => !!coach.l
 // switching language redraws what speaks: the card, the list, the table, the panel's name
 function applyLanguage() {
   $("lang").textContent = ui("other");
+  for (const a of document.querySelectorAll("nav#site a")) a.textContent = ui("tab" + a.dataset.tab[0].toUpperCase() + a.dataset.tab.slice(1));
+  $("tagline").textContent = ui("tagline");
+  $("go").textContent = ui("go");
   $("ptitle").textContent = ui("problems");
   $("relesson").title = ui("restart");
   document.documentElement.lang = lang;
@@ -1568,6 +1598,27 @@ $("lang").onclick = () => {
   applyLanguage();
 };
 applyLanguage();
+
+// The site's tabs (DS-257). A link that names something of the editor (an example, a replay, a line) opens it;
+// otherwise ?tab= says which page, and the home page is the default. The tab is kept in the address.
+const TABS = ["home", "editor"];
+function showTab(tab, push) {
+  if (!TABS.includes(tab)) tab = "home";
+  document.body.dataset.tab = tab;
+  for (const a of document.querySelectorAll("nav#site a")) a.classList.toggle("on", a.dataset.tab === tab);
+  for (const page of document.querySelectorAll("section.page")) page.hidden = page.id !== tab;
+  if (tab === "editor") requestAnimationFrame(() => editor.refresh());
+  const url = new URL(location.href);
+  if (tab === "home") url.searchParams.delete("tab"); else url.searchParams.set("tab", tab);
+  history[push ? "pushState" : "replaceState"](null, "", url);
+}
+for (const a of document.querySelectorAll("[data-tab]")) a.onclick = (e) => { e.preventDefault(); showTab(a.dataset.tab, true); };
+window.addEventListener("popstate", () => showTab(new URLSearchParams(location.search).get("tab") || "home", false));
+{
+  const q = new URLSearchParams(location.search);
+  const editing = q.has("example") || q.has("play") || q.has("select") || /^#(?:.+:)?L\d+$/.test(location.hash);
+  showTab(q.get("tab") || (editing ? "editor" : "home"), false);
+}
 
 const backend = await start().catch((e) => { $("count").innerHTML = `<span class="e">no engine: ${escapeHtml(e.message)}</span>`; throw e; });
 $("backend").textContent = backend === "wasm" ? "engine: wasm" : "engine: dev server";

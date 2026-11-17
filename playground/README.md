@@ -1,7 +1,9 @@
 # Playground
 
-A page that edits a DriftSpec workspace in the browser and draws every diagram beside the text
-as it is typed, with twenty guided lessons in English and Spanish (SREQ-00019-1, DS-201). A diagram of
+DriftSpec's site (DS-256): a page of tabs, Home and Editor so far, in English and Spanish. The Editor
+tab edits a DriftSpec workspace in the browser and draws every diagram beside the text as it is typed,
+with twenty guided lessons (SREQ-00019-1, DS-201). `?tab=editor` opens it, and so does any link that
+names something of it (`?example=`, `?play=`, `?select=`, a line). A diagram of
 `kind: tour` is played step by step in its pane: the message in the sequence, and the two boxes
 it joins (DS-245); `?play=<diagram>` in the address starts one.
 

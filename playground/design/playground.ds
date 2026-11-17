@@ -1,4 +1,5 @@
-// The playground (DS-204, DS-238): a static page that edits a workspace and draws it as it is typed.
+// The playground (DS-204, DS-238): a static page that edits a workspace and draws it as it is typed,
+// grown into DriftSpec's site with the editor as one of its tabs (DS-257).
 // No server: the page calls the ds engine compiled to WebAssembly, once per edit. Its code is plain
 // JavaScript that argos does not read, so this design is offered as an example of the page itself.
 
@@ -37,6 +38,19 @@ package playground {
     rationale:
       Owner, 2026-11-16 (DS-245): the live viewer's replay of a behaviour over the map, in the
       playground, and in one diagram that already relates the two, so nothing is paired by eye.
+  }
+
+  requirement REQ-00004-1 {
+    title: The page shall be DriftSpec's site, a tab per page, the editor one of them
+    status: approved
+    text:
+      The header carries the tabs (Home and Editor today; Learn, Examples and Reference as they are
+      written), the language and the theme, shared by every tab. A link that names something of the
+      editor (?example=, ?play=, ?select=, a line) opens the Editor; otherwise ?tab= says which page,
+      and the home page is the default. What only the editor uses shows only there.
+    rationale:
+      Owner, 2026-11-17 (DS-256, DS-257): finish the playground as DriftSpec's website, in English
+      and Spanish, with the editor as one of its tabs.
   }
 
   // the engine, as the page reaches it: one function of ds.wasm (REQ-00113-1)
@@ -113,6 +127,10 @@ package playground {
       - owns problems: Problems
       - owns coach: lessons::Coach
       + load(lesson: lessons::Lesson) -> none
+      // the site's pages: one shown at a time, kept in the address
+      + showTab(tab: string) -> none {
+        @requirement REQ-00004-1
+      }
       + onEdit() -> none
       // the diagrams a step is about, shown alone while it lasts; the one that is a tour is played
       + focus(step: lessons::Step) -> none {
