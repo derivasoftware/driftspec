@@ -377,6 +377,31 @@ std::string IrExport::closeBoxes(const std::string& ir, const axis::Cut& cut, bo
     if (visible(from) == from && visible(to) == to && e.contains("refs") && e["refs"].contains("bond"))
       lifted.insert(from + "|" + to + "|" + e["refs"]["bond"].get<std::string>());
   }
+  // what a lifted arrow is made of: the interfaces of the box it reaches that the box it leaves goes through, each
+  // with the operations asked of it (DS-266). The arrow says it when pointed at
+  std::map<std::string, std::map<std::string, std::set<std::string>>> through;
+  for (const auto& r : model_.index().ofKinds({"consumes", "uses", "calls"})) {
+    const model::Entity* target = model_.find(r.to);
+    if (!target) continue;
+    const model::Entity* interface = target->kind == model::Kind::Interface ? target : model_.find(model::Scope(r.to).outer().text());
+    if (!interface || interface->kind != model::Kind::Interface) continue;
+    const std::string from = visible(r.from), to = visible(interface->id);
+    if (from == to) continue;
+    auto& operations = through[from + "|" + to][interface->name];
+    if (target != interface) operations.insert(target->name);
+  }
+  auto crossed = [&](const std::string& from, const std::string& to) {
+    std::string said;
+    const auto at = through.find(from + "|" + to);
+    if (at == through.end()) return said;
+    for (const auto& [interface, operations] : at->second) {
+      said += (said.empty() ? "" : "\n") + interface;
+      std::string list;
+      for (const auto& operation : operations) list += (list.empty() ? "" : ", ") + operation;
+      if (!list.empty()) said += ": " + list;
+    }
+    return said;
+  };
   for (auto e : doc["edges"]) {
     const std::string from = visible(e["from"]);
     const std::string to = visible(e["to"]);
@@ -387,6 +412,9 @@ std::string IrExport::closeBoxes(const std::string& ir, const axis::Cut& cut, bo
       if (!lifted.insert(from + "|" + to + "|" + bond).second) continue;
       e = {{"from", from}, {"to", to}, {"kind", bond == "structural" ? "association" : "dependency"}, {"refs", {{"bond", bond}}}};
     }
+    // between two boxes, a use says which interfaces it goes through, lifted or written between them as they are
+    const bool structural = e.contains("refs") && e["refs"].value("bond", "") == "structural";
+    if (!structural && !e.contains("title") && !crossed(from, to).empty()) e["title"] = crossed(from, to);
     edges.push_back(e);
   }
   doc["nodes"] = nodes;
@@ -818,6 +846,21 @@ std::string IrExport::renderTable(const model::Entity& diagram, bool pretty) con
     for (const std::string& name : names) all += (all.empty() ? "" : ", ") + name;
     return all;
   };
+  const auto written = model_.tables().find(diagram.id);
+  if (written != model_.tables().end() && !written->second.columns.empty()) {
+    // written with its rows and columns (DS-268): the first column heads each row
+    const model::Tabulated& t = written->second;
+    nlohmann::json rows = nlohmann::json::array();
+    for (std::size_t r = 0; r < t.rows.size(); ++r) {
+      nlohmann::json cells = nlohmann::json::array();
+      for (std::size_t c = 1; c < t.rows[r].size(); ++c)
+        cells.push_back({{"text", t.rows[r][c]}, {"kind", t.kinds[r][c].empty() ? "jump" : t.kinds[r][c]}, {"title", ""}});
+      rows.push_back({{"label", t.rows[r][0]}, {"title", ""}, {"cells", cells}});
+    }
+    out["table"] = {
+        {"corner", t.columns[0]}, {"columns", std::vector<std::string>(t.columns.begin() + 1, t.columns.end())}, {"rows", rows}};
+    return pretty ? out.dump(2) : out.dump();
+  }
   for (const auto& id : query::StateFilter(split(diagram.field("include"), ',')).machines(model_)) {
     const machine::Table table(model_, *model_.find(id));
     nlohmann::json rows = nlohmann::json::array();

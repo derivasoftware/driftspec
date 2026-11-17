@@ -1,0 +1,470 @@
+{
+  "title": {
+    "en": "0 · A tour",
+    "es": "0 · Un paseo"
+  },
+  "version": 2,
+  "workspace": "driftspec",
+  "open": "hld.ds",
+  "steps": [
+    {
+      "at": {
+        "panel": "centre"
+      },
+      "text": {
+        "en": "Hi, architect! Here to design something new? First let me tell you what this is, and then I'll walk you through a real design.",
+        "es": "¡Hola, arquitecto! ¿Vienes a diseñar algo nuevo? Antes te cuento qué es esto y luego te paseo por un diseño de verdad."
+      },
+      "done": {
+        "ack": {
+          "en": "Let's go",
+          "es": "Vamos"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "centre"
+      },
+      "text": {
+        "en": "DriftSpec is a tool for writing the specification of a system as code: text files that live in the repository, next to the code they describe.",
+        "es": "DriftSpec es una herramienta para escribir la especificación de un sistema como código: ficheros de texto que viven en el repositorio, al lado del código que describen."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "centre"
+      },
+      "text": {
+        "en": "How is it different from PlantUML or Mermaid? There, each diagram is a separate drawing and nobody checks that they agree with each other. Here you write one model, the diagrams are views of that model, and DriftSpec tells you when something contradicts something else.",
+        "es": "¿En qué se diferencia de PlantUML o Mermaid? Allí cada diagrama es un dibujo suelto y nadie comprueba que cuadren entre sí. Aquí escribes un solo modelo, los diagramas son vistas de ese modelo y DriftSpec te avisa cuando algo se contradice con otra cosa."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "centre"
+      },
+      "text": {
+        "en": "What you have in front of you is the playground: a demo that runs DriftSpec inside your browser, compiled to WebAssembly. There is no server behind it.",
+        "es": "Lo que tienes delante es el playground: una demostración que ejecuta DriftSpec dentro de tu navegador, compilado a WebAssembly. Detrás no hay ningún servidor."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "centre"
+      },
+      "text": {
+        "en": "The real DriftSpec is written in C++ and comes with what you need to fit it into your own environment: a command line, a Python library, a language server for your editor and a grammar for highlighting.",
+        "es": "El DriftSpec de verdad está escrito en C++ y trae lo necesario para meterlo en tu entorno de desarrollo: línea de comandos, librería de Python, servidor de lenguaje para tu editor y gramática para el resaltado."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "centre"
+      },
+      "text": {
+        "en": "To show you around I've loaded a real, finished design: DriftSpec's own. It's about three thousand pieces, and all of it is text. And you can trust it: argos, deriva's tool, checks on every change that this design and the code say the same thing.",
+        "es": "Para enseñártelo he cargado un diseño real y terminado: el del propio DriftSpec. Son unas tres mil piezas y todo es texto. Y puedes fiarte de él: argos, la herramienta de deriva, comprueba en cada cambio que este diseño y el código dicen lo mismo."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "tree"
+      },
+      "text": {
+        "en": "The page has four parts. On the left, the files. Organise them however you like: one file or forty, folders or none. DriftSpec reads them all together, so where you put each thing is up to you.",
+        "es": "La página tiene cuatro partes. A la izquierda, los ficheros. Organízalos como te dé la gana: uno o cuarenta, con carpetas o sin ellas. DriftSpec los lee todos juntos, así que dónde pones cada cosa es cosa tuya."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "code"
+      },
+      "text": {
+        "en": "In the middle, the code of the file you have open. This is where you write the design: boxes, classes, what they do, the requirements.",
+        "es": "En el centro, el código del fichero que tienes abierto. Aquí se escribe el diseño: las cajas, las clases, lo que hacen, los requisitos."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "diagrams"
+      },
+      "text": {
+        "en": "On the right, the diagrams, drawn from that code. You don't move boxes around here: change the text and the drawing changes with it.",
+        "es": "A la derecha, los diagramas, dibujados a partir de ese código. Aquí no se mueven cajas a mano: cambias el texto y el dibujo cambia con él."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "At the bottom, the problems: everything in the design that contradicts something else. Right now there are none.",
+        "es": "Abajo, los problemas: todo lo que en el diseño se contradice con otra cosa. Ahora mismo no hay ninguno."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "panel": "diagrams"
+      },
+      "text": {
+        "en": "DriftSpec looks at a design from three perspectives. The structural one: what there is. The functional one: what it does. The logical one: what must always hold. Let's see them one by one.",
+        "es": "DriftSpec mira un diseño desde tres perspectivas. La estructural: qué hay. La funcional: qué hace. La lógica: qué tiene que cumplirse siempre. Vamos a verlas una a una."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Boxes"
+      },
+      "shows": "T_Boxes",
+      "text": {
+        "en": "We start with the structural one. This is the HLD, the high-level design: DriftSpec's top-level packages. There are four: the tool, the Python side, the grammar and this very playground. Inside each one you see its modules. The arrows draw themselves from what each package uses. Hover over a box: its arrows light up and you'll see which interface it goes in through.",
+        "es": "Empezamos por la estructural. Esto es el HLD, el diseño de alto nivel: los paquetes más grandes de DriftSpec. Son cuatro: la herramienta, la parte de Python, la gramática y este mismo playground. Dentro de cada uno ves sus módulos. Las flechas salen solas de lo que cada paquete usa. Pasa el ratón por encima de una caja: se encienden sus flechas y verás por qué interfaz entra."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Classes"
+      },
+      "shows": "T_Classes",
+      "text": {
+        "en": "Get closer and a box opens into its classes. This is the one that compares two versions of a design. Hover over a class and you'll see who it talks to.",
+        "es": "Si te acercas, una caja se abre y ves sus clases. Esta es la que compara dos versiones de un diseño. Pasa el ratón por encima de una clase y verás con quién se habla."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Interface"
+      },
+      "shows": "T_Interface",
+      "text": {
+        "en": "Those interfaces you saw when hovering are the doors of a box: the only way in from outside. Here are three of the tool's: `cli` is the command line, `engine` is the one Python uses and `browser` is the one this playground uses. Each one lists what you can ask it for.",
+        "es": "Esas interfaces que salían al pasar el ratón son las puertas de una caja: por donde se entra desde fuera. Aquí tienes tres de la herramienta: `cli` es la línea de comandos, `engine` la que usa Python y `browser` la que usa este playground. Cada una lista lo que se le puede pedir."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Behaviour"
+      },
+      "shows": "T_Behaviour",
+      "text": {
+        "en": "Now the functional one. A sequence tells one operation step by step; this one is `ds check`. Every message has to exist in the classes: call something that isn't there and you get a warning.",
+        "es": "Ahora la funcional. Una secuencia cuenta una operación paso a paso; esta es `ds check`. Cada mensaje tiene que existir en las clases: si llamas a algo que no está, te avisa."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "file": "tour.ds",
+        "end": true,
+        "text": "diagram T_Tour {\n  kind: tour\n  include: driftspec@ds@cli::check\n  close: module\n  depth: 3\n}"
+      },
+      "at": {
+        "pane": "T_Tour"
+      },
+      "shows": "T_Tour",
+      "text": {
+        "en": "Diagrams are text too. I've just written this one in `tour.ds`: it asks for the same `ds check`, animated over the modules it goes through. It loads the files, checks them and writes the report.",
+        "es": "Los diagramas también son texto. Acabo de escribir este en `tour.ds`: pide el mismo `ds check`, pero animado sobre los módulos por los que pasa. Carga los ficheros, los comprueba y escribe el informe."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Rules"
+      },
+      "shows": "T_Rules",
+      "text": {
+        "en": "And the logical one: the rules. A rule is a sentence about the design that must always hold, and DriftSpec checks it every time. This table lists the rules of the tool: what it says, the requirement it answers to, and whether the model keeps it.",
+        "es": "Y la lógica: las reglas. Una regla es una frase sobre el diseño que tiene que cumplirse siempre, y DriftSpec la comprueba cada vez. Esta tabla lista las reglas de la herramienta: qué dice cada una, a qué requisito responde y si el modelo la cumple."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "ds/format.ds",
+        "find": "rule formats-read-no-model"
+      },
+      "text": {
+        "en": "This is how they are written; these three belong to the module that writes the reports. They read almost the way you'd say them. The first: for every class in `format`, it never depends on the model. The next: no format uses another.",
+        "es": "Así se escriben; estas tres son las del módulo que escribe los informes. Se leen casi como se dicen. La primera: para toda clase de `format`, nunca depende del modelo. La siguiente: ningún formato usa a otro."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      },
+      "shows": "T_Rules"
+    },
+    {
+      "write": {
+        "file": "ds/diff.ds",
+        "below": {
+          "find": "dataclass DiffResult {",
+          "after": "}"
+        },
+        "text": "\nrule diff-reads-no-model {\n  title: what compares two versions never touches the model\n  @requirement REQ-00004-1\n  for class c in driftspec@ds@diff\n  never depends(c, driftspec@ds@model::Model)\n}"
+      },
+      "at": {
+        "file": "ds/diff.ds",
+        "find": "rule diff-reads-no-model"
+      },
+      "shows": "T_Rules",
+      "text": {
+        "en": "Let me write a new one about the classes you saw earlier, the ones that compare two versions: they must never touch the model. It turns out it doesn't hold: `Diff` does use it. Look at the table: the new row says broken, and the error is listed below.",
+        "es": "Te escribo una nueva sobre las clases que viste antes, las que comparan dos versiones: que nunca toquen el modelo. Y resulta que no se cumple: `Diff` sí lo usa. Mira la tabla: la fila nueva dice que está rota, y abajo tienes el error."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "ds/diff.ds",
+        "find": "rule diff-reads-no-model"
+      },
+      "text": {
+        "en": "A broken rule is fixed by changing the design or by dropping the rule. I made this one up, so delete it: the six lines of `rule diff-reads-no-model`.",
+        "es": "Una regla rota se arregla cambiando el diseño o quitando la regla. Esta me la he inventado, así que bórrala: las seis líneas de `rule diff-reads-no-model`."
+      },
+      "solution": {
+        "replace": "\n    rule diff-reads-no-model {\n      title: what compares two versions never touches the model\n      @requirement REQ-00004-1\n      for class c in driftspec@ds@diff\n      never depends(c, driftspec@ds@model::Model)\n    }\n",
+        "text": ""
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Requirement"
+      },
+      "shows": "T_Requirement",
+      "text": {
+        "en": "Last, the reason for all of it: the requirements. A requirement says what the system must do. This one asks for a warning when a call arrives out of order. Below it you have who keeps it and which tests prove it.",
+        "es": "Por último, el porqué de todo: los requisitos. Un requisito dice qué tiene que hacer el sistema. Este pide que se avise cuando una llamada llega fuera de orden. Debajo tienes quién lo cumple y qué tests lo prueban."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Requirements"
+      },
+      "shows": "T_Requirements",
+      "text": {
+        "en": "Seen all together they are a table. These are the playground's: what each one says, who keeps it and what proves it. An empty cell is a requirement nobody keeps or nobody tests.",
+        "es": "Vistos todos juntos son una tabla. Estos son los del playground: qué dice cada uno, quién lo cumple y qué lo prueba. Una celda vacía es un requisito que nadie cumple o que nadie prueba."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "tour.ds",
+        "find": "diagram T_Requirements"
+      },
+      "shows": "T_Requirements",
+      "text": {
+        "en": "That table is text too. You say what the rows are, the way a rule does (`for requirement r in` a box), and what each column asks: a field of the row, or what is related to it.",
+        "es": "Esa tabla también es texto. Dices qué son las filas, igual que en una regla (`for requirement r in` una caja), y qué pregunta cada columna: un campo de la fila o lo que está relacionado con ella."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_Constraint"
+      },
+      "shows": "T_Constraint",
+      "text": {
+        "en": "A constraint is a requirement about how things are built, not about what they do. This one says the model's relations are read only through its index, and it shows what it governs.",
+        "es": "Una restricción es un requisito sobre cómo están hechas las cosas, no sobre lo que hacen. Esta dice que las relaciones del modelo solo se leen a través de su índice, y enseña a qué afecta."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "pane": "T_UseCases"
+      },
+      "shows": "T_UseCases",
+      "text": {
+        "en": "And at the very top, the use cases: what DriftSpec is for, in seven lines, each with the system requirements it answers. Everything you've seen hangs from here.",
+        "es": "Y arriba del todo, los casos de uso: para qué sirve DriftSpec, en siete líneas, cada uno con los requisitos de sistema a los que responde. Todo lo que has visto cuelga de aquí."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "write": {
+        "below": {
+          "find": "-> app::main(workspace) / check -> code"
+        },
+        "text": "-> app::launch(workspace)"
+      },
+      "at": {
+        "panel": "problems"
+      },
+      "text": {
+        "en": "All of this is checked while you type. Look: I've just added a call to `app::launch`, which doesn't exist. It's underlined in the text and listed below, under Problems.",
+        "es": "Todo esto se comprueba mientras escribes. Mira: acabo de meter una llamada a `app::launch`, que no existe. Sale subrayada en el texto y apuntada abajo, en Problemas."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "ds/cli.ds",
+        "find": "-> app::launch(workspace)"
+      },
+      "text": {
+        "en": "Your turn. Delete the line `-> app::launch(workspace)` and the warning goes away.",
+        "es": "Te toca. Borra la línea `-> app::launch(workspace)` y el aviso desaparece."
+      },
+      "solution": {
+        "replace": "    -> app::launch(workspace)\n",
+        "text": ""
+      },
+      "done": {
+        "clean": true
+      }
+    },
+    {
+      "at": {
+        "panel": "tree"
+      },
+      "text": {
+        "en": "That's the whole thing from above. There's plenty left to see (state machines, failures, levels of detail), and that's what the lessons are for: each one starts from an empty file and explains one thing.",
+        "es": "Pues eso es todo, a vista de pájaro. Queda bastante por ver (máquinas de estados, fallos, niveles de detalle), y para eso están las lecciones: cada una empieza con un fichero vacío y explica una sola cosa."
+      },
+      "done": {
+        "ack": {
+          "en": "Finish",
+          "es": "Terminar"
+        }
+      }
+    }
+  ]
+}

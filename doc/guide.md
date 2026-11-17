@@ -341,7 +341,10 @@ them. The vision (`vision.md`) says why; this says what.*
   between boxes it is one of two things (2026-11-16, DS-230): a structural bond, a solid arrow,
   when one owns, refers to, derives from or realises something of the other; a use, a dashed
   arrow, when it names a type of the other, calls it, sends it a message or declares its use.
-  Each is drawn once between two boxes, and what stays inside a closed box is not drawn. A behaviour that crosses
+  Each is drawn once between two boxes, and what stays inside a closed box is not drawn. A use
+  between two boxes says the interfaces of the one it reaches that the other goes through, a line
+  each with the operations asked (`engine: check, render`), as what the arrow says when pointed
+  at (2026-11-17, DS-266); a use through no interface says nothing. A behaviour that crosses
   boxes counts too, so an interface reaches what handles it: the component view is derived,
   never written. `ds query <workspace> shows <diagram>` answers with the same cut. A pattern
   that names no box, or a `cut:` that names no diagram, is `W-DIAGRAM-UNDECLARED`.
@@ -358,6 +361,17 @@ them. The vision (`vision.md`) says why; this says what.*
   (`Paid`, `Paid [enough]`, `Paid / Held`), and is empty where the machine has no jump. Over it,
   what the behaviours written do: the heading of a row says who calls its event, and a cell in
   which a behaviour calls an event against the machine (`W-STATE-ORDER`) names that behaviour.
+- **A table of anything (2026-11-17, DS-268)** says its rows as a rule says what it speaks about,
+  and a column per question:
+  `diagram TB_Reqs { kind: table; for requirement r in shop; where r.status = "approved";
+  column requirement: r.id; column says: r.title; column kept: x where x requires r;
+  column proved: holds v verifies r }`. A row per binding of the ranges that passes the filter.
+  A column is a field of the row (`r.title`; `name` and `id` every entity has, `holds` says of a
+  rule whether the model keeps it), what is related to it (`x where <literals>`: every `x` that
+  answers, by name), or a yes or no (`holds <literals>`). The first column heads each row. A
+  comparison reads a field of what a variable is bound to (`r.status = "draft"`), in a table and
+  in a rule alike, and an artefact is in the box it is written in. A cell too long for a line
+  goes on several.
   The state diagram shows the ways through; the table shows every pair the machine says nothing of.
 - **A tour (2026-11-16, DS-245)** is one diagram that relates a behaviour to the boxes it crosses:
   `diagram TOUR_Buy { kind: tour; include: shop@shell::buy; close: module }`, with the fields of

@@ -190,6 +190,10 @@
         "required": true,
         "types": [
           {
+            "type": "field_term",
+            "named": true
+          },
+          {
             "type": "number",
             "named": true
           },
@@ -522,6 +526,107 @@
     }
   },
   {
+    "type": "column",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "column_field",
+          "named": true
+        },
+        {
+          "type": "column_holds",
+          "named": true
+        },
+        {
+          "type": "column_related",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "column_field",
+    "named": true,
+    "fields": {
+      "field": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "of": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "column_holds",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "literal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "column_related",
+    "named": true,
+    "fields": {
+      "show": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "literal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "compare_atom",
     "named": true,
     "fields": {
@@ -529,6 +634,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "field_term",
+            "named": true
+          },
           {
             "type": "number",
             "named": true
@@ -577,6 +686,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "field_term",
+            "named": true
+          },
           {
             "type": "number",
             "named": true
@@ -729,7 +842,19 @@
       "required": false,
       "types": [
         {
+          "type": "column",
+          "named": true
+        },
+        {
           "type": "field",
+          "named": true
+        },
+        {
+          "type": "rule_for",
+          "named": true
+        },
+        {
+          "type": "rule_where",
           "named": true
         }
       ]
@@ -866,6 +991,32 @@
           },
           {
             "type": "line_text",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "field_term",
+    "named": true,
+    "fields": {
+      "field": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "of": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
             "named": true
           }
         ]
@@ -2907,6 +3058,10 @@
   },
   {
     "type": "class",
+    "named": false
+  },
+  {
+    "type": "column",
     "named": false
   },
   {

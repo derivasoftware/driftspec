@@ -2130,6 +2130,28 @@ package driftspec@ds {
             tests/integration/ds/check/test_levels.cpp::TestLevels.AUseSaidByAScenarioAndByTheDetailBelowIsDrawnOnceBetweenTwoBoxes
         }
       }
+      requirement REQ-00155-1 {
+        tags: language, diagrams, cut, relations
+        status: approved
+        title: A use drawn between two boxes shall say the interfaces of the one it reaches that the other goes through, with the operations asked of each
+        text:
+          What a box consumes, uses or calls of an interface of another box is said by the use
+          drawn between the two, lifted or written between them as they are: a line per interface,
+          its name and the operations asked of it. A use that goes through no interface says
+          nothing, and a structural bond never does. The drawing carries it as what the arrow says
+          when pointed at.
+        rationale:
+          Owner, 2026-11-17 (DS-266): in the HLD, resting on a box lights its relations and says
+          which interface each one uses. The arrow between two closed boxes is a summary; this is
+          what it is made of, read from the model and never drawn by hand.
+        verification VER-00171-1 {
+          title: Integration tests confirm a use between two closed boxes says the interface it goes through and the operation asked, and that a use through none says nothing
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough
+        }
+      }
       requirement REQ-00062-1 {
         tags: language, diagrams, state
         status: approved
@@ -2228,6 +2250,34 @@ package driftspec@ds {
           method: test
           tests:
             tests/integration/ds/render/test_table_view.cpp::TestTableView.TheTableSaysWhoCallsEachEventAndTheCellInWhichABehaviourCallsOneAgainstTheMachine
+        }
+      }
+      requirement REQ-00154-1 {
+        tags: language, diagrams, table
+        status: approved
+        title: A table diagram shall list what its ranges and its filter answer, a row each, with a cell under each column it writes
+        text:
+          diagram TB { kind: table; for <kind> <variable> [in <box>], ...; where <literals>;
+          column <name>: <what> ... }. The rows are said as a rule says what it speaks about: every
+          binding of the ranges that passes the filter. A column is a field of the row (r.title;
+          name and id are what every entity has, holds says of a rule whether the model keeps it),
+          what is related to the row (x where r requires x: every x that answers, by its name), or
+          a yes or no (holds <literals>). The first column heads each row. A comparison reads a
+          field of what a variable is bound to (r.status = "draft"), in a table and in a rule alike,
+          and an artefact is in the box it is written in. A table written this way is the model's
+          answer, kept when the design is checked; one that names a machine is REQ-00147-2. A cell
+          too long for one line goes on several.
+        rationale:
+          Owner, 2026-11-17 (DS-268): one idea of table. The rows are a filter written as a rule and
+          each column a question, so whatever a rule may range over a table may list: rules,
+          requirements, use cases, constraints, classes. Nothing new to learn but the word column.
+          Named tables and the cross (rows of one range, columns of another) come after it.
+        verification VER-00170-1 {
+          title: Integration tests confirm a table written with its rows and columns answers a cell for each, heads each row by its first column, says a yes or no, and keeps only the rows its filter reads
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_table_view.cpp::TestTableView.ATableWrittenWithRowsAndColumnsAnswersEachCell
         }
       }
       requirement REQ-00122-1 {

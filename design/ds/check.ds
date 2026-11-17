@@ -37,6 +37,9 @@ package driftspec@ds {
       - stratify() -> bool
       - computeDefinitions() -> void
       - evaluateRule(id: std::string, formula: model::Formula) -> void
+      - tabulate(id: std::string, formula: model::Formula) -> void {
+        @requirement REQ-00154-1
+      }
       - solve(owner: std::string, body: std::vector<model::Literal>, bindings: std::map<std::string, std::string>, first: bool) -> std::vector<std::map<std::string, std::string>>
       - solveFrom(owner: std::string, body: std::vector<model::Literal>, done: std::vector<bool>, bindings: std::map<std::string, std::string>, first: bool, out_answers: std::vector<std::map<std::string, std::string>>) -> void
       - ready(literal: model::Literal, bindings: std::map<std::string, std::string>) -> bool

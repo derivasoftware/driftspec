@@ -142,7 +142,8 @@ body:not([data-tab="editor"]) .coach { display: none !important; }
 .count { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .count .e { color: var(--err); } .count .w { color: var(--warn); }
 
-main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+main { flex: 1; display: flex; min-height: 0; }
+#stage { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }  /* the files beside it at full height: the problems run under the code and the diagrams only */
 #work { flex: 1; display: flex; min-height: 0; }
 #left { display: flex; flex-direction: column; min-width: 240px; width: 40%; }
 .vsplit { width: 5px; cursor: col-resize; background: var(--line); flex: none; touch-action: none; }
@@ -330,6 +331,15 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .coach { position: fixed; z-index: 50; width: 320px; background: var(--raised); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35); font: 13px/1.5 var(--sans); visibility: hidden; }
 .coach.placed { visibility: visible; }
 .coach::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 10px 0 0 10px; background: var(--coach); }
+#via { position: fixed; z-index: 60; display: none; max-width: 340px; background: var(--raised); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 11px; font: 11.5px/1.55 var(--mono); box-shadow: 0 8px 24px rgba(0,0,0,.35); pointer-events: none; }
+#via .v-pair { color: var(--muted); }
+#via .v-pair:not(:first-child) { margin-top: 8px; }
+#via .v-if b { color: var(--coach); font-weight: 600; }
+.coach .c-pet { position: absolute; left: 14px; top: -31px; width: 44px; height: 40px; pointer-events: none; }  /* who tells the lesson: it looks over the card's edge */
+.coach .c-pet .body, .coach .c-pet .ant { fill: var(--coach); stroke: var(--coach); }
+.coach .c-pet .eye { transform-box: fill-box; transform-origin: center; animation: petblink 4.2s infinite; }
+@keyframes petblink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+@media (prefers-reduced-motion: reduce) { .coach .c-pet .eye { animation: none; } }
 .coach .c-head { display: flex; align-items: center; gap: 8px; padding: 9px 8px 0 16px; font: 11px var(--mono); color: var(--muted); }
 .coach .c-head .spacer { flex: 1; }
 .coach .c-dots { display: inline-flex; gap: 3px; }
@@ -338,6 +348,9 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .coach p { margin: 6px 16px 0; white-space: pre-line; }
 .coach code { font: 12px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--s-fn); }
 .coach .c-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 10px 12px 12px 16px; }
+.coach .c-back { margin-right: auto; font: 12px var(--sans); color: var(--muted); background: none; border: 0; padding: 5px 0; cursor: pointer; }
+.coach .c-back:hover { color: var(--fg); }
+.coach .c-back + .c-wait { margin-right: 0; }
 .coach .c-wait { margin-right: auto; display: inline-flex; align-items: center; gap: 7px; font: 11.5px var(--sans); color: var(--muted); }
 .coach .c-wait i { width: 7px; height: 7px; border-radius: 50%; background: var(--coach); animation: coachpulse 1.4s ease-in-out infinite; }
 .coach.ok .c-wait i { animation: none; background: var(--v-pub); }
@@ -354,6 +367,8 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .pane.coached { box-shadow: 0 0 0 2px var(--coach); }
 #problems.coached { box-shadow: inset 0 2px 0 var(--coach); }
 #tree.coached { box-shadow: inset -2px 0 0 var(--coach); }
+#left.coached, #right.coached { position: relative; }
+#left.coached::after, #right.coached::after { content: ""; position: absolute; inset: 0; border: 2px solid var(--coach); pointer-events: none; z-index: 6; }
 @media (prefers-reduced-motion: reduce) { .coach .c-wait i { animation: none; } }
 @media (max-width: 760px) {
   #work { flex-direction: column; }
@@ -638,7 +653,6 @@ definition module-depends(m, n) {
   </div></div>
 </section>
 <main>
-  <div id="work">
     <aside id="tree">
       <div class="head"><span id="wsname">workspace</span><span class="spacer"></span>
         <button class="icon-btn" id="newfile" title="New file"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg></button>
@@ -646,6 +660,8 @@ definition module-depends(m, n) {
       <div id="files"></div>
     </aside>
     <div class="vsplit" id="tsplit"></div>
+  <div id="stage">
+  <div id="work">
     <section id="left">
       <nav id="tabs"></nav>
       <div id="editor"></div>
@@ -665,12 +681,13 @@ definition module-depends(m, n) {
     </div>
     <div id="findings"></div>
   </section>
+  </div>
 </main>
 
 <script type="module">
 import { start, ds } from "./engine.js";
 
-const KEYWORDS = "if package module class dataclass enum interface function extern sequence state diagram requirement verification constraint usecase outcome operation view rule definition loop alt opt else return on initial attempt fail fails failure realises from to in is not where for holds never otherwise scenario event";
+const KEYWORDS = "if column package module class dataclass enum interface function extern sequence state diagram requirement verification constraint usecase outcome operation view rule definition loop alt opt else return on initial attempt fail fails failure realises from to in is not where for holds never otherwise scenario event";
 const FIELDS = "kind include exclude open depth show hide neighbours level title text status category language note test tests method actor goal subject";
 
 CodeMirror.defineSimpleMode("driftspec", {
@@ -698,7 +715,7 @@ const $ = (id) => document.getElementById(id);
 
 // ---- two languages: the lessons and what the page says (DS-204) ----------------------------
 const UI = {
-  en: { waiting: "Waiting for you", writeForMe: "Write it for me", showMe: "Show me", writing: "Writing", done: "Done",
+  en: { back: "Back", waiting: "Waiting for you", writeForMe: "Write it for me", showMe: "Show me", writing: "Writing", done: "Done",
         leave: "Leave the lesson (restart it with the button beside the list)", close: "Close", next: "Done. Next:",
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
@@ -715,7 +732,7 @@ const UI = {
         w3p: "The text is the specification. A diagram is a question asked of it: what to show, and at which level. Change the text and every view follows. No drawing is kept by hand, so none goes stale.",
         lessons: "Lessons", examples: "Examples",
         play: "Play" },
-  es: { waiting: "Esperándote", writeForMe: "Escríbelo por mí", showMe: "Muéstramelo", writing: "Escribiendo", done: "Hecho",
+  es: { back: "Atrás", waiting: "Esperándote", writeForMe: "Escríbelo por mí", showMe: "Muéstramelo", writing: "Escribiendo", done: "Hecho",
         leave: "Dejar la lección (vuelve a empezarla con el botón junto a la lista)", close: "Cerrar", next: "Hecho. Siguiente:",
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
@@ -1032,6 +1049,7 @@ function startLesson(ex) {
   if (!coach.lesson) return;
   coach.step = 0;
   coach.written = -1;
+  coach.wrote = new Set();  // the steps whose text is already in the files: gone back to, they are not written again
 }
 
 function restartLesson() {
@@ -1058,7 +1076,7 @@ function checkStep() {
   }
   const st = steps[coach.step];
   if (coach.typing) return;
-  if (st.write && coach.written !== coach.step) return writeStep(st);
+  if (st.write && !coach.wrote.has(coach.step)) return writeStep(st);
   if (passed(st.done)) return advance(true);
   showCoach(st);
 }
@@ -1078,11 +1096,12 @@ function locate(doc, at) {
 const indentOf = (t) => t.match(/^\s*/)[0];
 
 async function writeStep(st) {
-  coach.written = coach.step;
+  coach.written = coach.step; coach.wrote.add(coach.step);
   coach.typing = true;  // before the card shows: nothing advances while the lesson types
   showCoach(st);
   placeAtWrite([].concat(st.write)[0]);
   await typeAll([].concat(st.write));
+  coach.placed = coach.shown = -1;  // what was written is there now: the card goes beside it, not over it
   run();
 }
 
@@ -1239,6 +1258,15 @@ function advance(byEngine) {
   else go();
 }
 
+// back to the last card the reader answered with its button: to read it again, nothing is undone
+const backTo = () => { for (let i = coach.step - 1; i >= 0; i--) if (coach.lesson.steps[i].done.ack) return i; return -1; };
+function goBack() {
+  if (coach.timer || coach.typing || backTo() < 0) return;
+  coach.step = backTo();
+  coach.shown = coach.focused = coach.placed = -1;
+  coachCheck();
+}
+
 // a lesson just finished: a card offers the next one
 function showNext() {
   const i = state.examples.indexOf(state.example);
@@ -1284,8 +1312,10 @@ function showCoach(st) {
     const foot = st.done.ack
       ? (st.write ? `<span class="c-wait"><i></i><span>${ui("writing")}</span></span>` : "") + `<button class="c-ack">${escapeHtml(t(st.done.ack))}</button>`
       : (st.solution ? `<button class="c-for-me">${[].concat(st.solution)[0].ui ? ui("showMe") : ui("writeForMe")}</button>` : "") + `<span class="c-wait"><i></i><span>${ui("waiting")}</span></span>`;
-    el.innerHTML = `<div class="c-head"><span class="c-dots">${dots}</span><span>${coach.step + 1} / ${steps.length}</span><span class="spacer"></span>
-      <button class="icon-btn c-x" title="${ui("leave")}">${XMARK}</button></div><p>${fmt(t(st.text))}</p><div class="c-foot">${foot}</div>`;
+    el.innerHTML = `${PET}<div class="c-head"><span class="c-dots">${dots}</span><span>${coach.step + 1} / ${steps.length}</span><span class="spacer"></span>
+      <button class="icon-btn c-x" title="${ui("leave")}">${XMARK}</button></div><p>${fmt(t(st.text))}</p><div class="c-foot">${backTo() >= 0 ? `<button class="c-back">${ui("back")}</button>` : ""}${foot}</div>`;
+    const back = el.querySelector(".c-back");
+    if (back) back.onclick = goBack;
     el.querySelector(".c-x").onclick = () => { coach.step = steps.length; hideCoach(); };
     const ack = el.querySelector(".c-ack");
     if (ack) ack.onclick = () => advance(false);
@@ -1322,6 +1352,29 @@ function doOnPage(a) {
 // what a step is about, read from the step itself (DS-242): the diagrams it names (`shows`), or the pane its
 // card points at with the ones its check looks at, or the diagram whose line it points at. A lesson that
 // teaches the page (a step done by opening, selecting or showing a pane alone) moves nothing by itself.
+// the interfaces the uses pointed at go through: one block per arrow, beside the box or the arrow
+function showVia(edges, beside) {
+  if (!edges.length) return hideVia();
+  let el = $("via");
+  if (!el) { el = document.createElement("div"); el.id = "via"; document.body.appendChild(el); }
+  const short = (id) => id.split("@").pop();
+  el.innerHTML = edges.map((g) => `<div class="v-pair">${escapeHtml(short(g.dataset.from))} → ${escapeHtml(short(g.dataset.to))}</div>` +
+    g.dataset.via.split("\n").map((line) => { const [name, ...ops] = line.split(": "); return `<div class="v-if"><b>${escapeHtml(name)}</b>${ops.length ? " " + escapeHtml(ops.join(": ")) : ""}</div>`; }).join("")).join("");
+  el.style.display = "block";
+  const b = beside.getBoundingClientRect();
+  const x = b.right + 12 + el.offsetWidth <= innerWidth ? b.right + 12 : Math.max(8, b.left - el.offsetWidth - 12);
+  el.style.left = x + "px";
+  el.style.top = Math.max(8, Math.min(b.top, innerHeight - el.offsetHeight - 8)) + "px";
+}
+function hideVia() { const el = $("via"); if (el) el.style.display = "none"; }
+
+const PET = `<svg class="c-pet" viewBox="0 0 44 40" aria-hidden="true">
+  <g class="ant" stroke-width="2" stroke-linecap="round"><path d="M15 11 L11 4" fill="none"/><path d="M29 11 L33 4" fill="none"/><circle cx="11" cy="4" r="2.2" stroke="none"/><circle cx="33" cy="4" r="2.2" stroke="none"/></g>
+  <rect class="body" x="6" y="9" width="32" height="30" rx="9" stroke="none"/>
+  <g class="eye"><circle cx="16" cy="21" r="4.6" fill="#fff"/><circle cx="17.2" cy="21.6" r="2.1" fill="#151618"/></g>
+  <g class="eye"><circle cx="28" cy="21" r="4.6" fill="#fff"/><circle cx="29.2" cy="21.6" r="2.1" fill="#151618"/></g>
+</svg>`;
+
 function diagramsOf(st) {
   const onThePage = (x) => ["opened", "selected", "solo"].some((k) => k in (x.done || {}));
   if (coach.lesson.steps.some(onThePage)) return null;
@@ -1360,7 +1413,7 @@ function placeCoach(st) {
     if (line >= 0) {
       doc.addLineClass(line, "background", "coach-line");
       coach.mark = { file, line };
-      if (first && state.current === file) { editor.scrollIntoView({ line, ch: 0 }, 80); shown(); }
+      if (first && state.current === file) { editor.scrollIntoView({ line, ch: 0 }, Math.max(80, editor.getScrollInfo().clientHeight / 2 - 60)); shown(); }  // the line a step is about, in the middle of the editor
       if (free && state.current === file) fix(coach.el, besideLine(line));
     }
   } else if (at.pane) {
@@ -1376,6 +1429,13 @@ function placeCoach(st) {
     const el = $("tree"); el.classList.add("coached"); coach.mark = { el };
     shown();
     if (free) { const b = el.getBoundingClientRect(); fix(coach.el, { x: b.right + 16, y: b.bottom - coach.el.offsetHeight - 24 }); }  // low, where the code rarely reaches
+  } else if (at.panel === "centre") {  // about nothing on the page: the card in the middle of it
+    shown();
+    if (free) fix(coach.el, { x: (innerWidth - coach.el.offsetWidth) / 2, y: (innerHeight - coach.el.offsetHeight) / 2 });
+  } else if (at.panel === "code" || at.panel === "diagrams") {  // a whole half of the page: the card sits inside it, low
+    const el = $(at.panel === "code" ? "left" : "right"); el.classList.add("coached"); coach.mark = { el };
+    shown();
+    if (free) { const b = el.getBoundingClientRect(); fix(coach.el, { x: b.left + (b.width - coach.el.offsetWidth) / 2, y: b.bottom - coach.el.offsetHeight - 32 }); }
   } else if (at.panel === "problems") {
     if ($("problems").classList.contains("folded")) foldProblems(false);
     const el = $("problems"); el.classList.add("coached"); coach.mark = { el };
@@ -1390,6 +1450,10 @@ function besideLine(line) {
   const c = editor.charCoords({ line: Math.min(line, doc.lastLine()), ch: 0 }, "window");
   let widest = 0;
   for (let i = 0; i < doc.lineCount(); i++) widest = Math.max(widest, editor.charCoords({ line: i, ch: doc.getLine(i).length }, "window").right);
+  // no room beside the text inside the editor (a file of long lines): the card stands just above the line, over
+  // what comes before it, and never out among the diagrams
+  const box = $("left").getBoundingClientRect(), w = coach.el ? coach.el.offsetWidth : 320, h = coach.el ? coach.el.offsetHeight : 160;
+  if (widest + 40 + w > box.right) return { x: Math.min(c.left + 80, box.right - w - 16), y: c.top - h - 14 };
   return { x: widest + 40, y: c.top - 8 };
 }
 
@@ -1637,7 +1701,7 @@ function paintTable(rows) {
 
 // ---- relations at rest and lit -----------------------------------------------------------
 const EDGE_KIND = { inheritance: "inherits", realization: "inherits", composition: "has", aggregation: "refers", dependency: "uses", association: "has" };  // association: a structural bond between closed boxes (DS-230)
-const UNIT = /pr-classifier-(class|dataclass|enum)\b/;
+const UNIT = /pr-classifier-(class|dataclass|enum|package|module)\b/;  // what lights its relations when pointed at: a class, or a closed box
 
 function wireRelations(pane) {
   const svg = pane.body.querySelector("svg");
@@ -1673,10 +1737,18 @@ function wireRelations(pane) {
     }
     if (id) box(id)?.classList.add("sel");
   };
+  // a use between two boxes says which interfaces it goes through (DS-266): the page shows it beside what is pointed at
+  for (const g of svg.querySelectorAll('.pr-edge-group[data-ref-bond="uses"]')) {
+    const said = g.querySelector(":scope > title");
+    if (!said) continue;
+    g.dataset.via = said.textContent; said.remove();  // the page's own card, not the browser's tooltip over it
+    g.addEventListener("mouseenter", () => showVia([g], g));
+    g.addEventListener("mouseleave", hideVia);
+  }
   for (const b of svg.querySelectorAll(".pr-box")) {
     if (!UNIT.test(b.getAttribute("class"))) continue;
-    b.addEventListener("mouseenter", () => light(b.dataset.id));
-    b.addEventListener("mouseleave", () => light(pane.selected));
+    b.addEventListener("mouseenter", () => { light(b.dataset.id); showVia([...svg.querySelectorAll(".pr-edge-group[data-via]")].filter((g) => g.dataset.from === b.dataset.id || g.dataset.to === b.dataset.id), b); });
+    b.addEventListener("mouseleave", () => { light(pane.selected); hideVia(); });
     b.addEventListener("click", (e) => { e.stopPropagation(); pane.selected = pane.selected === b.dataset.id ? null : b.dataset.id; light(pane.selected); uiChanged(); });
   }
   svg.addEventListener("click", () => { pane.selected = null; light(null); });

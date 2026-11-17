@@ -81,7 +81,9 @@ module.exports = grammar({
     in_atom: $ => seq(field('left', $.qualified_name), 'in', field('right', $.qualified_name)),
     // values compare: numbers as numbers, strings as written
     compare_atom: $ => seq(field('left', $._term), field('operator', choice('=', '!=', '<', '<=', '>', '>=')), field('right', $._term)),
-    _term: $ => choice($.qualified_name, $.number, $.string),
+    _term: $ => choice($.field_term, $.qualified_name, $.number, $.string),
+    // a field of what a variable is bound to: `r.status = "draft"` (DS-268)
+    field_term: $ => seq(field('of', $.name), '.', field('field', $.name)),
     // arg(k, p, v): the call k passes v, a literal written in the sequence, to the parameter p of what it calls
     arg_atom: $ => seq('arg', '(', field('call', $.qualified_name), ',', field('parameter', $.name), ',', field('value', $._term), ')'),
     call_atom: $ => seq(field('definition', $.qualified_name), '(', $.qualified_name, repeat(seq(',', $.qualified_name)), ')'),
@@ -234,7 +236,12 @@ module.exports = grammar({
     transition: $ => seq(field('from', $.name), '->', field('to', $.name), 'on', field('event', $.name), optional(field('guard', $.guard)), optional(seq('/', field('action', $.name)))),
 
     // ---- representations --------------------------------------------------
-    diagram: $ => seq('diagram', field('name', $.name), '{', repeat($.field), '}'),
+    // a table says its rows as a rule says its ranges (`for`, `where`) and a column per question (DS-268)
+    diagram: $ => seq('diagram', field('name', $.name), '{', repeat(choice($.field, $.rule_for, $.rule_where, $.column)), '}'),
+    column: $ => seq('column', field('name', $.name), ':', choice($.column_field, $.column_related, $.column_holds)),
+    column_field: $ => seq(field('of', $.name), '.', field('field', $.name)),           // a field of the row: r.title
+    column_related: $ => seq(field('show', $.name), 'where', $._literals),               // what is related to it: x where r requires x
+    column_holds: $ => seq('holds', $._literals),                                        // yes or no
 
     // ---- common -----------------------------------------------------------
     annotation: $ => seq('@', field('kind', $.name), field('target', $.qualified_name)),

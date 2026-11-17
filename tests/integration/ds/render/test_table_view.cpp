@@ -108,4 +108,37 @@ TEST_F(TestTableView, ATableThatNamesNoMachineSaysSo) {
   EXPECT_NE(none["notice"].get<std::string>().find("No state machine selected"), std::string::npos);
 }
 
+TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
+  ds::parse::Parser parser;
+  ds::model::Model other;
+  ds::bind::Binder binder(other);
+  binder.bind(parser.parseText(
+      "a.ds",
+      "package p {\n"
+      "  requirement REQ-00001-1 {\n    title: The thing shall count\n    status: approved\n"
+      "    verification VER-00001-1 {\n      title: Tests count\n      status: approved\n      method: review\n    }\n  }\n"
+      "  requirement REQ-00002-1 {\n    title: The thing shall rest\n    status: draft\n  }\n"
+      "  module m {\n    class Thing {\n      @requirement REQ-00001-1\n    }\n  }\n}\n"
+      "diagram TB {\n  kind: table\n  for requirement r in p\n  column requirement: r.id\n  column says: r.title\n"
+      "  column proved: v where v verifies r\n  column kept: holds c requires r\n}\n"
+      "diagram TD {\n  kind: table\n  for requirement r in p\n  where r.status = \"draft\"\n  column requirement: r.id\n}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(other, checkSteps).run(binder);
+  const auto t = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:TB", false))["table"];
+  EXPECT_EQ(t["corner"], "requirement");
+  EXPECT_EQ(t["columns"], (std::vector<std::string>{"says", "proved", "kept"}));
+  ASSERT_EQ(t["rows"].size(), 2u);
+  EXPECT_EQ(t["rows"][0]["label"], "REQ-00001-1");
+  EXPECT_EQ(t["rows"][0]["cells"][0]["text"], "The thing shall count");
+  EXPECT_EQ(t["rows"][0]["cells"][1]["text"], "VER-00001-1");
+  EXPECT_EQ(t["rows"][0]["cells"][2]["text"], "yes");
+  EXPECT_EQ(t["rows"][1]["cells"][1]["kind"], "none");
+  EXPECT_EQ(t["rows"][1]["cells"][2]["text"], "no");
+  EXPECT_EQ(t["rows"][1]["cells"][2]["kind"], "against");
+  // a filter reads a field of the row: only the drafts
+  const auto drafts = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:TD", false))["table"];
+  ASSERT_EQ(drafts["rows"].size(), 1u);
+  EXPECT_EQ(drafts["rows"][0]["label"], "REQ-00002-1");
+}
+
 }  // namespace

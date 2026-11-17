@@ -752,13 +752,29 @@ namespace {
 /// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
 std::string tableSvg(const IrDocument& doc) {
   const IrTable& t = doc.table;
-  const int charW = 8, padX = 14, rowH = 34, headH = 38;
-  std::vector<int> widths{static_cast<int>(t.corner.size())};
-  for (const IrRow& row : t.rows) widths[0] = std::max(widths[0], static_cast<int>(row.label.size()));
+  const int charW = 8, padX = 14, rowH = 34, headH = 38, lineH = 17;
+  const std::size_t kWrap = 40;  // a cell is as wide as this many characters; what is longer goes on more lines (DS-268)
+  const auto lines = [&](const std::string& text) {
+    std::vector<std::string> out{""};
+    std::istringstream in(text);
+    std::string word;
+    while (in >> word) {
+      if (!out.back().empty() && out.back().size() + 1 + word.size() > kWrap) out.push_back("");
+      out.back() += (out.back().empty() ? "" : " ") + word;
+    }
+    return out;
+  };
+  const auto widest = [&](const std::string& text) {
+    std::size_t w = 0;
+    for (const auto& l : lines(text)) w = std::max(w, l.size());
+    return static_cast<int>(w);
+  };
+  std::vector<int> widths{widest(t.corner)};
+  for (const IrRow& row : t.rows) widths[0] = std::max(widths[0], widest(row.label));
   for (std::size_t c = 0; c < t.columns.size(); ++c) {
-    int longest = static_cast<int>(t.columns[c].size());
+    int longest = widest(t.columns[c]);
     for (const IrRow& row : t.rows)
-      if (c < row.cells.size()) longest = std::max(longest, static_cast<int>(row.cells[c].text.size()));
+      if (c < row.cells.size()) longest = std::max(longest, widest(row.cells[c].text));
     widths.push_back(longest);
   }
   int width = 0;
@@ -766,7 +782,14 @@ std::string tableSvg(const IrDocument& doc) {
     w = w * charW + 2 * padX;
     width += w;
   }
-  const int height = headH + rowH * static_cast<int>(t.rows.size());
+  std::vector<int> heights;
+  int height = headH;
+  for (const IrRow& row : t.rows) {
+    std::size_t most = lines(row.label).size();
+    for (const IrCell& it : row.cells) most = std::max(most, lines(it.text).size());
+    heights.push_back(std::max(rowH, static_cast<int>(most) * lineH + 17));
+    height += heights.back();
+  }
   std::ostringstream out;
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-10 -10 " << width + 20 << " " << height + 20 << "\" width=\"" << width + 20
       << "\" height=\"" << height + 20 << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
@@ -780,11 +803,15 @@ std::string tableSvg(const IrDocument& doc) {
       << "</style>\n";
   const auto cell = [&](int x, int y, int w, int h, const std::string& text, const std::string& kind, const std::string& title,
                         bool centred) {
+    const auto written = lines(text);
     out << "<g class=\"pr-cell pr-cell-" << kind << "\">";
     if (!title.empty()) out << "<title>" << esc(title) << "</title>";
     out << "<rect x=\"" << x << "\" y=\"" << y << "\" width=\"" << w << "\" height=\"" << h << "\"/>";
-    out << "<text x=\"" << (centred ? x + w / 2 : x + padX) << "\" y=\"" << y + h / 2 + 4 << "\""
-        << (centred ? " text-anchor=\"middle\"" : "") << ">" << esc(text) << "</text></g>\n";
+    const int first = y + h / 2 + 4 - (static_cast<int>(written.size()) - 1) * lineH / 2;
+    for (std::size_t l = 0; l < written.size(); ++l)
+      out << "<text x=\"" << (centred ? x + w / 2 : x + padX) << "\" y=\"" << first + static_cast<int>(l) * lineH << "\""
+          << (centred ? " text-anchor=\"middle\"" : "") << ">" << esc(written[l]) << "</text>";
+    out << "</g>\n";
   };
   int x = 0;
   cell(x, 0, widths[0], headH, t.corner, "head", "", false);
@@ -793,15 +820,16 @@ std::string tableSvg(const IrDocument& doc) {
     cell(x, 0, widths[c + 1], headH, t.columns[c], "head", "", true);
     x += widths[c + 1];
   }
+  int y = headH;
   for (std::size_t r = 0; r < t.rows.size(); ++r) {
-    const int y = headH + rowH * static_cast<int>(r);
-    cell(0, y, widths[0], rowH, t.rows[r].label, "head", t.rows[r].title, false);
+    cell(0, y, widths[0], heights[r], t.rows[r].label, "head", t.rows[r].title, false);
     x = widths[0];
     for (std::size_t c = 0; c < t.columns.size() && c < t.rows[r].cells.size(); ++c) {
       const IrCell& it = t.rows[r].cells[c];
-      cell(x, y, widths[c + 1], rowH, it.text, it.kind, it.title, true);
+      cell(x, y, widths[c + 1], heights[r], it.text, it.kind, it.title, lines(it.text).size() == 1);
       x += widths[c + 1];
     }
+    y += heights[r];
   }
   out << "</svg>\n";
   return out.str();

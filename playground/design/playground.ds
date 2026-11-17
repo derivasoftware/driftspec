@@ -1,18 +1,25 @@
 // The playground (DS-204, DS-238): a static page that edits a workspace and draws it as it is typed,
 // grown into DriftSpec's site with the editor as one of its tabs (DS-257).
 // No server: the page calls the ds engine compiled to WebAssembly, once per edit. Its code is plain
-// JavaScript that argos does not read, so this design is offered as an example of the page itself.
+// JavaScript that argos does not read, so this file stays out of design/; it is written as one more
+// package of driftspec and is read together with design/ wherever the whole design is shown.
 
-package playground {
-  requirement REQ-00001-1 {
+package driftspec@playground {
+  requirement REQ-00149-1 {
     title: The lessons shall know nothing of the page that shows them
     status: approved
     rationale:
       A lesson is data and a coach that decides what comes next; the page decides how it is shown.
       The page may change its look without touching a lesson.
+
+    verification VER-00165-1 {
+      status: approved
+      title: Analysis confirms no class of the lessons uses or refers to the page: the two rules of the lessons module, evaluated on every check of this design
+      method: analysis
+    }
   }
 
-  requirement REQ-00002-1 {
+  requirement REQ-00150-1 {
     title: The page shall show alone the diagrams a step of a lesson is about, while the step lasts
     status: approved
     text:
@@ -22,10 +29,16 @@ package playground {
       the other. A lesson that teaches the page itself moves nothing.
     rationale:
       Owner, 2026-11-16 (DS-242): with a dozen diagrams side by side a reader does not know which
-      one a step is changing. The lesson still knows nothing of the page (REQ-00001-1).
+      one a step is changing. The lesson still knows nothing of the page (REQ-00149-1).
+
+    verification VER-00166-1 {
+      status: approved
+      title: Inspection confirms each step of a lesson shows its diagrams alone: every lesson played in a browser by a scripted reader (playground/lessons/browser_check.sh)
+      method: inspection
+    }
   }
 
-  requirement REQ-00003-1 {
+  requirement REQ-00151-1 {
     title: The page shall play a tour step by step: the message in its sequence, and the two boxes it joins
     status: approved
     text:
@@ -38,9 +51,15 @@ package playground {
     rationale:
       Owner, 2026-11-16 (DS-245): the live viewer's replay of a behaviour over the map, in the
       playground, and in one diagram that already relates the two, so nothing is paired by eye.
+
+    verification VER-00167-1 {
+      status: approved
+      title: Inspection confirms a tour plays step by step, with its controls, alone in its pane: the lessons that write a tour played in a browser (playground/lessons/browser_check.sh)
+      method: inspection
+    }
   }
 
-  requirement REQ-00004-1 {
+  requirement REQ-00152-1 {
     title: The page shall be DriftSpec's site, a tab per page, the editor one of them
     status: approved
     text:
@@ -51,9 +70,15 @@ package playground {
     rationale:
       Owner, 2026-11-17 (DS-256, DS-257): finish the playground as DriftSpec's website, in English
       and Spanish, with the editor as one of its tabs.
+
+    verification VER-00168-1 {
+      status: approved
+      title: Inspection confirms the site opens on Home, changes tab by its header and by ?tab=, and opens the Editor on a link that names an example
+      method: inspection
+    }
   }
 
-  requirement REQ-00005-1 {
+  requirement REQ-00153-1 {
     title: The home page shall say what DriftSpec is beside an example the engine makes in the page
     status: approved
     text:
@@ -67,24 +92,78 @@ package playground {
     rationale:
       Owner, 2026-11-17 (DS-258), after two proposals seen in the browser: a home kept extremely
       simple, with the tool's own output as its picture.
+
+    verification VER-00169-1 {
+      status: approved
+      title: System tests confirm the example the home page shows draws its classes and a sequence, lists its requirements and has the one error the page shows
+      method: test
+      tests:
+        tests/system/python/test_playground.py::TestPlayground::test_the_example_of_the_home_page_draws_and_has_the_one_error_it_shows
+    }
   }
 
-  // the engine, as the page reaches it: one function of ds.wasm (REQ-00113-1)
-  interface wasm {
-    kind: library
-    transport: webassembly, in the page
-    encoding: json text
-    operation ds_playground(request: string) -> string
+  requirement REQ-00156-1 {
+    title: The page shall say, beside a box or a use pointed at, the interfaces that use goes through
+    status: approved
+    text:
+      Pointed at, a class or a closed box lights its relations. Where a use between two boxes says
+      the interfaces it goes through (the engine's REQ-00155-1), the page shows them in a card of
+      its own beside what is pointed at: the two boxes, then each interface with the operations
+      asked of it. The arrow itself shows the same.
+    rationale:
+      Owner, 2026-11-17 (DS-266): in the HLD, resting on a box lights its relations and says which
+      interface each one uses.
+
+    verification VER-00172-1 {
+      status: approved
+      title: Inspection confirms a closed box pointed at in the tour's HLD lights its uses and shows the interfaces each goes through
+      method: inspection
+    }
   }
 
-  sequence wasm::ds_playground {
-    return answer
+  requirement REQ-00157-1 {
+    title: A card of a lesson shall let the reader go back to the last card answered, undoing nothing
+    status: approved
+    text:
+      Every card but the first carries Back. It returns to the last card the reader answered with
+      its button, to read it again: what the lesson wrote stays written and is not written again
+      going forward. A card that waited for the reader to write is passed over.
+    rationale:
+      Owner, 2026-11-17 (DS-265): someone who read a card badly can go back.
+
+    verification VER-00173-1 {
+      status: approved
+      title: Inspection confirms a reader goes back three cards past one the lesson wrote and forward again with that text written once
+      method: inspection
+    }
+  }
+
+  requirement REQ-00158-1 {
+    title: A lesson shall be able to walk DriftSpec's own design, read as it is, with the views it adds of its own
+    status: approved
+    text:
+      A lesson that says workspace: driftspec starts from the design of the tool and of this
+      playground, read from the repository when the site is built, with its own files beside
+      them. Lesson 0 is a tour of it: what DriftSpec is, the parts of the page, and each
+      perspective at a glance; its cards may stand in the middle of the page or point at a whole
+      part of it.
+    rationale:
+      Owner, 2026-11-17 (DS-265): lesson 0 is a tour of a large, real project, and the lessons
+      after it go into the detail. Read, never copied, so the tour cannot fall behind the design.
+
+    verification VER-00174-1 {
+      status: approved
+      title: System tests replay the tour over DriftSpec's own design to a clean end, with every lesson
+      method: test
+      tests:
+        tests/system/python/test_playground.py::TestPlayground::test_every_lesson_plays_to_a_clean_end
+    }
   }
 
   module engine {
     // engine.js: loads ds.js + ds.wasm and makes the one call
     class Engine {
-      @uses playground@wasm
+      @uses driftspec@ds@browser
       + start() -> none
       + ds(files: Files, width: int) -> Answer
     }
@@ -126,8 +205,8 @@ package playground {
       + svg: string
     }
     sequence Engine::ds {
-      local wasm: playground@wasm             // the engine's function in ds.wasm, not the C++ behind it
-      -> wasm.ds_playground(request) -> json
+      local wasm: driftspec@ds@browser                   // the engine's function in ds.wasm, as ds offers it to a page
+      -> wasm.answer(request) -> json
       return answer
     }
   }
@@ -142,20 +221,22 @@ package playground {
       - owns table: Table
       - owns problems: Problems
       - owns coach: lessons::Coach
-      + load(lesson: lessons::Lesson) -> none
+      + load(lesson: lessons::Lesson) -> none {
+        @requirement REQ-00158-1
+      }
       // the home page's example, drawn by the engine when the page loads
       + paintHome() -> none {
-        @requirement REQ-00005-1
+        @requirement REQ-00153-1
       }
       // the site's pages: one shown at a time, kept in the address
       + showTab(tab: string) -> none {
-        @requirement REQ-00004-1
+        @requirement REQ-00152-1
       }
       + onEdit() -> none
       // the diagrams a step is about, shown alone while it lasts; the one that is a tour is played
       + focus(step: lessons::Step) -> none {
-        @requirement REQ-00002-1
-        @requirement REQ-00003-1
+        @requirement REQ-00150-1
+        @requirement REQ-00151-1
       }
     }
     class Editor {
@@ -178,16 +259,20 @@ package playground {
       + solo(diagram: string, beside: list<string>) -> none
       // a tour played: the step it is at, lit in its two parts
       + play(tour: string) -> none {
-        @requirement REQ-00003-1
+        @requirement REQ-00151-1
       }
       + step(tour: string, at: int) -> none {
-        @requirement REQ-00003-1
+        @requirement REQ-00151-1
       }
     }
     class Pane {
       - refs editor: Editor
       + draw(drawn: engine::Drawn) -> none
       + light(entity: string) -> none
+      // the interfaces the uses of what is pointed at go through, in a card beside it
+      + via(entity: string) -> none {
+        @requirement REQ-00156-1
+      }
       + reveal(entity: string) -> none
     }
     class Table {
@@ -252,13 +337,17 @@ package playground {
       + clean: bool
     }
     // the card beside what a step talks about: decides when a step is done and which comes next; the page
-    // types its code (the lessons know nothing of the page, REQ-00001-1)
+    // types its code (the lessons know nothing of the page, REQ-00149-1)
     class Coach {
       - refs lesson: Lesson
       + check(answer: engine::Answer) -> optional<Step>
       + passed(check: Check, answer: engine::Answer) -> bool
       // what a step is about: the diagrams it names, or the ones its card and its check look at
       + about(step: Step) -> list<string>
+      // back to the last card answered with its button; nothing is undone
+      + back() -> optional<Step> {
+        @requirement REQ-00157-1
+      }
     }
 
     sequence Coach::check {
@@ -272,42 +361,42 @@ package playground {
 
     rule lessons-blind-to-page {
       title: No member of the lessons names a type of the page
-      @requirement REQ-00001-1
-      for class c in playground@lessons
-      never m in c, m uses x, x in playground@page
+      @requirement REQ-00149-1
+      for class c in driftspec@playground@lessons
+      never m in c, m uses x, x in driftspec@playground@page
     }
     rule lessons-hold-no-page {
       title: No attribute of the lessons refers to the page
-      @requirement REQ-00001-1
-      for class c in playground@lessons
-      never a in c, a refs x, x in playground@page
+      @requirement REQ-00149-1
+      for class c in driftspec@playground@lessons
+      never a in c, a refs x, x in driftspec@playground@page
     }
   }
 }
 
 diagram HLD_Playground {
   kind: class
-  include: playground@*
+  include: driftspec@playground@*
   open:
 }
 
 diagram CL_Page {
   kind: class
-  include: playground@page::*
+  include: driftspec@playground@page::*
 }
 
 diagram CL_Engine {
   kind: class
-  include: playground@engine::*
+  include: driftspec@playground@engine::*
 }
 
 diagram CL_Lessons {
   kind: class
-  include: playground@lessons::*
+  include: driftspec@playground@lessons::*
 }
 
 diagram SEQ_Edit {
   kind: sequence
-  include: playground@page::Page::onEdit
+  include: driftspec@playground@page::Page::onEdit
   depth: 1
 }

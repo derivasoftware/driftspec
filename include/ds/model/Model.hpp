@@ -112,6 +112,7 @@ struct Term {
   std::string text;
   bool variable = false;
   bool value = false;
+  std::string field;  ///< the field read of what the variable is bound to (`r.status`); "" for the entity itself
 };
 
 /// One literal of a rule or a definition (DS-94): a relation of the metamodel, a kind, containment,
@@ -136,6 +137,23 @@ struct Range {
   Location location;
 };
 
+/// One column of a table (DS-268): a field of the row, what is related to the row, or a yes/no.
+struct Column {
+  std::string name;
+  std::string form;      ///< "field", "related" or "holds"
+  std::string variable;  ///< the row's variable (field) or the one shown (related)
+  std::string field;     ///< the field read
+  std::vector<Literal> body;
+  Location location;
+};
+
+/// A table as the model answers it: the headings and, per row, a cell under each.
+struct Tabulated {
+  std::vector<std::string> columns;
+  std::vector<std::vector<std::string>> rows;
+  std::vector<std::vector<std::string>> kinds;  ///< how each cell reads: "" plain, "against" a no, "none" empty
+};
+
 /// What a rule or a definition says, read from its syntax and never from prose.
 struct Formula {
   std::vector<Range> ranges;                 ///< a rule's for
@@ -144,6 +162,7 @@ struct Formula {
   bool never = false;                        ///< the claim is a never
   std::vector<std::string> parameters;       ///< a definition's parameters
   std::vector<std::vector<Literal>> cases;   ///< a definition's if lines
+  std::vector<Column> columns;               ///< a table's columns
 };
 
 /// The resolved workspace: entities by identity, relations and findings.
@@ -174,6 +193,9 @@ class Model {
   /// The bindings that break each rule, by the rule's identity, as the evaluator found them.
   const std::map<std::string, std::vector<Breach>>& breaches() const { return breaches_; }
   void breach(const std::string& rule, const Breach& breach) { breaches_[rule].push_back(breach); }
+  /// The tables the checker answered, by diagram (DS-268).
+  const std::map<std::string, Tabulated>& tables() const { return tables_; }
+  std::map<std::string, Tabulated>& tables() { return tables_; }
   /// The questions the model answers by identity, with no pass over it (DS-171).
   Index index() const { return Index(*this); }
 
@@ -191,6 +213,7 @@ class Model {
   std::vector<Finding> coverage_;
   std::map<std::string, Formula> formulas_;
   std::map<std::string, std::vector<Breach>> breaches_;
+  std::map<std::string, Tabulated> tables_;
   mutable Indexed indexed_;  ///< kept in step by declare, relate and rename; its tree is built when asked
 };
 

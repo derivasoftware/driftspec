@@ -148,7 +148,11 @@ def passed(done: dict, out: dict) -> bool:
 
 def replay(folder: pathlib.Path, show: bool) -> bool:
     lesson = json.loads((folder / "lesson.json").read_text())
-    files = {str(p.relative_to(folder)): p.read_text() for p in sorted(folder.rglob("*.ds"))}
+    files = {}
+    root = pathlib.Path(__file__).resolve().parents[2]
+    homes = [("", root / "design"), ("playground/", root / "playground" / "design")] if lesson.get("workspace") == "driftspec" else []
+    for prefix, home in homes + [("", folder)]:  # its own files, over driftspec's whole design when the lesson walks it
+        files.update({prefix + str(p.relative_to(home)): p.read_text() for p in sorted(home.rglob("*.ds"))})
     ok = True
     for i, st in enumerate(lesson["steps"], 1):
         for w in [st["write"]] if isinstance(st.get("write"), dict) else st.get("write", []):
