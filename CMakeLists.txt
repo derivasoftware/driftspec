@@ -142,6 +142,22 @@ if(EMSCRIPTEN)
     -sEXPORTED_FUNCTIONS=_ds_playground
     -sEXPORTED_RUNTIME_METHODS=ccall)
   set_target_properties(ds_wasm PROPERTIES OUTPUT_NAME ds)
+  # the grammar for the page's editor (DS-269): the parser as a module the
+  # tree-sitter runtime of a browser loads, so the editor is coloured by the
+  # same grammar and queries as every other editor
+  add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/tree-sitter-driftspec.wasm
+    COMMAND
+      ${CMAKE_C_COMPILER} -o ${CMAKE_BINARY_DIR}/tree-sitter-driftspec.wasm -Os
+      -fno-exceptions -fvisibility=hidden -sSIDE_MODULE=2
+      -sEXPORTED_FUNCTIONS=_tree_sitter_driftspec
+      -I${CMAKE_SOURCE_DIR}/grammar/src ${CMAKE_SOURCE_DIR}/grammar/src/parser.c
+      ${CMAKE_SOURCE_DIR}/grammar/src/scanner.c
+    DEPENDS ${CMAKE_SOURCE_DIR}/grammar/src/parser.c
+            ${CMAKE_SOURCE_DIR}/grammar/src/scanner.c
+    VERBATIM)
+  add_custom_target(driftspec_grammar_wasm ALL
+                    DEPENDS ${CMAKE_BINARY_DIR}/tree-sitter-driftspec.wasm)
   return()
 endif()
 

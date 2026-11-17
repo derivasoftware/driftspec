@@ -686,6 +686,7 @@ definition module-depends(m, n) {
 
 <script type="module">
 import { start, ds } from "./engine.js";
+import { grammarMode } from "./highlight.js";
 
 const KEYWORDS = "if column package module class dataclass enum interface function extern sequence state diagram requirement verification constraint usecase outcome operation view rule definition loop alt opt else return on initial attempt fail fails failure realises from to in is not where for holds never otherwise scenario event";
 const FIELDS = "kind include exclude open depth show hide neighbours level title text status category language note test tests method actor goal subject";
@@ -773,8 +774,9 @@ const editor = CodeMirror($("editor"), {
 });
 
 // ---- files, tree and tabs ---------------------------------------------------------------
+let MODE = "driftspec";  // regular expressions until the language's own grammar is loaded (DS-269)
 function makeDoc(path, text) {
-  const doc = CodeMirror.Doc(text, "driftspec");
+  const doc = CodeMirror.Doc(text, MODE);
   doc.on("change", () => { state.files[path] = doc.getValue(); if (!coach.typing) schedule(); });
   state.docs[path] = doc;
 }
@@ -2021,7 +2023,7 @@ async function paintHome() {
   const read = async (name) => (await fetch("home/" + name, { cache: "no-cache" })).text();
   const files = { "shop.ds": await read("shop.ds"), "diagrams.ds": await read("diagrams.ds") };
   const lines = files["shop.ds"].replace(/\n+$/, "").split("\n").slice(2, -2).map((l) => l.replace(/^ {4}/, ""));
-  home.shown = CodeMirror($("homecode"), { value: lines.join("\n"), mode: "driftspec", readOnly: "nocursor", lineNumbers: false, viewportMargin: Infinity });
+  home.shown = CodeMirror($("homecode"), { value: lines.join("\n"), mode: MODE, readOnly: "nocursor", lineNumbers: false, viewportMargin: Infinity });
   const out = await ds(files, 0);
   $("homeclasses").innerHTML = out.diagrams.find((d) => d.id === "CL_Store")?.svg || "";
   $("homesequence").innerHTML = out.diagrams.find((d) => d.id === "SEQ_Checkout")?.svg || "";
@@ -2064,6 +2066,14 @@ window.addEventListener("popstate", () => showTab(new URLSearchParams(location.s
 }
 
 const backend = await start().catch((e) => { $("count").innerHTML = `<span class="e">no engine: ${escapeHtml(e.message)}</span>`; throw e; });
+// the language's own grammar, once it is there: every document is read again by it (DS-269)
+grammarMode(CodeMirror).then((mode) => {
+  if (!mode) return;
+  MODE = mode;
+  for (const doc of [EMPTY, ...Object.values(state.docs)]) doc.modeOption = mode;
+  editor.setOption("mode", mode);
+  if (home.shown) home.shown.setOption("mode", mode);
+});
 $("backend").textContent = backend === "wasm" ? "engine: wasm" : "engine: dev server";
 paintHome().catch(() => {});
 state.examples = await (await fetch("examples.json", { cache: "no-cache" })).json();
