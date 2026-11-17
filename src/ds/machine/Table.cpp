@@ -1,4 +1,4 @@
-#include "ds/machine/Matrix.hpp"
+#include "ds/machine/Table.hpp"
 
 #include <algorithm>
 
@@ -16,7 +16,7 @@ void note(std::vector<std::string>& all, const std::string& name) {
 
 }  // namespace
 
-Matrix::Matrix(const model::Model& model, const model::Entity& machine) {
+Table::Table(const model::Model& model, const model::Entity& machine) {
   const Machine written(model, machine);
   const model::Entity* subject = model.find(written.subject());
   subject_ = subject ? subject->name : machine.name;

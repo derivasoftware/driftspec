@@ -221,8 +221,8 @@ package driftspec@ds {
         @requirement REQ-00144-1
         @requirement REQ-00146-1
       }
-      // a machine as a table: what machine::Matrix says, written as the table of the IR
-      - renderMatrix(diagram: model::Entity, pretty: bool) -> std::string {
+      // a machine as a table: what machine::Table says, written as the table of the IR
+      - renderTable(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00006-1
       }
       - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
@@ -273,8 +273,8 @@ package driftspec@ds {
         -> renderState(diagram, pretty) -> ir
         return ir
       }
-      opt it is a matrix / matrix-diagram {
-        -> renderMatrix(diagram, pretty) -> ir
+      opt it is a table / table-diagram {
+        -> renderTable(diagram, pretty) -> ir
         return ir
       }
       opt it is a tour / tour {

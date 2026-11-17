@@ -3,7 +3,7 @@
 // exclude each other. Its jumps are made on events, and the behaviours written call them (DS-250).
 // This namespace reads a machine once for whoever needs it: the checks that hold its rules to each
 // other and to the structure and the calls of the behaviours to its jumps, and the drawing of it.
-// It also says what the matrix of a machine holds (DS-251): the table itself is drawn by ds::render.
+// It also says what the table of a machine holds (DS-251): the table itself is drawn by ds::render.
 // Not its jobs: running the check (ds::check), drawing (ds::render).
 
 package driftspec@ds {
@@ -51,32 +51,32 @@ package driftspec@ds {
       + calls() -> std::vector<Call>
     }
 
-    // one cell of the matrix of a machine: where an event takes a state, and the behaviours that call
+    // one cell of the table of a machine: where an event takes a state, and the behaviours that call
     // the event when its receiver can only be where the machine has no jump, this state among them
     dataclass Cell {
-      @requirement REQ-00147-1
-      @requirement REQ-00148-1
+      @requirement REQ-00147-2
+      @requirement REQ-00148-2
       + to: std::string
       + against: std::vector<std::string>
     }
 
-    // one row of the matrix: an event, the behaviours that call it, and its cell under each state
+    // one row of the table: an event, the behaviours that call it, and its cell under each state
     dataclass Row {
-      @requirement REQ-00147-1
-      @requirement REQ-00148-1
+      @requirement REQ-00147-2
+      @requirement REQ-00148-2
       + event: std::string
       + callers: std::vector<std::string>
       + owns cells: std::vector<Cell>
     }
 
     // a machine as a table: its events down, its states across, and over it what the behaviours do
-    class Matrix {
-      @requirement REQ-00147-1
-      @requirement REQ-00148-1
+    class Table {
+      @requirement REQ-00147-2
+      @requirement REQ-00148-2
       - subject_: std::string
       - states_: std::vector<std::string>
       - owns rows_: std::vector<Row>
-      + Matrix(model: model::Model, machine: model::Entity)
+      + Table(model: model::Model, machine: model::Entity)
       + subject() -> std::string
       + states() -> std::vector<std::string>
       + rows() -> std::vector<Row>

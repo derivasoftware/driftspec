@@ -79,8 +79,8 @@ package net {
 }
 
 // the machine as a table: its events down, its states across; an empty cell is a pair it says nothing of
-diagram MX_Link {
-  kind: matrix
+diagram TB_Link {
+  kind: table
   include: net@link::Link
 }
 

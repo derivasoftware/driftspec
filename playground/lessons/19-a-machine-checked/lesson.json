@@ -3,7 +3,7 @@
     "en": "19 · A machine that is checked",
     "es": "19 · Una máquina que se comprueba"
   },
-  "version": 1,
+  "version": 2,
   "open": "store/Cart.ds",
   "steps": [
     {
@@ -156,15 +156,15 @@
       "write": {
         "file": "diagrams/behaviour.ds",
         "end": true,
-        "text": "diagram MX_Cart {\n  kind: matrix\n  include: shop@store::Cart\n}"
+        "text": "diagram TB_Cart {\n  kind: table\n  include: shop@store::Cart\n}"
       },
       "at": {
-        "pane": "MX_Cart"
+        "pane": "TB_Cart"
       },
-      "shows": "MX_Cart",
+      "shows": "TB_Cart",
       "text": {
-        "en": "The same machine as a table, `kind: matrix`: its events down, its states across, and in each cell where the event takes the state. An empty cell is a pair the machine says nothing of. The cell of `cancel` under `Shipped` is where the behaviour and the machine disagree: it names `shell::buy`.",
-        "es": "La misma máquina como tabla, `kind: matrix`: sus eventos hacia abajo, sus estados a lo ancho, y en cada casilla adónde lleva el evento desde ese estado. Una casilla vacía es una pareja de la que la máquina no dice nada. La casilla de `cancel` bajo `Shipped` es donde el comportamiento y la máquina no coinciden: nombra a `shell::buy`."
+        "en": "The same machine as a table, `kind: table`: its events down, its states across, and in each cell where the event takes the state. An empty cell is a pair the machine says nothing of. The cell of `cancel` under `Shipped` is where the behaviour and the machine disagree: it names `shell::buy`.",
+        "es": "La misma máquina como tabla, `kind: table`: sus eventos hacia abajo, sus estados a lo ancho, y en cada casilla adónde lleva el evento desde ese estado. Una casilla vacía es una pareja de la que la máquina no dice nada. La casilla de `cancel` bajo `Shipped` es donde el comportamiento y la máquina no coinciden: nombra a `shell::buy`."
       },
       "done": {
         "ack": {
@@ -192,10 +192,10 @@
     },
     {
       "at": {
-        "pane": "MX_Cart"
+        "pane": "TB_Cart"
       },
       "shows": [
-        "MX_Cart",
+        "TB_Cart",
         "ST_Cart"
       ],
       "text": {
