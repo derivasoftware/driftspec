@@ -71,7 +71,7 @@
 (guard_body) @string.special
 
 ; rules and definitions: formal, Datalog over the model (DS-94)
-[ "rule" "definition" "for" "where" "holds" "never" "if" "not" "is" "in" "arg" ] @keyword
+[ "rule" "definition" "for" "where" "holds" "never" "if" "not" "is" "in" "arg" "column" ] @keyword
 (rule name: (name) @function)
 (definition name: (name) @function)
 (range variable: (name) @variable)

@@ -21,7 +21,7 @@ that shows what it taught.
 
 | # | Lesson | What it teaches | Ends with |
 |---|---|---|---|
-| 0 | Where things are | the workspace and its files, a diagram per pane, relations lit on hover and click, a pane alone, problems | the page |
+| 0 | A tour | what DriftSpec is and what the playground is; the four parts of the page; the three perspectives over DriftSpec's own design: the HLD and the interfaces a use goes through, classes, a sequence and a tour played, rules and a table of them, requirements, a constraint, use cases; a finding | the map of everything the lessons detail |
 | **Static: the parts** ||||
 | 1 | A class and its diagram | package, module, class, identity; a diagram is a question; `owns`; a reference to nothing is a finding | `CL_Store`: Cart, Line, Money |
 | 2 | Members | attributes and methods, visibility `+ - #`, every form of default, `dataclass`, `enum`; interface and abstract are derived from the members | a richer `CL_Store` |
@@ -65,11 +65,12 @@ Notes for writing a lesson:
 
 | Key | What it does |
 |---|---|
-| `at` | what the card points at: `{file, find[, after]}` a line (`after: "}"` the end of that line's block), `{pane[, select]}` a diagram (and the class whose relations light up), `{panel: "problems"}` |
+| `at` | what the card points at: `{file, find[, after]}` a line (`after: "}"` the end of that line's block), `{pane[, select]}` a diagram (and the class whose relations light up), `{panel: "problems" \| "tree" \| "code" \| "diagrams"}` a part of the page, `{panel: "centre"}` nothing: the card in the middle |
 | `shows` | the diagrams the step is about, when they are not the pane the card points at or the one its check looks at: one or a list. The page shows the diagrams of a step alone while it lasts (DS-242), and plays the one that is a tour (DS-246); a lesson with a step done on the page itself moves nothing |
 | `write` | what the lesson types before the card asks anything: one or a list of `{file, end}`, `{file, below: {find[, after]}}`, `{file, into: {find[, first]}}` (end of the block, or its first line), `{file, replace, text}` |
 | `solution` | the same shapes, typed when the reader asks the lesson to write it |
 | `open` (lesson) | the file the lesson opens first |
+| `workspace` (lesson) | `"driftspec"`: the lesson walks DriftSpec's own design (`design/` and `playground/design/`, read as they are) with its own files added, instead of a workspace of its own (lesson 0) |
 | `title`, `text`, `done.ack` | each `{"en": ..., "es": ...}`; the code between backquotes is the same in both |
 | `done` | `{ack}` a button; `opened`, `selected` (a pane), `solo` (a pane or `false`) for steps done on the page, with a `solution` of `{ui: open|select|solo|unsolo}` behind "Show me"; otherwise every condition given must hold: `entity`, `edge {diagram, from, to}`, `draws {diagram, text}`, `hides {diagram, text}` (the diagram is drawn and no longer shows it), `finding`, `gone` (a code that must have left the problems: what was left to write is written), `clean`; what is not yet written (coverage) reads as information, never as a problem |
 

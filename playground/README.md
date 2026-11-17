@@ -11,7 +11,7 @@ it joins (DS-245); `?play=<diagram>` in the address starts one.
 |---|---|
 | `web/` | The page (`index.html`), its engine loader (`engine.js`) and `home/`, the example the Home tab shows (two `.ds` files the engine draws when the page loads; `shop.ds` carries one error on purpose). |
 | `lessons/NN-*/` | One lesson each: the workspace it starts from and `lesson.json`, its steps. `lessons/README.md` is the curriculum and the step format. |
-| `build.py` | Assembles the static site in `site/`: the page, `ds.js` + `ds.wasm`, the brand from `doc/assets`, and `examples.json`: the lessons, then three whole examples (the shop of `examples/shop`, `examples/hola`, the design of this playground in `design/`, and driftspec's own design). |
+| `build.py` | Assembles the static site in `site/`: the page, `ds.js` + `ds.wasm`, the brand from `doc/assets`, and `examples.json`: the lessons, then whole examples (the shop of `examples/shop`, `examples/hola`, a state machine, and driftspec's own design, which holds the design of this playground as one of its packages). |
 
 The engine is `ds::api::Browser` (REQ-00113-1) compiled to WebAssembly by the tree itself:
 

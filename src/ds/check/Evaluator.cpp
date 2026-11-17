@@ -87,6 +87,10 @@ std::vector<model::Finding> Evaluator::run() {
     const model::Entity* e = model_.find(f.first);
     if (e && e->kind == model::Kind::Rule && !invalid_.count(f.first)) evaluateRule(f.first, f.second);
   }
+  for (const auto& f : model_.formulas()) {  // after the rules: a table may say which of them hold
+    const model::Entity* e = model_.find(f.first);
+    if (e && e->kind == model::Kind::Diagram && !invalid_.count(f.first)) tabulate(f.first, f.second);
+  }
   std::vector<model::Finding> out;
   out.swap(found_);
   return out;
@@ -138,7 +142,13 @@ bool Evaluator::validate(const std::string& id, const model::Formula& formula) {
     }
     bound.insert(range.variable);
   }
-  if (e->kind == model::Kind::Rule) {
+  if (e->kind == model::Kind::Diagram) {
+    ok = validateBody(id, formula.where, bound) && ok;
+    for (const auto& column : formula.columns) {
+      std::set<std::string> inColumn = bound;
+      if (column.form != "field") ok = validateBody(id, column.body, inColumn) && ok;
+    }
+  } else if (e->kind == model::Kind::Rule) {
     ok = validateBody(id, formula.where, bound) && ok;
     for (const auto& claim : formula.claims) {
       std::set<std::string> inClaim = bound;
@@ -362,6 +372,72 @@ void Evaluator::computeDefinitions() {
   }
 }
 
+void Evaluator::tabulate(const std::string& id, const model::Formula& formula) {
+  std::set<Bindings> subjects;
+  std::function<void(std::size_t, const Bindings&)> range = [&](std::size_t i, const Bindings& b) {
+    if (i == formula.ranges.size()) {
+      for (const auto& w : solve(id, formula.where, b, false)) subjects.insert(w);
+      return;
+    }
+    const model::Range& r = formula.ranges[i];
+    const std::string scope = r.scope.empty() ? "" : constants_[key(id, r.scope)];
+    const auto it = byKind_.find(r.kind);
+    if (it == byKind_.end()) return;
+    for (const auto& entity : it->second) {
+      if (!scope.empty() && !contains(scope, entity)) continue;
+      Bindings next = b;
+      next[r.variable] = entity;
+      range(i + 1, next);
+    }
+  };
+  range(0, {});
+  model::Tabulated table;
+  for (const auto& column : formula.columns) table.columns.push_back(column.name);
+  const auto shown = [&](const std::string& entity) {  // an artefact by its id, anything else by its name
+    const model::Entity* e = model_.find(entity);
+    return e && !e->name.empty() ? e->name : entity;
+  };
+  for (const auto& subject : subjects) {
+    std::vector<std::string> cells, kinds;
+    for (const auto& column : formula.columns) {
+      std::string text, kind;
+      if (column.form == "field") {
+        const auto bound = subject.find(column.variable);
+        const model::Entity* e = bound == subject.end() ? nullptr : model_.find(bound->second);
+        if (e && column.field == "name") {
+          text = e->name;
+        } else if (e && column.field == "id") {
+          text = e->id;
+        } else if (e && column.field == "holds" && e->kind == model::Kind::Rule) {  // a rule: whether the model keeps it
+          const auto broken = model_.breaches().find(e->id);
+          const bool holds = broken == model_.breaches().end() || broken->second.empty();
+          text = holds ? "holds" : "broken";
+          kind = holds ? "" : "against";
+        } else if (e) {
+          text = e->field(column.field);
+        }
+      } else if (column.form == "related") {
+        std::set<std::string> seen;
+        for (const auto& answer : solve(id, column.body, subject, false)) {
+          const auto at = answer.find(column.variable);
+          if (at == answer.end() || !seen.insert(at->second).second) continue;
+          text += (text.empty() ? "" : ", ") + shown(at->second);
+        }
+      } else {
+        const bool yes = !solve(id, column.body, subject, true).empty();
+        text = yes ? "yes" : "no";
+        kind = yes ? "" : "against";
+      }
+      if (text.empty()) kind = "none";
+      cells.push_back(text);
+      kinds.push_back(kind);
+    }
+    table.rows.push_back(cells);
+    table.kinds.push_back(kinds);
+  }
+  model_.tables()[id] = table;
+}
+
 void Evaluator::evaluateRule(const std::string& id, const model::Formula& formula) {
   if (formula.claims.size() != 1) return;  // the checker says so (W-RULE-NO-CLAIM)
   const model::Entity* rule = model_.find(id);
@@ -423,6 +499,12 @@ bool Evaluator::value(const std::string& owner, const model::Term& term, const B
     const auto it = bindings.find(term.text);
     if (it == bindings.end()) return false;
     out_value = it->second;
+    if (!term.field.empty()) {  // a field of what it is bound to (DS-268)
+      const model::Entity* e = model_.find(it->second);
+      out_value = !e ? "" : term.field == "name" ? e->name : term.field == "id" ? e->id : e->field(term.field);
+      double ignored = 0;
+      if (!number(out_value, ignored)) out_value = "\"" + out_value + "\"";  // a text compares with a string as written
+    }
     return true;
   }
   const auto it = constants_.find(key(owner, term.text));
@@ -437,7 +519,13 @@ std::string Evaluator::definitionOf(const std::string& owner, const std::string&
 
 bool Evaluator::contains(const std::string& outer, const std::string& inner) const {
   const model::Index index = model_.index();
-  for (std::string up = index.parent(inner); !up.empty(); up = index.parent(up))
+  std::string up = index.parent(inner);
+  if (up.empty()) {  // an artefact hangs from no box by `contains`: it is in the box it was written in (DS-268)
+    const model::Entity* e = model_.find(inner);
+    up = e ? e->scope : "";
+    while (!up.empty() && (up.back() == '@' || up.back() == ':')) up.pop_back();
+  }
+  for (; !up.empty(); up = index.parent(up))
     if (up == outer) return true;
   return false;
 }

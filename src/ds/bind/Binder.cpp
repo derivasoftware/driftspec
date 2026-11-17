@@ -104,6 +104,7 @@ namespace {
 
 model::Term termOf(const parse::ParsedFile& file, TSNode node) {
   const std::string text = file.textOf(node);
+  if (is(node, "field_term")) return {fieldText(file, node, "of"), true, false, fieldText(file, node, "field")};
   if (!is(node, "qualified_name")) return {text, false, true};  // a number or a string: a value
   // a bare name is a variable; an entity is always written qualified (the form decides, nothing is guessed)
   return {text, !model::Identity(text).isQualified(), false};
@@ -189,6 +190,24 @@ void Binder::bindFormula(const parse::ParsedFile& file, TSNode node, model::Enti
       formula.claims.push_back(literals(c));
       formula.never = is(c, "rule_never");
       append(formula.never ? "never" : "holds", clauseText(file, c));
+    } else if (is(c, "column")) {
+      TSNode what = ts_node_named_child(c, ts_node_named_child_count(c) - 1);
+      model::Column column;
+      column.name = fieldText(file, c, "name");
+      column.location = locationOf(file, c);
+      if (is(what, "column_field")) {
+        column.form = "field";
+        column.variable = fieldText(file, what, "of");
+        column.field = fieldText(file, what, "field");
+      } else if (is(what, "column_related")) {
+        column.form = "related";
+        column.variable = fieldText(file, what, "show");
+        column.body = literals(what);
+      } else {
+        column.form = "holds";
+        column.body = literals(what);
+      }
+      formula.columns.push_back(column);
     } else if (is(c, "definition_case")) {
       formula.cases.push_back(literals(c));
       append("if", clauseText(file, c));
@@ -196,6 +215,7 @@ void Binder::bindFormula(const parse::ParsedFile& file, TSNode node, model::Enti
       formula.parameters.push_back(file.textOf(c));  // a definition's parameters
     }
   }
+  if (out_entity.kind == model::Kind::Diagram && formula.ranges.empty() && formula.columns.empty()) return;  // no table written
   model_.state(out_entity.id, formula);
 }
 
@@ -945,6 +965,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.id = model::Identity::ofDiagram(e.name).text();
       e.location = loc;
       bindFields(file, c, e);
+      bindFormula(file, c, e);  // a table's rows and columns (DS-268)
       model_.declare(e);
     }
   }

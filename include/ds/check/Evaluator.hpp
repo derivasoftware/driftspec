@@ -32,6 +32,8 @@ class Evaluator {
   bool stratify();
   void computeDefinitions();
   void evaluateRule(const std::string& id, const model::Formula& formula);
+  /// A table (DS-268): a row per binding of its ranges that passes its where, a cell per column.
+  void tabulate(const std::string& id, const model::Formula& formula);
 
   /// Every answer of `body` that extends `bindings`; `first` stops at the first one.
   std::vector<std::map<std::string, std::string>> solve(const std::string& owner, const std::vector<model::Literal>& body,

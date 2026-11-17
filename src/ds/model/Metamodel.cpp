@@ -194,7 +194,9 @@ std::vector<KindSpec> build() {
         written("unfold", FieldType::Patterns, "the calls a sequence follows: *, a box, an operation; alone, every other call is folded"),
         written("fold", FieldType::Patterns, "the calls a sequence does not follow"),
         written("show", FieldType::Names, "the extras it draws"), written("hide", FieldType::Names, "the compartments it leaves out"),
-        written("neighbours", FieldType::Number, "how many steps of neighbours it adds")},
+        written("neighbours", FieldType::Number, "how many steps of neighbours it adds"),
+        syntax("for", FieldType::Text, "the rows of a table: what it ranges over, as a rule does"),
+        syntax("where", FieldType::Text, "the rows of a table that stay: the literals each must answer")},
        {},
        {},
        true});

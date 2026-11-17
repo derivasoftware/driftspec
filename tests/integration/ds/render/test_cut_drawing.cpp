@@ -140,6 +140,40 @@ TEST_F(TestCutDrawing, ARelationLiftedOntoClosedBoxesIsOneOfTwoBondsAndOneArrowO
   for (const auto& e : ir["edges"]) EXPECT_TRUE(e["refs"]["bond"] == "structural" || e["refs"]["bond"] == "uses");
 }
 
+TEST_F(TestCutDrawing, AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough) {
+  ds::parse::Parser parser;
+  ds::model::Model other;
+  ds::bind::Binder binder(other);
+  binder.bind(parser.parseText("a.ds",
+                               "package p {\n"
+                               "  package tool {\n"
+                               "    interface door {\n      kind: library\n      operation ask(question: string) -> string\n    }\n"
+                               "    sequence door::ask {\n      return answer\n    }\n"
+                               "    module core {\n      class Core {\n        + run() -> none\n      }\n    }\n"
+                               "  }\n"
+                               "  package app {\n"
+                               "    module ui {\n"
+                               "      class Screen {\n        @uses p@tool@door\n        + show(question: string) -> string\n      }\n"
+                               "      sequence Screen::show {\n        local door: p@tool@door\n        -> door.ask(question) -> answer\n  "
+                               "      return answer\n      }\n"
+                               "      class Plain {\n        + refs core: p@tool@core::Core\n      }\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"
+                               "diagram HLD {\n  kind: class\n  include: p@*\n  close: package\n}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(other, checkSteps).run(binder);
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:HLD", false));
+  std::string use, structural = "none";
+  for (const auto& e : ir["edges"]) {
+    if (e["from"] != "p@app" || e["to"] != "p@tool") continue;
+    if (e["refs"]["bond"] == "uses") use = e.value("title", "");
+    if (e["refs"]["bond"] == "structural") structural = e.value("title", "");
+  }
+  EXPECT_EQ(use, "door: ask");  // the use goes through the door, and asks
+  EXPECT_EQ(structural, "");    // the reference to the core is a bond: it says nothing
+}
+
 TEST_F(TestCutDrawing, WithTheBoxesOpenEveryRelationKeepsItsOwnKind) {
   const auto ir = diagram("CL_Everything");
   std::set<std::string> kinds;

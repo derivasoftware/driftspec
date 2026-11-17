@@ -1,0 +1,59 @@
+// Lesson 0 · A tour. The lesson walks DriftSpec's own design (design/, read as it is) and adds only these
+// diagrams: small views over that large model, one for each thing the tour stops at.
+
+diagram T_Boxes {                      // from far away: the packages closed, each with what it holds and offers
+  kind: class
+  include: driftspec@*
+  close: package
+}
+
+diagram T_Classes {                    // one box opened into its classes: the one that compares two versions
+  kind: class
+  include: driftspec@ds@diff::*
+}
+
+diagram T_Interface {                  // a box seen from outside: three of the doors of the tool
+  kind: interface
+  include: driftspec@ds@cli, driftspec@ds@engine, driftspec@ds@browser
+}
+
+diagram T_Behaviour {                  // one operation told step by step, one level down
+  kind: sequence
+  include: driftspec@ds@cli::check
+  depth: 1
+}
+
+diagram T_Requirement {                // one requirement with what keeps it and what proves it
+  kind: requirement
+  include: REQ-00145-1
+}
+
+diagram T_Rules {                      // the rules of the tool: what each says, its requirement, whether it holds
+  kind: table
+  for rule r in driftspec@ds
+  column rule: r.title
+  column requirement: x where r requires x
+  column model: r.holds
+}
+
+diagram T_Requirements {               // the requirements of the playground: who keeps each and what proves it
+  kind: table
+  for requirement r in driftspec@playground
+  column requirement: r.id
+  column says: r.title
+  column kept: x where x requires r
+  column proved: v where v verifies r
+}
+
+diagram T_Constraint {                 // one constraint, with what it governs
+  kind: requirement
+  include: CST-00008-2
+}
+
+diagram T_UseCases {                   // what DriftSpec is for: each use case and the system requirements it answers
+  kind: table
+  for usecase u in driftspec
+  column usecase: u.id
+  column says: u.title
+  column answers: x where u requires x
+}

@@ -462,6 +462,7 @@ package driftspec@ds {
       + text: std::string
       + variable: bool
       + value: bool
+      + field: std::string
     }
 
     dataclass Literal {                      // one literal of a rule or a definition
@@ -481,7 +482,24 @@ package driftspec@ds {
       + owns location: Location
     }
 
-    dataclass Formula {                      // what a rule or a definition says, read from its syntax
+    dataclass Column {                       // one column of a table: a field of the row, what is related to it, or a yes/no
+      @requirement REQ-00154-1
+      + name: std::string
+      + form: std::string
+      + variable: std::string
+      + field: std::string
+      + owns body: std::vector<Literal>
+      + owns location: Location
+    }
+
+    dataclass Tabulated {                    // a table as the model answers it: the headings and, per row, a cell under each
+      @requirement REQ-00154-1
+      + columns: std::vector<std::string>
+      + rows: std::vector<std::vector<std::string>>
+      + kinds: std::vector<std::vector<std::string>>
+    }
+
+    dataclass Formula {                      // what a rule, a definition or a table says, read from its syntax
       @requirement REQ-00095-2
       + owns ranges: std::vector<Range>
       + owns where: std::vector<Literal>
@@ -489,6 +507,7 @@ package driftspec@ds {
       + never: bool
       + parameters: std::vector<std::string>
       + cases: std::vector<std::vector<Literal>>
+      + owns columns: std::vector<Column>
     }
 
     dataclass Breach {                       // one binding that breaks a rule, its answer, where it lands
@@ -605,6 +624,7 @@ package driftspec@ds {
       - owns coverage_: std::vector<Finding>
       - owns formulas_: std::map<std::string, Formula>
       - owns breaches_: std::map<std::string, std::vector<Breach>>
+      - owns tables_: std::map<std::string, Tabulated>
       - owns indexed_: Indexed
       + index() -> Index
       - indexEntity(entity: Entity, enters: bool) -> void
@@ -636,6 +656,9 @@ package driftspec@ds {
       }
       + breach(rule: std::string, breach: Breach) -> void {
         @requirement REQ-00098-1
+      }
+      + tables() -> std::map<std::string, Tabulated> {
+        @requirement REQ-00154-1
       }
     }
 

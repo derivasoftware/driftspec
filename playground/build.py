@@ -22,12 +22,23 @@ def workspace(folder: pathlib.Path) -> dict[str, str]:
     return {str(p.relative_to(folder)): p.read_text() for p in sorted(folder.rglob("*.ds"))}
 
 
+def whole_design() -> dict[str, str]:
+    """DriftSpec's own design with the playground's, which is one of its packages kept beside its code."""
+    return {**workspace(ROOT / "design"), **{f"playground/{k}": v for k, v in workspace(HERE / "design").items()}}
+
+
+def lesson_files(folder: pathlib.Path, lesson: dict) -> dict[str, str]:
+    """The files a lesson starts from: its own, over driftspec's whole design when it walks it (`"workspace": "driftspec"`)."""
+    files = whole_design() if lesson.get("workspace") == "driftspec" else {}
+    return {**files, **workspace(folder)}  # what the lesson adds of its own goes with it
+
+
 def examples() -> list[dict]:
     """The lessons the page offers, in their order."""
     out = []
     for folder in sorted(p for p in (HERE / "lessons").iterdir() if (p / "lesson.json").exists()):
         lesson = json.loads((folder / "lesson.json").read_text())
-        out.append({"name": lesson["title"]["en"], "id": folder.name, "files": workspace(folder), "lesson": lesson})
+        out.append({"name": lesson["title"]["en"], "id": folder.name, "files": lesson_files(folder, lesson), "lesson": lesson})
     return out
 
 
@@ -39,14 +50,13 @@ EXAMPLES = [
      ROOT / "examples" / "hola"),
     ("states", {"en": "Example: a connection, a machine that is checked", "es": "Ejemplo: una conexión, una máquina que se comprueba"},
      HERE / "examples" / "states"),
-    ("playground", {"en": "Example: the design of this playground", "es": "Ejemplo: el diseño de este playground"}, HERE / "design"),
     ("driftspec", {"en": "Example: the design of DriftSpec itself", "es": "Ejemplo: el diseño del propio DriftSpec"}, ROOT / "design"),
 ]
 
 
 def showcases() -> list[dict]:
     """The examples the page offers after the lessons: whole workspaces that check clean."""
-    return [{"name": title["en"], "id": key, "title": title, "files": workspace(folder), "group": "examples"}
+    return [{"name": title["en"], "id": key, "title": title, "files": whole_design() if key == "driftspec" else workspace(folder), "group": "examples"}
             for key, title, folder in EXAMPLES]
 
 

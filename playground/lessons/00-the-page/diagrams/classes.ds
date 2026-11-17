@@ -1,4 +1,0 @@
-diagram CL_Store {
-  kind: class
-  include: shop@store::*
-}
