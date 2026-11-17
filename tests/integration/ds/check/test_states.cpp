@@ -49,11 +49,11 @@ TEST_F(TestStates, AStateIsWrittenWithTheRuleThatComputesItOverWhatItsSubjectHol
   EXPECT_NE(rules.find("Open|status=Open,!cancelled|"), std::string::npos) << rules;
   EXPECT_NE(rules.find("Cancelled|cancelled,status!=Shipped|"), std::string::npos) << rules;
   EXPECT_NE(machine->field("transitions").find("Open>Paid>pay"), std::string::npos);
-  // nothing of the three machines whose rules exclude each other is reported
-  for (const auto& f : model.findings()) {
-    EXPECT_EQ(f.message.find("Order"), std::string::npos) << f.message;
-    EXPECT_EQ(f.message.find("Offer"), std::string::npos) << f.message;
-    EXPECT_EQ(f.message.find("Lamp "), std::string::npos) << f.message;
+  // nothing is said of the rules of the three machines whose rules exclude each other
+  for (const std::string code : {"W-STATE-OVERLAP", "W-STATE-VALUE", "W-STATE-UNDECLARED", "W-STATE-IMPOSSIBLE"}) {
+    EXPECT_FALSE(says(code, "Order")) << code;
+    EXPECT_FALSE(says(code, "Offer")) << code;
+    EXPECT_FALSE(says(code, "Lamp ")) << code;
   }
 }
 
@@ -76,6 +76,24 @@ TEST_F(TestStates, AValueItsTypeLacksAnAttributeTheSubjectLacksAndARuleThatExclu
   EXPECT_TRUE(says("W-STATE-IMPOSSIBLE", "the state Stuck of Door can never be"));
   // a rule that is already wrong is said once: it is not held to the others
   EXPECT_FALSE(says("W-STATE-OVERLAP", "Door"));
+}
+
+// ---- DS-250: the calls of the behaviours written, held to the machine --------------------------------------
+
+TEST_F(TestStates, ACallOfAnEventTheMachineLetsHappenFromNoStateItsReceiverMayBeInIsAFindingWhereItIsMade) {
+  const auto all = said("W-STATE-ORDER");
+  ASSERT_EQ(all.size(), 1u);
+  // pay, ship, then cancel: once shipped, the machine lets nothing cancel the order
+  EXPECT_EQ(all[0],
+            "Desk::rush calls order.cancel() when order can only be Shipped: the machine of Order lets cancel happen from Open or Paid");
+  for (const auto& f : model.findings())
+    if (f.code == "W-STATE-ORDER") EXPECT_EQ(f.location.line, 53);  // the line of the call
+}
+
+TEST_F(TestStates, CallsInTheOrderOfTheMachineACallAfterAFrameThatMayNotHappenAndAFirstCallAreNoFinding) {
+  EXPECT_FALSE(says("W-STATE-ORDER", "Desk::sell"));   // pay, then ship
+  EXPECT_FALSE(says("W-STATE-ORDER", "Desk::close"));  // ship inside an opt, then cancel: the order may still be open
+  EXPECT_FALSE(says("W-STATE-ORDER", "Desk::label"));  // ship as the first call: the order may be in any state
 }
 
 }  // namespace

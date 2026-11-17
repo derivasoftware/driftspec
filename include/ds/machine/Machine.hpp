@@ -9,6 +9,17 @@
 namespace ds {
 namespace machine {
 
+/// One call of an event of a machine, found in a behaviour written (DS-250): who makes it, on what, and the
+/// states its receiver may be in when it is made.
+struct Call {
+  std::string behaviour;          ///< the behaviour that makes it, as a reader calls it: Session::restart
+  std::string message;            ///< the message that makes it
+  std::string receiver;           ///< the name it is made on, in that behaviour
+  std::string event;              ///< the operation called: an event of the machine
+  std::vector<std::string> from;  ///< the states the receiver may be in when it is made
+  bool fits = true;               ///< whether a jump of the machine lets the event happen from one of them
+};
+
 /// A state machine as its author wrote it (DS-249), read once for whoever needs it: the check that holds its
 /// rules to each other and to the structure, and the drawing. A state is computed by a rule over the context
 /// of the machine's subject: what its attributes are worth. The rules of a machine exclude each other, so
@@ -27,6 +38,16 @@ class Machine {
   /// What the rules say that cannot be: an attribute the subject does not hold, a value its type does not
   /// have, a rule that excludes itself, and two states that can hold at once, with a context in which they do.
   std::vector<model::Finding> faults() const;
+  /// The events its jumps are made on, in the order written.
+  std::vector<std::string> events() const;
+  /// The states the jumps let an event happen from, in the order written.
+  std::vector<std::string> sources(const std::string& event) const;
+  /// Every call of one of its events in the behaviours written (DS-250), each behaviour in the order it is
+  /// written. Along a behaviour the states a receiver may be in are kept: any, to begin with; a call of an
+  /// event moves them by the jumps on it; a jump with a guard, and a call inside a frame, may leave them
+  /// where they were; an operation that is no event of the machine moves nothing. A call no jump lets
+  /// happen from any of them does not fit.
+  std::vector<Call> calls() const;
 
  private:
   const model::Model& model_;

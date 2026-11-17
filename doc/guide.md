@@ -219,6 +219,16 @@ them. The vision (`vision.md`) says why; this says what.*
     (`W-STATE-IMPOSSIBLE`).
   - The start is not written: the machine starts in the state the defaults of
     its subject are in. A state diagram draws each state with its rule.
+- The calls of the behaviours, held to the machine (DS-250). The behaviours
+  are read as they are. Along one, what it calls an event on may be in any
+  state to begin with, and each call of an event moves it by the jumps on
+  that event; a jump with a guard may leave it where it was. A frame may not
+  happen, the sides of an alt are each one way, and a loop is read once. An
+  operation that is no event moves nothing. A call the machine lets happen
+  from no state its receiver may be in is `W-STATE-ORDER`, where it is made:
+  *Desk::rush calls order.cancel() when order can only be Shipped: the machine
+  of Order lets cancel happen from Open or Paid.* In a state diagram each jump
+  says, when pointed at, the behaviours that call its event.
 
 ## 4. Requirements, constraints and verifications (`examples/artefacts`, decided 2026-10-25)
 

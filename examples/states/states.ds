@@ -1,4 +1,5 @@
-// The states of a machine as rules over the context of its subject (DS-249).
+// The states of a machine as rules over the context of its subject (DS-249), and the calls of the
+// behaviours held to its jumps (DS-250).
 //
 // A state is not kept in a variable: it is computed. Each rule says when the subject is in a state, over
 // what the subject holds: `Paid if status = Paid`. The literals are joined by commas and all hold; a name
@@ -30,6 +31,35 @@ package shop {
       Paid -> Shipped on ship
       Open -> Cancelled on cancel
       Paid -> Cancelled on cancel
+    }
+
+    // ---- the calls of the behaviours, held to the machine (DS-250) --------------------------------------
+    // Nothing is asked of a behaviour: it is read as it is. Along it, what it calls an event on may be in
+    // any state to begin with, and each call of an event moves it by the jumps on that event.
+    class Desk {
+      - owns order: Order
+      + sell() -> none
+      + rush() -> none
+      + close() -> none
+      + label() -> none
+    }
+    sequence Desk::sell {                             // pay, then ship: the order the machine writes
+      self -> order.pay()
+      self -> order.ship()
+    }
+    sequence Desk::rush {
+      self -> order.pay()
+      self -> order.ship()
+      self -> order.cancel()                          // ! W-STATE-ORDER: once shipped, nothing cancels it
+    }
+    sequence Desk::close {
+      opt it was paid {
+        self -> order.ship()                          // inside a frame: it may not happen
+      }
+      self -> order.cancel()                          // so the order may still be open: nothing to report
+    }
+    sequence Desk::label {
+      self -> order.ship()                            // the first call: the order may be in any state
     }
 
     // ---- a state with two rules: two ways of being in it ------------------------------------------------

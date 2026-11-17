@@ -208,4 +208,135 @@ TEST_F(TestMachine, AnAttributeWhoseValuesCannotBeListedIsComparedAsWritten) {
   EXPECT_EQ(machine("Tank").initial(), "Empty");
 }
 
+// ---- DS-250: the calls of its events in the behaviours written --------------------------------------
+
+const char* const kShop =
+    "    class Order {\n"
+    "      + pay() -> none\n"
+    "      + ship() -> none\n"
+    "      + cancel() -> none\n"
+    "      + audit() -> none\n"
+    "      + settle() -> none\n"
+    "    }\n"
+    "    state Order {\n"
+    "      initial Open\n"
+    "      Open -> Paid on pay [enough]\n"
+    "      Paid -> Shipped on ship\n"
+    "      Open -> Cancelled on cancel\n"
+    "      Paid -> Cancelled on cancel\n"
+    "    }\n"
+    "    class Desk {\n"
+    "      - owns order: Order\n"
+    "      - owns other: Order\n"
+    "      + run() -> none\n"
+    "    }\n";
+
+/// The calls of the events of the order a behaviour of the desk makes: `event from A,B` and `!` when it does not fit.
+class TestCalls : public TestMachine {
+ protected:
+  std::vector<std::string> made(const std::string& behaviour) {
+    load(std::string(kShop) + behaviour);
+    std::vector<std::string> out;
+    for (const auto& call : machine("Order").calls()) {
+      std::string from;
+      for (const auto& state : call.from) from += (from.empty() ? "" : ",") + state;
+      out.push_back(call.receiver + "." + call.event + " from " + from + (call.fits ? "" : " !"));
+    }
+    return out;
+  }
+};
+
+TEST_F(TestCalls, ItsEventsAreWhatItsJumpsAreMadeOnAndEachHasTheStatesItHappensFrom) {
+  load(kShop);
+  EXPECT_EQ(machine("Order").events(), (std::vector<std::string>{"pay", "ship", "cancel"}));
+  EXPECT_EQ(machine("Order").sources("cancel"), (std::vector<std::string>{"Open", "Paid"}));
+  EXPECT_TRUE(machine("Order").sources("audit").empty());
+  EXPECT_TRUE(machine("Order").calls().empty());  // no behaviour is written
+}
+
+TEST_F(TestCalls, ACallIsFoundWithWhoMakesItAndTheStatesItsReceiverMayBeIn) {
+  load(std::string(kShop) +
+       "    sequence Desk::run {\n"
+       "      self -> order.ship()\n"
+       "    }\n");
+  const auto calls = machine("Order").calls();
+  ASSERT_EQ(calls.size(), 1u);
+  EXPECT_EQ(calls[0].behaviour, "Desk::run");
+  EXPECT_EQ(calls[0].receiver, "order");
+  EXPECT_EQ(calls[0].event, "ship");
+  EXPECT_EQ(calls[0].from, (std::vector<std::string>{"Open", "Paid", "Shipped", "Cancelled"}));  // the first call: any state
+  EXPECT_TRUE(calls[0].fits);
+  ASSERT_NE(model.find(calls[0].message), nullptr);
+  EXPECT_EQ(model.find(calls[0].message)->location.line, 23);
+}
+
+TEST_F(TestCalls, ACallMovesItsReceiverByTheJumpsOnItsEventAndOneNoJumpLetsHappenDoesNotFit) {
+  EXPECT_EQ(made("    sequence Desk::run {\n"
+                 "      self -> order.cancel()\n"
+                 "      self -> order.ship()\n"
+                 "    }\n"),
+            (std::vector<std::string>{"order.cancel from Open,Paid,Shipped,Cancelled", "order.ship from Cancelled !"}));
+}
+
+TEST_F(TestCalls, AJumpWithAGuardMayLeaveItsReceiverWhereItWas) {
+  EXPECT_EQ(made("    sequence Desk::run {\n"
+                 "      self -> order.pay()\n"
+                 "      self -> order.cancel()\n"
+                 "    }\n"),
+            (std::vector<std::string>{"order.pay from Open,Paid,Shipped,Cancelled", "order.cancel from Open,Paid"}));
+}
+
+TEST_F(TestCalls, AFrameMayNotHappenAndInsideItTheOrderIsHeld) {
+  EXPECT_EQ(made("    sequence Desk::run {\n"
+                 "      opt it was paid {\n"
+                 "        self -> order.ship()\n"
+                 "        self -> order.cancel()\n"
+                 "      }\n"
+                 "      self -> order.cancel()\n"
+                 "    }\n"),
+            (std::vector<std::string>{"order.ship from Open,Paid,Shipped,Cancelled", "order.cancel from Shipped !",
+                                      "order.cancel from Open,Paid,Shipped,Cancelled"}));
+}
+
+TEST_F(TestCalls, TheSidesOfAnAltAreEachOneWay) {
+  EXPECT_EQ(made("    sequence Desk::run {\n"
+                 "      alt it was paid {\n"
+                 "        self -> order.ship()\n"
+                 "      } else {\n"
+                 "        self -> order.cancel()\n"
+                 "      }\n"
+                 "      self -> order.cancel()\n"
+                 "    }\n"),
+            (std::vector<std::string>{"order.ship from Open,Paid,Shipped,Cancelled", "order.cancel from Open,Paid,Shipped,Cancelled",
+                                      "order.cancel from Shipped,Cancelled !"}));
+}
+
+TEST_F(TestCalls, ALoopIsReadOnceSinceItsReceiverMayBeAnotherEachTime) {
+  EXPECT_EQ(made("    sequence Desk::run {\n"
+                 "      loop each order {\n"
+                 "        self -> order.cancel()\n"
+                 "      }\n"
+                 "    }\n"),
+            (std::vector<std::string>{"order.cancel from Open,Paid,Shipped,Cancelled"}));
+}
+
+TEST_F(TestCalls, AnOperationThatIsNoEventMovesNothingAndTwoReceiversAreFollowedApart) {
+  EXPECT_EQ(made("    sequence Desk::run {\n"
+                 "      self -> order.ship()\n"
+                 "      self -> order.audit()\n"
+                 "      self -> other.cancel()\n"
+                 "      self -> order.cancel()\n"
+                 "    }\n"),
+            (std::vector<std::string>{"order.ship from Open,Paid,Shipped,Cancelled", "other.cancel from Open,Paid,Shipped,Cancelled",
+                                      "order.cancel from Shipped !"}));
+}
+
+TEST_F(TestCalls, ABehaviourOfTheSubjectCallingItsOwnEventsIsFollowed) {
+  EXPECT_EQ(made("    sequence Order::settle {\n"
+                 "      -> ship()\n"
+                 "      -> cancel()\n"
+                 "    }\n"),
+            (std::vector<std::string>{"self.ship from Open,Paid,Shipped,Cancelled", "self.cancel from Shipped !"}));
+}
+
 }  // namespace

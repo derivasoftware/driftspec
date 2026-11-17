@@ -716,6 +716,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   for (const auto& machine : query::StateFilter(split(diagram.field("include"), ',')).machines(model_)) {  // DS-127
     const model::Entity* state = model_.find(machine);
     const machine::Machine written(model_, *state);  // a state a rule computes shows its rule (DS-249)
+    const std::vector<machine::Call> calls = written.calls();
     const auto box = [&](const std::string& name) {
       const std::string id = state->id + "::" + name;
       if (!drawn.insert(id).second) return id;
@@ -778,10 +779,21 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       const auto first = move.find('>');
       const auto second = move.find('>', first + 1);
       if (first == std::string::npos || second == std::string::npos) continue;
-      edges.push_back({{"from", box(move.substr(0, first))},
-                       {"to", box(move.substr(first + 1, second - first - 1))},
-                       {"kind", "association"},
-                       {"label", move.substr(second + 1)}});
+      // a jump says the behaviours that call its event (DS-250): the label stays as it is written
+      const std::string label = move.substr(second + 1);
+      const std::string event = label.substr(0, label.find_first_of(" ["));
+      std::vector<std::string> callers;
+      for (const machine::Call& call : calls)
+        if (call.event == event && std::find(callers.begin(), callers.end(), call.behaviour) == callers.end())
+          callers.push_back(call.behaviour);
+      std::string in;
+      for (const std::string& caller : callers) in += (in.empty() ? "" : ", ") + caller;
+      nlohmann::json edge = {{"from", box(move.substr(0, first))},
+                             {"to", box(move.substr(first + 1, second - first - 1))},
+                             {"kind", "association"},
+                             {"label", label}};
+      if (!in.empty()) edge["title"] = event + " is called in " + in;  // one nobody calls says nothing
+      edges.push_back(edge);
     }
   }
   nlohmann::json out;

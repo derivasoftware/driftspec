@@ -136,4 +136,20 @@ TEST_F(TestStateView, AMachineWithNoStartWrittenStartsWhereTheDefaultsOfItsSubje
   EXPECT_NE(edge(lamp, "shop@order::Lamp::state::initial", "shop@order::Lamp::state::Dark"), nullptr);
 }
 
+// DS-250: a jump says the behaviours that call its event
+TEST_F(TestStateView, AJumpSaysTheBehavioursThatCallItsEventAndOneNobodyCallsSaysNothing) {
+  const auto order = draw("states", "STM_Order");
+  const auto* pay = edge(order, "shop@order::Order::state::Open", "shop@order::Order::state::Paid");
+  ASSERT_NE(pay, nullptr);
+  EXPECT_EQ((*pay)["label"], "pay");  // the label stays as it is written
+  EXPECT_EQ((*pay)["title"], "pay is called in Desk::rush, Desk::sell");
+  const auto* ship = edge(order, "shop@order::Order::state::Paid", "shop@order::Order::state::Shipped");
+  ASSERT_NE(ship, nullptr);
+  EXPECT_EQ((*ship)["title"], "ship is called in Desk::close, Desk::label, Desk::rush, Desk::sell");
+  // the navigation of an interface, whose events no behaviour calls: its jumps say nothing more
+  const auto web = draw("interfaces", "ST_Web");
+  ASSERT_FALSE(web["edges"].empty());
+  for (const auto& e : web["edges"]) EXPECT_FALSE(e.contains("title")) << e;
+}
+
 }  // namespace

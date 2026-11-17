@@ -189,6 +189,18 @@ class StateRules : public ACheck {
   std::vector<model::Finding> check(const Context& context) override;
 };
 
+/// The calls of the behaviours written, held to the machine of what they are made on (DS-250): a call of an
+/// event made when its receiver can be in no state the machine lets it happen from. The behaviours are
+/// read as they are: nothing is asked of them.
+class CallOrder : public ACheck {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check(const Context& context) override;
+};
+
 /// Ownership, artefacts, extensions and fields.
 class StructureCheck : public ACheck {
  public:

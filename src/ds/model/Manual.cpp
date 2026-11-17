@@ -315,6 +315,10 @@ std::vector<CodeSpec> buildCodes() {
        "Name an attribute of the subject of the machine."},
       {"W-STATE-IMPOSSIBLE", "warning", "The rule of a state asks two things that exclude each other: the subject can never be in it.",
        "Correct the rule."},
+      {"W-STATE-ORDER", "warning",
+       "A behaviour calls an event of a machine when what it calls it on can be in no state from which the machine lets that event "
+       "happen.",
+       "Correct the order of the calls, or the jumps of the machine."},
       {"W-MESSAGE-NO-OPERATION", "coverage",
        "A scenario sends a message to a box that offers no operation of that name: the message is a label, and the level below is not "
        "written yet.",
