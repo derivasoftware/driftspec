@@ -6,6 +6,9 @@
 <title>DriftSpec</title>
 <link rel="icon" type="image/svg+xml" href="brand/driftspec-tile.svg">
 <link rel="apple-touch-icon" href="brand/driftspec-icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
@@ -28,6 +31,7 @@
   --kw: var(--s-kw); --ty: var(--s-ty); --id: var(--c-req); --com: var(--faint); --str: var(--s-str);
   --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --brand: #B79CF0; --on-brand: #151618; --figtree: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: dark;
 }
 :root[data-theme="light"] {
@@ -39,6 +43,7 @@
   --s-fn: #795e26; --s-pn: #001080; --s-ty: #267f99; --s-kw: #af00db; --s-str: #a31515;
   --v-pub: #1e8e3e; --v-prot: #a67c00; --v-priv: #d1343f;
   --r-inherits: #6b46c1; --r-has: #9a6b00; --r-refers: #0f766e; --r-uses: #1d5fbf;
+  --brand: #6B3FB8; --on-brand: #ffffff;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -66,13 +71,74 @@ body:not([data-tab="editor"]) > main { display: none; }
 body:not([data-tab="editor"]) .coach { display: none !important; }
 .page { flex: 1; min-height: 0; overflow: auto; background: var(--page); }
 .page[hidden] { display: none; }
-#home .hero { max-width: 760px; margin: 0 auto; padding: 14vh 24px 40px; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
-#home .hero img { height: 56px; width: auto; }
-#home .hero .light { display: none; }
-:root[data-theme="light"] #home .hero .dark { display: none; }
-:root[data-theme="light"] #home .hero .light { display: block; }
-#home .hero p { margin: 0; font-size: 22px; line-height: 1.35; color: var(--fg); max-width: 32ch; }
-#home .hero a.go { font: 600 14px var(--sans); color: var(--page); background: var(--fg); border-radius: 8px; padding: 9px 16px; text-decoration: none; }
+/* ---- Home (DS-258): what DriftSpec is, beside an example made by the engine in the page ---- */
+#home { font: 400 17px/1.5 var(--figtree); -webkit-font-smoothing: antialiased; }
+#home .dark, #home .light { display: block; }
+#home .light { display: none; }
+:root[data-theme="light"] #home .dark { display: none; }
+:root[data-theme="light"] #home .light { display: block; }
+/* behind the sheets: a listing of rules in DriftSpec, barely there, to fill the ground; none behind the words */
+#home .first { position: relative; overflow: hidden; }
+#home .wall { position: absolute; inset: 0; margin: 0; padding: 26px 30px; columns: 4 360px; column-gap: 56px; font: 12.5px/1.75 var(--mono); color: var(--fg); opacity: .07; white-space: pre; overflow: hidden; pointer-events: none; user-select: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, transparent 41%, #000 60%), linear-gradient(#000 62%, transparent 98%); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, transparent 41%, #000 60%), linear-gradient(#000 62%, transparent 98%); mask-composite: intersect; }
+:root[data-theme="light"] #home .wall { opacity: .1; }
+/* one block, centred: however wide the window, the words and the picture stay together */
+#home .lead { position: relative; width: 100%; max-width: 1360px; margin: 0 auto; min-height: clamp(540px, 76vh, 760px); display: grid; grid-template-columns: minmax(0, 10fr) minmax(0, 14fr); align-items: center; gap: 44px; padding: 36px clamp(20px, 4vw, 56px) 28px; }
+/* the two marks: the product large, who makes it beside it */
+#home .marks { display: flex; align-items: center; gap: clamp(14px, 1.8vw, 26px); }
+#home .marks .ds { height: clamp(34px, 4.3vw, 62px); width: auto; min-width: 0; }
+#home .marks .rule { width: 1px; align-self: stretch; background: var(--line); }
+#home .marks .deriva { height: clamp(26px, 3vw, 42px); width: auto; min-width: 0; }
+#home h1 { margin: 44px 0 14px; font: 700 clamp(26px, 2.6vw, 36px)/1.12 var(--figtree); letter-spacing: -0.03em; text-wrap: balance; }
+#home .say p { margin: 0; max-width: 44ch; color: color-mix(in srgb, var(--fg) 80%, var(--page)); font-size: clamp(16px, 1.25vw, 18.5px); }
+#home .go { display: inline-block; margin-top: 30px; font: 600 16px var(--figtree); color: var(--on-brand); background: var(--brand); border-radius: 999px; padding: 13px 24px; text-decoration: none; cursor: pointer; }
+#home .go:hover { filter: brightness(1.08); }
+/* the text and what the engine makes of it, as sheets laid one over another: the classes, a sequence, the
+   requirements. Nothing is rotated: a browser paints a rotated sheet as a picture and blurs its lines and
+   its type. The sheets are sized with zoom, so they are laid out again at each size and stay sharp. */
+#home .shot { min-width: 0; }
+#home .stage { position: relative; width: 980px; height: 790px; zoom: var(--k, .72); }
+#home .card { position: absolute; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); overflow: hidden; box-shadow: 0 14px 34px -14px rgba(0,0,0,.55); }
+:root[data-theme="light"] #home .card { box-shadow: 0 14px 34px -16px rgba(0,0,0,.22); }
+#home .card .bar { display: flex; border-bottom: 1px solid var(--line); background: var(--page); font: 12.5px var(--mono); }
+#home .card .bar span { padding: 9px 16px; color: var(--muted); }
+#home .card .bar .tab { color: var(--fg); background: var(--panel); border-right: 1px solid var(--line); border-top: 2px solid var(--brand); font-weight: 700; }
+#home .card .bar b { color: var(--fg); margin-right: 10px; }
+#home .card .draw { background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; }
+#home .card .draw svg { max-width: 100%; height: auto; display: block; }
+#home .card.text { left: 0; top: 60px; width: 410px; }
+#home .card.text .code { padding: 14px 0 18px; pointer-events: none; }
+#home .card.classes { left: 396px; top: 0; width: 430px; }
+#home .card.sequence { left: 512px; top: 312px; width: 460px; }
+#home .card.reqs { left: 318px; top: 680px; width: 590px; }
+#home .card.reqs table { width: 100%; border-collapse: collapse; font: 12.5px/1.4 var(--figtree); }
+#home .card.reqs th { text-align: left; font-weight: 500; color: var(--muted); padding: 10px 16px 6px; }
+#home .card.reqs td { padding: 9px 16px; border-top: 1px solid var(--line); vertical-align: top; }
+#home .card.reqs td.id { font: 700 12px var(--mono); color: var(--c-req); white-space: nowrap; }
+#home .card.reqs td.by { font: 12px var(--mono); color: var(--s-ty); white-space: nowrap; }
+#home .wrong { text-decoration: underline wavy var(--err); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+#home .said { margin: 5px 14px 8px 16px; padding: 7px 11px; border-left: 3px solid var(--err); border-radius: 0 9px 9px 0; background: color-mix(in srgb, var(--err) 11%, var(--panel)); font: 11.5px/1.5 var(--mono); color: var(--fg); white-space: normal; }
+#home .said b { color: var(--err); font-weight: 700; margin-right: 1ch; }
+#home .CodeMirror { height: auto; font: 12.5px/1.55 var(--mono); background: transparent; }
+#home .CodeMirror-lines { padding: 0; }
+#home .CodeMirror pre.CodeMirror-line { padding: 0 16px; }
+/* why it exists: three reasons, said once each, as wide as what is above them */
+#home .whys { width: 100%; max-width: 1360px; margin: 8px auto 72px; padding: 0 clamp(20px, 4vw, 56px); }
+#home .why { padding: clamp(28px, 3.4vw, 52px); border-radius: 36px; background: var(--bg); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(28px, 4vw, 64px); }
+#home .why svg { display: block; height: 54px; width: auto; margin-bottom: 20px; overflow: visible; }
+#home .why svg * { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+#home .why .ink { stroke: var(--rule); } #home .why .fail { stroke: var(--err); } #home .why .cls { stroke: var(--k-class); }
+#home .why .seq { stroke: var(--c-seq); } #home .why .holds { stroke: var(--c-rule); } #home .why .req { stroke: var(--c-req); }
+#home .why h2 { margin: 0 0 12px; font: 700 clamp(21px, 1.7vw, 25px)/1.15 var(--figtree); letter-spacing: -0.025em; text-wrap: balance; }
+#home .why p { margin: 0; color: var(--muted); font-size: 16.5px; max-width: 38ch; }
+@media (max-width: 900px) {
+  #home { font-size: 16px; }
+  #home .lead { grid-template-columns: 1fr; grid-auto-rows: min-content; align-content: start; min-height: 0; gap: 36px; padding: 36px 20px 0; }
+  #home h1 { margin-top: 32px; }
+  #home .why { grid-template-columns: 1fr; }
+  #home .whys { margin-top: 56px; }
+}
 .count { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .count .e { color: var(--err); } .count .w { color: var(--warn); }
 
@@ -195,7 +261,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 
 /* the diagrams in the same look: cards on the grey stage, the kind in its colour, signatures as code */
 .pane .body { background: var(--bg); }
-.pane svg.pr-diagram {
+.pane svg.pr-diagram, #home svg.pr-diagram {
   --pr-text: var(--fg); --pr-muted: var(--muted); --pr-stroke: var(--rule); --pr-edge: var(--rule); --pr-edge-width: 1;
   --pr-box-fill: var(--panel); --pr-container-fill: color-mix(in srgb, var(--panel) 45%, var(--bg)); --pr-container-stroke: var(--line);
   --pr-note-fill: var(--raised); --pr-note-stroke: var(--line);
@@ -210,7 +276,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .pane svg .pr-classifier-dataclass { --pr-badge-class: var(--k-dataclass); }
 .pane svg .pr-classifier-interface { --pr-badge-abstract: var(--k-interface); }
 /* the line under a card's name wears the colour of its kind (the chosen class widget) */
-.pane svg .pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--k-class); }
+.pane svg .pr-box .pr-header + .pr-sep, #home svg .pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--k-class); }
 .pane svg .pr-classifier-interface .pr-header + .pr-sep { stroke: var(--k-interface); }
 .pane svg .pr-classifier-dataclass .pr-header + .pr-sep { stroke: var(--k-dataclass); }
 .pane svg .pr-classifier-enum .pr-header + .pr-sep { stroke: var(--k-enum); }
@@ -312,11 +378,264 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   <button id="theme" title="Theme">◐</button>
 </header>
 <section class="page" id="home" hidden>
-  <div class="hero">
-    <img class="dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec">
-    <p id="tagline"></p>
-    <a class="go" data-tab="editor" id="go"></a>
+  <div class="first">
+<pre class="wall" aria-hidden="true">rule no-module-cycles {
+  title: Two modules never depend both ways
+  @requirement LIB-00001-1
+  for module m, module n
+  where m != n
+  never module-depends(m, n),
+        module-depends(n, m)
+}
+
+definition depends(a, b) {
+  if a uses b
+  if m in a, m owns b
+  if m in a, m refs b
+  if m in a, s behaviour-of m, s uses b
+}
+
+rule store-calls-no-billing {
+  title: No message of the store calls billing
+  @requirement REQ-00002-1
+  for message m in shop@store
+  never m calls f, f in shop@billing
+}
+
+state Cart {
+  Open       if status = Open, not cancelled
+  Paid       if status = Paid, not cancelled
+  Shipped    if status = Shipped
+  Cancelled  if cancelled, status != Shipped
+  Open -&gt; Paid       on checkout
+  Paid -&gt; Shipped    on ship
+  Open -&gt; Cancelled  on cancel
+}
+
+rule store-requirements-kept {
+  title: Every requirement of the store is kept
+  @requirement REQ-00003-1
+  for requirement r in shop@store
+  holds x requires r
+}
+
+definition module-depends(m, n) {
+  if c in m, x in n, depends(c, x)
+}
+
+rule no-module-cycles {
+  title: Two modules never depend both ways
+  @requirement LIB-00001-1
+  for module m, module n
+  where m != n
+  never module-depends(m, n),
+        module-depends(n, m)
+}
+
+definition depends(a, b) {
+  if a uses b
+  if m in a, m owns b
+  if m in a, m refs b
+  if m in a, s behaviour-of m, s uses b
+}
+
+rule store-calls-no-billing {
+  title: No message of the store calls billing
+  @requirement REQ-00002-1
+  for message m in shop@store
+  never m calls f, f in shop@billing
+}
+
+state Cart {
+  Open       if status = Open, not cancelled
+  Paid       if status = Paid, not cancelled
+  Shipped    if status = Shipped
+  Cancelled  if cancelled, status != Shipped
+  Open -&gt; Paid       on checkout
+  Paid -&gt; Shipped    on ship
+  Open -&gt; Cancelled  on cancel
+}
+
+rule store-requirements-kept {
+  title: Every requirement of the store is kept
+  @requirement REQ-00003-1
+  for requirement r in shop@store
+  holds x requires r
+}
+
+definition module-depends(m, n) {
+  if c in m, x in n, depends(c, x)
+}
+
+rule no-module-cycles {
+  title: Two modules never depend both ways
+  @requirement LIB-00001-1
+  for module m, module n
+  where m != n
+  never module-depends(m, n),
+        module-depends(n, m)
+}
+
+definition depends(a, b) {
+  if a uses b
+  if m in a, m owns b
+  if m in a, m refs b
+  if m in a, s behaviour-of m, s uses b
+}
+
+rule store-calls-no-billing {
+  title: No message of the store calls billing
+  @requirement REQ-00002-1
+  for message m in shop@store
+  never m calls f, f in shop@billing
+}
+
+state Cart {
+  Open       if status = Open, not cancelled
+  Paid       if status = Paid, not cancelled
+  Shipped    if status = Shipped
+  Cancelled  if cancelled, status != Shipped
+  Open -&gt; Paid       on checkout
+  Paid -&gt; Shipped    on ship
+  Open -&gt; Cancelled  on cancel
+}
+
+rule store-requirements-kept {
+  title: Every requirement of the store is kept
+  @requirement REQ-00003-1
+  for requirement r in shop@store
+  holds x requires r
+}
+
+definition module-depends(m, n) {
+  if c in m, x in n, depends(c, x)
+}
+
+rule no-module-cycles {
+  title: Two modules never depend both ways
+  @requirement LIB-00001-1
+  for module m, module n
+  where m != n
+  never module-depends(m, n),
+        module-depends(n, m)
+}
+
+definition depends(a, b) {
+  if a uses b
+  if m in a, m owns b
+  if m in a, m refs b
+  if m in a, s behaviour-of m, s uses b
+}
+
+rule store-calls-no-billing {
+  title: No message of the store calls billing
+  @requirement REQ-00002-1
+  for message m in shop@store
+  never m calls f, f in shop@billing
+}
+
+state Cart {
+  Open       if status = Open, not cancelled
+  Paid       if status = Paid, not cancelled
+  Shipped    if status = Shipped
+  Cancelled  if cancelled, status != Shipped
+  Open -&gt; Paid       on checkout
+  Paid -&gt; Shipped    on ship
+  Open -&gt; Cancelled  on cancel
+}
+
+rule store-requirements-kept {
+  title: Every requirement of the store is kept
+  @requirement REQ-00003-1
+  for requirement r in shop@store
+  holds x requires r
+}
+
+definition module-depends(m, n) {
+  if c in m, x in n, depends(c, x)
+}
+
+rule no-module-cycles {
+  title: Two modules never depend both ways
+  @requirement LIB-00001-1
+  for module m, module n
+  where m != n
+  never module-depends(m, n),
+        module-depends(n, m)
+}
+
+definition depends(a, b) {
+  if a uses b
+  if m in a, m owns b
+  if m in a, m refs b
+  if m in a, s behaviour-of m, s uses b
+}
+
+rule store-calls-no-billing {
+  title: No message of the store calls billing
+  @requirement REQ-00002-1
+  for message m in shop@store
+  never m calls f, f in shop@billing
+}
+
+state Cart {
+  Open       if status = Open, not cancelled
+  Paid       if status = Paid, not cancelled
+  Shipped    if status = Shipped
+  Cancelled  if cancelled, status != Shipped
+  Open -&gt; Paid       on checkout
+  Paid -&gt; Shipped    on ship
+  Open -&gt; Cancelled  on cancel
+}
+
+rule store-requirements-kept {
+  title: Every requirement of the store is kept
+  @requirement REQ-00003-1
+  for requirement r in shop@store
+  holds x requires r
+}
+
+definition module-depends(m, n) {
+  if c in m, x in n, depends(c, x)
+}
+
+</pre>
+    <div class="lead">
+      <div class="say">
+        <div class="marks">
+          <img class="ds dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="ds light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec">
+          <span class="rule"></span>
+          <img class="deriva dark" src="brand/deriva-lockup-h.svg" alt="deriva."><img class="deriva light" src="brand/deriva-lockup-h-light.svg" alt="deriva.">
+        </div>
+        <h1 data-t="homeTitle"></h1>
+        <p data-t="homeText"></p>
+        <a class="go" data-tab="editor" data-t="go"></a>
+      </div>
+      <div class="shot" aria-hidden="true">
+        <div class="stage">
+          <div class="card text"><div class="bar"><span class="tab">shop.ds</span></div><div class="code" id="homecode"></div></div>
+          <div class="card classes"><div class="bar"><span><b>CL_Store</b><i data-t="kClass" style="font-style:normal"></i></span></div><div class="draw" id="homeclasses"></div></div>
+          <div class="card sequence"><div class="bar"><span><b>SEQ_Checkout</b><i data-t="kSequence" style="font-style:normal"></i></span></div><div class="draw" id="homesequence"></div></div>
+          <div class="card reqs"><div class="bar"><span><b data-t="requirements"></b><i data-t="table" style="font-style:normal"></i></span></div>
+            <table><thead><tr><th>Id</th><th data-t="cTitle"></th><th data-t="cKept"></th></tr></thead><tbody id="homereqs"></tbody></table></div>
+        </div>
+      </div>
+    </div>
   </div>
+  <div class="whys"><div class="why">
+    <div>
+      <svg viewBox="0 0 120 54" aria-hidden="true"><path class="ink" d="M4 8h74M4 24h40M4 46h58"/><path class="fail" d="M52 24h56"/><path class="fail" d="M52 32q3.5-5 7 0t7 0 7 0 7 0 7 0 7 0 7 0 7 0"/></svg>
+      <h2 data-t="w1"></h2><p data-t="w1p"></p>
+    </div>
+    <div>
+      <svg viewBox="0 0 150 54" aria-hidden="true"><rect class="cls" x="3" y="6" width="38" height="42" rx="7"/><path class="cls" d="M3 20h38"/><path class="seq" d="M62 6v42M92 6v42M62 18h26M92 34H66"/><path class="seq" d="M84 14l5 4-5 4M70 30l-5 4 5 4"/><path class="holds" d="M113 28l10 10 22-26"/></svg>
+      <h2 data-t="w2"></h2><p data-t="w2p"></p>
+    </div>
+    <div>
+      <svg viewBox="0 0 150 54" aria-hidden="true"><path class="ink" d="M4 8h44M4 22h30M4 36h38M4 50h22"/><path class="req" d="M66 27h18M78 20l7 7-7 7"/><rect class="cls" x="100" y="4" width="46" height="20" rx="6"/><rect class="cls" x="100" y="34" width="46" height="18" rx="6"/><path class="cls" d="M123 24v10"/></svg>
+      <h2 data-t="w3"></h2><p data-t="w3p"></p>
+    </div>
+  </div></div>
 </section>
 <main>
   <div id="work">
@@ -351,7 +670,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 <script type="module">
 import { start, ds } from "./engine.js";
 
-const KEYWORDS = "package module class dataclass enum interface function extern sequence state diagram requirement verification constraint usecase outcome operation view rule definition loop alt opt else return on initial attempt fail fails failure realises from to in is not where for holds never otherwise scenario event";
+const KEYWORDS = "if package module class dataclass enum interface function extern sequence state diagram requirement verification constraint usecase outcome operation view rule definition loop alt opt else return on initial attempt fail fails failure realises from to in is not where for holds never otherwise scenario event";
 const FIELDS = "kind include exclude open depth show hide neighbours level title text status category language note test tests method actor goal subject";
 
 CodeMirror.defineSimpleMode("driftspec", {
@@ -384,7 +703,16 @@ const UI = {
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
         requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
-        tabHome: "Home", tabEditor: "Editor", tagline: "A software design as text: checked, drawn, compared and asked.", go: "Open the editor",
+        tabHome: "Home", tabEditor: "Editor", go: "Open the editor",
+        homeTitle: "Design specifications as code.",
+        homeText: "DriftSpec is a tool for writing the design of a piece of software as text and keeping it consistent. It checks every contradiction, draws the diagrams, and joins requirements, design and tests in one model.",
+        kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Kept by",
+        w1: "Detailed, and coherent",
+        w1p: "A specification detailed enough to build from, checked as it is written. A reference to nothing, a call to an operation that does not exist, two states that hold at once: each is a finding, not something left for a reviewer to catch.",
+        w2: "Three perspectives, one model",
+        w2p: "Structure says what there is. Behaviour says what happens. Logic says what holds. They are three ways of reading the same model, so a sequence or a rule names the very classes the structure declares.",
+        w3: "The specification is not the drawing",
+        w3p: "The text is the specification. A diagram is a question asked of it: what to show, and at which level. Change the text and every view follows. No drawing is kept by hand, so none goes stale.",
         lessons: "Lessons", examples: "Examples",
         play: "Play" },
   es: { waiting: "Esperándote", writeForMe: "Escríbelo por mí", showMe: "Muéstramelo", writing: "Escribiendo", done: "Hecho",
@@ -392,16 +720,25 @@ const UI = {
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
         requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
-        tabHome: "Inicio", tabEditor: "Editor", tagline: "Un diseño de software como texto: comprobado, dibujado, comparado y consultado.", go: "Abrir el editor",
+        tabHome: "Inicio", tabEditor: "Editor", go: "Abrir el editor",
+        homeTitle: "Especificaciones de diseño como código.",
+        homeText: "DriftSpec es una herramienta para escribir el diseño de un software como texto y mantenerlo consistente. Comprueba cada contradicción, dibuja los diagramas y une requisitos, diseño y pruebas en un solo modelo.",
+        kClass: "clases", kSequence: "secuencia", cTitle: "Título", cKept: "Lo cumple",
+        w1: "Detallada y coherente",
+        w1p: "Una especificación con el detalle suficiente para construir a partir de ella, comprobada mientras se escribe. Una referencia a nada, una llamada a una operación que no existe, dos estados que se cumplen a la vez: cada una es un aviso, no algo que se deja para que lo cace un revisor.",
+        w2: "Tres perspectivas, un modelo",
+        w2p: "La estructura dice qué hay. El comportamiento dice qué pasa. La lógica dice qué se cumple. Son tres maneras de leer el mismo modelo, así que una secuencia o una regla nombran las mismas clases que declara la estructura.",
+        w3: "La especificación no es el dibujo",
+        w3p: "El texto es la especificación. Un diagrama es una pregunta que se le hace: qué mostrar y a qué nivel. Cambias el texto y todas las vistas lo siguen. Ningún dibujo se mantiene a mano, así que ninguno se queda viejo.",
         lessons: "Lecciones", examples: "Ejemplos",
         play: "Reproducir" },
 };
-let lang = (() => {
-  const asked = new URLSearchParams(location.search).get("lang");
-  if (asked === "en" || asked === "es") return asked;
-  try { const kept = localStorage.getItem("ds-playground-lang"); if (kept === "en" || kept === "es") return kept; } catch {}
-  return (navigator.language || "").toLowerCase().startsWith("es") ? "es" : "en";
-})();
+// the language: what the address asks for, else what the reader chose before, else the first of the
+// browser's own languages that the site speaks; English when it speaks none of them
+const spoken = (l) => (/^es\b/i.test(l || "") ? "es" : /^en\b/i.test(l || "") ? "en" : null);
+let lang = spoken(new URLSearchParams(location.search).get("lang"))
+        || (() => { try { return spoken(localStorage.getItem("ds-playground-lang")); } catch { return null; } })()
+        || (navigator.languages || [navigator.language]).map(spoken).find(Boolean) || "en";
 const ui = (k) => UI[lang][k];
 const t = (x) => (x == null ? "" : typeof x === "string" ? x : x[lang] ?? x.en);
 const state = { name: "", files: {}, docs: {}, current: null, open: [], folded: new Set(), examples: [], panes: new Map(), solo: null, marks: [] };
@@ -1581,8 +1918,7 @@ window.dsPlayground = { files: () => ({ ...state.files }), done: () => !!coach.l
 function applyLanguage() {
   $("lang").textContent = ui("other");
   for (const a of document.querySelectorAll("nav#site a")) a.textContent = ui("tab" + a.dataset.tab[0].toUpperCase() + a.dataset.tab.slice(1));
-  $("tagline").textContent = ui("tagline");
-  $("go").textContent = ui("go");
+  for (const el of document.querySelectorAll("#home [data-t]")) el.textContent = ui(el.dataset.t);
   $("ptitle").textContent = ui("problems");
   $("relesson").title = ui("restart");
   document.documentElement.lang = lang;
@@ -1599,6 +1935,40 @@ $("lang").onclick = () => {
 };
 applyLanguage();
 
+// The home page (DS-258): an example in two files beside the page (home/shop.ds, home/diagrams.ds), shown as the
+// engine makes it: its text, its classes, a sequence, its requirements with what keeps each, and under the
+// line that is wrong what the engine says of it. The text is shown without its package and module: two lines
+// and four columns in.
+const home = { shown: null };
+{
+  const shot = document.querySelector("#home .shot");
+  const fit = () => { if (shot.clientWidth) shot.style.setProperty("--k", Math.min(1, shot.clientWidth / 980).toFixed(3)); };
+  new ResizeObserver(fit).observe(shot);
+}
+async function paintHome() {
+  const read = async (name) => (await fetch("home/" + name, { cache: "no-cache" })).text();
+  const files = { "shop.ds": await read("shop.ds"), "diagrams.ds": await read("diagrams.ds") };
+  const lines = files["shop.ds"].replace(/\n+$/, "").split("\n").slice(2, -2).map((l) => l.replace(/^ {4}/, ""));
+  home.shown = CodeMirror($("homecode"), { value: lines.join("\n"), mode: "driftspec", readOnly: "nocursor", lineNumbers: false, viewportMargin: Infinity });
+  const out = await ds(files, 0);
+  $("homeclasses").innerHTML = out.diagrams.find((d) => d.id === "CL_Store")?.svg || "";
+  $("homesequence").innerHTML = out.diagrams.find((d) => d.id === "SEQ_Checkout")?.svg || "";
+  for (const f of (out.report?.findings || []).filter((x) => x.severity !== "info" && x.location?.file === "shop.ds").slice(0, 1)) {
+    const line = Math.min(home.shown.lastLine(), Math.max(0, (f.location.line || 1) - 3));
+    const from = Math.max(0, (f.location.column || 1) - 5);
+    home.shown.markText({ line, ch: from }, { line, ch: home.shown.getLine(line).length }, { className: "wrong" });
+    const note = Object.assign(document.createElement("div"), { className: "said" });
+    note.append(Object.assign(document.createElement("b"), { textContent: f.code }), f.message.replace(/shop@store::/g, ""));
+    home.shown.addLineWidget(line, note);
+  }
+  for (const a of (out.artefacts || []).filter((x) => x.kind === "requirement")) {
+    const row = document.createElement("tr");
+    for (const [cls, text] of [["id", a.id], ["", a.title], ["by", (a.keptBy || []).map((k) => k.replace(/^.*@[^:]*::/, "")).join(", ")]])
+      row.append(Object.assign(document.createElement("td"), { className: cls, textContent: text }));
+    $("homereqs").append(row);
+  }
+}
+
 // The site's tabs (DS-257). A link that names something of the editor (an example, a replay, a line) opens it;
 // otherwise ?tab= says which page, and the home page is the default. The tab is kept in the address.
 const TABS = ["home", "editor"];
@@ -1608,6 +1978,7 @@ function showTab(tab, push) {
   for (const a of document.querySelectorAll("nav#site a")) a.classList.toggle("on", a.dataset.tab === tab);
   for (const page of document.querySelectorAll("section.page")) page.hidden = page.id !== tab;
   if (tab === "editor") requestAnimationFrame(() => editor.refresh());
+  if (tab === "home") requestAnimationFrame(() => home.shown?.refresh());
   const url = new URL(location.href);
   if (tab === "home") url.searchParams.delete("tab"); else url.searchParams.set("tab", tab);
   history[push ? "pushState" : "replaceState"](null, "", url);
@@ -1622,6 +1993,7 @@ window.addEventListener("popstate", () => showTab(new URLSearchParams(location.s
 
 const backend = await start().catch((e) => { $("count").innerHTML = `<span class="e">no engine: ${escapeHtml(e.message)}</span>`; throw e; });
 $("backend").textContent = backend === "wasm" ? "engine: wasm" : "engine: dev server";
+paintHome().catch(() => {});
 state.examples = await (await fetch("examples.json", { cache: "no-cache" })).json();
 const sel = $("example");
 // the lessons first, then whole examples (DS-236), each in a group of the list

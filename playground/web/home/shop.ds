@@ -1,0 +1,32 @@
+package shop {
+  module store {
+    requirement REQ-00001-1 {
+      title: A cart shall total its lines
+    }
+    requirement REQ-00002-1 {
+      title: A cart shall charge its total to a card
+    }
+
+    class Cart {
+      - owns lines: list<Line>
+      + total() -> int {
+        @requirement REQ-00001-1
+      }
+      + checkout(card: Card) -> bool {
+        @requirement REQ-00002-1
+      }
+    }
+    class Line {
+      - price: int
+    }
+    class Card {
+      + pay(amount: int) -> bool
+    }
+
+    sequence Cart::checkout {
+      -> total() -> amount
+      self -> card.pay() -> paid
+      return paid
+    }
+  }
+}

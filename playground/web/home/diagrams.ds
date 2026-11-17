@@ -1,0 +1,10 @@
+// The drawings the home page shows of shop.ds (DS-258). shop.ds carries one error on purpose, the call of
+// pay() without its argument: the page shows what the engine says of it, under the line.
+diagram CL_Store {
+  kind: class
+  include: shop@store
+}
+diagram SEQ_Checkout {
+  kind: sequence
+  include: shop@store::Cart::checkout
+}
