@@ -560,6 +560,11 @@ std::string indexPage() {
       "then check it, look at it, compare two versions of it, ask it questions or hand it to another tool.\n\n"
       "Commands (ds manual commands for their exit codes)\n";
   for (const auto& c : commands()) out += "  " + pad(c.name, 8) + c.does + "\n";
+  if (!manualGuides().empty()) {
+    out += "\nGuides (ds manual <guide>: the language explained, with examples)\n  ";
+    for (const auto& guide : manualGuides()) out += guide.first + "  ";
+    out += "\n";
+  }
   out += "\nKinds you write (ds manual <kind>: how it is written, its fields and an example)\n  ";
   size_t column = 2;
   for (const auto& k : kinds()) {
@@ -634,7 +639,9 @@ std::string grammarPage() {
 }  // namespace
 
 std::vector<std::string> manualTopics() {
-  std::vector<std::string> out{"grammar", "commands", "annotations", "codes"};
+  std::vector<std::string> out;
+  for (const auto& guide : manualGuides()) out.push_back(guide.first);
+  for (const char* topic : {"grammar", "commands", "annotations", "codes"}) out.push_back(topic);
   for (const auto& k : kinds()) out.push_back(kindName(k.kind));
   for (const auto& c : codes()) out.push_back(c.code);
   return out;
@@ -642,6 +649,8 @@ std::vector<std::string> manualTopics() {
 
 std::string manualPage(const std::string& topic) {
   if (topic.empty()) return indexPage();
+  for (const auto& guide : manualGuides())
+    if (guide.first == topic) return guide.second;
   if (topic == "grammar") return grammarPage();
   if (const KindSpec* k = kindNamed(topic)) return kindPage(*k);
   if (const CodeSpec* c = codeOf(topic)) return c->code + " (" + c->severity + ")\n\n" + c->meaning + "\n\nWhat to do: " + c->fix + "\n";

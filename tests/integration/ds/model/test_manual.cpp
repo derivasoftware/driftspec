@@ -64,6 +64,25 @@ TEST_F(TestManual, EveryKindIsWrittenDownAndItsExampleChecksClean) {
   }
 }
 
+TEST_F(TestManual, EveryExampleOfAGuideChecksCleanAndOneMarkedWrongHasItsFinding) {
+  ASSERT_FALSE(ds::model::manualGuides().empty());
+  const std::regex example("```ds( wrong)?\n([^`]*)```");
+  std::size_t examples = 0;
+  for (const auto& guide : ds::model::manualGuides()) {
+    EXPECT_EQ(guide.second.rfind("# ", 0), 0U) << guide.first << " does not start with its title";
+    EXPECT_EQ(ds::model::manualPage(guide.first), guide.second);
+    for (std::sregex_iterator it(guide.second.begin(), guide.second.end(), example), end; it != end; ++it) {
+      ++examples;
+      const auto findings = findingsOf((*it)[2].str());
+      if ((*it)[1].matched)
+        EXPECT_FALSE(findings.empty()) << guide.first << ": an example marked wrong checks clean\n" << (*it)[2].str();
+      else
+        EXPECT_TRUE(findings.empty()) << guide.first << ": " << (findings.empty() ? "" : findings.front()) << "\n" << (*it)[2].str();
+    }
+  }
+  EXPECT_GT(examples, 0U);
+}
+
 TEST_F(TestManual, TheCatalogueHoldsExactlyTheCodesTheEngineReports) {
   std::set<std::string> catalogued;
   for (const auto& c : ds::model::codes()) {

@@ -159,6 +159,26 @@ package driftspec@playground {
     }
   }
 
+  requirement REQ-00161-1 {
+    title: The Docs tab shall draw the guides the engine carries, each example beside what the engine makes of it
+    status: approved
+    text:
+      The page asks the engine for the guides of the manual (the engine's REQ-00160-1) and lists
+      them down the side. A guide is shown as its prose with each example in two parts: its text,
+      coloured by the grammar, and the diagrams the engine draws from it there and then; under an
+      example that is wrong on purpose, what the engine says of it. Each example opens in the
+      editor. The guide shown is kept in the address (?tab=docs&doc=logic).
+    rationale:
+      Owner, 2026-11-17 (DS-272): no Learn tab; documentation in the style of PlantUML's site,
+      with examples. Drawn by the engine, an example cannot fall behind the language.
+
+    verification VER-00177-1 {
+      status: approved
+      title: Inspection confirms the Docs tab lists the five guides and draws the examples of Logic beside their text, with the finding under the one that is wrong
+      method: inspection
+    }
+  }
+
   requirement REQ-00158-1 {
     title: A lesson shall be able to walk DriftSpec's own design, read as it is, with the views it adds of its own
     status: approved
@@ -252,6 +272,10 @@ package driftspec@playground {
       // the site's pages: one shown at a time, kept in the address
       + showTab(tab: string) -> none {
         @requirement REQ-00152-1
+      }
+      // the guides of the manual, asked of the engine and drawn with their examples
+      + paintDocs() -> none {
+        @requirement REQ-00161-1
       }
       + onEdit() -> none
       // the diagrams a step is about, shown alone while it lasts; the one that is a tour is played

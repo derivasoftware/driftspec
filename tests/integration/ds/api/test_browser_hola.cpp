@@ -56,4 +56,14 @@ TEST_F(TestBrowserOverHola, AClassOfTheExampleIsFoundWhereItIsWritten) {
   EXPECT_LT(at[1].get<int>(), at[2].get<int>());
 }
 
+TEST_F(TestBrowserOverHola, TheManualIsAnsweredByItsOwnRequest) {
+  const auto index = nlohmann::json::parse(ds::api::Browser::answer(nlohmann::json{{"manual", ""}}.dump()))["manual"];
+  ASSERT_FALSE(index["guides"].empty());
+  EXPECT_FALSE(index["topics"].empty());
+  const std::string first = index["guides"][0];
+  const auto page = nlohmann::json::parse(ds::api::Browser::answer(nlohmann::json{{"manual", first}}.dump()))["manual"];
+  EXPECT_EQ(page["topic"], first);
+  EXPECT_EQ(page["text"].get<std::string>().rfind("# ", 0), 0U);  // a guide is Markdown that starts with its title
+}
+
 }  // namespace

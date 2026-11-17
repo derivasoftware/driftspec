@@ -115,8 +115,33 @@ set_property(
   DIRECTORY
   APPEND
   PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/viewer/scene.html)
-add_library(driftspec STATIC ${driftspec_SOURCES}
-                             ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp)
+# the guides of the manual ship inside ds too (DS-272): each
+# doc/manual/NN-topic.md becomes a page ds manual <topic> prints and the site
+# draws; one source for both
+file(GLOB DS_MANUAL_GUIDES CONFIGURE_DEPENDS
+     "${CMAKE_SOURCE_DIR}/doc/manual/*.md")
+list(SORT DS_MANUAL_GUIDES)
+set(DS_MANUAL_PAGES "")
+foreach(guide ${DS_MANUAL_GUIDES})
+  get_filename_component(topic ${guide} NAME_WE)
+  string(REGEX REPLACE "^[0-9]+-" "" topic ${topic})
+  file(READ ${guide} text)
+  string(APPEND DS_MANUAL_PAGES "    {\"${topic}\", R\"DSMD(${text})DSMD\"},\n")
+  set_property(
+    DIRECTORY
+    APPEND
+    PROPERTY CMAKE_CONFIGURE_DEPENDS ${guide})
+endforeach()
+file(
+  WRITE ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp.in
+  "#include <string>\n#include <utility>\n#include <vector>\n\nnamespace ds {\nnamespace model {\nconst std::vector<std::pair<std::string, std::string>>& manualGuides() {\n  static const std::vector<std::pair<std::string, std::string>> guides = {\n${DS_MANUAL_PAGES}  };\n  return guides;\n}\n}  // namespace model\n}  // namespace ds\n"
+)
+configure_file(${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp.in
+               ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp COPYONLY)
+add_library(
+  driftspec STATIC
+  ${driftspec_SOURCES} ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp
+  ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp)
 target_include_directories(driftspec PUBLIC include)
 target_link_libraries(
   driftspec

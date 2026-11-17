@@ -16,6 +16,7 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
   - `ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]` — the changes in the model's terms, or a diagram with them marked.
   - `ds query <workspace> <question> [subject] [--json]` — diagrams, entities, relations, artefacts, behaviours, shows, findings, coupling.
   - `ds manual [topic] [--json]` — the manual ds carries: how each kind is written, with an example that checks clean; what each finding code means; the annotations; the commands and their exit codes.
+- `doc/manual/` — the guides of the manual, Markdown (`NN-topic.md`): intent, structure, behaviour, logic and using. The build embeds them: `ds manual <topic>` prints one and the site's Docs tab draws it, each example beside what the engine makes of it. Every example is checked by the tests.
 - `viewer/` — the viewer page compiled into ds (`scene.html`) and its themes (`themes/night.css`, for `--css`).
   The viewer reads one map in three perspectives (structure, behaviour, logic), each with its own lines and marks; touching a box lights up what it composes, aggregates, calls and uses, and docks its card on the right. Tours play along the bottom.
 - `examples/hola/` — the example the viewer is tried on: `ds render examples/hola -o hola.html`.

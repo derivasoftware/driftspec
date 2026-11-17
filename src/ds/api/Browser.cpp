@@ -7,6 +7,7 @@
 
 #include "ds/api/Workspace.hpp"
 #include "ds/model/Identity.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/query/Query.hpp"
 
@@ -83,6 +84,16 @@ nlohmann::json diagrams(const Workspace& workspace, int width) {
 
 std::string respond(const std::string& request) {
   const auto in = nlohmann::json::parse(request);
+  if (in.contains("manual")) {  // a page of the manual, or with "" its guides and topics (DS-272)
+    const std::string topic = in["manual"].get<std::string>();
+    nlohmann::json out{{"topic", topic}, {"text", model::manualPage(topic)}};
+    if (topic.empty()) {
+      out["guides"] = nlohmann::json::array();
+      for (const auto& guide : model::manualGuides()) out["guides"].push_back(guide.first);
+      out["topics"] = model::manualTopics();
+    }
+    return nlohmann::json{{"manual", out}}.dump();
+  }
   Files files;
   for (const auto& f : in.at("files").items()) files[f.key()] = f.value().get<std::string>();
   const Workspace workspace(files);
