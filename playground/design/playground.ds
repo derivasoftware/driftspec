@@ -138,6 +138,27 @@ package driftspec@playground {
     }
   }
 
+  requirement REQ-00159-1 {
+    title: The editor shall colour the text with the language's own grammar and highlight queries
+    status: approved
+    text:
+      The tree-sitter parser of DriftSpec, compiled to WebAssembly by the build that makes the
+      engine for the page, and grammar/queries/highlights.scm, the queries every other editor
+      reads. A document is parsed whole when its text has changed; what the queries capture says
+      the colour of each character, a later pattern over an earlier one. Until the grammar is
+      loaded, or where it cannot be, the page keeps a mode of regular expressions.
+    rationale:
+      Owner, 2026-11-17 (DS-269): fundamental. A dozen regular expressions written by hand missed
+      for, where, rule, never and holds, and painted any capitalised word of a title as a type.
+      One grammar, the same colours in the page as in Neovim.
+
+    verification VER-00175-1 {
+      status: approved
+      title: Inspection confirms a rule in the tour is coloured by the grammar: its keywords, its title as text, the requirement it answers to
+      method: inspection
+    }
+  }
+
   requirement REQ-00158-1 {
     title: A lesson shall be able to walk DriftSpec's own design, read as it is, with the views it adds of its own
     status: approved
@@ -240,6 +261,10 @@ package driftspec@playground {
       }
     }
     class Editor {
+      // the mode that reads the language's grammar, once it is loaded
+      + colour(mode: string) -> none {
+        @requirement REQ-00159-1
+      }
       + open(file: string) -> none
       + type(step: lessons::Step) -> none
       + reveal(file: string, line: int, endLine: int) -> none

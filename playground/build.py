@@ -69,8 +69,10 @@ def main() -> None:
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(HERE / "web", out)
-    for name in ("ds.js", "ds.wasm"):
+    for name in ("ds.js", "ds.wasm", "tree-sitter-driftspec.wasm"):
         shutil.copy(pathlib.Path(args.wasm) / name, out / name)
+    # the editor is coloured by the grammar's own queries, the ones every other editor reads (DS-269)
+    shutil.copy(ROOT / "grammar" / "queries" / "highlights.scm", out / "highlights.scm")
     (out / "brand").mkdir()
     for name in ("driftspec-lockup-h.svg", "driftspec-lockup-h-light.svg", "driftspec-tile.svg", "driftspec-icon-180.png",
                  "deriva-lockup-h.svg", "deriva-lockup-h-light.svg"):

@@ -72,6 +72,12 @@
 
 ; rules and definitions: formal, Datalog over the model (DS-94)
 [ "rule" "definition" "for" "where" "holds" "never" "if" "not" "is" "in" "arg" "column" ] @keyword
+[ "usecase" "outcome" ] @keyword
+(usecase id: (name) @constant)
+(outcome name: (name) @constant)
+(column name: (name) @property)
+(column_field field: (name) @property)
+(field_term field: (name) @property)
 (rule name: (name) @function)
 (definition name: (name) @function)
 (range variable: (name) @variable)
