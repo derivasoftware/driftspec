@@ -40,6 +40,11 @@ class Machine {
   std::vector<model::Finding> faults() const;
   /// The events its jumps are made on, in the order written.
   std::vector<std::string> events() const;
+  /// What the machine is of: the identity of its subject.
+  const std::string& subject() const { return subject_; }
+  /// Where the jumps on an event lead from a state, in the order written, each with its guard when it has
+  /// one: Paid, or Paid [enough]; none when the machine does not let the event happen there.
+  std::vector<std::string> targets(const std::string& event, const std::string& from) const;
   /// The states the jumps let an event happen from, in the order written.
   std::vector<std::string> sources(const std::string& event) const;
   /// Every call of one of its events in the behaviours written (DS-250), each behaviour in the order it is

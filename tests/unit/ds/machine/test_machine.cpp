@@ -339,4 +339,15 @@ TEST_F(TestCalls, ABehaviourOfTheSubjectCallingItsOwnEventsIsFollowed) {
             (std::vector<std::string>{"self.ship from Open,Paid,Shipped,Cancelled", "self.cancel from Shipped !"}));
 }
 
+// ---- DS-251: where an event leads from a state --------------------------------------------------------
+
+TEST_F(TestCalls, AnEventLeadsFromAStateWhereItsJumpsSayEachWithItsGuard) {
+  load(kShop);
+  EXPECT_EQ(machine("Order").subject(), "p@m::Order");
+  EXPECT_EQ(machine("Order").targets("pay", "Open"), (std::vector<std::string>{"Paid [enough]"}));
+  EXPECT_EQ(machine("Order").targets("cancel", "Paid"), (std::vector<std::string>{"Cancelled"}));
+  EXPECT_TRUE(machine("Order").targets("cancel", "Shipped").empty());  // the machine does not let it happen there
+  EXPECT_TRUE(machine("Order").targets("audit", "Open").empty());      // no event of the machine
+}
+
 }  // namespace

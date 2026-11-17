@@ -646,6 +646,57 @@ int contentWidth(int maxWidth) { return maxWidth > 0 ? std::max(10, maxWidth - 2
 
 namespace {
 /// The parts of a drawing (DS-245), one under the other with a line between: a terminal reads down.
+// A drawing that is a table (DS-251): a row of headings, a rule under it, and a row for each of its rows; a
+// cell against the machine is marked with a bang.
+Grid tableGrid(const IrDocument& doc) {
+  const IrTable& t = doc.table;
+  const auto shown = [](const IrCell& cell) {
+    return cell.kind == "against" ? "! " + cell.text : cell.kind == "none" ? "\xC2\xB7" : cell.text;
+  };
+  const auto wide = [](const std::string& s) {  // in cells: one for each UTF-8 code point
+    int n = 0;
+    for (const char c : s)
+      if ((static_cast<unsigned char>(c) & 0xC0) != 0x80) ++n;
+    return n;
+  };
+  std::vector<int> widths{wide(t.corner)};
+  for (const IrRow& row : t.rows) widths[0] = std::max(widths[0], wide(row.label));
+  for (std::size_t c = 0; c < t.columns.size(); ++c) {
+    int longest = wide(t.columns[c]);
+    for (const IrRow& row : t.rows)
+      if (c < row.cells.size()) longest = std::max(longest, wide(shown(row.cells[c])));
+    widths.push_back(longest);
+  }
+  int width = 1;
+  for (const int w : widths) width += w + 3;
+  Grid g(0, 0, width, static_cast<int>(t.rows.size()) + 2);
+  int x = 1;
+  g.text(x, 0, t.corner);
+  for (std::size_t c = 0; c < t.columns.size(); ++c) {
+    x += widths[c] + 3;
+    g.put(x - 2, 0, "\xE2\x94\x82", kMuted);  // │
+    g.text(x, 0, t.columns[c]);
+  }
+  for (int i = 0; i < width; ++i) g.put(i, 1, "\xE2\x94\x80", kMuted);  // ─
+  x = 1;
+  for (std::size_t c = 0; c < t.columns.size(); ++c) {
+    x += widths[c] + 3;
+    g.put(x - 2, 1, "\xE2\x94\xBC", kMuted);  // ┼
+  }
+  for (std::size_t r = 0; r < t.rows.size(); ++r) {
+    const int y = static_cast<int>(r) + 2;
+    x = 1;
+    g.text(x, y, t.rows[r].label);
+    for (std::size_t c = 0; c < t.columns.size() && c < t.rows[r].cells.size(); ++c) {
+      x += widths[c] + 3;
+      g.put(x - 2, y, "\xE2\x94\x82", kMuted);  // │
+      const IrCell& cell = t.rows[r].cells[c];
+      g.text(x, y, shown(cell), cell.kind == "against" ? "31" : cell.kind == "none" ? kMuted : "");
+    }
+  }
+  return g;
+}
+
 Grid partsGrid(const IrDocument& doc, int maxWidth) {
   std::vector<Grid> grids;
   int w = 1, h = 0;
@@ -667,6 +718,7 @@ Grid partsGrid(const IrDocument& doc, int maxWidth) {
 }  // namespace
 
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
+  if (!doc.table.columns.empty()) return tableGrid(doc).dump(color);
   if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
   if (isSequence(doc)) return sequenceGrid(doc).dump(color);
   const IrDocument bundled = doc.bundled();
@@ -680,9 +732,10 @@ std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool co
 
 std::string Text::cells(const IrDocument& doc, int maxWidth) const {
   const IrDocument bundled = doc.bundled();
-  const Grid g = !doc.parts.empty() ? partsGrid(doc, maxWidth)
-                 : isSequence(doc)  ? sequenceGrid(doc)
-                                    : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth)));
+  const Grid g = !doc.table.columns.empty() ? tableGrid(doc)
+                 : !doc.parts.empty()       ? partsGrid(doc, maxWidth)
+                 : isSequence(doc)          ? sequenceGrid(doc)
+                                            : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth)));
   nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode()}, {"text", g.dump(false)}};
   return out.dump();
 }

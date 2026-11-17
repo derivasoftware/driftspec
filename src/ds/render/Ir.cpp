@@ -32,6 +32,17 @@ IrDocument IrDocument::parse(const std::string& json) {
   doc.title = text(j, "title");
   doc.notice = text(j, "notice");
   for (const auto& part : j.value("parts", nlohmann::json::array())) doc.parts.push_back(part.get<std::string>());
+  if (j.contains("table")) {
+    const auto& t = j["table"];
+    doc.table.corner = text(t, "corner");
+    for (const auto& column : t.value("columns", nlohmann::json::array())) doc.table.columns.push_back(column.get<std::string>());
+    for (const auto& r : t.value("rows", nlohmann::json::array())) {
+      IrRow row{text(r, "label"), text(r, "title"), {}};
+      for (const auto& c : r.value("cells", nlohmann::json::array()))
+        row.cells.push_back({text(c, "text"), text(c, "kind"), text(c, "title")});
+      doc.table.rows.push_back(row);
+    }
+  }
   for (const auto& n : j.value("nodes", nlohmann::json::array())) {
     IrNode node;
     node.id = text(n, "id");

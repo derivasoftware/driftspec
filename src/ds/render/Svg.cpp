@@ -749,6 +749,64 @@ std::string sequenceSvg(const IrDocument& doc) {
 }  // namespace
 
 namespace {
+/// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
+std::string tableSvg(const IrDocument& doc) {
+  const IrTable& t = doc.table;
+  const int charW = 8, padX = 14, rowH = 34, headH = 38;
+  std::vector<int> widths{static_cast<int>(t.corner.size())};
+  for (const IrRow& row : t.rows) widths[0] = std::max(widths[0], static_cast<int>(row.label.size()));
+  for (std::size_t c = 0; c < t.columns.size(); ++c) {
+    int longest = static_cast<int>(t.columns[c].size());
+    for (const IrRow& row : t.rows)
+      if (c < row.cells.size()) longest = std::max(longest, static_cast<int>(row.cells[c].text.size()));
+    widths.push_back(longest);
+  }
+  int width = 0;
+  for (int& w : widths) {
+    w = w * charW + 2 * padX;
+    width += w;
+  }
+  const int height = headH + rowH * static_cast<int>(t.rows.size());
+  std::ostringstream out;
+  out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-10 -10 " << width + 20 << " " << height + 20 << "\" width=\"" << width + 20
+      << "\" height=\"" << height + 20 << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
+  if (!doc.title.empty()) out << "<title>" << esc(doc.title) << "</title>\n";
+  out << "<style>" << kStyle
+      << "\n  .pr-diagram .pr-cell rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: 1; }"
+         "\n  .pr-diagram .pr-cell-head rect { fill: var(--pr-head-class); }"
+         "\n  .pr-diagram .pr-cell-head text, .pr-diagram .pr-cell-jump text { font-weight: 600; }"
+         "\n  .pr-diagram .pr-cell-against rect { stroke: var(--pr-removed); stroke-width: 2; }"
+         "\n  .pr-diagram .pr-cell-against text { fill: var(--pr-removed); font-weight: 600; }"
+      << "</style>\n";
+  const auto cell = [&](int x, int y, int w, int h, const std::string& text, const std::string& kind, const std::string& title,
+                        bool centred) {
+    out << "<g class=\"pr-cell pr-cell-" << kind << "\">";
+    if (!title.empty()) out << "<title>" << esc(title) << "</title>";
+    out << "<rect x=\"" << x << "\" y=\"" << y << "\" width=\"" << w << "\" height=\"" << h << "\"/>";
+    out << "<text x=\"" << (centred ? x + w / 2 : x + padX) << "\" y=\"" << y + h / 2 + 4 << "\""
+        << (centred ? " text-anchor=\"middle\"" : "") << ">" << esc(text) << "</text></g>\n";
+  };
+  int x = 0;
+  cell(x, 0, widths[0], headH, t.corner, "head", "", false);
+  x += widths[0];
+  for (std::size_t c = 0; c < t.columns.size(); ++c) {
+    cell(x, 0, widths[c + 1], headH, t.columns[c], "head", "", true);
+    x += widths[c + 1];
+  }
+  for (std::size_t r = 0; r < t.rows.size(); ++r) {
+    const int y = headH + rowH * static_cast<int>(r);
+    cell(0, y, widths[0], rowH, t.rows[r].label, "head", t.rows[r].title, false);
+    x = widths[0];
+    for (std::size_t c = 0; c < t.columns.size() && c < t.rows[r].cells.size(); ++c) {
+      const IrCell& it = t.rows[r].cells[c];
+      cell(x, y, widths[c + 1], rowH, it.text, it.kind, it.title, true);
+      x += widths[c + 1];
+    }
+  }
+  out << "</svg>\n";
+  return out.str();
+}
+
 /// Several drawings in one (DS-245): each keeps its own drawing and is placed beside the last, or under it when
 /// the width asked for does not hold them side by side. Each is a nested svg that says which part it is.
 std::string besideEachOther(const std::vector<std::pair<std::string, std::string>>& drawings, int maxWidth) {
@@ -782,6 +840,7 @@ std::string besideEachOther(const std::vector<std::pair<std::string, std::string
 }  // namespace
 
 std::string Svg::render(const IrDocument& doc, int maxWidth) const {
+  if (!doc.table.columns.empty()) return tableSvg(doc);
   if (!doc.parts.empty()) {
     std::vector<std::pair<std::string, std::string>> drawings;
     for (const auto& name : doc.parts) drawings.push_back({name, render(doc.part(name), maxWidth)});
