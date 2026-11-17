@@ -7,19 +7,33 @@
 [project]
 asil = "NA"
 
-# C++ test discovery: the GoogleTest plugin reads from
-# ``tests/unit/<package>/`` where ``<package>`` matches the
-# namespace under ``include/``. Tests outside that tree fire
-# W-TEST-LAYOUT-UNRECOGNISED.
+# What this repository is made of: each part of its specification, by
+# technology, and the folders it is in. argos reads each declared part only
+# with the plugin that serves its technology, so no [plugins] disabled is
+# needed to keep the PlantUML reader away (argos REQ-01089-1). The
+# requirements, verifications and constraints live in the DriftSpec design.
+
+[requirements]
+driftspec = ["design"]
+
+[verifications]
+driftspec = ["design"]
+
+[constraints]
+driftspec = ["design"]
+
+[design]
+driftspec = ["design"]
 
 [sources]
 cpp = ["src", "include"]
 
-# The design of this repository is written in DriftSpec (design/**/*.ds) and
-# read by argos-design-driftspec; the PlantUML design plugin stays out so the
-# host resolves the DriftSpec reader.
-[plugins]
-disabled = ["argos-design-plantuml"]
+# The engine's tests run on GoogleTest, read from ``tests/unit/<package>/``
+# where ``<package>`` matches the namespace under ``include/`` (tests outside
+# that tree fire W-TEST-LAYOUT-UNRECOGNISED); the Python face's run on pytest.
+[tests]
+gtest = ["tests"]
+pytest = ["tests/integration/python", "tests/system/python"]
 
 # The C++ reader lists a destructor and a deleted copy assignment as methods of
 # the class that declares them; DriftSpec cannot name them (~Parser, operator=)
