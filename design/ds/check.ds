@@ -281,7 +281,7 @@ package driftspec@ds {
       @requirement REQ-00119-1
       @requirement REQ-00082-1
       @requirement REQ-00061-1
-      @requirement REQ-00109-1
+      @requirement REQ-00109-2
       @requirement REQ-00112-1
       @requirement REQ-00065-1
       @requirement REQ-00049-3
@@ -311,7 +311,7 @@ package driftspec@ds {
         @requirement REQ-00061-1
       }
       - checkStates(state: model::Entity) -> void {
-        @requirement REQ-00109-1
+        @requirement REQ-00109-2
       }
       - checkFailures(operation: model::Entity) -> void {
         @requirement REQ-00112-1
