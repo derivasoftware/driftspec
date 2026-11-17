@@ -167,18 +167,19 @@ TEST_F(TestBehaviour, ADiagramThatClosesTheModulesKeepsOnlyWhatCrossesThem) {
 
 namespace {
 
-std::vector<std::string> unreachable(const std::string& machine) {
+std::vector<std::string> unreachable(const std::string& machine, const std::string& holds = "") {
   ds::model::Model model;
   ds::parse::Parser parser;
   ds::bind::Binder binder(model);
   binder.bind(parser.parseText("door.ds",
                                "package app {\n"
                                "  module shop {\n"
-                               "    class Door {\n"
-                               "      + open() -> none\n"
-                               "      + close() -> none\n"
-                               "    }\n"
-                               "    state Door {\n" +
+                               "    class Door {\n" +
+                                   holds +
+                                   "      + open() -> none\n"
+                                   "      + close() -> none\n"
+                                   "    }\n"
+                                   "    state Door {\n" +
                                    machine +
                                    "    }\n"
                                    "  }\n"
@@ -212,4 +213,21 @@ TEST(TestStateReach, AMachineEveryStateOfWhichIsReachedOrWithNoInitialStateSaysN
   EXPECT_TRUE(unreachable("      Shut -> Open on open\n"
                           "      Lost -> Shut on close\n")
                   .empty());  // where it starts cannot be told
+}
+
+TEST(TestStateReach, TheWalkStartsWhereTheMachineStartsWhenItsStartIsNotWritten) {
+  // DS-253: no `initial`, and the states have rules: a door starts not ajar, so in Shut, and Lost is still found
+  const std::string rules =
+      "      Shut if not ajar\n"
+      "      Open if ajar\n"
+      "      Shut -> Open on open\n"
+      "      Open -> Shut on close\n"
+      "      Lost -> Shut on close\n";
+  const auto found = unreachable(rules, "      - ajar: bool = false\n");
+  ASSERT_EQ(found.size(), 1U);
+  EXPECT_NE(found[0].find("the state Lost of Door from its initial state Shut"), std::string::npos) << found[0];
+  // a door that starts ajar starts in Open, and from there too nothing leads to Lost
+  EXPECT_EQ(unreachable(rules, "      - ajar: bool = true\n").size(), 1U);
+  // defaults that tell no state give no start: nothing is said
+  EXPECT_TRUE(unreachable(rules, "      - ajar: bool\n").empty());
 }

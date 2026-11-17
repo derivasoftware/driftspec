@@ -218,7 +218,8 @@ them. The vision (`vision.md`) says why; this says what.*
     hold (`W-STATE-UNDECLARED`), literals that exclude each other
     (`W-STATE-IMPOSSIBLE`).
   - The start is not written: the machine starts in the state the defaults of
-    its subject are in. A state diagram draws each state with its rule.
+    its subject are in, and a state no jump leads to from there is still told
+    (`W-STATE-UNREACHABLE`). A state diagram draws each state with its rule.
 - The calls of the behaviours, held to the machine (DS-250). The behaviours
   are read as they are. Along one, what it calls an event on may be in any
   state to begin with, and each call of an event moves it by the jumps on

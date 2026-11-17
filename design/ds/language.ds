@@ -1292,23 +1292,28 @@ package driftspec@ds {
           }
         }
 
-        requirement REQ-00109-1 {
+        requirement REQ-00109-2 {
           tags: language, lld, state, check
           status: approved
           title: The checker shall report a state of a class's machine that no transition leads to from its initial state
           text:
             A state named in the transitions that the walk from the initial state never enters is
-            W-STATE-UNREACHABLE: a state left over, or a transition missing. A machine with no initial
-            state written says nothing, since where it starts cannot be told. The navigation of an
-            interface has its own (W-VIEW-UNREACHABLE).
-          rationale: DS-53, measured 2026-11-05: `Lost -> Idle on go`, never entered, passed silently.
-          verification VER-00125-1 {
-            title: Integration tests confirm a state nothing leads to from the initial one is reported, and a machine fully reached or with no initial state says nothing
+            W-STATE-UNREACHABLE: a state left over, or a transition missing. The initial state is
+            the one written, or the one the machine starts in when it is not written (REQ-00143-1).
+            A machine with neither says nothing, since where it starts cannot be told. The
+            navigation of an interface has its own (W-VIEW-UNREACHABLE).
+          rationale:
+            DS-53, measured 2026-11-05: `Lost -> Idle on go`, never entered, passed silently.
+            Revised 2026-11-17 (DS-253): the start of a machine whose states have rules is derived
+            and no longer written, and leaving it out turned this check off in silence.
+          verification VER-00125-2 {
+            title: Integration tests confirm a state nothing leads to from the initial one, written or derived, is reported, and a machine fully reached or whose start cannot be told says nothing
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_behaviour.cpp::TestStateReach.AStateNothingLeadsToFromTheInitialOneIsAFinding
               tests/integration/ds/check/test_behaviour.cpp::TestStateReach.AMachineEveryStateOfWhichIsReachedOrWithNoInitialStateSaysNothing
+              tests/integration/ds/check/test_behaviour.cpp::TestStateReach.TheWalkStartsWhereTheMachineStartsWhenItsStartIsNotWritten
           }
         }
 

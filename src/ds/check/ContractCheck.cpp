@@ -10,6 +10,7 @@
 #include "Shared.hpp"
 #include "ds/check/Evaluator.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/machine/Machine.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
@@ -316,12 +317,14 @@ void ContractCheck::checkViews(const model::Entity& state) {
 }
 
 void ContractCheck::checkStates(const model::Entity& state) {
-  // a state of a class's machine that no transition leads to from the initial one is never entered (DS-53);
-  // with no initial state written, where the machine starts cannot be told
-  const auto initial = state.fields.find("initial");
+  // a state of a class's machine that no transition leads to from the initial one is never entered (DS-53).
+  // The machine starts where it is written to, or in the state the defaults of its subject are in (DS-253);
+  // with neither, where it starts cannot be told
   const auto moves = state.fields.find("transitions");
-  if (initial == state.fields.end() || moves == state.fields.end()) return;
-  std::vector<std::string> states{initial->second};
+  if (moves == state.fields.end()) return;
+  const std::string initial = machine::Machine(*model_, state).initial();
+  if (initial.empty()) return;
+  std::vector<std::string> states{initial};
   std::map<std::string, std::set<std::string>> next;
   for (const auto& move : split(moves->second, '\n')) {
     const auto gt = move.find('>');
@@ -333,7 +336,7 @@ void ContractCheck::checkStates(const model::Entity& state) {
     next[from].insert(to);
   }
   std::set<std::string> reached;
-  std::vector<std::string> pending{initial->second};
+  std::vector<std::string> pending{initial};
   while (!pending.empty()) {
     const std::string at = pending.back();
     pending.pop_back();
@@ -343,8 +346,7 @@ void ContractCheck::checkStates(const model::Entity& state) {
   for (const auto& name : states) {
     if (reached.count(name)) continue;
     found_.push_back({"W-STATE-UNREACHABLE", "warning",
-                      "nothing leads to the state " + name + " of " + state.name + " from its initial state " + initial->second,
-                      state.location});
+                      "nothing leads to the state " + name + " of " + state.name + " from its initial state " + initial, state.location});
   }
 }
 

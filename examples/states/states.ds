@@ -109,6 +109,20 @@ package shop {
       Open   if hinge = Left                          // ! W-STATE-UNDECLARED: the door holds no hinge
       Stuck  if locked, not locked                    // ! W-STATE-IMPOSSIBLE: locked and not locked
     }
+
+    // the start is not written: a gate starts not open, so Down, and from there nothing leads to Jammed
+    class Gate {
+      - open: bool = false
+      + lift() -> none
+      + drop() -> none
+    }
+    state Gate {                                      // ! W-STATE-UNREACHABLE: nothing leads to Jammed from Down
+      Down  if not open
+      Up    if open
+      Down -> Up on lift
+      Up -> Down on drop
+      Jammed -> Down on drop
+    }
   }
 }
 
