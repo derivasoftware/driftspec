@@ -53,6 +53,22 @@ package playground {
       and Spanish, with the editor as one of its tabs.
   }
 
+  requirement REQ-00005-1 {
+    title: The home page shall say what DriftSpec is beside an example the engine makes in the page
+    status: approved
+    text:
+      One screen: the marks of DriftSpec and of deriva, what DriftSpec is in a sentence and three
+      lines, and the way into the editor. Beside them, an example kept as files with the page
+      (home/shop.ds, home/diagrams.ds) and shown as the engine makes it when the page loads: its
+      text, its classes, a sequence, its requirements with what keeps each, and under the line that
+      is wrong what the engine says of it. Nothing of it is a picture kept by hand. Below, the three
+      reasons for DriftSpec: a specification detailed and coherent, three perspectives over one
+      model, the specification apart from its drawings. In English and Spanish, like the site.
+    rationale:
+      Owner, 2026-11-17 (DS-258), after two proposals seen in the browser: a home kept extremely
+      simple, with the tool's own output as its picture.
+  }
+
   // the engine, as the page reaches it: one function of ds.wasm (REQ-00113-1)
   interface wasm {
     kind: library
@@ -127,6 +143,10 @@ package playground {
       - owns problems: Problems
       - owns coach: lessons::Coach
       + load(lesson: lessons::Lesson) -> none
+      // the home page's example, drawn by the engine when the page loads
+      + paintHome() -> none {
+        @requirement REQ-00005-1
+      }
       // the site's pages: one shown at a time, kept in the address
       + showTab(tab: string) -> none {
         @requirement REQ-00004-1

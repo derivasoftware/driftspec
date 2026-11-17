@@ -62,7 +62,8 @@ def main() -> None:
     for name in ("ds.js", "ds.wasm"):
         shutil.copy(pathlib.Path(args.wasm) / name, out / name)
     (out / "brand").mkdir()
-    for name in ("driftspec-lockup-h.svg", "driftspec-lockup-h-light.svg", "driftspec-tile.svg", "driftspec-icon-180.png"):
+    for name in ("driftspec-lockup-h.svg", "driftspec-lockup-h-light.svg", "driftspec-tile.svg", "driftspec-icon-180.png",
+                 "deriva-lockup-h.svg", "deriva-lockup-h-light.svg"):
         shutil.copy(ROOT / "doc" / "assets" / name, out / "brand" / name)
     (out / "examples.json").write_text(json.dumps(examples() + showcases()))
     print(f"playground site in {out}")

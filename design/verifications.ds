@@ -292,6 +292,15 @@ package driftspec {
       tests/system/python/test_playground.py::TestPlayground::test_every_example_checks_clean_and_has_a_title_in_both_languages
   }
 
+  verification SVER-00025-1 {
+    status: approved
+    @requirement SREQ-00019-1
+    title: System tests confirm the example the home page shows draws its classes and a sequence, lists its requirements with what keeps each, and has the one error the page shows
+    method: test
+    tests:
+      tests/system/python/test_playground.py::TestPlayground::test_the_example_of_the_home_page_draws_and_has_the_one_error_it_shows
+  }
+
   verification SVER-00022-1 {
     status: approved
     @requirement SREQ-00018-1
