@@ -20,3 +20,6 @@ build-*/
 .driftspec/
 .emsdk/
 playground/site/
+
+# a compiled grammar is built when it is needed, never committed (DS-32)
+*.so
