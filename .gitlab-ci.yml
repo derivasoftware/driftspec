@@ -24,6 +24,14 @@ variables:
   # and hands the reach record to the gate, which requires it (DS-11).
   ARGOS_EVIDENCE: "1"
 
+# The shared job upgrades argos and its gtest plugin by name, and pip leaves what they depend on as
+# the runner's cached environment holds it: an argos of today beside a plano of October, which does
+# not import (found on 2026-11-17, pipeline 17465). Until the shared job upgrades them itself
+# (DDEV-1409, in deriva/infra/ci-templates), this job asks pip to: then these three lines go.
+cpp-evidence:
+  variables:
+    PIP_UPGRADE_STRATEGY: eager
+
 # The Release ds travels to the viewer's tests (viewer-js).
 cpp-test:
   artifacts:
