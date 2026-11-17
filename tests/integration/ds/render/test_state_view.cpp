@@ -102,4 +102,38 @@ TEST(TestSelfLoop, ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack) {
   EXPECT_GT(out.routes.at(0).points[1].x, out.routes.at(0).points.front().x);
 }
 
+// DS-249: a state a rule computes is drawn with its rule
+TEST_F(TestStateView, AStateIsDrawnWithTheRuleThatComputesIt) {
+  const auto ir = draw("states", "STM_Order");
+  const auto* open = node(ir, "shop@order::Order::state::Open");
+  ASSERT_NE(open, nullptr);
+  EXPECT_EQ((*open)["sections"][0][0], "if status = Open, not cancelled");
+  const auto* cancelled = node(ir, "shop@order::Order::state::Cancelled");
+  ASSERT_NE(cancelled, nullptr);
+  EXPECT_EQ((*cancelled)["sections"][0][0], "if cancelled, status != Shipped");
+  // the jumps are drawn as they always were
+  const auto* pay = edge(ir, "shop@order::Order::state::Open", "shop@order::Order::state::Paid");
+  ASSERT_NE(pay, nullptr);
+  EXPECT_EQ((*pay)["label"], "pay");
+}
+
+TEST_F(TestStateView, AStateWithNoJumpIsStillDrawnAndOneWithTwoRulesShowsBoth) {
+  const auto ir = draw("states", "STM_Lamp");
+  const auto* dark = node(ir, "shop@order::Lamp::state::Dark");
+  ASSERT_NE(dark, nullptr);
+  ASSERT_EQ((*dark)["sections"][0].size(), 2u);
+  EXPECT_EQ((*dark)["sections"][0][0], "if not lit");
+  EXPECT_EQ((*dark)["sections"][0][1], "if broken, lit");
+  EXPECT_NE(node(ir, "shop@order::Lamp::state::On"), nullptr);
+}
+
+// DS-249: nobody wrote `initial`: the machine starts in the state its subject's defaults are in
+TEST_F(TestStateView, AMachineWithNoStartWrittenStartsWhereTheDefaultsOfItsSubjectAre) {
+  const auto order = draw("states", "STM_Order");  // status = Open, cancelled = false: Open
+  EXPECT_NE(edge(order, "shop@order::Order::state::initial", "shop@order::Order::state::Open"), nullptr);
+  EXPECT_EQ(edge(order, "shop@order::Order::state::initial", "shop@order::Order::state::Paid"), nullptr);
+  const auto lamp = draw("states", "STM_Lamp");  // lit = false: Dark
+  EXPECT_NE(edge(lamp, "shop@order::Lamp::state::initial", "shop@order::Lamp::state::Dark"), nullptr);
+}
+
 }  // namespace

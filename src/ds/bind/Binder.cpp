@@ -898,10 +898,23 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       references_.push_back({e.id, entityName, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
       bindAnnotations(file, c, e.id, scope);
       std::vector<std::string> transitions;
+      std::vector<std::string> rules;
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
         TSNode t = ts_node_named_child(c, j);
         if (is(t, "initial")) model_.find(e.id)->fields["initial"] = fieldText(file, t, "name");
+        if (is(t, "state_rule")) {  // a state computed by a rule (DS-249): state|literal,literal|line, `not` as a leading !
+          std::vector<std::string> literals;
+          const uint32_t nl = ts_node_named_child_count(t);
+          for (uint32_t x = 0; x < nl; ++x) {
+            TSNode l = ts_node_named_child(t, x);
+            if (!is(l, "state_literal")) continue;
+            literals.push_back((fieldText(file, l, "negated").empty() ? "" : "!") + fieldText(file, l, "left") +
+                               fieldText(file, l, "operator") + fieldText(file, l, "right"));
+          }
+          rules.push_back(fieldText(file, t, "name") + "|" + join(literals, ",") + "|" + std::to_string(locationOf(file, t).line));
+          model_.find(e.id)->fields["rules"] = join(rules, "\n");
+        }
         if (is(t, "view")) {
           model::Entity v;
           v.kind = model::Kind::View;

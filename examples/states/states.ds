@@ -1,0 +1,98 @@
+// The states of a machine as rules over the context of its subject (DS-249).
+//
+// A state is not kept in a variable: it is computed. Each rule says when the subject is in a state, over
+// what the subject holds: `Paid if status = Paid`. The literals are joined by commas and all hold; a name
+// alone is a boolean of the subject, or a condition with a name when the subject holds nothing so called;
+// `not` turns a literal round. One state may have several rules: each is one way of being in it.
+//
+// The rules of a machine exclude each other: whatever the subject holds, it is in one state. Two states
+// that can hold at once are a finding, and it says a context in which they do. The machine starts in the
+// state its subject's defaults are in: it is not written. The lines marked ! are the oracle.
+
+package shop {
+  module order {
+    enum Status { Open, Paid, Shipped }
+
+    // ---- a machine whose rules exclude each other: nothing to report -----------------------------------
+    class Order {
+      - status: Status = Open
+      - cancelled: bool = false
+      + pay() -> none
+      + ship() -> none
+      + cancel() -> none
+    }
+    state Order {
+      Open       if status = Open, not cancelled
+      Paid       if status = Paid, not cancelled
+      Shipped    if status = Shipped
+      Cancelled  if cancelled, status != Shipped      // two literals on two attributes
+      Open -> Paid on pay                             // the jumps are written as they always were
+      Paid -> Shipped on ship
+      Open -> Cancelled on cancel
+      Paid -> Cancelled on cancel
+    }
+
+    // ---- a state with two rules: two ways of being in it ------------------------------------------------
+    class Lamp {
+      - lit: bool = false
+      - broken: bool = false
+    }
+    state Lamp {
+      Dark  if not lit
+      Dark  if broken, lit                            // a broken lamp is dark though it is lit
+      On    if lit, not broken
+    }
+
+    // ---- a condition with a name: the subject holds nothing called `expired`, so it is only a name ------
+    class Offer {
+      - taken: bool = false
+    }
+    state Offer {
+      Standing   if not taken, not expired
+      Taken      if taken
+      Lapsed     if not taken, expired
+    }
+  }
+
+  // ---- what the rules say that cannot be -------------------------------------------------------------------
+  module faults {
+    enum Lever { Rest, Left, Right }
+
+    class Lamps {
+      - lever: Lever = Rest
+      - hazard: bool = false
+    }
+    state Lamps {
+      Dark   if lever = Rest, not hazard
+      Left   if lever = Left
+      Right  if lever = Right
+      Both   if hazard                                // ! W-STATE-OVERLAP: with the lever to one side and the hazard on, it is two states
+    }
+
+    class Door {
+      - lever: Lever = Rest
+      - locked: bool = false
+    }
+    state Door {
+      Shut   if lever = Rest
+      Ajar   if lever = Up                            // ! W-STATE-VALUE: a lever is Rest, Left or Right, never Up
+      Open   if hinge = Left                          // ! W-STATE-UNDECLARED: the door holds no hinge
+      Stuck  if locked, not locked                    // ! W-STATE-IMPOSSIBLE: locked and not locked
+    }
+  }
+}
+
+diagram STM_Order {
+  kind: state
+  include: shop@order::Order
+}
+
+diagram STM_Lamp {
+  kind: state
+  include: shop@order::Lamp
+}
+
+diagram STM_Lamps {
+  kind: state
+  include: shop@faults::Lamps
+}

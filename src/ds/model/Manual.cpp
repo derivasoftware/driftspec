@@ -305,6 +305,16 @@ std::vector<CodeSpec> buildCodes() {
        "A scenario of a use case has one participant send to another, and the behaviour below it does not show it yet: what the "
        "sender does is not all written.",
        "Write the behaviours the sender still lacks; an empty sequence says an operation calls nothing."},
+      {"W-STATE-OVERLAP", "warning",
+       "Two states of a machine can hold at once: there is a context in which the rules of both hold, so the subject would be in two "
+       "states.",
+       "Say in one of the two rules what tells them apart: the rules of a machine exclude each other."},
+      {"W-STATE-VALUE", "warning", "The rule of a state asks an attribute for a value its type does not have.",
+       "Write one of the values of the type, or add the value to it."},
+      {"W-STATE-UNDECLARED", "warning", "The rule of a state compares something its subject does not hold.",
+       "Name an attribute of the subject of the machine."},
+      {"W-STATE-IMPOSSIBLE", "warning", "The rule of a state asks two things that exclude each other: the subject can never be in it.",
+       "Correct the rule."},
       {"W-MESSAGE-NO-OPERATION", "coverage",
        "A scenario sends a message to a box that offers no operation of that name: the message is a label, and the level below is not "
        "written yet.",

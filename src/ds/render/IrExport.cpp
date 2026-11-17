@@ -6,6 +6,7 @@
 #include <regex>
 #include <sstream>
 
+#include "ds/machine/Machine.hpp"
 #include "ds/model/SequenceTree.hpp"
 #include "ds/model/Words.hpp"
 #include "ds/query/Filter.hpp"
@@ -714,10 +715,19 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   std::set<std::string> drawn;
   for (const auto& machine : query::StateFilter(split(diagram.field("include"), ',')).machines(model_)) {  // DS-127
     const model::Entity* state = model_.find(machine);
+    const machine::Machine written(model_, *state);  // a state a rule computes shows its rule (DS-249)
     const auto box = [&](const std::string& name) {
       const std::string id = state->id + "::" + name;
       if (!drawn.insert(id).second) return id;
       nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", name}, {"classifier", "state"}};
+      const std::vector<std::string> rules = written.rules(name);
+      if (!rules.empty()) {
+        nlohmann::json lines = nlohmann::json::array();
+        for (const std::string& rule : rules)
+          for (const std::string& line : wrap("if " + rule, 40)) lines.push_back(line);
+        node["sections"] = nlohmann::json::array({lines});
+        node["sectionKinds"] = nlohmann::json::array({"attributes"});
+      }
       if (const model::Entity* view = model_.find(id)) {
         node["refs"] = {{"location", view->location.file + ":" + std::to_string(view->location.line)}};
         nlohmann::json sections = nlohmann::json::array();
@@ -744,7 +754,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       return id;
     };
     // the machine reads from where it starts: first in the document, so the layout flows down from it
-    const std::string initial = state->field("initial");
+    const std::string initial = written.initial();  // the one written, else where the defaults are (DS-249)
     if (!initial.empty()) {
       const std::string start = state->id + "::initial";
       nodes.push_back({{"id", start}, {"kind", "box"}, {"label", "start"}, {"classifier", "initial"}});
@@ -758,6 +768,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       const auto end = move.find('>', cut + 1);
       if (end != std::string::npos) box(move.substr(cut + 1, end - cut - 1));
     }
+    for (const std::string& name : written.states()) box(name);     // a state a rule computes is drawn though no jump names it
     for (const auto& member : model_.index().members(state->id)) {  // a view no transition names is still drawn: it is the finding
       const model::Entity& view = *model_.find(member);
       if (view.kind == model::Kind::View) box(view.name);

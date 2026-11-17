@@ -384,6 +384,16 @@ package driftspec@ds {
       - check(context: Context) -> std::vector<model::Finding>
     }
 
+    // the states of a machine, written as rules over what its subject holds (DS-249), held to each other
+    // and to the structure
+    class StateRules : ACheck {
+      @requirement REQ-00141-1
+      @requirement REQ-00142-1
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
     class DependencyCheck : ACheck {       // what a box declares it uses against what its behaviours call
       @requirement REQ-00094-2
       - refs context_: Context

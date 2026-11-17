@@ -201,6 +201,24 @@ them. The vision (`vision.md`) says why; this says what.*
   are operations of the class (`W-EVENT-UNDECLARED`, `W-ACTION-UNDECLARED`);
   the guard is not interpreted. No nested states until a design asks for
   them. Activities come with the process domain.
+- The states of a machine as rules (`examples/states`, decided 2026-11-17,
+  DS-249). A state is computed, not kept: `Paid if status = Paid, not
+  cancelled` says when the subject of the machine is in it, over what the
+  subject holds. The literals are joined by commas and all hold: an attribute
+  compared with a value (`=`, `!=`), or a name alone, which is a boolean
+  attribute, or a condition with a name when the subject holds nothing so
+  called; `not` turns a literal round. A state may have several rules, each
+  one way of being in it. The jumps are written beside the rules as before.
+  - The rules of a machine exclude each other: whatever the subject holds, it
+    is in one state. Two states that can hold at once are `W-STATE-OVERLAP`,
+    and the finding says a context in which they do. What no rule covers is
+    nothing to report.
+  - A rule that cannot hold as written is a finding: a value the type of the
+    attribute does not have (`W-STATE-VALUE`), something the subject does not
+    hold (`W-STATE-UNDECLARED`), literals that exclude each other
+    (`W-STATE-IMPOSSIBLE`).
+  - The start is not written: the machine starts in the state the defaults of
+    its subject are in. A state diagram draws each state with its rule.
 
 ## 4. Requirements, constraints and verifications (`examples/artefacts`, decided 2026-10-25)
 
