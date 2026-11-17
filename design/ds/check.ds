@@ -394,6 +394,14 @@ package driftspec@ds {
       - check(context: Context) -> std::vector<model::Finding>
     }
 
+    // the calls of the behaviours written, held to the machine of what they are made on (DS-250)
+    class CallOrder : ACheck {
+      @requirement REQ-00145-1
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
     class DependencyCheck : ACheck {       // what a box declares it uses against what its behaviours call
       @requirement REQ-00094-2
       - refs context_: Context

@@ -192,6 +192,133 @@ void note(std::vector<std::string>& all, const std::string& name) {
   if (!name.empty() && std::find(all.begin(), all.end(), name) == all.end()) all.push_back(name);
 }
 
+/// A jump as its author wrote it: from a state to another, on an event; with a guard it may also not happen.
+struct Jump {
+  std::string from;
+  std::string to;
+  std::string event;
+  bool guarded = false;
+};
+
+std::vector<Jump> jumpsOf(const model::Entity& machine) {
+  std::vector<Jump> out;
+  for (const std::string& line : pieces(machine.field("transitions"), '\n')) {
+    const auto first = line.find('>');
+    const auto second = line.find('>', first + 1);
+    if (first == std::string::npos || second == std::string::npos) continue;
+    const std::string label = line.substr(second + 1);  // event [guard] / action
+    out.push_back({line.substr(0, first), line.substr(first + 1, second - first - 1), label.substr(0, label.find_first_of(" [")),
+                   label.find('[') != std::string::npos});
+  }
+  return out;
+}
+
+/// Who a behaviour runs on: a method's class, a function's module, an operation's interface, or its subject.
+std::string holderOf(const model::Model& model, const std::string& sequence) {
+  const model::Entity* subject = model.find(model::Identity(sequence).subject().text());
+  if (!subject) return "";
+  const bool member =
+      subject->kind == model::Kind::Method || subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation;
+  return member ? subject->scope : subject->id;
+}
+
+/// A behaviour as a reader calls it: its subject, and its scenario when it has one.
+std::string named(const model::Entity& sequence) {
+  const std::string subject = sequence.field("subject").empty() ? sequence.name : sequence.field("subject");
+  return subject + (sequence.field("scenario").empty() ? "" : " / " + sequence.field("scenario"));
+}
+
+/// The states a receiver may be in, by the name it has in a behaviour; a name that is not there may be in any.
+using May = std::map<std::string, std::set<std::string>>;
+
+/// What two ways through a behaviour leave between them: a receiver either way leaves in any state is in any.
+May either(const May& a, const May& b) {
+  May out;
+  for (const auto& pair : a) {
+    const auto other = b.find(pair.first);
+    if (other == b.end()) continue;
+    out[pair.first] = pair.second;
+    out[pair.first].insert(other->second.begin(), other->second.end());
+  }
+  return out;
+}
+
+/// One walk of the behaviours written, for the calls of the events of one machine (DS-250).
+class Calls {
+ public:
+  Calls(const model::Model& model, const std::string& subject, const std::vector<Jump>& jumps, const std::vector<std::string>& states)
+      : model_(model), subject_(subject), jumps_(jumps), states_(states) {}
+
+  /// The calls a behaviour makes, in the order written, added to what was found.
+  void of(const model::Entity& sequence, std::vector<Call>& found) const {
+    May may;
+    walk(sequence, sequence.id, may, found);
+  }
+
+ private:
+  /// What a behaviour or a frame holds, in the order written. A frame may not happen: what comes after it
+  /// finds its receivers as the frame leaves them or as they were; the sides of an alt are each one way.
+  void walk(const model::Entity& sequence, const std::string& holder, May& may, std::vector<Call>& found) const {
+    for (const std::string& id : model_.index().children(holder)) {
+      const model::Entity* step = model_.find(id);
+      if (!step) continue;
+      if (step->kind == model::Kind::Message) {
+        call(sequence, *step, may, found);
+      } else if (step->kind == model::Kind::Frame) {
+        std::vector<std::string> sides;
+        for (const std::string& side : model_.index().children(id)) {
+          const model::Entity* branch = model_.find(side);
+          if (branch && branch->kind == model::Kind::Frame && branch->field("kind") == "branch") sides.push_back(side);
+        }
+        May after = may;  // it may not happen
+        if (sides.size() > 1) {
+          for (std::size_t i = 0; i < sides.size(); ++i) {
+            May side = may;
+            walk(sequence, sides[i], side, found);
+            after = i == 0 ? side : either(after, side);  // one of its sides happens
+          }
+        } else {
+          May inside = may;
+          walk(sequence, id, inside, found);
+          after = either(may, inside);
+        }
+        may = after;
+      }
+    }
+  }
+
+  /// One message: a call of an event of the machine moves its receiver by the jumps on that event.
+  void call(const model::Entity& sequence, const model::Entity& m, May& may, std::vector<Call>& found) const {
+    if (m.field("return") == "true" || m.field("op").empty()) return;
+    const std::string receiver = m.field("to");
+    if ((receiver == "self" ? holderOf(model_, sequence.id) : m.field("type")) != subject_) return;
+    std::string event = m.field("op");
+    if (event.rfind("::") != std::string::npos) event = event.substr(event.rfind("::") + 2);
+    std::set<std::string> targets;
+    for (const Jump& jump : jumps_)
+      if (jump.event == event) targets.insert(jump.to);
+    if (targets.empty()) return;  // no event of the machine: it moves nothing
+    const auto known = may.find(receiver);
+    const std::set<std::string> now = known == may.end() ? std::set<std::string>(states_.begin(), states_.end()) : known->second;
+    std::set<std::string> next;
+    for (const Jump& jump : jumps_) {
+      if (jump.event != event || !now.count(jump.from)) continue;
+      next.insert(jump.to);
+      if (jump.guarded) next.insert(jump.from);  // the guard may not hold: it stays
+    }
+    Call made{named(sequence), m.id, receiver, event, {}, !next.empty()};
+    for (const std::string& state : states_)  // in the order the machine writes its states
+      if (now.count(state)) made.from.push_back(state);
+    found.push_back(made);
+    may[receiver] = next.empty() ? targets : next;  // a call that does not fit: go on as if it had been made
+  }
+
+  const model::Model& model_;
+  const std::string& subject_;
+  const std::vector<Jump>& jumps_;
+  const std::vector<std::string>& states_;
+};
+
 }  // namespace
 
 Machine::Machine(const model::Model& model, const model::Entity& machine) : model_(model), machine_(machine) {
@@ -285,6 +412,30 @@ std::vector<model::Finding> Machine::faults() const {
     }
   }
   return found;
+}
+
+std::vector<std::string> Machine::events() const {
+  std::vector<std::string> out;
+  for (const Jump& jump : jumpsOf(machine_)) note(out, jump.event);
+  return out;
+}
+
+std::vector<std::string> Machine::sources(const std::string& event) const {
+  std::vector<std::string> out;
+  for (const Jump& jump : jumpsOf(machine_))
+    if (jump.event == event) note(out, jump.from);
+  return out;
+}
+
+std::vector<Call> Machine::calls() const {
+  std::vector<Call> out;
+  const std::vector<Jump> jumps = jumpsOf(machine_);
+  if (jumps.empty()) return out;
+  const std::vector<std::string> everyState = states();
+  const Calls walk(model_, subject_, jumps, everyState);
+  for (const auto& pair : model_.entities())
+    if (pair.second.kind == model::Kind::Sequence) walk.of(pair.second, out);
+  return out;
 }
 
 }  // namespace machine

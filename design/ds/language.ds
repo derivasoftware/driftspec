@@ -1403,6 +1403,34 @@ package driftspec@ds {
               tests/integration/ds/render/test_state_view.cpp::TestStateView.AMachineWithNoStartWrittenStartsWhereTheDefaultsOfItsSubjectAre
           }
         }
+
+        requirement REQ-00145-1 {
+          tags: language, lld, state, logic, check
+          status: approved
+          title: The checker shall report a call of an event that the machine of its receiver lets happen from no state the receiver may be in
+          text:
+            The behaviours written are read as they are, and nothing is asked of them. Along a
+            behaviour, what it calls an event on may be in any state to begin with; a call of an
+            event moves it by the jumps on that event, and a jump with a guard may leave it where it
+            was. A frame may not happen: what comes after it finds the receiver as the frame leaves it
+            or as it was; the sides of an alt are each one way, and a loop is read once, since its
+            receiver may be another each time. An operation that is no event of the machine moves
+            nothing. A call the machine lets happen from none of the states its receiver may be in is
+            W-STATE-ORDER, where the call is made: Desk::rush calls order.cancel() when order can only
+            be Shipped: the machine of Order lets cancel happen from Open or Paid.
+          rationale:
+            Owner, 2026-11-17 (DS-250): the author writes the machine whole, and the tool looks for
+            where each of its events is called. From a state not every other can be reached, so the order of
+            the calls is what a behaviour can contradict.
+          verification VER-00161-1 {
+            title: Integration tests confirm a call out of the order of the machine is a finding where it is made, and that calls in order, a call after a frame that may not happen and a first call are not
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.ACallOfAnEventTheMachineLetsHappenFromNoStateItsReceiverMayBeInIsAFindingWhereItIsMade
+              tests/integration/ds/check/test_states.cpp::TestStates.CallsInTheOrderOfTheMachineACallAfterAFrameThatMayNotHappenAndAFirstCallAreNoFinding
+          }
+        }
       }
 
       // ---- activity ----
@@ -2135,6 +2163,23 @@ package driftspec@ds {
           tests:
             tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateIsDrawnWithTheRuleThatComputesIt
             tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateWithNoJumpIsStillDrawnAndOneWithTwoRulesShowsBoth
+        }
+      }
+      requirement REQ-00146-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A state diagram shall say, on each jump, the behaviours that call its event
+        text:
+          The jump keeps its label as it is written, and says besides the behaviours written that
+          call its event: pay is called in Desk::rush, Desk::sell. A jump whose event no behaviour
+          calls says nothing more.
+        rationale: DS-250. The machine is written apart from the behaviours; the drawing is where the two are seen together.
+        verification VER-00162-1 {
+          title: Integration tests confirm a jump of a state diagram says the behaviours that call its event, and that one nobody calls says nothing more
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AJumpSaysTheBehavioursThatCallItsEventAndOneNobodyCallsSaysNothing
         }
       }
       requirement REQ-00122-1 {
