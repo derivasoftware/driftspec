@@ -186,8 +186,10 @@ package driftspec@playground {
       Nobody writes a design on a phone; a lesson is read there. Under 760 pixels the tab is still
       the Editor and shows, from the top: the diagram the step is about, alone; the code, at the
       line the step speaks of; the problems, only when there are some; and the card, docked at
-      the bottom across the screen. The files and the dividers are not shown. A line says once
-      that a design is better written on a computer, and stays closed once closed.
+      the bottom across the screen. The files are not shown. The line between the diagram and
+      the code is dragged to give more of the screen to one or the other, and where it was left
+      is kept. A line says once that the editor is better opened on a large screen, and stays
+      closed once closed.
     rationale:
       Owner, 2026-11-17 (DS-273): the lessons should be readable from a phone, with the diagram
       on top, the exact code under it and the explanation at the bottom, and a notice that it is
