@@ -85,9 +85,10 @@ wasm:
     - . .emsdk/emsdk_env.sh
     - emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release
     - cmake --build build-wasm --parallel
-    - ls -l build-wasm/ds.js build-wasm/ds.wasm
+    - ls -l build-wasm/ds.js build-wasm/ds.wasm build-wasm/tree-sitter-driftspec.wasm
   artifacts:
-    paths: [build-wasm/ds.js, build-wasm/ds.wasm]
+    # the engine and the grammar the page's editor is coloured by (DS-269)
+    paths: [build-wasm/ds.js, build-wasm/ds.wasm, build-wasm/tree-sitter-driftspec.wasm]
     expire_in: 1 week
 
 # The playground as a static site (DS-204): the page, the engine the wasm job built, the lessons and
