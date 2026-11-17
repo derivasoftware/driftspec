@@ -121,6 +121,9 @@ std::string exampleOf(Kind kind);
 /// The manual ds embeds: the index ("" topic), a kind, a finding code, commands, annotations or codes; "" for no such topic.
 std::string manualPage(const std::string& topic);
 std::vector<std::string> manualTopics();
+/// The guides of the manual, written as Markdown in doc/manual and embedded when ds is built (DS-272): each by its
+/// topic, in the order they are read. The same text is what ds manual <topic> prints and what the site draws.
+const std::vector<std::pair<std::string, std::string>>& manualGuides();
 /// Whether a relation of this kind may go from one kind to another.
 bool joins(const RelationSpec& relation, Kind from, Kind to);
 

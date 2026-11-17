@@ -70,6 +70,35 @@ body:not([data-tab="editor"]) .editor-only { display: none !important; }
 body:not([data-tab="editor"]) > main { display: none; }
 body:not([data-tab="editor"]) .coach { display: none !important; }
 .page { flex: 1; min-height: 0; overflow: auto; background: var(--page); }
+/* the docs: the guides down the side, a page of prose and examples; an example is its text beside its drawing */
+.docs { display: flex; gap: 40px; max-width: 1240px; margin: 0 auto; padding: 36px 28px 80px; }
+#docnav { flex: none; width: 180px; position: sticky; top: 36px; align-self: flex-start; display: flex; flex-direction: column; gap: 2px; font: 14px var(--sans); }
+#docnav a { color: var(--muted); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+#docnav a:hover { color: var(--fg); }
+#docnav a.on { color: var(--fg); background: var(--soft); }
+#docpage { flex: 1; min-width: 0; font: 15px/1.65 var(--sans); color: var(--fg); }
+#docpage .prose { max-width: 720px; }
+#docpage h1 { font: 700 34px/1.15 var(--sans); margin: 0 0 14px; letter-spacing: -.01em; }
+#docpage h2 { font: 600 21px/1.25 var(--sans); margin: 44px 0 10px; }
+#docpage p, #docpage ul { margin: 0 0 12px; color: var(--muted); }
+#docpage ul { padding-left: 20px; }
+#docpage p code, #docpage li code { font: 13px var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; color: var(--fg); }
+#docpage .prose pre { margin: 12px 0 16px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; font: 12.5px/1.6 var(--mono); color: var(--fg); max-width: 100%; }
+#docpage .prose pre code { background: none; border: 0; padding: 0; font: inherit; }
+#docpage .example { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 0; margin: 16px 0 8px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+#docpage .ex-code { position: relative; border-right: 1px solid var(--line); padding: 12px 6px 44px 12px; min-width: 0; }
+#docpage .ex-code .CodeMirror { height: auto; background: transparent; font-size: 12.5px; }
+#docpage .ex-drawn { padding: 16px; display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center; min-width: 0; background: var(--page); }
+#docpage .ex-drawn svg { max-width: 100%; height: auto; }
+#docpage .ex-open { position: absolute; right: 10px; bottom: 10px; font: 600 12px var(--sans); color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+#docpage .ex-open:hover { color: var(--fg); border-color: var(--muted); }
+#docpage .ex-finding { margin: 10px 4px 0; font: 12px/1.5 var(--mono); color: var(--warn); }
+@media (max-width: 900px) {
+  .docs { flex-direction: column; gap: 16px; padding: 20px 16px 60px; }
+  #docnav { position: static; width: auto; flex-direction: row; flex-wrap: wrap; }
+  #docpage .example { grid-template-columns: 1fr; }
+  #docpage .ex-code { border-right: 0; border-bottom: 1px solid var(--line); }
+}
 .page[hidden] { display: none; }
 /* ---- Home (DS-258): what DriftSpec is, beside an example made by the engine in the page ---- */
 #home { font: 400 17px/1.5 var(--figtree); -webkit-font-smoothing: antialiased; }
@@ -262,7 +291,7 @@ main { flex: 1; display: flex; min-height: 0; }
 
 /* the diagrams in the same look: cards on the grey stage, the kind in its colour, signatures as code */
 .pane .body { background: var(--bg); }
-.pane svg.pr-diagram, #home svg.pr-diagram {
+.pane svg.pr-diagram, #home svg.pr-diagram, #docs svg.pr-diagram {
   --pr-text: var(--fg); --pr-muted: var(--muted); --pr-stroke: var(--rule); --pr-edge: var(--rule); --pr-edge-width: 1;
   --pr-box-fill: var(--panel); --pr-container-fill: color-mix(in srgb, var(--panel) 45%, var(--bg)); --pr-container-stroke: var(--line);
   --pr-note-fill: var(--raised); --pr-note-stroke: var(--line);
@@ -383,7 +412,7 @@ main { flex: 1; display: flex; min-height: 0; }
 <body>
 <header>
   <a class="logo" href="./" title="DriftSpec"><img class="dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec"></a>
-  <nav id="site"><a data-tab="home"></a><a data-tab="editor"></a></nav>
+  <nav id="site"><a data-tab="home"></a><a data-tab="docs"></a><a data-tab="editor"></a></nav>
   <select class="editor-only" id="example" title="Example"></select>
   <button class="icon-btn editor-only" id="relesson" title="Restart the lesson" hidden><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7a4.5 4.5 0 1 0 1.4-3.3"/><path d="M2.5 2v2.6h2.6"/></svg></button>
   <span class="spacer"></span>
@@ -392,6 +421,9 @@ main { flex: 1; display: flex; min-height: 0; }
   <button id="lang" title="Language / Idioma">ES</button>
   <button id="theme" title="Theme">◐</button>
 </header>
+<section class="page" id="docs" hidden>
+  <div class="docs"><nav id="docnav"></nav><article id="docpage"></article></div>
+</section>
 <section class="page" id="home" hidden>
   <div class="first">
 <pre class="wall" aria-hidden="true">rule no-module-cycles {
@@ -685,7 +717,7 @@ definition module-depends(m, n) {
 </main>
 
 <script type="module">
-import { start, ds } from "./engine.js";
+import { start, ds, manual } from "./engine.js";
 import { grammarMode } from "./highlight.js";
 
 const KEYWORDS = "if column package module class dataclass enum interface function extern sequence state diagram requirement verification constraint usecase outcome operation view rule definition loop alt opt else return on initial attempt fail fails failure realises from to in is not where for holds never otherwise scenario event";
@@ -721,7 +753,7 @@ const UI = {
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
         requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
-        tabHome: "Home", tabEditor: "Editor", go: "Open the editor",
+        tabHome: "Home", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Open in the editor", go: "Open the editor",
         homeTitle: "Design specifications as code.",
         homeText: "DriftSpec is a tool for writing the design of a piece of software as text and keeping it consistent. It checks every contradiction, draws the diagrams, and joins requirements, design and tests in one model.",
         kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Kept by",
@@ -738,7 +770,7 @@ const UI = {
         last: "Hecho: era la última lección.",
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
         requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
-        tabHome: "Inicio", tabEditor: "Editor", go: "Abrir el editor",
+        tabHome: "Inicio", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Abrir en el editor", go: "Abrir el editor",
         homeTitle: "Especificaciones de diseño como código.",
         homeText: "DriftSpec es una herramienta para escribir el diseño de un software como texto y mantenerlo consistente. Comprueba cada contradicción, dibuja los diagramas y une requisitos, diseño y pruebas en un solo modelo.",
         kClass: "clases", kSequence: "secuencia", cTitle: "Título", cKept: "Lo cumple",
@@ -2043,9 +2075,73 @@ async function paintHome() {
   }
 }
 
+// ---- the docs (DS-272): the guides the engine carries, the same text ds manual prints, drawn as pages. Every
+// example of a guide is drawn by the engine here, beside its text, and opens in the editor --------------------
+const docs = { guides: null, topic: null };
+let marked = null;
+
+async function paintDocs() {
+  if (!docs.guides) {
+    ({ marked } = await import("https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.esm.js"));
+    docs.guides = manual("").guides.map((topic) => ({ topic, text: manual(topic).text }));
+    for (const g of docs.guides) g.title = (/^# (.+)$/m.exec(g.text) || [0, g.topic])[1];
+    $("docnav").innerHTML = docs.guides.map((g) => `<a data-doc="${escapeHtml(g.topic)}">${escapeHtml(g.title)}</a>`).join("");
+    for (const a of $("docnav").querySelectorAll("a")) a.onclick = () => showDoc(a.dataset.doc, true);
+  }
+  showDoc(new URLSearchParams(location.search).get("doc") || docs.guides[0]?.topic, false);
+}
+
+function showDoc(topic, push) {
+  const guide = docs.guides.find((g) => g.topic === topic) || docs.guides[0];
+  if (!guide) return;
+  for (const a of $("docnav").querySelectorAll("a")) a.classList.toggle("on", a.dataset.doc === guide.topic);
+  const url = new URL(location.href);
+  url.searchParams.set("doc", guide.topic);
+  history[push ? "pushState" : "replaceState"](null, "", url);
+  if (docs.topic === guide.topic) return;
+  docs.topic = guide.topic;
+  const page = $("docpage");
+  page.innerHTML = "";
+  // the prose between two examples is Markdown; an example is its text beside what the engine draws of it
+  const parts = guide.text.split(/```ds( wrong)?\n([\s\S]*?)```/);
+  for (let i = 0; i < parts.length; i += 3) {
+    const prose = document.createElement("div");
+    prose.className = "prose";
+    prose.innerHTML = marked.parse(parts[i]);
+    page.append(prose);
+    if (parts[i + 2] != null) page.append(exampleOf(parts[i + 2].replace(/\n$/, ""), guide.title));
+  }
+  for (const code of page.querySelectorAll(".CodeMirror")) code.CodeMirror.refresh();  // written before they were on the page
+  page.scrollTop = 0;
+  $("docs").scrollTop = 0;
+}
+
+function exampleOf(code, title) {
+  const el = document.createElement("div");
+  el.className = "example";
+  el.innerHTML = `<div class="ex-code"></div><div class="ex-drawn"></div>`;
+  CodeMirror(el.querySelector(".ex-code"), { value: code, mode: MODE, readOnly: "nocursor", lineNumbers: false, viewportMargin: Infinity });
+  ds({ "example.ds": code }).then((out) => {
+    const drawn = el.querySelector(".ex-drawn");
+    drawn.innerHTML = out.diagrams.map((d) => d.svg).join("");
+    for (const f of out.report.findings.filter((f) => f.severity !== "info")) {
+      const said = document.createElement("div");
+      said.className = "ex-finding";
+      said.innerHTML = `<b>${escapeHtml(f.code)}</b> ${escapeHtml(f.message)}`;
+      el.querySelector(".ex-code").append(said);
+    }
+  });
+  const open = document.createElement("button");
+  open.className = "ex-open";
+  open.textContent = ui("openInEditor");
+  open.onclick = () => { load({ name: title, id: "docs", title: { en: title, es: title }, files: { "example.ds": code } }); showTab("editor", true); };
+  el.querySelector(".ex-code").append(open);
+  return el;
+}
+
 // The site's tabs (DS-257). A link that names something of the editor (an example, a replay, a line) opens it;
 // otherwise ?tab= says which page, and the home page is the default. The tab is kept in the address.
-const TABS = ["home", "editor"];
+const TABS = ["home", "docs", "editor"];
 function showTab(tab, push) {
   if (!TABS.includes(tab)) tab = "home";
   document.body.dataset.tab = tab;
@@ -2053,6 +2149,7 @@ function showTab(tab, push) {
   for (const page of document.querySelectorAll("section.page")) page.hidden = page.id !== tab;
   if (tab === "editor") requestAnimationFrame(() => editor.refresh());
   if (tab === "home") requestAnimationFrame(() => home.shown?.refresh());
+  if (tab === "docs") paintDocs();
   const url = new URL(location.href);
   if (tab === "home") url.searchParams.delete("tab"); else url.searchParams.set("tab", tab);
   history[push ? "pushState" : "replaceState"](null, "", url);

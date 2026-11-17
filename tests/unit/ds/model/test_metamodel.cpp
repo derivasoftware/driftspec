@@ -132,8 +132,25 @@ TEST_F(TestManualPage, TheIndexListsTheKindsAndAnUnknownTopicHasNoPage) {
 
 TEST_F(TestManualTopics, TheTopicsAreTheTablesTheKindsAndTheCodes) {
   const auto topics = ds::model::manualTopics();
-  EXPECT_EQ(topics.size(), 4 + ds::model::kinds().size() + ds::model::codes().size());
-  EXPECT_EQ(topics.front(), "grammar");
+  const auto& guides = ds::model::manualGuides();  // the guides written in doc/manual come first (DS-272)
+  EXPECT_EQ(topics.size(), guides.size() + 4 + ds::model::kinds().size() + ds::model::codes().size());
+  EXPECT_EQ(topics[guides.size()], "grammar");
+  for (std::size_t i = 0; i < guides.size(); ++i) EXPECT_EQ(topics[i], guides[i].first);
+}
+
+/// The guides of the manual, embedded from doc/manual when ds is built (DS-272).
+class TestManualGuides : public ::testing::Test {};
+
+TEST_F(TestManualGuides, EachGuideHasATopicOfItsOwnAndStartsWithItsTitle) {
+  const auto& guides = ds::model::manualGuides();
+  ASSERT_FALSE(guides.empty());
+  std::set<std::string> topics;
+  for (const auto& guide : guides) {
+    EXPECT_TRUE(topics.insert(guide.first).second) << guide.first << " is there twice";
+    EXPECT_EQ(guide.first.find_first_of("0123456789"), std::string::npos) << guide.first << " keeps the number of its file";
+    EXPECT_EQ(guide.second.rfind("# ", 0), 0U) << guide.first;
+  }
+  EXPECT_EQ(guides.front().first, "intent");  // in the order of their files
 }
 
 }  // namespace

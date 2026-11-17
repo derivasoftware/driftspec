@@ -16,3 +16,8 @@ export async function ds(files, width = 0) {
   if (out.report) out.report.findings = out.report.findings.concat((out.report.coverage || []).map((f) => ({ ...f, severity: "info" })));
   return out;
 }
+
+// A page of the manual the engine carries, or with "" its guides and topics (DS-272): the same text ds manual prints.
+export function manual(topic = "") {
+  return JSON.parse(call(JSON.stringify({ manual: topic }))).manual;
+}

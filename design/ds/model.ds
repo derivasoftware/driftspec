@@ -329,6 +329,36 @@ package driftspec@ds {
       tags: manual, metamodel, language
     }
 
+    requirement REQ-00160-1 {
+      status: approved
+      @refines SREQ-00014-1
+      title: The manual shall carry its guides, written as Markdown in the repository and embedded when ds is built, the same text in the terminal and in a page
+      text:
+        doc/manual/NN-topic.md is a guide: intent, structure, behaviour, logic, using. The build
+        embeds each as it is, in the order of its number, and its topic is its name. ds manual
+        <topic> prints it, the index lists the guides before the kinds, and the engine for a page
+        answers it to a request for the manual (with no topic, the guides and every topic), so a
+        site draws the text the terminal prints. An example of a guide is a block marked ds: a
+        workspace of its own that checks clean, or, marked ds wrong, one with the finding it is
+        there to show.
+      rationale:
+        Owner, 2026-11-17 (DS-272): one source for the manual in both places. The prose is
+        Markdown; what the engine uses to work (the kinds, the codes, the commands) stays in the
+        metamodel and its pages are generated. Four articles by perspective and one on using the
+        tool, in the style of PlantUML's site.
+      tags: manual, guides
+    }
+
+    verification VER-00176-1 {
+      status: approved
+      @requirement REQ-00160-1
+      title: Integration tests confirm every guide starts with its title and is the page of its topic, that each of its examples checks clean or has the finding it is marked for, and that the engine for a page answers the manual
+      method: test
+      tests:
+        tests/integration/ds/model/test_manual.cpp::TestManual.EveryExampleOfAGuideChecksCleanAndOneMarkedWrongHasItsFinding
+        tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.TheManualIsAnsweredByItsOwnRequest
+    }
+
     verification VER-00088-1 {
       status: approved
       @requirement REQ-00079-1
@@ -395,6 +425,9 @@ package driftspec@ds {
     }
     function manualTopics() -> std::vector<std::string> {
       @requirement REQ-00079-1
+    }
+    function manualGuides() -> std::vector<std::pair<std::string, std::string>> {
+      @requirement REQ-00160-1
     }
 
     enum Kind {
