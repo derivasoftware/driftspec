@@ -6,7 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
-#include "ds/machine/Matrix.hpp"
+#include "ds/machine/Table.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -14,16 +14,16 @@ namespace {
 
 /// A machine as a table (DS-251): its events down, its states across, in each cell where the event takes the
 /// state, and over it what the behaviours written do.
-class TestMatrix : public ::testing::Test {
+class TestTable : public ::testing::Test {
  protected:
-  /// The matrix of the order of a module `m` of a package `p`, after the text given.
-  ds::machine::Matrix matrix(const std::string& behaviours = "") {
+  /// The table of the order of a module `m` of a package `p`, after the text given.
+  ds::machine::Table table(const std::string& behaviours = "") {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
     binder.bind(parser.parseText("a.ds", std::string("package p {\n  module m {\n") + kShop + behaviours + "  }\n}\n"));
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
-    return ds::machine::Matrix(model, *model.find("p@m::Order::state"));
+    return ds::machine::Table(model, *model.find("p@m::Order::state"));
   }
 
   /// One row as it reads: the event, then `to` under each state, `-` where the machine has no jump.
@@ -56,8 +56,8 @@ class TestMatrix : public ::testing::Test {
   ds::model::Model model;
 };
 
-TEST_F(TestMatrix, ItsStatesGoAcrossAndItsEventsDownAsTheMachineWritesThem) {
-  const auto m = matrix();
+TEST_F(TestTable, ItsStatesGoAcrossAndItsEventsDownAsTheMachineWritesThem) {
+  const auto m = table();
   EXPECT_EQ(m.subject(), "Order");
   EXPECT_EQ(m.states(), (std::vector<std::string>{"Open", "Paid", "Held", "Shipped", "Cancelled"}));
   ASSERT_EQ(m.rows().size(), 3u);
@@ -67,15 +67,15 @@ TEST_F(TestMatrix, ItsStatesGoAcrossAndItsEventsDownAsTheMachineWritesThem) {
   for (const auto& row : m.rows()) EXPECT_EQ(row.cells.size(), 5u) << row.event;  // a cell under every state
 }
 
-TEST_F(TestMatrix, ACellSaysWhereTheEventTakesTheStateWithItsGuardAndEveryJumpWhenThereAreSeveral) {
-  const auto m = matrix();
+TEST_F(TestTable, ACellSaysWhereTheEventTakesTheStateWithItsGuardAndEveryJumpWhenThereAreSeveral) {
+  const auto m = table();
   EXPECT_EQ(read(m.rows()[0]), "pay: Paid [enough] / Held - - - -");
   EXPECT_EQ(read(m.rows()[1]), "ship: - Shipped - - -");
   EXPECT_EQ(read(m.rows()[2]), "cancel: Cancelled Cancelled - - -");
 }
 
-TEST_F(TestMatrix, ARowSaysTheBehavioursThatCallItsEventEachOnce) {
-  const auto m = matrix(
+TEST_F(TestTable, ARowSaysTheBehavioursThatCallItsEventEachOnce) {
+  const auto m = table(
       "    sequence Desk::run {\n"
       "      self -> order.ship()\n"
       "    }\n"
@@ -89,8 +89,8 @@ TEST_F(TestMatrix, ARowSaysTheBehavioursThatCallItsEventEachOnce) {
   EXPECT_EQ(m.rows()[1].callers, (std::vector<std::string>{"Desk::run", "Desk::rush"}));
 }
 
-TEST_F(TestMatrix, ACallAgainstTheMachineIsSaidInEveryCellItsReceiverCanBeInThen) {
-  const auto m = matrix(
+TEST_F(TestTable, ACallAgainstTheMachineIsSaidInEveryCellItsReceiverCanBeInThen) {
+  const auto m = table(
       "    sequence Desk::rush {\n"
       "      alt paid {\n"
       "        self -> order.ship()\n"

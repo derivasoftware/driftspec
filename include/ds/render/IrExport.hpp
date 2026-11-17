@@ -33,8 +33,8 @@ class IrExport {
   std::string renderBoxes(const model::Entity& diagram, bool pretty) const;
   std::string closeBoxes(const std::string& ir, const axis::Cut& cut, bool pretty) const;
   std::string renderState(const model::Entity& diagram, bool pretty) const;
-  /// A machine as a table (DS-251): what ds::machine::Matrix says, as the table of the IR.
-  std::string renderMatrix(const model::Entity& diagram, bool pretty) const;
+  /// A machine as a table (DS-251): what ds::machine::Table says, as the table of the IR.
+  std::string renderTable(const model::Entity& diagram, bool pretty) const;
   std::string renderRequirements(const model::Entity& diagram, bool pretty) const;
 
   const model::Model& model_;

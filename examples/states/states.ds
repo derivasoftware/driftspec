@@ -1,5 +1,5 @@
 // The states of a machine as rules over the context of its subject (DS-249), and the calls of the
-// behaviours held to its jumps (DS-250). MX_Order draws the order as a matrix (DS-251).
+// behaviours held to its jumps (DS-250). TB_Order draws the order as a table (DS-251).
 //
 // A state is not kept in a variable: it is computed. Each rule says when the subject is in a state, over
 // what the subject holds: `Paid if status = Paid`. The literals are joined by commas and all hold; a name
@@ -131,8 +131,8 @@ diagram STM_Order {
   include: shop@order::Order
 }
 
-diagram MX_Order {
-  kind: matrix
+diagram TB_Order {
+  kind: table
   include: shop@order::Order
 }
 

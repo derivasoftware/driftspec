@@ -16,7 +16,7 @@
 namespace {
 
 /// A machine drawn as a table (DS-251), over examples/states: the order, its events down and its states across.
-class TestMatrixView : public ::testing::Test {
+class TestTableView : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
@@ -24,7 +24,7 @@ class TestMatrixView : public ::testing::Test {
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/states")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
-    json = ds::render::IrExport(model).render("diagram:MX_Order", false);
+    json = ds::render::IrExport(model).render("diagram:TB_Order", false);
     ir = nlohmann::json::parse(json);
   }
 
@@ -44,7 +44,7 @@ class TestMatrixView : public ::testing::Test {
   nlohmann::json ir;
 };
 
-TEST_F(TestMatrixView, AMatrixDiagramIsATableOfTheEventsOfAMachineDownItsStatesAcrossAndWhereEachEventTakesEachState) {
+TEST_F(TestTableView, ATableDiagramIsATableOfTheEventsOfAMachineDownItsStatesAcrossAndWhereEachEventTakesEachState) {
   EXPECT_EQ(ir["table"]["corner"], "Order");
   EXPECT_EQ(ir["table"]["columns"], nlohmann::json::array({"Open", "Paid", "Shipped", "Cancelled"}));
   ASSERT_EQ(ir["table"]["rows"].size(), 3u);
@@ -64,7 +64,7 @@ TEST_F(TestMatrixView, AMatrixDiagramIsATableOfTheEventsOfAMachineDownItsStatesA
   EXPECT_TRUE(ir["edges"].empty());
 }
 
-TEST_F(TestMatrixView, TheMatrixSaysWhoCallsEachEventAndTheCellInWhichABehaviourCallsOneAgainstTheMachine) {
+TEST_F(TestTableView, TheTableSaysWhoCallsEachEventAndTheCellInWhichABehaviourCallsOneAgainstTheMachine) {
   EXPECT_EQ(ir["table"]["rows"][0]["title"], "pay is called in Desk::rush, Desk::sell");
   // Desk::rush cancels an order that can only be Shipped: the machine has no jump there
   EXPECT_EQ(cell("cancel", "Shipped")["kind"], "against");
@@ -73,7 +73,7 @@ TEST_F(TestMatrixView, TheMatrixSaysWhoCallsEachEventAndTheCellInWhichABehaviour
   EXPECT_EQ(cell("cancel", "Cancelled")["kind"], "none");  // nobody calls it there
 }
 
-TEST_F(TestMatrixView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineMarked) {
+TEST_F(TestTableView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineMarked) {
   const auto doc = ds::render::IrDocument::parse(json);
   const std::string svg = ds::render::Svg().render(doc, 0);
   EXPECT_NE(svg.find("<g class=\"pr-cell pr-cell-head\"><rect"), std::string::npos);
@@ -94,13 +94,13 @@ TEST_F(TestMatrixView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachine
   EXPECT_NE(cells["text"].get<std::string>().find("! Desk::rush"), std::string::npos);
 }
 
-TEST_F(TestMatrixView, AMatrixThatNamesNoMachineSaysSo) {
+TEST_F(TestTableView, ATableThatNamesNoMachineSaysSo) {
   ds::parse::Parser parser;
   ds::model::Model other;
   ds::bind::Binder binder(other);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n  module m {\n    class Thing { }\n  }\n}\n"
-                               "diagram MX { kind: matrix\n include: p@m::Thing }\n"));
+                               "diagram MX { kind: table\n include: p@m::Thing }\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(other, checkSteps).run(binder);
   const auto none = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:MX", false));
