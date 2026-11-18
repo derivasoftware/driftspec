@@ -316,8 +316,8 @@ std::vector<const Entity*> pathOf(const Model& model, const std::string& sequenc
     bool taken = true;
     bool certain = true;  // every frame around it is a side the path takes, none it cannot tell
     std::vector<std::string> around;
-    for (std::string id = tree.frameOf(m->id); !id.empty() && taken; id = tree.frameOf(id)) {
-      const Entity& f = *model.find(id);
+    for (std::string frame = tree.frameOf(m->id); !frame.empty() && taken; frame = tree.frameOf(frame)) {
+      const Entity& f = *model.find(frame);
       const Branches::Way way = branches.decide(f, scenario);
       const bool elseSide = tree.onElse(f.id, m->id);
       if (way == Branches::Way::Skip || (way == Branches::Way::Then && elseSide) || (way == Branches::Way::Else && !elseSide)) {

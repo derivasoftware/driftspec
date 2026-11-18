@@ -25,7 +25,7 @@ class TestApiOverHola : public ::testing::Test {
       std::ifstream in(entry.path());
       std::stringstream text;
       text << in.rdbuf();
-      files[entry.path().string()] = text.str();
+      files[entry.path().generic_string()] = text.str();  // with /, as an editor names them on every system
     }
   }
 };
@@ -74,7 +74,7 @@ TEST_F(TestApiOverHola, AnUnsavedBufferIsCheckedAsItIsTyped) {
 
 TEST_F(TestApiOverHola, ADiagramDrawsAsTextOrAsItsRenderIr) {
   EXPECT_NE(ds::api::Api::render(files, "CL_Hola", "text", 120).find("Greeter"), std::string::npos);
-  EXPECT_NO_THROW(nlohmann::json::parse(ds::api::Api::render(files, "CL_Hola", "ir", 0)));
+  EXPECT_FALSE(nlohmann::json::parse(ds::api::Api::render(files, "CL_Hola", "ir", 0)).is_discarded());
   EXPECT_EQ(ds::api::Api::render(files, "NoSuchDiagram", "text", 0), "");
 }
 

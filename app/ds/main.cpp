@@ -1,6 +1,13 @@
 // ds — the DriftSpec command line: check, export, render, query and the manual over a workspace.
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#define DS_ISATTY(fd) (_isatty(fd) != 0)
+#else
 #include <pthread.h>
 #include <unistd.h>
+#define DS_ISATTY(fd) (isatty(fd) != 0)
+#endif
 
 #include <CLI/CLI.hpp>
 #include <algorithm>
@@ -87,7 +94,7 @@ int emit(const std::string& output, const std::string& text) {
     std::cout << text;
     return 0;
   }
-  std::ofstream out(output);
+  std::ofstream out(output, std::ios::binary);  // the same bytes on every system (DS-283)
   if (!out) {
     std::cerr << "cannot write " << output << "\n";
     return 1;
@@ -209,7 +216,7 @@ struct Render {
     ds::format::FormatOptions options;
     options.pretty = workspace;
     options.width = width;
-    options.color = isatty(1) != 0;
+    options.color = DS_ISATTY(1);
     return options;
   }
 };
@@ -337,9 +344,15 @@ void* work(void* raw) {
 }  // namespace
 
 // The work runs on a thread with a large stack: the binder walks a design as deep as it is nested, and the
-// 8 MB of the main thread end near 1,500 nested blocks (DS-279). The memory is reserved, not used.
+// 8 MB of the main thread end near 1,500 nested blocks (DS-279). The memory is reserved, not used. On Windows
+// the stack of the main thread is set when ds is linked (DS-283), and the work runs there.
 int main(int argc, char** argv) {
   Call call{argc, argv, 2};
+#ifdef _WIN32
+  // what ds writes is the same bytes on every system: no line ending is turned into \r\n (DS-283)
+  _setmode(_fileno(stdout), _O_BINARY);
+  work(&call);
+#else
   pthread_attr_t attributes;
   pthread_attr_init(&attributes);
   pthread_attr_setstacksize(&attributes, std::size_t{512} * 1024 * 1024);
@@ -350,5 +363,6 @@ int main(int argc, char** argv) {
     pthread_join(worker, nullptr);
   }
   pthread_attr_destroy(&attributes);
+#endif
   return call.code;
 }

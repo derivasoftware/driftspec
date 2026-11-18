@@ -51,7 +51,13 @@ cmake -S . -B build && cmake --build build -j
 ctest --test-dir build
 ```
 
-The binary is `build/ds`. It needs a C++ compiler and CMake, and nothing at run time.
+The binary is `build/ds`. It needs a C++17 compiler and CMake, and nothing at run time. On
+Windows, from the Developer Command Prompt of Visual Studio 2022 (its Build Tools are enough):
+
+```bat
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
 
 ## In your editor: the language server
 
@@ -117,5 +123,7 @@ DriftSpec is young. This is what a first release leaves out, so that nothing her
   no meaning of its own yet.
 - **Two versions of a design are not compared.** An earlier `ds diff` was taken out before this
   release; it may come back.
+- **Built and tested on Linux and on Windows; not yet tried on macOS.** It should build there
+  as it does on Linux, but no one has run it.
 - **DriftSpec checks the design, not the code.** Whether the code does what the design says is
   outside this tool.

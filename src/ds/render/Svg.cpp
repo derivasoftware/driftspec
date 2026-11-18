@@ -244,6 +244,7 @@ std::pair<std::string, std::string> memberMarkup(const std::string& line) {
 }
 
 std::string num(int v) { return std::to_string(v); }
+std::string num(double v) { return num(static_cast<int>(v)); }  // a position computed in doubles, drawn in whole pixels
 
 std::string emitNode(const Placed& p, const std::string& px) {
   const IrNode& n = *p.node;

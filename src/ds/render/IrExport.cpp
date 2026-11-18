@@ -491,8 +491,8 @@ struct SequenceBuilder {
   }
 
   std::string shortName(const std::string& id) {
-    const auto cut = id.rfind("::");
-    return cut == std::string::npos ? id : id.substr(cut + 2);
+    const auto at = id.rfind("::");
+    return at == std::string::npos ? id : id.substr(at + 2);
   }
 
   /// Emits the messages of one behaviour; `selfLine` is the lifeline its subject runs on.
@@ -806,9 +806,9 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
     }
     std::stringstream moves(state->field("transitions"));
     for (std::string move; std::getline(moves, move);) {
-      const auto first = move.find('>');
-      const auto second = move.find('>', first + 1);
-      if (first == std::string::npos || second == std::string::npos) continue;
+      const auto arrow = move.find('>');
+      const auto second = move.find('>', arrow + 1);
+      if (arrow == std::string::npos || second == std::string::npos) continue;
       // a jump says the behaviours that call its event (DS-250): the label stays as it is written
       const std::string label = move.substr(second + 1);
       const std::string event = label.substr(0, label.find_first_of(" ["));
@@ -818,8 +818,8 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
           callers.push_back(call.behaviour);
       std::string in;
       for (const std::string& caller : callers) in += (in.empty() ? "" : ", ") + caller;
-      nlohmann::json edge = {{"from", box(move.substr(0, first))},
-                             {"to", box(move.substr(first + 1, second - first - 1))},
+      nlohmann::json edge = {{"from", box(move.substr(0, arrow))},
+                             {"to", box(move.substr(arrow + 1, second - arrow - 1))},
                              {"kind", "association"},
                              {"label", label}};
       if (!in.empty()) edge["title"] = event + " is called in " + in;  // one nobody calls says nothing
