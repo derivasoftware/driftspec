@@ -80,7 +80,8 @@ TEST_F(TestLayout, ChildrenSitInsideTheirContainer) {
 
 TEST_F(TestLayout, BasesAreDrawnAboveSubtypesAndWholesAboveParts) {
   const IrDocument doc = document("CL_Model");
-  const auto placed = byId(ds::render::Layout().place(doc));
+  const LayoutResult lay = ds::render::Layout().place(doc);  // kept: what byId points at lives in it
+  const auto placed = byId(lay);
   EXPECT_LT(placed.at("ds@ds::Check")->rect.y + placed.at("ds@ds::Check")->rect.h, placed.at("ds@ds::ScopedCheck")->rect.y);
   EXPECT_LT(placed.at("ds@ds::Finding")->rect.y + placed.at("ds@ds::Finding")->rect.h, placed.at("ds@ds::Location")->rect.y);
 }

@@ -87,7 +87,9 @@ TEST_F(TestStates, ACallOfAnEventTheMachineLetsHappenFromNoStateItsReceiverMayBe
   EXPECT_EQ(all[0],
             "Desk::rush calls order.cancel() when order can only be Shipped: the machine of Order lets cancel happen from Open or Paid");
   for (const auto& f : model.findings())
-    if (f.code == "W-STATE-ORDER") EXPECT_EQ(f.location.line, 53);  // the line of the call
+    if (f.code == "W-STATE-ORDER") {  // the line of the call
+      EXPECT_EQ(f.location.line, 53);
+    }
 }
 
 TEST_F(TestStates, CallsInTheOrderOfTheMachineACallAfterAFrameThatMayNotHappenAndAFirstCallAreNoFinding) {

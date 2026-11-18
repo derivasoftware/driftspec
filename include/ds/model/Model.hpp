@@ -112,7 +112,7 @@ struct Term {
   std::string text;
   bool variable = false;
   bool value = false;
-  std::string field;  ///< the field read of what the variable is bound to (`r.status`); "" for the entity itself
+  std::string field = {};  ///< the field read of what the variable is bound to (`r.status`); "" for the entity itself
 };
 
 /// One literal of a rule or a definition (DS-94): a relation of the metamodel, a kind, containment,

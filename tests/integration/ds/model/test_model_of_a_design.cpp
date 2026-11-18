@@ -92,7 +92,9 @@ TEST_F(TestModelOfADesign, ASecondDeclarationIsReportedWithWhereTheFirstIs) {
   check();
   ASSERT_EQ(findings("E-DUPLICATE-IDENTITY"), 1);
   for (const auto& f : model.findings()) {
-    if (f.code == "E-DUPLICATE-IDENTITY") EXPECT_NE(f.message.find("first at a.ds:3"), std::string::npos) << f.message;
+    if (f.code == "E-DUPLICATE-IDENTITY") {
+      EXPECT_NE(f.message.find("first at a.ds:3"), std::string::npos) << f.message;
+    }
   }
   EXPECT_NE(model.find("p@m::B"), nullptr);
 }
