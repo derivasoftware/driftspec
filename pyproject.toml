@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "driftspec"
-version = "0.0.214"
+version = "0.0.215"
 description = "DriftSpec: a software design as text, checked, drawn and asked"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -43,3 +43,14 @@ wheel.py-api = "cp310"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]  # not the build folders, which hold the tests of what the build fetches
+
+[tool.cibuildwheel]
+# One wheel per platform (DS-292): the extension targets the stable ABI, so cp310-abi3 serves Python
+# 3.10 and later. Each wheel is tried before it ships: ds answers, and the package checks an example.
+build = "cp310-*"
+build-frontend = "build"
+test-command = [
+  "ds --version",
+  "ds check {project}/examples/hola",
+  "python -c \"import driftspec, sys; sys.exit(driftspec.check(sys.argv[1]).errors)\" {project}/examples/hola",
+]
