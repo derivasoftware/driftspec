@@ -1,13 +1,13 @@
 """driftspec-live: a design seen live while it is written.
 
-    python -m pyds.live serve <workspace> [--port 4747] [--open]   the viewer in the browser, following the files
-    python -m pyds.live focus <identity>                            take the reader to an identity
-    python -m pyds.live note <identity> <text> [--tone t]           a bubble on an identity (empty text removes it)
-    python -m pyds.live highlight <identity>... [--tone t] [--add]  light identities of any perspective
-    python -m pyds.live clear [notes|highlights|all]
-    python -m pyds.live selection                                   what the reader has selected
-    python -m pyds.live state                                       version, the findings
-    python -m pyds.live mcp [--port 4747]                           the same, as MCP tools over stdio
+    python -m driftspec.live serve <workspace> [--port 4747] [--open]   the viewer in the browser, following the files
+    python -m driftspec.live focus <identity>                            take the reader to an identity
+    python -m driftspec.live note <identity> <text> [--tone t]           a bubble on an identity (empty text removes it)
+    python -m driftspec.live highlight <identity>... [--tone t] [--add]  light identities of any perspective
+    python -m driftspec.live clear [notes|highlights|all]
+    python -m driftspec.live selection                                   what the reader has selected
+    python -m driftspec.live state                                       version, the findings
+    python -m driftspec.live mcp [--port 4747]                           the same, as MCP tools over stdio
 
 The design stays text: whoever edits it edits the .ds files. The session watches them, loads the
 model on every change and pushes the new state to every page
@@ -31,7 +31,7 @@ import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-import pyds
+import driftspec
 
 PORT = 4747
 
@@ -74,7 +74,7 @@ class Live:
         self.lock = threading.Lock()
         self.version = 0
         self.page = ""
-        self.loaded: pyds.Workspace | None = None  # the version shown, loaded once in the engine (DS-173)
+        self.loaded: driftspec.Workspace | None = None  # the version shown, loaded once in the engine (DS-173)
         self.history: list[dict] = []
         self.findings: list[dict] = []
         self.counts: dict = {}
@@ -207,8 +207,8 @@ class Live:
         self.stamp = stamp
         t0 = time.perf_counter()
         try:
-            files = pyds.read(self.workspace) if stamp else {}
-            loaded = pyds.Workspace(files)  # once: the model, the page and the check all ask it (DS-173)
+            files = driftspec.read(self.workspace) if stamp else {}
+            loaded = driftspec.Workspace(files)  # once: the model, the page and the check all ask it (DS-173)
             model = loaded.model()
             page = loaded.page(self.title, [])
             report = loaded.report()

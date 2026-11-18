@@ -37,30 +37,30 @@ cpp-test:
 
 # The gate installs the DriftSpec reader over the fleet's pinned plugins, and
 # this merge request's own engine under it: the reader loads the design through
-# pyds (DS-90), so the wheel pyds-wheel builds from this tree is what reads it.
+# the driftspec package (DS-90), so the wheel python-wheel builds from this tree is what reads it.
 # Since DS-4 every class has its design and the gate blocks the merge like
 # everywhere else in the fleet.
 argos-diagnose:
-  needs: [pyds-wheel, cpp-evidence, pre-commit]
+  needs: [python-wheel, cpp-evidence, pre-commit]
   script:
     - pip install --no-deps "argos-design-driftspec" dist/driftspec-*.whl
     - !reference [.argos-diagnose-gate, script]
 
-# pyds, the Python face (DS-84): the engine built as its CPython extension and
+# the driftspec package, the Python face (DS-84, DS-288): the engine built as its CPython extension and
 # driven by pytest, the language server through a real stdio session.
-pyds:
+python:
   extends: [.on-mr]
   stage: test
   script:
-    - python3 -m venv .pyds && . .pyds/bin/activate
+    - python3 -m venv .python && . .python/bin/activate
     - pip install -q pytest "pygls>=2.0"
-    - cmake -S . -B build-py -DCMAKE_BUILD_TYPE=Release -DDS_PYTHON=ON -DPython_EXECUTABLE="$PWD/.pyds/bin/python"
+    - cmake -S . -B build-py -DCMAKE_BUILD_TYPE=Release -DDS_PYTHON=ON -DPython_EXECUTABLE="$PWD/.python/bin/python"
     - cmake --build build-py --parallel --target driftspec_python ds_browser
-    - PYTHONPATH=build-py/python python -m pytest -q -p no:cacheprovider tests/integration/python tests/system/python --junitxml=build-py/pyds.junit.xml
+    - PYTHONPATH=build-py/python python -m pytest -q -p no:cacheprovider tests/integration/python tests/system/python --junitxml=build-py/python.junit.xml
   artifacts:
     when: always
     reports:
-      junit: build-py/pyds.junit.xml
+      junit: build-py/python.junit.xml
     expire_in: 1 week
 
 # The engine for a page in a browser (DS-203, REQ-00113-1): ds.js and ds.wasm, built with Emscripten.
@@ -92,7 +92,7 @@ wasm:
     expire_in: 1 week
 
 # The playground as a static site (DS-204): the page, the engine the wasm job built, the lessons and
-# the examples, ready to serve as files. The lessons themselves are replayed by the pyds job
+# the examples, ready to serve as files. The lessons themselves are replayed by the python job
 # (tests/system/python/test_playground.py).
 playground-site:
   stage: test
@@ -112,7 +112,7 @@ playground-site:
 # The Python face as a wheel (DS-181): built on every merge request, so a broken build is seen
 # before main and the gate reads the design with it (DS-90). One abi3 wheel serves every Python
 # from 3.10.
-pyds-wheel:
+python-wheel:
   stage: test
   # its own rules: .on-mr-and-main is an alias of .on-mr in ci-templates, and main is where it uploads
   rules:
@@ -133,14 +133,14 @@ pyds-wheel:
 # The wheel uploaded to this project's PyPI registry on main, beside argos and its plugins. The
 # version bump of every merge request keeps each upload new; an upload of a version already there
 # fails rather than replace it. Consumers: pip install driftspec --index-url <the group's PyPI
-# index>; the import is pyds.
-publish-pyds:
+# index>; the import is driftspec.
+publish-python:
   stage: deploy
   rules:
     - if: $ARGOS_ON_DEMAND
       when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  needs: [pyds-wheel]
+  needs: [python-wheel]
   interruptible: false
   script:
     - set -euo pipefail

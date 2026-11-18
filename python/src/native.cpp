@@ -1,4 +1,4 @@
-// pyds._native: the engine for Python, through the limited CPython API (abi3), so one
+// driftspec._native: the engine for Python, through the limited CPython API (abi3), so one
 // wheel serves every Python from 3.10 on (DS-84). A Workspace is loaded once and kept here, in
 // the engine, for every question the caller asks (DS-173); its answers are the JSON the engine
 // writes, which the Python face reads into its own types. The functions of text to JSON stay,
@@ -233,7 +233,7 @@ PyType_Slot kWorkspaceSlots[] = {
     {Py_tp_doc, const_cast<char*>("Workspace(files: dict[str, str]): a workspace loaded once, asked as often as needed")},
     {0, nullptr}};
 
-PyType_Spec kWorkspaceSpec = {"pyds._native.Workspace", sizeof(WorkspaceObject), 0, Py_TPFLAGS_DEFAULT, kWorkspaceSlots};
+PyType_Spec kWorkspaceSpec = {"driftspec._native.Workspace", sizeof(WorkspaceObject), 0, Py_TPFLAGS_DEFAULT, kWorkspaceSlots};
 
 // ---- how an identity is written (DS-173) ---------------------------------------------------------
 

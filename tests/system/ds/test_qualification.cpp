@@ -113,7 +113,7 @@ TEST_F(TestQualification, EveryIncoherenceIsAFindingAtItsLocation) {
 }
 
 // SREQ-00003-2: artefacts linked to the design by revision, boxes and classes alike
-// DS-120: ds check --json prints the one shape of a check, the one pyds.check returns
+// DS-120: ds check --json prints the one shape of a check, the one driftspec.check returns
 TEST_F(TestQualification, TheCheckJsonSaysTheFindingsAndTheCounts) {
   const Outcome check = ds("check --json " + examples("artefacts"));
   const auto out = nlohmann::json::parse(check.out);

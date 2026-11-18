@@ -54,22 +54,22 @@ three gates through deriva/infra/ci-templates (`.gitlab-ci.yml`) plus the argos
 diagnose gate, which reads this repository's design through
 argos-design-driftspec.
 
-## From Python: pyds and the language server
+## From Python: the driftspec package and the language server
 
-`pyds` is the engine as a Python package. It runs in the same process, and one
+`driftspec` is the engine as a Python package (`import driftspec`). It runs in the same process, and one
 native module (abi3) serves every Python from 3.10 on.
 
 ```bash
-pip install ".[lsp]"            # builds pyds._native with scikit-build-core; lsp adds pygls
+pip install ".[lsp]"            # builds driftspec._native with scikit-build-core; lsp adds pygls
 pip install "driftspec[lsp]" --index-url <the group's PyPI index>   # or the wheel main publishes (DS-181)
 ```
 
 ```python
-import pyds
-model = pyds.load("design")                 # a directory, or {path: text} as an editor holds it
+import driftspec
+model = driftspec.load("design")                 # a directory, or {path: text} as an editor holds it
 model.find("driftspec@ds@api::Api").kind    # 'class'
-pyds.check("design").errors                 # the findings of ds check, typed
-pyds.render("design", "CL_Pyds", "text", 120)
+driftspec.check("design").errors                 # the findings of ds check, typed
+driftspec.render("design", "CL_Python", "text", 120)
 ```
 
 `driftspec-lsp` is the language server, on stdio. Each file belongs to its own
@@ -79,7 +79,7 @@ references, hover, completion and symbols. Two commands draw what is under the
 cursor: `driftspec.draw` as text and `driftspec.view` in the viewer.
 
 The Python tests run from a build configured with `-DDS_PYTHON=ON`. ctest
-includes them, and the `pyds` job runs them in CI.
+includes them, and the `python` job runs them in CI.
 
 ## A design seen live: driftspec-live
 

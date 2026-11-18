@@ -335,7 +335,7 @@ package driftspec@ds {
       title: The tool shall say its version, the same in the command, in Python and in the model it exports
       text:
         The version is kept once, in pyproject.toml, and written into the engine when it is built.
-        ds --version prints it (ds 0.1.0) and exits 0; pyds.__version__ is it; ds export carries it
+        ds --version prints it (ds 0.1.0) and exits 0; driftspec.__version__ is it; ds export carries it
         as version, beside format, the shape of the exported document, so a reader can tell a
         document it does not know.
       rationale:
@@ -347,7 +347,7 @@ package driftspec@ds {
     verification VER-00179-1 {
       status: approved
       @requirement REQ-00163-1
-      title: Integration tests confirm pyds.__version__ is written as major.minor.patch and is the version the export of the engine carries
+      title: Integration tests confirm driftspec.__version__ is written as major.minor.patch and is the version the export of the engine carries
       method: test
       tests:
         tests/integration/python/test_workspace.py::TestWorkspace::test_the_package_says_the_version_of_its_engine

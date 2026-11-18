@@ -84,10 +84,10 @@ class Reader:
 
 def agent(port: int, *calls) -> list[dict]:
     """An MCP session over the module's own stdio loop: initialize, then each tool call; the replies in order."""
-    import pyds.live
+    import driftspec.live
 
     lines = [{"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {"protocolVersion": "2025-06-18"}}]
     lines += [{"jsonrpc": "2.0", "id": i + 1, "method": "tools/call", "params": {"name": n, "arguments": a}} for i, (n, a) in enumerate(calls)]
     out = io.StringIO()
-    pyds.live.mcp(port, io.StringIO("".join(json.dumps(x) + "\n" for x in lines)), out)
+    driftspec.live.mcp(port, io.StringIO("".join(json.dumps(x) + "\n" for x in lines)), out)
     return [json.loads(x) for x in out.getvalue().splitlines()]

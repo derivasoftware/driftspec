@@ -26,7 +26,7 @@ CI builds both on every merge request: the `wasm` job gives `ds.js` and `ds.wasm
 
 ## Checks
 
-- `tests/system/python/test_playground.py` (SVER-00023-5, run by the `pyds` job) replays every lesson
+- `tests/system/python/test_playground.py` (SVER-00023-5, run by the `python` job) replays every lesson
   through the same engine built as `build-py/libds_browser.so` beside the Python face:
   `cmake -S . -B build-py -DDS_PYTHON=ON && cmake --build build-py --target driftspec_python ds_browser`.
 - `lessons/replay.py` is that replay by hand, with `--print` for the final files; `lessons/chain.py --from NN --bump`

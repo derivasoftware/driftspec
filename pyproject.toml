@@ -1,14 +1,14 @@
 # The Python face of DriftSpec (DS-84): the engine as a CPython extension (abi3) and a language
-# server on it. pip install . builds pyds._native with the CMake of this repository. Published to
-# the registry as driftspec (DS-181): PyPI already serves a pyds, which an install that also reads
-# PyPI would take over this one. The import stays pyds.
+# server on it. pip install . builds driftspec._native with the CMake of this repository. Installed
+# and imported as driftspec (DS-181, DS-288); pyds, its old name, stays as an alias until the argos
+# plugin imports driftspec: PyPI serves another pyds.
 [build-system]
 requires = ["scikit-build-core>=0.10"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "driftspec"
-version = "0.0.195"
+version = "0.0.196"
 description = "DriftSpec: a software design as text, checked, drawn and asked"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -28,15 +28,15 @@ classifiers = [
 lsp = ["pygls>=2.0"]
 
 [project.scripts]
-driftspec-lsp = "pyds.lsp:main"
-driftspec-live = "pyds.live:main"
+driftspec-lsp = "driftspec.lsp:main"
+driftspec-live = "driftspec.live:main"
 
 [tool.scikit-build]
 cmake.build-type = "Release"
 cmake.define = { DS_PYTHON = "ON" }
 build.targets = ["_native"]
 install.components = ["python"]
-wheel.packages = ["python/pyds"]
+wheel.packages = ["python/driftspec", "python/pyds"]
 # the licence, its notice and the notices of the third-party code compiled into the extension travel with it
 # (DS-284, DS-287)
 wheel.license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "grammar/LICENSE"]

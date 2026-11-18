@@ -1,5 +1,5 @@
 """What the Python tests share: the example they read and a language server session driven over
-stdio as an editor drives it. pyds is imported from the build: PYTHONPATH carries the package beside
+stdio as an editor drives it. driftspec is imported from the build: PYTHONPATH carries the package beside
 its native module (cmake -DDS_PYTHON=ON builds both into <build>/python)."""
 
 import json
@@ -31,7 +31,7 @@ def uri(path):
 class Session:
     def __init__(self, root: str):
         log = open(os.environ.get("PYDS_LSP_LOG", os.devnull), "w")  # the server's own log, when asked for
-        self.p = subprocess.Popen([sys.executable, "-m", "pyds.lsp"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        self.p = subprocess.Popen([sys.executable, "-m", "driftspec.lsp"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                   stderr=log, env=os.environ)
         self.n = 0
         self.inbox: queue.Queue = queue.Queue()

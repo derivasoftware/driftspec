@@ -10,13 +10,13 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from live_helpers import Reader, agent, get, post, workspace  # noqa: E402
 
-import pyds.live  # noqa: E402
+import driftspec.live  # noqa: E402
 
 
 @pytest.mark.crosses_boundary  # the session's contract is HTTP on the machine itself: the system is that server
 class TestLiveSessionFromOutside:
     def test_the_agent_points_and_annotates_and_the_reader_sees_it_and_answers(self, tmp_path):
-        live = pyds.live.serve(workspace(str(tmp_path)), 0, block=False)
+        live = driftspec.live.serve(workspace(str(tmp_path)), 0, block=False)
         try:
             reader = Reader(live)
             reader.next("model")
@@ -40,7 +40,7 @@ class TestLiveSessionFromOutside:
         replies = agent(0)
         lines = [{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}]
         out = io.StringIO()
-        pyds.live.mcp(0, io.StringIO(json.dumps(lines[0]) + "\n"), out)
+        driftspec.live.mcp(0, io.StringIO(json.dumps(lines[0]) + "\n"), out)
         names = {t["name"] for t in json.loads(out.getvalue())["result"]["tools"]}
         assert names == {"live_open", "live_focus", "live_note", "live_highlight", "live_clear", "live_selection", "live_state",
                          "live_comments", "live_isolate"}
