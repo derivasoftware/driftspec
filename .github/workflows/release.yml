@@ -1,0 +1,148 @@
+# A release (DS-292): pushing a tag vX.Y.Z builds what DriftSpec ships and attaches it to the
+# GitHub release of that tag: a wheel per platform (each carries the ds command, the Python
+# package, driftspec-lsp and driftspec-live), the sdist, the ds command alone per platform, and
+# the site. The wheels and the sdist go to PyPI when the repository variable PUBLISH_PYPI is
+# true and PyPI trusts this workflow (trusted publishing, environment "pypi").
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    name: wheel · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            archs: x86_64
+          - os: windows-latest
+            archs: AMD64
+          # macos-latest is arm64; Intel Macs are left out until someone asks for them
+          - os: macos-latest
+            archs: arm64
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: pypa/cibuildwheel@v4.2.1
+        env:
+          CIBW_ARCHS: ${{ matrix.archs }}
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: wheel-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  sdist:
+    name: sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: pipx run build --sdist
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  ds:
+    name: ds · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x86_64
+          - os: windows-latest
+            name: windows-x86_64
+          - os: macos-latest
+            name: macos-arm64
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --target ds --parallel
+      - name: pack
+        shell: bash
+        run: |
+          mkdir -p "ds-${{ matrix.name }}"
+          bin=$(ls build/Release/ds.exe build/ds 2>/dev/null | head -1)
+          "$bin" --version
+          cp "$bin" LICENSE NOTICE THIRD_PARTY_NOTICES.md "ds-${{ matrix.name }}/"
+          if [ "${{ runner.os }}" = Windows ]; then 7z a -bd "ds-${{ matrix.name }}.zip" "ds-${{ matrix.name }}" >/dev/null
+          else tar czf "ds-${{ matrix.name }}.tar.gz" "ds-${{ matrix.name }}"; fi
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ds-${{ matrix.name }}
+          path: ds-${{ matrix.name }}.*
+
+  site:
+    name: site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: build
+        env:
+          EMSDK_VERSION: "7.0.0"   # the version GitLab's wasm job builds with
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git .emsdk
+          .emsdk/emsdk install "$EMSDK_VERSION" && .emsdk/emsdk activate "$EMSDK_VERSION"
+          source .emsdk/emsdk_env.sh
+          emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-wasm --parallel
+          python3 playground/build.py --wasm build-wasm --out site
+          cd site && zip -qr ../driftspec-site.zip .
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: site
+          path: driftspec-site.zip
+
+  release:
+    name: attach to the release
+    needs: [wheels, sdist, ds, site]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v7.0.0
+        with:
+          path: assets
+          merge-multiple: true
+      - name: notes from the changelog
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '$0 ~ "^## "v"( |$)" {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "DriftSpec $v." > notes.md
+      - name: upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -l assets
+          gh release view "$TAG" >/dev/null 2>&1 ||
+            gh release create "$TAG" --title "DriftSpec ${TAG#v}" --notes-file notes.md
+          gh release upload "$TAG" assets/* --clobber
+
+  pypi:
+    name: publish to PyPI
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/v') && vars.PUBLISH_PYPI == 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v7.0.0
+        with:
+          path: dist
+          merge-multiple: true
+          pattern: '{wheel-*,sdist}'
+      - uses: pypa/gh-action-pypi-publish@v1.13.0

@@ -1,0 +1,45 @@
+# The public pipeline (DS-289): DriftSpec built and tested on Linux, Windows and macOS on every
+# push to main and every pull request. The project's own CI lives in GitLab, on Linux runners
+# only; GitHub's hosted runners carry the two systems GitLab cannot reach.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    name: engine · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: build
+        run: cmake --build build --config Release --parallel
+      - name: test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  python:
+    name: python package · ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v6.0.0
+        with:
+          python-version: '3.12'
+      - name: install
+        run: pip install ".[lsp]" pytest
+      - name: test
+        run: |
+          ds --version
+          python -m pytest -q
