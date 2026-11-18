@@ -291,6 +291,7 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
       tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
       tests/system/ds/test_qualification.cpp::TestQualification.InputThatCannotBeReadIsBadUsageAndDeepNestingIsRead
+      tests/system/ds/test_qualification.cpp::TestQualification.TheToolSaysItsVersion
       tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
   }
 

@@ -138,10 +138,27 @@ file(
 )
 configure_file(${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp.in
                ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp COPYONLY)
+# the version of the tool, read from pyproject.toml where it is kept, said by ds
+# --version, pyds.__version__ and the export (DS-278)
+file(STRINGS ${CMAKE_SOURCE_DIR}/pyproject.toml DS_VERSION_LINE
+     REGEX "^version = \"[^\"]+\"")
+string(REGEX REPLACE "^version = \"([^\"]+)\".*" "\\1" DS_VERSION
+                     "${DS_VERSION_LINE}")
+file(
+  WRITE ${CMAKE_BINARY_DIR}/generated/Version.cpp.in
+  "#include <string>\n\nnamespace ds {\nnamespace model {\nstd::string version() { return \"${DS_VERSION}\"; }\n}  // namespace model\n}  // namespace ds\n"
+)
+configure_file(${CMAKE_BINARY_DIR}/generated/Version.cpp.in
+               ${CMAKE_BINARY_DIR}/generated/Version.cpp COPYONLY)
+set_property(
+  DIRECTORY
+  APPEND
+  PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/pyproject.toml)
 add_library(
   driftspec STATIC
   ${driftspec_SOURCES} ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp
-  ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp)
+  ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp
+  ${CMAKE_BINARY_DIR}/generated/Version.cpp)
 target_include_directories(driftspec PUBLIC include)
 target_link_libraries(
   driftspec

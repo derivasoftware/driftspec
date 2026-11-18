@@ -153,4 +153,20 @@ TEST_F(TestManualGuides, EachGuideHasATopicOfItsOwnAndStartsWithItsTitle) {
   EXPECT_EQ(guides.front().first, "intent");  // in the order of their files
 }
 
+/// The version of the tool, written in when ds is built (DS-278).
+class TestVersion : public ::testing::Test {};
+
+TEST_F(TestVersion, IsWrittenAsMajorMinorPatch) {
+  const std::string v = ds::model::version();
+  int dots = 0;
+  for (char c : v) {
+    if (c == '.') {
+      ++dots;
+    } else {
+      EXPECT_TRUE(c >= '0' && c <= '9') << v;
+    }
+  }
+  EXPECT_EQ(dots, 2) << v;
+}
+
 }  // namespace

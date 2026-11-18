@@ -329,6 +329,30 @@ package driftspec@ds {
       tags: manual, metamodel, language
     }
 
+    requirement REQ-00163-1 {
+      status: approved
+      @refines SREQ-00018-2
+      title: The tool shall say its version, the same in the command, in Python and in the model it exports
+      text:
+        The version is kept once, in pyproject.toml, and written into the engine when it is built.
+        ds --version prints it (ds 0.1.0) and exits 0; pyds.__version__ is it; ds export carries it
+        as version, beside format, the shape of the exported document, so a reader can tell a
+        document it does not know.
+      rationale:
+        Owner, 2026-11-18 (DS-278), audit for the first release: a tool with users says which
+        version answered, and a document read by another tool says what shape it has.
+      tags: cli, export, release
+    }
+
+    verification VER-00179-1 {
+      status: approved
+      @requirement REQ-00163-1
+      title: Integration tests confirm pyds.__version__ is written as major.minor.patch and is the version the export of the engine carries
+      method: test
+      tests:
+        tests/integration/python/test_workspace.py::TestWorkspace::test_the_package_says_the_version_of_its_engine
+    }
+
     requirement REQ-00160-1 {
       status: approved
       @refines SREQ-00014-1
@@ -428,6 +452,9 @@ package driftspec@ds {
     }
     function manualGuides() -> std::vector<std::pair<std::string, std::string>> {
       @requirement REQ-00160-1
+    }
+    function version() -> std::string {
+      @requirement REQ-00163-1
     }
 
     enum Kind {

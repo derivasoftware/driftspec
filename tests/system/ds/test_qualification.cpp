@@ -351,6 +351,16 @@ TEST_F(TestQualification, AnIdentityTheModelDoesNotDeclareIsAnError) {
 }
 
 // SREQ-00014-1: the tool carries its manual: how each kind is written, what each code means, the exit codes
+// SREQ-00018-2: the tool says its version, and the version is the one its export carries (DS-278)
+TEST_F(TestQualification, TheToolSaysItsVersion) {
+  const Outcome said = ds("--version");
+  EXPECT_EQ(said.code, 0);
+  ASSERT_EQ(said.out.rfind("ds ", 0), 0U) << said.out;
+  const std::string version = said.out.substr(3, said.out.find_last_not_of("\n") - 2);
+  const Outcome exported = ds("export " + examples("hola"));
+  EXPECT_EQ(nlohmann::json::parse(exported.out)["version"], version);
+}
+
 TEST_F(TestQualification, TheToolCarriesItsManual) {
   const Outcome index = ds("manual");
   EXPECT_EQ(index.code, 0);

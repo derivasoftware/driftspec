@@ -75,6 +75,9 @@ nlohmann::json metamodelJson() {
 
 std::string JsonExport::render(const model::Model& model, bool pretty) const {
   nlohmann::json out;
+  // who wrote it and in which shape: a reader can tell a document it does not know (DS-278)
+  out["version"] = model::version();
+  out["format"] = 1;
   out["entities"] = nlohmann::json::array();
   for (const auto& pair : model.entities()) out["entities"].push_back(entityJson(pair.second));
   out["relations"] = nlohmann::json::array();

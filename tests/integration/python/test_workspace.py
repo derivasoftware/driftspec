@@ -1,5 +1,7 @@
 """A workspace loaded once in the engine and asked from Python (REQ-00107-2, DS-173)."""
 
+import json
+
 import pyds
 
 SHOP = """package p {
@@ -63,6 +65,11 @@ class TestWorkspace:
         members = ws.members("p@m")
         members.clear()
         assert ws.members("p@m")  # the engine's model is as it was
+
+    def test_the_package_says_the_version_of_its_engine(self):
+        version = pyds.__version__
+        assert version.count(".") == 2 and all(part.isdigit() for part in version.split("."))
+        assert json.loads(pyds._native.export({"shop.ds": SHOP}))["version"] == version
 
     def test_an_identity_is_written_as_the_engine_writes_it(self):
         assert pyds.qualify("p@m", "C") == "p@m::C"
