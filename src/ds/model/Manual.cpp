@@ -223,6 +223,10 @@ std::vector<CodeSpec> buildCodes() {
        "A file does not parse at the place shown. What parses around it still reaches the model, so other findings in that file "
        "may come from the cut rather than from the design.",
        "Fix this one first and check again. The message says what the place takes; ds manual grammar says what goes where."},
+      {"E-NAME-RESERVED", "error",
+       "A member is named state or sequence and its holder has that behaviour: a state machine is X::state and a sequence "
+       "X::name::sequence, so the member takes the identity of the behaviour.",
+       "Rename the member: status, phase, steps, order. A member with that name and no such behaviour is fine."},
       {"E-DUPLICATE-IDENTITY", "error", "Two declarations name the same identity: one model has one entity per identity.",
        "Rename one, or reopen the scope instead of declaring it again."},
       {"E-MSG-ARITY", "error", "A message passes more or fewer arguments than the operation it calls takes.",

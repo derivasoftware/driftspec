@@ -79,6 +79,12 @@ std::string Entity::field(const std::string& key) const {
   return found == fields.end() ? "" : found->second;
 }
 
+namespace {
+/// A behaviour is named after its subject: X::state, X::run::sequence. A member written with that name takes
+/// the identity of the behaviour when the behaviour exists (DS-222).
+bool behaviour(Kind kind) { return kind == Kind::Sequence || kind == Kind::State; }
+}  // namespace
+
 Entity& Model::declare(const Entity& entity) {
   auto it = entities_.find(entity.id);
   if (it == entities_.end()) {
@@ -95,6 +101,22 @@ Entity& Model::declare(const Entity& entity) {
   }
   if (entity.expected) {
     return existing;  // a second reference to the same expected node
+  }
+  // a behaviour and a member named after it: said once, on the member, and the behaviour keeps the identity, so
+  // what is written about it (its jumps, its diagram) is still read as it was meant (DS-222)
+  if (behaviour(entity.kind) != behaviour(existing.kind)) {
+    const Entity& member = behaviour(entity.kind) ? existing : entity;
+    report({"E-NAME-RESERVED", "error",
+            std::string(kindName(member.kind)) + " '" + member.id + "' takes the identity of the " +
+                ((behaviour(entity.kind) ? entity.kind : existing.kind) == Kind::State ? "state machine" : "sequence") +
+                " written for what holds it: rename the " + kindName(member.kind),
+            member.location});
+    if (behaviour(entity.kind)) {
+      indexEntity(existing, false);
+      existing = entity;
+      indexEntity(existing, true);
+    }
+    return existing;
   }
   const bool reopenable = entity.kind == Kind::Package || entity.kind == Kind::Module;
   if (!reopenable) {
