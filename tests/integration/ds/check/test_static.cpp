@@ -71,7 +71,7 @@ TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
   EXPECT_NE(relation("about", "DS-C-0001-0", "ds"), nullptr);
   // nested in a class or a member body (R12) says what annotating says (DS-217)
   EXPECT_NE(relation("constrained-by", "ds@ds::Vector", "DS-C-0003-0"), nullptr);
-  EXPECT_NE(relation("requires", "ds@ds::Model::declare", "DS-0003-0"), nullptr);
+  EXPECT_NE(relation("satisfies", "ds@ds::Model::declare", "DS-0003-0"), nullptr);
   EXPECT_NE(relation("constrained-by", "ds@ds::Model", "DS-C-0001-0"), nullptr);  // a pinned link
 }
 
@@ -105,9 +105,9 @@ TEST(TestNesting, NestingAnArtefactInADesignEntityIsAnnotatingIt) {
       if (r.kind == kind && r.to == to) return true;
     return false;
   };
-  EXPECT_TRUE(has("requires", "shop@store::Cart", "REQ-00001-1"));
+  EXPECT_TRUE(has("satisfies", "shop@store::Cart", "REQ-00001-1"));
   EXPECT_TRUE(has("constrained-by", "shop@store::Cart::cents", "CST-00001-1"));
-  EXPECT_TRUE(has("requires", "shop@store::Basket", "REQ-00002-1"));
+  EXPECT_TRUE(has("satisfies", "shop@store::Basket", "REQ-00002-1"));
   EXPECT_TRUE(has("constrained-by", "shop@store::Basket::cents", "CST-00001-1"));
   EXPECT_TRUE(has("about", "REQ-00002-1", "shop@store"));  // in a box it still gives its level
 }

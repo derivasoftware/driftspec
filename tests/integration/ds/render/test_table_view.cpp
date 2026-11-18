@@ -120,7 +120,7 @@ TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
       "  requirement REQ-00002-1 {\n    title: The thing shall rest\n    status: draft\n  }\n"
       "  module m {\n    class Thing {\n      @requirement REQ-00001-1\n    }\n  }\n}\n"
       "diagram TB {\n  kind: table\n  for requirement r in p\n  column requirement: r.id\n  column says: r.title\n"
-      "  column proved: v where v verifies r\n  column kept: holds c requires r\n}\n"
+      "  column proved: v where v verifies r\n  column kept: holds c satisfies r\n}\n"
       "diagram TD {\n  kind: table\n  for requirement r in p\n  where r.status = \"draft\"\n  column requirement: r.id\n}\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(other, checkSteps).run(binder);

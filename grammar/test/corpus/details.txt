@@ -316,7 +316,7 @@ diagram Kept {
   kind: table
   for requirement r in shop@store
   column id: r.id
-  column kept: holds x requires r
+  column kept: holds x satisfies r
 }
 
 ---

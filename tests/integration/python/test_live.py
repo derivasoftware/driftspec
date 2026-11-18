@@ -39,13 +39,13 @@ class TestLiveSession:
                      "    title: every class answers to a requirement\n"
                      "    @requirement REQ-00009-1\n"
                      "    for class c\n"
-                     "    holds c requires r\n"
+                     "    holds c satisfies r\n"
                      "  }\n"
                      "}\n")
         state = until(lambda: (s := get(live, "/state"))["version"] == 2 and s)
         (rule,) = [r for r in state["rules"] if r["id"] == "sistema@answered"]
         assert rule["kind"] == "rule" and rule["title"] == "every class answers to a requirement"
-        assert rule["lines"] == [["for", "class c"], ["holds", "c requires r"]]
+        assert rule["lines"] == [["for", "class c"], ["holds", "c satisfies r"]]
         assert rule["requirements"] == ["REQ-00009-1"] and rule["file"] == "rules.ds"
         assert rule["broken"] and all(b["bindings"][0][0] == "c" for b in rule["broken"])
         assert rule["problems"] == []

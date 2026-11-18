@@ -128,7 +128,7 @@ TEST_F(TestQualification, ArtefactsAreLinkedByRevision) {
   for (const auto& r : exported["relations"]) {
     refines |= r["kind"] == "refines" && r["from"] == "REQ-00001-2" && r["to"] == "SREQ-00001-2";
     verifies |= r["kind"] == "verifies" && r["from"] == "VER-00001-3" && r["to"] == "REQ-00001-2";
-    realises |= r["kind"] == "requires" && r["from"] == "iris@projection::Projection" && r["to"] == "REQ-00001-2";
+    realises |= r["kind"] == "satisfies" && r["from"] == "iris@projection::Projection" && r["to"] == "REQ-00001-2";
   }
   EXPECT_TRUE(refines);
   EXPECT_TRUE(verifies);
@@ -136,7 +136,7 @@ TEST_F(TestQualification, ArtefactsAreLinkedByRevision) {
   // an HLD box realises a requirement the same way (revision 2)
   const auto packages = nlohmann::json::parse(ds("export " + examples("packages")).out);
   bool box = false;
-  for (const auto& r : packages["relations"]) box |= r["kind"] == "requires" && r["from"] == "app@core" && r["to"] == "SREQ-00001-1";
+  for (const auto& r : packages["relations"]) box |= r["kind"] == "satisfies" && r["from"] == "app@core" && r["to"] == "SREQ-00001-1";
   EXPECT_TRUE(box);
 }
 
@@ -413,7 +413,7 @@ TEST_F(TestQualification, AQuestionAboutTheModelIsAnsweredByIdentity) {
   EXPECT_TRUE(refinedBy);
   // the answer names an identity that the next question takes
   const Outcome artefacts = ds("query " + examples("artefacts") + " artefacts iris@projection::Projection");
-  EXPECT_NE(artefacts.out.find("requires  REQ-00001-2"), std::string::npos);
+  EXPECT_NE(artefacts.out.find("satisfies  REQ-00001-2"), std::string::npos);
   EXPECT_NE(artefacts.out.find("verified-by  VER-"), std::string::npos);
   const Outcome shows = ds("query " + examples("artefacts") + " shows CL_Projection");
   EXPECT_NE(shows.out.find("class  iris@projection::Projection"), std::string::npos);

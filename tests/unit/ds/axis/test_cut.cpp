@@ -199,7 +199,7 @@ TEST(TestBondOf, ARelationReadsBetweenBoxesAsAStructuralBondOrAUseOrNothing) {
     EXPECT_EQ(ds::axis::bondOf(structural), "structural") << structural;
   for (const char* use : {"uses", "bounded-by", "consumes", "calls", "sends", "couples-transient", "couples-structural"})
     EXPECT_EQ(ds::axis::bondOf(use), "uses") << use;
-  for (const char* none : {"contains", "refines", "verifies", "requires", "behaviour-of", "expands-to"})
+  for (const char* none : {"contains", "refines", "verifies", "satisfies", "behaviour-of", "expands-to"})
     EXPECT_EQ(ds::axis::bondOf(none), "") << none;
 }
 

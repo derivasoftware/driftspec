@@ -54,7 +54,7 @@ const char* const kBoxes =
     "      if m in a, m owns b\n"
     "    }\n"
     "    definition traced(x) {\n"
-    "      if x requires r\n"
+    "      if x satisfies r\n"
     "    }\n";
 
 TEST_F(TestRuleEvaluation, ARuleIsBrokenByEveryBindingThatBreaksIt) {

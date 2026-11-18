@@ -233,7 +233,7 @@ std::vector<RelationSpec> buildRelations() {
   return {
       rel("exposes", "a package or a module offers an interface", {P, M}, {I}),
       // whatever may nest an artefact may annotate it, and one source set for both (DS-217)
-      rel("requires", "the entity answers to a requirement", {P, M, Cl, E, F, Me, A, O, I, Op, Vw, S, St, Uc, Kind::Rule, Kind::Definition},
+      rel("satisfies", "the entity satisfies a requirement", {P, M, Cl, E, F, Me, A, O, I, Op, Vw, S, St, Uc, Kind::Rule, Kind::Definition},
           {Rq}),
       rel("constrained-by", "the entity obeys a constraint", {P, M, Cl, E, F, Me, A, O, I, Op, Vw, S, St, Uc, Kind::Rule, Kind::Definition},
           {Cs}),

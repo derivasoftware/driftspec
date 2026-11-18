@@ -196,7 +196,7 @@ class Live:
             problems = [{"code": f.code, "message": f.message[len(e.id) + 1:]} for f in findings
                         if f.message.startswith(e.id + " ") and f.code.startswith(("E-RULE", "W-RULE", "W-DEFINITION")) and f.code != "E-RULE-BROKEN"]
             rules.append({"id": e.id, "kind": e.kind, "name": e.name, "title": e.fields.get("title", ""), "scope": e.scope.rstrip("@"),
-                          "lines": lines, "requirements": [r.target for r in model.relations if r.kind == "requires" and r.source == e.id],
+                          "lines": lines, "requirements": [r.target for r in model.relations if r.kind == "satisfies" and r.source == e.id],
                           "broken": breaches, "problems": problems, "file": rel(e.location.file), "line": e.location.line})
         return rules
 

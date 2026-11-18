@@ -312,7 +312,7 @@ void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std:
     const bool inDesign = ownerEntity && ownerEntity->kind != model::Kind::Package && ownerEntity->kind != model::Kind::Module &&
                           ownerEntity->kind != model::Kind::Requirement;
     if (inDesign && e.kind == model::Kind::Requirement) {
-      model_.relate({"requires", owner, e.id, loc, ""});
+      model_.relate({"satisfies", owner, e.id, loc, ""});
     } else if (inDesign && e.kind == model::Kind::Constraint) {
       model_.relate({"constrained-by", owner, e.id, loc, ""});
     } else {

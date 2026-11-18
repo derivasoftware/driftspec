@@ -75,7 +75,7 @@ TEST_F(TestUseCases, HolaRealisesItsUseCasesFromBothInterfacesAndChecksClean) {
   EXPECT_TRUE(related("realises", "hola@shell::greet", "UC-00001-1"));
   EXPECT_TRUE(related("realises", "hola@web::greet", "UC-00002-1"));
   EXPECT_TRUE(related("inherits", "UC-00002-1", "UC-00001-1"));  // the specific specialises the generic
-  EXPECT_TRUE(related("requires", "UC-00001-1", "SREQ-00001-1"));
+  EXPECT_TRUE(related("satisfies", "UC-00001-1", "SREQ-00001-1"));
   const ds::model::Entity* outcome = model.find("UC-00001-1::empty-name");
   ASSERT_NE(outcome, nullptr);
   EXPECT_EQ(outcome->kind, ds::model::Kind::Outcome);

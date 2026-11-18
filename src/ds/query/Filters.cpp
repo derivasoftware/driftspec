@@ -257,10 +257,10 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
   bool grew = true;
   while (grew) {
     grew = false;
-    for (const auto& r : model.index().ofKinds({"refines", "verifies", "requires", "constrained-by"})) {
+    for (const auto& r : model.index().ofKinds({"refines", "verifies", "satisfies", "constrained-by"})) {
       if ((r.kind == "refines" && selected.count(r.to) && !selected.count(r.from)) ||
           (verifications_ && r.kind == "verifies" && selected.count(r.to) && !selected.count(r.from)) ||
-          (design_ && (r.kind == "requires" || r.kind == "constrained-by") && selected.count(r.to) && !selected.count(r.from))) {
+          (design_ && (r.kind == "satisfies" || r.kind == "constrained-by") && selected.count(r.to) && !selected.count(r.from))) {
         const model::Entity* from = model.find(r.from);
         if (!from || from->expected) continue;
         // whatever answers to a requirement is drawn under it: a box, an interface, a function, a rule; a member or

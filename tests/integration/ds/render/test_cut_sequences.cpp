@@ -164,7 +164,7 @@ TEST_F(TestCutSequences, WhatAnswersToARequirementIsTheBoxThatStandsForIt) {
   EXPECT_TRUE(has(classes, "shop@warehouse@stock::Shelf"));  // a method answers through its class
   EXPECT_TRUE(has(modules, "shop@sales@desk"));
   EXPECT_FALSE(has(modules, "shop@sales@desk::Desk"));
-  EXPECT_TRUE(message(modules, "REQ-00002-1", "shop@warehouse@stock", "realised by"));
+  EXPECT_TRUE(message(modules, "REQ-00002-1", "shop@warehouse@stock", "satisfied by"));
   const auto filter = ds::query::filterFor(*model.find("diagram:REQ_Modules"));
   std::set<std::string> drawn;
   for (const auto& n : modules["nodes"]) drawn.insert(n["id"].get<std::string>());

@@ -334,7 +334,7 @@ package driftspec@ds {
       self -> model_.index() -> index
       self -> index.from(id) -> leaving
       loop each relation that leaves id {
-        opt it realises, requires or is constrained by {
+        opt it realises, satisfies or is constrained by {
           self -> index.to(relation.to) -> reaching
           loop each relation that reaches the same target {
             opt it verifies it {

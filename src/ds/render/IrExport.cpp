@@ -262,7 +262,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
       // the artefacts this entity realises or is bound by, one note
       std::vector<std::string> lines;
       for (const auto& r : model_.index().from(id)) {
-        if (r.kind != "requires" && r.kind != "constrained-by") continue;
+        if (r.kind != "satisfies" && r.kind != "constrained-by") continue;
         const model::Entity* a = model_.find(r.to);
         if (!a || a->expected) continue;
         lines.push_back(a->id + "  " + a->field("title"));
@@ -770,7 +770,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
         }
         std::vector<std::string> binds;
         for (const auto& r : model_.index().from(id)) {
-          if (r.kind == "requires" || r.kind == "constrained-by") binds.push_back(r.to);
+          if (r.kind == "satisfies" || r.kind == "constrained-by") binds.push_back(r.to);
         }
         if (!binds.empty()) {
           sections.push_back(binds);
@@ -963,7 +963,7 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
   }
   std::set<std::string> said;  // one edge per pair: a class and its method that answer the same requirement draw once
   for (model::Relation r : model_.index().all()) {
-    if ((r.kind == "requires" || r.kind == "constrained-by") && !selected.count(r.from)) {
+    if ((r.kind == "satisfies" || r.kind == "constrained-by") && !selected.count(r.from)) {
       const model::Entity* from = model_.find(r.from);  // a member answers through the class that holds it (DS-220)
       if (from && selected.count(from->scope)) {
         r.from = from->scope;
@@ -977,8 +977,8 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       out["edges"].push_back({{"from", r.from}, {"to", r.to}, {"kind", "realization"}, {"label", "refines"}});  // the parent above
     } else if (r.kind == "verifies") {
       out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "verified by"}});
-    } else if (r.kind == "requires") {
-      out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "realised by"}});
+    } else if (r.kind == "satisfies") {
+      out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "satisfied by"}});
     } else if (r.kind == "constrained-by") {
       out["edges"].push_back({{"from", r.to}, {"to", r.from}, {"kind", "dependency"}, {"label", "constrains"}});
     }

@@ -52,7 +52,7 @@ class TestRules : public ::testing::Test {
 
   bool answersTo(const std::string& from, const std::string& to) const {
     for (const auto& r : model.index().all())
-      if (r.kind == "requires" && r.from == from && r.to == to) return true;
+      if (r.kind == "satisfies" && r.from == from && r.to == to) return true;
     return false;
   }
 };
@@ -75,7 +75,7 @@ TEST_F(TestRules, ARuleIsADesignPieceInTheBoxItAppliesTo) {
       "      rule named {\n"
       "        @requirement REQ-00001-1\n"
       "        for method m in p@core::Checker\n"
-      "        holds m requires r\n"
+      "        holds m satisfies r\n"
       "      }\n"
       "    }\n"
       "  }\n"

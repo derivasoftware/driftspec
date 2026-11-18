@@ -41,8 +41,8 @@ package driftspec {
     title: System tests confirm artefacts are linked to the design by revision
     text:
       The export of the artefacts corpus carries refines, verifies and
-      requires relations between pinned ids and the classes that realise them;
-      the packages corpus carries the same requires relation from an HLD box
+      satisfies relations between pinned ids and the classes that realise them;
+      the packages corpus carries the same satisfies relation from an HLD box
       (revision 2).
     method: test
     tests:

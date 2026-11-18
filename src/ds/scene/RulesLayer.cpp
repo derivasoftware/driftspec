@@ -38,7 +38,7 @@ void RulesLayer::decorate(SceneDocument& out_document) {
       }
     }
     for (const auto& rel : model_.index().from(e.id))
-      if (rel.kind == "requires") r.requirements.push_back(rel.to);
+      if (rel.kind == "satisfies") r.requirements.push_back(rel.to);
     const auto broken = model_.breaches().find(e.id);
     if (broken != model_.breaches().end())
       for (const auto& b : broken->second) {

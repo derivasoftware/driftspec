@@ -42,7 +42,7 @@ TEST_F(TestRequirementsView, TheUmbrellaOfARequirement) {
   EXPECT_EQ(count(doc, "classifier", "class"), 1);         // Projection realises REQ-00001-2
   EXPECT_EQ(count(doc, "label", "refines"), 4);
   EXPECT_EQ(count(doc, "label", "verified by"), 3);
-  EXPECT_EQ(count(doc, "label", "realised by"), 1);
+  EXPECT_EQ(count(doc, "label", "satisfied by"), 1);
   bool titleAsSection = false, statusInStereotype = false;
   for (const auto& n : doc["nodes"]) {
     if (n["id"] != "SREQ-00001-2") continue;
@@ -103,7 +103,7 @@ TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsIt
              n["sections"][0][0] == "Buy an item";
   EXPECT_TRUE(card);
   bool realised = false;
-  for (const auto& e : doc["edges"]) realised |= e["from"] == "SREQ-00001-1" && e.value("label", "") == "realised by";
+  for (const auto& e : doc["edges"]) realised |= e["from"] == "SREQ-00001-1" && e.value("label", "") == "satisfied by";
   EXPECT_TRUE(realised);
 }
 
