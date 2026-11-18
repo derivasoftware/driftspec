@@ -1,6 +1,7 @@
 """driftspec.live, the live session (REQ-00089-2, REQ-00090-1, REQ-00091-3, REQ-00102-1..REQ-00105-1): a workspace
 followed as it is written, and what the one who writes and the one who reads point at."""
 
+import json
 import os
 import sys
 
@@ -182,3 +183,34 @@ class TestLiveSession:
         replies = agent(live.port, ("live_comments", {}), ("live_isolate", {"ids": ["sistema@core"]}))
         assert '"look here"' in replies[1]["result"]["content"][0]["text"]
         assert get(live, "/state")["isolated"] == ["sistema@core"]
+
+
+class TestLiveSessionIsLocal:
+    """Only this session's own page and the tools of this machine reach it (DS-302)."""
+
+    @staticmethod
+    def send(live, path: str, headers: dict, data: dict | None = None):
+        import urllib.error
+        import urllib.request
+
+        req = urllib.request.Request(live.url.rstrip("/") + path, method="GET" if data is None else "POST",
+                                     data=None if data is None else json.dumps(data).encode(), headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=5) as r:
+                return r.status
+        except urllib.error.HTTPError as e:
+            return e.code
+
+    def test_a_page_of_another_origin_cannot_write_to_the_session(self, session):
+        _, live = session
+        note = {"id": "sistema@core::Broker", "text": "from elsewhere"}
+        assert self.send(live, "/note", {"Origin": "https://example.com"}, note) == 403
+        assert self.send(live, "/note", {"Origin": "null"}, note) == 403  # a file opened in the browser
+        assert get(live, "/state")["notes"] == []
+        assert self.send(live, "/note", {"Origin": f"http://localhost:{live.port}"}, note) == 200  # its own page
+        assert [n["text"] for n in get(live, "/state")["notes"]] == ["from elsewhere"]
+
+    def test_a_name_that_is_not_the_sessions_cannot_read_it(self, session):
+        _, live = session
+        assert self.send(live, "/state", {"Host": f"rebound.example:{live.port}"}) == 403
+        assert self.send(live, "/state", {"Host": f"127.0.0.1:{live.port}"}) == 200

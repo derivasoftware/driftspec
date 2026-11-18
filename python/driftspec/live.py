@@ -21,6 +21,7 @@ are kept in <workspace>/.driftspec/live.json, beside the design and never in it.
 
 from __future__ import annotations
 
+import html
 import json
 import os
 import queue
@@ -408,6 +409,21 @@ def handler_for(live: Live):
         def log_message(self, *a):  # quiet
             pass
 
+        def local(self) -> bool:
+            """Whether a request comes from this machine's own page or tools (DS-302).
+
+            The session listens on 127.0.0.1, but any page the browser has open can still send to it:
+            a POST from another origin is carried out even though the browser hides the answer, and a
+            name that resolves to 127.0.0.1 (DNS rebinding) can read it. So the Host must be this
+            session's own name, and an Origin, when the browser sends one, must be this session's.
+            """
+            port = self.server.server_address[1]
+            own = {f"localhost:{port}", f"127.0.0.1:{port}", f"[::1]:{port}"}
+            if (self.headers.get("Host") or "") not in own:
+                return False
+            origin = self.headers.get("Origin")
+            return origin is None or origin in {f"http://{h}" for h in own}
+
         def send(self, code: int, body: bytes, ctype: str) -> None:
             self.send_response(code)
             self.send_header("Content-Type", ctype)
@@ -420,9 +436,13 @@ def handler_for(live: Live):
             self.send(code, json.dumps(obj).encode(), "application/json")
 
         def do_GET(self):
+            if not self.local():
+                self.send(403, b"not this session's page", "text/plain")
+                return
             path = self.path.split("?")[0]
             if path == "/":
-                self.send(200, SHELL.replace("__TITLE__", live.title).replace("__WS__", live.workspace).encode(), "text/html; charset=utf-8")
+                self.send(200, SHELL.replace("__TITLE__", html.escape(live.title)).replace("__WS__", html.escape(live.workspace)).encode(),
+                          "text/html; charset=utf-8")
             elif path == "/page":
                 with live.lock:
                     page = live.page
@@ -462,6 +482,9 @@ def handler_for(live: Live):
 
         def do_POST(self):
             body = self.rfile.read(int(self.headers.get("Content-Length", 0) or 0))
+            if not self.local():
+                self.json({"error": "not this session's page"}, 403)
+                return
             try:
                 data = json.loads(body or b"{}")
             except ValueError:
