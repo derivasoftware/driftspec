@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "driftspec"
-version = "0.0.207"
+version = "0.0.208"
 description = "DriftSpec: a software design as text, checked, drawn and asked"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -33,7 +33,7 @@ driftspec-live = "driftspec.live:main"
 [tool.scikit-build]
 cmake.build-type = "Release"
 cmake.define = { DS_PYTHON = "ON" }
-build.targets = ["_native"]
+build.targets = ["_native", "ds"]  # the extension and the ds command (DS-303)
 install.components = ["python"]
 wheel.packages = ["python/driftspec"]
 # the licence, its notice and the notices of the third-party code compiled into the extension travel with it

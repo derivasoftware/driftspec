@@ -35,3 +35,10 @@ class TestRelease:
         project = tomllib.loads((ROOT / "pyproject.toml").read_text())
         assert project["project"]["license"] == {"text": "Apache-2.0"}
         assert set(project["tool"]["scikit-build"]["wheel"]["license-files"]) >= {"LICENSE", "NOTICE", "grammar/LICENSE"}
+
+    def test_the_wheel_installs_the_ds_command_beside_the_package(self):
+        """pip install driftspec gives ds too (SREQ-00020-1): the build makes it, CMake installs it as a script."""
+        build = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["scikit-build"]["build"]
+        assert "ds" in build["targets"]
+        cmake = (ROOT / "CMakeLists.txt").read_text()
+        assert re.search(r"install\(\s*TARGETS ds\s+RUNTIME DESTINATION \$\{SKBUILD_SCRIPTS_DIR\}", cmake)

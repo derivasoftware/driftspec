@@ -108,6 +108,17 @@ package driftspec {
     tags: render, scene
   }
 
+  requirement SREQ-00020-1 {
+    status: approved
+    title: The system shall install its command line beside its Python package with one pip install
+    text:
+      pip install driftspec puts the ds command in the environment's scripts, next to the package,
+      driftspec-lsp and driftspec-live: one installation gives every way of using the engine,
+      without a compiler on the reader's side once the release ships built wheels.
+    rationale: Owner, 2026-11-18 (DS-303): the command line was only to be had by building it with CMake.
+    tags: python, cli, release
+  }
+
   requirement SREQ-00015-1 {
     status: approved
     title: The system shall serve its engine in process to Python, as a package to depend on
