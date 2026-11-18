@@ -23,3 +23,10 @@ playground/site/
 
 # a compiled grammar is built when it is needed, never committed (DS-32)
 *.so
+
+# The instructions and settings of coding agents live outside the repository, with whoever uses
+# them (DS-291): kept here, they would name tools a reader outside deriva cannot use.
+CLAUDE.md
+AGENTS.md
+.claude/
+.mcp.json
