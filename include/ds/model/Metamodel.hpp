@@ -124,6 +124,8 @@ std::vector<std::string> manualTopics();
 /// The guides of the manual, written as Markdown in doc/manual and embedded when ds is built (DS-272): each by its
 /// topic, in the order they are read. The same text is what ds manual <topic> prints and what the site draws.
 const std::vector<std::pair<std::string, std::string>>& manualGuides();
+/// The version of the tool, as pyproject.toml keeps it, written in when ds is built (DS-278).
+std::string version();
 /// Whether a relation of this kind may go from one kind to another.
 bool joins(const RelationSpec& relation, Kind from, Kind to);
 

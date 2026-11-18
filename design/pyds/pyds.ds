@@ -510,6 +510,7 @@ package driftspec@pyds {
     @uses driftspec@ds@workspace             // DS-90: a workspace loaded once, through its interface
     @requirement REQ-00086-1
 
+    function version() -> string
     function check(files: map<string, string>) -> string
     function export(files: map<string, string>) -> string
     function expected_at(text: string, line: int, column: int) -> string

@@ -24,10 +24,12 @@ from typing import Iterator, Mapping, Union
 
 from . import _native
 
+__version__ = _native.version()  # the engine's, as ds --version says it (DS-278)
+
 Source = Union[str, os.PathLike, Mapping[str, str]]
 
 __all__ = [
-    "Location", "Entity", "Relation", "Finding", "Model", "Report", "Answer", "Step", "Walked", "Frame", "Tree", "Change",
+    "Location", "Entity", "Relation", "Finding", "Model", "Report", "Answer", "Step", "Walked", "Frame", "Tree",
     "Workspace", "read", "load", "check", "expected_at", "render", "page", "qualify", "outer", "box_of",
     "package_of", "behaviour_of", "subject_of", "scenario_of", "without_revision",
 ]

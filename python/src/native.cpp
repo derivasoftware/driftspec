@@ -12,6 +12,7 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
@@ -48,6 +49,8 @@ PyObject* run(F work) {
   }
   return PyUnicode_FromStringAndSize(out.data(), static_cast<Py_ssize_t>(out.size()));
 }
+
+PyObject* version(PyObject*, PyObject*) { return PyUnicode_FromString(ds::model::version().c_str()); }
 
 PyObject* check(PyObject*, PyObject* args) {
   PyObject* dict = nullptr;
@@ -258,6 +261,7 @@ PyMethodDef kMethods[] = {
     {"subject_of", identity1<&ds::api::Identity::subjectOf>, METH_VARARGS, "subject_of(id) -> str: the subject of a behaviour"},
     {"scenario_of", identity1<&ds::api::Identity::scenarioOf>, METH_VARARGS, "scenario_of(id) -> str: the scenario a behaviour names"},
     {"without_revision", identity1<&ds::api::Identity::withoutRevision>, METH_VARARGS, "without_revision(id) -> str: an artefact id bare"},
+    {"version", version, METH_NOARGS, "version() -> str: the version of the engine, as ds --version says it"},
     {"check", check, METH_VARARGS, "check(files: dict[str, str]) -> str: the findings and counts, as ds check --json"},
     {"export", exportModel, METH_VARARGS, "export(files: dict[str, str]) -> str: the model, as ds export"},
     {"expected_at", expectedAt, METH_VARARGS, "expected_at(text, line, column) -> str: what the grammar takes there, as JSON"},

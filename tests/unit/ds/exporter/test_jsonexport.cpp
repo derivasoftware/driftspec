@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 
 #include "ds/export/JsonExport.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace {
@@ -78,6 +79,12 @@ TEST_F(TestJsonExport, CarriesTheMetamodelTheModelIsWrittenIn) {
   }
   EXPECT_TRUE(requirement);
   EXPECT_TRUE(verifies);
+}
+
+TEST_F(TestJsonExport, SaysTheVersionThatWroteItAndTheShapeOfTheDocument) {
+  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model, false));
+  EXPECT_EQ(doc["version"], ds::model::version());
+  EXPECT_EQ(doc["format"], 1);
 }
 
 TEST_F(TestJsonExport, CompactOnRequest) {
