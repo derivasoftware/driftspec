@@ -269,7 +269,7 @@ short:
 - **api** offers the engine in process: one-question functions (`interface
   engine`) and a `Workspace` loaded once and asked as often as needed
   (`interface workspace`), each answer the JSON the engine writes.
-- **driftspec** (the Python package, `import driftspec`; `pyds` until DS-288) is the Python face: the
+- **driftspec** (the Python package, `import driftspec`) is the Python face: the
   native module, typed answers, the language server and the live session.
   argos-design-driftspec reads designs through it, in process.
 - **Core must be domain-neutral.** The metamodel is already data, but adding

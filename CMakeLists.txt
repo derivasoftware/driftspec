@@ -263,8 +263,6 @@ if(DS_PYTHON)
     COMMAND
       ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/driftspec
       ${CMAKE_BINARY_DIR}/python/driftspec
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/pyds
-            ${CMAKE_BINARY_DIR}/python/pyds
     DEPENDS _native)
   # pytest drives the package and its language server from the build
   # (tests/*/python)
