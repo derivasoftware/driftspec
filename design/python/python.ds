@@ -234,6 +234,29 @@ package driftspec@python {
     }
   }
 
+  requirement REQ-00165-1 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The live session shall answer only its own page and the tools of the machine it runs on
+    text:
+      It listens on 127.0.0.1, and a request whose Host is not the session's own name, or whose
+      Origin, when the browser sends one, is not the session's own page, is refused (403) before it
+      reads or writes anything. Its page writes the workspace's name escaped.
+    rationale:
+      A page of another site open in the same browser could write notes and comments into the
+      session, which the browser carries out even though it hides the answer, and a name that
+      resolves to 127.0.0.1 could read the design (audit for 0.1.0, DS-302).
+    tags: live, security
+    verification VER-00182-1 {
+      status: approved
+      title: Integration tests confirm a page of another origin cannot write to the session and a name that is not the session's cannot read it
+      method: test
+      tests:
+        tests/integration/python/test_live.py::TestLiveSessionIsLocal::test_a_page_of_another_origin_cannot_write_to_the_session
+        tests/integration/python/test_live.py::TestLiveSessionIsLocal::test_a_name_that_is_not_the_sessions_cannot_read_it
+    }
+  }
+
   requirement REQ-00103-1 {
     status: approved
     @refines SREQ-00017-1
@@ -927,6 +950,7 @@ package driftspec@python {
     @requirement REQ-00102-1
     @requirement REQ-00103-1
     @requirement REQ-00104-1
+    @requirement REQ-00165-1
 
     class Live {                               // a session over one workspace: its model version by version, and what both sides point at
       @requirement REQ-00089-2
