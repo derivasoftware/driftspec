@@ -1,4 +1,4 @@
 {
   "grammars": [{ "name": "driftspec", "camelcase": "Driftspec", "scope": "source.driftspec", "path": ".", "file-types": ["ds"], "injection-regex": "^driftspec$" }],
-  "metadata": { "version": "0.0.189", "license": "MIT", "description": "DriftSpec grammar for tree-sitter", "authors": [{ "name": "deriva" }] }
+  "metadata": { "version": "0.0.190", "license": "MIT", "description": "DriftSpec grammar for tree-sitter", "authors": [{ "name": "deriva" }] }
 }

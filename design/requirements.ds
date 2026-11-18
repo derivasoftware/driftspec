@@ -314,6 +314,20 @@ package driftspec {
     tags: language, grammar
   }
 
+  constraint CST-00010-1 {
+    status: approved
+    category: release
+    title: Everything DriftSpec ships shall carry the notices of the third-party code compiled into it
+    text:
+      THIRD_PARTY_NOTICES.md names each library the build fetches, with the version built and its
+      licence text, and the Emscripten runtime the WebAssembly engine is made with; it goes in the
+      wheel and in the site, and with every binary a release attaches.
+    rationale:
+      Owner, 2026-11-18 (DS-284), audit for the first release: tree-sitter, nlohmann json and miniz
+      (MIT) and CLI11 (BSD-3-Clause) ask that their notice go with any copy.
+    tags: release, licence
+  }
+
   constraint CST-00001-1 {
     status: approved
     category: performance
