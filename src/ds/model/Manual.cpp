@@ -136,7 +136,7 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "    view Done {\n      text: What was bought.\n    }\n    Home -> Done on buy\n    Done -> Home on back\n  }\n}\n"}},
       {Kind::Class,
        {"[+|-] class | dataclass <Name>[<T: Bound>] [: <Base>, ...] [<<operators>>] { members }\nextern in an extern module: a "
-        "name with no obligations\ninterface and abstract are derived from abstract methods, never written",
+        "name with no obligations\nabstract is derived from abstract methods, never written",
         kShopClass}},
       {Kind::Enum,
        {"enum <Name> { <Value>, <Value> = 2, ... }",

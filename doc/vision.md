@@ -215,8 +215,8 @@ whose `!` comments are the oracle of the test suite. In short:
 - **R12** Any entity, including a member, may open a body with fields, notes,
   annotations, contracts and nested requirements or constraints.
 - **R13** Comments are not model; `note:` is.
-- **R14** Kinds: `class`, `dataclass`, `enum`. Interface and abstract are
-  derived from the methods.
+- **R14** Kinds: `class`, `dataclass`, `enum`. Abstract is derived from the
+  methods; a class whose methods are all abstract is still a class (DS-301).
 - **R15** Templates: `class Repository<T: Entity>`; identity is name plus
   arity; a use `Repository<Finding>` is checked against the bound
   (`E-TEMPLATE-BOUND`). Built-in generics `list`, `set`, `map`, `optional`.

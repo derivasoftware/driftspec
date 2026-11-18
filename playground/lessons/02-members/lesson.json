@@ -193,8 +193,8 @@
         "select": "shop@store::PaymentMethod"
       },
       "text": {
-        "en": "Nobody wrote the word interface. A class whose methods are all abstract is one, and the engine derives it: look at its badge, `I`. What the members already say is never declared again, so it can never contradict them.",
-        "es": "Nadie ha escrito la palabra interfaz. Una clase con todos sus métodos abstractos lo es, y el motor lo deduce: mira su distintivo, `I`. Lo que ya dicen los miembros nunca se vuelve a declarar, así que nunca puede contradecirlos."
+        "en": "Nobody wrote the word abstract. A class whose methods are all abstract is an abstract class, and the engine derives it from its members: its name goes in italics, and nobody can create one. What the members already say is never declared again, so it can never contradict them.",
+        "es": "Nadie ha escrito la palabra abstracta. Una clase con todos sus métodos abstractos es una clase abstracta, y el motor lo deduce de sus miembros: su nombre va en cursiva y nadie puede crear una. Lo que ya dicen los miembros nunca se vuelve a declarar, así que nunca puede contradecirlos."
       },
       "done": {
         "ack": {
@@ -236,8 +236,8 @@
         "select": "shop@store::Pricing"
       },
       "text": {
-        "en": "Some methods abstract, some not: `Pricing` is an abstract class. It stays a class, `C`, but nobody can create one, and its name and the method it lacks go in italics. All abstract: an interface. None: a class you can create. Derived from the members, never written.",
-        "es": "Unos métodos abstractos y otros no: `Pricing` es una clase abstracta. Sigue siendo una clase, `C`, pero nadie puede crear una, y su nombre y el método que le falta van en cursiva. Todos abstractos: una interfaz. Ninguno: una clase que se puede crear. Se deduce de los miembros, nunca se escribe."
+        "en": "Some methods abstract, some not: `Pricing` is an abstract class too. It stays a class, `C`, but nobody can create one, and its name and the method it lacks go in italics. One abstract method or all of them: abstract. None: a class you can create. Derived from the members, never written.",
+        "es": "Unos métodos abstractos y otros no: `Pricing` también es una clase abstracta. Sigue siendo una clase, `C`, pero nadie puede crear una, y su nombre y el método que le falta van en cursiva. Uno o todos sus métodos abstractos: abstracta. Ninguno: una clase que se puede crear. Se deduce de los miembros, nunca se escribe."
       },
       "done": {
         "ack": {

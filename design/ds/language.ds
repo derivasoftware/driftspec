@@ -649,17 +649,20 @@ package driftspec@ds {
               tests/integration/ds/check/test_static.cpp::TestStatic.OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody
           }
         }
-        requirement REQ-00031-1 {
+        requirement REQ-00031-2 {
           tags: language, lld, class
           status: approved
-          title: Interface, abstract and value shall be derived from the members, never written
-          rationale: What is derived cannot contradict what is declared (R14).
-          verification VER-00024-1 {
-            title: Integration tests confirm interface, abstract and value are derived from the members, never written
+          title: Abstract and value shall be derived from the members, never written
+          rationale:
+            What is derived cannot contradict what is declared (R14). A class whose methods are all
+            abstract is an abstract class, drawn and inherited as one: interface is only the contract of a
+            box (Owner, 2026-11-18, DS-301).
+          verification VER-00024-2 {
+            title: Integration tests confirm abstract and value are derived from the members, never written
             status: approved
             method: test
             tests:
-              tests/integration/ds/check/test_static.cpp::TestStatic.InterfaceAndAbstractAreDerived
+              tests/integration/ds/check/test_static.cpp::TestStatic.AbstractAndValueAreDerived
           }
         }
         requirement REQ-00032-2 {

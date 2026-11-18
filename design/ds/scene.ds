@@ -166,7 +166,7 @@ package driftspec@ds {
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle
-        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AClassThatInheritsFromAnInterfaceRealisesIt
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AClassThatInheritsIsDrawnInheritingWhateverItsBase
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
     }
 
@@ -198,7 +198,7 @@ package driftspec@ds {
       method: test
       tests:
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.HeirsSitInARowBelowTheirBaseCentredOverThem
-        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.InterfaceAndAbstractAreTheStereotypesTheCheckerDerives
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AbstractIsTheStereotypeTheCheckerDerives
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheModuleThatHoldsTheBasesComesBeforeTheModulesThatInherit
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AHeaderThatNamesABaseInAnotherModuleIsWideEnoughForIt
     }

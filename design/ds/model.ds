@@ -695,9 +695,6 @@ package driftspec@ds {
       }
       + find(id: std::string) -> Entity
       + relate(relation: Relation) -> void
-      + readAs(relation: Relation) -> std::string {  // the relation as the language reads it (R14)
-        @requirement REQ-00031-1
-      }
       + report(finding: Finding) -> void
       + rename(from: std::string, to: std::string) -> bool
       + entities() -> std::map<std::string, Entity>

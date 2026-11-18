@@ -328,7 +328,7 @@ package driftspec@ds {
     }
 
     class Derivation : IStep {            // what the model says without writing it: the stereotypes, the languages
-      @requirement REQ-00031-1
+      @requirement REQ-00031-2
       @requirement REQ-00084-1
       - refs context_: Context
       - refs model_: model::Model
@@ -337,7 +337,7 @@ package driftspec@ds {
       + needs() -> std::vector<std::string>
       + run(out_context: Context) -> std::vector<model::Finding>
       - classify() -> void {
-        @requirement REQ-00031-1
+        @requirement REQ-00031-2
       }
       - fillLanguages() -> void {
         @requirement REQ-00084-1
