@@ -61,6 +61,10 @@ header select, header button { font: inherit; color: var(--fg); background: var(
 header #relesson { width: 28px; height: 28px; margin-left: -6px; padding: 0; border: 1px solid var(--line); background: var(--soft); color: var(--muted); }
 header #relesson:hover { color: var(--fg); }
 header .spacer { flex: 1; }
+/* who to talk to: deriva's contact, on its own site (DS-308) */
+header a.contact { color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; background: var(--soft); white-space: nowrap; }
+header a.contact:hover { border-color: var(--brand); }
+header a.contact:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 /* the site (DS-257): a tab per page, the editor one of them; what only the editor uses shows only there */
 header nav#site { display: flex; gap: 2px; }
 header nav#site a { color: var(--muted); text-decoration: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
@@ -433,6 +437,17 @@ main { flex: 1; display: flex; min-height: 0; }
   #narrow:not([hidden]) { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 12px; font: 12.5px/1.35 var(--sans); color: var(--muted); background: var(--panel); border-bottom: 1px solid var(--line); flex: none; }
   #narrow span { flex: 1; }
 }
+@media (max-width: 480px) {  /* a phone: logo, tabs, contact, language and theme stay on one line (DS-308) */
+  header { flex-wrap: nowrap; gap: 4px; padding: 6px 8px; }
+  header .logo { padding-right: 2px; }
+  header nav#site a { padding: 4px 5px; }
+  header a.contact, header button#lang { padding: 3px 6px; }
+}
+@media (max-width: 380px) {
+  header .logo img { height: 15px; }
+  header nav#site a { padding: 4px 4px; }
+  header #theme { padding: 3px 6px; }
+}
 </style>
 </head>
 <body>
@@ -444,6 +459,7 @@ main { flex: 1; display: flex; min-height: 0; }
   <span class="spacer"></span>
   <span class="count editor-only" id="count"></span>
   <span class="count editor-only" id="backend"></span>
+  <a class="contact" href="https://derivasoftware.dev/#contacto" data-t="contact"></a>
   <button id="lang" title="Language / Idioma">ES</button>
   <button id="theme" title="Theme">◐</button>
 </header>
@@ -782,6 +798,7 @@ const UI = {
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
         requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Satisfied by", "Proved by"], other: "ES",
         narrow: "For a better experience, open the editor on a large screen.", tabHome: "Home", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Open in the editor", go: "Open the editor",
+        contact: "Contact",
         homeTitle: "Design specifications as code.",
         homeText: "DriftSpec is a tool for writing the design of a piece of software as text and keeping it consistent. It checks every contradiction, draws the diagrams, and joins requirements, design and tests in one model.",
         kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Satisfied by",
@@ -799,6 +816,7 @@ const UI = {
         cont: "Continuar", restart: "Repetir la lección", problems: "Problemas", noProblems: "Sin problemas.",
         requirements: "Requisitos", table: "tabla", cols: ["Id", "Título", "Estado", "Nivel", "Lo cumple", "Lo prueba"], other: "EN",
         narrow: "Para una mejor experiencia, abre el editor en una pantalla grande.", tabHome: "Inicio", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Abrir en el editor", go: "Abrir el editor",
+        contact: "Contacto",
         homeTitle: "Especificaciones de diseño como código.",
         homeText: "DriftSpec es una herramienta para escribir el diseño de un software como texto y mantenerlo consistente. Comprueba cada contradicción, dibuja los diagramas y une requisitos, diseño y pruebas en un solo modelo.",
         kClass: "clases", kSequence: "secuencia", cTitle: "Título", cKept: "Lo cumple",
@@ -2056,7 +2074,7 @@ window.dsPlayground = { files: () => ({ ...state.files }), done: () => !!coach.l
 function applyLanguage() {
   $("lang").textContent = ui("other");
   for (const a of document.querySelectorAll("nav#site a")) a.textContent = ui("tab" + a.dataset.tab[0].toUpperCase() + a.dataset.tab.slice(1));
-  for (const el of document.querySelectorAll("#home [data-t]")) el.textContent = ui(el.dataset.t);
+  for (const el of document.querySelectorAll("#home [data-t], header [data-t]")) el.textContent = ui(el.dataset.t);
   $("ptitle").textContent = ui("problems");
   $("narrow").querySelector("span").textContent = ui("narrow");
   $("relesson").title = ui("restart");
