@@ -74,7 +74,8 @@ def main() -> None:
     # the editor is coloured by the grammar's own queries, the ones every other editor reads (DS-269)
     shutil.copy(ROOT / "grammar" / "queries" / "highlights.scm", out / "highlights.scm")
     # the engine compiled into the page carries third-party code: its notices go with it (DS-284)
-    shutil.copy(ROOT / "THIRD_PARTY_NOTICES.md", out / "THIRD_PARTY_NOTICES.md")
+    for name in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):  # the licence and the notices go with it (DS-287)
+        shutil.copy(ROOT / name, out / name)
     (out / "brand").mkdir()
     for name in ("driftspec-lockup-h.svg", "driftspec-lockup-h-light.svg", "driftspec-tile.svg", "driftspec-icon-180.png",
                  "deriva-lockup-h.svg", "deriva-lockup-h-light.svg"):

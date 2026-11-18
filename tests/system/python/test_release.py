@@ -1,4 +1,5 @@
-"""CST-00010-1 from outside: what DriftSpec ships carries the notices of the third-party code in it."""
+"""CST-00010-1 and CST-00011-1 from outside: what DriftSpec ships carries its licence and the notices of the
+third-party code in it."""
 
 import pathlib
 import re
@@ -22,3 +23,15 @@ class TestRelease:
         wheel = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["scikit-build"]["wheel"]
         assert "THIRD_PARTY_NOTICES.md" in wheel["license-files"]
         assert "THIRD_PARTY_NOTICES.md" in (ROOT / "playground" / "build.py").read_text()
+
+    def test_the_licence_is_apache_and_the_grammar_mit_with_the_holder_named(self):
+        assert (ROOT / "LICENSE").read_text().lstrip().startswith("Apache License")
+        assert "Version 2.0, January 2004" in (ROOT / "LICENSE").read_text()
+        notice = (ROOT / "NOTICE").read_text()
+        assert "Copyright 2026 ARGOSQA SLU (deriva)" in notice and "THIRD_PARTY_NOTICES.md" in notice
+        grammar = (ROOT / "grammar" / "LICENSE").read_text()
+        assert grammar.startswith("MIT License") and "ARGOSQA SLU (deriva)" in grammar
+        assert '"license": "MIT"' in (ROOT / "grammar" / "tree-sitter.json").read_text()
+        project = tomllib.loads((ROOT / "pyproject.toml").read_text())
+        assert project["project"]["license"] == {"text": "Apache-2.0"}
+        assert set(project["tool"]["scikit-build"]["wheel"]["license-files"]) >= {"LICENSE", "NOTICE", "grammar/LICENSE"}

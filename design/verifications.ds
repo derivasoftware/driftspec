@@ -308,4 +308,13 @@ package driftspec {
       tests/system/python/test_release.py::TestRelease::test_every_dependency_the_build_fetches_has_its_notice_with_the_version_pinned
       tests/system/python/test_release.py::TestRelease::test_the_wheel_and_the_site_ship_the_notices
   }
+
+  verification SVER-00027-1 {
+    status: approved
+    @constraint CST-00011-1
+    title: System tests confirm the licence is Apache 2.0 with the holder's notice, the grammar's is MIT, and the wheel ships them
+    method: test
+    tests:
+      tests/system/python/test_release.py::TestRelease::test_the_licence_is_apache_and_the_grammar_mit_with_the_holder_named
+  }
 }

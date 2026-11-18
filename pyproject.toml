@@ -8,10 +8,21 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "driftspec"
-version = "0.0.194"
-description = "DriftSpec: a software design as text, checked, drawn, compared and asked"
+version = "0.0.195"
+description = "DriftSpec: a software design as text, checked, drawn and asked"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "ARGOSQA SLU (deriva)" }]
 requires-python = ">=3.10"
 dependencies = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Documentation",
+  "Topic :: Software Development :: Quality Assurance",
+]
 
 [project.optional-dependencies]
 lsp = ["pygls>=2.0"]
@@ -26,6 +37,7 @@ cmake.define = { DS_PYTHON = "ON" }
 build.targets = ["_native"]
 install.components = ["python"]
 wheel.packages = ["python/pyds"]
-# the notices of the third-party code compiled into the extension travel with it (DS-284)
-wheel.license-files = ["THIRD_PARTY_NOTICES.md"]
+# the licence, its notice and the notices of the third-party code compiled into the extension travel with it
+# (DS-284, DS-287)
+wheel.license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "grammar/LICENSE"]
 wheel.py-api = "cp310"
