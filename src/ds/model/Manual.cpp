@@ -548,11 +548,11 @@ std::string kindPage(const KindSpec& k) {
 
 std::string indexPage() {
   std::string out =
-      "ds — a software design as text: checked, drawn, compared and asked.\n\n"
+      "ds — a software design as text: checked, drawn and asked.\n\n"
       "A workspace is a directory of .ds files, read as one model in which every entity has one identity.\n"
       "Write its high-level design (packages, interfaces), its low-level design (modules, classes, functions,\n"
       "sequences, state machines) and the artefacts about it (requirements, constraints, verifications) in it;\n"
-      "then check it, look at it, compare two versions of it, ask it questions or hand it to another tool.\n\n"
+      "then check it, look at it, ask it questions or hand it to another tool.\n\n"
       "Commands (ds manual commands for their exit codes)\n";
   for (const auto& c : commands()) out += "  " + pad(c.name, 8) + c.does + "\n";
   if (!manualGuides().empty()) {
