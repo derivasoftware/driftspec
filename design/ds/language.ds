@@ -139,6 +139,31 @@ package driftspec@ds {
         title: Every entity shall have one identity, and a second declaration of it shall be E-DUPLICATE-IDENTITY
         rationale: R5: identity across the workspace is what makes references, diagrams and diffs mean the same entity everywhere.
       }
+      requirement REQ-00164-1 {
+        tags: language, workspace, behaviour
+        status: approved
+        title: A member named after a behaviour its holder has shall be E-NAME-RESERVED, and the behaviour keep its identity
+        text:
+          A state machine is its subject's identity with ::state, and a sequence its subject's with
+          ::sequence; a member written with that name takes the identity of the behaviour when the
+          behaviour is written too. The member is reported where it is written, once, and the
+          behaviour keeps the identity whichever of the two is written first, with nothing else said
+          of the collision. A member named state or sequence whose holder has no such behaviour is
+          an ordinary member.
+        rationale:
+          Owner, 2026-11-18 (DS-222, model audit finding I1): the names are the language's, not a new
+          separator, so the identities users write in diagrams (Cart::add::sequence/sold-out) do not
+          change. Reported only where the two meet: DriftSpec's own design has nine members called
+          state or sequence (Identity::state(), the live session's GET /state) with no behaviour of
+          that name, and they stay as the code has them.
+        verification VER-00180-1 {
+          status: approved
+          title: Integration tests confirm a method named state beside its class's state machine is E-NAME-RESERVED once, the machine keeps its identity, and without a machine the method is ordinary
+          method: test
+          tests:
+            tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AMemberNamedAfterABehaviourOfItsHolderIsToldSoAndTheBehaviourKeepsItsIdentity
+        }
+      }
       constraint CST-00003-2 {
         tags: language, workspace
         status: approved

@@ -173,4 +173,35 @@ TEST_F(TestAuditDefects, AHandlerOfAFailureNoStepRaisesHandlesNothing) {
   EXPECT_TRUE(said("W-FAILURE-UNDECLARED").empty());  // IoError is handled
 }
 
+TEST_F(TestAuditDefects, AMemberNamedAfterABehaviourOfItsHolderIsToldSoAndTheBehaviourKeepsItsIdentity) {
+  load(
+      "package p {\n"
+      "  module m {\n"
+      "    class Order {\n"
+      "      + state() -> int\n"
+      "      + steps: int\n"
+      "      + pay() -> none\n"
+      "    }\n"
+      "    state Order {\n"
+      "      initial Open\n"
+      "      Open -> Paid on pay\n"
+      "    }\n"
+      "  }\n"
+      "}\n");
+  ASSERT_EQ(said("E-NAME-RESERVED").size(), 1U);
+  EXPECT_NE(said("E-NAME-RESERVED")[0].find("p@m::Order::state"), std::string::npos);
+  EXPECT_TRUE(said("E-DUPLICATE-IDENTITY").empty());  // the state machine is not mistaken for a second declaration
+  ASSERT_NE(model.find("p@m::Order::state"), nullptr);
+  EXPECT_EQ(model.find("p@m::Order::state")->kind, ds::model::Kind::State);
+  EXPECT_EQ(model.findings().size(), 1U);  // nothing else is said
+  // with no state machine, a method named state is an ordinary method
+  ds::model::Model other;
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(other);
+  binder.bind(parser.parseText("b.ds", "package p {\n  module m {\n    class Gauge {\n      + state() -> int\n    }\n  }\n}\n"));
+  const auto checkSteps = ds::check::steps();
+  ds::check::Checker(other, checkSteps).run(binder);
+  EXPECT_TRUE(other.findings().empty());
+}
+
 }  // namespace

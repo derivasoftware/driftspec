@@ -691,6 +691,7 @@ package driftspec@ds {
       - indexAgain() -> void
       + declare(entity: Entity) -> Entity {
         @constraint CST-00002-1
+        @requirement REQ-00164-1
       }
       + find(id: std::string) -> Entity
       + relate(relation: Relation) -> void
