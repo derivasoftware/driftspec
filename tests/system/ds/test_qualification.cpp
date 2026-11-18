@@ -317,6 +317,25 @@ TEST_F(TestQualification, CheckingAPathThatIsNoWorkspaceIsBadUsage) {
   EXPECT_EQ(ds("check " + examples("static")).code, 1);  // its oracle carries errors: the design fails, exit 1
 }
 
+// SREQ-00018-2: input the tool cannot use is said on stderr with the code of bad input, never an abort; and a
+// design nested far deeper than any written by hand is still read (DS-279)
+TEST_F(TestQualification, InputThatCannotBeReadIsBadUsageAndDeepNestingIsRead) {
+  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-input-" + std::to_string(::getpid());
+  std::system(("mkdir -p " + tmp + "/unreadable " + tmp + "/deep").c_str());
+  std::ofstream(tmp + "/unreadable/a.ds") << "package p { }\n";
+  std::system(("chmod 000 " + tmp + "/unreadable/a.ds").c_str());
+  if (::access((tmp + "/unreadable/a.ds").c_str(), R_OK) != 0)  // as root every file can be read: nothing to try
+    EXPECT_EQ(ds("check " + tmp + "/unreadable").code, 2);
+  std::ofstream deep(tmp + "/deep/a.ds");
+  deep << "package q {\n";
+  for (int i = 0; i < 3000; ++i) deep << "requirement REQ-" << 10000 + i << "-1 {\n title: The x shall y\n";
+  for (int i = 0; i < 3000; ++i) deep << "}\n";
+  deep << "}\n";
+  deep.close();
+  EXPECT_EQ(ds("check " + tmp + "/deep").code, 0);
+  std::system(("chmod 644 " + tmp + "/unreadable/a.ds; rm -rf " + tmp).c_str());
+}
+
 // SREQ-00011-1: an identity the model does not declare is no empty answer: it fails, and names what was meant
 TEST_F(TestQualification, AnIdentityTheModelDoesNotDeclareIsAnError) {
   const Outcome unknown = ds("query " + examples("artefacts") + " relations Projection");

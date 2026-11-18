@@ -226,8 +226,10 @@ if(DS_PYTHON)
   target_link_libraries(ds_browser PRIVATE driftspec)
 endif()
 
+find_package(Threads REQUIRED) # the work runs on a thread with a large stack
+                               # (DS-279)
 add_executable(ds app/ds/main.cpp)
-target_link_libraries(ds PRIVATE driftspec CLI11::CLI11)
+target_link_libraries(ds PRIVATE driftspec CLI11::CLI11 Threads::Threads)
 
 # ---- tests: one executable per tests/unit/**/test_*.cpp (argos-test-gtest)
 # ----
