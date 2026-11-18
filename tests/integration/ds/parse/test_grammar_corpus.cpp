@@ -36,7 +36,9 @@ class TestGrammarCorpus : public ::testing::Test {
     EXPECT_TRUE(in.good()) << path;
     std::stringstream text;
     text << in.rdbuf();
-    return text.str();
+    std::string out = text.str();
+    out.erase(std::remove(out.begin(), out.end(), '\r'), out.end());  // a Windows checkout ends lines in CRLF
+    return out;
   }
 
   /// Every case of every corpus file: a header between lines of `=`, the text, `---`, the tree.

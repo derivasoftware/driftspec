@@ -22,10 +22,23 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7.0.1
+      # a compiler cache kept between runs: a push recompiles what it touches, not the whole tool
+      - uses: hendrikmuhs/ccache-action@v1.2.24
+        with:
+          key: engine-${{ matrix.os }}
+          max-size: 2G
+      # on Windows, MSVC through Ninja: the Visual Studio generator cannot take a compiler launcher
+      - uses: ilammy/msvc-dev-cmd@v1.13.0
+        if: runner.os == 'Windows'
       - name: configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        shell: bash
+        run: |
+          gen=""; [ "$RUNNER_OS" = Windows ] && gen="-G Ninja"
+          cmake -S . -B build $gen -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - name: build
-        run: cmake --build build --config Release --parallel
+        # GitHub's runners have 3 or 4 cores; an unbounded build runs them out of memory
+        run: cmake --build build --config Release --parallel 4
       - name: test
         run: ctest --test-dir build -C Release --output-on-failure
 
@@ -37,9 +50,23 @@ jobs:
       - uses: actions/setup-python@v6.0.0
         with:
           python-version: '3.12'
-      - name: install
-        run: pip install ".[lsp]" pytest
-      - name: test
+      - uses: hendrikmuhs/ccache-action@v1.2.24
+        with:
+          key: python-ubuntu
+          max-size: 1G
+      - name: build
+        # as GitLab builds it: the package beside its native module and the playground's library,
+        # which the playground's tests load from the build
         run: |
+          pip install "pygls>=2.0" pytest
+          cmake -S . -B build-py -DCMAKE_BUILD_TYPE=Release -DDS_PYTHON=ON -DPython_EXECUTABLE="$(which python)" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build build-py --parallel 4
+      - name: test
+        run: PYTHONPATH=build-py/python python -m pytest -q
+      - name: install
+        # and what pip gives a user: ds and the package from the wheel
+        run: |
+          pip install .
           ds --version
-          python -m pytest -q
+          ds check examples/hola

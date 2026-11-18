@@ -64,15 +64,19 @@ jobs:
             name: macos-arm64
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: ilammy/msvc-dev-cmd@v1.13.0
+        if: runner.os == 'Windows'
       - name: build
+        shell: bash
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --config Release --target ds --parallel
+          gen=""; [ "$RUNNER_OS" = Windows ] && gen="-G Ninja"
+          cmake -S . -B build $gen -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --target ds --parallel 4
       - name: pack
         shell: bash
         run: |
           mkdir -p "ds-${{ matrix.name }}"
-          bin=$(ls build/Release/ds.exe build/ds 2>/dev/null | head -1)
+          bin=$(ls build/ds.exe build/ds 2>/dev/null | head -1)
           "$bin" --version
           cp "$bin" LICENSE NOTICE THIRD_PARTY_NOTICES.md "ds-${{ matrix.name }}/"
           if [ "${{ runner.os }}" = Windows ]; then 7z a -bd "ds-${{ matrix.name }}.zip" "ds-${{ matrix.name }}" >/dev/null
@@ -95,7 +99,7 @@ jobs:
           .emsdk/emsdk install "$EMSDK_VERSION" && .emsdk/emsdk activate "$EMSDK_VERSION"
           source .emsdk/emsdk_env.sh
           emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-wasm --parallel
+          cmake --build build-wasm --parallel 4
           python3 playground/build.py --wasm build-wasm --out site
           cd site && zip -qr ../driftspec-site.zip .
       - uses: actions/upload-artifact@v7.0.1

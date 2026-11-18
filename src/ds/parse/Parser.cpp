@@ -131,13 +131,19 @@ Parser::Parser() : parser_(ts_parser_new()) { ts_parser_set_language(parser_, tr
 Parser::~Parser() { ts_parser_delete(parser_); }
 
 ParsedFile Parser::parseText(const std::string& path, const std::string& text) {
+  // a file written on Windows ends its lines in CRLF: read as LF, so no text the model keeps ends in a
+  // carriage return; lines and columns stay where they were (DS-315)
+  std::string read;
+  read.reserve(text.size());
+  for (std::size_t i = 0; i < text.size(); ++i)
+    if (!(text[i] == '\r' && i + 1 < text.size() && text[i + 1] == '\n')) read += text[i];
   ParsedFile file;
   file.path = path;
-  file.text = text;
-  TSTree* raw = ts_parser_parse_string(parser_, nullptr, text.c_str(), static_cast<uint32_t>(text.size()));
+  file.text = read;
+  TSTree* raw = ts_parser_parse_string(parser_, nullptr, read.c_str(), static_cast<uint32_t>(read.size()));
   file.tree = std::shared_ptr<TSTree>(raw, ts_tree_delete);
   file.hasSyntaxErrors = ts_node_has_error(ts_tree_root_node(raw));
-  if (file.hasSyntaxErrors && !firstError(ts_tree_root_node(raw), text, file)) {
+  if (file.hasSyntaxErrors && !firstError(ts_tree_root_node(raw), read, file)) {
     file.errorLine = 1;  // an error the walk cannot place: the file, as before
     file.errorColumn = 1;
   }
