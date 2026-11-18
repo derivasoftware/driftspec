@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <nlohmann/json.hpp>
+#include <set>
+#include <vector>
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
@@ -14,19 +16,83 @@
 namespace ds {
 namespace api {
 
+namespace {
+
+/// The block a file leaves open, read from its indentation (CST-00007-1: braces enclose one thing per line, a
+/// closing brace at the indentation of the line that opened it): the first line that opens a block and is
+/// followed, before its brace, by a line written at its own indentation or outside it. Empty when every block
+/// closes where it should, or when the file is not written that way (DS-304).
+struct Unclosed {
+  int line = 0;   ///< the line that opens the block, 1-based
+  int until = 0;  ///< the first line written outside it
+  std::string opener;
+};
+
+Unclosed unclosedBlock(const std::string& text) {
+  struct Open {
+    std::size_t indent;
+    int line;
+    std::string opener;
+  };
+  std::vector<Open> open;
+  std::size_t from = 0;
+  for (int n = 1; from <= text.size(); ++n) {
+    std::size_t to = text.find('\n', from);
+    if (to == std::string::npos) to = text.size();
+    std::string line = text.substr(from, to - from);
+    from = to + 1;
+    const auto comment = line.find("//");
+    if (comment != std::string::npos) line.erase(comment);
+    const std::size_t indent = line.find_first_not_of(' ');
+    if (indent == std::string::npos) continue;
+    const std::size_t end = line.find_last_not_of(" \t\r");
+    const std::string body = line.substr(indent, end - indent + 1);
+    if (body[0] == '}') {
+      if (open.empty() || open.back().indent != indent) return {};  // not written the way the heuristic reads
+      open.pop_back();
+    } else if (!open.empty() && indent <= open.back().indent) {
+      return {open.back().line, n, open.back().opener};
+    }
+    if (body.back() == '{' && body.size() > 1) open.push_back({indent, n, body});
+  }
+  return {};
+}
+
+}  // namespace
+
 model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
   model::Model model;
   bind::Binder binder(model);
+  std::set<std::string> broken;
   for (const auto& parsed : files) {
     if (parsed.hasSyntaxErrors) {
-      const std::string detail = parsed.errorDetail.empty() ? "" : ": " + parsed.errorDetail;
-      model.report({"E-SYNTAX", "error", "the file does not parse" + detail, {parsed.path, parsed.errorLine, parsed.errorColumn}});
+      broken.insert(parsed.path);
+      const Unclosed u = unclosedBlock(parsed.text);
+      if (u.line > 0 && u.line <= parsed.errorLine) {  // a lost brace: say which block, where it opens
+        model.report(
+            {"E-SYNTAX",
+             "error",
+             "the file does not parse: `" + u.opener + "` is not closed; line " + std::to_string(u.until) + " is written outside it",
+             {parsed.path, u.line, 1}});
+      } else {
+        const std::string detail = parsed.errorDetail.empty() ? "" : ": " + parsed.errorDetail;
+        model.report({"E-SYNTAX", "error", "the file does not parse" + detail, {parsed.path, parsed.errorLine, parsed.errorColumn}});
+      }
     }
     binder.bind(parsed);
   }
   const auto steps = check::steps();
   check::Checker(model, steps).run(binder);
   auto& findings = model.findings();
+  if (!broken.empty()) {
+    // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
+    // the rest of that file, and every name now declared nowhere. They go until the file parses (DS-304)
+    findings.erase(std::remove_if(findings.begin(), findings.end(),
+                                  [&](const model::Finding& f) {
+                                    return f.code != "E-SYNTAX" && (broken.count(f.location.file) || f.code == "W-REF-UNDECLARED");
+                                  }),
+                   findings.end());
+  }
   std::stable_sort(findings.begin(), findings.end(), [](const model::Finding& a, const model::Finding& b) {
     return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;
   });
