@@ -25,7 +25,37 @@ variables:
   ARGOS_EVIDENCE: "1"
 
 # The Release ds travels to the viewer's tests (viewer-js).
+# A compiler cache for the two C++ builds that set a merge request's pace (DS-314): the runners
+# share one host and keep $HOME, so ccache (a static release, fetched once per runner) keeps the
+# objects of every build, and a change recompiles only what it touches. The cache is the
+# project's own, and independent of the folder a job runs in.
+.ccache:
+  before_script:
+    - |
+      CCACHE_HOME="$HOME/.cache/ccache-4.10.2"
+      (
+        flock -x 200
+        if [ ! -x "$CCACHE_HOME/ccache" ]; then
+          mkdir -p "$CCACHE_HOME"
+          curl -fsSL https://github.com/ccache/ccache/releases/download/v4.10.2/ccache-4.10.2-linux-x86_64.tar.xz |
+            tar -xJ --strip-components=1 -C "$CCACHE_HOME"
+        fi
+      ) 200>/tmp/ccache-4.10.2.install.lock
+      export CCACHE_DIR="$HOME/.cache/ccache/$CI_PROJECT_NAME" CCACHE_MAXSIZE=5G
+      # a job runs in one of several folders of the runner (builds/<runner>/<slot>/...): the objects
+      # are made independent of it, so the cache serves every slot and the coverage maps stay right
+      export CCACHE_BASEDIR="$CI_PROJECT_DIR" CCACHE_NOHASHDIR=1
+      export CFLAGS="${CFLAGS:-} -ffile-prefix-map=$CI_PROJECT_DIR/=" CXXFLAGS="${CXXFLAGS:-} -ffile-prefix-map=$CI_PROJECT_DIR/="
+      export CMAKE_C_COMPILER_LAUNCHER="$CCACHE_HOME/ccache" CMAKE_CXX_COMPILER_LAUNCHER="$CCACHE_HOME/ccache"
+      "$CCACHE_HOME/ccache" --zero-stats > /dev/null
+  after_script:
+    - CCACHE_DIR="$HOME/.cache/ccache/$CI_PROJECT_NAME" "$HOME/.cache/ccache-4.10.2/ccache" --show-stats || true
+
+cpp-evidence:
+  extends: [.ccache]
+
 cpp-test:
+  extends: [.ccache]
   artifacts:
     when: always
     paths:
