@@ -309,6 +309,15 @@ package driftspec {
       tests/system/python/test_release.py::TestRelease::test_the_wheel_and_the_site_ship_the_notices
   }
 
+  verification SVER-00028-1 {
+    status: approved
+    @requirement SREQ-00020-1
+    title: System tests confirm the wheel's build makes the ds command and installs it among the environment's scripts
+    method: test
+    tests:
+      tests/system/python/test_release.py::TestRelease::test_the_wheel_installs_the_ds_command_beside_the_package
+  }
+
   verification SVER-00027-1 {
     status: approved
     @constraint CST-00011-1

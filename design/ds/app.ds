@@ -7,6 +7,25 @@
 package driftspec@ds {
   module app {
     @requirement SREQ-00018-2
+    @requirement REQ-00166-1
+
+    requirement REQ-00166-1 {
+      status: approved
+      @refines SREQ-00020-1
+      title: The build of the Python wheel shall make the ds command and install it among the environment's scripts
+      text:
+        The wheel's build compiles ds beside the extension and installs it where pip puts the
+        commands of a package, so ds, driftspec-lsp and driftspec-live arrive together.
+      rationale: Owner, 2026-11-18 (DS-303).
+      tags: cli, python, release
+      verification VER-00183-1 {
+        status: approved
+        title: Integration tests confirm the wheel's build makes ds and installs it as a script in a component the wheel carries
+        method: test
+        tests:
+          tests/integration/python/test_packaging.py::TestPackaging::test_the_wheels_build_makes_ds_and_installs_it_as_a_script
+      }
+    }
     function main(argv: list<string>) -> int
     function run(argv: list<string>) -> int           // the command, on the thread main starts with a large stack (DS-279)
     - function work(raw: object) -> object             // runs the command; what cannot be read is said, exit 2

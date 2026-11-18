@@ -289,6 +289,11 @@ find_package(Threads REQUIRED) # the work runs on a thread with a large stack
                                # (DS-279)
 add_executable(ds app/ds/main.cpp)
 target_link_libraries(ds PRIVATE driftspec CLI11::CLI11 Threads::Threads)
+if(SKBUILD) # pip install driftspec gives the ds command too, beside the package
+            # (DS-303)
+  install(TARGETS ds RUNTIME DESTINATION ${SKBUILD_SCRIPTS_DIR}
+                             COMPONENT python)
+endif()
 if(MSVC)
   target_link_options(ds PRIVATE /STACK:536870912) # the 512 MB the work gets on
                                                    # POSIX (DS-283)

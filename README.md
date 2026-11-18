@@ -60,8 +60,17 @@ this tool.
 
 ## Getting it
 
-DriftSpec 0.1.0 is not released yet; for now you build it. It needs a C++17 compiler and CMake
-3.20 or later; everything else is fetched by the build.
+DriftSpec 0.1.0 is not released yet; for now you install it from a checkout. One `pip install`
+gives the `ds` command, the Python package, the language server and the live session. It
+compiles the engine, so it needs a C++17 compiler and CMake 3.20 or later; everything else is
+fetched by the build.
+
+```bash
+pip install ".[lsp]"
+ds --version
+```
+
+To build only the command line, with CMake:
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -117,10 +126,6 @@ an editor in the browser, the engine compiled to WebAssembly, and twenty guided 
   Any editor that speaks LSP can run it on `.ds` files; the tree-sitter grammar in `grammar/`,
   with its highlight and fold queries, colours them.
 - **Python.** The engine is also a Python package that runs in the same process:
-
-  ```bash
-  pip install ".[lsp]"
-  ```
 
   ```python
   import driftspec

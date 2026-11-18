@@ -51,7 +51,9 @@ cmake -S . -B build && cmake --build build -j
 ctest --test-dir build
 ```
 
-The binary is `build/ds`. It needs a C++17 compiler and CMake, and nothing at run time. On
+The binary is `build/ds`. It needs a C++17 compiler and CMake, and nothing at run time.
+`pip install .` from a checkout builds the same `ds` and puts it in the environment's scripts,
+beside the Python package. On
 Windows, from the Developer Command Prompt of Visual Studio 2022 (its Build Tools are enough):
 
 ```bat
