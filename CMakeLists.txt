@@ -110,6 +110,8 @@ target_link_libraries(driftspec_grammar PUBLIC tree_sitter_runtime)
 
 # ---- the engine --------------------------------------------------------------
 file(GLOB_RECURSE driftspec_SOURCES CONFIGURE_DEPENDS "src/ds/*.cpp")
+# the command line is not the engine: ds_app holds it (DS-311)
+list(FILTER driftspec_SOURCES EXCLUDE REGEX "/src/ds/app/")
 # A text file embedded in ds as a list of raw string literals of at most about 8
 # KB each, cut at a line break (DS-283): MSVC refuses a literal over 16 KB and a
 # concatenation over 64 KB, and the viewer page is more. The pieces are joined
@@ -287,8 +289,15 @@ endif()
 
 find_package(Threads REQUIRED) # the work runs on a thread with a large stack
                                # (DS-279)
+# the command line as functions (ds/app/App.hpp), a library of its own beside
+# the engine so that its unit tests link it (DS-311)
+add_library(ds_app STATIC src/ds/app/App.cpp)
+target_link_libraries(
+  ds_app
+  PUBLIC driftspec
+  PRIVATE CLI11::CLI11 Threads::Threads)
 add_executable(ds app/ds/main.cpp)
-target_link_libraries(ds PRIVATE driftspec CLI11::CLI11 Threads::Threads)
+target_link_libraries(ds PRIVATE ds_app)
 if(SKBUILD) # pip install driftspec gives the ds command too, beside the package
             # (DS-303)
   install(TARGETS ds RUNTIME DESTINATION ${SKBUILD_SCRIPTS_DIR}
@@ -307,6 +316,10 @@ foreach(test_src IN LISTS driftspec_TESTS)
   get_filename_component(test_name ${test_src} NAME_WE)
   add_executable(${test_name} ${test_src})
   target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
+  if(test_src MATCHES "/tests/unit/ds/app/") # the command line's functions
+                                             # (DS-311)
+    target_link_libraries(${test_name} PRIVATE ds_app)
+  endif()
   target_compile_definitions(
     ${test_name}
     PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
