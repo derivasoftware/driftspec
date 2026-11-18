@@ -112,8 +112,9 @@ diagram REQ_Shop {
 
 ## A constraint
 
-A constraint is a requirement about how things are made, not about what they do: a rule
-every instance of a category obeys. What obeys it says so with `@constraint`.
+A constraint is a requirement that every instance of what it binds obeys: how things are made
+(every price is kept in cents), or what must always or never happen. What obeys it says so with
+`@constraint`, and a rule can check it.
 
 ```ds
 package shop {
