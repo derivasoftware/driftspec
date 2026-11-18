@@ -114,7 +114,8 @@ an editor in the browser, the engine compiled to WebAssembly, and twenty guided 
 
 - **Language server.** `driftspec-lsp` checks each design on every change, and gives
   definition, references, hover, completion and symbols, and draws what is under the cursor.
-  A Neovim setup is in [`editors/nvim`](editors/nvim/README.md).
+  Any editor that speaks LSP can run it on `.ds` files; the tree-sitter grammar in `grammar/`,
+  with its highlight and fold queries, colours them.
 - **Python.** The engine is also a Python package that runs in the same process:
 
   ```bash
