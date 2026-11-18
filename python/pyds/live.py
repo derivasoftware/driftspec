@@ -6,11 +6,11 @@
     python -m pyds.live highlight <identity>... [--tone t] [--add]  light identities of any perspective
     python -m pyds.live clear [notes|highlights|all]
     python -m pyds.live selection                                   what the reader has selected
-    python -m pyds.live state                                       version, what changed, the findings
+    python -m pyds.live state                                       version, the findings
     python -m pyds.live mcp [--port 4747]                           the same, as MCP tools over stdio
 
 The design stays text: whoever edits it edits the .ds files. The session watches them, loads the
-model on every change, works out which identities changed and pushes the new state to every page
+model on every change and pushes the new state to every page
 that follows it. Focus, notes, highlights and the reader's selection go both ways, so the one who
 writes and the one who reads point at the same identities.
 
@@ -24,7 +24,6 @@ from __future__ import annotations
 import json
 import os
 import queue
-import subprocess
 import sys
 import threading
 import time
@@ -38,11 +37,11 @@ PORT = 4747
 
 # The fields of the state, in the order a client reads them: the contract says them and state() gives
 # exactly these, so adding one is a new version a client can see (DS-123).
-STATE = ["contract", "workspace", "title", "version", "boot", "changed", "removed", "findings", "counts", "history", "selection",
-         "error", "notes", "highlights", "rules", "comments", "isolated", "baseline", "diff"]
+STATE = ["contract", "workspace", "title", "version", "boot", "findings", "counts", "history", "selection",
+         "error", "notes", "highlights", "rules", "comments", "isolated"]
 
 CONTRACT = {
-    "version": 3,  # 3: seen notes, the reader's comments, isolation and a baseline diff (DS-102, DS-139, DS-147, DS-148)
+    "version": 4,  # 4: what changed and the baseline left with ds diff (DS-277); 3: seen notes, comments, isolation
     "state": STATE,
     "routes": {
         "GET /": "the page: the viewer that follows the session",
@@ -60,38 +59,9 @@ CONTRACT = {
         "POST /comment": "{id, text}: the reader writes a comment on an identity for the agent",
         "POST /unread": "{mark}: the comments the agent has not read; marked read unless mark is false",
         "POST /isolate": "{ids, tell}: show only these boxes; empty shows everything",
-        "POST /baseline": "{baseline}: a directory or a git ref to compare the design with; empty stops",
     },
     "tones": ["accent", "info", "ok", "bad", "req", "you"],
 }
-
-
-# ---------------------------------------------------------------- the model, version by version
-DERIVED = ("expands-to", "couples-transient", "couples-structural")  # relations the check derives: not a change of their own
-
-
-def what_changed(diff: pyds.Diff, model: pyds.Model) -> tuple[set[str], set[str], set[str]]:
-    """What a diff the engine computed added, changed and removed, by identity (DS-173): an entity
-    whose relation to another changed is changed, and what holds a member that changed is too, seen
-    from afar. A rename is the old identity removed and the new one added."""
-    added, changed, removed = set(), set(), set()
-    for c in diff.changes:
-        if c.what == "entity":
-            if c.kind == "renamed":
-                added.add(c.id)
-                removed.add(c.renamed_from)
-            else:
-                {"added": added, "changed": changed, "removed": removed}[c.kind].add(c.id)
-        else:  # a relation, "kind from -> to": its source changed
-            kind, _, ends = c.id.partition(" ")
-            if kind not in DERIVED:
-                changed.add(ends.split(" -> ", 1)[0])
-    for i in list(added | changed):
-        e = model.entities.get(i)
-        if e is not None and model.owner(e).id != e.id and model.owner(e).id not in added:
-            changed.add(model.owner(e).id)  # what holds it, as the metamodel says (DS-122)
-    changed = {i for i in changed - added if i in model.entities}
-    return added, changed, removed
 
 
 class Live:
@@ -105,8 +75,6 @@ class Live:
         self.version = 0
         self.page = ""
         self.loaded: pyds.Workspace | None = None  # the version shown, loaded once in the engine (DS-173)
-        self.changed: list[str] = []
-        self.removed: list[str] = []
         self.history: list[dict] = []
         self.findings: list[dict] = []
         self.counts: dict = {}
@@ -116,9 +84,6 @@ class Live:
         self.rules: list[dict] = []
         self.comments: list[dict] = []  # what the reader writes for the agent (DS-147)
         self.isolated: list[str] = []  # what the reader isolates, kept across reloads (DS-139)
-        self.baseline = ""  # what the design is compared with (DS-148): a directory, or a git ref of the workspace
-        self.base: pyds.Workspace | None = None
-        self.diff: dict = {"added": [], "changed": [], "removed": []}
         self.listeners: list[queue.Queue] = []
         self.stamp = None
         self.error = ""
@@ -197,32 +162,6 @@ class Live:
             self.broadcast("isolate", {"ids": self.isolated})
         return self.isolated
 
-    def base_files(self) -> dict[str, str]:
-        if os.path.isdir(self.baseline):
-            return pyds.read(os.path.realpath(self.baseline))
-        top = subprocess.run(["git", "-C", self.workspace, "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip()
-        rel = os.path.relpath(self.workspace, top)
-        names = subprocess.run(["git", "-C", top, "ls-tree", "-r", "--name-only", self.baseline, "--", rel], capture_output=True, text=True, check=True).stdout.split()
-        return {os.path.join(top, n): subprocess.run(["git", "-C", top, "show", f"{self.baseline}:{n}"], capture_output=True, text=True, check=True).stdout
-                for n in names if n.endswith(".ds")}
-
-    def set_baseline(self, baseline: str) -> dict:
-        self.baseline, self.base = baseline, None
-        if baseline:
-            try:
-                self.base = pyds.Workspace(self.base_files())
-            except Exception as exc:  # a baseline that does not load compares with nothing
-                self.error = f"baseline {baseline}: {exc}"
-        self.stamp = None  # compare again on the next reload
-        return {"baseline": self.baseline, "loaded": self.base is not None}
-
-    def compare(self, loaded: pyds.Workspace, model: pyds.Model) -> dict:
-        """The design against its baseline, as the engine's diff says (DS-148, DS-173)."""
-        if self.base is None:
-            return {"added": [], "changed": [], "removed": []}
-        added, changed, removed = what_changed(loaded.diff(self.base), model)
-        return {"added": sorted(added), "changed": sorted(changed), "removed": sorted(removed)}
-
     def select(self, identity: str | None, label: str = "") -> None:
         self.selection = {"id": identity, "label": label, "at": time.strftime("%H:%M:%S")}
 
@@ -279,9 +218,6 @@ class Live:
             return True
         with self.lock:
             first = self.version == 0
-            added, changed, removed = (set(), set(), set()) if first else what_changed(loaded.diff(self.loaded), model)
-            self.changed = sorted(added | changed)
-            self.removed = sorted(removed)
             self.loaded, self.page, self.error = loaded, page, ""
             self.version += 1
             self.findings = [{"code": f.code, "severity": f.severity, "message": f.message,
@@ -289,20 +225,18 @@ class Live:
                               "line": f.location.line} for f in report.findings]
             self.counts = dict(report.counts)
             self.rules = self.rules_of(model, report.findings)
-            self.diff = self.compare(loaded, model)
             if not first:
-                self.history.append({"version": self.version, "at": time.strftime("%H:%M:%S"), "changed": self.changed,
-                                     "removed": self.removed, "ms": round((time.perf_counter() - t0) * 1000)})
+                self.history.append({"version": self.version, "at": time.strftime("%H:%M:%S"), "ms": round((time.perf_counter() - t0) * 1000)})
                 self.history = self.history[-30:]
         self.broadcast("model", self.state())
         return True
 
     def state(self) -> dict:
         return {"contract": CONTRACT["version"], "workspace": self.workspace, "title": self.title, "version": self.version,
-                "boot": self.boot, "changed": self.changed, "removed": self.removed, "findings": self.findings,
+                "boot": self.boot, "findings": self.findings,
                 "counts": self.counts, "history": self.history, "selection": self.selection, "error": self.error,
                 "notes": self.notes, "highlights": self.highlights, "rules": self.rules, "comments": self.comments,
-                "isolated": self.isolated, "baseline": self.baseline, "diff": self.diff}
+                "isolated": self.isolated}
 
     def broadcast(self, event: str, data: dict) -> None:
         for q in list(self.listeners):
@@ -357,22 +291,22 @@ details>summary h3{flex:1} .n{font-size:11px;color:var(--muted)} .acts{display:f
 .nt .hd{display:flex;gap:6px;align-items:center} .nt .hd button.id{flex:1;text-align:left} .nt .b.on{border-color:var(--ok);color:var(--ok)}
 .thread{display:flex;flex-direction:column;gap:6px} textarea{width:100%;min-height:58px;resize:vertical;font:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);color:var(--fg)}
 .send{display:flex;justify-content:space-between;align-items:center;margin-top:4px} .send button{all:unset;cursor:pointer;font-size:12px;padding:3px 12px;border-radius:999px;background:var(--sel);color:#fff}
-.pill.diff{cursor:pointer} .pill.diff.off{opacity:.45} .pill.iso{cursor:pointer;border-color:var(--accent);color:var(--accent)}
+.pill.iso{cursor:pointer;border-color:var(--accent);color:var(--accent)}
 .add{color:var(--ok)} .chg{color:var(--accent)}
 @media (max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr 40%} aside{border-left:0;border-top:1px solid var(--line)}}
 </style></head><body>
 <header><span class="dot" id="dot"></span><b>__TITLE__</b><span class="pill" id="ver">v0</span><span class="pill" id="counts"></span>
-<span class="pill" id="find"></span><span class="pill diff" id="diffp" hidden title="what the design adds, changes and removes against the baseline; click to hide or show the marks"></span>
+<span class="pill" id="find"></span>
 <span class="pill iso" id="isop" hidden title="click to show everything again"></span><span class="pill sel" id="sel" hidden></span><span class="v" id="ws">__WS__</span></header>
 <div id="views"></div>
 <aside id="side">
 <details open data-k="sel"><summary><h3>Selected</h3><span class="n" id="seln">nothing</span></summary><div class="thread" id="thread"><div class="v">select a box, a member or a note in the viewer</div></div>
 <div id="cbox" hidden><textarea id="ctext" placeholder="a comment for the agent on what is selected (Ctrl+Enter sends)"></textarea><div class="send"><span class="v" id="cto"></span><button id="csend">send</button></div></div></details>
 <details open data-k="notes"><summary><h3>Notes</h3><span class="n" id="notesn"></span></summary><div class="acts"><button id="nfold">fold all</button><button id="nopen">open all</button><button id="nseen">all seen</button><button id="nhide">hide seen</button></div><ul id="notes" style="gap:6px"><li class="v">none</li></ul></details>
-<details open data-k="diff" id="diffbox" hidden><summary><h3>Diff</h3><span class="n" id="diffn"></span></summary><ul id="diffl"></ul></details>
+
 <div id="rulesbox" hidden><div class="hd" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Rules</h3>
 <div class="tabs"><button data-f="all" class="on">all</button><button data-f="bad">broken</button><button data-f="sel">selected</button></div></div>
-<ul class="rules" id="rules"><li class="v">none</li></ul></div><details data-k="last"><summary><h3>Last change</h3></summary><ul id="last"><li class="v">waiting for the files to change…</li></ul></details>
+<ul class="rules" id="rules"><li class="v">none</li></ul></div>
 <details data-k="find"><summary><h3>Findings</h3><span class="n" id="findn"></span></summary><ul id="findings"></ul></details><details data-k="hist"><summary><h3>History</h3></summary><ul id="hist"></ul></details></aside>
 <script>
 const views=document.getElementById('views'); let cur=null, version=0, keepSel=null, pending=null, busy=false, ann={notes:[],highlights:[]};
@@ -385,17 +319,16 @@ async function swap(state){ // a new viewer loads hidden; it takes the reader's 
   const f=document.createElement('iframe'); f.style.visibility='hidden'; f.srcdoc=html; views.appendChild(f);
   await new Promise(res=>{const on=e=>{if(e.source===f.contentWindow&&e.data&&e.data.ds==='ready'){removeEventListener('message',on); res();}}; addEventListener('message',on); setTimeout(res,4000);});
   const v=f.contentWindow.DS_VIEW;
-  if(v){ if(cam) v.setCam(cam); if(sel&&v.has(sel)) v.select(sel); v.mark(state.changed||[]); v.highlight(ann.highlights); v.notes(drawnNotes());
-    if(!cam&&state.changed&&state.changed.length) v.frame(state.changed); }
-  if(v){v.perspective_(PERSP); if(ACTIVE) v.lightRule(ACTIVE); if(v.isolate&&ISOLATED.length) v.isolate(ISOLATED); if(v.diff) v.diff(SHOWDIFF?DIFF:null); paint();}
+  if(v){ if(cam) v.setCam(cam); if(sel&&v.has(sel)) v.select(sel); v.highlight(ann.highlights); v.notes(drawnNotes()); }
+  if(v){v.perspective_(PERSP); if(ACTIVE) v.lightRule(ACTIVE); if(v.isolate&&ISOLATED.length) v.isolate(ISOLATED); paint();}
   f.style.visibility='visible'; if(cur) cur.remove(); cur=f; busy=false;
   if(pending){const p=pending; pending=null; swap(p);} }
 let RULES=[], ACTIVE=null, FILTER='all', SELID=null, PERSP='structure';
 function perspective(p){PERSP=p; $('rulesbox').hidden=p!=='logic'; if(p!=='logic'&&ACTIVE){const v=view(); if(v&&v.rule) v.lightRule(v.rule); ACTIVE=null; rules();}}
 function paint(){const v=view(); if(!v) return; v.highlight(ann.highlights); v.notes(drawnNotes());}
-// ---- the reader's side (DS-102, DS-139, DS-147, DS-148): folded and seen notes, comments, isolation, the diff
+// ---- the reader's side (DS-102, DS-139, DS-147): folded and seen notes, comments, isolation
 const store={get(k,d){try{return JSON.parse(localStorage.getItem('dslive.'+k))??d;}catch(e){return d;}},set(k,v){try{localStorage.setItem('dslive.'+k,JSON.stringify(v));}catch(e){}}};
-let FOLD=new Set(store.get('fold',[])), OPEN=new Set(store.get('open',[])), HIDESEEN=store.get('hideseen',false), COMMENTS=[], ISOLATED=[], DIFF={added:[],changed:[],removed:[]}, SHOWDIFF=store.get('showdiff',true), BASE='';
+let FOLD=new Set(store.get('fold',[])), OPEN=new Set(store.get('open',[])), HIDESEEN=store.get('hideseen',false), COMMENTS=[], ISOLATED=[];
 const keyOf=n=>n.n?'c'+n.n:n.id+'@'+(n.at||'');
 const foldedOf=n=>FOLD.has(keyOf(n))||(!OPEN.has(keyOf(n))&&(n.seen||!!n.n));
 function keep(){store.set('fold',[...FOLD]); store.set('open',[...OPEN]); store.set('hideseen',HIDESEEN);}
@@ -422,14 +355,6 @@ $('notes').addEventListener('click',e=>{const f=e.target.closest('[data-fold]');
   const s=e.target.closest('[data-seen]'); if(s){const n=ann.notes.find(x=>x.id===s.dataset.seen); seen([n.id],!n.seen); e.stopPropagation();}},true);
 function isoPill(){$('isop').hidden=!ISOLATED.length; $('isop').textContent=`isolated: ${ISOLATED.map(short).join(', ')} ×`;}
 $('isop').onclick=()=>{ISOLATED=[]; const v=view(); if(v&&v.isolate) v.isolate([]); fetch('/isolate',{method:'POST',body:JSON.stringify({ids:[],tell:false})}); isoPill();};
-function diffSide(s){DIFF=s.diff||{added:[],changed:[],removed:[]}; BASE=s.baseline||''; const n=DIFF.added.length+DIFF.changed.length+DIFF.removed.length;
-  $('diffp').hidden=!BASE; $('diffbox').hidden=!BASE; $('diffp').textContent=`vs ${BASE.split('/').filter(Boolean).pop()||BASE}: +${DIFF.added.length} ~${DIFF.changed.length} −${DIFF.removed.length}`; $('diffp').classList.toggle('off',!SHOWDIFF);
-  $('diffn').textContent=n?`${n} against ${BASE.split('/').filter(Boolean).pop()}`:'no difference';
-  const top=l=>l.filter(i=>!l.some(o=>o!==i&&(i.startsWith(o+'::')||i.startsWith(o+'@'))));  // what is new inside something new is said once
-  $('diffl').innerHTML=[...top(DIFF.added).map(i=>`<li><button class="add" data-id="${esc(i)}">+ ${esc(i)}</button></li>`),...DIFF.changed.map(i=>`<li><button class="chg" data-id="${esc(i)}">~ ${esc(i)}</button></li>`),
-    ...top(DIFF.removed).map(i=>`<li class="rm">− ${esc(i)}</li>`)].join('')||'<li class="v">the design is the baseline</li>';
-  const v=view(); if(v&&v.diff) v.diff(SHOWDIFF?DIFF:null);}
-$('diffp').onclick=()=>{SHOWDIFF=!SHOWDIFF; store.set('showdiff',SHOWDIFF); $('diffp').classList.toggle('off',!SHOWDIFF); const v=view(); if(v&&v.diff) v.diff(SHOWDIFF?DIFF:null);};
 document.querySelectorAll('details[data-k]').forEach(d=>{const o=store.get('open.'+d.dataset.k,null); if(o!==null) d.open=o; d.addEventListener('toggle',()=>store.set('open.'+d.dataset.k,d.open));});
 function activate(id){const v=view(); ACTIVE=v&&v.lightRule?v.lightRule(id):null; rules();}
 const short=s=>String(s).replace(/^.*?::sequence::/,'call ').split(/[@:]+/).slice(-2).join('::');
@@ -450,12 +375,10 @@ function applyAnn(d){ann={notes:d.notes||[],highlights:d.highlights||[]}; COMMEN
 function side(s){
   $('ver').textContent='v'+s.version; const c=s.counts||{}; $('counts').textContent=`${c.entities||0} entities · ${c.relations||0} relations`;
   const n=(s.findings||[]).length; $('find').textContent=n?`${n} findings`:'no findings'; $('find').className='pill'+(n?' err':''); $('findn').textContent=n?String(n):'';
-  ISOLATED=s.isolated||ISOLATED; isoPill(); diffSide(s);
-  const last=s.history&&s.history.length?s.history[s.history.length-1]:null;
-  $('last').innerHTML=last?[`<li class="v">v${last.version} · ${last.at} · ${last.ms} ms</li>`,...last.changed.slice(0,40).map(i=>`<li><button class="ch" data-id="${esc(i)}">~ ${esc(i)}</button></li>`),...last.removed.slice(0,20).map(i=>`<li class="rm">− ${esc(i)}</li>`),(!last.changed.length&&!last.removed.length?'<li class="v">the model did not change</li>':'')].join(''):'<li class="v">waiting for the files to change…</li>';
+  ISOLATED=s.isolated||ISOLATED; isoPill();
   $('findings').innerHTML=(s.findings||[]).slice(0,60).map(f=>`<li class="f"><code>${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
   RULES=s.rules||[]; if(ACTIVE&&!RULES.find(r=>r.id===ACTIVE)) ACTIVE=null; rules();
-  $('hist').innerHTML=(s.history||[]).slice().reverse().map(h=>`<li class="v">v${h.version} · ${h.at} · ${h.changed.length} changed${h.removed.length?' · '+h.removed.length+' removed':''}</li>`).join('');
+  $('hist').innerHTML=(s.history||[]).slice().reverse().map(h=>`<li class="v">v${h.version} · ${h.at} · ${h.ms} ms</li>`).join('');
   $('side').classList.remove('flash'); void $('side').offsetWidth; $('side').classList.add('flash');}
 $('side').addEventListener('click',e=>{const r=e.target.closest('[data-rule]'); if(r) activate(r.dataset.rule);});
 $('side').onclick=e=>{const b=e.target.closest('[data-id]'); const v=view(); if(b&&v){const k=v.show(b.dataset.id); if(k!=='node') v.frameAny([b.dataset.id]);}};
@@ -474,7 +397,7 @@ function connect(){const es=new EventSource('/events'); es.onopen=()=>$('dot').c
   es.addEventListener('focus',e=>{const d=JSON.parse(e.data); const v=view(); if(v){const k=v.show(d.id); if(k!=='node') v.frameAny([d.id].concat(d.also||[]));}});
   es.addEventListener('annotate',e=>{const d=JSON.parse(e.data); applyAnn(d); const v=view(); if(v&&d.frame&&d.frame.length) v.frameAny(d.frame);});
   es.addEventListener('isolate',e=>{const d=JSON.parse(e.data); ISOLATED=d.ids||[]; isoPill(); const v=view(); if(v&&v.isolate) v.isolate(ISOLATED);});
-  es.addEventListener('error',e=>{if(e.data){$('dot').className='dot err'; $('last').innerHTML=`<li class="f"><code>error</code> ${esc(JSON.parse(e.data).message)}</li>`;}});
+  es.addEventListener('error',e=>{if(e.data){$('dot').className='dot err'; $('findings').innerHTML=`<li class="f"><code>error</code> ${esc(JSON.parse(e.data).message)}</li>`;}});
   es.onerror=()=>{$('dot').className='dot'; };}
 connect();
 </script></body></html>"""
@@ -560,8 +483,6 @@ def handler_for(live: Live):
                 self.json({"comments": live.unread(data.get("mark", True))})
             elif self.path == "/isolate":
                 self.json({"isolated": live.isolate(data.get("ids", []), data.get("tell", True))})
-            elif self.path == "/baseline":
-                self.json(live.set_baseline(data.get("baseline", "")))
             elif self.path == "/clear":
                 live.clear(data.get("what", "all"))
                 self.json({})
@@ -581,11 +502,9 @@ def browser_open(url: str) -> None:
         webbrowser.open(url)
 
 
-def serve(workspace: str, port: int = PORT, open_browser: bool = False, block: bool = True, baseline: str = "") -> Live:
+def serve(workspace: str, port: int = PORT, open_browser: bool = False, block: bool = True) -> Live:
     """A session on the workspace, served on the port (0: any free one); the session knows its url and how to stop."""
     live = Live(workspace)
-    if baseline:
-        live.set_baseline(baseline)
     live.reload()
     server = ThreadingHTTPServer(("127.0.0.1", port), handler_for(live))
     server.daemon_threads = True
@@ -633,10 +552,8 @@ TOOLS = [
      "inputSchema": {"type": "object", "properties": {"peek": {"type": "boolean"}}}},
     {"name": "live_isolate", "description": "Show only these boxes in the live viewer, with what they use from outside as ghosts; an empty list shows everything.",
      "inputSchema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "string"}}}, "required": ["ids"]}},
-    {"name": "live_baseline", "description": "Compare the design with a baseline in the live viewer and mark what it adds, changes and removes: a directory, or a git ref of the workspace (main); empty stops comparing.",
-     "inputSchema": {"type": "object", "properties": {"baseline": {"type": "string"}}, "required": ["baseline"]}},
     {"name": "live_selection", "description": "What the reader has selected in the live viewer.", "inputSchema": {"type": "object", "properties": {}}},
-    {"name": "live_state", "description": "The live session: version, what changed last, the findings.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "live_state", "description": "The live session: its version and the findings.", "inputSchema": {"type": "object", "properties": {}}},
 ]
 
 
@@ -664,8 +581,6 @@ def tool(port: int, name: str, args: dict, opened: dict) -> object:
         return call(port, "/unread", {"mark": not args.get("peek", False)})
     if name == "live_isolate":
         return call(port, "/isolate", {"ids": args.get("ids", [])})
-    if name == "live_baseline":
-        return call(port, "/baseline", {"baseline": args.get("baseline", "")})
     if name == "live_selection":
         return call(port, "/selection")
     if name == "live_state":
@@ -721,16 +636,11 @@ def main(argv: list[str] | None = None) -> None:
         k = args.index("--tone")
         tone = args[k + 1]
         del args[k:k + 2]
-    baseline = ""
-    if "--baseline" in args:
-        k = args.index("--baseline")
-        baseline = args[k + 1]
-        del args[k:k + 2]
     add = "--add" in args
     args = [a for a in args if a != "--add"]
     cmd = args[0] if args else "serve"
     if cmd == "serve":
-        serve(args[1] if len(args) > 1 else ".", port, open_browser="--open" in args, baseline=baseline)
+        serve(args[1] if len(args) > 1 else ".", port, open_browser="--open" in args)
     elif cmd == "focus":
         print(json.dumps(call(port, "/focus", {"id": args[1], "also": args[2:]})))
     elif cmd == "note":
@@ -743,13 +653,11 @@ def main(argv: list[str] | None = None) -> None:
         print(json.dumps(call(port, "/unread", {"mark": "--peek" not in args}), indent=1))
     elif cmd == "isolate":
         print(json.dumps(call(port, "/isolate", {"ids": args[1:]})))
-    elif cmd == "baseline":
-        print(json.dumps(call(port, "/baseline", {"baseline": args[1] if len(args) > 1 else ""})))
     elif cmd == "selection":
         print(json.dumps(call(port, "/selection")))
     elif cmd == "state":
         st = call(port, "/state")
-        print(json.dumps({k: st[k] for k in ("version", "changed", "removed", "counts", "error")} | {"findings": st["findings"][:20]}, indent=1))
+        print(json.dumps({k: st[k] for k in ("version", "counts", "error")} | {"findings": st["findings"][:20]}, indent=1))
     elif cmd == "mcp":
         mcp(port)
     else:

@@ -43,5 +43,5 @@ class TestLiveSessionFromOutside:
         pyds.live.mcp(0, io.StringIO(json.dumps(lines[0]) + "\n"), out)
         names = {t["name"] for t in json.loads(out.getvalue())["result"]["tools"]}
         assert names == {"live_open", "live_focus", "live_note", "live_highlight", "live_clear", "live_selection", "live_state",
-                         "live_comments", "live_isolate", "live_baseline"}
+                         "live_comments", "live_isolate"}
         assert replies[0]["result"]["capabilities"] == {"tools": {}}

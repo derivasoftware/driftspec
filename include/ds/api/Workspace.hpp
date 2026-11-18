@@ -57,9 +57,6 @@ class Workspace {
   /// The viewer as one page, framed on the identities given.
   std::string page(const std::string& title, const std::vector<std::string>& focus) const;
 
-  /// What changed from `before` to this one, in the model's terms: the changes and the findings.
-  std::string diff(const Workspace& before) const;
-
  private:
   model::Model model_;
 };

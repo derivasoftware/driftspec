@@ -249,8 +249,6 @@ std::vector<CodeSpec> buildCodes() {
        "Declare it, qualify the name, or declare it extern."},
       {"W-REVISION-DRIFT", "warning", "A link names an older revision of an artefact than the one the workspace declares.",
        "Point the link at the current revision."},
-      {"W-REVISION-STALE", "warning", "ds diff: an artefact changed between two versions but kept its revision.",
-       "Write it as the next revision: <ID>-(N+1)."},
       {"W-PARENT-IGNORED", "warning", "A requirement carries a parent: field, which the language does not read.",
        "Nest it in its parent, or write @refines <ID>."},
       {"W-FIELD-UNKNOWN", "warning",
@@ -457,13 +455,6 @@ const std::vector<CommandSpec>& commands() {
        {{0, "drawn"},
         {1, "no such diagram"},
         {2, "bad usage (a format that needs a diagram without one), or nothing to read at the path"}}},
-      {"diff",
-       "ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]",
-       "the changes between two versions in the model's terms; A and B are directories, or git revisions with the path of the "
-       "workspace inside the repository",
-       {{0, "compared"},
-        {1, "a version does not parse, or the diff raises findings, drawn or not"},
-        {2, "bad usage (-f without a diagram), or a version that is no workspace"}}},
       {"query",
        "ds query <workspace> <question> [subject] [--json]",
        "ask the model: diagrams · entities <scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings "

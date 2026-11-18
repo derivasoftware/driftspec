@@ -4,7 +4,6 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/check/Report.hpp"
-#include "ds/diff/Diff.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
@@ -113,29 +112,6 @@ std::string Workspace::page(const std::string& title, const std::vector<std::str
   options.title = title;
   options.focus = focus;
   return format::SceneHtml().write(scene::Scene(model_).build(), options);
-}
-
-std::string Workspace::diff(const Workspace& before) const {
-  const diff::DiffResult result = diff::Diff::compare(before.model_, model_);
-  nlohmann::json changes = nlohmann::json::array();
-  for (const auto& c : result.changes) {
-    changes.push_back({{"kind", c.kind},
-                       {"what", c.what},
-                       {"id", c.id},
-                       {"entity", c.entity},
-                       {"scope", c.scope},
-                       {"detail", c.detail},
-                       {"from", c.from},
-                       {"label", c.label}});
-  }
-  nlohmann::json findings = nlohmann::json::array();
-  for (const auto& f : result.findings) {
-    findings.push_back({{"code", f.code},
-                        {"severity", f.severity},
-                        {"message", f.message},
-                        {"location", {{"file", f.location.file}, {"line", f.location.line}, {"column", f.location.column}}}});
-  }
-  return nlohmann::json{{"changes", changes}, {"findings", findings}}.dump();
 }
 
 std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }

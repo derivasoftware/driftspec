@@ -38,15 +38,6 @@ package driftspec@ds {
       exit 2: no-workspace
     }
 
-    operation diff(before: string, after: string, path: string, diagram: string) -> none : UC-00003-1 {
-      @requirement SREQ-00007-1
-      command: ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]
-      stdout: the changes in the terms of the model, or a diagram with them marked
-      exit 0: default
-      exit 1: findings
-      exit 2: no-workspace
-    }
-
     operation query(workspace: path, question: string, subject: string) -> none : UC-00004-1 {
       @requirement SREQ-00011-1
       @requirement SREQ-00004-1
@@ -98,18 +89,6 @@ package driftspec@ds {
     -> app::main(input) / no-workspace -> code
   }
 
-  sequence cli::diff {
-    -> app::main(before) / diff -> code
-  }
-
-  sequence cli::diff / findings {
-    -> app::main(before) / diff-findings -> code
-  }
-
-  sequence cli::diff / no-workspace {
-    -> app::main(before) / no-workspace -> code
-  }
-
   sequence cli::query {
     -> app::main(workspace) / query -> code
   }
@@ -151,12 +130,6 @@ diagram SEQ_CheckSyntaxError {
 diagram SEQ_Render {
   kind: sequence
   include: driftspec@ds@cli::render
-  depth: 2
-}
-
-diagram SEQ_Diff {
-  kind: sequence
-  include: driftspec@ds@cli::diff
   depth: 2
 }
 

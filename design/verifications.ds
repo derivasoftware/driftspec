@@ -130,25 +130,6 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
   }
 
-  verification SVER-00007-2 {
-    status: approved
-    @requirement SREQ-00007-1
-    title: System tests confirm two versions are compared by identity, and a version that does not load is compared to nothing
-    text:
-      A workspace against itself is no design change; a class renamed with its
-      shape intact is reported as a rename, not as a removal and an addition.
-      A version that does not parse, or declares nothing, is no design
-      emptied: ds diff names its syntax errors, compares nothing and exits 1;
-      one with no .ds file is no workspace and exits 2. A diff that draws a
-      diagram still exits 1 when it raises findings, and -f with nothing to
-      draw is bad usage.
-    method: test
-    tests:
-      tests/system/ds/test_qualification.cpp::TestQualification.TwoVersionsAreComparedByIdentity
-      tests/system/ds/test_qualification.cpp::TestQualification.AVersionThatDoesNotLoadIsComparedToNothing
-      tests/system/ds/test_qualification.cpp::TestQualification.ADiffThatDrawsStillCountsItsFindings
-  }
-
   verification SVER-00008-1 {
     status: approved
     @requirement SREQ-00008-1
@@ -303,14 +284,12 @@ package driftspec {
 
   verification SVER-00022-1 {
     status: approved
-    @requirement SREQ-00018-1
+    @requirement SREQ-00018-2
     title: System tests drive the ds binary by its verbs and read its exit codes
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
       tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
-      tests/system/ds/test_qualification.cpp::TestQualification.AVersionThatDoesNotLoadIsComparedToNothing
-      tests/system/ds/test_qualification.cpp::TestQualification.ADiffThatDrawsStillCountsItsFindings
       tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
   }
 

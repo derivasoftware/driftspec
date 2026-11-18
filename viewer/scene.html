@@ -810,7 +810,7 @@ new ResizeObserver(()=>{clearTimeout(seq._t); seq._t=setTimeout(seq,80);}).obser
 /* ---------- live: a page that embeds the viewer can follow it and steer it ---------- */
 // window.DS_VIEW: read and set the camera, select and frame an identity, mark what changed.
 // The viewer tells its parent what is selected, so a live session knows what the reader points at.
-let CHANGED=new Set(), MARKED_AT=0, HILITE=new Map(), NOTES=[], NOTEHIT=[], DIFF={added:new Set(),changed:new Set()};
+let CHANGED=new Set(), MARKED_AT=0, HILITE=new Map(), NOTES=[], NOTEHIT=[];
 // isolation (DS-139): only the chosen boxes, the boxes around them as frames, and what they use from outside as ghosts
 let ISO=new Set(), ISOSAVE=null, GHOST=new Set(), GLINKS=[], GHOSTHIT=[];
 const isoIn=id=>!ISO.size||anc(id).some(a=>ISO.has(a)); const isoBoth=l=>isoIn(l.from)&&isoIn(l.to);
@@ -928,14 +928,6 @@ draw=function(){drawBase(); drawLogic();
     ctx.save(); ctx.globalAlpha=a; ctx.strokeStyle=K.warn||K.accent; ctx.lineWidth=3; ctx.setLineDash([7,4]);
     CHANGED.forEach(id=>{const n=N[id]; if(!n||n.hidden) return; const b=scr(n); if(!onScreen(b)) return; rr(b.x-4,b.y-4,b.w+8,b.h+8,8); ctx.stroke();});
     ctx.restore(); if(age<16) loop();}
-  if(DIFF.added.size||DIFF.changed.size){ctx.save();  // only the outermost of what is new is marked: a thin ring, a tag, a glyph for a member
-    [[DIFF.added,K.ok,'+','new'],[DIFF.changed,K.warn||K.accent,'~','changed']].forEach(([set,col,sig,tag])=>set.forEach(id=>{const n=N[id]; if(!n||n.hidden) return;
-      if(sig==='+'&&n.parent&&DIFF.added.has(n.parent)) return; const b=scr(n); if(!onScreen(b)) return;
-      if(n.kind==='row'){if(!visible(n)) return; const px=Math.max(9,Math.min(13,b.h*.8)); text(sig,b.x-px*.75,b.y+b.h/2+px*.36,px,col,'700'); return;}
-      if(sig==='~'&&(KIDS[id]||[]).some(k=>set.has(k)&&N[k].kind!=='row')) return;  // a box whose changes are inside a box inside it: mark that one
-      ctx.globalAlpha=.9; rr(b.x-3,b.y-3,b.w+6,b.h+6,7); ctx.strokeStyle=col; ctx.lineWidth=1.6; ctx.stroke(); ctx.globalAlpha=1;
-      if(b.w>60){ctx.font=`600 10.5px ${K.mono}`; const tw=ctx.measureText(tag).width+10, tx=b.x+b.w-tw, ty=b.y-17; rr(tx,ty,tw,14,7); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.lineWidth=1.2; ctx.stroke(); text(tag,tx+5,ty+10.5,10.5,col,'600');}}));
-    ctx.restore();}
   drawGhosts(); drawNotes();};
 const selectBase=select;
 select=function(id){selectBase(id); try{parent!==window&&parent.postMessage({ds:'select',id:id||null,label:id&&N[id]?N[id].label:''},'*');}catch(e){}};
@@ -954,7 +946,6 @@ window.DS_VIEW={
   highlight(list){HILITE=new Map(); (list||[]).forEach(h=>idsOf(h.id).forEach(i=>HILITE.set(i,h.tone||'accent'))); loop(); return HILITE.size;},
   notes(list){NOTES=(list||[]).slice(); loop(); return NOTES.length;},
   isolate(ids){return isolate(ids);}, get isolated(){return [...ISO];},
-  diff(d){DIFF={added:new Set((d&&d.added||[]).filter(i=>N[i])),changed:new Set((d&&d.changed||[]).filter(i=>N[i]))}; loop(); return DIFF.added.size+DIFF.changed.size;},
   frameAny(ids){const all=[].concat(ids).flatMap(idsOf); return frameIds(all);},
   known(id){return !!(N[id]||RBY[id]||TBY[id]||TOURS.find(t=>t.subject===id));},
   get perspective(){return PERSP;}, perspective_(p){setPersp(p);}, lightRule(id){return lightRule(id);}, get rule(){return RULE_ON;},

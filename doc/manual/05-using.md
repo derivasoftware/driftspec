@@ -1,7 +1,7 @@
 # Using DriftSpec
 
 DriftSpec is one program, `ds`, written in C++. It reads a folder of `.ds` files as one
-design and checks it, draws it, compares two versions of it and answers questions about it.
+design and checks it, draws it, and answers questions about it.
 Around it there is what an editor and a pipeline need: a language server, a tree-sitter
 grammar, a Python package and a live viewer.
 
@@ -25,7 +25,6 @@ design/
 ds check design                     # the findings, then the counts of the model
 ds render design                    # the whole design in the viewer, one HTML file
 ds render design CL_Store -f svg    # one diagram drawn: svg, or text for a terminal
-ds diff main HEAD design            # what changed between two versions, in the model's terms
 ds query design entities shop@store # ask the model: entities, relations, coverage, findings
 ds export design                    # the model as JSON, for another tool
 ds manual                           # this manual; ds manual <kind> or <CODE> for one page

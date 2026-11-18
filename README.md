@@ -8,12 +8,11 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
 
 - `grammar/` — the tree-sitter grammar (`grammar.js`), the generated parser and
   the external scanner for indented text blocks.
-- `include/ds/`, `src/ds/` — the engine (namespace root `ds`): parse, model, bind, check, render, diff, query, axis, exporter.
+- `include/ds/`, `src/ds/` — the engine (namespace root `ds`): parse, model, bind, check, render, query, axis, exporter.
 - `app/ds/` — the `ds` command line, five commands (`ds <command> --help` for each):
   - `ds check <workspace> [--json]` — the findings, then the counts of the model.
   - `ds export <workspace>` — the model as JSON, with its metamodel.
   - `ds render <workspace|ir.json> [diagram] [-f html|json|svg|text|cells|ir|layout] [-w N] [-o file] [--embed [--height N]] [--css file]` — the viewer of the whole model (html, framed on the diagram when one is named), its scene (json), or one diagram drawn still or as its data.
-  - `ds diff <A> <B> [path] [diagram] [-f text|svg|cells] [-w N]` — the changes in the model's terms, or a diagram with them marked.
   - `ds query <workspace> <question> [subject] [--json]` — diagrams, entities, relations, artefacts, behaviours, shows, findings, coupling.
   - `ds manual [topic] [--json]` — the manual ds carries: how each kind is written, with an example that checks clean; what each finding code means; the annotations; the commands and their exit codes.
 - `doc/manual/` — the guides of the manual, Markdown (`NN-topic.md`): intent, structure, behaviour, logic and using. The build embeds them: `ds manual <topic>` prints one and the site's Docs tab draws it, each example beside what the engine makes of it. Every example is checked by the tests.

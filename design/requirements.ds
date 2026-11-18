@@ -152,12 +152,12 @@ package driftspec {
     tags: live, viewer, mcp
   }
 
-  requirement SREQ-00018-1 {
+  requirement SREQ-00018-2 {
     status: approved
     title: The system shall be driven by one command, ds, with a verb for each use case and an exit code that names how it ended
     text:
       A person at a terminal and a script drive the tool the same way: ds, a verb (check, export,
-      render, diff, query, manual), the workspace and the options of that verb. What is asked for
+      render, query, manual), the workspace and the options of that verb. What is asked for
       goes to standard output, why nothing was done to standard error, and the exit code names the
       outcome of the use case the verb serves: 0 when it went well, another for each way it may
       end. The command reads the arguments, loads the workspace and hands it to whoever answers;
@@ -169,6 +169,7 @@ package driftspec {
       requirement, DS-137). It is the owner of the app module in the sense of bottom-up ownership:
       why the module exists; what it does are the use cases, which hang from the requirements they
       serve.
+      Revision 2: ds diff left the tool before its first release (Owner, 2026-11-18, DS-277).
     tags: cli, app
   }
 
@@ -223,21 +224,6 @@ package driftspec {
       the model, not the files. The IR keeps the family's renderers
       interchangeable.
     tags: export, argos
-  }
-
-  requirement SREQ-00007-1 {
-    status: approved
-    title: The system shall compute the difference between two versions of a workspace in terms of the model
-    text:
-      Two directories, or two git revisions of a path, are compared by
-      identity: entities and relations added, removed or changed, a class
-      renamed when its shape survives, an artefact whose text changed under the
-      same revision. The difference is reported by module and drawn on the
-      diagrams with the changes marked.
-    rationale:
-      A review needs to see what changed in the design, not which lines moved
-      in which file. Only a model with identities can answer that.
-    tags: diff, review
   }
 
   requirement SREQ-00008-1 {

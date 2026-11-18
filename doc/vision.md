@@ -254,7 +254,7 @@ short:
 ```
 .ds files ─ tree-sitter grammar ─► parse ─► bind ─► model ─► check (steps)
                                                       │
-              query · axis · scene · render (svg, text, cells, ir, layout) · diff · exporter
+              query · axis · scene · render (svg, text, cells, ir, layout) · exporter
                                                       │
                                    api (Api, Workspace) ─► pyds (CPython extension)
                                                       │
@@ -435,7 +435,10 @@ Priority: development, process, analysis.
   the files as they are written, and the reader and an agent leave notes and
   comments on identities through it (its MCP tools).
 
-### Semantic diff (built 2026-10-25)
+### Semantic diff (built 2026-10-25, removed 2026-11-18)
+
+*Taken out before the first release (DS-277): it was not used and had to be
+maintained. Kept as the scope DS-276; the last version with it is 0.0.184.*
 
 A design change is a difference between two models, never between two
 texts: a moved file or a reordered member is no change. `ds diff A B [path]`

@@ -29,7 +29,7 @@ const char* kShop =
     "  }\n"
     "}\n";
 
-/// A workspace loaded once and asked as often as needed (REQ-00107-1, DS-173): the engine whole,
+/// A workspace loaded once and asked as often as needed (REQ-00107-2, DS-173): the engine whole,
 /// from the texts to each answer.
 class TestWorkspace : public ::testing::Test {
  protected:
@@ -74,15 +74,13 @@ TEST_F(TestWorkspace, ItAsksAsDsQueryAndDrawsAsDsRender) {
   EXPECT_NE(ws.page("shop", {"p@m::Desk"}).find("<html"), std::string::npos);
 }
 
-TEST_F(TestWorkspace, TwoLoadedAtOnceTellWhatChangedFromOneToTheOther) {
+TEST_F(TestWorkspace, TwoLoadedAtOnceEachKeepItsOwnModel) {
   std::string after = kShop;
   after.replace(after.find("+ take(n: int) -> int"), 21, "+ take(n: int) -> bool");
   const ds::api::Workspace later{{{"shop.ds", after}}};
-  const auto changes = json(later.diff(ws))["changes"];
-  ASSERT_EQ(changes.size(), 1u);
-  EXPECT_EQ(changes[0]["id"], "p@m::Vault::take");
-  EXPECT_EQ(changes[0]["kind"], "changed");
-  EXPECT_TRUE(json(ws.diff(ws))["changes"].empty());  // the first is as it was
+  // the second load answers from its own model, and the first is as it was
+  EXPECT_NE(later.find("p@m::Vault::take").find("bool"), std::string::npos);
+  EXPECT_EQ(ws.find("p@m::Vault::take").find("bool"), std::string::npos);
 }
 
 TEST_F(TestWorkspace, AnIdentityIsWrittenAsTheModelWritesIt) {

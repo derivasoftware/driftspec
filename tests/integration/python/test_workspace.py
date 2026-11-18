@@ -1,4 +1,4 @@
-"""A workspace loaded once in the engine and asked from Python (REQ-00107-1, DS-173)."""
+"""A workspace loaded once in the engine and asked from Python (REQ-00107-2, DS-173)."""
 
 import pyds
 
@@ -52,12 +52,11 @@ class TestWorkspace:
         assert ws.render("CL_None", "svg") == ""
         assert "<html" in ws.page("shop", ["p@m::Desk"])
 
-    def test_several_are_loaded_at_once_and_one_tells_what_changed_from_another(self):
+    def test_several_are_loaded_at_once_each_with_its_own_model(self):
         before = pyds.Workspace({"shop.ds": SHOP})
         after = pyds.Workspace({"shop.ds": SHOP.replace("+ take(n: int) -> int", "+ take(n: int) -> bool")})
-        (change,) = after.diff(before).changes
-        assert change.id == "p@m::Vault::take" and change.kind == "changed"
-        assert not before.diff(before).changes
+        assert "bool" in after.find("p@m::Vault::take").fields.get("returns", "")
+        assert "bool" not in before.find("p@m::Vault::take").fields.get("returns", "")  # the first is as it was
 
     def test_an_answer_is_a_copy_the_caller_may_change(self):
         ws = pyds.Workspace({"shop.ds": SHOP})

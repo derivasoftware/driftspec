@@ -32,16 +32,6 @@ package driftspec {
     outcome no-workspace: nothing to read at the path
   }
 
-  usecase UC-00003-1 {
-    title: Compare two versions of a design in the terms of the model
-    status: approved
-    @requirement SREQ-00007-1
-
-    outcome default: the changes, entity by entity and relation by relation
-    outcome findings: a version does not parse, or the diff raises findings; they come first
-    outcome no-workspace: a version is no workspace
-  }
-
   usecase UC-00004-1 {
     title: Ask the model what exists, what an entity relates to and what a diagram shows
     status: approved

@@ -136,7 +136,7 @@ package driftspec@ds {
       @requirement REQ-00070-1
       @requirement REQ-00071-2
       @requirement REQ-00077-1
-      @requirement REQ-00092-2
+      @requirement REQ-00092-3
       + name() -> std::string
       + write(document: scene::SceneDocument, options: FormatOptions) -> std::string
     }

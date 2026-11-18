@@ -1,8 +1,7 @@
-"""pyds.live, the live session (REQ-00089-1, REQ-00090-1, REQ-00091-2, REQ-00102-1..REQ-00105-1): a workspace
+"""pyds.live, the live session (REQ-00089-2, REQ-00090-1, REQ-00091-3, REQ-00102-1..REQ-00105-1): a workspace
 followed as it is written, and what the one who writes and the one who reads point at."""
 
 import os
-import subprocess
 import sys
 
 import pytest
@@ -22,15 +21,14 @@ def session(tmp_path):
 
 
 class TestLiveSession:
-    def test_a_change_to_a_file_reaches_the_state_with_what_changed(self, session):
+    def test_a_change_to_a_file_reaches_a_new_version_of_the_state(self, session):
         ws, live = session
         assert get(live, "/state")["version"] == 1
         with open(os.path.join(ws, "hld.ds"), "w") as fh:
             fh.write(SYSTEM.replace("    class Broker {", "    class Queue {\n      + push(n: int) -> none\n    }\n    class Broker {"))
         state = until(lambda: (s := get(live, "/state"))["version"] == 2 and s)
-        assert "sistema@core::Queue" in state["changed"] and "sistema@core::Queue::push" in state["changed"]
-        assert "sistema@core::Broker" not in state["changed"]
-        assert state["history"][-1]["changed"] == state["changed"]
+        assert state["history"][-1]["version"] == 2 and "ms" in state["history"][-1]
+        assert not state["error"]
 
     def test_the_rules_reach_the_state_as_written_with_what_breaks_them(self, session):
         ws, live = session
@@ -99,12 +97,13 @@ class TestLiveSession:
         _, live = session
         contract = get(live, "/contract")
         state = get(live, "/state")
-        assert contract["version"] == state["contract"] == 3
+        assert contract["version"] == state["contract"] == 4
         assert list(state) == contract["state"]  # the state is exactly what the contract says (DS-123)
         assert ", ".join(contract["state"]) in contract["routes"]["GET /state"]
         for route in ("GET /state", "GET /events", "POST /focus", "POST /note", "POST /highlight", "POST /clear", "POST /selection",
-                      "POST /seen", "POST /comment", "POST /unread", "POST /isolate", "POST /baseline"):
+                      "POST /seen", "POST /comment", "POST /unread", "POST /isolate"):
             assert route in contract["routes"]
+        assert "POST /baseline" not in contract["routes"]  # left with ds diff (DS-277)
 
     def test_an_agent_calls_the_contract_as_mcp_tools(self, session):
         _, live = session
@@ -177,40 +176,9 @@ class TestLiveSession:
         post(live, "/isolate", {"ids": [], "tell": False})  # a page that isolated it itself only tells the session
         assert get(live, "/state")["isolated"] == []
 
-    # ---- what the design changes against a baseline (REQ-00105-1, DS-148)
-    def test_the_design_is_compared_with_a_baseline_directory(self, session, tmp_path):
-        ws, live = session
-        base = tmp_path / "base"
-        base.mkdir()
-        (base / "hld.ds").write_text(SYSTEM.replace("    class Broker {", "    class Old { }\n    class Broker {").replace("(n: int)", "(n: string)"))
-        assert post(live, "/baseline", {"baseline": str(base)})["loaded"] is True
-        with open(os.path.join(ws, "hld.ds"), "a") as fh:
-            fh.write("package extra { }\n")
-        state = until(lambda: (s := get(live, "/state"))["diff"]["added"] and s)
-        assert state["baseline"] == str(base)
-        assert state["diff"]["added"] == ["extra"]
-        assert "sistema@core::Broker::publish" in state["diff"]["changed"] and "sistema@core::Broker" in state["diff"]["changed"]
-        assert state["diff"]["removed"] == ["sistema@core::Old"]
-        post(live, "/baseline", {"baseline": ""})  # comparing stops
-        assert until(lambda: (s := get(live, "/state"))["diff"] == {"added": [], "changed": [], "removed": []} and s)
-
-    def test_the_design_is_compared_with_a_git_ref(self, session):
-        ws, live = session
-        root = os.path.dirname(ws)
-        git = lambda *a: subprocess.run(["git", "-C", root, *a], check=True, capture_output=True)  # noqa: E731
-        git("init", "-q")
-        git("-c", "user.email=t@t", "-c", "user.name=t", "add", "-A")
-        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "base")
-        with open(os.path.join(ws, "more.ds"), "w") as fh:
-            fh.write("package more { }\n")
-        assert post(live, "/baseline", {"baseline": "HEAD"})["loaded"] is True
-        state = until(lambda: (s := get(live, "/state"))["diff"]["added"] and s)
-        assert state["diff"] == {"added": ["more"], "changed": [], "removed": []}
-
-    def test_an_agent_reads_comments_isolates_and_compares_as_mcp_tools(self, session, tmp_path):
+    def test_an_agent_reads_comments_and_isolates_as_mcp_tools(self, session, tmp_path):
         ws, live = session
         post(live, "/comment", {"id": "sistema@core", "text": "look here"})
-        replies = agent(live.port, ("live_comments", {}), ("live_isolate", {"ids": ["sistema@core"]}), ("live_baseline", {"baseline": ws}))
+        replies = agent(live.port, ("live_comments", {}), ("live_isolate", {"ids": ["sistema@core"]}))
         assert '"look here"' in replies[1]["result"]["content"][0]["text"]
         assert get(live, "/state")["isolated"] == ["sistema@core"]
-        assert '"loaded": true' in replies[3]["result"]["content"][0]["text"]
