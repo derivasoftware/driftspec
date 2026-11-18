@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 
-import pyds.lsp
+import driftspec.lsp
 
 from conftest import uri
 
@@ -62,7 +62,7 @@ class TestEditorSession:
         )
         out = Pipe()
         try:
-            pyds.lsp.server.start_io(io.BytesIO(session), out)
+            driftspec.lsp.server.start_io(io.BytesIO(session), out)
         except SystemExit:
             pass
         replies = unframed(out.getvalue())

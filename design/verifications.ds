@@ -233,10 +233,10 @@ package driftspec {
   verification SVER-00019-1 {
     status: approved
     @requirement SREQ-00015-1
-    title: System tests confirm a program that depends on pyds loads, checks and draws the design of ds in its own process
+    title: System tests confirm a program that depends on the driftspec package loads, checks and draws the design of ds in its own process
     method: test
     tests:
-      tests/system/python/test_dependency.py::TestDependency::test_a_program_depending_on_pyds_reads_checks_and_draws_the_design_of_ds
+      tests/system/python/test_dependency.py::TestDependency::test_a_program_depending_on_driftspec_reads_checks_and_draws_the_design_of_ds
   }
 
   verification SVER-00020-1 {

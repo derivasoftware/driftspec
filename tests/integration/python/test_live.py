@@ -1,4 +1,4 @@
-"""pyds.live, the live session (REQ-00089-2, REQ-00090-1, REQ-00091-3, REQ-00102-1..REQ-00105-1): a workspace
+"""driftspec.live, the live session (REQ-00089-2, REQ-00090-1, REQ-00091-3, REQ-00102-1..REQ-00105-1): a workspace
 followed as it is written, and what the one who writes and the one who reads point at."""
 
 import os
@@ -9,13 +9,13 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from live_helpers import SYSTEM, Reader, agent, get, post, until, workspace  # noqa: E402
 
-import pyds.live  # noqa: E402
+import driftspec.live  # noqa: E402
 
 
 @pytest.fixture
 def session(tmp_path):
     ws = workspace(str(tmp_path))
-    live = pyds.live.serve(ws, 0, block=False)
+    live = driftspec.live.serve(ws, 0, block=False)
     yield ws, live
     live.stop()
 
@@ -67,13 +67,13 @@ class TestLiveSession:
         post(live, "/note", {"id": "sistema@core::Broker", "text": "where the data comes in", "tone": "info"})
         post(live, "/highlight", {"ids": ["sistema@core::Broker::publish"], "tone": "ok"})
         live.stop()
-        again = pyds.live.serve(ws, 0, block=False)
+        again = driftspec.live.serve(ws, 0, block=False)
         try:
             state = get(again, "/state")
             (note,) = state["notes"]
             assert (note["id"], note["text"], note["tone"], note["seen"]) == ("sistema@core::Broker", "where the data comes in", "info", False)
             assert state["highlights"] == [{"id": "sistema@core::Broker::publish", "tone": "ok"}]
-            assert sorted(pyds.read(ws)) == [os.path.join(ws, "hld.ds")]  # kept beside the design, not in it
+            assert sorted(driftspec.read(ws)) == [os.path.join(ws, "hld.ds")]  # kept beside the design, not in it
         finally:
             again.stop()
 
@@ -124,7 +124,7 @@ class TestLiveSession:
         assert {n["id"]: n["seen"] for n in get(live, "/state")["notes"]}["sistema@core::Broker"] is False
         post(live, "/seen", {"ids": ["sistema@core"], "seen": True})
         live.stop()
-        again = pyds.live.serve(ws, 0, block=False)  # what was seen is kept with the notes
+        again = driftspec.live.serve(ws, 0, block=False)  # what was seen is kept with the notes
         try:
             assert {n["id"]: n["seen"] for n in get(again, "/state")["notes"]} == {"sistema@core::Broker": False, "sistema@core": True}
         finally:
@@ -149,12 +149,12 @@ class TestLiveSession:
         assert post(live, "/unread", {})["comments"] == []  # read once
         post(live, "/comment", {"id": "sistema@core", "text": "and rename it"})
         live.stop()
-        again = pyds.live.serve(ws, 0, block=False)
+        again = driftspec.live.serve(ws, 0, block=False)
         try:
             state = get(again, "/state")
             assert [(c["n"], c["read"]) for c in state["comments"]] == [(1, True), (2, True), (3, False)]
             assert [c["text"] for c in post(again, "/unread", {})["comments"]] == ["and rename it"]
-            assert sorted(pyds.read(ws)) == [os.path.join(ws, "hld.ds")]  # beside the design, never in it
+            assert sorted(driftspec.read(ws)) == [os.path.join(ws, "hld.ds")]  # beside the design, never in it
         finally:
             again.stop()
 

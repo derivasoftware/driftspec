@@ -327,7 +327,7 @@ package driftspec@ds {
         thirds of it the viewer's code as written; packing the code brings it
         back to 92 KB. Use cases and the manual took it to 104 KB, a seventh of
         it the viewer's styles as written; packed, before the reader's
-        theme so the theme still wins, 95 KB. The design of pyds took it to
+        theme so the theme still wins, 95 KB. The design of the Python face took it to
         104 KB with the viewer unchanged: 37 KB of the page is the tool, the
         rest is the scene, and the scene grows with the design it draws, so
         each is bounded on its own. Revises REQ-00075-3, which bounded the

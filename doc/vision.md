@@ -41,7 +41,7 @@ The boundary, stated once:
   every behaviour bound to the static element it describes, every diagram a
   projection of the model. Incoherence inside the model is a finding.
 - **DriftSpec exports.** The model, with its relations, in a form argos can
-  read (`ds export`, and in process through pyds).
+  read (`ds export`, and in process through the driftspec package).
 - **argos owns reality.** Declared against implemented, declared against
   tested, declared against observed. If argos writes something back as `.ds`
   files, DriftSpec loads them like any other files; it does not know or care
@@ -163,7 +163,7 @@ in Plane, epics DS-206 and DS-205.
   modules; a `diagram` selects and decides what to print. Layout hints are
   the only thing a diagram owns.
 - **One engine, C++.** Grammar (tree-sitter), engine, checks and renders in
-  one repository; the command line, the Python face (pyds) and through it the
+  one repository; the command line, the Python face (the driftspec package) and through it the
   language server, the live session and argos's plugin all ask the same
   engine. Everything runs in milliseconds, which is what makes an editor
   preview and an agent loop viable.
@@ -247,7 +247,7 @@ Decisions taken and why (so they are not reopened by accident):
 ## 5. Architecture
 
 The architecture is designed in DriftSpec itself (`design/hld.ds` and one
-file per namespace under `design/ds/` and `design/pyds/`); `ds render design
+file per namespace under `design/ds/` and `design/python/`); `ds render design
 HLD_Ds` draws it, and that design, not this section, is the reference. In
 short:
 
@@ -256,7 +256,7 @@ short:
                                                       │
               query · axis · scene · render (svg, text, cells, ir, layout) · exporter
                                                       │
-                                   api (Api, Workspace) ─► pyds (CPython extension)
+                                   api (Api, Workspace) ─► the driftspec package (CPython extension)
                                                       │
                                      ds (command line) · lsp · live viewer · argos plugin
 ```
@@ -269,7 +269,7 @@ short:
 - **api** offers the engine in process: one-question functions (`interface
   engine`) and a `Workspace` loaded once and asked as often as needed
   (`interface workspace`), each answer the JSON the engine writes.
-- **pyds** is the Python face, published as the `driftspec` package: the
+- **driftspec** (the Python package, `import driftspec`; `pyds` until DS-288) is the Python face: the
   native module, typed answers, the language server and the live session.
   argos-design-driftspec reads designs through it, in process.
 - **Core must be domain-neutral.** The metamodel is already data, but adding
@@ -431,7 +431,7 @@ Priority: development, process, analysis.
   declaration, cursor in the `.ds` → focus in the webview, save → redraw;
   plantuml-vscode is the precedent. With the LSP behind, the extension knows
   nothing about the language.
-- **Live session** (`python -m pyds.live serve <dir>`): the viewer follows
+- **Live session** (`python -m driftspec.live serve <dir>`): the viewer follows
   the files as they are written, and the reader and an agent leave notes and
   comments on identities through it (its MCP tools).
 
@@ -487,10 +487,10 @@ design entities`, `ds render design HLD_Ds`. What it covers, in short:
   queries, the scene of the whole model for a viewer that zooms, and the
   drawings in SVG, terminal text and cells.
 - The engine in process (`api`) and its Python face (`driftspec` on the
-  deriva registry, import `pyds`), with a language server and a live session:
+  deriva registry, import `driftspec`), with a language server and a live session:
   the viewer follows the files as they are written, with notes and comments
   for an agent.
-- argos-design-driftspec reads a DriftSpec workspace into argos through pyds:
+- argos-design-driftspec reads a DriftSpec workspace into argos through the driftspec package:
   classes, free functions as function sheets, relations, usage from
   behaviour, the HLD, every sequence as a SEQ_, requirements, verifications
   and constraints, and the engine's findings. Its autofix writes code-ahead
@@ -552,7 +552,7 @@ Recommended order: 1, 2, then 3 and 4 together, then 5.
 ## 13. Relationship to the fleet
 
 - **argos**: reads DriftSpec through argos-design-driftspec, which loads the
-  workspace through pyds; the obligations DriftSpec derives become argos
+  workspace through the driftspec package; the obligations DriftSpec derives become argos
   checks against code, tests and runs. argos is extended where DriftSpec says
   more than PlantUML (§2a).
 - **plano**: the type package; DriftSpec's domains mirror its namespaces

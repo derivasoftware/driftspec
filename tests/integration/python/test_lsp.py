@@ -1,4 +1,4 @@
-"""pyds.lsp, the language server (REQ-00087-1), driven over stdio as an editor drives it."""
+"""driftspec.lsp, the language server (REQ-00087-1), driven over stdio as an editor drives it."""
 
 import os
 import shutil

@@ -81,15 +81,15 @@ its editor with the same grammar, compiled to WebAssembly.
 
 ## From Python
 
-`pyds` is the engine as a Python package, in the same process.
+`driftspec` is the engine as a Python package, in the same process (`import driftspec`).
 
 ```python
-import pyds
+import driftspec
 
-model = pyds.load("design")
+model = driftspec.load("design")
 model.find("shop@store::Cart").kind       # 'class'
-pyds.check("design").errors               # the findings of ds check, typed
-pyds.render("design", "CL_Store", "text", 120)
+driftspec.check("design").errors               # the findings of ds check, typed
+driftspec.render("design", "CL_Store", "text", 120)
 ```
 
 ## A design seen live
