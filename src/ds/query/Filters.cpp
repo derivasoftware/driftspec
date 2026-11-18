@@ -70,7 +70,8 @@ ClassFilter::ClassFilter(std::vector<std::string> include, std::vector<std::stri
     : include_(std::move(include)), exclude_(std::move(exclude)), neighbours_(neighbours), cutOf_(std::move(cutOf)) {}
 
 std::string drawnFrom(const model::Model& model, const model::Entity& entity) {
-  if (isBox(entity) || entity.kind == model::Kind::Module || entity.kind == model::Kind::Package) return entity.id;  // a box's own @uses
+  if (isBox(entity) || entity.kind == model::Kind::Module || entity.kind == model::Kind::Package)
+    return entity.id;  // a box's own @consumes
   if (entity.kind == model::Kind::Sequence || entity.kind == model::Kind::State) {
     const model::Entity* subject = model.find(model::Identity(entity.id).subject().text());
     if (!subject && entity.kind == model::Kind::State) subject = model.find(model::Identity(entity.id).machineSubject().text());

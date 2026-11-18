@@ -153,7 +153,7 @@ TEST_F(TestCutDrawing, AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough) {
                                "  }\n"
                                "  package app {\n"
                                "    module ui {\n"
-                               "      class Screen {\n        @uses p@tool@door\n        + show(question: string) -> string\n      }\n"
+                               "      class Screen {\n        @consumes p@tool@door\n        + show(question: string) -> string\n      }\n"
                                "      sequence Screen::show {\n        local door: p@tool@door\n        -> door.ask(question) -> answer\n  "
                                "      return answer\n      }\n"
                                "      class Plain {\n        + refs core: p@tool@core::Core\n      }\n"

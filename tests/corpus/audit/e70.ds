@@ -18,7 +18,7 @@ package e70shop {
   }
   package sales {
     @requirement SREQ-70001-1
-    @uses e70shop@warehouse@counter
+    @consumes e70shop@warehouse@counter
   }
   package warehouse {
     interface counter {

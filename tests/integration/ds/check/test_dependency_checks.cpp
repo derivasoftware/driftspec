@@ -47,7 +47,7 @@ class TestDependencyChecks : public ::testing::Test {
   std::vector<std::string> uses() const {  // the findings about dependencies, by code
     std::vector<std::string> out;
     for (const auto& f : model.findings())
-      if (f.code.rfind("W-USES", 0) == 0) out.push_back(f.code);
+      if (f.code.rfind("W-CONSUMES", 0) == 0) out.push_back(f.code);
     return out;
   }
 
@@ -67,30 +67,30 @@ class TestDependencyChecks : public ::testing::Test {
 
 TEST_F(TestDependencyChecks, ACallToAnotherBoxsInterfaceNeedsAUseOnTheCallerOrWhereItLives) {
   load(face("", "      local ds: p@engine\n      -> ds.check(text) -> json\n"));
-  EXPECT_EQ(uses(), std::vector<std::string>{"W-USES-UNDECLARED"});
+  EXPECT_EQ(uses(), std::vector<std::string>{"W-CONSUMES-UNDECLARED"});
 }
 
 TEST_F(TestDependencyChecks, AUseOnTheModuleOrInAWiringBlockOnItsPackageCoversTheCall) {
-  load(face("    @uses p@engine\n", "      local ds: p@engine\n      -> ds.check(text) -> json\n"));
+  load(face("    @consumes p@engine\n", "      local ds: p@engine\n      -> ds.check(text) -> json\n"));
   EXPECT_TRUE(uses().empty());
   ds::model::Model again;
   model = std::move(again);
-  load(face("", "      local ds: p@engine\n      -> ds.check(text) -> json\n") + "package q {\n  @uses p@engine\n}\n");
+  load(face("", "      local ds: p@engine\n      -> ds.check(text) -> json\n") + "package q {\n  @consumes p@engine\n}\n");
   EXPECT_TRUE(uses().empty());
 }
 
 TEST_F(TestDependencyChecks, AUseNoBehaviourCallsIsDeadOnceTheBoxHasBehaviours) {
-  load(face("    @uses p@engine\n", "      local json: string\n"));
-  EXPECT_EQ(uses(), std::vector<std::string>{"W-USES-UNUSED"});
+  load(face("    @consumes p@engine\n", "      local json: string\n"));
+  EXPECT_EQ(uses(), std::vector<std::string>{"W-CONSUMES-UNUSED"});
   ds::model::Model again;
   model = std::move(again);
-  load("package q {\n  @uses p@engine\n}\n");  // drawn before any behaviour: a plan, not yet a claim
+  load("package q {\n  @consumes p@engine\n}\n");  // drawn before any behaviour: a plan, not yet a claim
   EXPECT_TRUE(uses().empty());
 }
 
 TEST_F(TestDependencyChecks, CallingTheClassBehindAnInterfaceFromOutsideGoesAroundIt) {
   load(face("", "      local api: p@core::Api\n      -> api.check(text) -> json\n"));
-  EXPECT_EQ(uses(), std::vector<std::string>{"W-USES-BYPASS"});
+  EXPECT_EQ(uses(), std::vector<std::string>{"W-CONSUMES-BYPASS"});
 }
 
 TEST_F(TestDependencyChecks, AMethodTheInterfaceDoesNotOfferIsNoBypass) {

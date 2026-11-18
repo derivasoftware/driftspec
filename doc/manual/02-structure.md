@@ -100,7 +100,7 @@ diagram IF_Shell {
 }
 ```
 
-A box that goes through an interface of another says so with `@uses`, and the arrow between
+A box that goes through an interface of another says so with `@consumes`, and the arrow between
 the two tells which interface it is when you point at it.
 
 ## Classes and their members

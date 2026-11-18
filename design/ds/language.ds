@@ -332,7 +332,7 @@ package driftspec@ds {
           status: approved
           title: A package, a module or a class shall declare that it uses an interface another box offers, in its own body or from another file
           text:
-            @uses sistema@broker@publish in a box binds a consumes relation from the box to the interface; the
+            @consumes sistema@broker@publish in a box binds a consumes relation from the box to the interface; the
             box that offers the interface is the provider. Like every annotation it binds the same
             written in the box or in an extension block anywhere else, so the wiring of a system can
             live in a file of its own (as design/wiring.ds does for requirements) and a design brought
@@ -383,12 +383,12 @@ package driftspec@ds {
           status: approved
           title: The checker shall compare what a box declares it uses with what its behaviours call, and report what is not declared, what is declared and never called, and a call that goes around an interface
           text:
-            A call to an operation of an interface another box offers needs a @uses of that interface
+            A call to an operation of an interface another box offers needs a @consumes of that interface
             on the caller or on a box it lives in, written there or in a wiring file
-            (W-USES-UNDECLARED). A @uses that none of the box's behaviours calls is dead, said only once
-            the box has behaviours (W-USES-UNUSED). A call to a method of a class that realises an
+            (W-CONSUMES-UNDECLARED). A @consumes that none of the box's behaviours calls is dead, said only once
+            the box has behaviours (W-CONSUMES-UNUSED). A call to a method of a class that realises an
             interface, from outside the class's module, goes around the contract when the method
-            answers an operation of that interface (W-USES-BYPASS); a method the interface does not
+            answers an operation of that interface (W-CONSUMES-BYPASS); a method the interface does not
             offer cannot be called through it and is no bypass (DS-106). An
             interface's own sequences realise it, and a box calling an interface it offers depends on
             nothing.
@@ -913,7 +913,7 @@ package driftspec@ds {
           title: A message shall be sent by the participant written before its arrow, and by the subject of the behaviour when none is written
           text:
             sales -> warehouse.take(item) leaves the sales. The sender is who calls: what it may see
-            (W-NOT-VISIBLE) and what it declares to use (W-USES-UNDECLARED) are checked from it, and
+            (W-NOT-VISIBLE) and what it declares to use (W-CONSUMES-UNDECLARED) are checked from it, and
             it is where the message leaves in a drawing. A message with no sender written is the
             subject's, as before.
           rationale:
@@ -2002,17 +2002,17 @@ package driftspec@ds {
       requirement REQ-00121-1 {
         tags: language, diagrams, dependencies
         status: approved
-        title: A class diagram shall draw a behaviour's dependencies from its subject, count behaviour with or without open, and draw a declared @uses
+        title: A class diagram shall draw a behaviour's dependencies from its subject, count behaviour with or without open, and draw a declared @consumes
         text:
           What a sequence uses or couples to is drawn from its subject's box (a method's class, a
           function, an operation's interface), not from the module it is written in. Behaviour that
           crosses boxes is drawn whether or not the diagram writes open:, so a diagram that does not
           write open: draws what one that opens every box draws; a coupling an edge between the
-          two already says gives no second arrow. A box's @uses of an interface is drawn as a
+          two already says gives no second arrow. A box's @consumes of an interface is drawn as a
           dependency, before any behaviour confirms it.
         rationale:
           Model audit 2026-11, finding I2 (DS-219): one dependency was drawn three ways. Without
-          open: the arrow left the module; with open: a second arrow appeared; a declared @uses was
+          open: the arrow left the module; with open: a second arrow appeared; a declared @consumes was
           drawn by the viewer and by no diagram. The single rule for lifting relations is DS-230.
         verification VER-00137-1 {
           title: Integration tests confirm one dependency is drawn alike with or without open, from the subject of its behaviour, and a declared use is drawn

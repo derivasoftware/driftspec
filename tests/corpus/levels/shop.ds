@@ -44,7 +44,7 @@ package shop {
   sequence UC-00002-1 {
     -> shell.refund(item)                              // ! W-MSG-UNDECLARED: the shell is written, and has no refund
     sales -> warehouse.take(item, 1)                   // ! E-MSG-ARITY: the counter's take takes one argument
-    bank -> warehouse.take(item)                       // ! W-USES-UNDECLARED: the bank does not say it uses the counter
+    bank -> warehouse.take(item)                       // ! W-CONSUMES-UNDECLARED: the bank does not say it uses the counter
     courier -> sales.sell(item)                        // ! W-PARTICIPANT-UNDECLARED: nobody is called courier
     sales -> warehouse.restock(item)                   // ? W-MESSAGE-NO-OPERATION: not designed yet
     return 0
@@ -82,8 +82,8 @@ package shop {
   }
 
   package sales {
-    @uses shop@warehouse@counter
-    @uses shop@bank@gateway
+    @consumes shop@warehouse@counter
+    @consumes shop@bank@gateway
 
     module desk {
       class Desk {
@@ -124,7 +124,7 @@ package shop {
   }
 
   package warehouse {
-    @uses shop@bank@gateway
+    @consumes shop@bank@gateway
 
     interface counter {
       kind: library
