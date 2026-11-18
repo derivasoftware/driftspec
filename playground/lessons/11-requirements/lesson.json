@@ -75,7 +75,7 @@
         "pane": "table:requirements"
       },
       "text": {
-        "en": "The same artefacts, as a table: every requirement with its level, what keeps it and what proves it, nested by what it refines. What nothing keeps yet shows `none` in orange. Click any id to go to where it is written.",
+        "en": "The same artefacts, as a table: every requirement with its level, what satisfies it and what proves it, nested by what it refines. What nothing satisfies yet shows `none` in orange. Click any id to go to where it is written.",
         "es": "Los mismos artefactos, como tabla: cada requisito con su nivel, lo que lo cumple y lo que lo prueba, anidado según lo que refina. Lo que todavía no cumple nadie aparece como `none` en naranja. Haz clic en cualquier identificador para ir a donde está escrito."
       },
       "done": {

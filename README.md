@@ -52,7 +52,7 @@ shop/shop.ds:19:7  E-MSG-ARITY  shop@store::Card::pay takes 1 parameter, 0 given
 - **Reads it in three perspectives.** Structure (what the parts are), behaviour (what they do)
   and logic (the rules they must keep), on one map, so that touching a box shows what it holds,
   calls and uses.
-- **Joins requirements, design and tests.** A requirement is kept by the design that names it,
+- **Joins requirements, design and tests.** A requirement is satisfied by the design that names it,
   and verified by a verification that names the tests.
 
 DriftSpec checks the design, not the code: whether the code does what the design says is outside

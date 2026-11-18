@@ -52,9 +52,9 @@ diagram REQ_Shop {
 
 A requirement written somewhere else says the same with `@refines SREQ-00001-1`.
 
-## Who keeps a requirement
+## What satisfies a requirement
 
-A requirement is kept by the part of the design that names it with `@requirement`. One that
+A requirement is satisfied by the part of the design that names it with `@requirement`. One that
 nothing names is a promise with no one behind it, and DriftSpec says so.
 
 ```ds
@@ -164,7 +164,7 @@ diagram REQ_Shop {
 
 A table lists whatever you ask for, a row each, with a column per question. This one lists
 the requirements of the shop with who keeps each and what proves it; an empty cell is a
-requirement nobody keeps or nobody proves.
+requirement nothing satisfies or nothing proves.
 
 ```ds
 package shop {
@@ -195,7 +195,7 @@ diagram TB_Requirements {
   for requirement r in shop
   column requirement: r.id
   column says: r.title
-  column kept: x where x satisfies r
+  column satisfied: x where x satisfies r
   column proved: v where v verifies r
 }
 ```

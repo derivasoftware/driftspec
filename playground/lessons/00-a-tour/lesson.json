@@ -263,7 +263,7 @@
       },
       "shows": "T_Rules",
       "text": {
-        "en": "And the logical one: the rules. A rule is a sentence about the design that must always hold, and DriftSpec checks it every time. This table lists the rules of the tool: what it says, the requirement it answers to, and whether the model keeps it.",
+        "en": "And the logical one: the rules. A rule is a sentence about the design that must always hold, and DriftSpec checks it every time. This table lists the rules of the tool: what it says, the requirement it answers to, and whether the model satisfies it.",
         "es": "Y la lógica: las reglas. Una regla es una frase sobre el diseño que tiene que cumplirse siempre, y DriftSpec la comprueba cada vez. Esta tabla lista las reglas de la herramienta: qué dice cada una, a qué requisito responde y si el modelo la cumple."
       },
       "done": {
@@ -338,7 +338,7 @@
       },
       "shows": "T_Requirement",
       "text": {
-        "en": "Last, the reason for all of it: the requirements. A requirement says what the system must do. This one asks for a warning when a call arrives out of order. Below it you have who keeps it and which tests prove it.",
+        "en": "Last, the reason for all of it: the requirements. A requirement says what the system must do. This one asks for a warning when a call arrives out of order. Below it you have what satisfies it and which tests prove it.",
         "es": "Por último, el porqué de todo: los requisitos. Un requisito dice qué tiene que hacer el sistema. Este pide que se avise cuando una llamada llega fuera de orden. Debajo tienes quién lo cumple y qué tests lo prueban."
       },
       "done": {
@@ -354,7 +354,7 @@
       },
       "shows": "T_Requirements",
       "text": {
-        "en": "Seen all together they are a table. These are the playground's: what each one says, who keeps it and what proves it. An empty cell is a requirement nobody keeps or nobody tests.",
+        "en": "Seen all together they are a table. These are the playground's: what each one says, what satisfies it and what proves it. An empty cell is a requirement nothing satisfies or nothing tests.",
         "es": "Vistos todos juntos son una tabla. Estos son los del playground: qué dice cada uno, quién lo cumple y qué lo prueba. Una celda vacía es un requisito que nadie cumple o que nadie prueba."
       },
       "done": {
