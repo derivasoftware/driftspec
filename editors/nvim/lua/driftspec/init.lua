@@ -2,11 +2,12 @@
 --- Self-sufficient: `make` in editors/nvim compiles the grammar of this very
 --- repository into parser/driftspec.so and copies its queries; setup() wires
 --- the filetype, native tree-sitter highlighting and folding. No
---- nvim-treesitter required. The language server arrives with `ds lsp`.
+--- nvim-treesitter required. With driftspec-lsp on the PATH (pip install the driftspec package
+--- extra lsp), each .ds buffer is also attached to the language server; `lsp = false` turns it off.
 
 local M = {}
 
-M.defaults = { folds = true }
+M.defaults = { folds = true, lsp = true }
 
 local function plugin_root()
   local source = debug.getinfo(1, "S").source:sub(2)
@@ -27,6 +28,11 @@ function M.setup(opts)
         return
       end
       vim.bo[buf].commentstring = "// %s"
+      -- the language server checks the design the file belongs to: its folder and the folders above holding .ds files
+      if opts.lsp and vim.fn.executable("driftspec-lsp") == 1 then
+        vim.lsp.start({ name = "driftspec", cmd = { "driftspec-lsp" },
+                        root_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(buf)) }, { bufnr = buf })
+      end
       if opts.folds then
         vim.wo.foldmethod = "expr"
         vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
