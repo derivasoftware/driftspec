@@ -38,8 +38,8 @@ void BehaviourLayer::tours(SceneDocument& out_document) {
     std::vector<std::string> scenarios{""};
     if (model::Identity(seq.id).scenario().empty()) {  // the default behaviour, not one written apart for a scenario
       std::set<std::string> named;
-      for (const auto& member : model_.index().members(seq.id)) {
-        const model::Entity& f = *model_.find(member);
+      for (const auto& child : model_.index().members(seq.id)) {
+        const model::Entity& f = *model_.find(child);
         if (f.kind != model::Kind::Frame || f.field("kind") == "branch") continue;
         // a loop or an opt names its scenario; an alt's sides name theirs, the first then the else
         const std::vector<std::string> sides =

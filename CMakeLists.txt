@@ -19,9 +19,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
-add_compile_options(
-  $<$<COMPILE_LANGUAGE:CXX>:-Wall> $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
-  $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>)
+if(MSVC)
+  # the sources are UTF-8; the standard library's checked iterators and the
+  # usual secure-CRT nagging stay as the platform has them
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W4> /utf-8 /permissive-
+                      /Zc:__cplusplus)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX)
+else()
+  add_compile_options(
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall> $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>)
+endif()
 # Built with Emscripten (emcmake), the tree gives the engine for a page in a
 # browser and nothing else (REQ-00113-1); the engine throws and catches, and
 # WebAssembly exceptions keep that.
@@ -102,12 +110,42 @@ target_link_libraries(driftspec_grammar PUBLIC tree_sitter_runtime)
 
 # ---- the engine --------------------------------------------------------------
 file(GLOB_RECURSE driftspec_SOURCES CONFIGURE_DEPENDS "src/ds/*.cpp")
+# A text file embedded in ds as a list of raw string literals of at most about 8
+# KB each, cut at a line break (DS-283): MSVC refuses a literal over 16 KB and a
+# concatenation over 64 KB, and the viewer page is more. The pieces are joined
+# when the program runs. The text must not contain )DSX".
+function(ds_embedded_pieces text out)
+  set(rest "${text}")
+  set(pieces "")
+  while(NOT rest STREQUAL "")
+    string(LENGTH "${rest}" length)
+    if(length LESS_EQUAL 8000)
+      set(cut ${length})
+    else()
+      string(SUBSTRING "${rest}" 0 8000 piece)
+      string(FIND "${piece}" "\n" newline REVERSE)
+      if(newline LESS 0)
+        set(cut 8000)
+      else()
+        math(EXPR cut "${newline} + 1")
+      endif()
+    endif()
+    string(SUBSTRING "${rest}" 0 ${cut} piece)
+    string(SUBSTRING "${rest}" ${cut} -1 rest)
+    string(APPEND pieces "R\"DSX(${piece})DSX\",\n")
+  endwhile()
+  set(${out}
+      "${pieces}"
+      PARENT_SCOPE)
+endfunction()
+
 # the viewer page ships inside ds: viewer/scene.html becomes a string the scene
 # fills (ds view)
 file(READ ${CMAKE_SOURCE_DIR}/viewer/scene.html DS_VIEWER_HTML)
+ds_embedded_pieces("${DS_VIEWER_HTML}" DS_VIEWER_PIECES)
 file(
   WRITE ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
-  "namespace ds {\nnamespace format {\nconst char* viewerTemplate() {\n  return R\"DSVIEW(${DS_VIEWER_HTML})DSVIEW\";\n}\n}  // namespace format\n}  // namespace ds\n"
+  "#include <string>\n\nnamespace ds {\nnamespace format {\nconst char* viewerTemplate() {\n  static const char* const pieces[] = {\n${DS_VIEWER_PIECES}  };\n  static const std::string whole = [] {\n    std::string out;\n    for (const char* piece : pieces) out += piece;\n    return out;\n  }();\n  return whole.c_str();\n}\n}  // namespace format\n}  // namespace ds\n"
 )
 configure_file(${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
                ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp COPYONLY)
@@ -126,7 +164,8 @@ foreach(guide ${DS_MANUAL_GUIDES})
   get_filename_component(topic ${guide} NAME_WE)
   string(REGEX REPLACE "^[0-9]+-" "" topic ${topic})
   file(READ ${guide} text)
-  string(APPEND DS_MANUAL_PAGES "    {\"${topic}\", R\"DSMD(${text})DSMD\"},\n")
+  ds_embedded_pieces("${text}" pieces)
+  string(APPEND DS_MANUAL_PAGES "    {\"${topic}\", {${pieces}}},\n")
   set_property(
     DIRECTORY
     APPEND
@@ -134,7 +173,7 @@ foreach(guide ${DS_MANUAL_GUIDES})
 endforeach()
 file(
   WRITE ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp.in
-  "#include <string>\n#include <utility>\n#include <vector>\n\nnamespace ds {\nnamespace model {\nconst std::vector<std::pair<std::string, std::string>>& manualGuides() {\n  static const std::vector<std::pair<std::string, std::string>> guides = {\n${DS_MANUAL_PAGES}  };\n  return guides;\n}\n}  // namespace model\n}  // namespace ds\n"
+  "#include <string>\n#include <utility>\n#include <vector>\n\nnamespace ds {\nnamespace model {\nconst std::vector<std::pair<std::string, std::string>>& manualGuides() {\n  struct Written {\n    const char* topic;\n    std::vector<const char*> pieces;\n  };\n  static const std::vector<Written> written = {\n${DS_MANUAL_PAGES}  };\n  static const std::vector<std::pair<std::string, std::string>> guides = [] {\n    std::vector<std::pair<std::string, std::string>> out;\n    for (const auto& w : written) {\n      std::string text;\n      for (const char* piece : w.pieces) text += piece;\n      out.emplace_back(w.topic, text);\n    }\n    return out;\n  }();\n  return guides;\n}\n}  // namespace model\n}  // namespace ds\n"
 )
 configure_file(${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp.in
                ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp COPYONLY)
@@ -247,6 +286,10 @@ find_package(Threads REQUIRED) # the work runs on a thread with a large stack
                                # (DS-279)
 add_executable(ds app/ds/main.cpp)
 target_link_libraries(ds PRIVATE driftspec CLI11::CLI11 Threads::Threads)
+if(MSVC)
+  target_link_options(ds PRIVATE /STACK:536870912) # the 512 MB the work gets on
+                                                   # POSIX (DS-283)
+endif()
 
 # ---- tests: one executable per tests/unit/**/test_*.cpp (argos-test-gtest)
 # ----

@@ -24,7 +24,7 @@ class TestBrowserOverHola : public ::testing::Test {
       std::ifstream in(entry.path());
       std::stringstream text;
       text << in.rdbuf();
-      files[std::filesystem::relative(entry.path(), root).string()] = text.str();
+      files[std::filesystem::relative(entry.path(), root).generic_string()] = text.str();
     }
     answer = nlohmann::json::parse(ds::api::Browser::answer(nlohmann::json{{"files", files}}.dump()));
   }

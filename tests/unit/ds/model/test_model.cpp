@@ -77,11 +77,11 @@ TEST_F(TestModel, ARenameOntoADeclaredIdentityIsRefused) {
 }
 
 TEST_F(TestModel, ARelationTheMetamodelDoesNotDeclareIsRefused) {
-  Model model;
-  EXPECT_THROW(model.relate({"depends-on", "p@m::A", "p@m::B", {}, ""}), std::logic_error);
-  EXPECT_EQ(model.index().count(), 0u);
-  model.relate({"uses", "p@m::A", "p@m::B", {}, ""});
-  EXPECT_EQ(model.index().count(), 1u);
+  Model fresh;
+  EXPECT_THROW(fresh.relate({"depends-on", "p@m::A", "p@m::B", {}, ""}), std::logic_error);
+  EXPECT_EQ(fresh.index().count(), 0u);
+  fresh.relate({"uses", "p@m::A", "p@m::B", {}, ""});
+  EXPECT_EQ(fresh.index().count(), 1u);
 }
 
 /// An entity knows the flags it was declared with.

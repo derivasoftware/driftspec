@@ -2,8 +2,9 @@
 // per promise of the system requirements (design/requirements.ds). Nothing
 // here links the engine: the binary, its arguments, its output, its exit code.
 #include <gtest/gtest.h>
+#ifndef _WIN32
 #include <sys/wait.h>
-#include <unistd.h>
+#endif
 
 #include <chrono>
 #include <cstdio>
@@ -25,16 +26,34 @@ struct Outcome {
 };
 
 Outcome ds(const std::string& args) {
-  const std::string command = std::string(DRIFTSPEC_DS_BIN) + " " + args + " 2>/dev/null";
   Outcome run;
+#ifdef _WIN32
+  // cmd.exe takes the whole line in one more pair of quotes; the exit code comes back as it is (DS-283)
+  const std::string command = "\"\"" + std::string(DRIFTSPEC_DS_BIN) + "\" " + args + " 2>NUL\"";
+  FILE* p = ::_popen(command.c_str(), "rb");
+#else
+  const std::string command = std::string(DRIFTSPEC_DS_BIN) + " " + args + " 2>/dev/null";
   FILE* p = ::popen(command.c_str(), "r");
+#endif
   if (!p) return run;
   char buffer[4096];
   size_t n;
   while ((n = std::fread(buffer, 1, sizeof buffer, p)) > 0) run.out.append(buffer, n);
+#ifdef _WIN32
+  run.code = ::_pclose(p);
+#else
   const int status = ::pclose(p);
   run.code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+#endif
   return run;
+}
+
+/// A fresh folder of the system's temporary directory, for one test: removed by the test when it is done.
+std::string scratch(const std::string& name) {
+  const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto dir = std::filesystem::temp_directory_path() / (name + "-" + std::to_string(stamp));
+  std::filesystem::create_directories(dir);
+  return dir.generic_string();
 }
 
 std::string examples(const std::string& corpus) { return std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus; }
@@ -74,8 +93,15 @@ TEST_F(TestQualification, AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity) {
 // SREQ-00002-1: every incoherence is a finding with code, severity and location; a dangling reference never stops the load
 TEST_F(TestQualification, EveryIncoherenceIsAFindingAtItsLocation) {
   const Outcome check = ds("check " + examples("artefacts"));
-  const std::regex line(R"(^[^\n]+\.ds:[0-9]+:[0-9]+  [EW]-[A-Z-]+  .+$)", std::regex::multiline);
-  EXPECT_TRUE(std::regex_search(check.out, line));
+  // a line of its own, read line by line: std::regex::multiline is not in every standard library (DS-283)
+  const std::regex line(R"([^\n]+\.ds:[0-9]+:[0-9]+  [EW]-[A-Z-]+  .+)");
+  bool found = false;
+  std::istringstream lines(check.out);
+  for (std::string l; std::getline(lines, l);) {
+    if (!l.empty() && l.back() == '\r') l.pop_back();
+    found |= std::regex_match(l, line);
+  }
+  EXPECT_TRUE(found);
   EXPECT_NE(check.out.find("E-REF-UNPINNED"), std::string::npos);
   EXPECT_NE(check.out.find("W-REVISION-DRIFT"), std::string::npos);
   EXPECT_EQ(check.code, 1);  // an error among the findings
@@ -189,11 +215,10 @@ TEST_F(TestQualification, TheViewerIsOnePageWithTheWholeModelInside) {
 
 // SREQ-00013-1: the viewer embeds into another document as one frame, in the reader's colours
 TEST_F(TestQualification, TheViewerEmbedsAsAFrameInTheReadersColours) {
-  const std::string tmp =
-      std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-theme-" + std::to_string(::getpid()) + ".css";
+  const std::string dir = scratch("ds-theme"), tmp = dir + "/theme.css";
   std::ofstream(tmp) << ":root{--bg:#0e1116}";
   const Outcome run = ds("render " + examples("static") + " --embed --height 420 --css " + tmp);
-  std::remove(tmp.c_str());
+  std::filesystem::remove_all(dir);
   EXPECT_EQ(run.code, 0);
   EXPECT_EQ(run.out.rfind("<iframe ", 0), 0u);
   EXPECT_NE(run.out.find("height:420px"), std::string::npos);
@@ -300,15 +325,15 @@ TEST_F(TestQualification, EveryKindOfDiagramIsAViewOfTheModel) {
 
 // SREQ-00002-1: a path that is no workspace is bad usage on every command, the same way
 TEST_F(TestQualification, EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage) {
-  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-nowhere-" + std::to_string(::getpid());
-  EXPECT_EQ(std::system(("mkdir -p " + tmp + "/empty").c_str()), 0);
+  const std::string tmp = scratch("ds-nowhere");
+  std::filesystem::create_directories(tmp + "/empty");
   for (const std::string& path : {std::string("/nonexistent/workspace"), tmp + "/empty"}) {
     EXPECT_EQ(ds("check " + path).code, 2) << path;
     EXPECT_EQ(ds("export " + path).code, 2) << path;
     EXPECT_EQ(ds("render " + path).code, 2) << path;
     EXPECT_EQ(ds("query " + path + " diagrams").code, 2) << path;
   }
-  EXPECT_EQ(std::system(("rm -rf " + tmp).c_str()), 0);
+  std::filesystem::remove_all(tmp);
 }
 
 // SREQ-00002-1: a path that is no workspace is a command line to correct, not a design with errors
@@ -320,11 +345,13 @@ TEST_F(TestQualification, CheckingAPathThatIsNoWorkspaceIsBadUsage) {
 // SREQ-00018-2: input the tool cannot use is said on stderr with the code of bad input, never an abort; and a
 // design nested far deeper than any written by hand is still read (DS-279)
 TEST_F(TestQualification, InputThatCannotBeReadIsBadUsageAndDeepNestingIsRead) {
-  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-input-" + std::to_string(::getpid());
-  EXPECT_EQ(std::system(("mkdir -p " + tmp + "/unreadable " + tmp + "/deep").c_str()), 0);
+  const std::string tmp = scratch("ds-input");
+  std::filesystem::create_directories(tmp + "/unreadable");
+  std::filesystem::create_directories(tmp + "/deep");
   std::ofstream(tmp + "/unreadable/a.ds") << "package p { }\n";
-  EXPECT_EQ(std::system(("chmod 000 " + tmp + "/unreadable/a.ds").c_str()), 0);
-  if (::access((tmp + "/unreadable/a.ds").c_str(), R_OK) != 0) {  // as root every file can be read: nothing to try
+  std::filesystem::permissions(tmp + "/unreadable/a.ds", std::filesystem::perms::none);
+  // as root every file can be read, and on Windows no permission takes reading away: then nothing to try
+  if (!std::ifstream(tmp + "/unreadable/a.ds").good()) {
     EXPECT_EQ(ds("check " + tmp + "/unreadable").code, 2);
   }
   std::ofstream deep(tmp + "/deep/a.ds");
@@ -334,7 +361,8 @@ TEST_F(TestQualification, InputThatCannotBeReadIsBadUsageAndDeepNestingIsRead) {
   deep << "}\n";
   deep.close();
   EXPECT_EQ(ds("check " + tmp + "/deep").code, 0);
-  EXPECT_EQ(std::system(("chmod 644 " + tmp + "/unreadable/a.ds; rm -rf " + tmp).c_str()), 0);
+  std::filesystem::permissions(tmp + "/unreadable/a.ds", std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
+  std::filesystem::remove_all(tmp);
 }
 
 // SREQ-00011-1: an identity the model does not declare is no empty answer: it fails, and names what was meant
@@ -448,8 +476,7 @@ TEST_F(TestQualification, EveryCorpusMeansExactlyTheFindingsItMarks) {
 
 // CST-00001-1: every command under a hundred milliseconds on a hundred classes
 TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds) {
-  const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-perf-" + std::to_string(::getpid());
-  EXPECT_EQ(std::system(("mkdir -p " + tmp).c_str()), 0);
+  const std::string tmp = scratch("ds-perf");
   std::ofstream ws(tmp + "/big.ds");
   ws << "package big {\n  module m {\n";
   for (int i = 0; i < 100; ++i) {
@@ -468,7 +495,7 @@ TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
     EXPECT_LT(ms, release ? 100 : 300) << command << (release ? "" : " (Debug build: the 100 ms budget is measured on Release)");
     EXPECT_FALSE(run.out.empty()) << command;
   }
-  EXPECT_EQ(std::system(("rm -rf " + tmp).c_str()), 0);
+  std::filesystem::remove_all(tmp);
 }
 
 }  // namespace
