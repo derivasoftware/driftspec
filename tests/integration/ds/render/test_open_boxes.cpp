@@ -14,13 +14,13 @@
 
 namespace {
 
-/// A diagram opens the boxes it names and closes the rest, over examples/visibility.
+/// A diagram opens the boxes it names and closes the rest, over tests/corpus/visibility.
 class TestOpenBoxes : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/visibility")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/visibility")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
   }
@@ -89,7 +89,7 @@ TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
   ds::model::Model plain;
   ds::parse::Parser parser;
   ds::bind::Binder binder(plain);
-  for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/static")) binder.bind(f);
+  for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(plain, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(plain).render("diagram:CL_Model", false));
@@ -100,7 +100,7 @@ TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawin
   ds::model::Model shop;
   ds::parse::Parser parser;
   ds::bind::Binder binder(shop);
-  for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/interfaces")) binder.bind(f);
+  for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/interfaces")) binder.bind(f);
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(shop, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(shop).render("diagram:HLD_Shop", false));

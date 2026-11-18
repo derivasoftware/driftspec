@@ -11,7 +11,7 @@
 
 namespace {
 
-/// Nested packages: the HLD nests with the conventions of every other entity (examples/packages).
+/// Nested packages: the HLD nests with the conventions of every other entity (tests/corpus/packages).
 class TestPackages : public ::testing::Test {
  protected:
   ds::model::Model model;
@@ -19,7 +19,7 @@ class TestPackages : public ::testing::Test {
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/packages")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/packages")) {
       EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }

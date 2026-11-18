@@ -257,8 +257,10 @@ foreach(test_src IN LISTS driftspec_TESTS)
   add_executable(${test_name} ${test_src})
   target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
   target_compile_definitions(
-    ${test_name} PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
-                         DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    ${test_name}
+    PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
+            DRIFTSPEC_CORPUS_DIR="${CMAKE_SOURCE_DIR}/tests/corpus"
+            DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
   add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
 
@@ -272,8 +274,10 @@ foreach(test_src IN LISTS driftspec_INTEGRATION_TESTS)
   add_executable(${test_name} ${test_src})
   target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
   target_compile_definitions(
-    ${test_name} PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
-                         DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    ${test_name}
+    PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
+            DRIFTSPEC_CORPUS_DIR="${CMAKE_SOURCE_DIR}/tests/corpus"
+            DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
   add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
 
@@ -289,6 +293,7 @@ foreach(test_src IN LISTS driftspec_SYSTEM_TESTS)
   target_compile_definitions(
     ${test_name}
     PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
+            DRIFTSPEC_CORPUS_DIR="${CMAKE_SOURCE_DIR}/tests/corpus"
             DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
             DRIFTSPEC_DS_BIN="$<TARGET_FILE:ds>"
             DRIFTSPEC_BUILD_TYPE="${CMAKE_BUILD_TYPE}")

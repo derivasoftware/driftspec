@@ -10,7 +10,7 @@
 
 namespace {
 
-/// Block 1: requirements, constraints and verifications as decided, over examples/artefacts (its `!` lines are the oracle).
+/// Block 1: requirements, constraints and verifications as decided, over tests/corpus/artefacts (its `!` lines are the oracle).
 class TestArtefacts : public ::testing::Test {
  protected:
   ds::model::Model model;
@@ -19,7 +19,7 @@ class TestArtefacts : public ::testing::Test {
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/artefacts")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }

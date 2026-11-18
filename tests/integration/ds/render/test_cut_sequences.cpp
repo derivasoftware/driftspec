@@ -15,14 +15,14 @@
 
 namespace {
 
-/// A sequence and a requirement diagram on the cut of a class diagram (DS-231), over examples/cut: one
+/// A sequence and a requirement diagram on the cut of a class diagram (DS-231), over tests/corpus/cut: one
 /// purchase that goes from the shell through the sales, the warehouse and the bank.
 class TestCutSequences : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/cut")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/cut")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
   }

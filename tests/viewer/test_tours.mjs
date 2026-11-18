@@ -65,7 +65,7 @@ test('a step goes one level deeper for each behaviour entered', () => {
 });
 
 test('a call that names a scenario goes on into that branch, not the default path', () => {
-  const s = scene(join(ROOT, 'examples', 'branches'));
+  const s = scene(join(ROOT, 'tests', 'corpus', 'branches'));
   for (const scenario of ['frozen', 'refused']) {
     const steps = tour(s, `bank@teller::withdraw / ${scenario}`).steps;
     const inner = steps.filter((x) => x.d === 2 && !x.ret).map((x) => x.m);

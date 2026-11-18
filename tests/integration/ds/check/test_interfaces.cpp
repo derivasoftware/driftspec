@@ -14,13 +14,13 @@
 
 namespace {
 
-/// The external interfaces of a process and how they go down, over examples/interfaces.
+/// The external interfaces of a process and how they go down, over tests/corpus/interfaces.
 class TestInterfaces : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/interfaces")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/interfaces")) {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }

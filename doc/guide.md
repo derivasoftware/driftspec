@@ -13,7 +13,7 @@ them. The vision (`vision.md`) says why; this says what.*
 ## 1. Workspace and identity
 
 - A workspace is a directory of `.ds` files. `ds` loads it whole; a file is
-  not a unit of meaning. `examples/diag`.
+  not a unit of meaning. `tests/corpus/diag`.
 - A `package` is the whole scope, the black box. A `module` is a namespace
   and opens the white box. Both reopen across files (R1, R2, R9).
 - Full identities name their package with `@` and their modules with `::`,
@@ -48,9 +48,9 @@ them. The vision (`vision.md`) says why; this says what.*
   In a class diagram the nested packages are containers (the HLD boxes); the
   outermost one is the drawing itself. A package body takes annotations like
   a class body: `@requirement` for what the box realises, `@constraint` for
-  what binds it (HLD, decided 2026-10-26). Corpus: `examples/packages`.
+  what binds it (HLD, decided 2026-10-26). Corpus: `tests/corpus/packages`.
 
-## 2. Static design (`examples/static`)
+## 2. Static design (`tests/corpus/static`)
 
 - Kinds: `class`, `dataclass`, `enum`, and `function` for an operation of the
   module (below). Interface and abstract are derived
@@ -85,7 +85,7 @@ them. The vision (`vision.md`) says why; this says what.*
   knowing who consumes them; the wiring to the system's SREQ lives in the
   consumer's file and leaves with it. A second definition is still
   `E-DUPLICATE-IDENTITY`; an extension of something defined nowhere is an
-  expected node, `W-REF-UNDECLARED`. Corpus: `examples/packages/wiring.ds`.
+  expected node, `W-REF-UNDECLARED`. Corpus: `tests/corpus/packages/wiring.ds`.
 - **The extern catalogue (2026-10-26).** `extern` modules reopen in any
   file, so the names the workspace borrows (std, a C API) grow into one
   catalogue. A bare name nobody declares in scope resolves to the one extern
@@ -108,13 +108,13 @@ them. The vision (`vision.md`) says why; this says what.*
   module, `-> tasks::gather(..)` one of another module, and a method reaches a
   function its class does not declare the same way. A class diagram draws each
   function as a box «function»; a sequence diagram runs it on its module's
-  lifeline. Corpus: `examples/functions`.
+  lifeline. Corpus: `tests/corpus/functions`.
 - **Nothing is reserved (2026-10-26).** `abstract`, `static`, `const`,
   `owns`, `refs`, `shares` are modifiers only in front of a name; followed by
   `:` or `(` they are the name: `+ abstract: bool`, `+ refs: map<..>`. A code
   base designed in DriftSpec keeps its own names.
 
-## 3. Behaviour (`examples/behaviour`, decided 2026-10-25)
+## 3. Behaviour (`tests/corpus/behaviour`, decided 2026-10-25)
 
 - A behaviour is identified by its subject, written as any reference is
   (`Checker::run` beside the class, `ds@ds::Checker::run` from outside):
@@ -130,7 +130,7 @@ them. The vision (`vision.md`) says why; this says what.*
   the parameters of the method, by name; only what the method creates is
   written, `local parser: Parser`. The result of a message is one too, for the
   messages after it. `W-PARTICIPANT-UNDECLARED`.
-- **Behaviour at any cut (decided 2026-11-16, DS-232, `examples/levels`).** A scenario is written
+- **Behaviour at any cut (decided 2026-11-16, DS-232, `tests/corpus/levels`).** A scenario is written
   in one block, between whatever takes part, without a sequence for every operation on the way:
   ```
   sequence UC-00001-1 {
@@ -169,7 +169,7 @@ them. The vision (`vision.md`) says why; this says what.*
     lists which steps of the high level have no detail beneath yet.
   - A scenario with no behaviour below it is held to nothing.
 - A branch names a scenario, a path through one behaviour (decided 2026-11-05,
-  `examples/branches`): `opt the account is frozen / frozen { ... return 3 }`, and a
+  `tests/corpus/branches`): `opt the account is frozen / frozen { ... return 3 }`, and a
   bare `return` ends a branch. What every scenario shares is written once. The path
   takes what is shared and its branch up to its return; the default path takes no
   named branch; of an alt with one named side, the other is taken; a branch it
@@ -177,14 +177,14 @@ them. The vision (`vision.md`) says why; this says what.*
   for a sequence of its own, which stays for paths that share nothing. A name
   given twice is `W-SCENARIO-TWICE`. A behaviour asked for by its subject is drawn
   whole, early returns included; an unnamed call follows the default path.
-- Values have types (decided 2026-11-05, `examples/values`): a result has the
+- Values have types (decided 2026-11-05, `tests/corpus/values`): a result has the
   type its operation returns, so a call on it is checked like any other. An
   argument is checked against its parameter (`W-ARG-TYPE`), and taking the
   result of an operation returning `none` is reported (`W-RESULT-NONE`). An
   argument may be a literal, `visit(file, root, "", 7)`, with the type it is written
   in. A value of unknown type has nothing to be checked against.
 - What a behaviour gives back and where a call goes (decided 2026-11-05,
-  `examples/scenarios`): `return code` or `return 2`, a name or a literal, never
+  `tests/corpus/scenarios`): `return code` or `return 2`, a name or a literal, never
   an expression, checked against the operation (`W-RETURN-TYPE`). A call names
   the scenario it enters as a declaration does, `vault.withdraw(amount) / refused`,
   and expands to it; one nobody declares is `W-SCENARIO-UNDECLARED`. A trace so
@@ -201,7 +201,7 @@ them. The vision (`vision.md`) says why; this says what.*
   are operations of the class (`W-EVENT-UNDECLARED`, `W-ACTION-UNDECLARED`);
   the guard is not interpreted. No nested states until a design asks for
   them. Activities come with the process domain.
-- The states of a machine as rules (`examples/states`, decided 2026-11-17,
+- The states of a machine as rules (`tests/corpus/states`, decided 2026-11-17,
   DS-249). A state is computed, not kept: `Paid if status = Paid, not
   cancelled` says when the subject of the machine is in it, over what the
   subject holds. The literals are joined by commas and all hold: an attribute
@@ -231,7 +231,7 @@ them. The vision (`vision.md`) says why; this says what.*
   of Order lets cancel happen from Open or Paid.* In a state diagram each jump
   says, when pointed at, the behaviours that call its event.
 
-## 4. Requirements, constraints and verifications (`examples/artefacts`, decided 2026-10-25)
+## 4. Requirements, constraints and verifications (`tests/corpus/artefacts`, decided 2026-10-25)
 
 - **Identity and links.** The revision is part of the id. Every link names a
   revision: `@refines SREQ-00001-2`, `@requirement REQ-00001-2`,
@@ -269,7 +269,7 @@ them. The vision (`vision.md`) says why; this says what.*
   test with no tests, are coverage, not findings: what is not yet written
   (DS-216), answered by `ds query <workspace> coverage`.
 
-## 3b. Visibility (`examples/visibility`, decided 2026-11-05)
+## 3b. Visibility (`tests/corpus/visibility`, decided 2026-11-05)
 
 - One rule at every level: a box connects to another through a public child. A
   package's public children are its interfaces and modules, a module's its classes
@@ -282,7 +282,7 @@ them. The vision (`vision.md`) says why; this says what.*
   A public member showing a private type is `W-PRIVATE-LEAK`. Dependencies between
   boxes stay derived from calls and types (`ds query <workspace> coupling`).
 
-## 4b. Interfaces (`examples/interfaces`, decided 2026-11-05)
+## 4b. Interfaces (`tests/corpus/interfaces`, decided 2026-11-05)
 
 - An interface is an external interface of a process, or of a library when it
   is binary. It lives in a package, at any level: `interface shell { }` is
@@ -312,7 +312,7 @@ them. The vision (`vision.md`) says why; this says what.*
   named. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
-- **The cut (decided 2026-11-16, DS-229, `examples/cut`).** A cut is a set of boxes none of
+- **The cut (decided 2026-11-16, DS-229, `tests/corpus/cut`).** A cut is a set of boxes none of
   which holds another: what is above it stays open, and everything below it is drawn as the
   outermost closed box around it. It is written as what closes and what opens, never as its
   frontier, so whatever is written is a cut, and one branch may go down to its classes while

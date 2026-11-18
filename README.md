@@ -18,8 +18,8 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
 - `doc/manual/` — the guides of the manual, Markdown (`NN-topic.md`): intent, structure, behaviour, logic and using. The build embeds them: `ds manual <topic>` prints one and the site's Docs tab draws it, each example beside what the engine makes of it. Every example is checked by the tests.
 - `viewer/` — the viewer page compiled into ds (`scene.html`) and its themes (`themes/night.css`, for `--css`).
   The viewer reads one map in three perspectives (structure, behaviour, logic), each with its own lines and marks; touching a box lights up what it composes, aggregates, calls and uses, and docks its card on the right. Tours play along the bottom.
-- `examples/hola/` — the example the viewer is tried on: `ds render examples/hola -o hola.html`.
-- `examples/diag/` — the reference workspace, one entity per file.
+- `examples/` — designs to start from, each checking clean: `hola` (a greeting service in four boxes, the one the viewer is tried on: `ds render examples/hola -o hola.html`), `shop` (a shop from the promise to the code) and `states` (a connection, a machine that is checked).
+- `tests/corpus/` — the tests' oracles, not examples: a small workspace per part of the language, each marking with `// !` the findings it must raise.
 - `tests/unit/ds/` — GoogleTest suites, mirroring the namespaces; `tests/system/ds/` drives the binary from outside.
 
 Build: `cmake -S . -B build && cmake --build build -j && ctest --test-dir build`.
@@ -31,8 +31,8 @@ How a design is read in three perspectives, the outer contract of each and the r
 How we design DriftSpec itself, until each practice is a rule: [`doc/design-practices.md`](doc/design-practices.md).
 How the engine runs in a browser, what its WebAssembly build needs and the traps it met: [`doc/webassembly.md`](doc/webassembly.md).
 
-Governed by argos (ASIL NA). Rules of the language so far: `examples/diag/ds.package.ds`
-and the R1–R9 notes in `examples/diag/*.ds`.
+Governed by argos (ASIL NA). Rules of the language so far: `tests/corpus/diag/ds.package.ds`
+and the R1–R9 notes in `tests/corpus/diag/*.ds`.
 
 ## Seeing a design
 

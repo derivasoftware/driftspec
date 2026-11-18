@@ -10,7 +10,7 @@ class TestParser : public ::testing::Test {};
 
 TEST_F(TestParser, ParsesAWholeWorkspaceWithoutSyntaxErrors) {
   ds::parse::Parser parser;
-  const auto files = parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/diag");
+  const auto files = parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag");
   ASSERT_EQ(files.size(), 13u);
   for (const auto& f : files) EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
 }

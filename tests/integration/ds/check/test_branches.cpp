@@ -16,13 +16,13 @@
 
 namespace {
 
-/// A scenario is a path through one behaviour, named on a branch, over examples/branches.
+/// A scenario is a path through one behaviour, named on a branch, over tests/corpus/branches.
 class TestBranches : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/branches")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/branches")) {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }

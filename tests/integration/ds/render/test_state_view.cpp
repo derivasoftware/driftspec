@@ -20,7 +20,7 @@ class TestStateView : public ::testing::Test {
   nlohmann::json draw(const std::string& corpus, const std::string& diagram) {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/" + corpus)) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus)) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
     return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + diagram, false));
