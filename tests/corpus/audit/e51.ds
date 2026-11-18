@@ -10,7 +10,7 @@ package e51shop {
     }
   }
   package front {
-    @uses e51shop@back@orders
+    @consumes e51shop@back@orders
     module web {
       class Page {
         - api: e51shop@back@orders  // ! E-RELATION-KIND

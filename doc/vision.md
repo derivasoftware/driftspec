@@ -345,8 +345,8 @@ derives the links.
   attribute typed elsewhere) and transient coupling (a local created and
   dropped inside a method), because the second is the one that usually hides
   a missing injection. What a box may depend on is declared towards an
-  interface, `@uses` (DS-96), and checked against what its behaviours call
-  (`W-USES-UNDECLARED`, `W-USES-UNUSED`, `W-USES-BYPASS`); without the
+  interface, `@consumes` (DS-96), and checked against what its behaviours call
+  (`W-CONSUMES-UNDECLARED`, `W-CONSUMES-UNUSED`, `W-CONSUMES-BYPASS`); without the
   declaration coupling is a derived fact, reported, never a finding.
 - **Observed sequences stay in argos (decided 2026-11-05, DS-16).** What the tests
   of a requirement did, with modules as participants, is reality, and reality is

@@ -34,9 +34,9 @@ std::vector<model::Finding> DependencyCheck::check(const Context& context) {
   return out;
 }
 
-// A box says what it depends on (@uses <interface>, REQ-00088-1) and its behaviours say what it
+// A box says what it depends on (@consumes <interface>, REQ-00088-1) and its behaviours say what it
 // calls; the two are compared (REQ-00094-2). A call to an interface offered by another box needs a
-// @uses on the caller or on something it lives in; a @uses that none of the box's behaviours calls is
+// @consumes on the caller or on something it lives in; a @consumes that none of the box's behaviours calls is
 // dead, said only once the box has behaviours; a call to a class that realises an interface, from
 // outside its module, goes around the contract. An interface's own sequences realise it, and a box
 // calling an interface it offers itself depends on nothing.
@@ -99,8 +99,8 @@ void DependencyCheck::checkDependencies() {
       }
       const auto offered = offeredBy.find(iface);
       if (declares || inside(subject, iface) || (offered != offeredBy.end() && inside(subject, offered->second))) continue;
-      found_.push_back(
-          {"W-USES-UNDECLARED", "warning", subject + " calls " + op->id + ", and nothing it lives in declares @uses " + iface, location});
+      found_.push_back({"W-CONSUMES-UNDECLARED", "warning",
+                        subject + " calls " + op->id + ", and nothing it lives in declares @consumes " + iface, location});
     } else if (op->kind == model::Kind::Method) {
       const auto r2 = realised.find(op->scope);
       const model::Entity* cls = model_->find(op->scope);
@@ -116,9 +116,9 @@ void DependencyCheck::checkDependencies() {
         if (iface.empty() && operation && operation->kind == model::Kind::Operation) iface = i;
       }
       if (iface.empty()) continue;
-      found_.push_back({"W-USES-BYPASS", "warning",
+      found_.push_back({"W-CONSUMES-BYPASS", "warning",
                         subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
-                            ": call the interface (a local or a parameter typed " + iface + ") and declare @uses " + iface,
+                            ": call the interface (a local or a parameter typed " + iface + ") and declare @consumes " + iface,
                         location});
     }
   }
@@ -134,7 +134,7 @@ void DependencyCheck::checkDependencies() {
     if (!behaves) continue;  // a box drawn before its behaviour: its uses are a plan, not yet a claim
     for (const auto& iface : d.second) {
       if (called[d.first].count(iface)) continue;
-      found_.push_back({"W-USES-UNUSED", "warning", d.first + " declares @uses " + iface + ", and none of its behaviours calls it",
+      found_.push_back({"W-CONSUMES-UNUSED", "warning", d.first + " declares @consumes " + iface + ", and none of its behaviours calls it",
                         written[{d.first, iface}]});
     }
   }

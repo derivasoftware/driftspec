@@ -51,7 +51,7 @@ TEST_F(TestWorkspaceParsing, ASyntaxErrorIsReportedWhereTheFileStopsParsing) {
                                                                       "  module m {\n"
                                                                       "    class A {\n"
                                                                       "      + x: int\n"
-                                                                      "      @uses b.c\n"
+                                                                      "      @consumes b.c\n"
                                                                       "    }\n"
                                                                       "  }\n"
                                                                       "}\n")});

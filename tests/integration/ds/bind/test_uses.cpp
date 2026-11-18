@@ -12,7 +12,7 @@
 
 namespace {
 
-/// A box declares that it uses an interface another box offers (REQ-00088-1): @uses binds a
+/// A box declares that it uses an interface another box offers (REQ-00088-1): @consumes binds a
 /// consumes relation, the same in the box or in an extension block in another file.
 class TestUses : public ::testing::Test {
  protected:
@@ -61,13 +61,13 @@ class TestUses : public ::testing::Test {
 
 TEST_F(TestUses, APackageAModuleOrAClassUsesAnInterfaceOfAnotherBox) {
   load({{"a.ds", std::string(kSystem) + "  package service {\n"
-                                        "    @uses sistema@broker@publish\n"
+                                        "    @consumes sistema@broker@publish\n"
                                         "  }\n"
                                         "  package tui {\n"
                                         "    module screen {\n"
-                                        "      @uses sistema@broker@observe\n"
+                                        "      @consumes sistema@broker@observe\n"
                                         "      class View {\n"
-                                        "        @uses sistema@broker@observe\n"
+                                        "        @consumes sistema@broker@observe\n"
                                         "        + show(n: int) -> none\n"
                                         "      }\n"
                                         "    }\n"
@@ -84,10 +84,10 @@ TEST_F(TestUses, AUseWrittenInAnotherFileBindsTheSame) {
         {"wiring.ds",  // the system's wiring, apart from the boxes it connects
          "package sistema {\n"
          "  package service {\n"
-         "    @uses sistema@broker@publish\n"
+         "    @consumes sistema@broker@publish\n"
          "  }\n"
          "  package web {\n"
-         "    @uses sistema@broker@observe\n"
+         "    @consumes sistema@broker@observe\n"
          "  }\n"
          "}\n"}});
   EXPECT_TRUE(consumes("sistema@service", "sistema@broker@publish"));
@@ -96,7 +96,7 @@ TEST_F(TestUses, AUseWrittenInAnotherFileBindsTheSame) {
 
 TEST_F(TestUses, AUseOfSomethingThatIsNoInterfaceIsReportedAndNotBound) {
   load({{"a.ds", std::string(kSystem) + "  package service {\n"
-                                        "    @uses sistema@protocol@messages::Dato\n"
+                                        "    @consumes sistema@protocol@messages::Dato\n"
                                         "  }\n"
                                         "}\n"}});
   int kind = 0;
@@ -106,7 +106,7 @@ TEST_F(TestUses, AUseOfSomethingThatIsNoInterfaceIsReportedAndNotBound) {
 }
 
 TEST_F(TestUses, AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten) {
-  const auto uses = ds::model::annotationOf("uses");
+  const auto uses = ds::model::annotationOf("consumes");
   EXPECT_EQ(uses.relation, "consumes");
   EXPECT_EQ(uses.target, ds::model::Kind::Interface);
   EXPECT_EQ(ds::model::annotationOf("whatever").relation, "refers");  // a word with no meaning stays a plain link

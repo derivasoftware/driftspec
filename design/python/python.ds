@@ -506,8 +506,8 @@ package driftspec@python {
   // ---- the extension: C++ inside the Python box --------------------------------------------------
   module native {
     language: cpp
-    @uses driftspec@ds@engine                // DS-92: through the engine's interface
-    @uses driftspec@ds@workspace             // DS-90: a workspace loaded once, through its interface
+    @consumes driftspec@ds@engine                // DS-92: through the engine's interface
+    @consumes driftspec@ds@workspace             // DS-90: a workspace loaded once, through its interface
     @requirement REQ-00086-1
 
     function version() -> string

@@ -18,8 +18,8 @@ package shop {
   }
 
   package sales {
-    @uses shop@warehouse@counter
-    @uses shop@bank@gateway
+    @consumes shop@warehouse@counter
+    @consumes shop@bank@gateway
 
     module desk {
       requirement REQ-00001-1 {
@@ -68,7 +68,7 @@ package shop {
   }
 
   package warehouse {
-    @uses shop@bank@gateway
+    @consumes shop@bank@gateway
 
     interface counter {
       kind: library

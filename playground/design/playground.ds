@@ -227,7 +227,7 @@ package driftspec@playground {
   module engine {
     // engine.js: loads ds.js + ds.wasm and makes the one call
     class Engine {
-      @uses driftspec@ds@browser
+      @consumes driftspec@ds@browser
       + start() -> none
       + ds(files: Files, width: int) -> Answer
     }

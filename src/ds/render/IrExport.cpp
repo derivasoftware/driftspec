@@ -73,7 +73,7 @@ std::string edgeKind(const std::string& relation) {
   if (relation == "owns") return "composition";
   if (relation == "refs" || relation == "shares") return "aggregation";
   if (relation == "uses" || relation == "bounded-by" || relation == "consumes" || relation == "sends")
-    return "dependency";  // @uses is drawn (DS-219)
+    return "dependency";  // @consumes is drawn (DS-219)
   if (relation == "realises") return "realization";
   return "";
 }

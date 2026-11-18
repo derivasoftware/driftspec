@@ -109,10 +109,11 @@ TEST_F(TestLevels, AMessageNoOperationAnswersIsALabelListedAsCoverage) {
 
 TEST_F(TestLevels, WhatClashesWithTheLevelBelowIsAFinding) {
   EXPECT_EQ(found(model.findings(), "E-MSG-ARITY", "shop@warehouse@counter::take takes 1 parameter, 2 given"), 1);
-  EXPECT_EQ(found(model.findings(), "W-USES-UNDECLARED", "shop@bank calls shop@warehouse@counter::take"), 1);  // the sender is who calls
+  EXPECT_EQ(found(model.findings(), "W-CONSUMES-UNDECLARED", "shop@bank calls shop@warehouse@counter::take"),
+            1);                                                                     // the sender is who calls
   EXPECT_EQ(found(model.findings(), "W-MSG-UNDECLARED", "shop@shell::refund"), 1);  // an interface is written: what it lacks, it lacks
   EXPECT_EQ(found(model.findings(), "W-PARTICIPANT-UNDECLARED", "'courier' sends a message"), 1);
-  EXPECT_EQ(found(model.findings(), "W-USES-UNDECLARED", ""), 1);  // and no other: whoever asks from outside declares no use
+  EXPECT_EQ(found(model.findings(), "W-CONSUMES-UNDECLARED", ""), 1);  // and no other: whoever asks from outside declares no use
 }
 
 TEST_F(TestLevels, TheWrittenLevelAndTheDetailLiftedOntoItsBoxesDrawTheSameCrossings) {

@@ -125,7 +125,7 @@ TEST(TestDependencyCheck, ACallIntoAnotherBoxsInterfaceNeedsAUse) {
       "  }\n"
       "}\n",
       "dependencies");
-  EXPECT_TRUE(has(codes, "W-USES-UNDECLARED"));
+  EXPECT_TRUE(has(codes, "W-CONSUMES-UNDECLARED"));
 }
 
 TEST(TestRuleCheck, ARuleThatAnswersToNoRequirementIsAFinding) {

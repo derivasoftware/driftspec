@@ -55,7 +55,7 @@ package shop {
 
   package sales {
     @requirement SREQ-00001-1
-    @uses shop@warehouse@counter
+    @consumes shop@warehouse@counter
 
     module desk {
       requirement REQ-00001-1 {

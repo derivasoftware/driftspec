@@ -166,7 +166,7 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
   binder.bind(parser.parseText("a.ds",
                                "package shop {\n"
                                "  package sales {\n"
-                               "    @uses shop@warehouse@counter\n"
+                               "    @consumes shop@warehouse@counter\n"
                                "  }\n"
                                "  package warehouse {\n"
                                "    interface counter {\n"
@@ -197,7 +197,7 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
   binder.bind(parser.parseText("a.ds",
                                "package shop {\n"
                                "  package front {\n"
-                               "    @uses shop@back@orders\n"
+                               "    @consumes shop@back@orders\n"
                                "    module web {\n"
                                "      class Page {\n"
                                "        + show(id: string) -> none\n"
@@ -241,7 +241,7 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
   EXPECT_EQ(open, edges("CL_Named"));
   EXPECT_TRUE(open.count("shop@front@web::Page -> shop@back@store::Ledger"));  // the subject, not its module
   EXPECT_FALSE(open.count("shop@front@web -> shop@back@store::Ledger"));
-  EXPECT_TRUE(open.count("shop@front -> shop@back@orders"));  // the declared @uses
+  EXPECT_TRUE(open.count("shop@front -> shop@back@orders"));  // the declared @consumes
 }
 
 }  // namespace
