@@ -76,7 +76,7 @@ Any editor that speaks the Language Server Protocol can start it for files endin
 ## Syntax: the tree-sitter grammar
 
 The language is a tree-sitter grammar (`grammar/`), with its queries for highlighting and
-folding (`grammar/queries/`). Neovim loads it as any other language, and this site colours
+folding (`grammar/queries/`). An editor with tree-sitter, such as Neovim, loads it as any other language, and this site colours
 its editor with the same grammar, compiled to WebAssembly.
 
 ## From Python
