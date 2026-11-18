@@ -125,7 +125,8 @@ DriftSpec is young. This is what a first release leaves out, so that nothing her
   no meaning of its own yet.
 - **Two versions of a design are not compared.** An earlier `ds diff` was taken out before this
   release; it may come back.
-- **Built and tested on Linux and on Windows; not yet tried on macOS.** It should build there
-  as it does on Linux, but no one has run it.
+- **Built and tested on Linux, Windows and macOS (Apple silicon); no Intel Mac wheel yet.** Every
+  push is built and tested on the three; the release carries a wheel for each, and none for an
+  Intel Mac until someone asks.
 - **DriftSpec checks the design, not the code.** Whether the code does what the design says is
   outside this tool.
