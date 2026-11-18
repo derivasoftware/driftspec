@@ -221,8 +221,9 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
 std::vector<CodeSpec> buildCodes() {
   return {
       {"E-SYNTAX", "error",
-       "A file does not parse at the place shown. What parses around it still reaches the model, so other findings in that file "
-       "may come from the cut rather than from the design.",
+       "A file does not parse at the place shown; a block left open is shown where it opens. What parses around it still reaches "
+       "the model, and until the file parses the findings that only echo the cut are left out: the rest of that file's, and "
+       "every name declared nowhere.",
        "Fix this one first and check again. The message says what the place takes; ds manual grammar says what goes where."},
       {"E-NAME-RESERVED", "error",
        "A member is named state or sequence and its holder has that behaviour: a state machine is X::state and a sequence "

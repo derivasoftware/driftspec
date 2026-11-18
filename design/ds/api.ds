@@ -176,7 +176,9 @@ package driftspec@ds {
       @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-1
       + static check(files: Files) -> std::string
-      + static load(files: std::vector<parse::ParsedFile>) -> model::Model
+      + static load(files: std::vector<parse::ParsedFile>) -> model::Model {
+        @requirement REQ-00167-1
+      }
       + static report(model: model::Model, pretty: bool) -> std::string
       + static exportModel(files: Files) -> std::string
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
