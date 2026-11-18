@@ -30,7 +30,7 @@ class TestMetamodelConformance : public ::testing::Test {
 
   static std::vector<std::string> workspaces() {
     std::vector<std::string> out{std::string(DRIFTSPEC_SOURCE_DIR) + "/design"};
-    for (const auto& d : std::filesystem::directory_iterator(std::string(DRIFTSPEC_EXAMPLES_DIR))) {
+    for (const auto& d : std::filesystem::directory_iterator(std::string(DRIFTSPEC_CORPUS_DIR))) {
       if (d.is_directory()) out.push_back(d.path().string());
     }
     return out;

@@ -14,13 +14,13 @@
 
 namespace {
 
-/// A behaviour says what it gives back and a call which scenario it enters, over examples/scenarios.
+/// A behaviour says what it gives back and a call which scenario it enters, over tests/corpus/scenarios.
 class TestScenarios : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/scenarios")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/scenarios")) {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }

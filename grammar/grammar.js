@@ -3,7 +3,7 @@
  * behaviour, read per workspace. Consumer-neutral tree-sitter grammar: the
  * same parser serves the engine, the language server and the editors.
  *
- * Static part follows rules R10–R19 (examples/static/static.ds).
+ * Static part follows rules R10–R19 (tests/corpus/static/static.ds).
  */
 
 const NAME = /[A-Za-z_][A-Za-z0-9_]*(-[A-Za-z0-9_]+)*/;

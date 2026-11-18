@@ -45,11 +45,11 @@ def examples() -> list[dict]:
 # whole workspaces offered after the lessons: a small system, the shop of the model audit, and driftspec's own design
 EXAMPLES = [
     ("shop", {"en": "Example: a shop, from the promise to the code", "es": "Ejemplo: una tienda, de la promesa al código"},
-     HERE / "examples" / "shop"),
+     ROOT / "examples" / "shop"),
     ("hola", {"en": "Example: hola, a greeting service in four boxes", "es": "Ejemplo: hola, un servicio de saludos en cuatro cajas"},
      ROOT / "examples" / "hola"),
     ("states", {"en": "Example: a connection, a machine that is checked", "es": "Ejemplo: una conexión, una máquina que se comprueba"},
-     HERE / "examples" / "states"),
+     ROOT / "examples" / "states"),
     ("driftspec", {"en": "Example: the design of DriftSpec itself", "es": "Ejemplo: el diseño del propio DriftSpec"}, ROOT / "design"),
 ]
 

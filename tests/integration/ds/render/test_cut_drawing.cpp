@@ -15,14 +15,14 @@
 
 namespace {
 
-/// The cut of a diagram as it is drawn and as it is asked (DS-229), over examples/cut: one shop
+/// The cut of a diagram as it is drawn and as it is asked (DS-229), over tests/corpus/cut: one shop
 /// through several cuts.
 class TestCutDrawing : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/cut")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/cut")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
   }

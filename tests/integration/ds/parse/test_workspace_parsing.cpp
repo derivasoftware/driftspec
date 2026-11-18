@@ -26,7 +26,7 @@ class TestWorkspaceParsing : public ::testing::Test {
 };
 
 TEST_F(TestWorkspaceParsing, AWholeWorkspaceIsReadWithoutSyntaxErrors) {
-  const auto files = parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/diag");
+  const auto files = parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag");
   ASSERT_EQ(files.size(), 13u);
   for (const auto& f : files) EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
   const ds::model::Model model = ds::api::Api::load(files);
@@ -35,7 +35,7 @@ TEST_F(TestWorkspaceParsing, AWholeWorkspaceIsReadWithoutSyntaxErrors) {
 }
 
 TEST_F(TestWorkspaceParsing, TheFilesOfADirectoryAreReadAsOneInAnyOrder) {
-  auto files = parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/diag");
+  auto files = parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag");
   const ds::check::Report forwards = ds::check::Report::of(ds::api::Api::load(files));
   std::reverse(files.begin(), files.end());
   const ds::check::Report backwards = ds::check::Report::of(ds::api::Api::load(files));

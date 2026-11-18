@@ -15,13 +15,13 @@
 
 namespace {
 
-/// A machine drawn as a table (DS-251), over examples/states: the order, its events down and its states across.
+/// A machine drawn as a table (DS-251), over tests/corpus/states: the order, its events down and its states across.
 class TestTableView : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/states")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/states")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
     json = ds::render::IrExport(model).render("diagram:TB_Order", false);

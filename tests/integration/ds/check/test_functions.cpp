@@ -12,7 +12,7 @@
 
 namespace {
 
-/// Functions of a module (F1-F5) over examples/functions/functions.ds, whose `!` comments are the oracle.
+/// Functions of a module (F1-F5) over tests/corpus/functions/functions.ds, whose `!` comments are the oracle.
 class TestFunctions : public ::testing::Test {
  protected:
   ds::model::Model model;
@@ -21,7 +21,7 @@ class TestFunctions : public ::testing::Test {
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/functions")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/functions")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }

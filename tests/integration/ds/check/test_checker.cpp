@@ -17,7 +17,7 @@ class TestChecker : public ::testing::Test {
   std::map<std::string, int> loadExamples() {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/diag")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
     std::map<std::string, int> byCode;

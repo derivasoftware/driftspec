@@ -14,7 +14,7 @@ shift 2
 workspaces=("$@")
 if [ ${#workspaces[@]} -eq 0 ]; then
   workspaces=(design)
-  for d in examples/*/; do workspaces+=("${d%/}"); done
+  for d in examples/*/ tests/corpus/*/; do workspaces+=("${d%/}"); done
 fi
 out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT

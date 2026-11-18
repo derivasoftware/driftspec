@@ -185,7 +185,7 @@ in Plane, epics DS-206 and DS-205.
 
 ## 4. The language as decided so far (R1–R19)
 
-Rules R1–R9 are in `examples/diag` and R10–R19 in `examples/static/static.ds`,
+Rules R1–R9 are in `tests/corpus/diag` and R10–R19 in `tests/corpus/static/static.ds`,
 whose `!` comments are the oracle of the test suite. In short:
 
 - **R1–R2** A `package` is the whole scope, the black box: requirements,
@@ -367,7 +367,7 @@ derives the links.
   to its behaviour), focus on hover, expansions that fold on click with the
   rows below moving up, and `data-ref-location` on every message for an
   editor to jump to the `.ds` line. The caller invokes the entry operation
-  first, leftmost, so a drawing says what it shows. Corpus `examples/behaviour`. Activities are not
+  first, leftmost, so a drawing says what it shows. Corpus `tests/corpus/behaviour`. Activities are not
   in the POC. A `//` now always starts a comment, also after a field value.
 - This is the input for syntax block 3; the behaviour-as-entity decision
   itself is taken, the syntax is provisional until chosen.
@@ -530,7 +530,7 @@ corpus the same day.
    level by placement, `status` in the language, no `asil` (tags), no
    `parent:` (nesting or `@refines`), verification nested or `@requirement`,
    tests as the runner names them, constraint `category`/`bok`, one-line
-   forms; `applies:` on constraints deferred. Corpus `examples/artefacts`.
+   forms; `applies:` on constraints deferred. Corpus `tests/corpus/artefacts`.
 2. **Static leftovers**: DECIDED 2026-10-25: contracts as text in the body
    only; ids `pkg@mod::Class`, boundaries `pkg@name`, artefacts global;
    braces enclose and one thing per line; `extern` names only.

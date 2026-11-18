@@ -14,7 +14,7 @@
 
 namespace {
 
-/// Where a failure starts and where it is handled, over examples/failures (DS-187).
+/// Where a failure starts and where it is handled, over tests/corpus/failures (DS-187).
 class TestFailures : public ::testing::Test {
  protected:
   ds::model::Model model;
@@ -22,7 +22,7 @@ class TestFailures : public ::testing::Test {
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/failures")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/failures")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path << ": " << f.errorDetail;
       binder.bind(f);
     }

@@ -14,13 +14,13 @@
 
 namespace {
 
-/// The values of a sequence have types, over examples/values (its `!` lines are the oracle).
+/// The values of a sequence have types, over tests/corpus/values (its `!` lines are the oracle).
 class TestValues : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/values")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/values")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);

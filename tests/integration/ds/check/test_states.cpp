@@ -12,14 +12,14 @@
 
 namespace {
 
-/// The states of a machine as rules over the context of its subject (DS-249), over examples/states: machines
+/// The states of a machine as rules over the context of its subject (DS-249), over tests/corpus/states: machines
 /// whose rules exclude each other, and the faults a rule can have (its `!` lines are the oracle).
 class TestStates : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/states")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/states")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
   }

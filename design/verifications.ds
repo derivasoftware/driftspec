@@ -183,18 +183,21 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
   }
 
-  verification SVER-00013-1 {
+  verification SVER-00013-2 {
     status: approved
     @requirement SREQ-00012-1
-    title: System tests confirm every oracle corpus means exactly the findings it marks
+    title: System tests confirm every oracle corpus means exactly the findings it marks, and every example a newcomer is shown checks clean
     text:
-      For every corpus under examples/, the codes ds check reports are
+      For every corpus under tests/corpus/, the codes ds check reports are
       exactly the codes the corpus marks in its `// !` comments: every rule
       of the language is fixed by a text that shows it and by the findings
-      it must and must not raise.
+      it must and must not raise. The corpora live with the tests; examples/
+      holds what a newcomer is shown, and each of its workspaces checks with
+      no finding. Revision 2: the corpora left examples/ (DS-282).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCorpusMeansExactlyTheFindingsItMarks
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryExampleANewcomerIsShownChecksClean
   }
 
   verification SVER-00012-2 {

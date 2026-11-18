@@ -16,14 +16,14 @@
 
 namespace {
 
-/// Behaviour written at the high level, in one block between the boxes (DS-232), over examples/levels: the
+/// Behaviour written at the high level, in one block between the boxes (DS-232), over tests/corpus/levels: the
 /// purchase of a shop written as a scenario of its use case, beside the same purchase in detail.
 class TestLevels : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/levels")) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/levels")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
   }

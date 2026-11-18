@@ -11,7 +11,7 @@
 
 namespace {
 
-/// The static rules R10–R19 over examples/static/static.ds, whose `!` comments are the oracle.
+/// The static rules R10–R19 over tests/corpus/static/static.ds, whose `!` comments are the oracle.
 class TestStatic : public ::testing::Test {
  protected:
   ds::model::Model model;
@@ -20,7 +20,7 @@ class TestStatic : public ::testing::Test {
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/static")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }

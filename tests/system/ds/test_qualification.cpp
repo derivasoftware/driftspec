@@ -37,7 +37,7 @@ Outcome ds(const std::string& args) {
   return run;
 }
 
-std::string examples(const std::string& corpus) { return std::string(DRIFTSPEC_EXAMPLES_DIR) + "/" + corpus; }
+std::string examples(const std::string& corpus) { return std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus; }
 
 int widest(const std::string& text) {
   int w = 0, current = 0;
@@ -357,7 +357,7 @@ TEST_F(TestQualification, TheToolSaysItsVersion) {
   EXPECT_EQ(said.code, 0);
   ASSERT_EQ(said.out.rfind("ds ", 0), 0U) << said.out;
   const std::string version = said.out.substr(3, said.out.find_last_not_of("\n") - 2);
-  const Outcome exported = ds("export " + examples("hola"));
+  const Outcome exported = ds("export " + examples("states"));
   EXPECT_EQ(nlohmann::json::parse(exported.out)["version"], version);
 }
 
@@ -394,10 +394,23 @@ TEST_F(TestQualification, AQuestionAboutTheModelIsAnsweredByIdentity) {
 
 // SREQ-00012-1: the language is formal: every oracle corpus means exactly the findings it marks with // !, and
 // what is not yet written exactly the coverage it marks with // ? (DS-216)
+// SREQ-00012-1: what examples/ shows a newcomer is a design written as it should be: no finding (DS-282)
+TEST_F(TestQualification, EveryExampleANewcomerIsShownChecksClean) {
+  int examples = 0;
+  for (const auto& dir : std::filesystem::directory_iterator(std::string(DRIFTSPEC_EXAMPLES_DIR))) {
+    if (!dir.is_directory()) continue;
+    ++examples;
+    const Outcome checked = ds("check " + dir.path().string());
+    EXPECT_EQ(checked.code, 0) << dir.path();
+    EXPECT_NE(checked.out.find(" 0 findings"), std::string::npos) << dir.path() << "\n" << checked.out;
+  }
+  EXPECT_GE(examples, 1);
+}
+
 TEST_F(TestQualification, EveryCorpusMeansExactlyTheFindingsItMarks) {
   const std::regex code(R"([EW]-[A-Z][A-Z-]+)");
   int corpora = 0;
-  for (const auto& dir : std::filesystem::directory_iterator(std::string(DRIFTSPEC_EXAMPLES_DIR))) {
+  for (const auto& dir : std::filesystem::directory_iterator(std::string(DRIFTSPEC_CORPUS_DIR))) {
     if (!dir.is_directory()) continue;
     ++corpora;
     std::set<std::string> marked, reported, markedCoverage, reportedCoverage;

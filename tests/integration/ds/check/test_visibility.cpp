@@ -12,13 +12,13 @@
 
 namespace {
 
-/// A box connects to another through a public child, at every level, over examples/visibility.
+/// A box connects to another through a public child, at every level, over tests/corpus/visibility.
 class TestVisibility : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/visibility")) {
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/visibility")) {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }

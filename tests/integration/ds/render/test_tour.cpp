@@ -19,7 +19,7 @@
 namespace {
 
 /// A tour (DS-245): one drawing that holds the boxes that take part in a behaviour and the sequence between
-/// them, on one cut. Over examples/cut, a purchase with its detail, and examples/levels, the same purchase
+/// them, on one cut. Over tests/corpus/cut, a purchase with its detail, and tests/corpus/levels, the same purchase
 /// written between the boxes.
 class TestTour : public ::testing::Test {
  protected:
@@ -31,7 +31,7 @@ class TestTour : public ::testing::Test {
   static void load(ds::model::Model& model, const std::string& corpus) {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model);
-    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/" + corpus)) binder.bind(f);
+    for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus)) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, checkSteps).run(binder);
   }
