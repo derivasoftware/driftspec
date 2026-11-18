@@ -98,6 +98,7 @@ package driftspec@ds {
       }
       - bindMember(file: parse::ParsedFile, node: TSNode, out_cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
         @requirement REQ-00026-1
+        @requirement REQ-00101-1                 // ~Name() flagged destructor
       }
       - bindFunction(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00054-1

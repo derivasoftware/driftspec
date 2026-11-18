@@ -338,6 +338,7 @@ package driftspec@ds {
       + run(out_context: Context) -> std::vector<model::Finding>
       - classify() -> void {
         @requirement REQ-00031-2
+        @requirement REQ-00101-1                 // a destructor is no part of the contract
       }
       - fillLanguages() -> void {
         @requirement REQ-00084-1
