@@ -1,4 +1,5 @@
 // ds — the DriftSpec command line: check, export, render, query and the manual over a workspace.
+#include <pthread.h>
 #include <unistd.h>
 
 #include <CLI/CLI.hpp>
@@ -215,7 +216,7 @@ struct Render {
 
 }  // namespace
 
-int main(int argc, char** argv) {
+int run(int argc, char** argv) {
   CLI::App app{"ds: a software design as text, checked, drawn, compared and asked", "ds"};
   app.require_subcommand(1);
   app.footer("A workspace is a directory of .ds files read as one. Each command takes --help; ds manual tells the rest.");
@@ -308,4 +309,45 @@ int main(int argc, char** argv) {
   // the answers, written by the format asked for (DS-126)
   std::cout << ds::format::answerFormats().at(json ? "json" : "text")->write(answers, {}) << (json ? "\n" : "");
   return 0;
+}
+
+namespace {
+
+/// What the thread that does the work is given and gives back.
+struct Call {
+  int argc;
+  char** argv;
+  int code;
+};
+
+void* work(void* raw) {
+  auto* call = static_cast<Call*>(raw);
+  try {
+    call->code = run(call->argc, call->argv);
+  } catch (const std::exception& e) {
+    // a file that cannot be read, or anything else the input makes impossible: said, with the code of bad
+    // input, never an abort (DS-279)
+    std::cerr << "ds: " << e.what() << "\n";
+    call->code = 2;
+  }
+  return nullptr;
+}
+
+}  // namespace
+
+// The work runs on a thread with a large stack: the binder walks a design as deep as it is nested, and the
+// 8 MB of the main thread end near 1,500 nested blocks (DS-279). The memory is reserved, not used.
+int main(int argc, char** argv) {
+  Call call{argc, argv, 2};
+  pthread_attr_t attributes;
+  pthread_attr_init(&attributes);
+  pthread_attr_setstacksize(&attributes, std::size_t{512} * 1024 * 1024);
+  pthread_t worker;
+  if (pthread_create(&worker, &attributes, work, &call) != 0) {
+    work(&call);  // no thread to be had: the work runs here, on the stack there is
+  } else {
+    pthread_join(worker, nullptr);
+  }
+  pthread_attr_destroy(&attributes);
+  return call.code;
 }
