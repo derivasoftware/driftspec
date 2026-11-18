@@ -53,7 +53,7 @@ body { background: var(--bg); color: var(--fg); font: 13px/1.4 var(--sans); disp
 header { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--page); flex: none; }
 header .logo { display: flex; align-items: center; padding: 4px 6px 4px 0; }
 header .logo img { height: 22px; width: auto; display: block; }
-header .logo .light { display: none; }
+header .logo .light, header .logo .tile { display: none; }
 :root[data-theme="light"] header .logo .dark { display: none; }
 :root[data-theme="light"] header .logo .light { display: block; }
 header select, header button { font: inherit; color: var(--fg); background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
@@ -65,6 +65,11 @@ header .spacer { flex: 1; }
 header a.contact { color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; background: var(--soft); white-space: nowrap; }
 header a.contact:hover { border-color: var(--brand); }
 header a.contact:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* the code, where it is published (DS-313) */
+header a.code { display: grid; place-items: center; width: 28px; height: 28px; box-sizing: border-box; color: var(--fg); border: 1px solid var(--line); border-radius: 6px; background: var(--soft); }
+header a.code svg { width: 16px; height: 16px; }
+header a.code:hover { border-color: var(--brand); }
+header a.code:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 /* the site (DS-257): a tab per page, the editor one of them; what only the editor uses shows only there */
 header nav#site { display: flex; gap: 2px; }
 header nav#site a { color: var(--muted); text-decoration: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
@@ -443,8 +448,11 @@ main { flex: 1; display: flex; min-height: 0; }
   header nav#site a { padding: 4px 5px; }
   header a.contact, header button#lang { padding: 3px 6px; }
 }
+@media (max-width: 400px) {  /* the tile alone: the wordmark needs the room the header has not got (DS-313) */
+  header .logo img.dark, header .logo img.light { display: none !important; }
+  header .logo img.tile { display: block; height: 22px; }
+}
 @media (max-width: 380px) {
-  header .logo img { height: 15px; }
   header nav#site a { padding: 4px 4px; }
   header #theme { padding: 3px 6px; }
 }
@@ -452,13 +460,14 @@ main { flex: 1; display: flex; min-height: 0; }
 </head>
 <body>
 <header>
-  <a class="logo" href="./" title="DriftSpec"><img class="dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec"></a>
+  <a class="logo" href="./" title="DriftSpec"><img class="dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec"><img class="tile" src="brand/driftspec-tile.svg" alt="driftspec"></a>
   <nav id="site"><a data-tab="home"></a><a data-tab="docs"></a><a data-tab="editor"></a></nav>
   <select class="editor-only" id="example" title="Example"></select>
   <button class="icon-btn editor-only" id="relesson" title="Restart the lesson" hidden><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7a4.5 4.5 0 1 0 1.4-3.3"/><path d="M2.5 2v2.6h2.6"/></svg></button>
   <span class="spacer"></span>
   <span class="count editor-only" id="count"></span>
   <span class="count editor-only" id="backend"></span>
+  <a class="code" href="https://github.com/derivasoftware/driftspec" title="GitHub" aria-label="DriftSpec on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
   <a class="contact" href="https://derivasoftware.dev/#contacto" data-t="contact"></a>
   <button id="lang" title="Language / Idioma">ES</button>
   <button id="theme" title="Theme">◐</button>
