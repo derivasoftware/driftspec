@@ -34,7 +34,7 @@ package driftspec@pyds {
 
   rule python-asks-the-engine-through-the-workspace {
     title: what is Python reaches the engine only through the native module; it holds no part of the engine of its own
-    @requirement REQ-00107-1
+    @requirement REQ-00107-2
     for class c in driftspec@pyds
     where not c in driftspec@pyds@native
     never depends(c, x), x in driftspec@ds
@@ -144,23 +144,23 @@ package driftspec@pyds {
   }
 
   // ---- the live session: a workspace followed as it is written --------------------------------
-  requirement REQ-00089-1 {
+  requirement REQ-00089-2 {
     status: approved
     @refines SREQ-00017-1
-    title: The live session shall reload the model on every change of the workspace's files and give every page that follows it the new state, with the identities that changed
+    title: The live session shall reload the model on every change of the workspace's files and give every page that follows it the new state
     text:
-      pyds.live watches the .ds files of a workspace; a change loads the model again, compares each
-      identity with the version before (an entity and the relations it makes), and pushes the state
-      (version, changed, removed, findings, counts, history) to every page following the session as
-      server-sent events. A member that changed marks its class too. A half-written file does not
-      stop the session: the error is sent and the next save is read.
+      pyds.live watches the .ds files of a workspace; a change loads the model again and pushes the
+      state (version, findings, counts, history) to every page following the session as server-sent
+      events. A half-written file does not stop the session: the error is sent and the next save is
+      read.
+    rationale: Revision 2: the identities that changed left with ds diff (Owner, 2026-11-18, DS-277).
     tags: live, viewer
-    verification VER-00098-1 {
+    verification VER-00098-2 {
       status: approved
-      title: Integration tests confirm a change to a file reaches the state with the identities that changed, and a page following the session receives the model
+      title: Integration tests confirm a change to a file reaches a new version of the state, and a page following the session receives the model
       method: test
       tests:
-        tests/integration/python/test_live.py::TestLiveSession::test_a_change_to_a_file_reaches_the_state_with_what_changed
+        tests/integration/python/test_live.py::TestLiveSession::test_a_change_to_a_file_reaches_a_new_version_of_the_state
         tests/integration/python/test_live.py::TestLiveSession::test_a_reader_receives_the_model_and_is_taken_where_it_is_asked
     }
   }
@@ -191,24 +191,24 @@ package driftspec@pyds {
     }
   }
 
-  requirement REQ-00091-2 {
+  requirement REQ-00091-3 {
     status: approved
     @refines SREQ-00017-1
     title: The live session shall offer its contract to an agent as MCP tools over stdio
     text:
       python -m pyds.live mcp serves live_open (starting the session if none serves the workspace),
       live_focus, live_note, live_highlight, live_clear, live_selection, live_state, live_comments
-      (what the reader wrote since the last call), live_isolate and live_baseline; each answers
+      (what the reader wrote since the last call) and live_isolate; each answers
       through the session's routes, so the agent and a page see the same state.
-    rationale: Revision 2 adds the tools of the reader's comments, isolation and the baseline (DS-139, DS-147, DS-148).
+    rationale: Revision 2 adds the tools of the reader's comments, isolation and the baseline (DS-139, DS-147, DS-148); revision 3 drops the baseline with ds diff (DS-277).
     tags: live, mcp
-    verification VER-00100-1 {
+    verification VER-00100-2 {
       status: approved
       title: Integration tests confirm an agent calls the contract as MCP tools and an unknown tool is an error
       method: test
       tests:
         tests/integration/python/test_live.py::TestLiveSession::test_an_agent_calls_the_contract_as_mcp_tools
-        tests/integration/python/test_live.py::TestLiveSession::test_an_agent_reads_comments_isolates_and_compares_as_mcp_tools
+        tests/integration/python/test_live.py::TestLiveSession::test_an_agent_reads_comments_and_isolates_as_mcp_tools
     }
   }
 
@@ -262,7 +262,7 @@ package driftspec@pyds {
     text:
       What is isolated (POST /isolate, live_isolate) is in the state and told to every page; a page
       that isolated it itself only tells the session. A new version of the model keeps it isolated.
-      How the viewer isolates is REQ-00092-2.
+      How the viewer isolates is REQ-00092-3.
     rationale: Owner, 2026-11-09 and 2026-11-10 (DS-139): see only the modules being talked about.
     tags: live, viewer, mcp
     verification VER-00113-1 {
@@ -271,28 +271,6 @@ package driftspec@pyds {
       method: test
       tests:
         tests/integration/python/test_live.py::TestLiveSession::test_the_isolation_is_kept_and_told_to_every_page
-    }
-  }
-
-  requirement REQ-00105-1 {
-    status: approved
-    @refines SREQ-00017-1
-    title: The live session shall compare the design with a baseline and say what it adds, changes and removes
-    text:
-      A baseline is a directory of .ds files or a git ref of the workspace's repository (serve
-      --baseline, POST /baseline, live_baseline); an empty one stops comparing. On every version
-      the state carries the identities added, changed (a member that changed changes its class)
-      and removed against it, compared as the session compares one version with the next. The page
-      counts them, lists them and asks the viewer to mark them; the marks can be hidden.
-    rationale: Owner, 2026-11-10 (DS-148): compare a proposal with the design on one map.
-    tags: live, viewer, diff
-    verification VER-00114-1 {
-      status: approved
-      title: Integration tests confirm the design is compared with a baseline directory and a git ref, and comparing stops
-      method: test
-      tests:
-        tests/integration/python/test_live.py::TestLiveSession::test_the_design_is_compared_with_a_baseline_directory
-        tests/integration/python/test_live.py::TestLiveSession::test_the_design_is_compared_with_a_git_ref
     }
   }
 
@@ -341,9 +319,6 @@ package driftspec@pyds {
     }
     operation isolate(ids: list<string>, tell: bool) -> object {
       @requirement REQ-00104-1
-    }
-    operation baseline(baseline: string) -> object {
-      @requirement REQ-00105-1
     }
   }
 
@@ -414,16 +389,10 @@ package driftspec@pyds {
     return isolated
   }
 
-  sequence session::baseline {
-    local s: live::Live
-    -> s.set_baseline(baseline) -> answer
-    return answer
-  }
-
   interface agent {                            // the same contract, for an agent
     kind: mcp
     transport: stdio, json-rpc
-    @requirement REQ-00091-2
+    @requirement REQ-00091-3
 
     operation live_open(workspace: string) -> string
     operation live_focus(id: string) -> object
@@ -437,9 +406,6 @@ package driftspec@pyds {
     }
     operation live_isolate(ids: list<string>) -> object {
       @requirement REQ-00104-1
-    }
-    operation live_baseline(baseline: string) -> object {
-      @requirement REQ-00105-1
     }
   }
 
@@ -484,11 +450,6 @@ package driftspec@pyds {
   }
 
   sequence agent::live_isolate {
-    -> live::tool(port, name, args, opened) -> answer
-    return answer
-  }
-
-  sequence agent::live_baseline {
     -> live::tool(port, name, args, opened) -> answer
     return answer
   }
@@ -567,7 +528,7 @@ package driftspec@pyds {
     // holds; its methods are the operations of the engine's workspace interface, each answer the JSON
     // the engine writes. No reader sees a CPython type yet: argos holds it to no code (DS-90).
     class Workspace {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       @constraint CST-00009-1
       - owns workspace: driftspec@ds@api::Workspace
       + Workspace(files: map<string, string>)
@@ -588,7 +549,6 @@ package driftspec@pyds {
       + shows(diagram: string) -> string
       + render(diagram: string, format: string, width: int) -> string
       + page(title: string, focus: list<string>) -> string
-      + diff(before: Workspace) -> string
     }
 
     sequence Workspace::export {
@@ -693,12 +653,6 @@ package driftspec@pyds {
       return json
     }
 
-    sequence Workspace::diff {
-      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
-      -> loaded.diff(before.workspace) -> json
-      return json
-    }
-
     sequence check {
       local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
       -> ds.check(files) -> json
@@ -800,24 +754,24 @@ package driftspec@pyds {
 
     // ---- what the engine answers about a loaded workspace, read into Python's own types (DS-173) -----
     dataclass Answer {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       + kind: string
       + id: string
       + detail: string
     }
     dataclass Step {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       + message: string
       + next: string
       + next_path: string
     }
     dataclass Walked {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       + message: string
       + depth: int
     }
     dataclass Frame {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       + id: string
       + kind: string
       + frame: string
@@ -829,32 +783,16 @@ package driftspec@pyds {
       + else_scenario: string
     }
     dataclass Tree {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       + sequence: string
       + messages: list<list<string>>
       + frames: list<Frame>
-    }
-    dataclass Change {
-      @requirement REQ-00107-1
-      + kind: string
-      + what: string
-      + id: string
-      + entity: string
-      + scope: string
-      + detail: string
-      + renamed_from: string
-      + label: string
-    }
-    dataclass Diff {
-      @requirement REQ-00107-1
-      + changes: list<Change>
-      + findings: list<Finding>
     }
 
     // What Python holds: a workspace loaded once in the engine, asked; it computes nothing the
     // engine knows. Several may be held at once, each with its own model.
     class Workspace {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       @constraint CST-00009-1
       - owns _native: native::Workspace
       + Workspace(source: Source)
@@ -875,17 +813,11 @@ package driftspec@pyds {
       + shows(diagram: string) -> list<Answer>
       + render(diagram: string, format: string, width: int) -> string
       + page(title: string, focus: list<string>) -> string
-      + diff(before: Workspace) -> Diff
     }
 
     sequence Workspace::relations_from {
       self -> _native.relations_from(identity) -> text
       return found
-    }
-
-    sequence Workspace::diff {
-      self -> _native.diff(before) -> text
-      return changes
     }
 
     function read(source: Source) -> map<string, string>
@@ -988,31 +920,25 @@ package driftspec@pyds {
 
   // ---- the live session ---------------------------------------------------------------------------
   module live {
-    @requirement REQ-00089-1
+    @requirement REQ-00089-2
     @requirement REQ-00090-1
-    @requirement REQ-00091-2
+    @requirement REQ-00091-3
     @requirement REQ-00102-1
     @requirement REQ-00103-1
     @requirement REQ-00104-1
-    @requirement REQ-00105-1
 
     class Live {                               // a session over one workspace: its model version by version, and what both sides point at
-      @requirement REQ-00089-1
+      @requirement REQ-00089-2
       @requirement REQ-00090-1
       + workspace: string
       + version: int
-      + changed: list<string>
-      + removed: list<string>
       + notes: list<object>
       + highlights: list<object>
       + rules: list<object>
       + selection: map<string, string>
       + comments: list<object>
       + isolated: list<string>
-      + baseline: string
-      + diff: map<string, list<string>>
       - loaded: optional<pyds::Workspace>      // the version shown, loaded once in the engine (DS-173)
-      - base: optional<pyds::Workspace>        // the baseline it is compared with
       + reload() -> bool
       + files_stamp() -> list<object>          // what the .ds files are now: a save changes it
       + rules_of(model: pyds::Model, findings: list<pyds::Finding>) -> list<map<string, object>> {
@@ -1040,19 +966,9 @@ package driftspec@pyds {
       + isolate(ids: list<string>, tell: bool) -> list<string> {
         @requirement REQ-00104-1
       }
-      + set_baseline(baseline: string) -> map<string, object> {
-        @requirement REQ-00105-1
-      }
-      + base_files() -> map<string, string> {
-        @requirement REQ-00105-1
-      }
-      + compare(loaded: pyds::Workspace, model: pyds::Model) -> map<string, list<string>> {
-        @requirement REQ-00105-1
-      }
     }
 
-    // A save: the version loaded once, its model, its page and its check asked of it, and what changed
-    // from the version before asked of the engine's diff (DS-173).
+    // A save: the version loaded once, and its model, its page and its check asked of it (DS-173).
     sequence Live::reload {
       local loaded: pyds::Workspace
       -> files_stamp() -> stamp
@@ -1062,18 +978,12 @@ package driftspec@pyds {
       -> loaded.model() -> model
       -> loaded.page(title, focus) -> page
       -> loaded.report() -> report
-      opt a version was shown before {
-        -> loaded.diff(before) -> diff
-        -> what_changed(diff, model) -> changes
-      }
       -> rules_of(model, findings) -> rules
-      -> compare(loaded, model) -> compared
       -> broadcast(event, data)
       return true
     }
 
-    function serve(workspace: string, port: int, open_browser: bool, block: bool, baseline: string) -> Live
-    function what_changed(diff: pyds::Diff, model: pyds::Model) -> list<set<string>>
+    function serve(workspace: string, port: int, open_browser: bool, block: bool) -> Live
     function handler_for(live: Live) -> object
     function call(port: int, path: string, data: map<string, object>) -> map<string, object>
     function tool(port: int, name: string, args: map<string, object>, opened: map<string, object>) -> object

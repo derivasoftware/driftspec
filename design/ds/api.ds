@@ -34,7 +34,7 @@ package driftspec@ds {
       }
     }
 
-    requirement REQ-00107-1 {
+    requirement REQ-00107-2 {
       status: approved
       @refines SREQ-00015-1
       title: The engine shall load a workspace once and answer every question asked of it, as documents
@@ -44,13 +44,14 @@ package driftspec@ds {
         identity (what leaves, reaches or touches an entity, what a scope declares, what holds what,
         the declared revision of an artefact), a behaviour's tree, the path of a scenario and the walk
         into what it calls, the questions of ds query and what a diagram takes, a diagram drawn and the
-        viewer, and what changed from another Workspace. How an identity is written is asked too, not
+        viewer. How an identity is written is asked too, not
         copied by the caller. Several Workspaces may be loaded at once, each with its own model.
       rationale:
         DS-173: every call from Python read and checked the whole workspace again (about 130 ms on
         driftspec's design), and what the engine knows (identities, a behaviour's tree, a diff) was
         derived again in Python by argos's plugin and the live session. One load, many questions, one
         contract; the place a reload would live.
+        Revision 2: what changed from another Workspace left with ds diff (Owner, 2026-11-18, DS-277).
       tags: python, api
     }
 
@@ -97,7 +98,7 @@ package driftspec@ds {
     // module of its own with its questions grouped by what they look at.
     class Workspace {
       @interface workspace                   // the class the in-process interface is linked against
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       @constraint CST-00009-1
       - owns model_: model::Model
       + Workspace(files: Files)
@@ -119,12 +120,11 @@ package driftspec@ds {
       + shows(diagram: std::string) -> std::string
       + render(diagram: std::string, format: std::string, width: int) -> std::string
       + page(title: std::string, focus: std::vector<std::string>) -> std::string
-      + diff(before: Workspace) -> std::string
     }
 
     // How an identity is written (model/Identity), asked by another language rather than copied into it.
     class Identity {
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       + static qualify(scope: std::string, name: std::string) -> std::string
       + static outer(scope: std::string) -> std::string
       + static boxOf(scope: std::string) -> std::string
@@ -135,9 +135,9 @@ package driftspec@ds {
       + static withoutRevision(id: std::string) -> std::string
     }
 
-    verification VER-00123-2 {
+    verification VER-00123-3 {
       status: approved
-      @requirement REQ-00107-1
+      @requirement REQ-00107-2
       @constraint CST-00009-1
       title: Integration tests ask a loaded workspace from C++ and from Python, two at once, and change an answer without changing the model
       method: test
@@ -146,12 +146,12 @@ package driftspec@ds {
         tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.OneHopIsTheIndexOfTheModel
         tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ABehaviourIsAnsweredAsItsTreePathAndWalk
         tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ItAsksAsDsQueryAndDrawsAsDsRender
-        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.TwoLoadedAtOnceTellWhatChangedFromOneToTheOther
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.TwoLoadedAtOnceEachKeepItsOwnModel
         tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.AnIdentityIsWrittenAsTheModelWritesIt
         tests/integration/python/test_workspace.py::TestWorkspace::test_one_load_answers_the_model_the_check_and_one_hop
         tests/integration/python/test_workspace.py::TestWorkspace::test_a_behaviour_is_read_as_its_tree_path_and_walk
         tests/integration/python/test_workspace.py::TestWorkspace::test_it_asks_as_ds_query_does_and_draws_as_ds_render_does
-        tests/integration/python/test_workspace.py::TestWorkspace::test_several_are_loaded_at_once_and_one_tells_what_changed_from_another
+        tests/integration/python/test_workspace.py::TestWorkspace::test_several_are_loaded_at_once_each_with_its_own_model
         tests/integration/python/test_workspace.py::TestWorkspace::test_an_answer_is_a_copy_the_caller_may_change
         tests/integration/python/test_workspace.py::TestWorkspace::test_an_identity_is_written_as_the_engine_writes_it
     }
@@ -169,11 +169,6 @@ package driftspec@ds {
       local tree: model::SequenceTree
       -> tree.frames() -> frames
       -> tree.messages() -> messages
-      return document
-    }
-
-    sequence Workspace::diff {
-      -> diff::Diff::compare(model, model) -> result   // static: called on its class (DS-60)
       return document
     }
 
@@ -265,7 +260,7 @@ package driftspec@ds {
     kind: library
     transport: in process, linked
     encoding: json text
-    @requirement REQ-00107-1
+    @requirement REQ-00107-2
     @constraint CST-00009-1
     operation export() -> string
     operation report() -> string
@@ -284,7 +279,6 @@ package driftspec@ds {
     operation shows(diagram: string) -> string
     operation render(diagram: string, format: string, width: int) -> string
     operation page(title: string, focus: list<string>) -> string
-    operation diff(before: api::Workspace) -> string
   }
 
   // The engine for a page in a browser (DS-203): one call per edit, the whole of what the page shows
@@ -478,9 +472,4 @@ package driftspec@ds {
     return json
   }
 
-  sequence workspace::diff {
-    local loaded: api::Workspace
-    -> loaded.diff(before) -> json
-    return json
-  }
 }

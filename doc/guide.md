@@ -267,8 +267,7 @@ them. The vision (`vision.md`) says why; this says what.*
   nesting is for ad-hoc views.
 - **Checks.** An approved requirement nothing verifies, and a verification by
   test with no tests, are coverage, not findings: what is not yet written
-  (DS-216), answered by `ds query <workspace> coverage`. The semantic diff adds `W-REVISION-STALE` for an artefact whose
-  text changed under the same revision.
+  (DS-216), answered by `ds query <workspace> coverage`.
 
 ## 3b. Visibility (`examples/visibility`, decided 2026-11-05)
 

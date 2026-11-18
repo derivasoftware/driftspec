@@ -194,8 +194,8 @@
       },
       "shows": "T_Classes",
       "text": {
-        "en": "Get closer and a box opens into its classes. This is the one that compares two versions of a design. Hover over a class and you'll see who it talks to.",
-        "es": "Si te acercas, una caja se abre y ves sus clases. Esta es la que compara dos versiones de un diseño. Pasa el ratón por encima de una clase y verás con quién se habla."
+        "en": "Get closer and a box opens into its classes. This is the one that reads a state machine and turns it into a table. Hover over a class and you'll see who it talks to.",
+        "es": "Si te acercas, una caja se abre y ves sus clases. Esta es la que lee una máquina de estados y la convierte en tabla. Pasa el ratón por encima de una clase y verás con quién se habla."
       },
       "done": {
         "ack": {
@@ -292,12 +292,12 @@
     },
     {
       "write": {
-        "file": "ds/diff.ds",
+        "file": "ds/machine.ds",
         "below": {
-          "find": "dataclass DiffResult {",
+          "find": "dataclass Row {",
           "after": "}"
         },
-        "text": "\nrule diff-reads-no-model {\n  title: what compares two versions never touches the model\n  @requirement REQ-00004-1\n  for class c in driftspec@ds@diff\n  never depends(c, driftspec@ds@model::Model)\n}"
+        "text": "\nrule machine-reads-no-model {\n  title: what reads a state machine never touches the model\n  @requirement REQ-00143-1\n  for class c in driftspec@ds@machine\n  never depends(c, driftspec@ds@model::Model)\n}"
       },
       "at": {
         "file": "ds/diff.ds",
@@ -305,8 +305,8 @@
       },
       "shows": "T_Rules",
       "text": {
-        "en": "Let me write a new one about the classes you saw earlier, the ones that compare two versions: they must never touch the model. It turns out it doesn't hold: `Diff` does use it. Look at the table: the new row says broken, and the error is listed below.",
-        "es": "Te escribo una nueva sobre las clases que viste antes, las que comparan dos versiones: que nunca toquen el modelo. Y resulta que no se cumple: `Diff` sí lo usa. Mira la tabla: la fila nueva dice que está rota, y abajo tienes el error."
+        "en": "Let me write a new one about the classes you saw earlier, the ones that read a state machine: they must never touch the model. It turns out it doesn't hold: `Machine` and `Table` do use it. Look at the table: the new row says broken, and the errors are listed below.",
+        "es": "Te escribo una nueva sobre las clases que viste antes, las que leen una máquina de estados: que nunca toquen el modelo. Y resulta que no se cumple: `Machine` y `Table` sí lo usan. Mira la tabla: la fila nueva dice que está rota, y abajo tienes los errores."
       },
       "done": {
         "ack": {
@@ -317,15 +317,15 @@
     },
     {
       "at": {
-        "file": "ds/diff.ds",
-        "find": "rule diff-reads-no-model"
+        "file": "ds/machine.ds",
+        "find": "rule machine-reads-no-model"
       },
       "text": {
-        "en": "A broken rule is fixed by changing the design or by dropping the rule. I made this one up, so delete it: the six lines of `rule diff-reads-no-model`.",
-        "es": "Una regla rota se arregla cambiando el diseño o quitando la regla. Esta me la he inventado, así que bórrala: las seis líneas de `rule diff-reads-no-model`."
+        "en": "A broken rule is fixed by changing the design or by dropping the rule. I made this one up, so delete it: the six lines of `rule machine-reads-no-model`.",
+        "es": "Una regla rota se arregla cambiando el diseño o quitando la regla. Esta me la he inventado, así que bórrala: las seis líneas de `rule machine-reads-no-model`."
       },
       "solution": {
-        "replace": "\n    rule diff-reads-no-model {\n      title: what compares two versions never touches the model\n      @requirement REQ-00004-1\n      for class c in driftspec@ds@diff\n      never depends(c, driftspec@ds@model::Model)\n    }\n",
+        "replace": "\n    rule machine-reads-no-model {\n      title: what reads a state machine never touches the model\n      @requirement REQ-00143-1\n      for class c in driftspec@ds@machine\n      never depends(c, driftspec@ds@model::Model)\n    }\n",
         "text": ""
       },
       "done": {
@@ -403,8 +403,8 @@
       },
       "shows": "T_UseCases",
       "text": {
-        "en": "And at the very top, the use cases: what DriftSpec is for, in seven lines, each with the system requirements it answers. Everything you've seen hangs from here.",
-        "es": "Y arriba del todo, los casos de uso: para qué sirve DriftSpec, en siete líneas, cada uno con los requisitos de sistema a los que responde. Todo lo que has visto cuelga de aquí."
+        "en": "And at the very top, the use cases: what DriftSpec is for, in six lines, each with the system requirements it answers. Everything you've seen hangs from here.",
+        "es": "Y arriba del todo, los casos de uso: para qué sirve DriftSpec, en seis líneas, cada uno con los requisitos de sistema a los que responde. Todo lo que has visto cuelga de aquí."
       },
       "done": {
         "ack": {

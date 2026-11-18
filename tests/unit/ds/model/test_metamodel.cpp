@@ -100,7 +100,7 @@ TEST_F(TestAnnotationSpec, EveryAnnotationThatMeansSomethingNamesTheRelationItMa
 }
 
 TEST_F(TestCommandSpec, EveryCommandSaysWhatEachOfItsExitCodesMeans) {
-  for (const char* name : {"check", "export", "render", "diff", "query", "manual"}) {
+  for (const char* name : {"check", "export", "render", "query", "manual"}) {
     const auto* command = ds::model::commandOf(name);
     ASSERT_NE(command, nullptr) << name;
     ASSERT_GE(command->exits.size(), 2u) << name;

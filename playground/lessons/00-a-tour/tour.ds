@@ -7,9 +7,9 @@ diagram T_Boxes {                      // from far away: the packages closed, ea
   close: package
 }
 
-diagram T_Classes {                    // one box opened into its classes: the one that compares two versions
+diagram T_Classes {                    // one box opened into its classes: the one that reads a state machine
   kind: class
-  include: driftspec@ds@diff::*
+  include: driftspec@ds@machine::*
 }
 
 diagram T_Interface {                  // a box seen from outside: three of the doors of the tool

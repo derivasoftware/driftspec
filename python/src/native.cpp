@@ -203,16 +203,6 @@ PyObject* workspacePage(PyObject* self, PyObject* args) {
   return run([self, t, &focus] { return held(self).page(t, focus); });
 }
 
-PyObject* workspaceDiff(PyObject* self, PyObject* args) {
-  PyObject* before = nullptr;
-  if (!PyArg_ParseTuple(args, "O", &before)) return nullptr;
-  if (!PyObject_TypeCheck(before, workspaceType)) {
-    PyErr_SetString(PyExc_TypeError, "diff takes the Workspace of the version before");
-    return nullptr;
-  }
-  return run([self, before] { return held(self).diff(held(before)); });
-}
-
 PyMethodDef kWorkspaceMethods[] = {
     {"export", ask0<&ds::api::Workspace::exportModel>, METH_NOARGS, "export() -> str: the model, as ds export"},
     {"report", ask0<&ds::api::Workspace::report>, METH_NOARGS, "report() -> str: the findings and counts, as ds check --json"},
@@ -231,7 +221,6 @@ PyMethodDef kWorkspaceMethods[] = {
     {"shows", ask1<&ds::api::Workspace::shows>, METH_VARARGS, "shows(diagram) -> str: what a diagram takes"},
     {"render", ask3<&ds::api::Workspace::render>, METH_VARARGS, "render(diagram, format, width) -> str: '' when none"},
     {"page", workspacePage, METH_VARARGS, "page(title, focus) -> str: the viewer, framed on the identities given"},
-    {"diff", workspaceDiff, METH_VARARGS, "diff(before) -> str: what changed from that Workspace to this one"},
     {nullptr, nullptr, 0, nullptr}};
 
 PyType_Slot kWorkspaceSlots[] = {

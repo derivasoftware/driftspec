@@ -14,7 +14,6 @@ package driftspec {
     @requirement SREQ-00004-1                // behaviour bound to the static entities
     @requirement SREQ-00005-1                // drawings as SVG and terminal, adapting to a width
     @requirement SREQ-00006-1                // the model and the drawings exported
-    @requirement SREQ-00007-1                // two versions compared in the model's terms
     @requirement SREQ-00009-2                // the static metamodel, packages nesting
     @requirement SREQ-00010-1                // a diagram kind per view
     @requirement SREQ-00011-1                // questions answered by identity
@@ -27,7 +26,6 @@ package driftspec {
     module bind { }
     module check { }
     module render { }
-    module diff { }
     module query { }
     module axis { }                         // the abstraction axis: the cut of a diagram, read by query and render
     module machine { }                      // a state machine as written: its states and the rules that compute them

@@ -1,5 +1,4 @@
-// ds — the DriftSpec command line: check, export, render, draw, coupling, diff and query over a workspace.
-#include <sys/stat.h>
+// ds — the DriftSpec command line: check, export, render, query and the manual over a workspace.
 #include <unistd.h>
 
 #include <CLI/CLI.hpp>
@@ -19,7 +18,6 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
-#include "ds/diff/Diff.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
@@ -37,38 +35,8 @@
 namespace {
 
 bool isDirectory(const std::string& path) {
-  struct stat st;
-  return ::stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
-}
-
-std::string firstLine(const std::string& command) {
-  std::string out;
-  if (FILE* p = ::popen(command.c_str(), "r")) {
-    char buffer[4096];
-    if (std::fgets(buffer, sizeof buffer, p)) out = buffer;
-    ::pclose(p);
-  }
-  while (!out.empty() && (out.back() == '\n' || out.back() == '/')) out.pop_back();
-  return out;
-}
-
-/// The .ds files of `path` (relative to the current directory, or absolute inside a
-/// repository) at git revision `rev`, extracted to a fresh directory ("" on failure).
-std::string checkout(const std::string& rev, const std::string& path) {
-  char tmpl[] = "/tmp/ds-diff-XXXXXX";
-  const char* dir = ::mkdtemp(tmpl);
-  if (!dir) return "";
-  std::string root = ".", relative = path;
-  if (!path.empty() && path[0] == '/') {
-    root = firstLine("git -C '" + path + "' rev-parse --show-toplevel 2>/dev/null");
-    relative = firstLine("git -C '" + path + "' rev-parse --show-prefix 2>/dev/null");
-    if (root.empty()) return "";
-    if (relative.empty()) relative = ".";
-  }
-  const std::string command =
-      "git -C '" + root + "' archive '" + rev + "' -- '" + relative + "' 2>/dev/null | tar -x -C '" + std::string(dir) + "' 2>/dev/null";
-  if (std::system(command.c_str()) != 0) return "";
-  return std::string(dir) + "/" + relative;
+  std::error_code error;
+  return std::filesystem::is_directory(path, error);
 }
 
 ds::model::Model load(const std::string& dir) {
@@ -287,18 +255,6 @@ int main(int argc, char** argv) {
   renderCmd->add_option("--css", render.css, "a stylesheet over the viewer's; it may redefine its colour and font variables")
       ->check(CLI::ExistingFile);
 
-  std::string before, after, path, diagram, format = "text";
-  int diffWidth = 0;
-  auto* diffCmd = app.add_subcommand("diff", "the changes between two versions in the model's terms, or a diagram with them marked");
-  diffCmd->add_option("before", before, "a directory, or a git revision")->required();
-  diffCmd->add_option("after", after, "a directory, or a git revision")->required();
-  diffCmd->add_option("path", path, "with git revisions: the workspace inside the repository; with directories: the diagram");
-  diffCmd->add_option("diagram", diagram, "with git revisions: the diagram to draw with the changes marked");
-  diffCmd->add_option("-f,--format", format, "how to draw the diagram")
-      ->check(CLI::IsMember({"text", "svg", "cells"}))
-      ->capture_default_str();
-  width(diffCmd, &diffWidth);
-
   auto* queryCmd = app.add_subcommand(
       "query",
       "ask the model: diagrams · entities · relations · artefacts · behaviours · shows · findings · coverage · coupling · failures");
@@ -313,7 +269,7 @@ int main(int argc, char** argv) {
   manualCmd->add_flag("--json", json, "the page as JSON");
 
   // every command says its exit codes, from the one table the manual prints too (DS-79)
-  for (auto* cmd : {checkCmd, exportCmd, renderCmd, diffCmd, queryCmd, manualCmd}) {
+  for (auto* cmd : {checkCmd, exportCmd, renderCmd, queryCmd, manualCmd}) {
     const ds::model::CommandSpec* spec = ds::model::commandOf(cmd->get_name());
     if (!spec) continue;
     std::string exits = "Exit codes:";
@@ -331,68 +287,6 @@ int main(int argc, char** argv) {
   if (manualCmd->parsed()) return manual(topic, json);
   if (checkCmd->parsed()) return check(dir, json);
   if (renderCmd->parsed()) return render.run();
-  if (diffCmd->parsed()) {
-    std::string a = before, b = after;
-    if (isDirectory(a) && isDirectory(b)) {
-      if (diagram.empty()) diagram = path;  // two directories need no path: the third argument is the diagram
-      for (const std::string& version : {a, b}) {
-        if (holdsDesign(version)) continue;
-        std::cerr << "no .ds file under " << version << ": it is no workspace\n";
-        return 2;
-      }
-    } else {
-      a = checkout(a, path.empty() ? "." : path);
-      b = checkout(b, path.empty() ? "." : path);
-      if (a.empty() || b.empty()) {
-        std::cerr << "cannot read both revisions (give two directories, or two git revisions and a path)\n";
-        return 2;
-      }
-    }
-    const ds::model::Model first = load(a);
-    const ds::model::Model second = load(b);
-    // a version that does not load is no deletion of the design: say why, and compare nothing
-    bool unloadable = false;
-    for (const auto* version : {&first, &second}) {
-      const std::string& name = version == &first ? before : after;
-      long declared = 0;
-      for (const auto& p : version->entities()) declared += p.second.expected ? 0 : 1;
-      if (declared == 0) {
-        std::cerr << name << ": no .ds file declares anything there\n";
-        unloadable = true;
-      }
-      for (const auto& f : version->findings()) {
-        if (f.code != "E-SYNTAX") continue;
-        std::cout << name << ": " << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  "
-                  << f.message << "\n";
-        unloadable = true;
-      }
-    }
-    if (unloadable) return 1;
-    if (diagram.empty() && diffCmd->count("--format")) {
-      std::cerr << "-f draws a diagram with the changes marked: name one (ds query <workspace> diagrams lists them)\n";
-      return 2;
-    }
-    const ds::diff::DiffResult result = ds::diff::Diff::compare(first, second);
-    if (!diagram.empty()) {
-      const ds::model::Model marked = ds::diff::Diff::marked(first, second, result);
-      const std::string doc = ds::render::IrExport(marked).render(diagramId(diagram), false);
-      if (doc.empty()) {
-        std::cerr << "no diagram named " << diagram << "\n";
-        return 1;
-      }
-      ds::format::FormatOptions options;  // the marked diagram, written by the format named (DS-126)
-      options.width = diffWidth;
-      options.color = isatty(1) != 0;
-      std::cout << ds::format::diagramFormats().at(format)->write({doc}, options);
-      // the drawing is the output; what the diff raises still counts, and goes where it cannot spoil a drawing
-      for (const auto& f : result.findings)
-        std::cerr << f.location.file << ":" << f.location.line << "  " << f.code << "  " << f.message << "\n";
-      return result.findings.empty() ? 0 : 1;
-    }
-    std::cout << ds::diff::Diff::report(result);
-    return result.findings.empty() ? 0 : 1;
-  }
-
   ds::model::Model model;
   if (!loadWorkspace(dir, &model)) return 2;
   if (exportCmd->parsed()) {

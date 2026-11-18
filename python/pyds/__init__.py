@@ -3,7 +3,7 @@
     import pyds
     ws = pyds.Workspace("design/")          # loaded once, kept in the engine (DS-173) ...
     ws.relations_from("p@m::C"); ws.tree("p@m::C::run::sequence"); ws.ask("coupling")
-    ws.render("CL_Model", "text"); ws.diff(pyds.Workspace(older))
+    ws.render("CL_Model", "text")
     model = ws.model()                       # ... and the whole of it, typed, when that is wanted
     model = pyds.load("design/")            # the same, for one look: a directory or {path: text}
     report = pyds.check("design/")
@@ -28,7 +28,7 @@ Source = Union[str, os.PathLike, Mapping[str, str]]
 
 __all__ = [
     "Location", "Entity", "Relation", "Finding", "Model", "Report", "Answer", "Step", "Walked", "Frame", "Tree", "Change",
-    "Diff", "Workspace", "read", "load", "check", "expected_at", "render", "page", "qualify", "outer", "box_of",
+    "Workspace", "read", "load", "check", "expected_at", "render", "page", "qualify", "outer", "box_of",
     "package_of", "behaviour_of", "subject_of", "scenario_of", "without_revision",
 ]
 
@@ -258,26 +258,6 @@ class Tree:
     frames: tuple[Frame, ...]
 
 
-@dataclass(frozen=True)
-class Change:
-    """One difference between two versions, by identity."""
-
-    kind: str
-    what: str
-    id: str
-    entity: str
-    scope: str
-    detail: str
-    renamed_from: str
-    label: str
-
-
-@dataclass(frozen=True)
-class Diff:
-    changes: tuple[Change, ...]
-    findings: tuple[Finding, ...]
-
-
 class Workspace:
     """A workspace loaded once and kept in the engine (DS-173): asked as often as needed, each answer
     a copy. Several may be loaded at once; each keeps its own model."""
@@ -347,13 +327,6 @@ class Workspace:
     def page(self, title: str, focus: list[str] | tuple[str, ...] = ()) -> str:
         return self._native.page(title, list(focus))
 
-    def diff(self, before: Workspace) -> Diff:
-        """What changed from `before` to this one, in the model's terms."""
-        data = json.loads(self._native.diff(before._native))
-        changes = tuple(
-            Change(c["kind"], c["what"], c["id"], c["entity"], c["scope"], c["detail"], c["from"], c["label"]) for c in data["changes"]
-        )
-        return Diff(changes, tuple(_finding(f) for f in data["findings"]))
 
 
 def load(source: Source) -> Model:

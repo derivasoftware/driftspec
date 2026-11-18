@@ -1,12 +1,12 @@
-// The ds command: CLI11 reads the command line (five commands: check, export, render, diff,
-// query, each with its options and its help), main loads the workspace and hands it to
+// The ds command: CLI11 reads the command line (five commands: check, export, render, query,
+// manual, each with its options and its help), main loads the workspace and hands it to
 // whoever answers.
 // One scenario of main per thing it can end in; the rest of the tool knows nothing of
 // a command line.
 
 package driftspec@ds {
   module app {
-    @requirement SREQ-00018-1
+    @requirement SREQ-00018-2
     function main(argv: list<string>) -> int
 
     - function load(dir: path) -> model::Model
@@ -19,7 +19,6 @@ package driftspec@ds {
     - function manual(topic: string, json: bool) -> int
     - function diagramId(name: string) -> string
     - function isDirectory(path: string) -> bool
-    - function checkout(rev: string, path: string) -> string
 
     sequence loadWorkspace {
       -> isDirectory(dir) -> found
@@ -142,21 +141,6 @@ package driftspec@ds {
       local ir: render::IrExport
       -> loadWorkspace(argv, model) -> found
       -> ir.render(name, pretty) / no-diagram -> document
-      return 1
-    }
-
-    sequence main / diff {
-      -> load(argv) -> before
-      -> load(argv) -> after
-      -> diff::Diff::compare(before, after) -> result
-      -> diff::Diff::report(result) -> text
-      return 0
-    }
-
-    sequence main / diff-findings {
-      -> load(argv) -> before
-      -> load(argv) -> after
-      -> diff::Diff::compare(before, after) -> result
       return 1
     }
 

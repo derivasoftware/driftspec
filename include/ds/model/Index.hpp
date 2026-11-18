@@ -46,7 +46,7 @@ class Index {
   std::vector<Relation> ofKind(const std::string& kind) const;
   /// Every relation of any of these kinds, in the order stated.
   std::vector<Relation> ofKinds(const std::vector<std::string>& kinds) const;
-  /// Every relation, in the order stated: for a reader of the whole model (an export, a diff).
+  /// Every relation, in the order stated: for a reader of the whole model (an export).
   std::vector<Relation> all() const;
   /// How many relations the model states.
   std::size_t count() const;

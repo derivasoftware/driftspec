@@ -119,7 +119,7 @@ TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
   const std::string viewer = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
   EXPECT_NE(viewer.find("window.DS_VIEW="), std::string::npos);
   for (const char* member :
-       {"setCam(", "select(id)", "show(id)", "frameAny(", "mark(ids)", "highlight(list)", "notes(list)", "isolate(ids)", "diff(d)"})
+       {"setCam(", "select(id)", "show(id)", "frameAny(", "mark(ids)", "highlight(list)", "notes(list)", "isolate(ids)"})
     EXPECT_NE(viewer.find(member), std::string::npos) << member;
   EXPECT_NE(viewer.find("{ds:'ready'}"), std::string::npos);                                    // when a page can steer it
   EXPECT_NE(viewer.find("{ds:'select',id:"), std::string::npos);                                // what the reader selects
