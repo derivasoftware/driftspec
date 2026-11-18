@@ -26,9 +26,9 @@ package driftspec@ds {
           tests/integration/python/test_packaging.py::TestPackaging::test_the_wheels_build_makes_ds_and_installs_it_as_a_script
       }
     }
-    function main(argv: list<string>) -> int
+    function main(argv: list<string>) -> int       // the program's main hands its command line here (DS-311)
     function run(argv: list<string>) -> int           // the command, on the thread main starts with a large stack (DS-279)
-    - function work(raw: object) -> object             // runs the command; what cannot be read is said, exit 2
+    - function work(argv: list<string>) -> int         // runs the command; what cannot be read is said, exit 2
 
     - function load(dir: path) -> model::Model
     - function loadWorkspace(dir: path, model: model::Model) -> bool
