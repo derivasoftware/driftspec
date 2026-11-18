@@ -301,14 +301,14 @@ TEST_F(TestQualification, EveryKindOfDiagramIsAViewOfTheModel) {
 // SREQ-00002-1: a path that is no workspace is bad usage on every command, the same way
 TEST_F(TestQualification, EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage) {
   const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-nowhere-" + std::to_string(::getpid());
-  std::system(("mkdir -p " + tmp + "/empty").c_str());
+  EXPECT_EQ(std::system(("mkdir -p " + tmp + "/empty").c_str()), 0);
   for (const std::string& path : {std::string("/nonexistent/workspace"), tmp + "/empty"}) {
     EXPECT_EQ(ds("check " + path).code, 2) << path;
     EXPECT_EQ(ds("export " + path).code, 2) << path;
     EXPECT_EQ(ds("render " + path).code, 2) << path;
     EXPECT_EQ(ds("query " + path + " diagrams").code, 2) << path;
   }
-  std::system(("rm -rf " + tmp).c_str());
+  EXPECT_EQ(std::system(("rm -rf " + tmp).c_str()), 0);
 }
 
 // SREQ-00002-1: a path that is no workspace is a command line to correct, not a design with errors
@@ -321,11 +321,12 @@ TEST_F(TestQualification, CheckingAPathThatIsNoWorkspaceIsBadUsage) {
 // design nested far deeper than any written by hand is still read (DS-279)
 TEST_F(TestQualification, InputThatCannotBeReadIsBadUsageAndDeepNestingIsRead) {
   const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-input-" + std::to_string(::getpid());
-  std::system(("mkdir -p " + tmp + "/unreadable " + tmp + "/deep").c_str());
+  EXPECT_EQ(std::system(("mkdir -p " + tmp + "/unreadable " + tmp + "/deep").c_str()), 0);
   std::ofstream(tmp + "/unreadable/a.ds") << "package p { }\n";
-  std::system(("chmod 000 " + tmp + "/unreadable/a.ds").c_str());
-  if (::access((tmp + "/unreadable/a.ds").c_str(), R_OK) != 0)  // as root every file can be read: nothing to try
+  EXPECT_EQ(std::system(("chmod 000 " + tmp + "/unreadable/a.ds").c_str()), 0);
+  if (::access((tmp + "/unreadable/a.ds").c_str(), R_OK) != 0) {  // as root every file can be read: nothing to try
     EXPECT_EQ(ds("check " + tmp + "/unreadable").code, 2);
+  }
   std::ofstream deep(tmp + "/deep/a.ds");
   deep << "package q {\n";
   for (int i = 0; i < 3000; ++i) deep << "requirement REQ-" << 10000 + i << "-1 {\n title: The x shall y\n";
@@ -333,7 +334,7 @@ TEST_F(TestQualification, InputThatCannotBeReadIsBadUsageAndDeepNestingIsRead) {
   deep << "}\n";
   deep.close();
   EXPECT_EQ(ds("check " + tmp + "/deep").code, 0);
-  std::system(("chmod 644 " + tmp + "/unreadable/a.ds; rm -rf " + tmp).c_str());
+  EXPECT_EQ(std::system(("chmod 644 " + tmp + "/unreadable/a.ds; rm -rf " + tmp).c_str()), 0);
 }
 
 // SREQ-00011-1: an identity the model does not declare is no empty answer: it fails, and names what was meant
@@ -425,7 +426,7 @@ TEST_F(TestQualification, EveryCorpusMeansExactlyTheFindingsItMarks) {
 // CST-00001-1: every command under a hundred milliseconds on a hundred classes
 TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds) {
   const std::string tmp = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp") + "/ds-perf-" + std::to_string(::getpid());
-  std::system(("mkdir -p " + tmp).c_str());
+  EXPECT_EQ(std::system(("mkdir -p " + tmp).c_str()), 0);
   std::ofstream ws(tmp + "/big.ds");
   ws << "package big {\n  module m {\n";
   for (int i = 0; i < 100; ++i) {
@@ -444,7 +445,7 @@ TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
     EXPECT_LT(ms, release ? 100 : 300) << command << (release ? "" : " (Debug build: the 100 ms budget is measured on Release)");
     EXPECT_FALSE(run.out.empty()) << command;
   }
-  std::system(("rm -rf " + tmp).c_str());
+  EXPECT_EQ(std::system(("rm -rf " + tmp).c_str()), 0);
 }
 
 }  // namespace

@@ -40,7 +40,9 @@ TEST_F(TestQuery, TheDiagramsAWorkspaceDeclaresWithTheirKind) {
   EXPECT_TRUE(names(answers, "REQ_Tracker", "diagram"));
   EXPECT_TRUE(names(answers, "CL_Projection", "diagram"));
   for (const auto& a : answers)
-    if (a.id == "REQ_Tracker") EXPECT_EQ(a.detail, "requirement");
+    if (a.id == "REQ_Tracker") {
+      EXPECT_EQ(a.detail, "requirement");
+    }
 }
 
 TEST_F(TestQuery, TheEntitiesOfAScope) {

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <deque>
 #include <map>
 
 #include "ds/bind/Binder.hpp"
@@ -35,9 +36,12 @@ class TestStatic : public ::testing::Test {
     return it == e->fields.end() ? "" : it->second;
   }
 
+  mutable std::deque<ds::model::Relation> kept;
+
+  // a copy kept by the fixture: the index is a view made for the asking, and what it lists does not outlive it
   const ds::model::Relation* relation(const std::string& kind, const std::string& from, const std::string& to) const {
     for (const auto& r : model.index().all()) {
-      if (r.kind == kind && r.from == from && r.to == to) return &r;
+      if (r.kind == kind && r.from == from && r.to == to) return &kept.emplace_back(r);
     }
     return nullptr;
   }

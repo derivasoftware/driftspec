@@ -30,11 +30,9 @@ TEST_F(TestModuleAnnotations, AModuleAnswersToTheRequirementItsBodyNames) {
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, checkSteps).run(binder);
-  bool
-    requires
-  = false;
-  for (const auto& r : model.index().all()) requires |= r.kind == "requires" && r.from == "p@store" && r.to == "REQ-00001-1";
-  EXPECT_TRUE(requires);
+  bool required = false;
+  for (const auto& r : model.index().all()) required |= r.kind == "requires" && r.from == "p@store" && r.to == "REQ-00001-1";
+  EXPECT_TRUE(required);
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().code;
 }
 

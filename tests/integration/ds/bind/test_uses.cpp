@@ -106,7 +106,7 @@ TEST_F(TestUses, AUseOfSomethingThatIsNoInterfaceIsReportedAndNotBound) {
 }
 
 TEST_F(TestUses, AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten) {
-  const auto& uses = ds::model::annotationOf("uses");
+  const auto uses = ds::model::annotationOf("uses");
   EXPECT_EQ(uses.relation, "consumes");
   EXPECT_EQ(uses.target, ds::model::Kind::Interface);
   EXPECT_EQ(ds::model::annotationOf("whatever").relation, "refers");  // a word with no meaning stays a plain link
@@ -114,7 +114,9 @@ TEST_F(TestUses, AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten) {
   for (const auto& a : ds::model::annotations()) {
     if (a.relation == "refers" || a.name.rfind("@", 0) != 0) continue;
     EXPECT_NE(ds::model::relationOf(a.relation), nullptr) << a.name;
-    if (!a.onVerification.empty()) EXPECT_NE(ds::model::relationOf(a.onVerification), nullptr) << a.name;
+    if (!a.onVerification.empty()) {
+      EXPECT_NE(ds::model::relationOf(a.onVerification), nullptr) << a.name;
+    }
   }
 }
 

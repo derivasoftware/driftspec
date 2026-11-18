@@ -50,9 +50,7 @@ class TestRules : public ::testing::Test {
     return out;
   }
 
-  bool
-    requires(const std::string& from, const std::string& to)
-  const {
+  bool answersTo(const std::string& from, const std::string& to) const {
     for (const auto& r : model.index().all())
       if (r.kind == "requires" && r.from == from && r.to == to) return true;
     return false;
@@ -101,8 +99,8 @@ TEST_F(TestRules, ARuleIsADesignPieceInTheBoxItAppliesTo) {
   EXPECT_FALSE(f.claims[0][1].terms[1].variable);                      // a qualified name is an entity
   EXPECT_EQ(field("p@core-blind", "never"), "m uses x, x in p@face");  // the card shows it as written
   EXPECT_NE(model.find("p@core::Checker::named"), nullptr);            // a class's rule is named under it
-  EXPECT_TRUE(requires("p@core-blind", "REQ-00001-1"));
-  EXPECT_TRUE(requires("p@core::Checker::named", "REQ-00001-1"));
+  EXPECT_TRUE(answersTo("p@core-blind", "REQ-00001-1"));
+  EXPECT_TRUE(answersTo("p@core::Checker::named", "REQ-00001-1"));
   EXPECT_TRUE(codes("W-RULE").empty());
 }
 
@@ -178,7 +176,7 @@ TEST_F(TestRules, ARuleOfAMemberIsNamedUnderIt) {
       "  }\n"
       "}\n");
   ASSERT_NE(model.find("p@m::Link::send::in-range"), nullptr);
-  EXPECT_TRUE(requires("p@m::Link::send::in-range", "REQ-00001-1"));
+  EXPECT_TRUE(answersTo("p@m::Link::send::in-range", "REQ-00001-1"));
   const auto& f = formula("p@m::Link::send::in-range");
   ASSERT_EQ(f.where.size(), 2u);
   EXPECT_EQ(f.where[1].form, ds::model::LiteralForm::Arg);

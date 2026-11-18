@@ -36,8 +36,9 @@ TEST_F(TestSceneLayersOfADesign, EveryIdentityOfTheDesignLandsOnItselfOrTheNeare
   EXPECT_EQ(map.land("q@n::C"), "");                                // nothing on the map stands for it
   EXPECT_EQ(map.parentOf("p@m::A"), "p@m");
   for (const auto& pair : model.entities()) {
-    if (pair.second.kind == ds::model::Kind::Class || pair.second.kind == ds::model::Kind::Method)
+    if (pair.second.kind == ds::model::Kind::Class || pair.second.kind == ds::model::Kind::Method) {
       EXPECT_TRUE(map.has(pair.first)) << pair.first;
+    }
   }
 }
 
