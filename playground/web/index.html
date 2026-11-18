@@ -119,6 +119,9 @@ body:not([data-tab="editor"]) .coach { display: none !important; }
 #home .marks .ds { height: clamp(34px, 4.3vw, 62px); width: auto; min-width: 0; }
 #home .marks .rule { width: 1px; align-self: stretch; background: var(--line); }
 #home .marks .deriva { height: clamp(26px, 3vw, 42px); width: auto; min-width: 0; }
+/* who makes it links to who makes it (DS-307) */
+#home .marks .by { display: flex; align-items: center; min-width: 0; border-radius: 6px; }
+#home .marks .by:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
 #home h1 { margin: 44px 0 14px; font: 700 clamp(26px, 2.6vw, 36px)/1.12 var(--figtree); letter-spacing: -0.03em; text-wrap: balance; }
 #home .say p { margin: 0; max-width: 44ch; color: color-mix(in srgb, var(--fg) 80%, var(--page)); font-size: clamp(16px, 1.25vw, 18.5px); }
 #home .go { display: inline-block; margin-top: 30px; font: 600 16px var(--figtree); color: var(--on-brand); background: var(--brand); border-radius: 999px; padding: 13px 24px; text-decoration: none; cursor: pointer; }
@@ -676,7 +679,7 @@ definition module-depends(m, n) {
         <div class="marks">
           <img class="ds dark" src="brand/driftspec-lockup-h.svg" alt="driftspec"><img class="ds light" src="brand/driftspec-lockup-h-light.svg" alt="driftspec">
           <span class="rule"></span>
-          <img class="deriva dark" src="brand/deriva-lockup-h.svg" alt="deriva."><img class="deriva light" src="brand/deriva-lockup-h-light.svg" alt="deriva.">
+          <a class="by" href="https://derivasoftware.dev" aria-label="deriva"><img class="deriva dark" src="brand/deriva-lockup-h.svg" alt="deriva."><img class="deriva light" src="brand/deriva-lockup-h-light.svg" alt="deriva."></a>
         </div>
         <h1 data-t="homeTitle"></h1>
         <p data-t="homeText"></p>
