@@ -5,10 +5,26 @@
 //   python   a library in process: load, check, render, page, expected_at
 //   editor   the language server protocol over stdio: what an editor asks while a design is typed
 
-package driftspec@python {
+package driftspec@driftspec {
 
+  extern module builtins {                   // what Python names, written as the code writes it
+    class str
+    class None
+    class dict<K, V>
+    class tuple<A, B>                       // tuple<variadic<T>> is a tuple of any length of T
+  }
   extern module typing {                     // what Python and the libraries the server stands on name
     class object
+    class Iterator<T>
+    class Mapping<K, V>
+    class union<A, B>                       // A | B
+    class variadic<T>                       // T, ... in a tuple; *args: T as a parameter
+  }
+  extern module threading {
+    class Lock
+  }
+  extern module queue {
+    class Queue
   }
   extern module pygls {
     class LanguageServer
@@ -20,6 +36,11 @@ package driftspec@python {
     class CompletionList
     class SymbolInformation
     class Diagnostic
+    class DefinitionParams
+    class ReferenceParams
+    class HoverParams
+    class CompletionParams
+    class DocumentSymbolParams
   }
 
   // What it is to depend, for the rules of the Python face: through a member or a behaviour.
@@ -35,8 +56,8 @@ package driftspec@python {
   rule python-asks-the-engine-through-the-workspace {
     title: what is Python reaches the engine only through the native module; it holds no part of the engine of its own
     @requirement REQ-00107-2
-    for class c in driftspec@python
-    where not c in driftspec@python@native
+    for class c in driftspec@driftspec
+    where not c in driftspec@driftspec@native
     never depends(c, x), x in driftspec@ds
   }
 
@@ -517,12 +538,12 @@ package driftspec@python {
   }
 
   sequence editor::draw {
-    -> lsp::draw(ls, uri, line, character, width, typed) -> drawing
+    -> lsp::draw(ls, uri, line, character, rest) -> drawing
     return drawing
   }
 
   sequence editor::view {
-    -> lsp::view(ls, uri, line, character, width, typed) -> opened
+    -> lsp::view(ls, uri, line, character, rest) -> opened
     return opened
   }
 
@@ -709,134 +730,139 @@ package driftspec@python {
   }
 
   // ---- the package: the JSON read into a typed model ----------------------------------------------
+  // Its types are written as Python writes them (str, dict<str, int>, tuple<variadic<str>> for a
+  // tuple of any length, optional<T> for T | None), so argos holds them to the code as they are.
   module driftspec {
     @requirement REQ-00086-1
 
-    class Source {                             // a directory, or a mapping of path to text
+    class Source {                             // a directory, or a mapping of path to text: a type alias in the code
       @requirement REQ-00086-1
     }
     dataclass Location {
       @requirement REQ-00086-1
-      + file: string
+      + file: str
       + line: int
       + column: int
+      + end_line: int                          // the place right after its last character; 0 when not known
+      + end_column: int
     }
     dataclass Entity {
       @requirement REQ-00086-1
-      + id: string
-      + kind: string
-      + name: string
-      + scope: string
+      + id: str
+      + kind: str
+      + name: str
+      + scope: str
       + location: Location
-      + fields: map<string, string>
-      + flags: list<string>
+      + fields: Mapping<str, str>
+      + flags: tuple<variadic<str>>
       + expected: bool
     }
     dataclass Relation {
       @requirement REQ-00086-1
-      + kind: string
-      + source: string
-      + target: string
+      + kind: str
+      + source: str
+      + target: str
       + location: Location
-      + multiplicity: string
+      + multiplicity: str                      // how many a holding relation holds: "1", "*"; "" for the rest
     }
     dataclass Finding {
       @requirement REQ-00086-1
-      + code: string
-      + severity: string
-      + message: string
+      + code: str
+      + severity: str
+      + message: str
       + location: Location
     }
     dataclass Breach {                         // one binding that breaks a rule, and its answer
       @requirement REQ-00098-1
-      + bindings: list<list<string>>
-      + witness: list<list<string>>
+      + bindings: tuple<variadic<tuple<str, str>>>
+      + witness: tuple<variadic<tuple<str, str>>>
       + location: Location
     }
     class Model {                              // a workspace loaded: every entity by its identity
       @requirement REQ-00086-1
-      + entities: map<string, Entity>
+      + entities: dict<str, Entity>
       + relations: list<Relation>
       + findings: list<Finding>
-      + breaches: map<string, list<Breach>>
-      + find(identity: string) -> optional<Entity>
-      + of_kind(kind: string) -> list<Entity>
-      + named(name: string) -> list<Entity>
-      + relations_of(identity: string) -> list<Relation>
-      + in_file(path: string) -> list<Entity>
-      + parents_of(kind: string) -> list<string>
-      + in_a_box(kind: string) -> bool
-      + laid_out(kind: string) -> bool
-      + named_kinds() -> set<string>
+      + metamodel: dict                        // the kinds and relations the language declares, as ds export writes them
+      + breaches: dict<str, list<Breach>>
+      + find(identity: str) -> optional<Entity>
+      + of_kind(kind: str) -> Iterator<Entity>
+      + named(name: str) -> list<Entity>
+      + relations_of(identity: str) -> list<Relation>
+      + in_file(path: str) -> list<Entity>
+      + parents_of(kind: str) -> list<str>
+      + in_a_box(kind: str) -> bool
+      + laid_out(kind: str) -> bool
+      + named_kinds() -> set<str>
       + owner(entity: Entity) -> Entity
     }
     dataclass Report {
       @requirement REQ-00086-1
       + findings: list<Finding>
-      + counts: map<string, int>
+      + counts: Mapping<str, int>
+      + errors() -> int                        // a property: the count of errors
     }
 
     // ---- what the engine answers about a loaded workspace, read into Python's own types (DS-173) -----
     dataclass Answer {
       @requirement REQ-00107-2
-      + kind: string
-      + id: string
-      + detail: string
+      + kind: str
+      + id: str
+      + detail: str
     }
     dataclass Step {
       @requirement REQ-00107-2
-      + message: string
-      + next: string
-      + next_path: string
+      + message: str
+      + next: str
+      + next_path: str
     }
     dataclass Walked {
       @requirement REQ-00107-2
-      + message: string
+      + message: str
       + depth: int
     }
     dataclass Frame {
       @requirement REQ-00107-2
-      + id: string
-      + kind: string
-      + frame: string
+      + id: str
+      + kind: str
+      + frame: str
       + at: int
-      + first: string
-      + else_: string
+      + first: str
+      + else_: str
       + two_sides: bool
-      + scenario: string
-      + else_scenario: string
+      + scenario: str
+      + else_scenario: str
     }
     dataclass Tree {
       @requirement REQ-00107-2
-      + sequence: string
-      + messages: list<list<string>>
-      + frames: list<Frame>
+      + sequence: str
+      + messages: tuple<variadic<tuple<str, str>>>
+      + frames: tuple<variadic<Frame>>
     }
 
     // What Python holds: a workspace loaded once in the engine, asked; it computes nothing the
-    // engine knows. Several may be held at once, each with its own model.
+    // engine knows. Several may be held at once, each with its own model. It is made from a Source.
     class Workspace {
       @requirement REQ-00107-2
       @constraint CST-00009-1
       - owns _native: native::Workspace
-      + Workspace(source: Source)
       + model() -> Model
       + report() -> Report
-      + find(identity: string) -> optional<Entity>
-      + relations_from(identity: string) -> list<Relation>
-      + relations_to(identity: string) -> list<Relation>
-      + touching(identity: string) -> list<Relation>
-      + members(scope: string) -> list<string>
-      + parent(identity: string) -> string
-      + children(identity: string) -> list<string>
-      + revision_of(artefact: string) -> string
-      + tree(sequence: string) -> Tree
-      + steps(sequence: string, path: string) -> list<Step>
-      + walk(sequence: string, path: string, depth: int) -> list<Walked>
-      + ask(question: string, subject: string) -> list<Answer>
-      + shows(diagram: string) -> list<Answer>
-      + render(diagram: string, format: string, width: int) -> string
-      + page(title: string, focus: list<string>) -> string
+      + find(identity: str) -> optional<Entity>
+      + relations_from(identity: str) -> list<Relation>
+      + relations_to(identity: str) -> list<Relation>
+      + touching(identity: str) -> list<Relation>
+      + members(scope: str) -> list<str>
+      + parent(identity: str) -> str
+      + children(identity: str) -> list<str>
+      + revision_of(artefact: str) -> str
+      + tree(sequence: str) -> Tree
+      + steps(sequence: str, path: str) -> list<Step>
+      + walk(sequence: str, path: str, depth: int) -> list<Walked>
+      + ask(question: str, subject: str) -> list<Answer>
+      + shows(diagram: str) -> list<Answer>
+      + render(diagram: str, format: str, width: int) -> str
+      + page(title: str, focus: union<list<str>, tuple<variadic<str>>>) -> str
     }
 
     sequence Workspace::relations_from {
@@ -844,12 +870,19 @@ package driftspec@python {
       return found
     }
 
-    function read(source: Source) -> map<string, string>
+    function read(source: Source) -> dict<str, str>
     function load(source: Source) -> Model
     function check(source: Source) -> Report
-    function render(source: Source, diagram: string, format: string, width: int) -> string
-    function page(source: Source, title: string, focus: list<string>) -> string
-    function expected_at(text: string, line: int, column: int) -> list<string>
+    function render(source: Source, diagram: str, format: str, width: int) -> str
+    function page(source: Source, title: str, focus: union<list<str>, tuple<variadic<str>>>) -> str
+    function expected_at(text: str, line: int, column: int) -> list<str>
+    // the engine's JSON read into the types above, one shape each
+    - function _location(d: Mapping) -> Location
+    - function _finding(d: Mapping) -> Finding
+    - function _entity(e: Mapping) -> Entity
+    - function _relation(r: Mapping) -> Relation
+    - function _model(data: Mapping) -> Model
+    - function _report(data: Mapping) -> Report
 
     // A workspace loaded for one look at the whole of it (DS-173).
     sequence load {
@@ -883,27 +916,35 @@ package driftspec@python {
   }
 
   // ---- the server: one design per file, its model kept, its findings published -------------------
+  // The protocol's types come from lsprotocol, which the code names through its module (lsp.Location).
   module lsp {
     @requirement REQ-00087-1
 
-    function changed(ls: pygls::LanguageServer, params: typing::object) -> none
-    function definition(ls: pygls::LanguageServer, params: typing::object) -> list<lsprotocol::Location>
-    function references(ls: pygls::LanguageServer, params: typing::object) -> list<lsprotocol::Location>
-    function hover(ls: pygls::LanguageServer, params: typing::object) -> optional<lsprotocol::Hover>
-    function completion(ls: pygls::LanguageServer, params: typing::object) -> lsprotocol::CompletionList
-    function symbols(ls: pygls::LanguageServer, params: typing::object) -> list<lsprotocol::SymbolInformation>
-    function draw(ls: pygls::LanguageServer, uri: string, line: int, character: int, width: int, typed: string) -> map<string, string>
-    function view(ls: pygls::LanguageServer, uri: string, line: int, character: int, width: int, typed: string) -> map<string, string>
-    function main() -> none
-    - function workspace_of(ls: pygls::LanguageServer, path: string) -> string
-    - function workspace_files(ls: pygls::LanguageServer, ws: string) -> map<string, string>
-    - function use(ls: pygls::LanguageServer, uri: string) -> string
-    - function refresh(ls: pygls::LanguageServer, ws: string) -> none
-    - function entities_for(word: string) -> list<driftspec::Entity>
-    - function subject_at(ls: pygls::LanguageServer, uri: string, line: int, character: int, typed: string) -> string
-    - function enclosing(path: string, line: int) -> optional<driftspec::Entity>
-    - function with_focus(files: map<string, string>, identity: string) -> map<string, string>
-    - function open_in_browser(path: string) -> none
+    function path_of(uri: str) -> str
+    function uri_of(path: str) -> str
+    function holds_ds(directory: str) -> bool
+    function workspace_of(ls: pygls::LanguageServer, path: str) -> str
+    function workspace_files(ls: pygls::LanguageServer, ws: str) -> dict<str, str>
+    function use(ls: pygls::LanguageServer, uri: str) -> str
+    function refresh(ls: pygls::LanguageServer, ws: str) -> None
+    function word_at(ls: pygls::LanguageServer, uri: str, position: lsprotocol::Position) -> str
+    function entities_for(word: str) -> list<driftspec::Entity>
+    function location_of(e: driftspec::Entity) -> lsprotocol::Location
+    function changed(ls: pygls::LanguageServer, params) -> None
+    function definition(ls: pygls::LanguageServer, params: lsprotocol::DefinitionParams) -> list<lsprotocol::Location>
+    function references(ls: pygls::LanguageServer, params: lsprotocol::ReferenceParams) -> list<lsprotocol::Location>
+    function hover(ls: pygls::LanguageServer, params: lsprotocol::HoverParams) -> optional<lsprotocol::Hover>
+    function completion(ls: pygls::LanguageServer, params: lsprotocol::CompletionParams) -> lsprotocol::CompletionList
+    function symbols(ls: pygls::LanguageServer, params: lsprotocol::DocumentSymbolParams) -> list<lsprotocol::SymbolInformation>
+    function subject_at(ls: pygls::LanguageServer, uri: str, line: int, character: int, typed: str) -> tuple<str, str>
+    function enclosing(path: str, line: int) -> optional<driftspec::Entity>
+    function subject_of(word: str) -> tuple<str, str>
+    function with_focus(files: dict<str, str>, identity: str) -> tuple<dict<str, str>, str>
+    function optional(rest: tuple) -> tuple<int, str>      // the width and the word typed, from what pygls passes on
+    function draw(ls: pygls::LanguageServer, uri: str, line: int, character: int, rest: variadic<object>) -> dict
+    function open_in_browser(path: str) -> None
+    function view(ls: pygls::LanguageServer, uri: str, line: int, character: int, rest: variadic<object>) -> dict
+    function main() -> None
 
     sequence changed {
       -> workspace_of(ls, path) -> ws
@@ -924,6 +965,7 @@ package driftspec@python {
     }
 
     sequence draw {
+      -> optional(rest) -> options
       -> use(ls, uri) -> ws
       -> subject_at(ls, uri, line, character, typed) -> subject
       -> workspace_files(ls, ws) -> files
@@ -933,10 +975,11 @@ package driftspec@python {
     }
 
     sequence view {
+      local workspace: driftspec::Workspace
+      -> optional(rest) -> options
       -> use(ls, uri) -> ws
       -> subject_at(ls, uri, line, character, typed) -> subject
-      -> workspace_files(ls, ws) -> files
-      -> driftspec::page(files, title, focus) -> html
+      -> workspace.page(title, focus) -> html
       -> open_in_browser(path)
       return answer
     }
@@ -955,40 +998,52 @@ package driftspec@python {
     class Live {                               // a session over one workspace: its model version by version, and what both sides point at
       @requirement REQ-00089-2
       @requirement REQ-00090-1
-      + workspace: string
+      + workspace: str                         // the workspace's real path
+      + title: str                             // the project's name, or the workspace's when it is not called design
+      + lock: Lock
       + version: int
-      + notes: list<object>
-      + highlights: list<object>
-      + rules: list<object>
-      + selection: map<string, string>
-      + comments: list<object>
-      + isolated: list<string>
-      - loaded: optional<driftspec::Workspace>      // the version shown, loaded once in the engine (DS-173)
+      + page: str                              // the viewer of the version shown
+      + loaded: optional<driftspec::Workspace>      // the version shown, loaded once in the engine (DS-173)
+      + history: list<dict>                    // the last reloads: version, when, how long
+      + findings: list<dict>
+      + counts: dict
+      + selection: dict
+      + notes: list<dict>
+      + highlights: list<dict>
+      + rules: list<dict>
+      + comments: list<dict>
+      + isolated: list<str>
+      + listeners: list<Queue>                 // one per page following the session
+      + stamp: None                            // what the .ds files were at the last reload; none before the first
+      + error: str
+      + boot: str                              // when the server started: a page from an older one reloads itself
+      + store: str                             // <workspace>/.driftspec/live.json
       + reload() -> bool
-      + files_stamp() -> list<object>          // what the .ds files are now: a save changes it
-      + rules_of(model: driftspec::Model, findings: list<driftspec::Finding>) -> list<map<string, object>> {
+      + files_stamp()                          // what the .ds files are now: a save changes it
+      + rules_of(model, findings) -> list<dict> {
         @requirement REQ-00100-1
       }
-      + state() -> map<string, object>
-      + broadcast(event: string, data: map<string, object>) -> none
-      + watch(every: float) -> none
-      + focus(identity: string, also: list<string>) -> int
-      + note(identity: string, text: string, tone: string, frame: bool) -> int
-      + highlight(ids: list<string>, tone: string, add: bool, frame: bool) -> int
-      + clear(what: string) -> none
-      + select(identity: string, label: string) -> none
-      + load() -> none
-      + save() -> none
-      + seen(ids: list<string>, seen: bool) -> int {
+      + state() -> dict
+      + broadcast(event: str, data: dict) -> None
+      + watch(every: float) -> None
+      + annotations(frame: list<str>) -> None  // the notes, highlights and comments kept, and told to every page
+      + focus(identity: str, also: optional<list<str>>) -> int
+      + note(identity: str, text: str, tone: str, frame: bool) -> int
+      + highlight(ids: list<str>, tone: str, add: bool, frame: bool) -> int
+      + clear(what: str) -> None
+      + select(identity: optional<str>, label: str) -> None
+      + load() -> None
+      + save() -> None
+      + seen(ids: list<str>, seen: bool) -> int {
         @requirement REQ-00102-1
       }
-      + comment(identity: string, text: string) -> int {
+      + comment(identity: str, text: str) -> int {
         @requirement REQ-00103-1
       }
-      + unread(mark: bool) -> list<map<string, object>> {
+      + unread(mark: bool) -> list<dict> {
         @requirement REQ-00103-1
       }
-      + isolate(ids: list<string>, tell: bool) -> list<string> {
+      + isolate(ids: list<str>, tell: bool) -> list<str> {
         @requirement REQ-00104-1
       }
     }
@@ -1008,12 +1063,22 @@ package driftspec@python {
       return true
     }
 
-    function serve(workspace: string, port: int, open_browser: bool, block: bool) -> Live
-    function handler_for(live: Live) -> object
-    function call(port: int, path: string, data: map<string, object>) -> map<string, object>
-    function tool(port: int, name: string, args: map<string, object>, opened: map<string, object>) -> object
-    function mcp(port: int, stdin: object, stdout: object) -> none
-    function browser_open(url: string) -> none
-    function main(argv: list<string>) -> none
+    function serve(workspace: str, port: int, open_browser: bool, block: bool) -> Live
+    function handler_for(live: Live)                 // the HTTP handler class serving one session
+    function call(port: int, path: str, data: optional<dict>) -> dict
+    function tool(port: int, name: str, args: dict, opened: dict) -> object
+    function mcp(port: int, stdin, stdout) -> None
+    function browser_open(url: str) -> None
+    function main(argv: optional<list<str>>) -> None
   }
+}
+
+diagram CL_LiveModule {                         // the live session's module: the session and what serves it
+  kind: class
+  include: driftspec@driftspec@live::*
+}
+
+diagram CL_NativeModule {                       // the extension: the workspace it holds in the engine
+  kind: class
+  include: driftspec@driftspec@native::*
 }
