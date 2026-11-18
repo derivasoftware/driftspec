@@ -1,0 +1,8 @@
+DriftSpec
+Copyright 2026 ARGOSQA SLU (deriva)
+
+Licensed under the Apache License, Version 2.0 (LICENSE). The tree-sitter grammar
+in grammar/ is licensed under the MIT License (grammar/LICENSE).
+
+This product includes third-party software, listed with its licences in
+THIRD_PARTY_NOTICES.md.

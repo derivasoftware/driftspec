@@ -24,7 +24,7 @@ behaviour, with its engine, language server and MCP surface in one C++ binary.
 
 Build: `cmake -S . -B build && cmake --build build -j && ctest --test-dir build`.
 
-Third-party code compiled into what DriftSpec ships, and its licences: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+Licensed under the [Apache License 2.0](LICENSE), copyright 2026 ARGOSQA SLU (deriva); the grammar in `grammar/` is [MIT](grammar/LICENSE). Third-party code compiled into what DriftSpec ships, and its licences: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 Regenerate the parser after editing the grammar: `tree-sitter generate` in `grammar/`.
 
 How a design is read in three perspectives, the outer contract of each and the rules: [`doc/perspectives.md`](doc/perspectives.md).
