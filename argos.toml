@@ -33,7 +33,7 @@ cpp = ["src", "include"]
 # that tree fire W-TEST-LAYOUT-UNRECOGNISED); the Python face's run on pytest.
 [tests]
 gtest = ["tests"]
-pytest = ["tests/integration/python", "tests/system/python"]
+pytest = ["tests/unit/python", "tests/integration/python", "tests/system/python"]
 
 # The C++ reader lists a destructor and a deleted copy assignment as methods of
 # the class that declares them; DriftSpec cannot name them (~Parser, operator=)
