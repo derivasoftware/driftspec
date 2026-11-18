@@ -202,8 +202,10 @@ diagram CL_Store {
 
 ## Inheritance
 
-A class names its base after a colon. An interface is never written as such: a class whose
-methods are all abstract and that keeps no data is one, and the drawing says so.
+A class names its base after a colon. Whether a class is abstract is never written: a class
+with an abstract method is abstract, and the drawing says so. A class whose methods are all
+abstract is still a class, and what derives from it inherits from it. An interface is something
+else: the contract a box offers, written with `interface`.
 
 ```ds
 package shop {

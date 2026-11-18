@@ -74,16 +74,17 @@ TEST_F(TestSceneOfTheTaxonomy, HeirsSitInARowBelowTheirBaseCentredOverThem) {
   EXPECT_EQ(formal.parent, "hola@core");  // the tree only groups: the heirs stay children of their module
 }
 
-TEST_F(TestSceneOfTheTaxonomy, InterfaceAndAbstractAreTheStereotypesTheCheckerDerives) {
-  EXPECT_EQ(at("hola@core::Style").stereotype, "interface");
+TEST_F(TestSceneOfTheTaxonomy, AbstractIsTheStereotypeTheCheckerDerives) {
+  EXPECT_EQ(at("hola@core::Style").stereotype, "abstract");  // every method abstract (DS-301)
   EXPECT_EQ(at("hola@core::Channel").stereotype, "abstract");
   EXPECT_EQ(at("hola@core::Greeter").stereotype, "class");
   EXPECT_EQ(at("hola@core::Locale").stereotype, "dataclass");
 }
 
-TEST_F(TestSceneOfTheTaxonomy, AClassThatInheritsFromAnInterfaceRealisesIt) {
-  EXPECT_EQ(kindOf("hola@core::Formal", "hola@core::Style"), "realises");
-  EXPECT_EQ(kindOf("hola@core::Casual", "hola@core::Style"), "realises");
+TEST_F(TestSceneOfTheTaxonomy, AClassThatInheritsIsDrawnInheritingWhateverItsBase) {
+  // a base whose methods are all abstract is an abstract class: inheriting from it is inheritance (DS-301)
+  EXPECT_EQ(kindOf("hola@core::Formal", "hola@core::Style"), "inherits");
+  EXPECT_EQ(kindOf("hola@core::Casual", "hola@core::Style"), "inherits");
   EXPECT_EQ(kindOf("hola@app::Console", "hola@core::Channel"), "inherits");
   EXPECT_EQ(kindOf("hola@server::Response", "hola@core::Channel"), "inherits");
 }

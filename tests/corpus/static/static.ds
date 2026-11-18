@@ -14,11 +14,10 @@
 //      Nesting means "about this" (R3).
 //  R13 Comments (//) are not part of the model. Notes are: `note:` is a field
 //      the model keeps, diagrams print and tools can search.
-//  R14 Kinds of type: class, dataclass, enum. interface and abstract
-//      are never written; the tool derives them from the methods:
-//      every method abstract and no data → interface; at least one abstract
-//      method → abstract. What is derived cannot be declared, so it cannot
-//      contradict.
+//  R14 Kinds of type: class, dataclass, enum. abstract is never written;
+//      the tool derives it from the methods: at least one abstract method →
+//      abstract, all of them too (DS-301). What is derived cannot be declared,
+//      so it cannot contradict.
 //  R15 Templates: a type may declare parameters <T, U: Bound>. Identity is the
 //      name plus arity (Repository<1>). A use Repository<Finding> relates the
 //      user to Repository (instantiates) and to Finding (argument).
@@ -92,7 +91,7 @@ package ds {
 
     // --- classification is derived (R14) ---------------------------------------
 
-    // every method abstract, no data → <<interface>>
+    // every method abstract, no data → <<abstract>>, still a class (DS-301)
     class Check {
       + abstract name() -> string
       + abstract run(model: Model) -> list<Finding>

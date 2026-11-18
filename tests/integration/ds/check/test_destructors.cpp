@@ -54,8 +54,8 @@ TEST_F(TestDestructors, ATildeAndTheClassNameIsItsDestructor) {
 }
 
 TEST_F(TestDestructors, AnInterfaceKeepsItsDestructorAndStaysAnInterface) {
-  EXPECT_EQ(stereotypes("p@m::IStep"), "interface");
-  EXPECT_EQ(stereotypes("p@m::Pump"), "");  // a concrete class with a destructor is no interface
+  EXPECT_EQ(stereotypes("p@m::IStep"), "abstract");
+  EXPECT_EQ(stereotypes("p@m::Pump"), "");  // a concrete class with a destructor is not abstract
 }
 
 }  // namespace

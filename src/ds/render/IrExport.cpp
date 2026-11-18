@@ -57,7 +57,7 @@ std::string classifierOf(const model::Entity& e) {
   if (e.kind == model::Kind::Module) return "namespace";
   if (e.kind == model::Kind::Function) return "function";
   if (e.kind == model::Kind::Enum) return "enum";
-  if (e.kind == model::Kind::Interface || e.field("stereotypes").find("interface") != std::string::npos) return "interface";
+  if (e.kind == model::Kind::Interface) return "interface";
   return e.has("dataclass") ? "dataclass" : "class";
 }
 
@@ -202,7 +202,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
       node["sections"] = nlohmann::json::array({split(e.field("values"), ',')});
       node["sectionKinds"] = nlohmann::json::array({"attributes"});
     } else {
-      const bool interface = e.kind == model::Kind::Interface || stereotypes.find("interface") != std::string::npos;
+      const bool interface = e.kind == model::Kind::Interface;
       node["classifier"] = interface ? "interface" : e.has("dataclass") ? "dataclass" : "class";
       node["abstract"] = interface || stereotypes.find("abstract") != std::string::npos;
       // the badge: derived stereotypes, then the operator symbols the families do not already say
@@ -279,8 +279,8 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   // relations: lifted from members to their class; one edge per (from, to, kind, label)
   std::set<std::string> drawn;
   for (const auto& r : model_.index().all()) {
-    const std::string& change = r.change;           // a diff marks a relation as added or removed
-    std::string kind = edgeKind(model_.readAs(r));  // inheriting an interface is realisation, as in the viewer
+    const std::string& change = r.change;  // a diff marks a relation as added or removed
+    std::string kind = edgeKind(r.kind);   // drawn as written: inheriting is inheritance (DS-301)
     if (kind.empty()) continue;
     const model::Entity* from = model_.find(r.from);
     const model::Entity* to = model_.find(r.to);

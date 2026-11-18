@@ -209,11 +209,10 @@ class Variant {
     shapes[id] = {w, h, {}};
   }
 
-  // what a box says it is: interface and abstract are derived by the checker (R14), never written
+  // what a box says it is: abstract is derived by the checker (R14), never written
   static std::string stereotypeOf(const model::Entity& e) {
     if (e.has("dataclass")) return "dataclass";
     const std::string derived = field(e, "stereotypes");
-    if (derived.find("interface") != std::string::npos) return "interface";
     if (derived.find("abstract") != std::string::npos) return "abstract";
     return model::kindName(e.kind);
   }

@@ -288,15 +288,6 @@ struct Branches {
 
 }  // namespace
 
-std::string Model::readAs(const Relation& relation) const {
-  if (relation.kind != "inherits") return relation.kind;
-  const Entity* target = find(relation.to);
-  if (!target) return relation.kind;
-  const auto stereotypes = target->fields.find("stereotypes");
-  const bool interface = stereotypes != target->fields.end() && stereotypes->second.find("interface") != std::string::npos;
-  return interface ? "realises" : relation.kind;
-}
-
 bool hasScenario(const Model& model, const std::string& sequence, const std::string& scenario) {
   // a loop, an opt or a side of an alt that names it
   for (const auto& id : model.index().members(sequence)) {

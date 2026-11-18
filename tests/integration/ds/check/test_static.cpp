@@ -117,8 +117,8 @@ TEST_F(TestStatic, NotesLiveInMemberBodies) {
   EXPECT_EQ(field("ds@ds::ScopedCheck::run", "contract.0"), "");  // no prose contract: what holds is a rule (DS-94)
 }
 
-TEST_F(TestStatic, InterfaceAndAbstractAreDerived) {
-  EXPECT_EQ(field("ds@ds::Check", "stereotypes"), "interface");
+TEST_F(TestStatic, AbstractAndValueAreDerived) {
+  EXPECT_EQ(field("ds@ds::Check", "stereotypes"), "abstract");  // every method abstract: still an abstract class (DS-301)
   EXPECT_EQ(field("ds@ds::ScopedCheck", "stereotypes"), "abstract");
   EXPECT_EQ(field("ds@ds::Model", "stereotypes"), "");
   EXPECT_EQ(field("ds@ds::Location", "stereotypes"), "value, equatable, ordered, printable");

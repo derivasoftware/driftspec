@@ -280,7 +280,7 @@ TEST_F(TestQualification, TheStaticMetamodelIsModelledAndClassifiedByDerivation)
   const auto exported = nlohmann::json::parse(ds("export " + examples("static")).out);
   std::map<std::string, nlohmann::json> by;
   for (const auto& e : exported["entities"]) by[e["id"]] = e;
-  EXPECT_EQ(by["ds@ds::Check"]["fields"]["stereotypes"], "interface");
+  EXPECT_EQ(by["ds@ds::Check"]["fields"]["stereotypes"], "abstract");
   EXPECT_EQ(by["ds@ds::ScopedCheck"]["fields"]["stereotypes"], "abstract");
   EXPECT_EQ(by["ds@ds::Location"]["fields"]["stereotypes"], "value, equatable, ordered, printable");
   EXPECT_EQ(by["ds@ds::Repository<1>"]["fields"]["bound.T"], "Entity");

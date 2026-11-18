@@ -53,8 +53,8 @@ them. The vision (`vision.md`) says why; this says what.*
 ## 2. Static design (`tests/corpus/static`)
 
 - Kinds: `class`, `dataclass`, `enum`, and `function` for an operation of the
-  module (below). Interface and abstract are derived
-  from the methods and never written (R14).
+  module (below). Abstract is derived from the methods and never written; a
+  class whose methods are all abstract is still a class (R14, DS-301).
 - Any entity, a member too, may open a body with fields, `note:`,
   annotations, contracts and nested requirements or constraints; nesting
   means "about this" (R12, R13). Braces enclose, one thing per line, a field

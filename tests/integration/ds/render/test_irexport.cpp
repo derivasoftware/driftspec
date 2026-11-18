@@ -63,9 +63,9 @@ TEST_F(TestIrExport, IncludeSelectsAndTheModuleBecomesAContainer) {
 TEST_F(TestIrExport, DerivedStereotypesAndMembersArePrinted) {
   const auto doc = render("CL_Model");
   const nlohmann::json& check = *node(doc, "ds@ds::Check");
-  EXPECT_EQ(check["classifier"], "interface");
+  EXPECT_EQ(check["classifier"], "class");  // every method abstract: an abstract class, never an interface (DS-301)
   EXPECT_EQ(check["abstract"], true);
-  EXPECT_EQ(check["stereotype"], "interface");
+  EXPECT_EQ(check["stereotype"], "abstract");
   EXPECT_EQ(check["sectionKinds"], nlohmann::json({"methods"}));
   EXPECT_EQ(check["sections"][0][0], "+ abstract name() -> string");
   const nlohmann::json& location = *node(doc, "ds@ds::Location");
@@ -78,18 +78,18 @@ TEST_F(TestIrExport, TheDiagramReadsARelationAsTheViewerDoes) {
   std::string viewer;
   for (const auto& l : ds::scene::Scene(model).build().links)
     if (l.from == "ds@ds::ScopedCheck" && l.to == "ds@ds::Check") viewer = l.kind;
-  EXPECT_EQ(viewer, "realises");
+  EXPECT_EQ(viewer, "inherits");
   std::string diagram;
   const auto doc = render("CL_Model");
   for (const auto& e : doc["edges"])
     if (e["from"] == "ds@ds::ScopedCheck" && e["to"] == "ds@ds::Check") diagram = e["kind"];
-  EXPECT_EQ(diagram, "realization");
+  EXPECT_EQ(diagram, "inheritance");
 }
 
 TEST_F(TestIrExport, EdgesAreLiftedFromMembersToClasses) {
   const auto doc = render("CL_Model");
-  EXPECT_EQ(edges(doc, "realization"), 1);  // ScopedCheck -> Check, an interface: realised, not inherited (DS-118)
-  EXPECT_EQ(edges(doc, "inheritance"), 0);
+  EXPECT_EQ(edges(doc, "realization"), 0);  // ScopedCheck -> Check: inheriting is drawn as written (DS-301)
+  EXPECT_EQ(edges(doc, "inheritance"), 1);
   EXPECT_EQ(edges(doc, "composition"), 1);  // Finding owns Location, labelled with name and multiplicity
   EXPECT_EQ(edges(doc, "attachment"), 1);   // the note of Finding
   bool labelled = false;

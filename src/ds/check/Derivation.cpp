@@ -32,7 +32,7 @@ std::vector<model::Finding> Derivation::run(Context& out_context) {
   return out_context.take();
 }
 
-// interface / abstract / value and the operator families are derived, never written (R14, R17)
+// abstract / value and the operator families are derived, never written (R14, R17)
 void Derivation::classify() {
   std::vector<std::string> classes;
   for (const auto& pair : model_->entities()) {
@@ -55,11 +55,7 @@ void Derivation::classify() {
     std::vector<std::string> stereotypes;
     if (cls->has("extern")) stereotypes.push_back("extern");
     if (cls->has("dataclass")) stereotypes.push_back("value");
-    if (methods > 0 && abstractMethods == methods && attributes == 0) {
-      stereotypes.push_back("interface");
-    } else if (abstractMethods > 0) {
-      stereotypes.push_back("abstract");
-    }
+    if (abstractMethods > 0) stereotypes.push_back("abstract");  // all of them or some: an abstract class (DS-301)
     const auto ops = cls->fields.find("operators");
     if (ops != cls->fields.end()) {
       for (const auto& item : split(ops->second, ',')) {
