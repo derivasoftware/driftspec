@@ -84,7 +84,7 @@ std::vector<KindSpec> build() {
        {"extension"},
        {P, M, Rq}});
   k.push_back({Kind::Constraint,
-               "a rule every instance of a category obeys",
+               "a requirement every instance of what it binds obeys",
                plus(artefact(), {written("category", FieldType::Name, "the category it applies to"),
                                  written("bok", FieldType::Names, "the guides that ground it")}),
                {"extension"},

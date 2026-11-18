@@ -117,7 +117,7 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "    verification VER-00001-1 {\n      title: Unit tests confirm the cart totals its items\n      method: test\n"
         "      tests:\n        tests/test_cart.cpp::TestCart.Totals\n    }\n  }\n}\n"}},
       {Kind::Constraint,
-       {"constraint <ID>: <title>\nconstraint <ID> {\n  title: <a rule every instance of a category obeys>\n  category: <category>\n"
+       {"constraint <ID>: <title>\nconstraint <ID> {\n  title: <what every instance of what it binds shall obey>\n  category: <category>\n"
         "  bok: <guides>\n}",
         "package shop {\n  constraint CST-00001-1: Every price shall be kept in cents\n}\n"}},
       {Kind::Interface,

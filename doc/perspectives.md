@@ -34,8 +34,8 @@ part of the design that realises it, and evidence that it is met:
 | Logic | constraint: always, or never | rules | the evaluator, or tests when the design cannot decide |
 
 The split is a guide, not a wall. A requirement may describe behaviour, and a
-use case touches structure. A constraint is a requirement with a negative or
-universal scope. What matters is that a request takes the form that states it
+use case touches structure. A constraint is a requirement that every instance
+of what it binds obeys. What matters is that a request takes the form that states it
 best: a capability is a requirement; an interaction in time, with who starts
 it and how it may end, is a use case; "every", "always" or "never" is a
 constraint. argos already sorts requests this way.
