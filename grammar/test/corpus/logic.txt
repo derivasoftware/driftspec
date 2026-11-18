@@ -1,0 +1,584 @@
+=============
+logic: A rule
+=============
+
+package shop {
+  requirement REQ-00001-1: The store shall not depend on the web
+
+  module web {
+    class Page {
+      + show() -> none
+    }
+  }
+
+  module store {
+    class Order {
+      + total() -> int
+    }
+
+    rule store-knows-no-web {
+      title: No class of the store uses the web
+      @requirement REQ-00001-1
+      for class c in shop@store
+      never m in c, m uses x, x in shop@web
+    }
+  }
+}
+
+diagram CL_Shop {
+  kind: class
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (line_text))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name)))))))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (rule
+        (name)
+        (field
+          (name)
+          (line_text))
+        (annotation
+          (name)
+          (qualified_name
+            (name)))
+        (rule_for
+          (range
+            (name)
+            (name)
+            (qualified_name
+              (package_prefix)
+              (name))))
+        (rule_never
+          (literal
+            (in_atom
+              (qualified_name
+                (name))
+              (qualified_name
+                (name))))
+          (literal
+            (relation_atom
+              (qualified_name
+                (name))
+              (name)
+              (qualified_name
+                (name))))
+          (literal
+            (in_atom
+              (qualified_name
+                (name))
+              (qualified_name
+                (package_prefix)
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+===================================
+logic: Filtering and reading fields
+===================================
+
+package shop {
+  requirement REQ-00001-1 {
+    title: The cart shall total the price of its lines
+    status: approved
+  }
+  requirement REQ-00002-1 {
+    title: The cart shall remember its customer
+    status: draft
+  }
+
+  module store {
+    class Cart {
+      + total() -> int {
+        @requirement REQ-00001-1
+      }
+    }
+  }
+
+  rule approved-are-kept {
+    title: Every approved requirement is kept by something
+    @requirement REQ-00001-1
+    for requirement r in shop
+    where r.status = "approved"
+    holds x requires r
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text)))
+    (requirement
+      (name)
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text)))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name)))
+            (member_body
+              (annotation
+                (name)
+                (qualified_name
+                  (name))))))))
+    (rule
+      (name)
+      (field
+        (name)
+        (line_text))
+      (annotation
+        (name)
+        (qualified_name
+          (name)))
+      (rule_for
+        (range
+          (name)
+          (name)
+          (qualified_name
+            (name))))
+      (rule_where
+        (literal
+          (compare_atom
+            (field_term
+              (name)
+              (name))
+            (string))))
+      (rule_holds
+        (literal
+          (relation_atom
+            (qualified_name
+              (name))
+            (name)
+            (qualified_name
+              (name)))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+===========================
+logic: The rules as a table
+===========================
+
+package shop {
+  requirement REQ-00001-1: The store shall not depend on the web
+
+  module web {
+    class Page {
+      + show() -> none
+    }
+  }
+
+  module store {
+    class Order {
+      + total() -> int
+    }
+
+    rule store-knows-no-web {
+      title: No class of the store uses the web
+      @requirement REQ-00001-1
+      for class c in shop@store
+      never m in c, m uses x, x in shop@web
+    }
+
+    rule store-refers-to-no-web {
+      title: No attribute of the store refers to the web
+      @requirement REQ-00001-1
+      for attribute a in shop@store
+      never a refs t, t in shop@web
+    }
+  }
+}
+
+diagram TB_Rules {
+  kind: table
+  for rule r in shop
+  column rule: r.title
+  column requirement: x where r requires x
+  column model: r.holds
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (line_text))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name)))))))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (rule
+        (name)
+        (field
+          (name)
+          (line_text))
+        (annotation
+          (name)
+          (qualified_name
+            (name)))
+        (rule_for
+          (range
+            (name)
+            (name)
+            (qualified_name
+              (package_prefix)
+              (name))))
+        (rule_never
+          (literal
+            (in_atom
+              (qualified_name
+                (name))
+              (qualified_name
+                (name))))
+          (literal
+            (relation_atom
+              (qualified_name
+                (name))
+              (name)
+              (qualified_name
+                (name))))
+          (literal
+            (in_atom
+              (qualified_name
+                (name))
+              (qualified_name
+                (package_prefix)
+                (name))))))
+      (rule
+        (name)
+        (field
+          (name)
+          (line_text))
+        (annotation
+          (name)
+          (qualified_name
+            (name)))
+        (rule_for
+          (range
+            (name)
+            (name)
+            (qualified_name
+              (package_prefix)
+              (name))))
+        (rule_never
+          (literal
+            (relation_atom
+              (qualified_name
+                (name))
+              (name)
+              (qualified_name
+                (name))))
+          (literal
+            (in_atom
+              (qualified_name
+                (name))
+              (qualified_name
+                (package_prefix)
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (rule_for
+      (range
+        (name)
+        (name)
+        (qualified_name
+          (name))))
+    (column
+      (name)
+      (column_field
+        (name)
+        (name)))
+    (column
+      (name)
+      (column_related
+        (name)
+        (literal
+          (relation_atom
+            (qualified_name
+              (name))
+            (name)
+            (qualified_name
+              (name))))))
+    (column
+      (name)
+      (column_field
+        (name)
+        (name)))))
+
+======================
+logic: A state machine
+======================
+
+package shop {
+  module store {
+    class Order {
+      + pay() -> none
+      + ship() -> none
+      + cancel() -> none
+    }
+
+    state Order {
+      initial Open
+      Open -> Paid on pay
+      Paid -> Shipped on ship
+      Open -> Cancelled on cancel
+      Paid -> Cancelled on cancel
+    }
+  }
+}
+
+diagram ST_Order {
+  kind: state
+  include: shop@store::Order
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (state
+        (qualified_name
+          (name))
+        (initial
+          (name))
+        (transition
+          (name)
+          (name)
+          (name))
+        (transition
+          (name)
+          (name)
+          (name))
+        (transition
+          (name)
+          (name)
+          (name))
+        (transition
+          (name)
+          (name)
+          (name)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+=============================
+logic: The machine as a table
+=============================
+
+package shop {
+  module store {
+    class Order {
+      + pay() -> none
+      + ship() -> none
+      + cancel() -> none
+    }
+
+    state Order {
+      initial Open
+      Open -> Paid on pay
+      Paid -> Shipped on ship
+      Open -> Cancelled on cancel
+      Paid -> Cancelled on cancel
+    }
+  }
+}
+
+diagram TB_Order {
+  kind: table
+  include: shop@store::Order
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (state
+        (qualified_name
+          (name))
+        (initial
+          (name))
+        (transition
+          (name)
+          (name)
+          (name))
+        (transition
+          (name)
+          (name)
+          (name))
+        (transition
+          (name)
+          (name)
+          (name))
+        (transition
+          (name)
+          (name)
+          (name)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))

@@ -1,0 +1,942 @@
+=====================
+behaviour: A sequence
+=====================
+
+package shop {
+  module store {
+    class Stock {
+      + has(item: string) -> bool
+    }
+
+    class Cart {
+      - stock: Stock
+      + add(item: string) -> bool
+    }
+
+    sequence Cart::add {
+      self -> stock.has(item) -> ok
+      return ok
+    }
+  }
+}
+
+diagram SEQ_Add {
+  kind: sequence
+  include: shop@store::Cart::add
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (message
+          (name)
+          (name)
+          (qualified_name
+            (name))
+          (arguments
+            (argument
+              (name)))
+          (name))
+        (return
+          (name)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+=============================
+behaviour: Branches and loops
+=============================
+
+package shop {
+  module store {
+    class Line {
+      + subtotal() -> int
+    }
+
+    class Cart {
+      - owns lines: list<Line>
+      + total() -> int
+    }
+
+    sequence Cart::total {
+      local line: Line
+      loop each line {
+        self -> line.subtotal() -> part
+      }
+      return sum
+    }
+  }
+}
+
+diagram SEQ_Total {
+  kind: sequence
+  include: shop@store::Cart::total
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))
+              (type_args
+                (type
+                  (qualified_name
+                    (name))))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (local
+          (name)
+          (type
+            (qualified_name
+              (name))))
+        (loop
+          (condition)
+          (message
+            (name)
+            (name)
+            (qualified_name
+              (name))
+            (arguments)
+            (name)))
+        (return
+          (name)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+====================
+behaviour: Scenarios
+====================
+
+package shop {
+  module store {
+    class Stock {
+      + has(item: string) -> bool
+      + reserve(item: string) -> none
+    }
+
+    class Cart {
+      - stock: Stock
+      + add(item: string) -> bool
+    }
+
+    sequence Cart::add {
+      self -> stock.has(item) -> ok
+      opt the item is out of stock / sold-out {
+        return false
+      }
+      self -> stock.reserve(item)
+      return true
+    }
+  }
+}
+
+diagram SEQ_Add {
+  kind: sequence
+  include: shop@store::Cart::add
+}
+
+diagram SEQ_SoldOut {
+  kind: sequence
+  include: shop@store::Cart::add / sold-out
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (message
+          (name)
+          (name)
+          (qualified_name
+            (name))
+          (arguments
+            (argument
+              (name)))
+          (name))
+        (opt
+          (condition)
+          (name)
+          (return))
+        (message
+          (name)
+          (name)
+          (qualified_name
+            (name))
+          (arguments
+            (argument
+              (name))))
+        (return))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text)))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+==================================
+behaviour: One call inside another
+==================================
+
+package shop {
+  module store {
+    class Card {
+      + pay(amount: int) -> bool
+    }
+
+    class Line {
+      + subtotal() -> int
+    }
+
+    class Cart {
+      - owns lines: list<Line>
+      + total() -> int
+      + checkout(card: Card) -> bool
+    }
+
+    sequence Cart::total {
+      local line: Line
+      loop each line {
+        self -> line.subtotal() -> part
+      }
+      return sum
+    }
+
+    sequence Cart::checkout {
+      -> total() -> amount
+      self -> card.pay(amount) -> paid
+      return paid
+    }
+  }
+}
+
+diagram SEQ_Checkout {
+  kind: sequence
+  include: shop@store::Cart::checkout
+  depth: *
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))
+              (type_args
+                (type
+                  (qualified_name
+                    (name))))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (local
+          (name)
+          (type
+            (qualified_name
+              (name))))
+        (loop
+          (condition)
+          (message
+            (name)
+            (name)
+            (qualified_name
+              (name))
+            (arguments)
+            (name)))
+        (return
+          (name)))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (message
+          (qualified_name
+            (name))
+          (arguments)
+          (name))
+        (message
+          (name)
+          (name)
+          (qualified_name
+            (name))
+          (arguments
+            (argument
+              (name)))
+          (name))
+        (return
+          (name)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+===================
+behaviour: Failures
+===================
+
+package shop {
+  module store {
+    class Stock {
+      + reserve(item: string) -> none fails SoldOut
+    }
+
+    class Cart {
+      - stock: Stock
+      + add(item: string) -> bool
+    }
+
+    sequence Stock::reserve {
+      opt nothing is left / empty {
+        fail SoldOut
+      }
+    }
+
+    sequence Cart::add {
+      attempt {
+        self -> stock.reserve(item)
+      } on SoldOut {
+        return false
+      }
+      return true
+    }
+  }
+}
+
+diagram SEQ_Add {
+  kind: sequence
+  include: shop@store::Cart::add
+  depth: *
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name)))
+            (failures
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (opt
+          (condition)
+          (name)
+          (fail
+            (qualified_name
+              (name)))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (attempt
+          (message
+            (name)
+            (name)
+            (qualified_name
+              (name))
+            (arguments
+              (argument
+                (name))))
+          (handler
+            (qualified_name
+              (name))
+            (return)))
+        (return))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+========================================
+behaviour: The behaviour of an interface
+========================================
+
+package shop {
+  interface shell {
+    kind: cli
+    operation buy(item: string) -> int {
+      command: shop buy <item>
+      exit 0: default
+    }
+  }
+
+  sequence shell::buy {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) -> paid
+    return 0
+  }
+
+  module store {
+    class Card {
+      + pay(amount: int) -> bool
+    }
+
+    class Cart {
+      + checkout(card: Card) -> bool
+    }
+
+    sequence Cart::checkout {
+      self -> card.pay(amount) -> paid
+      return paid
+    }
+  }
+}
+
+diagram SEQ_Buy {
+  kind: sequence
+  include: shop@shell::buy
+  depth: *
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (interface
+      (name)
+      (field
+        (name)
+        (line_text))
+      (operation
+        (name)
+        (parameters
+          (parameter
+            (name)
+            (type
+              (qualified_name
+                (name)))))
+        (type
+          (qualified_name
+            (name)))
+        (field
+          (name)
+          (line_text))
+        (field
+          (name)
+          (number)
+          (line_text))))
+    (sequence
+      (qualified_name
+        (name)
+        (name))
+      (local
+        (name)
+        (type
+          (qualified_name
+            (name)
+            (name))))
+      (local
+        (name)
+        (type
+          (qualified_name
+            (name)
+            (name))))
+      (message
+        (name)
+        (name)
+        (qualified_name
+          (name))
+        (arguments
+          (argument
+            (name)))
+        (name))
+      (return
+        (number)))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (message
+          (name)
+          (name)
+          (qualified_name
+            (name))
+          (arguments
+            (argument
+              (name)))
+          (name))
+        (return
+          (name)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+=================
+behaviour: A tour
+=================
+
+package shop {
+  interface shell {
+    kind: cli
+    operation buy(item: string) -> int {
+      command: shop buy <item>
+      exit 0: default
+    }
+  }
+
+  sequence shell::buy {
+    local cart: store::Cart
+    local card: store::Card
+    self -> cart.checkout(card) -> paid
+    return 0
+  }
+
+  module store {
+    class Card {
+      + pay(amount: int) -> bool
+    }
+
+    class Cart {
+      + checkout(card: Card) -> bool
+    }
+
+    sequence Cart::checkout {
+      self -> card.pay(amount) -> paid
+      return paid
+    }
+  }
+}
+
+diagram TOUR_Buy {
+  kind: tour
+  include: shop@shell::buy
+  depth: *
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (interface
+      (name)
+      (field
+        (name)
+        (line_text))
+      (operation
+        (name)
+        (parameters
+          (parameter
+            (name)
+            (type
+              (qualified_name
+                (name)))))
+        (type
+          (qualified_name
+            (name)))
+        (field
+          (name)
+          (line_text))
+        (field
+          (name)
+          (number)
+          (line_text))))
+    (sequence
+      (qualified_name
+        (name)
+        (name))
+      (local
+        (name)
+        (type
+          (qualified_name
+            (name)
+            (name))))
+      (local
+        (name)
+        (type
+          (qualified_name
+            (name)
+            (name))))
+      (message
+        (name)
+        (name)
+        (qualified_name
+          (name))
+        (arguments
+          (argument
+            (name)))
+        (name))
+      (return
+        (number)))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (message
+          (name)
+          (name)
+          (qualified_name
+            (name))
+          (arguments
+            (argument
+              (name)))
+          (name))
+        (return
+          (name)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))

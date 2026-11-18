@@ -1,0 +1,804 @@
+=========================================
+structure: Packages, modules and identity
+=========================================
+
+package shop {
+  module store {
+    class Cart {
+      + total() -> int
+    }
+  }
+  module billing {
+    class Invoice {
+      + refs cart: store::Cart
+    }
+  }
+}
+
+diagram CL_Shop {
+  kind: class
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name)))))))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name)
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+================================
+structure: The high-level design
+================================
+
+package shop {
+  module store {
+    class Cart {
+      + total() -> int
+    }
+    class Line {
+      + refs cart: Cart
+    }
+  }
+  module billing {
+    class Invoice {
+      + refs cart: store::Cart
+      + print() -> string
+    }
+  }
+}
+
+diagram HLD_Shop {
+  kind: class
+  include: shop@*
+  close: module
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name)))))))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name)
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+=====================
+structure: Interfaces
+=====================
+
+package shop {
+  interface shell {
+    kind: cli
+    operation buy(item: string) -> int {
+      command: shop buy <item>
+      exit 0: default
+      exit 2: declined
+    }
+  }
+
+  sequence shell::buy {
+    return 0
+  }
+
+  sequence shell::buy / declined {
+    return 2
+  }
+}
+
+diagram IF_Shell {
+  kind: interface
+  include: shop@shell
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (interface
+      (name)
+      (field
+        (name)
+        (line_text))
+      (operation
+        (name)
+        (parameters
+          (parameter
+            (name)
+            (type
+              (qualified_name
+                (name)))))
+        (type
+          (qualified_name
+            (name)))
+        (field
+          (name)
+          (line_text))
+        (field
+          (name)
+          (number)
+          (line_text))
+        (field
+          (name)
+          (number)
+          (line_text))))
+    (sequence
+      (qualified_name
+        (name)
+        (name))
+      (return
+        (number)))
+    (sequence
+      (qualified_name
+        (name)
+        (name))
+      (name)
+      (return
+        (number))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+====================================
+structure: Classes and their members
+====================================
+
+package shop {
+  module store {
+    class Cart {
+      + total() -> int
+      + add(price: int) -> none
+      # discount(percent: int) -> int
+      - count: int = 0
+      + static empty() -> Cart
+    }
+  }
+}
+
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name)))
+            (default_value
+              (number)))
+          (method
+            (visibility)
+            (method_modifier)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+==================================
+structure: Values and enumerations
+==================================
+
+package shop {
+  module store {
+    enum Status { Open, Paid, Sent }
+
+    dataclass Money {
+      + cents: int
+      + currency: string
+    }
+
+    class Cart {
+      + status: Status
+      + total() -> Money
+    }
+  }
+}
+
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (enum
+        (name)
+        (enum_value
+          (name))
+        (enum_value
+          (name))
+        (enum_value
+          (name)))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+====================
+structure: Relations
+====================
+
+package shop {
+  module store {
+    class Line {
+      + price: int
+    }
+
+    class Catalogue {
+      + priceOf(item: string) -> int
+    }
+
+    class Coupon {
+      + percent: int
+    }
+
+    class Cart {
+      - owns lines: list<Line>
+      - refs catalogue: Catalogue
+      + apply(coupon: Coupon) -> none
+      + total() -> int
+    }
+  }
+}
+
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+  show: ownership, multiplicity
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))
+              (type_args
+                (type
+                  (qualified_name
+                    (name))))))
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+======================
+structure: Inheritance
+======================
+
+package shop {
+  module billing {
+    class Payment {
+      + abstract pay(amount: int) -> bool
+    }
+
+    class Card : Payment {
+      + pay(amount: int) -> bool
+    }
+
+    class Transfer : Payment {
+      + pay(amount: int) -> bool
+    }
+  }
+}
+
+diagram CL_Billing {
+  kind: class
+  include: shop@billing::*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (method_modifier)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (qualified_name
+          (name))
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (qualified_name
+          (name))
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+====================
+structure: Functions
+====================
+
+package shop {
+  module billing {
+    class Invoice {
+      + number: int
+    }
+
+    function invoice(amount: int) -> Invoice
+    function today() -> string
+  }
+}
+
+diagram CL_Billing {
+  kind: class
+  include: shop@billing::*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))))
+      (function
+        (member_name
+          (name))
+        (parameters
+          (parameter
+            (name)
+            (type
+              (qualified_name
+                (name)))))
+        (type
+          (qualified_name
+            (name))))
+      (function
+        (member_name
+          (name))
+        (parameters)
+        (type
+          (qualified_name
+            (name))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+========================================
+structure: Choosing what a diagram shows
+========================================
+
+package shop {
+  module store {
+    class Line {
+      + price: int
+    }
+
+    class Cart {
+      - owns lines: list<Line>
+      + total() -> int
+    }
+
+    class Receipt {
+      + refs cart: Cart
+      + print() -> string
+    }
+  }
+}
+
+diagram CL_Carts {
+  kind: class
+  include: shop@store::*
+  exclude: shop@store::Receipt
+  hide: methods
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))
+              (type_args
+                (type
+                  (qualified_name
+                    (name))))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (attribute
+            (visibility)
+            (ownership)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
