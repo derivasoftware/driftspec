@@ -67,8 +67,8 @@ TEST_F(TestInterfaces, AnInterfaceHoldsItsTypedOperationsAndTheirFields) {
 }
 
 TEST_F(TestInterfaces, RequirementsAndConstraintsLinkToAnInterfaceOrAnOperation) {
-  EXPECT_TRUE(related("requires", "shop@shell", "SREQ-00002-1"));
-  EXPECT_TRUE(related("requires", "shop@shell::buy", "SREQ-00001-1"));
+  EXPECT_TRUE(related("satisfies", "shop@shell", "SREQ-00002-1"));
+  EXPECT_TRUE(related("satisfies", "shop@shell::buy", "SREQ-00001-1"));
 }
 
 TEST_F(TestInterfaces, AnOperationIsTheSubjectOfItsSequenceAndItsTraceGoesDown) {
@@ -99,7 +99,7 @@ TEST_F(TestInterfaces, AViewIsAStateWithItsTextAndWhatBindsIt) {
   ASSERT_NE(home, nullptr);
   EXPECT_EQ(home->kind, ds::model::Kind::View);
   EXPECT_NE(home->fields.at("text").find("A field for the code"), std::string::npos);
-  EXPECT_TRUE(related("requires", home->id, "SREQ-00001-1"));
+  EXPECT_TRUE(related("satisfies", home->id, "SREQ-00001-1"));
   EXPECT_TRUE(related("constrained-by", home->id, "CST-00001-1"));
 }
 

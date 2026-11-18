@@ -48,7 +48,7 @@ class TestScene : public ::testing::Test {
     f.params = {{"dir", "path"}};
     f.fields["returns"] = "Model";
     model.declare(f);
-    model.relate({"requires", "p@m::A", "REQ-00001-1", {}, ""});
+    model.relate({"satisfies", "p@m::A", "REQ-00001-1", {}, ""});
     for (const auto& n : ds::scene::Scene(model).build().nodes) byId[n.id] = n;
   }
 
@@ -296,7 +296,7 @@ class TestRequirement : public ::testing::Test {
     proof.fields["tests"] = "tests/a.cpp::TestA.Greets\ntests/a.cpp::TestA.Rejects";
     model.declare(proof);
     model.relate({"refines", "R-2", "R-1", {}, ""});
-    model.relate({"requires", "p@m::A", "R-2", {}, ""});
+    model.relate({"satisfies", "p@m::A", "R-2", {}, ""});
     model.relate({"verifies", "V-1", "R-2", {}, ""});
     doc = ds::scene::Scene(model).build();
   }
@@ -348,7 +348,7 @@ TEST_F(TestOutcome, AUseCaseCarriesItsOutcomesTheDefaultFirst) {
   happy.fields["text"] = "a greeting";
   model.declare(happy);
   model.relate({"realises", "p@shell::greet", "UC-1", {}, ""});
-  model.relate({"requires", "UC-1", "R-1", {}, ""});
+  model.relate({"satisfies", "UC-1", "R-1", {}, ""});
   const auto doc = ds::scene::Scene(model).build();
   const auto it = std::find_if(doc.requirements.begin(), doc.requirements.end(), [](const auto& r) { return r.id == "UC-1"; });
   ASSERT_NE(it, doc.requirements.end());

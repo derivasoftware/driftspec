@@ -194,7 +194,7 @@ diagram TB_Requirements {
   for requirement r in shop
   column requirement: r.id
   column says: r.title
-  column kept: x where x requires r
+  column kept: x where x satisfies r
   column proved: v where v verifies r
 }
 ```

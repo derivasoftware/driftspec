@@ -43,9 +43,9 @@ nlohmann::json artefacts(const model::Model& model) {
                        {"keptBy", nlohmann::json::array()},
                        {"provedBy", nlohmann::json::array()}};
     for (const auto& r : model.index().from(e.id))
-      if (r.kind == "refines" || (e.kind == model::Kind::UseCase && r.kind == "requires")) row["parent"] = r.to;
+      if (r.kind == "refines" || (e.kind == model::Kind::UseCase && r.kind == "satisfies")) row["parent"] = r.to;
     for (const auto& r : model.index().to(e.id)) {
-      if (r.kind == "requires" || r.kind == "constrained-by" || r.kind == "realises") row["keptBy"].push_back(r.from);
+      if (r.kind == "satisfies" || r.kind == "constrained-by" || r.kind == "realises") row["keptBy"].push_back(r.from);
       if (r.kind == "verifies") row["provedBy"].push_back(r.from);
     }
     rows.push_back(row);

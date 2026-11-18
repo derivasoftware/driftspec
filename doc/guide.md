@@ -250,7 +250,7 @@ them. The vision (`vision.md`) says why; this says what.*
   syntaxes that only change where an artefact is filed: nested in the same
   file, or written elsewhere and linked with an annotation. Today the engine
   keeps it for `refines` and `verifies`; a requirement nested in a class still
-  binds `about` instead of `requires` (DS-217).
+  binds `about` instead of `satisfies` (DS-217).
 - **Parent.** A requirement nested in a requirement refines it; elsewhere,
   `@refines`. A `parent:` field is ignored with `W-PARENT-IGNORED`: one
   representation per concept.
@@ -363,7 +363,7 @@ them. The vision (`vision.md`) says why; this says what.*
 - **A table of anything (2026-11-17, DS-268)** says its rows as a rule says what it speaks about,
   and a column per question:
   `diagram TB_Reqs { kind: table; for requirement r in shop; where r.status = "approved";
-  column requirement: r.id; column says: r.title; column kept: x where x requires r;
+  column requirement: r.id; column says: r.title; column kept: x where x satisfies r;
   column proved: holds v verifies r }`. A row per binding of the ranges that passes the filter.
   A column is a field of the row (`r.title`; `name` and `id` every entity has, `holds` says of a
   rule whether the model keeps it), what is related to it (`x where <literals>`: every `x` that
@@ -399,7 +399,7 @@ them. The vision (`vision.md`) says why; this says what.*
 - `diagrams` (each with its kind), `entities <scope>` (the direct members of a
   package, module, class or behaviour; a package may be named plainly),
   `relations <id>` (every relation touching it, `->` out and `<-` in, with
-  multiplicity), `artefacts <id>` (what a class realises, requires or is bound
+  multiplicity), `artefacts <id>` (what a class realises, satisfies or is bound
   by, and what verifies each), `behaviours <id>` (the sequences and state
   machines of a method or class), `shows <diagram>` (what the drawing would
   show: the projection itself answers), `findings [file]`, `coupling`, and

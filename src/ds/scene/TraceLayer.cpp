@@ -81,17 +81,17 @@ void TraceLayer::verifications(SceneDocument& out_document) {
 
 // what each refines, binds, realises and proves, and the nodes that answer to it
 void TraceLayer::answers(SceneDocument& out_document) const {
-  for (const auto& r : model_.index().ofKinds({"refines", "inherits", "requires", "realises", "verifies", "constrained-by"})) {
+  for (const auto& r : model_.index().ofKinds({"refines", "inherits", "satisfies", "realises", "verifies", "constrained-by"})) {
     if ((r.kind == "refines" || r.kind == "inherits") && at_.count(r.from)) {  // or the use case it specialises
       out_document.requirements[at_.at(r.from)].parent = r.to;
-    } else if (r.kind == "requires" && at_.count(r.from) && out_document.requirements[at_.at(r.from)].kind == "usecase") {
+    } else if (r.kind == "satisfies" && at_.count(r.from) && out_document.requirements[at_.at(r.from)].kind == "usecase") {
       out_document.requirements[at_.at(r.from)].binds.push_back(r.to);
     } else if (r.kind == "realises" && at_.count(r.to)) {  // an interface operation realises a use case
       const std::string node = map_.land(r.from);
       if (!node.empty()) out_document.requirements[at_.at(r.to)].nodes.push_back(node);
     } else if (r.kind == "verifies" && verificationAt_.count(r.from)) {
       out_document.verifications[verificationAt_.at(r.from)].requirements.push_back(r.to);
-    } else if ((r.kind == "requires" || r.kind == "constrained-by") && at_.count(r.to)) {
+    } else if ((r.kind == "satisfies" || r.kind == "constrained-by") && at_.count(r.to)) {
       const std::string node = map_.land(r.from);
       auto& nodes = out_document.requirements[at_.at(r.to)].nodes;
       if (!node.empty() && std::find(nodes.begin(), nodes.end(), node) == nodes.end()) nodes.push_back(node);

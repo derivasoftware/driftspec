@@ -61,7 +61,7 @@ package shop {
     title: Every requirement of the store is kept by something
     @requirement REQ-00003-1
     for requirement r in shop@store
-    holds x requires r
+    holds x satisfies r
   }
   rule shell-through-cart {
     title: The shell reaches the store only through the cart

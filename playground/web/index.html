@@ -487,7 +487,7 @@ rule store-requirements-kept {
   title: Every requirement of the store is kept
   @requirement REQ-00003-1
   for requirement r in shop@store
-  holds x requires r
+  holds x satisfies r
 }
 
 definition module-depends(m, n) {
@@ -531,7 +531,7 @@ rule store-requirements-kept {
   title: Every requirement of the store is kept
   @requirement REQ-00003-1
   for requirement r in shop@store
-  holds x requires r
+  holds x satisfies r
 }
 
 definition module-depends(m, n) {
@@ -575,7 +575,7 @@ rule store-requirements-kept {
   title: Every requirement of the store is kept
   @requirement REQ-00003-1
   for requirement r in shop@store
-  holds x requires r
+  holds x satisfies r
 }
 
 definition module-depends(m, n) {
@@ -619,7 +619,7 @@ rule store-requirements-kept {
   title: Every requirement of the store is kept
   @requirement REQ-00003-1
   for requirement r in shop@store
-  holds x requires r
+  holds x satisfies r
 }
 
 definition module-depends(m, n) {
@@ -663,7 +663,7 @@ rule store-requirements-kept {
   title: Every requirement of the store is kept
   @requirement REQ-00003-1
   for requirement r in shop@store
-  holds x requires r
+  holds x satisfies r
 }
 
 definition module-depends(m, n) {
@@ -777,11 +777,11 @@ const UI = {
         leave: "Leave the lesson (restart it with the button beside the list)", close: "Close", next: "Done. Next:",
         last: "Done: that was the last lesson.",
         cont: "Continue", restart: "Restart the lesson", problems: "Problems", noProblems: "No problems.",
-        requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Kept by", "Proved by"], other: "ES",
+        requirements: "Requirements", table: "table", cols: ["Id", "Title", "Status", "Level", "Satisfied by", "Proved by"], other: "ES",
         narrow: "For a better experience, open the editor on a large screen.", tabHome: "Home", tabDocs: "Docs", tabEditor: "Editor", openInEditor: "Open in the editor", go: "Open the editor",
         homeTitle: "Design specifications as code.",
         homeText: "DriftSpec is a tool for writing the design of a piece of software as text and keeping it consistent. It checks every contradiction, draws the diagrams, and joins requirements, design and tests in one model.",
-        kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Kept by",
+        kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Satisfied by",
         w1: "Detailed, and coherent",
         w1p: "A specification detailed enough to build from, checked as it is written. A reference to nothing, a call to an operation that does not exist, two states that hold at once: each is a finding, not something left for a reviewer to catch.",
         w2: "Three perspectives, one model",

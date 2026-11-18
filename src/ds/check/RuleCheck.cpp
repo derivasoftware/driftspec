@@ -36,7 +36,7 @@ std::vector<model::Finding> RuleCheck::run(Context& out_context) {
 // model (REQ-00096-1).
 void RuleCheck::checkRules() {
   std::set<std::string> linked;
-  for (const auto& r : model_->index().ofKind("requires")) linked.insert(r.from);
+  for (const auto& r : model_->index().ofKind("satisfies")) linked.insert(r.from);
   const auto said = [](const model::Entity& e, const char* key) {
     const auto it = e.fields.find(key);
     return it != e.fields.end() && !it->second.empty();

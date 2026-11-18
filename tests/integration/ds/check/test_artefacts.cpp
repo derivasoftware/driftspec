@@ -74,7 +74,7 @@ TEST_F(TestArtefacts, LevelByPlacementAndNestingGivesTheRelation) {
   EXPECT_NE(relation("verifies", "VER-00001-3", "REQ-00001-2"), nullptr);   // verification nested in a requirement
   EXPECT_NE(relation("verifies", "VER-00050-1", "SREQ-00001-2"), nullptr);  // verification elsewhere, @requirement
   EXPECT_NE(relation("about", "CST-00002-1", "iris"), nullptr);
-  EXPECT_NE(relation("requires", "iris@projection::Projection", "REQ-00001-2"), nullptr);
+  EXPECT_NE(relation("satisfies", "iris@projection::Projection", "REQ-00001-2"), nullptr);
   EXPECT_NE(relation("constrained-by", "iris@projection::Projection", "CST-00002-1"), nullptr);
 }
 

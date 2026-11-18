@@ -141,7 +141,7 @@
             "find": "rule store-refers-to-no-billing",
             "after": "}"
           },
-          "text": "rule store-requirements-kept {\n  title: Every requirement of the store is kept by something\n  @requirement REQ-00003-1\n  for requirement r in shop@store\n  holds x requires r\n}\nrule shell-through-cart {\n  title: The shell reaches the store only through the cart\n  @requirement REQ-00004-1\n  for message m in shop@shell\n  never m calls x, x in shop@store, not x in shop@store::Cart\n}"
+          "text": "rule store-requirements-kept {\n  title: Every requirement of the store is kept by something\n  @requirement REQ-00003-1\n  for requirement r in shop@store\n  holds x satisfies r\n}\nrule shell-through-cart {\n  title: The shell reaches the store only through the cart\n  @requirement REQ-00004-1\n  for message m in shop@shell\n  never m calls x, x in shop@store, not x in shop@store::Cart\n}"
         }
       ],
       "at": {
@@ -149,8 +149,8 @@
         "find": "rule store-requirements-kept"
       },
       "text": {
-        "en": "Rules say more than who depends on whom. `holds x requires r` asks that something exist: every requirement of the store is kept by some part of the design. `not x in ...` leaves something out: the shell may reach the store, but only through the cart. Both hold today.",
-        "es": "Las reglas dicen más que quién depende de quién. `holds x requires r` pide que algo exista: cada requisito del almacén lo cumple alguna parte del diseño. `not x in ...` deja algo fuera: el shell puede llegar al almacén, pero solo a través del carrito. Las dos se cumplen hoy."
+        "en": "Rules say more than who depends on whom. `holds x satisfies r` asks that something exist: every requirement of the store is kept by some part of the design. `not x in ...` leaves something out: the shell may reach the store, but only through the cart. Both hold today.",
+        "es": "Las reglas dicen más que quién depende de quién. `holds x satisfies r` pide que algo exista: cada requisito del almacén lo cumple alguna parte del diseño. `not x in ...` deja algo fuera: el shell puede llegar al almacén, pero solo a través del carrito. Las dos se cumplen hoy."
       },
       "done": {
         "ack": {

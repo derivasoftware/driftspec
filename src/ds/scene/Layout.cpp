@@ -96,8 +96,8 @@ class Variant {
       const model::Entity& e = pair.second;
       if (!e.expected) byScope_[e.scope].push_back(&e);
     }
-    for (const auto& r : model.index().ofKinds({"requires", "constrained-by", "inherits", "realises"})) {
-      if (r.kind == "requires" || r.kind == "constrained-by") linked_[r.from].push_back(r.to);
+    for (const auto& r : model.index().ofKinds({"satisfies", "constrained-by", "inherits", "realises"})) {
+      if (r.kind == "satisfies" || r.kind == "constrained-by") linked_[r.from].push_back(r.to);
       if (r.kind == "inherits" || r.kind == "realises") bases_[r.from].push_back(r.to);
     }
   }

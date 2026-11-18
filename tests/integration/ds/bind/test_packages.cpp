@@ -70,7 +70,7 @@ TEST_F(TestPackages, AnOuterPackageNobodyDeclaresIsExpected) {
 }
 
 TEST_F(TestPackages, ABoxRealisesRequirementsLikeAClass) {
-  EXPECT_TRUE(related("requires", "app@core", "SREQ-00001-1"));  // @requirement in the package body
+  EXPECT_TRUE(related("satisfies", "app@core", "SREQ-00001-1"));  // @requirement in the package body
 }
 
 TEST_F(TestPackages, AModifierIsAWordOnlyInFrontOfAName) {
@@ -99,14 +99,14 @@ TEST_F(TestPackages, AGenericUseFindsTheExternOfItsSimpleName) {
 }
 
 TEST_F(TestPackages, AnEnumRealisesRequirementsLikeAClass) {
-  EXPECT_TRUE(related("requires", "app@render@svg::Mode", "SREQ-00001-1"));
+  EXPECT_TRUE(related("satisfies", "app@render@svg::Mode", "SREQ-00001-1"));
   EXPECT_EQ(model.find("app@render@svg::Mode")->fields.at("values"), "Fast, Slow");
 }
 
 TEST_F(TestPackages, AnExtensionAddsRelationsWithoutRedefining) {
   EXPECT_EQ(model.find("REQ-00002-1")->fields.at("title"), "The render shall draw the model");  // defined once, in packages.ds
   EXPECT_TRUE(related("refines", "REQ-00002-1", "SREQ-00001-1"));                               // wired in wiring.ds
-  EXPECT_TRUE(related("requires", "app@render@svg::Svg", "REQ-00002-1"));
+  EXPECT_TRUE(related("satisfies", "app@render@svg::Svg", "REQ-00002-1"));
   EXPECT_FALSE(reported("E-DUPLICATE-IDENTITY", "REQ-00002-1"));
   EXPECT_FALSE(reported("E-DUPLICATE-IDENTITY", "Svg"));
   EXPECT_FALSE(model.find("app@render@svg::Svg")->expected);
@@ -189,7 +189,7 @@ TEST(TestLoneExtension, AClassWithRequirementsAndNoMembersIsADefinitionWhenNothi
   bool contained = false, required = false;
   for (const auto& r : model.index().all()) {
     contained |= r.kind == "contains" && r.from == "app@errors" && r.to == "app@errors::NotAllowed";
-    required |= r.kind == "requires" && r.from == "app@errors::NotAllowed" && r.to == "REQ-00001-1";
+    required |= r.kind == "satisfies" && r.from == "app@errors::NotAllowed" && r.to == "REQ-00001-1";
   }
   EXPECT_TRUE(contained);
   EXPECT_TRUE(required);

@@ -186,7 +186,8 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
        {"rule <name> {\n  title: <what it states>\n  @requirement <ID>\n  for <kind> <variable> [in <box>], ...\n  where <literals>\n"
         "  holds <literals>               or never <literals>\n}\nliterals joined by commas, each one of:\n  <a> <relation> <b>    a "
         "relation "
-        "of the metamodel: c uses x, m requires r\n  <a> is <kind>         x is class\n  <a> in <b>            containment, at any depth\n "
+        "of the metamodel: c uses x, m satisfies r\n  <a> is <kind>         x is class\n  <a> in <b>            containment, at any "
+        "depth\n "
         " "
         "<a> = <b>, !=, <, <=, >, >=   entities or values: numbers compare as numbers\n  <definition>(<a>, ...)\n  arg(<call>, <param>, "
         "<v>)"
@@ -420,7 +421,7 @@ const CodeSpec* codeOf(const std::string& code) {
 
 const std::vector<AnnotationSpec>& annotations() {
   static const std::vector<AnnotationSpec> all = {
-      {"@requirement", "requires", "the entity answers to the requirement; on a verification, verifies it", "verifies", Kind::Requirement},
+      {"@requirement", "satisfies", "the entity answers to the requirement; on a verification, verifies it", "verifies", Kind::Requirement},
       {"@constraint", "constrained-by", "the entity obeys the constraint; on a verification, verifies it", "verifies", Kind::Constraint},
       {"@refines", "refines", "the requirement details the one named (nesting says the same)", "", Kind::Requirement},
       {"@interface", "realises", "the class or verification carries out the interface", "", Kind::Interface},

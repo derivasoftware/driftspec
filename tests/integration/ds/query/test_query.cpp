@@ -69,7 +69,7 @@ TEST_F(TestQuery, TheRelationsOfAnEntityInBothDirections) {
 
 TEST_F(TestQuery, WhatAClassRealisesAndWhatProvesIt) {
   const auto answers = ds::query::Query(model).ask("artefacts", "iris@projection::Projection");
-  EXPECT_TRUE(names(answers, "REQ-00001-2", "requires"));
+  EXPECT_TRUE(names(answers, "REQ-00001-2", "satisfies"));
   bool proof = false;
   for (const auto& a : answers) proof |= a.kind == "verified-by" && a.detail == "REQ-00001-2";
   EXPECT_TRUE(proof);

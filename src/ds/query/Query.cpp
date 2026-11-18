@@ -109,11 +109,11 @@ std::vector<Answer> Query::relations(const std::string& id) const {
 }
 
 std::vector<Answer> Query::artefacts(const std::string& id) const {
-  // what the entity realises, requires or is bound by, then what verifies each of those
+  // what the entity realises, satisfies or is bound by, then what verifies each of those
   std::vector<Answer> out;
   const model::Index index = model_.index();
   for (const auto& r : index.from(id)) {
-    if (r.kind != "realises" && r.kind != "requires" && r.kind != "constrained-by") continue;
+    if (r.kind != "realises" && r.kind != "satisfies" && r.kind != "constrained-by") continue;
     out.push_back({r.kind, r.to, ""});
     for (const auto& v : index.to(r.to))
       if (v.kind == "verifies") out.push_back({"verified-by", v.from, r.to});

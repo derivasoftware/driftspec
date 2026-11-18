@@ -1661,7 +1661,7 @@ package driftspec@ds {
           requires from the entity, and a nested constraint binds constrained-by, as @requirement
           and @constraint do: two syntaxes that only change where the artefact is filed. Every kind
           that may nest an artefact, an attribute and an operator among them, may carry either
-          annotation, and requires and constrained-by leave the same kinds, a state machine
+          annotation, and satisfies and constrained-by leave the same kinds, a state machine
           included. In a package or a module a nested artefact still gives its level.
         rationale:
           Owner, 2026-11-15, on the model audit (findings I7 and I6, DS-217): nesting and annotating
@@ -1669,7 +1669,7 @@ package driftspec@ds {
           the class answered to nothing. Whether a requirement written in a box also means the box
           answers to it is left to the Owner.
         verification VER-00141-1 {
-          title: Integration tests confirm nesting in a design entity gives requires or constrained-by, an attribute annotates as it nests, and a box keeps the level
+          title: Integration tests confirm nesting in a design entity gives satisfies or constrained-by, an attribute annotates as it nests, and a box keeps the level
           status: approved
           method: test
           tests:
@@ -2286,7 +2286,7 @@ package driftspec@ds {
           column <name>: <what> ... }. The rows are said as a rule says what it speaks about: every
           binding of the ranges that passes the filter. A column is a field of the row (r.title;
           name and id are what every entity has, holds says of a rule whether the model keeps it),
-          what is related to the row (x where r requires x: every x that answers, by its name), or
+          what is related to the row (x where r satisfies x: every x that answers, by its name), or
           a yes or no (holds <literals>). The first column heads each row. A comparison reads a
           field of what a variable is bound to (r.status = "draft"), in a table and in a rule alike,
           and an artefact is in the box it is written in. A table written this way is the model's
@@ -2310,7 +2310,7 @@ package driftspec@ds {
         status: approved
         title: A requirement diagram shall draw whatever answers to a requirement, a member through the class or interface that holds it
         text:
-          Every source of requires and constrained-by is drawn under the artefact: a package, a module,
+          Every source of satisfies and constrained-by is drawn under the artefact: a package, a module,
           an interface, a class, an enum, a function, a use case, a rule. A method, an attribute, an
           operator or an operation answers through the class or the interface that holds it, and a
           holder and its member that answer the same artefact draw one edge.

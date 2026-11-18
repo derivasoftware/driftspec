@@ -109,7 +109,7 @@ package shop {
     @requirement REQ-00001-1
     for requirement r in shop
     where r.status = "approved"
-    holds x requires r
+    holds x satisfies r
   }
 }
 
@@ -159,7 +159,7 @@ diagram TB_Rules {
   kind: table
   for rule r in shop
   column rule: r.title
-  column requirement: x where r requires x
+  column requirement: x where r satisfies x
   column model: r.holds
 }
 ```

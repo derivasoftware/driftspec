@@ -32,7 +32,7 @@ diagram T_Rules {                      // the rules of the tool: what each says,
   kind: table
   for rule r in driftspec@ds
   column rule: r.title
-  column requirement: x where r requires x
+  column requirement: x where r satisfies x
   column model: r.holds
 }
 
@@ -41,7 +41,7 @@ diagram T_Requirements {               // the requirements of the playground: wh
   for requirement r in driftspec@playground
   column requirement: r.id
   column says: r.title
-  column kept: x where x requires r
+  column kept: x where x satisfies r
   column proved: v where v verifies r
 }
 
@@ -55,5 +55,5 @@ diagram T_UseCases {                   // what DriftSpec is for: each use case a
   for usecase u in driftspec
   column usecase: u.id
   column says: u.title
-  column answers: x where u requires x
+  column answers: x where u satisfies x
 }
