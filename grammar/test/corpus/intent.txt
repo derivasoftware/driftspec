@@ -1,0 +1,494 @@
+=====================
+intent: A requirement
+=====================
+
+package shop {
+  requirement REQ-00001-1 {
+    title: The cart shall total the price of its lines
+    status: draft
+    rationale:
+      A customer sees the total before paying.
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (block_text))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+============================
+intent: From the system down
+============================
+
+package shop {
+  requirement SREQ-00001-1 {
+    title: The shop shall sell an item from the command line
+    status: draft
+
+    requirement REQ-00001-1: The cart shall total the price of its lines
+    requirement REQ-00002-1: The cart shall charge its total to a card
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text))
+      (requirement
+        (name)
+        (line_text))
+      (requirement
+        (name)
+        (line_text))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+===============================
+intent: Who keeps a requirement
+===============================
+
+package shop {
+  requirement REQ-00001-1: The cart shall total the price of its lines
+  requirement REQ-00002-1: The cart shall charge its total to a card
+
+  module store {
+    class Card {
+      + pay(amount: int) -> bool
+    }
+
+    class Cart {
+      + total() -> int {
+        @requirement REQ-00001-1
+      }
+      + checkout(card: Card) -> bool {
+        @requirement REQ-00002-1
+      }
+    }
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (line_text))
+    (requirement
+      (name)
+      (line_text))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name))))))
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name)))
+            (member_body
+              (annotation
+                (name)
+                (qualified_name
+                  (name)))))
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name)))
+            (member_body
+              (annotation
+                (name)
+                (qualified_name
+                  (name)))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+======================
+intent: A verification
+======================
+
+package shop {
+  requirement REQ-00001-1 {
+    title: The cart shall total the price of its lines
+    status: draft
+
+    verification VER-00001-1 {
+      title: Unit tests confirm the cart totals its lines
+      method: test
+      tests:
+        tests/test_cart.cpp::TestCart.Totals
+    }
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text))
+      (verification
+        (name)
+        (field
+          (name)
+          (line_text))
+        (field
+          (name)
+          (line_text))
+        (field
+          (name)
+          (block_text)))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+====================
+intent: A constraint
+====================
+
+package shop {
+  constraint CST-00001-1: Every price shall be kept in cents
+
+  module store {
+    dataclass Money {
+      @constraint CST-00001-1
+      + cents: int
+    }
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (constraint
+      (name)
+      (line_text))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (annotation
+            (name)
+            (qualified_name
+              (name)))
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+==================
+intent: A use case
+==================
+
+package shop {
+  requirement SREQ-00001-1: The shop shall sell an item from the command line
+
+  usecase UC-00001-1 buy(item: string) -> int {
+    title: Buy an item
+    status: draft
+    @requirement SREQ-00001-1
+    outcome default: the number of the order
+    outcome declined: nothing is bought
+    outcome sold-out: the item is not in stock
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (line_text))
+    (usecase
+      (name)
+      (name)
+      (parameters
+        (parameter
+          (name)
+          (type
+            (qualified_name
+              (name)))))
+      (type
+        (qualified_name
+          (name)))
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text))
+      (annotation
+        (name)
+        (qualified_name
+          (name)))
+      (outcome
+        (name)
+        (line_text))
+      (outcome
+        (name)
+        (line_text))
+      (outcome
+        (name)
+        (line_text))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (field
+      (name)
+      (line_text))))
+
+==============================
+intent: All of them as a table
+==============================
+
+package shop {
+  requirement REQ-00001-1 {
+    title: The cart shall total the price of its lines
+    status: draft
+
+    verification VER-00001-1 {
+      title: Unit tests confirm the cart totals its lines
+      method: test
+      tests:
+        tests/test_cart.cpp::TestCart.Totals
+    }
+  }
+  requirement REQ-00002-1: The cart shall charge its total to a card
+
+  module store {
+    class Cart {
+      + total() -> int {
+        @requirement REQ-00001-1
+      }
+    }
+  }
+}
+
+diagram TB_Requirements {
+  kind: table
+  for requirement r in shop
+  column requirement: r.id
+  column says: r.title
+  column kept: x where x requires r
+  column proved: v where v verifies r
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (requirement
+      (name)
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text))
+      (verification
+        (name)
+        (field
+          (name)
+          (line_text))
+        (field
+          (name)
+          (line_text))
+        (field
+          (name)
+          (block_text))))
+    (requirement
+      (name)
+      (line_text))
+    (module
+      (name)
+      (class
+        (name)
+        (class_body
+          (method
+            (visibility)
+            (member_name
+              (name))
+            (parameters)
+            (type
+              (qualified_name
+                (name)))
+            (member_body
+              (annotation
+                (name)
+                (qualified_name
+                  (name)))))))))
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (rule_for
+      (range
+        (name)
+        (name)
+        (qualified_name
+          (name))))
+    (column
+      (name)
+      (column_field
+        (name)
+        (name)))
+    (column
+      (name)
+      (column_field
+        (name)
+        (name)))
+    (column
+      (name)
+      (column_related
+        (name)
+        (literal
+          (relation_atom
+            (qualified_name
+              (name))
+            (name)
+            (qualified_name
+              (name))))))
+    (column
+      (name)
+      (column_related
+        (name)
+        (literal
+          (relation_atom
+            (qualified_name
+              (name))
+            (name)
+            (qualified_name
+              (name))))))))

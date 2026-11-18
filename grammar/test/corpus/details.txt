@@ -1,0 +1,351 @@
+========================================
+details: a comment
+========================================
+
+// a comment stands on its own line
+package shop {
+  module store { }  // or after what it speaks of
+}
+
+---
+
+(source_file
+  (comment)
+  (package
+    (name)
+    (module
+      (name))
+    (comment)))
+
+========================================
+details: a template class with its operators
+========================================
+
+package lib {
+  module values {
+    class pair<A, B>
+    dataclass Money <<==, ordered, +>> {
+      - cents: int
+      operator + (other: Money) -> Money
+    }
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (class
+        (name)
+        (template_params
+          (template_param
+            (name))
+          (template_param
+            (name))))
+      (class
+        (name)
+        (operator_set
+          (operator_item
+            (operator_symbol))
+          (operator_item
+            (name))
+          (operator_item
+            (operator_symbol)))
+        (class_body
+          (attribute
+            (visibility)
+            (member_name
+              (name))
+            (type
+              (qualified_name
+                (name))))
+          (operator
+            (operator_symbol)
+            (parameters
+              (parameter
+                (name)
+                (type
+                  (qualified_name
+                    (name)))))
+            (type
+              (qualified_name
+                (name)))))))))
+
+========================================
+details: participants and branches in a sequence
+========================================
+
+package shop {
+  module store {
+    sequence Cart::checkout {
+      participant card: Card
+      alt the card is accepted / paid {
+        self -> card.pay(amount) -> ok
+      } else / refused {
+        return false
+      }
+    }
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (sequence
+        (qualified_name
+          (name)
+          (name))
+        (participant
+          (name)
+          (type
+            (qualified_name
+              (name))))
+        (alt
+          (condition)
+          (name)
+          (message
+            (name)
+            (name)
+            (qualified_name
+              (name))
+            (arguments
+              (argument
+                (name)))
+            (name))
+          (name)
+          (return))))))
+
+========================================
+details: a state machine with guards, actions and computed states
+========================================
+
+package net {
+  module link {
+    state Link {
+      initial Closed
+      Closed -> Open on open [the address answers] / connect
+      Open -> Closed on close
+      Idle if status = Open, not busy
+    }
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (module
+      (name)
+      (state
+        (qualified_name
+          (name))
+        (initial
+          (name))
+        (transition
+          (name)
+          (name)
+          (name)
+          (guard
+            (guard_body))
+          (name))
+        (transition
+          (name)
+          (name)
+          (name))
+        (state_rule
+          (name)
+          (state_literal
+            (name)
+            (name))
+          (state_literal
+            (name)))))))
+
+========================================
+details: a view of an interface's navigation
+========================================
+
+package hola {
+  interface web {
+    kind: gui
+  }
+  state web {
+    initial Home
+    view Home {
+      text: A field for the name and a button to greet
+    }
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (interface
+      (name)
+      (field
+        (name)
+        (line_text)))
+    (state
+      (qualified_name
+        (name))
+      (initial
+        (name))
+      (view
+        (name)
+        (field
+          (name)
+          (line_text))))))
+
+========================================
+details: definitions, calls, kinds and arguments in rules
+========================================
+
+package design {
+  definition depends(a, b) {
+    if a uses b
+    if m in a, m is class, m refs b
+  }
+  rule no-cycles {
+    for module m, module n
+    where m != n
+    never depends(m, n), depends(n, m)
+  }
+  rule no-empty-names {
+    for message k
+    never arg(k, name, "")
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (definition
+      (name)
+      (name)
+      (name)
+      (definition_case
+        (literal
+          (relation_atom
+            (qualified_name
+              (name))
+            (name)
+            (qualified_name
+              (name)))))
+      (definition_case
+        (literal
+          (in_atom
+            (qualified_name
+              (name))
+            (qualified_name
+              (name))))
+        (literal
+          (kind_atom
+            (qualified_name
+              (name))
+            (name)))
+        (literal
+          (relation_atom
+            (qualified_name
+              (name))
+            (name)
+            (qualified_name
+              (name))))))
+    (rule
+      (name)
+      (rule_for
+        (range
+          (name)
+          (name))
+        (range
+          (name)
+          (name)))
+      (rule_where
+        (literal
+          (compare_atom
+            (qualified_name
+              (name))
+            (qualified_name
+              (name)))))
+      (rule_never
+        (literal
+          (call_atom
+            (qualified_name
+              (name))
+            (qualified_name
+              (name))
+            (qualified_name
+              (name))))
+        (literal
+          (call_atom
+            (qualified_name
+              (name))
+            (qualified_name
+              (name))
+            (qualified_name
+              (name))))))
+    (rule
+      (name)
+      (rule_for
+        (range
+          (name)
+          (name)))
+      (rule_never
+        (literal
+          (arg_atom
+            (qualified_name
+              (name))
+            (name)
+            (string)))))))
+
+========================================
+details: a table column that holds when its literals do
+========================================
+
+diagram Kept {
+  kind: table
+  for requirement r in shop@store
+  column id: r.id
+  column kept: holds x requires r
+}
+
+---
+
+(source_file
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (rule_for
+      (range
+        (name)
+        (name)
+        (qualified_name
+          (package_prefix)
+          (name))))
+    (column
+      (name)
+      (column_field
+        (name)
+        (name)))
+    (column
+      (name)
+      (column_holds
+        (literal
+          (relation_atom
+            (qualified_name
+              (name))
+            (name)
+            (qualified_name
+              (name))))))))

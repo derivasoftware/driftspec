@@ -16,6 +16,14 @@ package driftspec@grammar {
       tests:
         tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AWholeWorkspaceIsReadWithoutSyntaxErrors
     }
+    verification VER-00181-1 {
+      title: Integration tests confirm every case of the grammar's corpus parses to the tree it records, and the cases reach every named node of the grammar
+      status: approved
+      method: test
+      tests:
+        tests/integration/ds/parse/test_grammar_corpus.cpp::TestGrammarCorpus.EveryCaseParsesToTheTreeItRecords
+        tests/integration/ds/parse/test_grammar_corpus.cpp::TestGrammarCorpus.TheCasesReachEveryNamedNodeOfTheGrammar
+    }
     constraint CST-00007-1 {
       tags: language, grammar
       status: approved
