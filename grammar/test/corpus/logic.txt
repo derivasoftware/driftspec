@@ -133,7 +133,7 @@ package shop {
   }
 
   rule approved-are-kept {
-    title: Every approved requirement is kept by something
+    title: Every approved requirement is satisfied by something
     @requirement REQ-00001-1
     for requirement r in shop
     where r.status = "approved"

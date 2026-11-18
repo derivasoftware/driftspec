@@ -23,7 +23,7 @@ diagram T_Behaviour {                  // one operation told step by step, one l
   depth: 1
 }
 
-diagram T_Requirement {                // one requirement with what keeps it and what proves it
+diagram T_Requirement {                // one requirement with what satisfies it and what proves it
   kind: requirement
   include: REQ-00145-1
 }
@@ -41,7 +41,7 @@ diagram T_Requirements {               // the requirements of the playground: wh
   for requirement r in driftspec@playground
   column requirement: r.id
   column says: r.title
-  column kept: x where x satisfies r
+  column satisfied: x where x satisfies r
   column proved: v where v verifies r
 }
 

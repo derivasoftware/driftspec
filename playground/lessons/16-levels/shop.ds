@@ -46,8 +46,8 @@ package shop {
     for attribute a in shop@store
     never a refs t, t in shop@billing
   }
-  rule store-requirements-kept {
-    title: Every requirement of the store is kept by something
+  rule store-requirements-satisfied {
+    title: Every requirement of the store is satisfied by something
     @requirement REQ-00003-1
     for requirement r in shop@store
     holds x satisfies r

@@ -83,7 +83,7 @@ diagram CL_Shop {
 ## Filtering and reading fields
 
 `where` keeps only some of what `for` ranges over, and a comparison may read a field of what
-a variable is bound to. This rule asks that every approved requirement be kept by something.
+a variable is bound to. This rule asks that every approved requirement be satisfied by something.
 
 ```ds
 package shop {
@@ -105,7 +105,7 @@ package shop {
   }
 
   rule approved-are-kept {
-    title: Every approved requirement is kept by something
+    title: Every approved requirement is satisfied by something
     @requirement REQ-00001-1
     for requirement r in shop
     where r.status = "approved"
@@ -122,7 +122,7 @@ diagram REQ_Shop {
 ## The rules as a table
 
 A table lists whatever a rule may range over. This one lists the rules of the shop: what each
-says, the requirement it answers to, and whether the model keeps it.
+says, the requirement it answers to, and whether the model satisfies it.
 
 ```ds
 package shop {
