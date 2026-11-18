@@ -85,7 +85,7 @@ includes them, and the `pyds` job runs them in CI.
 
 `driftspec-live` follows a workspace while it is written. Run `driftspec-live serve <workspace> --open`
 and the viewer opens in the browser: on every save of a `.ds` file it is drawn again where you
-were looking, with what changed marked and the findings beside it.
+were looking, with the findings beside it.
 
 Whoever writes, a person or an agent, can point at the design. They can take the reader to an
 identity, highlight identities and put notes on them, and they can read what the reader has

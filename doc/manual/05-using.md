@@ -89,7 +89,7 @@ pyds.render("design", "CL_Store", "text", 120)
 ## A design seen live
 
 `driftspec-live serve design --open` opens the viewer in the browser and draws the design
-again on every save, with what changed marked and the findings beside it. An agent can point
+again on every save, where you were looking, with the findings beside it. An agent can point
 at the design through the same contract, served as MCP tools:
 
 ```bash
@@ -100,3 +100,22 @@ claude mcp add driftspec-live -- driftspec-live mcp
 
 The editor of this site is DriftSpec compiled to WebAssembly: it runs in your browser, with
 no server behind it. Every example of these pages opens there with one click.
+
+## What 0.1.0 does not do yet
+
+DriftSpec is young. This is what a first release leaves out, so that nothing here surprises you.
+
+- **The language may still change.** The grammar is not frozen and some words are under review
+  before 1.0; a release that renames one says so in its changelog.
+- **Some types of real code cannot be written yet.** In C++: pointers (`Node*`), the ownership a
+  `std::unique_ptr` or a `std::shared_ptr` gives, a base class with its template arguments, and
+  `long`. In Python: unions, `Callable`, `Literal` and tuples of any length. Write the nearest type
+  the language has, or a class that stands for it.
+- **No type aliases, and no deployment.** A name for a type that is not a class, and the
+  libraries and binaries a system is built into, are not part of the language yet.
+- **A sequence does not say that it creates an object**, and a message sent to a collection has
+  no meaning of its own yet.
+- **Two versions of a design are not compared.** An earlier `ds diff` was taken out before this
+  release; it may come back.
+- **DriftSpec checks the design, not the code.** Whether the code does what the design says is
+  outside this tool.
