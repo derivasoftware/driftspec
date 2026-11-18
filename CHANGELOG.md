@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.0 (not yet released)
+## 0.1.0 (2026-11-18)
 
 The first public release.
 
@@ -35,6 +35,8 @@ The first public release.
   `driftspec-lsp` and the live session `driftspec-live` (also as MCP tools for an agent).
   `pip install driftspec` gives `ds` too.
 - A tree-sitter grammar with highlight and fold queries, under the MIT licence.
+- Built and tested on Linux, Windows and macOS; the release carries a wheel and `ds` for each
+  (Linux and Windows x86-64, macOS on Apple silicon). Not on PyPI yet.
 - A site with an editor in the browser, the engine compiled to WebAssembly, twenty guided
   lessons and the guides.
 

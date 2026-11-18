@@ -60,26 +60,26 @@ this tool.
 
 ## Getting it
 
-DriftSpec 0.1.0 is not released yet; for now you install it from a checkout. One `pip install`
-gives the `ds` command, the Python package, the language server and the live session. It
-compiles the engine, so it needs a C++17 compiler and CMake 3.20 or later; everything else is
-fetched by the build.
+The [releases](https://github.com/derivasoftware/driftspec/releases) carry, for Linux (x86-64),
+Windows (x86-64) and macOS (Apple silicon), a Python wheel that gives the `ds` command, the Python
+package, the language server and the live session, and the `ds` command alone. DriftSpec is not on
+PyPI yet: install a downloaded wheel with pip.
 
 ```bash
-pip install ".[lsp]"
+pip install "driftspec-0.1.0-cp310-abi3-<your platform>.whl[lsp]"
 ds --version
 ```
 
-To build only the command line, with CMake:
+From a checkout, the same with a C++17 compiler and CMake 3.20 or later (everything else is
+fetched by the build):
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j --target ds
-build/ds --version
+pip install ".[lsp]"                                  # ds and the Python package
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j --target ds   # ds alone
 ```
 
-It builds and is tested on Linux, and on Windows with Visual Studio 2022. It has not been tried
-on macOS yet. The [using guide](doc/manual/05-using.md#building-it) has the details.
+Every push is built and tested on Linux, Windows and macOS. The
+[using guide](doc/manual/05-using.md#building-it) has the details.
 
 ## First steps
 
