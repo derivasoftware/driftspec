@@ -1466,12 +1466,6 @@ package driftspec@ds {
         }
       }
 
-      // ---- activity ----
-      requirement REQ-00041-1 {
-        tags: language, lld, activity
-        title: An activity shall be the behaviour of a process
-        text: Reserved: nothing is decided until the process domain arrives.
-      }
     }
 
     // ======================= logic ========================================

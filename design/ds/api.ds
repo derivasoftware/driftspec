@@ -58,6 +58,7 @@ package driftspec@ds {
     requirement REQ-00113-1 {
       status: approved
       @refines SREQ-00015-1
+      @refines SREQ-00019-1                  // the one call the playground's page makes
       title: The engine shall answer a page in a browser in one call, with what the page shows after an edit
       text:
         The request is the texts of a workspace by path and a width. The answer is one document: the
@@ -474,4 +475,9 @@ package driftspec@ds {
     return json
   }
 
+}
+
+diagram CL_ApiNamespace {                   // the api box drawn inside: the engine's three faces and what they share
+  kind: class
+  include: driftspec@ds@api::*
 }
