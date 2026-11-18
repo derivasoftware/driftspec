@@ -224,7 +224,7 @@ struct Render {
 }  // namespace
 
 int run(int argc, char** argv) {
-  CLI::App app{"ds: a software design as text, checked, drawn, compared and asked", "ds"};
+  CLI::App app{"ds: a software design as text, checked, drawn and asked", "ds"};
   app.set_version_flag("--version", "ds " + ds::model::version());
   app.require_subcommand(1);
   app.footer("A workspace is a directory of .ds files read as one. Each command takes --help; ds manual tells the rest.");
