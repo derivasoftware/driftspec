@@ -170,6 +170,12 @@ ctest --test-dir build
 
 After editing the grammar, regenerate the parser with `tree-sitter generate` in `grammar/`.
 
+## Contributing
+
+How to build, test and send a change: [`CONTRIBUTING.md`](CONTRIBUTING.md). What each release
+brings: [`CHANGELOG.md`](CHANGELOG.md). A security problem is reported privately:
+[`SECURITY.md`](SECURITY.md).
+
 ## Licence
 
 Apache License 2.0 ([`LICENSE`](LICENSE)), copyright 2026 ARGOSQA SLU (deriva). The grammar in
