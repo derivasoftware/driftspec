@@ -8,7 +8,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "driftspec"
-version = "0.0.189"
+version = "0.0.190"
 description = "DriftSpec: a software design as text, checked, drawn, compared and asked"
 requires-python = ">=3.10"
 dependencies = []
@@ -26,4 +26,6 @@ cmake.define = { DS_PYTHON = "ON" }
 build.targets = ["_native"]
 install.components = ["python"]
 wheel.packages = ["python/pyds"]
+# the notices of the third-party code compiled into the extension travel with it (DS-284)
+wheel.license-files = ["THIRD_PARTY_NOTICES.md"]
 wheel.py-api = "cp310"

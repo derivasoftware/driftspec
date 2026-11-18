@@ -295,4 +295,14 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
   }
 
+
+  verification SVER-00026-1 {
+    status: approved
+    @constraint CST-00010-1
+    title: System tests confirm every dependency the build fetches has its notice and the version pinned, and the wheel and the site ship the notices
+    method: test
+    tests:
+      tests/system/python/test_release.py::TestRelease::test_every_dependency_the_build_fetches_has_its_notice_with_the_version_pinned
+      tests/system/python/test_release.py::TestRelease::test_the_wheel_and_the_site_ship_the_notices
+  }
 }
