@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "ds-${{ matrix.name }}"
-          bin=$(ls build/ds.exe build/ds 2>/dev/null | head -1)
+          if [ -f build/ds.exe ]; then bin=build/ds.exe; else bin=build/ds; fi
           "$bin" --version
           cp "$bin" LICENSE NOTICE THIRD_PARTY_NOTICES.md "ds-${{ matrix.name }}/"
           if [ "${{ runner.os }}" = Windows ]; then 7z a -bd "ds-${{ matrix.name }}.zip" "ds-${{ matrix.name }}" >/dev/null

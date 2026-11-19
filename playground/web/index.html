@@ -48,6 +48,9 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
+/* the page is as tall as what the screen shows now: on a phone the browser's bar comes and goes, and
+   100% or 100vh count the screen without it, so the bottom of the page sat under the bar (DS-316) */
+body { height: 100dvh; }
 body { background: var(--bg); color: var(--fg); font: 13px/1.4 var(--sans); display: flex; flex-direction: column; overflow: hidden; }
 
 header { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--page); flex: none; }
@@ -435,7 +438,7 @@ main { flex: 1; display: flex; min-height: 0; }
   main { padding-bottom: var(--coach-h, 0px); }
   .coach { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: auto; max-height: 46%; border-radius: 14px 14px 0 0; border-width: 1px 0 0; font-size: 14px; }
   .coach::before { border-radius: 14px 0 0 0; }
-  .coach p { max-height: 30vh; overflow: auto; }
+  .coach p { max-height: 30vh; max-height: 30dvh; overflow: auto; }
   .coach .c-ack, .coach .c-for-me { padding: 8px 16px; font-size: 13px; }
   .coach .c-back { padding: 8px 4px; font-size: 13px; }
   #via { display: none !important; }
@@ -443,7 +446,8 @@ main { flex: 1; display: flex; min-height: 0; }
   #narrow span { flex: 1; }
 }
 @media (max-width: 480px) {  /* a phone: logo, tabs, contact, language and theme stay on one line (DS-308) */
-  header { flex-wrap: nowrap; gap: 4px; padding: 6px 8px; }
+  header { gap: 4px; padding: 6px 8px; }
+  body:not([data-tab="editor"]) header { flex-wrap: nowrap; }  /* the editor's header takes a second line, for its example */
   header .logo { padding-right: 2px; }
   header nav#site a { padding: 4px 5px; }
   header a.contact, header button#lang { padding: 3px 6px; }
