@@ -44,33 +44,3 @@ pytest = ["tests/unit/python", "tests/integration/python", "tests/system/python"
 code = "E-DRIFT-METHOD-EXTRA"
 source = "ds.parse.Parser"
 reason = "Parser owns a TSParser: its destructor and deleted copy assignment are the non-copyable RAII idiom, special member functions the design language does not name (the cpp14 reader lists them as methods)."
-
-# The rule against std:: containers in signatures belongs to high-integrity
-# C++ (no dynamic memory behind an interface). DriftSpec is a desktop tool with
-# no integrity level (asil NA) whose model is maps and vectors by nature; the
-# rule is set aside for the whole workspace (Owner, 2026-11-14, DS-134).
-[[diagnose.exempt]]
-code = "W-CPP-FORBIDDEN-STDLIB"
-workspace = true
-reason = "DriftSpec is an NA desktop tool: its engine holds the model in std:: maps and vectors and hands them across its interfaces by design; the high-integrity ban on standard containers in signatures does not apply here (Owner decision, DS-134)."
-
-# Marking every method noexcept is a rule of certified code, where no dynamic
-# memory is used and a method cannot throw. For DriftSpec the rule that holds is
-# the derived one: a method is noexcept when no exception can escape it,
-# directly or through what it calls. The design can compute that from its
-# failure model (DS-190, parked); until then the blanket rule is set aside for
-# the whole workspace (Owner, 2026-11-14, DS-133).
-[[diagnose.exempt]]
-code = "W-CPP-METHOD-NOT-NOEXCEPT"
-workspace = true
-reason = "The blanket noexcept rule matters for certified code; DriftSpec is an NA desktop tool whose engine allocates in almost every method. What holds here is the derived rule (noexcept when nothing can escape, directly or transitively), to be checked from the design's failure model when DS-190 is taken up (Owner decision, DS-133)."
-
-# An orphan class is one with no coupling inside the workspace. argos counts
-# that coupling from the edges its extractor finds by tracking imports, which it
-# does for Python; for C++ it finds none, so every class of the engine that is
-# not a data carrier reads as an orphan, the facade the whole engine goes
-# through among them.
-[[diagnose.exempt]]
-code = "W-ORPHAN-CLASS"
-workspace = true
-reason = "The check does not apply to C++ yet: argos builds class coupling from import-tracked edges, which its extractor produces for Python and not for C++, so the count is zero for every engine class and the finding says nothing about use (Owner decision, DS-199). Lift it when argos extracts C++ edges."
