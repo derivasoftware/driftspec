@@ -3,7 +3,7 @@
     "en": "19 · A machine that is checked",
     "es": "19 · Una máquina que se comprueba"
   },
-  "version": 2,
+  "version": 3,
   "open": "store/Cart.ds",
   "steps": [
     {
@@ -12,7 +12,7 @@
           "into": {
             "find": "class Cart"
           },
-          "text": "- cancelled: bool = false\n+ cancel() -> none"
+          "text": "- cancelled: bool = false\n+ cancel() -> void"
         },
         {
           "into": {

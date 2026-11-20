@@ -4,27 +4,27 @@ package shop {
   module store {
     class Cart {
       - shares stock: Stock
-      - refs coupon: optional<Coupon>
+      - refs optional coupon: std::optional<Coupon>
       - status: Status = Open
-      - owns lines: list<Line>
+      - owns many lines: std::vector<Line>
       + total() -> int
-      + add(line: Line) -> none
-      - recalculate() -> none
+      + add(line: Line) -> void
+      - recalculate() -> void
     }
     class Line {
       - refs cart: Cart
       - count: int = 1
       - price: Money
       - gift: bool = false
-      - note: string = ""
+      - note: std::string = ""
     }
     dataclass Money {
       - cents: int
-      - currency: string = "EUR"
+      - currency: std::string = "EUR"
     }
     enum Status { Open, Paid, Shipped }
     dataclass Coupon {
-      - code: string
+      - code: std::string
       - percent: int
     }
     class PaymentMethod {

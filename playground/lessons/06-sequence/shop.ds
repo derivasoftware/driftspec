@@ -1,7 +1,4 @@
 // Lesson 6 · A sequence
 
 package shop {
-  extern module bank {
-    class Gateway
-  }
 }

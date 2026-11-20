@@ -3,7 +3,7 @@
     "en": "7 · Branches and scenarios",
     "es": "7 · Ramas y escenarios"
   },
-  "version": 3,
+  "version": 4,
   "open": "store/Cart.ds",
   "steps": [
     {
@@ -43,27 +43,19 @@
       }
     },
     {
-      "write": [
-        {
-          "into": {
-            "find": "class Line"
-          },
-          "text": "+ subtotal() -> Money"
+      "write": {
+        "below": {
+          "find": "sequence Cart::add",
+          "after": "}"
         },
-        {
-          "below": {
-            "find": "sequence Cart::add",
-            "after": "}"
-          },
-          "text": "sequence Cart::total {\n  loop each line {\n    self -> line.subtotal() -> part\n  }\n  return sum\n}"
-        }
-      ],
+        "text": "sequence Cart::total {\n  local line: Line\n  loop each line {\n    self -> line.subtotal() -> part\n  }\n  return sum\n}"
+      },
       "at": {
         "find": "loop each line"
       },
       "text": {
-        "en": "Here is how a cart adds up: a loop over its lines, each asked for its subtotal. Look at the problems: the engine does not know who `line` is. The loop's prose names it, but nothing declares it.",
-        "es": "Así suma un carrito: un bucle por sus líneas, a cada una se le pide su subtotal. Mira los problemas: el motor no sabe quién es `line`. La prosa del bucle lo nombra, pero nada lo declara."
+        "en": "Here is how a cart adds up: a loop over its lines, each asked for its subtotal. `local line: Line` says who `line` is, and the engine checks the call against `Line`. Look at the problems: `Line` has no `subtotal`.",
+        "es": "Así suma un carrito: un bucle sobre sus líneas, a cada una se le pide su subtotal. `local line: Line` dice quién es `line`, y el motor comprueba la llamada contra `Line`. Mira los problemas: `Line` no tiene `subtotal`."
       },
       "done": {
         "ack": {
@@ -74,18 +66,17 @@
     },
     {
       "at": {
-        "find": "sequence Cart::total"
+        "find": "class Line"
       },
       "text": {
-        "en": "A name a sequence uses must be an attribute, a parameter, an earlier result or a local. Declare it as the first line of the sequence:\n`local line: Line`",
-        "es": "Un nombre que use una secuencia tiene que ser un atributo, un parámetro, un resultado anterior o una variable local. Declárala en la primera línea de la secuencia:\n`local line: Line`"
+        "en": "The behaviour asks for something the class does not declare. Declare it in `Line`:\n`+ subtotal() -> Money`",
+        "es": "El comportamiento pide algo que la clase no declara. Decláralo en `Line`:\n`+ subtotal() -> Money`"
       },
       "solution": {
         "into": {
-          "find": "sequence Cart::total",
-          "first": true
+          "find": "class Line"
         },
-        "text": "local line: Line"
+        "text": "+ subtotal() -> Money"
       },
       "done": {
         "clean": true

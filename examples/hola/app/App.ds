@@ -7,13 +7,13 @@ package hola {
       @requirement REQ-00002-1
       - shares greeter: core::Greeter
       - owns console: Console
-      + run(name: string) -> int
-      - print(greeting: core::Greeting) -> none
-      - fail(text: string) -> none
+      + run(name: std::string) -> int
+      - print(greeting: core::Greeting) -> void
+      - fail(text: std::string) -> void
     }
 
     class Console : core::Channel {
-      # write(text: string) -> none
+      # write(text: std::string) -> void
       - colour: bool
     }
 

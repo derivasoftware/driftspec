@@ -3,7 +3,7 @@
     "en": "6 · A sequence",
     "es": "6 · Una secuencia"
   },
-  "version": 3,
+  "version": 4,
   "open": "store/Cart.ds",
   "steps": [
     {
@@ -71,14 +71,14 @@
         "panel": "problems"
       },
       "text": {
-        "en": "A sequence can only send what a class declares, and `Stock` has no `reserve`. The behaviour just told you the static design is missing something. Give `Stock` the method:\n`+ reserve(line: Line) -> none`",
-        "es": "Una secuencia solo puede enviar lo que una clase declara, y `Stock` no tiene `reserve`. El comportamiento te acaba de decir que al diseño estático le falta algo. Dale a `Stock` el método:\n`+ reserve(line: Line) -> none`"
+        "en": "A sequence can only send what a class declares, and `Stock` has no `reserve`. The behaviour just told you the static design is missing something. Give `Stock` the method:\n`+ reserve(line: Line) -> void`",
+        "es": "Una secuencia solo puede enviar lo que una clase declara, y `Stock` no tiene `reserve`. El comportamiento te acaba de decir que al diseño estático le falta algo. Dale a `Stock` el método:\n`+ reserve(line: Line) -> void`"
       },
       "solution": {
         "into": {
           "find": "class Stock"
         },
-        "text": "+ reserve(line: Line) -> none"
+        "text": "+ reserve(line: Line) -> void"
       },
       "done": {
         "clean": true,
@@ -106,12 +106,12 @@
         "panel": "problems"
       },
       "text": {
-        "en": "The call and the method disagree: one argument given, none taken. Here the call is right and the method is behind. Change its declaration in `Cart` to:\n`- recalculate(line: Line) -> none`",
-        "es": "La llamada y el método no coinciden: se pasa un argumento y no se recibe ninguno. Aquí la llamada tiene razón y el método se ha quedado atrás. Cambia su declaración en `Cart` por:\n`- recalculate(line: Line) -> none`"
+        "en": "The call and the method disagree: one argument given, none taken. Here the call is right and the method is behind. Change its declaration in `Cart` to:\n`- recalculate(line: Line) -> void`",
+        "es": "La llamada y el método no coinciden: se pasa un argumento y no se recibe ninguno. Aquí la llamada tiene razón y el método se ha quedado atrás. Cambia su declaración en `Cart` por:\n`- recalculate(line: Line) -> void`"
       },
       "solution": {
-        "replace": "- recalculate() -> none",
-        "text": "- recalculate(line: Line) -> none"
+        "replace": "- recalculate() -> void",
+        "text": "- recalculate(line: Line) -> void"
       },
       "done": {
         "clean": true
@@ -130,19 +130,19 @@
             "find": "sequence Cart::add",
             "after": "}"
           },
-          "text": "sequence Cart::checkout {\n  -> total() -> amount\n  self -> payment.pay(amount) -> paid\n  return paid\n}"
+          "text": "sequence Cart::checkout {\n  self -> payment.pay(100) -> paid\n  return paid\n}"
         }
       ],
       "at": {
         "find": "payment.pay"
       },
       "text": {
-        "en": "Here is `checkout`, written with a slip on purpose: it pays through `payment`, but the parameter is called `method`. Fix the name in the message.",
-        "es": "Aquí está `checkout`, escrito con un despiste a propósito: paga a través de `payment`, pero el parámetro se llama `method`. Corrige el nombre en el mensaje."
+        "en": "Here is `checkout`, written with a slip on purpose: it pays through `payment`, but the parameter is called `method`. The engine says nothing: a name your design does not declare is text, and the call reaches no class. Fix the name in the message.",
+        "es": "Aquí está `checkout`, escrito con un descuido a propósito: paga a través de `payment`, pero el parámetro se llama `method`. El motor no dice nada: un nombre que tu diseño no declara es texto, y la llamada no llega a ninguna clase. Corrige el nombre en el mensaje."
       },
       "solution": {
-        "replace": "payment.pay(amount)",
-        "text": "method.pay(amount)"
+        "replace": "payment.pay(100)",
+        "text": "method.pay(100)"
       },
       "done": {
         "finding": "W-ARG-TYPE"
@@ -153,13 +153,26 @@
         "panel": "problems"
       },
       "text": {
-        "en": "Now that the engine knows who is paid, it checks what is passed: `total()` gives an `int`, and `pay` wants `Money`. Every value of a sequence has the type of what produced it. Make the cart's total a `Money`:\n`+ total() -> Money`",
-        "es": "Ahora que el motor sabe a quién se paga, comprueba lo que se pasa: `total()` da un `int`, y `pay` quiere `Money`. Cada valor de una secuencia tiene el tipo de lo que lo produjo. Haz que el total del carrito sea `Money`:\n`+ total() -> Money`"
+        "en": "Now that the engine knows who is paid, it checks what is passed: `pay` wants `Money`, and a bare number is none. Pay the cart's total, and make that total a `Money`: add `-> total() -> amount` as the first line of `checkout`, pass `amount`, and declare\n`+ total() -> Money`",
+        "es": "Ahora que el motor sabe a quién se paga, comprueba lo que se pasa: `pay` quiere `Money`, y un número suelto no lo es. Paga el total del carrito, y haz que ese total sea un `Money`: añade `-> total() -> amount` como primera línea de `checkout`, pasa `amount` y declara\n`+ total() -> Money`"
       },
-      "solution": {
-        "replace": "+ total() -> int",
-        "text": "+ total() -> Money"
-      },
+      "solution": [
+        {
+          "into": {
+            "find": "sequence Cart::checkout",
+            "first": true
+          },
+          "text": "-> total() -> amount"
+        },
+        {
+          "replace": "method.pay(100)",
+          "text": "method.pay(amount)"
+        },
+        {
+          "replace": "+ total() -> int",
+          "text": "+ total() -> Money"
+        }
+      ],
       "done": {
         "clean": true
       }

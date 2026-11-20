@@ -1,7 +1,4 @@
 // Lesson 10 · Interfaces and the high-level design
 
 package shop {
-  extern module bank {
-    class Gateway
-  }
 }

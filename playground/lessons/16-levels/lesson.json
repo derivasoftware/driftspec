@@ -3,7 +3,7 @@
     "en": "16 · Levels",
     "es": "16 · Niveles"
   },
-  "version": 1,
+  "version": 2,
   "open": "diagrams/structure.ds",
   "steps": [
     {
@@ -18,12 +18,12 @@
         {
           "file": "shipping.ds",
           "end": true,
-          "text": "package shop@shipping {\n  module carrier {\n    class Courier {\n      - owns route: Route\n      + deliver(parcel: Parcel) -> bool\n    }\n    class Route {\n      + next() -> string\n    }\n    dataclass Parcel {\n      + address: string\n    }\n  }\n  module tracking {\n    class Tracker {\n      - refs courier: carrier::Courier\n      + where(parcel: carrier::Parcel) -> string\n    }\n  }\n}"
+          "text": "package shop@shipping {\n  module carrier {\n    class Courier {\n      - owns route: Route\n      + deliver(parcel: Parcel) -> bool\n    }\n    class Route {\n      + next() -> std::string\n    }\n    dataclass Parcel {\n      + address: std::string\n    }\n  }\n  module tracking {\n    class Tracker {\n      - refs courier: carrier::Courier\n      + where(parcel: carrier::Parcel) -> std::string\n    }\n  }\n}"
         },
         {
           "file": "store/Cart.ds",
           "below": {
-            "find": "- owns lines: list<Line>"
+            "find": "- owns many lines: std::vector<Line>"
           },
           "text": "- refs courier: shop@shipping@carrier::Courier"
         },

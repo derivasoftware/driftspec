@@ -1,7 +1,4 @@
 // Lesson 9 · Functions
 
 package shop {
-  extern module bank {
-    class Gateway
-  }
 }

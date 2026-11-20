@@ -3,7 +3,7 @@
     "en": "9 · Functions",
     "es": "9 · Funciones"
   },
-  "version": 3,
+  "version": 4,
   "open": "billing/Numbering.ds",
   "steps": [
     {
@@ -31,14 +31,14 @@
         "below": {
           "find": "function invoice"
         },
-        "text": "sequence invoice {\n  local numbering: Numbering\n  self -> numbering.next() -> number\n  return number\n}"
+        "text": "sequence invoice {\n  local numbering: Numbering\n  self -> numbering.next() -> number\n  return 0\n}"
       },
       "at": {
-        "find": "return number"
+        "find": "return 0"
       },
       "text": {
-        "en": "Its behaviour, with a slip: it returns the number, but promised an `Invoice`. What a sequence returns is checked against the signature. Make it build one: add `local invoice: Invoice` at the top of the sequence, and change the last line to `return invoice`.",
-        "es": "Su comportamiento, con un despiste: devuelve el número, pero prometió una `Invoice`. Lo que devuelve una secuencia se comprueba contra su firma. Haz que construya una: añade `local invoice: Invoice` al principio de la secuencia y cambia la última línea por `return invoice`."
+        "en": "Its behaviour, with a slip: it returns `0`, but promised an `Invoice`. What a sequence returns is checked against the signature. Make it build one: add `local invoice: Invoice` at the top of the sequence, and change the last line to `return invoice`.",
+        "es": "Su comportamiento, con un descuido: devuelve `0`, pero prometió una `Invoice`. Lo que devuelve una secuencia se comprueba contra la firma. Haz que construya una: añade `local invoice: Invoice` al principio de la secuencia y cambia la última línea por `return invoice`."
       },
       "solution": [
         {
@@ -49,7 +49,7 @@
           "text": "local invoice: Invoice"
         },
         {
-          "replace": "return number",
+          "replace": "return 0",
           "text": "return invoice"
         }
       ],
@@ -85,7 +85,7 @@
           "into": {
             "find": "class Numbering"
           },
-          "text": "+ static today() -> string"
+          "text": "+ static today() -> std::string"
         },
         {
           "below": {

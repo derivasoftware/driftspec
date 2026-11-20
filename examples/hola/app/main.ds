@@ -2,7 +2,7 @@
 
 package hola {
   module app {
-    function main(argv: list<string>) -> int {
+    function main(argv: std::vector<std::string>) -> int {
       @requirement REQ-00002-1
     }
 

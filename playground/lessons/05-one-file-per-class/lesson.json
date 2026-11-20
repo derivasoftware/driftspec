@@ -3,7 +3,7 @@
     "en": "5 · One class per file",
     "es": "5 · Una clase por fichero"
   },
-  "version": 1,
+  "version": 2,
   "open": "shop.ds",
   "steps": [
     {
@@ -27,11 +27,11 @@
         {
           "file": "store/Cart.ds",
           "end": true,
-          "text": "package shop {\n  module store {\n    class Cart {\n      - refs numbering: billing::Numbering\n      - shares stock: Stock\n      - refs coupon: optional<Coupon>\n      - status: Status = Open\n      - owns lines: list<Line>\n      + total() -> int\n      + add(line: Line) -> none\n      - recalculate() -> none\n    }\n  }\n}"
+          "text": "package shop {\n  module store {\n    class Cart {\n      - refs numbering: billing::Numbering\n      - shares stock: Stock\n      - refs optional coupon: std::optional<Coupon>\n      - status: Status = Open\n      - owns many lines: std::vector<Line>\n      + total() -> int\n      + add(line: Line) -> void\n      - recalculate() -> void\n    }\n  }\n}"
         },
         {
           "file": "shop.ds",
-          "replace": "    class Cart {\n      - refs numbering: billing::Numbering\n      - shares stock: Stock\n      - refs coupon: optional<Coupon>\n      - status: Status = Open\n      - owns lines: list<Line>\n      + total() -> int\n      + add(line: Line) -> none\n      - recalculate() -> none\n    }\n",
+          "replace": "    class Cart {\n      - refs numbering: billing::Numbering\n      - shares stock: Stock\n      - refs optional coupon: std::optional<Coupon>\n      - status: Status = Open\n      - owns many lines: std::vector<Line>\n      + total() -> int\n      + add(line: Line) -> void\n      - recalculate() -> void\n    }\n",
           "text": ""
         }
       ],
@@ -62,11 +62,11 @@
         {
           "file": "store/Line.ds",
           "end": true,
-          "text": "package shop {\n  module store {\n    class Line {\n      - refs cart: Cart\n      - count: int = 1\n      - price: Money\n      - gift: bool = false\n      - note: string = \"\"\n    }\n  }\n}"
+          "text": "package shop {\n  module store {\n    class Line {\n      - refs cart: Cart\n      - count: int = 1\n      - price: Money\n      - gift: bool = false\n      - note: std::string = \"\"\n    }\n  }\n}"
         },
         {
           "file": "shop.ds",
-          "replace": "    class Line {\n      - refs cart: Cart\n      - count: int = 1\n      - price: Money\n      - gift: bool = false\n      - note: string = \"\"\n    }\n",
+          "replace": "    class Line {\n      - refs cart: Cart\n      - count: int = 1\n      - price: Money\n      - gift: bool = false\n      - note: std::string = \"\"\n    }\n",
           "text": ""
         }
       ],
@@ -83,12 +83,12 @@
         {
           "file": "store/Money.ds",
           "end": true,
-          "text": "package shop {\n  module store {\n    dataclass Money {\n      - cents: int\n      - currency: string = \"EUR\"\n    }\n  }\n}",
+          "text": "package shop {\n  module store {\n    dataclass Money {\n      - cents: int\n      - currency: std::string = \"EUR\"\n    }\n  }\n}",
           "instant": true
         },
         {
           "file": "shop.ds",
-          "replace": "    dataclass Money {\n      - cents: int\n      - currency: string = \"EUR\"\n    }\n",
+          "replace": "    dataclass Money {\n      - cents: int\n      - currency: std::string = \"EUR\"\n    }\n",
           "text": "",
           "instant": true
         },
@@ -107,12 +107,12 @@
         {
           "file": "store/Coupon.ds",
           "end": true,
-          "text": "package shop {\n  module store {\n    dataclass Coupon {\n      - code: string\n      - percent: int\n    }\n  }\n}",
+          "text": "package shop {\n  module store {\n    dataclass Coupon {\n      - code: std::string\n      - percent: int\n    }\n  }\n}",
           "instant": true
         },
         {
           "file": "shop.ds",
-          "replace": "    dataclass Coupon {\n      - code: string\n      - percent: int\n    }\n",
+          "replace": "    dataclass Coupon {\n      - code: std::string\n      - percent: int\n    }\n",
           "text": "",
           "instant": true
         },
@@ -167,12 +167,12 @@
         {
           "file": "billing/Invoice.ds",
           "end": true,
-          "text": "package shop {\n  module billing {\n    class Invoice {\n      - refs cart: store::Cart\n      - refs payer: store::Card\n    }\n  }\n}",
+          "text": "package shop {\n  module billing {\n    class Invoice {\n      - refs cart: store::Cart\n      - refs payer: Card\n    }\n  }\n}",
           "instant": true
         },
         {
           "file": "shop.ds",
-          "replace": "    class Invoice {\n      - refs cart: store::Cart\n      - refs payer: store::Card\n    }\n",
+          "replace": "    class Invoice {\n      - refs cart: store::Cart\n      - refs payer: Card\n    }\n",
           "text": "",
           "instant": true
         },

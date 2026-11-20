@@ -74,7 +74,7 @@ package shop {
       class Desk {
         @requirement REQ-00001-1
         - refs counter: shop@warehouse@counter
-        + sell(item: string) -> int
+        + sell(item: std::string) -> int
       }
 
       sequence Desk::sell {
@@ -108,11 +108,11 @@ package shop {
 
     - module stock {
       class Shelf {
-        - owns boxes: list<Box>
-        + pick(item: string) -> bool
+        - owns many boxes: std::vector<Box>
+        + pick(item: std::string) -> bool
       }
       dataclass Box {
-        + item: string
+        + item: std::string
         + units: int
       }
     }

@@ -2,9 +2,6 @@
 
 package shop {
   @requirement LIB-00001-1
-  extern module bank {
-    class Gateway
-  }
   interface shell {
     kind: cli
     @requirement SREQ-00001-1

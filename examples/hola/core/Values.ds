@@ -1,14 +1,14 @@
 package hola {
   module core {
     dataclass Locale {
-      + language: string
-      + region: string
+      + language: std::string
+      + region: std::string
     }
 
     class GreetingCache {
-      + find(name: string) -> optional<Greeting>
-      + keep(greeting: Greeting) -> none
-      - owns entries: map<string, Greeting>
+      + find(name: std::string) -> std::optional<Greeting>
+      + keep(greeting: Greeting) -> void
+      - owns many entries: std::map<std::string, Greeting>
     }
   }
 }

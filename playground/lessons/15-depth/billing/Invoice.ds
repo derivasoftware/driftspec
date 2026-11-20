@@ -2,7 +2,7 @@ package shop {
   module billing {
     class Invoice {
       - refs cart: store::Cart
-      - refs payer: store::Card
+      - refs payer: Card
     }
   }
 }

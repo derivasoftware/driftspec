@@ -3,7 +3,7 @@
     "en": "0 · A tour",
     "es": "0 · Un paseo"
   },
-  "version": 2,
+  "version": 3,
   "workspace": "driftspec",
   "open": "hld.ds",
   "steps": [
@@ -418,14 +418,14 @@
         "below": {
           "find": "-> app::main(workspace) / check -> code"
         },
-        "text": "-> app::launch(workspace)"
+        "text": "-> app::main(workspace, 2)"
       },
       "at": {
         "panel": "problems"
       },
       "text": {
-        "en": "All of this is checked while you type. Look: I've just added a call to `app::launch`, which doesn't exist. It's underlined in the text and listed below, under Problems.",
-        "es": "Todo esto se comprueba mientras escribes. Mira: acabo de meter una llamada a `app::launch`, que no existe. Sale subrayada en el texto y apuntada abajo, en Problemas."
+        "en": "All of this is checked while you type. Look: I've just added a call to `app::main` with two arguments, and it takes one. It's underlined in the text and listed below, under Problems.",
+        "es": "Todo esto se comprueba mientras escribes. Mira: acabo de meter una llamada a `app::main` con dos argumentos, y recibe uno. Sale subrayada en el texto y apuntada abajo, en Problemas."
       },
       "done": {
         "ack": {
@@ -437,14 +437,14 @@
     {
       "at": {
         "file": "ds/cli.ds",
-        "find": "-> app::launch(workspace)"
+        "find": "-> app::main(workspace, 2)"
       },
       "text": {
-        "en": "Your turn. Delete the line `-> app::launch(workspace)` and the warning goes away.",
-        "es": "Te toca. Borra la línea `-> app::launch(workspace)` y el aviso desaparece."
+        "en": "Your turn. Delete the line `-> app::main(workspace, 2)` and the error goes away.",
+        "es": "Te toca. Borra la línea `-> app::main(workspace, 2)` y el error desaparece."
       },
       "solution": {
-        "replace": "    -> app::launch(workspace)\n",
+        "replace": "    -> app::main(workspace, 2)\n",
         "text": ""
       },
       "done": {

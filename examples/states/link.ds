@@ -20,11 +20,11 @@ package net {
       - retryPending: bool = false    // a retry is scheduled
       - retried: bool = false         // it has retried at least once
       - line: Line = Closed           // the line: closed, opening or open
-      + connect() -> none
-      + opened() -> none              // the answer arrives: the line opened
-      + lost() -> none                // the line dropped
-      + retry() -> none               // the time to retry has come
-      + disconnect() -> none
+      + connect() -> void
+      + opened() -> void              // the answer arrives: the line opened
+      + lost() -> void                // the line dropped
+      + retry() -> void               // the time to retry has come
+      + disconnect() -> void
     }
 
     state Link {
@@ -53,9 +53,9 @@ package net {
     // who uses the link: its behaviours call the events of the machine, in an order the machine allows
     class Session {
       - owns link: Link
-      + open() -> none
-      + lifetime() -> none
-      + close() -> none
+      + open() -> void
+      + lifetime() -> void
+      + close() -> void
     }
 
     sequence Session::open {

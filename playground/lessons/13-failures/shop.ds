@@ -1,9 +1,6 @@
 // Lesson 13 · Failures
 
 package shop {
-  extern module bank {
-    class Gateway
-  }
   interface shell {
     kind: cli
     @requirement SREQ-00001-1

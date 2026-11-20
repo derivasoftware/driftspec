@@ -4,16 +4,16 @@
 package hola {
   module core {
     class Style {
-      + abstract apply(text: string) -> string
+      + abstract apply(text: std::string) -> std::string
     }
 
     class Formal : Style {
-      + apply(text: string) -> string
+      + apply(text: std::string) -> std::string
     }
 
     class Casual : Style {
-      + apply(text: string) -> string
-      - emoji: string
+      + apply(text: std::string) -> std::string
+      - emoji: std::string
     }
   }
 }

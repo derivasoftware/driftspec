@@ -73,8 +73,8 @@
         "pane": "CL_Store"
       },
       "text": {
-        "en": "`Line` is in the diagram already. Now say that a cart holds its lines: add this member inside `Cart`:\n`- owns lines: list<Line>`",
-        "es": "`Line` ya está en el diagrama. Ahora di que un carrito tiene sus líneas: añade este miembro dentro de `Cart`:\n`- owns lines: list<Line>`"
+        "en": "`Line` is in the diagram already. Now say that a cart holds its lines: add this member inside `Cart`:\n`- owns many lines: std::vector<Line>`\nThe type is written as your code writes it; `many` says how many.",
+        "es": "`Line` ya está en el diagrama. Ahora di que un carrito tiene sus líneas: añade este miembro dentro de `Cart`:\n`- owns many lines: std::vector<Line>`\nEl tipo se escribe como lo escribe tu código; `many` dice cuántas."
       },
       "solution": {
         "file": "shop.ds",
@@ -82,7 +82,7 @@
           "find": "class Cart",
           "first": true
         },
-        "text": "- owns lines: list<Line>"
+        "text": "- owns many lines: std::vector<Line>"
       },
       "done": {
         "edge": {
@@ -114,8 +114,8 @@
         "find": "class Line"
       },
       "text": {
-        "en": "Now make a mistake on purpose. Give `Line` a price inside its braces:\n`- price: Money`",
-        "es": "Ahora equivócate a propósito. Ponle precio a `Line` dentro de sus llaves:\n`- price: Money`"
+        "en": "Now give `Line` a price, inside its braces:\n`- price: Money`",
+        "es": "Ahora ponle precio a `Line`, dentro de sus llaves:\n`- price: Money`"
       },
       "solution": {
         "file": "shop.ds",
@@ -125,7 +125,7 @@
         "text": "- price: Money"
       },
       "done": {
-        "finding": "W-REF-UNDECLARED"
+        "entity": "shop@store::Line::price"
       }
     },
     {
@@ -133,8 +133,8 @@
         "panel": "problems"
       },
       "text": {
-        "en": "The engine noticed: `Money` is declared nowhere. A reference to nothing is a finding, never a silent gap. Fix it: declare `Money` in the module, below `Line`:\n`dataclass Money {`\n`  - cents: int`\n`}`",
-        "es": "El motor se ha dado cuenta: `Money` no está declarado en ningún sitio. Una referencia a nada es un aviso, nunca un hueco silencioso. Arréglalo: declara `Money` en el módulo, debajo de `Line`:\n`dataclass Money {`\n`  - cents: int`\n`}`"
+        "en": "`Money` is declared nowhere, and the engine says nothing: a name your design does not declare is text, like `std::string` or a library's class, and no arrow leaves `Line`. Make it part of the design: declare `Money` in the module, below `Line`:\n`dataclass Money {`\n`  - cents: int`\n`}`",
+        "es": "`Money` no está declarado en ningún sitio, y el motor no dice nada: un nombre que tu diseño no declara es texto, como `std::string` o una clase de una biblioteca, y de `Line` no sale ninguna flecha. Hazlo parte del diseño: declara `Money` en el módulo, debajo de `Line`:\n`dataclass Money {`\n`  - cents: int`\n`}`"
       },
       "solution": {
         "file": "shop.ds",
@@ -146,6 +146,11 @@
       },
       "done": {
         "entity": "shop@store::Money",
+        "edge": {
+          "diagram": "CL_Store",
+          "from": "shop@store::Line",
+          "to": "shop@store::Money"
+        },
         "clean": true
       }
     },

@@ -3,14 +3,14 @@ package shop {
     class Cart {
       - refs numbering: billing::Numbering
       - shares stock: Stock
-      - refs coupon: optional<Coupon>
+      - refs optional coupon: std::optional<Coupon>
       - status: Status = Open
-      - owns lines: list<Line>
+      - owns many lines: std::vector<Line>
       + total() -> Money
-      + add(line: Line) -> none
-      - recalculate(line: Line) -> none
+      + add(line: Line) -> void
+      - recalculate(line: Line) -> void
       + checkout(method: PaymentMethod) -> bool
-      + ship() -> none
+      + ship() -> void
     }
     sequence Cart::add {
       self -> stock.has(line) -> available

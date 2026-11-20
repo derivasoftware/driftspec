@@ -3,7 +3,7 @@
 package shop {
   module store {
     class Cart {
-      - owns lines: list<Line>
+      - owns many lines: std::vector<Line>
       + total() -> int
     }
     class Line {

@@ -3,7 +3,7 @@
     "en": "8 · State machines",
     "es": "8 · Máquinas de estados"
   },
-  "version": 3,
+  "version": 4,
   "open": "store/Cart.ds",
   "steps": [
     {
@@ -71,14 +71,14 @@
         "panel": "problems"
       },
       "text": {
-        "en": "A move fires on something the cart can do, and `Cart` has no `ship`. The machine just found a gap in the class. Declare it in `Cart`:\n`+ ship() -> none`",
-        "es": "Una transición se dispara con algo que el carrito sabe hacer, y `Cart` no tiene `ship`. La máquina acaba de encontrar un hueco en la clase. Decláralo en `Cart`:\n`+ ship() -> none`"
+        "en": "A move fires on something the cart can do, and `Cart` has no `ship`. The machine just found a gap in the class. Declare it in `Cart`:\n`+ ship() -> void`",
+        "es": "Una transición se dispara con algo que el carrito sabe hacer, y `Cart` no tiene `ship`. La máquina acaba de encontrar un hueco en la clase. Decláralo en `Cart`:\n`+ ship() -> void`"
       },
       "solution": {
         "into": {
           "find": "class Cart"
         },
-        "text": "+ ship() -> none"
+        "text": "+ ship() -> void"
       },
       "done": {
         "clean": true,
