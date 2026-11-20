@@ -1734,6 +1734,35 @@ package driftspec@ds {
             tests/integration/ds/check/test_cycles.cpp::TestCycles.ARequirementThatRefinesOneOfTheSystemIsNoFinding
         }
       }
+      requirement REQ-00168-1 {
+        tags: language, artefacts, static
+        status: approved
+        title: A piece that answers to a requirement whose home does not hold it shall be reported as W-SATISFIES-OUTSIDE-HOME, naming the box that holds the home and every piece that realises it
+        text:
+          A requirement written in a box has that box as its home. A box, interface, class,
+          function or member that answers to it from outside that box is a warning: the
+          requirement is written at one place and realised outside it. The finding names the
+          innermost box around the home that holds every piece realising the requirement: where
+          the requirement would stand with all of them inside. What holds a piece is read from
+          where it is written, never from the prefix of its id. A requirement written at the root
+          holds everything, and a requirement nothing realises is no finding. A system that
+          adopts the requirement of another, written in a package of its own that no box shares
+          with it (a library's), answers to it as to any artefact: no finding either.
+        rationale:
+          Owner, 2026-11-19 and 2026-11-20 (DDEV-1460, DDEV-1470): a requirement two modules
+          realise is the requirement of the package that holds them both, and the coherence of
+          the design is the language's to check, forwarded to argos by its plugin; argos crosses
+          the design with the code. The nesting and the annotation are two written facts that
+          clash, not an absence.
+        verification VER-00185-1 {
+          status: approved
+          title: Integration tests confirm a piece outside its requirement's home is reported with the box that holds them all, and a piece inside the home, a requirement at the root or one another system adopts is not
+          method: test
+          tests:
+            tests/integration/ds/check/test_satisfies_home.cpp::TestSatisfiesHome.APieceOutsideTheHomeIsReportedWithTheBoxThatHoldsThemAll
+            tests/integration/ds/check/test_satisfies_home.cpp::TestSatisfiesHome.APieceInsideTheHomeARequirementAtTheRootOrOneAnotherSystemAdoptsIsNoFinding
+        }
+      }
       requirement REQ-00124-1 {
         tags: language, check, coverage
         status: approved

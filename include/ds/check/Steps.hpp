@@ -214,6 +214,7 @@ class StructureCheck : public ACheck {
   void checkCycles(const std::string& relation, const std::string& code, const std::string& verb);
   /// A requirement that refines one written inside its own box.
   void checkRefinesUpward();
+  void checkSatisfiesHome();
   void checkArtefacts();
   void checkExtensions();
   void checkFields();

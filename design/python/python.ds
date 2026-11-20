@@ -573,7 +573,7 @@ package driftspec@driftspec {
     // holds; its methods are the operations of the engine's workspace interface, each answer the JSON
     // the engine writes. No reader sees a CPython type yet: argos holds it to no code (DS-90).
     class Workspace {
-      @requirement REQ-00107-2
+      @requirement REQ-00086-1
       @constraint CST-00009-1
       - owns workspace: driftspec@ds@api::Workspace
       + Workspace(files: map<string, string>)
@@ -805,24 +805,24 @@ package driftspec@driftspec {
 
     // ---- what the engine answers about a loaded workspace, read into Python's own types (DS-173) -----
     dataclass Answer {
-      @requirement REQ-00107-2
+      @requirement REQ-00086-1
       + kind: str
       + id: str
       + detail: str
     }
     dataclass Step {
-      @requirement REQ-00107-2
+      @requirement REQ-00086-1
       + message: str
       + next: str
       + next_path: str
     }
     dataclass Walked {
-      @requirement REQ-00107-2
+      @requirement REQ-00086-1
       + message: str
       + depth: int
     }
     dataclass Frame {
-      @requirement REQ-00107-2
+      @requirement REQ-00086-1
       + id: str
       + kind: str
       + frame: str
@@ -834,7 +834,7 @@ package driftspec@driftspec {
       + else_scenario: str
     }
     dataclass Tree {
-      @requirement REQ-00107-2
+      @requirement REQ-00086-1
       + sequence: str
       + messages: tuple<variadic<tuple<str, str>>>
       + frames: tuple<variadic<Frame>>
@@ -843,7 +843,7 @@ package driftspec@driftspec {
     // What Python holds: a workspace loaded once in the engine, asked; it computes nothing the
     // engine knows. Several may be held at once, each with its own model. It is made from a Source.
     class Workspace {
-      @requirement REQ-00107-2
+      @requirement REQ-00086-1
       @constraint CST-00009-1
       - owns _native: native::Workspace
       + model() -> Model

@@ -32,6 +32,7 @@ std::vector<model::Finding> StructureCheck::check(const Context& context) {
   checkCycles("refines", "E-REFINES-CYCLE", "refines");
   checkCycles("inherits", "E-INHERITANCE-CYCLE", "derives from");
   checkRefinesUpward();
+  checkSatisfiesHome();
   checkArtefacts();
   checkExtensions();
   checkFields();
@@ -135,6 +136,83 @@ void StructureCheck::checkRefinesUpward() {
                           ", which is written inside it (in " + model::Scope(parent->scope).box().text() +
                           "): the detail stands above what it details",
                       r.location});
+  }
+}
+
+// A piece answers to a requirement whose home does not hold it: the requirement is written at one place and
+// realised outside it (DDEV-1470). The home is the box the requirement is written in (about); holding is read
+// from where each piece is written, outward through its scopes, never from the prefix of an id. A requirement
+// written at the root holds everything, what nothing realises is no finding, and a system that adopts the
+// requirement of another (no box holds both) answers to it as to any artefact. The finding names the box that
+// holds the home and every piece that realises it: where the requirement would stand with all of them inside.
+void StructureCheck::checkSatisfiesHome() {
+  const auto isPiece = [](model::Kind k) {
+    switch (k) {
+      case model::Kind::Package:
+      case model::Kind::Module:
+      case model::Kind::Interface:
+      case model::Kind::Operation:
+      case model::Kind::Class:
+      case model::Kind::Enum:
+      case model::Kind::Function:
+      case model::Kind::Method:
+      case model::Kind::Attribute:
+      case model::Kind::Operator:
+        return true;
+      default:
+        return false;
+    }
+  };
+  // the boxes a piece is written in, innermost first, the piece itself first when it is a box
+  const auto boxesOf = [this](const model::Entity& e) {
+    std::vector<std::string> out{e.id};
+    for (model::Scope s(e.scope); !s.empty(); s = s.outer()) {
+      const std::string box = s.box().text();
+      if (out.back() != box) out.push_back(box);
+    }
+    return out;
+  };
+  std::map<std::string, std::string> homes;
+  for (const auto& r : model_->index().ofKind("about")) {
+    const model::Entity* artefact = model_->find(r.from);
+    if (artefact && artefact->kind == model::Kind::Requirement) homes.emplace(r.from, r.to);
+  }
+  struct Outside {
+    const model::Entity* piece;
+    model::Location location;
+  };
+  std::map<std::string, std::vector<Outside>> outside;
+  std::map<std::string, std::vector<std::vector<std::string>>> realisers;
+  for (const auto& r : model_->index().ofKind("satisfies")) {
+    const auto home = homes.find(r.to);
+    const model::Entity* piece = model_->find(r.from);
+    if (home == homes.end() || !piece || piece->expected || !isPiece(piece->kind)) continue;
+    const auto boxes = boxesOf(*piece);
+    realisers[r.to].push_back(boxes);
+    if (std::find(boxes.begin(), boxes.end(), home->second) == boxes.end()) outside[r.to].push_back({piece, r.location});
+  }
+  for (const auto& pair : outside) {
+    const std::string& home = homes.at(pair.first);
+    // the innermost box around the home that holds every piece that realises the requirement
+    std::string common;
+    const model::Entity* homeEntity = model_->find(home);
+    const std::vector<std::string> around = homeEntity ? boxesOf(*homeEntity) : std::vector<std::string>{home};
+    for (const auto& box : around) {
+      const auto& all = realisers.at(pair.first);
+      if (std::all_of(all.begin(), all.end(),
+                      [&](const std::vector<std::string>& b) { return std::find(b.begin(), b.end(), box) != b.end(); })) {
+        common = box;
+        break;
+      }
+    }
+    // no box holds them all: the pieces lie in another system, which adopts the requirement as any artefact
+    if (common.empty()) continue;
+    const std::string where = common + " holds it and every piece that realises it";
+    for (const auto& o : pair.second)
+      found_.push_back({"W-SATISFIES-OUTSIDE-HOME", "warning",
+                        o.piece->id + " satisfies " + pair.first + ", whose home " + home +
+                            " does not hold it: the requirement is written at one place and realised outside it; " + where,
+                        o.location});
   }
 }
 

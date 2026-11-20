@@ -272,6 +272,10 @@ std::vector<CodeSpec> buildCodes() {
        "Name the members: m in c, m uses x. ds manual <kind> lists the relations of each kind."},
       {"W-REFINES-UPWARD", "warning", "A requirement refines one written inside its own box: the detail stands above what it details.",
        "Turn the link round, or move one of them to the box it belongs to."},
+      {"W-SATISFIES-OUTSIDE-HOME", "warning",
+       "A piece answers to a requirement written in a box that does not hold it: the requirement is written at one place and "
+       "realised outside it. The finding names the box that holds the home and every piece that realises the requirement.",
+       "Move the requirement to the box the finding names, or take the annotation off a piece that only passes the work on."},
       {"W-INTERFACE-SIGNATURE", "warning",
        "A class declares an operation of an interface it realises with another signature than the interface's.",
        "Make the two take and give the same. What the class does not declare is no finding."},
