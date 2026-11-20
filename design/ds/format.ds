@@ -4,49 +4,50 @@
 // line in the map of that document: the scene, a diagram, a query's answers, a check's report.
 
 package driftspec@ds {
-  module format {
-    requirement REQ-00106-1 {
+  // every document ds writes, whichever module builds it: the package's, not the format module's
+  requirement REQ-00106-1 {
+    status: approved
+    @refines SREQ-00013-1
+    title: Each document ds writes shall be written by formats behind one interface, found by name, none of which reads the model
+    text:
+      A format has a name and writes one kind of document with the options it is given (indented,
+      the title, a reader's stylesheet, the identities a page opens framed on, whether a page is
+      embedded and how tall). The formats of a document are named in one map, so a command finds
+      the one asked for by name. A format writes what the document says and never reads the
+      model; what two formats need (packing, the scene's JSON) lives apart and knows none of them.
+    rationale:
+      Owner, 2026-11-10 (DS-126): the scene, a diagram's IR, a query's answers and a check's
+      findings are each written in several forms, each in its own way; one shape for all of them
+      and the command line finding a format by name.
+    tags: format, render, scene
+    verification VER-00115-2 {
       status: approved
-      @refines SREQ-00013-1
-      title: Each document ds writes shall be written by formats behind one interface, found by name, none of which reads the model
-      text:
-        A format has a name and writes one kind of document with the options it is given (indented,
-        the title, a reader's stylesheet, the identities a page opens framed on, whether a page is
-        embedded and how tall). The formats of a document are named in one map, so a command finds
-        the one asked for by name. A format writes what the document says and never reads the
-        model; what two formats need (packing, the scene's JSON) lives apart and knows none of them.
-      rationale:
-        Owner, 2026-11-10 (DS-126): the scene, a diagram's IR, a query's answers and a check's
-        findings are each written in several forms, each in its own way; one shape for all of them
-        and the command line finding a format by name.
-      tags: format, render, scene
-      verification VER-00115-2 {
-        status: approved
-        title: Integration tests confirm the scene's formats are found by name, write the scene of a design, and the page becomes a frame when asked
-        method: test
-        tests:
-          tests/integration/ds/format/test_formats_of_a_design.cpp::TestSceneFormatsOfADesign.EachFormatFoundByItsNameWritesTheSceneOfTheDesign
-          tests/integration/ds/format/test_formats_of_a_design.cpp::TestSceneFormatsOfADesign.ThePageOfTheDesignIsAFrameCarryingItWholeWhenAskedToEmbed
-      }
-      verification VER-00116-2 {
-        status: approved
-        title: Integration tests confirm a diagram's five formats are found by name, the IR is written as it came unless asked to indent, and each drawing format draws the same diagram
-        method: test
-        tests:
-          tests/integration/ds/format/test_formats_of_a_design.cpp::TestDiagramFormatsOfADesign.EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares
-          tests/integration/ds/format/test_formats_of_a_design.cpp::TestDiagramFormatsOfADesign.EachDrawingFormatDrawsTheSameDiagramItsIrDescribes
-      }
-      verification VER-00117-3 {
-        status: approved
-        text: Revision 2 (DS-185) gives the formats of an answer and of a report a test each, named after their factory. Revision 3 (DS-137) verifies them over the answers and the report of a design.
-        title: Integration tests confirm a query's answers and a check's report are written as text or JSON by name, and the report is built once from the model and read the same either way
-        method: test
-        tests:
-          tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheAnswersOfAQueryAreWrittenAsTextOrJsonByName
-          tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAsTextAndAsJson
-      }
+      title: Integration tests confirm the scene's formats are found by name, write the scene of a design, and the page becomes a frame when asked
+      method: test
+      tests:
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestSceneFormatsOfADesign.EachFormatFoundByItsNameWritesTheSceneOfTheDesign
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestSceneFormatsOfADesign.ThePageOfTheDesignIsAFrameCarryingItWholeWhenAskedToEmbed
     }
+    verification VER-00116-2 {
+      status: approved
+      title: Integration tests confirm a diagram's five formats are found by name, the IR is written as it came unless asked to indent, and each drawing format draws the same diagram
+      method: test
+      tests:
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestDiagramFormatsOfADesign.EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestDiagramFormatsOfADesign.EachDrawingFormatDrawsTheSameDiagramItsIrDescribes
+    }
+    verification VER-00117-3 {
+      status: approved
+      text: Revision 2 (DS-185) gives the formats of an answer and of a report a test each, named after their factory. Revision 3 (DS-137) verifies them over the answers and the report of a design.
+      title: Integration tests confirm a query's answers and a check's report are written as text or JSON by name, and the report is built once from the model and read the same either way
+      method: test
+      tests:
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheAnswersOfAQueryAreWrittenAsTextOrJsonByName
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAsTextAndAsJson
+    }
+  }
 
+  module format {
     // ---- the principles, as rules ----------------------------------------------------------
     rule formats-read-no-model {
       title: a format writes the document it is given; it never reads the model
@@ -109,7 +110,7 @@ package driftspec@ds {
       }
       // compact JSON that says how to read itself: every record an array whose columns fields names
       function encode(document: scene::SceneDocument, pretty: bool) -> std::string {
-        @requirement REQ-00069-1
+        @requirement REQ-00106-1
       }
     }
 
@@ -149,35 +150,35 @@ package driftspec@ds {
 
     // ds render -f ir: the IR as it came, indented when asked
     class DiagramIr : IFormat {
-      @requirement REQ-00006-1
+      @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
     class DiagramLayout : IFormat {
-      @requirement REQ-00007-1
+      @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f svg
     class DiagramSvg : IFormat {
-      @requirement REQ-00007-1
+      @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f text: boxes in characters for a terminal
     class DiagramText : IFormat {
-      @requirement REQ-00007-1
+      @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f cells: the terminal's coloured cells
     class DiagramCells : IFormat {
-      @requirement REQ-00007-1
+      @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
@@ -189,14 +190,14 @@ package driftspec@ds {
 
     // ds query: kind  identity  detail, one answer per line
     class AnswersText : IFormat {
-      @requirement REQ-00003-2
+      @requirement REQ-00106-1
       + name() -> std::string
       + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
     }
 
     // ds query --json: an array of the same three fields
     class AnswersJson : IFormat {
-      @requirement REQ-00003-2
+      @requirement REQ-00106-1
       + name() -> std::string
       + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
     }

@@ -6,6 +6,30 @@ package driftspec@ds {
 
   module api {
 
+    // refines how parse reports a syntax error; the engine's load is what reports a cut file once and drops its echoes
+    requirement REQ-00167-1 {
+      status: approved
+      @refines REQ-00080-1
+      title: A file that does not parse shall be reported once, at the block a lost brace leaves open, and what only echoes it shall not be reported
+      text:
+        When a block is not closed, read from the indentation every file keeps (CST-00007-1), the
+        error is reported at the line that opens it and names it. While a file does not parse, the
+        other findings in it and the names declared nowhere are left out: they come from what the
+        cut leaves out of the model, not from the design. The findings of the files that parse stay.
+      rationale:
+        Audit for 0.1.0 (DS-7, DS-304): one lost brace in DriftSpec's own design gave dozens of
+        findings, every one an echo of it, and the error stood lines below the block left open.
+      tags: parse, syntax
+      verification VER-00184-1 {
+        status: approved
+        title: Integration tests confirm a lost brace is reported at the block it leaves open, and the findings that echo the cut go while an intact file keeps its own
+        method: test
+        tests:
+          tests/integration/ds/api/test_cut_file.cpp::TestCutFile.ALostBraceIsReportedAtTheBlockItLeavesOpen
+          tests/integration/ds/api/test_cut_file.cpp::TestCutFile.WhatOnlyEchoesTheCutGoesAndTheOtherFilesKeepTheirFindings
+      }
+    }
+
     requirement REQ-00085-1 {
       status: approved
       @refines SREQ-00015-1
