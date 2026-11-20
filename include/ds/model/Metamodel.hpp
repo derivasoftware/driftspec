@@ -95,6 +95,8 @@ const std::vector<KindSpec>& kinds();
 const std::vector<RelationSpec>& relations();
 
 const KindSpec& specOf(Kind kind);
+/// The kind a word names, as kindName writes it (class, sequence...); nullptr when it names none.
+const KindSpec* specNamed(const std::string& name);
 /// The field a key names for a kind, families included; nullptr when the kind does not declare it.
 const FieldSpec* fieldOf(Kind kind, const std::string& key);
 

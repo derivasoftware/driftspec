@@ -5,11 +5,7 @@
 namespace ds {
 namespace model {
 
-namespace {
-
-bool isBranch(const Entity& e) { return e.kind == Kind::Frame && e.field("kind") == "branch"; }
-
-}  // namespace
+bool SequenceTree::isBranch(const Entity& e) { return e.kind == Kind::Frame && e.field("kind") == "branch"; }
 
 SequenceTree::SequenceTree(const Model& model, const std::string& sequence) : model_(model) { walk(sequence, ""); }
 

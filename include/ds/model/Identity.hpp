@@ -60,6 +60,9 @@ class Identity {
   bool operator==(const Identity& other) const { return text_ == other.text_; }
 
  private:
+  static const std::string kSequence;  ///< what a sequence adds to its subject: ::sequence
+  static const std::string kState;     ///< what a state machine adds to its subject: ::state
+  static const std::string kDiagram;   ///< what a diagram's identity starts with: diagram:
   std::string text_;
 };
 
@@ -105,6 +108,11 @@ class ArtefactName {
   bool operator==(const ArtefactName& other) const { return text_ == other.text_; }
 
  private:
+  /// Whether `text` is written PREFIX(-PART)*-NUMBER-REVISION (REQ-00001-2, DS-C-0001-0); `stem`, when
+  /// given, takes it without its revision.
+  static bool writtenWithRevision(const std::string& text, std::string* stem = nullptr);
+  /// Whether `text` is written PREFIX(-PART)*-NUMBER, with no revision.
+  static bool writtenBare(const std::string& text);
   std::string text_;
 };
 

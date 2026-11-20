@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.17
+
+The model package has no anonymous namespaces (DS-332): each helper is a private member of the one
+class it serves, or lives in `ds::model::detail`, declared in an internal header, and the design
+draws them all. `holderOf` and `specNamed` are said once in the model for the check and the state
+machines. Nothing changes for a design.
+
 ## 0.1.16
 
 The viewer's tours run on vitest (DS-329), so argos reads them as the tests their verifications
