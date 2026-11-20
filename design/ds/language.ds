@@ -671,7 +671,7 @@ package driftspec@ds {
             incompleteness, not incoherence.
           verification VER-00021-4 {
             title: Integration tests confirm ownership and multiplicity are written on the attribute, every designed name of its type is related, a name qualified with dots as with ::, and parameters and returns give use
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
