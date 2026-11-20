@@ -28,6 +28,7 @@ package driftspec@grammar {
       tags: language, grammar
       status: approved
       category: language
+      bok: BOK-00004-1
       title: Every file shall be braces that enclose one thing per line, // always a comment, a field value to the end of its line, multiline text by indentation
       rationale: R7: one shape for every construct, readable without a parser in the head.
     }

@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.15
+
+Every constraint of DriftSpec's own design names the guide that says why it exists (DS-328): four
+guides under `doc/knowledge/guides/` cover the licence and the third-party notices, the hundred
+millisecond budget, the engine's answers as copies, and the rules of the language's text. Nothing
+changes for a design.
+
 ## 0.1.14
 
 The CI gate fails on code without design and on stale evidence (DDEV-1507). Nothing changes for a

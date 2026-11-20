@@ -328,6 +328,7 @@ package driftspec {
   constraint CST-00011-1 {
     status: approved
     category: release
+    bok: BOK-00001-1
     title: Everything DriftSpec ships shall carry its licence, Apache 2.0 with its notice, and the grammar its own, MIT
     text:
       LICENSE is the Apache License 2.0; NOTICE names the holder, ARGOSQA SLU (deriva), and points at
@@ -343,6 +344,7 @@ package driftspec {
   constraint CST-00010-1 {
     status: approved
     category: release
+    bok: BOK-00001-1
     title: Everything DriftSpec ships shall carry the notices of the third-party code compiled into it
     text:
       THIRD_PARTY_NOTICES.md names each library the build fetches, with the version built and its
@@ -357,6 +359,7 @@ package driftspec {
   constraint CST-00001-1 {
     status: approved
     category: performance
+    bok: BOK-00002-1
     title: Every command of the tool shall complete in under one hundred milliseconds on a workspace of a hundred classes
     text:
       Loading, checking, exporting, diffing and drawing a workspace of a
