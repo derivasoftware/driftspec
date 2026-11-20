@@ -906,9 +906,9 @@ package driftspec@driftspec {
     function subject_of(word: str) -> tuple[str, str]
     function with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]
     function optional(rest: tuple) -> tuple[int, str]      // the width and the word typed, from what pygls passes on
-    function draw(ls: LanguageServer, uri: str, line: int, character: int, *rest: object) -> dict
+    function draw(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
     function open_in_browser(path: str) -> None
-    function view(ls: LanguageServer, uri: str, line: int, character: int, *rest: object) -> dict
+    function view(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
     function main() -> None
 
     sequence changed {
@@ -978,7 +978,7 @@ package driftspec@driftspec {
       + rules: list[dict]
       + comments: list[dict]
       + isolated: list[str]
-      + listeners: list[Queue]                 // one per page following the session
+      + listeners: list[queue.Queue]           // one per page following the session
       + stamp: None                            // what the .ds files were at the last reload; none before the first
       + error: str
       + boot: str                              // when the server started: a page from an older one reloads itself
