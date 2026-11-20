@@ -30,3 +30,6 @@ CLAUDE.md
 AGENTS.md
 .claude/
 .mcp.json
+
+# the viewer's test dependencies, installed by npm ci from package-lock.json (DS-329)
+node_modules/

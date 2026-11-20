@@ -192,7 +192,7 @@ async function unpack(b64){const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate')); return JSON.parse(await new Response(stream).text());}
 if(typeof DecompressionStream==='undefined'){document.getElementById('stage').innerHTML='<p style="padding:20px;font-family:sans-serif">This browser cannot inflate the scene (it lacks DecompressionStream). Open the page in a current one.</p>'; return;}
 const SCENE=decode(await unpack(PACKED));
-// ---- the scene, decoded (tests/viewer runs this part as it is: keep it free of the page) ----
+// ---- the scene, decoded (tests/integration/viewer runs this part as it is: keep it free of the page) ----
 // the scene comes compact (version 2): records are arrays whose columns `fields` names, and nodes and
 // behaviours are named by index; a tour is a behaviour expanded through the behaviours its calls go on into:
 // where each call goes on is decided by ds (query::stepsOf, DS-130), the viewer only follows it

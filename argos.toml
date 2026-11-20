@@ -36,10 +36,12 @@ python = ["python"]
 
 # The engine's tests run on GoogleTest, read from ``tests/unit/<package>/``
 # where ``<package>`` matches the namespace under ``include/`` (tests outside
-# that tree fire W-TEST-LAYOUT-UNRECOGNISED); the Python face's run on pytest.
+# that tree fire W-TEST-LAYOUT-UNRECOGNISED); the Python face's run on pytest; the viewer's own
+# code, the tours it replays over scenes ds writes, runs on vitest (DS-329).
 [tests]
 gtest = ["tests"]
 pytest = ["tests/unit/python", "tests/integration/python", "tests/system/python"]
+vitest = ["tests/integration/viewer"]
 
 # Phase 3 (DDEV-1466, DDEV-1507): code without design and stale evidence fail the gate. W-DESIGN-NO-CODE
 # and W-DESIGN-NO-FUNCTION join once the anonymous-namespace helpers are lifted (DS-326).
