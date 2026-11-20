@@ -3,29 +3,16 @@
 #include <regex>
 #include <utility>
 
+#include "Detail.hpp"
+
 namespace ds {
 namespace model {
 
-namespace {
-const std::string kSequence = "::sequence";
-// artefact ids: PREFIX(-PART)*-NUMBER-REVISION, e.g. REQ-00001-2, DS-C-0001-0
-const std::regex kArtefactWithRevision("^([A-Z]+(?:-[A-Z]+)*-[0-9]+)-([0-9]+)$");
-const std::regex kArtefactBare("^[A-Z]+(?:-[A-Z]+)*-[0-9]+$");
-const std::string kState = "::state";
-const std::string kDiagram = "diagram:";
-
-/// The scope outside `text`, of an identity or of a scope: both step out the same way.
-std::string outerOf(const std::string& text) {
-  const auto cut = text.rfind("::");
-  if (cut != std::string::npos) return text.substr(0, cut);
-  std::string s = text;
-  if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope: step out of that package
-  const auto at = s.rfind('@');
-  return at == std::string::npos ? "" : s.substr(0, at + 1);
-}
-}  // namespace
-
 // ---- Identity ---------------------------------------------------------------------------------
+
+const std::string Identity::kSequence = "::sequence";
+const std::string Identity::kState = "::state";
+const std::string Identity::kDiagram = "diagram:";
 
 Identity::Identity(std::string text) : text_(std::move(text)) {}
 
@@ -36,7 +23,7 @@ std::string Identity::lastName() const {
   return cut == std::string::npos ? text_ : text_.substr(cut + 1);
 }
 
-Scope Identity::scope() const { return Scope(outerOf(text_)); }
+Scope Identity::scope() const { return Scope(detail::outerOf(text_)); }
 
 Scope Identity::asScope() const { return Scope(text_); }
 
@@ -99,7 +86,7 @@ Identity Scope::qualify(const std::string& name) const {
   return Identity(text_ + "::" + name);
 }
 
-Scope Scope::outer() const { return Scope(outerOf(text_)); }
+Scope Scope::outer() const { return Scope(detail::outerOf(text_)); }
 
 Scope Scope::package() const {
   const auto at = text_.rfind('@');
@@ -112,18 +99,42 @@ bool Scope::isSystem() const { return !text_.empty() && text_.back() == '@' && t
 
 // ---- ArtefactName -----------------------------------------------------------------------------
 
+bool ArtefactName::writtenWithRevision(const std::string& text, std::string* stem) {
+  static const std::regex form("^([A-Z]+(?:-[A-Z]+)*-[0-9]+)-([0-9]+)$");
+  std::smatch m;
+  if (!std::regex_match(text, m, form)) return false;
+  if (stem) *stem = m[1].str();
+  return true;
+}
+
+bool ArtefactName::writtenBare(const std::string& text) {
+  static const std::regex form("^[A-Z]+(?:-[A-Z]+)*-[0-9]+$");
+  return std::regex_match(text, form);
+}
+
 ArtefactName::ArtefactName(std::string text) : text_(std::move(text)) {}
 
-bool ArtefactName::matches(const std::string& text) {
-  return std::regex_match(text, kArtefactBare) || std::regex_match(text, kArtefactWithRevision);
-}
+bool ArtefactName::matches(const std::string& text) { return writtenBare(text) || writtenWithRevision(text); }
 
-bool ArtefactName::hasRevision() const { return std::regex_match(text_, kArtefactWithRevision); }
+bool ArtefactName::hasRevision() const { return writtenWithRevision(text_); }
 
 ArtefactName ArtefactName::withoutRevision() const {
-  std::smatch m;
-  return ArtefactName(std::regex_match(text_, m, kArtefactWithRevision) ? m[1].str() : text_);
+  std::string stem;
+  return ArtefactName(writtenWithRevision(text_, &stem) ? stem : text_);
 }
+
+namespace detail {
+
+std::string outerOf(const std::string& text) {
+  const auto cut = text.rfind("::");
+  if (cut != std::string::npos) return text.substr(0, cut);
+  std::string s = text;
+  if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope: step out of that package
+  const auto at = s.rfind('@');
+  return at == std::string::npos ? "" : s.substr(0, at + 1);
+}
+
+}  // namespace detail
 
 }  // namespace model
 }  // namespace ds

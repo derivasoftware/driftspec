@@ -169,4 +169,13 @@ TEST_F(TestVersion, IsWrittenAsMajorMinorPatch) {
   EXPECT_EQ(dots, 2) << v;
 }
 
+class TestSpecNamed : public ::testing::Test {};
+
+TEST_F(TestSpecNamed, AWordNamesTheKindKindNameWritesAndNoOtherWordDoes) {
+  EXPECT_EQ(ds::model::specNamed("class"), &ds::model::specOf(Kind::Class));
+  EXPECT_EQ(ds::model::specNamed("usecase"), &ds::model::specOf(Kind::UseCase));
+  EXPECT_EQ(ds::model::specNamed("Class"), nullptr);
+  EXPECT_EQ(ds::model::specNamed("nothing"), nullptr);
+}
+
 }  // namespace

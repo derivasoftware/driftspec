@@ -45,6 +45,8 @@ class SequenceTree {
   std::vector<std::string> inside(const std::string& frame, bool elseSide) const;
 
  private:
+  /// A branch: a side of the alt around it, never a frame of its own.
+  static bool isBranch(const Entity& e);
   void walk(const std::string& holder, const std::string& frame);
   const Model& model_;
   std::vector<std::string> messages_;

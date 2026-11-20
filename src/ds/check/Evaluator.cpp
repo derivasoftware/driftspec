@@ -171,12 +171,6 @@ bool Evaluator::validate(const std::string& id, const model::Formula& formula) {
 
 namespace {
 
-const model::KindSpec* kindNamed(const std::string& name) {
-  for (const auto& spec : model::kinds())
-    if (name == model::kindName(spec.kind)) return &spec;
-  return nullptr;
-}
-
 /// Whether a relation of the metamodel may leave (or reach) an entity of a kind.
 bool joinsAtEnd(const model::RelationSpec& spec, model::Kind kind, bool from) {
   if (!spec.pairs.empty()) {
@@ -195,14 +189,14 @@ bool joinsAtEnd(const model::RelationSpec& spec, model::Kind kind, bool from) {
 void Evaluator::checkVacuity(const std::string& id, const model::Formula& formula) {
   std::map<std::string, model::Kind> kindOf;  // variable -> the kind its range or a kind literal binds it to
   for (const auto& r : formula.ranges)
-    if (const model::KindSpec* k = kindNamed(r.kind)) kindOf[r.variable] = k->kind;
+    if (const model::KindSpec* k = model::specNamed(r.kind)) kindOf[r.variable] = k->kind;
   std::vector<const std::vector<model::Literal>*> bodies{&formula.where};
   for (const auto& c : formula.claims) bodies.push_back(&c);
   for (const auto& c : formula.cases) bodies.push_back(&c);
   for (const auto* body : bodies)
     for (const auto& l : *body)
       if (l.form == Form::Kind && !l.negated && !l.terms.empty() && l.terms[0].variable)
-        if (const model::KindSpec* k = kindNamed(l.name)) kindOf.emplace(l.terms[0].text, k->kind);
+        if (const model::KindSpec* k = model::specNamed(l.name)) kindOf.emplace(l.terms[0].text, k->kind);
   const std::string scope = scopeOf(id);
   const auto kindOfTerm = [&](const model::Term& t, model::Kind* out) {
     if (t.value) return false;

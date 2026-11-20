@@ -105,6 +105,9 @@ package driftspec@ds {
       + subject() -> Identity
       + machineSubject() -> Identity
       operator ==(other: Identity) -> bool
+      - kSequence: std::string      // what a sequence adds to its subject: ::sequence
+      - kState: std::string         // what a state machine adds to its subject: ::state
+      - kDiagram: std::string       // what a diagram's identity starts with: diagram:
     }
     class Scope <<==>> {          // where a name is written: p@, app@core@, p@m, p@m::C
       @constraint CST-00004-1
@@ -130,6 +133,8 @@ package driftspec@ds {
       + hasRevision() -> bool
       + withoutRevision() -> ArtefactName
       operator ==(other: ArtefactName) -> bool
+      - static writtenWithRevision(text: std::string, stem: std::string) -> bool   // PREFIX(-PART)*-NUMBER-REVISION
+      - static writtenBare(text: std::string) -> bool                              // PREFIX(-PART)*-NUMBER
     }
 
     // a list written in a field, taken apart and put back, in one place for every module (DS-185)
@@ -143,6 +148,10 @@ package driftspec@ds {
     function pathOf(model: Model, sequence: std::string, scenario: std::string, kept: std::set<std::string>) -> std::vector<Entity> {
       @requirement REQ-00065-1
     }
+
+    // who a behaviour runs on: a method's class, a function's module, an operation's interface, or its subject;
+    // the check and the state machines ask it the same
+    function holderOf(model: Model, sequence: std::string) -> std::string
 
     // A behaviour's steps are kept as the tree they are written in (DS-172): each message and frame
     // contained by what encloses it, the sequence or a frame, in the order written; an alt holds its
@@ -172,6 +181,7 @@ package driftspec@ds {
       + scenario(frame: std::string, elseSide: bool) -> std::string
       + inside(frame: std::string, elseSide: bool) -> std::vector<std::string>
       - walk(holder: std::string, frame: std::string) -> void
+      - static isBranch(e: Entity) -> bool
     }
 
     // What the sequence or a frame holds, asked of the index in the order written: a message takes the
@@ -269,6 +279,10 @@ package driftspec@ds {
       @requirement REQ-00043-1
     }
     function specOf(kind: Kind) -> KindSpec {
+      @requirement REQ-00066-1
+    }
+    // the kind a word names, as kindName writes it; none when it names no kind
+    function specNamed(name: std::string) -> KindSpec {
       @requirement REQ-00066-1
     }
     function fieldOf(kind: Kind, key: std::string) -> FieldSpec {
@@ -698,6 +712,7 @@ package driftspec@ds {
       + tables() -> std::map<std::string, Tabulated> {
         @requirement REQ-00154-1
       }
+      - static behaviour(kind: Kind) -> bool
     }
 
     // An identity not held: the map keeps a copy of the entity and that copy comes back.
@@ -905,6 +920,93 @@ package driftspec@ds {
       // identities moved: what was indexed by the old ones is built again
       -> indexAgain()
       return true
+    }
+
+    // ---- what the package's own functions and classes share (DS-332): internal, declared in
+    // src/ds/model/Detail.hpp and in no header under include/; its constants are written in the code alone
+    - module detail {
+      // the scope outside an identity or a scope
+      function outerOf(text: std::string) -> std::string {
+        @requirement REQ-00035-1
+      }
+      // the value of a field of an entity; "" when it does not carry it
+      function fieldIn(e: Entity, key: std::string) -> std::string {
+        @requirement REQ-00065-1
+      }
+
+      // the frames of one behaviour, read from its tree, and for each what its two sides name
+      class Branches {
+        @requirement REQ-00065-1
+        + refs tree: SequenceTree
+        + names(f: Entity, elseSide: bool) -> std::set<std::string>
+        + decide(f: Entity, scenario: std::string) -> Way
+      }
+
+      // how the metamodel is built
+      function writtenField(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec {
+        @requirement REQ-00066-1
+      }
+      function syntax(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec {
+        @requirement REQ-00066-1
+      }
+      function derived(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec {
+        @requirement REQ-00066-1
+      }
+      function closed(name: std::string, type: FieldType, meaning: std::string, values: std::vector<std::string>) -> FieldSpec {
+        @requirement REQ-00066-1
+      }
+      function artefact() -> std::vector<FieldSpec> {
+        @requirement REQ-00066-1
+      }
+      function plus(base: std::vector<FieldSpec>, more: std::vector<FieldSpec>) -> std::vector<FieldSpec> {
+        @requirement REQ-00066-1
+      }
+      function describe(kinds: std::vector<KindSpec>) -> std::vector<KindSpec> {
+        @requirement REQ-00066-1
+      }
+      function build() -> std::vector<KindSpec> {
+        @requirement REQ-00066-1
+      }
+      function rel(kind: std::string, meaning: std::string, from: std::vector<Kind>, to: std::vector<Kind>) -> RelationSpec {
+        @requirement REQ-00066-1
+      }
+      function buildRelations() -> std::vector<RelationSpec> {
+        @requirement REQ-00066-1
+      }
+      function among(kinds: std::vector<Kind>, kind: Kind) -> bool {
+        @requirement REQ-00066-1
+      }
+      function matches(name: std::string, key: std::string) -> bool {
+        @requirement REQ-00066-1
+      }
+      // how the manual is written
+      function containment() -> RelationSpec {
+        @requirement REQ-00066-1
+      }
+      function writtenForms() -> std::map<Kind, std::pair<std::string, std::string>> {
+        @requirement REQ-00079-1
+      }
+      function buildCodes() -> std::vector<CodeSpec> {
+        @requirement REQ-00079-1
+      }
+      function indent(text: std::string, by: std::string) -> std::string {
+        @requirement REQ-00079-1
+      }
+      function pad(text: std::string, width: std::size_t) -> std::string {
+        @requirement REQ-00079-1
+      }
+      function names(kinds: std::vector<Kind>) -> std::string {
+        @requirement REQ-00079-1
+      }
+      function kindPage(k: KindSpec) -> std::string {
+        @requirement REQ-00079-1
+      }
+      function indexPage() -> std::string {
+        @requirement REQ-00079-1
+      }
+      function grammarPage() -> std::string {
+        @requirement REQ-00079-1
+      }
     }
   }
 }

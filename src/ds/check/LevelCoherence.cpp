@@ -7,6 +7,7 @@
 #include "ds/axis/Cut.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/model/Identity.hpp"
+#include "ds/model/Model.hpp"
 
 namespace ds {
 namespace check {
@@ -28,15 +29,6 @@ struct Below {
   std::set<std::string> entered;    ///< the participants something is seen to happen in
   std::set<std::string> open;       ///< those in which a call is made whose behaviour is not written
 };
-
-/// Who a behaviour runs on: a method's class, a function's module, an operation's interface, or its subject.
-std::string holderOf(const model::Model& model, const std::string& sequence) {
-  const model::Entity* subject = model.find(model::Identity(sequence).subject().text());
-  if (!subject) return "";
-  const bool member =
-      subject->kind == model::Kind::Method || subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation;
-  return member ? subject->scope : subject->id;
-}
 
 std::string calleeOf(const model::Model& model, const std::string& message) {
   for (const auto& r : model.index().from(message))
@@ -64,7 +56,7 @@ void collect(const model::Model& model, const std::string& sequence, const std::
              Below& out) {
   const std::string key = model::Identity(sequence).withScenario(path).text();
   if (!stack.insert(key).second) return;  // a behaviour already being walked: the cycle ends here
-  const std::string self = holderOf(model, sequence);
+  const std::string self = model::holderOf(model, sequence);
   for (const model::Entity* m : model::pathOf(model, sequence, path, nullptr)) {
     if (m->field("return") == "true") continue;
     const std::string from = on(m->field("from-type").empty() ? self : m->field("from-type"));
@@ -154,7 +146,7 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
     std::string through;
     for (const model::Entity* entry : entries) {
       const auto behaviour = behaviourBelow(model, scenario, *entry);
-      below.entered.insert(on(holderOf(model, behaviour.first)));
+      below.entered.insert(on(model::holderOf(model, behaviour.first)));
       std::set<std::string> stack;
       collect(model, behaviour.first, behaviour.second, on, stack, below);
       through += (through.empty() ? "" : ", ") + calleeOf(model, entry->id);

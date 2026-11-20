@@ -197,6 +197,8 @@ class Model {
 
  private:
   friend class Index;
+  /// A behaviour is named after its subject: X::state, X::run::sequence (DS-222).
+  static bool behaviour(Kind kind);
   /// The relations as the model keeps them: read through index(), the one way in for a reader.
   const std::vector<Relation>& relations() const { return relations_; }
   /// An entity enters what is indexed, or leaves it.
@@ -222,6 +224,10 @@ bool hasScenario(const Model& model, const std::string& sequence, const std::str
 /// `scenario` is the default path: no named branch taken.
 std::vector<const Entity*> pathOf(const Model& model, const std::string& sequence, const std::string& scenario,
                                   std::set<std::string>* kept);
+
+/// Who a behaviour runs on: a method's class, a function's module, an operation's interface, or its subject;
+/// "" when its subject is declared nowhere.
+std::string holderOf(const Model& model, const std::string& sequence);
 
 }  // namespace model
 }  // namespace ds

@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 
+#include "Detail.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Words.hpp"
 
@@ -15,7 +16,7 @@
 namespace ds {
 namespace model {
 
-namespace {
+namespace detail {
 
 const std::string kShopClass =
     "package shop {\n"
@@ -95,7 +96,7 @@ const std::string kShopUseCase =
     "  }\n"
     "}\n";
 
-const std::map<Kind, std::pair<std::string, std::string>>& written() {
+const std::map<Kind, std::pair<std::string, std::string>>& writtenForms() {
   static const std::map<Kind, std::pair<std::string, std::string>> all = {
       {Kind::Package,
        {"package <name> { ... }\npackage <outer>@<inner> { ... }      reopens the nested package <inner>\nlanguage: cpp | c | "
@@ -411,20 +412,20 @@ std::vector<CodeSpec> buildCodes() {
   };
 }
 
-}  // namespace
+}  // namespace detail
 
 std::string syntaxOf(Kind kind) {
-  const auto it = written().find(kind);
-  return it == written().end() ? "" : it->second.first;
+  const auto it = detail::writtenForms().find(kind);
+  return it == detail::writtenForms().end() ? "" : it->second.first;
 }
 
 std::string exampleOf(Kind kind) {
-  const auto it = written().find(kind);
-  return it == written().end() ? "" : it->second.second;
+  const auto it = detail::writtenForms().find(kind);
+  return it == detail::writtenForms().end() ? "" : it->second.second;
 }
 
 const std::vector<CodeSpec>& codes() {
-  static const std::vector<CodeSpec> all = buildCodes();
+  static const std::vector<CodeSpec> all = detail::buildCodes();
   return all;
 }
 
@@ -501,7 +502,7 @@ const CommandSpec* commandOf(const std::string& name) {
 namespace ds {
 namespace model {
 
-namespace {
+namespace detail {
 
 std::string indent(const std::string& text, const std::string& by) {
   std::string out;
@@ -523,12 +524,6 @@ std::string names(const std::vector<Kind>& kinds) {
   std::string out;
   for (size_t i = 0; i < kinds.size(); ++i) out += (i ? ", " : "") + std::string(kindName(kinds[i]));
   return out;
-}
-
-const KindSpec* kindNamed(const std::string& name) {
-  for (const auto& k : kinds())
-    if (name == kindName(k.kind)) return &k;
-  return nullptr;
 }
 
 std::string kindPage(const KindSpec& k) {
@@ -648,7 +643,7 @@ std::string grammarPage() {
   return out;
 }
 
-}  // namespace
+}  // namespace detail
 
 std::vector<std::string> manualTopics() {
   std::vector<std::string> out;
@@ -660,11 +655,11 @@ std::vector<std::string> manualTopics() {
 }
 
 std::string manualPage(const std::string& topic) {
-  if (topic.empty()) return indexPage();
+  if (topic.empty()) return detail::indexPage();
   for (const auto& guide : manualGuides())
     if (guide.first == topic) return guide.second;
-  if (topic == "grammar") return grammarPage();
-  if (const KindSpec* k = kindNamed(topic)) return kindPage(*k);
+  if (topic == "grammar") return detail::grammarPage();
+  if (const KindSpec* k = specNamed(topic)) return detail::kindPage(*k);
   if (const CodeSpec* c = codeOf(topic)) return c->code + " (" + c->severity + ")\n\n" + c->meaning + "\n\nWhat to do: " + c->fix + "\n";
   if (topic == "commands") {
     std::string out;
@@ -677,12 +672,12 @@ std::string manualPage(const std::string& topic) {
   }
   if (topic == "annotations") {
     std::string out = "An annotation links the entity it is written in to an artefact: @<word> <ID>.\n\n";
-    for (const auto& a : annotations()) out += "  " + pad(a.name, 20) + pad(a.relation, 16) + a.meaning + "\n";
+    for (const auto& a : annotations()) out += "  " + detail::pad(a.name, 20) + detail::pad(a.relation, 16) + a.meaning + "\n";
     return out;
   }
   if (topic == "codes") {
     std::string out;
-    for (const auto& c : codes()) out += "  " + pad(c.code, 26) + pad(c.severity, 9) + c.meaning + "\n";
+    for (const auto& c : codes()) out += "  " + detail::pad(c.code, 26) + detail::pad(c.severity, 9) + c.meaning + "\n";
     return out + "\nds manual <CODE> says what to do about one.\n";
   }
   return "";

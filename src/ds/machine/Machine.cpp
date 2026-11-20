@@ -217,15 +217,6 @@ std::vector<Jump> jumpsOf(const model::Entity& machine) {
   return out;
 }
 
-/// Who a behaviour runs on: a method's class, a function's module, an operation's interface, or its subject.
-std::string holderOf(const model::Model& model, const std::string& sequence) {
-  const model::Entity* subject = model.find(model::Identity(sequence).subject().text());
-  if (!subject) return "";
-  const bool member =
-      subject->kind == model::Kind::Method || subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation;
-  return member ? subject->scope : subject->id;
-}
-
 /// A behaviour as a reader calls it: its subject, and its scenario when it has one.
 std::string named(const model::Entity& sequence) {
   const std::string subject = sequence.field("subject").empty() ? sequence.name : sequence.field("subject");
@@ -295,7 +286,7 @@ class Calls {
   void call(const model::Entity& sequence, const model::Entity& m, May& may, std::vector<Call>& found) const {
     if (m.field("return") == "true" || m.field("op").empty()) return;
     const std::string receiver = m.field("to");
-    if ((receiver == "self" ? holderOf(model_, sequence.id) : m.field("type")) != subject_) return;
+    if ((receiver == "self" ? model::holderOf(model_, sequence.id) : m.field("type")) != subject_) return;
     std::string event = m.field("op");
     if (event.rfind("::") != std::string::npos) event = event.substr(event.rfind("::") + 2);
     std::set<std::string> targets;

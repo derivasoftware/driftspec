@@ -132,4 +132,24 @@ TEST_F(TestPathOf, APathThatNamesABranchInsideALoopGoesIntoItAndEndsThere) {
   EXPECT_EQ(ops(ds::model::pathOf(model, "p@m::C::find::sequence", "found", nullptr)), (std::vector<std::string>{"next", "take", "1"}));
 }
 
+class TestHolderOf : public ::testing::Test {};
+
+TEST_F(TestHolderOf, AMembersBehaviourRunsOnWhatHoldsItAndAClassesOnTheClass) {
+  Model model;
+  Entity c;
+  c.kind = Kind::Class;
+  c.id = "p@m::C";
+  c.scope = "p@m";
+  model.declare(c);
+  Entity run;
+  run.kind = Kind::Method;
+  run.id = "p@m::C::run";
+  run.scope = "p@m::C";
+  model.declare(run);
+  EXPECT_EQ(ds::model::holderOf(model, "p@m::C::run::sequence"), "p@m::C");
+  EXPECT_EQ(ds::model::holderOf(model, "p@m::C::run::sequence/out"), "p@m::C");
+  EXPECT_EQ(ds::model::holderOf(model, "p@m::C::sequence"), "p@m::C");
+  EXPECT_EQ(ds::model::holderOf(model, "p@m::D::sequence"), "");
+}
+
 }  // namespace
