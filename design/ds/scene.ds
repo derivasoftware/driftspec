@@ -6,6 +6,139 @@
 
 package driftspec@ds {
 
+  // the page ds writes and the tours it plays: scene builds them, format writes the page, query walks the
+  // behaviour; the package's, not one module's. The viewer's own code realises the page's interaction.
+  requirement REQ-00070-1 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The viewer shall be one self-contained page that ds writes with the scene inside, titled after the workspace
+    text:
+      viewer/scene.html is compiled into ds; ds fills it with the scene and
+      the workspace's name, so the page opens in a browser as it is, with
+      no server and nothing to fetch. What the scene holds never closes the
+      page's script. In the page a reader zooms from the system down to a
+      member (what fits is shown), sees each kind in its colour and a dot
+      for whether a box is linked to a requirement, hides private members,
+      and taps a box for its card.
+    rationale:
+      Owner, 2026-11-06: a JSON is not something to read; the page is what
+      a person opens, on a desktop or a phone.
+    tags: render, scene, viewer
+  }
+
+  requirement REQ-00071-2 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The viewer shall embed into any HTML document as one iframe, and take a reader's stylesheet over its own
+    text:
+      ds render --embed prints an iframe whose srcdoc is the whole page, so
+      pasting it into a document is all it takes; --height sets its height.
+      ds render --css file puts the file after the viewer's own styles: it
+      redefines the variables the viewer draws with (background, panels,
+      accent, the colour of each kind, the requirement dot, the fonts), and
+      cannot close the page's style.
+    rationale:
+      Owner, 2026-11-06: embed the design in any HTML page with a compact
+      command line, and give it the host's look. Colours with a meaning in
+      the model belong to the language instead (DS-76). Revises
+      REQ-00071-1, which named ds view (DS-80).
+    tags: render, scene, viewer
+  }
+
+  requirement REQ-00092-3 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The viewer shall let a page that embeds it read and set its camera, select and frame any identity, mark what changed, highlight, annotate and isolate, and tell the page what the reader does
+    text:
+      window.DS_VIEW: cam and setCam, selected and select, show (a node is selected, a requirement
+      opens in its list, a sequence opens as its tour), frame and frameAny, mark (what changed,
+      fading), highlight (identities of any perspective, each with a tone), notes (bubbles that
+      follow the camera and keep out of each other's way; a folded one is a dot on its box, a seen
+      one is dimmed), isolate (only the given boxes are drawn, with the relations between them;
+      each box they use from outside is a stub on their right edge, and touching it adds that box).
+      The viewer posts {ds: 'ready'} when it can be steered, {ds: 'select', id} whenever the reader
+      selects, {ds: 'note', ids, act} when a note is folded, opened or marked seen, and {ds:
+      'isolate', ids} when the reader isolates (the isolate button or i, Esc with nothing selected
+      to undo), so a live session keeps the reader's place and hears them.
+    rationale: Revision 2: notes that fold and are seen, isolation and the diff (DS-102, DS-139, DS-148). Revision 3: the diff left with ds diff (DS-277).
+    tags: render, scene, viewer, live
+  }
+
+  requirement REQ-00077-1 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The viewer shall dock the card of a box on the right and play a tour along the bottom, so a reader keeps both open beside the canvas
+    text:
+      On a desktop the card of the box touched docks on the right and the
+      canvas makes room for it; a tour plays in a panel along the bottom,
+      its controls in one row above the sequence, and the canvas keeps the
+      space between them. The legend and the minimap step aside while a
+      tour plays. On a phone there is room for one panel at the bottom: the
+      tour hides the card, which comes back when the tour closes.
+    rationale:
+      Owner, 2026-11-06: the card floating over the canvas hid what lit
+      up, and opening a tour pushed it away; "en pc se ve mucho mejor así".
+    tags: render, viewer
+  }
+
+  requirement REQ-00073-2 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The scene shall carry a tour of every interface operation and public behaviour, each call expanded into the sequence of what it calls, along each named scenario
+    text:
+      A tour walks a sequence along a scenario (the default path, each
+      branch it names, each scenario written apart) and expands every call
+      into the behaviour it goes on into, on the branch the call names, to a
+      depth of twelve: a step from the caller to the callee, then the steps
+      of the callee, then its answer coming back. Each step knows its depth.
+      ds decides where each call goes on, in the one walk of a behaviour
+      (query::Walker::steps); the scene writes each behaviour once with that link,
+      and the viewer only follows it. Private behaviours are replayed inside the public ones that
+      reach them. The viewer replays a tour over the structure: the camera
+      frames each call, the member called lights up in its box, a sequence
+      window keeps the same step, and a depth slider hides what lies below.
+    rationale:
+      Owner, 2026-11-05 (DS-67, the fourth dimension): the dynamic part
+      played over the static one. Revision 2 (DS-130): a call that names a
+      scenario goes on into that branch (it went on into the default path),
+      and the depth is the one the viewer uses.
+    tags: render, scene, behaviour
+  }
+
+  requirement REQ-00075-5 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The page shall carry its scene, the viewer's code and its styles deflated and written in base64, and inflate them in the browser
+    text:
+      The scene, the viewer's code and its own styles travel inside the page as
+      zlib-deflated text written in base64, which needs no escaping in a
+      script or in an iframe's srcdoc; what changes from one page to another
+      (the scene, the identities it opens framed on) stays outside the code's
+      pack. A short loader inflates the code with the browser's own
+      DecompressionStream and runs it, and says so when the browser has
+      none. Unpacking a pack gives back the text it was made from. What the
+      page carries beside its scene stays under 64 KB, the scene's pack under
+      128 bytes for each node it lays out, and the embedded frame within 16
+      KB of the page it escapes.
+    rationale:
+      Owner, 2026-11-06: keep the page small and usable. After writing each
+      behaviour once the page weighed 147 KB, and the frame 196 KB because
+      every quote of the scene was escaped for the attribute; packed, 77 KB
+      and 82 KB. Listing the requirements took the page to 123 KB, two
+      thirds of it the viewer's code as written; packing the code brings it
+      back to 92 KB. Use cases and the manual took it to 104 KB, a seventh of
+      it the viewer's styles as written; packed, before the reader's
+      theme so the theme still wins, 95 KB. The design of the Python face took it to
+      104 KB with the viewer unchanged: 37 KB of the page is the tool, the
+      rest is the scene, and the scene grows with the design it draws, so
+      each is bounded on its own. Revises REQ-00075-3, which bounded the
+      whole page of ds's design. Owner, 2026-11-09 (DS-108): the three
+      perspectives, the right-angle routes and the rules took the tool from
+      39 KB to 46 KB; the bound goes to 64 KB, room for the rest of the
+      viewer's work (compartments, zoom, visibility).
+    tags: render, scene, size
+  }
+
   module scene {
 
     requirement REQ-00069-1 {
@@ -38,24 +171,6 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.WithPrivateMembersHiddenEveryBoxStillNestsAndKeepsApart
     }
 
-    requirement REQ-00070-1 {
-      status: approved
-      @refines SREQ-00013-1
-      title: The viewer shall be one self-contained page that ds writes with the scene inside, titled after the workspace
-      text:
-        viewer/scene.html is compiled into ds; ds fills it with the scene and
-        the workspace's name, so the page opens in a browser as it is, with
-        no server and nothing to fetch. What the scene holds never closes the
-        page's script. In the page a reader zooms from the system down to a
-        member (what fits is shown), sees each kind in its colour and a dot
-        for whether a box is linked to a requirement, hides private members,
-        and taps a box for its card.
-      rationale:
-        Owner, 2026-11-06: a JSON is not something to read; the page is what
-        a person opens, on a desktop or a phone.
-      tags: render, scene, viewer
-    }
-
     verification VER-00077-1 {
       status: approved
       @requirement REQ-00070-1
@@ -63,25 +178,6 @@ package driftspec@ds {
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
-    }
-
-    requirement REQ-00071-2 {
-      status: approved
-      @refines SREQ-00013-1
-      title: The viewer shall embed into any HTML document as one iframe, and take a reader's stylesheet over its own
-      text:
-        ds render --embed prints an iframe whose srcdoc is the whole page, so
-        pasting it into a document is all it takes; --height sets its height.
-        ds render --css file puts the file after the viewer's own styles: it
-        redefines the variables the viewer draws with (background, panels,
-        accent, the colour of each kind, the requirement dot, the fonts), and
-        cannot close the page's style.
-      rationale:
-        Owner, 2026-11-06: embed the design in any HTML page with a compact
-        command line, and give it the host's look. Colours with a meaning in
-        the model belong to the language instead (DS-76). Revises
-        REQ-00071-1, which named ds view (DS-80).
-      tags: render, scene, viewer
     }
 
     verification VER-00078-2 {
@@ -94,25 +190,6 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
         tests/integration/ds/scene/test_themes.cpp::TestThemes.TheNightThemeSetsEveryVariableTheViewerDrawsWith
         tests/integration/ds/scene/test_themes.cpp::TestThemes.TheNoteToThemeAuthorsNamesEveryVariable
-    }
-
-    requirement REQ-00092-3 {
-      status: approved
-      @refines SREQ-00017-1
-      title: The viewer shall let a page that embeds it read and set its camera, select and frame any identity, mark what changed, highlight, annotate and isolate, and tell the page what the reader does
-      text:
-        window.DS_VIEW: cam and setCam, selected and select, show (a node is selected, a requirement
-        opens in its list, a sequence opens as its tour), frame and frameAny, mark (what changed,
-        fading), highlight (identities of any perspective, each with a tone), notes (bubbles that
-        follow the camera and keep out of each other's way; a folded one is a dot on its box, a seen
-        one is dimmed), isolate (only the given boxes are drawn, with the relations between them;
-        each box they use from outside is a stub on their right edge, and touching it adds that box).
-        The viewer posts {ds: 'ready'} when it can be steered, {ds: 'select', id} whenever the reader
-        selects, {ds: 'note', ids, act} when a note is folded, opened or marked seen, and {ds:
-        'isolate', ids} when the reader isolates (the isolate button or i, Esc with nothing selected
-        to undo), so a live session keeps the reader's place and hears them.
-      rationale: Revision 2: notes that fold and are seen, isolation and the diff (DS-102, DS-139, DS-148). Revision 3: the diff left with ds diff (DS-277).
-      tags: render, scene, viewer, live
     }
 
     verification VER-00101-2 {
@@ -203,23 +280,6 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AHeaderThatNamesABaseInAnotherModuleIsWideEnoughForIt
     }
 
-    requirement REQ-00077-1 {
-      status: approved
-      @refines SREQ-00013-1
-      title: The viewer shall dock the card of a box on the right and play a tour along the bottom, so a reader keeps both open beside the canvas
-      text:
-        On a desktop the card of the box touched docks on the right and the
-        canvas makes room for it; a tour plays in a panel along the bottom,
-        its controls in one row above the sequence, and the canvas keeps the
-        space between them. The legend and the minimap step aside while a
-        tour plays. On a phone there is room for one panel at the bottom: the
-        tour hides the card, which comes back when the tour closes.
-      rationale:
-        Owner, 2026-11-06: the card floating over the canvas hid what lit
-        up, and opening a tour pushed it away; "en pc se ve mucho mejor así".
-      tags: render, viewer
-    }
-
     verification VER-00086-1 {
       status: approved
       @requirement REQ-00077-1
@@ -236,30 +296,6 @@ package driftspec@ds {
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.HidingPrivateMembersMakesNoBoxWider
-    }
-
-    requirement REQ-00073-2 {
-      status: approved
-      @refines SREQ-00013-1
-      title: The scene shall carry a tour of every interface operation and public behaviour, each call expanded into the sequence of what it calls, along each named scenario
-      text:
-        A tour walks a sequence along a scenario (the default path, each
-        branch it names, each scenario written apart) and expands every call
-        into the behaviour it goes on into, on the branch the call names, to a
-        depth of twelve: a step from the caller to the callee, then the steps
-        of the callee, then its answer coming back. Each step knows its depth.
-        ds decides where each call goes on, in the one walk of a behaviour
-        (query::Walker::steps); the scene writes each behaviour once with that link,
-        and the viewer only follows it. Private behaviours are replayed inside the public ones that
-        reach them. The viewer replays a tour over the structure: the camera
-        frames each call, the member called lights up in its box, a sequence
-        window keeps the same step, and a depth slider hides what lies below.
-      rationale:
-        Owner, 2026-11-05 (DS-67, the fourth dimension): the dynamic part
-        played over the static one. Revision 2 (DS-130): a call that names a
-        scenario goes on into that branch (it went on into the default path),
-        and the depth is the one the viewer uses.
-      tags: render, scene, behaviour
     }
 
     verification VER-00082-2 {
@@ -302,40 +338,6 @@ package driftspec@ds {
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
         tests/viewer/test_tours.mjs::the page stays small because each behaviour is written once and the tours replay many more steps
-    }
-
-    requirement REQ-00075-5 {
-      status: approved
-      @refines SREQ-00013-1
-      title: The page shall carry its scene, the viewer's code and its styles deflated and written in base64, and inflate them in the browser
-      text:
-        The scene, the viewer's code and its own styles travel inside the page as
-        zlib-deflated text written in base64, which needs no escaping in a
-        script or in an iframe's srcdoc; what changes from one page to another
-        (the scene, the identities it opens framed on) stays outside the code's
-        pack. A short loader inflates the code with the browser's own
-        DecompressionStream and runs it, and says so when the browser has
-        none. Unpacking a pack gives back the text it was made from. What the
-        page carries beside its scene stays under 64 KB, the scene's pack under
-        128 bytes for each node it lays out, and the embedded frame within 16
-        KB of the page it escapes.
-      rationale:
-        Owner, 2026-11-06: keep the page small and usable. After writing each
-        behaviour once the page weighed 147 KB, and the frame 196 KB because
-        every quote of the scene was escaped for the attribute; packed, 77 KB
-        and 82 KB. Listing the requirements took the page to 123 KB, two
-        thirds of it the viewer's code as written; packing the code brings it
-        back to 92 KB. Use cases and the manual took it to 104 KB, a seventh of
-        it the viewer's styles as written; packed, before the reader's
-        theme so the theme still wins, 95 KB. The design of the Python face took it to
-        104 KB with the viewer unchanged: 37 KB of the page is the tool, the
-        rest is the scene, and the scene grows with the design it draws, so
-        each is bounded on its own. Revises REQ-00075-3, which bounded the
-        whole page of ds's design. Owner, 2026-11-09 (DS-108): the three
-        perspectives, the right-angle routes and the rules took the tool from
-        39 KB to 46 KB; the bound goes to 64 KB, room for the rest of the
-        viewer's work (compartments, zoom, visibility).
-      tags: render, scene, size
     }
 
     verification VER-00084-5 {
