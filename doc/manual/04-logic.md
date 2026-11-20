@@ -16,7 +16,7 @@ package shop {
 
   module web {
     class Page {
-      + show() -> none
+      + show() -> void
     }
   }
 
@@ -55,14 +55,14 @@ package shop {
 
   module web {
     class Page {
-      + show() -> none
+      + show() -> void
     }
   }
 
   module store {
     class Order {
       + total() -> int
-      + draw(page: web::Page) -> none
+      + draw(page: web::Page) -> void
     }
 
     rule store-knows-no-web {
@@ -130,7 +130,7 @@ package shop {
 
   module web {
     class Page {
-      + show() -> none
+      + show() -> void
     }
   }
 
@@ -173,9 +173,9 @@ takes it from one to the next.
 package shop {
   module store {
     class Order {
-      + pay() -> none
-      + ship() -> none
-      + cancel() -> none
+      + pay() -> void
+      + ship() -> void
+      + cancel() -> void
     }
 
     state Order {
@@ -203,9 +203,9 @@ the operation takes the state. An empty cell is a pair the machine says nothing 
 package shop {
   module store {
     class Order {
-      + pay() -> none
-      + ship() -> none
-      + cancel() -> none
+      + pay() -> void
+      + ship() -> void
+      + cancel() -> void
     }
 
     state Order {
@@ -234,9 +234,9 @@ nothing takes `Shipped` anywhere on `cancel`.
 package shop {
   module store {
     class Order {
-      + pay() -> none
-      + ship() -> none
-      + cancel() -> none
+      + pay() -> void
+      + ship() -> void
+      + cancel() -> void
     }
 
     state Order {
@@ -248,7 +248,7 @@ package shop {
     }
 
     class Desk {
-      + send(order: Order) -> none
+      + send(order: Order) -> void
     }
 
     sequence Desk::send {

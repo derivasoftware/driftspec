@@ -29,13 +29,16 @@ them.*
   qualified name; process artefacts (requirement, constraint, verification)
   by id **with its revision**, `REQ-00001-2`. Two declarations of one
   identity are `E-DUPLICATE-IDENTITY` (R5).
-- A reference nobody declares creates an expected node and one
-  `W-REF-UNDECLARED`; loading never fails on it, only on syntax (R6).
+- A link nobody declares (an annotation, a sequence's subject) creates an
+  expected node and one `W-REF-UNDECLARED`; loading never fails on it, only on
+  syntax (R6). A name in a type, a base, a bound or a call that nobody designs
+  is text: no relation, no finding (DS-18).
 - Multiline text by indentation under the key (R7). A field value runs to the
   end of the line; `//` always starts a comment. Closing braces go on their
   own line.
-- `extern module std { class vector<T> }` declares what lives outside the
-  workspace, with no obligations (R11).
+- What lives outside the workspace is not declared: there is no `extern`
+  (DS-18, which replaced R11). A bare name no scope declares is the one class
+  of that name in the package; with two of the name it is text.
 
 - **Nested packages (decided 2026-10-26).** A package holds packages: the
   HLD nests. Nested with braces, or reopened flat by its full path
@@ -61,17 +64,21 @@ them.*
   value runs to the end of its line and `//` always starts a comment.
 - Contracts are rules in the member's body (`perspectives.md`, DS-94). The
   bracket contracts (`[requires: …]`) of R8 are gone: one syntax for one thing.
-- `extern` declares names only, never signatures: what lives outside the
-  workspace is not checked (R11).
+- A type is written as the code writes it (`std::vector<Line>`, `list[Line]`,
+  `Line | None`); ds knows no language and reads only the names in it (DS-18).
 - Members: visibility (`+ # -`), then `abstract | static | const` for
-  methods or `owns | refs | shares` for attributes, then the name. A method
-  named like its class is a constructor. `name: type = default` (R19).
+  methods or `owns | refs | shares` and `many | optional` for attributes, then
+  the name. A method named like its class is a constructor.
+  `name: type = default` (R19). `*args` and `**kwargs` are parameter names.
 - Ownership from the attribute: `owns` (default, composition), `refs` and
-  `shares` (aggregation); multiplicity from the type (`T` 1,
-  `optional<T>` 0..1, `list/set/map` *). Parameters and returns give `uses`.
-  `E-OWNERSHIP-CYCLE`, `W-MODIFIER-ON-VALUE` (R16).
+  `shares` (aggregation); multiplicity written beside it, never read from the
+  type: `many` *, `optional` 0..1, neither 1. Two of a kind are
+  `E-MODIFIER-CONFLICT`. Parameters and returns give `uses`.
+  `E-OWNERSHIP-CYCLE` (R16, DS-18).
 - Templates: `class Repository<T: Entity>`, identity name plus arity,
-  `E-TEMPLATE-BOUND` (R15).
+  `E-TEMPLATE-BOUND` (R15); a base keeps its arguments as written
+  (`class SceneJson : IFormat<Scene>`), and a method may take its own
+  parameters (`+ each<F>(f: F) -> void`).
 - Operators in the header as a set, `class Vector <<==, ordered, +, []>>`;
   the body may refine an operand; `E-OPERATOR-UNDECLARED` (R17).
 - A characteristic of an entity is a requirement or a constraint, nested or
@@ -86,23 +93,22 @@ them.*
   consumer's file and leaves with it. A second definition is still
   `E-DUPLICATE-IDENTITY`; an extension of something defined nowhere is an
   expected node, `W-REF-UNDECLARED`. Corpus: `tests/corpus/packages/wiring.ds`.
-- **The extern catalogue (2026-10-26).** `extern` modules reopen in any
-  file, so the names the workspace borrows (std, a C API) grow into one
-  catalogue. A bare name nobody declares in scope resolves to the one extern
-  entity of that simple name; two externs with the same simple name make the
-  bare reference `E-REF-AMBIGUOUS` (qualify it). The type text stays as
+- **No extern (2026-11-20, DS-18).** The extern catalogue of 2026-10-26 is
+  gone with `extern`: a name the design does not declare is text, and a bare
+  name no scope declares resolves to the one class of that name in the
+  package, the rule argos applies to the code. The type text stays as
   written, which is what a code reader compares.
 - **Enums are annotated like classes (2026-10-26)**: `@requirement` lines
   before the values.
 - **Functions of a module (2026-10-26).** A module declares operations no
   class holds, as a Python module or a C++ namespace does:
-  `function gather(board: Board, project: string) -> list<Task>`, with a
+  `function gather(board: Board, project: str) -> list[Task]`, with a
   member's visibility in front when it is not public (`- function _row_of(..)`).
   Its identity is its module's plus its name, like a class
   (`iris@tasks::gather`); two of one name are `E-DUPLICATE-IDENTITY`. Its
   signature and body are a method's: parameters and the return give `uses`,
   the body takes notes, `@requirement`, `@constraint`, contracts and nested
-  artefacts. An extern module declares functions as names. Its behaviour is
+  artefacts. A call to a function nobody designs is text. Its behaviour is
   `sequence gather { }`: the participants are its parameters and locals, there
   is no self; a call with no target is a function resolved outward from the
   module, `-> tasks::gather(..)` one of another module, and a method reaches a
@@ -129,7 +135,8 @@ them.*
 - Participants are the static context: `self`, the attributes of the class,
   the parameters of the method, by name; only what the method creates is
   written, `local parser: Parser`. The result of a message is one too, for the
-  messages after it. `W-PARTICIPANT-UNDECLARED`.
+  messages after it. A name that is none of these, and no box or class the
+  behaviour sees, is text: its call is not checked (DS-18).
 - **Behaviour at any cut (decided 2026-11-16, DS-232, `tests/corpus/levels`).** A scenario is written
   in one block, between whatever takes part, without a sequence for every operation on the way:
   ```
@@ -179,10 +186,11 @@ them.*
   whole, early returns included; an unnamed call follows the default path.
 - Values have types (decided 2026-11-05, `tests/corpus/values`): a result has the
   type its operation returns, so a call on it is checked like any other. An
-  argument is checked against its parameter (`W-ARG-TYPE`), and taking the
-  result of an operation returning `none` is reported (`W-RESULT-NONE`). An
-  argument may be a literal, `visit(file, root, "", 7)`, with the type it is written
-  in. A value of unknown type has nothing to be checked against.
+  argument is checked against its parameter (`W-ARG-TYPE`): a value of a designed
+  class must derive from the class expected, and a literal, `visit(file, root, "", 7)`,
+  fits no designed class. ds knows no language, so a type it does not design
+  (`int`, `std::string`, `None`) is never compared (DS-18). A value of unknown
+  type has nothing to be checked against.
 - What a behaviour gives back and where a call goes (decided 2026-11-05,
   `tests/corpus/scenarios`): `return code` or `return 2`, a name or a literal, never
   an expression, checked against the operation (`W-RETURN-TYPE`). A call names
@@ -308,8 +316,7 @@ them.*
 
 - `diagram CL_X { kind: class | sequence | requirement | state | table | interface | tour; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
 - `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
-  (`ds@*`), read alike by every kind of diagram; extern entities only when
-  named. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
+  (`ds@*`), read alike by every kind of diagram. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
 - **The cut (decided 2026-11-16, DS-229, `tests/corpus/cut`).** A cut is a set of boxes none of

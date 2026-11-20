@@ -13,12 +13,12 @@ my `stock` for `has(item)` and call the answer `ok`.
 package shop {
   module store {
     class Stock {
-      + has(item: string) -> bool
+      + has(item: std::string) -> bool
     }
 
     class Cart {
       - stock: Stock
-      + add(item: string) -> bool
+      + add(item: std::string) -> bool
     }
 
     sequence Cart::add {
@@ -43,12 +43,12 @@ finding, at the line where it is written.
 package shop {
   module store {
     class Stock {
-      + has(item: string) -> bool
+      + has(item: std::string) -> bool
     }
 
     class Cart {
       - stock: Stock
-      + add(item: string) -> bool
+      + add(item: std::string) -> bool
     }
 
     sequence Cart::add {
@@ -77,7 +77,7 @@ package shop {
     }
 
     class Cart {
-      - owns lines: list<Line>
+      - owns many lines: std::vector<Line>
       + total() -> int
     }
 
@@ -106,13 +106,13 @@ can go. A diagram can ask for the whole behaviour or for one scenario alone.
 package shop {
   module store {
     class Stock {
-      + has(item: string) -> bool
-      + reserve(item: string) -> none
+      + has(item: std::string) -> bool
+      + reserve(item: std::string) -> void
     }
 
     class Cart {
       - stock: Stock
-      + add(item: string) -> bool
+      + add(item: std::string) -> bool
     }
 
     sequence Cart::add {
@@ -154,7 +154,7 @@ package shop {
     }
 
     class Cart {
-      - owns lines: list<Line>
+      - owns many lines: std::vector<Line>
       + total() -> int
       + checkout(card: Card) -> bool
     }
@@ -191,12 +191,12 @@ An operation says what it may fail with (`fails SoldOut`). A sequence ends a pat
 package shop {
   module store {
     class Stock {
-      + reserve(item: string) -> none fails SoldOut
+      + reserve(item: std::string) -> void fails SoldOut
     }
 
     class Cart {
       - stock: Stock
-      + add(item: string) -> bool
+      + add(item: std::string) -> bool
     }
 
     sequence Stock::reserve {
