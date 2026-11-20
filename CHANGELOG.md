@@ -6,6 +6,11 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.10
+
+The design names the native module `_native`, as Python imports it (DS-321), so the Python face's
+design writes what its code writes. Nothing changes for a design.
+
 ## 0.1.9
 
 The CI gate diagnoses with the current argos-design-driftspec (DDEV-1493). Nothing changes for a design.
