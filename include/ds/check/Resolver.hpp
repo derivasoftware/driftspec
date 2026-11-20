@@ -20,6 +20,9 @@ class Resolver {
   /// found nowhere on the way is the one class of that name in the same package (DS-18).
   /// Returns the identity, or "" when nothing declares it, or when two classes of the package share the name.
   std::string resolve(const std::string& name, const std::string& scope) const;
+  /// The classes a bare name could be when it resolves to nothing because two or more classes of its package
+  /// share it, by identity; empty when it resolves, when nothing is of that name, or when it is not bare (DS-325).
+  std::vector<std::string> ambiguous(const std::string& name, const std::string& scope) const;
   /// Whether `derived` is `base` or inherits from it, transitively.
   bool derives(const std::string& derived, const std::string& base) const;
   /// The member `name` of a type: its own, else the nearest one it inherits; nullptr when none declares it.
@@ -33,6 +36,8 @@ class Resolver {
  private:
   /// The one class or enum named `name` (with its arity, Box<1>) in the package of `scope`; "" for none or two.
   std::string inPackage(const std::string& name, const std::string& scope) const;
+  /// Every class or enum named `name` (with its arity) in the package of `scope`, by identity.
+  std::vector<std::string> namesakes(const std::string& name, const std::string& scope) const;
 
   const model::Model& model_;
 };

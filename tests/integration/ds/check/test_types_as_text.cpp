@@ -11,7 +11,7 @@
 namespace {
 
 /// A type is written as the code writes it, and only what the design declares relates (DS-18):
-/// REQ-00024-3, REQ-00026-2, REQ-00028-2, REQ-00029-2, REQ-00169-1, REQ-00170-1.
+/// REQ-00024-3, REQ-00026-2, REQ-00028-2, REQ-00029-2, REQ-00169-2, REQ-00170-1.
 class TestTypesAsText : public ::testing::Test {
  protected:
   ds::model::Model model;
@@ -138,7 +138,54 @@ TEST_F(TestTypesAsText, ABareNameNoScopeDeclaresIsTheOneClassOfThePackage) {
   EXPECT_TRUE(related("owns", "shop@cli::Runner::plan", "shop@plan::Plan"));
   for (const auto& r : model.index().from("shop@cli::Runner::twice")) ADD_FAILURE() << "two Twice, related to " << r.to;
   for (const auto& r : model.index().from("elsewhere@m::User::plan")) ADD_FAILURE() << "another package, related to " << r.to;
-  EXPECT_TRUE(model.findings().empty()) << model.findings().front().message;
+  ASSERT_EQ(model.findings().size(), 1U);  // the two Twice are said, the rest is quiet (DS-325)
+  EXPECT_EQ(model.findings().front().code, "W-NAME-AMBIGUOUS");
+}
+
+// DS-325: two classes of the package share a bare name: it relates nothing, and it is said once where it is
+// written, naming every candidate; one class, a name a scope declares, a name nobody declares and a template
+// parameter say nothing
+TEST_F(TestTypesAsText, ABareNameTwoClassesOfThePackageShareWarnsOnceForItsUse) {
+  load(
+      "package shop {\n"
+      "  module store {\n"
+      "    class Card\n"
+      "    class Line\n"
+      "  }\n"
+      "  module payment {\n"
+      "    class Card\n"
+      "  }\n"
+      "  module billing {\n"
+      "    class Note\n"
+      "    class Invoice {\n"
+      "      - cards: std::map<Card, Card>\n"
+      "      - line: Line\n"
+      "      - note: Note\n"
+      "      - text: Missing\n"
+      "    }\n"
+      "    class Box<T> {\n"
+      "      - item: T\n"
+      "    }\n"
+      "  }\n"
+      "  module own {\n"
+      "    class Card\n"
+      "    class Wallet {\n"
+      "      - card: Card\n"
+      "    }\n"
+      "  }\n"
+      "}\n");
+  ASSERT_EQ(findings("W-NAME-AMBIGUOUS"), 1) << (model.findings().empty() ? "" : model.findings().front().message);
+  const auto& f = model.findings().front();
+  EXPECT_NE(f.message.find("'Card'"), std::string::npos) << f.message;
+  for (const char* id : {"shop@store::Card", "shop@payment::Card", "shop@own::Card"})
+    EXPECT_NE(f.message.find(id), std::string::npos) << id << " missing: " << f.message;
+  EXPECT_EQ(f.location.line, model.find("shop@billing::Invoice::cards")->location.line);
+  for (const auto& r : model.index().from("shop@billing::Invoice::cards")) ADD_FAILURE() << "ambiguous, related to " << r.to;
+  EXPECT_TRUE(related("owns", "shop@billing::Invoice::line", "shop@store::Line"));  // one class of the package
+  EXPECT_TRUE(related("owns", "shop@billing::Invoice::note", "shop@billing::Note"));
+  EXPECT_TRUE(related("owns", "shop@own::Wallet::card", "shop@own::Card"));  // its own module shadows the others
+  // Missing is text, T is a parameter: neither says anything
+  EXPECT_EQ(model.findings().size(), 1U);
 }
 
 TEST_F(TestTypesAsText, ADottedNameRelatesAsTheSameNameWithTwoColons) {

@@ -562,27 +562,33 @@ package driftspec@ds {
               tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.OnlyTheNamesTheDesignDeclaresRelateTheRestIsText
           }
         }
-        requirement REQ-00169-1 {
+        requirement REQ-00169-2 {
           tags: language, lld, module
           status: approved
-          title: A bare name that no scope declares shall resolve to the one class of that name in its package, and to nothing when two share it
+          title: A bare name that no scope declares shall resolve to the one class of that name in its package, and warn when two share it
           text:
             After the scopes, from the innermost outward, a bare name (no :: and no
             @) is looked for among the classes and enums of the package it is
             written in, at any depth of its modules: the one of that name and arity
-            is it, two or more are nothing, and another package is never asked.
-            It is the rule argos applies to the code, so Plan, written as a Python
-            module imports it from a sibling module, finds the class there.
+            is it, and another package is never asked. When two or more share it,
+            it relates nothing and W-NAME-AMBIGUOUS is reported once where it is
+            written, naming every candidate by its identity. A name written from
+            the top package, a name nobody declares and a template parameter say
+            nothing. It is the rule argos applies to the code, so Plan, written as
+            a Python module imports it from a sibling module, finds the class there.
           rationale:
             DS-18, Owner 2026-11-20, agreed with the argos side: a type written as
             the code writes it names imported classes bare, and without this rule
             the design of a Python package lost every relation between its modules.
-          verification VER-00186-1 {
-            title: Integration tests confirm a bare name no scope declares is the one class of that name in its package, nothing when two share it, and never one of another package
+            Revision 2 (DS-325, Owner 2026-11-20): two candidates are an
+            ambiguity, an incoherence, and an incoherence is said.
+          verification VER-00186-2 {
+            title: Integration tests confirm a bare name no scope declares is the one class of that name in its package, warns once naming the candidates when two share it, and is never one of another package
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABareNameNoScopeDeclaresIsTheOneClassOfThePackage
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABareNameTwoClassesOfThePackageShareWarnsOnceForItsUse
               tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesResolveByTheModuleOrByThePackage
           }
         }

@@ -915,7 +915,7 @@ package driftspec@driftspec {
 
     // The design loaded once in the engine: its findings, its drawings and the viewer ask it (DS-173).
     sequence refresh {
-      local workspace: Workspace
+      local workspace: driftspec.Workspace
       -> workspace_files(ls, ws) -> files
       -> workspace.model() -> model
     }
@@ -937,7 +937,7 @@ package driftspec@driftspec {
     }
 
     sequence view {
-      local workspace: Workspace
+      local workspace: driftspec.Workspace
       -> optional(rest) -> options
       -> use(ls, uri) -> ws
       -> subject_at(ls, uri, line, character, typed) -> subject
@@ -1033,7 +1033,7 @@ package driftspec@driftspec {
 
     // A save: the version loaded once, and its model, its page and its check asked of it (DS-173).
     sequence Live::reload {
-      local loaded: Workspace
+      local loaded: driftspec.Workspace
       -> files_stamp() -> stamp
       opt nothing was saved since / unchanged {
         return false

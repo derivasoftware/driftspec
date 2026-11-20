@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.13
+
+A bare name that two designed classes of its package share is an ambiguity, and it is said
+(DS-325): `W-NAME-AMBIGUOUS` names the name and every candidate where the name is written. It
+still relates nothing. A design that wrote such a name, silent until now, gets the warning; qualify
+the name with its module (`store::Card`).
+
 ## 0.1.12
 
 DriftSpec's own design no longer fakes two type aliases as entities (DS-324): an alias is text,

@@ -28,6 +28,7 @@ std::vector<model::Finding> Linker::run(Context& out_context) {
   // a name read out of a type, a base or a bound relates only to what the design declares; any other name is
   // text, with no expected node and no finding: allow incompleteness, say incoherence (DS-18)
   for (const auto& r : context_->binder().references()) {
+    if (reportAmbiguous(r)) continue;
     if (r.soft) {
       const std::string target = resolver_->resolve(r.target, r.scope);
       const model::Entity* e = target.empty() ? nullptr : model_->find(target);
@@ -38,6 +39,24 @@ std::vector<model::Finding> Linker::run(Context& out_context) {
   unifyBehaviours();
   for (const auto& r : context_->binder().references()) checkTemplateBound(r);
   return out_context.take();
+}
+
+// a bare name two classes of its package share relates nothing, and is said once for each place it is
+// written: an incoherence, not an incompleteness (DS-325)
+bool Linker::reportAmbiguous(const bind::Reference& reference) {
+  const std::vector<std::string> candidates = resolver_->ambiguous(reference.target, reference.scope);
+  if (candidates.empty()) return false;
+  const std::string written = reference.target.substr(0, reference.target.find('<'));
+  const model::Location& at = reference.location;
+  const std::string use = at.file + ":" + std::to_string(at.line) + ":" + std::to_string(at.column) + " " + reference.from + " " + written;
+  if (!context_->reported().insert("ambiguous " + use).second) return true;
+  std::string names;
+  for (const auto& c : candidates) names += (names.empty() ? "" : ", ") + c;
+  context_->report({"W-NAME-AMBIGUOUS", "warning",
+                    "'" + written + "' in " + reference.from + " names " + std::to_string(candidates.size()) +
+                        " classes of its package: " + names + "; it relates nothing until it is qualified",
+                    reference.location});
+  return true;
 }
 
 void Linker::defineLoneExtensions() {
