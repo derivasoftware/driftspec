@@ -33,6 +33,7 @@ struct TypeToken {
 };
 /// The names of a type's text, left to right. The text is the code's: no name of any language is known,
 /// so `std::map<std::string, Pool*>` holds std::map (two arguments), std::string and Pool (DS-18).
+/// A dot qualifies as `::` does: `lsp.Location` is the name lsp::Location (DS-319).
 std::vector<TypeToken> scanTypeTokens(const std::string& text);
 
 /// A message of a behaviour: `from -> to.op(args) -> result`, checked against the static

@@ -669,8 +669,8 @@ package driftspec@ds {
             written, never read from a type whose language ds does not know, and
             W-MODIFIER-ON-VALUE goes: a modifier on what nobody designs is
             incompleteness, not incoherence.
-          verification VER-00021-3 {
-            title: Integration tests confirm ownership and multiplicity are written on the attribute, every designed name of its type is related, and parameters and returns give use
+          verification VER-00021-4 {
+            title: Integration tests confirm ownership and multiplicity are written on the attribute, every designed name of its type is related, a name qualified with dots as with ::, and parameters and returns give use
             status: approved
             method: test
             tests:
@@ -678,6 +678,7 @@ package driftspec@ds {
               tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
               tests/integration/ds/check/test_type_reading.cpp::TestTypeReading.AQualifiedContainerHandsTheCallToItsElement
               tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.MultiplicityIsWrittenInFrontOfTheName
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ADottedNameRelatesAsTheSameNameWithTwoColons
           }
         }
         requirement REQ-00029-2 {

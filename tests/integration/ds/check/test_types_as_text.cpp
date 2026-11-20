@@ -141,6 +141,35 @@ TEST_F(TestTypesAsText, ABareNameNoScopeDeclaresIsTheOneClassOfThePackage) {
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().message;
 }
 
+TEST_F(TestTypesAsText, ADottedNameRelatesAsTheSameNameWithTwoColons) {
+  load(
+      "package p {\n"
+      "  module m {\n"
+      "    language: python\n"
+      "    class Entity\n"
+      "  }\n"
+      "  module n {\n"
+      "    language: python\n"
+      "    class User {\n"
+      "      + held: m.Entity\n"
+      "      + alias: lsp.Location\n"
+      "      + queue: queue.Queue[int]\n"
+      "      + pair: tuple[int, ...]\n"
+      "      + many: optional[m.Entity] | None\n"
+      "    }\n"
+      "    function f(e: m.Entity) -> lsp.Location\n"
+      "  }\n"
+      "}\n");
+  EXPECT_TRUE(related("owns", "p@n::User::held", "p@m::Entity", "1"));
+  EXPECT_TRUE(related("owns", "p@n::User::many", "p@m::Entity"));
+  EXPECT_TRUE(related("uses", "p@n::f", "p@m::Entity"));
+  EXPECT_EQ(model.find("p@n::User::held")->field("type"), "m.Entity");  // the text stays as written
+  for (const char* id : {"p@n::User::alias", "p@n::User::queue", "p@n::User::pair"})
+    for (const auto& r : model.index().from(id))
+      if (r.kind != "contains") ADD_FAILURE() << id << " " << r.kind << " " << r.to;
+  EXPECT_TRUE(model.findings().empty()) << model.findings().front().code << " " << model.findings().front().message;
+}
+
 TEST_F(TestTypesAsText, ABaseAndAMethodCarryTheirTemplateArgumentsAsWritten) {
   load(
       "package p {\n"
