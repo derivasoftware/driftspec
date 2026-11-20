@@ -332,68 +332,68 @@ package driftspec@driftspec {
   }
 
   sequence session::state {
-    local s: live::Live
+    local s: live_session::Live
     -> s.state() -> state
     return state
   }
 
   sequence session::events {
-    local s: live::Live
+    local s: live_session::Live
     -> s.state() -> state
     -> s.broadcast(event, data)
     return state
   }
 
   sequence session::focus {
-    local s: live::Live
+    local s: live_session::Live
     -> s.focus(id, also) -> listeners
     return listeners
   }
 
   sequence session::note {
-    local s: live::Live
+    local s: live_session::Live
     -> s.note(id, text, tone, frame) -> notes
     return notes
   }
 
   sequence session::highlight {
-    local s: live::Live
+    local s: live_session::Live
     -> s.highlight(ids, tone, add, frame) -> highlights
     return highlights
   }
 
   sequence session::clear {
-    local s: live::Live
+    local s: live_session::Live
     -> s.clear(what)
     return none
   }
 
   sequence session::selection {
-    local s: live::Live
+    local s: live_session::Live
     -> s.select(id, label)
     return none
   }
 
   sequence session::seen {
-    local s: live::Live
+    local s: live_session::Live
     -> s.seen(ids, seen) -> count
     return count
   }
 
   sequence session::comment {
-    local s: live::Live
+    local s: live_session::Live
     -> s.comment(id, text) -> count
     return count
   }
 
   sequence session::unread {
-    local s: live::Live
+    local s: live_session::Live
     -> s.unread(mark) -> comments
     return comments
   }
 
   sequence session::isolate {
-    local s: live::Live
+    local s: live_session::Live
     -> s.isolate(ids, tell) -> isolated
     return isolated
   }
@@ -419,47 +419,47 @@ package driftspec@driftspec {
   }
 
   sequence agent::live_open {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_focus {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_note {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_highlight {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_clear {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_selection {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_state {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_comments {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
   sequence agent::live_isolate {
-    -> live::tool(port, name, args, opened) -> answer
+    -> live_mcp::tool(port, name, args, opened) -> answer
     return answer
   }
 
@@ -951,14 +951,35 @@ package driftspec@driftspec {
   }
 
   // ---- the live session ---------------------------------------------------------------------------
-  module live {
+  // The live session is split by what each part does (DS-322): the session and its contract, the page
+  // around the viewer, the routes served over HTTP, the client side with the MCP tools, and the command
+  // line, which keeps every name a caller imports from driftspec.live.
+  module live {                                // the command line: driftspec-live and python -m driftspec.live
+    @requirement REQ-00089-2
+    @requirement REQ-00091-3
+
+    class Command {                            // one command line: the command, its words and the options taken out of them
+      @requirement REQ-00089-2
+      + port: int
+      + tone: str
+      + add: bool
+      + args: list[str]                        // the words left once the options are taken out
+      + name: str                              // the command; serve when there is none
+      + static option(args: list[str], flag: str, default)  // the value after a flag, taken out with it
+      + word(k: int, default: str) -> str
+      + ask(path: str, data: dict | None, indent: int | None) -> None  // the session's answer to a route, printed
+      + state() -> None
+    }
+
+    function main(argv: list[str] | None) -> None
+  }
+
+  module live_session {                        // the session over one workspace and the contract a client relies on
     @requirement REQ-00089-2
     @requirement REQ-00090-1
-    @requirement REQ-00091-3
     @requirement REQ-00102-1
     @requirement REQ-00103-1
     @requirement REQ-00104-1
-    @requirement REQ-00165-1
 
     class Live {                               // a session over one workspace: its model version by version, and what both sides point at
       @requirement REQ-00089-2
@@ -1027,20 +1048,66 @@ package driftspec@driftspec {
       -> broadcast(event, data)
       return true
     }
+  }
 
-    function serve(workspace: str, port: int, open_browser: bool, block: bool) -> Live
-    function handler_for(live: Live)                 // the HTTP handler class serving one session
-    function call(port: int, path: str, data: dict | None) -> dict
-    function tool(port: int, name: str, args: dict, opened: dict) -> object
-    function mcp(port: int, stdin, stdout) -> None
+  module live_page {                           // the page around the viewer, which follows the session
+    @requirement REQ-00089-2
+    @requirement REQ-00102-1
+    @requirement REQ-00103-1
+    @requirement REQ-00104-1
+
+    function shell(title: str, workspace: str) -> str
+  }
+
+  module live_http {                           // the session served over HTTP on this machine only
+    @requirement REQ-00090-1
+    @requirement REQ-00165-1
+
+    class Handler {                            // one request to a session; handler_for binds a subclass to each session
+      @requirement REQ-00090-1
+      + live: Live
+      + log_message(*a)
+      + local() -> bool {                      // the Host and the Origin are this session's own (DS-302)
+        @requirement REQ-00165-1
+      }
+      + send(code: int, body: bytes, ctype: str) -> None
+      + json(obj, code: int) -> None
+      + do_GET()
+      + page() -> None
+      + events() -> None                       // the events a page follows, until the session stops
+      + stream(q: queue.Queue) -> None         // the next event, or a keep-alive
+      + do_POST()
+    }
+
+    function handler_for(live: Live) -> type[Handler]
     function browser_open(url: str) -> None
-    function main(argv: list[str] | None) -> None
+    function serve(workspace: str, port: int, open_browser: bool, block: bool) -> Live
+  }
+
+  module live_mcp {                            // the client side, the one who writes, and the MCP tools for an agent
+    @requirement REQ-00091-3
+    @requirement REQ-00103-1
+    @requirement REQ-00104-1
+
+    function call(port: int, path: str, data: dict | None) -> dict
+    function open_workspace(port: int, args: dict, opened: dict) -> str
+    function state(port: int) -> dict
+    function tool(port: int, name: str, args: dict, opened: dict) -> object
+    function initialize(port: int, msg: dict, opened: dict) -> dict
+    function called(port: int, msg: dict, opened: dict) -> dict
+    function reply(stdout, i, result, error) -> None
+    function answer(port: int, msg: dict, opened: dict, stdout) -> None
+    function mcp(port: int, stdin, stdout) -> None
   }
 }
 
-diagram CL_LiveModule {                         // the live session's module: the session and what serves it
+diagram CL_LiveModule {                         // the live session's modules: the session and what serves it
   kind: class
   include: driftspec@driftspec@live::*
+  include: driftspec@driftspec@live_session::*
+  include: driftspec@driftspec@live_page::*
+  include: driftspec@driftspec@live_http::*
+  include: driftspec@driftspec@live_mcp::*
 }
 
 diagram CL_NativeModule {                       // the extension: the workspace it holds in the engine
