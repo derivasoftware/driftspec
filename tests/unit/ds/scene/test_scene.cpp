@@ -270,7 +270,7 @@ TEST_F(TestBehaviour, EachBehaviourIsWrittenOnceAndACallNamesTheOneItGoesOnInto)
 TEST_F(TestTour, AMethodWithABehaviourIsATourOffered) {
   bool offered = false;
   for (const auto& t : doc.tours) offered |= t.behaviour == behaviour("p@m::A::run") && t.group == "method";
-  EXPECT_TRUE(offered);  // how it is replayed: tests/viewer/test_tours.mjs, on the viewer's own code (DS-130)
+  EXPECT_TRUE(offered);  // how it is replayed: tests/integration/viewer/tours.test.ts, on the viewer's own code (DS-130)
 }
 
 /// The requirements of a small model as the viewer lists them (REQ-00078-1): R-2 refines R-1,

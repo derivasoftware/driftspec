@@ -6,6 +6,11 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.16
+
+The viewer's tours run on vitest (DS-329), so argos reads them as the tests their verifications
+name. Nothing changes for a design.
+
 ## 0.1.15
 
 Every constraint of DriftSpec's own design names the guide that says why it exists (DS-328): four

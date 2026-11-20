@@ -1,0 +1,12 @@
+{
+  "name": "driftspec-viewer-tests",
+  "private": true,
+  "description": "The viewer's own code under test: the tours it replays, run by vitest over scenes ds writes (DS-130, DS-329).",
+  "type": "module",
+  "scripts": {
+    "test:viewer": "vitest run tests/integration/viewer"
+  },
+  "devDependencies": {
+    "vitest": "3.2.4"
+  }
+}

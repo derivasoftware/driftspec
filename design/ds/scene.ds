@@ -299,16 +299,16 @@ package driftspec@ds {
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.HidingPrivateMembersMakesNoBoxWider
     }
 
-    verification VER-00082-2 {
-      status: approved
+    verification VER-00082-3 {
+      status: draft
       @requirement REQ-00073-2
       title: Viewer tests, on the viewer's own code over scenes ds writes, confirm a call expands into what it calls and its answer comes back, a named scenario is followed, and ds check is a tour from the CLI down to the Checker and back
       method: test
       tests:
-        tests/viewer/test_tours.mjs::a call expands into the behaviour of what it calls, and its answer comes back
-        tests/viewer/test_tours.mjs::a step goes one level deeper for each behaviour entered
-        tests/viewer/test_tours.mjs::a call that names a scenario goes on into that branch, not the default path
-        tests/viewer/test_tours.mjs::every interface command of ds's design is a tour that reaches the model and comes back
+        tests/integration/viewer/tours.test.ts::a call expands into the behaviour of what it calls, and its answer comes back
+        tests/integration/viewer/tours.test.ts::a step goes one level deeper for each behaviour entered
+        tests/integration/viewer/tours.test.ts::a call that names a scenario goes on into that branch, not the default path
+        tests/integration/viewer/tours.test.ts::every interface command of ds's design is a tour that reaches the model and comes back
     }
 
     requirement REQ-00074-1 {
@@ -331,14 +331,14 @@ package driftspec@ds {
       tags: render, scene, size
     }
 
-    verification VER-00083-2 {
-      status: approved
+    verification VER-00083-3 {
+      status: draft
       @requirement REQ-00074-1
       title: Integration tests confirm ds's design writes each behaviour once, its tours replay far more steps than it writes, and its page stays under 250 KB
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
-        tests/viewer/test_tours.mjs::the page stays small because each behaviour is written once and the tours replay many more steps
+        tests/integration/viewer/tours.test.ts::the page stays small because each behaviour is written once and the tours replay many more steps
     }
 
     verification VER-00084-5 {

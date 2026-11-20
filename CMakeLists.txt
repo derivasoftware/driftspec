@@ -369,9 +369,12 @@ endforeach()
 # what ds writes ----
 find_program(DS_NODE node)
 if(DS_NODE)
-  add_test(NAME viewer_tours
-           COMMAND ${DS_NODE} --test
-                   ${CMAKE_SOURCE_DIR}/tests/viewer/test_tours.mjs)
+  # vitest (DS-329) comes from the package.json at the root: npm ci installs it
+  add_test(
+    NAME viewer_tours
+    COMMAND ${DS_NODE} ${CMAKE_SOURCE_DIR}/node_modules/vitest/vitest.mjs run
+            ${CMAKE_SOURCE_DIR}/tests/integration/viewer
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
   set_tests_properties(
     viewer_tours
     PROPERTIES

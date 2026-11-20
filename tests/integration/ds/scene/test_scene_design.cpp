@@ -181,7 +181,7 @@ TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce)
     EXPECT_TRUE(seen.insert(b.id).second) << b.id;
     calls += b.calls.size();
   }
-  EXPECT_GT(calls, 0u);  // how many more steps the tours replay: tests/viewer/test_tours.mjs (DS-130)
+  EXPECT_GT(calls, 0u);  // how many more steps the tours replay: tests/integration/viewer/tours.test.ts (DS-130)
   EXPECT_LT(ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "design"}).size(),
             250u * 1024u);  // the whole viewer of ds's design
 }

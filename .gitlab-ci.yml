@@ -188,9 +188,10 @@ viewer-js:
   needs: [cpp-test]
   script:
     - node --version
+    - npm ci --no-audit --no-fund
     - DS="$CI_PROJECT_DIR/build-ci/ds" VIEWER="$CI_PROJECT_DIR/viewer/scene.html" ROOT="$CI_PROJECT_DIR"
-      node --test --test-reporter=spec --test-reporter-destination=stdout
-      --test-reporter=junit --test-reporter-destination=viewer.junit.xml tests/viewer/test_tours.mjs
+      npx vitest run tests/integration/viewer --reporter=default
+      --reporter=junit --outputFile.junit=viewer.junit.xml
   artifacts:
     when: always
     reports:
