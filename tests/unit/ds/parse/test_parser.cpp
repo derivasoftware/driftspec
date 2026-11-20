@@ -38,6 +38,24 @@ TEST_F(TestParser, ReportsWhereTheFileStopsParsing) {
   EXPECT_FALSE(file.errorDetail.empty());
 }
 
+TEST_F(TestParser, TheQuotedTextIsCutOnACodePointBoundary) {
+  // DS-334: an arrow (three bytes) across the cut once left half a character, and the JSON of the
+  // findings refused the message
+  ds::parse::Parser parser;
+  const auto file = parser.parseText("x.ds", "package a { }\n&c><le only knows it  \u2192 aggregation\n");
+  ASSERT_TRUE(file.hasSyntaxErrors);
+  const std::string& detail = file.errorDetail;
+  ASSERT_NE(detail.find("..."), std::string::npos);  // the quote was cut
+  for (std::size_t i = 0; i < detail.size();) {      // every lead byte has all its continuation bytes
+    const auto lead = static_cast<unsigned char>(detail[i]);
+    const std::size_t length = lead < 0x80 ? 1 : (lead >> 5) == 0x6 ? 2 : (lead >> 4) == 0xE ? 3 : (lead >> 3) == 0x1E ? 4 : 0;
+    ASSERT_GT(length, 0u) << "a continuation byte where a character starts, at " << i;
+    for (std::size_t k = 1; k < length; ++k)
+      ASSERT_EQ(static_cast<unsigned char>(detail[i + k]) & 0xC0, 0x80) << "a character cut at " << i;
+    i += length;
+  }
+}
+
 TEST_F(TestParser, AFileThatParsesHasNoErrorPlace) {
   ds::parse::Parser parser;
   const auto file = parser.parseText("x.ds", "package a { }\n");
