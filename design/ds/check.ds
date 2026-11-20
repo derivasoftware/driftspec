@@ -60,7 +60,11 @@ package driftspec@ds {
       + Resolver(model: model::Model)
       + resolve(name: std::string, scope: std::string) -> std::string {
         @requirement REQ-00023-1
-        @requirement REQ-00169-1
+        @requirement REQ-00169-2
+      }
+      // the classes a bare name could be when two or more of its package share it (DS-325)
+      + ambiguous(name: std::string, scope: std::string) -> std::vector<std::string> {
+        @requirement REQ-00169-2
       }
       + derives(derived: std::string, base: std::string) -> bool {
         @requirement REQ-00029-2
@@ -74,7 +78,10 @@ package driftspec@ds {
       }
       // the one class of a name in the package of a scope, as argos finds it in the code (DS-18)
       - inPackage(name: std::string, scope: std::string) -> std::string {
-        @requirement REQ-00169-1
+        @requirement REQ-00169-2
+      }
+      - namesakes(name: std::string, scope: std::string) -> std::vector<std::string> {  // every class of the name in the package
+        @requirement REQ-00169-2
       }
       + privateOnTheWay(from: std::string, target: std::string) -> std::string {
         @requirement REQ-00063-1
@@ -188,6 +195,9 @@ package driftspec@ds {
         @requirement REQ-00043-1
         @requirement REQ-00053-2
         @constraint CST-00006-1
+      }
+      - reportAmbiguous(reference: bind::Reference) -> bool {  // a bare name two classes share, said once (DS-325)
+        @requirement REQ-00169-2
       }
       - kindAllowed(reference: bind::Reference, target: std::string) -> bool {
         @requirement REQ-00066-1
@@ -488,7 +498,10 @@ package driftspec@ds {
       self -> context_.binder() -> binder
       self -> binder.references() -> references
       loop each reference {
-        -> resolveReference(reference)
+        -> reportAmbiguous(reference) -> ambiguous
+        opt the name is no ambiguity of its package {
+          -> resolveReference(reference)
+        }
       }
       -> unifyBehaviours()
       loop each reference {
@@ -706,13 +719,43 @@ package driftspec@ds {
     // The class or enum of a bare name in the package of the scope it is written in, as argos finds a class in
     // the code: one of that name and arity, or none when two share it (DS-18). Testing each entity is no message.
     sequence Resolver::inPackage {
-      local package: model::Scope
-      self -> package.package() -> box
-      self -> model_.entities() -> entities
+      -> namesakes(name, scope) -> found
       opt two classes of the package have that name / ambiguous {
         return ""
       }
       return found
+    }
+
+    // Every class or enum of a name and arity in the package of the scope. Testing each entity is no message.
+    sequence Resolver::namesakes {
+      local package: model::Scope
+      self -> package.package() -> box
+      self -> model_.entities() -> entities
+      return found
+    }
+
+    // A bare name is ambiguous when it resolves to nothing and two or more classes of its package share it (DS-325)
+    sequence Resolver::ambiguous {
+      -> resolve(name, scope) -> resolved
+      opt the name is qualified, an artefact, or resolves / resolved {
+        return candidates
+      }
+      -> namesakes(name, scope) -> candidates
+      return candidates
+    }
+
+    // A bare name two classes of its package share relates nothing, and is said once for each place it is written
+    sequence Linker::reportAmbiguous {
+      self -> resolver_.ambiguous(reference.target, reference.scope) -> candidates
+      opt no candidates: the name is no ambiguity / clear {
+        return false
+      }
+      self -> context_.reported() -> said
+      opt it was said for that place already / said {
+        return true
+      }
+      self -> context_.report(finding)
+      return true
     }
 
     // Walks the inherits relations up from derived. The stack of pending names and

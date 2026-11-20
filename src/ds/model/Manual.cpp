@@ -260,6 +260,11 @@ std::vector<CodeSpec> buildCodes() {
        "An annotation, a sequence's subject or a link names something the workspace declares nowhere; it stays in the model as "
        "expected. A name in a type, a base, a bound or a call is never this: it is text.",
        "Declare it, or qualify the name."},
+      {"W-NAME-AMBIGUOUS", "warning",
+       "A bare name that no scope declares is the one class of that name in its package, and two or more classes of the package "
+       "share it: Card in billing, when store::Card and payment::Card are both designed. It relates nothing; the message names "
+       "every candidate.",
+       "Qualify the name with its module (store::Card), or rename one of the classes."},
       {"W-REVISION-DRIFT", "warning", "A link names an older revision of an artefact than the one the workspace declares.",
        "Point the link at the current revision."},
       {"W-PARENT-IGNORED", "warning", "A requirement carries a parent: field, which the language does not read.",

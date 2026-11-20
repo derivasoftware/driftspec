@@ -37,6 +37,8 @@ class Linker : public IStep {
 
  private:
   void resolveReference(const bind::Reference& reference);
+  /// A bare name two classes of its package share: said once for its place, related to nothing (DS-325).
+  bool reportAmbiguous(const bind::Reference& reference);
   bool kindAllowed(const bind::Reference& reference, const std::string& target);
   void checkTemplateBound(const bind::Reference& reference);
   /// A behaviour's identity is its resolved subject plus its scenario, wherever it was written.

@@ -270,8 +270,8 @@ You design what you want to say, and nothing else. A name the design does not de
 a base or a call, is text: `std::string`, `Exception`, a library's `Gateway`. It relates nothing,
 it is not drawn and it is no finding, so what lives outside your design costs nothing to name.
 A bare name that no scope declares is the one class of that name in the package, as your code
-imports it from a sibling module; with two of that name it is text again, and you qualify it:
-`store::Card`.
+imports it from a sibling module. With two of that name it relates nothing and
+`W-NAME-AMBIGUOUS` names both; qualify it: `store::Card`.
 
 ```ds
 package shop {
@@ -300,6 +300,32 @@ diagram CL_Shop {
 
 A misspelt name is text too, and its arrow is missing from the drawing. argos, comparing the
 design with the code, tells you where the code relates what the design does not.
+
+```ds wrong
+package shop {
+  module store {
+    class Card { }
+  }
+
+  module payment {
+    class Card { }
+  }
+
+  module billing {
+    class Invoice {
+      - card: Card
+    }
+  }
+}
+
+diagram CL_Shop {
+  kind: class
+  include: shop@*
+}
+```
+
+`W-NAME-AMBIGUOUS` says that `Card` in `Invoice` could be `shop@payment::Card` or
+`shop@store::Card`. Write `store::Card` and the arrow is drawn.
 
 ## Two things at once
 

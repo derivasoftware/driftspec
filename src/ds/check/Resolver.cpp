@@ -27,19 +27,32 @@ std::string Resolver::resolve(const std::string& name, const std::string& scope)
     if (model_.find(candidate)) return candidate;
   }
   // a bare name that no scope on the way declares: the class of that name in the same package, as the code
-  // imports it from a sibling module (`Plan` written in cli for plan::Plan). Two classes of the name: none.
-  // The same rule argos applies to the code (DS-18)
+  // imports it from a sibling module (`Plan` written in cli for plan::Plan). Two classes of the name: none,
+  // and the linker says so (DS-325). The same rule argos applies to the code (DS-18)
   if (!model::Identity(name).isQualified() && !model::ArtefactName::matches(name)) return inPackage(name, scope);
   return "";
 }
 
 std::string Resolver::inPackage(const std::string& name, const std::string& scope) const {
+  const std::vector<std::string> found = namesakes(name, scope);
+  return found.size() == 1 ? found.front() : "";  // two of the name in the package: it relates nothing
+}
+
+// a bare name that resolves nowhere because two classes of its package share it: an incoherence, said (DS-325)
+std::vector<std::string> Resolver::ambiguous(const std::string& name, const std::string& scope) const {
+  if (model::Identity(name).isQualified() || model::ArtefactName::matches(name) || !resolve(name, scope).empty()) return {};
+  std::vector<std::string> found = namesakes(name, scope);
+  if (found.size() < 2) found.clear();
+  return found;
+}
+
+std::vector<std::string> Resolver::namesakes(const std::string& name, const std::string& scope) const {
   const std::string package = model::Scope(scope).package().text();
-  if (package.empty()) return "";
+  if (package.empty()) return {};  // written from the top package: no package to ask
   const auto open = name.find('<');
   const std::string simple = name.substr(0, open);
   const std::string arity = open == std::string::npos ? "" : name.substr(open);
-  std::string found;
+  std::vector<std::string> found;
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
     if (e.expected || e.name != simple || (e.kind != model::Kind::Class && e.kind != model::Kind::Enum)) continue;
@@ -47,8 +60,7 @@ std::string Resolver::inPackage(const std::string& name, const std::string& scop
     const bool templated = !id.empty() && id.back() == '>';
     if (arity.empty() ? templated : id.size() < arity.size() || id.compare(id.size() - arity.size(), arity.size(), arity) != 0) continue;
     if (model::Scope(e.scope).package().text() != package) continue;
-    if (!found.empty()) return "";  // two of the name in the package: it relates nothing
-    found = id;
+    found.push_back(id);
   }
   return found;
 }
