@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.7
+
+A dot in a type qualifies a name as `::` does (DS-319): `store.Card`, written as Python writes it,
+relates to the class `store::Card` names, and the text stays as written; an undeclared dotted name
+such as `typing.Any` is text, as before. A design written for 0.1.6 needs no change; one that
+wrote `store::Card` in a Python type may now write `store.Card`.
+
 ## 0.1.6
 
 Types are written as the code writes them (DS-18). A design written for 0.1.5 or earlier has to change:

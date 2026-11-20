@@ -169,6 +169,7 @@ methods:
 A type is written as your code writes it: `std::vector<Line>`, `list[Line]`, `Line | None`,
 `const Catalogue&`. DriftSpec knows no language: it reads the names in the type, and each name the
 design declares is related; any other name (`std::string`, `int`, a library's class) is text.
+A dot qualifies a name as `::` does: `store.Card` in a Python type is `store::Card`.
 
 How many is written in front of the name, never read from the type: `many` is any number,
 `optional` is none or one, and nothing is exactly one. They go with `refs` and `shares`:

@@ -27,7 +27,8 @@ package driftspec@ds {
       + args: std::vector<std::string>
     }
 
-    // the names of a type as the code writes it, left to right: no name of any language is known (DS-18)
+    // the names of a type as the code writes it, left to right: no name of any language is known (DS-18);
+    // a dot qualifies as :: does, so lsp.Location is read lsp::Location (DS-319)
     function scanTypeTokens(text: std::string) -> std::vector<TypeToken> {
       @requirement REQ-00028-2
     }
