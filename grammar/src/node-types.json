@@ -330,6 +330,16 @@
           }
         ]
       },
+      "many": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "many",
+            "named": false
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -340,8 +350,18 @@
           }
         ]
       },
+      "optional": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "optional",
+            "named": false
+          }
+        ]
+      },
       "ownership": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {
@@ -407,7 +427,7 @@
         "required": false,
         "types": [
           {
-            "type": "qualified_name",
+            "type": "type",
             "named": true
           }
         ]
@@ -1057,6 +1077,16 @@
           }
         ]
       },
+      "params": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "template_params",
+            "named": true
+          }
+        ]
+      },
       "returns": {
         "multiple": false,
         "required": false,
@@ -1587,6 +1617,16 @@
           }
         ]
       },
+      "params": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "template_params",
+            "named": true
+          }
+        ]
+      },
       "returns": {
         "multiple": false,
         "required": false,
@@ -1628,16 +1668,6 @@
     "type": "module",
     "named": true,
     "fields": {
-      "extern": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "extern",
-            "named": false
-          }
-        ]
-      },
       "name": {
         "multiple": false,
         "required": true,
@@ -2771,47 +2801,6 @@
     }
   },
   {
-    "type": "type",
-    "named": true,
-    "fields": {
-      "args": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "type_args",
-            "named": true
-          }
-        ]
-      },
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "qualified_name",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "type_args",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "type",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "usecase",
     "named": true,
     "fields": {
@@ -3102,10 +3091,6 @@
     "named": false
   },
   {
-    "type": "extern",
-    "named": false
-  },
-  {
     "type": "fail",
     "named": false
   },
@@ -3166,6 +3151,10 @@
     "named": false
   },
   {
+    "type": "many",
+    "named": false
+  },
+  {
     "type": "module",
     "named": false
   },
@@ -3203,6 +3192,10 @@
   },
   {
     "type": "opt",
+    "named": false
+  },
+  {
+    "type": "optional",
     "named": false
   },
   {
@@ -3264,6 +3257,10 @@
   {
     "type": "true",
     "named": false
+  },
+  {
+    "type": "type",
+    "named": true
   },
   {
     "type": "usecase",

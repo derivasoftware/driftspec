@@ -2,17 +2,18 @@
 
 (comment) @comment
 
-[ "package" "module" "extern" "requirement" "constraint" "verification" "interface" "view" "operation"
+[ "package" "module" "requirement" "constraint" "verification" "interface" "view" "operation"
   "class" "dataclass" "enum" "function" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "on" "return"
   "loop" "alt" "opt" "else" "fail" "attempt" "fails" ] @keyword
 
 (method_modifier) @keyword.modifier
 (ownership) @keyword.modifier
+(attribute [ "many" "optional" ] @keyword.modifier)
 
 (package name: (name) @module)
 (module name: (name) @module)
 (class name: (name) @type)
-(class base: (qualified_name) @type)
+(class base: (type) @type)
 (template_param name: (name) @type.parameter)
 (template_param bound: (qualified_name) @type)
 (enum name: (name) @type)
@@ -44,7 +45,7 @@
 (participant name: (name) @variable)
 (participant type: (type) @type)
 (parameter name: (name) @variable.parameter)
-(type name: (qualified_name) @type)
+(type) @type
 (default_value) @constant
 (number) @number
 (string) @string

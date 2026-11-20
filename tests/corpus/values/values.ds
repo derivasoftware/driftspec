@@ -11,7 +11,7 @@ package shop {
 
     class Item {
       + price() -> Price
-      + rename(name: string) -> none
+      + rename(name: std::string) -> void
     }
 
     class SpecialItem : Item {
@@ -19,18 +19,18 @@ package shop {
     }
 
     class Stock {
-      + find(sku: string) -> Item
-      + first(skus: map<string, int>) -> SpecialItem
+      + find(sku: std::string) -> Item
+      + first(skus: std::map<std::string, int>) -> SpecialItem
       + count(item: Item) -> int
-      + restock(amount: int) -> none
-      + mystery(sku: string)
+      + restock(amount: int) -> void
+      + mystery(sku: std::string)
     }
   }
 
   module till {
     class Till {
       - stock: store::Stock
-      + sell(sku: string, skus: map<string, int>) -> int
+      + sell(sku: std::string, skus: std::map<std::string, int>) -> int
     }
 
     sequence Till::sell {
@@ -41,7 +41,7 @@ package shop {
       self -> stock.count(special) -> n              // a SpecialItem is an Item
       self -> stock.mystery(sku) -> unknown          // no return declared: its type is unknown
       self -> unknown.anything()                     // no finding: there is nothing to check it against
-      self -> stock.restock(3)                       // a literal has the type it is written in
+      self -> stock.restock(3)                       // a literal against int: the code's word, never compared (DS-18)
       self -> stock.find("A-1") -> other             // other is an Item too: its own lifeline, not item's
       self -> other.price() -> otherPrice
       opt a spare is on the shelf {
@@ -54,10 +54,11 @@ package shop {
 
       self -> item.nothing()                         // ! W-MSG-UNDECLARED: Item does not declare it
       self -> stock.count(price) -> wrong            // ! W-ARG-TYPE: a Price is not an Item
-      self -> stock.restock(sku)                     // ! W-ARG-TYPE: a string is not an int
-      self -> stock.find(7) -> wrongSku              // ! W-ARG-TYPE: a number is not a string
-      self -> stock.restock(n) -> gone               // ! W-RESULT-NONE: restock returns nothing
-      self -> early.price()                          // ! W-PARTICIPANT-UNDECLARED: only later
+      self -> stock.count(3) -> three                // ! W-ARG-TYPE: a literal is no Item
+      self -> stock.restock(sku)                     // std::string against int: the code's words, never compared (DS-18)
+      self -> stock.find(7) -> wrongSku              // a literal against std::string: never compared either
+      self -> stock.restock(n) -> gone               // ds does not read void: no finding (DS-18)
+      self -> early.price()                          // early is not yet a value: text, unchecked (DS-18)
       self -> stock.find(sku) -> early
     }
   }

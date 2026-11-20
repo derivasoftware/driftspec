@@ -81,9 +81,8 @@ TEST_F(TestModelOfADesign, WhatIsNamedBeforeItIsDeclaredIsOneEntityAndNotExpecte
   ASSERT_NE(model.find("p@m::A"), nullptr);
   EXPECT_FALSE(model.find("p@m::A")->expected);  // the declaration stands, whatever file named it first
   EXPECT_EQ(findings("E-DUPLICATE-IDENTITY"), 0);
-  ASSERT_NE(model.find("p@m::Missing"), nullptr);
-  EXPECT_TRUE(model.find("p@m::Missing")->expected);  // named, and declared nowhere
-  EXPECT_EQ(findings("W-REF-UNDECLARED"), 1);
+  EXPECT_EQ(model.find("p@m::Missing"), nullptr);  // named in a type, declared nowhere: text, no entity (DS-18)
+  EXPECT_EQ(findings("W-REF-UNDECLARED"), 0);
 }
 
 TEST_F(TestModelOfADesign, ASecondDeclarationIsReportedWithWhereTheFirstIs) {

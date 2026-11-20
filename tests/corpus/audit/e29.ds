@@ -7,7 +7,7 @@ package e29shop {
     }
     class Thief {
       - vault: Vault
-      + steal() -> none
+      + steal() -> void
     }
     sequence Thief::steal {
       self -> vault.secret() -> a  // ! W-NOT-VISIBLE

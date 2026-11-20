@@ -53,7 +53,6 @@ void Derivation::classify() {
     }
     model::Entity* cls = model_->find(id);
     std::vector<std::string> stereotypes;
-    if (cls->has("extern")) stereotypes.push_back("extern");
     if (cls->has("dataclass")) stereotypes.push_back("value");
     if (abstractMethods > 0) stereotypes.push_back("abstract");  // all of them or some: an abstract class (DS-301)
     const auto ops = cls->fields.find("operators");

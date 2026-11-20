@@ -94,11 +94,12 @@ const model::Entity* attributeOf(const model::Model& model, const std::string& s
   return e && e->kind == model::Kind::Attribute ? e : nullptr;
 }
 
-/// The values a name may take: those of its enum, true and false for a boolean or a condition with a name;
-/// empty when they cannot be listed (a number, a text, a time).
+/// The values a name may take: those of its enum; true and false for a condition with a name, or for an
+/// attribute whose initial value is true or false (ds reads no type's name: DS-18); empty when they cannot
+/// be listed (a number, a text, a time).
 std::vector<std::string> valuesOf(const model::Model& model, const std::string& subject, const std::string& name) {
   const model::Entity* a = attributeOf(model, subject, name);
-  if (!a || a->field("type") == "bool") return {"false", "true"};
+  if (!a || a->field("default") == "true" || a->field("default") == "false") return {"false", "true"};
   for (const auto& r : model.index().from(a->id)) {
     if (r.kind != "uses" && r.kind != "owns" && r.kind != "refs" && r.kind != "shares") continue;
     const model::Entity* type = model.find(r.to);

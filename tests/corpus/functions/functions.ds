@@ -16,48 +16,45 @@
 //      a method calling one that its class does not declare reaches it too.
 //  F4  In a class diagram each function is one box «function»; in a sequence
 //      a function runs on its module's lifeline.
-//  F5  An extern module declares functions as names, with no obligations.
+//  F5  A function nobody designs (a library's, requests::get) is text: a call
+//      to it relates nothing and is no finding (DS-18).
 
 package iris {
-
-  extern module requests {
-    function get(url: string) -> string
-  }
 
   module tasks {
     requirement REQ-00900-1: The tasks of a project shall be gathered from the board
 
     class Board {
-      + issues(project: string) -> list<Task>
+      + issues(project: std::string) -> std::vector<Task>
     }
     dataclass Task {
-      + key: string
-      + title: string
+      + key: std::string
+      + title: std::string
     }
 
-    function gather(board: Board, project: string) -> list<Task> {
+    function gather(board: Board, project: std::string) -> std::vector<Task> {
       @requirement REQ-00900-1
       note: the one door to the board
       // requires: project is a board identifier
     }
-    - function _row_of(task: Task) -> string
-    function describe(tasks: list<Task>) -> string
-    function describe(task: Task) -> string      // ! E-DUPLICATE-IDENTITY: a function is identified by its name, like a member
+    - function _row_of(task: Task) -> std::string
+    function describe(tasks: std::vector<Task>) -> std::string
+    function describe(task: Task) -> std::string      // ! E-DUPLICATE-IDENTITY: a function is identified by its name, like a member
 
     sequence gather {
       -> board.issues(project) -> issues
       -> _row_of(task)
       -> _row_of(task, project)                    // ! E-MSG-ARITY: _row_of takes 1 parameter, 2 given
-      -> summarise(issues)                         // ! W-MSG-UNDECLARED: no function of iris@tasks is called summarise
-      -> cache.put(issues)                        // ! W-PARTICIPANT-UNDECLARED: a function has no attributes; cache is neither a parameter nor a local
+      -> summarise(issues)                         // no function of iris@tasks is called summarise: text (F5)
+      -> cache.put(issues)                         // cache is neither a parameter nor a local: text (DS-18)
     }
   }
 
   module cli {
     class Command {
-      + run(project: string) -> int
+      + run(project: std::string) -> int
     }
-    function main(argv: list<string>) -> int
+    function main(argv: std::vector<std::string>) -> int
 
     sequence Command::run {
       local board: tasks::Board

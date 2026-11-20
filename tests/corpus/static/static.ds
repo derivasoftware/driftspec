@@ -3,11 +3,12 @@
 // Open choices are marked "?".
 //
 //  R10 No includes, no using. A reference is a bare name, resolved from the
-//      innermost module outward, or a qualified name module::Name. Two
-//      candidates at the same depth = E-REF-AMBIGUOUS, never a silent pick.
-//  R11 extern declares identities that live outside the workspace (std, Qt,
-//      a vendor SDK). They resolve like any entity but carry no obligations:
-//      no members required, no verification, no diagnostics about their inside.
+//      innermost module outward, or a qualified name module::Name. A bare name
+//      no scope declares is the one class of that name in the package; with
+//      two of the name it is nothing (DS-18).
+//  R11 What the design does not declare (std, Qt, a vendor SDK) is text: a
+//      name in a type, a base, a bound or a call that nobody designs relates
+//      nothing and is no finding. There is no extern (DS-18).
 //  R12 Any entity, including a member, may open a body { }. A body holds
 //      fields (key: value), notes, annotations (@kind id), rules
 //      and nested process artefacts (requirement, constraint).
@@ -20,14 +21,15 @@
 //      so it cannot contradict.
 //  R15 Templates: a type may declare parameters <T, U: Bound>. Identity is the
 //      name plus arity (Repository<1>). A use Repository<Finding> relates the
-//      user to Repository (instantiates) and to Finding (argument).
-//      Built-in generics: list<T>, set<T>, map<K,V>, optional<T>.
+//      user to Repository and to Finding. A type is written as the code
+//      writes it; ds knows no generic of any language (DS-18).
 //  R16 Ownership comes from the attribute, not from a drawn arrow:
 //        owns    (default) the whole creates and destroys the part  → composition
 //        refs    the part lives elsewhere; the whole only knows it  → aggregation
 //        shares  lifetime shared with other holders                 → aggregation
-//      Multiplicity comes from the type: T → 1, optional<T> → 0..1,
-//      list<T>, set<T>, map<K,T> → *. Parameters and return types give `uses`.
+//      Multiplicity is written, never read from the type: many → *,
+//      optional → 0..1, neither → 1. Two ownerships or two multiplicities on
+//      one attribute are E-MODIFIER-CONFLICT. Parameters and return types give `uses`.
 //      A composition cycle (A owns B, B owns A) = E-OWNERSHIP-CYCLE.
 //  R17 Operators are declared in the class header, as a set: class Vector
 //      <<==, ordered, +, []>>. Each symbol has a canonical signature the tool
@@ -50,14 +52,6 @@
 
 package ds {
 
-  // --- the outside world the package relies on (R11) --------------------------
-
-  extern module std {
-    class string
-    class vector<T>
-    class shared_ptr<T>
-  }
-
   // --- process artefacts at package level (R18) -------------------------------
 
   constraint DS-C-0001-0: The diagnostics core shall not depend on any I/O library
@@ -76,16 +70,16 @@ package ds {
     enum Severity { Error, Warning, Info }
 
     dataclass Location <<==, ordered, print>> {
-      + file: path
+      + file: std::string
       + line: int
       + column: int = 0
     }
 
     dataclass Finding <<==, hash>> {
       note: A finding is a value: two findings with equal fields are the same finding.
-      + code: string
+      + code: std::string
       + severity: Severity
-      + message: string
+      + message: std::string
       + location: Location               // owns by default → composition, 1
     }
 
@@ -93,45 +87,45 @@ package ds {
 
     // every method abstract, no data → <<abstract>>, still a class (DS-301)
     class Check {
-      + abstract name() -> string
-      + abstract run(model: Model) -> list<Finding>
+      + abstract name() -> std::string
+      + abstract run(model: Model) -> std::vector<Finding>
     }
 
     // one abstract method left → <<abstract>>
     class ScopedCheck : Check {
-      + name() -> string
-      + run(model: Model) -> list<Finding> {
+      + name() -> std::string
+      + run(model: Model) -> std::vector<Finding> {
         note: walks the scopes and delegates each one to runScope
         // ensures: result sorted by location
       }
-      # abstract runScope(scope: Scope, model: Model) -> list<Finding>
-      - refs scopes: list<Scope>         // aggregation, *: the scopes belong to the model
+      # abstract runScope(scope: Scope, model: Model) -> std::vector<Finding>
+      - refs many scopes: std::vector<Scope>         // aggregation, *: the scopes belong to the model
     }
 
     class Scope {
-      + name: string
-      - owns children: list<Scope>       // composition of the same type is fine; a cycle is not
+      + name: std::string
+      - owns many children: std::vector<Scope>       // composition of the same type is fine; a cycle is not
     }
 
     dataclass Entity {
-      + id: string
+      + id: std::string
       + scope: Scope                     // ? a dataclass that owns a class: allowed, but worth a warning?
     }
 
     dataclass Relation {
-      + kind: string
-      + from: string
-      + to: string
+      + kind: std::string
+      + from: std::string
+      + to: std::string
     }
 
     // --- a class with an inline requirement in a member body (R12) -------------
 
     class Model {
       @constraint DS-C-0001-0
-      - owns entities: map<string, Entity>   // composition, *; the key is a string and relates nothing
-      - owns relations: list<Relation>
-      - shares cache: Cache              // ! Cache is undeclared → EXPECTED node, W-REF-UNDECLARED
-      + find(id: string) -> optional<Entity>   // uses Entity, 0..1
+      - owns many entities: std::map<std::string, Entity>   // composition, *; the key is a string and relates nothing
+      - owns many relations: std::vector<Relation>
+      - shares cache: Cache              // Cache nobody designs: text, no relation and no finding (R11)
+      + find(id: std::string) -> std::optional<Entity>   // uses Entity
       + declare(entity: Entity) -> Entity {
         requirement DS-0003-0 {
           owner: dcoello
@@ -148,20 +142,20 @@ package ds {
     // --- templates (R15) ---------------------------------------------------------
 
     class Repository<T: Entity> {
-      + get(id: string) -> optional<T>
-      + all() -> list<T>
+      + get(id: std::string) -> std::optional<T>
+      + all() -> std::vector<T>
     }
 
     class Index {
-      - owns requirements: Repository<Requirement>   // instantiates Repository<1>; Requirement is EXPECTED (!)
+      - owns requirements: Repository<Requirement>   // instantiates Repository<1>; Requirement nobody designs is text
       - owns relations: Repository<Relation>         // ! Relation is a dataclass, not an Entity → E-TEMPLATE-BOUND
     }
 
     class Stack<T> {
-      - owns items: list<T>
-      + push(item: T) -> none
-      + pop() -> optional<T>
-      + static of(items: list<T>) -> Stack<T>
+      - owns items: std::vector<T>
+      + push(item: T) -> void
+      + pop() -> std::optional<T>
+      + static of(items: std::vector<T>) -> Stack<T>
       + const size() -> int
     }
 
@@ -181,7 +175,7 @@ package ds {
 
     dataclass Broken {
       + abstract size() -> int           // ! E-DATACLASS-ABSTRACT: a value type has no abstract methods
-      - refs count: int                  // ! W-MODIFIER-ON-VALUE: refs/shares on a primitive mean nothing
+      - refs shares count: int           // ! E-MODIFIER-CONFLICT: two ownerships say two things at once
     }
 
     class Node {
@@ -199,8 +193,8 @@ package ds {
 
     class Publisher {
       - refs model: ds::Model            // qualified: no include needed
-      - owns last: list<ds::Finding>     // the package does not contribute to names (R4): ds:: is needed
-      + publish(findings: list<Finding>) -> none   // ! bare Finding is not visible from lsp → W-REF-UNDECLARED (R4)
+      - owns many last: std::vector<ds::Finding>     // qualified: found through the module
+      + publish(findings: std::vector<Finding>) -> void   // bare: no scope of lsp declares it, so it is the one Finding of the package (R10)
     }
   }
 }

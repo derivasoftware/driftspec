@@ -87,7 +87,7 @@ package shop {
   }
 
   module till {
-    function main(sku: string) -> int {
+    function main(sku: std::string) -> int {
       @requirement SREQ-00001-1
     }
 

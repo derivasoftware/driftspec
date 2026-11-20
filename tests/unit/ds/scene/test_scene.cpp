@@ -25,7 +25,7 @@ Entity entity(Kind kind, const std::string& id, const std::string& name, const s
 }
 
 /// The structural scene of a small model: a package, a module, a class with a public and a
-/// private member, a function (REQ-00069-1).
+/// private member, a function (REQ-00069-2).
 class TestScene : public ::testing::Test {
  protected:
   ds::model::Model model;

@@ -9,7 +9,7 @@ package shop {
   package store {
     - module internal {
       class Cache {
-        + get(sku: string) -> int
+        + get(sku: std::string) -> int
       }
     }
 
@@ -30,7 +30,7 @@ package shop {
       class Inventory {
         - cache: internal::Cache         // inside its package: a sibling module sees it
         - helper: Helper                 // and a private member of a private class is no leak
-        + find(sku: string) -> Item
+        + find(sku: std::string) -> Item
         + aid() -> Helper                // ! W-PRIVATE-LEAK: public, and it shows a private class
         + report() -> Report
       }
@@ -56,7 +56,7 @@ package shop {
         - item: shop@store@stock::Item
         - cache: shop@store@internal::Cache   // ! W-NOT-VISIBLE: private module of another box
         - helper: shop@store@stock::Helper    // ! W-NOT-VISIBLE: private class of another module
-        + sell(sku: string) -> int
+        + sell(sku: std::string) -> int
       }
 
       sequence Till::sell {

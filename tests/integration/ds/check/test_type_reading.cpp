@@ -10,7 +10,7 @@
 
 namespace {
 
-/// A type is read the same by the binder and the checker (REQ-00028-1, REQ-00029-1; DS-112, DS-113):
+/// A type is read the same by the binder and the checker (REQ-00028-2, REQ-00029-2; DS-112, DS-113):
 /// a qualified container is the container, and a template's arity counts its own arguments only.
 class TestTypeReading : public ::testing::Test {
  protected:

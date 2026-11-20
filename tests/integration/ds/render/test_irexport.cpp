@@ -67,7 +67,7 @@ TEST_F(TestIrExport, DerivedStereotypesAndMembersArePrinted) {
   EXPECT_EQ(check["abstract"], true);
   EXPECT_EQ(check["stereotype"], "abstract");
   EXPECT_EQ(check["sectionKinds"], nlohmann::json({"methods"}));
-  EXPECT_EQ(check["sections"][0][0], "+ abstract name() -> string");
+  EXPECT_EQ(check["sections"][0][0], "+ abstract name() -> std::string");
   const nlohmann::json& location = *node(doc, "ds@ds::Location");
   EXPECT_EQ(location["stereotype"], "value, equatable, ordered, printable");
   EXPECT_EQ(location["sections"][0][2], "+ column: int = 0");  // source order

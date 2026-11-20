@@ -1,7 +1,7 @@
 // A class in its own file. Its identity is lsp::LspClient (R4); the file name
 // is a convention for humans, the tool never relies on it.
-// ! AbstractClass and Vector are declared nowhere in this workspace: they load
-// ! as EXPECTED nodes and are reported (W-REF-UNDECLARED) until declared (R6).
+// AbstractClass and Vector are declared nowhere in this workspace: a name in a
+// base or a type that nobody designs is text, with no relation and no finding (DS-18).
 
 package ds {
   module lsp {
@@ -18,7 +18,7 @@ package ds {
 
       - a: Vector
 
-      + close() -> none
+      + close() -> void
     }
   }
 }

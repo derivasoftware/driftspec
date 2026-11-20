@@ -148,7 +148,7 @@ void ContractCheck::checkUseCases() {
     std::string out = "(";
     for (size_t i = 0; i < e.params.size(); ++i) out += (i ? ", " : "") + model::Identity(e.params[i].type).lastName();
     const auto returns = e.fields.find("returns");
-    return out + ") -> " + (returns == e.fields.end() ? std::string("none") : model::Identity(returns->second).lastName());
+    return out + ")" + (returns == e.fields.end() ? std::string() : " -> " + model::Identity(returns->second).lastName());
   };
   for (const auto& pair : base) {  // a specific use case keeps the contract of its base
     const model::Entity* own = model_->find(pair.first);
@@ -242,12 +242,10 @@ void ContractCheck::checkInterfaces() {
 // A class that realises an interface and declares one of its operations declares it with the same
 // signature: two written facts that must agree (DS-215). What the class does not declare is no finding.
 void ContractCheck::checkRealisations() {
-  // a type as the idea it commits to: no qualifiers, std::vector read as the neutral list, void as none
+  // a type as the idea it commits to: no qualifiers and no spaces; the rest is the code's text (DS-18)
   const auto idea = [](const std::string& text) {
     std::string t = std::regex_replace(text, std::regex(R"(\b[A-Za-z_][A-Za-z0-9_]*::)"), "");
-    t = std::regex_replace(t, std::regex(R"(\bvector\b)"), "list");
-    t = std::regex_replace(t, std::regex(R"(\s+)"), "");
-    return t.empty() || t == "void" ? std::string("none") : t;
+    return std::regex_replace(t, std::regex(R"(\s+)"), "");
   };
   const auto signature = [&idea](const model::Entity& e) {
     std::string out = "(";

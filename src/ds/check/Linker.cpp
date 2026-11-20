@@ -25,7 +25,16 @@ std::vector<model::Finding> Linker::run(Context& out_context) {
   model_ = &out_context.model();
   resolver_ = &out_context.resolver();
   defineLoneExtensions();
-  for (const auto& r : context_->binder().references()) resolveReference(r);
+  // a name read out of a type, a base or a bound relates only to what the design declares; any other name is
+  // text, with no expected node and no finding: allow incompleteness, say incoherence (DS-18)
+  for (const auto& r : context_->binder().references()) {
+    if (r.soft) {
+      const std::string target = resolver_->resolve(r.target, r.scope);
+      const model::Entity* e = target.empty() ? nullptr : model_->find(target);
+      if (!e || e->expected) continue;
+    }
+    resolveReference(r);
+  }
   unifyBehaviours();
   for (const auto& r : context_->binder().references()) checkTemplateBound(r);
   return out_context.take();
@@ -70,13 +79,6 @@ void Linker::resolveReference(const bind::Reference& reference) {
     }
   }
   std::string target = resolver_->resolve(reference.target, reference.scope);
-  if (target.empty() && resolver_->externsNamed(reference.target).size() > 1) {
-    context_->report({"E-REF-AMBIGUOUS", "error",
-                      reference.from + " refers to " + reference.target + ", which " +
-                          std::to_string(resolver_->externsNamed(reference.target).size()) + " extern modules declare: qualify it",
-                      reference.location});
-    return;
-  }
   if (target.empty()) {
     // nobody declares it: an EXPECTED node, reported once (R6)
     model::Entity expected;
@@ -149,7 +151,7 @@ void Linker::checkTemplateBound(const bind::Reference& reference) {
   if (!tpl || tpl->expected) return;
   const std::vector<model::Param>& params = tpl->params;
   for (size_t i = 0; i < params.size() && i < reference.args.size(); ++i) {
-    if (params[i].type.empty()) continue;  // a template parameter with no bound
+    if (params[i].type.empty() || reference.args[i].empty()) continue;  // no bound, or the user's own parameter (DS-18)
     const std::string boundId = resolver_->resolve(params[i].type, tpl->scope);
     const std::string argId = resolver_->resolve(reference.args[i], reference.scope);
     const model::Entity* arg = argId.empty() ? nullptr : model_->find(argId);

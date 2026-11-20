@@ -11,7 +11,7 @@
 
 namespace {
 
-/// The scene of a design (REQ-00069-1): boxes placed once, a map that says where each identity of
+/// The scene of a design (REQ-00069-2): boxes placed once, a map that says where each identity of
 /// the model lands on them, and the layers that draw each perspective over the same boxes.
 class TestSceneLayersOfADesign : public ::testing::Test {
  protected:

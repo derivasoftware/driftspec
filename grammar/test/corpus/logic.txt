@@ -48,9 +48,7 @@ diagram CL_Shop {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name)))))))
+            (type)))))
     (module
       (name)
       (class
@@ -61,9 +59,7 @@ diagram CL_Shop {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (rule
         (name)
         (field
@@ -177,9 +173,7 @@ diagram REQ_Shop {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name)))
+            (type)
             (member_body
               (annotation
                 (name)
@@ -284,9 +278,7 @@ diagram TB_Rules {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name)))))))
+            (type)))))
     (module
       (name)
       (class
@@ -297,9 +289,7 @@ diagram TB_Rules {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (rule
         (name)
         (field
@@ -443,25 +433,19 @@ diagram ST_Order {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (state
         (qualified_name
           (name))
@@ -534,25 +518,19 @@ diagram TB_Order {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (state
         (qualified_name
           (name))

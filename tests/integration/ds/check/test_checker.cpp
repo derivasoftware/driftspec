@@ -28,10 +28,13 @@ class TestChecker : public ::testing::Test {
 
 TEST_F(TestChecker, UndeclaredReferencesBecomeExpectedNodesReportedOnce) {
   const auto byCode = loadExamples();
-  const ds::model::Entity* base = model.find("ds@lsp::AbstractClass");
-  ASSERT_NE(base, nullptr);
-  EXPECT_TRUE(base->expected);
-  EXPECT_GE(byCode.at("W-REF-UNDECLARED"), 3);  // AbstractClass, Vector, LspServer (and boundary return types)
+  // the subject of a behaviour nobody declares is a link that waits: an expected node, said once (R6)
+  const ds::model::Entity* subject = model.find("ds@lsp::SendOnce");
+  ASSERT_NE(subject, nullptr);
+  EXPECT_TRUE(subject->expected);
+  EXPECT_EQ(byCode.at("W-REF-UNDECLARED"), 1);
+  // a base, a type or a participant nobody designs is text: no expected node, no finding (DS-18)
+  for (const char* id : {"ds@lsp::AbstractClass", "ds@lsp::Vector", "ds@lsp::LspServer"}) EXPECT_EQ(model.find(id), nullptr) << id;
 }
 
 TEST_F(TestChecker, AStateEventMustBeAnOperationOfItsEntity) {

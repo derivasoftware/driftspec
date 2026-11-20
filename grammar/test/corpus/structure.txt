@@ -35,9 +35,7 @@ diagram CL_Shop {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name)))))))
+            (type)))))
     (module
       (name)
       (class
@@ -48,10 +46,7 @@ diagram CL_Shop {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name)
-                (name))))))))
+            (type))))))
   (diagram
     (name)
     (field
@@ -103,9 +98,7 @@ diagram HLD_Shop {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -114,9 +107,7 @@ diagram HLD_Shop {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name)))))))
+            (type)))))
     (module
       (name)
       (class
@@ -127,18 +118,13 @@ diagram HLD_Shop {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name)
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))))
+            (type))))))
   (diagram
     (name)
     (field
@@ -194,12 +180,8 @@ diagram IF_Shell {
         (parameters
           (parameter
             (name)
-            (type
-              (qualified_name
-                (name)))))
-        (type
-          (qualified_name
-            (name)))
+            (type)))
+        (type)
         (field
           (name)
           (line_text))
@@ -269,9 +251,7 @@ diagram CL_Store {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
@@ -279,12 +259,8 @@ diagram CL_Store {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))
+                (type)))
+            (type))
           (method
             (visibility)
             (member_name
@@ -292,19 +268,13 @@ diagram CL_Store {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))
+                (type)))
+            (type))
           (attribute
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name)))
+            (type)
             (default_value
               (number)))
           (method
@@ -313,9 +283,7 @@ diagram CL_Store {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))))
+            (type))))))
   (diagram
     (name)
     (field
@@ -372,16 +340,12 @@ diagram CL_Store {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (attribute
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -389,17 +353,13 @@ diagram CL_Store {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))))
+            (type))))))
   (diagram
     (name)
     (field
@@ -456,9 +416,7 @@ diagram CL_Store {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -469,12 +427,8 @@ diagram CL_Store {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
         (class_body
@@ -482,9 +436,7 @@ diagram CL_Store {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -493,21 +445,13 @@ diagram CL_Store {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))
-              (type_args
-                (type
-                  (qualified_name
-                    (name))))))
+            (type))
           (attribute
             (visibility)
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
@@ -515,20 +459,14 @@ diagram CL_Store {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))
+                (type)))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))))
+            (type))))))
   (diagram
     (name)
     (field
@@ -584,16 +522,11 @@ diagram CL_Billing {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
-        (qualified_name
-          (name))
+        (type)
         (class_body
           (method
             (visibility)
@@ -602,16 +535,11 @@ diagram CL_Billing {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
-        (qualified_name
-          (name))
+        (type)
         (class_body
           (method
             (visibility)
@@ -620,12 +548,8 @@ diagram CL_Billing {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))))
+                (type)))
+            (type))))))
   (diagram
     (name)
     (field
@@ -669,28 +593,20 @@ diagram CL_Billing {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (function
         (member_name
           (name))
         (parameters
           (parameter
             (name)
-            (type
-              (qualified_name
-                (name)))))
-        (type
-          (qualified_name
-            (name))))
+            (type)))
+        (type))
       (function
         (member_name
           (name))
         (parameters)
-        (type
-          (qualified_name
-            (name))))))
+        (type))))
   (diagram
     (name)
     (field
@@ -743,9 +659,7 @@ diagram CL_Carts {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -754,21 +668,13 @@ diagram CL_Carts {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))
-              (type_args
-                (type
-                  (qualified_name
-                    (name))))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -777,17 +683,13 @@ diagram CL_Carts {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))))
+            (type))))))
   (diagram
     (name)
     (field

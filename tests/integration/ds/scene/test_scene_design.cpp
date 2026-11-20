@@ -16,7 +16,7 @@
 
 namespace {
 
-/// The scene of ds's own design (REQ-00069-1): every box of the model has one place,
+/// The scene of ds's own design (REQ-00069-2): every box of the model has one place,
 /// inside its parent, apart from its siblings, with and without private members.
 class TestSceneOfTheDesign : public ::testing::Test {
  protected:
@@ -75,9 +75,7 @@ TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
   int units = 0, rows = 0;
   for (const auto& pair : model.entities()) {
     const auto& e = pair.second;
-    if (e.expected || e.has("extern")) continue;
-    const ds::model::Entity* scope = model.find(e.scope);
-    if (scope && scope->has("extern")) continue;
+    if (e.expected) continue;
     if (e.kind == ds::model::Kind::Class || e.kind == ds::model::Kind::Function || e.kind == ds::model::Kind::Enum) {
       ++units;
       EXPECT_EQ(byId.count(e.id), 1u) << e.id;

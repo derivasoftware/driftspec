@@ -6,13 +6,13 @@
 package ds {
   module lsp {
 
-    sequence SendOnce {
+    sequence SendOnce {                  // ! W-REF-UNDECLARED: its subject is declared nowhere, a link that waits
       @requirement DS-0002-0
       @verification VF-0001-0            // the test expected to exercise it
       participant client: LspClient
-      participant server: LspServer    // ! undeclared → EXPECTED node
+      participant server: LspServer    // nobody designs LspServer: text
 
-      client -> server.receive(msg)    // ! reported once LspServer exists without receive
+      client -> server.receive(msg)    // a call on what nobody designs is text too
       server -> client.send(ack)       // resolves to lsp::LspClient::send(msg: int) -> bool
       return true
     }

@@ -2,7 +2,7 @@
 package e11shop {
   module store {
     class Cart {
-      + add(item: string) -> bool
+      + add(item: std::string) -> bool
     }
     sequence Cart::add {
       opt the path is /tmp or the ratio a/b is low {

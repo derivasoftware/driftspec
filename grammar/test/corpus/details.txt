@@ -59,20 +59,14 @@ package lib {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (operator
             (operator_symbol)
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name)))))))))
+                (type)))
+            (type)))))))
 
 ========================================
 details: participants and branches in a sequence
@@ -104,9 +98,7 @@ package shop {
           (name))
         (participant
           (name)
-          (type
-            (qualified_name
-              (name))))
+          (type))
         (alt
           (condition)
           (name)

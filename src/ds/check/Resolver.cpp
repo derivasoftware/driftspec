@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 
+#include "ds/bind/Binder.hpp"
 #include "ds/model/Metamodel.hpp"
 
 namespace ds {
@@ -25,28 +26,31 @@ std::string Resolver::resolve(const std::string& name, const std::string& scope)
     const std::string candidate = model::Scope(s).qualify(name).text();
     if (model_.find(candidate)) return candidate;
   }
-  // the extern catalogue (R11): a bare name nobody declares in scope is the one extern
-  // entity of that simple name, declared in any extern module of the workspace
-  const std::vector<std::string> externs = externsNamed(name);
-  return externs.size() == 1 ? externs.front() : "";
+  // a bare name that no scope on the way declares: the class of that name in the same package, as the code
+  // imports it from a sibling module (`Plan` written in cli for plan::Plan). Two classes of the name: none.
+  // The same rule argos applies to the code (DS-18)
+  if (!model::Identity(name).isQualified() && !model::ArtefactName::matches(name)) return inPackage(name, scope);
+  return "";
 }
 
-std::vector<std::string> Resolver::externsNamed(const std::string& name) const {
-  std::vector<std::string> out;
-  if (model::Identity(name).isQualified()) return out;
-  // an extern is known by its simple name: a use's template arguments (tuple<2>) are not the
-  // design's to check, so any arity of the use, and of the declaration, finds it (R11)
-  const std::string simple = name.substr(0, name.find('<'));
+std::string Resolver::inPackage(const std::string& name, const std::string& scope) const {
+  const std::string package = model::Scope(scope).package().text();
+  if (package.empty()) return "";
+  const auto open = name.find('<');
+  const std::string simple = name.substr(0, open);
+  const std::string arity = open == std::string::npos ? "" : name.substr(open);
+  std::string found;
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
-    if (e.has("extern") && (e.kind == model::Kind::Class || e.kind == model::Kind::Enum) && e.name == simple) out.push_back(e.id);
+    if (e.expected || e.name != simple || (e.kind != model::Kind::Class && e.kind != model::Kind::Enum)) continue;
+    const std::string id = pair.first;
+    const bool templated = !id.empty() && id.back() == '>';
+    if (arity.empty() ? templated : id.size() < arity.size() || id.compare(id.size() - arity.size(), arity.size(), arity) != 0) continue;
+    if (model::Scope(e.scope).package().text() != package) continue;
+    if (!found.empty()) return "";  // two of the name in the package: it relates nothing
+    found = id;
   }
-  // several declarations of the name (tuple<1>, tuple<2>): the one of the use's arity, when there is one
-  std::vector<std::string> exact;
-  for (const auto& id : out) {
-    if (id.size() >= name.size() + 2 && id.compare(id.size() - name.size() - 2, std::string::npos, "::" + name) == 0) exact.push_back(id);
-  }
-  return exact.size() == 1 ? exact : out;
+  return found;
 }
 
 bool Resolver::derives(const std::string& derived, const std::string& base) const {
@@ -87,7 +91,7 @@ std::string Resolver::privateOnTheWay(const std::string& from, const std::string
   // down from the first container they share: a child is seen from inside its parent, so siblings see each other
   for (std::string t = target; !t.empty() && !chain.count(t); t = model::Scope(t).outer().text()) {
     const model::Entity* e = model_.find(t);
-    if (!e || e->has("extern")) return "";
+    if (!e) return "";
     const auto visibility = e->fields.find("visibility");
     const std::string parent = model::Scope(t).outer().text();
     if (visibility != e->fields.end() && visibility->second == "-" && !chain.count(parent)) return t;
@@ -101,46 +105,17 @@ std::string Resolver::privateOnTheWay(const std::string& from, const std::string
   return "";
 }
 
+// the element of a type is the one entity of the design its text names; none, or two or more, and the type
+// has no element: calls through it are not typed, and nothing is said (DS-18)
 std::string Resolver::resolveTypeText(const std::string& text, const std::string& scope) const {
-  const auto trimmed = [](const std::string& s) {
-    const auto b = s.find_first_not_of(' ');
-    return b == std::string::npos ? std::string() : s.substr(b, s.find_last_not_of(' ') - b + 1);
-  };
-  // the arguments between the outer < >, split at their own level: map<string, pair<a, b>> has two
-  const auto arguments = [&trimmed](const std::string& inside) {
-    std::vector<std::string> out;
-    int depth = 0;
-    std::string arg;
-    for (char c : inside) {
-      if (c == '<') ++depth;
-      if (c == '>') --depth;
-      if (c == ',' && depth == 0) {
-        out.push_back(trimmed(arg));
-        arg.clear();
-      } else {
-        arg += c;
-      }
-    }
-    if (!trimmed(arg).empty()) out.push_back(trimmed(arg));
-    return out;
-  };
-  std::string t = trimmed(text);
-  // containers hand over to their element (the value of a map), read from the table the binder reads (R16)
-  for (;;) {
-    const auto lt = t.find('<');
-    const auto gt = t.rfind('>');
-    if (lt == std::string::npos || gt == std::string::npos || gt < lt) break;
-    const std::string head = t.substr(0, lt);
-    const std::vector<std::string> args = arguments(t.substr(lt + 1, gt - lt - 1));
-    if (const model::ContainerSpec* container = model::containerOf(head)) {
-      t = container->element < static_cast<int>(args.size()) ? args[container->element] : "";
-      continue;
-    }
-    t = model::Identity(head).withArity(args.size()).text();  // a template use: identity is name + arity (R15)
-    break;
+  std::set<std::string> designed;
+  for (const bind::TypeToken& token : bind::scanTypeTokens(text)) {
+    const std::string name = token.args.empty() ? token.name : model::Identity(token.name).withArity(token.args.size()).text();
+    const std::string id = resolve(name, scope);
+    const model::Entity* e = id.empty() ? nullptr : model_.find(id);
+    if (e && !e->expected) designed.insert(id);
   }
-  if (t.empty()) return "";
-  return resolve(t, scope);
+  return designed.size() == 1 ? *designed.begin() : "";
 }
 
 }  // namespace check

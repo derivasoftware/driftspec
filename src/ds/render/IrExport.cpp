@@ -707,8 +707,8 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
     const std::string path = pathOf.count(seq) ? pathOf[seq] : kWhole;
     b.emit(*seq, self, caller, path, depth, stack);
     const std::string returns = method ? subject->field("returns") : "";
-    if (method && !returns.empty() && returns != "none" && returns != "void") {
-      std::string given = returns;  // what its `return` says, or the declared type
+    if (method && !returns.empty()) {  // a return written is drawn as written: ds knows no language's nothing (DS-18)
+      std::string given = returns;     // what its `return` says, or the declared type
       for (const query::Taken& taken : query::Walker(model_).steps(seq->id, path)) {
         const model::Entity* m = model_.find(taken.message);
         if (m->field("return") == "true" && !m->field("result").empty()) given = m->field("result");

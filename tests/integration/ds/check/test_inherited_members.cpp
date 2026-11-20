@@ -78,7 +78,7 @@ TEST_F(TestInheritedMembers, ASelfCallReachesAMethodTheClassInherits) {
 
 TEST_F(TestInheritedMembers, AnInheritedAttributeIsAParticipant) {
   EXPECT_TRUE(calls("p@m::Store::get"));
-  EXPECT_TRUE(codes("W-PARTICIPANT-UNDECLARED").empty());
+  EXPECT_TRUE(codes("W-MSG-UNDECLARED").empty());
 }
 
 TEST_F(TestInheritedMembers, ACallOnASubclassReachesTheMethodOfItsBase) {

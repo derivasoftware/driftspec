@@ -1,5 +1,6 @@
 #include "ds/bind/Binder.hpp"
 
+#include <cctype>
 #include <cstring>
 #include <map>
 
@@ -48,14 +49,12 @@ std::string relationForAnnotation(model::Kind from, const model::AnnotationSpec&
   return from == model::Kind::Verification && !spec.onVerification.empty() ? spec.onVerification : spec.relation;
 }
 
-const char* const kPrimitives[] = {"int",  "bool",  "string", "path",   "none",
-                                   "void", "float", "double", "size_t", "char"};  // the C++ sizes and chars relate nothing either
-
-bool isPrimitive(const std::string& type) {
-  for (const char* p : kPrimitives) {
-    if (type == p) return true;
-  }
-  return false;
+// the names of a template parameter list, <F, G: Bound>
+std::vector<std::string> templateParams(const parse::ParsedFile& file, TSNode params) {
+  std::vector<std::string> out;
+  if (ts_node_is_null(params)) return out;
+  for (uint32_t i = 0; i < ts_node_named_child_count(params); ++i) out.push_back(fieldText(file, ts_node_named_child(params, i), "name"));
+  return out;
 }
 
 bool isOwnership(const std::string& relation) { return relation == "owns" || relation == "refs" || relation == "shares"; }
@@ -363,8 +362,8 @@ void Binder::bindUseCase(const parse::ParsedFile& file, TSNode node, const std::
     out.scope = e.id;
     out.location = locationOf(file, o);
     out.fields["text"] = trim(fieldText(file, o, "text"));
-    const TypeUse returns = bindType(file, child(o, "returns"), scope, out.id, "uses", "", {}, out.location);
-    if (!returns.text.empty()) out.fields["returns"] = returns.text;
+    const std::string returns = bindType(file, child(o, "returns"), scope, out.id, "uses", "", {}, out.location);
+    if (!returns.empty()) out.fields["returns"] = returns;
     model_.declare(out);
     model_.relate({"contains", e.id, out.id, out.location, ""});
   }
@@ -372,54 +371,91 @@ void Binder::bindUseCase(const parse::ParsedFile& file, TSNode node, const std::
 
 // ---- types (R15, R16) ----------------------------------------------------------
 
-TypeUse Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
-                         const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
-                         const model::Location& location) {
-  TypeUse use;
-  if (ts_node_is_null(type)) return use;
-  use.text = trim(file.textOf(type));
-  const std::string name = fieldText(file, type, "name");
-  std::vector<TSNode> args;
-  TSNode argsNode = child(type, "args");
-  if (!ts_node_is_null(argsNode)) {
-    const uint32_t n = ts_node_named_child_count(argsNode);
-    for (uint32_t i = 0; i < n; ++i) args.push_back(ts_node_named_child(argsNode, i));
-  }
-
-  // built-in generics decide the multiplicity and pass the relation to their element (R16);
-  // a qualified container (std::vector, std::map) is the same container, read from one table
-  const std::string text = use.text;
-  if (const model::ContainerSpec* container = model::containerOf(name)) {
-    for (std::size_t i = 0; i < args.size(); ++i) {
-      if (static_cast<int>(i) == container->element)
-        use = bindType(file, args[i], scope, from, relation, container->multiplicity, params, location);
-      else
-        bindType(file, args[i], scope, from, "uses", "", params, location);  // a map's key is used
+// A type is the code's text (DS-18). Its names are read out of it; each that the design declares is related
+// with the holder's relation (owns by default, refs or shares as written, uses for a signature or a local).
+std::vector<TypeToken> scanTypeTokens(const std::string& text) {
+  std::vector<TypeToken> out;
+  const auto start = [](char c) { return std::isalpha(static_cast<unsigned char>(c)) || c == '_'; };
+  const auto inWord = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_'; };
+  std::size_t i = 0;
+  const std::size_t n = text.size();
+  while (i < n) {
+    if (!start(text[i]) || (i > 0 && inWord(text[i - 1]))) {
+      ++i;
+      continue;
     }
-    use.text = text;
-    return use;
+    // (pkg@)* name (::name)*
+    std::size_t j = i;
+    for (;;) {
+      std::size_t k = j;
+      while (k < n && inWord(text[k])) ++k;
+      if (k < n && text[k] == '@' && k + 1 < n && start(text[k + 1])) {
+        j = k + 1;
+        continue;
+      }
+      if (k + 2 < n && text[k] == ':' && text[k + 1] == ':' && start(text[k + 2])) {
+        j = k + 2;
+        continue;
+      }
+      j = k;
+      break;
+    }
+    TypeToken token;
+    token.name = text.substr(i, j - i);
+    // the arguments of a bracket written right after the name: its arity (R15)
+    std::size_t b = j;
+    while (b < n && text[b] == ' ') ++b;
+    if (b < n && (text[b] == '<' || text[b] == '[')) {
+      int depth = 0;
+      std::string arg;
+      for (std::size_t k = b; k < n; ++k) {
+        const char c = text[k];
+        if (c == '<' || c == '[' || c == '(') {
+          if (depth++ == 0) continue;
+        }
+        if (c == '>' || c == ']' || c == ')') {
+          if (--depth == 0) {
+            if (!trim(arg).empty()) token.args.push_back(trim(arg));
+            break;
+          }
+        }
+        if (c == ',' && depth == 1) {
+          token.args.push_back(trim(arg));
+          arg.clear();
+          continue;
+        }
+        arg += c;
+      }
+    }
+    out.push_back(token);
+    i = j;
   }
-  if (contains(params, name)) {
-    use.parameter = true;
-    return use;
-  }
-  if (isPrimitive(name)) return use;  // nothing to relate
+  return out;
+}
 
-  use.classLike = true;
-  Reference ref;
-  ref.from = from;
-  ref.target = args.empty() ? name : model::Identity(name).withArity(args.size()).text();  // identity = name + arity (R15)
-  ref.scope = scope;
-  ref.relation = relation;
-  ref.expectedKind = model::Kind::Class;
-  ref.location = location;
-  ref.multiplicity = isOwnership(relation) ? (multiplicity.empty() ? "1" : multiplicity) : "";
-  for (TSNode a : args) {
-    ref.args.push_back(trim(file.textOf(a)));
-    bindType(file, a, scope, from, "uses", "", params, location);  // the argument is used by the holder
+std::string Binder::bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
+                             const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
+                             const model::Location& location) {
+  if (ts_node_is_null(type)) return "";
+  const std::string text = trim(file.textOf(type));
+  for (const TypeToken& token : scanTypeTokens(text)) {
+    if (contains(params, token.name)) continue;  // a template parameter may be anything (R15)
+    Reference ref;
+    ref.from = from;
+    ref.target = token.args.empty() ? token.name : model::Identity(token.name).withArity(token.args.size()).text();
+    ref.scope = scope;
+    ref.relation = relation;
+    ref.expectedKind = model::Kind::Class;
+    ref.location = location;
+    ref.args = token.args;
+    for (auto& a : ref.args)
+      if (contains(params, a)) a.clear();  // Repository<T> inside a template of T: a parameter, no bound to check
+    // the multiplicity is the one written (many, optional); an ownership without one holds one (DS-18)
+    ref.multiplicity = isOwnership(relation) ? (multiplicity.empty() ? "1" : multiplicity) : "";
+    ref.soft = true;
+    references_.push_back(ref);
   }
-  references_.push_back(ref);
-  return use;
+  return text;
 }
 
 // ---- classes (R14, R15, R17, R19) ----------------------------------------------
@@ -483,19 +519,42 @@ void Binder::bindMember(const parse::ParsedFile& file, TSNode m, model::Entity& 
       model_.report({"E-DATACLASS-ABSTRACT", "error",
                      out_cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
     }
-    bindSignature(file, m, member, scope, params);
+    std::vector<std::string> own = params;  // a templated method's own parameters are no entities either (DS-18)
+    for (const std::string& t : templateParams(file, child(m, "params"))) own.push_back(t);
+    if (own.size() > params.size())
+      member.fields["template"] = join(std::vector<std::string>(own.begin() + params.size(), own.end()), ", ");
+    bindSignature(file, m, member, scope, own);
   } else {
     const std::string ownership = fieldText(file, m, "ownership");
     const std::string relation = ownership.empty() ? "owns" : ownership;  // owns by default (R16)
     member.flags.push_back(relation);
-    TypeUse use = bindType(file, child(m, "type"), scope, member.id, relation, "", params, loc);
-    member.fields["type"] = use.text;
+    // the multiplicity is written, never read from the type: many is *, optional is 0..1 (DS-18). One ownership
+    // and one multiplicity at most: two of either say two things at once, and the first written is kept
+    std::vector<std::string> owning, counting;
+    const uint32_t children = ts_node_child_count(m);
+    for (uint32_t i = 0; i < children; ++i) {
+      const char* f = ts_node_field_name_for_child(m, i);
+      if (!f) continue;
+      if (std::strcmp(f, "ownership") == 0) owning.push_back(file.textOf(ts_node_child(m, i)));
+      if (std::strcmp(f, "many") == 0 || std::strcmp(f, "optional") == 0) counting.push_back(file.textOf(ts_node_child(m, i)));
+    }
+    for (const auto* said : {&owning, &counting}) {
+      if (said->size() < 2) continue;
+      const bool aboutOwnership = said == &owning;
+      model_.report({"E-MODIFIER-CONFLICT", "error",
+                     member.id + " is written " + join(*said, " ") + ": an attribute has at most one " +
+                         (aboutOwnership ? "ownership (owns, refs or shares)" : "multiplicity (many or optional)"),
+                     loc});
+    }
+    const std::string counted = counting.empty() ? "" : counting.front();
+    if (!counted.empty()) member.flags.push_back(counted);
+    member.fields["type"] = bindType(file, child(m, "type"), scope, member.id, relation,
+                                     counted == "many"       ? "*"
+                                     : counted == "optional" ? "0..1"
+                                                             : "",
+                                     params, loc);
     const std::string def = fieldText(file, m, "default");
     if (!def.empty()) member.fields["default"] = def;
-    if (!ownership.empty() && !use.classLike && !use.parameter) {
-      model_.report({"W-MODIFIER-ON-VALUE", "warning",
-                     "'" + ownership + "' on " + member.id + " means nothing: " + use.text + " is a value, not an entity", loc});
-    }
   }
 
   if (member.kind == model::Kind::Operator && model_.find(member.id)) {
@@ -529,8 +588,8 @@ void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::En
     }
   }
   out_entity.fields["params"] = join(paramTexts, ", ");  // parameters and returns give use (R16)
-  TypeUse returns = bindType(file, child(node, "returns"), scope, out_entity.id, "uses", "", params, locationOf(file, node));
-  if (!returns.text.empty()) out_entity.fields["returns"] = returns.text;
+  const std::string returns = bindType(file, child(node, "returns"), scope, out_entity.id, "uses", "", params, locationOf(file, node));
+  if (!returns.empty()) out_entity.fields["returns"] = returns;
   TSNode fails = child(node, "fails");  // what it promises it may fail with; `fails nothing` promises none (DS-189)
   if (!ts_node_is_null(fails)) {
     std::vector<std::string> names;
@@ -548,9 +607,9 @@ void Binder::bindFunction(const parse::ParsedFile& file, TSNode f, const std::st
   e.location = locationOf(file, f);
   const std::string visibility = fieldText(file, f, "visibility");
   e.fields["visibility"] = visibility.empty() ? "+" : visibility;
-  const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
-  if (ownerEntity && ownerEntity->has("extern")) e.flags.push_back("extern");  // R11: a name, no obligations
-  bindSignature(file, f, e, scope, {});
+  const std::vector<std::string> own = templateParams(file, child(f, "params"));  // a templated function (DS-18)
+  if (!own.empty()) e.fields["template"] = join(own, ", ");
+  bindSignature(file, f, e, scope, own);
   model_.declare(e);
   if (!owner.empty()) model_.relate({"contains", owner, e.id, e.location, ""});
   bindMemberBody(file, f, e, scope);  // annotations, rules and nested artefacts, as a method's
@@ -572,8 +631,6 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   e.location = loc;
   if (fieldText(file, c, "kind") == "dataclass") e.flags.push_back("dataclass");
   if (fieldText(file, c, "visibility") == "-") e.fields["visibility"] = "-";
-  const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
-  if (ownerEntity && ownerEntity->has("extern")) e.flags.push_back("extern");
 
   std::vector<std::string> params;
   std::map<std::string, std::string> bounds;
@@ -611,11 +668,33 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   bindFields(file, body, e);
   model::Entity& declared = model_.declare(e);
   if (!owner.empty()) model_.relate({"contains", owner, declared.id, loc, ""});
-  for (TSNode base : childrenNamed(c, "base")) {
-    references_.push_back({declared.id, file.textOf(base), scope, "inherits", model::Kind::Class, loc, "", {}});
+  // a base is written as the code writes it (IFormat<scene::SceneDocument>) and kept so; its first name is what the
+  // class inherits, and only when the design declares it: class Error : Exception is text, no arrow (DS-18)
+  std::vector<std::string> baseTexts;
+  for (TSNode base : childrenNamed(c, "base")) baseTexts.push_back(trim(file.textOf(base)));
+  if (!baseTexts.empty()) declared.fields["bases"] = join(baseTexts, "; ");
+  for (const std::string& written : baseTexts) {
+    const std::vector<TypeToken> tokens = scanTypeTokens(written);
+    if (tokens.empty()) continue;
+    const TypeToken& token = tokens.front();
+    std::vector<std::string> args = token.args;
+    for (auto& a : args)
+      if (contains(params, a)) a.clear();  // class Holder<T> : Base<T>: T is Holder's parameter, not a class T
+    Reference ref{declared.id,
+                  token.args.empty() ? token.name : model::Identity(token.name).withArity(token.args.size()).text(),
+                  scope,
+                  "inherits",
+                  model::Kind::Class,
+                  loc,
+                  "",
+                  args};
+    ref.soft = true;
+    references_.push_back(ref);
   }
   for (const auto& b : bounds) {
-    references_.push_back({declared.id, b.second, scope, "bounded-by", model::Kind::Class, loc, "", {}});
+    Reference bound{declared.id, b.second, scope, "bounded-by", model::Kind::Class, loc, "", {}};
+    bound.soft = true;  // a bound nobody designs is text, as a base is
+    references_.push_back(bound);
   }
   for (const auto& symbol : operators) declareOperator(declared, symbol, loc);
   if (ts_node_is_null(body)) return;
@@ -755,8 +834,8 @@ void Binder::bindSequence(const parse::ParsedFile& file, TSNode c, const std::st
       if (is(s, "loop") || is(s, "alt") || is(s, "opt") || is(s, "attempt") || is(s, "handler")) pending.push_back(s);
       if (!is(s, "local") && !is(s, "participant")) continue;
       const std::string name = fieldText(file, s, "name");
-      TypeUse use = bindType(file, child(s, "type"), scope, declared.id, "uses", "", {}, locationOf(file, s));
-      model_.find(declared.id)->fields["local." + name] = use.text;
+      model_.find(declared.id)->fields["local." + name] =
+          bindType(file, child(s, "type"), scope, declared.id, "uses", "", {}, locationOf(file, s));
     }
   }
   int order = 0, frames = 0;
@@ -804,8 +883,6 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       e.id = model::Scope(scope).qualify(e.name).text();
       e.scope = scope;
       e.location = loc;
-      const model::Entity* ownerEntity = owner.empty() ? nullptr : model_.find(owner);
-      if (!ts_node_is_null(child(c, "extern")) || (ownerEntity && ownerEntity->has("extern"))) e.flags.push_back("extern");  // R11
       const bool isPrivate = fieldText(file, c, "visibility") == "-";
       if (isPrivate) e.fields["visibility"] = "-";
       bindFields(file, c, e);

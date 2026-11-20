@@ -44,9 +44,9 @@ class TestBehaviour : public ::testing::Test {
 };
 
 TEST_F(TestBehaviour, TheOracleFindings) {
-  EXPECT_EQ(byCode["W-PARTICIPANT-UNDECLARED"], 1);  // binder in checkMessage
-  EXPECT_EQ(byCode["E-MSG-ARITY"], 1);               // Model::find(id, scope)
-  EXPECT_EQ(byCode["W-ACTION-UNDECLARED"], 1);       // / report is Model's
+  EXPECT_EQ(byCode["W-REF-UNDECLARED"], 0);     // Parser and binder nobody designs: text (DS-18)
+  EXPECT_EQ(byCode["E-MSG-ARITY"], 1);          // Model::find(id, scope)
+  EXPECT_EQ(byCode["W-ACTION-UNDECLARED"], 1);  // / report is Model's
   EXPECT_EQ(byCode["W-MSG-UNDECLARED"], 0);
   EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 1);  // the default scenario of checkMessage declared again from another module
 }
@@ -140,7 +140,7 @@ TEST_F(TestBehaviour, ASequenceDiagramExpandsByDepthAndLinksAtDepthZero) {
   int links = 0;
   for (const auto& e : shallow["edges"]) links += e.contains("href");
   EXPECT_EQ(links, 2);                     // resolveReference and checkMessage are reachable, not inlined
-  EXPECT_EQ(shallow["edges"].size(), 7u);  // the caller's run(binder) first; run returns none
+  EXPECT_EQ(shallow["edges"].size(), 8u);  // the caller's run(binder) first; run's return is drawn as written: void
   EXPECT_EQ(shallow["edges"][0]["from"], "caller");
   EXPECT_EQ(shallow["edges"][0]["label"], "run(binder: Binder)");
 }

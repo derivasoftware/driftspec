@@ -31,14 +31,14 @@ package bank {
   module core {
     class Vault {
       + balance() -> int
-      + take(amount: int) -> none
+      + take(amount: int) -> void
     }
 
     class Desk {
       - vault: Vault
       + withdraw(amount: int) -> int
-      + close(amount: int) -> none
-      - log(amount: int) -> none
+      + close(amount: int) -> void
+      - log(amount: int) -> void
     }
 
     sequence Desk::withdraw {
