@@ -564,7 +564,7 @@ package driftspec@ds {
         }
         requirement REQ-00169-2 {
           tags: language, lld, module
-          status: draft
+          status: approved
           title: A bare name that no scope declares shall resolve to the one class of that name in its package, and warn when two share it
           text:
             After the scopes, from the innermost outward, a bare name (no :: and no
@@ -584,7 +584,7 @@ package driftspec@ds {
             ambiguity, an incoherence, and an incoherence is said.
           verification VER-00186-2 {
             title: Integration tests confirm a bare name no scope declares is the one class of that name in its package, warns once naming the candidates when two share it, and is never one of another package
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABareNameNoScopeDeclaresIsTheOneClassOfThePackage
