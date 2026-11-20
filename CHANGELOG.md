@@ -6,6 +6,11 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.14
+
+The CI gate fails on code without design and on stale evidence (DDEV-1507). Nothing changes for a
+design.
+
 ## 0.1.13
 
 A bare name that two designed classes of its package share is an ambiguity, and it is said
