@@ -122,6 +122,17 @@ TEST_F(TestQualification, TheCheckJsonSaysTheFindingsAndTheCounts) {
   EXPECT_EQ(check.code, 1);
 }
 
+// SREQ-00002-1: a file that does not parse is a finding like any other, whatever the text it quotes (DS-334)
+TEST_F(TestQualification, ASyntaxErrorQuotingAWideCharacterComesBackAsJson) {
+  const std::string tmp = scratch("ds-wide-quote");
+  std::ofstream(tmp + "/a.ds") << "package a { }\n&c><le only knows it  \u2192 aggregation\n";
+  const Outcome check = ds("check --json " + tmp);
+  EXPECT_EQ(check.code, 1) << check.out;
+  const auto out = nlohmann::json::parse(check.out);
+  ASSERT_FALSE(out["findings"].empty());
+  EXPECT_EQ(out["findings"][0]["code"], "E-SYNTAX");
+}
+
 TEST_F(TestQualification, ArtefactsAreLinkedByRevision) {
   const auto exported = nlohmann::json::parse(ds("export " + examples("artefacts")).out);
   bool refines = false, verifies = false, realises = false;

@@ -110,7 +110,11 @@ bool firstError(TSNode node, const std::string& text, ParsedFile& file) {
     } else {
       std::string snippet = text.substr(ts_node_start_byte(node), ts_node_end_byte(node) - ts_node_start_byte(node));
       snippet = snippet.substr(0, snippet.find('\n'));
-      if (snippet.size() > 24) snippet = snippet.substr(0, 24) + "...";
+      if (snippet.size() > 24) {  // cut on a code point boundary, never inside one: the message stays UTF-8 (DS-334)
+        std::size_t cut = 24;
+        while (cut > 0 && (static_cast<unsigned char>(snippet[cut]) & 0xC0) == 0x80) --cut;
+        snippet = snippet.substr(0, cut) + "...";
+      }
       file.errorDetail = "unexpected `" + snippet + "` " + contextOf(node);
       const std::string expected = expectedAt(node);
       if (!expected.empty()) file.errorDetail += "; it takes " + expected;
