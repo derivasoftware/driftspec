@@ -581,6 +581,7 @@ package driftspec@ds {
       tags: model, index
       status: approved
       category: design
+      bok: BOK-00003-1
       title: The model's relations shall be read only through its index, which answers with copies in the order the model states, holds no fact of its own and never lags a change of the model
       rationale:
         The model knows none of its readers, so it gives every one the same contract and no exception
