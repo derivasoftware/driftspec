@@ -24,7 +24,7 @@ package e08shop {
   }
   module store {
     @requirement SREQ-8001-1
-    function price(item: string) -> int {
+    function price(item: std::string) -> int {
       @requirement SREQ-8001-1
     }
     enum Status {
@@ -33,7 +33,7 @@ package e08shop {
     }
     class Cart {
       @requirement SREQ-8001-1
-      + add(item: string) -> bool {
+      + add(item: std::string) -> bool {
         @requirement SREQ-8001-1
       }
     }

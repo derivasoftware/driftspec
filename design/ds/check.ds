@@ -25,7 +25,7 @@ package driftspec@ds {
       - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
       - stratum_: std::map<std::string, int>
       - owns invalid_: std::set<std::string>
-      - owns found_: std::vector<model::Finding>
+      - owns many found_: std::vector<model::Finding>
       + Evaluator(model: model::Model, resolver: Resolver)
       + run() -> std::vector<model::Finding>
       - index() -> void
@@ -60,18 +60,21 @@ package driftspec@ds {
       + Resolver(model: model::Model)
       + resolve(name: std::string, scope: std::string) -> std::string {
         @requirement REQ-00023-1
-      }
-      + externsNamed(name: std::string) -> std::vector<std::string> {
-        @requirement REQ-00024-2
+        @requirement REQ-00169-1
       }
       + derives(derived: std::string, base: std::string) -> bool {
-        @requirement REQ-00029-1
+        @requirement REQ-00029-2
       }
       + member(type: std::string, name: std::string) -> model::Entity {
         @requirement REQ-00036-2
       }
       + resolveTypeText(text: std::string, scope: std::string) -> std::string {
         @requirement REQ-00023-1
+        @requirement REQ-00058-3
+      }
+      // the one class of a name in the package of a scope, as argos finds it in the code (DS-18)
+      - inPackage(name: std::string, scope: std::string) -> std::string {
+        @requirement REQ-00169-1
       }
       + privateOnTheWay(from: std::string, target: std::string) -> std::string {
         @requirement REQ-00063-1
@@ -82,8 +85,8 @@ package driftspec@ds {
     // built once from the model, written by its formats without it (DS-126)
     dataclass Report {
       @requirement REQ-00106-1
-      + findings: std::vector<model::Finding>
-      + coverage: std::vector<model::Finding>
+      + many findings: std::vector<model::Finding>
+      + many coverage: std::vector<model::Finding>
       + entities: int
       + expected: int
       + relations: int
@@ -120,7 +123,7 @@ package driftspec@ds {
       - refs binder_: bind::Binder
       - owns renamed_: std::map<std::string, std::string>
       - owns reported_: std::set<std::string>
-      - owns found_: std::vector<model::Finding>
+      - owns many found_: std::vector<model::Finding>
       + Context(model: model::Model, resolver: Resolver, binder: bind::Binder)
       + model() -> model::Model
       + resolver() -> Resolver
@@ -142,7 +145,7 @@ package driftspec@ds {
 
     // The check module's entry point (DS-138): what the rest of ds asks of a check.
     class IChecker {
-      @requirement REQ-00053-1
+      @requirement REQ-00053-2
       + ~IChecker()
       + abstract run(binder: bind::Binder) -> void
     }
@@ -151,11 +154,11 @@ package driftspec@ds {
     // context and adds what each found to the model when it ends. The map is built outside and
     // outlives it.
     class Checker : IChecker {               // realises the language step by step: each step names its requirements
-      @requirement REQ-00053-1
+      @requirement REQ-00053-2
       @requirement REQ-00012-1
       - refs model_: model::Model
       - owns resolver_: Resolver
-      - refs steps_: std::map<std::string, std::unique_ptr<IStep>>
+      - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
       + Checker(model: model::Model, steps: std::map<std::string, std::unique_ptr<IStep>>)
       + run(binder: bind::Binder) -> void
       + resolver() -> Resolver
@@ -167,18 +170,13 @@ package driftspec@ds {
       @requirement REQ-00012-1
     }
 
-    // primitives one converts to the other without saying so; any other pair of primitives is a mismatch
-    function primitiveFamily(type: std::string) -> int {
-      @requirement REQ-00058-2
-    }
-
     class Linker : IStep {                // references become relations, behaviours take their subject's identity
       @requirement REQ-00043-1
-      @requirement REQ-00053-1
+      @requirement REQ-00053-2
       @constraint CST-00006-1
       @constraint CST-00003-2
       @requirement REQ-00066-1
-      @requirement REQ-00029-1
+      @requirement REQ-00029-2
       @requirement REQ-00035-1
       - refs context_: Context
       - refs model_: model::Model
@@ -188,14 +186,14 @@ package driftspec@ds {
       + run(out_context: Context) -> std::vector<model::Finding>
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
-        @requirement REQ-00053-1
+        @requirement REQ-00053-2
         @constraint CST-00006-1
       }
       - kindAllowed(reference: bind::Reference, target: std::string) -> bool {
         @requirement REQ-00066-1
       }
       - checkTemplateBound(reference: bind::Reference) -> void {
-        @requirement REQ-00029-1
+        @requirement REQ-00029-2
       }
       - unifyBehaviours() -> void {
         @requirement REQ-00035-1
@@ -209,9 +207,9 @@ package driftspec@ds {
       @requirement REQ-00036-2
       @requirement REQ-00038-2
       @requirement REQ-00037-1
-      @requirement REQ-00059-1
+      @requirement REQ-00059-2
       @requirement REQ-00056-1
-      @requirement REQ-00058-2
+      @requirement REQ-00058-3
       @requirement REQ-00039-1
       @requirement REQ-00040-1
       @requirement REQ-00132-1
@@ -236,7 +234,7 @@ package driftspec@ds {
         @requirement REQ-00038-2
       }
       - checkReturn(message: bind::Message) -> void {
-        @requirement REQ-00059-1
+        @requirement REQ-00059-2
       }
       - checkMessage(message: bind::Message) -> void {
         @requirement REQ-00037-1
@@ -247,10 +245,10 @@ package driftspec@ds {
       }
       // a participant named as what it is: a box, an interface or a class the behaviour sees (DS-232)
       - namedEntity(name: std::string, home: std::string) -> std::string {
-        @requirement REQ-00133-1
+        @requirement REQ-00133-2
       }
       // who sends: the participant written before the arrow, typed like the receiver
-      - typeSender(seq: model::Entity, cls: model::Entity, subject: model::Entity, out_msg: model::Entity, home: std::string, location: model::Location) -> bool {
+      - typeSender(seq: model::Entity, cls: model::Entity, subject: model::Entity, out_msg: model::Entity, home: std::string) -> void {
         @requirement REQ-00134-1
       }
       // the operation a box offers under a name: a function of a module, an operation of one interface of a package
@@ -260,14 +258,14 @@ package driftspec@ds {
       - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
         @requirement REQ-00036-2
       }
-      - compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>) -> bool {
-        @requirement REQ-00058-2
+      - compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>, literal: bool) -> bool {
+        @requirement REQ-00058-3
       }
       - checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
-        @requirement REQ-00058-2
+        @requirement REQ-00058-3
       }
       - rememberResult(message: bind::Message) -> void {
-        @requirement REQ-00058-2
+        @requirement REQ-00058-3
       }
       - checkLocals() -> void {
         @requirement REQ-00036-2
@@ -281,7 +279,7 @@ package driftspec@ds {
     class ContractCheck : ACheck {         // interfaces, use cases, scenarios, outcomes and diagrams
       @requirement REQ-00060-1
       @requirement REQ-00123-1
-      @requirement REQ-00119-1
+      @requirement REQ-00119-2
       @requirement REQ-00082-1
       @requirement REQ-00061-1
       @requirement REQ-00109-2
@@ -291,7 +289,7 @@ package driftspec@ds {
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
-      - owns found_: std::vector<model::Finding>
+      - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
       - check(context: Context) -> std::vector<model::Finding>
@@ -308,7 +306,7 @@ package driftspec@ds {
         @requirement REQ-00123-1
       }
       - checkRealisations() -> void {
-        @requirement REQ-00119-1
+        @requirement REQ-00119-2
       }
       - checkViews(state: model::Entity) -> void {
         @requirement REQ-00061-1
@@ -346,7 +344,7 @@ package driftspec@ds {
     }
 
     class StructureCheck : ACheck {        // ownership, artefacts, extensions and fields
-      @requirement REQ-00028-1
+      @requirement REQ-00028-2
       @requirement REQ-00045-1
       @constraint CST-00003-2
       @requirement REQ-00067-1
@@ -355,12 +353,12 @@ package driftspec@ds {
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
-      - owns found_: std::vector<model::Finding>
+      - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
       - check(context: Context) -> std::vector<model::Finding>
       - checkOwnershipCycles() -> void {
-        @requirement REQ-00028-1
+        @requirement REQ-00028-2
       }
       - checkCycles(relation: std::string, code: std::string, verb: std::string) -> void {
         @requirement REQ-00118-1
@@ -415,7 +413,7 @@ package driftspec@ds {
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
-      - owns found_: std::vector<model::Finding>
+      - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
       - check(context: Context) -> std::vector<model::Finding>
@@ -517,11 +515,6 @@ package driftspec@ds {
         }
       }
       self -> resolver_.resolve(reference.target, reference.scope) -> target
-      opt nothing declares it and several extern modules name it / ambiguous {
-        self -> resolver_.externsNamed(reference.target) -> externs
-        self -> context_.report(finding)
-        return
-      }
       opt nothing declares it / undeclared {
         // an expected node takes its place, and it is said once
         self -> model_.declare(expected) -> node
@@ -703,31 +696,23 @@ package driftspec@ds {
         self -> model_.find(candidate)
         self -> s.outer() -> s
       }
-      opt no scope declares it: the extern catalogue {
-        -> externsNamed(name) -> externs
-        alt exactly one extern has that name / extern {
-          // the code returns externs.front(), an expression no return can say
-          return
-        } else / unresolved {
-          return ""
-        }
+      opt no scope declares it, and the name is bare: the one class of that name in the package / package {
+        -> inPackage(name, scope) -> found
+        return found
       }
       return candidate
     }
 
-    // Every extern class or enum of that simple name, in any arity. Filling the lists
-    // and testing each entity are not messages: a loop variable is not a participant.
-    sequence Resolver::externsNamed {
-      local out: std::vector<std::string>
-      local exact: std::vector<std::string>
-      opt the name has a path, so it is no extern's simple name / qualified {
-        return out
-      }
+    // The class or enum of a bare name in the package of the scope it is written in, as argos finds a class in
+    // the code: one of that name and arity, or none when two share it (DS-18). Testing each entity is no message.
+    sequence Resolver::inPackage {
+      local package: model::Scope
+      self -> package.package() -> box
       self -> model_.entities() -> entities
-      opt exactly one of those found has the arity of the use / exact {
-        return exact
+      opt two classes of the package have that name / ambiguous {
+        return ""
       }
-      return out
+      return found
     }
 
     // Walks the inherits relations up from derived. The stack of pending names and

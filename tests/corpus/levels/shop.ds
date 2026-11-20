@@ -45,7 +45,7 @@ package shop {
     -> shell.refund(item)                              // ! W-MSG-UNDECLARED: the shell is written, and has no refund
     sales -> warehouse.take(item, 1)                   // ! E-MSG-ARITY: the counter's take takes one argument
     bank -> warehouse.take(item)                       // ! W-CONSUMES-UNDECLARED: the bank does not say it uses the counter
-    courier -> sales.sell(item)                        // ! W-PARTICIPANT-UNDECLARED: nobody is called courier
+    courier -> sales.sell(item)                        // nobody is called courier: a sender nobody designs is text (DS-18)
     sales -> warehouse.restock(item)                   // ? W-MESSAGE-NO-OPERATION: not designed yet
     return 0
   }
@@ -90,11 +90,11 @@ package shop {
         - refs counter: shop@warehouse@counter
         - owns till: shop@sales@till::Till
         - owns prices: PriceList
-        + sell(item: string) -> int
-        + restock(item: string) -> int
+        + sell(item: std::string) -> int
+        + restock(item: std::string) -> int
       }
       class PriceList {
-        + priceOf(item: string) -> int
+        + priceOf(item: std::string) -> int
       }
 
       sequence Desk::sell {
@@ -143,7 +143,7 @@ package shop {
 
     module stock {
       class Shelf {
-        + pick(item: string) -> bool
+        + pick(item: std::string) -> bool
       }
 
       sequence Shelf::pick {                         // written, and it calls nothing: the warehouse is all written
@@ -154,7 +154,7 @@ package shop {
     module supply {
       class Buyer {
         - refs bank: shop@bank@gateway
-        + reorder(item: string)
+        + reorder(item: std::string)
       }
 
       sequence Buyer::reorder {

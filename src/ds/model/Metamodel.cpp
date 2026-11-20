@@ -66,7 +66,7 @@ std::vector<KindSpec> build() {
        {},
        {P},
        true});
-  k.push_back({M, "a namespace of the code inside a package; modules nest and reopen", {kVisibility, kLanguage}, {"extern"}, {P, M}});
+  k.push_back({M, "a namespace of the code inside a package; modules nest and reopen", {kVisibility, kLanguage}, {}, {P, M}});
   k.push_back({Rq,
                "what the system or a module promises",
                plus(artefact(), {written("parent", FieldType::Name, "ignored: nesting or @refines say it (W-PARENT-IGNORED)")}),
@@ -117,29 +117,32 @@ std::vector<KindSpec> build() {
   k.push_back({Kind::View, "a state of an interface's navigation", {written("text", FieldType::Text, "what it shows")}, {}, {Kind::State}});
   k.push_back(
       {Cl,
-       "a class, a dataclass or an extern type",
+       "a class or a dataclass",
        {kVisibility, kNote,
         derived("stereotypes", FieldType::Names,
-                "what the check reads from the declaration: interface, abstract, value, equatable, ordered, hashable, printable, extern"),
+                "what the check reads from the declaration: interface, abstract, value, equatable, ordered, hashable, printable"),
         syntax("params", FieldType::Params, "the template parameters"), syntax("operators", FieldType::Names, "the operators it declares"),
-        syntax("bound.*", FieldType::Type, "the bound of a template parameter")},
-       {"dataclass", "extern", "extension"},  // abstract is derived into stereotypes, never a flag
+        syntax("bound.*", FieldType::Type, "the bound of a template parameter"),
+        syntax("bases", FieldType::Text, "its bases as written, template arguments and all")},
+       {"dataclass", "extension"},  // abstract is derived into stereotypes, never a flag
        {M}});
   k.push_back({Kind::Enum, "a closed set of values", {kVisibility, syntax("values", FieldType::Names, "its values")}, {}, {M}});
   k.push_back({Kind::Function,
                "a free function of a module",
-               {kParams, kReturns, kVisibility, kNote, kFails, kEscapes, kEscapePath},
-               {"extern"},
+               {kParams, kReturns, kVisibility, kNote, kFails, kEscapes, kEscapePath,
+                syntax("template", FieldType::Names, "its own template parameters")},
+               {},
                {M}});
   k.push_back({Kind::Method,
                "an operation of a class",
-               {kParams, kReturns, kVisibility, kNote, kFails, kEscapes, kEscapePath},
+               {kParams, kReturns, kVisibility, kNote, kFails, kEscapes, kEscapePath,
+                syntax("template", FieldType::Names, "its own template parameters")},
                {"abstract", "static", "const", "constructor", "destructor"},
                {Cl}});
   k.push_back({Kind::Attribute,
                "a field of a class",
                {syntax("type", FieldType::Type, "its type"), kVisibility, syntax("default", FieldType::Text, "its initial value")},
-               {"owns", "refs", "shares"},
+               {"owns", "refs", "shares", "many", "optional"},
                {Cl}});
   k.push_back({Kind::Operator, "an operator of a class", {syntax("symbol", FieldType::Name, "the operator"), kParams, kReturns}, {}, {Cl}});
   k.push_back({Kind::Sequence,
@@ -353,20 +356,6 @@ const FieldSpec* fieldOf(Kind kind, const std::string& key) {
   for (const auto& f : specOf(kind).fields) {
     if (matches(f.name, key)) return &f;
   }
-  return nullptr;
-}
-
-const std::vector<ContainerSpec>& containers() {
-  static const std::vector<ContainerSpec> all = {
-      {"list", "*", 0}, {"set", "*", 0}, {"vector", "*", 0}, {"optional", "0..1", 0}, {"map", "*", 1}};
-  return all;
-}
-
-const ContainerSpec* containerOf(const std::string& name) {
-  const auto at = name.rfind("::");
-  const std::string base = at == std::string::npos ? name : name.substr(at + 2);
-  for (const auto& c : containers())
-    if (c.name == base) return &c;
   return nullptr;
 }
 

@@ -19,8 +19,6 @@ class TestSpecOf : public ::testing::Test {};
 class TestFieldOf : public ::testing::Test {};
 class TestRelations : public ::testing::Test {};
 class TestRelationOf : public ::testing::Test {};
-class TestContainers : public ::testing::Test {};
-class TestContainerOf : public ::testing::Test {};
 class TestCodes : public ::testing::Test {};
 class TestCodeOf : public ::testing::Test {};
 class TestAnnotations : public ::testing::Test {};
@@ -62,21 +60,6 @@ TEST_F(TestRelations, NoRelationIsDeclaredTwiceAndContainmentIsOne) {
 TEST_F(TestRelationOf, ARelationIsTheRowNamedAndNothingForAnotherWord) {
   for (const auto& r : ds::model::relations()) EXPECT_EQ(ds::model::relationOf(r.kind), &r);
   EXPECT_EQ(ds::model::relationOf("befriends"), nullptr);
-}
-
-TEST_F(TestContainers, EveryContainerSaysHowManyItHolds) {
-  ASSERT_FALSE(ds::model::containers().empty());
-  for (const auto& c : ds::model::containers()) EXPECT_TRUE(c.multiplicity == "*" || c.multiplicity == "0..1") << c.name;
-}
-
-TEST_F(TestContainerOf, AContainerIsFoundPlainOrQualifiedAndAClassIsNone) {
-  const auto* plain = ds::model::containerOf("vector");
-  ASSERT_NE(plain, nullptr);
-  EXPECT_EQ(plain->multiplicity, "*");
-  EXPECT_EQ(ds::model::containerOf("std::vector"), plain);
-  ASSERT_NE(ds::model::containerOf("optional"), nullptr);
-  EXPECT_EQ(ds::model::containerOf("optional")->multiplicity, "0..1");
-  EXPECT_EQ(ds::model::containerOf("Entity"), nullptr);
 }
 
 TEST_F(TestCodes, EveryCodeIsAnErrorOrAWarningWithAMeaning) {

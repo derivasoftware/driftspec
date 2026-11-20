@@ -52,9 +52,8 @@ class TestFunctions : public ::testing::Test {
 TEST_F(TestFunctions, TheOracleFindingsAndNothingElse) {
   EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 1);  // describe twice: a function is identified by its name
   EXPECT_EQ(byCode["E-MSG-ARITY"], 1);
-  EXPECT_EQ(byCode["W-MSG-UNDECLARED"], 1);
-  EXPECT_EQ(byCode["W-PARTICIPANT-UNDECLARED"], 1);
-  EXPECT_EQ(model.findings().size(), 4u);
+  EXPECT_EQ(byCode["W-MSG-UNDECLARED"], 0);  // summarise and cache nobody designs: text (DS-18)
+  EXPECT_EQ(model.findings().size(), 2u);
 }
 
 TEST_F(TestFunctions, AFunctionIsAnOperationOfItsModule) {
@@ -63,16 +62,16 @@ TEST_F(TestFunctions, AFunctionIsAnOperationOfItsModule) {
   EXPECT_EQ(gather->kind, ds::model::Kind::Function);
   EXPECT_EQ(gather->scope, "iris@tasks");
   EXPECT_TRUE(related("contains", "iris@tasks", "iris@tasks::gather"));
-  EXPECT_EQ(field("iris@tasks::gather", "params"), "board: Board, project: string");
-  EXPECT_EQ(field("iris@tasks::gather", "returns"), "list<Task>");
+  EXPECT_EQ(field("iris@tasks::gather", "params"), "board: Board, project: std::string");
+  EXPECT_EQ(field("iris@tasks::gather", "returns"), "std::vector<Task>");
   EXPECT_EQ(field("iris@tasks::gather", "visibility"), "+");  // public when nothing is written
   EXPECT_EQ(field("iris@tasks::_row_of", "visibility"), "-");
-  EXPECT_TRUE(model.find("iris@requests::get")->has("extern"));  // F5: a name, no obligations
+  EXPECT_EQ(model.find("iris@requests::get"), nullptr);  // F5: what nobody designs is not declared
 }
 
 TEST_F(TestFunctions, ItsSignatureGivesUseAndItsBodyIsAMethods) {
   EXPECT_TRUE(related("uses", "iris@tasks::gather", "iris@tasks::Board"));
-  EXPECT_TRUE(related("uses", "iris@tasks::gather", "iris@tasks::Task"));  // through list<Task>
+  EXPECT_TRUE(related("uses", "iris@tasks::gather", "iris@tasks::Task"));  // through std::vector<Task>
   EXPECT_TRUE(related("satisfies", "iris@tasks::gather", "REQ-00900-1"));
   EXPECT_EQ(field("iris@tasks::gather", "note"), "the one door to the board");
 }

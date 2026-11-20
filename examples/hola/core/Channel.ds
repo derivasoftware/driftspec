@@ -4,8 +4,8 @@
 package hola {
   module core {
     class Channel {
-      + deliver(greeting: Greeting) -> none
-      # abstract write(text: string) -> none
+      + deliver(greeting: Greeting) -> void
+      # abstract write(text: std::string) -> void
     }
   }
 }

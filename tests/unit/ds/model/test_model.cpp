@@ -91,7 +91,7 @@ TEST_F(TestEntity, HasAFlagItWasDeclaredWith) {
   Entity e = entity(Kind::Class, "p@m::A", "p@m");
   e.flags = {"abstract", "dataclass"};
   EXPECT_TRUE(e.has("abstract"));
-  EXPECT_FALSE(e.has("extern"));
+  EXPECT_FALSE(e.has("many"));
 }
 
 /// A parameter is kept as the binder read it, and a renamed entity carries its parameters and arguments.

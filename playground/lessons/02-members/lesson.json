@@ -3,7 +3,7 @@
     "en": "2 · Members",
     "es": "2 · Miembros"
   },
-  "version": 3,
+  "version": 4,
   "steps": [
     {
       "write": {
@@ -11,7 +11,7 @@
         "into": {
           "find": "class Cart"
         },
-        "text": "+ add(line: Line) -> none\n- recalculate() -> none"
+        "text": "+ add(line: Line) -> void\n- recalculate() -> void"
       },
       "at": {
         "file": "shop.ds",
@@ -56,14 +56,14 @@
           "into": {
             "find": "class Line"
           },
-          "text": "- gift: bool = false\n- note: string = \"\""
+          "text": "- gift: bool = false\n- note: std::string = \"\""
         },
         {
           "file": "shop.ds",
           "into": {
             "find": "dataclass Money"
           },
-          "text": "- currency: string = \"EUR\""
+          "text": "- currency: std::string = \"EUR\""
         }
       ],
       "at": {
@@ -121,7 +121,7 @@
         "below": {
           "find": "enum Status"
         },
-        "text": "dataclass Coupon {\n  - code: string\n  - percent: int\n}"
+        "text": "dataclass Coupon {\n  - code: std::string\n  - percent: int\n}"
       },
       "at": {
         "file": "shop.ds",
@@ -144,8 +144,8 @@
         "find": "class Cart"
       },
       "text": {
-        "en": "A cart may carry a coupon, or none. Say so inside `Cart`:\n`- refs coupon: optional<Coupon>`",
-        "es": "Un carrito puede llevar un cupón, o ninguno. Dilo dentro de `Cart`:\n`- refs coupon: optional<Coupon>`"
+        "en": "A cart may carry a coupon, or none. Say so inside `Cart`:\n`- refs optional coupon: std::optional<Coupon>`",
+        "es": "Un carrito puede llevar un cupón, o ninguno. Dilo dentro de `Cart`:\n`- refs optional coupon: std::optional<Coupon>`"
       },
       "solution": {
         "file": "shop.ds",
@@ -153,7 +153,7 @@
           "find": "class Cart",
           "first": true
         },
-        "text": "- refs coupon: optional<Coupon>"
+        "text": "- refs optional coupon: std::optional<Coupon>"
       },
       "done": {
         "edge": {
@@ -169,8 +169,8 @@
         "select": "shop@store::Cart"
       },
       "text": {
-        "en": "How many is never written apart: it comes from the type. `optional<T>` is zero or one, `list<T>` any number, a plain type exactly one. `refs` means the cart points at a coupon it does not own.",
-        "es": "El cuántos nunca se escribe aparte: sale del tipo. `optional<T>` es cero o uno, `list<T>` cualquier número y un tipo simple exactamente uno. `refs` significa que el carrito apunta a un cupón que no es suyo."
+        "en": "How many is written in front of the name, never read from the type: `many` is any number, `optional` zero or one, and nothing exactly one. The type stays as your code writes it. `refs` means the cart points at a coupon it does not own.",
+        "es": "El cuántos se escribe delante del nombre y nunca se lee del tipo: `many` es cualquier número, `optional` cero o uno, y nada exactamente uno. El tipo queda como lo escribe tu código. `refs` significa que el carrito apunta a un cupón que no es suyo."
       },
       "done": {
         "ack": {

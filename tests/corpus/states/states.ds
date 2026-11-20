@@ -18,9 +18,9 @@ package shop {
     class Order {
       - status: Status = Open
       - cancelled: bool = false
-      + pay() -> none
-      + ship() -> none
-      + cancel() -> none
+      + pay() -> void
+      + ship() -> void
+      + cancel() -> void
     }
     state Order {
       Open       if status = Open, not cancelled
@@ -38,10 +38,10 @@ package shop {
     // any state to begin with, and each call of an event moves it by the jumps on that event.
     class Desk {
       - owns order: Order
-      + sell() -> none
-      + rush() -> none
-      + close() -> none
-      + label() -> none
+      + sell() -> void
+      + rush() -> void
+      + close() -> void
+      + label() -> void
     }
     sequence Desk::sell {                             // pay, then ship: the order the machine writes
       self -> order.pay()
@@ -113,8 +113,8 @@ package shop {
     // the start is not written: a gate starts not open, so Down, and from there nothing leads to Jammed
     class Gate {
       - open: bool = false
-      + lift() -> none
-      + drop() -> none
+      + lift() -> void
+      + drop() -> void
     }
     state Gate {                                      // ! W-STATE-UNREACHABLE: nothing leads to Jammed from Down
       Down  if not open

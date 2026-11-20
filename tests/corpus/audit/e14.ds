@@ -6,7 +6,7 @@ package e14Cart {
     }
     class Shop {
       - cart: Cart
-      + open() -> none
+      + open() -> void
     }
     sequence Shop::open {
       self -> cart.total() -> t

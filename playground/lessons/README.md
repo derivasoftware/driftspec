@@ -26,7 +26,7 @@ that shows what it taught.
 | 1 | A class and its diagram | package, module, class, identity; a diagram is a question; `owns`; a reference to nothing is a finding | `CL_Store`: Cart, Line, Money |
 | 2 | Members | attributes and methods, visibility `+ - #`, every form of default, `dataclass`, `enum`; abstract is derived from the members | a richer `CL_Store` |
 | 3 | Relations | `owns` / `refs` / `shares`, inheritance `class X : Base`, uses from parameters; an ownership cycle is an error | relations lit by kind |
-| 4 | Modules and names | several modules, qualified names, bare names resolve outwards, private members, `extern module` | `CL_Shop`, the whole package |
+| 4 | Modules and names | several modules, qualified names, bare names resolve outwards, private members, a name nobody designs is text | `CL_Shop`, the whole package |
 | 5 | One class per file | a workspace is files: packages and modules reopen in every file, one class per file, diagrams in `diagrams/`; identity does not depend on the file | the workspace reorganised |
 | **Dynamic: what it does** ||||
 | 6 | A sequence | `sequence Class::method`, messages, results, `return`, checked against the classes (`W-MSG-UNDECLARED`, `E-MSG-ARITY`, `W-ARG-TYPE`) | `SEQ_Add`, `SEQ_Checkout` |

@@ -49,13 +49,14 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision
   }
 
-  verification SVER-00004-1 {
+  verification SVER-00004-2 {
     status: approved
     @requirement SREQ-00004-1
     title: System tests confirm behaviour is bound to its subject and checked against it
     text:
       The export of the behaviour corpus carries behaviour-of and expands-to
-      relations; ds check reports E-MSG-ARITY and W-PARTICIPANT-UNDECLARED.
+      relations; ds check reports E-MSG-ARITY and W-ACTION-UNDECLARED. Revision 2
+      (DS-18): a participant nobody designs is text, no longer a finding.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked

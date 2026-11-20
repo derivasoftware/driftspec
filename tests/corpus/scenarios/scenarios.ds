@@ -8,7 +8,7 @@ package bank {
   module core {
     class Vault {
       + withdraw(amount: int) -> int
-      - audit() -> none
+      - audit() -> void
     }
 
     sequence Vault::withdraw {
@@ -25,11 +25,17 @@ package bank {
     class Teller {
       - vault: core::Vault
       + serve(amount: int) -> int
-      + name() -> string
+      + name() -> std::string
       + ready() -> bool
-      + quiet() -> none
+      + quiet() -> void
       + count() -> int
-      + describe(amount: int) -> string
+      + describe(amount: int) -> std::string
+      + receipt() -> Receipt
+      + vaultOf() -> core::Vault
+    }
+
+    dataclass Receipt {
+      + amount: int
     }
 
     sequence Teller::serve {
@@ -55,16 +61,26 @@ package bank {
       return true
     }
 
+    // void, int and std::string are the code's words, which ds does not read: nothing is said (DS-18)
     sequence Teller::quiet {
-      return 1                                          // ! W-RETURN-TYPE: it returns nothing
+      return 1
     }
 
     sequence Teller::count {
-      return "many"                                     // ! W-RETURN-TYPE: a string is not an int
+      return "many"
     }
 
     sequence Teller::describe {
-      return amount                                     // ! W-RETURN-TYPE: an int is not a string
+      return amount
+    }
+
+    sequence Teller::receipt {
+      return "paper"                                    // ! W-RETURN-TYPE: a literal is no Receipt
+    }
+
+    sequence Teller::vaultOf {
+      local receipt: Receipt
+      return receipt                                    // ! W-RETURN-TYPE: a Receipt is no Vault
     }
   }
 }

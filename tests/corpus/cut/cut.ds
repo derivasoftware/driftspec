@@ -32,10 +32,10 @@ package shop {
         - refs counter: shop@warehouse@counter
         - owns till: shop@sales@till::Till
         - owns prices: PriceList
-        + sell(item: string) -> int
+        + sell(item: std::string) -> int
       }
       class PriceList {
-        + priceOf(item: string) -> int
+        + priceOf(item: std::string) -> int
       }
 
       sequence Desk::sell {
@@ -92,13 +92,13 @@ package shop {
       }
 
       class Shelf {
-        - owns boxes: list<Box>
-        + pick(item: string) -> bool {
+        - owns many boxes: std::vector<Box>
+        + pick(item: std::string) -> bool {
           @requirement REQ-00002-1
         }
       }
       dataclass Box {
-        + item: string
+        + item: std::string
         + units: int
       }
     }
@@ -106,7 +106,7 @@ package shop {
     module supply {
       class Buyer {
         - refs bank: shop@bank@gateway
-        + reorder(item: string)
+        + reorder(item: std::string)
       }
 
       sequence Buyer::reorder {

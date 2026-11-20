@@ -21,12 +21,12 @@ const std::string kShopClass =
     "package shop {\n"
     "  module store {\n"
     "    dataclass Item {\n"
-    "      + name: string\n"
+    "      + name: std::string\n"
     "      + cents: int\n"
     "    }\n"
     "    class Cart {\n"
-    "      - owns items: list<Item>\n"
-    "      + add(item: Item) -> none\n"
+    "      - owns many items: std::vector<Item>\n"
+    "      + add(item: const Item&) -> void\n"
     "      + total() -> int\n"
     "    }\n"
     "  }\n"
@@ -51,11 +51,11 @@ const std::string kShopSequence =
     "package shop {\n"
     "  module store {\n"
     "    class Stock {\n"
-    "      + has(item: string) -> bool\n"
+    "      + has(item: const std::string&) -> bool\n"
     "    }\n"
     "    class Cart {\n"
     "      - stock: Stock\n"
-    "      + add(item: string) -> bool\n"
+    "      + add(item: const std::string&) -> bool\n"
     "    }\n"
     "\n"
     "    sequence Cart::add {\n"
@@ -102,7 +102,7 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "python | typescript | lua     what its code is written in; what it holds says the same unless it says otherwise",
         "package shop {\n  module store { }\n}\n"}},
       {Kind::Module,
-       {"[-] [extern] module <name> { ... }\nlanguage: <language>     only when it differs from the box around it",
+       {"[-] module <name> { ... }\nlanguage: <language>     only when it differs from the box around it",
         "package shop {\n  language: cpp\n  module store {\n    module pricing { }\n  }\n  module web {\n    language: python\n  }\n}\n"}},
       {Kind::Requirement,
        {"requirement <ID> {\n  title: <one sentence: The <subject> shall <verb> <object>>\n  status: draft | approved | obsolete\n  text:\n"
@@ -135,23 +135,26 @@ const std::map<Kind, std::pair<std::string, std::string>>& written() {
         "  state web {\n    initial Home\n    view Home {\n      text: The items, and a button to buy one.\n    }\n"
         "    view Done {\n      text: What was bought.\n    }\n    Home -> Done on buy\n    Done -> Home on back\n  }\n}\n"}},
       {Kind::Class,
-       {"[+|-] class | dataclass <Name>[<T: Bound>] [: <Base>, ...] [<<operators>>] { members }\nextern in an extern module: a "
-        "name with no obligations\nabstract is derived from abstract methods, never written",
+       {"[+|-] class | dataclass <Name>[<T: Bound>] [: <Base>, ...] [<<operators>>] { members }\na base is written as the code "
+        "writes it (IFormat<scene::SceneDocument>, Box[int]); its first name is what the class inherits, and a name the design does "
+        "not declare is text (class Error : Exception)\nabstract is derived from abstract methods, never written",
         kShopClass}},
       {Kind::Enum,
        {"enum <Name> { <Value>, <Value> = 2, ... }",
         "package shop {\n  module store {\n    enum Status { Open, Paid, Shipped }\n  }\n}\n"}},
       {Kind::Function,
-       {"[-] function <name>(<param>: <type>, ...) [-> <type>] [fails <Failure>, ... | fails nothing] [{ @requirement <ID> }]",
-        "package shop {\n  module store {\n    function total(cents: list<int>) -> int\n  }\n}\n"}},
+       {"[-] function <name>[<T>](<param>: <type>, ...) [-> <type>] [fails <Failure>, ... | fails nothing] [{ @requirement <ID> }]",
+        "package shop {\n  module store {\n    function total(cents: const std::vector<int>&) -> int\n  }\n}\n"}},
       {Kind::Method,
-       {"+|-|# [abstract | static | const] <name>(<param>: <type>, ...) [-> <type>] [fails <Failure>, ... | fails nothing] [{ "
+       {"+|-|# [abstract | static | const] <name>[<T>](<param>: <type>, ...) [-> <type>] [fails <Failure>, ... | fails nothing] [{ "
         "body }]\nin a class; named like the class, "
-        "it is a constructor; named ~ and the class, its destructor, which no interface counts against",
+        "it is a constructor; named ~ and the class, its destructor, which no interface counts against\na type is written as the code "
+        "writes it; *args and **kwargs are parameter names like any other",
         kShopClass}},
       {Kind::Attribute,
-       {"+|- [owns | refs | shares] <name>: <type> [= <default>]\nowns (the default) is composition, refs and shares aggregation; "
-        "list<T>, set<T>, map<K,T> give *, optional<T> gives 0..1",
+       {"+|- [owns | refs | shares] [many | optional] <name>: <type> [= <default>]\nowns (the default) is composition, refs and "
+        "shares aggregation; many is *, optional is 0..1, and without either the attribute holds one. The type is the code's text: "
+        "each name in it that the design declares is related, any other is text",
         kShopClass}},
       {Kind::Operator,
        {"in the header:  class <Name> <<==, ordered, hash, print, +, -, *, []>>\nin the body:    operator <symbol>(<param>: <type>) [-> "
@@ -233,11 +236,13 @@ std::vector<CodeSpec> buildCodes() {
        "Rename one, or reopen the scope instead of declaring it again."},
       {"E-MSG-ARITY", "error", "A message passes more or fewer arguments than the operation it calls takes.",
        "Match the arguments to the operation's parameters."},
+      {"E-MODIFIER-CONFLICT", "error",
+       "An attribute is written with two ownerships (owns, refs, shares) or two multiplicities (many, optional), or one of them twice.",
+       "Keep one of each: - refs many watchers: std::set<Watcher*>."},
       {"E-OPERATOR-UNDECLARED", "error", "A class refines an operator in its body that its header does not name.",
        "Add the symbol to the header set: class Vector <<==, +>>."},
       {"E-OWNERSHIP-CYCLE", "error", "Classes own each other in a cycle: a composition must be a tree.",
        "Make one of the attributes refs or shares instead of owns."},
-      {"E-REF-AMBIGUOUS", "error", "A name is declared by more than one extern module.", "Qualify it: module::Name."},
       {"E-RELATION-KIND", "error",
        "A reference would join two kinds the language does not relate that way, such as a class that names an interface as its base.",
        "Realise an interface with @interface <name>; otherwise name something of the kind the relation takes."},
@@ -251,8 +256,10 @@ std::vector<CodeSpec> buildCodes() {
        "Pass a type that derives from the bound, or change the bound."},
       {"E-DATACLASS-ABSTRACT", "error", "A dataclass declares an abstract method: a value type has no abstract behaviour.",
        "Make it a class, or give the method a body."},
-      {"W-REF-UNDECLARED", "warning", "Something is named that the workspace declares nowhere; it stays in the model as expected.",
-       "Declare it, qualify the name, or declare it extern."},
+      {"W-REF-UNDECLARED", "warning",
+       "An annotation, a sequence's subject or a link names something the workspace declares nowhere; it stays in the model as "
+       "expected. A name in a type, a base, a bound or a call is never this: it is text.",
+       "Declare it, or qualify the name."},
       {"W-REVISION-DRIFT", "warning", "A link names an older revision of an artefact than the one the workspace declares.",
        "Point the link at the current revision."},
       {"W-PARENT-IGNORED", "warning", "A requirement carries a parent: field, which the language does not read.",
@@ -285,18 +292,16 @@ std::vector<CodeSpec> buildCodes() {
       {"W-FIELD-VALUE", "warning",
        "A closed field (status, method, a verification's level, a diagram's kind or level) carries a value it does not take.",
        "ds manual <kind> lists the values of each closed field."},
-      {"W-MODIFIER-ON-VALUE", "warning", "owns, refs or shares on a value type (int, string...) means nothing.", "Drop the modifier."},
       {"W-MSG-UNDECLARED", "warning", "A message calls an operation its target does not declare.",
        "Declare the operation, or correct the name or the target."},
       {"W-MSG-NOT-STATIC", "warning", "A message calls a class's operation on the class itself, and the operation is not static.",
        "Make the operation static, or call it through an instance: a local, an attribute or a parameter."},
-      {"W-PARTICIPANT-UNDECLARED", "warning",
-       "A message is sent to something that is neither the subject, an attribute, a local nor an earlier result.",
-       "Declare it with local <name>: <type>, or name an attribute."},
-      {"W-ARG-TYPE", "warning", "An argument's type does not match the parameter it is passed to.", "Pass a value of the declared type."},
-      {"W-RESULT-NONE", "warning", "A message names a result of an operation that returns nothing.",
-       "Drop the result, or declare what the operation returns."},
-      {"W-RETURN-TYPE", "warning", "A sequence returns a value of another type than its subject declares.",
+      {"W-ARG-TYPE", "warning",
+       "An argument does not fit the class its parameter expects: a value of a class that does not derive from it, or a literal. "
+       "A type the design does not declare (int, str, std::string) is never compared.",
+       "Pass a value of the declared class."},
+      {"W-RETURN-TYPE", "warning",
+       "A sequence returns a value that does not fit the class its subject declares: a value of another class, or a literal.",
        "Return the declared type, or correct the declaration."},
       {"W-SCENARIO-UNDECLARED", "warning", "A message or an exit names a scenario its target's behaviour does not have.",
        "Write that scenario (sequence X / name, or a branch / name), or correct the name."},

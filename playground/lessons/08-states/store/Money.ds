@@ -2,7 +2,7 @@ package shop {
   module store {
     dataclass Money {
       - cents: int
-      - currency: string = "EUR"
+      - currency: std::string = "EUR"
     }
   }
 }

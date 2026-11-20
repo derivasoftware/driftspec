@@ -3,14 +3,14 @@
     "en": "13 · Failures",
     "es": "13 · Fallos"
   },
-  "version": 3,
+  "version": 4,
   "open": "store/Stock.ds",
   "steps": [
     {
       "write": [
         {
-          "replace": "+ reserve(line: Line) -> none",
-          "text": "+ reserve(line: Line) -> none fails SoldOut"
+          "replace": "+ reserve(line: Line) -> void",
+          "text": "+ reserve(line: Line) -> void fails SoldOut"
         },
         {
           "below": {
@@ -55,12 +55,12 @@
         "find": "+ add(line: Line)"
       },
       "text": {
-        "en": "A signature can promise what may escape. Promise too much on purpose: change `+ add(line: Line) -> none` to\n`+ add(line: Line) -> none fails Timeout`",
-        "es": "Una firma puede prometer lo que puede escapar. Promete de más a propósito: cambia `+ add(line: Line) -> none` por\n`+ add(line: Line) -> none fails Timeout`"
+        "en": "A signature can promise what may escape. Promise too much on purpose: change `+ add(line: Line) -> void` to\n`+ add(line: Line) -> void fails Timeout`",
+        "es": "Una firma puede prometer lo que puede escapar. Promete de más a propósito: cambia `+ add(line: Line) -> void` por\n`+ add(line: Line) -> void fails Timeout`"
       },
       "solution": {
-        "replace": "+ add(line: Line) -> none",
-        "text": "+ add(line: Line) -> none fails Timeout"
+        "replace": "+ add(line: Line) -> void",
+        "text": "+ add(line: Line) -> void fails Timeout"
       },
       "done": {
         "finding": "W-FAILURE-UNREACHED"

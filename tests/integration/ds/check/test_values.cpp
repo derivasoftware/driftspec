@@ -40,8 +40,6 @@ class TestValues : public ::testing::Test {
 };
 
 TEST_F(TestValues, AResultIsAParticipantOfTheMessagesAfterIt) {
-  EXPECT_FALSE(reported("W-PARTICIPANT-UNDECLARED", "'item'"));
-  EXPECT_FALSE(reported("W-PARTICIPANT-UNDECLARED", "'special'"));
   bool called = false;
   for (const auto& r : model.index().all()) {
     called = called || (r.kind == "calls" && r.to == "shop@store::Item::price");
@@ -49,9 +47,10 @@ TEST_F(TestValues, AResultIsAParticipantOfTheMessagesAfterIt) {
   EXPECT_TRUE(called);
 }
 
-TEST_F(TestValues, AResultDoesNotExistBeforeItsMessage) {
-  EXPECT_TRUE(reported("W-PARTICIPANT-UNDECLARED", "'early'"));
-  EXPECT_EQ(lines["W-PARTICIPANT-UNDECLARED"].size(), 1U);
+TEST_F(TestValues, AResultUsedBeforeItsMessageIsText) {
+  // a name used before the message that gives it is no value yet: text, its call unchecked and unsaid (DS-18)
+  for (const auto& entry : lines)
+    for (const auto& line : entry.second) EXPECT_EQ(line.find("early"), std::string::npos) << entry.first << " " << line;
 }
 
 TEST_F(TestValues, ACallOnAResultIsCheckedAgainstItsType) {
@@ -59,33 +58,32 @@ TEST_F(TestValues, ACallOnAResultIsCheckedAgainstItsType) {
   EXPECT_EQ(lines["W-MSG-UNDECLARED"].size(), 1U);
 }
 
-TEST_F(TestValues, AValueOfUnknownTypeHasNothingToBeCheckedAgainst) {
-  EXPECT_FALSE(reported("W-PARTICIPANT-UNDECLARED", "'unknown'"));
-  EXPECT_FALSE(reported("W-MSG-UNDECLARED", "anything"));
-}
+TEST_F(TestValues, AValueOfUnknownTypeHasNothingToBeCheckedAgainst) { EXPECT_FALSE(reported("W-MSG-UNDECLARED", "anything")); }
 
 TEST_F(TestValues, AnArgumentOfTheWrongTypeIsReported) {
-  EXPECT_TRUE(reported("W-ARG-TYPE", "'price' is Price"));
-  EXPECT_TRUE(reported("W-ARG-TYPE", "'sku' is string"));
-  EXPECT_EQ(lines["W-ARG-TYPE"].size(), 3U);
+  EXPECT_TRUE(reported("W-ARG-TYPE", "'price' is Price"));  // a designed class that is not the one expected
+  EXPECT_TRUE(reported("W-ARG-TYPE", "'3' is a literal"));  // a literal where a designed class is expected
+  EXPECT_EQ(lines["W-ARG-TYPE"].size(), 2U);                // std::string, int and void are the code's words: never compared (DS-18)
 }
 
 TEST_F(TestValues, ADerivedClassSatisfiesItsBaseAsAnArgument) { EXPECT_FALSE(reported("W-ARG-TYPE", "'special'")); }
 
 TEST_F(TestValues, ATemplateWithCommasIsOneParameter) { EXPECT_EQ(lines.count("E-MSG-ARITY"), 0U); }
 
-TEST_F(TestValues, TakingTheResultOfAnOperationThatReturnsNothingIsReported) {
-  EXPECT_TRUE(reported("W-RESULT-NONE", "'gone'"));
-  EXPECT_EQ(lines["W-RESULT-NONE"].size(), 1U);
-}
-
-TEST_F(TestValues, ALiteralArgumentHasTheTypeItIsWrittenIn) {
-  EXPECT_TRUE(reported("W-ARG-TYPE", "'7' is int"));
-  EXPECT_FALSE(reported("W-ARG-TYPE", "'3'"));
+TEST_F(TestValues, ALiteralDiffersOnlyFromADesignedClass) {
+  EXPECT_TRUE(reported("W-ARG-TYPE", "count takes item: Item, and '3' is a literal"));
+  EXPECT_FALSE(reported("W-ARG-TYPE", "restock"));  // 3 against int: the code's word, never compared
+  EXPECT_FALSE(reported("W-ARG-TYPE", "'7'"));      // 7 against std::string, the same
   EXPECT_FALSE(reported("W-ARG-TYPE", "A-1"));
 }
 
-TEST_F(TestValues, ALocalInsideAFrameIsALocal) { EXPECT_FALSE(reported("W-PARTICIPANT-UNDECLARED", "'spare'")); }
+TEST_F(TestValues, TheResultOfAnyOperationMayBeTaken) {
+  // ds does not read void, none or None: taking the result of restock is no finding (DS-18)
+  for (const auto& entry : lines)
+    for (const auto& line : entry.second) EXPECT_EQ(line.find("'gone'"), std::string::npos) << entry.first << " " << line;
+}
+
+TEST_F(TestValues, ALocalInsideAFrameIsALocal) { EXPECT_FALSE(reported("W-MSG-UNDECLARED", "spare")); }
 
 TEST_F(TestValues, TwoObjectsOfOneTypeAreTwoLifelines) {
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:SEQ_Sell", false));

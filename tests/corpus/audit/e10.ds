@@ -11,19 +11,19 @@ package e10zoo {
   }
   module animals {
     class Animal {
-      + abstract speak() -> string
-      + abstract eat(food: string) -> none
+      + abstract speak() -> std::string
+      + abstract eat(food: std::string) -> void
     }
     class Dog : Animal {
-      + bark() -> none
+      + bark() -> void
     }
     class Staff {
       @interface keeper
-      + feed(animal: int, extra: bool) -> none  // ! W-INTERFACE-SIGNATURE
+      + feed(animal: int, extra: bool) -> void  // ! W-INTERFACE-SIGNATURE
     }
     class Kennel {
       - dog: Dog
-      + open() -> none
+      + open() -> void
     }
     sequence Kennel::open {
       self -> dog.speak() -> noise

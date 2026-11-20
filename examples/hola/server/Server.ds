@@ -13,12 +13,12 @@ package hola {
       @requirement REQ-00003-1
       - shares greeter: core::Greeter
       - owns response: Response
-      + greet(name: string) -> core::Greeting
-      - reject(reason: string) -> none
+      + greet(name: std::string) -> core::Greeting
+      - reject(reason: std::string) -> void
     }
 
     class Response : core::Channel {
-      # write(text: string) -> none
+      # write(text: std::string) -> void
       + status: int
     }
 

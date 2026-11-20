@@ -7,9 +7,6 @@
 
 package driftspec@ds {
 
-  extern module std {
-    class pair<A, B>
-  }
 
   module query {
     @requirement REQ-00003-2

@@ -83,19 +83,17 @@ TEST_F(TestPackages, AModifierIsAWordOnlyInFrontOfAName) {
   EXPECT_TRUE(run->has("static"));  // the same word, modifying
 }
 
-TEST_F(TestPackages, ABareNameFallsBackToTheExternCatalogue) {
-  EXPECT_TRUE(related("owns", "app@render@svg::Svg::node", "app@render@tree_sitter::TSNode"));  // resolved by simple name
-  EXPECT_TRUE(reported("E-REF-AMBIGUOUS", "Dup"));                                              // two externs, no winner
-  EXPECT_FALSE(related("owns", "app@render@svg::Svg::dup", "app@render@tree_sitter::Dup"));
-}
-
-TEST_F(TestPackages, AGenericUseFindsTheExternOfItsSimpleName) {
-  // an extern's template arguments are not the design's to check: the use's arity, and the declaration's, do not matter
-  EXPECT_TRUE(related("owns", "app@render@svg::Svg::ends", "app@render@std::pair<2>"));
-  EXPECT_TRUE(related("owns", "app@render@svg::Svg::span", "app@render@python::tuple"));
-  EXPECT_FALSE(reported("W-REF-UNDECLARED", "pair<2>"));
-  EXPECT_FALSE(reported("W-REF-UNDECLARED", "tuple<3>"));
-  EXPECT_FALSE(reported("E-REF-AMBIGUOUS", "pair<2>"));  // std::pair<2> and python::pair<1>: the arity of the use decides
+TEST_F(TestPackages, ANameNobodyDesignsIsTextAndSaysNothing) {
+  // what lives outside the design is not declared: a name nobody designs relates nothing and is no finding (DS-18)
+  for (const char* member : {"node", "dup", "ends", "span"}) {
+    const std::string id = std::string("app@render@svg::Svg::") + member;
+    for (const auto& r : model.index().from(id)) ADD_FAILURE() << id << " " << r.kind << " " << r.to;
+  }
+  for (const char* name : {"TSNode", "Dup", "pair", "tuple"}) {
+    EXPECT_FALSE(reported("W-REF-UNDECLARED", name)) << name;
+    EXPECT_FALSE(reported("E-REF-AMBIGUOUS", name)) << name;
+  }
+  EXPECT_EQ(model.find("app@render@svg::Svg::ends")->field("type"), "std::pair<int, int>");  // the text as written
 }
 
 TEST_F(TestPackages, AnEnumRealisesRequirementsLikeAClass) {

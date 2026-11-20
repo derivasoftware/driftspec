@@ -140,12 +140,8 @@ diagram REQ_Shop {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
         (class_body
@@ -154,9 +150,7 @@ diagram REQ_Shop {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name)))
+            (type)
             (member_body
               (annotation
                 (name)
@@ -169,12 +163,8 @@ diagram REQ_Shop {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name)))
+                (type)))
+            (type)
             (member_body
               (annotation
                 (name)
@@ -286,9 +276,7 @@ diagram REQ_Shop {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))))))
+            (type))))))
   (diagram
     (name)
     (field
@@ -334,12 +322,8 @@ diagram REQ_Shop {
       (parameters
         (parameter
           (name)
-          (type
-            (qualified_name
-              (name)))))
-      (type
-        (qualified_name
-          (name)))
+          (type)))
+      (type)
       (field
         (name)
         (line_text))
@@ -441,9 +425,7 @@ diagram TB_Requirements {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name)))
+            (type)
             (member_body
               (annotation
                 (name)

@@ -5,16 +5,16 @@ package shop@shipping {
       + deliver(parcel: Parcel) -> bool
     }
     class Route {
-      + next() -> string
+      + next() -> std::string
     }
     dataclass Parcel {
-      + address: string
+      + address: std::string
     }
   }
   module tracking {
     class Tracker {
       - refs courier: carrier::Courier
-      + where(parcel: carrier::Parcel) -> string
+      + where(parcel: carrier::Parcel) -> std::string
     }
   }
 }

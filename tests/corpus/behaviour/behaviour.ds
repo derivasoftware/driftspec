@@ -25,11 +25,10 @@
 //        local parser: Parser     a stack or heap entity born in this method
 //      At class level the participants are the class's attributes; at module
 //      level the module's classes; at package level its modules and boundaries.
-//      ! a message to a name that is neither attribute, parameter nor local
-//        → W-PARTICIPANT-UNDECLARED (this replaces the W-MSG-NO-PATH idea:
-//        the path IS the static context).
-//      ! a local whose type is not reachable from the subject's module by
-//        uses/owns → W-REF-UNDECLARED as for any reference.
+//      A message to a name that is neither attribute, parameter nor local is
+//        text, unchecked: the path IS the static context, and what it does
+//        not hold the design does not say (DS-18).
+//      A local whose type nobody designs is text, as any type is.
 //  B4  messages
 //      (A) rec  from -> to.op(args) -> result        return on the same line
 //      (B)      from -> to.op(args)  and a separate  return to.op -> result  (today)
@@ -73,29 +72,29 @@ package ds {
   module ds {
 
     dataclass Reference {
-      + from: string
-      + target: string
-      + scope: string
+      + from: std::string
+      + target: std::string
+      + scope: std::string
     }
 
     class Model {
-      + find(id: string) -> optional<Entity>
+      + find(id: std::string) -> std::optional<Entity>
       + declare(entity: Entity) -> Entity
-      + relate(relation: Relation) -> none
-      + report(finding: Finding) -> none
+      + relate(relation: Relation) -> void
+      + report(finding: Finding) -> void
     }
 
     class Binder {
-      + references() -> list<Reference>
-      + messages() -> list<Message>
+      + references() -> std::vector<Reference>
+      + messages() -> std::vector<Message>
     }
 
     class Checker {
       - refs model: Model
-      + run(binder: Binder) -> none
-      + resolve(name: string, scope: string) -> string
-      + resolveReference(ref: Reference) -> none
-      + checkMessage(message: Message) -> none
+      + run(binder: Binder) -> void
+      + resolve(name: std::string, scope: std::string) -> std::string
+      + resolveReference(ref: Reference) -> void
+      + checkMessage(message: Message) -> void
     }
 
     // --- B1 (A): the behaviour of a method; `self` is the Checker ---------------
@@ -134,8 +133,8 @@ package ds {
     // --- things the tool refuses (B3, B4) --------------------------------------
 
     sequence Checker::checkMessage {
-      local parser: Parser                          // ! W-REF-UNDECLARED: Parser (expected node)
-      self -> binder.messages()                     // ! W-PARTICIPANT-UNDECLARED: binder is neither an attribute of Checker, a parameter of checkMessage nor a local
+      local parser: Parser                          // Parser nobody designs: text (DS-18)
+      self -> binder.messages()                     // binder is neither an attribute, a parameter nor a local: text, unchecked (DS-18)
       self -> model.find(id, scope)                 // ! E-MSG-ARITY: Model::find takes 1 parameter, 2 given
       self -> parser.parseFile(path)                // waits: Parser is expected (R6)
     }
@@ -158,7 +157,7 @@ package ds {
   module lsp {
     class Publisher {
       - refs model: ds::Model                      // structural coupling to ds
-      + publish(findings: list<ds::Finding>) -> none
+      + publish(findings: std::vector<ds::Finding>) -> void
     }
     sequence Publisher::publish {
       local checker: ds::Checker                   // transient coupling to ds: created here

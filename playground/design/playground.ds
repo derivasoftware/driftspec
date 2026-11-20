@@ -228,45 +228,45 @@ package driftspec@playground {
     // engine.js: loads ds.js + ds.wasm and makes the one call
     class Engine {
       @consumes driftspec@ds@browser
-      + start() -> none
+      + start() -> void
       + ds(files: Files, width: int) -> Answer
     }
     dataclass Files {
-      + texts: map<string, string>
+      + texts: std::map<std::string, std::string>
     }
     // what the engine answers after an edit: everything the page paints
     dataclass Answer {
       + report: Report
-      + entities: list<string>
-      + locations: map<string, Location>
-      + artefacts: list<Artefact>
-      + diagrams: list<Drawn>
+      + entities: std::vector<std::string>
+      + many locations: std::map<std::string, Location>
+      + many artefacts: std::vector<Artefact>
+      + many diagrams: std::vector<Drawn>
     }
     dataclass Report {
-      + findings: list<Finding>
-      + coverage: list<Finding>             // what is not yet written, shown as information (DS-216)
+      + many findings: std::vector<Finding>
+      + many coverage: std::vector<Finding>             // what is not yet written, shown as information (DS-216)
     }
     dataclass Finding {
-      + code: string
-      + message: string
+      + code: std::string
+      + message: std::string
       + at: Location
     }
     dataclass Location {
-      + file: string
+      + file: std::string
       + line: int
       + endLine: int
     }
     dataclass Artefact {
-      + id: string
-      + title: string
-      + keptBy: list<string>
-      + provedBy: list<string>
+      + id: std::string
+      + title: std::string
+      + keptBy: std::vector<std::string>
+      + provedBy: std::vector<std::string>
     }
     dataclass Drawn {
-      + id: string
-      + kind: string
-      + include: string
-      + svg: string
+      + id: std::string
+      + kind: std::string
+      + include: std::string
+      + svg: std::string
     }
     sequence Engine::ds {
       local wasm: driftspec@ds@browser                   // the engine's function in ds.wasm, as ds offers it to a page
@@ -285,72 +285,72 @@ package driftspec@playground {
       - owns table: Table
       - owns problems: Problems
       - owns coach: lessons::Coach
-      + load(lesson: lessons::Lesson) -> none {
+      + load(lesson: lessons::Lesson) -> void {
         @requirement REQ-00158-1
         @requirement REQ-00162-1
       }
       // the home page's example, drawn by the engine when the page loads
-      + paintHome() -> none {
+      + paintHome() -> void {
         @requirement REQ-00153-1
       }
       // the site's pages: one shown at a time, kept in the address
-      + showTab(tab: string) -> none {
+      + showTab(tab: std::string) -> void {
         @requirement REQ-00152-1
       }
       // the guides of the manual, asked of the engine and drawn with their examples
-      + paintDocs() -> none {
+      + paintDocs() -> void {
         @requirement REQ-00161-1
       }
-      + onEdit() -> none
+      + onEdit() -> void
       // the diagrams a step is about, shown alone while it lasts; the one that is a tour is played
-      + focus(step: lessons::Step) -> none {
+      + focus(step: lessons::Step) -> void {
         @requirement REQ-00150-1
         @requirement REQ-00151-1
       }
     }
     class Editor {
       // the mode that reads the language's grammar, once it is loaded
-      + colour(mode: string) -> none {
+      + colour(mode: std::string) -> void {
         @requirement REQ-00159-1
       }
-      + open(file: string) -> none
-      + type(step: lessons::Step) -> none
-      + reveal(file: string, line: int, endLine: int) -> none
-      + underline(findings: list<engine::Finding>) -> none
+      + open(file: std::string) -> void
+      + type(step: lessons::Step) -> void
+      + reveal(file: std::string, line: int, endLine: int) -> void
+      + underline(findings: std::vector<engine::Finding>) -> void
     }
     class Tree {
-      + paint(files: engine::Files, findings: list<engine::Finding>) -> none
+      + paint(files: engine::Files, findings: std::vector<engine::Finding>) -> void
     }
     class Problems {
-      + paint(findings: list<engine::Finding>) -> none
-      + fold() -> none
+      + paint(findings: std::vector<engine::Finding>) -> void
+      + fold() -> void
     }
     class Panes {
-      - owns panes: list<Pane>
-      + paint(diagrams: list<engine::Drawn>) -> none
+      - owns many panes: std::vector<Pane>
+      + paint(diagrams: std::vector<engine::Drawn>) -> void
       // one pane alone, or it and the ones a step compares it with
-      + solo(diagram: string, beside: list<string>) -> none
+      + solo(diagram: std::string, beside: std::vector<std::string>) -> void
       // a tour played: the step it is at, lit in its two parts
-      + play(tour: string) -> none {
+      + play(tour: std::string) -> void {
         @requirement REQ-00151-1
       }
-      + step(tour: string, at: int) -> none {
+      + step(tour: std::string, at: int) -> void {
         @requirement REQ-00151-1
       }
     }
     class Pane {
       - refs editor: Editor
-      + draw(drawn: engine::Drawn) -> none
-      + light(entity: string) -> none
+      + draw(drawn: engine::Drawn) -> void
+      + light(entity: std::string) -> void
       // the interfaces the uses of what is pointed at go through, in a card beside it
-      + via(entity: string) -> none {
+      + via(entity: std::string) -> void {
         @requirement REQ-00156-1
       }
-      + reveal(entity: string) -> none
+      + reveal(entity: std::string) -> void
     }
     class Table {
       - refs editor: Editor
-      + paint(rows: list<engine::Artefact>) -> none
+      + paint(rows: std::vector<engine::Artefact>) -> void
     }
 
     sequence Page::onEdit {
@@ -383,42 +383,42 @@ package driftspec@playground {
     // a lesson: its starting files and its steps (lessons/NN-*/lesson.json), in two languages
     dataclass Lesson {
       + title: Text
-      + steps: list<Step>
+      + many steps: std::vector<Step>
     }
     dataclass Step {
       + text: Text
-      + shows: list<string>                  // the diagrams it is about, when its card and its check do not say
-      + write: list<Write>
-      + solution: list<Write>
+      + shows: std::vector<std::string>                  // the diagrams it is about, when its card and its check do not say
+      + many write: std::vector<Write>
+      + many solution: std::vector<Write>
       + done: Check
     }
     dataclass Text {
-      + en: string
-      + es: string
+      + en: std::string
+      + es: std::string
     }
     dataclass Write {
-      + file: string
-      + anchor: string
-      + text: string
+      + file: std::string
+      + anchor: std::string
+      + text: std::string
     }
     dataclass Check {
-      + ack: optional<Text>
-      + entity: optional<string>
-      + finding: optional<string>
-      + gone: optional<string>
-      + hides: optional<string>             // a text a diagram no longer draws: what a cut closes, what a fold stops at
+      + optional ack: std::optional<Text>
+      + entity: std::optional<std::string>
+      + finding: std::optional<std::string>
+      + gone: std::optional<std::string>
+      + hides: std::optional<std::string>             // a text a diagram no longer draws: what a cut closes, what a fold stops at
       + clean: bool
     }
     // the card beside what a step talks about: decides when a step is done and which comes next; the page
     // types its code (the lessons know nothing of the page, REQ-00149-1)
     class Coach {
       - refs lesson: Lesson
-      + check(answer: engine::Answer) -> optional<Step>
+      + check(answer: engine::Answer) -> std::optional<Step>
       + passed(check: Check, answer: engine::Answer) -> bool
       // what a step is about: the diagrams it names, or the ones its card and its check look at
-      + about(step: Step) -> list<string>
+      + about(step: Step) -> std::vector<std::string>
       // back to the last card answered with its button; nothing is undone
-      + back() -> optional<Step> {
+      + back() -> std::optional<Step> {
         @requirement REQ-00157-1
       }
     }

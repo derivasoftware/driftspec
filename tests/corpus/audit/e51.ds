@@ -15,7 +15,7 @@ package e51shop {
       class Page {
         - api: e51shop@back@orders  // ! E-RELATION-KIND
         - refs api2: e51shop@back@orders
-        + show(id: string) -> none
+        + show(id: std::string) -> void
       }
       sequence Page::show {
         self -> api2.find(id) -> order

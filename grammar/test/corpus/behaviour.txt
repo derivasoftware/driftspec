@@ -42,12 +42,8 @@ diagram SEQ_Add {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
         (class_body
@@ -55,9 +51,7 @@ diagram SEQ_Add {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
@@ -65,12 +59,8 @@ diagram SEQ_Add {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (sequence
         (qualified_name
           (name)
@@ -140,9 +130,7 @@ diagram SEQ_Total {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -151,30 +139,20 @@ diagram SEQ_Total {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))
-              (type_args
-                (type
-                  (qualified_name
-                    (name))))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (sequence
         (qualified_name
           (name)
           (name))
         (local
           (name)
-          (type
-            (qualified_name
-              (name))))
+          (type))
         (loop
           (condition)
           (message
@@ -249,12 +227,8 @@ diagram SEQ_SoldOut {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))
+                (type)))
+            (type))
           (method
             (visibility)
             (member_name
@@ -262,12 +236,8 @@ diagram SEQ_SoldOut {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
         (class_body
@@ -275,9 +245,7 @@ diagram SEQ_SoldOut {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
@@ -285,12 +253,8 @@ diagram SEQ_SoldOut {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (sequence
         (qualified_name
           (name)
@@ -393,12 +357,8 @@ diagram SEQ_Checkout {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
         (class_body
@@ -407,9 +367,7 @@ diagram SEQ_Checkout {
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))))
+            (type))))
       (class
         (name)
         (class_body
@@ -418,21 +376,13 @@ diagram SEQ_Checkout {
             (ownership)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))
-              (type_args
-                (type
-                  (qualified_name
-                    (name))))))
+            (type))
           (method
             (visibility)
             (member_name
               (name))
             (parameters)
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
@@ -440,21 +390,15 @@ diagram SEQ_Checkout {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (sequence
         (qualified_name
           (name)
           (name))
         (local
           (name)
-          (type
-            (qualified_name
-              (name))))
+          (type))
         (loop
           (condition)
           (message
@@ -553,12 +497,8 @@ diagram SEQ_Add {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name)))
+                (type)))
+            (type)
             (failures
               (qualified_name
                 (name))))))
@@ -569,9 +509,7 @@ diagram SEQ_Add {
             (visibility)
             (member_name
               (name))
-            (type
-              (qualified_name
-                (name))))
+            (type))
           (method
             (visibility)
             (member_name
@@ -579,12 +517,8 @@ diagram SEQ_Add {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (sequence
         (qualified_name
           (name)
@@ -682,12 +616,8 @@ diagram SEQ_Buy {
         (parameters
           (parameter
             (name)
-            (type
-              (qualified_name
-                (name)))))
-        (type
-          (qualified_name
-            (name)))
+            (type)))
+        (type)
         (field
           (name)
           (line_text))
@@ -701,16 +631,10 @@ diagram SEQ_Buy {
         (name))
       (local
         (name)
-        (type
-          (qualified_name
-            (name)
-            (name))))
+        (type))
       (local
         (name)
-        (type
-          (qualified_name
-            (name)
-            (name))))
+        (type))
       (message
         (name)
         (name)
@@ -734,12 +658,8 @@ diagram SEQ_Buy {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
         (class_body
@@ -750,12 +670,8 @@ diagram SEQ_Buy {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (sequence
         (qualified_name
           (name)
@@ -840,12 +756,8 @@ diagram TOUR_Buy {
         (parameters
           (parameter
             (name)
-            (type
-              (qualified_name
-                (name)))))
-        (type
-          (qualified_name
-            (name)))
+            (type)))
+        (type)
         (field
           (name)
           (line_text))
@@ -859,16 +771,10 @@ diagram TOUR_Buy {
         (name))
       (local
         (name)
-        (type
-          (qualified_name
-            (name)
-            (name))))
+        (type))
       (local
         (name)
-        (type
-          (qualified_name
-            (name)
-            (name))))
+        (type))
       (message
         (name)
         (name)
@@ -892,12 +798,8 @@ diagram TOUR_Buy {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (class
         (name)
         (class_body
@@ -908,12 +810,8 @@ diagram TOUR_Buy {
             (parameters
               (parameter
                 (name)
-                (type
-                  (qualified_name
-                    (name)))))
-            (type
-              (qualified_name
-                (name))))))
+                (type)))
+            (type))))
       (sequence
         (qualified_name
           (name)

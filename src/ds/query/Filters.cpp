@@ -82,7 +82,6 @@ std::string drawnFrom(const model::Model& model, const model::Entity& entity) {
 
 bool ClassFilter::matches(const model::Model& model, const std::string& pattern, const model::Entity& entity) const {
   if (pattern == entity.id) return true;
-  if (entity.has("extern")) return false;  // what lives outside the workspace is drawn only when named
   return inPattern(model, pattern, entity);
 }
 
@@ -109,8 +108,8 @@ std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
       const std::string fromClass = drawnFrom(model, *from);
       const model::Entity* fromEntity = model.find(fromClass);
       if (!fromEntity || !isBox(*fromEntity) || !isBox(*to) || to->expected || fromEntity->expected) continue;
-      if (selected.count(fromClass) && !to->has("extern")) grown.insert(r.to);
-      if (selected.count(r.to) && !fromEntity->has("extern")) grown.insert(fromClass);
+      if (selected.count(fromClass)) grown.insert(r.to);
+      if (selected.count(r.to)) grown.insert(fromClass);
     }
     selected = grown;
   }

@@ -69,7 +69,7 @@ struct Entity {
   std::string scope;  ///< qualified name of the enclosing scope ("" at top)
   std::map<std::string, std::string> fields;
   std::vector<std::string>
-      flags;  ///< modifiers with semantics (R19): abstract, static, const, owns, refs, shares, extern, dataclass, constructor
+      flags;  ///< modifiers with semantics (R19): abstract, static, const, owns, refs, shares, many, optional, dataclass, constructor
   std::vector<Param> params;      ///< read once from the syntax: an operation's parameters, a template's parameters
   std::vector<std::string> args;  ///< read once from the syntax: a message's arguments, as written
   Location location;

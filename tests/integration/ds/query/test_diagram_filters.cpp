@@ -41,7 +41,6 @@ class TestFilters : public ::testing::Test {
 
   static const char* shop() {
     return "package shop {\n"
-           "  extern module std { class vector<T> }\n"
            "  module store {\n"
            "    class Item { + price: int }\n"
            "    class Stock {\n"
@@ -106,9 +105,16 @@ class TestFilterFor : public TestFilters {};
 TEST_F(TestFilterFor, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   load(std::string(shop()) + "diagram SEQ_Sell {\n  kind: sequence\n  include: shop@till::Till::sell\n}\n" +
        "diagram REQ_None {\n  kind: requirement\n  include: REQ-09999-1\n}\n");
-  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::filterFor(*model.find("diagram:SEQ_Sell")).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::filterFor(*model.find("diagram:REQ_None")).get()), nullptr);
-  EXPECT_EQ(ds::query::filterFor(*model.find("shop@till::Till")), nullptr);
+  // a failed load leaves the model empty: say so, never dereference what it does not hold
+  const ds::model::Entity* sell = model.find("diagram:SEQ_Sell");
+  const ds::model::Entity* none = model.find("diagram:REQ_None");
+  const ds::model::Entity* till = model.find("shop@till::Till");
+  ASSERT_NE(sell, nullptr);
+  ASSERT_NE(none, nullptr);
+  ASSERT_NE(till, nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::filterFor(*sell).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::filterFor(*none).get()), nullptr);
+  EXPECT_EQ(ds::query::filterFor(*till), nullptr);
 }
 
 /// A filter of our own: built with its criteria and passed in; the query knows nothing of it.

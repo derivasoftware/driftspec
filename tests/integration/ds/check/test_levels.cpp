@@ -78,7 +78,7 @@ TEST_F(TestLevels, ABoxTakesPartByBeingNamed) {
   const ds::model::Entity* charge = message("shop@sales::sequence", "charge");
   ASSERT_NE(charge, nullptr);
   EXPECT_EQ(charge->field("type"), "shop@sales@till");  // a module, named from inside the box the scenario is of
-  EXPECT_EQ(found(model.findings(), "W-PARTICIPANT-UNDECLARED", "sales"), 0);
+  EXPECT_EQ(found(model.findings(), "W-MSG-UNDECLARED", "sales"), 0);
 }
 
 TEST_F(TestLevels, TheParticipantWrittenBeforeTheArrowSendsTheMessage) {
@@ -101,7 +101,7 @@ TEST_F(TestLevels, AMessageToABoxIsBoundToTheOperationTheBoxOffers) {
 }
 
 TEST_F(TestLevels, AMessageNoOperationAnswersIsALabelListedAsCoverage) {
-  EXPECT_EQ(found(model.coverage(), "W-MESSAGE-NO-OPERATION", "sends sell to shop@sales"), 1);
+  EXPECT_EQ(found(model.coverage(), "W-MESSAGE-NO-OPERATION", "sends sell to shop@sales"), 2);  // the courier's too: its sender is text
   EXPECT_EQ(found(model.coverage(), "W-MESSAGE-NO-OPERATION", "sends charge to shop@sales@till"), 1);  // a module offers its functions
   EXPECT_EQ(found(model.findings(), "W-MESSAGE-NO-OPERATION", ""), 0);
   EXPECT_EQ(found(model.findings(), "W-MSG-UNDECLARED", "sell"), 0);
@@ -112,7 +112,6 @@ TEST_F(TestLevels, WhatClashesWithTheLevelBelowIsAFinding) {
   EXPECT_EQ(found(model.findings(), "W-CONSUMES-UNDECLARED", "shop@bank calls shop@warehouse@counter::take"),
             1);                                                                     // the sender is who calls
   EXPECT_EQ(found(model.findings(), "W-MSG-UNDECLARED", "shop@shell::refund"), 1);  // an interface is written: what it lacks, it lacks
-  EXPECT_EQ(found(model.findings(), "W-PARTICIPANT-UNDECLARED", "'courier' sends a message"), 1);
   EXPECT_EQ(found(model.findings(), "W-CONSUMES-UNDECLARED", ""), 1);  // and no other: whoever asks from outside declares no use
 }
 

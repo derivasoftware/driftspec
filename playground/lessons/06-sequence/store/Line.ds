@@ -5,7 +5,7 @@ package shop {
       - count: int = 1
       - price: Money
       - gift: bool = false
-      - note: string = ""
+      - note: std::string = ""
     }
   }
 }

@@ -2,7 +2,7 @@ package shop {
   module billing {
     + class Numbering {
       + next() -> int
-      + static today() -> string
+      + static today() -> std::string
     }
   }
 }

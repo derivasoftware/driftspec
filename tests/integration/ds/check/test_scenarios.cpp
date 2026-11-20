@@ -76,10 +76,9 @@ TEST_F(TestScenarios, AScenarioNobodyDeclaresIsAFinding) {
 }
 
 TEST_F(TestScenarios, AReturnIsCheckedAgainstWhatTheOperationDeclares) {
-  EXPECT_TRUE(reported("W-RETURN-TYPE", "Teller::quiet returns none"));
-  EXPECT_TRUE(reported("W-RETURN-TYPE", "Teller::count returns int"));
-  EXPECT_TRUE(reported("W-RETURN-TYPE", "Teller::describe returns string"));
-  EXPECT_EQ(lines["W-RETURN-TYPE"].size(), 3U);
+  EXPECT_TRUE(reported("W-RETURN-TYPE", "Teller::receipt returns Receipt"));      // a literal where a designed class is promised
+  EXPECT_TRUE(reported("W-RETURN-TYPE", "Teller::vaultOf returns core::Vault"));  // a designed class that is not the one promised
+  EXPECT_EQ(lines["W-RETURN-TYPE"].size(), 2U);  // void, int and std::string are the code's words: never compared (DS-18)
 }
 
 TEST_F(TestScenarios, AReturnThatAgreesIsNotAFinding) {

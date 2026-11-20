@@ -6,6 +6,25 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.6
+
+Types are written as the code writes them (DS-18). A design written for 0.1.5 or earlier has to change:
+
+- `extern module` is gone and is now a syntax error. Delete those blocks: a name the design does
+  not declare, in a type, a base, a bound or a call, is text, with no relation and no finding.
+- The neutral types are gone: write `std::string`, `void`, `std::vector<Line>` in a C++ box and
+  `str`, `None`, `list[Line]`, `Line | None` in a Python one, as the code does. `*args` and
+  `**kwargs` are parameter names.
+- Multiplicity is no longer read from the type: write `many` (`*`) or `optional` (`0..1`) in front
+  of the attribute, beside `refs` or `shares`. Two of a kind are `E-MODIFIER-CONFLICT`.
+- A bare name that no scope declares is the one class of that name in its package.
+- A base keeps its template arguments (`class SceneJson : IFormat<Scene>`), and a method may take
+  its own (`+ each<F>(f: F) -> void`).
+- A literal is checked only against a designed class; `W-RESULT-NONE`, `W-MODIFIER-ON-VALUE`,
+  `W-PARTICIPANT-UNDECLARED` and `E-REF-AMBIGUOUS` are no longer reported.
+
+`tools/migrate_types.py` does most of the rewrite; check what it wrote against the code.
+
 ## 0.1.0 (2026-11-18)
 
 The first public release.

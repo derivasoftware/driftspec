@@ -16,7 +16,9 @@ module.exports = grammar({
 
   extras: $ => [/[ \t\r\n]/, $.comment],
 
-  externals: $ => [$.block_text],
+  // a type is the code's text, read by the external scanner: its brackets <> [] () balanced, up to a top-level
+  // , ) ] > = { } newline, a lone :, ->, << or the word fails (DS-18)
+  externals: $ => [$.block_text, $.type],
 
   word: $ => $.name,
 
@@ -35,7 +37,8 @@ module.exports = grammar({
     // a package is annotated like a class: @requirement for what the box realises, @constraint for what binds it (HLD, 2026-10-26)
     _package_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.rule, $.definition, $.interface, $.package, $.module, $.sequence, $.state),
 
-    module: $ => seq(optional(field('visibility', $.visibility)), optional(field('extern', 'extern')), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
+    // a name nobody designs is text, so nothing outside the design is declared: there is no extern module (DS-18)
+    module: $ => seq(optional(field('visibility', $.visibility)), 'module', field('name', $.name), '{', repeat($._module_item), '}'),
     _module_item: $ => choice($.field, $.annotation, $.requirement, $.constraint, $.verification, $.usecase, $.rule, $.definition, $.interface, $.module, $.class, $.enum, $.function, $.sequence, $.state),
 
     // ---- process artefacts ------------------------------------------------
@@ -112,7 +115,8 @@ module.exports = grammar({
       field('kind', choice('class', 'dataclass')),
       field('name', $.name),
       optional(field('params', $.template_params)),
-      optional(seq(':', field('base', $.qualified_name), repeat(seq(',', field('base', $.qualified_name))))),
+      // a base is written as the code writes it, template arguments and all: IFormat<scene::SceneDocument> (DS-18)
+      optional(seq(':', field('base', $.type), repeat(seq(',', field('base', $.type))))),
       optional(field('operators', $.operator_set)),
       optional(field('body', $.class_body)),
     ),
@@ -122,6 +126,7 @@ module.exports = grammar({
       optional(field('visibility', $.visibility)),
       'function',
       field('name', $.member_name),
+      optional(field('params', $.template_params)),  // a templated function, as a templated method (DS-18)
       $.parameters,
       optional(seq('->', field('returns', $.type))),
       optional($._fails),
@@ -142,6 +147,7 @@ module.exports = grammar({
       field('visibility', $.visibility),
       repeat(field('modifier', $.method_modifier)),
       field('name', $.member_name),
+      optional(field('params', $.template_params)),  // a templated method: each<F>(f: F) (DS-18)
       $.parameters,
       optional(seq('->', field('returns', $.type))),
       optional($._fails),
@@ -150,7 +156,9 @@ module.exports = grammar({
     method_modifier: $ => choice('abstract', 'static', 'const'),
     attribute: $ => seq(
       field('visibility', $.visibility),
-      optional(field('ownership', $.ownership)),
+      // what it holds and how many: owns (the default), refs or shares; many (*) or optional (0..1). Written, never
+      // read from the type. Two of one kind parse, so the check can say E-MODIFIER-CONFLICT (DS-18)
+      repeat(choice(field('ownership', $.ownership), field('many', 'many'), field('optional', 'optional'))),
       field('name', $.member_name),
       ':',
       field('type', $.type),
@@ -161,7 +169,7 @@ module.exports = grammar({
     // a modifier is a word only in front of a name: `+ abstract: bool` is an attribute named abstract,
     // `+ refs: map<..>` one named refs. The parser decides by what follows; nothing is reserved.
     // ~Name is the class's destructor (DS-143): one token, so a tilde is never an operator here
-    member_name: $ => choice($.name, alias(choice('abstract', 'static', 'const', 'owns', 'refs', 'shares', 'function'), $.name),
+    member_name: $ => choice($.name, alias(choice('abstract', 'static', 'const', 'owns', 'refs', 'shares', 'many', 'optional', 'function'), $.name),
       alias(token(seq('~', NAME)), $.name)),
     operator: $ => prec.right(seq(
       'operator',
@@ -174,9 +182,9 @@ module.exports = grammar({
     member_body: $ => seq('{', repeat(choice($.field, $.annotation, $.rule, $.requirement, $.constraint)), '}'),
     visibility: $ => choice('+', '-', '#'),
     parameters: $ => seq('(', optional(seq($.parameter, repeat(seq(',', $.parameter)))), ')'),
-    parameter: $ => seq(field('name', $.name), optional(seq(':', field('type', $.type)))),
-    type: $ => seq(field('name', $.qualified_name), optional(field('args', $.type_args))),
-    type_args: $ => seq('<', $.type, repeat(seq(',', $.type)), '>'),
+    // *args and **kwargs are names like any other: the stars are part of the text (DS-18)
+    parameter: $ => seq(field('name', choice($.name, alias($.starred_name, $.name))), optional(seq(':', field('type', $.type)))),
+    starred_name: $ => token(seq(choice('*', '**'), NAME)),
     default_value: $ => choice($.number, $.string, 'true', 'false', $.qualified_name),
     // a transition's guard, as UML writes it; kept as text until a state machine asks for more
     guard: $ => seq('[', field('body', $.guard_body), ']'),

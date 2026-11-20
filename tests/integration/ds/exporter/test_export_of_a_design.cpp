@@ -13,9 +13,10 @@ const char* kDesign =
     "package p {\n"
     "  module m {\n"
     "    class A {\n"
-    "      - refs b: B\n"
-    "      + run() -> none\n"
+    "      - refs shares b: B\n"
+    "      + run() -> void\n"
     "    }\n"
+    "    class B\n"
     "  }\n"
     "}\n";
 
@@ -45,7 +46,7 @@ TEST_F(TestExportOfADesign, TheThreeArraysCarryWhatTheTextDeclaresRelatesAndGets
   EXPECT_EQ((*attribute)["fields"]["visibility"], "-");
   const nlohmann::json* b = byId(doc["entities"], "p@m::B");
   ASSERT_NE(b, nullptr);
-  EXPECT_TRUE((*b)["expected"]);  // named, declared nowhere
+  EXPECT_FALSE((*b)["expected"]);
 
   bool refs = false;
   for (const auto& r : doc["relations"]) {
@@ -59,8 +60,8 @@ TEST_F(TestExportOfADesign, TheThreeArraysCarryWhatTheTextDeclaresRelatesAndGets
   EXPECT_TRUE(refs);
 
   ASSERT_EQ(doc["findings"].size(), 1u);
-  EXPECT_EQ(doc["findings"][0]["code"], "W-REF-UNDECLARED");
-  EXPECT_EQ(doc["findings"][0]["severity"], "warning");
+  EXPECT_EQ(doc["findings"][0]["code"], "E-MODIFIER-CONFLICT");  // refs and shares at once: the first is kept
+  EXPECT_EQ(doc["findings"][0]["severity"], "error");
   EXPECT_EQ(doc["findings"][0]["location"]["file"], "a.ds");
   EXPECT_EQ(doc["findings"][0]["location"]["line"], 4);
 }

@@ -85,20 +85,15 @@ package driftspec@ds {
       + color: bool
     }
 
-    // THE EXTENSION POINT: IFormat<D> in the code, D the document it writes; the grammar cannot yet
-    // write a base's template arguments (DS-150), so the drawing reads IFormat, and D stands below
-    class IFormat {
+    // THE EXTENSION POINT: IFormat<D>, D the document a format writes; each format names its document in its
+    // base, as the code does (DS-18)
+    class IFormat<D> {
       @requirement REQ-00106-1
       + ~IFormat()
       + abstract name() -> std::string
       + abstract write(document: D, options: FormatOptions) -> std::string
     }
 
-    // D, the template parameter: stands for the document a format writes (the scene today)
-    dataclass D {
-      @requirement REQ-00106-1
-      + kind: std::string
-    }
 
     // ---- what two formats or more need: knows no format, never reads the model ---------------
     module common {
@@ -116,7 +111,7 @@ package driftspec@ds {
 
     // ---- the scene's formats -----------------------------------------------------------------
     // the one place that names them
-    function sceneFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+    function sceneFormats() -> std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>> {
       @requirement REQ-00106-1
     }
 
@@ -126,14 +121,14 @@ package driftspec@ds {
     }
 
     // ds render -f json
-    class SceneJson : IFormat {
+    class SceneJson : IFormat<scene::SceneDocument> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: scene::SceneDocument, options: FormatOptions) -> std::string
     }
 
     // ds render -f html: the viewer as one page, or that page as an iframe when options.embed asks
-    class SceneHtml : IFormat {
+    class SceneHtml : IFormat<scene::SceneDocument> {
       @requirement REQ-00070-1
       @requirement REQ-00071-2
       @requirement REQ-00077-1
@@ -144,78 +139,78 @@ package driftspec@ds {
 
     // ---- a diagram's formats: its IR, as its contract writes it (render::IrText) -------------
     // the one place that names them
-    function diagramFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+    function diagramFormats() -> std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> {
       @requirement REQ-00106-1
     }
 
     // ds render -f ir: the IR as it came, indented when asked
-    class DiagramIr : IFormat {
+    class DiagramIr : IFormat<render::IrText> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
-    class DiagramLayout : IFormat {
+    class DiagramLayout : IFormat<render::IrText> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f svg
-    class DiagramSvg : IFormat {
+    class DiagramSvg : IFormat<render::IrText> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f text: boxes in characters for a terminal
-    class DiagramText : IFormat {
+    class DiagramText : IFormat<render::IrText> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ds render -f cells: the terminal's coloured cells
-    class DiagramCells : IFormat {
+    class DiagramCells : IFormat<render::IrText> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions) -> std::string
     }
 
     // ---- a query's answers -------------------------------------------------------------------
-    function answerFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+    function answerFormats() -> std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> {
       @requirement REQ-00106-1
     }
 
     // ds query: kind  identity  detail, one answer per line
-    class AnswersText : IFormat {
+    class AnswersText : IFormat<std::vector<query::Answer>> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
     }
 
     // ds query --json: an array of the same three fields
-    class AnswersJson : IFormat {
+    class AnswersJson : IFormat<std::vector<query::Answer>> {
       @requirement REQ-00106-1
       + name() -> std::string
       + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
     }
 
     // ---- a check's report ---------------------------------------------------------------------
-    function reportFormats() -> std::map<std::string, std::unique_ptr<IFormat>> {
+    function reportFormats() -> std::map<std::string, std::unique_ptr<IFormat<check::Report>>> {
       @requirement REQ-00106-1
     }
 
     // ds check: each finding where it is, then the counts
-    class ReportText : IFormat {
+    class ReportText : IFormat<check::Report> {
       @requirement SREQ-00002-1
       + name() -> std::string
       + write(document: check::Report, options: FormatOptions) -> std::string
     }
 
     // ds check --json and the API: the one shape every caller reads
-    class ReportJson : IFormat {
+    class ReportJson : IFormat<check::Report> {
       @requirement SREQ-00002-1
       + name() -> std::string
       + write(document: check::Report, options: FormatOptions) -> std::string

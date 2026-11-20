@@ -3,7 +3,7 @@ package shop {
     dataclass Money {
       @constraint CST-00001-1
       - cents: int
-      - currency: string = "EUR"
+      - currency: std::string = "EUR"
     }
   }
 }

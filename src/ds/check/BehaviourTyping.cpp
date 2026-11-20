@@ -49,7 +49,7 @@ void BehaviourTyping::couple(const model::Entity& sequence, const model::Entity&
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(sequence, &subject);
   const bool function = subject && (subject->kind == model::Kind::Function || subject->kind == model::Kind::Operation);
-  if ((!cls && !function) || type.expected || type.has("extern")) return;
+  if ((!cls && !function) || type.expected) return;
   const std::string home = cls ? cls->scope : subject->scope;
   if (type.scope == home || (cls && type.id == cls->id)) return;  // inside the module: cohesion, not coupling
   const std::string kind = transient ? "couples-transient" : "couples-structural";
@@ -72,12 +72,7 @@ void BehaviourTyping::call(model::Entity& out_msg, const model::Entity& op, cons
   }
   if (expected == message.argc) checkArguments(out_msg, op, message);
   const auto returns = op.fields.find("returns");
-  const auto result = out_msg.fields.find("result");
   if (returns != op.fields.end()) {
-    if (result != out_msg.fields.end() && primitiveFamily(returns->second) == 4) {
-      context_->report(
-          {"W-RESULT-NONE", "warning", op.id + " returns nothing, so '" + result->second + "' holds no value", message.location});
-    }
     out_msg.fields["result_type"] = returns->second;
     const model::Entity* owner = op.kind == model::Kind::Method ? model_->find(op.scope) : nullptr;
     out_msg.fields["result_scope"] = owner ? owner->scope : op.scope;
@@ -123,8 +118,8 @@ void BehaviourTyping::checkReturn(const bind::Message& message) {
   bool mismatch = false;
   if (value.front() == '"' || value == "true" || value == "false" || value.front() == '-' ||
       std::isdigit(static_cast<unsigned char>(value.front()))) {
-    given = value.front() == '"' ? "string" : (value == "true" || value == "false") ? "bool" : "int";
-    mismatch = !compatible({given, home}, {returns->second, home});
+    given = "a literal";
+    mismatch = !compatible({"", home}, {returns->second, home}, true);
   } else {
     std::pair<std::string, std::string> named;
     bool transient = false;
@@ -158,7 +153,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   std::string home = cls ? cls->scope : subject->scope;
   if (subject->kind == model::Kind::Package) home = subject->id + "@";
   if (subject->kind == model::Kind::Module) home = subject->id;
-  if (!typeSender(*seq, cls, *subject, *msg, home, message.location)) return;
+  typeSender(*seq, cls, *subject, *msg, home);
   // a call with no target from a function, or one the class does not declare, is a function of the
   // module, resolved outward like any name: a free function calls its neighbours (2026-10-26)
   if (!box && message.to == "self" && (function || !resolver_->member(cls->id, message.op))) {
@@ -171,11 +166,9 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
       return;
     }
     if (callStatic(*seq, *msg, message, home)) return;
-    if (function) {
-      context_->report({"W-MSG-UNDECLARED", "warning", seq->name + " calls " + message.op + ", which no function of " + home + " declares",
-                        message.location});
-      return;
-    }
+    // a function nobody designs (subprocess::run, a library's helper) is text: no relation, no finding; so is a
+    // qualified call from a class's behaviour. Only a bare call on self still asks the class (DS-18)
+    if (function || message.op.find("::") != std::string::npos) return;
   }
   // the participant: self, or a name of the behaviour's context (B3)
   std::string typeId;
@@ -188,14 +181,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
       typeId = value.first.empty() ? "" : resolver_->resolveTypeText(value.first, value.second);
     } else {
       typeId = namedEntity(message.to, home);  // a box, an interface or a class named as such is the participant (DS-232)
-      if (typeId.empty()) {
-        const std::string context = cls ? "an attribute of " + cls->id + ", a parameter of " : "a parameter of ";
-        context_->report({"W-PARTICIPANT-UNDECLARED", "warning",
-                          "'" + message.to + "' is neither " + context + subject->name + ", a local of " + seq->name +
-                              " nor the result of an earlier message",
-                          message.location});
-        return;
-      }
+      if (typeId.empty()) return;              // a receiver nobody designs is text: no relation, no finding (DS-18)
     }
   }
   if (typeId.empty()) return;  // a primitive or an unknown spelling: nothing to check
@@ -240,11 +226,12 @@ std::string BehaviourTyping::namedEntity(const std::string& name, const std::str
   return named ? id : "";
 }
 
-bool BehaviourTyping::typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
-                                 const std::string& home, const model::Location& location) {
-  // who sends is the participant written before the arrow, typed like the receiver; with none, the subject (DS-232)
+void BehaviourTyping::typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
+                                 const std::string& home) {
+  // who sends is the participant written before the arrow, typed like the receiver; with none, the subject (DS-232).
+  // A sender nobody designs is text (DS-18)
   const std::string sender = out_msg.field("from");
-  if (sender.empty() || sender == "self") return true;
+  if (sender.empty() || sender == "self") return;
   std::pair<std::string, std::string> value;
   bool transient = false;
   std::string type;
@@ -252,16 +239,8 @@ bool BehaviourTyping::typeSender(const model::Entity& seq, const model::Entity* 
     type = value.first.empty() ? "" : resolver_->resolveTypeText(value.first, value.second);
   } else {
     type = namedEntity(sender, home);
-    if (type.empty()) {
-      context_->report({"W-PARTICIPANT-UNDECLARED", "warning",
-                        "'" + sender + "' sends a message in " + seq.name +
-                            ", and it is neither a value of its context nor a box, an interface or a class it sees",
-                        location});
-      return false;
-    }
   }
   if (!type.empty()) out_msg.fields["from-type"] = type;
-  return true;
 }
 
 const model::Entity* BehaviourTyping::offered(const model::Entity& box, const std::string& op) const {
@@ -339,20 +318,20 @@ bool BehaviourTyping::typeOfName(const model::Entity& sequence, const model::Ent
   return false;
 }
 
-bool BehaviourTyping::compatible(const std::pair<std::string, std::string>& argument,
-                                 const std::pair<std::string, std::string>& parameter) const {
+// ds knows no language, and so no type of its own (DS-18): a literal differs only from a designed class (a "x"
+// passed where a Pool is expected); two designed types differ unless one derives from the other; text on either
+// side (int, str, std::string, Optional[str], anything nobody designs) never differs
+bool BehaviourTyping::compatible(const std::pair<std::string, std::string>& argument, const std::pair<std::string, std::string>& parameter,
+                                 bool literal) const {
+  const std::string parameterId = resolver_->resolveTypeText(parameter.first, parameter.second);
+  const model::Entity* p = parameterId.empty() ? nullptr : model_->find(parameterId);
+  if (!p || p->expected) return true;
+  if (literal) return false;
   if (argument.first == parameter.first) return true;
   const std::string argumentId = resolver_->resolveTypeText(argument.first, argument.second);
-  const std::string parameterId = resolver_->resolveTypeText(parameter.first, parameter.second);
   const model::Entity* a = argumentId.empty() ? nullptr : model_->find(argumentId);
-  const model::Entity* p = parameterId.empty() ? nullptr : model_->find(parameterId);
-  // what is not declared, or lives outside the workspace, has no obligations (R6, R11)
-  if ((a && (a->expected || a->has("extern"))) || (p && (p->expected || p->has("extern")))) return true;
-  if (a && p) return resolver_->derives(argumentId, parameterId);
-  const int af = primitiveFamily(argument.first);
-  const int pf = primitiveFamily(parameter.first);
-  if (a || p) return !(a ? pf : af);
-  return !af || !pf || af == pf;
+  if (!a || a->expected) return true;
+  return resolver_->derives(argumentId, parameterId);
 }
 
 void BehaviourTyping::checkArguments(const model::Entity& msg, const model::Entity& op, const bind::Message& message) {
@@ -370,21 +349,19 @@ void BehaviourTyping::checkArguments(const model::Entity& msg, const model::Enti
     std::pair<std::string, std::string> argument;
     bool transient = false;
     const std::string& written = arguments[i];
-    if (written.front() == '"') {
-      argument = {"string", scope};  // a literal has the type it is written in
-    } else if (std::isdigit(static_cast<unsigned char>(written.front())) || written.front() == '-') {
-      argument = {"int", scope};
-    } else if (written == "true" || written == "false") {
-      argument = {"bool", scope};
+    const bool literal = written.front() == '"' || std::isdigit(static_cast<unsigned char>(written.front())) || written.front() == '-' ||
+                         written == "true" || written == "false";
+    if (literal) {
+      argument = {"", scope};  // a literal, of no type ds knows
     } else if (!typeOfName(*seq, cls, *subject, written, &argument, &transient) || argument.first.empty()) {
       continue;
     }
     const std::pair<std::string, std::string> parameter{parameters[i].type, scope};
-    if (compatible(argument, parameter)) continue;
-    context_->report(
-        {"W-ARG-TYPE", "warning",
-         op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" + arguments[i] + "' is " + argument.first,
-         message.location});
+    if (compatible(argument, parameter, literal)) continue;
+    context_->report({"W-ARG-TYPE", "warning",
+                      op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" + arguments[i] + "' is " +
+                          (literal ? std::string("a literal") : argument.first),
+                      message.location});
   }
 }
 

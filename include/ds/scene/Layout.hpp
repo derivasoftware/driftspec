@@ -7,7 +7,7 @@
 namespace ds {
 namespace scene {
 
-/// Where every box goes (REQ-00069-1): each package, module, interface, unit and row placed inside
+/// Where every box goes (REQ-00069-2): each package, module, interface, unit and row placed inside
 /// its parent, once, with and without private members; the base document the layers draw over.
 class Layout {
  public:

@@ -50,7 +50,7 @@ std::string signature(const std::string& name, const std::vector<model::Param>& 
   std::string out = name + "(";
   for (size_t i = 0; i < params.size(); ++i) out += (i ? ", " : "") + params[i].name;
   out += ")";
-  if (!returns.empty() && returns != "void" && returns != "none") out += " → " + unqualified(returns);
+  if (!returns.empty()) out += " → " + unqualified(returns);  // the return as written: void, None, whatever the code says
   return out;
 }
 
@@ -109,7 +109,7 @@ class Variant {
   void run() {
     std::vector<std::pair<std::string, std::pair<double, double>>> roots;
     for (const model::Entity* e : children("")) {
-      if (e->kind == model::Kind::Package && !e->has("extern")) roots.push_back({package(*e, ""), {0, 0}});
+      if (e->kind == model::Kind::Package) roots.push_back({package(*e, ""), {0, 0}});
     }
     const auto size = shelf(roots, shapes, kTopGap, width("", target(roots, shapes, 0, 1.6)));
     keep("", size.first);
@@ -282,7 +282,6 @@ class Variant {
       return a->name.size() > b->name.size();
     });
     for (const model::Entity* k : kids) {
-      if (k->has("extern")) continue;
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Interface) offered.push_back({interface(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Class || k->kind == model::Kind::Function || k->kind == model::Kind::Enum)
@@ -336,7 +335,6 @@ class Variant {
   std::string package(const model::Entity& e, const std::string& parent) {
     std::vector<std::pair<std::string, std::pair<double, double>>> boxes, interfaces;
     for (const model::Entity* k : children(e.id + "@")) {
-      if (k->has("extern")) continue;
       if (k->kind == model::Kind::Package) boxes.push_back({package(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Module) boxes.push_back({module(*k, e.id), {0, 0}});
       if (k->kind == model::Kind::Interface) interfaces.push_back({interface(*k, e.id), {0, 0}});

@@ -2,7 +2,7 @@ package shop {
   module store {
     class Stock {
       + has(line: Line) -> bool
-      + reserve(line: Line) -> none fails SoldOut
+      + reserve(line: Line) -> void fails SoldOut
     }
     sequence Stock::reserve {
       opt nothing is left / empty {

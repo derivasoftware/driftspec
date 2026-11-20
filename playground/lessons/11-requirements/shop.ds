@@ -1,9 +1,6 @@
 // Lesson 11 · Requirements
 
 package shop {
-  extern module bank {
-    class Gateway
-  }
   interface shell {
     kind: cli
     operation buy(item: string) -> int {

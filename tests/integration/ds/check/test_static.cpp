@@ -48,20 +48,21 @@ class TestStatic : public ::testing::Test {
 };
 
 TEST_F(TestStatic, TheOracleFindingsAndNothingElse) {
-  EXPECT_EQ(byCode["W-REF-UNDECLARED"], 3);  // Cache, Requirement, bare Finding from lsp
   EXPECT_EQ(byCode["E-TEMPLATE-BOUND"], 1);
-  EXPECT_EQ(byCode["W-MODIFIER-ON-VALUE"], 1);
+  EXPECT_EQ(byCode["E-MODIFIER-CONFLICT"], 1);
   EXPECT_EQ(byCode["E-OPERATOR-UNDECLARED"], 1);
   EXPECT_EQ(byCode["E-DATACLASS-ABSTRACT"], 1);
   EXPECT_EQ(byCode["E-OWNERSHIP-CYCLE"], 1);
-  EXPECT_EQ(model.findings().size(), 8u);
+  EXPECT_EQ(model.findings().size(), 5u);  // Cache, Requirement and std:: nobody designs: text, no finding (R11)
 }
 
-TEST_F(TestStatic, ExternDeclaresIdentitiesWithoutObligations) {
-  const ds::model::Entity* vec = model.find("ds@std::vector<1>");
-  ASSERT_NE(vec, nullptr);
-  EXPECT_TRUE(vec->has("extern"));
-  EXPECT_EQ(field("ds@std::vector<1>", "stereotypes"), "extern");
+TEST_F(TestStatic, ANameNobodyDesignsIsTextAndRelatesNothing) {
+  // std::string, std::vector, Cache and Requirement are named and declared nowhere: no entity, no relation (DS-18)
+  for (const char* id : {"ds@ds::Cache", "ds@std::vector<1>", "ds@ds::Requirement", "ds@std::string"})
+    EXPECT_EQ(model.find(id), nullptr) << id;
+  for (const auto& r : model.index().from("ds@ds::Model::cache")) ADD_FAILURE() << r.kind << " " << r.to;
+  EXPECT_EQ(field("ds@ds::Model::cache", "type"), "Cache");                                    // the text stays as written
+  EXPECT_NE(relation("owns", "ds@ds::Index::requirements", "ds@ds::Repository<1>"), nullptr);  // only what is designed relates
 }
 
 TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
@@ -131,7 +132,7 @@ TEST_F(TestStatic, EnumsAndTemplatesHaveIdentities) {
   EXPECT_EQ(field("ds@ds::Repository<1>", "bound.T"), "Entity");
   EXPECT_NE(relation("bounded-by", "ds@ds::Repository<1>", "ds@ds::Entity"), nullptr);
   EXPECT_NE(relation("owns", "ds@ds::Index::relations", "ds@ds::Repository<1>"), nullptr);
-  EXPECT_NE(relation("uses", "ds@ds::Index::relations", "ds@ds::Relation"), nullptr);
+  EXPECT_NE(relation("owns", "ds@ds::Index::relations", "ds@ds::Relation"), nullptr);  // every designed name of the type, owned
 }
 
 TEST_F(TestStatic, OwnershipAndMultiplicityComeFromTheAttribute) {
@@ -147,8 +148,9 @@ TEST_F(TestStatic, OwnershipAndMultiplicityComeFromTheAttribute) {
   const auto* found = relation("uses", "ds@ds::Model::find", "ds@ds::Entity");
   ASSERT_NE(found, nullptr);
   EXPECT_EQ(found->multiplicity, "");
-  EXPECT_NE(relation("shares", "ds@ds::Model::cache", "ds@ds::Cache"), nullptr);
   EXPECT_NE(relation("uses", "ds@ds::ScopedCheck::runScope", "ds@ds::Model"), nullptr);  // parameters give uses
+  EXPECT_TRUE(model.find("ds@ds::ScopedCheck::scopes")->has("many"));                    // written, never read from std::vector
+  EXPECT_FALSE(model.find("ds@ds::Finding::location")->has("many"));
 }
 
 TEST_F(TestStatic, OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody) {
@@ -160,13 +162,13 @@ TEST_F(TestStatic, OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody) {
   EXPECT_TRUE(model.find("ds@ds::Vector::Vector")->has("constructor"));
 }
 
-TEST_F(TestStatic, CrossModuleReferencesNeedTheModuleNotAnInclude) {
+TEST_F(TestStatic, CrossModuleReferencesResolveByTheModuleOrByThePackage) {
   const auto* model_ = relation("refs", "ds@lsp::Publisher::model", "ds@ds::Model");
   ASSERT_NE(model_, nullptr);
   EXPECT_NE(relation("owns", "ds@lsp::Publisher::last", "ds@ds::Finding"), nullptr);
-  const ds::model::Entity* bare = model.find("ds@lsp::Finding");
-  ASSERT_NE(bare, nullptr);
-  EXPECT_TRUE(bare->expected);
+  // a bare Finding no scope of lsp declares is the one Finding of the package, as the code imports it (DS-18)
+  EXPECT_NE(relation("uses", "ds@lsp::Publisher::publish", "ds@ds::Finding"), nullptr);
+  EXPECT_EQ(model.find("ds@lsp::Finding"), nullptr);
 }
 
 TEST_F(TestStatic, DefaultsAndModifiersAreKept) {

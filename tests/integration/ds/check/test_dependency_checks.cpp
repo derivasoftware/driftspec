@@ -138,14 +138,14 @@ TEST(TestRealisation, AMethodThatAnswersAnInterfaceOperationWithAnotherSignature
                                "package zoo {\n"
                                "  interface keeper {\n"
                                "    kind: library\n"
-                               "    operation feed(animal: string) -> none\n"
-                               "    operation clean(cage: int) -> none\n"
-                               "    operation count(names: list<string>) -> int\n"
+                               "    operation feed(animal: std::string) -> void\n"
+                               "    operation clean(cage: int) -> void\n"
+                               "    operation count(names: std::vector<std::string>) -> int\n"
                                "  }\n"
                                "  module animals {\n"
                                "    class Staff {\n"
                                "      @interface keeper\n"
-                               "      + feed(animal: int, extra: bool) -> none\n"
+                               "      + feed(animal: int, extra: bool) -> void\n"
                                "      + count(names: std::vector<std::string>) -> int\n"
                                "    }\n"
                                "  }\n"
@@ -155,7 +155,7 @@ TEST(TestRealisation, AMethodThatAnswersAnInterfaceOperationWithAnotherSignature
   std::vector<std::string> found;
   for (const auto& f : model.findings())
     if (f.code == "W-INTERFACE-SIGNATURE") found.push_back(f.message);
-  ASSERT_EQ(found.size(), 1u);  // clean, which Staff does not declare, is no finding; count says the same idea
+  ASSERT_EQ(found.size(), 1u);  // clean, which Staff does not declare, is no finding; count says the same
   EXPECT_EQ(found[0].rfind("zoo@animals::Staff::feed", 0), 0u);
 }
 

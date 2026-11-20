@@ -53,7 +53,7 @@ package shop {
   module billing {
     class Invoice {
       + refs cart: store::Cart
-      + print() -> string
+      + print() -> std::string
     }
   }
 }
@@ -114,7 +114,7 @@ package shop {
   module store {
     class Cart {
       + total() -> int
-      + add(price: int) -> none
+      + add(price: int) -> void
       # discount(percent: int) -> int
       - count: int = 0
       + static empty() -> Cart
@@ -140,7 +140,7 @@ package shop {
 
     dataclass Money {
       + cents: int
-      + currency: string
+      + currency: std::string
     }
 
     class Cart {
@@ -166,8 +166,14 @@ methods:
 - `shares`: the lifetime is shared with other holders.
 - A type named in a parameter or a return is a use, drawn dashed.
 
-How many comes from the type: `Line` is one, `optional<Line>` is none or one, `list<Line>`
-is many.
+A type is written as your code writes it: `std::vector<Line>`, `list[Line]`, `Line | None`,
+`const Catalogue&`. DriftSpec knows no language: it reads the names in the type, and each name the
+design declares is related; any other name (`std::string`, `int`, a library's class) is text.
+
+How many is written in front of the name, never read from the type: `many` is any number,
+`optional` is none or one, and nothing is exactly one. They go with `refs` and `shares`:
+`- refs many watchers: std::set<Watcher*>`. Two ownerships, or two multiplicities, on one attribute
+say two things at once (`E-MODIFIER-CONFLICT`).
 
 ```ds
 package shop {
@@ -177,7 +183,7 @@ package shop {
     }
 
     class Catalogue {
-      + priceOf(item: string) -> int
+      + priceOf(item: std::string) -> int
     }
 
     class Coupon {
@@ -185,9 +191,9 @@ package shop {
     }
 
     class Cart {
-      - owns lines: list<Line>
+      - owns many lines: std::vector<Line>
       - refs catalogue: Catalogue
-      + apply(coupon: Coupon) -> none
+      + apply(coupon: Coupon) -> void
       + total() -> int
     }
   }
@@ -202,7 +208,11 @@ diagram CL_Store {
 
 ## Inheritance
 
-A class names its base after a colon. Whether a class is abstract is never written: a class
+A class names its base after a colon, written as the code writes it, template arguments and all:
+`class SceneJson : IFormat<Scene>`, `class IntBox : Box[int]`. Its first name is what the class
+inherits, when the design declares it; a base nobody designs (`Exception`) is text and draws no
+arrow. A template declares its parameters after its name, a class (`class Box<T>`) or a method
+(`+ each<F>(f: F) -> void`) alike. Whether a class is abstract is never written: a class
 with an abstract method is abstract, and the drawing says so. A class whose methods are all
 abstract is still a class, and what derives from it inherits from it. An interface is something
 else: the contract a box offers, written with `interface`.
@@ -243,7 +253,7 @@ package shop {
     }
 
     function invoice(amount: int) -> Invoice
-    function today() -> string
+    function today() -> std::string
   }
 }
 
@@ -255,14 +265,54 @@ diagram CL_Billing {
 
 ## A name nobody declares
 
-Every name the design uses has to exist. One that does not is drawn as a ghost and reported,
-with the line where it is written.
+You design what you want to say, and nothing else. A name the design does not declare, in a type,
+a base or a call, is text: `std::string`, `Exception`, a library's `Gateway`. It relates nothing,
+it is not drawn and it is no finding, so what lives outside your design costs nothing to name.
+A bare name that no scope declares is the one class of that name in the package, as your code
+imports it from a sibling module; with two of that name it is text again, and you qualify it:
+`store::Card`.
+
+```ds
+package shop {
+  module store {
+    class Line {
+      + note: std::string
+    }
+
+    class Error : Exception {
+      + line: Line
+    }
+  }
+
+  module billing {
+    class Invoice {
+      - refs many lines: std::vector<Line>
+    }
+  }
+}
+
+diagram CL_Shop {
+  kind: class
+  include: shop@*
+}
+```
+
+A misspelt name is text too, and its arrow is missing from the drawing. argos, comparing the
+design with the code, tells you where the code relates what the design does not.
+
+## Two things at once
+
+An attribute has one ownership and one multiplicity. Writing two of a kind is an error.
 
 ```ds wrong
 package shop {
   module store {
+    class Line {
+      + price: int
+    }
+
     class Cart {
-      - owns lines: list<Line>
+      - refs shares many lines: std::vector<Line>
     }
   }
 }
@@ -273,7 +323,7 @@ diagram CL_Store {
 }
 ```
 
-`W-REF-UNDECLARED` says that `Line` is used and never declared. Declare it, or fix the name.
+`E-MODIFIER-CONFLICT` says that `lines` is both `refs` and `shares`. Keep the one you mean.
 
 ## Choosing what a diagram shows
 
@@ -289,13 +339,13 @@ package shop {
     }
 
     class Cart {
-      - owns lines: list<Line>
+      - owns many lines: std::vector<Line>
       + total() -> int
     }
 
     class Receipt {
       + refs cart: Cart
-      + print() -> string
+      + print() -> std::string
     }
   }
 }

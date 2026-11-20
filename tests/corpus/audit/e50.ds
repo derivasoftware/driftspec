@@ -10,10 +10,10 @@ package e50shop {
       @refines SREQ-50001-1
     }
     class A : B {
-      + go() -> none
+      + go() -> void
     }
     class B : A {  // ! E-INHERITANCE-CYCLE
-      + stop() -> none
+      + stop() -> void
     }
     class Cart {
       @requirement SREQ-50001-1

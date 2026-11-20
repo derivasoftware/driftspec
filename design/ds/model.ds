@@ -5,14 +5,6 @@
 
 package driftspec@ds {
 
-  extern module std {                        // the standard library, names only (R11)
-    class string
-    class map<K, V>
-    class multimap<K, V>
-    class size_t
-    class unique_ptr<T>
-    class vector<T>
-  }
 
   // What it is to depend, said once for every rule of the tool (a definition of a package is in scope
   // in its modules): through a member that owns, refers to or uses, or through a behaviour that uses.
@@ -102,7 +94,7 @@ package driftspec@ds {
       + isAbsolute() -> bool
       + within(outer: Identity) -> bool
       + withArity(arity: std::size_t) -> Identity {
-        @requirement REQ-00029-1
+        @requirement REQ-00029-2
       }
       + diagramName() -> std::string
       + sequence(scenario: std::string) -> Identity
@@ -248,28 +240,21 @@ package driftspec@ds {
       @requirement REQ-00066-1
       + kind: Kind
       + meaning: std::string
-      + fields: std::vector<FieldSpec>
+      + many fields: std::vector<FieldSpec>
       + flags: std::vector<std::string>
-      + parents: std::vector<Kind>
+      + many parents: std::vector<Kind>
       + top: bool
       + syntax: std::string                  // how it is written (REQ-00079-1)
       + example: std::string                 // a minimal workspace that declares one and checks clean
-    }
-
-    dataclass ContainerSpec {                // a container the language knows: its multiplicity and its element (R16)
-      @requirement REQ-00028-1
-      + name: std::string
-      + multiplicity: std::string
-      + element: int
     }
 
     dataclass RelationSpec {                 // one relation and the kinds it may join; no ends is any kind
       @requirement REQ-00066-1
       + kind: std::string
       + meaning: std::string
-      + from: std::vector<Kind>
-      + to: std::vector<Kind>
-      + pairs: std::vector<std::pair<Kind, Kind>>
+      + many from: std::vector<Kind>
+      + many to: std::vector<Kind>
+      + many pairs: std::vector<std::pair<Kind, Kind>>
     }
 
     function kinds() -> std::vector<KindSpec> {
@@ -291,12 +276,6 @@ package driftspec@ds {
     }
     function relationOf(kind: std::string) -> RelationSpec {
       @requirement REQ-00066-1
-    }
-    function containers() -> std::vector<ContainerSpec> {
-      @requirement REQ-00028-1
-    }
-    function containerOf(name: std::string) -> ContainerSpec {
-      @requirement REQ-00028-1
     }
     function joins(relation: RelationSpec, from: Kind, to: Kind) -> bool {
       @requirement REQ-00066-1
@@ -485,7 +464,7 @@ package driftspec@ds {
       + scope: std::string
       + fields: std::map<std::string, std::string>
       + flags: std::vector<std::string>
-      + params: std::vector<Param>
+      + many params: std::vector<Param>
       + args: std::vector<std::string>
       + owns location: Location
       + expected: bool
@@ -530,7 +509,7 @@ package driftspec@ds {
       + form: LiteralForm
       + negated: bool
       + name: std::string
-      + owns terms: std::vector<Term>
+      + owns many terms: std::vector<Term>
       + owns location: Location
     }
 
@@ -548,7 +527,7 @@ package driftspec@ds {
       + form: std::string
       + variable: std::string
       + field: std::string
-      + owns body: std::vector<Literal>
+      + owns many body: std::vector<Literal>
       + owns location: Location
     }
 
@@ -561,13 +540,13 @@ package driftspec@ds {
 
     dataclass Formula {                      // what a rule, a definition or a table says, read from its syntax
       @requirement REQ-00095-2
-      + owns ranges: std::vector<Range>
-      + owns where: std::vector<Literal>
-      + claims: std::vector<std::vector<Literal>>
+      + owns many ranges: std::vector<Range>
+      + owns many where: std::vector<Literal>
+      + many claims: std::vector<std::vector<Literal>>
       + never: bool
       + parameters: std::vector<std::string>
-      + cases: std::vector<std::vector<Literal>>
-      + owns columns: std::vector<Column>
+      + many cases: std::vector<std::vector<Literal>>
+      + owns many columns: std::vector<Column>
     }
 
     dataclass Breach {                       // one binding that breaks a rule, its answer, where it lands
@@ -678,13 +657,13 @@ package driftspec@ds {
     class Model {                            // the resolved workspace: entities by identity, relations and findings
       @requirement REQ-00001-1
       @requirement REQ-00002-1
-      - owns entities_: std::map<std::string, Entity>
-      - owns relations_: std::vector<Relation>
-      - owns findings_: std::vector<Finding>
-      - owns coverage_: std::vector<Finding>
-      - owns formulas_: std::map<std::string, Formula>
-      - owns breaches_: std::map<std::string, std::vector<Breach>>
-      - owns tables_: std::map<std::string, Tabulated>
+      - owns many entities_: std::map<std::string, Entity>
+      - owns many relations_: std::vector<Relation>
+      - owns many findings_: std::vector<Finding>
+      - owns many coverage_: std::vector<Finding>
+      - owns many formulas_: std::map<std::string, Formula>
+      - owns many breaches_: std::map<std::string, std::vector<Breach>>
+      - owns many tables_: std::map<std::string, Tabulated>
       - owns indexed_: Indexed
       + index() -> Index
       - indexEntity(entity: Entity, enters: bool) -> void

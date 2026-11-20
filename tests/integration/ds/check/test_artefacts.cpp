@@ -50,9 +50,9 @@ TEST_F(TestArtefacts, TheOracleFindingsAndNothingElse) {
   EXPECT_EQ(byCode["E-REF-UNPINNED"], 1);         // REQ-00003-1 -> SREQ-00001
   EXPECT_EQ(byCode["W-PARENT-IGNORED"], 1);       // REQ-00003-1
   EXPECT_EQ(byCode["W-VER-NO-TEST"], 1);          // VER-00004-3
-  EXPECT_EQ(byCode["W-REF-UNDECLARED"], 1);       // Report
+  EXPECT_EQ(byCode["W-REF-UNDECLARED"], 0);       // Report nobody designs: a type, so text (DS-18)
   EXPECT_EQ(byCode["W-ANNOTATION-UNKNOWN"], 1);   // @requirment on Projection
-  EXPECT_EQ(model.findings().size(), 5u);
+  EXPECT_EQ(model.findings().size(), 4u);
   EXPECT_EQ(model.coverage().size(), 2u);  // W-REQ-NO-VERIFICATION and W-VER-NO-TEST are no findings (DS-216)
 }
 

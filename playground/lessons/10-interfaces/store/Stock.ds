@@ -2,7 +2,7 @@ package shop {
   module store {
     class Stock {
       + has(line: Line) -> bool
-      + reserve(line: Line) -> none
+      + reserve(line: Line) -> void
     }
   }
 }

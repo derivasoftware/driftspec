@@ -3,7 +3,7 @@
     "en": "4 · Modules and names",
     "es": "4 · Módulos y nombres"
   },
-  "version": 2,
+  "version": 3,
   "steps": [
     {
       "write": {
@@ -67,28 +67,26 @@
         "text": "- refs payer: Card"
       },
       "done": {
-        "finding": "W-REF-UNDECLARED"
-      }
-    },
-    {
-      "at": {
-        "panel": "problems"
-      },
-      "text": {
-        "en": "Not found. A bare `Card` is looked for in `billing`, then in `shop`, never inside a sibling module. Qualify it: `store::Card`.",
-        "es": "No se encuentra. Un `Card` sin cualificar se busca en `billing` y luego en `shop`, nunca dentro de un módulo hermano. Cualifícalo: `store::Card`."
-      },
-      "solution": {
-        "file": "shop.ds",
-        "replace": "payer: Card",
-        "text": "payer: store::Card"
-      },
-      "done": {
-        "clean": true,
         "edge": {
           "diagram": "CL_Shop",
           "from": "shop@billing::Invoice",
           "to": "shop@store::Card"
+        }
+      }
+    },
+    {
+      "at": {
+        "file": "shop.ds",
+        "find": "refs payer: Card"
+      },
+      "text": {
+        "en": "A bare `Card` is looked for in `billing`, then in `shop`. Found in no scope, it is the one class of that name in the package, as your code imports it. Were there two, it would relate nothing; qualify it then: `store::Card`.",
+        "es": "Un `Card` sin cualificar se busca en `billing` y luego en `shop`. Si ningún ámbito lo declara, es la única clase con ese nombre en el paquete, como la importa tu código. Si hubiera dos, no relacionaría nada; entonces se cualifica: `store::Card`."
+      },
+      "done": {
+        "ack": {
+          "en": "Got it",
+          "es": "Entendido"
         }
       }
     },
@@ -154,31 +152,21 @@
       }
     },
     {
-      "write": [
-        {
-          "file": "shop.ds",
-          "below": {
-            "find": "module billing",
-            "after": "}"
-          },
-          "text": "extern module bank {\n  class Gateway\n}"
+      "write": {
+        "file": "shop.ds",
+        "into": {
+          "find": "class Card",
+          "first": true
         },
-        {
-          "file": "shop.ds",
-          "into": {
-            "find": "class Card",
-            "first": true
-          },
-          "text": "- refs gateway: bank::Gateway"
-        }
-      ],
+        "text": "- refs gateway: bank::Gateway"
+      },
       "at": {
         "file": "shop.ds",
-        "find": "extern module bank"
+        "find": "refs gateway: bank::Gateway"
       },
       "text": {
-        "en": "What lives outside your workspace is declared `extern`: a name with no obligations, so the model can point at it. The bank's gateway is not yours to design, and the diagrams leave it out.",
-        "es": "Lo que vive fuera de tu workspace se declara `extern`: un nombre sin obligaciones, para que el modelo pueda apuntar a él. La pasarela del banco no la diseñas tú, y los diagramas la dejan fuera."
+        "en": "What lives outside your workspace needs no declaration. `bank::Gateway` is a name your design does not declare, so it is text: no relation, no problem. The bank's gateway is not yours to design, and the diagrams leave it out.",
+        "es": "Lo que vive fuera de tu workspace no necesita declaración. `bank::Gateway` es un nombre que tu diseño no declara, así que es texto: ni relación ni problema. La pasarela del banco no la diseñas tú, y los diagramas la dejan fuera."
       },
       "done": {
         "ack": {

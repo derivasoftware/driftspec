@@ -106,10 +106,10 @@ TEST_F(TestQualification, EveryIncoherenceIsAFindingAtItsLocation) {
   EXPECT_NE(check.out.find("W-REVISION-DRIFT"), std::string::npos);
   EXPECT_EQ(check.code, 1);  // an error among the findings
   const auto exported = nlohmann::json::parse(ds("export " + examples("static")).out);
-  EXPECT_GT(exported["entities"].size(), 50u);  // loaded whole, with its W-REF-UNDECLARED
-  bool undeclared = false;
-  for (const auto& f : exported["findings"]) undeclared |= f["code"] == "W-REF-UNDECLARED" && f["severity"] == "warning";
-  EXPECT_TRUE(undeclared);
+  EXPECT_GT(exported["entities"].size(), 50u);  // loaded whole, with its E-TEMPLATE-BOUND
+  bool bound = false;
+  for (const auto& f : exported["findings"]) bound |= f["code"] == "E-TEMPLATE-BOUND" && f["severity"] == "error";
+  EXPECT_TRUE(bound);
 }
 
 // SREQ-00003-2: artefacts linked to the design by revision, boxes and classes alike
@@ -152,7 +152,7 @@ TEST_F(TestQualification, BehaviourIsBoundToItsSubjectAndChecked) {
   EXPECT_TRUE(expands);
   const Outcome check = ds("check " + examples("behaviour"));
   EXPECT_NE(check.out.find("E-MSG-ARITY"), std::string::npos);
-  EXPECT_NE(check.out.find("W-PARTICIPANT-UNDECLARED"), std::string::npos);
+  EXPECT_NE(check.out.find("W-ACTION-UNDECLARED"), std::string::npos);
 }
 
 // SREQ-00005-1: any selection drawn as SVG and as text, adapting to a width

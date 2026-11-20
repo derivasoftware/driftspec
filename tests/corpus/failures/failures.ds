@@ -20,13 +20,13 @@
 package shelf {
   module books {
     class Files {
-      + read(path: string) -> string fails IoError, Busy
+      + read(path: std::string) -> std::string fails IoError, Busy
     }
     class Parser {
-      + parse(text: string) -> Book fails ParseError, Timeout   // ! W-FAILURE-UNREACHED: no path times out
+      + parse(text: std::string) -> Book fails ParseError, Timeout   // ! W-FAILURE-UNREACHED: no path times out
     }
     class Book {
-      + title: string
+      + title: std::string
     }
     class Cache {
       + last() -> Book
@@ -36,13 +36,13 @@ package shelf {
       - files: Files
       - parser: Parser
       - cache: Cache
-      + load(path: string) -> Book fails LoadError, ParseError
-      + open(path: string) -> Book fails LoadError     // ! W-FAILURE-UNDECLARED: ParseError escapes too
+      + load(path: std::string) -> Book fails LoadError, ParseError
+      + open(path: std::string) -> Book fails LoadError     // ! W-FAILURE-UNDECLARED: ParseError escapes too
     }
 
     class Shelf {
       - loader: Loader
-      + show(path: string) -> string fails nothing
+      + show(path: std::string) -> std::string fails nothing
     }
 
     // where a failure starts: the path that does not parse ends failing

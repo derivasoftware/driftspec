@@ -112,17 +112,20 @@ package driftspec@ds {
     }
 
     // ======================= workspace ====================================
-    requirement REQ-00053-1 {
+    requirement REQ-00053-2 {
       tags: language, workspace
       status: approved
       title: A specification shall be a directory of .ds files read as one, in any order
       text:
-        Files are read whole and are not units of meaning; a reference nobody
-        declares is an expected node reported once (W-REF-UNDECLARED) and never
-        stops the load; only syntax stops a file (E-SYNTAX).
+        Files are read whole and are not units of meaning; a link nobody
+        declares (an annotation, the subject of a behaviour) is an expected node
+        reported once (W-REF-UNDECLARED) and never stops the load; a name in a
+        type, a base, a bound or a call is text instead (REQ-00024-3); only
+        syntax stops a file (E-SYNTAX).
       rationale:
         A specification that lives per file cannot say that two files talk
-        about the same thing (R1, R6).
+        about the same thing (R1, R6). Revision 2 (DS-18, 2026-11-20): names in
+        types are text.
       verification VER-00041-2 {
         title: Integration tests confirm a specification is a directory of .ds files read as one, in any order
         status: approved
@@ -406,21 +409,22 @@ package driftspec@ds {
               tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AMethodTheInterfaceDoesNotOfferIsNoBypass
           }
         }
-        requirement REQ-00119-1 {
+        requirement REQ-00119-2 {
           tags: language, hld, interfaces, check
           status: approved
           title: A method that answers an operation of an interface its class realises shall take and give what the operation does, or be reported as W-INTERFACE-SIGNATURE
           text:
             When a class realises an interface (@interface) and declares, or inherits, a method named
             like one of the interface's operations, their parameters and returns are compared as the
-            idea each type commits to: qualifiers dropped, std::vector read as the neutral list, void
-            as none. A difference is a warning at the method. An operation the class does not declare
-            is no finding: that is absence.
+            idea each type commits to: qualifiers and spaces dropped, the rest as the code writes it.
+            A difference is a warning at the method. An operation the class does not declare is no
+            finding: that is absence.
           rationale:
             Model audit 2026-11, finding G5 (DS-215): a class realising keeper declared feed(animal:
             int, extra: bool) against feed(animal: string) and nothing was said, while between an
             operation and its use case the signatures were compared. It is the link from the
-            high-level design to the low-level one.
+            high-level design to the low-level one. Revision 2 (DS-18, 2026-11-20): no neutral name
+            is read any more; the types are the code's text.
           verification VER-00135-1 {
             title: Integration tests confirm a method that answers an interface operation with another signature is reported, one that says the same idea is not, and an operation the class does not declare is no finding
             status: approved
@@ -520,42 +524,66 @@ package driftspec@ds {
           status: approved
           title: A bare name shall resolve from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
           text: No includes, no using; what already encloses you is omitted.
-          verification VER-00017-1 {
+          verification VER-00017-2 {
             title: Integration tests confirm a bare name resolves from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
               tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.ABareNameFindsTheClassBesideItBeforeARootPackageOfItsName
-              tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesNeedTheModuleNotAnInclude
+              tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesResolveByTheModuleOrByThePackage
               tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
           }
         }
-        requirement REQ-00024-2 {
+        requirement REQ-00024-3 {
           tags: language, lld, module
           status: approved
-          title: An extern module shall declare names only, with no obligations, and every extern shall join one catalogue
+          title: A name the design does not declare shall be text in a type, a base, a bound or a call, relating nothing and reported nowhere
           text:
-            A bare name nobody declares in scope resolves to the one extern
-            of that simple name, whatever the template arguments of the use
-            or of the declaration (tuple<int, str> finds class tuple);
-            among several of that name, the one of the use's arity wins,
-            and two left without a winner make it E-REF-AMBIGUOUS. The type
-            text stays as written.
+            A design declares what it designs and nothing else. A name read out of a
+            type, a base, a template bound or a call that resolves to nothing the
+            design declares is text: no relation, no expected node, no finding
+            (std::string, Exception, subprocess::run). There is no extern module:
+            a design that still writes one fails with E-SYNTAX until it is migrated.
           rationale:
-            R11; the catalogue 2026-10-26. Revision 2: an extern's template
-            arguments are not the design's to check, and a generic used by
-            its bare name never found its extern (tuple<2> against class
-            tuple), which left every generic Python type of the iris spike
-            undeclared.
-          verification VER-00018-2 {
-            title: Integration tests confirm an extern module declares names only, with no obligations, and every extern joins one catalogue
+            R11; the extern catalogue of 2026-10-26. Revision 3 (DS-18, Owner
+            2026-11-20): allow incompleteness, say incoherence. Designs inherit
+            from and call the standard and outside libraries all the time, and
+            declaring them cost preludes that existed only to be named; a
+            misspelt name of the design is caught by argos against the code and
+            shows as a missing arrow in the drawing.
+          verification VER-00018-3 {
+            title: Integration tests confirm a name the design does not declare is text in a type, a base, a bound or a call, relating nothing and reported nowhere
             status: approved
             method: test
             tests:
-              tests/integration/ds/check/test_static.cpp::TestStatic.ExternDeclaresIdentitiesWithoutObligations
-              tests/integration/ds/bind/test_packages.cpp::TestPackages.ABareNameFallsBackToTheExternCatalogue
-              tests/integration/ds/bind/test_packages.cpp::TestPackages.AGenericUseFindsTheExternOfItsSimpleName
+              tests/integration/ds/check/test_static.cpp::TestStatic.ANameNobodyDesignsIsTextAndRelatesNothing
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.ANameNobodyDesignsIsTextAndSaysNothing
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.OnlyTheNamesTheDesignDeclaresRelateTheRestIsText
+          }
+        }
+        requirement REQ-00169-1 {
+          tags: language, lld, module
+          status: approved
+          title: A bare name that no scope declares shall resolve to the one class of that name in its package, and to nothing when two share it
+          text:
+            After the scopes, from the innermost outward, a bare name (no :: and no
+            @) is looked for among the classes and enums of the package it is
+            written in, at any depth of its modules: the one of that name and arity
+            is it, two or more are nothing, and another package is never asked.
+            It is the rule argos applies to the code, so Plan, written as a Python
+            module imports it from a sibling module, finds the class there.
+          rationale:
+            DS-18, Owner 2026-11-20, agreed with the argos side: a type written as
+            the code writes it names imported classes bare, and without this rule
+            the design of a Python package lost every relation between its modules.
+          verification VER-00186-1 {
+            title: Integration tests confirm a bare name no scope declares is the one class of that name in its package, nothing when two share it, and never one of another package
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABareNameNoScopeDeclaresIsTheOneClassOfThePackage
+              tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesResolveByTheModuleOrByThePackage
           }
         }
       }
@@ -575,21 +603,45 @@ package driftspec@ds {
         title: A class shall be a type of the design: class, dataclass or enum, with members
         rationale: R12, R14, R19.
 
-        requirement REQ-00026-1 {
+        requirement REQ-00026-2 {
           tags: language, lld, class
           status: approved
           title: A member shall carry visibility, modifiers, a name, a type and an optional default
           text:
-            + # -, then abstract | static | const for methods or owns | refs |
-            shares for attributes, then the name; a method named like its
-            class is a constructor; name: type = default. Members are
-            identified by name: an overload is one member.
-          verification VER-00019-1 {
+            + # -, then abstract | static | const for methods, or owns | refs |
+            shares and many | optional for attributes, then the name; a method
+            named like its class is a constructor; name: type = default, the
+            type as the code writes it. *args and **kwargs are parameter names
+            like any other. Members are identified by name: an overload is one
+            member.
+          rationale: Revision 2 (DS-18, 2026-11-20): many and optional say the multiplicity, and a type is the code's text.
+          verification VER-00019-2 {
             title: Integration tests confirm a member carries visibility, modifiers, a name, a type and an optional default
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.MultiplicityIsWrittenInFrontOfTheName
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.OnlyTheNamesTheDesignDeclaresRelateTheRestIsText
+          }
+        }
+        requirement REQ-00170-1 {
+          tags: language, lld, class
+          status: approved
+          title: An attribute written with two ownerships or two multiplicities shall be reported as E-MODIFIER-CONFLICT
+          text:
+            An attribute has one ownership (owns, refs, shares) and one
+            multiplicity (many, optional). Two of either kind, or one written
+            twice, say two things at once: an error at the attribute, which keeps
+            the first one written.
+          rationale: DS-18, Owner 2026-11-20: what contradicts itself is said, never guessed.
+          verification VER-00187-1 {
+            title: Integration tests confirm two ownerships, two multiplicities or one written twice are E-MODIFIER-CONFLICT, and the first written is kept
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.TwoOwnershipsOrTwoMultiplicitiesAreAConflict
+              tests/integration/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
           }
         }
         constraint CST-00005-1 {
@@ -600,39 +652,54 @@ package driftspec@ds {
           text: + abstract: bool is an attribute named abstract.
           rationale: decided 2026-10-26: a code base designed in DriftSpec keeps its names.
         }
-        requirement REQ-00028-1 {
+        requirement REQ-00028-2 {
           tags: language, lld, class
           status: approved
-          title: Ownership and multiplicity shall come from the attribute and its type; parameters and returns shall give use
+          title: Ownership and multiplicity shall be written on the attribute, and every name of its type that the design declares shall be related; parameters and returns shall give use
           text:
-            owns (default), refs, shares; T is 1, optional<T> 0..1, list, set,
-            vector, map are *, a qualified container the same, and a container
-            passes the relation to its element. E-OWNERSHIP-CYCLE,
-            W-MODIFIER-ON-VALUE.
-          rationale: R16.
-          verification VER-00021-2 {
-            title: Integration tests confirm ownership and multiplicity come from the attribute and its type, and parameters and returns give use
+            owns (default), refs, shares; many is *, optional 0..1, neither 1.
+            A type is the code's text (std::map<std::string, Pool*>, list[Step],
+            Pool | None): each name in it that the design declares is related
+            with the attribute's ownership and multiplicity, or as a use from a
+            parameter or a return; ds knows no container of any language. The
+            one designed name of a type is what a call through it reaches.
+            E-OWNERSHIP-CYCLE.
+          rationale:
+            R16. Revision 2 (DS-18, Owner 2026-11-20): the multiplicity is
+            written, never read from a type whose language ds does not know, and
+            W-MODIFIER-ON-VALUE goes: a modifier on what nobody designs is
+            incompleteness, not incoherence.
+          verification VER-00021-3 {
+            title: Integration tests confirm ownership and multiplicity are written on the attribute, every designed name of its type is related, and parameters and returns give use
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
               tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
               tests/integration/ds/check/test_type_reading.cpp::TestTypeReading.AQualifiedContainerHandsTheCallToItsElement
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.MultiplicityIsWrittenInFrontOfTheName
           }
         }
-        requirement REQ-00029-1 {
+        requirement REQ-00029-2 {
           tags: language, lld, class
           status: approved
-          title: A template shall be identified by name and arity and its arguments checked against their bounds
-          text: class Repository<T: Entity>; E-TEMPLATE-BOUND.
-          rationale: R15.
-          verification VER-00022-2 {
-            title: Integration tests confirm a template is identified by name and arity and its arguments checked against their bounds
+          title: A template shall be identified by name and arity and its arguments checked against their bounds, and a base or a method shall carry its template arguments as written
+          text:
+            class Repository<T: Entity>; E-TEMPLATE-BOUND, never against an
+            argument that is the user's own parameter (class Holder<T> : Base<T>).
+            A base is written as the code writes it, IFormat<scene::SceneDocument>
+            or Box[int]: its first name is what the class inherits and the whole
+            text is kept; a method or a function takes parameters of its own,
+            each<F>(f: F).
+          rationale: R15. Revision 2 (DS-18, 2026-11-20): bases with arguments and templated methods, as the code has them (DS-150).
+          verification VER-00022-3 {
+            title: Integration tests confirm a template is identified by name and arity and its arguments checked against their bounds, and a base or a method carries its template arguments as written
             status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
               tests/integration/ds/check/test_type_reading.cpp::TestTypeReading.ATemplatesArityCountsItsOwnArgumentsOnly
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABaseAndAMethodCarryTheirTemplateArgumentsAsWritten
           }
         }
         requirement REQ-00030-1 {
@@ -746,7 +813,7 @@ package driftspec@ds {
             tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.AProtectedMemberIsSeenFromADerivedClassAndHiddenFromAnyOther
         }
       }
-      requirement REQ-00054-1 {
+      requirement REQ-00054-2 {
         status: approved
         tags: language, lld, function
         verification VER-00058-1 {
@@ -759,12 +826,14 @@ package driftspec@ds {
         text:
           function name(params) -> type in a module, with a member's optional
           visibility in front, public when absent; two of one name are
-          E-DUPLICATE-IDENTITY. An extern module declares functions as names.
+          E-DUPLICATE-IDENTITY. A call to a function nobody designs is text
+          (REQ-00024-3).
         rationale:
           A Python module or a C++ namespace declares operations no class
           holds; a design that wraps them in a class the code does not have
           drifts from it. Migrating iris (2026-10-26) found 133 of its design
-          entities were functions.
+          entities were functions. Revision 2 (DS-18, 2026-11-20): no extern
+          module declares them.
 
         requirement REQ-00055-2 {
 
@@ -842,20 +911,21 @@ package driftspec@ds {
           status: approved
           title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
           rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
-          verification VER-00028-5 {
+          verification VER-00028-6 {
             title: Integration tests confirm the participants of a sequence are its static context: self, the attributes, the parameters, the locals written and the results of earlier messages, scoped as the code scopes them
             status: approved
             text:
               Revision 5 adds how a name resolves when two of them share it (DDEV-1242): a local
               hides a member of its name, a method is no value a message is sent to, and a result
-              named like an attribute is stored in that attribute.
+              named like an attribute is stored in that attribute. Revision 6 (DS-18): a name used
+              before the message that gives it is text, unchecked.
             method: test
             tests:
               tests/integration/ds/check/test_values.cpp::TestNameScopes.ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttributeOfItsName
               tests/integration/ds/check/test_values.cpp::TestValues.ALocalInsideAFrameIsALocal
               tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
               tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt
-              tests/integration/ds/check/test_values.cpp::TestValues.AResultDoesNotExistBeforeItsMessage
+              tests/integration/ds/check/test_values.cpp::TestValues.AResultUsedBeforeItsMessageIsText
               tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.ASelfCallReachesAMethodTheClassInherits
               tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.AnInheritedAttributeIsAParticipant
               tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.ACallOnASubclassReachesTheMethodOfItsBase
@@ -888,7 +958,7 @@ package driftspec@ds {
               tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioOfABoxIsDrawnBetweenWhatItNames
           }
         }
-        requirement REQ-00133-1 {
+        requirement REQ-00133-2 {
           tags: language, behaviour, levels
           status: approved
           title: A participant of a sequence shall be nameable as what it is: a package, a module, an interface or a class the behaviour sees
@@ -896,11 +966,12 @@ package driftspec@ds {
             sales in shell -> sales.sell(item) is the package shop@sales, resolved like any name, from
             the innermost scope outward; no local declares it. A value of the static context of that
             name comes first (REQ-00036-2). A name that is neither, the sender's included, is
-            W-PARTICIPANT-UNDECLARED. In a drawing a box that is named is one lifeline, the same one
+            text, and its message is not checked (REQ-00024-3). In a drawing a box that is named is one lifeline, the same one
             a closed box has on a cut (REQ-00129-1), and ds query shows answers it.
           rationale:
             Owner, 2026-11-15 (DS-232, probe e80): a box could not be a participant, so a scenario
             between boxes needed an interface in every box and a sequence for every operation on the way.
+            Revision 2 (DS-18, 2026-11-20): W-PARTICIPANT-UNDECLARED goes, a name nobody designs being text.
           verification VER-00149-1 {
             title: Integration tests confirm a package and a module take part in a scenario by being named, and that the query answers them
             status: approved
@@ -1017,17 +1088,18 @@ package driftspec@ds {
               tests/integration/ds/render/test_cut_drawing.cpp::TestWrittenLevel.AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfTheBoxes
           }
         }
-        requirement REQ-00059-1 {
+        requirement REQ-00059-2 {
           tags: language, lld, sequence
           status: approved
           title: A behaviour shall say what it gives back with return, and that value shall be checked against what its operation declares
           text:
-            return takes a name or a literal, never an expression. Its type is checked
-            against the return of the operation (W-RETURN-TYPE), and an operation that
-            returns none gives nothing back. A name the context does not know is left
-            alone, as an argument is. An operation that declares no return has nothing
-            to check against.
-          rationale: DS-52. With the scenario a call follows, a trace reaches the value it ends in, which is what lets an interface promise an outcome.
+            return takes a name or a literal, never an expression. When the operation
+            promises a designed class, a value of another class, or a literal, is
+            reported (W-RETURN-TYPE); a return the design does not declare (void, int,
+            None) is never compared. A name the context does not know is left alone,
+            as an argument is. An operation that declares no return has nothing to
+            check against.
+          rationale: DS-52. With the scenario a call follows, a trace reaches the value it ends in, which is what lets an interface promise an outcome. Revision 2 (DS-18, 2026-11-20): ds knows no language's types.
           verification VER-00063-1 {
             title: Integration tests confirm a behaviour says what it gives back with return, and that value is checked against what its operation declares
             status: approved
@@ -1206,31 +1278,35 @@ package driftspec@ds {
               tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AHandlerOfAFailureNoStepRaisesHandlesNothing
           }
         }
-        requirement REQ-00058-2 {
+        requirement REQ-00058-3 {
           tags: language, lld, sequence
           status: approved
           title: A value of a sequence shall have the type of what produced it, and its uses shall be checked against that type
           text:
             The result of a message has the type its operation returns. A call on a
-            result is checked as a call on any other participant, an argument against
-            the type of its parameter (W-ARG-TYPE), and taking the result of an operation
-            that returns none is reported (W-RESULT-NONE). An argument may be a literal, a number or a
-            string, and has the type it is written in. A value whose type is not
-            known, because its operation declares no return or does not resolve, has
-            nothing to be checked against and gives no finding.
-          rationale: DS-51; revision 2 adds literal arguments (DS-64): the code passes them, and naming them invented values. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it.
-          verification VER-00062-2 {
+            result is checked as a call on any other participant, and an argument
+            against its parameter (W-ARG-TYPE): a value of a designed class must
+            derive from the designed class the parameter names, and a literal, a
+            number or a string, fits no designed class. A type the design does not
+            declare (int, std::string, None) is the code's word, which ds does not
+            read: it is never compared, and the result of any operation may be
+            taken. A value whose type is not known, because its operation declares
+            no return or does not resolve, has nothing to be checked against and
+            gives no finding.
+          rationale: DS-51; revision 2 adds literal arguments (DS-64): the code passes them, and naming them invented values. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it. Revision 3 (DS-18, Owner 2026-11-20): ds knows no language, so the families of literals and W-RESULT-NONE go; what needs no table of a language stays.
+          verification VER-00062-3 {
             title: Integration tests confirm a value of a sequence has the type of what produced it, and its uses are checked against that type
             status: approved
             method: test
             tests:
-              tests/integration/ds/check/test_values.cpp::TestValues.ALiteralArgumentHasTheTypeItIsWrittenIn
+              tests/integration/ds/check/test_values.cpp::TestValues.ALiteralDiffersOnlyFromADesignedClass
               tests/integration/ds/check/test_values.cpp::TestValues.ACallOnAResultIsCheckedAgainstItsType
               tests/integration/ds/check/test_values.cpp::TestValues.AValueOfUnknownTypeHasNothingToBeCheckedAgainst
               tests/integration/ds/check/test_values.cpp::TestValues.AnArgumentOfTheWrongTypeIsReported
               tests/integration/ds/check/test_values.cpp::TestValues.ADerivedClassSatisfiesItsBaseAsAnArgument
               tests/integration/ds/check/test_values.cpp::TestValues.ATemplateWithCommasIsOneParameter
-              tests/integration/ds/check/test_values.cpp::TestValues.TakingTheResultOfAnOperationThatReturnsNothingIsReported
+              tests/integration/ds/check/test_values.cpp::TestValues.TheResultOfAnyOperationMayBeTaken
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ALiteralDiffersOnlyFromADesignedClass
           }
         }
         requirement REQ-00037-1 {

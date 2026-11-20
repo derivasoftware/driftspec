@@ -141,7 +141,7 @@ package driftspec@ds {
 
   module scene {
 
-    requirement REQ-00069-1 {
+    requirement REQ-00069-2 {
       status: approved
       @refines SREQ-00013-1
       title: The scene shall place every package, module, interface, class, function, enum and member inside its parent, once, apart from its siblings, with and without private members
@@ -150,19 +150,20 @@ package driftspec@ds {
         tall as its rows; a module and a package lay their children out in
         shelves no wider than the square root of their area allows; an
         interface sits on its package's border, half outside, as a port. Rows
-        read unqualified: run(name) -> vector<Entity>. The second variant
-        leaves private members out and shrinks their class; a private class
-        keeps its place. Extern modules and expected nodes are not drawn.
+        read unqualified, each type as written: run(name) -> vector<Entity>.
+        The second variant leaves private members out and shrinks their
+        class; a private class keeps its place. Expected nodes are not drawn.
       rationale:
         A viewer that shows what fits at each zoom needs places that do not
         move; computed once by ds, the same scene feeds the interactive
-        viewer and any snapshot.
+        viewer and any snapshot. Revision 2 (DS-18, 2026-11-20): there are no
+        extern modules to leave out.
       tags: render, scene
     }
 
     verification VER-00076-1 {
       status: approved
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       title: Integration tests confirm every class, function and member of ds's design has a place, nested and apart, in both variants
       method: test
       tests:
@@ -291,7 +292,7 @@ package driftspec@ds {
 
     verification VER-00081-1 {
       status: approved
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       title: Integration tests confirm hiding private members makes no box of ds's design wider
       method: test
       tests:
@@ -476,7 +477,7 @@ package driftspec@ds {
       + scope: std::string
       + lines: std::vector<std::pair<std::string, std::string>>
       + requirements: std::vector<std::string>
-      + breaches: std::vector<BreachView>
+      + many breaches: std::vector<BreachView>
       + file: std::string
       + line: int
     }
@@ -500,7 +501,7 @@ package driftspec@ds {
       + scope: std::string
       + nodes: std::vector<std::string>
       + signature: std::string
-      + outcomes: std::vector<Outcome>
+      + many outcomes: std::vector<Outcome>
       + binds: std::vector<std::string>
     }
 
@@ -527,7 +528,7 @@ package driftspec@ds {
       + id: std::string
       + subject: std::string
       + scenario: std::string
-      + calls: std::vector<Call>
+      + many calls: std::vector<Call>
     }
 
     dataclass Tour {                         // a behaviour a viewer offers to replay
@@ -554,7 +555,7 @@ package driftspec@ds {
     }
 
     dataclass Box {                          // a rectangle of the scene: one unit is a pixel at zoom 1
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       + x: double
       + y: double
       + w: double
@@ -562,7 +563,7 @@ package driftspec@ds {
     }
 
     dataclass Node {                         // one thing drawn: a package, module, interface, unit or row
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       + id: std::string
       + kind: std::string
       + parent: std::string
@@ -576,24 +577,24 @@ package driftspec@ds {
     }
 
     dataclass SceneDocument {                // the scene: its nodes in drawing order and the world each variant spans
-      @requirement REQ-00069-1
-      + nodes: std::vector<Node>
+      @requirement REQ-00069-2
+      + many nodes: std::vector<Node>
       + owns world: Box
       + owns leanWorld: Box
-      + owns links: std::vector<Link>
-      + owns diagrams: std::vector<DiagramView>
+      + owns many links: std::vector<Link>
+      + owns many diagrams: std::vector<DiagramView>
       + titles: std::map<std::string, std::string>
-      + owns behaviours: std::vector<Behaviour>
-      + owns tours: std::vector<Tour>
-      + owns requirements: std::vector<Requirement>
-      + owns verifications: std::vector<Verification>
-      + owns rules: std::vector<RuleView>
+      + owns many behaviours: std::vector<Behaviour>
+      + owns many tours: std::vector<Tour>
+      + owns many requirements: std::vector<Requirement>
+      + owns many verifications: std::vector<Verification>
+      + owns many rules: std::vector<RuleView>
     }
 
     // The scene builds the document and nothing else (DS-126): writing it as JSON or as the viewer
     // page is the formats' job (ds::format). Next, inside: the layout and the four fillers.
     class IScene {
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       + ~IScene()
       + abstract build() -> SceneDocument
     }
@@ -609,7 +610,7 @@ package driftspec@ds {
     // ---- the principles, as rules ----------------------------------------------------------
     rule no-layer-knows-another {
       title: a layer adds its own part; it never depends on another layer
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       for class a in driftspec@ds@scene, class b in driftspec@ds@scene
       where a inherits driftspec@ds@scene::ILayer, b inherits driftspec@ds@scene::ILayer, a != b
       never depends(a, b)
@@ -617,7 +618,7 @@ package driftspec@ds {
 
     rule scene-knows-layers-as-ilayer {
       title: the scene holds the layers as ILayer; only layers() names a concrete one
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       for class c in driftspec@ds@scene
       where c = driftspec@ds@scene::Scene
       never depends(c, x), x inherits driftspec@ds@scene::ILayer
@@ -626,7 +627,7 @@ package driftspec@ds {
     // ---- placing the boxes, and the map --------------------------------------------------------
     // where every box goes, once per variant (lean hides private members): the base document
     class Layout {
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       @requirement REQ-00076-1
       @requirement REQ-00093-1
       - refs model_: model::Model
@@ -637,7 +638,7 @@ package driftspec@ds {
     // the boxes placed and where each identity of the model lands among them: built once, read by
     // every layer
     class Map {
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       - ids_: std::set<std::string>
       - parent_: std::map<std::string, std::string>
       + Map(nodes: std::vector<Node>)
@@ -651,19 +652,19 @@ package driftspec@ds {
     // ---- the layers: what each perspective draws over the map ----------------------------------
     // a layer adds its part of the document; it is built with the model and the map and keeps them
     class ILayer {
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       + ~ILayer()
       + abstract decorate(out_document: SceneDocument) -> void
     }
 
     // the one place that names the layers, in the order they decorate
     function layers(model: model::Model, map: Map) -> std::vector<std::unique_ptr<ILayer>> {
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
     }
 
     verification VER-00118-2 {
       status: approved
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       title: Integration tests confirm the map says where each identity lands, the layers come in order each adding its own part, and the scene builds the same document every time
       method: test
       tests:
@@ -725,10 +726,10 @@ package driftspec@ds {
     // ---- the scene: the entry point the rest of ds uses -------------------------------------------
     // built once: it places, makes the map and takes the layers, and keeps them
     class Scene : IScene {
-      @requirement REQ-00069-1
+      @requirement REQ-00069-2
       - owns base_: SceneDocument
       - owns map_: Map
-      - owns layers_: std::vector<std::unique_ptr<ILayer>>
+      - owns many layers_: std::vector<std::unique_ptr<ILayer>>
       + Scene(model: model::Model)
       + build() -> SceneDocument
     }

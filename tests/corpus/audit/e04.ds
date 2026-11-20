@@ -2,7 +2,7 @@
 package e04shop {
   module store {
     class Cart {
-      + add(item: string) -> bool
+      + add(item: std::string) -> bool
     }
   }
 }

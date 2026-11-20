@@ -1,9 +1,6 @@
 // Lesson 12 · Verifications and use cases
 
 package shop {
-  extern module bank {
-    class Gateway
-  }
   interface shell {
     kind: cli
     @requirement SREQ-00001-1

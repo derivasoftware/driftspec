@@ -17,6 +17,19 @@ package driftspec@ds {
       + owns location: model::Location
       + multiplicity: std::string
       + args: std::vector<std::string>
+      + soft: bool                           // read out of a type, a base or a bound: text when nobody designs it (DS-18)
+    }
+
+    // one name a type's text holds, with the arguments of a bracket right after it (DS-18)
+    dataclass TypeToken {
+      @requirement REQ-00028-2
+      + name: std::string
+      + args: std::vector<std::string>
+    }
+
+    // the names of a type as the code writes it, left to right: no name of any language is known (DS-18)
+    function scanTypeTokens(text: std::string) -> std::vector<TypeToken> {
+      @requirement REQ-00028-2
     }
 
     dataclass Message {                      // a message of a behaviour, checked later against the static context
@@ -40,22 +53,15 @@ package driftspec@ds {
       + owns location: model::Location
     }
 
-    dataclass TypeUse {                      // what a type expression named: an entity, a template parameter, or text
-      @requirement REQ-00028-1
-      + classLike: bool
-      + parameter: bool
-      + text: std::string
-    }
-
     class Binder {                           // realises the language rule by rule: each member names its requirement
-      @requirement REQ-00053-1
+      @requirement REQ-00053-2
       @requirement REQ-00021-1
       @requirement REQ-00110-1
       @requirement REQ-00112-1
       - refs model_: model::Model
-      - owns references_: std::vector<Reference>
-      - owns messages_: std::vector<Message>
-      - owns events_: std::vector<Event>
+      - owns many references_: std::vector<Reference>
+      - owns many messages_: std::vector<Message>
+      - owns many events_: std::vector<Event>
       + Binder(model: model::Model)
       + bind(file: parse::ParsedFile) -> void
       + references() -> std::vector<Reference>
@@ -90,21 +96,22 @@ package driftspec@ds {
       }
       - bindClass(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
         @requirement REQ-00025-1
-        @requirement REQ-00029-1
+        @requirement REQ-00029-2
         @requirement REQ-00033-1
       }
       - extend(file: parse::ParsedFile, node: TSNode, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
         @constraint CST-00003-2
       }
       - bindMember(file: parse::ParsedFile, node: TSNode, out_cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
-        @requirement REQ-00026-1
+        @requirement REQ-00170-1
+        @requirement REQ-00026-2
         @requirement REQ-00101-1                 // ~Name() flagged destructor
       }
       - bindFunction(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
-        @requirement REQ-00054-1
+        @requirement REQ-00054-2
       }
       - bindSignature(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
-        @requirement REQ-00028-1
+        @requirement REQ-00028-2
         @requirement REQ-00055-2
         @requirement REQ-00112-1
       }
@@ -123,9 +130,9 @@ package driftspec@ds {
       - branch(file: parse::ParsedFile, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
         @requirement REQ-00037-1
       }
-      - bindType(file: parse::ParsedFile, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> TypeUse {
-        @requirement REQ-00028-1
-        @requirement REQ-00024-2
+      - bindType(file: parse::ParsedFile, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> std::string {
+        @requirement REQ-00028-2
+        @requirement REQ-00024-3
       }
       - declareOperator(out_cls: model::Entity, symbol: std::string, location: model::Location) -> void {
         @requirement REQ-00030-1

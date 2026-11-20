@@ -2,11 +2,11 @@
 package e19shop {
   module store {
     class Disk {
-      + read(path: string) -> string fails IoError
+      + read(path: std::string) -> std::string fails IoError
     }
     class Book {
       - disk: Disk
-      + load(path: string) -> string fails nothing  // ! W-FAILURE-UNDECLARED
+      + load(path: std::string) -> std::string fails nothing  // ! W-FAILURE-UNDECLARED
     }
     sequence Book::load {
       attempt {

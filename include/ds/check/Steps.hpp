@@ -69,16 +69,18 @@ class BehaviourTyping : public IStep {
   bool callStatic(const model::Entity& seq, model::Entity& out_msg, const bind::Message& message, const std::string& home);
   /// The box, interface or class a participant is named as (DS-232); empty when the name is none of them.
   std::string namedEntity(const std::string& name, const std::string& home) const;
-  /// Types who sends a message, the participant written before its arrow; false when that name is nobody.
-  bool typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
-                  const std::string& home, const model::Location& location);
+  /// Types who sends a message, the participant written before its arrow; a name nobody designs is text.
+  void typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
+                  const std::string& home);
   /// The operation a box offers under a name: a function of a module, an operation of one interface of a package.
   const model::Entity* offered(const model::Entity& box, const std::string& op) const;
   /// The type a name has in a behaviour: attribute, parameter, local or an earlier result (B3). A value is
   /// a pair: the type as written and the scope that resolves it; an empty type is an unknown one.
   bool typeOfName(const model::Entity& sequence, const model::Entity* cls, const model::Entity& subject, const std::string& name,
                   std::pair<std::string, std::string>* value, bool* transient) const;
-  bool compatible(const std::pair<std::string, std::string>& argument, const std::pair<std::string, std::string>& parameter) const;
+  /// Whether a value may be passed where `parameter` is expected; `literal` for a literal, whose type ds does not know.
+  bool compatible(const std::pair<std::string, std::string>& argument, const std::pair<std::string, std::string>& parameter,
+                  bool literal = false) const;
   void checkArguments(const model::Entity& msg, const model::Entity& op, const bind::Message& message);
   void rememberResult(const bind::Message& message);
   void checkLocals();

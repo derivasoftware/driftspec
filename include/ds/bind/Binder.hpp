@@ -21,7 +21,19 @@ struct Reference {
   model::Location location;
   std::string multiplicity;       ///< for owns/refs/shares (R16)
   std::vector<std::string> args;  ///< template arguments as written, for Repository<Finding> (R15)
+  /// a name read out of a type, a base or a bound: it relates only to what the design declares, and is
+  /// text otherwise, with no expected node and no finding (DS-18)
+  bool soft = false;
 };
+
+/// One name a type's text holds (pkg@mod::Name), with the arguments of a bracket written right after it.
+struct TypeToken {
+  std::string name;
+  std::vector<std::string> args;
+};
+/// The names of a type's text, left to right. The text is the code's: no name of any language is known,
+/// so `std::map<std::string, Pool*>` holds std::map (two arguments), std::string and Pool (DS-18).
+std::vector<TypeToken> scanTypeTokens(const std::string& text);
 
 /// A message of a behaviour: `from -> to.op(args) -> result`, checked against the static
 /// context of the behaviour's subject (self, attributes, parameters, locals).
@@ -46,13 +58,6 @@ struct Event {
 };
 
 /// Walks the syntax trees of a workspace and declares its entities (R1-R5, R9).
-/// What a type expression named: an entity (or a container of one), a template parameter, or text.
-struct TypeUse {
-  bool classLike = false;  ///< named an entity (or a container of one)
-  bool parameter = false;  ///< named a template parameter: may be anything (R15)
-  std::string text;
-};
-
 class Binder {
  public:
   explicit Binder(model::Model& model) : model_(model) {}
@@ -63,7 +68,6 @@ class Binder {
   const std::vector<Event>& events() const { return events_; }
 
  private:
-  /// What a type expression contributed: whether it named something class-like, and its text.
   void visit(const parse::ParsedFile& file, TSNode node, const std::string& scope, const std::string& owner);
   void bindFields(const parse::ParsedFile& file, TSNode node, model::Entity& out_entity);
   void bindAnnotations(const parse::ParsedFile& file, TSNode node, const std::string& from, const std::string& scope);
@@ -89,10 +93,10 @@ class Binder {
   /// One side of an alt (DS-172): a frame of kind branch the alt contains, `side` 0 for the first, 1 for the else.
   std::string branch(const parse::ParsedFile& file, TSNode at, const std::string& sequence, const std::string& alt, int side,
                      const std::string& scenario);
-  /// Relate `from` to every class-like name of a type expression (R15, R16).
-  TypeUse bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
-                   const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
-                   const model::Location& location);
+  /// Relate `from` to every name of a type that the design declares; the type's text, trimmed (DS-18).
+  std::string bindType(const parse::ParsedFile& file, TSNode type, const std::string& scope, const std::string& from,
+                       const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
+                       const model::Location& location);
   void declareOperator(model::Entity& out_cls, const std::string& symbol, const model::Location& location);
   model::Location locationOf(const parse::ParsedFile& file, TSNode node) const;
 
