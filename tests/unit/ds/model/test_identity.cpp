@@ -107,6 +107,27 @@ TEST(TestArtefactName, AnArtefactIsNamedPrefixNumberAndRevision) {
   EXPECT_FALSE(ArtefactName("REQ-00001").hasRevision());
 }
 
+TEST(TestArtefactName, OnlyLetterPartsThenNumberPartsBetweenSingleDashesAreAnArtefact) {
+  // the edges the hand-written recogniser walks, held to what the pattern it replaces accepted (DS-335)
+  EXPECT_TRUE(ArtefactName::matches("A-1"));
+  EXPECT_TRUE(ArtefactName::matches("A-B-C-1-2"));
+  EXPECT_FALSE(ArtefactName::matches(""));
+  EXPECT_FALSE(ArtefactName::matches("REQ"));         // no number
+  EXPECT_FALSE(ArtefactName::matches("00001-2"));     // no letter part
+  EXPECT_FALSE(ArtefactName::matches("-REQ-00001"));  // a leading dash
+  EXPECT_FALSE(ArtefactName::matches("REQ-00001-"));  // a trailing dash
+  EXPECT_FALSE(ArtefactName::matches("REQ--00001"));  // a doubled dash
+  EXPECT_FALSE(ArtefactName::matches("Req-00001"));   // lowercase
+  EXPECT_FALSE(ArtefactName::matches("REQ1-00001"));  // a part both letters and digits
+  EXPECT_FALSE(ArtefactName::matches("REQ-1-DS-2"));  // letters after a number
+  EXPECT_FALSE(ArtefactName::matches("REQ-1-2-3"));   // three numbers
+  EXPECT_FALSE(ArtefactName::matches("REQ-00001 "));  // a trailing space
+  EXPECT_FALSE(ArtefactName("A-1").hasRevision());
+  EXPECT_TRUE(ArtefactName("A-1-0").hasRevision());
+  EXPECT_EQ(ArtefactName("A-1-0").withoutRevision(), ArtefactName("A-1"));
+  EXPECT_EQ(ArtefactName("REQ-1-2-3").withoutRevision(), ArtefactName("REQ-1-2-3"));  // not an artefact: kept
+}
+
 TEST(TestArtefactName, ItLosesItsRevisionAndNothingElseDoes) {
   EXPECT_EQ(ArtefactName("REQ-00001-2").withoutRevision(), ArtefactName("REQ-00001"));
   EXPECT_EQ(ArtefactName("DS-C-0001-0").withoutRevision(), ArtefactName("DS-C-0001"));

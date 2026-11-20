@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.19
+
+Artefact names are recognised by a hand-written scan instead of `std::regex` (DS-335), the regular
+expressions a contract check and two number fields built on every call are built once or replaced by a
+digit check, and six unused `#include <regex>` are gone. On DriftSpec's own design this saves about 5–6 %
+of the instructions of `ds check`, `export` and `render`; the findings are the same. Nothing changes
+for a design.
+
 ## 0.1.18
 
 The model package has no anonymous namespaces (DS-332): each helper is a private member of the one
