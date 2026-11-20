@@ -139,6 +139,7 @@ package driftspec@ds {
         tags: language, workspace
         status: approved
         category: language
+        bok: BOK-00004-1
         title: Every entity shall have one identity, and a second declaration of it shall be E-DUPLICATE-IDENTITY
         rationale: R5: identity across the workspace is what makes references, diagrams and diffs mean the same entity everywhere.
       }
@@ -171,6 +172,7 @@ package driftspec@ds {
         tags: language, workspace
         status: approved
         category: language
+        bok: BOK-00004-1
         title: Every entity shall be defined once and extended only by blocks of annotations
         text:
           An extension adds relations and never touches the definition; an extension of nothing is an expected node,
@@ -231,6 +233,7 @@ package driftspec@ds {
           tags: language, hld
           status: approved
           category: language
+          bok: BOK-00004-1
           title: Every identity shall name its packages with @ and its namespaces with ::, the box that holds the modules rooting the code's namespace
           text:
             app@core@model::Entity: boxes with @, namespaces with ::; outer
@@ -654,6 +657,7 @@ package driftspec@ds {
           tags: language, lld, class
           status: approved
           category: language
+          bok: BOK-00004-1
           title: Every modifier shall be a word only in front of a name: nothing is reserved
           text: + abstract: bool is an attribute named abstract.
           rationale: decided 2026-10-26: a code base designed in DriftSpec keeps its names.
@@ -1727,6 +1731,7 @@ package driftspec@ds {
           tags: language, artefacts
           status: approved
           category: language
+          bok: BOK-00004-1
           title: Every link to an artefact shall name a revision
           text: An unpinned link is E-REF-UNPINNED.
           rationale: Pinning links to a revision is what lets the tool tell who stayed behind when an artefact moved (block 1).

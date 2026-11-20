@@ -33,6 +33,7 @@ package driftspec@ds {
     constraint CST-00009-1 {
       status: approved
       category: design
+      bok: BOK-00003-1
       title: Every answer of the engine to a caller outside it shall be a document it writes, a copy, never a view into a model the caller could keep
       rationale:
         The engine knows none of its callers (CST-00008-2 inside it, this one at its edge): a caller that
