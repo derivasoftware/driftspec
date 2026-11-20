@@ -6,6 +6,12 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.11
+
+The live session's code is split by what each part does (DS-322): `driftspec.live` keeps the command
+line and every name a caller imports, beside `live_session`, `live_page`, `live_http` and `live_mcp`.
+`driftspec-live` works as before. Nothing changes for a design.
+
 ## 0.1.10
 
 The design names the native module `_native`, as Python imports it (DS-321), so the Python face's
