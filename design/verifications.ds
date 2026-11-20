@@ -50,7 +50,7 @@ package driftspec {
   }
 
   verification SVER-00004-2 {
-    status: draft
+    status: approved
     @requirement SREQ-00004-1
     title: System tests confirm behaviour is bound to its subject and checked against it
     text:

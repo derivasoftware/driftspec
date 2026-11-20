@@ -114,7 +114,7 @@ package driftspec@ds {
     // ======================= workspace ====================================
     requirement REQ-00053-2 {
       tags: language, workspace
-      status: draft
+      status: approved
       title: A specification shall be a directory of .ds files read as one, in any order
       text:
         Files are read whole and are not units of meaning; a link nobody
@@ -411,7 +411,7 @@ package driftspec@ds {
         }
         requirement REQ-00119-2 {
           tags: language, hld, interfaces, check
-          status: draft
+          status: approved
           title: A method that answers an operation of an interface its class realises shall take and give what the operation does, or be reported as W-INTERFACE-SIGNATURE
           text:
             When a class realises an interface (@interface) and declares, or inherits, a method named
@@ -526,7 +526,7 @@ package driftspec@ds {
           text: No includes, no using; what already encloses you is omitted.
           verification VER-00017-2 {
             title: Integration tests confirm a bare name resolves from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
@@ -537,7 +537,7 @@ package driftspec@ds {
         }
         requirement REQ-00024-3 {
           tags: language, lld, module
-          status: draft
+          status: approved
           title: A name the design does not declare shall be text in a type, a base, a bound or a call, relating nothing and reported nowhere
           text:
             A design declares what it designs and nothing else. A name read out of a
@@ -554,7 +554,7 @@ package driftspec@ds {
             shows as a missing arrow in the drawing.
           verification VER-00018-3 {
             title: Integration tests confirm a name the design does not declare is text in a type, a base, a bound or a call, relating nothing and reported nowhere
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.ANameNobodyDesignsIsTextAndRelatesNothing
@@ -564,7 +564,7 @@ package driftspec@ds {
         }
         requirement REQ-00169-1 {
           tags: language, lld, module
-          status: draft
+          status: approved
           title: A bare name that no scope declares shall resolve to the one class of that name in its package, and to nothing when two share it
           text:
             After the scopes, from the innermost outward, a bare name (no :: and no
@@ -579,7 +579,7 @@ package driftspec@ds {
             the design of a Python package lost every relation between its modules.
           verification VER-00186-1 {
             title: Integration tests confirm a bare name no scope declares is the one class of that name in its package, nothing when two share it, and never one of another package
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABareNameNoScopeDeclaresIsTheOneClassOfThePackage
@@ -605,7 +605,7 @@ package driftspec@ds {
 
         requirement REQ-00026-2 {
           tags: language, lld, class
-          status: draft
+          status: approved
           title: A member shall carry visibility, modifiers, a name, a type and an optional default
           text:
             + # -, then abstract | static | const for methods, or owns | refs |
@@ -617,7 +617,7 @@ package driftspec@ds {
           rationale: Revision 2 (DS-18, 2026-11-20): many and optional say the multiplicity, and a type is the code's text.
           verification VER-00019-2 {
             title: Integration tests confirm a member carries visibility, modifiers, a name, a type and an optional default
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
@@ -627,7 +627,7 @@ package driftspec@ds {
         }
         requirement REQ-00170-1 {
           tags: language, lld, class
-          status: draft
+          status: approved
           title: An attribute written with two ownerships or two multiplicities shall be reported as E-MODIFIER-CONFLICT
           text:
             An attribute has one ownership (owns, refs, shares) and one
@@ -637,7 +637,7 @@ package driftspec@ds {
           rationale: DS-18, Owner 2026-11-20: what contradicts itself is said, never guessed.
           verification VER-00187-1 {
             title: Integration tests confirm two ownerships, two multiplicities or one written twice are E-MODIFIER-CONFLICT, and the first written is kept
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.TwoOwnershipsOrTwoMultiplicitiesAreAConflict
@@ -654,7 +654,7 @@ package driftspec@ds {
         }
         requirement REQ-00028-2 {
           tags: language, lld, class
-          status: draft
+          status: approved
           title: Ownership and multiplicity shall be written on the attribute, and every name of its type that the design declares shall be related; parameters and returns shall give use
           text:
             owns (default), refs, shares; many is *, optional 0..1, neither 1.
@@ -671,7 +671,7 @@ package driftspec@ds {
             incompleteness, not incoherence.
           verification VER-00021-3 {
             title: Integration tests confirm ownership and multiplicity are written on the attribute, every designed name of its type is related, and parameters and returns give use
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
@@ -682,7 +682,7 @@ package driftspec@ds {
         }
         requirement REQ-00029-2 {
           tags: language, lld, class
-          status: draft
+          status: approved
           title: A template shall be identified by name and arity and its arguments checked against their bounds, and a base or a method shall carry its template arguments as written
           text:
             class Repository<T: Entity>; E-TEMPLATE-BOUND, never against an
@@ -694,7 +694,7 @@ package driftspec@ds {
           rationale: R15. Revision 2 (DS-18, 2026-11-20): bases with arguments and templated methods, as the code has them (DS-150).
           verification VER-00022-3 {
             title: Integration tests confirm a template is identified by name and arity and its arguments checked against their bounds, and a base or a method carries its template arguments as written
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
@@ -814,7 +814,7 @@ package driftspec@ds {
         }
       }
       requirement REQ-00054-2 {
-        status: draft
+        status: approved
         tags: language, lld, function
         verification VER-00058-1 {
           title: Unit tests confirm a function is an operation of its module: the functions oracle
@@ -913,7 +913,7 @@ package driftspec@ds {
           rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
           verification VER-00028-6 {
             title: Integration tests confirm the participants of a sequence are its static context: self, the attributes, the parameters, the locals written and the results of earlier messages, scoped as the code scopes them
-            status: draft
+            status: approved
             text:
               Revision 5 adds how a name resolves when two of them share it (DDEV-1242): a local
               hides a member of its name, a method is no value a message is sent to, and a result
@@ -960,7 +960,7 @@ package driftspec@ds {
         }
         requirement REQ-00133-2 {
           tags: language, behaviour, levels
-          status: draft
+          status: approved
           title: A participant of a sequence shall be nameable as what it is: a package, a module, an interface or a class the behaviour sees
           text:
             sales in shell -> sales.sell(item) is the package shop@sales, resolved like any name, from
@@ -1090,7 +1090,7 @@ package driftspec@ds {
         }
         requirement REQ-00059-2 {
           tags: language, lld, sequence
-          status: draft
+          status: approved
           title: A behaviour shall say what it gives back with return, and that value shall be checked against what its operation declares
           text:
             return takes a name or a literal, never an expression. When the operation
@@ -1280,7 +1280,7 @@ package driftspec@ds {
         }
         requirement REQ-00058-3 {
           tags: language, lld, sequence
-          status: draft
+          status: approved
           title: A value of a sequence shall have the type of what produced it, and its uses shall be checked against that type
           text:
             The result of a message has the type its operation returns. A call on a
@@ -1296,7 +1296,7 @@ package driftspec@ds {
           rationale: DS-51; revision 2 adds literal arguments (DS-64): the code passes them, and naming them invented values. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it. Revision 3 (DS-18, Owner 2026-11-20): ds knows no language, so the families of literals and W-RESULT-NONE go; what needs no table of a language stays.
           verification VER-00062-3 {
             title: Integration tests confirm a value of a sequence has the type of what produced it, and its uses are checked against that type
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_values.cpp::TestValues.ALiteralDiffersOnlyFromADesignedClass

@@ -142,7 +142,7 @@ package driftspec@ds {
   module scene {
 
     requirement REQ-00069-2 {
-      status: draft
+      status: approved
       @refines SREQ-00013-1
       title: The scene shall place every package, module, interface, class, function, enum and member inside its parent, once, apart from its siblings, with and without private members
       text:
