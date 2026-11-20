@@ -6,6 +6,12 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.17
+
+A file that does not parse quotes the unexpected text cut on a character boundary (DS-334): a
+multi-byte character across the cut once left half of it, and `ds check --json` then aborted with no
+findings. Nothing changes for a design.
+
 ## 0.1.16
 
 The viewer's tours run on vitest (DS-329), so argos reads them as the tests their verifications
