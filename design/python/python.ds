@@ -892,23 +892,23 @@ package driftspec@driftspec {
     function workspace_files(ls: LanguageServer, ws: str) -> dict[str, str]
     function use(ls: LanguageServer, uri: str) -> str
     function refresh(ls: LanguageServer, ws: str) -> None
-    function word_at(ls: LanguageServer, uri: str, position: Position) -> str
-    function entities_for(word: str) -> list[Entity]
-    function location_of(e: Entity) -> Location
+    function word_at(ls: LanguageServer, uri: str, position: lsp.Position) -> str
+    function entities_for(word: str) -> list[driftspec.Entity]
+    function location_of(e: driftspec.Entity) -> lsp.Location
     function changed(ls: LanguageServer, params) -> None
-    function definition(ls: LanguageServer, params: DefinitionParams) -> list[Location]
-    function references(ls: LanguageServer, params: ReferenceParams) -> list[Location]
-    function hover(ls: LanguageServer, params: HoverParams) -> Hover | None
-    function completion(ls: LanguageServer, params: CompletionParams) -> CompletionList
-    function symbols(ls: LanguageServer, params: DocumentSymbolParams) -> list[SymbolInformation]
+    function definition(ls: LanguageServer, params: lsp.DefinitionParams) -> list[lsp.Location]
+    function references(ls: LanguageServer, params: lsp.ReferenceParams) -> list[lsp.Location]
+    function hover(ls: LanguageServer, params: lsp.HoverParams) -> lsp.Hover | None
+    function completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.CompletionList
+    function symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.SymbolInformation]
     function subject_at(ls: LanguageServer, uri: str, line: int, character: int, typed: str) -> tuple[str, str]
-    function enclosing(path: str, line: int) -> Entity | None
+    function enclosing(path: str, line: int) -> driftspec.Entity | None
     function subject_of(word: str) -> tuple[str, str]
     function with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]
     function optional(rest: tuple) -> tuple[int, str]      // the width and the word typed, from what pygls passes on
-    function draw(ls: LanguageServer, uri: str, line: int, character: int, *rest: object) -> dict
+    function draw(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
     function open_in_browser(path: str) -> None
-    function view(ls: LanguageServer, uri: str, line: int, character: int, *rest: object) -> dict
+    function view(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
     function main() -> None
 
     sequence changed {
@@ -968,7 +968,7 @@ package driftspec@driftspec {
       + lock: Lock
       + version: int
       + page: str                              // the viewer of the version shown
-      + optional loaded: Workspace | None      // the version shown, loaded once in the engine (DS-173)
+      + optional loaded: driftspec.Workspace | None      // the version shown, loaded once in the engine (DS-173)
       + history: list[dict]                    // the last reloads: version, when, how long
       + findings: list[dict]
       + counts: dict
@@ -978,7 +978,7 @@ package driftspec@driftspec {
       + rules: list[dict]
       + comments: list[dict]
       + isolated: list[str]
-      + listeners: list[Queue]                 // one per page following the session
+      + listeners: list[queue.Queue]           // one per page following the session
       + stamp: None                            // what the .ds files were at the last reload; none before the first
       + error: str
       + boot: str                              // when the server started: a page from an older one reloads itself

@@ -69,9 +69,9 @@ class Live:
     """A live session over one workspace: its model version by version, and what both sides point at."""
 
     def __init__(self, workspace: str):
-        self.workspace = os.path.realpath(workspace)
+        self.workspace: str = os.path.realpath(workspace)
         base = os.path.basename(self.workspace.rstrip("/"))
-        self.title = os.path.basename(os.path.dirname(self.workspace)) if base in ("design", "designs", "") else base
+        self.title: str = os.path.basename(os.path.dirname(self.workspace)) if base in ("design", "designs", "") else base
         self.lock = threading.Lock()
         self.version = 0
         self.page = ""
@@ -88,8 +88,8 @@ class Live:
         self.listeners: list[queue.Queue] = []
         self.stamp = None
         self.error = ""
-        self.boot = str(time.time())  # a page from an older server reloads itself
-        self.store = os.path.join(self.workspace, ".driftspec", "live.json")
+        self.boot: str = str(time.time())  # a page from an older server reloads itself
+        self.store: str = os.path.join(self.workspace, ".driftspec", "live.json")
         self.load()
 
     # ---- what both sides point at, kept beside the design

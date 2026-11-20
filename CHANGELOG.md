@@ -6,6 +6,11 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.8
+
+argos compares DriftSpec's Python face with its code (DS-320): `python` is in the sources, and the
+design of the Python face is written as its code writes it. Nothing changes for a design.
+
 ## 0.1.7
 
 A dot in a type qualifies a name as `::` does (DS-319): `store.Card`, written as Python writes it,

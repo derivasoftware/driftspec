@@ -25,8 +25,14 @@ driftspec = ["design"]
 [design]
 driftspec = ["design"]
 
+# The engine is C++ under src/ and include/; the Python face, the package
+# driftspec, is Python under python/ (its module names start there:
+# python/driftspec/live.py is driftspec.live). The extension in
+# python/src/native.cpp is read by neither reader: the C++ one is not pointed
+# at it and the Python one reads only .py files.
 [sources]
 cpp = ["src", "include"]
+python = ["python"]
 
 # The engine's tests run on GoogleTest, read from ``tests/unit/<package>/``
 # where ``<package>`` matches the namespace under ``include/`` (tests outside
@@ -44,3 +50,17 @@ pytest = ["tests/unit/python", "tests/integration/python", "tests/system/python"
 code = "E-DRIFT-METHOD-EXTRA"
 source = "ds.parse.Parser"
 reason = "Parser owns a TSParser: its destructor and deleted copy assignment are the non-copyable RAII idiom, special member functions the design language does not name (the cpp14 reader lists them as methods)."
+
+# The native module is read by no reader (DDEV-1468, Owner's choice): its functions are C++ over
+# the CPython API, registered in method tables, so the design of driftspec._native is exempted
+# rather than parsed. The trade-off is accepted: a changed native function can let its design go
+# stale without a finding.
+[[diagnose.exempt]]
+code = "W-DESIGN-NO-FUNCTION"
+source = "CL_native"
+reason = "driftspec._native is C++ over the CPython API: its functions are registered in method tables, not written as code a reader sees. The Python face's tests exercise every one of them."
+
+[[diagnose.exempt]]
+code = "W-DESIGN-NO-CODE"
+source = "CL_native_Workspace"
+reason = "Same: the native Workspace type is a CPython type object, registered, not a class a reader sees."
