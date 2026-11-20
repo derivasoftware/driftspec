@@ -57,10 +57,15 @@ reason = "Parser owns a TSParser: its destructor and deleted copy assignment are
 # stale without a finding.
 [[diagnose.exempt]]
 code = "W-DESIGN-NO-FUNCTION"
-source = "CL_native"
+source = "CL__native"
 reason = "driftspec._native is C++ over the CPython API: its functions are registered in method tables, not written as code a reader sees. The Python face's tests exercise every one of them."
 
 [[diagnose.exempt]]
 code = "W-DESIGN-NO-CODE"
-source = "CL_native_Workspace"
+source = "CL__native_Workspace"
 reason = "Same: the native Workspace type is a CPython type object, registered, not a class a reader sees."
+
+[[diagnose.exempt]]
+code = "W-RELATION-NO-CODE"
+source = "driftspec.Workspace"
+reason = "Same: driftspec.Workspace holds the native Workspace (self._native = _native.Workspace(...)), a CPython type no reader sees, so argos cannot find the class the composition points at."

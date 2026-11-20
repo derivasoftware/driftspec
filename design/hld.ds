@@ -40,7 +40,7 @@ package driftspec {
     @requirement SREQ-00015-1                // the engine in process, for Python
     @requirement SREQ-00016-1                // a language server for .ds files
     @requirement SREQ-00017-1                // a design seen live while it is written
-    module native { }                       // the CPython extension: C++, the one box here that is
+    module _native { }                       // the CPython extension: C++, the one box here that is
     module driftspec { }                    // the package (import driftspec): the JSON read into a typed model
     module lsp { }                          // the language server, on pygls
     module live { }                         // the live session: the viewer following the files, and its MCP

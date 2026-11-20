@@ -22,7 +22,7 @@ package driftspec@driftspec {
     title: what is Python reaches the engine only through the native module; it holds no part of the engine of its own
     @requirement REQ-00107-2
     for class c in driftspec@driftspec
-    where not c in driftspec@driftspec@native
+    where not c in driftspec@driftspec@_native
     never depends(c, x), x in driftspec@ds
   }
 
@@ -513,7 +513,7 @@ package driftspec@driftspec {
   }
 
   // ---- the extension: C++ inside the Python box --------------------------------------------------
-  module native {
+  module _native {
     language: cpp
     @consumes driftspec@ds@engine                // DS-92: through the engine's interface
     @consumes driftspec@ds@workspace             // DS-90: a workspace loaded once, through its interface
@@ -810,7 +810,7 @@ package driftspec@driftspec {
     class Workspace {
       @requirement REQ-00086-1
       @constraint CST-00009-1
-      - owns _native: Workspace
+      - owns _native: _native.Workspace
       + model() -> Model
       + report() -> Report
       + find(identity: str) -> Entity | None
@@ -864,18 +864,18 @@ package driftspec@driftspec {
 
     sequence render {
       -> read(source) -> files
-      -> native::render(files, diagram, format, width) -> drawing
+      -> _native::render(files, diagram, format, width) -> drawing
       return drawing
     }
 
     sequence page {
       -> read(source) -> files
-      -> native::page(files, title, focus) -> html
+      -> _native::page(files, title, focus) -> html
       return html
     }
 
     sequence expected_at {
-      -> native::expected_at(text, line, column) -> words
+      -> _native::expected_at(text, line, column) -> words
       return words
     }
   }
@@ -965,7 +965,7 @@ package driftspec@driftspec {
       @requirement REQ-00090-1
       + workspace: str                         // the workspace's real path
       + title: str                             // the project's name, or the workspace's when it is not called design
-      + lock: Lock
+      + lock: threading.Lock
       + version: int
       + page: str                              // the viewer of the version shown
       + optional loaded: driftspec.Workspace | None      // the version shown, loaded once in the engine (DS-173)
@@ -1045,5 +1045,5 @@ diagram CL_LiveModule {                         // the live session's module: th
 
 diagram CL_NativeModule {                       // the extension: the workspace it holds in the engine
   kind: class
-  include: driftspec@driftspec@native::*
+  include: driftspec@driftspec@_native::*
 }
