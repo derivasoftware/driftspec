@@ -25,8 +25,14 @@ driftspec = ["design"]
 [design]
 driftspec = ["design"]
 
+# The engine is C++ under src/ and include/; the Python face, the package
+# driftspec, is Python under python/ (its module names start there:
+# python/driftspec/live.py is driftspec.live). The extension in
+# python/src/native.cpp is read by neither reader: the C++ one is not pointed
+# at it and the Python one reads only .py files.
 [sources]
 cpp = ["src", "include"]
+python = ["python"]
 
 # The engine's tests run on GoogleTest, read from ``tests/unit/<package>/``
 # where ``<package>`` matches the namespace under ``include/`` (tests outside
