@@ -351,6 +351,7 @@ package driftspec@ds {
       @constraint CST-00003-2
       @requirement REQ-00067-1
       @requirement REQ-00118-1
+      @requirement REQ-00168-1
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
@@ -366,6 +367,9 @@ package driftspec@ds {
       }
       - checkRefinesUpward() -> void {
         @requirement REQ-00118-1
+      }
+      - checkSatisfiesHome() -> void {
+        @requirement REQ-00168-1
       }
       - checkArtefacts() -> void {
         @requirement REQ-00045-1

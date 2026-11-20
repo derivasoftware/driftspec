@@ -7,7 +7,7 @@ package ds {
   module lsp {
 
     class LspClient : AbstractClass {
-      @requirement DS-0002-0
+      @requirement DS-0002-0  // ! W-SATISFIES-OUTSIDE-HOME: DS-0002-0 is written in module ds, LspClient in lsp
       @interface LSP          // this class realises the LSP interface
 
       + send(msg: int) -> bool {
