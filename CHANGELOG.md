@@ -6,9 +6,9 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.2.0
+## 0.1.6
 
-Types are written as the code writes them (DS-18). A design written for 0.1 has to change:
+Types are written as the code writes them (DS-18). A design written for 0.1.5 or earlier has to change:
 
 - `extern module` is gone and is now a syntax error. Delete those blocks: a name the design does
   not declare, in a type, a base, a bound or a call, is text, with no relation and no finding.
