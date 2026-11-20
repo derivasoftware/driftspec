@@ -26,20 +26,20 @@ package driftspec@ds {
           tests/integration/python/test_packaging.py::TestPackaging::test_the_wheels_build_makes_ds_and_installs_it_as_a_script
       }
     }
-    function main(argv: list<string>) -> int       // the program's main hands its command line here (DS-311)
-    function run(argv: list<string>) -> int           // the command, on the thread main starts with a large stack (DS-279)
-    - function work(argv: list<string>) -> int         // runs the command; what cannot be read is said, exit 2
+    function main(argv: std::vector<std::string>) -> int       // the program's main hands its command line here (DS-311)
+    function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279)
+    - function work(argv: std::vector<std::string>) -> int         // runs the command; what cannot be read is said, exit 2
 
-    - function load(dir: path) -> model::Model
-    - function loadWorkspace(dir: path, model: model::Model) -> bool
-    - function titleOf(dir: string) -> string
-    - function readFile(path: string) -> string
-    - function emit(output: string, text: string) -> int
-    - function check(dir: path, json: bool) -> int
-    - function holdsDesign(dir: path) -> bool         // a directory with no .ds file under it is no workspace
-    - function manual(topic: string, json: bool) -> int
-    - function diagramId(name: string) -> string
-    - function isDirectory(path: string) -> bool
+    - function load(dir: std::string) -> model::Model
+    - function loadWorkspace(dir: std::string, model: model::Model) -> bool
+    - function titleOf(dir: std::string) -> std::string
+    - function readFile(path: std::string) -> std::string
+    - function emit(output: std::string, text: std::string) -> int
+    - function check(dir: std::string, json: bool) -> int
+    - function holdsDesign(dir: std::string) -> bool         // a directory with no .ds file under it is no workspace
+    - function manual(topic: std::string, json: bool) -> int
+    - function diagramId(name: std::string) -> std::string
+    - function isDirectory(path: std::string) -> bool
 
     sequence loadWorkspace {
       -> isDirectory(dir) -> found
@@ -130,7 +130,7 @@ package driftspec@ds {
       -> scene.build() -> document
       -> format::sceneFormats() -> formats
       -> json.write(document, options) -> text
-      -> emit(output, json) -> written
+      -> emit(output, text) -> written
       return 0
     }
 
@@ -150,7 +150,8 @@ package driftspec@ds {
 
     sequence main / render-document {
       local chosen: format::DiagramSvg
-      -> readFile(argv) -> document
+      local document: render::IrText       // the text read, as the IR document the format draws
+      -> readFile(argv) -> text
       -> format::diagramFormats() -> formats
       -> chosen.write(document, options) -> picture
       -> emit(output, picture) -> written

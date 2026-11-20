@@ -4,15 +4,7 @@
 
 package driftspec@ds {
 
-  extern module tree_sitter {                // the catalogue: the C API, names only (R11)
-    class TSParser
-    class TSTree
-    class TSNode
-  }
 
-  extern module std {
-    class shared_ptr<T>
-  }
 
   module parse {
     @requirement REQ-00008-1

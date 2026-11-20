@@ -6,9 +6,6 @@
 
 package driftspec@ds {
 
-  extern module std {
-    class set<T>
-  }
 
   module render {
 
@@ -154,14 +151,14 @@ package driftspec@ds {
       @requirement REQ-00006-1
       + label: std::string
       + title: std::string
-      + owns cells: std::vector<IrCell>
+      + owns many cells: std::vector<IrCell>
     }
 
     dataclass IrTable {
       @requirement REQ-00006-1
       + corner: std::string
       + columns: std::vector<std::string>
-      + owns rows: std::vector<IrRow>
+      + owns many rows: std::vector<IrRow>
     }
 
     dataclass IrDocument {
@@ -169,8 +166,8 @@ package driftspec@ds {
       + title: std::string
       + notice: std::string
       + owns table: IrTable                 // when it has columns, the document is drawn as this table
-      + owns nodes: std::vector<IrNode>
-      + owns edges: std::vector<IrEdge>
+      + owns many nodes: std::vector<IrNode>
+      + owns many edges: std::vector<IrEdge>
       // a drawing made of several, each drawn as itself and placed beside the last: a tour (DS-245)
       + parts: std::vector<std::string>
       + static parse(json: std::string) -> IrDocument
@@ -343,7 +340,7 @@ package driftspec@ds {
 
     dataclass Route {
       @requirement REQ-00007-1
-      + owns points: std::vector<Point>
+      + owns many points: std::vector<Point>
     }
 
     dataclass Placed {
@@ -354,8 +351,8 @@ package driftspec@ds {
 
     dataclass LayoutResult {
       @requirement REQ-00007-1
-      + owns placed: std::vector<Placed>
-      + owns routes: std::map<size_t, Route>
+      + owns many placed: std::vector<Placed>
+      + owns many routes: std::map<size_t, Route>
     }
 
     dataclass Metrics {                      // the runtime table of sizes: one for SVG pixels, one for terminal cells

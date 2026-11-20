@@ -66,7 +66,7 @@ package driftspec@ds {
       @requirement REQ-00148-2
       + event: std::string
       + callers: std::vector<std::string>
-      + owns cells: std::vector<Cell>
+      + owns many cells: std::vector<Cell>
     }
 
     // a machine as a table: its events down, its states across, and over it what the behaviours do
@@ -75,7 +75,7 @@ package driftspec@ds {
       @requirement REQ-00148-2
       - subject_: std::string
       - states_: std::vector<std::string>
-      - owns rows_: std::vector<Row>
+      - owns many rows_: std::vector<Row>
       + Table(model: model::Model, machine: model::Entity)
       + subject() -> std::string
       + states() -> std::vector<std::string>
