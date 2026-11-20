@@ -142,11 +142,6 @@ package driftspec@ds {
       + static answer(request: std::string) -> std::string
     }
 
-    dataclass Files {                        // each .ds file of a workspace by its path, as an editor holds it
-      @requirement REQ-00085-1
-      + texts: std::map<std::string, std::string>
-    }
-
     // The functions of text to JSON: a Workspace loaded for one question (DS-173).
     sequence Api::check {
       local workspace: Workspace

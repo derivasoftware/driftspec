@@ -700,9 +700,6 @@ package driftspec@driftspec {
   module driftspec {
     @requirement REQ-00086-1
 
-    class Source {                             // a directory, or a mapping of path to text: a type alias in the code
-      @requirement REQ-00086-1
-    }
     dataclass Location {
       @requirement REQ-00086-1
       + file: str
