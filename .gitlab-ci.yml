@@ -73,7 +73,7 @@ cpp-test:
 argos-diagnose:
   needs: [python-wheel, cpp-evidence, pre-commit]
   script:
-    - pip install --no-deps "argos-design-driftspec" dist/driftspec-*.whl
+    - pip install --no-deps --upgrade "argos-design-driftspec" dist/driftspec-*.whl
     - !reference [.argos-diagnose-gate, script]
 
 # the driftspec package, the Python face (DS-84, DS-288): the engine built as its CPython extension and
