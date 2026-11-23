@@ -5,6 +5,7 @@
 namespace ds {
 namespace bind {
 
+using parse::Field;
 using parse::TreeReader;
 
 std::vector<std::string> ArtefactBinder::kinds() const { return {"requirement", "verification", "constraint"}; }
@@ -13,23 +14,23 @@ void ArtefactBinder::bind(TSNode node, const BindContext& ctx) const {
   const std::string& scope = ctx.scope;
   const std::string& owner = ctx.owner;
   const model::Location loc = ctx.locationOf(node);
-  if (BindContext::annotationsOnly(node, TreeReader::child(node, "id"))) {
+  if (BindContext::annotationsOnly(node, TreeReader::child(node, Field::id))) {
     const model::Kind kind = TreeReader::is(node, "requirement")    ? model::Kind::Requirement
                              : TreeReader::is(node, "verification") ? model::Kind::Verification
                                                                     : model::Kind::Constraint;
-    ctx.extend(node, ctx.reader.fieldText(node, "id"), kind, ctx.reader.fieldText(node, "id"), scope, loc);
+    ctx.extend(node, ctx.reader.fieldText(node, Field::id), kind, ctx.reader.fieldText(node, Field::id), scope, loc);
     return;
   }
   model::Entity e;
   e.kind = TreeReader::is(node, "requirement")    ? model::Kind::Requirement
            : TreeReader::is(node, "verification") ? model::Kind::Verification
                                                   : model::Kind::Constraint;
-  e.name = ctx.reader.fieldText(node, "id");
+  e.name = ctx.reader.fieldText(node, Field::id);
   e.id = e.name;  // process artefacts are identified by id (R5)
   e.scope = scope;
   e.location = loc;
   ctx.fields(node, e);
-  const std::string title = ctx.reader.fieldText(node, "title");
+  const std::string title = ctx.reader.fieldText(node, Field::title);
   if (!title.empty()) e.fields["title"] = std::string(text::trimWhitespace(title));  // the one-line form
   ctx.declare(e);
   if (!owner.empty()) {

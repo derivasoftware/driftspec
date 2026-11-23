@@ -88,7 +88,7 @@ TEST(TestBindContext, AnExtensionExpectsWhatNothingDefinedYet) {
   const ds::bind::BindContext ctx{model, notes, reader, metamodel, dispatch, "p@", "p"};
   const TSNode module = ts_node_named_child(ts_node_named_child(reader.root(), 0), 1);
   const TSNode cls = ts_node_named_child(module, 1);
-  const TSNode body = ds::parse::TreeReader::child(cls, "body");
+  const TSNode body = ds::parse::TreeReader::child(cls, ds::parse::Field::body);
   EXPECT_TRUE(ds::bind::BindContext::annotationsOnly(body));
   ctx.extend(body, "p@m::A", ds::model::Kind::Class, "A", "p@m", ctx.locationOf(cls));
   const ds::model::Entity* expected = model.find("p@m::A");
