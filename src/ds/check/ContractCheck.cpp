@@ -368,8 +368,7 @@ void ContractCheck::checkFailures(const model::Entity& op) {
                           (promises ? "its signature does not say it may fail with it" : "a boundary must say what it fails with"),
                       op.location});
   }
-  bool behaviour = false;
-  for (const auto& r : model_->index().to(op.id)) behaviour |= r.kind == "behaviour-of";
+  const bool behaviour = !model_->index().toOfKind(op.id, "behaviour-of").empty();
   if (!behaviour) return;  // with no behaviour, the signature is what it fails with
   for (const auto& name : declared) {
     if (escaping.count(name)) continue;
@@ -430,7 +429,8 @@ void ContractCheck::checkScenarios() {
     if (f.kind != model::Kind::Frame || f.field("kind") == "branch") continue;
     // a loop or an opt names its scenario itself; an alt's sides name theirs, where each is written
     std::vector<const model::Entity*> namers{&f};
-    if (f.field("kind") == "alt") namers = {model_->find(f.id + "::b0"), model_->find(f.id + "::b1")};
+    if (f.field("kind") == "alt")
+      namers = {model_->find(model::Identity(f.id).branch(false).text()), model_->find(model::Identity(f.id).branch(true).text())};
     for (const model::Entity* side : namers) {
       if (!side) continue;
       const std::string name = side->field("scenario");

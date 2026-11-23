@@ -723,7 +723,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
     if (!ts_node_is_named(c)) {
       if (std::strcmp(ts_node_type(c), "else") == 0 && is(node, "alt")) {
         // the else opens the alt's second side; `holder` is its first, alt::b0
-        const std::string alt = holder.substr(0, holder.size() - std::string("::b0").size());
+        const std::string alt = holder.substr(0, holder.size() - model::Identity("").branch(false).text().size());
         current = branch(file, c, sequenceId, alt, 1, fieldText(file, node, "else_scenario"));
       }
       continue;
@@ -797,7 +797,7 @@ std::string Binder::branch(const parse::ParsedFile& file, TSNode at, const std::
                            const std::string& scenario) {
   model::Entity b;
   b.kind = model::Kind::Frame;
-  b.id = alt + "::b" + std::to_string(side);
+  b.id = model::Identity(alt).branch(side == 1).text();
   b.scope = sequence;
   b.location = locationOf(file, at);  // the first side where the alt is written, the else where else is
   b.name = side == 0 ? "branch" : "else";

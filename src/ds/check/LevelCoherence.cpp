@@ -31,9 +31,8 @@ struct Below {
 };
 
 std::string calleeOf(const model::Model& model, const std::string& message) {
-  for (const auto& r : model.index().from(message))
-    if (r.kind == "calls") return r.to;
-  return "";
+  const auto calls = model.index().fromOfKind(message, "calls");
+  return calls.empty() ? "" : calls.front().to;
 }
 
 /// The behaviour a scenario is asked through at one of its entries: the scenario of the same name of the

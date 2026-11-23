@@ -2,7 +2,9 @@
 #define DRIFTSPEC_MODEL_SEQUENCETREE_HPP
 
 #include <map>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ds {
@@ -55,6 +57,9 @@ class SequenceTree {
   std::map<std::string, std::string> frameOf_;  ///< step -> innermost loop, alt or opt
   std::map<std::string, int> at_;
   std::map<std::string, std::string> first_;
+  std::set<std::pair<std::string, std::string>> onElse_;  ///< (frame, step) for each step on the else side of a frame
+  std::map<std::string, std::string> elseFirst_;          ///< frame -> the first message on its else side
+  std::vector<std::string> sides_;                        ///< while walking: the frames whose else side is being walked
 };
 
 }  // namespace model

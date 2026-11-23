@@ -74,7 +74,7 @@ struct Entity {
 
   bool has(const std::string& flag) const;
   /// The value of a field; "" when it does not carry it.
-  std::string field(const std::string& key) const;
+  const std::string& field(const std::string& key) const;
 };
 
 /// A typed relation between two identities.

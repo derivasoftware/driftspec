@@ -17,9 +17,27 @@ std::vector<Relation> Index::at(const std::map<std::string, std::vector<std::siz
   return out;
 }
 
+std::vector<Relation> Index::atOfKind(const std::map<std::string, std::vector<std::size_t>>& table, const std::string& key,
+                                      const std::string& kind) const {
+  std::vector<Relation> out;
+  const auto found = table.find(key);
+  if (found == table.end()) return out;
+  for (const std::size_t position : found->second)
+    if (model_.relations_[position].kind == kind) out.push_back(model_.relations_[position]);
+  return out;
+}
+
 std::vector<Relation> Index::from(const std::string& id) const { return at(model_.indexed_.from, id); }
 
 std::vector<Relation> Index::to(const std::string& id) const { return at(model_.indexed_.to, id); }
+
+std::vector<Relation> Index::fromOfKind(const std::string& id, const std::string& kind) const {
+  return atOfKind(model_.indexed_.from, id, kind);
+}
+
+std::vector<Relation> Index::toOfKind(const std::string& id, const std::string& kind) const {
+  return atOfKind(model_.indexed_.to, id, kind);
+}
 
 std::vector<Relation> Index::touching(const std::string& id) const {
   // the two lists are in the order stated: merged, a relation from an entity to itself comes once

@@ -54,15 +54,13 @@ std::string FailureFlow::originOf(const std::string& step, const std::string& se
 }
 
 bool FailureFlow::hasBehaviour(const std::string& operation) const {
-  for (const auto& r : model_->index().to(operation))
-    if (r.kind == "behaviour-of") return true;
+  if (!model_->index().toOfKind(operation, "behaviour-of").empty()) return true;
   return false;
 }
 
 std::string FailureFlow::callee(const std::string& message) const {
-  for (const auto& r : model_->index().from(message))
-    if (r.kind == "calls") return r.to;
-  return "";
+  const auto calls = model_->index().fromOfKind(message, "calls");
+  return calls.empty() ? "" : calls.front().to;
 }
 
 bool FailureFlow::pass(std::map<std::string, std::map<std::string, Escape>>& out_escapes) const {
@@ -81,8 +79,7 @@ bool FailureFlow::pass(std::map<std::string, std::map<std::string, Escape>>& out
     const model::Entity& seq = pair.second;
     if (seq.kind != model::Kind::Sequence || seq.expected) continue;
     std::string operation;
-    for (const auto& r : model_->index().from(seq.id))
-      if (r.kind == "behaviour-of") operation = r.to;
+    for (const auto& r : model_->index().fromOfKind(seq.id, "behaviour-of")) operation = r.to;
     if (operation.empty()) continue;
     auto& own = out_escapes[operation];
     const model::SequenceTree tree(*model_, seq.id);  // kept: its messages are read while it lives
