@@ -322,10 +322,6 @@ foreach(test_src IN LISTS driftspec_TESTS)
                                              # (DS-311)
     target_link_libraries(${test_name} PRIVATE ds_app)
   endif()
-  if(test_src MATCHES "/tests/unit/ds/[^/]+/detail/") # a package's internal
-                                                      # helpers (DS-332)
-    target_include_directories(${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  endif()
   target_compile_definitions(
     ${test_name}
     PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"

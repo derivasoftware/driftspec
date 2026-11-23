@@ -5,6 +5,7 @@
 
 #include "ds/axis/Cut.hpp"
 #include "ds/model/Identity.hpp"
+#include "ds/model/Paths.hpp"
 #include "ds/model/SequenceTree.hpp"
 
 namespace ds {
@@ -19,7 +20,8 @@ std::vector<Taken> Walker::steps(const std::string& sequence, const std::string&
     const model::SequenceTree tree(model, sequence);  // every branch, as written; kept while its answer is read
     for (const auto& id : tree.messages()) messages.push_back(model.find(id));
   } else {
-    messages = model::pathOf(model, sequence, path, out_kept);
+    const model::Paths paths(model);
+    messages = paths.pathOf(sequence, path, out_kept);
   }
   std::vector<Taken> out;
   for (const model::Entity* m : messages) {
