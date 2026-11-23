@@ -1,10 +1,14 @@
 #include "ds/render/Text.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
+#include <cstring>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <regex>
+#include <stdexcept>
+#include <string_view>
 #include <vector>
 
 #include "ds/text/Text.hpp"
@@ -16,13 +20,18 @@ namespace {
 
 const Metrics M = Metrics::text();
 
+/// One character of the drawing, in 7 bytes (DS-350): its UTF-8 bytes inline, the index of its colour in the
+/// grid's palette and what an edge drew there. A glyph longer than one code point (never drawn today) is kept
+/// in the grid's list of long glyphs and found by its index.
 struct Cell {
-  std::string glyph = " ";
-  std::string color;  // ANSI SGR parameters, "" = default
-  int line = 0;       // 1 horizontal, 2 vertical, 3 both: what an edge already drew here
+  std::array<char, 4> glyph = {' ', 0, 0, 0};
+  std::uint8_t size = 1;    ///< bytes of glyph in use; kLong: glyph holds the index of a long glyph
+  std::uint8_t colour = 0;  ///< the grid's palette; 0 is the default colour
+  std::uint8_t line = 0;    ///< 1 horizontal, 2 vertical, 3 both: what an edge already drew here
 };
 
-/// The grid, with the origin shifted so negative coordinates still land on it.
+constexpr std::uint8_t kLong = 0xFF;
+
 class Grid {
  public:
   Grid(int minX, int minY, int w, int h) : minX_(minX), minY_(minY), w_(w), h_(h), cells_(static_cast<size_t>(w) * h) {}
@@ -36,8 +45,8 @@ class Grid {
 
   void put(int x, int y, const std::string& glyph, const std::string& color = "") {
     if (Cell* c = at(x, y)) {
-      c->glyph = glyph;
-      c->color = color;
+      setGlyph(*c, glyph);
+      c->colour = paint(color);
       c->line = 0;
     }
   }
@@ -65,14 +74,14 @@ class Grid {
     if (!c) return;
     const int bit = horizontal ? 1 : 2;
     if (c->line && (c->line | bit) == 3 && c->line != bit) {
-      c->glyph = "\xE2\x94\xBC";  // ┼
+      setGlyph(*c, "\xE2\x94\xBC");  // ┼
     } else if (c->line == bit) {
       return;
     } else {
-      c->glyph = horizontal ? (dashed ? "\xE2\x94\x84" : "\xE2\x94\x80") : (dashed ? "\xE2\x94\x86" : "\xE2\x94\x82");  // ┄ ─ ┆ │
+      setGlyph(*c, horizontal ? (dashed ? "\xE2\x94\x84" : "\xE2\x94\x80") : (dashed ? "\xE2\x94\x86" : "\xE2\x94\x82"));  // ┄ ─ ┆ │
     }
-    c->line |= bit;
-    c->color = color;
+    c->line = static_cast<std::uint8_t>(c->line | bit);
+    c->colour = paint(color);
   }
 
   /// base64 of u32 little-endian triplets per cell: codepoint, foreground, background
@@ -86,16 +95,17 @@ class Grid {
     };
     for (const Cell& c : cells_) {
       uint32_t cp = 0x20;
-      const unsigned char b0 = static_cast<unsigned char>(c.glyph[0]);
+      const std::string_view glyph = glyphOf(c);
+      const unsigned char b0 = glyph.empty() ? 0 : static_cast<unsigned char>(glyph[0]);
       if (b0 < 0x80)
         cp = b0;
-      else if (b0 >= 0xF0 && c.glyph.size() >= 4)
-        cp = ((b0 & 0x07u) << 18) | ((c.glyph[1] & 0x3fu) << 12) | ((c.glyph[2] & 0x3fu) << 6) | (c.glyph[3] & 0x3fu);
-      else if (b0 >= 0xE0 && c.glyph.size() >= 3)
-        cp = ((b0 & 0x0fu) << 12) | ((c.glyph[1] & 0x3fu) << 6) | (c.glyph[2] & 0x3fu);
-      else if (b0 >= 0xC0 && c.glyph.size() >= 2)
-        cp = ((b0 & 0x1fu) << 6) | (c.glyph[1] & 0x3fu);
-      const auto colour = rgb.find(c.color);
+      else if (b0 >= 0xF0 && glyph.size() >= 4)
+        cp = ((b0 & 0x07u) << 18) | ((glyph[1] & 0x3fu) << 12) | ((glyph[2] & 0x3fu) << 6) | (glyph[3] & 0x3fu);
+      else if (b0 >= 0xE0 && glyph.size() >= 3)
+        cp = ((b0 & 0x0fu) << 12) | ((glyph[1] & 0x3fu) << 6) | (glyph[2] & 0x3fu);
+      else if (b0 >= 0xC0 && glyph.size() >= 2)
+        cp = ((b0 & 0x1fu) << 6) | (glyph[1] & 0x3fu);
+      const auto colour = rgb.find(palette_[c.colour]);
       put32(cp);
       put32(colour == rgb.end() ? 0x01000000u : colour->second);
       put32(0x01000000u);
@@ -127,9 +137,17 @@ class Grid {
 
   /// Another grid copied onto this one, its first row at `row`: the parts of a drawing, one under the other.
   void paste(const Grid& other, int row) {
+    // the other grid's palette and long glyphs are its own: each cell is told again in this grid's
+    std::vector<std::uint8_t> colours;
+    for (const auto& c : other.palette_) colours.push_back(paint(c));
     for (int y = 0; y < other.h_ && row + y < h_; ++y)
-      for (int x = 0; x < other.w_ && x < w_; ++x)
-        cells_[static_cast<size_t>(row + y) * w_ + x] = other.cells_[static_cast<size_t>(y) * other.w_ + x];
+      for (int x = 0; x < other.w_ && x < w_; ++x) {
+        const Cell& from = other.cells_[static_cast<size_t>(y) * other.w_ + x];
+        Cell& to = cells_[static_cast<size_t>(row + y) * w_ + x];
+        to = from;
+        to.colour = colours[from.colour];
+        if (from.size == kLong) setGlyph(to, std::string(other.glyphOf(from)));
+      }
   }
 
   std::string dump(bool color) const {
@@ -139,11 +157,12 @@ class Grid {
       std::string current;
       for (int x = 0; x < w_; ++x) {
         const Cell& c = cells_[static_cast<size_t>(y) * w_ + x];
-        if (color && c.color != current) {
-          row += c.color.empty() ? "\x1b[0m" : "\x1b[" + c.color + "m";
-          current = c.color;
+        const std::string& colour = palette_[c.colour];
+        if (color && colour != current) {
+          row += colour.empty() ? "\x1b[0m" : "\x1b[" + colour + "m";
+          current = colour;
         }
-        row += c.glyph;
+        row += glyphOf(c);
       }
       if (color && !current.empty()) row += "\x1b[0m";
       // trailing blanks are noise in a buffer
@@ -154,8 +173,36 @@ class Grid {
   }
 
  private:
+  /// The index of `color` in the palette, added the first time it is asked.
+  std::uint8_t paint(const std::string& color) {
+    for (std::size_t i = 0; i < palette_.size(); ++i)
+      if (palette_[i] == color) return static_cast<std::uint8_t>(i);
+    if (palette_.size() >= kLong) throw std::length_error("a text drawing of more than 254 colours");
+    palette_.push_back(color);
+    return static_cast<std::uint8_t>(palette_.size() - 1);
+  }
+  void setGlyph(Cell& c, const std::string& glyph) {
+    if (glyph.size() <= c.glyph.size()) {
+      std::copy(glyph.begin(), glyph.end(), c.glyph.begin());
+      c.size = static_cast<std::uint8_t>(glyph.size());
+      return;
+    }
+    const auto index = static_cast<std::uint32_t>(long_.size());
+    long_.push_back(glyph);
+    std::memcpy(c.glyph.data(), &index, sizeof index);
+    c.size = kLong;
+  }
+  std::string_view glyphOf(const Cell& c) const {
+    if (c.size != kLong) return std::string_view(c.glyph.data(), c.size);
+    std::uint32_t index = 0;
+    std::memcpy(&index, c.glyph.data(), sizeof index);
+    return long_[index];
+  }
+
   int minX_, minY_, w_, h_;
   std::vector<Cell> cells_;
+  std::vector<std::string> palette_{""};  ///< the colours the cells name, "" first: the default
+  std::vector<std::string> long_;         ///< the glyphs longer than one code point
 };
 
 // palette roles, as SGR parameters: the SVG tokens' nearest terminal colours
