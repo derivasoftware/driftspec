@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "driftspec"
-version = "0.1.28"
+version = "0.1.29"
 description = "DriftSpec: a software design as text, checked, drawn and asked"
 readme = "README.md"
 license = { text = "Apache-2.0" }
