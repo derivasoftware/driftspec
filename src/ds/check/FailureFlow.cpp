@@ -7,7 +7,7 @@
 #include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/model/SequenceTree.hpp"
-#include "ds/model/Words.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace check {
@@ -71,7 +71,7 @@ bool FailureFlow::pass(std::map<std::string, std::map<std::string, Escape>>& out
     const model::Entity& op = pair.second;
     const bool operation = op.kind == model::Kind::Method || op.kind == model::Kind::Function || op.kind == model::Kind::Operation;
     if (!operation || op.expected || op.field("fails").empty() || hasBehaviour(op.id)) continue;
-    for (const auto& name : model::split(op.field("fails"), ',')) {
+    for (const auto& name : text::splitTrimmed(op.field("fails"), ',')) {
       if (name == "nothing" || out_escapes[op.id].count(name)) continue;
       out_escapes[op.id][name] = Escape{{op.id}, op.id};
       changed = true;
@@ -118,9 +118,9 @@ void FailureFlow::write(const std::map<std::string, std::map<std::string, Escape
     std::vector<std::string> names;
     for (const auto& f : op.second) {
       names.push_back(f.first);
-      e->fields["escape." + f.first] = model::join(f.second.through, " -> ") + " from " + f.second.origin;
+      e->fields["escape." + f.first] = text::join(f.second.through, " -> ") + " from " + f.second.origin;
     }
-    e->fields["escapes"] = model::join(names, ", ");
+    e->fields["escapes"] = text::join(names, ", ");
   }
 }
 

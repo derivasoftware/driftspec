@@ -5,14 +5,14 @@
 #include <string>
 #include <vector>
 
-#include "ds/model/Words.hpp"
+#include "ds/text/Text.hpp"
 
 // small text helpers the steps of the check share; not part of any interface
 namespace ds {
 namespace check {
 
-using model::join;
-using model::split;
+using text::join;
+using text::splitTrimmed;
 
 }  // namespace check
 }  // namespace ds

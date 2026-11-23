@@ -5,13 +5,13 @@
 #include <map>
 
 #include "ds/model/Metamodel.hpp"
-#include "ds/model/Words.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace bind {
 
-using model::join;
-using model::split;
+using text::join;
+using text::splitTrimmed;
 
 namespace {
 
@@ -35,13 +35,6 @@ std::vector<TSNode> childrenNamed(TSNode node, const char* fieldName) {
     if (f && std::strcmp(f, fieldName) == 0) out.push_back(ts_node_child(node, i));
   }
   return out;
-}
-
-std::string trim(const std::string& text) {
-  const auto begin = text.find_first_not_of(" \t\r\n");
-  if (begin == std::string::npos) return "";
-  const auto end = text.find_last_not_of(" \t\r\n");
-  return text.substr(begin, end - begin + 1);
 }
 
 // what an annotation means comes from the metamodel's table (model::annotations()), declared once
@@ -88,7 +81,7 @@ void Binder::bindFields(const parse::ParsedFile& file, TSNode node, model::Entit
     if (is(c, "field")) {
       const std::string code = fieldText(file, c, "code");
       const std::string key = fieldText(file, c, "key") + (code.empty() ? "" : " " + code);
-      const std::string value = trim(fieldText(file, c, "value"));
+      const std::string value = std::string(text::trimWhitespace(fieldText(file, c, "value")));
       auto existing = out_entity.fields.find(key);
       if (existing == out_entity.fields.end() || existing->second.empty()) {
         out_entity.fields[key] = value;
@@ -113,7 +106,7 @@ model::Term termOf(const parse::ParsedFile& file, TSNode node) {
 std::string clauseText(const parse::ParsedFile& file, TSNode clause) {
   const std::string text = file.textOf(clause);
   const auto space = text.find_first_of(" \t\r\n");
-  return space == std::string::npos ? "" : trim(text.substr(space));
+  return space == std::string::npos ? "" : std::string(text::trimWhitespace(text.substr(space)));
 }
 
 }  // namespace
@@ -299,7 +292,7 @@ void Binder::bindArtefact(const parse::ParsedFile& file, TSNode node, const std:
   e.location = loc;
   bindFields(file, node, e);
   const std::string title = fieldText(file, node, "title");
-  if (!title.empty()) e.fields["title"] = trim(title);  // the one-line form
+  if (!title.empty()) e.fields["title"] = std::string(text::trimWhitespace(title));  // the one-line form
   model_.declare(e);
   if (!owner.empty()) {
     // nesting gives the relation (R3): a verification verifies the requirement it is in,
@@ -349,7 +342,8 @@ void Binder::bindUseCase(const parse::ParsedFile& file, TSNode node, const std::
   if (!owner.empty()) model_.relate({"about", e.id, owner, e.location, ""});
   const std::string base = fieldText(file, node, "base");
   // the use case it specialises is resolved like any artefact link: pinned, followed to its revision (DS-116)
-  if (!base.empty()) references_.push_back({e.id, trim(base), scope, "inherits", model::Kind::UseCase, e.location, "", {}});
+  if (!base.empty())
+    references_.push_back({e.id, std::string(text::trimWhitespace(base)), scope, "inherits", model::Kind::UseCase, e.location, "", {}});
   bindAnnotations(file, node, e.id, scope);
   const uint32_t n = ts_node_named_child_count(node);
   for (uint32_t i = 0; i < n; ++i) {
@@ -361,7 +355,7 @@ void Binder::bindUseCase(const parse::ParsedFile& file, TSNode node, const std::
     out.id = e.id + "::" + out.name;
     out.scope = e.id;
     out.location = locationOf(file, o);
-    out.fields["text"] = trim(fieldText(file, o, "text"));
+    out.fields["text"] = std::string(text::trimWhitespace(fieldText(file, o, "text")));
     const std::string returns = bindType(file, child(o, "returns"), scope, out.id, "uses", "", {}, out.location);
     if (!returns.empty()) out.fields["returns"] = returns;
     model_.declare(out);
@@ -422,12 +416,12 @@ std::vector<TypeToken> scanTypeTokens(const std::string& text) {
         }
         if (c == '>' || c == ']' || c == ')') {
           if (--depth == 0) {
-            if (!trim(arg).empty()) token.args.push_back(trim(arg));
+            if (!std::string(text::trimWhitespace(arg)).empty()) token.args.push_back(std::string(text::trimWhitespace(arg)));
             break;
           }
         }
         if (c == ',' && depth == 1) {
-          token.args.push_back(trim(arg));
+          token.args.push_back(std::string(text::trimWhitespace(arg)));
           arg.clear();
           continue;
         }
@@ -444,7 +438,7 @@ std::string Binder::bindType(const parse::ParsedFile& file, TSNode type, const s
                              const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
                              const model::Location& location) {
   if (ts_node_is_null(type)) return "";
-  const std::string text = trim(file.textOf(type));
+  const std::string text = std::string(text::trimWhitespace(file.textOf(type)));
   for (const TypeToken& token : scanTypeTokens(text)) {
     if (contains(params, token.name)) continue;  // a template parameter may be anything (R15)
     Reference ref;
@@ -588,9 +582,10 @@ void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::En
     const uint32_t n = ts_node_named_child_count(parameters);
     for (uint32_t i = 0; i < n; ++i) {
       TSNode p = ts_node_named_child(parameters, i);
-      paramTexts.push_back(trim(file.textOf(p)));
+      paramTexts.push_back(std::string(text::trimWhitespace(file.textOf(p))));
       TSNode type = child(p, "type");
-      out_entity.params.push_back({fieldText(file, p, "name"), ts_node_is_null(type) ? "" : trim(file.textOf(type))});
+      out_entity.params.push_back(
+          {fieldText(file, p, "name"), ts_node_is_null(type) ? "" : std::string(text::trimWhitespace(file.textOf(type)))});
       bindType(file, child(p, "type"), scope, out_entity.id, "uses", "", params, locationOf(file, p));
     }
   }
@@ -600,7 +595,8 @@ void Binder::bindSignature(const parse::ParsedFile& file, TSNode node, model::En
   TSNode fails = child(node, "fails");  // what it promises it may fail with; `fails nothing` promises none (DS-189)
   if (!ts_node_is_null(fails)) {
     std::vector<std::string> names;
-    for (uint32_t i = 0; i < ts_node_named_child_count(fails); ++i) names.push_back(trim(file.textOf(ts_node_named_child(fails, i))));
+    for (uint32_t i = 0; i < ts_node_named_child_count(fails); ++i)
+      names.push_back(std::string(text::trimWhitespace(file.textOf(ts_node_named_child(fails, i)))));
     out_entity.fields["fails"] = join(names, ", ");
   }
 }
@@ -664,7 +660,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
     const uint32_t n = ts_node_named_child_count(opSet);
     for (uint32_t i = 0; i < n; ++i) {
       TSNode item = ts_node_named_child(opSet, i);
-      const std::string text = trim(file.textOf(item));
+      const std::string text = std::string(text::trimWhitespace(file.textOf(item)));
       operatorTexts.push_back(text);
       if (ts_node_is_null(child(item, "family"))) operators.insert(text);
     }
@@ -678,7 +674,7 @@ void Binder::bindClass(const parse::ParsedFile& file, TSNode c, const std::strin
   // a base is written as the code writes it (IFormat<scene::SceneDocument>) and kept so; its first name is what the
   // class inherits, and only when the design declares it: class Error : Exception is text, no arrow (DS-18)
   std::vector<std::string> baseTexts;
-  for (TSNode base : childrenNamed(c, "base")) baseTexts.push_back(trim(file.textOf(base)));
+  for (TSNode base : childrenNamed(c, "base")) baseTexts.push_back(std::string(text::trimWhitespace(file.textOf(base))));
   if (!baseTexts.empty()) declared.fields["bases"] = join(baseTexts, "; ");
   for (const std::string& written : baseTexts) {
     const std::vector<TypeToken> tokens = scanTypeTokens(written);
@@ -765,7 +761,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
         if (!is(a, "arguments")) continue;
         const uint32_t na = ts_node_named_child_count(a);
         for (uint32_t x = 0; x < na; ++x) {
-          args.push_back(trim(file.textOf(ts_node_named_child(a, x))));
+          args.push_back(std::string(text::trimWhitespace(file.textOf(ts_node_named_child(a, x)))));
           ++argc;
         }
       }
@@ -785,7 +781,7 @@ void Binder::bindSteps(const parse::ParsedFile& file, TSNode node, model::Entity
       f.location = loc;
       f.name = ts_node_type(c);
       f.fields["kind"] = ts_node_type(c);
-      f.fields["condition"] = trim(fieldText(file, c, "condition"));
+      f.fields["condition"] = std::string(text::trimWhitespace(fieldText(file, c, "condition")));
       if (is(c, "handler")) f.fields["failure"] = fieldText(file, c, "failure");  // the failure it handles (DS-187)
       const std::string scenario = fieldText(file, c, "scenario");
       if (!scenario.empty() && !is(c, "alt")) f.fields["scenario"] = scenario;  // an alt's sides name their own
@@ -957,7 +953,8 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
         model_.relate({"contains", e.id, o.id, o.location, ""});
         const std::string realised = fieldText(file, op, "realises");  // operation greet(...) : UC-00001-1
         if (!realised.empty())  // the use case it realises: an artefact link, resolved and pinned (DS-116)
-          references_.push_back({o.id, trim(realised), scope, "realises", model::Kind::UseCase, o.location, "", {}});
+          references_.push_back(
+              {o.id, std::string(text::trimWhitespace(realised)), scope, "realises", model::Kind::UseCase, o.location, "", {}});
         bindAnnotations(file, op, o.id, scope);
       }
 
@@ -979,7 +976,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
         TSNode v = ts_node_named_child(c, j);
-        if (is(v, "enum_value")) values.push_back(trim(file.textOf(v)));
+        if (is(v, "enum_value")) values.push_back(std::string(text::trimWhitespace(file.textOf(v))));
       }
       e.fields["values"] = join(values, ", ");
       model_.declare(e);
@@ -1032,7 +1029,7 @@ void Binder::visit(const parse::ParsedFile& file, TSNode node, const std::string
           bindAnnotations(file, t, v.id, scope);
         }
         if (!is(t, "transition")) continue;
-        const std::string guard = trim(fieldText(file, t, "guard"));
+        const std::string guard = std::string(text::trimWhitespace(fieldText(file, t, "guard")));
         const std::string does = fieldText(file, t, "action");
         transitions.push_back(fieldText(file, t, "from") + ">" + fieldText(file, t, "to") + ">" + fieldText(file, t, "event") +
                               (guard.empty() ? "" : " " + guard) + (does.empty() ? "" : " / " + does));

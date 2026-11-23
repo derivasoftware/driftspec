@@ -6,26 +6,12 @@
 #include <limits>
 #include <set>
 
+#include "ds/text/Text.hpp"
+
 namespace ds {
 namespace render {
 
 namespace {
-
-std::vector<std::string> linesOf(const std::string& label) {
-  std::vector<std::string> out;
-  std::string current;
-  for (size_t i = 0; i < label.size(); ++i) {
-    if (label[i] == '\n' || (label[i] == '\\' && i + 1 < label.size() && label[i + 1] == 'n')) {
-      out.push_back(current);
-      current.clear();
-      if (label[i] == '\\') ++i;
-    } else {
-      current += label[i];
-    }
-  }
-  out.push_back(current);
-  return out;
-}
 
 size_t longest(const std::vector<std::string>& lines) {
   size_t n = 0;
@@ -701,7 +687,7 @@ Rect Layout::sizeOf(const IrNode& node) const {
   const Metrics& M = m_;
   Rect r;
   if (node.kind == "note") {
-    const auto lines = linesOf(node.label);
+    const auto lines = text::linesOf(node.label);
     r.w = static_cast<int>(std::max<size_t>(1, longest(lines))) * M.CHAR_W + 2 * M.PAD_X + M.NOTE_FOLD;
     r.h = 2 * M.PAD_Y + static_cast<int>(lines.size()) * M.LINE_H;
     return r;

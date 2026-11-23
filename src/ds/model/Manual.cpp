@@ -6,7 +6,7 @@
 
 #include "Detail.hpp"
 #include "ds/model/Metamodel.hpp"
-#include "ds/model/Words.hpp"
+#include "ds/text/Text.hpp"
 
 // The manual ds embeds (DS-79): how each kind is written with a minimal example that checks
 // clean, every finding code with what it means and what to do, the annotations that mean
@@ -535,7 +535,7 @@ std::string kindPage(const KindSpec& k) {
     out += "Fields\n";
     for (const auto& f : k.fields)
       out += "  " + pad(f.name, 14) + pad(fieldTypeName(f.type), 9) + pad(fieldSourceName(f.source), 9) + f.meaning +
-             (f.values.empty() ? "" : " (one of: " + model::join(f.values, ", ") + ")") + "\n";
+             (f.values.empty() ? "" : " (one of: " + text::join(f.values, ", ") + ")") + "\n";
     out += "  (written: you write it as key: value; syntax: read from how it is declared; derived: computed by the check)\n\n";
   }
   if (!k.flags.empty()) {
