@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ds/app/App.hpp"
+#include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
 
 namespace {
@@ -15,6 +16,7 @@ namespace {
 class Commands : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
+  const ds::model::Manual book{metamodel};  // the manual, made from the metamodel as run makes it (DS-342)
   const std::string hola = std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola";
 
   /// A command line as main receives it.
@@ -33,10 +35,10 @@ class TestManual : public Commands {};
 
 TEST_F(TestManual, APageIsPrintedAsTextOrJson) {
   ::testing::internal::CaptureStdout();
-  EXPECT_EQ(ds::app::manual(metamodel, "grammar", false), 0);
+  EXPECT_EQ(ds::app::manual(metamodel, book, "grammar", false), 0);
   EXPECT_FALSE(::testing::internal::GetCapturedStdout().empty());
   ::testing::internal::CaptureStdout();
-  EXPECT_EQ(ds::app::manual(metamodel, "class", true), 0);
+  EXPECT_EQ(ds::app::manual(metamodel, book, "class", true), 0);
   const auto page = nlohmann::json::parse(::testing::internal::GetCapturedStdout());
   EXPECT_EQ(page["topic"], "class");
   EXPECT_TRUE(page.contains("kind"));
@@ -44,7 +46,7 @@ TEST_F(TestManual, APageIsPrintedAsTextOrJson) {
 
 TEST_F(TestManual, AnUnknownTopicListsTheTopicsAndExitsOne) {
   ::testing::internal::CaptureStderr();
-  EXPECT_EQ(ds::app::manual(metamodel, "no-such-topic", false), 1);
+  EXPECT_EQ(ds::app::manual(metamodel, book, "no-such-topic", false), 1);
   EXPECT_NE(::testing::internal::GetCapturedStderr().find("grammar"), std::string::npos);
 }
 

@@ -27,7 +27,7 @@ package driftspec@ds {
       }
     }
     function main(argv: std::vector<std::string>) -> int       // the program's main hands its command line here (DS-311)
-    function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279); it makes the metamodel once (DS-341)
+    function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279); it makes the metamodel (DS-341) and its manual (DS-342) once
     - function work(argv: std::vector<std::string>) -> int         // runs the command; what cannot be read is said, exit 2
 
     - function load(metamodel: model::Metamodel, dir: std::string) -> model::Model
@@ -37,7 +37,7 @@ package driftspec@ds {
     - function emit(output: std::string, text: std::string) -> int
     - function check(metamodel: model::Metamodel, dir: std::string, json: bool) -> int
     - function holdsDesign(dir: std::string) -> bool         // a directory with no .ds file under it is no workspace
-    - function manual(metamodel: model::Metamodel, topic: std::string, json: bool) -> int
+    - function manual(metamodel: model::Metamodel, book: model::Manual, topic: std::string, json: bool) -> int
     - function diagramId(name: std::string) -> std::string
     - function isDirectory(path: std::string) -> bool
 
@@ -192,20 +192,22 @@ package driftspec@ds {
 
     sequence main / manual {                  // no workspace: the manual is in the tool
       local metamodel: model::Metamodel
-      -> manual(metamodel, topic, json) -> code
+      local book: model::Manual
+      -> manual(metamodel, book, topic, json) -> code
       return code
     }
 
     sequence main / no-topic {
       local metamodel: model::Metamodel
-      -> manual(metamodel, topic, json) / no-topic -> code
+      local book: model::Manual
+      -> manual(metamodel, book, topic, json) / no-topic -> code
       return 1
     }
 
     sequence manual {
-      -> model::manualPage(metamodel, topic) -> page
+      -> book.page(topic) -> page
       opt no such topic / no-topic {
-        -> model::manualTopics(metamodel) -> topics
+        -> book.topics() -> topics
         return 1
       }
       return 0

@@ -163,7 +163,7 @@ package driftspec@playground {
     title: The Docs tab shall draw the guides the engine carries, each example beside what the engine makes of it
     status: approved
     text:
-      The page asks the engine for the guides of the manual (the engine's REQ-00160-1) and lists
+      The page asks the engine for the guides of the manual (the engine's REQ-00160-2) and lists
       them down the side. A guide is shown as its prose with each example in two parts: its text,
       coloured by the grammar, and the diagrams the engine draws from it there and then; under an
       example that is wrong on purpose, what the engine says of it. Each example opens in the

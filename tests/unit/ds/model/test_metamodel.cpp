@@ -88,10 +88,10 @@ TEST_F(TestKindSpec, OnlyPackagesAndDiagramsStandAtTheTop) {
   }
 }
 
-/// The manual's tables (REQ-00079-1): a code, an annotation, a command, each found by its name.
+/// The tables the manual reads (REQ-00079-2): a code and an annotation, each found by its name. A command is the
+/// manual's (DS-342): tests/unit/ds/model/test_manual_pages.cpp.
 class TestCodeSpec : public Metamodelled {};
 class TestAnnotationSpec : public Metamodelled {};
-class TestCommandSpec : public Metamodelled {};
 
 TEST_F(TestCodeSpec, ACodeIsFoundWithItsSeverityItsMeaningAndWhatToDo) {
   const auto* code = metamodel.codeOf("E-SYNTAX");
@@ -108,20 +108,9 @@ TEST_F(TestAnnotationSpec, EveryAnnotationThatMeansSomethingNamesTheRelationItMa
   }
 }
 
-TEST_F(TestCommandSpec, EveryCommandSaysWhatEachOfItsExitCodesMeans) {
-  for (const char* name : {"check", "export", "render", "query", "manual"}) {
-    const auto* command = ds::model::commandOf(name);
-    ASSERT_NE(command, nullptr) << name;
-    ASSERT_GE(command->exits.size(), 2u) << name;
-    EXPECT_EQ(command->exits.front().first, 0) << name;
-  }
-}
-
-/// The manual's functions (REQ-00079-1), one fixture each.
+/// How a kind is written and its example, the metamodel's for the manual (REQ-00079-2), one fixture each.
 class TestSyntaxOf : public Metamodelled {};
 class TestExampleOf : public Metamodelled {};
-class TestManualPage : public Metamodelled {};
-class TestManualTopics : public Metamodelled {};
 
 TEST_F(TestSyntaxOf, AKindSaysHowItIsWritten) {
   EXPECT_NE(metamodel.syntaxOf(Kind::Sequence).find("sequence <Class>::<method>"), std::string::npos);
@@ -131,35 +120,6 @@ TEST_F(TestSyntaxOf, AKindSaysHowItIsWritten) {
 TEST_F(TestExampleOf, AKindsExampleDeclaresOneOfItsKind) {
   EXPECT_NE(metamodel.exampleOf(Kind::Enum).find("enum "), std::string::npos);
   EXPECT_NE(metamodel.exampleOf(Kind::Diagram).find("diagram "), std::string::npos);
-}
-
-TEST_F(TestManualPage, TheIndexListsTheKindsAndAnUnknownTopicHasNoPage) {
-  const std::string index = ds::model::manualPage(metamodel, "");
-  for (const auto& k : metamodel.kinds()) EXPECT_NE(index.find(metamodel.nameOf(k.kind)), std::string::npos);
-  EXPECT_EQ(ds::model::manualPage(metamodel, "weather"), "");
-}
-
-TEST_F(TestManualTopics, TheTopicsAreTheTablesTheKindsAndTheCodes) {
-  const auto topics = ds::model::manualTopics(metamodel);
-  const auto& guides = ds::model::manualGuides();  // the guides written in doc/manual come first (DS-272)
-  EXPECT_EQ(topics.size(), guides.size() + 4 + metamodel.kinds().size() + metamodel.codes().size());
-  EXPECT_EQ(topics[guides.size()], "grammar");
-  for (std::size_t i = 0; i < guides.size(); ++i) EXPECT_EQ(topics[i], guides[i].first);
-}
-
-/// The guides of the manual, embedded from doc/manual when ds is built (DS-272).
-class TestManualGuides : public Metamodelled {};
-
-TEST_F(TestManualGuides, EachGuideHasATopicOfItsOwnAndStartsWithItsTitle) {
-  const auto& guides = ds::model::manualGuides();
-  ASSERT_FALSE(guides.empty());
-  std::set<std::string> topics;
-  for (const auto& guide : guides) {
-    EXPECT_TRUE(topics.insert(guide.first).second) << guide.first << " is there twice";
-    EXPECT_EQ(guide.first.find_first_of("0123456789"), std::string::npos) << guide.first << " keeps the number of its file";
-    EXPECT_EQ(guide.second.rfind("# ", 0), 0U) << guide.first;
-  }
-  EXPECT_EQ(guides.front().first, "intent");  // in the order of their files
 }
 
 /// The version of the tool, written in when ds is built (DS-278).

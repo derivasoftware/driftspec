@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
@@ -29,8 +30,9 @@ std::string titleOf(std::string dir);
 std::string readFile(const std::string& path);
 /// Writes to the file -o names, or to stdout.
 int emit(const std::string& output, const std::string& text);
-/// A page of the manual ds embeds; an unknown topic lists the ones there are.
-int manual(const ds::model::Metamodel& metamodel, const std::string& topic, bool json);
+/// A page of the manual ds embeds, from the one made where the command starts; an unknown topic lists the ones
+/// there are.
+int manual(const ds::model::Metamodel& metamodel, const ds::model::Manual& book, const std::string& topic, bool json);
 int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool json);
 std::string diagramId(const std::string& name);
 

@@ -186,8 +186,16 @@ package driftspec@ds {
       return drawing
     }
 
+    // a request for the manual is answered by a manual made from the metamodel the browser holds (DS-342)
     sequence Browser::answer {
+      local manual: model::Manual
       local workspace: Workspace
+      opt a request for the manual {
+        -> manual.page(topic) -> text
+        -> manual.guides() -> guides
+        -> manual.topics() -> topics
+        return json
+      }
       -> workspace.report() -> report
       -> workspace.render(diagram, format, width) -> drawing
       return json

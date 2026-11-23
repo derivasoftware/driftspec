@@ -32,6 +32,7 @@
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/format/TextFormats.hpp"
+#include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -107,11 +108,11 @@ int emit(const std::string& output, const std::string& text) {
 }
 
 /// A page of the manual ds embeds; an unknown topic lists the ones there are.
-int manual(const ds::model::Metamodel& metamodel, const std::string& topic, bool json) {
-  const std::string page = ds::model::manualPage(metamodel, topic);
+int manual(const ds::model::Metamodel& metamodel, const ds::model::Manual& book, const std::string& topic, bool json) {
+  const std::string page = book.page(topic);
   if (page.empty()) {
     std::cerr << "no page '" << topic << "' in the manual; there are:";
-    for (const auto& t : ds::model::manualTopics(metamodel)) std::cerr << " " << t;
+    for (const auto& t : book.topics()) std::cerr << " " << t;
     std::cerr << "\n";
     return 1;
   }
@@ -133,7 +134,7 @@ int manual(const ds::model::Metamodel& metamodel, const std::string& topic, bool
   }
   if (const ds::model::CodeSpec* c = metamodel.codeOf(topic))
     out["code"] = {{"code", c->code}, {"severity", c->severity}, {"meaning", c->meaning}, {"fix", c->fix}};
-  if (topic.empty()) out["topics"] = ds::model::manualTopics(metamodel);
+  if (topic.empty()) out["topics"] = book.topics();
   std::cout << out.dump(2) << "\n";
   return 0;
 }
@@ -229,7 +230,8 @@ struct Render {
 }  // namespace
 
 int run(int argc, char** argv) {
-  const ds::model::Metamodel metamodel;  // the language, made once where the command starts (DS-341)
+  const ds::model::Metamodel metamodel;     // the language, made once where the command starts (DS-341)
+  const ds::model::Manual book(metamodel);  // its manual, with the commands and their exit codes (DS-342)
   CLI::App app{"ds: a software design as text, checked, drawn and asked", "ds"};
   app.set_version_flag("--version", "ds " + metamodel.version());
   app.require_subcommand(1);
@@ -285,7 +287,7 @@ int run(int argc, char** argv) {
 
   // every command says its exit codes, from the one table the manual prints too (DS-79)
   for (auto* cmd : {checkCmd, exportCmd, renderCmd, queryCmd, manualCmd}) {
-    const ds::model::CommandSpec* spec = ds::model::commandOf(cmd->get_name());
+    const ds::model::CommandSpec* spec = book.commandOf(cmd->get_name());
     if (!spec) continue;
     std::string exits = "Exit codes:";
     for (const auto& e : spec->exits) exits += "\n  " + std::to_string(e.first) + "  " + e.second;
@@ -299,7 +301,7 @@ int run(int argc, char** argv) {
     return code == 0 ? 0 : 2;  // help is not a failure; a wrong command line is bad usage
   }
 
-  if (manualCmd->parsed()) return manual(metamodel, topic, json);
+  if (manualCmd->parsed()) return manual(metamodel, book, topic, json);
   if (checkCmd->parsed()) return check(metamodel, dir, json);
   if (renderCmd->parsed()) return render.run(metamodel);
   ds::model::Model model(metamodel);

@@ -1,12 +1,9 @@
 #ifndef DRIFTSPEC_MODEL_DETAIL_HPP
 #define DRIFTSPEC_MODEL_DETAIL_HPP
 
-#include <cstddef>
 #include <set>
 #include <string>
-#include <vector>
 
-#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/model/SequenceTree.hpp"
 
@@ -40,16 +37,6 @@ struct Branches {
   /// Which way the path named `scenario` goes at a frame.
   Way decide(const Entity& f, const std::string& scenario) const;
 };
-
-// ---- Manual.cpp --------------------------------------------------------------------------------
-
-std::string indent(const std::string& text, const std::string& by);
-std::string pad(const std::string& text, size_t width);
-// the manual's pages, written from the metamodel they are given (DS-342 makes them the Manual's)
-std::string names(const Metamodel& metamodel, const std::vector<Kind>& kinds);
-std::string kindPage(const Metamodel& metamodel, const KindSpec& k);
-std::string indexPage(const Metamodel& metamodel);
-std::string grammarPage(const Metamodel& metamodel);
 
 }  // namespace detail
 }  // namespace model

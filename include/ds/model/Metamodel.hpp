@@ -68,14 +68,6 @@ struct AnnotationSpec {
   Kind target = Kind::Class;        ///< what the name it carries is expected to be, when nothing declares it
 };
 
-/// A command of ds: how it is invoked, what it does, what each exit code says.
-struct CommandSpec {
-  std::string name;
-  std::string synopsis;
-  std::string does;
-  std::vector<std::pair<int, std::string>> exits;
-};
-
 struct RelationSpec {
   std::string kind;
   std::string meaning;
@@ -84,10 +76,6 @@ struct RelationSpec {
   /// When set, the only (from, to) pairs it may join: contains is derived from where each kind may be declared.
   std::vector<std::pair<Kind, Kind>> pairs;
 };
-
-/// The commands of ds, how each is invoked and what each exit code says: the manual's (DS-342 makes it a class).
-const std::vector<CommandSpec>& commands();
-const CommandSpec* commandOf(const std::string& name);
 
 /// The metamodel of DriftSpec, declared once (DS-341): every kind with its fields, flags and parents, every
 /// relation with the kinds it joins, the catalogue of finding codes, the annotations that mean something and
@@ -175,14 +163,6 @@ class Metamodel {
   AnnotationSpec other_;
   std::vector<AnnotationSpec> annotations_;
 };
-
-/// The manual ds embeds: the index ("" topic), a kind, a finding code, commands, annotations or codes; "" for no such
-/// topic. Written from the metamodel it is given (DS-342 makes the manual a class).
-std::string manualPage(const Metamodel& metamodel, const std::string& topic);
-std::vector<std::string> manualTopics(const Metamodel& metamodel);
-/// The guides of the manual, written as Markdown in doc/manual and embedded when ds is built (DS-272): each by its
-/// topic, in the order they are read. The same text is what ds manual <topic> prints and what the site draws.
-const std::vector<std::pair<std::string, std::string>>& manualGuides();
 
 }  // namespace model
 }  // namespace ds

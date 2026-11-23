@@ -96,55 +96,7 @@ TEST_F(TestBranches, ThePathThatNamesAnOptTakesItAndTheDefaultSkipsIt) {
 // The metamodel's builders are its private members (DS-341): tests/unit/ds/model/test_metamodel.cpp holds them
 // through what the class answers.
 
-// ---- Manual.cpp --------------------------------------------------------------------------------
-
-class TestIndent : public ::testing::Test {};
-
-TEST_F(TestIndent, IndentsEveryLineAndEndsEachWithANewline) {
-  EXPECT_EQ(detail::indent("a\nb", "  "), "  a\n  b\n");
-  EXPECT_EQ(detail::indent("", "  "), "");
-}
-
-class TestPad : public ::testing::Test {};
-
-TEST_F(TestPad, FillsToTheWidthOrLeavesOneSpaceAfterALongerText) {
-  EXPECT_EQ(detail::pad("ab", 4), "ab  ");
-  EXPECT_EQ(detail::pad("abcd", 3), "abcd ");
-}
-
-/// The manual's pages, written from the metamodel they are given.
-class Manual : public ::testing::Test {
- protected:
-  const ds::model::Metamodel metamodel;
-};
-
-class TestNames : public Manual {};
-
-TEST_F(TestNames, NamesTheKindsAsTheLanguageWritesThem) {
-  EXPECT_EQ(detail::names(metamodel, {Kind::Package, Kind::Module}), "package, module");
-  EXPECT_EQ(detail::names(metamodel, {}), "");
-}
-
-class TestKindPage : public Manual {};
-
-TEST_F(TestKindPage, SaysWhatAKindIsAndEndsWithItsExample) {
-  const std::string page = detail::kindPage(metamodel, metamodel.specOf(Kind::Class));
-  EXPECT_EQ(page.rfind("class — ", 0), 0u);
-  EXPECT_NE(page.find("Example (a workspace that checks clean)"), std::string::npos);
-}
-
-class TestIndexPage : public Manual {};
-
-TEST_F(TestIndexPage, IsTheManualWithNoTopic) {
-  EXPECT_EQ(detail::indexPage(metamodel).rfind("ds — a software design as text", 0), 0u);
-  EXPECT_EQ(detail::indexPage(metamodel), ds::model::manualPage(metamodel, ""));
-}
-
-class TestGrammarPage : public Manual {};
-
-TEST_F(TestGrammarPage, IsTheGrammarTopic) {
-  EXPECT_EQ(detail::grammarPage(metamodel).rfind("How a workspace is written", 0), 0u);
-  EXPECT_EQ(detail::grammarPage(metamodel), ds::model::manualPage(metamodel, "grammar"));
-}
+// The manual's page builders are its private members (DS-342): tests/unit/ds/model/test_manual_pages.cpp holds
+// them through the pages the class writes.
 
 }  // namespace
