@@ -7,6 +7,8 @@
 #include <regex>
 #include <vector>
 
+#include "ds/text/Text.hpp"
+
 namespace ds {
 namespace render {
 
@@ -167,22 +169,6 @@ const char* const kNote = "33";
 const char* const kContainer = "2";
 const char* const kEdge = "";
 
-std::vector<std::string> linesOf(const std::string& label) {
-  std::vector<std::string> out;
-  std::string current;
-  for (size_t i = 0; i < label.size(); ++i) {
-    if (label[i] == '\n' || (label[i] == '\\' && i + 1 < label.size() && label[i + 1] == 'n')) {
-      out.push_back(current);
-      current.clear();
-      if (label[i] == '\\') ++i;
-    } else {
-      current += label[i];
-    }
-  }
-  out.push_back(current);
-  return out;
-}
-
 void frame(Grid& g, const Rect& r, bool rounded, const std::string& color) {
   const char* tl = rounded ? "\xE2\x95\xAD" : "\xE2\x94\x8C";  // ╭ ┌
   const char* tr = rounded ? "\xE2\x95\xAE" : "\xE2\x94\x90";  // ╮ ┐
@@ -268,7 +254,7 @@ void box(Grid& g, const Placed& p) {
   clear(g, r);
   if (n.kind == "note") {
     frame(g, r, false, kNote);
-    const auto lines = linesOf(n.label);
+    const auto lines = text::linesOf(n.label);
     for (size_t i = 0; i < lines.size(); ++i) g.text(r.x + M.PAD_X, r.y + M.PAD_Y + static_cast<int>(i), lines[i], kNote);
     return;
   }
@@ -404,7 +390,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
       }
     }
     const Point a = pts[best], b = pts[best + 1];
-    const auto lines = linesOf(change == e.refs.end() ? e.label : (change->second == "added" ? "+ " : "- ") + e.label);
+    const auto lines = text::linesOf(change == e.refs.end() ? e.label : (change->second == "added" ? "+ " : "- ") + e.label);
     if (a.y == b.y) {
       std::string joined;
       for (const auto& l : lines) joined += (joined.empty() ? "" : ", ") + l;

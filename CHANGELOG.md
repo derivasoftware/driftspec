@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.22
+
+The engine's text helpers live in one module, `ds::text` (DS-344): splitting and joining a list, the lines of a
+label, trimming, base64 and XML escaping, each once instead of a copy in each module. Joining a list whose
+first item is empty keeps the separator after it (`"", a` joined with `,` is `,a`, not `a`). Nothing
+changes for a design.
+
 ## 0.1.21
 
 The rules evaluate faster (DS-338): applying a definition visits only the tuples that begin with its first

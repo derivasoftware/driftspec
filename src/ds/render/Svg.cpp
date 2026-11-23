@@ -8,6 +8,8 @@
 #include <sstream>
 #include <vector>
 
+#include "ds/text/Text.hpp"
+
 namespace ds {
 namespace render {
 
@@ -97,31 +99,7 @@ const char* const kStyle = R"CSS(
   .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
 )CSS";
 
-std::string esc(const std::string& text);
 std::string dataAttrs(const std::map<std::string, std::string>& refs);
-
-std::string esc(const std::string& text) {
-  std::string out;
-  for (char c : text) {
-    switch (c) {
-      case '&':
-        out += "&amp;";
-        break;
-      case '<':
-        out += "&lt;";
-        break;
-      case '>':
-        out += "&gt;";
-        break;
-      case '"':
-        out += "&quot;";
-        break;
-      default:
-        out += c;
-    }
-  }
-  return out;
-}
 
 /// FNV-1a of the title in base 36, as shared.ts idPrefix: several SVGs share one page.
 std::string idPrefix(const std::string& title) {
@@ -162,28 +140,6 @@ const std::map<std::string, std::string> kMarkerByKind = {
     {"inheritance", "tri"},     {"realization", "tri"},  {"composition", "diamond-filled"},
     {"aggregation", "diamond"}, {"dependency", "arrow"}, {"association", "arrow"}};
 
-std::vector<std::string> linesOf(const std::string& label) {
-  std::vector<std::string> out;
-  std::string current;
-  for (size_t i = 0; i < label.size(); ++i) {
-    if (label[i] == '\n' || (label[i] == '\\' && i + 1 < label.size() && label[i + 1] == 'n')) {
-      out.push_back(current);
-      current.clear();
-      if (label[i] == '\\') ++i;
-    } else {
-      current += label[i];
-    }
-  }
-  out.push_back(current);
-  return out;
-}
-
-std::string trim(const std::string& s) {
-  const auto b = s.find_first_not_of(' ');
-  if (b == std::string::npos) return "";
-  return s.substr(b, s.find_last_not_of(' ') - b + 1);
-}
-
 /// Split on top-level commas: generics and parentheses stay whole.
 std::vector<std::string> splitParams(const std::string& text) {
   std::vector<std::string> out;
@@ -199,11 +155,13 @@ std::vector<std::string> splitParams(const std::string& text) {
       current += c;
     }
   }
-  if (!trim(current).empty()) out.push_back(current);
+  if (!std::string(text::trimSpaces(current)).empty()) out.push_back(current);
   return out;
 }
 
-std::string typed(const std::string& type) { return "<tspan class=\"pr-type\">" + esc(trim(type)) + "</tspan>"; }
+std::string typed(const std::string& type) {
+  return "<tspan class=\"pr-type\">" + text::escapeXml(std::string(text::trimSpaces(type))) + "</tspan>";
+}
 
 /// One member line of `ds render` (`+ abstract run(model: Model) -> list<Finding>`,
 /// `- items: list<T> = 0`) tokenised into the engine's syntax-coloured tspans.
@@ -213,10 +171,10 @@ std::pair<std::string, std::string> memberMarkup(const std::string& line) {
   static const std::regex attribute(R"(^([^\s:]+)\s*:\s*([^=]+?)(?:\s*=\s*(.+))?$)");
   static const std::map<char, std::string> visibility = {{'+', "public"}, {'-', "private"}, {'#', "protected"}, {'~', "package"}};
   std::smatch m;
-  if (!std::regex_match(line, m, head)) return {"", esc(line)};
+  if (!std::regex_match(line, m, head)) return {"", text::escapeXml(line)};
   const std::string vis = m[1].matched ? visibility.at(m[1].str()[0]) : "";
   const std::string modifiers = m[2].str();
-  const std::string body = trim(m[3].str());
+  const std::string body = std::string(text::trimSpaces(m[3].str()));
   std::string nameClass = "pr-name";
   if (modifiers.find("static") != std::string::npos) nameClass += " pr-static";
   if (modifiers.find("abstract") != std::string::npos) nameClass += " pr-abstract-member";
@@ -226,21 +184,23 @@ std::pair<std::string, std::string> memberMarkup(const std::string& line) {
     for (const auto& p : splitParams(mm[2].str())) {
       if (!params.empty()) params += "<tspan class=\"pr-punct\">, </tspan>";
       const auto colon = p.find(':');
-      params += colon == std::string::npos ? "<tspan class=\"pr-param\">" + esc(trim(p)) + "</tspan>"
-                                           : "<tspan class=\"pr-param\">" + esc(trim(p.substr(0, colon))) +
-                                                 "</tspan><tspan class=\"pr-punct\">: </tspan>" + typed(p.substr(colon + 1));
+      params += colon == std::string::npos
+                    ? "<tspan class=\"pr-param\">" + text::escapeXml(std::string(text::trimSpaces(p))) + "</tspan>"
+                    : "<tspan class=\"pr-param\">" + text::escapeXml(std::string(text::trimSpaces(p.substr(0, colon)))) +
+                          "</tspan><tspan class=\"pr-punct\">: </tspan>" + typed(p.substr(colon + 1));
     }
     const std::string returns = mm[3].matched ? "<tspan class=\"pr-punct\"> -> </tspan>" + typed(mm[3].str()) : "";
-    return {vis, "<tspan class=\"" + nameClass + "\">" + esc(mm[1].str()) + "</tspan><tspan class=\"pr-punct\">(</tspan>" + params +
-                     "<tspan class=\"pr-punct\">)</tspan>" + returns};
+    return {vis, "<tspan class=\"" + nameClass + "\">" + text::escapeXml(mm[1].str()) + "</tspan><tspan class=\"pr-punct\">(</tspan>" +
+                     params + "<tspan class=\"pr-punct\">)</tspan>" + returns};
   }
   if (std::regex_match(body, mm, attribute)) {
-    const std::string def =
-        mm[3].matched ? "<tspan class=\"pr-punct\"> = </tspan><tspan class=\"pr-param\">" + esc(trim(mm[3].str())) + "</tspan>" : "";
-    return {vis, "<tspan class=\"" + nameClass + "\">" + esc(mm[1].str()) + "</tspan><tspan class=\"pr-punct\"> : </tspan>" +
+    const std::string def = mm[3].matched ? "<tspan class=\"pr-punct\"> = </tspan><tspan class=\"pr-param\">" +
+                                                text::escapeXml(std::string(text::trimSpaces(mm[3].str()))) + "</tspan>"
+                                          : "";
+    return {vis, "<tspan class=\"" + nameClass + "\">" + text::escapeXml(mm[1].str()) + "</tspan><tspan class=\"pr-punct\"> : </tspan>" +
                      typed(mm[2].str()) + def};
   }
-  return {vis, "<tspan class=\"" + nameClass + "\">" + esc(body) + "</tspan>"};
+  return {vis, "<tspan class=\"" + nameClass + "\">" + text::escapeXml(body) + "</tspan>"};
 }
 
 std::string num(int v) { return std::to_string(v); }
@@ -260,20 +220,21 @@ std::string emitNode(const Placed& p, const std::string& px) {
   const auto change = n.refs.find("change");
   if (change != n.refs.end()) classes += " pr-change-" + change->second;
   std::ostringstream out;
-  out << "<g id=\"" << px << esc(n.id) << "\" data-id=\"" << esc(n.id) << "\" class=\"" << classes << "\"" << dataAttrs(n.refs) << ">";
-  if (!n.title.empty()) out << "<title>" << esc(n.title) << "</title>";
+  out << "<g id=\"" << px << text::escapeXml(n.id) << "\" data-id=\"" << text::escapeXml(n.id) << "\" class=\"" << classes << "\""
+      << dataAttrs(n.refs) << ">";
+  if (!n.title.empty()) out << "<title>" << text::escapeXml(n.title) << "</title>";
   if (n.kind == "container") {
     out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"6\"/>";
-    out << "<text class=\"pr-header\" x=\"" << r.x + 10 << "\" y=\"" << r.y + 15 << "\">" << esc(n.label) << "</text>";
+    out << "<text class=\"pr-header\" x=\"" << r.x + 10 << "\" y=\"" << r.y + 15 << "\">" << text::escapeXml(n.label) << "</text>";
   } else if (n.kind == "note") {
     const int f = M.NOTE_FOLD;
     out << "<path d=\"M" << r.x << "," << r.y << " H" << r.x + r.w - f << " L" << r.x + r.w << "," << r.y + f << " V" << r.y + r.h << " H"
         << r.x << " Z\"/>";
     out << "<path d=\"M" << r.x + r.w - f << "," << r.y << " V" << r.y + f << " H" << r.x + r.w << "\"/>";
-    const auto lines = linesOf(n.label);
+    const auto lines = text::linesOf(n.label);
     for (size_t i = 0; i < lines.size(); ++i) {
-      out << "<text x=\"" << r.x + M.PAD_X << "\" y=\"" << r.y + M.PAD_X + 12 + static_cast<int>(i) * M.LINE_H << "\">" << esc(lines[i])
-          << "</text>";
+      out << "<text x=\"" << r.x + M.PAD_X << "\" y=\"" << r.y + M.PAD_X + 12 + static_cast<int>(i) * M.LINE_H << "\">"
+          << text::escapeXml(lines[i]) << "</text>";
     }
   } else {
     out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"4\"/>";
@@ -285,14 +246,15 @@ std::string emitNode(const Placed& p, const std::string& px) {
         << " 0 0 1 " << r.x + rad << "," << r.y << " Z\"/>";
     if (!n.stereotype.empty()) {
       out << "<text class=\"pr-stereo\" x=\"" << r.x + M.PAD_X << "\" y=\"" << ty - 2 << "\">"
-          << esc("\xC2\xAB" + n.stereotype + "\xC2\xBB") << "</text>";
+          << text::escapeXml("\xC2\xAB" + n.stereotype + "\xC2\xBB") << "</text>";
       ty += M.LINE_H;
     }
     const std::string letter = badgeOf(n.classifier, n.abstract);
     out << "<circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
-    out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">" << esc(letter)
+    out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">"
+        << text::escapeXml(letter) << "</text>";
+    out << "<text class=\"pr-header\" x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << text::escapeXml(n.label)
         << "</text>";
-    out << "<text class=\"pr-header\" x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << esc(n.label) << "</text>";
     ty += M.LINE_H;
     for (size_t s = 0; s < n.sections.size(); ++s) {
       const auto& section = n.sections[s];
@@ -305,13 +267,13 @@ std::string emitNode(const Placed& p, const std::string& px) {
         if (!offered.empty()) {
           out << "<g class=\"pr-offered pr-classifier-" << offered << "\"><circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 6
               << "\" cy=\"" << ty - 4 << "\" r=\"6\"/><text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 6 << "\" y=\"" << ty - 1
-              << "\" text-anchor=\"middle\">" << esc(badgeOf(offered, false)) << "</text></g>";
-          out << "<text x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << esc(line) << "</text>";
+              << "\" text-anchor=\"middle\">" << text::escapeXml(badgeOf(offered, false)) << "</text></g>";
+          out << "<text x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << text::escapeXml(line) << "</text>";
           ty += M.LINE_H;
           continue;
         }
         // only class members are tokenised; an artefact's title is prose and stays plain
-        const auto marked = n.sectionKinds.empty() ? std::make_pair(std::string(), esc(line)) : memberMarkup(line);
+        const auto marked = n.sectionKinds.empty() ? std::make_pair(std::string(), text::escapeXml(line)) : memberMarkup(line);
         if (!marked.first.empty()) {
           out << "<circle class=\"pr-vis pr-vis-" << marked.first << "\" cx=\"" << r.x + M.PAD_X + 4 << "\" cy=\"" << ty - 4
               << "\" r=\"3.5\"/>";
@@ -324,7 +286,7 @@ std::string emitNode(const Placed& p, const std::string& px) {
   }
   out << "</g>";
   const std::string g = out.str();
-  return n.href.empty() ? g : "<a href=\"" + esc(n.href) + "\" class=\"pr-link\">" + g + "</a>";
+  return n.href.empty() ? g : "<a href=\"" + text::escapeXml(n.href) + "\" class=\"pr-link\">" + g + "</a>";
 }
 
 struct EdgeMarkup {
@@ -356,19 +318,20 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
     const Point b = points[best + 1];
     const int x = (a.x + b.x) / 2 + 6;
     const int y = (a.y + b.y) / 2 - 4;
-    const auto lines = linesOf(e.label);
+    const auto lines = text::linesOf(e.label);
     std::string rows;
     for (size_t i = 0; i < lines.size(); ++i)
-      rows += "<tspan x=\"" + num(x) + "\" dy=\"" + num(i == 0 ? 0 : 14) + "\">" + esc(lines[i]) + "</tspan>";
-    out.label =
-        "<text class=\"pr-edge-label\" x=\"" + num(x) + "\" y=\"" + num(y) + "\">" + (lines.size() == 1 ? esc(e.label) : rows) + "</text>";
+      rows += "<tspan x=\"" + num(x) + "\" dy=\"" + num(i == 0 ? 0 : 14) + "\">" + text::escapeXml(lines[i]) + "</tspan>";
+    out.label = "<text class=\"pr-edge-label\" x=\"" + num(x) + "\" y=\"" + num(y) + "\">" +
+                (lines.size() == 1 ? text::escapeXml(e.label) : rows) + "</text>";
   }
   const auto change = e.refs.find("change");
   const std::string changeClass = change == e.refs.end() ? "" : " pr-edge-change-" + change->second;
-  out.path = "<g class=\"pr-edge-group\" data-from=\"" + esc(e.from) + "\" data-to=\"" + esc(e.to) + "\"" + dataAttrs(e.refs) + ">" +
-             (e.title.empty() ? "" : "<title>" + esc(e.title) + "</title>") + "<path class=\"pr-edge-hit\" d=\"" + d +
-             "\"/><path class=\"pr-edge pr-edge-" + e.kind + changeClass + "\" d=\"" + d + "\"" + markerAttr + "/></g>";
-  if (!e.href.empty()) out.path = "<a href=\"" + esc(e.href) + "\" class=\"pr-link\">" + out.path + "</a>";
+  out.path = "<g class=\"pr-edge-group\" data-from=\"" + text::escapeXml(e.from) + "\" data-to=\"" + text::escapeXml(e.to) + "\"" +
+             dataAttrs(e.refs) + ">" + (e.title.empty() ? "" : "<title>" + text::escapeXml(e.title) + "</title>") +
+             "<path class=\"pr-edge-hit\" d=\"" + d + "\"/><path class=\"pr-edge pr-edge-" + e.kind + changeClass + "\" d=\"" + d + "\"" +
+             markerAttr + "/></g>";
+  if (!e.href.empty()) out.path = "<a href=\"" + text::escapeXml(e.href) + "\" class=\"pr-link\">" + out.path + "</a>";
   return out;
 }
 
@@ -505,7 +468,7 @@ struct Lane {
 
 std::string dataAttrs(const std::map<std::string, std::string>& refs) {
   std::string out;
-  for (const auto& r : refs) out += " data-ref-" + r.first + "=\"" + esc(r.second) + "\"";
+  for (const auto& r : refs) out += " data-ref-" + r.first + "=\"" + text::escapeXml(r.second) + "\"";
   return out;
 }
 
@@ -530,8 +493,8 @@ std::string sequenceSvg(const IrDocument& doc) {
   if (lanes.empty()) {
     return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 40\" width=\"320\" height=\"40\" class=\"pr-diagram\" "
            "role=\"img\"><style>" +
-           std::string(kStyle) + "</style><text x=\"10\" y=\"25\">" + esc(doc.notice.empty() ? "Nothing to draw." : doc.notice) +
-           "</text></svg>\n";
+           std::string(kStyle) + "</style><text x=\"10\" y=\"25\">" +
+           text::escapeXml(doc.notice.empty() ? "Nothing to draw." : doc.notice) + "</text></svg>\n";
   }
 
   // ---- lanes: gaps wide enough for the heads and for the labels crossing them
@@ -643,7 +606,7 @@ std::string sequenceSvg(const IrDocument& doc) {
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"" << rootId << "\" viewBox=\"" << vx << " " << vy << " " << vw << " " << vh
       << "\" data-viewbox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" width=\"" << vw << "\" height=\"" << vh
       << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram pr-sequence\" role=\"img\">\n";
-  if (!doc.title.empty()) out << "<title>" << esc(doc.title) << "</title>\n";
+  if (!doc.title.empty()) out << "<title>" << text::escapeXml(doc.title) << "</title>\n";
   out << "<style>" << kStyle << kSeqStyle << "</style>\n<defs>" << markers(px) << "  <marker id=\"" << px
       << "msg\" viewBox=\"0 0 12 12\" refX=\"11\" refY=\"6\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path "
          "class=\"pr-filled\" d=\"M1,1 L11,6 L1,11 Z\"/></marker>\n</defs>\n";
@@ -652,16 +615,17 @@ std::string sequenceSvg(const IrDocument& doc) {
     const std::string kind = f.node->classifier;
     std::string condition = f.node->label;
     if (condition.rfind(kind + " ", 0) == 0) condition = condition.substr(kind.size() + 1);
-    out << "<g class=\"pr-frame pr-frame-" << esc(kind) << "\" data-id=\"" << esc(f.node->id) << "\" data-first=\"" << f.first
-        << "\" data-last=\"" << f.last << "\" data-top=\"" << f.top << "\" data-bottom=\"" << f.bottom << "\" transform=\"translate(0,"
-        << f.top << ")\">";
-    out << "<title>" << esc(kind + ": " + condition) << "</title>";
+    out << "<g class=\"pr-frame pr-frame-" << text::escapeXml(kind) << "\" data-id=\"" << text::escapeXml(f.node->id) << "\" data-first=\""
+        << f.first << "\" data-last=\"" << f.last << "\" data-top=\"" << f.top << "\" data-bottom=\"" << f.bottom
+        << "\" transform=\"translate(0," << f.top << ")\">";
+    out << "<title>" << text::escapeXml(kind + ": " + condition) << "</title>";
     out << "<rect x=\"" << f.left << "\" y=\"0\" width=\"" << f.right - f.left << "\" height=\"" << f.bottom - f.top << "\" rx=\"3\"/>";
     const int tabW = static_cast<int>(kind.size()) * 7 + 16;
     out << "<path class=\"pr-frame-tab\" d=\"M" << f.left << ",0 H" << f.left + tabW << " V" << FRAME_HEAD - 6 << " L" << f.left + tabW - 6
         << "," << FRAME_HEAD << " H" << f.left << " Z\"/>";
-    out << "<text class=\"pr-frame-label\" x=\"" << f.left + 8 << "\" y=\"" << FRAME_HEAD - 7 << "\">" << esc(kind) << "</text>";
-    out << "<text class=\"pr-frame-cond\" x=\"" << f.left + tabW + 10 << "\" y=\"" << FRAME_HEAD - 7 << "\">" << esc(condition)
+    out << "<text class=\"pr-frame-label\" x=\"" << f.left + 8 << "\" y=\"" << FRAME_HEAD - 7 << "\">" << text::escapeXml(kind)
+        << "</text>";
+    out << "<text class=\"pr-frame-cond\" x=\"" << f.left + tabW + 10 << "\" y=\"" << FRAME_HEAD - 7 << "\">" << text::escapeXml(condition)
         << "</text>";
     for (const auto& d : f.node->dividers) {
       if (d.first >= rowsCount) continue;
@@ -672,7 +636,7 @@ std::string sequenceSvg(const IrDocument& doc) {
       out << "<line class=\"pr-frame-divider\" data-divider-row=\"" << d.first << "\" data-y=\"" << dy << "\" x1=\"" << f.left << "\" y1=\""
           << dy - f.top << "\" x2=\"" << f.right << "\" y2=\"" << dy - f.top << "\"/>";
       out << "<text class=\"pr-frame-cond\" data-divider-row=\"" << d.first << "\" data-y=\"" << dy << "\" x=\"" << f.left + 8 << "\" y=\""
-          << dy - f.top + 4 << "\">[" << esc(d.second) << "]</text>";
+          << dy - f.top + 4 << "\">[" << text::escapeXml(d.second) << "]</text>";
     }
     out << "</g>\n";
   }
@@ -680,9 +644,9 @@ std::string sequenceSvg(const IrDocument& doc) {
   for (const Lane& l : lanes) {
     const IrNode& n = *l.node;
     const int hx = l.cx - l.headW / 2, hy = MARGIN;
-    out << "<g class=\"pr-lifeline" << (n.classifier == "actor" ? " pr-actor" : "") << "\" data-id=\"" << esc(n.id) << "\""
+    out << "<g class=\"pr-lifeline" << (n.classifier == "actor" ? " pr-actor" : "") << "\" data-id=\"" << text::escapeXml(n.id) << "\""
         << dataAttrs(n.refs) << ">";
-    if (!n.title.empty()) out << "<title>" << esc(n.title) << "</title>";
+    if (!n.title.empty()) out << "<title>" << text::escapeXml(n.title) << "</title>";
     out << "<line class=\"pr-lifeline-line\" x1=\"" << l.cx << "\" y1=\"" << hy + HEAD_H << "\" x2=\"" << l.cx << "\" y2=\"" << bottomY - 10
         << "\" data-y2=\"" << bottomY - 10 << "\"/>";
     std::string head;
@@ -692,13 +656,13 @@ std::string sequenceSvg(const IrDocument& doc) {
              "," + num(top + 11) + " V" + num(top + 22) + " M" + num(cx - 8) + "," + num(top + 15) + " H" + num(cx + 8) + " M" + num(cx) +
              "," + num(top + 22) + " L" + num(cx - 7) + "," + num(top + 32) + " M" + num(cx) + "," + num(top + 22) + " L" + num(cx + 7) +
              "," + num(top + 32) + "\"/>" + "<text class=\"pr-header\" x=\"" + num(cx) + "\" y=\"" + num(top + HEAD_H + 10) +
-             "\" text-anchor=\"middle\" font-size=\"11\">" + esc(n.label) + "</text></g>";
+             "\" text-anchor=\"middle\" font-size=\"11\">" + text::escapeXml(n.label) + "</text></g>";
     } else {
       head = "<g class=\"pr-lifeline-head\"><rect x=\"" + num(hx) + "\" y=\"" + num(hy) + "\" width=\"" + num(l.headW) + "\" height=\"" +
              num(HEAD_H) + "\" rx=\"4\"/><text class=\"pr-header\" x=\"" + num(l.cx) + "\" y=\"" + num(hy + 24) +
-             "\" text-anchor=\"middle\">" + esc(n.label) + "</text></g>";
+             "\" text-anchor=\"middle\">" + text::escapeXml(n.label) + "</text></g>";
     }
-    out << (n.href.empty() ? head : "<a href=\"" + esc(n.href) + "\" class=\"pr-link\">" + head + "</a>") << "</g>\n";
+    out << (n.href.empty() ? head : "<a href=\"" + text::escapeXml(n.href) + "\" class=\"pr-link\">" + head + "</a>") << "</g>\n";
   }
   // rows: one group per message, positioned at its absolute y, movable by the script
   for (const IrEdge* m : messages) {
@@ -711,9 +675,9 @@ std::string sequenceSvg(const IrDocument& doc) {
     const auto change = m->refs.find("change");
     if (change != m->refs.end()) classes += " pr-change-" + change->second;
     out << "<g class=\"" << classes << "\" data-row=\"" << r << "\" data-y=\"" << rowStart[r] << "\" data-h=\"" << rowEnd[r] - rowStart[r]
-        << "\" data-from=\"" << esc(m->from) << "\" data-to=\"" << esc(m->to) << "\"" << dataAttrs(m->refs) << ">";
+        << "\" data-from=\"" << text::escapeXml(m->from) << "\" data-to=\"" << text::escapeXml(m->to) << "\"" << dataAttrs(m->refs) << ">";
     std::string body;
-    if (!m->title.empty()) body += "<title>" + esc(m->title) + "</title>";
+    if (!m->title.empty()) body += "<title>" + text::escapeXml(m->title) + "</title>";
     std::string d;
     if (self) {
       d = "M" + num(a.cx) + "," + num(ly) + " H" + num(a.cx + SELF_W) + " V" + num(ly + 16) + " H" + num(a.cx + 3);
@@ -725,9 +689,11 @@ std::string sequenceSvg(const IrDocument& doc) {
     body += "<path class=\"pr-msg" + std::string(m->dashed ? " pr-msg-dashed" : "") + "\" d=\"" + d + "\" marker-end=\"url(#" + px +
             (m->dashed ? "arrow" : "msg") + ")\"/>";
     if (self) {
-      body += "<text class=\"pr-msg-label\" x=\"" + num(a.cx + SELF_W + 6) + "\" y=\"" + num(ly + 12) + "\">" + esc(m->label) + "</text>";
+      body += "<text class=\"pr-msg-label\" x=\"" + num(a.cx + SELF_W + 6) + "\" y=\"" + num(ly + 12) + "\">" + text::escapeXml(m->label) +
+              "</text>";
     } else {
-      body += "<text class=\"pr-msg-label\" x=\"" + num((a.cx + b.cx) / 2) + "\" y=\"" + num(ly - 5) + "\">" + esc(m->label) + "</text>";
+      body += "<text class=\"pr-msg-label\" x=\"" + num((a.cx + b.cx) / 2) + "\" y=\"" + num(ly - 5) + "\">" + text::escapeXml(m->label) +
+              "</text>";
     }
     if (m->refs.count("span")) {
       const int tx = self ? a.cx + SELF_W + 6 + static_cast<int>(m->label.size()) * M.CHAR_W + 6
@@ -736,10 +702,10 @@ std::string sequenceSvg(const IrDocument& doc) {
       body += "<text class=\"pr-toggle pr-toggle-open\" x=\"" + num(tx) + "\" y=\"" + num(ty) + "\">\xE2\x96\xBE fold</text>";
       body += "<text class=\"pr-toggle pr-toggle-closed\" x=\"" + num(tx) + "\" y=\"" + num(ty) + "\">\xE2\x96\xB8 unfold</text>";
     }
-    out << (m->href.empty() ? body : "<a href=\"" + esc(m->href) + "\" class=\"pr-link\">" + body + "</a>") << "</g>\n";
+    out << (m->href.empty() ? body : "<a href=\"" + text::escapeXml(m->href) + "\" class=\"pr-link\">" + body + "</a>") << "</g>\n";
   }
   if (!doc.notice.empty())
-    out << "<text class=\"pr-notice\" x=\"" << MARGIN << "\" y=\"" << bottomY - 4 << "\">" << esc(doc.notice) << "</text>\n";
+    out << "<text class=\"pr-notice\" x=\"" << MARGIN << "\" y=\"" << bottomY - 4 << "\">" << text::escapeXml(doc.notice) << "</text>\n";
   std::string script = kSeqScript;
   const std::string marker = "%ROOT%";
   script.replace(script.find(marker), marker.size(), rootId);
@@ -794,7 +760,7 @@ std::string tableSvg(const IrDocument& doc) {
   std::ostringstream out;
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-10 -10 " << width + 20 << " " << height + 20 << "\" width=\"" << width + 20
       << "\" height=\"" << height + 20 << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
-  if (!doc.title.empty()) out << "<title>" << esc(doc.title) << "</title>\n";
+  if (!doc.title.empty()) out << "<title>" << text::escapeXml(doc.title) << "</title>\n";
   out << "<style>" << kStyle
       << "\n  .pr-diagram .pr-cell rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: 1; }"
          "\n  .pr-diagram .pr-cell-head rect { fill: var(--pr-head-class); }"
@@ -806,12 +772,12 @@ std::string tableSvg(const IrDocument& doc) {
                         bool centred) {
     const auto written = lines(text);
     out << "<g class=\"pr-cell pr-cell-" << kind << "\">";
-    if (!title.empty()) out << "<title>" << esc(title) << "</title>";
+    if (!title.empty()) out << "<title>" << text::escapeXml(title) << "</title>";
     out << "<rect x=\"" << x << "\" y=\"" << y << "\" width=\"" << w << "\" height=\"" << h << "\"/>";
     const int first = y + h / 2 + 4 - (static_cast<int>(written.size()) - 1) * lineH / 2;
     for (std::size_t l = 0; l < written.size(); ++l)
       out << "<text x=\"" << (centred ? x + w / 2 : x + padX) << "\" y=\"" << first + static_cast<int>(l) * lineH << "\""
-          << (centred ? " text-anchor=\"middle\"" : "") << ">" << esc(written[l]) << "</text>";
+          << (centred ? " text-anchor=\"middle\"" : "") << ">" << text::escapeXml(written[l]) << "</text>";
     out << "</g>\n";
   };
   int x = 0;
@@ -940,7 +906,7 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
   }
   std::string noticeBlock;
   if (!notice.empty()) {
-    const auto lines = linesOf(notice);
+    const auto lines = text::linesOf(notice);
     size_t width = 0;
     for (const auto& l : lines) width = std::max(width, l.size());
     const int w = static_cast<int>(width) * M.CHAR_W + 2 * M.PAD_X;
@@ -951,7 +917,7 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
                   "\" rx=\"3\"/>";
     for (size_t i = 0; i < lines.size(); ++i)
       noticeBlock += "<text x=\"" + num(x + M.PAD_X) + "\" y=\"" + num(y + M.PAD_X + 4 + static_cast<int>(i) * M.LINE_H) + "\">" +
-                     esc(lines[i]) + "</text>";
+                     text::escapeXml(lines[i]) + "</text>";
     noticeBlock += "</g>";
     extend(x + w, y + h);
   }
@@ -959,7 +925,7 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
   std::ostringstream out;
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" width=\"" << vw
       << "\" height=\"" << vh << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
-  if (!doc.title.empty()) out << "<title>" << esc(doc.title) << "</title>\n";
+  if (!doc.title.empty()) out << "<title>" << text::escapeXml(doc.title) << "</title>\n";
   out << "<style>" << kStyle << "</style>\n<defs>" << markers(px) << "</defs>\n";
   for (const auto& s : containers) out << s << "\n";
   for (const auto& s : paths) out << s << "\n";

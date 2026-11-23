@@ -282,7 +282,7 @@ void ContractCheck::checkViews(const model::Entity& state) {
   std::map<std::string, std::set<std::string>> next;
   const auto moves = state.fields.find("transitions");
   if (moves != state.fields.end()) {
-    for (const auto& move : split(moves->second, '\n')) {
+    for (const auto& move : splitTrimmed(moves->second, '\n')) {
       const auto gt = move.find('>');
       const std::string from = move.substr(0, gt);
       const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
@@ -325,7 +325,7 @@ void ContractCheck::checkStates(const model::Entity& state) {
   if (initial.empty()) return;
   std::vector<std::string> states{initial};
   std::map<std::string, std::set<std::string>> next;
-  for (const auto& move : split(moves->second, '\n')) {
+  for (const auto& move : splitTrimmed(moves->second, '\n')) {
     const auto gt = move.find('>');
     if (gt == std::string::npos) continue;
     const std::string from = move.substr(0, gt);
@@ -356,10 +356,10 @@ void ContractCheck::checkFailures(const model::Entity& op) {
   const bool promises = op.fields.count("fails") > 0;
   if (!promises && !boundary) return;
   std::set<std::string> declared;
-  for (const auto& name : model::split(op.field("fails"), ','))
+  for (const auto& name : text::splitTrimmed(op.field("fails"), ','))
     if (name != "nothing") declared.insert(name);
   std::set<std::string> escaping;
-  for (const auto& name : model::split(op.field("escapes"), ',')) {
+  for (const auto& name : text::splitTrimmed(op.field("escapes"), ',')) {
     escaping.insert(name);
     if (declared.count(name)) continue;
     const std::string how = op.field("escape." + name);
@@ -408,7 +408,7 @@ void ContractCheck::checkHandlers() {
           bool behaves = false;
           for (const auto& b : index.to(op->id)) behaves = behaves || b.kind == "behaviour-of";
           if (!behaves && op->fields.count("fails") == 0) known = false;  // says nothing of how it fails
-          for (const auto& f : split(op->field("escapes"), ',')) possible.insert(f);
+          for (const auto& f : splitTrimmed(op->field("escapes"), ',')) possible.insert(f);
         }
       }
     }
@@ -452,7 +452,7 @@ void ContractCheck::checkDiagrams() {
     const auto include = pair.second.fields.find("include");
     if (include != pair.second.fields.end() && pair.second.fields.count("kind") &&
         (pair.second.fields.at("kind") == "sequence" || pair.second.fields.at("kind") == "tour")) {
-      for (const auto& pattern : split(include->second, ',')) {
+      for (const auto& pattern : splitTrimmed(include->second, ',')) {
         const auto slash = pattern.find(" / ");
         if (slash == std::string::npos) continue;
         const std::string behaviour = model::Identity(pattern.substr(0, slash)).sequence().text();
@@ -467,7 +467,7 @@ void ContractCheck::checkDiagrams() {
     // a pattern that names what nothing declares is a broken reference, as in the model (DS-212); a box that
     // exists and is empty is not: a level with no children is valid
     for (const char* key : {"include", "exclude", "open", "close", "unfold", "fold"}) {
-      for (const auto& pattern : split(pair.second.field(key), ',')) {
+      for (const auto& pattern : splitTrimmed(pair.second.field(key), ',')) {
         // a cut may name a kind of box instead of a box (DS-229)
         const bool kind = (key == std::string("open") || key == std::string("close")) &&
                           (pattern == model::kindName(model::Kind::Module) || pattern == model::kindName(model::Kind::Package));

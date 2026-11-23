@@ -8,15 +8,15 @@
 #include "ds/machine/Machine.hpp"
 #include "ds/machine/Table.hpp"
 #include "ds/model/SequenceTree.hpp"
-#include "ds/model/Words.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace render {
 
-using model::join;
-using model::split;
+using text::join;
+using text::splitTrimmed;
 
 namespace {
 
@@ -104,7 +104,7 @@ std::string IrExport::renderTour(const model::Entity& tour, bool pretty) const {
   // the sequence, as a sequence diagram of the same fields draws it
   const nlohmann::json sequence = nlohmann::json::parse(renderSequence(tour, false));
   // who takes part, drawn as boxes on the same cut: each lifeline is one box, with the relations between them
-  const std::set<std::string> who = query::SequenceFilter(split(tour.field("include"), ','), levelsOf(tour), tour.id).select(model_);
+  const std::set<std::string> who = query::SequenceFilter(splitTrimmed(tour.field("include"), ','), levelsOf(tour), tour.id).select(model_);
   model::Entity boxes = tour;
   boxes.fields["kind"] = "class";
   std::vector<std::string> taken, closed;
@@ -144,9 +144,9 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   const model::Entity* diagram = &entity;
   // `show` adds optional detail (ownership, multiplicity, operators, notes, derived-stereotypes);
   // `hide` removes compartments (fields, methods). Nothing written = members only.
-  const std::vector<std::string> showList = split(diagram->field("show"), ',');
+  const std::vector<std::string> showList = splitTrimmed(diagram->field("show"), ',');
   const std::set<std::string> show(showList.begin(), showList.end());
-  const std::vector<std::string> hideList = split(diagram->field("hide"), ',');
+  const std::vector<std::string> hideList = splitTrimmed(diagram->field("hide"), ',');
   const std::set<std::string> hide(hideList.begin(), hideList.end());
   auto shows = [&](const char* what) { return show.count(what) > 0; };
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
@@ -200,7 +200,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
     } else if (e.kind == model::Kind::Enum) {
       node["classifier"] = "enum";
       node["stereotype"] = "enum";
-      node["sections"] = nlohmann::json::array({split(e.field("values"), ',')});
+      node["sections"] = nlohmann::json::array({splitTrimmed(e.field("values"), ',')});
       node["sectionKinds"] = nlohmann::json::array({"attributes"});
     } else {
       const bool interface = e.kind == model::Kind::Interface;
@@ -208,9 +208,9 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
       node["abstract"] = interface || stereotypes.find("abstract") != std::string::npos;
       // the badge: derived stereotypes, then the operator symbols the families do not already say
       std::vector<std::string> badges;
-      if (shows("derived-stereotypes")) badges = split(stereotypes, ',');
+      if (shows("derived-stereotypes")) badges = splitTrimmed(stereotypes, ',');
       if (shows("operators")) {
-        for (const auto& op : split(e.field("operators"), ',')) {
+        for (const auto& op : splitTrimmed(e.field("operators"), ',')) {
           if (op != "==" && op != "!=" && op != "ordered" && op != "hash" && op != "print") badges.push_back(op);
         }
       }
@@ -662,7 +662,8 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   // the behaviours selected, by subject id, by sequence id, or a namespace: the query's filter (DS-127)
   std::vector<const model::Entity*> selected;
   std::map<const model::Entity*, std::string> pathOf;  // a named branch asked for: the path of that behaviour
-  for (const query::Behaviour& taken : query::SequenceFilter(split(diagram.field("include"), ','), depth, diagram.id).behaviours(model_)) {
+  for (const query::Behaviour& taken :
+       query::SequenceFilter(splitTrimmed(diagram.field("include"), ','), depth, diagram.id).behaviours(model_)) {
     selected.push_back(taken.sequence);
     if (taken.path != kWhole) pathOf[taken.sequence] = taken.path;
   }
@@ -744,7 +745,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
   nlohmann::json nodes = nlohmann::json::array();
   nlohmann::json edges = nlohmann::json::array();
   std::set<std::string> drawn;
-  for (const auto& machine : query::StateFilter(split(diagram.field("include"), ',')).machines(model_)) {  // DS-127
+  for (const auto& machine : query::StateFilter(splitTrimmed(diagram.field("include"), ',')).machines(model_)) {  // DS-127
     const model::Entity* state = model_.find(machine);
     const machine::Machine written(model_, *state);  // a state a rule computes shows its rule (DS-249)
     const std::vector<machine::Call> calls = written.calls();
@@ -862,7 +863,7 @@ std::string IrExport::renderTable(const model::Entity& diagram, bool pretty) con
         {"corner", t.columns[0]}, {"columns", std::vector<std::string>(t.columns.begin() + 1, t.columns.end())}, {"rows", rows}};
     return pretty ? out.dump(2) : out.dump();
   }
-  for (const auto& id : query::StateFilter(split(diagram.field("include"), ',')).machines(model_)) {
+  for (const auto& id : query::StateFilter(splitTrimmed(diagram.field("include"), ',')).machines(model_)) {
     const machine::Table table(model_, *model_.find(id));
     nlohmann::json rows = nlohmann::json::array();
     for (const machine::Row& row : table.rows()) {
@@ -918,13 +919,13 @@ bool isArtefact(const model::Entity& e) {
 }  // namespace
 
 std::string IrExport::renderRequirements(const model::Entity& diagram, bool pretty) const {
-  const std::vector<std::string> showList = split(diagram.field("show"), ',');
+  const std::vector<std::string> showList = splitTrimmed(diagram.field("show"), ',');
   const std::set<std::string> show(showList.begin(), showList.end());
   const bool withDesign = show.empty() || show.count("design");
   const bool withVerifications = show.empty() || show.count("verifications");
   // the roots and their umbrella are the query's filter of the diagram (DS-127)
   const std::set<std::string> selected =
-      query::RequirementsFilter(split(diagram.field("include"), ','), withDesign, withVerifications, diagram.id).select(model_);
+      query::RequirementsFilter(splitTrimmed(diagram.field("include"), ','), withDesign, withVerifications, diagram.id).select(model_);
   const axis::Cut cut(model_, diagram);  // what answers to a requirement is the box that stands for it (DS-231)
   nlohmann::json out;
   out["ir"] = 1;

@@ -138,10 +138,6 @@ package driftspec@ds {
       - static numberParts(text: std::string, lastDash: std::size_t) -> int         // the number parts after the letter parts, or -1 (DS-335)
     }
 
-    // a list written in a field, taken apart and put back, in one place for every module (DS-185)
-    function split(text: std::string, sep: char) -> std::vector<std::string>
-    function join(items: std::vector<std::string>, sep: std::string) -> std::string
-
     function hasScenario(model: Model, sequence: std::string, scenario: std::string) -> bool {
       @requirement REQ-00065-1
     }

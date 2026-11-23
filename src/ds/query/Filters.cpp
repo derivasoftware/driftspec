@@ -3,15 +3,15 @@
 
 #include "ds/axis/Cut.hpp"
 #include "ds/model/Identity.hpp"
-#include "ds/model/Words.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace query {
 
-using model::join;
-using model::split;
+using text::join;
+using text::splitTrimmed;
 
 namespace {
 
@@ -282,18 +282,18 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
 std::unique_ptr<IFilter> filterFor(const model::Entity& diagram) {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
   const std::string kind = diagram.field("kind");
-  const std::vector<std::string> include = split(diagram.field("include"), ',');
+  const std::vector<std::string> include = splitTrimmed(diagram.field("include"), ',');
   if (kind == "sequence" || kind == "tour")
     return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.id));
   if (kind == "state" || kind == "table") return std::unique_ptr<IFilter>(new StateFilter(include));  // both are of a machine
   if (kind == "requirement") {
-    const std::vector<std::string> shown = split(diagram.field("show"), ',');
+    const std::vector<std::string> shown = splitTrimmed(diagram.field("show"), ',');
     const std::set<std::string> show(shown.begin(), shown.end());
     return std::unique_ptr<IFilter>(
         new RequirementsFilter(include, show.empty() || show.count("design"), show.empty() || show.count("verifications"), diagram.id));
   }
   return std::unique_ptr<IFilter>(
-      new ClassFilter(include, split(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0), diagram.id));
+      new ClassFilter(include, splitTrimmed(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0), diagram.id));
 }
 
 }  // namespace query

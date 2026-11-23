@@ -2,7 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "ds/model/Words.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace query {
@@ -144,7 +144,7 @@ std::vector<Answer> Query::failures(const std::string& id) const {
   std::vector<Answer> out;
   const model::Entity* e = model_.find(id);
   if (!e) return out;
-  for (const auto& name : model::split(e->field("escapes"), ',')) {
+  for (const auto& name : text::splitTrimmed(e->field("escapes"), ',')) {
     const std::string path = e->field("escape." + name);
     const std::string through = path.substr(0, path.find(" from "));
     const auto last = through.rfind(" -> ");
