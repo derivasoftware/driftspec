@@ -13,6 +13,7 @@
 #include "ds/machine/Machine.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/model/Paths.hpp"
 
 namespace ds {
 namespace check {
@@ -71,7 +72,8 @@ std::vector<model::Finding> ContractCheck::check(const Context& context) {
 
 std::string ContractCheck::outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const {
   if (!seen->insert(model::Identity(sequence).withScenario(path).text()).second) return "";
-  const std::vector<const model::Entity*> messages = model::pathOf(*model_, sequence, path, nullptr);
+  const model::Paths paths(*model_);
+  const std::vector<const model::Entity*> messages = paths.pathOf(sequence, path, nullptr);
   std::string wanted;  // the name of the result the behaviour returns; empty: its last call decides
   for (auto it = messages.rbegin(); it != messages.rend(); ++it) {
     const model::Entity& m = **it;
@@ -98,6 +100,7 @@ std::string ContractCheck::outcomeOf(const std::string& sequence, const std::str
 // takes and returns the same and handles every outcome as a scenario of its behaviour; a scenario
 // no outcome names is behaviour no use case asked for.
 void ContractCheck::checkUseCases() {
+  const model::Paths paths(*model_);
   const auto isUseCase = [this](const std::string& id) {
     const model::Entity* e = model_->find(id);
     return e && !e->expected && e->kind == model::Kind::UseCase;
@@ -174,8 +177,7 @@ void ContractCheck::checkUseCases() {
       }
       const std::string behaviour = model::Identity(op->id).sequence().text();
       for (const auto& end : ends) {
-        if (end == "default" || model_->find(model::Identity(behaviour).withScenario(end).text()) ||
-            model::hasScenario(*model_, behaviour, end))
+        if (end == "default" || model_->find(model::Identity(behaviour).withScenario(end).text()) || paths.hasScenario(behaviour, end))
           continue;
         found_.push_back({"W-USECASE-OUTCOME-UNHANDLED", "warning",
                           op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r.location});
@@ -202,6 +204,7 @@ void ContractCheck::checkUseCases() {
 }
 
 void ContractCheck::checkInterfaces() {
+  const model::Paths paths(*model_);
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.kind == model::Kind::State) {
@@ -220,7 +223,7 @@ void ContractCheck::checkInterfaces() {
       const std::string code = field.first.substr(5);
       std::string id = field.second == "default" ? behaviour : model::Identity(behaviour).withScenario(field.second).text();
       std::string path;
-      if (!model_->find(id) && model::hasScenario(*model_, behaviour, field.second)) {
+      if (!model_->find(id) && paths.hasScenario(behaviour, field.second)) {
         id = behaviour;  // a named branch of the one behaviour
         path = field.second;
       }
@@ -446,6 +449,7 @@ void ContractCheck::checkScenarios() {
 }
 
 void ContractCheck::checkDiagrams() {
+  const model::Paths paths(*model_);
   for (const auto& pair : model_->entities()) {
     if (pair.second.kind != model::Kind::Diagram) continue;
     // a sequence diagram that asks for a scenario: it is a behaviour of its own, or a named branch of one
@@ -458,7 +462,7 @@ void ContractCheck::checkDiagrams() {
         const std::string behaviour = model::Identity(pattern.substr(0, slash)).sequence().text();
         const std::string scenario = pattern.substr(slash + 3);
         if (!model_->find(behaviour) || model_->find(model::Identity(behaviour).withScenario(scenario).text()) ||
-            model::hasScenario(*model_, behaviour, scenario))
+            paths.hasScenario(behaviour, scenario))
           continue;
         found_.push_back({"W-SCENARIO-UNDECLARED", "warning", pair.second.name + " asks for " + pattern + ", a scenario nobody declares",
                           pair.second.location});

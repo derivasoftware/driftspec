@@ -123,6 +123,10 @@ package driftspec@ds {
       + box() -> Identity
       + isSystem() -> bool
       operator ==(other: Scope) -> bool
+      // the scope outside a text, which outer() steps to and an identity's scope() is its own text stepped out of
+      - static outerOf(text: std::string) -> std::string {
+        @requirement REQ-00035-1
+      }
     }
     class ArtefactName <<==>> {   // a process artefact's name: REQ-00001-2
       @requirement REQ-00043-1
@@ -138,17 +142,34 @@ package driftspec@ds {
       - static numberParts(text: std::string, lastDash: std::size_t) -> int         // the number parts after the letter parts, or -1 (DS-335)
     }
 
-    function hasScenario(model: Model, sequence: std::string, scenario: std::string) -> bool {
-      @requirement REQ-00065-1
+    // The walks of a model's behaviours (DS-343): which scenarios a behaviour names, the steps the path of one
+    // takes, and who a behaviour runs on, which the check and the state machines ask the same. Made over a model
+    // that outlives it, which it reads and never changes; it holds nothing else, so whoever asks makes one where
+    // it asks.
+    class Paths {
+      - refs model_: Model
+      + Paths(model: Model)
+      + hasScenario(sequence: std::string, scenario: std::string) -> bool {
+        @requirement REQ-00065-1
+      }
+      + pathOf(sequence: std::string, scenario: std::string, kept: std::set<std::string>) -> std::vector<const Entity*> {
+        @requirement REQ-00065-1
+      }
+      // a method's class, a function's module, an operation's interface, or its subject; "" when it is declared nowhere
+      + holderOf(sequence: std::string) -> std::string
+      // the value of a field of an entity; "" when it does not carry it
+      - static fieldIn(e: Entity, key: std::string) -> std::string
     }
 
-    function pathOf(model: Model, sequence: std::string, scenario: std::string, kept: std::set<std::string>) -> std::vector<Entity> {
+    // the frames of one behaviour, read from its tree, and for each what its two sides name: Paths's own, defined
+    // in src/ds/model/Paths.cpp and in no header, and made by pathOf over the tree it walks
+    - class Branches {
       @requirement REQ-00065-1
+      - refs tree_: SequenceTree
+      + Branches(tree: SequenceTree)
+      + names(f: Entity, elseSide: bool) -> std::set<std::string>
+      + decide(f: Entity, scenario: std::string) -> Way
     }
-
-    // who a behaviour runs on: a method's class, a function's module, an operation's interface, or its subject;
-    // the check and the state machines ask it the same
-    function holderOf(model: Model, sequence: std::string) -> std::string
 
     // A behaviour's steps are kept as the tree they are written in (DS-172): each message and frame
     // contained by what encloses it, the sequence or a frame, in the order written; an alt holds its
@@ -1041,29 +1062,6 @@ package driftspec@ds {
       // identities moved: what was indexed by the old ones is built again
       -> indexAgain()
       return true
-    }
-
-    // ---- what the package's own functions and classes share (DS-332): internal, declared in
-    // src/ds/model/Detail.hpp and in no header under include/. The metamodel's builders left it for the
-    // class (DS-341), the manual's page builders for theirs (DS-342); what is left goes to Paths and
-    // Scope (DS-343)
-    - module detail {
-      // the scope outside an identity or a scope
-      function outerOf(text: std::string) -> std::string {
-        @requirement REQ-00035-1
-      }
-      // the value of a field of an entity; "" when it does not carry it
-      function fieldIn(e: Entity, key: std::string) -> std::string {
-        @requirement REQ-00065-1
-      }
-
-      // the frames of one behaviour, read from its tree, and for each what its two sides name
-      class Branches {
-        @requirement REQ-00065-1
-        + refs tree: SequenceTree
-        + names(f: Entity, elseSide: bool) -> std::set<std::string>
-        + decide(f: Entity, scenario: std::string) -> Way
-      }
     }
   }
 }

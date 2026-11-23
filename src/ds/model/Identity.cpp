@@ -2,8 +2,6 @@
 
 #include <utility>
 
-#include "Detail.hpp"
-
 namespace ds {
 namespace model {
 
@@ -22,7 +20,7 @@ std::string Identity::lastName() const {
   return cut == std::string::npos ? text_ : text_.substr(cut + 1);
 }
 
-Scope Identity::scope() const { return Scope(detail::outerOf(text_)); }
+Scope Identity::scope() const { return Scope(text_).outer(); }
 
 Scope Identity::asScope() const { return Scope(text_); }
 
@@ -87,7 +85,16 @@ Identity Scope::qualify(const std::string& name) const {
   return Identity(text_ + "::" + name);
 }
 
-Scope Scope::outer() const { return Scope(detail::outerOf(text_)); }
+std::string Scope::outerOf(const std::string& text) {
+  const auto cut = text.rfind("::");
+  if (cut != std::string::npos) return text.substr(0, cut);
+  std::string s = text;
+  if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope: step out of that package
+  const auto at = s.rfind('@');
+  return at == std::string::npos ? "" : s.substr(0, at + 1);
+}
+
+Scope Scope::outer() const { return Scope(outerOf(text_)); }
 
 Scope Scope::package() const {
   const auto at = text_.rfind('@');
@@ -146,19 +153,6 @@ ArtefactName ArtefactName::withoutRevision() const {
   std::string stem;
   return ArtefactName(writtenWithRevision(text_, &stem) ? stem : text_);
 }
-
-namespace detail {
-
-std::string outerOf(const std::string& text) {
-  const auto cut = text.rfind("::");
-  if (cut != std::string::npos) return text.substr(0, cut);
-  std::string s = text;
-  if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope: step out of that package
-  const auto at = s.rfind('@');
-  return at == std::string::npos ? "" : s.substr(0, at + 1);
-}
-
-}  // namespace detail
 
 }  // namespace model
 }  // namespace ds

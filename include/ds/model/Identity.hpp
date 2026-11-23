@@ -91,6 +91,8 @@ class Scope {
   bool operator==(const Scope& other) const { return text_ == other.text_; }
 
  private:
+  /// The scope outside `text`: one step out of a member, out of a package, or out of the system to "".
+  static std::string outerOf(const std::string& text);
   std::string text_;
 };
 

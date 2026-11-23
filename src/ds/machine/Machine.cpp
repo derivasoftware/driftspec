@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "ds/model/Identity.hpp"
+#include "ds/model/Paths.hpp"
 
 namespace ds {
 namespace machine {
@@ -286,7 +287,8 @@ class Calls {
   void call(const model::Entity& sequence, const model::Entity& m, May& may, std::vector<Call>& found) const {
     if (m.field("return") == "true" || m.field("op").empty()) return;
     const std::string receiver = m.field("to");
-    if ((receiver == "self" ? model::holderOf(model_, sequence.id) : m.field("type")) != subject_) return;
+    const model::Paths paths(model_);
+    if ((receiver == "self" ? paths.holderOf(sequence.id) : m.field("type")) != subject_) return;
     std::string event = m.field("op");
     if (event.rfind("::") != std::string::npos) event = event.substr(event.rfind("::") + 2);
     std::set<std::string> targets;

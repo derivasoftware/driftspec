@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.31
+
+The walks of a behaviour are a class, `ds::model::Paths` (DS-343), made over the model whoever asks already holds:
+whether a behaviour names a scenario, the steps the path of one takes and who a behaviour runs on. How a path goes
+at each frame is its own, in no header. The scope outside a name is `Scope`'s to tell, and the model's internal
+helpers, `model::detail`, are gone. The findings, the export and every page of `ds manual` are the same. Nothing
+changes for a design.
+
 ## 0.1.30
 
 The binder starts its split into one binder per construct (DS-353, step one of four, DS-354). The binding code reads the

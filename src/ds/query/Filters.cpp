@@ -3,6 +3,7 @@
 
 #include "ds/axis/Cut.hpp"
 #include "ds/model/Identity.hpp"
+#include "ds/model/Paths.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
 #include "ds/text/Text.hpp"
@@ -158,6 +159,7 @@ SequenceFilter::SequenceFilter(std::vector<std::string> include, int depth, std:
     : include_(std::move(include)), depth_(depth), cutOf_(std::move(cutOf)) {}
 
 std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) const {
+  const model::Paths paths(model);
   std::vector<Behaviour> out;
   for (const auto& pattern : include_) {
     for (const auto& pair : model.entities()) {
@@ -173,7 +175,7 @@ std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) con
       const auto slash = pattern.find(" / ");
       if (isDefault && slash != std::string::npos && pattern.substr(0, slash) == subjectId &&
           !model.find(model::Identity(subjectId).sequence(pattern.substr(slash + 3)).text()) &&
-          model::hasScenario(model, e.id, pattern.substr(slash + 3))) {
+          paths.hasScenario(e.id, pattern.substr(slash + 3))) {
         out.push_back({&e, pattern.substr(slash + 3)});
       }
     }

@@ -12,6 +12,7 @@
 #include "ds/check/Steps.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/model/Paths.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
 
@@ -34,7 +35,7 @@ class TestBranches : public ::testing::Test {
 
   std::vector<std::string> path(const std::string& scenario) {
     std::vector<std::string> out;
-    for (const auto* m : ds::model::pathOf(model, "bank@core::Desk::withdraw::sequence", scenario, nullptr)) {
+    for (const auto* m : ds::model::Paths(model).pathOf("bank@core::Desk::withdraw::sequence", scenario, nullptr)) {
       out.push_back(m->fields.count("return") ? "return " + m->fields.at("result") : m->fields.at("op"));
     }
     return out;
@@ -55,9 +56,10 @@ class TestBranches : public ::testing::Test {
 
 TEST_F(TestBranches, ABranchNamesAScenarioAndABareReturnEndsIt) {
   EXPECT_EQ(syntaxErrors, 0);
-  EXPECT_TRUE(ds::model::hasScenario(model, "bank@core::Desk::withdraw::sequence", "frozen"));
-  EXPECT_TRUE(ds::model::hasScenario(model, "bank@core::Desk::withdraw::sequence", "refused"));
-  EXPECT_FALSE(ds::model::hasScenario(model, "bank@core::Desk::withdraw::sequence", "stolen"));
+  const ds::model::Paths paths(model);
+  EXPECT_TRUE(paths.hasScenario("bank@core::Desk::withdraw::sequence", "frozen"));
+  EXPECT_TRUE(paths.hasScenario("bank@core::Desk::withdraw::sequence", "refused"));
+  EXPECT_FALSE(paths.hasScenario("bank@core::Desk::withdraw::sequence", "stolen"));
 }
 
 TEST_F(TestBranches, APathTakesWhatIsSharedAndItsBranchUpToItsReturn) {

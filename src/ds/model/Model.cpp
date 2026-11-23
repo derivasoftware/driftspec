@@ -2,12 +2,9 @@
 
 #include <algorithm>
 #include <limits>
-#include <set>
 #include <stdexcept>
 
-#include "Detail.hpp"
 #include "ds/model/Metamodel.hpp"
-#include "ds/model/SequenceTree.hpp"
 
 namespace ds {
 namespace model {
@@ -181,100 +178,6 @@ bool Model::rename(const std::string& from, const std::string& to) {
 }
 
 void Model::report(const Finding& finding) { findings_.push_back(finding); }
-
-}  // namespace model
-}  // namespace ds
-
-namespace ds {
-namespace model {
-
-namespace detail {
-
-std::string fieldIn(const Entity& e, const std::string& key) {
-  const auto f = e.fields.find(key);
-  return f == e.fields.end() ? "" : f->second;
-}
-
-std::set<std::string> Branches::names(const Entity& f, bool elseSide) const {
-  std::set<std::string> out;
-  const std::string own = tree.scenario(f.id, elseSide);
-  if (!own.empty()) out.insert(own);
-  for (const auto& child : tree.inside(f.id, elseSide)) {
-    for (const bool side : {false, true}) {
-      for (const auto& n : names(*tree.model().find(child), side)) out.insert(n);
-    }
-  }
-  return out;
-}
-
-Branches::Way Branches::decide(const Entity& f, const std::string& scenario) const {
-  const std::set<std::string> thenNames = names(f, false);
-  const std::set<std::string> elseNames = names(f, true);
-  // a loop is not a choice: every path goes through it, and one that names a branch inside goes into it
-  if (fieldIn(f, "kind") == "loop") return !scenario.empty() && thenNames.count(scenario) ? Way::Enter : Way::Keep;
-  // an attempt is not a choice either: its steps run on every path (DS-187)
-  if (fieldIn(f, "kind") == "attempt") return Way::Enter;
-  // a handler runs only on a path that fails as it handles: one that names it; the default path does not fail
-  if (fieldIn(f, "kind") == "handler") return !scenario.empty() && thenNames.count(scenario) ? Way::Then : Way::Skip;
-  if (!scenario.empty() && thenNames.count(scenario)) return Way::Then;
-  if (!scenario.empty() && elseNames.count(scenario)) return Way::Else;
-  if (tree.twoSides(f.id)) {
-    if (!thenNames.empty() && elseNames.empty()) return Way::Else;
-    if (thenNames.empty() && !elseNames.empty()) return Way::Then;
-    return Way::Keep;
-  }
-  return thenNames.empty() ? Way::Keep : Way::Skip;  // a branch nobody asked for is not taken
-}
-
-}  // namespace detail
-
-bool hasScenario(const Model& model, const std::string& sequence, const std::string& scenario) {
-  // a loop, an opt or a side of an alt that names it
-  for (const auto& id : model.index().members(sequence)) {
-    const Entity* f = model.find(id);
-    if (f && f->kind == Kind::Frame && detail::fieldIn(*f, "scenario") == scenario) return true;
-  }
-  return false;
-}
-
-std::vector<const Entity*> pathOf(const Model& model, const std::string& sequence, const std::string& scenario,
-                                  std::set<std::string>* kept) {
-  const SequenceTree tree(model, sequence);
-  const detail::Branches branches{tree};
-  std::vector<const Entity*> out;
-  for (const auto& id : tree.messages()) {
-    const Entity* m = model.find(id);
-    bool taken = true;
-    bool certain = true;  // every frame around it is a side the path takes, none it cannot tell
-    std::vector<std::string> around;
-    for (std::string frame = tree.frameOf(m->id); !frame.empty() && taken; frame = tree.frameOf(frame)) {
-      const Entity& f = *model.find(frame);
-      const detail::Branches::Way way = branches.decide(f, scenario);
-      const bool elseSide = tree.onElse(f.id, m->id);
-      if (way == detail::Branches::Way::Skip || (way == detail::Branches::Way::Then && elseSide) ||
-          (way == detail::Branches::Way::Else && !elseSide)) {
-        taken = false;
-      } else if (way == detail::Branches::Way::Keep) {
-        certain = false;
-        around.push_back(f.id);
-      } else if (way == detail::Branches::Way::Enter) {
-        around.push_back(f.id);
-      }
-    }
-    if (!taken) continue;
-    if (kept) kept->insert(around.begin(), around.end());
-    out.push_back(m);
-    if (certain && detail::fieldIn(*m, "return") == "true") break;  // the path ends here
-  }
-  return out;
-}
-
-std::string holderOf(const Model& model, const std::string& sequence) {
-  const Entity* subject = model.find(Identity(sequence).subject().text());
-  if (!subject) return "";
-  const bool member = subject->kind == Kind::Method || subject->kind == Kind::Function || subject->kind == Kind::Operation;
-  return member ? subject->scope : subject->id;
-}
 
 }  // namespace model
 }  // namespace ds

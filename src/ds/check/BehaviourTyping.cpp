@@ -11,6 +11,7 @@
 #include "ds/check/Steps.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/model/Paths.hpp"
 
 namespace ds {
 namespace check {
@@ -85,10 +86,11 @@ void BehaviourTyping::expand(model::Entity& out_msg, const model::Entity& op, co
   const auto scenario = out_msg.fields.find("scenario");
   const bool named = scenario != out_msg.fields.end();
   const std::string id = model::Identity(op.id).sequence(named ? scenario->second : "").text();
+  const model::Paths paths(*model_);
   if (const model::Entity* child = model_->find(id)) {
     model_->relate({"expands-to", out_msg.id, child->id, message.location, ""});
     out_msg.fields["expands"] = child->id;
-  } else if (named && model::hasScenario(*model_, model::Identity(op.id).sequence().text(), scenario->second)) {
+  } else if (named && paths.hasScenario(model::Identity(op.id).sequence().text(), scenario->second)) {
     // a named branch of the one behaviour: the call enters that path of it
     model_->relate({"expands-to", out_msg.id, model::Identity(op.id).sequence().text(), message.location, ""});
     out_msg.fields["expands"] = model::Identity(op.id).sequence().text();

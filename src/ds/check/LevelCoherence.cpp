@@ -8,6 +8,7 @@
 #include "ds/check/Steps.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/model/Paths.hpp"
 
 namespace ds {
 namespace check {
@@ -44,7 +45,8 @@ std::pair<std::string, std::string> behaviourBelow(const model::Model& model, co
     const std::string own = model::Identity(op).sequence(named).text();
     if (model.find(own)) return {own, ""};
     const std::string shared = model::Identity(op).sequence().text();
-    if (model.find(shared) && model::hasScenario(model, shared, named)) return {shared, named};
+    const model::Paths paths(model);
+    if (model.find(shared) && paths.hasScenario(shared, named)) return {shared, named};
   }
   return {entry.field("expands"), entry.field("expands-path")};
 }
@@ -55,8 +57,9 @@ void collect(const model::Model& model, const std::string& sequence, const std::
              Below& out) {
   const std::string key = model::Identity(sequence).withScenario(path).text();
   if (!stack.insert(key).second) return;  // a behaviour already being walked: the cycle ends here
-  const std::string self = model::holderOf(model, sequence);
-  for (const model::Entity* m : model::pathOf(model, sequence, path, nullptr)) {
+  const model::Paths paths(model);
+  const std::string self = paths.holderOf(sequence);
+  for (const model::Entity* m : paths.pathOf(sequence, path, nullptr)) {
     if (m->field("return") == "true") continue;
     const std::string from = on(m->field("from-type").empty() ? self : m->field("from-type"));
     const std::string to = on(m->field("type"));
@@ -108,6 +111,7 @@ std::vector<std::string> LevelCoherence::needs() const { return {"behaviour"}; }
 
 std::vector<model::Finding> LevelCoherence::check(const Context& context) {
   const model::Model& model = context.model();
+  const model::Paths paths(model);
   std::vector<model::Finding> found;
   for (const auto& pair : model.entities()) {
     const model::Entity& scenario = pair.second;
@@ -116,7 +120,7 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
     if (!subject || subject->kind != model::Kind::UseCase) continue;  // the level that is asked from outside
 
     // the cut the scenario stands on is its participants: whatever one of them holds, it stands for
-    const std::vector<const model::Entity*> written = model::pathOf(model, scenario.id, "", nullptr);
+    const std::vector<const model::Entity*> written = paths.pathOf(scenario.id, "", nullptr);
     std::set<std::string> participants;
     for (const model::Entity* m : written) {
       if (m->field("return") == "true") continue;
@@ -145,7 +149,7 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
     std::string through;
     for (const model::Entity* entry : entries) {
       const auto behaviour = behaviourBelow(model, scenario, *entry);
-      below.entered.insert(on(model::holderOf(model, behaviour.first)));
+      below.entered.insert(on(paths.holderOf(behaviour.first)));
       std::set<std::string> stack;
       collect(model, behaviour.first, behaviour.second, on, stack, below);
       through += (through.empty() ? "" : ", ") + calleeOf(model, entry->id);
