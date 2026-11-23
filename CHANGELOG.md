@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.25
+## 0.1.26
 
 The metamodel is a class, `ds::model::Metamodel` (DS-341): its tables are built once, when one is made where the
 engine starts (the command line, the Python module, the page's engine), and it is handed by const reference to
@@ -14,6 +14,13 @@ the model, the binder, the checker and the manual; no global function reaches it
 binder knows are a list of their own, apart from the two rows the manual adds to document any other word and the
 use case an operation names. The findings, the export and every page of `ds manual` are the same. Nothing
 changes for a design.
+
+## 0.1.25
+
+The text drawing takes a tenth of the memory it took (DS-350): a cell of the drawing holds its character inline
+and its colour as an index into the drawing's palette, 7 bytes instead of some 72. A class diagram of 200 classes
+drawn as text needs 380 MB instead of 3 GB, and one of 400 classes, which used to exhaust the machine's memory, 2 GB.
+The drawing is the same, byte for byte. Nothing changes for a design.
 
 ## 0.1.24
 

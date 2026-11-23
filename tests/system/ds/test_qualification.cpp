@@ -3,6 +3,7 @@
 // here links the engine: the binary, its arguments, its output, its exit code.
 #include <gtest/gtest.h>
 #ifndef _WIN32
+#include <sys/resource.h>
 #include <sys/wait.h>
 #endif
 
@@ -483,6 +484,33 @@ TEST_F(TestQualification, EveryCorpusMeansExactlyTheFindingsItMarks) {
     EXPECT_EQ(reported, marked) << dir.path().filename();
   }
   EXPECT_GE(corpora, 5);
+}
+
+// SREQ-00005-1, DS-350: the text drawing of a large class diagram stays within bounded memory. A cell once took 72
+// bytes, so 250 classes needed some 5 GB and 400 took a machine down; the drawing runs under a 3 GB address-space
+// cap, so a regression fails here instead
+TEST_F(TestQualification, ALargeClassDiagramIsDrawnAsTextWithinBoundedMemory) {
+#ifdef _WIN32
+  GTEST_SKIP() << "the peak of a child process is read with getrusage";
+#else
+  const std::string tmp = scratch("ds-text-memory");
+  std::ofstream ws(tmp + "/big.ds");
+  ws << "package big {\n  module m {\n";
+  for (int i = 0; i < 250; ++i) {
+    ws << "    class C" << i << (i > 0 ? " : C" + std::to_string((i - 1) / 3) : "") << " {\n      - owns next: C" << (i + 1) % 250
+       << "\n      + run(a: int) -> C" << (i + 7) % 250 << "\n    }\n";
+  }
+  ws << "  }\n}\ndiagram CL_Big {\n  kind: class\n  include: big@*\n}\n";
+  ws.close();
+  const std::string command =
+      "ulimit -v 3145728; exec \"" + std::string(DRIFTSPEC_DS_BIN) + "\" render \"" + tmp + "\" CL_Big -f text > /dev/null 2>&1";
+  const int status = std::system(command.c_str());
+  EXPECT_TRUE(WIFEXITED(status) && WEXITSTATUS(status) == 0) << "the drawing did not finish under the 3 GB cap";
+  rusage usage{};
+  ::getrusage(RUSAGE_CHILDREN, &usage);
+  EXPECT_LT(usage.ru_maxrss, 1024L * 1024L) << "peak " << usage.ru_maxrss / 1024 << " MB";  // ru_maxrss is in KB
+  std::filesystem::remove_all(tmp);
+#endif
 }
 
 // CST-00001-1: every command under a hundred milliseconds on a hundred classes
