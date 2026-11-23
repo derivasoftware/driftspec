@@ -22,15 +22,16 @@ std::string Identity::lastName() const {
 
 Scope Identity::scope() const { return Scope(text_).outer(); }
 
-Scope Identity::asScope() const { return Scope(text_); }
-
 bool Identity::isQualified() const { return text_.find('@') != std::string::npos || text_.find("::") != std::string::npos; }
 
 bool Identity::isAbsolute() const { return text_.find('@') != std::string::npos; }
 
 bool Identity::within(const Identity& outer) const {
+  // read in place, nothing built per comparison (DS-346): outer itself, or outer then :: or /
   const std::string& prefix = outer.text_;
-  return text_ == prefix || text_.rfind(prefix + "::", 0) == 0 || text_.rfind(prefix + "/", 0) == 0;
+  if (text_.compare(0, prefix.size(), prefix) != 0) return false;
+  if (text_.size() == prefix.size()) return true;
+  return text_[prefix.size()] == '/' || text_.compare(prefix.size(), 2, "::") == 0;
 }
 
 Identity Identity::withArity(std::size_t arity) const { return Identity(text_ + "<" + std::to_string(arity) + ">"); }

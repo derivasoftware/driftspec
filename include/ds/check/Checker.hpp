@@ -29,7 +29,8 @@ class IChecker {
 /// test; it holds the map by reference, so the map outlives it.
 class Checker : public IChecker {
  public:
-  /// Checks `model` with the steps given; `metamodel` says which codes are coverage, not findings (DS-216, DS-341).
+  /// Checks `model` with the steps given, in `metamodel`, the language the model is written in (DS-341); the model
+  /// itself keeps apart what is coverage (DS-346).
   Checker(model::Model& model, const model::Metamodel& metamodel, const std::map<std::string, std::unique_ptr<IStep>>& steps);
   Checker(model::Model& model, const model::Metamodel& metamodel,
           std::map<std::string, std::unique_ptr<IStep>>&& steps) = delete;  // a temporary map would die before the run

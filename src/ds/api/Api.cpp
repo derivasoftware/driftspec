@@ -1,6 +1,5 @@
 #include "ds/api/Api.hpp"
 
-#include <algorithm>
 #include <nlohmann/json.hpp>
 #include <set>
 #include <vector>
@@ -83,19 +82,10 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) const {
   }
   const auto steps = check::steps();
   check::Checker(model, metamodel_, steps).run(binder.notes());
-  auto& findings = model.findings();
-  if (!broken.empty()) {
-    // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
-    // the rest of that file, and every name now declared nowhere. They go until the file parses (DS-304)
-    findings.erase(std::remove_if(findings.begin(), findings.end(),
-                                  [&](const model::Finding& f) {
-                                    return f.code != "E-SYNTAX" && (broken.count(f.location.file) || f.code == "W-REF-UNDECLARED");
-                                  }),
-                   findings.end());
-  }
-  std::stable_sort(findings.begin(), findings.end(), [](const model::Finding& a, const model::Finding& b) {
-    return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;
-  });
+  // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
+  // the rest of that file, and every name now declared nowhere. They go until the file parses (DS-304)
+  model.withdrawEchoes(broken);
+  model.sortFindings();
   return model;
 }
 

@@ -457,7 +457,7 @@ void Evaluator::tabulate(const std::string& id, const model::Formula& formula) {
     table.rows.push_back(cells);
     table.kinds.push_back(kinds);
   }
-  model_.tables()[id] = table;
+  model_.tabulate(id, table);
 }
 
 void Evaluator::evaluateRule(const std::string& id, const model::Formula& formula) {

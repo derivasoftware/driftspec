@@ -110,14 +110,13 @@ bool FailureFlow::pass(std::map<std::string, std::map<std::string, Escape>>& out
 
 void FailureFlow::write(const std::map<std::string, std::map<std::string, Escape>>& escapes) {
   for (const auto& op : escapes) {
-    model::Entity* e = model_->find(op.first);
-    if (!e || op.second.empty()) continue;
+    if (!model_->find(op.first) || op.second.empty()) continue;
     std::vector<std::string> names;
     for (const auto& f : op.second) {
       names.push_back(f.first);
-      e->fields["escape." + f.first] = text::join(f.second.through, " -> ") + " from " + f.second.origin;
+      model_->annotate(op.first, "escape." + f.first, text::join(f.second.through, " -> ") + " from " + f.second.origin);
     }
-    e->fields["escapes"] = text::join(names, ", ");
+    model_->annotate(op.first, "escapes", text::join(names, ", "));
   }
 }
 

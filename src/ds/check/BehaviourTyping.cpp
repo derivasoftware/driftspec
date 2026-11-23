@@ -59,10 +59,10 @@ void BehaviourTyping::couple(const model::Entity& sequence, const model::Entity&
   model_->relate({kind, sequence.id, type.id, sequence.location, ""});
 }
 
-void BehaviourTyping::call(model::Entity& out_msg, const model::Entity& op, const bind::Message& message) {
-  model_->relate({"calls", out_msg.id, op.id, message.location, ""});
+void BehaviourTyping::call(const model::Entity& msg, const model::Entity& op, const bind::Message& message) {
+  model_->relate({"calls", msg.id, op.id, message.location, ""});
   // seen from who sends it: the sender written, or the behaviour itself (DS-232)
-  context_->checkVisibility(out_msg.field("from-type").empty() ? out_msg.scope : out_msg.field("from-type"), op.id, message.location);
+  context_->checkVisibility(msg.field("from-type").empty() ? msg.scope : msg.field("from-type"), op.id, message.location);
   const int expected = static_cast<int>(op.params.size());
   if (expected != message.argc) {
     context_->report({"E-MSG-ARITY", "error",
@@ -70,31 +70,31 @@ void BehaviourTyping::call(model::Entity& out_msg, const model::Entity& op, cons
                           std::to_string(message.argc) + " given",
                       message.location});
   }
-  if (expected == message.argc) checkArguments(out_msg, op, message);
+  if (expected == message.argc) checkArguments(msg, op, message);
   const auto returns = op.fields.find("returns");
   if (returns != op.fields.end()) {
-    out_msg.fields["result_type"] = returns->second;
+    model_->annotate(msg.id, "result_type", returns->second);
     const model::Entity* owner = op.kind == model::Kind::Method ? model_->find(op.scope) : nullptr;
-    out_msg.fields["result_scope"] = owner ? owner->scope : op.scope;
+    model_->annotate(msg.id, "result_scope", owner ? owner->scope : op.scope);
   }
-  expand(out_msg, op, message);
+  expand(msg, op, message);
 }
 
-void BehaviourTyping::expand(model::Entity& out_msg, const model::Entity& op, const bind::Message& message) {
+void BehaviourTyping::expand(const model::Entity& msg, const model::Entity& op, const bind::Message& message) {
   // a message to an operation with a behaviour expands to it (B5): derived, never written; a message
   // that names a scenario expands to that one, and one nobody declares is a finding
-  const auto scenario = out_msg.fields.find("scenario");
-  const bool named = scenario != out_msg.fields.end();
+  const auto scenario = msg.fields.find("scenario");
+  const bool named = scenario != msg.fields.end();
   const std::string id = model::Identity(op.id).sequence(named ? scenario->second : "").text();
   const model::Paths paths(*model_);
   if (const model::Entity* child = model_->find(id)) {
-    model_->relate({"expands-to", out_msg.id, child->id, message.location, ""});
-    out_msg.fields["expands"] = child->id;
+    model_->relate({"expands-to", msg.id, child->id, message.location, ""});
+    model_->annotate(msg.id, "expands", child->id);
   } else if (named && paths.hasScenario(model::Identity(op.id).sequence().text(), scenario->second)) {
     // a named branch of the one behaviour: the call enters that path of it
-    model_->relate({"expands-to", out_msg.id, model::Identity(op.id).sequence().text(), message.location, ""});
-    out_msg.fields["expands"] = model::Identity(op.id).sequence().text();
-    out_msg.fields["expands-path"] = scenario->second;
+    model_->relate({"expands-to", msg.id, model::Identity(op.id).sequence().text(), message.location, ""});
+    model_->annotate(msg.id, "expands", model::Identity(op.id).sequence().text());
+    model_->annotate(msg.id, "expands-path", scenario->second);
   } else if (named) {
     context_->report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
   }
@@ -141,7 +141,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
     return;
   }
   const model::Entity* seq = model_->find(context_->current(message.sequence));
-  model::Entity* msg = model_->find(context_->current(message.message));
+  const model::Entity* msg = model_->find(context_->current(message.message));
   if (!seq || !msg) return;
   const model::Entity* subject = nullptr;
   const model::Entity* cls = subjectClass(*seq, &subject);
@@ -161,7 +161,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
     const std::string id = resolver_->resolve(message.op, home);
     const model::Entity* target = id.empty() ? nullptr : model_->find(id);
     if (target && target->kind == model::Kind::Function) {
-      msg->fields["type"] = target->scope;
+      model_->annotate(msg->id, "type", target->scope);
       couple(*seq, *target, true);  // a function of another module couples like a local
       call(*msg, *target, message);
       return;
@@ -188,7 +188,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   if (typeId.empty()) return;  // a primitive or an unknown spelling: nothing to check
   const model::Entity* type = model_->find(typeId);
   if (!type || type->expected) return;  // reported once the type is declared (R6)
-  msg->fields["type"] = typeId;
+  model_->annotate(msg->id, "type", typeId);
   if (message.to != "self") couple(*seq, *type, transient);
   // a message written between two participants says that the one uses the other (DS-230): the sender written,
   // or the box a scenario is of; whoever asks for a use case is outside the design
@@ -227,11 +227,11 @@ std::string BehaviourTyping::namedEntity(const std::string& name, const std::str
   return named ? id : "";
 }
 
-void BehaviourTyping::typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
+void BehaviourTyping::typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, const model::Entity& msg,
                                  const std::string& home) {
   // who sends is the participant written before the arrow, typed like the receiver; with none, the subject (DS-232).
   // A sender nobody designs is text (DS-18)
-  const std::string sender = out_msg.field("from");
+  const std::string sender = msg.field("from");
   if (sender.empty() || sender == "self") return;
   std::pair<std::string, std::string> value;
   bool transient = false;
@@ -241,7 +241,7 @@ void BehaviourTyping::typeSender(const model::Entity& seq, const model::Entity* 
   } else {
     type = namedEntity(sender, home);
   }
-  if (!type.empty()) out_msg.fields["from-type"] = type;
+  if (!type.empty()) model_->annotate(msg.id, "from-type", type);
 }
 
 const model::Entity* BehaviourTyping::offered(const model::Entity& box, const std::string& op) const {
@@ -263,7 +263,8 @@ const model::Entity* BehaviourTyping::offered(const model::Entity& box, const st
   return count == 1 ? found : nullptr;
 }
 
-bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& out_msg, const bind::Message& message, const std::string& home) {
+bool BehaviourTyping::callStatic(const model::Entity& seq, const model::Entity& msg, const bind::Message& message,
+                                 const std::string& home) {
   // `-> diff::Diff::compare(a, b)`: a qualified name with no participant that names a class's operation
   // calls it on the class itself, as a function of another module is called (DS-60)
   const auto at = message.op.rfind("::");
@@ -273,14 +274,14 @@ bool BehaviourTyping::callStatic(const model::Entity& seq, model::Entity& out_ms
   if (!type || type->kind != model::Kind::Class) return false;
   const model::Entity* op = resolver_->member(typeId, message.op.substr(at + 2));
   if (!op) return false;
-  out_msg.fields["type"] = typeId;
+  model_->annotate(msg.id, "type", typeId);
   couple(seq, *type, true);  // the class is reached for one call, like a local
   if (!op->has("static")) {
     context_->report({"W-MSG-NOT-STATIC", "warning",
                       seq.name + " calls " + op->id + " on its class, and it is not static: it needs an instance", message.location});
     return true;
   }
-  call(out_msg, *op, message);
+  call(msg, *op, message);
   return true;
 }
 

@@ -36,6 +36,7 @@ struct FieldSpec {
   FieldSource source = FieldSource::Written;
   std::string meaning;
   std::vector<std::string> values = {};  ///< when not empty, the only values it takes (a closed field, DS-211)
+  bool identity = false;                 ///< it holds an entity's identity, which a rename carries along (DS-346)
 };
 
 struct KindSpec {
@@ -93,6 +94,8 @@ class Metamodel {
   const KindSpec* specNamed(const std::string& name) const;
   /// The field a key names for a kind, families included; nullptr when the kind does not declare it.
   const FieldSpec* fieldOf(Kind kind, const std::string& key) const;
+  /// The fields that hold an entity's identity, whatever kind carries them, each once: what a rename carries along.
+  const std::vector<std::string>& identityFields() const { return identityFields_; }
   const RelationSpec* relationOf(const std::string& kind) const;
   /// Whether a relation of this kind may go from one kind to another.
   bool joins(const RelationSpec& relation, Kind from, Kind to) const;
@@ -125,11 +128,15 @@ class Metamodel {
   static FieldSpec derived(const std::string& name, FieldType type, const std::string& meaning);
   /// A field written with one of a closed set of values: any other is W-FIELD-VALUE (DS-211).
   static FieldSpec closed(const std::string& name, FieldType type, const std::string& meaning, std::vector<std::string> values);
+  /// A field that holds an entity's identity (DS-346).
+  static FieldSpec holdingIdentity(FieldSpec field);
   /// The fields every artefact carries (REQ-00045-1).
   static std::vector<FieldSpec> artefact();
   static std::vector<FieldSpec> plus(std::vector<FieldSpec> base, const std::vector<FieldSpec>& more);
   /// Every kind with its fields, flags and parents, as declared; how each is written comes after (describe).
   static std::vector<KindSpec> build();
+  /// The names of the fields that hold an identity, read from the kinds, each once, in the order declared.
+  std::vector<std::string> buildIdentityFields() const;
   static RelationSpec rel(const std::string& kind, const std::string& meaning, std::vector<Kind> from, std::vector<Kind> to);
   /// Every relation: containment first, derived from the kinds, then the others as declared.
   std::vector<RelationSpec> buildRelations() const;
@@ -157,6 +164,7 @@ class Metamodel {
   std::vector<std::string> names_;                             ///< each kind's name, by its place in Kind
   std::map<Kind, std::pair<std::string, std::string>> forms_;  ///< how each kind is written, and its example
   std::vector<KindSpec> kinds_;
+  std::vector<std::string> identityFields_;  ///< the fields that hold an identity, from the kinds
   std::vector<RelationSpec> relations_;
   std::vector<CodeSpec> codes_;
   std::vector<AnnotationSpec> known_;

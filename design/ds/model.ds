@@ -88,10 +88,9 @@ package driftspec@ds {
       + empty() -> bool
       + lastName() -> std::string
       + scope() -> Scope
-      + asScope() -> Scope
       + isQualified() -> bool
       + isAbsolute() -> bool
-      + within(outer: Identity) -> bool
+      + within(outer: Identity) -> bool          // read in place: nothing is built per comparison (DS-346)
       + withArity(arity: std::size_t) -> Identity {
         @requirement REQ-00029-2
       }
@@ -265,6 +264,7 @@ package driftspec@ds {
       + source: FieldSource
       + meaning: std::string
       + values: std::vector<std::string>
+      + identity: bool                       // it holds an entity's identity, which a rename carries along (DS-346)
     }
 
     dataclass KindSpec {                     // one kind: its fields, the flags it takes, what it may be declared inside
@@ -318,6 +318,7 @@ package driftspec@ds {
       - owns many names_: std::vector<std::string>                          // each kind's name, by its place in Kind
       - owns forms_: std::map<Kind, std::pair<std::string, std::string>>   // how each kind is written, and its example
       - owns many kinds_: std::vector<KindSpec>
+      - owns many identityFields_: std::vector<std::string>             // the fields that hold an identity, from the kinds
       - owns many relations_: std::vector<RelationSpec>
       - owns many codes_: std::vector<CodeSpec>
       - owns many known_: std::vector<AnnotationSpec>
@@ -333,6 +334,7 @@ package driftspec@ds {
       + specOf(kind: Kind) -> KindSpec
       + specNamed(name: std::string) -> KindSpec                    // the kind a word names, as nameOf writes it; none when it names no kind
       + fieldOf(kind: Kind, key: std::string) -> FieldSpec
+      + identityFields() -> std::vector<std::string>                 // the fields that hold an identity, each once: what a rename carries
       + relationOf(kind: std::string) -> RelationSpec
       + joins(relation: RelationSpec, from: Kind, to: Kind) -> bool
       + codes() -> std::vector<CodeSpec>
@@ -361,9 +363,11 @@ package driftspec@ds {
       - static syntax(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
       - static derived(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
       - static closed(name: std::string, type: FieldType, meaning: std::string, values: std::vector<std::string>) -> FieldSpec
+      - static holdingIdentity(field: FieldSpec) -> FieldSpec
       - static artefact() -> std::vector<FieldSpec>
       - static plus(base: std::vector<FieldSpec>, more: std::vector<FieldSpec>) -> std::vector<FieldSpec>
       - static build() -> std::vector<KindSpec>
+      - buildIdentityFields() -> std::vector<std::string>            // read from the kinds, each once, in the order declared
       - static rel(kind: std::string, meaning: std::string, from: std::vector<Kind>, to: std::vector<Kind>) -> RelationSpec
       - buildRelations() -> std::vector<RelationSpec>               // containment first, then the others
       - static among(kinds: std::vector<Kind>, kind: Kind) -> bool
@@ -384,6 +388,7 @@ package driftspec@ds {
       -> writtenForms() -> forms
       -> build() -> declared
       -> describe(declared) -> described
+      -> buildIdentityFields() -> identities
       -> buildRelations() -> relations
       -> buildCodes() -> codes
       -> buildKnownAnnotations() -> known
@@ -631,7 +636,6 @@ package driftspec@ds {
       + to: std::string
       + owns location: Location
       + multiplicity: std::string
-      + change: std::string
     }
 
     enum LiteralForm {                       // how a literal of a rule reads (DS-94)
@@ -820,11 +824,13 @@ package driftspec@ds {
       + index() -> Index
       - indexEntity(entity: Entity, enters: bool) -> void
       - indexAgain() -> void
-      + declare(entity: Entity) -> Entity {
+      + declare(entity: Entity) -> Entity {   // what the model keeps comes back to be read: only annotate and refine change it
         @constraint CST-00002-1
         @requirement REQ-00164-1
       }
-      + find(id: std::string) -> Entity
+      + find(id: std::string) -> Entity      // read only, as declare's
+      + annotate(id: std::string, key: std::string, value: std::string) -> void   // one field; nothing an entity is indexed by (DS-346)
+      + refine(later: Entity) -> void        // the body of a class on an operator its header set declared: fields, flags, parameters, where
       + relate(relation: Relation) -> void
       + report(finding: Finding) -> void
       + rename(from: std::string, to: std::string) -> bool
@@ -834,6 +840,11 @@ package driftspec@ds {
       + coverage() -> std::vector<Finding> {
         @requirement REQ-00124-1
       }
+      + cover() -> void {                     // what the metamodel calls coverage leaves the findings (DS-216)
+        @requirement REQ-00124-1
+      }
+      + withdrawEchoes(broken: std::set<std::string>) -> void   // what only echoes files that do not parse (DS-304)
+      + sortFindings() -> void                // by file, then by line; on one line, as reported
       + formulas() -> std::map<std::string, Formula> {
         @requirement REQ-00095-2
       }
@@ -849,7 +860,12 @@ package driftspec@ds {
       + tables() -> std::map<std::string, Tabulated> {
         @requirement REQ-00154-1
       }
+      + tabulate(diagram: std::string, table: Tabulated) -> void {
+        @requirement REQ-00154-1
+      }
       - static behaviour(kind: Kind) -> bool
+      - held(id: std::string) -> Entity      // the entity kept under an identity, to change; a defect of ds when none is
+      - reportDuplicate(entity: Entity, id: std::string, first: Entity) -> void   // E-DUPLICATE-IDENTITY, said once for declare and rename
     }
 
     // An identity not held: the map keeps a copy of the entity and that copy comes back.
@@ -867,13 +883,64 @@ package driftspec@ds {
         }
         alt a package or a module, opened again / reopened {
         } else / duplicate {
-          self -> metamodel_.nameOf(entity.kind) -> name
-          -> report(finding)
+          -> reportDuplicate(entity, entity.id, existing)
         }
         return existing
       }
       -> indexEntity(entity, true)
       return entity
+    }
+
+    sequence Model::reportDuplicate {
+      self -> metamodel_.nameOf(entity.kind) -> name
+      // the kind and where of the one that would take id, and where the first is written
+      -> report(finding)
+    }
+
+    // A writer names what it declared or found; nothing else of the entity is in reach (DS-346).
+    sequence Model::annotate {
+      -> held(id) -> kept
+      // the field is written, or written again
+    }
+
+    sequence Model::refine {
+      -> held(later.id) -> kept
+      loop each field of the later one {
+        // written, or written again
+      }
+      // its flags join those kept; its parameters, when it writes any, replace them; it is found where it is written
+    }
+
+    // What is not yet written is no finding (DS-216): the metamodel says which codes are coverage.
+    sequence Model::cover {
+      loop each finding, in the order reported {
+        self -> metamodel_.codeOf(code) -> spec
+        alt its code is coverage / covered {
+          // marked so, it joins the coverage
+        } else {
+          // it stays a finding
+        }
+      }
+    }
+
+    // A file that does not parse leaves names declared nowhere and a rest that echoes the cut (DS-304).
+    sequence Model::withdrawEchoes {
+      opt every file parses / whole {
+        return
+      }
+      loop each finding {
+        opt it says nothing of its own: in a broken file, or a name declared nowhere, and not the syntax error {
+          // it goes
+        }
+      }
+    }
+
+    sequence Model::sortFindings {
+      // by file, then by line; the order reported stays among those on one line
+    }
+
+    sequence Model::tabulate {
+      // in place of a table answered before for the same diagram
     }
 
     // A relation is kept where the others are, in the order stated, and what is indexed learns its
@@ -1034,14 +1101,14 @@ package driftspec@ds {
       -> find(to) -> other
       opt another declared entity holds to / refused {
         // the finding names the kind of the entity held at from
-        self -> metamodel_.nameOf(kind) -> name
-        -> report(finding)
+        -> reportDuplicate(entity, to, other)
         return false
       }
-      // an expected node at `to` is erased; the entity moves under its new identity
+      // an expected node at `to` is erased; the entity's node is taken out and put back under its new identity,
+      // nothing copied (DS-346)
       loop each entity held {
         alt its identity begins with from {
-          // taken out, to go back in under the new identity
+          // its node taken out, to go back in under the new identity
         } else {
           opt its scope is from {
           }
@@ -1052,9 +1119,10 @@ package driftspec@ds {
       loop each relation held {
         // both ends translated, by a lambda of this method
       }
+      self -> metamodel_.identityFields() -> identities
       loop each entity held {
-        loop each field {
-          opt named expands or subject-of {
+        loop each field that holds an identity {
+          opt the entity carries it {
             // translated by the same lambda
           }
         }

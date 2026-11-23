@@ -84,7 +84,6 @@ struct Relation {
   std::string to;
   Location location;
   std::string multiplicity;  ///< for owns/refs/shares: "1", "0..1" or "*" (R16); empty otherwise
-  std::string change = {};   ///< set by a diff on the model it marks: "added" or "removed"; empty otherwise
 };
 
 /// One binding that breaks a rule (DS-108): its ranges and where as bound, and for a never the answer
@@ -169,9 +168,17 @@ class Model {
   explicit Model(const Metamodel& metamodel) : metamodel_(&metamodel) {}
   /// The language the model is written in: what its readers ask of the kinds, the relations and the codes.
   const Metamodel& metamodel() const { return *metamodel_; }
-  Entity& declare(const Entity& entity);
+  /// An entity enters the model, or meets the one it keeps under that identity (R6, DS-222): what the model
+  /// keeps comes back to be read. Only annotate and refine change it afterwards (DS-346).
+  const Entity& declare(const Entity& entity);
   const Entity* find(const std::string& id) const;
-  Entity* find(const std::string& id);
+  /// Write a field of an entity the model keeps: the binder's from the syntax, the checker's derived. Only the
+  /// field changes; what the entity is indexed by (its identity, scope, kind, name and expected) stays (DS-346).
+  void annotate(const std::string& id, const std::string& key, const std::string& value);
+  /// What a later declaration says of an entity the model keeps: the body of a class refining an operator its
+  /// header set declared. Its fields and flags join, its parameters replace any, and it is found where the later
+  /// one is written; nothing it is indexed by changes (DS-346).
+  void refine(const Entity& later);
   void relate(const Relation& relation);
   void report(const Finding& finding);
   /// Give an entity a new identity, carrying its members (scope) and relations along.
@@ -180,10 +187,16 @@ class Model {
 
   const std::map<std::string, Entity>& entities() const { return entities_; }
   const std::vector<Finding>& findings() const { return findings_; }
-  std::vector<Finding>& findings() { return findings_; }
   /// What is not yet written, kept apart from the findings: absence is no finding (DS-216); ds query coverage asks it.
   const std::vector<Finding>& coverage() const { return coverage_; }
-  std::vector<Finding>& coverage() { return coverage_; }
+  /// Every finding whose code the metamodel calls coverage leaves the findings for the coverage, marked so, each
+  /// list in the order reported (DS-216).
+  void cover();
+  /// The findings that only echo what files that do not parse leave out of the model go: everything else said
+  /// in those files, and every name declared nowhere. What says the files do not parse stays (DS-304).
+  void withdrawEchoes(const std::set<std::string>& broken);
+  /// The findings in the order of where they are written: by file, then by line; on one line, as reported.
+  void sortFindings();
   /// What the rules and definitions say, by the identity of each.
   const std::map<std::string, Formula>& formulas() const { return formulas_; }
   void state(const std::string& id, const Formula& formula) { formulas_[id] = formula; }
@@ -192,7 +205,8 @@ class Model {
   void breach(const std::string& rule, const Breach& breach) { breaches_[rule].push_back(breach); }
   /// The tables the checker answered, by diagram (DS-268).
   const std::map<std::string, Tabulated>& tables() const { return tables_; }
-  std::map<std::string, Tabulated>& tables() { return tables_; }
+  /// The table the checker answered for a diagram, in place of any it answered before.
+  void tabulate(const std::string& diagram, const Tabulated& table) { tables_[diagram] = table; }
   /// The questions the model answers by identity, with no pass over it (DS-171).
   Index index() const { return Index(*this); }
 
@@ -200,6 +214,10 @@ class Model {
   friend class Index;
   /// A behaviour is named after its subject: X::state, X::run::sequence (DS-222).
   static bool behaviour(Kind kind);
+  /// The entity kept under an identity, to change; a defect of ds when none is kept.
+  Entity& held(const std::string& id);
+  /// E-DUPLICATE-IDENTITY: `entity` would take `id`, which `first` already holds.
+  void reportDuplicate(const Entity& entity, const std::string& id, const Entity& first);
   /// The relations as the model keeps them: read through index(), the one way in for a reader.
   const std::vector<Relation>& relations() const { return relations_; }
   /// An entity enters what is indexed, or leaves it.

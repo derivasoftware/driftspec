@@ -28,8 +28,6 @@ class Identity {
   std::string lastName() const;
   /// Where it is written: p@m::C → p@m, p@m → p@, p@ → "", app@core@ → app@.
   Scope scope() const;
-  /// The scope its members are written in, for anything but a package (Scope::inside a package).
-  Scope asScope() const;
   /// Written with its path (@ or ::), as an entity, not a bare word.
   bool isQualified() const;
   /// Written from a package (it holds @): absolute, never resolved through scopes.
