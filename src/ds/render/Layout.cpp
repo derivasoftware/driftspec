@@ -461,6 +461,18 @@ class Engine {
         for (int m = l + 1; m <= depth; ++m) rowY[m] += grown;
       }
     }
+    // DS-350 part 2: now that every node and channel has its x, a gap keeps a lane only for an edge that turns in it:
+    // a segment that leaves or enters a real node (its ends are spread along the side), or joins two channels that
+    // are not aligned. A long edge running straight down its channel takes no row, so the drawing is no longer as
+    // tall as the sum of its edges' lengths
+    for (int l = 0; l < depth; ++l) {
+      int turning = 0;
+      for (int v : rows[l])
+        for (int w : succA[v])
+          if (v < real || w < real || centre(v) != centre(w)) ++turning;
+      gapBelow[l] = std::max(M.GAP_Y, M.LANE * (turning + 1) + M.LANE_PAD);
+    }
+    for (int l = 1; l <= depth; ++l) rowY[l] = rowY[l - 1] + rowH[l - 1] + (rowH[l - 1] > 0 ? gapBelow[l - 1] : 0);
     c.w = 0;
     c.h = 0;
     for (int v = 0; v < real; ++v) {
