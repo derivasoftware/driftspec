@@ -4,11 +4,23 @@
 #include <string>
 #include <vector>
 
+#include "ds/bind/AnnotationBinder.hpp"
 #include "ds/bind/ArtefactBinder.hpp"
 #include "ds/bind/BindContext.hpp"
+#include "ds/bind/DiagramBinder.hpp"
 #include "ds/bind/Dispatch.hpp"
+#include "ds/bind/EnumBinder.hpp"
+#include "ds/bind/ExtensionBinder.hpp"
+#include "ds/bind/FieldBinder.hpp"
+#include "ds/bind/FormulaBinder.hpp"
+#include "ds/bind/InterfaceBinder.hpp"
 #include "ds/bind/LegacyBinder.hpp"
+#include "ds/bind/ModuleBinder.hpp"
 #include "ds/bind/Notes.hpp"
+#include "ds/bind/PackageBinder.hpp"
+#include "ds/bind/RuleBinder.hpp"
+#include "ds/bind/SignatureBinder.hpp"
+#include "ds/bind/TypeBinder.hpp"
 #include "ds/bind/TypeTokens.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -33,8 +45,21 @@ class Binder {
   model::Model& model_;
   const model::Metamodel& metamodel_;
   Notes notes_;
-  ArtefactBinder artefacts_;
-  LegacyBinder legacy_;
+  // the parts every construct shares, then the binders of the constructs, each given the parts it uses (DS-356)
+  FieldBinder fields_;
+  AnnotationBinder annotations_;
+  ExtensionBinder extensions_{annotations_};
+  TypeBinder types_;
+  SignatureBinder signatures_{types_};
+  FormulaBinder formulas_;
+  ArtefactBinder artefacts_{fields_, annotations_, extensions_};
+  PackageBinder packages_{fields_, annotations_};
+  ModuleBinder modules_{fields_, annotations_};
+  InterfaceBinder interfaces_{fields_, annotations_, signatures_};
+  EnumBinder enums_{annotations_};
+  RuleBinder rules_{fields_, annotations_, formulas_};
+  DiagramBinder diagrams_{fields_, formulas_};
+  LegacyBinder legacy_{fields_, annotations_, extensions_, types_, signatures_};
   Dispatch dispatch_;
 };
 

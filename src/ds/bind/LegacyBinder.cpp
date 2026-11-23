@@ -1,5 +1,6 @@
 #include "ds/bind/LegacyBinder.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <map>
@@ -15,147 +16,6 @@ using parse::Field;
 using parse::TreeReader;
 using text::join;
 using text::splitTrimmed;
-
-namespace {
-
-// the names of a template parameter list, <F, G: Bound>
-std::vector<std::string> templateParams(const parse::TreeReader& reader, TSNode params) {
-  std::vector<std::string> out;
-  if (ts_node_is_null(params)) return out;
-  for (uint32_t i = 0; i < ts_node_named_child_count(params); ++i)
-    out.push_back(reader.fieldText(ts_node_named_child(params, i), Field::name));
-  return out;
-}
-
-bool isOwnership(const std::string& relation) { return relation == "owns" || relation == "refs" || relation == "shares"; }
-
-bool contains(const std::vector<std::string>& items, const std::string& item) {
-  for (const auto& i : items) {
-    if (i == item) return true;
-  }
-  return false;
-}
-
-}  // namespace
-
-namespace {
-
-model::Term termOf(const parse::TreeReader& reader, TSNode node) {
-  const std::string text = reader.textOf(node);
-  if (TreeReader::is(node, "field_term")) return {reader.fieldText(node, Field::of), true, false, reader.fieldText(node, Field::field)};
-  if (!TreeReader::is(node, "qualified_name")) return {text, false, true};  // a number or a string: a value
-  // a bare name is a variable; an entity is always written qualified (the form decides, nothing is guessed)
-  return {text, !model::Identity(text).isQualified(), false};
-}
-
-/// The text of a clause after its keyword, for the card and the export.
-std::string clauseText(const parse::TreeReader& reader, TSNode clause) {
-  const std::string text = reader.textOf(clause);
-  const auto space = text.find_first_of(" \t\r\n");
-  return space == std::string::npos ? "" : std::string(text::trimWhitespace(text.substr(space)));
-}
-
-}  // namespace
-
-void LegacyBinder::bindFormula(const BindContext& ctx, TSNode node, model::Entity& out_entity) const {
-  model::Formula formula;
-  const auto literals = [&](TSNode clause) {
-    std::vector<model::Literal> out;
-    const uint32_t n = ts_node_named_child_count(clause);
-    for (uint32_t i = 0; i < n; ++i) {
-      TSNode lit = ts_node_named_child(clause, i);
-      if (!TreeReader::is(lit, "literal")) continue;
-      model::Literal l;
-      l.negated = !ts_node_is_null(TreeReader::child(lit, Field::negated));
-      l.location = ctx.locationOf(lit);
-      TSNode atom = ts_node_named_child(lit, 0);
-      if (TreeReader::is(atom, "relation_atom")) {
-        l.form = model::LiteralForm::Relation;
-        l.name = ctx.reader.fieldText(atom, Field::relation);
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left)), termOf(ctx.reader, TreeReader::child(atom, Field::right))};
-      } else if (TreeReader::is(atom, "kind_atom")) {
-        l.form = model::LiteralForm::Kind;
-        l.name = ctx.reader.fieldText(atom, Field::kind);
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left))};
-      } else if (TreeReader::is(atom, "in_atom")) {
-        l.form = model::LiteralForm::In;
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left)), termOf(ctx.reader, TreeReader::child(atom, Field::right))};
-      } else if (TreeReader::is(atom, "compare_atom")) {
-        static const std::map<std::string, model::LiteralForm> kOperators = {
-            {"=", model::LiteralForm::Equal},      {"!=", model::LiteralForm::NotEqual}, {"<", model::LiteralForm::Less},
-            {"<=", model::LiteralForm::LessEqual}, {">", model::LiteralForm::Greater},   {">=", model::LiteralForm::GreaterEqual}};
-        l.form = kOperators.at(ctx.reader.fieldText(atom, Field::operator_));
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left)), termOf(ctx.reader, TreeReader::child(atom, Field::right))};
-      } else if (TreeReader::is(atom, "arg_atom")) {
-        l.form = model::LiteralForm::Arg;
-        l.name = ctx.reader.fieldText(atom, Field::parameter);
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::call)), termOf(ctx.reader, TreeReader::child(atom, Field::value))};
-      } else if (TreeReader::is(atom, "call_atom")) {
-        l.form = model::LiteralForm::Call;
-        l.name = ctx.reader.fieldText(atom, Field::definition);
-        const uint32_t count = ts_node_child_count(atom);
-        for (uint32_t j = 0; j < count; ++j) {
-          TSNode arg = ts_node_child(atom, j);
-          if (TreeReader::is(arg, "qualified_name") && !ts_node_field_name_for_child(atom, j)) l.terms.push_back(termOf(ctx.reader, arg));
-        }
-      } else {
-        continue;
-      }
-      out.push_back(l);
-    }
-    return out;
-  };
-  const auto append = [&](const char* key, const std::string& text) {
-    std::string& field = out_entity.fields[key];
-    field += (field.empty() ? "" : "; ") + text;
-  };
-  const uint32_t count = ts_node_child_count(node);
-  for (uint32_t i = 0; i < count; ++i) {
-    TSNode c = ts_node_child(node, i);
-    if (TreeReader::is(c, "rule_for")) {
-      const uint32_t n = ts_node_named_child_count(c);
-      for (uint32_t j = 0; j < n; ++j) {
-        TSNode r = ts_node_named_child(c, j);
-        if (TreeReader::is(r, "range"))
-          formula.ranges.push_back({ctx.reader.fieldText(r, Field::kind), ctx.reader.fieldText(r, Field::variable),
-                                    ctx.reader.fieldText(r, Field::scope), ctx.locationOf(r)});
-      }
-      append("for", clauseText(ctx.reader, c));
-    } else if (TreeReader::is(c, "rule_where")) {
-      for (auto& l : literals(c)) formula.where.push_back(l);
-      append("where", clauseText(ctx.reader, c));
-    } else if (TreeReader::is(c, "rule_holds") || TreeReader::is(c, "rule_never")) {
-      formula.claims.push_back(literals(c));
-      formula.never = TreeReader::is(c, "rule_never");
-      append(formula.never ? "never" : "holds", clauseText(ctx.reader, c));
-    } else if (TreeReader::is(c, "column")) {
-      TSNode what = ts_node_named_child(c, ts_node_named_child_count(c) - 1);
-      model::Column column;
-      column.name = ctx.reader.fieldText(c, Field::name);
-      column.location = ctx.locationOf(c);
-      if (TreeReader::is(what, "column_field")) {
-        column.form = "field";
-        column.variable = ctx.reader.fieldText(what, Field::of);
-        column.field = ctx.reader.fieldText(what, Field::field);
-      } else if (TreeReader::is(what, "column_related")) {
-        column.form = "related";
-        column.variable = ctx.reader.fieldText(what, Field::show);
-        column.body = literals(what);
-      } else {
-        column.form = "holds";
-        column.body = literals(what);
-      }
-      formula.columns.push_back(column);
-    } else if (TreeReader::is(c, "definition_case")) {
-      formula.cases.push_back(literals(c));
-      append("if", clauseText(ctx.reader, c));
-    } else if (TreeReader::is(c, "name") && !ts_node_field_name_for_child(node, i)) {
-      formula.parameters.push_back(ctx.reader.textOf(c));  // a definition's parameters
-    }
-  }
-  if (out_entity.kind == model::Kind::Diagram && formula.ranges.empty() && formula.columns.empty()) return;  // no table written
-  ctx.state(out_entity.id, formula);
-}
 
 // ---- process artefacts: requirement, verification, constraint (R5, R18) ------
 
@@ -173,16 +33,16 @@ void LegacyBinder::bindUseCase(const BindContext& ctx, TSNode node) const {
   const std::string operation = ctx.reader.fieldText(node, Field::name);
   if (!operation.empty()) {
     e.fields["operation"] = operation;
-    bindSignature(ctx, node, e, scope, {});
+    signatures_.bind(node, ctx, e, scope, {});
   }
-  ctx.fields(node, e);
+  fields_.bind(node, ctx, e);
   ctx.declare(e);
   if (!owner.empty()) ctx.relate({"about", e.id, owner, e.location, ""});
   const std::string base = ctx.reader.fieldText(node, Field::base);
   // the use case it specialises is resolved like any artefact link: pinned, followed to its revision (DS-116)
   if (!base.empty())
     ctx.refer({e.id, std::string(text::trimWhitespace(base)), scope, "inherits", model::Kind::UseCase, e.location, "", {}});
-  ctx.annotations(node, e.id, scope);
+  annotations_.bind(node, ctx, e.id, scope);
   const uint32_t n = ts_node_named_child_count(node);
   for (uint32_t i = 0; i < n; ++i) {
     TSNode o = ts_node_named_child(node, i);
@@ -194,7 +54,7 @@ void LegacyBinder::bindUseCase(const BindContext& ctx, TSNode node) const {
     out.scope = e.id;
     out.location = ctx.locationOf(o);
     out.fields["text"] = std::string(text::trimWhitespace(ctx.reader.fieldText(o, Field::text)));
-    const std::string returns = bindType(ctx, TreeReader::child(o, Field::returns), scope, out.id, "uses", "", {}, out.location);
+    const std::string returns = types_.bind(TreeReader::child(o, Field::returns), ctx, scope, out.id, "uses", "", {}, out.location);
     if (!returns.empty()) out.fields["returns"] = returns;
     ctx.declare(out);
     ctx.relate({"contains", e.id, out.id, out.location, ""});
@@ -205,31 +65,6 @@ void LegacyBinder::bindUseCase(const BindContext& ctx, TSNode node) const {
 
 // A type is the code's text (DS-18). Its names are read out of it; each that the design declares is related
 // with the holder's relation (owns by default, refs or shares as written, uses for a signature or a local).
-std::string LegacyBinder::bindType(const BindContext& ctx, TSNode type, const std::string& scope, const std::string& from,
-                                   const std::string& relation, const std::string& multiplicity, const std::vector<std::string>& params,
-                                   const model::Location& location) const {
-  if (ts_node_is_null(type)) return "";
-  const std::string text = std::string(text::trimWhitespace(ctx.reader.textOf(type)));
-  for (const TypeToken& token : scanTypeTokens(text)) {
-    if (contains(params, token.name)) continue;  // a template parameter may be anything (R15)
-    Reference ref;
-    ref.from = from;
-    ref.target = token.args.empty() ? token.name : model::Identity(token.name).withArity(token.args.size()).text();
-    ref.scope = scope;
-    ref.relation = relation;
-    ref.expectedKind = model::Kind::Class;
-    ref.location = location;
-    ref.args = token.args;
-    for (auto& a : ref.args)
-      if (contains(params, a)) a.clear();  // Repository<T> inside a template of T: a parameter, no bound to check
-    // the multiplicity is the one written (many, optional); an ownership without one holds one (DS-18)
-    ref.multiplicity = isOwnership(relation) ? (multiplicity.empty() ? "1" : multiplicity) : "";
-    ref.soft = true;
-    ctx.refer(ref);
-  }
-  return text;
-}
-
 // ---- classes (R14, R15, R17, R19) ----------------------------------------------
 
 void LegacyBinder::declareOperator(const BindContext& ctx, const model::Entity& cls, const std::string& symbol,
@@ -246,16 +81,16 @@ void LegacyBinder::declareOperator(const BindContext& ctx, const model::Entity& 
 }
 
 void LegacyBinder::bindMemberBody(const BindContext& ctx, TSNode member, model::Entity& out_entity, const std::string& scope) const {
-  ctx.fields(member, out_entity);
+  fields_.bind(member, ctx, out_entity);
   TSNode body = TreeReader::child(member, Field::body);
-  if (!ts_node_is_null(body)) ctx.fields(body, out_entity);
+  if (!ts_node_is_null(body)) fields_.bind(body, ctx, out_entity);
   const model::Entity* declared = ctx.find(out_entity.id);
   // only the declaration the model kept takes the fields: a duplicate is reported and leaves the first as it was
   const model::Location& at = declared ? declared->location : out_entity.location;
   if (declared && at.file == out_entity.location.file && at.line == out_entity.location.line && at.column == out_entity.location.column)
     for (const auto& f : out_entity.fields) ctx.annotate(out_entity.id, f.first, f.second);
   if (ts_node_is_null(body)) return;
-  ctx.annotations(body, out_entity.id, scope);
+  annotations_.bind(body, ctx, out_entity.id, scope);
   ctx.within(scope, out_entity.id).children(body);  // nested requirements and constraints are about the member (R12)
 }
 
@@ -293,10 +128,10 @@ void LegacyBinder::bindMember(const BindContext& ctx, TSNode m, const model::Ent
           {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
     }
     std::vector<std::string> own = params;  // a templated method's own parameters are no entities either (DS-18)
-    for (const std::string& t : templateParams(ctx.reader, TreeReader::child(m, Field::params))) own.push_back(t);
+    for (const std::string& t : TypeBinder::params(ctx.reader, TreeReader::child(m, Field::params))) own.push_back(t);
     if (own.size() > params.size())
       member.fields["template"] = join(std::vector<std::string>(own.begin() + params.size(), own.end()), ", ");
-    bindSignature(ctx, m, member, scope, own);
+    signatures_.bind(m, ctx, member, scope, own);
   } else {
     const std::string ownership = ctx.reader.fieldText(m, Field::ownership);
     const std::string relation = ownership.empty() ? "owns" : ownership;  // owns by default (R16)
@@ -321,11 +156,11 @@ void LegacyBinder::bindMember(const BindContext& ctx, TSNode m, const model::Ent
     }
     const std::string counted = counting.empty() ? "" : counting.front();
     if (!counted.empty()) member.flags.push_back(counted);
-    member.fields["type"] = bindType(ctx, TreeReader::child(m, Field::type), scope, member.id, relation,
-                                     counted == "many"       ? "*"
-                                     : counted == "optional" ? "0..1"
-                                                             : "",
-                                     params, loc);
+    member.fields["type"] = types_.bind(TreeReader::child(m, Field::type), ctx, scope, member.id, relation,
+                                        counted == "many"       ? "*"
+                                        : counted == "optional" ? "0..1"
+                                                                : "",
+                                        params, loc);
     const std::string def = ctx.reader.fieldText(m, Field::default_);
     if (!def.empty()) member.fields["default"] = def;
   }
@@ -339,37 +174,6 @@ void LegacyBinder::bindMember(const BindContext& ctx, TSNode m, const model::Ent
   bindMemberBody(ctx, m, member, scope);
 }
 
-void LegacyBinder::bindSignature(const BindContext& ctx, TSNode node, model::Entity& out_entity, const std::string& scope,
-                                 const std::vector<std::string>& params) const {
-  TSNode parameters{};
-  for (uint32_t i = 0; i < ts_node_named_child_count(node); ++i) {
-    if (TreeReader::is(ts_node_named_child(node, i), "parameters")) parameters = ts_node_named_child(node, i);
-  }
-  std::vector<std::string> paramTexts;
-  if (!ts_node_is_null(parameters)) {
-    const uint32_t n = ts_node_named_child_count(parameters);
-    for (uint32_t i = 0; i < n; ++i) {
-      TSNode p = ts_node_named_child(parameters, i);
-      paramTexts.push_back(std::string(text::trimWhitespace(ctx.reader.textOf(p))));
-      TSNode type = TreeReader::child(p, Field::type);
-      out_entity.params.push_back(
-          {ctx.reader.fieldText(p, Field::name), ts_node_is_null(type) ? "" : std::string(text::trimWhitespace(ctx.reader.textOf(type)))});
-      bindType(ctx, TreeReader::child(p, Field::type), scope, out_entity.id, "uses", "", params, ctx.locationOf(p));
-    }
-  }
-  out_entity.fields["params"] = join(paramTexts, ", ");  // parameters and returns give use (R16)
-  const std::string returns =
-      bindType(ctx, TreeReader::child(node, Field::returns), scope, out_entity.id, "uses", "", params, ctx.locationOf(node));
-  if (!returns.empty()) out_entity.fields["returns"] = returns;
-  TSNode fails = TreeReader::child(node, Field::fails);  // what it promises it may fail with; `fails nothing` promises none (DS-189)
-  if (!ts_node_is_null(fails)) {
-    std::vector<std::string> names;
-    for (uint32_t i = 0; i < ts_node_named_child_count(fails); ++i)
-      names.push_back(std::string(text::trimWhitespace(ctx.reader.textOf(ts_node_named_child(fails, i)))));
-    out_entity.fields["fails"] = join(names, ", ");
-  }
-}
-
 void LegacyBinder::bindFunction(const BindContext& ctx, TSNode f) const {
   const std::string& scope = ctx.scope;
   const std::string& owner = ctx.owner;
@@ -381,9 +185,9 @@ void LegacyBinder::bindFunction(const BindContext& ctx, TSNode f) const {
   e.location = ctx.locationOf(f);
   const std::string visibility = ctx.reader.fieldText(f, Field::visibility);
   e.fields["visibility"] = visibility.empty() ? "+" : visibility;
-  const std::vector<std::string> own = templateParams(ctx.reader, TreeReader::child(f, Field::params));  // a templated function (DS-18)
+  const std::vector<std::string> own = TypeBinder::params(ctx.reader, TreeReader::child(f, Field::params));  // a templated function (DS-18)
   if (!own.empty()) e.fields["template"] = join(own, ", ");
-  bindSignature(ctx, f, e, scope, own);
+  signatures_.bind(f, ctx, e, scope, own);
   ctx.declare(e);
   if (!owner.empty()) ctx.relate({"contains", owner, e.id, e.location, ""});
   bindMemberBody(ctx, f, e, scope);  // annotations, rules and nested artefacts, as a method's
@@ -395,10 +199,10 @@ void LegacyBinder::bindClass(const BindContext& ctx, TSNode c) const {
   const model::Location loc = ctx.locationOf(c);
   if (ctx.reader.fieldText(c, Field::visibility).empty() && ts_node_is_null(TreeReader::child(c, Field::params)) &&
       TreeReader::childrenNamed(c, Field::base).empty() && ts_node_is_null(TreeReader::child(c, Field::operators)) &&
-      BindContext::annotationsOnly(TreeReader::child(c, Field::body))) {
+      ExtensionBinder::extends(TreeReader::child(c, Field::body))) {
     const std::string name = ctx.reader.fieldText(c, Field::name);
-    ctx.extend(TreeReader::child(c, Field::body), model::Scope(scope).qualify(name).text(), model::Kind::Class, name, scope,
-               loc);  // the annotations sit in the body
+    extensions_.bind(TreeReader::child(c, Field::body), ctx, model::Scope(scope).qualify(name).text(), model::Kind::Class, name, scope,
+                     loc);  // the annotations sit in the body
     return;
   }
   model::Entity e;
@@ -442,7 +246,7 @@ void LegacyBinder::bindClass(const BindContext& ctx, TSNode c) const {
   }
 
   TSNode body = TreeReader::child(c, Field::body);
-  ctx.fields(body, e);
+  fields_.bind(body, ctx, e);
   const model::Entity& declared = ctx.declare(e);
   if (!owner.empty()) ctx.relate({"contains", owner, declared.id, loc, ""});
   // a base is written as the code writes it (IFormat<scene::SceneDocument>) and kept so; its first name is what the
@@ -457,7 +261,8 @@ void LegacyBinder::bindClass(const BindContext& ctx, TSNode c) const {
     const TypeToken& token = tokens.front();
     std::vector<std::string> args = token.args;
     for (auto& a : args)
-      if (contains(params, a)) a.clear();  // class Holder<T> : Base<T>: T is Holder's parameter, not a class T
+      if (std::find(params.begin(), params.end(), a) != params.end())
+        a.clear();  // class Holder<T> : Base<T>: T is Holder's parameter, not a class T
     Reference ref{declared.id,
                   token.args.empty() ? token.name : model::Identity(token.name).withArity(token.args.size()).text(),
                   scope,
@@ -476,7 +281,7 @@ void LegacyBinder::bindClass(const BindContext& ctx, TSNode c) const {
   }
   for (const auto& symbol : operators) declareOperator(ctx, declared, symbol, loc);
   if (ts_node_is_null(body)) return;
-  ctx.annotations(body, declared.id, scope);
+  annotations_.bind(body, ctx, declared.id, scope);
   const uint32_t n = ts_node_named_child_count(body);
   for (uint32_t j = 0; j < n; ++j) {
     TSNode m = ts_node_named_child(body, j);
@@ -601,11 +406,11 @@ void LegacyBinder::bindSequence(const BindContext& ctx, TSNode c) const {
   e.location = loc;
   e.fields["subject"] = subject;
   if (!scenario.empty()) e.fields["scenario"] = scenario;
-  ctx.fields(c, e);
+  fields_.bind(c, ctx, e);
   const model::Entity& declared = ctx.declare(e);
   if (!owner.empty()) ctx.relate({"contains", owner, declared.id, loc, ""});
   ctx.refer({declared.id, subject, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
-  ctx.annotations(c, declared.id, scope);
+  annotations_.bind(c, ctx, declared.id, scope);
   // locals (and the older `participant`) are the only participants written (B3), at any depth of frames
   std::vector<TSNode> pending{c};
   while (!pending.empty()) {
@@ -620,7 +425,7 @@ void LegacyBinder::bindSequence(const BindContext& ctx, TSNode c) const {
       if (!TreeReader::is(s, "local") && !TreeReader::is(s, "participant")) continue;
       const std::string name = ctx.reader.fieldText(s, Field::name);
       ctx.annotate(declared.id, "local." + name,
-                   bindType(ctx, TreeReader::child(s, Field::type), scope, declared.id, "uses", "", {}, ctx.locationOf(s)));
+                   types_.bind(TreeReader::child(s, Field::type), ctx, scope, declared.id, "uses", "", {}, ctx.locationOf(s)));
     }
   }
   int order = 0, frames = 0;
@@ -629,141 +434,20 @@ void LegacyBinder::bindSequence(const BindContext& ctx, TSNode c) const {
 
 // ---- the walk --------------------------------------------------------------------
 
-std::vector<std::string> LegacyBinder::kinds() const {
-  return {"package", "module", "usecase", "rule", "definition", "interface", "class", "function", "enum", "sequence", "state", "diagram"};
-}
+std::vector<std::string> LegacyBinder::kinds() const { return {"usecase", "class", "function", "sequence", "state"}; }
 
 void LegacyBinder::bind(TSNode c, const BindContext& ctx) const {
   const std::string& scope = ctx.scope;
-  const std::string& owner = ctx.owner;
   const model::Location loc = ctx.locationOf(c);
 
-  if (TreeReader::is(c, "package")) {
-    // the flat form `package app@render {` reopens render inside app: the prefixes are the scope
-    std::string prefix;
-    const uint32_t parts = ts_node_named_child_count(c);
-    for (uint32_t j = 0; j < parts; ++j) {
-      TSNode part = ts_node_named_child(c, j);
-      if (TreeReader::is(part, "package_prefix")) prefix += ctx.reader.textOf(part);
-    }
-    model::Entity e;
-    e.kind = model::Kind::Package;
-    e.name = ctx.reader.fieldText(c, Field::name);
-    e.scope = prefix.empty() ? scope : prefix;
-    e.id = e.scope + e.name;  // every package level adds its name with @: app, app@core, app@core@model::Entity (R4)
-    if (ctx.reader.fieldText(c, Field::visibility) == "-") e.fields["visibility"] = "-";
-    e.location = loc;
-    ctx.fields(c, e);
-    const bool reopened = ctx.find(e.id) != nullptr;  // a box reopened adds no relation (DS-48)
-    const model::Entity& declared = ctx.declare(e);
-    for (const auto& f : e.fields) ctx.annotate(declared.id, f.first, f.second);
-    ctx.annotations(c, declared.id, declared.id + "@");  // an HLD box realises requirements like a class does
-    if (!reopened && !owner.empty())
-      ctx.relate({"contains", owner, declared.id, loc, ""});
-    else if (!reopened && !prefix.empty())  // the outer package must be declared somewhere; the checker turns part-of into contains
-      ctx.refer({declared.id, prefix.substr(0, prefix.size() - 1), "", "part-of", model::Kind::Package, loc, "", {}});
-    ctx.within(declared.id + "@", declared.id).children(c);
-
-  } else if (TreeReader::is(c, "module")) {
-    model::Entity e;
-    e.kind = model::Kind::Module;
-    e.name = ctx.reader.fieldText(c, Field::name);
-    e.id = model::Scope(scope).qualify(e.name).text();
-    e.scope = scope;
-    e.location = loc;
-    const bool isPrivate = ctx.reader.fieldText(c, Field::visibility) == "-";
-    if (isPrivate) e.fields["visibility"] = "-";
-    ctx.fields(c, e);
-    const bool reopened = ctx.find(e.id) != nullptr;  // a module reopened adds no relation (DS-48)
-    const model::Entity& declared = ctx.declare(e);
-    for (const auto& f : e.fields) {  // a module reopens: its fields add up, and two that differ are both kept
-      const std::string& kept = declared.field(f.first);
-      if (kept.empty())
-        ctx.annotate(declared.id, f.first, f.second);
-      else if (kept != f.second && (", " + kept + ",").find(", " + f.second + ",") == std::string::npos)
-        ctx.annotate(declared.id, f.first, kept + ", " + f.second);
-    }
-    if (isPrivate) ctx.annotate(declared.id, "visibility", "-");  // a module reopens: any declaration may say it
-    if (!owner.empty() && !reopened) ctx.relate({"contains", owner, declared.id, loc, ""});
-    ctx.annotations(c, declared.id, declared.id);  // a module answers to its requirements, as a package does
-    ctx.within(declared.id, declared.id).children(c);
-
-  } else if (TreeReader::is(c, "usecase")) {
+  if (TreeReader::is(c, "usecase")) {
     bindUseCase(ctx, c);
-
-  } else if (TreeReader::is(c, "rule") ||
-             TreeReader::is(c, "definition")) {  // a design piece with a name, in the box it applies to (DS-94)
-    model::Entity e;
-    e.kind = TreeReader::is(c, "rule") ? model::Kind::Rule : model::Kind::Definition;
-    e.name = ctx.reader.fieldText(c, Field::name);
-    const model::Entity* in = owner.empty() ? nullptr : ctx.find(owner);
-    // a rule of a class or a member is named under it: p@m::Order::priced, p@m::Link::send::in-range
-    const bool inClass = in && (in->kind == model::Kind::Class || in->kind == model::Kind::Method || in->kind == model::Kind::Function ||
-                                in->kind == model::Kind::Operator || in->kind == model::Kind::Attribute);  // DS-224
-    e.id = inClass ? owner + "::" + e.name : model::Scope(scope).qualify(e.name).text();
-    e.scope = inClass ? owner : scope;
-    e.location = loc;
-    ctx.fields(c, e);
-    bindFormula(ctx, c, e);
-    ctx.declare(e);
-    if (!owner.empty()) ctx.relate({"contains", owner, e.id, loc, ""});
-    ctx.annotations(c, e.id, scope);
-
-  } else if (TreeReader::is(c, "interface")) {
-    model::Entity e;
-    e.kind = model::Kind::Interface;
-    e.name = ctx.reader.fieldText(c, Field::name);
-    e.id = model::Scope(scope).qualify(e.name).text();  // hola@shell: an external interface of the box
-    e.scope = scope;
-    e.location = loc;
-    ctx.fields(c, e);
-    ctx.declare(e);
-    if (!owner.empty()) ctx.relate({"exposes", owner, e.id, loc, ""});
-    ctx.annotations(c, e.id, scope);
-    const uint32_t n = ts_node_named_child_count(c);
-    for (uint32_t j = 0; j < n; ++j) {
-      TSNode op = ts_node_named_child(c, j);
-      if (!TreeReader::is(op, "operation")) continue;
-      model::Entity o;
-      o.kind = model::Kind::Operation;
-      o.name = ctx.reader.fieldText(op, Field::name);
-      o.id = e.id + "::" + o.name;
-      o.scope = e.id;
-      o.location = ctx.locationOf(op);
-      bindSignature(ctx, op, o, scope, {});
-      ctx.fields(op, o);
-      ctx.declare(o);
-      ctx.relate({"contains", e.id, o.id, o.location, ""});
-      const std::string realised = ctx.reader.fieldText(op, Field::realises);  // operation greet(...) : UC-00001-1
-      if (!realised.empty())  // the use case it realises: an artefact link, resolved and pinned (DS-116)
-        ctx.refer({o.id, std::string(text::trimWhitespace(realised)), scope, "realises", model::Kind::UseCase, o.location, "", {}});
-      ctx.annotations(op, o.id, scope);
-    }
 
   } else if (TreeReader::is(c, "class")) {
     bindClass(ctx, c);
 
   } else if (TreeReader::is(c, "function")) {
     bindFunction(ctx, c);
-
-  } else if (TreeReader::is(c, "enum")) {
-    model::Entity e;
-    e.kind = model::Kind::Enum;
-    e.name = ctx.reader.fieldText(c, Field::name);
-    if (ctx.reader.fieldText(c, Field::visibility) == "-") e.fields["visibility"] = "-";
-    e.id = model::Scope(scope).qualify(e.name).text();
-    e.scope = scope;
-    e.location = loc;
-    std::vector<std::string> values;
-    const uint32_t n = ts_node_named_child_count(c);
-    for (uint32_t j = 0; j < n; ++j) {
-      TSNode v = ts_node_named_child(c, j);
-      if (TreeReader::is(v, "enum_value")) values.push_back(std::string(text::trimWhitespace(ctx.reader.textOf(v))));
-    }
-    e.fields["values"] = join(values, ", ");
-    ctx.declare(e);
-    if (!owner.empty()) ctx.relate({"contains", owner, e.id, loc, ""});
-    ctx.annotations(c, e.id, scope);  // an enum realises requirements like a class
 
   } else if (TreeReader::is(c, "sequence")) {
     bindSequence(ctx, c);
@@ -776,10 +460,10 @@ void LegacyBinder::bind(TSNode c, const BindContext& ctx) const {
     e.id = model::Identity(model::Scope(scope).qualify(entityName).text()).state().text();
     e.scope = scope;
     e.location = loc;
-    ctx.fields(c, e);
+    fields_.bind(c, ctx, e);
     ctx.declare(e);
     ctx.refer({e.id, entityName, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
-    ctx.annotations(c, e.id, scope);
+    annotations_.bind(c, ctx, e.id, scope);
     std::vector<std::string> transitions;
     std::vector<std::string> rules;
     const uint32_t n = ts_node_named_child_count(c);
@@ -805,10 +489,10 @@ void LegacyBinder::bind(TSNode c, const BindContext& ctx) const {
         v.id = e.id + "::" + v.name;
         v.scope = e.id;
         v.location = ctx.locationOf(t);
-        ctx.fields(t, v);
+        fields_.bind(t, ctx, v);
         ctx.declare(v);
         ctx.relate({"contains", e.id, v.id, v.location, ""});
-        ctx.annotations(t, v.id, scope);
+        annotations_.bind(t, ctx, v.id, scope);
       }
       if (!TreeReader::is(t, "transition")) continue;
       const std::string guard = std::string(text::trimWhitespace(ctx.reader.fieldText(t, Field::guard)));
@@ -821,16 +505,6 @@ void LegacyBinder::bind(TSNode c, const BindContext& ctx) const {
       const std::string action = ctx.reader.fieldText(t, Field::action);
       if (!action.empty()) ctx.noteEvent({e.id, entityName, scope, action, true, ctx.locationOf(t)});
     }
-
-  } else if (TreeReader::is(c, "diagram")) {
-    model::Entity e;
-    e.kind = model::Kind::Diagram;
-    e.name = ctx.reader.fieldText(c, Field::name);
-    e.id = model::Identity::ofDiagram(e.name).text();
-    e.location = loc;
-    ctx.fields(c, e);
-    bindFormula(ctx, c, e);  // a table's rows and columns (DS-268)
-    ctx.declare(e);
   }
 }
 

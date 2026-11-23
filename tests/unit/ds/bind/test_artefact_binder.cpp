@@ -3,9 +3,12 @@
 #include <string>
 #include <vector>
 
+#include "ds/bind/AnnotationBinder.hpp"
 #include "ds/bind/ArtefactBinder.hpp"
 #include "ds/bind/BindContext.hpp"
 #include "ds/bind/Dispatch.hpp"
+#include "ds/bind/ExtensionBinder.hpp"
+#include "ds/bind/FieldBinder.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -20,7 +23,10 @@ class TestArtefactBinder : public ::testing::Test {
   ds::model::Model model{metamodel};
   ds::bind::Notes notes;
   ds::parse::Parser parser;
-  const ds::bind::ArtefactBinder artefacts;
+  const ds::bind::FieldBinder fields{};
+  const ds::bind::AnnotationBinder annotations{};
+  const ds::bind::ExtensionBinder extensions{annotations};
+  const ds::bind::ArtefactBinder artefacts{fields, annotations, extensions};
   const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&artefacts}};
 
   /// Binds the artefacts written in the package of `text`, with no owner.
