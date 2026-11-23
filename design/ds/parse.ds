@@ -176,13 +176,22 @@ package driftspec@ds {
       - refs file_: ParsedFile
       + TreeReader(file: ParsedFile)
       + static is(node: TSNode, type: char) -> bool
-      + static child(node: TSNode, fieldName: char) -> TSNode
-      + static childrenNamed(node: TSNode, fieldName: char) -> std::vector<TSNode>
-      + fieldText(node: TSNode, fieldName: char) -> std::string
+      + static child(node: TSNode, field: Field) -> TSNode
+      + static childrenNamed(node: TSNode, field: Field) -> std::vector<TSNode>
+      + fieldText(node: TSNode, field: Field) -> std::string
       + textOf(node: TSNode) -> std::string
       + static spanOf(node: TSNode) -> Span
       + root() -> TSNode
       + file() -> ParsedFile
+      + static nameOf(field: Field) -> char       // the name grammar.js gives the field
+      - static idOf(field: Field) -> TSFieldId
+      - static ids() -> std::vector<TSFieldId>     // each field's id, resolved once from its name
+      - static resolve() -> std::vector<TSFieldId>
+    }
+
+    enum Field {                             // a field of the grammar, as grammar.js names it, read by its id (DS-360)
+      @requirement REQ-00008-1
+      action, base, body, bound, call, code, condition, default_, definition, else_scenario, entity, event, fails, failure, family, field, from, guard, id, key, kind, left, many, modifier, name, negated, of, op, operator_, operators, optional, otherwise, ownership, package, parameter, params, prefix, realises, relation, result, returns, right, scenario, scope, show, subject, symbol, target, text, title, to, type, value, variable, visibility
     }
   }
 }

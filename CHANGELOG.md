@@ -6,12 +6,20 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.35
+## 0.1.36
 
 A number too large for an int no longer stops ds (DS-337). A diagram that wrote `depth: 99999999999` passed
 `ds check` and then made `ds render` stop with `ds: stoi`; it now gets `W-DIAGRAM-DEPTH`, the finding of a depth
 that is no number, at the same place, and is drawn as one. A `neighbours:` too large for an int adds no neighbours,
 as a word there does. A diagram reads such a field in one place, and nothing else a design writes changes.
+
+## 0.1.35
+
+The tree reader reads a field by its id (DS-360). Every field of the grammar is named once, in `parse::Field`, and the
+reader turns each into the grammar's field id the first time a field is read; tree-sitter otherwise compares the
+field's name with every name of the grammar on each read. A field written wrong is now a compile error, not a child
+that is silently never found. Binding takes about a fifth fewer instructions, and nothing a design writes, no
+finding, export or drawing changes.
 
 ## 0.1.34
 

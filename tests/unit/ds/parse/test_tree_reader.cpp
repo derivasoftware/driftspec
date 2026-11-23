@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 #include "ds/parse/Parser.hpp"
 #include "ds/parse/TreeReader.hpp"
 
@@ -30,15 +32,27 @@ TEST_F(TestTreeReader, ANodeIsKnownByItsTypeAndItsFieldsAreRead) {
   ASSERT_FALSE(ts_node_is_null(cls));
   EXPECT_TRUE(TreeReader::is(cls, "class"));
   EXPECT_FALSE(TreeReader::is(cls, "module"));
-  EXPECT_EQ(reader.fieldText(cls, "name"), "A");
-  EXPECT_EQ(reader.fieldText(cls, "nobody"), "");  // a field the node lacks reads as nothing
-  EXPECT_TRUE(ts_node_is_null(TreeReader::child(cls, "nobody")));
+  EXPECT_EQ(reader.fieldText(cls, ds::parse::Field::name), "A");
+  EXPECT_EQ(reader.fieldText(cls, ds::parse::Field::guard), "");  // a field the node lacks reads as nothing
+  EXPECT_TRUE(ts_node_is_null(TreeReader::child(cls, ds::parse::Field::guard)));
+}
+
+TEST_F(TestTreeReader, EveryFieldIsAFieldOfTheGrammarByItsName) {
+  const TSLanguage* language = ds::parse::Parser::language();
+  const uint32_t count = ts_language_field_count(language);
+  EXPECT_EQ(static_cast<uint32_t>(ds::parse::Field::visibility) + 1, count);  // every field of the grammar, none more
+  for (uint32_t i = 0; i < count; ++i) {
+    const char* name = TreeReader::nameOf(static_cast<ds::parse::Field>(i));
+    EXPECT_NE(ts_language_field_id_for_name(language, name, static_cast<uint32_t>(std::strlen(name))), 0) << name;
+  }
+  EXPECT_STREQ(TreeReader::nameOf(ds::parse::Field::operator_), "operator");
+  EXPECT_STREQ(TreeReader::nameOf(ds::parse::Field::else_scenario), "else_scenario");
 }
 
 TEST_F(TestTreeReader, AFieldThatRepeatsGivesEveryChild) {
   const TSNode cls = find(reader.root(), "class");
   std::vector<std::string> bases;
-  for (const TSNode base : TreeReader::childrenNamed(cls, "base")) bases.push_back(reader.textOf(base));
+  for (const TSNode base : TreeReader::childrenNamed(cls, ds::parse::Field::base)) bases.push_back(reader.textOf(base));
   EXPECT_EQ(bases, (std::vector<std::string>{"B", "C"}));
 }
 
