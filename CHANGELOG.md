@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.28
+
+A class diagram is drawn less tall (DS-350): the gap under a layer keeps a lane only for an edge that turns in it, so
+a long edge running straight down its channel takes no row. Eight of DriftSpec's own thirty diagrams come out a
+little shorter, as text and as svg; the 400-class synthetic as text goes from 75,227 rows and 2 GB to 20,679 rows
+and 0.55 GB. A text drawing that would still take more than about 128 million characters is refused with what it
+would take (draw it as svg, or select less) instead of exhausting the machine's memory. Nothing changes for a design.
+
 ## 0.1.27
 
 The manual is a class, `ds::model::Manual` (DS-342), made from the metamodel whoever shows the manual already
