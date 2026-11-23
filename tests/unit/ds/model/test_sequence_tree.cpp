@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/model/SequenceTree.hpp"
 
@@ -14,8 +15,8 @@ const std::string kSeq = "p@m::C::run::sequence";
 
 /// m0; alt (its first side holds m1 and a loop holding m2; its else / refused holds m3); an empty opt; m4.
 /// Each step contained by what encloses it, in the order written, as the binder keeps it (DS-172).
-Model behaviour() {
-  Model model;
+Model behaviour(const ds::model::Metamodel& metamodel) {
+  Model model{metamodel};
   Entity s;
   s.kind = Kind::Sequence;
   s.id = kSeq;
@@ -48,7 +49,8 @@ Model behaviour() {
 /// One reading of a behaviour's tree, the same for every reader (REQ-00049-2, DS-172).
 class TestSequenceTree : public ::testing::Test {
  protected:
-  Model model = behaviour();
+  const ds::model::Metamodel metamodel;
+  Model model = behaviour(metamodel);
   SequenceTree tree{model, kSeq};
 };
 
@@ -96,7 +98,8 @@ TEST_F(TestSequenceTree, AnAltKnowsItsElseSideAndWhatEachSideNames) {
 TEST(TestSequenceTreeSides, WhatLiesDeeperOnAnElseSideIsOnItAndAnInnerElseIsNotTheOuters) {
   // DS-345: the sides are told by the walk once; nested frames keep the answers a walk up gave
   // f0 alt { b0: m1, f1 alt { b0: m2 | b1: m3 } | b1: f2 loop { m4 } }
-  Model model;
+  const ds::model::Metamodel metamodel;
+  Model model{metamodel};
   Entity s;
   s.kind = Kind::Sequence;
   s.id = kSeq;
@@ -132,7 +135,8 @@ TEST(TestSequenceTreeSides, WhatLiesDeeperOnAnElseSideIsOnItAndAnInnerElseIsNotT
 }
 
 TEST_F(TestSequenceTree, AnAltWithAnEmptyElseHasOneSide) {
-  Model one;
+  const ds::model::Metamodel metamodel;
+  Model one{metamodel};
   Entity s;
   s.kind = Kind::Sequence;
   s.id = kSeq;

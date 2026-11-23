@@ -13,6 +13,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Context.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -45,9 +46,10 @@ TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
 }
 
 TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   const auto checkSteps = ds::check::steps();
-  const ds::check::Checker checker(model, checkSteps);
+  const ds::check::Checker checker(model, metamodel, checkSteps);
   const std::vector<std::string> order = checker.order();
   EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "contracts", "levels",
                                              "order", "rules", "states", "structure"}));
@@ -76,8 +78,9 @@ TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
 /// A step gives back what it found (DS-138): a step that enriches reports to the context, which
 /// hands the findings back in the order they were said, once.
 TEST(TestFindings, TheContextHandsBackWhatAStepReportedInOrderAndOnce) {
-  ds::model::Model model;
-  ds::bind::Binder binder(model);
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::bind::Binder binder(model, metamodel);
   const ds::check::Resolver resolver(model);
   ds::check::Context context(model, resolver, binder);
   context.report({"W-A", "warning", "first", {}});
@@ -108,14 +111,15 @@ TEST(TestFindings, AStepThatOnlyChecksReadsTheModelAndCannotChangeIt) {
 /// run: the language of a box is derived before its fields are checked, so on one line the
 /// derivation's finding comes first.
 TEST(TestFindings, TheCheckerAddsTheFindingsOfEachStepInTheOrderTheStepsRun) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   const auto file = parser.parseText("s.ds", "package shop {\n  language: cobol\n  colour: red\n}\n");
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   std::vector<std::string> codes;
   for (const auto& f : model.findings()) codes.push_back(f.code);
   EXPECT_EQ(codes, (std::vector<std::string>{"W-LANGUAGE-UNKNOWN", "W-FIELD-UNKNOWN"}));
@@ -130,9 +134,10 @@ TEST(TestChecker, RunsTheStepsItIsGivenAfterWhatEachNeeds) {
   given["a"] = std::unique_ptr<ds::check::IStep>(new FakeStep("a", {"c"}, log));
   given["b"] = std::unique_ptr<ds::check::IStep>(new FakeStep("b", {}, log));
   given["c"] = std::unique_ptr<ds::check::IStep>(new FakeStep("c", {"b"}, log));
-  ds::model::Model model;
-  ds::bind::Binder binder(model);
-  ds::check::Checker checker(model, given);
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::bind::Binder binder(model, metamodel);
+  ds::check::Checker checker(model, metamodel, given);
   ds::check::IChecker& entry = checker;  // what the rest of ds sees
   entry.run(binder);
   EXPECT_EQ(log, (std::vector<std::string>{"b", "c", "a"}));
@@ -146,17 +151,18 @@ TEST(TestChecker, StepsThatNeedEachOtherAreACycleAndNoOrder) {
   std::map<std::string, std::unique_ptr<ds::check::IStep>> given;
   given["a"] = std::unique_ptr<ds::check::IStep>(new FakeStep("a", {"b"}, log));
   given["b"] = std::unique_ptr<ds::check::IStep>(new FakeStep("b", {"a"}, log));
-  ds::model::Model model;
-  const ds::check::Checker checker(model, given);
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  const ds::check::Checker checker(model, metamodel, given);
   EXPECT_THROW(checker.order(), std::logic_error);
 }
 
 /// The checker holds the map by reference, so it refuses a temporary one, which would die first.
 TEST(TestChecker, TakesNoTemporaryMap) {
-  EXPECT_TRUE((std::is_constructible<ds::check::Checker, ds::model::Model&,
+  EXPECT_TRUE((std::is_constructible<ds::check::Checker, ds::model::Model&, const ds::model::Metamodel&,
                                      const std::map<std::string, std::unique_ptr<ds::check::IStep>>&>::value));
-  EXPECT_FALSE(
-      (std::is_constructible<ds::check::Checker, ds::model::Model&, std::map<std::string, std::unique_ptr<ds::check::IStep>>&&>::value));
+  EXPECT_FALSE((std::is_constructible<ds::check::Checker, ds::model::Model&, const ds::model::Metamodel&,
+                                      std::map<std::string, std::unique_ptr<ds::check::IStep>>&&>::value));
   EXPECT_TRUE((std::is_base_of<ds::check::IChecker, ds::check::Checker>::value));
 }
 

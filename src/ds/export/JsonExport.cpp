@@ -16,9 +16,9 @@ nlohmann::json locationJson(const model::Location& l) {
   return out;
 }
 
-nlohmann::json entityJson(const model::Entity& e) {
+nlohmann::json entityJson(const model::Metamodel& metamodel, const model::Entity& e) {
   return {{"id", e.id},
-          {"kind", model::kindName(e.kind)},
+          {"kind", metamodel.nameOf(e.kind)},
           {"name", e.name},
           {"scope", e.scope},
           {"expected", e.expected},
@@ -33,38 +33,39 @@ nlohmann::json relationJson(const model::Relation& r) {
   return rel;
 }
 
-nlohmann::json kindNames(const std::vector<model::Kind>& kinds) {
+nlohmann::json kindNames(const model::Metamodel& metamodel, const std::vector<model::Kind>& kinds) {
   nlohmann::json out = nlohmann::json::array();
-  for (model::Kind k : kinds) out.push_back(model::kindName(k));
+  for (model::Kind k : kinds) out.push_back(metamodel.nameOf(k));
   return out;
 }
 
 // the language the model is written in: every kind with its fields, flags and parents, every relation with its ends
-nlohmann::json metamodelJson() {
+nlohmann::json metamodelJson(const model::Metamodel& metamodel) {
   nlohmann::json out;
   out["kinds"] = nlohmann::json::array();
-  for (const auto& k : model::kinds()) {
+  for (const auto& k : metamodel.kinds()) {
     nlohmann::json fields = nlohmann::json::array();
     for (const auto& f : k.fields) {
       fields.push_back({{"name", f.name},
-                        {"type", model::fieldTypeName(f.type)},
-                        {"source", model::fieldSourceName(f.source)},
+                        {"type", metamodel.fieldTypeName(f.type)},
+                        {"source", metamodel.fieldSourceName(f.source)},
                         {"meaning", f.meaning},
                         {"values", f.values}});
     }
-    out["kinds"].push_back({{"kind", model::kindName(k.kind)},
+    out["kinds"].push_back({{"kind", metamodel.nameOf(k.kind)},
                             {"meaning", k.meaning},
                             {"fields", fields},
                             {"flags", k.flags},
-                            {"parents", kindNames(k.parents)},
+                            {"parents", kindNames(metamodel, k.parents)},
                             {"top", k.top}});
   }
   out["relations"] = nlohmann::json::array();
-  for (const auto& r : model::relations()) {
-    nlohmann::json spec = {{"kind", r.kind}, {"meaning", r.meaning}, {"from", kindNames(r.from)}, {"to", kindNames(r.to)}};
+  for (const auto& r : metamodel.relations()) {
+    nlohmann::json spec = {
+        {"kind", r.kind}, {"meaning", r.meaning}, {"from", kindNames(metamodel, r.from)}, {"to", kindNames(metamodel, r.to)}};
     if (!r.pairs.empty()) {
       spec["pairs"] = nlohmann::json::array();
-      for (const auto& p : r.pairs) spec["pairs"].push_back({model::kindName(p.first), model::kindName(p.second)});
+      for (const auto& p : r.pairs) spec["pairs"].push_back({metamodel.nameOf(p.first), metamodel.nameOf(p.second)});
     }
     out["relations"].push_back(spec);
   }
@@ -76,10 +77,10 @@ nlohmann::json metamodelJson() {
 std::string JsonExport::render(const model::Model& model, bool pretty) const {
   nlohmann::json out;
   // who wrote it and in which shape: a reader can tell a document it does not know (DS-278)
-  out["version"] = model::version();
+  out["version"] = metamodel_.version();
   out["format"] = 1;
   out["entities"] = nlohmann::json::array();
-  for (const auto& pair : model.entities()) out["entities"].push_back(entityJson(pair.second));
+  for (const auto& pair : model.entities()) out["entities"].push_back(entityJson(metamodel_, pair.second));
   out["relations"] = nlohmann::json::array();
   for (const auto& r : model.index().all()) out["relations"].push_back(relationJson(r));
   out["coverage"] = nlohmann::json::array();
@@ -97,11 +98,11 @@ std::string JsonExport::render(const model::Model& model, bool pretty) const {
       list.push_back({{"bindings", b.bindings}, {"witness", b.witness}, {"location", locationJson(b.location)}});
     out["breaches"][rule.first] = list;
   }
-  out["metamodel"] = metamodelJson();
+  out["metamodel"] = metamodelJson(metamodel_);
   return pretty ? out.dump(2) : out.dump();
 }
 
-std::string JsonExport::entity(const model::Entity& entity) const { return entityJson(entity).dump(); }
+std::string JsonExport::entity(const model::Entity& entity) const { return entityJson(metamodel_, entity).dump(); }
 
 std::string JsonExport::relations(const std::vector<model::Relation>& relations) const {
   nlohmann::json out = nlohmann::json::array();

@@ -187,7 +187,7 @@ string(REGEX REPLACE "^version = \"([^\"]+)\".*" "\\1" DS_VERSION
                      "${DS_VERSION_LINE}")
 file(
   WRITE ${CMAKE_BINARY_DIR}/generated/Version.cpp.in
-  "#include <string>\n\nnamespace ds {\nnamespace model {\nstd::string version() { return \"${DS_VERSION}\"; }\n}  // namespace model\n}  // namespace ds\n"
+  "#include <string>\n\n#include \"ds/model/Metamodel.hpp\"\n\nnamespace ds {\nnamespace model {\nstd::string Metamodel::version() const { return \"${DS_VERSION}\"; }\n}  // namespace model\n}  // namespace ds\n"
 )
 configure_file(${CMAKE_BINARY_DIR}/generated/Version.cpp.in
                ${CMAKE_BINARY_DIR}/generated/Version.cpp COPYONLY)

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "ds/bind/Binder.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -8,11 +9,12 @@ namespace {
 
 class TestBinder : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
 
   void bindText(const std::string& text) {
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("t.ds", text));
   }
 };
@@ -25,7 +27,7 @@ TEST_F(TestBinder, PackagesQualifyWithAtAndModulesWithColons) {
 }
 
 TEST_F(TestBinder, ModulesCanBeReopenedAcrossFilesButClassesCannot) {
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds", "package ds { module m { class A { } } }"));
   binder.bind(parser.parseText("b.ds", "package ds { module m { class B { } } }"));
   binder.bind(parser.parseText("c.ds", "package ds { module m { class A { } } }"));

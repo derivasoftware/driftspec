@@ -11,7 +11,8 @@ namespace {
 /// The model as JSON: entities, relations and findings, each located (REQ-00005-1).
 class TestJsonExport : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::model::Entity e;
@@ -29,7 +30,7 @@ class TestJsonExport : public ::testing::Test {
 };
 
 TEST_F(TestJsonExport, TheThreeArraysWithTheirFields) {
-  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model));
+  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport(metamodel).render(model));
   ASSERT_EQ(doc["entities"].size(), 1u);
   const auto& e = doc["entities"][0];
   EXPECT_EQ(e["id"], "p@m::A");
@@ -49,7 +50,7 @@ TEST_F(TestJsonExport, TheThreeArraysWithTheirFields) {
 
 TEST_F(TestJsonExport, WhatBreaksEachRuleTravelsStructured) {
   model.breach("p@m::r", {{{"c", "p@m::A"}}, {{"x", "p@m::B"}}, {"a.ds", 3, 5}});
-  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model));
+  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport(metamodel).render(model));
   const auto& b = doc["breaches"]["p@m::r"][0];
   EXPECT_EQ(b["bindings"][0][0], "c");
   EXPECT_EQ(b["bindings"][0][1], "p@m::A");
@@ -58,7 +59,7 @@ TEST_F(TestJsonExport, WhatBreaksEachRuleTravelsStructured) {
 }
 
 TEST_F(TestJsonExport, CarriesTheMetamodelTheModelIsWrittenIn) {
-  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model));
+  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport(metamodel).render(model));
   const auto& meta = doc["metamodel"];
   bool requirement = false, verifies = false;
   for (const auto& k : meta["kinds"]) {
@@ -82,14 +83,14 @@ TEST_F(TestJsonExport, CarriesTheMetamodelTheModelIsWrittenIn) {
 }
 
 TEST_F(TestJsonExport, SaysTheVersionThatWroteItAndTheShapeOfTheDocument) {
-  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model, false));
-  EXPECT_EQ(doc["version"], ds::model::version());
+  const auto doc = nlohmann::json::parse(ds::exporter::JsonExport(metamodel).render(model, false));
+  EXPECT_EQ(doc["version"], metamodel.version());
   EXPECT_EQ(doc["format"], 1);
 }
 
 TEST_F(TestJsonExport, CompactOnRequest) {
-  const std::string pretty = ds::exporter::JsonExport().render(model, true);
-  const std::string compact = ds::exporter::JsonExport().render(model, false);
+  const std::string pretty = ds::exporter::JsonExport(metamodel).render(model, true);
+  const std::string compact = ds::exporter::JsonExport(metamodel).render(model, false);
   EXPECT_NE(pretty.find('\n'), std::string::npos);
   EXPECT_EQ(compact.find('\n'), std::string::npos);
   EXPECT_EQ(nlohmann::json::parse(pretty), nlohmann::json::parse(compact));

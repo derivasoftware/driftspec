@@ -9,6 +9,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Resolver.hpp"
 #include "ds/check/Step.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -28,8 +29,10 @@ class IChecker {
 /// test; it holds the map by reference, so the map outlives it.
 class Checker : public IChecker {
  public:
-  Checker(model::Model& model, const std::map<std::string, std::unique_ptr<IStep>>& steps);
-  Checker(model::Model& model, std::map<std::string, std::unique_ptr<IStep>>&& steps) = delete;  // a temporary map would die before the run
+  /// Checks `model` with the steps given; `metamodel` says which codes are coverage, not findings (DS-216, DS-341).
+  Checker(model::Model& model, const model::Metamodel& metamodel, const std::map<std::string, std::unique_ptr<IStep>>& steps);
+  Checker(model::Model& model, const model::Metamodel& metamodel,
+          std::map<std::string, std::unique_ptr<IStep>>&& steps) = delete;  // a temporary map would die before the run
   void run(const bind::Binder& binder) override;
   /// What a name means where it is written, and the other read-only questions the checks ask (DS-125).
   const Resolver& resolver() const { return resolver_; }
@@ -38,6 +41,7 @@ class Checker : public IChecker {
 
  private:
   model::Model& model_;
+  const model::Metamodel& metamodel_;
   Resolver resolver_;
   const std::map<std::string, std::unique_ptr<IStep>>& steps_;
 };

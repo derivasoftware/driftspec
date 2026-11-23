@@ -5,6 +5,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -14,17 +15,18 @@ namespace {
 /// Nested packages: the HLD nests with the conventions of every other entity (tests/corpus/packages).
 class TestPackages : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/packages")) {
       EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   bool related(const std::string& kind, const std::string& from, const std::string& to) const {
@@ -145,10 +147,10 @@ TEST_F(TestPackages, NestedPackagesAreContainersOfTheDrawing) {
 namespace {
 
 /// DS-20: a class written with its requirements and no members, where no other block defines it.
-ds::model::Model loneClass() {
-  ds::model::Model model;
+ds::model::Model loneClass(const ds::model::Metamodel& metamodel) {
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("errors.ds",
                                "package app {\n"
                                "  requirement REQ-00001-1 {\n"
@@ -172,14 +174,15 @@ ds::model::Model loneClass() {
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   return model;
 }
 
 }  // namespace
 
 TEST(TestLoneExtension, AClassWithRequirementsAndNoMembersIsADefinitionWhenNothingElseDefinesIt) {
-  const ds::model::Model model = loneClass();
+  const ds::model::Metamodel metamodel;
+  const ds::model::Model model = loneClass(metamodel);
   const auto* lone = model.find("app@errors::NotAllowed");
   ASSERT_NE(lone, nullptr);
   EXPECT_FALSE(lone->expected);

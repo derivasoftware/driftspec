@@ -8,6 +8,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -19,10 +20,10 @@ class TestValues : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/values")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
   }
 
@@ -35,7 +36,8 @@ class TestValues : public ::testing::Test {
     return false;
   }
 
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   std::map<std::string, std::vector<std::string>> lines;
 };
 
@@ -105,9 +107,10 @@ TEST_F(TestValues, AFrameWithNoMessageIsStillDrawn) {
 /// A name in a behaviour resolves as the code scopes it: a local hides a member of its name, a method
 /// is no value a message is sent to, and a result named like an attribute is stored in it.
 TEST(TestNameScopes, ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttributeOfItsName) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   const auto file = parser.parseText("a.ds",
                                      "package p {\n"
                                      "  module m {\n"
@@ -141,7 +144,7 @@ TEST(TestNameScopes, ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttribute
   ASSERT_FALSE(file.hasSyntaxErrors);
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   auto calls = [&model](const std::string& message, const std::string& op) {
     for (const auto& r : model.index().all())
       if (r.kind == "calls" && r.from == message && r.to == op) return true;

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -61,7 +62,8 @@ struct Event {
 /// Walks the syntax trees of a workspace and declares its entities (R1-R5, R9).
 class Binder {
  public:
-  explicit Binder(model::Model& model) : model_(model) {}
+  /// Binds into `model`, reading the language from `metamodel` (DS-341): what an annotation means, which ones it knows.
+  Binder(model::Model& model, const model::Metamodel& metamodel) : model_(model), metamodel_(metamodel) {}
   void bind(const parse::ParsedFile& file);
 
   const std::vector<Reference>& references() const { return references_; }
@@ -102,6 +104,7 @@ class Binder {
   model::Location locationOf(const parse::ParsedFile& file, TSNode node) const;
 
   model::Model& model_;
+  const model::Metamodel& metamodel_;
   std::vector<Reference> references_;
   std::vector<Message> messages_;
   std::vector<Event> events_;

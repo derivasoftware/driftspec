@@ -75,7 +75,7 @@ void Linker::defineLoneExtensions() {
 }
 
 void Linker::resolveReference(const bind::Reference& reference) {
-  const bool artefactRef = model::isArtefact(reference.expectedKind);
+  const bool artefactRef = model_->metamodel().isArtefact(reference.expectedKind);
   if (artefactRef && model::ArtefactName::matches(reference.target)) {
     if (!model::ArtefactName(reference.target).hasRevision()) {
       // a link goes against a revision: an unpinned one says nothing about which text was meant
@@ -103,7 +103,7 @@ void Linker::resolveReference(const bind::Reference& reference) {
     expected.kind = reference.expectedKind;
     expected.name = reference.target;
     expected.scope = reference.scope;
-    const bool artefact = model::isArtefact(reference.expectedKind);
+    const bool artefact = model_->metamodel().isArtefact(reference.expectedKind);
     const std::string pkg = model::Scope(reference.scope).package().text();  // the innermost package
     if (artefact) {
       expected.id = model::ArtefactName(reference.target).withoutRevision().text();
@@ -122,7 +122,7 @@ void Linker::resolveReference(const bind::Reference& reference) {
     // links were resolved here (DS-116)
     if (reference.expectedKind != model::Kind::UseCase && context_->reported().insert(target).second) {
       context_->report({"W-REF-UNDECLARED", "warning",
-                        std::string(model::kindName(expected.kind)) + " '" + reference.target + "' is referenced by " + reference.from +
+                        model_->metamodel().nameOf(expected.kind) + " '" + reference.target + "' is referenced by " + reference.from +
                             " but declared nowhere in the workspace",
                         reference.location});
     }
@@ -143,11 +143,11 @@ void Linker::resolveReference(const bind::Reference& reference) {
 // A reference binds only into a relation the language declares between those two kinds (REQ-00066-1):
 // a class that names an interface as its base does not inherit from it, it realises it, and is told so.
 bool Linker::kindAllowed(const bind::Reference& reference, const std::string& target) {
-  const model::RelationSpec* spec = model::relationOf(reference.relation);
+  const model::RelationSpec* spec = model_->metamodel().relationOf(reference.relation);
   const model::Entity* from = model_->find(reference.from);
   const model::Entity* to = model_->find(target);
-  if (!spec || !from || !to || to->expected || model::joins(*spec, from->kind, to->kind)) return true;
-  const std::string kind = model::kindName(to->kind);
+  if (!spec || !from || !to || to->expected || model_->metamodel().joins(*spec, from->kind, to->kind)) return true;
+  const std::string kind = model_->metamodel().nameOf(to->kind);
   const std::string article = std::string("aeiou").find(kind[0]) == std::string::npos ? ", a " : ", an ";
   std::string message = reference.from + " " + reference.relation + " " + target + article + kind + ": the language joins " +
                         reference.relation + " only between other kinds";

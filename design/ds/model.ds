@@ -75,7 +75,6 @@ package driftspec@ds {
         tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.ARenameOntoADeclaredIdentityIsRefused
     }
 
-    function kindName(kind: Kind) -> std::string
     // identities, written in one place (DS-124), as three values (DS-184): packages join with @, the
     // rest with ::, a behaviour is its subject with ::sequence[/scenario] or ::state, a template
     // carries its arity, a diagram is diagram:NAME. An entity keeps its id as text; these wrap it.
@@ -268,40 +267,6 @@ package driftspec@ds {
       + many pairs: std::vector<std::pair<Kind, Kind>>
     }
 
-    function kinds() -> std::vector<KindSpec> {
-      @requirement REQ-00066-1
-      @requirement REQ-00093-1
-    }
-    function relations() -> std::vector<RelationSpec> {
-      @requirement REQ-00066-1
-      @requirement REQ-00093-1
-    }
-    function isArtefact(kind: Kind) -> bool {
-      @requirement REQ-00043-1
-    }
-    function specOf(kind: Kind) -> KindSpec {
-      @requirement REQ-00066-1
-    }
-    // the kind a word names, as kindName writes it; none when it names no kind
-    function specNamed(name: std::string) -> KindSpec {
-      @requirement REQ-00066-1
-    }
-    function fieldOf(kind: Kind, key: std::string) -> FieldSpec {
-      @requirement REQ-00066-1
-    }
-    function relationOf(kind: std::string) -> RelationSpec {
-      @requirement REQ-00066-1
-    }
-    function joins(relation: RelationSpec, from: Kind, to: Kind) -> bool {
-      @requirement REQ-00066-1
-    }
-    function fieldTypeName(type: FieldType) -> std::string {
-      @requirement REQ-00066-1
-    }
-    function fieldSourceName(source: FieldSource) -> std::string {
-      @requirement REQ-00066-1
-    }
-
     // the metamodel's tables (DS-340): the catalogue of finding codes, the annotations that mean something
     // and how each kind is written. The binder, the checker and the kinds read them here; the manual
     // derives its pages from them and the metamodel never reads the manual
@@ -323,23 +288,104 @@ package driftspec@ds {
       + target: Kind
     }
 
-    function codes() -> std::vector<CodeSpec> {
+    // The language declared once (DS-341): a class whose tables are built when it is made, one made where
+    // the engine starts (the command line's run, the Python module, the page's engine) and handed by const
+    // reference to the model, the binder, the checker and the manual. No static accessor reaches it.
+    class Metamodel {
+      @requirement REQ-00066-1
       @requirement REQ-00079-1
+      - owns many names_: std::vector<std::string>                          // each kind's name, by its place in Kind
+      - owns forms_: std::map<Kind, std::pair<std::string, std::string>>   // how each kind is written, and its example
+      - owns many kinds_: std::vector<KindSpec>
+      - owns many relations_: std::vector<RelationSpec>
+      - owns many codes_: std::vector<CodeSpec>
+      - owns many known_: std::vector<AnnotationSpec>
+      - owns other_: AnnotationSpec
+      - owns many annotations_: std::vector<AnnotationSpec>
+      + Metamodel()
+      + kinds() -> std::vector<KindSpec> {
+        @requirement REQ-00093-1
+      }
+      + relations() -> std::vector<RelationSpec> {
+        @requirement REQ-00093-1
+      }
+      + specOf(kind: Kind) -> KindSpec
+      + specNamed(name: std::string) -> KindSpec                    // the kind a word names, as nameOf writes it; none when it names no kind
+      + fieldOf(kind: Kind, key: std::string) -> FieldSpec
+      + relationOf(kind: std::string) -> RelationSpec
+      + joins(relation: RelationSpec, from: Kind, to: Kind) -> bool
+      + codes() -> std::vector<CodeSpec>
+      + codeOf(code: std::string) -> CodeSpec
+      + annotations() -> std::vector<AnnotationSpec>                // the rows the manual lists: the known, any other word, the colon after an operation
+      + knownAnnotations() -> std::vector<AnnotationSpec> {         // the binder's: nothing else binds as an annotation
+        @requirement REQ-00088-1
+      }
+      + annotationOf(word: std::string) -> AnnotationSpec {
+        @requirement REQ-00088-1
+      }
+      + syntaxOf(kind: Kind) -> std::string
+      + exampleOf(kind: Kind) -> std::string
+      + nameOf(kind: Kind) -> std::string                           // read from names_, never built per call
+      + isArtefact(kind: Kind) -> bool {
+        @requirement REQ-00043-1
+      }
+      + fieldTypeName(type: FieldType) -> std::string
+      + fieldSourceName(source: FieldSource) -> std::string
+      + version() -> std::string {                                  // the language's version, written in when ds is built
+        @requirement REQ-00163-1
+      }
+      // how the tables are built: once, by the constructor
+      - static buildNames() -> std::vector<std::string>
+      - static writtenField(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
+      - static syntax(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
+      - static derived(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
+      - static closed(name: std::string, type: FieldType, meaning: std::string, values: std::vector<std::string>) -> FieldSpec
+      - static artefact() -> std::vector<FieldSpec>
+      - static plus(base: std::vector<FieldSpec>, more: std::vector<FieldSpec>) -> std::vector<FieldSpec>
+      - static build() -> std::vector<KindSpec>
+      - static rel(kind: std::string, meaning: std::string, from: std::vector<Kind>, to: std::vector<Kind>) -> RelationSpec
+      - buildRelations() -> std::vector<RelationSpec>               // containment first, then the others
+      - static among(kinds: std::vector<Kind>, kind: Kind) -> bool
+      - static matches(name: std::string, key: std::string) -> bool
+      - static writtenForms() -> std::map<Kind, std::pair<std::string, std::string>>
+      - static buildCodes() -> std::vector<CodeSpec>
+      - static buildKnownAnnotations() -> std::vector<AnnotationSpec>
+      - static buildOtherAnnotation() -> AnnotationSpec
+      - buildAnnotations() -> std::vector<AnnotationSpec>
+      - describe(kinds: std::vector<KindSpec>) -> std::vector<KindSpec>
+      - containment() -> RelationSpec
     }
-    function codeOf(code: std::string) -> CodeSpec {
-      @requirement REQ-00079-1
+
+    // The tables are built once, each from what is built before it: how each kind is written, the kinds
+    // that carry it, the relations that containment derives from the kinds, the codes and the annotations.
+    sequence Metamodel::Metamodel {
+      -> buildNames() -> names
+      -> writtenForms() -> forms
+      -> build() -> declared
+      -> describe(declared) -> described
+      -> buildRelations() -> relations
+      -> buildCodes() -> codes
+      -> buildKnownAnnotations() -> known
+      -> buildOtherAnnotation() -> other
+      -> buildAnnotations() -> annotations
     }
-    function annotations() -> std::vector<AnnotationSpec> {
-      @requirement REQ-00079-1
+
+    sequence Metamodel::buildRelations {
+      -> containment() -> contains
+      loop each relation declared {
+        -> rel(kind, meaning, from, to) -> relation
+      }
+      return relations
     }
-    function annotationOf(word: std::string) -> AnnotationSpec {
-      @requirement REQ-00088-1
-    }
-    function syntaxOf(kind: Kind) -> std::string {
-      @requirement REQ-00079-1
-    }
-    function exampleOf(kind: Kind) -> std::string {
-      @requirement REQ-00079-1
+
+    // an annotation the language knows, by its word; any other word is the row that only refers
+    sequence Metamodel::annotationOf {
+      loop each known annotation {
+        opt it is the word {
+          return known
+        }
+      }
+      return other_
     }
 
     // ---- the manual ds embeds (REQ-00079-1): written from the metamodel, held to the engine ----
@@ -442,17 +488,15 @@ package driftspec@ds {
     function commandOf(name: std::string) -> CommandSpec {
       @requirement REQ-00079-1
     }
-    function manualPage(topic: std::string) -> std::string {
+    // the manual's pages, written from the metamodel they are given (DS-342 makes the manual a class)
+    function manualPage(metamodel: Metamodel, topic: std::string) -> std::string {
       @requirement REQ-00079-1
     }
-    function manualTopics() -> std::vector<std::string> {
+    function manualTopics(metamodel: Metamodel) -> std::vector<std::string> {
       @requirement REQ-00079-1
     }
     function manualGuides() -> std::vector<std::pair<std::string, std::string>> {
       @requirement REQ-00160-1
-    }
-    function version() -> std::string {
-      @requirement REQ-00163-1
     }
 
     enum Kind {
@@ -682,6 +726,7 @@ package driftspec@ds {
     class Model {                            // the resolved workspace: entities by identity, relations and findings
       @requirement REQ-00001-1
       @requirement REQ-00002-1
+      - refs metamodel_: Metamodel             // the language it is written in, made outside it and outliving it (DS-341)
       - owns many entities_: std::map<std::string, Entity>
       - owns many relations_: std::vector<Relation>
       - owns many findings_: std::vector<Finding>
@@ -690,6 +735,8 @@ package driftspec@ds {
       - owns many breaches_: std::map<std::string, std::vector<Breach>>
       - owns many tables_: std::map<std::string, Tabulated>
       - owns indexed_: Indexed
+      + Model(metamodel: Metamodel)
+      + metamodel() -> Metamodel               // what a reader of the model asks of its language
       + index() -> Index
       - indexEntity(entity: Entity, enters: bool) -> void
       - indexAgain() -> void
@@ -740,7 +787,7 @@ package driftspec@ds {
         }
         alt a package or a module, opened again / reopened {
         } else / duplicate {
-          -> kindName(entity.kind) -> name
+          self -> metamodel_.nameOf(entity.kind) -> name
           -> report(finding)
         }
         return existing
@@ -752,7 +799,7 @@ package driftspec@ds {
     // A relation is kept where the others are, in the order stated, and what is indexed learns its
     // position by each end and by its kind: the index never lags the list.
     sequence Model::relate {
-      -> relationOf(relation.kind) -> declared
+      self -> metamodel_.relationOf(relation.kind) -> declared
       opt the metamodel does not declare that kind: a defect of ds, not of the design read / undeclared {
         return
       }
@@ -907,7 +954,7 @@ package driftspec@ds {
       -> find(to) -> other
       opt another declared entity holds to / refused {
         // the finding names the kind of the entity held at from
-        -> kindName(kind) -> name
+        self -> metamodel_.nameOf(kind) -> name
         -> report(finding)
         return false
       }
@@ -938,7 +985,8 @@ package driftspec@ds {
     }
 
     // ---- what the package's own functions and classes share (DS-332): internal, declared in
-    // src/ds/model/Detail.hpp and in no header under include/; its constants are written in the code alone
+    // src/ds/model/Detail.hpp and in no header under include/. The metamodel's builders left it for the
+    // class (DS-341); the manual's pages leave it with DS-342
     - module detail {
       // the scope outside an identity or a scope
       function outerOf(text: std::string) -> std::string {
@@ -957,53 +1005,6 @@ package driftspec@ds {
         + decide(f: Entity, scenario: std::string) -> Way
       }
 
-      // how the metamodel is built
-      function writtenField(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec {
-        @requirement REQ-00066-1
-      }
-      function syntax(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec {
-        @requirement REQ-00066-1
-      }
-      function derived(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec {
-        @requirement REQ-00066-1
-      }
-      function closed(name: std::string, type: FieldType, meaning: std::string, values: std::vector<std::string>) -> FieldSpec {
-        @requirement REQ-00066-1
-      }
-      function artefact() -> std::vector<FieldSpec> {
-        @requirement REQ-00066-1
-      }
-      function plus(base: std::vector<FieldSpec>, more: std::vector<FieldSpec>) -> std::vector<FieldSpec> {
-        @requirement REQ-00066-1
-      }
-      function describe(kinds: std::vector<KindSpec>) -> std::vector<KindSpec> {
-        @requirement REQ-00066-1
-      }
-      function build() -> std::vector<KindSpec> {
-        @requirement REQ-00066-1
-      }
-      function rel(kind: std::string, meaning: std::string, from: std::vector<Kind>, to: std::vector<Kind>) -> RelationSpec {
-        @requirement REQ-00066-1
-      }
-      function buildRelations() -> std::vector<RelationSpec> {
-        @requirement REQ-00066-1
-      }
-      function among(kinds: std::vector<Kind>, kind: Kind) -> bool {
-        @requirement REQ-00066-1
-      }
-      function matches(name: std::string, key: std::string) -> bool {
-        @requirement REQ-00066-1
-      }
-      function containment() -> RelationSpec {
-        @requirement REQ-00066-1
-      }
-      // the metamodel's tables: how each kind is written, the catalogue of codes
-      function writtenForms() -> std::map<Kind, std::pair<std::string, std::string>> {
-        @requirement REQ-00079-1
-      }
-      function buildCodes() -> std::vector<CodeSpec> {
-        @requirement REQ-00079-1
-      }
       // how the manual is written
       function indent(text: std::string, by: std::string) -> std::string {
         @requirement REQ-00079-1
@@ -1011,16 +1012,16 @@ package driftspec@ds {
       function pad(text: std::string, width: std::size_t) -> std::string {
         @requirement REQ-00079-1
       }
-      function names(kinds: std::vector<Kind>) -> std::string {
+      function names(metamodel: Metamodel, kinds: std::vector<Kind>) -> std::string {
         @requirement REQ-00079-1
       }
-      function kindPage(k: KindSpec) -> std::string {
+      function kindPage(metamodel: Metamodel, k: KindSpec) -> std::string {
         @requirement REQ-00079-1
       }
-      function indexPage() -> std::string {
+      function indexPage(metamodel: Metamodel) -> std::string {
         @requirement REQ-00079-1
       }
-      function grammarPage() -> std::string {
+      function grammarPage(metamodel: Metamodel) -> std::string {
         @requirement REQ-00079-1
       }
     }

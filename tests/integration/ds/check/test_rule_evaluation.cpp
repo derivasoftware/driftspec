@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -15,16 +16,17 @@ namespace {
 /// over a finite model, so every rule is decided; a rule is broken by each binding that breaks it.
 class TestRuleEvaluation : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void load(const std::string& text) {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("a.ds", text);
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   std::vector<std::string> messages(const std::string& code) const {
@@ -140,7 +142,7 @@ TEST_F(TestRuleEvaluation, ADefinitionRecursUntilItsFixpoint) {
   std::snprintf(text, sizeof text, chain.c_str(), "n: int");
   load(text);
   EXPECT_TRUE(messages("E-RULE-BROKEN").empty());
-  model = ds::model::Model();
+  model = ds::model::Model(metamodel);
   std::snprintf(text, sizeof text, chain.c_str(), "a: p@m::A");  // C owns A: the loop closes three steps away
   load(text);
   EXPECT_EQ(messages("E-RULE-BROKEN").size(), 3u);

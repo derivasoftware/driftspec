@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/model/SequenceTree.hpp"
 #include "ds/parse/Parser.hpp"
@@ -19,11 +20,12 @@ const std::string kSeq = "p@m::C::run::sequence";
 /// whose else, refused, holds m3; an opt with m4; m5.
 class TestSequenceTreeOfADesign : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("p.ds",
                                        "package p {\n  module m {\n"
                                        "    class B {\n      + go() -> int\n    }\n"
@@ -47,7 +49,7 @@ class TestSequenceTreeOfADesign : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder);
   }
 
   static std::vector<std::string> names(const std::vector<std::string>& ids) {

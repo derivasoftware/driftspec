@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -19,18 +20,18 @@ int run(int argc, char** argv);
 int work(int argc, char** argv);
 
 bool isDirectory(const std::string& path);
-ds::model::Model load(const std::string& dir);
+ds::model::Model load(const ds::model::Metamodel& metamodel, const std::string& dir);
 /// Whether any .ds file lies under a directory: a directory with none is no workspace (a mistyped path, most often).
 bool holdsDesign(const std::string& dir);
 /// The workspace loaded, or nothing when the path is no workspace (reported on stderr) (DS-83).
-bool loadWorkspace(const std::string& dir, ds::model::Model* model);
+bool loadWorkspace(const ds::model::Metamodel& metamodel, const std::string& dir, ds::model::Model* model);
 std::string titleOf(std::string dir);
 std::string readFile(const std::string& path);
 /// Writes to the file -o names, or to stdout.
 int emit(const std::string& output, const std::string& text);
 /// A page of the manual ds embeds; an unknown topic lists the ones there are.
-int manual(const std::string& topic, bool json);
-int check(const std::string& dir, bool json);
+int manual(const ds::model::Metamodel& metamodel, const std::string& topic, bool json);
+int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool json);
 std::string diagramId(const std::string& name);
 
 }  // namespace app

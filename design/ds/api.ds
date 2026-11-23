@@ -49,7 +49,7 @@ package driftspec@ds {
       @requirement REQ-00107-2
       @constraint CST-00009-1
       - owns model_: model::Model
-      + Workspace(files: Files)
+      + Workspace(metamodel: model::Metamodel, files: Files)   // loaded in the language it is given (DS-341)
       + model() -> model::Model
       + exportModel() -> std::string
       + report() -> std::string
@@ -120,18 +120,20 @@ package driftspec@ds {
       return document
     }
 
-    class Api {                              // static: the engine, called in process
+    class Api {                              // the engine, called in process, over the metamodel it is given (DS-341)
       @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-1
-      + static check(files: Files) -> std::string
-      + static load(files: std::vector<parse::ParsedFile>) -> model::Model {
+      - refs metamodel_: model::Metamodel
+      + Api(metamodel: model::Metamodel)
+      + check(files: Files) -> std::string
+      + load(files: std::vector<parse::ParsedFile>) -> model::Model {
         @requirement REQ-00167-1
       }
       + static report(model: model::Model, pretty: bool) -> std::string
-      + static exportModel(files: Files) -> std::string
+      + exportModel(files: Files) -> std::string
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
-      + static render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string
-      + static page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
+      + render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string
+      + page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
     }
 
     // The engine for a page in a browser (DS-203): one request of texts in, one document out, a copy
@@ -140,7 +142,23 @@ package driftspec@ds {
       @interface browser                     // the class ds.wasm's one function is linked against
       @requirement REQ-00113-1
       @constraint CST-00009-1
-      + static answer(request: std::string) -> std::string
+      - refs metamodel_: model::Metamodel
+      + Browser(metamodel: model::Metamodel)
+      + answer(request: std::string) -> std::string
+    }
+
+    // How every caller loads a workspace (DS-120): the files bound into one model written in the
+    // metamodel the Api holds, then checked; what only echoes a cut file goes (DS-304).
+    sequence Api::load {
+      local model: model::Model
+      local binder: bind::Binder
+      local checker: check::Checker
+      loop each file {
+        -> binder.bind(file)
+      }
+      -> check::steps() -> steps
+      -> checker.run(binder)
+      return model
     }
 
     // The functions of text to JSON: a Workspace loaded for one question (DS-173).
@@ -318,7 +336,8 @@ package driftspec@ds {
   }
 
   sequence browser::answer {
-    -> api::Browser::answer(request) -> json      // static: called on its class (DS-60)
+    local browser: api::Browser                  // made once, over the metamodel the page's engine makes (DS-341)
+    -> browser.answer(request) -> json
     return json
   }
 

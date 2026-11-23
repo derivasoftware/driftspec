@@ -60,10 +60,11 @@ package driftspec@ds {
       @requirement REQ-00110-1
       @requirement REQ-00112-1
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // what an annotation means, and which ones it knows (DS-341)
       - owns many references_: std::vector<Reference>
       - owns many messages_: std::vector<Message>
       - owns many events_: std::vector<Event>
-      + Binder(model: model::Model)
+      + Binder(model: model::Model, metamodel: model::Metamodel)
       + bind(file: parse::ParsedFile) -> void
       + references() -> std::vector<Reference>
       + messages() -> std::vector<Message>
@@ -147,6 +148,18 @@ package driftspec@ds {
     sequence Binder::bind {
       local root: TSNode
       -> visit(file, root, "", "")
+    }
+
+    // What an annotation means is the metamodel's (DS-341): the relation its word makes, and for a word it
+    // does not know a link that refers, said with the annotations it knows. The reference is linked later.
+    sequence Binder::bindAnnotations {
+      loop each annotation written in the node {
+        self -> metamodel_.annotationOf(word) -> spec
+        opt the language gives the word no meaning {
+          self -> metamodel_.knownAnnotations() -> known
+          self -> model_.report(finding)
+        }
+      }
     }
 
     // Where binding happens: each child of the node is declared by its kind, related to

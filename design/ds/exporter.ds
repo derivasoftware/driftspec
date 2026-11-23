@@ -60,6 +60,8 @@ package driftspec@ds {
     class JsonExport {
       @requirement REQ-00005-1
       @requirement REQ-00068-1
+      - refs metamodel_: model::Metamodel     // the language it writes in: the kinds by name, and itself (DS-341)
+      + JsonExport(metamodel: model::Metamodel)
       + render(model: model::Model, pretty: bool) -> std::string
       + entity(entity: model::Entity) -> std::string     // one entity, as the whole model writes it (DS-173)
       + relations(relations: std::vector<model::Relation>) -> std::string
@@ -70,7 +72,7 @@ package driftspec@ds {
     sequence JsonExport::render {
       self -> model.entities() -> entities
       loop each entity {
-        -> model::kindName(entity.kind) -> kind
+        self -> metamodel_.nameOf(entity.kind) -> kind
       }
       self -> model.index() -> index
       self -> index.all() -> relations
@@ -81,8 +83,9 @@ package driftspec@ds {
       self -> model.findings() -> findings
       loop each finding {
       }
-      -> model::kinds() -> kinds
-      -> model::relations() -> relationSpecs
+      self -> metamodel_.version() -> version
+      self -> metamodel_.kinds() -> kinds
+      self -> metamodel_.relations() -> relationSpecs
       alt pretty {
         return indented
       } else {

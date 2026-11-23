@@ -16,6 +16,11 @@
 
 namespace {
 
+// the language, made once where the module starts and handed by const reference to every Workspace and
+// to the engine's functions of text to JSON (DS-341); it lives as long as the module
+const ds::model::Metamodel kMetamodel;
+const ds::api::Api kApi(kMetamodel);
+
 // a dict {path: text} as the engine's files; false, with a Python error set, when it is not one
 bool filesOf(PyObject* dict, ds::api::Files* out) {
   if (!PyDict_Check(dict)) {
@@ -50,20 +55,20 @@ PyObject* run(F work) {
   return PyUnicode_FromStringAndSize(out.data(), static_cast<Py_ssize_t>(out.size()));
 }
 
-PyObject* version(PyObject*, PyObject*) { return PyUnicode_FromString(ds::model::version().c_str()); }
+PyObject* version(PyObject*, PyObject*) { return PyUnicode_FromString(kMetamodel.version().c_str()); }
 
 PyObject* check(PyObject*, PyObject* args) {
   PyObject* dict = nullptr;
   ds::api::Files files;
   if (!PyArg_ParseTuple(args, "O", &dict) || !filesOf(dict, &files)) return nullptr;
-  return run([&files] { return ds::api::Api::check(files); });
+  return run([&files] { return kApi.check(files); });
 }
 
 PyObject* exportModel(PyObject*, PyObject* args) {
   PyObject* dict = nullptr;
   ds::api::Files files;
   if (!PyArg_ParseTuple(args, "O", &dict) || !filesOf(dict, &files)) return nullptr;
-  return run([&files] { return ds::api::Api::exportModel(files); });
+  return run([&files] { return kApi.exportModel(files); });
 }
 
 PyObject* expectedAt(PyObject*, PyObject* args) {
@@ -81,7 +86,7 @@ PyObject* render(PyObject*, PyObject* args) {
   ds::api::Files files;
   if (!PyArg_ParseTuple(args, "Ossi", &dict, &diagram, &format, &width) || !filesOf(dict, &files)) return nullptr;
   const std::string d(diagram), f(format);
-  return run([&files, d, f, width] { return ds::api::Api::render(files, d, f, width); });
+  return run([&files, d, f, width] { return kApi.render(files, d, f, width); });
 }
 
 PyObject* page(PyObject*, PyObject* args) {
@@ -104,7 +109,7 @@ PyObject* page(PyObject*, PyObject* args) {
   }
   Py_DECREF(it);
   const std::string t(title);
-  return run([&files, t, &focus] { return ds::api::Api::page(files, t, focus); });
+  return run([&files, t, &focus] { return kApi.page(files, t, focus); });
 }
 
 // ---- a workspace loaded once (DS-173) ------------------------------------------------------------
@@ -139,7 +144,7 @@ PyObject* workspaceNew(PyTypeObject* type, PyObject* args, PyObject*) {
   if (!PyArg_ParseTuple(args, "O", &dict) || !filesOf(dict, &files)) return nullptr;
   ds::api::Workspace* loaded = nullptr;
   std::string failure;
-  Py_BEGIN_ALLOW_THREADS try { loaded = new ds::api::Workspace(files); } catch (const std::exception& e) {
+  Py_BEGIN_ALLOW_THREADS try { loaded = new ds::api::Workspace(kMetamodel, files); } catch (const std::exception& e) {
     failure = e.what();
   }
   Py_END_ALLOW_THREADS if (!loaded) {

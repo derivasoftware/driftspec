@@ -9,8 +9,8 @@
 namespace ds {
 namespace check {
 
-Checker::Checker(model::Model& model, const std::map<std::string, std::unique_ptr<IStep>>& steps)
-    : model_(model), resolver_(model), steps_(steps) {}
+Checker::Checker(model::Model& model, const model::Metamodel& metamodel, const std::map<std::string, std::unique_ptr<IStep>>& steps)
+    : model_(model), metamodel_(metamodel), resolver_(model), steps_(steps) {}
 
 // each step after every step it needs; among the steps ready at once, by key, so the order is one
 std::vector<std::string> Checker::order() const {
@@ -40,7 +40,7 @@ void Checker::run(const bind::Binder& binder) {
   // what is not yet written is no finding (Owner, 2026-11-15; DS-216): it is kept apart, as coverage
   std::vector<model::Finding> findings;
   for (auto& f : model_.findings()) {
-    const model::CodeSpec* spec = model::codeOf(f.code);
+    const model::CodeSpec* spec = metamodel_.codeOf(f.code);
     if (spec && spec->severity == "coverage") {
       f.severity = "coverage";
       model_.coverage().push_back(f);

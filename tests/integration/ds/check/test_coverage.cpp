@@ -6,6 +6,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
@@ -17,9 +18,10 @@ namespace {
 class TestCoverage : public ::testing::Test {};
 
 TEST_F(TestCoverage, AnAbsenceIsNoFindingAndTheQueryAnswersIt) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package shop {\n"
                                "  requirement SREQ-00001-1 {\n"
@@ -35,7 +37,7 @@ TEST_F(TestCoverage, AnAbsenceIsNoFindingAndTheQueryAnswersIt) {
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().code;
   const auto report = ds::check::Report::of(model);
   EXPECT_TRUE(report.findings.empty());

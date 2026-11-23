@@ -50,9 +50,9 @@ bool isDirectory(const std::string& path) {
   return std::filesystem::is_directory(path, error);
 }
 
-ds::model::Model load(const std::string& dir) {
+ds::model::Model load(const ds::model::Metamodel& metamodel, const std::string& dir) {
   ds::parse::Parser parser;
-  return ds::api::Api::load(parser.parseDirectory(dir));  // loaded as the Api loads texts (DS-120)
+  return ds::api::Api(metamodel).load(parser.parseDirectory(dir));  // loaded as the Api loads texts (DS-120)
 }
 
 /// Whether any .ds file lies under a directory: a directory with none is no workspace (a mistyped path, most often).
@@ -65,7 +65,7 @@ bool holdsDesign(const std::string& dir) {
 
 /// The workspace loaded, or nothing when the path is no workspace (reported on stderr): every command
 /// then exits 2, bad usage, since the command line names no design (DS-83).
-bool loadWorkspace(const std::string& dir, ds::model::Model* model) {
+bool loadWorkspace(const ds::model::Metamodel& metamodel, const std::string& dir, ds::model::Model* model) {
   if (!isDirectory(dir)) {
     std::cerr << "cannot read " << dir << ": not a directory\n";
     return false;
@@ -74,7 +74,7 @@ bool loadWorkspace(const std::string& dir, ds::model::Model* model) {
     std::cerr << "no .ds file under " << dir << ": it is no workspace\n";
     return false;
   }
-  *model = load(dir);
+  *model = load(metamodel, dir);
   return true;
 }
 
@@ -107,11 +107,11 @@ int emit(const std::string& output, const std::string& text) {
 }
 
 /// A page of the manual ds embeds; an unknown topic lists the ones there are.
-int manual(const std::string& topic, bool json) {
-  const std::string page = ds::model::manualPage(topic);
+int manual(const ds::model::Metamodel& metamodel, const std::string& topic, bool json) {
+  const std::string page = ds::model::manualPage(metamodel, topic);
   if (page.empty()) {
     std::cerr << "no page '" << topic << "' in the manual; there are:";
-    for (const auto& t : ds::model::manualTopics()) std::cerr << " " << t;
+    for (const auto& t : ds::model::manualTopics(metamodel)) std::cerr << " " << t;
     std::cerr << "\n";
     return 1;
   }
@@ -120,27 +120,27 @@ int manual(const std::string& topic, bool json) {
     return 0;
   }
   nlohmann::json out{{"topic", topic.empty() ? "index" : topic}, {"text", page}};
-  for (const auto& k : ds::model::kinds()) {
-    if (topic != ds::model::kindName(k.kind)) continue;
+  for (const auto& k : metamodel.kinds()) {
+    if (topic != metamodel.nameOf(k.kind)) continue;
     nlohmann::json fields = nlohmann::json::array();
     for (const auto& f : k.fields)
       fields.push_back({{"name", f.name},
-                        {"type", ds::model::fieldTypeName(f.type)},
-                        {"source", ds::model::fieldSourceName(f.source)},
+                        {"type", metamodel.fieldTypeName(f.type)},
+                        {"source", metamodel.fieldSourceName(f.source)},
                         {"meaning", f.meaning},
                         {"values", f.values}});
     out["kind"] = {{"meaning", k.meaning}, {"syntax", k.syntax}, {"fields", fields}, {"flags", k.flags}, {"example", k.example}};
   }
-  if (const ds::model::CodeSpec* c = ds::model::codeOf(topic))
+  if (const ds::model::CodeSpec* c = metamodel.codeOf(topic))
     out["code"] = {{"code", c->code}, {"severity", c->severity}, {"meaning", c->meaning}, {"fix", c->fix}};
-  if (topic.empty()) out["topics"] = ds::model::manualTopics();
+  if (topic.empty()) out["topics"] = ds::model::manualTopics(metamodel);
   std::cout << out.dump(2) << "\n";
   return 0;
 }
 
-int check(const std::string& dir, bool json) {
-  ds::model::Model model;
-  if (!loadWorkspace(dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
+int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool json) {
+  ds::model::Model model(metamodel);
+  if (!loadWorkspace(metamodel, dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
   // the one report of a check (DS-120), written by the format asked for (DS-126)
   const ds::check::Report report = ds::check::Report::of(model);
   ds::format::FormatOptions options;
@@ -160,7 +160,7 @@ struct Render {
   int width = 0, height = 640;
   bool embed = false;
 
-  int run() const {
+  int run(const ds::model::Metamodel& metamodel) const {
     if (!isDirectory(input)) {  // a render-IR document someone else produced: drawn like a diagram of a workspace
       std::ifstream probe(input);
       if (!probe) {
@@ -174,8 +174,8 @@ struct Render {
       }
       return emit(output, diagramFormat(false)->write({doc}, drawingOptions(false)));  // as it came, drawn by the format named
     }
-    ds::model::Model model;
-    if (!loadWorkspace(input, &model)) return 2;
+    ds::model::Model model(metamodel);
+    if (!loadWorkspace(metamodel, input, &model)) return 2;
     if (format == "html" || format == "json") {
       // the scene is the document; the format named writes it (DS-126)
       const auto formats = ds::format::sceneFormats();
@@ -229,8 +229,9 @@ struct Render {
 }  // namespace
 
 int run(int argc, char** argv) {
+  const ds::model::Metamodel metamodel;  // the language, made once where the command starts (DS-341)
   CLI::App app{"ds: a software design as text, checked, drawn and asked", "ds"};
-  app.set_version_flag("--version", "ds " + ds::model::version());
+  app.set_version_flag("--version", "ds " + metamodel.version());
   app.require_subcommand(1);
   app.footer("A workspace is a directory of .ds files read as one. Each command takes --help; ds manual tells the rest.");
   const auto workspace = [](CLI::App* cmd, std::string* dir) {
@@ -298,13 +299,13 @@ int run(int argc, char** argv) {
     return code == 0 ? 0 : 2;  // help is not a failure; a wrong command line is bad usage
   }
 
-  if (manualCmd->parsed()) return manual(topic, json);
-  if (checkCmd->parsed()) return check(dir, json);
-  if (renderCmd->parsed()) return render.run();
-  ds::model::Model model;
-  if (!loadWorkspace(dir, &model)) return 2;
+  if (manualCmd->parsed()) return manual(metamodel, topic, json);
+  if (checkCmd->parsed()) return check(metamodel, dir, json);
+  if (renderCmd->parsed()) return render.run(metamodel);
+  ds::model::Model model(metamodel);
+  if (!loadWorkspace(metamodel, dir, &model)) return 2;
   if (exportCmd->parsed()) {
-    std::cout << ds::exporter::JsonExport().render(model) << "\n";
+    std::cout << ds::exporter::JsonExport(metamodel).render(model) << "\n";
     return 0;
   }
   const ds::query::Query query(model);

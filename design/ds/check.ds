@@ -165,9 +165,10 @@ package driftspec@ds {
       @requirement REQ-00053-2
       @requirement REQ-00012-1
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // which codes are coverage, not findings (DS-216, DS-341)
       - owns resolver_: Resolver
       - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
-      + Checker(model: model::Model, steps: std::map<std::string, std::unique_ptr<IStep>>)
+      + Checker(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>)
       + run(binder: bind::Binder) -> void
       + resolver() -> Resolver
       + order() -> std::vector<std::string>
@@ -490,6 +491,14 @@ package driftspec@ds {
         -> step.run(context) -> found
         loop each finding found {
           self -> model_.report(finding)
+        }
+      }
+      // what is not yet written is no finding: a code the metamodel calls coverage is kept apart (DS-216)
+      self -> model_.findings() -> reported
+      loop each finding reported {
+        self -> metamodel_.codeOf(code) -> spec
+        opt its code is coverage {
+          self -> model_.coverage() -> coverage
         }
       }
     }

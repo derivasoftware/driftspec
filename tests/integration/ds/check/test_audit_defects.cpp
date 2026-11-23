@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -14,17 +15,18 @@ namespace {
 /// Six small defects the model audit of 2026-11 found (DS-224), each held to the requirement that owns it.
 class TestAuditDefects : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   bool parsed = true;
 
   void load(const std::string& text) {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("a.ds", text);
     parsed = !file.hasSyntaxErrors;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   std::vector<std::string> said(const std::string& code) const {
@@ -195,12 +197,12 @@ TEST_F(TestAuditDefects, AMemberNamedAfterABehaviourOfItsHolderIsToldSoAndTheBeh
   EXPECT_EQ(model.find("p@m::Order::state")->kind, ds::model::Kind::State);
   EXPECT_EQ(model.findings().size(), 1U);  // nothing else is said
   // with no state machine, a method named state is an ordinary method
-  ds::model::Model other;
+  ds::model::Model other{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(other);
+  ds::bind::Binder binder(other, metamodel);
   binder.bind(parser.parseText("b.ds", "package p {\n  module m {\n    class Gauge {\n      + state() -> int\n    }\n  }\n}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(other, checkSteps).run(binder);
+  ds::check::Checker(other, metamodel, checkSteps).run(binder);
   EXPECT_TRUE(other.findings().empty());
 }
 

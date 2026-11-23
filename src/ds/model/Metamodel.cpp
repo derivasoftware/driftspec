@@ -3,23 +3,38 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "Detail.hpp"
+// The metamodel's kinds and relations, built once when it is made (DS-341); its catalogue of codes is in
+// Codes.cpp and how each kind is written in WrittenForms.cpp.
 
 namespace ds {
 namespace model {
 
-namespace detail {
+Metamodel::Metamodel()
+    : names_(buildNames()),
+      forms_(writtenForms()),
+      kinds_(describe(build())),
+      relations_(buildRelations()),
+      codes_(buildCodes()),
+      known_(buildKnownAnnotations()),
+      other_(buildOtherAnnotation()),
+      annotations_(buildAnnotations()) {}
 
-FieldSpec writtenField(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Written, meaning}; }
-FieldSpec syntax(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Syntax, meaning}; }
-FieldSpec derived(const char* name, FieldType type, const char* meaning) { return {name, type, FieldSource::Derived, meaning}; }
+FieldSpec Metamodel::writtenField(const std::string& name, FieldType type, const std::string& meaning) {
+  return {name, type, FieldSource::Written, meaning};
+}
+FieldSpec Metamodel::syntax(const std::string& name, FieldType type, const std::string& meaning) {
+  return {name, type, FieldSource::Syntax, meaning};
+}
+FieldSpec Metamodel::derived(const std::string& name, FieldType type, const std::string& meaning) {
+  return {name, type, FieldSource::Derived, meaning};
+}
 // a field written with one of a closed set of values: any other is W-FIELD-VALUE (DS-211)
-FieldSpec closed(const char* name, FieldType type, const char* meaning, std::vector<std::string> values) {
+FieldSpec Metamodel::closed(const std::string& name, FieldType type, const std::string& meaning, std::vector<std::string> values) {
   return {name, type, FieldSource::Written, meaning, std::move(values)};
 }
 
 // The fields every artefact carries (REQ-00045-1).
-std::vector<FieldSpec> artefact() {
+std::vector<FieldSpec> Metamodel::artefact() {
   return {writtenField("title", FieldType::Text, "one sentence that names it"),
           writtenField("text", FieldType::Text, "what it says, in full"),
           writtenField("rationale", FieldType::Text, "why it is so"),
@@ -28,26 +43,12 @@ std::vector<FieldSpec> artefact() {
           writtenField("owner", FieldType::Name, "who answers for it")};
 }
 
-std::vector<FieldSpec> plus(std::vector<FieldSpec> base, const std::vector<FieldSpec>& more) {
+std::vector<FieldSpec> Metamodel::plus(std::vector<FieldSpec> base, const std::vector<FieldSpec>& more) {
   base.insert(base.end(), more.begin(), more.end());
   return base;
 }
 
-const FieldSpec kVisibility = syntax("visibility", FieldType::Name, "- when private to its parent, + otherwise");
-const FieldSpec kParams = syntax("params", FieldType::Params, "the parameters, name: type");
-const FieldSpec kReturns = syntax("returns", FieldType::Type, "what it gives back");
-const FieldSpec kNote = writtenField("note", FieldType::Text, "a remark kept with the declaration");
-const FieldSpec kFails =
-    syntax("fails", FieldType::Names, "what it promises it may fail with: fails A, B; fails nothing promises none (DS-189)");
-const FieldSpec kEscapes =
-    derived("escapes", FieldType::Names, "the failures that escape it, from where they start and where they are handled (DS-188)");
-const FieldSpec kEscapePath =
-    derived("escape.*", FieldType::Text, "how a failure escapes it: the operations it comes up through, and the behaviour that starts it");
-const FieldSpec kLanguage = writtenField("language", FieldType::Name,
-                                         "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless "
-                                         "that says otherwise");
-
-std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is written (WrittenForms.cpp)
+std::vector<KindSpec> Metamodel::describe(std::vector<KindSpec> kinds) const {  // how each is written (WrittenForms.cpp)
   for (auto& k : kinds) {
     k.syntax = syntaxOf(k.kind);
     k.example = exampleOf(k.kind);
@@ -55,7 +56,21 @@ std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is wr
   return kinds;
 }
 
-std::vector<KindSpec> build() {
+std::vector<KindSpec> Metamodel::build() {
+  // the fields several kinds carry the same
+  const FieldSpec kVisibility = syntax("visibility", FieldType::Name, "- when private to its parent, + otherwise");
+  const FieldSpec kParams = syntax("params", FieldType::Params, "the parameters, name: type");
+  const FieldSpec kReturns = syntax("returns", FieldType::Type, "what it gives back");
+  const FieldSpec kNote = writtenField("note", FieldType::Text, "a remark kept with the declaration");
+  const FieldSpec kFails =
+      syntax("fails", FieldType::Names, "what it promises it may fail with: fails A, B; fails nothing promises none (DS-189)");
+  const FieldSpec kEscapes =
+      derived("escapes", FieldType::Names, "the failures that escape it, from where they start and where they are handled (DS-188)");
+  const FieldSpec kEscapePath = derived("escape.*", FieldType::Text,
+                                        "how a failure escapes it: the operations it comes up through, and the behaviour that starts it");
+  const FieldSpec kLanguage = writtenField("language", FieldType::Name,
+                                           "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless "
+                                           "that says otherwise");
   const Kind P = Kind::Package, M = Kind::Module, Cl = Kind::Class, Rq = Kind::Requirement;
   // an artefact is written in a box, in the requirement it details, or in the class or member it is about (the grammar's
   // _package_item, _module_item, requirement, class_body and member_body; DS-121)
@@ -231,16 +246,18 @@ std::vector<KindSpec> build() {
   return k;
 }
 
-RelationSpec rel(const char* kind, const char* meaning, std::vector<Kind> from, std::vector<Kind> to) {
+RelationSpec Metamodel::rel(const std::string& kind, const std::string& meaning, std::vector<Kind> from, std::vector<Kind> to) {
   return {kind, meaning, std::move(from), std::move(to), {}};
 }
 
-std::vector<RelationSpec> buildRelations() {
+// containment first, derived from where each kind may be declared, then every other relation as declared
+std::vector<RelationSpec> Metamodel::buildRelations() const {
   const Kind P = Kind::Package, M = Kind::Module, Rq = Kind::Requirement, V = Kind::Verification, Cs = Kind::Constraint;
   const Kind I = Kind::Interface, Op = Kind::Operation, Vw = Kind::View, Cl = Kind::Class, E = Kind::Enum, F = Kind::Function;
   const Kind Me = Kind::Method, A = Kind::Attribute, O = Kind::Operator, S = Kind::Sequence, Ms = Kind::Message;
   const Kind St = Kind::State, Uc = Kind::UseCase;
   return {
+      containment(),
       rel("exposes", "a package or a module offers an interface", {P, M}, {I}),
       // whatever may nest an artefact may annotate it, and one source set for both (DS-217)
       rel("satisfies", "the entity satisfies a requirement", {P, M, Cl, E, F, Me, A, O, I, Op, Vw, S, St, Uc, Kind::Rule, Kind::Definition},
@@ -271,7 +288,7 @@ std::vector<RelationSpec> buildRelations() {
   };
 }
 
-bool among(const std::vector<Kind>& kinds, Kind kind) {
+bool Metamodel::among(const std::vector<Kind>& kinds, Kind kind) {
   if (kinds.empty()) return true;
   for (Kind k : kinds) {
     if (k == kind) return true;
@@ -279,15 +296,13 @@ bool among(const std::vector<Kind>& kinds, Kind kind) {
   return false;
 }
 
-bool matches(const std::string& name, const std::string& key) {
+bool Metamodel::matches(const std::string& name, const std::string& key) {
   if (!name.empty() && name.back() == '*')
     return key.compare(0, name.size() - 1, name, 0, name.size() - 1) == 0 && key.size() >= name.size();
   return name == key;
 }
 
-}  // namespace detail
-
-const char* fieldTypeName(FieldType type) {
+std::string Metamodel::fieldTypeName(FieldType type) const {
   switch (type) {
     case FieldType::Text:
       return "text";
@@ -309,7 +324,7 @@ const char* fieldTypeName(FieldType type) {
   return "text";
 }
 
-const char* fieldSourceName(FieldSource source) {
+std::string Metamodel::fieldSourceName(FieldSource source) const {
   switch (source) {
     case FieldSource::Written:
       return "written";
@@ -321,17 +336,76 @@ const char* fieldSourceName(FieldSource source) {
   return "written";
 }
 
-const std::vector<KindSpec>& kinds() {
-  static const std::vector<KindSpec> all = detail::describe(detail::build());
-  return all;
+// each kind's name, by its place in Kind: the switch is read once, here, and nameOf answers from the table. The
+// kinds are numbered from 0 in the order Kind declares them, and the first number that names no kind ends it.
+std::vector<std::string> Metamodel::buildNames() {
+  const auto written = [](Kind kind) -> const char* {
+    switch (kind) {
+      case Kind::Package:
+        return "package";
+      case Kind::Module:
+        return "module";
+      case Kind::Requirement:
+        return "requirement";
+      case Kind::Verification:
+        return "verification";
+      case Kind::Interface:
+        return "interface";
+      case Kind::View:
+        return "view";
+      case Kind::Operation:
+        return "operation";
+      case Kind::Constraint:
+        return "constraint";
+      case Kind::Class:
+        return "class";
+      case Kind::Enum:
+        return "enum";
+      case Kind::Function:
+        return "function";
+      case Kind::Method:
+        return "method";
+      case Kind::Attribute:
+        return "attribute";
+      case Kind::Operator:
+        return "operator";
+      case Kind::Sequence:
+        return "sequence";
+      case Kind::Message:
+        return "message";
+      case Kind::Frame:
+        return "frame";
+      case Kind::State:
+        return "state";
+      case Kind::Diagram:
+        return "diagram";
+      case Kind::UseCase:
+        return "usecase";
+      case Kind::Outcome:
+        return "outcome";
+      case Kind::Rule:
+        return "rule";
+      case Kind::Definition:
+        return "definition";
+    }
+    return "?";
+  };
+  std::vector<std::string> names;
+  for (int k = 0;; ++k) {
+    names.emplace_back(written(static_cast<Kind>(k)));
+    if (names.back() == "?") return names;
+  }
 }
 
-namespace detail {
+const std::string& Metamodel::nameOf(Kind kind) const {
+  const auto at = static_cast<std::size_t>(kind);
+  return names_[at < names_.size() ? at : names_.size() - 1];
+}
 
 // contains goes from a parent to a child exactly where the child may be declared: one pair per parent of each kind
-RelationSpec containment() {
+RelationSpec Metamodel::containment() const {
   RelationSpec contains{"contains", "the parent holds the child", {}, {}, {}};
-  for (const auto& k : kinds()) {
+  for (const auto& k : kinds_) {
     for (Kind p : k.parents) {
       contains.pairs.push_back({p, k.kind});
       if (std::find(contains.from.begin(), contains.from.end(), p) == contains.from.end()) contains.from.push_back(p);
@@ -341,77 +415,77 @@ RelationSpec containment() {
   return contains;
 }
 
-}  // namespace detail
-
-const std::vector<RelationSpec>& relations() {
-  static const std::vector<RelationSpec> all = [] {
-    std::vector<RelationSpec> r{detail::containment()};
-    for (auto& spec : detail::buildRelations()) r.push_back(spec);
-    return r;
-  }();
-  return all;
-}
-
-const KindSpec& specOf(Kind kind) {
-  for (const auto& k : kinds()) {
+const KindSpec& Metamodel::specOf(Kind kind) const {
+  for (const auto& k : kinds_) {
     if (k.kind == kind) return k;
   }
-  throw std::logic_error(std::string("the metamodel does not declare ") + kindName(kind));
+  throw std::logic_error(std::string("the metamodel does not declare ") + nameOf(kind));
 }
 
-const KindSpec* specNamed(const std::string& name) {
-  for (const auto& k : kinds())
-    if (name == kindName(k.kind)) return &k;
+const KindSpec* Metamodel::specNamed(const std::string& name) const {
+  for (const auto& k : kinds_)
+    if (name == nameOf(k.kind)) return &k;
   return nullptr;
 }
 
-const FieldSpec* fieldOf(Kind kind, const std::string& key) {
+const FieldSpec* Metamodel::fieldOf(Kind kind, const std::string& key) const {
   for (const auto& f : specOf(kind).fields) {
-    if (detail::matches(f.name, key)) return &f;
+    if (matches(f.name, key)) return &f;
   }
   return nullptr;
 }
 
-const RelationSpec* relationOf(const std::string& kind) {
-  for (const auto& r : relations()) {
+const RelationSpec* Metamodel::relationOf(const std::string& kind) const {
+  for (const auto& r : relations_) {
     if (r.kind == kind) return &r;
   }
   return nullptr;
 }
 
-// The annotations that mean something, the binder's table (DS-340: the metamodel's, not the manual's). Two
-// rows only document, for the manual: "@<any other word>" (which annotationOf also gives for an unknown word)
-// and ": <UC ID> after an operation"; the binder lists as known only the names that start with @ and hold no <.
-const std::vector<AnnotationSpec>& annotations() {
-  static const std::vector<AnnotationSpec> all = {
+// The annotations that mean something, the binder's table (DS-340: the metamodel's, not the manual's).
+std::vector<AnnotationSpec> Metamodel::buildKnownAnnotations() {
+  return {
       {"@requirement", "satisfies", "the entity answers to the requirement; on a verification, verifies it", "verifies", Kind::Requirement},
       {"@constraint", "constrained-by", "the entity obeys the constraint; on a verification, verifies it", "verifies", Kind::Constraint},
       {"@refines", "refines", "the requirement details the one named (nesting says the same)", "", Kind::Requirement},
       {"@interface", "realises", "the class or verification carries out the interface", "", Kind::Interface},
       {"@consumes", "consumes", "the package, module or class depends on an interface another box offers", "", Kind::Interface},
       {"@verification", "exercised-by", "the sequence is run by the verification", "", Kind::Verification},
-      {"@<any other word>", "refers", "kept as a link the language gives no meaning to, and reported (W-ANNOTATION-UNKNOWN)"},
-      {": <UC ID> after an operation", "realises", "not an annotation: an interface operation realises the use case it names"},
   };
+}
+
+// any other word: kept as a link, and said (DS-210)
+AnnotationSpec Metamodel::buildOtherAnnotation() {
+  return {"@<any other word>", "refers", "kept as a link the language gives no meaning to, and reported (W-ANNOTATION-UNKNOWN)"};
+}
+
+// what the manual lists: the known annotations, any other word, and what an operation writes after a colon,
+// which is no annotation but makes a relation the same way
+std::vector<AnnotationSpec> Metamodel::buildAnnotations() const {
+  std::vector<AnnotationSpec> all = known_;
+  all.push_back(other_);
+  all.push_back({": <UC ID> after an operation", "realises", "not an annotation: an interface operation realises the use case it names"});
   return all;
 }
 
-const AnnotationSpec& annotationOf(const std::string& word) {
-  for (const auto& a : annotations())
+const AnnotationSpec& Metamodel::annotationOf(const std::string& word) const {
+  for (const auto& a : known_)
     if (a.name == "@" + word) return a;
-  static const AnnotationSpec& other =
-      *std::find_if(annotations().begin(), annotations().end(), [](const AnnotationSpec& a) { return a.name == "@<any other word>"; });
-  return other;
+  return other_;
 }
 
-bool joins(const RelationSpec& relation, Kind from, Kind to) {
+bool Metamodel::isArtefact(Kind kind) const {
+  return kind == Kind::Requirement || kind == Kind::Verification || kind == Kind::Constraint || kind == Kind::UseCase;
+}
+
+bool Metamodel::joins(const RelationSpec& relation, Kind from, Kind to) const {
   if (!relation.pairs.empty()) {
     for (const auto& p : relation.pairs) {
       if (p.first == from && p.second == to) return true;
     }
     return false;
   }
-  return detail::among(relation.from, from) && detail::among(relation.to, to);
+  return among(relation.from, from) && among(relation.to, to);
 }
 
 }  // namespace model

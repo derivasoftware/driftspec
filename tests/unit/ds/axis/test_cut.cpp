@@ -7,6 +7,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -18,7 +19,7 @@ class TestCut : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText(
         "shop.ds",
         "package shop {\n"
@@ -57,12 +58,13 @@ class TestCut : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder);
   }
 
   ds::axis::Cut cut(const std::string& diagram) const { return ds::axis::Cut(model, *model.find("diagram:" + diagram)); }
 
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 };
 
 TEST_F(TestCut, ADiagramThatWritesNeitherOpenNorCloseHasNoCut) {

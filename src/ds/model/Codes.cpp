@@ -1,7 +1,6 @@
 #include <string>
 #include <vector>
 
-#include "Detail.hpp"
 #include "ds/model/Metamodel.hpp"
 
 // The catalogue of finding codes (DS-79): every code the engine reports, with what it means and what to do
@@ -10,9 +9,7 @@
 namespace ds {
 namespace model {
 
-namespace detail {
-
-std::vector<CodeSpec> buildCodes() {
+std::vector<CodeSpec> Metamodel::buildCodes() {
   return {
       {"E-SYNTAX", "error",
        "A file does not parse at the place shown; a block left open is shown where it opens. What parses around it still reaches "
@@ -202,15 +199,8 @@ std::vector<CodeSpec> buildCodes() {
   };
 }
 
-}  // namespace detail
-
-const std::vector<CodeSpec>& codes() {
-  static const std::vector<CodeSpec> all = detail::buildCodes();
-  return all;
-}
-
-const CodeSpec* codeOf(const std::string& code) {
-  for (const auto& c : codes())
+const CodeSpec* Metamodel::codeOf(const std::string& code) const {
+  for (const auto& c : codes_)
     if (c.code == code) return &c;
   return nullptr;
 }

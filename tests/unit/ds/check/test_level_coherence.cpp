@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -17,7 +18,7 @@ class TestLevelCoherence : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("shop.ds",
                                        "package shop {\n"
                                        "  usecase UC-00001-1 run() -> int {\n"
@@ -94,7 +95,7 @@ class TestLevelCoherence : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder);
   }
 
   /// The findings (or the coverage) of one code about one scenario.
@@ -109,7 +110,8 @@ class TestLevelCoherence : public ::testing::Test {
            count(model.coverage(), "W-LEVEL-NOT-BELOW", scenario);
   }
 
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 };
 
 TEST_F(TestLevelCoherence, TwoLevelsThatCrossAlikeInTheSameOrderAgree) { EXPECT_EQ(levels("UC-00001-1"), 0); }

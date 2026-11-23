@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace {
@@ -28,7 +29,8 @@ std::vector<std::string> ends(const std::vector<Relation>& relations, bool to) {
 /// The questions the model answers by identity, with no pass over it (REQ-00001-1, DS-171).
 class TestIndex : public ::testing::Test {
  protected:
-  Model model;
+  const ds::model::Metamodel metamodel;
+  Model model{metamodel};
 
   void SetUp() override {
     model.declare(entity(Kind::Package, "p"));
@@ -107,7 +109,7 @@ TEST_F(TestIndex, AnExpectedNodeThatIsDeclaredMovesToTheScopeOfItsDeclaration) {
 
 TEST_F(TestIndex, OnlyTheRelationsOfOneKindAreAnsweredInTheOrderStated) {
   // DS-345: a reader that wants one kind gets only those, copied, not every relation to filter
-  Model m;
+  Model m{metamodel};
   m.relate({"inherits", "a", "b", {}, ""});
   m.relate({"owns", "a", "c", {}, ""});
   m.relate({"inherits", "a", "d", {}, ""});
@@ -120,7 +122,7 @@ TEST_F(TestIndex, OnlyTheRelationsOfOneKindAreAnsweredInTheOrderStated) {
 
 TEST_F(TestIndex, TheDeclaredClassesOfANameAreKeptByPackageThroughARename) {
   // DS-336: what the resolver asks of a bare name, kept in step with declare and rename
-  Model m;
+  Model m{metamodel};
   Entity plan = entity(Kind::Class, "p@a::Plan", "p@a");
   plan.name = "Plan";
   m.declare(plan);

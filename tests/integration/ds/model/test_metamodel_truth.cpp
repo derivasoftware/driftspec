@@ -24,6 +24,7 @@ using ds::model::Kind;
 /// export publishes the metamodel, so a reader that trusts it is not misled.
 class TestMetamodelTruth : public ::testing::Test {
  protected:
+  const ds::model::Metamodel metamodel;
   // each rule of the grammar and the rules it names: `name: $ => ... $.child ...`
   static std::map<std::string, std::set<std::string>> grammar() {
     std::ifstream in(std::string(DRIFTSPEC_SOURCE_DIR) + "/grammar/grammar.js");
@@ -75,8 +76,8 @@ class TestMetamodelTruth : public ::testing::Test {
 
 TEST_F(TestMetamodelTruth, EveryKindIsDeclaredInWhatTheGrammarLetsItBeWrittenIn) {
   const auto rules = grammar();
-  for (const auto& spec : ds::model::kinds()) {
-    const std::string name = ds::model::kindName(spec.kind);
+  for (const auto& spec : metamodel.kinds()) {
+    const std::string name = metamodel.nameOf(spec.kind);
     if (!rules.count(name)) continue;  // laid out by a behaviour (message, frame): no rule of its own
     std::set<std::string> parents, top;
     for (const auto& h : holders(rules, name)) {
@@ -87,16 +88,17 @@ TEST_F(TestMetamodelTruth, EveryKindIsDeclaredInWhatTheGrammarLetsItBeWrittenIn)
       parents.insert(h);
     }
     std::set<std::string> declared;
-    for (Kind p : spec.parents) declared.insert(ds::model::kindName(p));
+    for (Kind p : spec.parents) declared.insert(metamodel.nameOf(p));
     EXPECT_EQ(declared, parents) << name << ": the metamodel's parents against the grammar";
     EXPECT_EQ(spec.top, !top.empty()) << name << ": at the top of a file";
   }
 }
 
 TEST_F(TestMetamodelTruth, EveryFlagTheBinderSetsIsOneItsKindDeclares) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   for (const char* dir : {"/examples", "/design"})
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + dir)) binder.bind(f);
   // what the corpus does not exercise: a verification and a constraint extended by their annotations
@@ -104,15 +106,15 @@ TEST_F(TestMetamodelTruth, EveryFlagTheBinderSetsIsOneItsKindDeclares) {
                                "package x {\n  verification VER-09001-1 {\n    @requirement REQ-09001-1\n  }\n"
                                "  constraint CST-09001-1 {\n    @requirement REQ-09001-1\n  }\n}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   std::size_t flagged = 0;
   for (const auto& pair : model.entities()) {
     const auto& e = pair.second;
-    const auto& allowed = ds::model::specOf(e.kind).flags;
+    const auto& allowed = metamodel.specOf(e.kind).flags;
     for (const auto& flag : e.flags) {
       ++flagged;
       EXPECT_NE(std::find(allowed.begin(), allowed.end(), flag), allowed.end())
-          << ds::model::kindName(e.kind) << " " << e.id << " carries the flag " << flag << ", which a " << ds::model::kindName(e.kind)
+          << metamodel.nameOf(e.kind) << " " << e.id << " carries the flag " << flag << ", which a " << metamodel.nameOf(e.kind)
           << " does not declare";
     }
   }

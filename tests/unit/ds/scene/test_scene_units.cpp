@@ -5,6 +5,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Layers.hpp"
@@ -17,12 +18,13 @@ namespace {
 /// of the document and nothing of another's.
 class SceneOf : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::scene::SceneDocument placed;
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("p.ds",
                                  "package p {\n"
                                  "  requirement REQ-00001-1: The system shall run\n"
@@ -52,7 +54,7 @@ class SceneOf : public ::testing::Test {
                                  "  }\n"
                                  "}\n"));
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder);
     placed = ds::scene::Layout(model).place();
   }
 };

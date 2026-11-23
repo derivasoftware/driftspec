@@ -50,10 +50,7 @@ enum class Kind {
   Definition
 };
 
-const char* kindName(Kind kind);
-/// Whether a kind is an artefact identified by its id with its revision: requirement, verification,
-/// constraint and use case (R5, DS-116).
-bool isArtefact(Kind kind);
+class Metamodel;
 
 /// One declared (or expected, R6) entity of the workspace.
 /// One parameter as the binder read it: its name and its type as written (a template's: its name and bound).
@@ -165,9 +162,13 @@ struct Formula {
   std::vector<Column> columns;               ///< a table's columns
 };
 
-/// The resolved workspace: entities by identity, relations and findings.
+/// The resolved workspace: entities by identity, relations and findings, written in the language of the metamodel
+/// it is given, which outlives it (DS-341).
 class Model {
  public:
+  explicit Model(const Metamodel& metamodel) : metamodel_(&metamodel) {}
+  /// The language the model is written in: what its readers ask of the kinds, the relations and the codes.
+  const Metamodel& metamodel() const { return *metamodel_; }
   Entity& declare(const Entity& entity);
   const Entity* find(const std::string& id) const;
   Entity* find(const std::string& id);
@@ -205,6 +206,7 @@ class Model {
   void indexEntity(const Entity& entity, bool enters);
   /// Everything indexed, built again from the entities and the relations (after a rename).
   void indexAgain();
+  const Metamodel* metamodel_;  ///< never null: a model is always written in one
   std::map<std::string, Entity> entities_;
   std::vector<Relation> relations_;
   std::vector<Finding> findings_;

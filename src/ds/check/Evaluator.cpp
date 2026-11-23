@@ -16,12 +16,6 @@ using Bindings = std::map<std::string, std::string>;
 
 std::string key(const std::string& owner, const std::string& written) { return owner + "\n" + written; }
 
-bool isKindName(const std::string& name) {
-  for (const auto& spec : model::kinds())
-    if (name == model::kindName(spec.kind)) return true;
-  return false;
-}
-
 std::string describe(const std::map<std::string, std::string>& bindings) {
   std::string out;
   for (const auto& b : bindings) out += (out.empty() ? "" : ", ") + b.first + " = " + b.second;
@@ -107,7 +101,7 @@ void Evaluator::index() {
   }
   for (const auto& pair : model_.entities()) {
     const model::Entity& e = pair.second;
-    if (!e.expected) byKind_[model::kindName(e.kind)].push_back(e.id);
+    if (!e.expected) byKind_[model_.metamodel().nameOf(e.kind)].push_back(e.id);
   }
 }
 
@@ -128,7 +122,7 @@ bool Evaluator::validate(const std::string& id, const model::Formula& formula) {
   bool ok = true;
   std::set<std::string> bound;
   for (const auto& range : formula.ranges) {
-    if (!isKindName(range.kind)) {
+    if (!model_.metamodel().specNamed(range.kind)) {
       report("E-RULE-UNKNOWN", id, "ranges over '" + range.kind + "', which is no kind of the language", range.location);
       ok = false;
     }
@@ -189,14 +183,14 @@ bool joinsAtEnd(const model::RelationSpec& spec, model::Kind kind, bool from) {
 void Evaluator::checkVacuity(const std::string& id, const model::Formula& formula) {
   std::map<std::string, model::Kind> kindOf;  // variable -> the kind its range or a kind literal binds it to
   for (const auto& r : formula.ranges)
-    if (const model::KindSpec* k = model::specNamed(r.kind)) kindOf[r.variable] = k->kind;
+    if (const model::KindSpec* k = model_.metamodel().specNamed(r.kind)) kindOf[r.variable] = k->kind;
   std::vector<const std::vector<model::Literal>*> bodies{&formula.where};
   for (const auto& c : formula.claims) bodies.push_back(&c);
   for (const auto& c : formula.cases) bodies.push_back(&c);
   for (const auto* body : bodies)
     for (const auto& l : *body)
       if (l.form == Form::Kind && !l.negated && !l.terms.empty() && l.terms[0].variable)
-        if (const model::KindSpec* k = model::specNamed(l.name)) kindOf.emplace(l.terms[0].text, k->kind);
+        if (const model::KindSpec* k = model_.metamodel().specNamed(l.name)) kindOf.emplace(l.terms[0].text, k->kind);
   const std::string scope = scopeOf(id);
   const auto kindOfTerm = [&](const model::Term& t, model::Kind* out) {
     if (t.value) return false;
@@ -214,14 +208,14 @@ void Evaluator::checkVacuity(const std::string& id, const model::Formula& formul
   for (const auto* body : bodies)
     for (const auto& l : *body) {
       if (l.form != Form::Relation || l.terms.size() != 2) continue;
-      const model::RelationSpec* spec = model::relationOf(l.name);
+      const model::RelationSpec* spec = model_.metamodel().relationOf(l.name);
       if (!spec) continue;
       for (int end = 0; end < 2; ++end) {
         model::Kind kind;
         if (!kindOfTerm(l.terms[end], &kind) || joinsAtEnd(*spec, kind, end == 0)) continue;
         found_.push_back({"W-RULE-NEVER-MATCHES", "warning",
                           id + " writes '" + l.terms[0].text + " " + l.name + " " + l.terms[1].text + "', and " + l.name +
-                              (end == 0 ? " never leaves " : " never reaches ") + std::string(model::kindName(kind)) + " (" +
+                              (end == 0 ? " never leaves " : " never reaches ") + model_.metamodel().nameOf(kind) + " (" +
                               l.terms[end].text + "): the literal matches nothing",
                           l.location});
         break;
@@ -233,10 +227,10 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
   bool ok = true;
   const std::string scope = scopeOf(id);
   for (const auto& l : body) {
-    if (l.form == Form::Relation && !model::relationOf(l.name)) {
+    if (l.form == Form::Relation && !model_.metamodel().relationOf(l.name)) {
       report("E-RULE-UNKNOWN", id, "names the relation '" + l.name + "', which the metamodel does not declare", l.location);
       ok = false;
-    } else if (l.form == Form::Kind && !isKindName(l.name)) {
+    } else if (l.form == Form::Kind && !model_.metamodel().specNamed(l.name)) {
       report("E-RULE-UNKNOWN", id, "names the kind '" + l.name + "', which is no kind of the language", l.location);
       ok = false;
     } else if (l.form == Form::Call) {
@@ -645,7 +639,7 @@ std::vector<Bindings> Evaluator::answers(const std::string& owner, const model::
     case Form::Kind: {
       if (hasA) {
         const model::Entity* e = model_.find(a);
-        if (e && !e->expected && l.name == model::kindName(e->kind)) out.push_back(bindings);
+        if (e && !e->expected && l.name == model_.metamodel().nameOf(e->kind)) out.push_back(bindings);
         break;
       }
       const auto it = byKind_.find(l.name);

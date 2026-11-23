@@ -2,7 +2,6 @@
 #include <string>
 #include <utility>
 
-#include "Detail.hpp"
 #include "ds/model/Metamodel.hpp"
 
 // How each kind is written and a minimal workspace that declares one (DS-79): the metamodel's, which the
@@ -12,88 +11,86 @@
 namespace ds {
 namespace model {
 
-namespace detail {
+// How each kind is written and a minimal workspace that declares one; four kinds share the shop of an example.
+std::map<Kind, std::pair<std::string, std::string>> Metamodel::writtenForms() {
+  const std::string kShopClass =
+      "package shop {\n"
+      "  module store {\n"
+      "    dataclass Item {\n"
+      "      + name: std::string\n"
+      "      + cents: int\n"
+      "    }\n"
+      "    class Cart {\n"
+      "      - owns many items: std::vector<Item>\n"
+      "      + add(item: const Item&) -> void\n"
+      "      + total() -> int\n"
+      "    }\n"
+      "  }\n"
+      "}\n";
 
-const std::string kShopClass =
-    "package shop {\n"
-    "  module store {\n"
-    "    dataclass Item {\n"
-    "      + name: std::string\n"
-    "      + cents: int\n"
-    "    }\n"
-    "    class Cart {\n"
-    "      - owns many items: std::vector<Item>\n"
-    "      + add(item: const Item&) -> void\n"
-    "      + total() -> int\n"
-    "    }\n"
-    "  }\n"
-    "}\n";
+  const std::string kShopInterface =
+      "package shop {\n"
+      "  interface shell {\n"
+      "    kind: cli\n"
+      "    operation buy(item: string) -> int {\n"
+      "      command: shop buy <item>\n"
+      "      exit 0: default\n"
+      "    }\n"
+      "  }\n"
+      "\n"
+      "  sequence shell::buy {\n"
+      "    return 0\n"
+      "  }\n"
+      "}\n";
 
-const std::string kShopInterface =
-    "package shop {\n"
-    "  interface shell {\n"
-    "    kind: cli\n"
-    "    operation buy(item: string) -> int {\n"
-    "      command: shop buy <item>\n"
-    "      exit 0: default\n"
-    "    }\n"
-    "  }\n"
-    "\n"
-    "  sequence shell::buy {\n"
-    "    return 0\n"
-    "  }\n"
-    "}\n";
+  const std::string kShopSequence =
+      "package shop {\n"
+      "  module store {\n"
+      "    class Stock {\n"
+      "      + has(item: const std::string&) -> bool\n"
+      "    }\n"
+      "    class Cart {\n"
+      "      - stock: Stock\n"
+      "      + add(item: const std::string&) -> bool\n"
+      "    }\n"
+      "\n"
+      "    sequence Cart::add {\n"
+      "      self -> stock.has(item) -> ok\n"
+      "      opt the item is out of stock / out {\n"
+      "        return false\n"
+      "      }\n"
+      "      return ok\n"
+      "    }\n"
+      "  }\n"
+      "}\n";
 
-const std::string kShopSequence =
-    "package shop {\n"
-    "  module store {\n"
-    "    class Stock {\n"
-    "      + has(item: const std::string&) -> bool\n"
-    "    }\n"
-    "    class Cart {\n"
-    "      - stock: Stock\n"
-    "      + add(item: const std::string&) -> bool\n"
-    "    }\n"
-    "\n"
-    "    sequence Cart::add {\n"
-    "      self -> stock.has(item) -> ok\n"
-    "      opt the item is out of stock / out {\n"
-    "        return false\n"
-    "      }\n"
-    "      return ok\n"
-    "    }\n"
-    "  }\n"
-    "}\n";
-
-const std::string kShopUseCase =
-    "package shop {\n"
-    "  usecase UC-00001-1 buy(item: string) -> int {\n"
-    "    title: Buy an item\n"
-    "    status: draft\n"
-    "    outcome default: the number of the order\n"
-    "    outcome sold-out: nothing is bought\n"
-    "  }\n"
-    "\n"
-    "  interface shell {\n"
-    "    kind: cli\n"
-    "    operation buy(item: string) -> int : UC-00001-1 {\n"
-    "      command: shop buy <item>\n"
-    "      exit 0: default\n"
-    "      exit 1: sold-out\n"
-    "    }\n"
-    "  }\n"
-    "\n"
-    "  sequence shell::buy {\n"
-    "    return 0\n"
-    "  }\n"
-    "\n"
-    "  sequence shell::buy / sold-out {\n"
-    "    return 1\n"
-    "  }\n"
-    "}\n";
-
-const std::map<Kind, std::pair<std::string, std::string>>& writtenForms() {
-  static const std::map<Kind, std::pair<std::string, std::string>> all = {
+  const std::string kShopUseCase =
+      "package shop {\n"
+      "  usecase UC-00001-1 buy(item: string) -> int {\n"
+      "    title: Buy an item\n"
+      "    status: draft\n"
+      "    outcome default: the number of the order\n"
+      "    outcome sold-out: nothing is bought\n"
+      "  }\n"
+      "\n"
+      "  interface shell {\n"
+      "    kind: cli\n"
+      "    operation buy(item: string) -> int : UC-00001-1 {\n"
+      "      command: shop buy <item>\n"
+      "      exit 0: default\n"
+      "      exit 1: sold-out\n"
+      "    }\n"
+      "  }\n"
+      "\n"
+      "  sequence shell::buy {\n"
+      "    return 0\n"
+      "  }\n"
+      "\n"
+      "  sequence shell::buy / sold-out {\n"
+      "    return 1\n"
+      "  }\n"
+      "}\n";
+  return {
       {Kind::Package,
        {"package <name> { ... }\npackage <outer>@<inner> { ... }      reopens the nested package <inner>\nlanguage: cpp | c | "
         "python | typescript | lua     what its code is written in; what it holds says the same unless it says otherwise",
@@ -215,19 +212,16 @@ const std::map<Kind, std::pair<std::string, std::string>>& writtenForms() {
         "package shop {\n  module store {\n    class Cart { }\n  }\n}\n\ndiagram CL_Store {\n  kind: class\n  include: "
         "shop@store::*\n}\n"}},
   };
-  return all;
 }
 
-}  // namespace detail
-
-std::string syntaxOf(Kind kind) {
-  const auto it = detail::writtenForms().find(kind);
-  return it == detail::writtenForms().end() ? "" : it->second.first;
+std::string Metamodel::syntaxOf(Kind kind) const {
+  const auto it = forms_.find(kind);
+  return it == forms_.end() ? "" : it->second.first;
 }
 
-std::string exampleOf(Kind kind) {
-  const auto it = detail::writtenForms().find(kind);
-  return it == detail::writtenForms().end() ? "" : it->second.second;
+std::string Metamodel::exampleOf(Kind kind) const {
+  const auto it = forms_.find(kind);
+  return it == forms_.end() ? "" : it->second.second;
 }
 
 }  // namespace model

@@ -5,6 +5,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -14,14 +15,15 @@ namespace {
 /// The requirement view: the umbrella of an artefact, the tree of a package, artefacts on a class.
 class TestRequirementsView : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   nlohmann::json diagram(const std::string& name) {
@@ -74,9 +76,10 @@ TEST_F(TestRequirementsView, AClassDiagramHangsItsArtefactsAsANote) {
 
 /// A use case that answers to a requirement realises it: the umbrella takes it, drawn as its card.
 TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsItsCard) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   const auto file = parser.parseText("shop.ds",
                                      "package shop {\n"
                                      "  requirement SREQ-00001-1: The shop shall sell an item\n"
@@ -94,7 +97,7 @@ TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsIt
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
   bool card = false;
   for (const auto& n : doc["nodes"])
@@ -108,9 +111,10 @@ TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsIt
 }
 
 TEST(TestRequirementsViewOfAnyAnswer, WhateverAnswersToARequirementIsDrawnAndAMemberThroughItsHolder) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   const auto file = parser.parseText("shop.ds",
                                      "package shop {\n"
                                      "  @requirement SREQ-00001-1\n"
@@ -140,7 +144,7 @@ TEST(TestRequirementsViewOfAnyAnswer, WhateverAnswersToARequirementIsDrawnAndAMe
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
   std::set<std::string> nodes;
   for (const auto& n : doc["nodes"]) nodes.insert(n["id"].get<std::string>());

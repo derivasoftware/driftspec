@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/Ir.hpp"
@@ -20,10 +21,10 @@ class TestTableView : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/states")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     json = ds::render::IrExport(model).render("diagram:TB_Order", false);
     ir = nlohmann::json::parse(json);
   }
@@ -39,7 +40,8 @@ class TestTableView : public ::testing::Test {
     return nullptr;
   }
 
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   std::string json;
   nlohmann::json ir;
 };
@@ -96,13 +98,13 @@ TEST_F(TestTableView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineM
 
 TEST_F(TestTableView, ATableThatNamesNoMachineSaysSo) {
   ds::parse::Parser parser;
-  ds::model::Model other;
-  ds::bind::Binder binder(other);
+  ds::model::Model other{metamodel};
+  ds::bind::Binder binder(other, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n  module m {\n    class Thing { }\n  }\n}\n"
                                "diagram MX { kind: table\n include: p@m::Thing }\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(other, checkSteps).run(binder);
+  ds::check::Checker(other, metamodel, checkSteps).run(binder);
   const auto none = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:MX", false));
   EXPECT_FALSE(none.contains("table"));
   EXPECT_NE(none["notice"].get<std::string>().find("No state machine selected"), std::string::npos);
@@ -110,8 +112,8 @@ TEST_F(TestTableView, ATableThatNamesNoMachineSaysSo) {
 
 TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
   ds::parse::Parser parser;
-  ds::model::Model other;
-  ds::bind::Binder binder(other);
+  ds::model::Model other{metamodel};
+  ds::bind::Binder binder(other, metamodel);
   binder.bind(parser.parseText(
       "a.ds",
       "package p {\n"
@@ -123,7 +125,7 @@ TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
       "  column proved: v where v verifies r\n  column kept: holds c satisfies r\n}\n"
       "diagram TD {\n  kind: table\n  for requirement r in p\n  where r.status = \"draft\"\n  column requirement: r.id\n}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(other, checkSteps).run(binder);
+  ds::check::Checker(other, metamodel, checkSteps).run(binder);
   const auto t = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:TB", false))["table"];
   EXPECT_EQ(t["corner"], "requirement");
   EXPECT_EQ(t["columns"], (std::vector<std::string>{"says", "proved", "kept"}));

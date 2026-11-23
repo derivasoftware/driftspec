@@ -7,6 +7,7 @@
 #include <string>
 
 #include "ds/api/Browser.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
@@ -14,6 +15,7 @@ namespace {
 /// page shows after an edit.
 class TestBrowserOverHola : public ::testing::Test {
  protected:
+  const ds::model::Metamodel metamodel;
   nlohmann::json answer;
 
   void SetUp() override {
@@ -26,7 +28,7 @@ class TestBrowserOverHola : public ::testing::Test {
       text << in.rdbuf();
       files[std::filesystem::relative(entry.path(), root).generic_string()] = text.str();
     }
-    answer = nlohmann::json::parse(ds::api::Browser::answer(nlohmann::json{{"files", files}}.dump()));
+    answer = nlohmann::json::parse(ds::api::Browser(metamodel).answer(nlohmann::json{{"files", files}}.dump()));
   }
 };
 
@@ -57,11 +59,11 @@ TEST_F(TestBrowserOverHola, AClassOfTheExampleIsFoundWhereItIsWritten) {
 }
 
 TEST_F(TestBrowserOverHola, TheManualIsAnsweredByItsOwnRequest) {
-  const auto index = nlohmann::json::parse(ds::api::Browser::answer(nlohmann::json{{"manual", ""}}.dump()))["manual"];
+  const auto index = nlohmann::json::parse(ds::api::Browser(metamodel).answer(nlohmann::json{{"manual", ""}}.dump()))["manual"];
   ASSERT_FALSE(index["guides"].empty());
   EXPECT_FALSE(index["topics"].empty());
   const std::string first = index["guides"][0];
-  const auto page = nlohmann::json::parse(ds::api::Browser::answer(nlohmann::json{{"manual", first}}.dump()))["manual"];
+  const auto page = nlohmann::json::parse(ds::api::Browser(metamodel).answer(nlohmann::json{{"manual", first}}.dump()))["manual"];
   EXPECT_EQ(page["topic"], first);
   EXPECT_EQ(page["text"].get<std::string>().rfind("# ", 0), 0U);  // a guide is Markdown that starts with its title
 }

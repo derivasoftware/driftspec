@@ -16,18 +16,19 @@ namespace {
 /// consumes relation, the same in the box or in an extension block in another file.
 class TestUses : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void load(const std::vector<std::pair<std::string, std::string>>& files) {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : files) {
       const auto parsed = parser.parseText(f.first, f.second);
       ASSERT_FALSE(parsed.hasSyntaxErrors) << f.first << ": " << parsed.errorDetail;
       binder.bind(parsed);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   bool consumes(const std::string& from, const std::string& to) const {
@@ -106,16 +107,16 @@ TEST_F(TestUses, AUseOfSomethingThatIsNoInterfaceIsReportedAndNotBound) {
 }
 
 TEST_F(TestUses, AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten) {
-  const auto uses = ds::model::annotationOf("consumes");
+  const auto uses = metamodel.annotationOf("consumes");
   EXPECT_EQ(uses.relation, "consumes");
   EXPECT_EQ(uses.target, ds::model::Kind::Interface);
-  EXPECT_EQ(ds::model::annotationOf("whatever").relation, "refers");  // a word with no meaning stays a plain link
-  EXPECT_EQ(ds::model::annotationOf("requirement").onVerification, "verifies");
-  for (const auto& a : ds::model::annotations()) {
+  EXPECT_EQ(metamodel.annotationOf("whatever").relation, "refers");  // a word with no meaning stays a plain link
+  EXPECT_EQ(metamodel.annotationOf("requirement").onVerification, "verifies");
+  for (const auto& a : metamodel.annotations()) {
     if (a.relation == "refers" || a.name.rfind("@", 0) != 0) continue;
-    EXPECT_NE(ds::model::relationOf(a.relation), nullptr) << a.name;
+    EXPECT_NE(metamodel.relationOf(a.relation), nullptr) << a.name;
     if (!a.onVerification.empty()) {
-      EXPECT_NE(ds::model::relationOf(a.onVerification), nullptr) << a.name;
+      EXPECT_NE(metamodel.relationOf(a.onVerification), nullptr) << a.name;
     }
   }
 }

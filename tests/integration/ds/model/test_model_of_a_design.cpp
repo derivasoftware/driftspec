@@ -7,6 +7,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -46,9 +47,10 @@ const char* kCrate = "package shop {\n  module store {\n    class Crate {\n     
 /// built by hand (REQ-00001-1, REQ-00002-1).
 class TestModelOfADesign : public ::testing::Test {
  protected:
-  Model model;
+  const ds::model::Metamodel metamodel;
+  Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder{model};
+  ds::bind::Binder binder{model, metamodel};
 
   void bind(const std::string& path, const std::string& text) {
     const auto file = parser.parseText(path, text);
@@ -58,7 +60,7 @@ class TestModelOfADesign : public ::testing::Test {
 
   void check() {
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder);
   }
 
   int findings(const std::string& code) const {
@@ -214,7 +216,7 @@ TEST_F(TestIndexOfADesign, AnAnswerIsACopyThatALaterChangeLeavesAsItWas) {
 
 TEST_F(TestIndexOfADesign, ACopyOfTheModelAnswersForItself) {
   Model copy = model;
-  ds::bind::Binder other(copy);
+  ds::bind::Binder other(copy, metamodel);
   other.bind(parser.parseText("crate.ds", kCrate));
   EXPECT_EQ(copy.index().children("shop@store").size(), 3u);
   EXPECT_EQ(model.index().children("shop@store").size(), 2u);

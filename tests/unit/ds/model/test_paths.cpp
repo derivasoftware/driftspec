@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace {
@@ -14,8 +15,8 @@ using ds::model::Model;
 
 /// One behaviour built by hand, as the binder keeps it (DS-172): m0, an `opt / stop` holding m1 and a
 /// return (m2), then m3 and a return (m4); each step contained by what encloses it, in the order written.
-Model behaviour() {
-  Model model;
+Model behaviour(const ds::model::Metamodel& metamodel) {
+  Model model{metamodel};
   const std::string seq = "p@m::C::run::sequence";
   Entity s;
   s.kind = Kind::Sequence;
@@ -59,7 +60,8 @@ std::vector<std::string> ops(const std::vector<const Entity*>& path) {
 class TestHasScenario : public ::testing::Test {};
 
 TEST_F(TestHasScenario, AnswersForANamedBranchOnly) {
-  const Model model = behaviour();
+  const ds::model::Metamodel metamodel;
+  const Model model = behaviour(metamodel);
   EXPECT_TRUE(ds::model::hasScenario(model, "p@m::C::run::sequence", "stop"));
   EXPECT_FALSE(ds::model::hasScenario(model, "p@m::C::run::sequence", "other"));
   EXPECT_FALSE(ds::model::hasScenario(model, "p@m::C::other::sequence", "stop"));
@@ -68,12 +70,14 @@ TEST_F(TestHasScenario, AnswersForANamedBranchOnly) {
 class TestPathOf : public ::testing::Test {};
 
 TEST_F(TestPathOf, TheNamedPathTakesItsBranchAndEndsAtItsReturn) {
-  const Model model = behaviour();
+  const ds::model::Metamodel metamodel;
+  const Model model = behaviour(metamodel);
   EXPECT_EQ(ops(ds::model::pathOf(model, "p@m::C::run::sequence", "stop", nullptr)), (std::vector<std::string>{"a", "b", "1"}));
 }
 
 TEST_F(TestPathOf, TheDefaultPathSkipsTheNamedBranch) {
-  const Model model = behaviour();
+  const ds::model::Metamodel metamodel;
+  const Model model = behaviour(metamodel);
   std::set<std::string> kept;
   EXPECT_EQ(ops(ds::model::pathOf(model, "p@m::C::run::sequence", "", &kept)), (std::vector<std::string>{"a", "c", "0"}));
   EXPECT_TRUE(kept.empty());
@@ -81,8 +85,8 @@ TEST_F(TestPathOf, TheDefaultPathSkipsTheNamedBranch) {
 
 /// A loop holding a named opt: m0 in the loop, the opt / found holding m1 and a return (m2); then m3.
 /// Each step contained by what encloses it, in the order written (DS-172).
-Model loopBehaviour() {
-  Model model;
+Model loopBehaviour(const ds::model::Metamodel& metamodel) {
+  Model model{metamodel};
   const std::string seq = "p@m::C::find::sequence";
   Entity s;
   s.kind = Kind::Sequence;
@@ -121,21 +125,24 @@ Model loopBehaviour() {
 }
 
 TEST_F(TestPathOf, ALoopWithANamedBranchInsideStaysOnTheDefaultPath) {
-  const Model model = loopBehaviour();
+  const ds::model::Metamodel metamodel;
+  const Model model = loopBehaviour(metamodel);
   std::set<std::string> kept;
   EXPECT_EQ(ops(ds::model::pathOf(model, "p@m::C::find::sequence", "", &kept)), (std::vector<std::string>{"next", "after"}));
   EXPECT_TRUE(kept.count("p@m::C::find::sequence::f0"));  // drawn as the loop it is
 }
 
 TEST_F(TestPathOf, APathThatNamesABranchInsideALoopGoesIntoItAndEndsThere) {
-  const Model model = loopBehaviour();
+  const ds::model::Metamodel metamodel;
+  const Model model = loopBehaviour(metamodel);
   EXPECT_EQ(ops(ds::model::pathOf(model, "p@m::C::find::sequence", "found", nullptr)), (std::vector<std::string>{"next", "take", "1"}));
 }
 
 class TestHolderOf : public ::testing::Test {};
 
 TEST_F(TestHolderOf, AMembersBehaviourRunsOnWhatHoldsItAndAClassesOnTheClass) {
-  Model model;
+  const ds::model::Metamodel metamodel;
+  Model model{metamodel};
   Entity c;
   c.kind = Kind::Class;
   c.id = "p@m::C";

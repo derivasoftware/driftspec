@@ -518,6 +518,8 @@ package driftspec@driftspec {
     @consumes driftspec@ds@engine                // DS-92: through the engine's interface
     @consumes driftspec@ds@workspace             // DS-90: a workspace loaded once, through its interface
     @requirement REQ-00086-1
+    // the module makes the language once, a model::Metamodel, and hands it to the engine's Api and to every
+    // Workspace it loads (DS-341); version() is that metamodel's
 
     function version() -> std::string
     function check(files: std::map<std::string, std::string>) -> std::string

@@ -7,6 +7,7 @@
 
 #include "ds/machine/Machine.hpp"
 #include "ds/machine/Table.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/SequenceTree.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
@@ -936,12 +937,12 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
     const model::Entity& e = *model_.find(id);
     // an artefact, or a use case, is drawn as its card: id, stereotype with its status, title
     const bool card = isArtefact(e) || e.kind == model::Kind::UseCase;
-    nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", card ? e.id : e.name}, {"classifier", model::kindName(e.kind)}};
+    nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", card ? e.id : e.name}, {"classifier", model_.metamodel().nameOf(e.kind)}};
     if (card) {
       std::vector<std::string> lines = wrap(e.field("title"), 44);
       const std::string status = e.field("status");
       const std::string method = e.field("method");
-      std::string stereotype = model::kindName(e.kind);
+      std::string stereotype = model_.metamodel().nameOf(e.kind);
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
       if (e.kind == model::Kind::Requirement)
