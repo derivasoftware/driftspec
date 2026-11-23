@@ -93,8 +93,8 @@ void shift(std::vector<std::pair<std::string, std::pair<double, double>>>& kids,
 /// Measures and lays out every box of the model once, for one variant (lean hides private members).
 class Variant {
  public:
-  Variant(const model::Model& model, bool lean, std::map<std::string, double>* widths)
-      : metamodel_(model.metamodel()), lean_(lean), widths_(widths) {
+  Variant(const model::Model& model, const model::Metamodel& metamodel, bool lean, std::map<std::string, double>* widths)
+      : metamodel_(metamodel), lean_(lean), widths_(widths) {
     for (const auto& pair : model.entities()) {
       const model::Entity& e = pair.second;
       if (!e.expected) byScope_[e.scope].push_back(&e);
@@ -411,13 +411,13 @@ Box bounds(const std::vector<Node>& nodes, bool lean) {
 
 }  // namespace
 
-Layout::Layout(const model::Model& model) : model_(model) {}
+Layout::Layout(const model::Model& model, const model::Metamodel& metamodel) : model_(model), metamodel_(metamodel) {}
 
 // The layout runs twice, once per variant; the full one's order is kept and every node that has a
 // lean place gets it.
 SceneDocument Layout::place() const {
   std::map<std::string, double> widths;
-  Variant full(model_, false, &widths), lean(model_, true, &widths);
+  Variant full(model_, metamodel_, false, &widths), lean(model_, metamodel_, true, &widths);
   full.run();
   lean.run();
   SceneDocument doc;

@@ -128,7 +128,7 @@ TEST_F(TestPackages, LevelByPlacementThroughTheLevels) {
 }
 
 TEST_F(TestPackages, NestedPackagesAreContainersOfTheDrawing) {
-  const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:CL_App", false));
+  const auto doc = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_App", false));
   std::map<std::string, nlohmann::json> by;
   for (const auto& n : doc["nodes"]) by[n["id"]] = n;
   ASSERT_TRUE(by.count("app@core"));

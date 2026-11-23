@@ -47,7 +47,7 @@ class TestEvaluator : public ::testing::Test {
   std::vector<std::string> broken() {
     const ds::check::Resolver resolver(model);  // the evaluator needs names resolved, not a checker (DS-125)
     std::vector<std::string> out;
-    for (const auto& f : ds::check::Evaluator(model, resolver).run())
+    for (const auto& f : ds::check::Evaluator(model, metamodel, resolver).run())
       if (f.code == "E-RULE-BROKEN") out.push_back(f.message);
     return out;
   }

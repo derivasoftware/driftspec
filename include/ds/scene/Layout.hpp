@@ -11,11 +11,13 @@ namespace scene {
 /// its parent, once, with and without private members; the base document the layers draw over.
 class Layout {
  public:
-  explicit Layout(const model::Model& model);
+  /// Places the boxes of `model`, written in `metamodel`, which names the kind of each (DS-351).
+  Layout(const model::Model& model, const model::Metamodel& metamodel);
   SceneDocument place() const;
 
  private:
   const model::Model& model_;
+  const model::Metamodel& metamodel_;
 };
 
 }  // namespace scene

@@ -105,7 +105,8 @@ std::string IrExport::renderTour(const model::Entity& tour, bool pretty) const {
   // the sequence, as a sequence diagram of the same fields draws it
   const nlohmann::json sequence = nlohmann::json::parse(renderSequence(tour, false));
   // who takes part, drawn as boxes on the same cut: each lifeline is one box, with the relations between them
-  const std::set<std::string> who = query::SequenceFilter(splitTrimmed(tour.field("include"), ','), levelsOf(tour), tour.id).select(model_);
+  const std::set<std::string> who =
+      query::SequenceFilter(metamodel_, splitTrimmed(tour.field("include"), ','), levelsOf(tour), tour.id).select(model_);
   model::Entity boxes = tour;
   boxes.fields["kind"] = "class";
   std::vector<std::string> taken, closed;
@@ -153,7 +154,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
 
   // what the diagram takes is the query's filter of it (DS-127); the boxes around are drawn here
-  const auto filter = query::filterFor(*diagram);
+  const auto filter = query::filterFor(metamodel_, *diagram);
   const std::set<std::string> selected = static_cast<const query::ClassFilter&>(*filter).boxes(model_);
   const std::set<std::string> containers = query::ClassFilter::containers(model_, selected);
   auto up = [](const std::string& s) { return model::Scope(model::Scope(s).outer().text()).box().text(); };
@@ -318,7 +319,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
     out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}, {"refs", {{"bond", axis::bondOf(r.kind)}}}});
   }
   // a cut written (`open:`, `close:`, `cut:`) says which boxes close: the drawing is lifted onto it (DS-229)
-  const axis::Cut cut(model_, *diagram);
+  const axis::Cut cut(model_, metamodel_, *diagram);
   if (cut.written()) return closeBoxes(out.dump(), cut, pretty);
   return pretty ? out.dump(2) : out.dump();
 }
@@ -662,13 +663,13 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   std::vector<const model::Entity*> selected;
   std::map<const model::Entity*, std::string> pathOf;  // a named branch asked for: the path of that behaviour
   for (const query::Behaviour& taken :
-       query::SequenceFilter(splitTrimmed(diagram.field("include"), ','), depth, diagram.id).behaviours(model_)) {
+       query::SequenceFilter(metamodel_, splitTrimmed(diagram.field("include"), ','), depth, diagram.id).behaviours(model_)) {
     selected.push_back(taken.sequence);
     if (taken.path != kWhole) pathOf[taken.sequence] = taken.path;
   }
   SequenceBuilder b{model_, nlohmann::json::array(), nlohmann::json::array(), {}, 0, nullptr, {}};
   // the lifelines stand on the cut the diagram writes, and the calls followed are the ones it says (DS-231)
-  const axis::Cut cut(model_, diagram);
+  const axis::Cut cut(model_, metamodel_, diagram);
   b.cut = &cut;
   nlohmann::json out;
   out["ir"] = 1;
@@ -924,8 +925,9 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
   const bool withVerifications = show.empty() || show.count("verifications");
   // the roots and their umbrella are the query's filter of the diagram (DS-127)
   const std::set<std::string> selected =
-      query::RequirementsFilter(splitTrimmed(diagram.field("include"), ','), withDesign, withVerifications, diagram.id).select(model_);
-  const axis::Cut cut(model_, diagram);  // what answers to a requirement is the box that stands for it (DS-231)
+      query::RequirementsFilter(metamodel_, splitTrimmed(diagram.field("include"), ','), withDesign, withVerifications, diagram.id)
+          .select(model_);
+  const axis::Cut cut(model_, metamodel_, diagram);  // what answers to a requirement is the box that stands for it (DS-231)
   nlohmann::json out;
   out["ir"] = 1;
   out["title"] = diagram.name;
@@ -935,12 +937,12 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
     const model::Entity& e = *model_.find(id);
     // an artefact, or a use case, is drawn as its card: id, stereotype with its status, title
     const bool card = isArtefact(e) || e.kind == model::Kind::UseCase;
-    nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", card ? e.id : e.name}, {"classifier", model_.metamodel().nameOf(e.kind)}};
+    nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", card ? e.id : e.name}, {"classifier", metamodel_.nameOf(e.kind)}};
     if (card) {
       std::vector<std::string> lines = wrap(e.field("title"), 44);
       const std::string status = e.field("status");
       const std::string method = e.field("method");
-      std::string stereotype = model_.metamodel().nameOf(e.kind);
+      std::string stereotype = metamodel_.nameOf(e.kind);
       if (!status.empty()) stereotype += ", " + status;
       if (!method.empty()) stereotype += ", " + method;
       if (e.kind == model::Kind::Requirement)

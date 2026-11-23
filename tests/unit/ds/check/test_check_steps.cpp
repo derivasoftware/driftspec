@@ -148,7 +148,7 @@ TEST(TestContext, AnIdentityIsReadAfterTheRenamesLinkingMade) {
   ds::model::Model model{metamodel};
   ds::bind::Binder binder(model, metamodel);
   const ds::check::Resolver resolver(model);
-  ds::check::Context context(model, resolver, binder.notes());
+  ds::check::Context context(model, metamodel, resolver, binder.notes());
   context.renamed()["p@m::Old"] = "p@m::New";
   EXPECT_EQ(context.current("p@m::Old"), "p@m::New");
   EXPECT_EQ(context.current("p@m::Kept"), "p@m::Kept");

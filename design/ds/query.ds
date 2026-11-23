@@ -110,8 +110,8 @@ package driftspec@ds {
       + abstract select(model: model::Model) -> std::set<std::string>
     }
 
-    // the one place that names the filter of each kind of diagram, built from the diagram's fields
-    function filterFor(diagram: model::Entity) -> std::unique_ptr<IFilter> {
+    // the one place that names the filter of each kind of diagram, built from the diagram's fields and read in the metamodel
+    function filterFor(metamodel: model::Metamodel, diagram: model::Entity) -> std::unique_ptr<IFilter> {
       @requirement REQ-00003-2
     }
 
@@ -132,11 +132,12 @@ package driftspec@ds {
       @requirement REQ-00048-1
       @requirement REQ-00064-5
       @requirement REQ-00120-1
+      - refs metamodel_: model::Metamodel     // the language its cut is read in (DS-351)
       - include_: std::vector<std::string>
       - exclude_: std::vector<std::string>
       - neighbours_: int
       - cutOf_: std::string
-      + ClassFilter(include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, cutOf: std::string)
+      + ClassFilter(metamodel: model::Metamodel, include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
       + boxes(model: model::Model) -> std::set<std::string>
       + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
@@ -155,10 +156,11 @@ package driftspec@ds {
       @requirement REQ-00049-3
       @requirement REQ-00056-1
       @requirement REQ-00129-1
+      - refs metamodel_: model::Metamodel     // the language its cut is read in (DS-351)
       - include_: std::vector<std::string>
       - depth_: int
       - cutOf_: std::string
-      + SequenceFilter(include: std::vector<std::string>, depth: int, cutOf: std::string)
+      + SequenceFilter(metamodel: model::Metamodel, include: std::vector<std::string>, depth: int, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
       + behaviours(model: model::Model) -> std::vector<Behaviour>
     }
@@ -177,11 +179,12 @@ package driftspec@ds {
       @requirement REQ-00050-1
       @requirement REQ-00122-1
       @requirement REQ-00131-1
+      - refs metamodel_: model::Metamodel     // the language its cut is read in (DS-351)
       - include_: std::vector<std::string>
       - design_: bool
       - verifications_: bool
       - cutOf_: std::string
-      + RequirementsFilter(include: std::vector<std::string>, design: bool, verifications: bool, cutOf: std::string)
+      + RequirementsFilter(metamodel: model::Metamodel, include: std::vector<std::string>, design: bool, verifications: bool, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
     }
 
@@ -218,7 +221,8 @@ package driftspec@ds {
     class Query : IQuery {
       @requirement REQ-00003-2
       - refs model_: model::Model
-      + Query(model: model::Model)
+      - refs metamodel_: model::Metamodel     // the language of the model: the kinds of the answers by name (DS-351)
+      + Query(model: model::Model, metamodel: model::Metamodel)
       + select(filter: IFilter) -> std::set<std::string>
       + static questions() -> std::vector<std::pair<std::string, std::string>>
       + ask(question: std::string, subject: std::string) -> std::vector<Answer>
@@ -294,8 +298,7 @@ package driftspec@ds {
       self -> model_.entities() -> held
       loop each entity held {
         opt it is a diagram {
-          self -> model_.metamodel() -> metamodel
-          -> metamodel.nameOf(entity.kind) -> kind
+          self -> metamodel_.nameOf(entity.kind) -> kind
         }
       }
       return out
@@ -307,8 +310,7 @@ package driftspec@ds {
       self -> model_.entities() -> held
       loop each entity held {
         opt in the scope, written with @ when it names a package, and not expected {
-          self -> model_.metamodel() -> metamodel
-          -> entityAnswer(metamodel, entity, title) -> answer
+          -> entityAnswer(metamodel_, entity, title) -> answer
         }
       }
       return out
@@ -352,8 +354,7 @@ package driftspec@ds {
         opt it is a behaviour-of {
           self -> model_.find(relation.from) -> behaviour
           opt the model holds it {
-            self -> model_.metamodel() -> metamodel
-            -> entityAnswer(metamodel, behaviour, scenario) -> answer
+            -> entityAnswer(metamodel_, behaviour, scenario) -> answer
           }
         }
       }
@@ -392,12 +393,11 @@ package driftspec@ds {
       opt no diagram has that name / no-such-diagram {
         return error
       }
-      -> filterFor(entity) -> filter
+      -> filterFor(metamodel_, entity) -> filter
       -> select(filter) -> ids
       loop each id {
         self -> model_.find(id) -> taken
-        self -> model_.metamodel() -> metamodel
-        -> entityAnswer(metamodel, taken, "") -> answer
+        -> entityAnswer(metamodel_, taken, "") -> answer
       }
       return out
     }

@@ -76,7 +76,7 @@ TEST_F(TestFailures, AHandlerKeepsTheFailureItHandles) {
 }
 
 TEST_F(TestFailures, TheSequenceDiagramDrawsTheFailureAndTheHandlers) {
-  const std::string ir = ds::render::IrExport(model).render("diagram:SEQ_Load", false);
+  const std::string ir = ds::render::IrExport(model, metamodel).render("diagram:SEQ_Load", false);
   EXPECT_NE(ir.find("fail LoadError"), std::string::npos);
   EXPECT_NE(ir.find("on IoError"), std::string::npos);
   EXPECT_NE(ir.find("on Busy"), std::string::npos);
@@ -100,13 +100,13 @@ TEST_F(TestFailures, EachEscapeKeepsThePathItComesUpByAndTheScenarioItStartsIn) 
 }
 
 TEST_F(TestFailures, TheQueryAnswersWhatEscapesAnOperationByWhereEachStarts) {
-  const auto answers = ds::query::Query(model).ask("failures", "shelf@books::Loader::open");
+  const auto answers = ds::query::Query(model, metamodel).ask("failures", "shelf@books::Loader::open");
   ASSERT_EQ(answers.size(), 2u);
   EXPECT_EQ(answers[0].kind, "failure");
   EXPECT_EQ(answers[0].id, "shelf@books::Loader::load");
   EXPECT_EQ(answers[0].detail.rfind("LoadError: ", 0), 0u);
   EXPECT_EQ(answers[1].id, "shelf@books::Parser::parse");
-  EXPECT_TRUE(ds::query::Query(model).ask("failures", "shelf@books::Shelf::show").empty());
+  EXPECT_TRUE(ds::query::Query(model, metamodel).ask("failures", "shelf@books::Shelf::show").empty());
 }
 
 /// What a signature promises (DS-189): fails A, B or fails nothing, held to what escapes.

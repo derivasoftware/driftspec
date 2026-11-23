@@ -83,7 +83,7 @@ std::vector<Answer> Query::diagrams() const {
     if (p.second.kind != model::Kind::Diagram) continue;
     const auto kind = p.second.fields.find("kind");
     const std::string name = model::Identity(p.second.id).diagramName();  // named as the user names it
-    out.push_back({model_.metamodel().nameOf(p.second.kind), name, kind == p.second.fields.end() ? "class" : kind->second});
+    out.push_back({metamodel_.nameOf(p.second.kind), name, kind == p.second.fields.end() ? "class" : kind->second});
   }
   return out;
 }
@@ -95,7 +95,7 @@ std::vector<Answer> Query::entities(const std::string& asked) const {
   std::vector<Answer> out;
   for (const auto& p : model_.entities()) {
     if (p.second.scope != scope || p.second.expected) continue;
-    out.push_back(entityAnswer(model_.metamodel(), p.second, p.second.fields.count("title") ? p.second.fields.at("title") : ""));
+    out.push_back(entityAnswer(metamodel_, p.second, p.second.fields.count("title") ? p.second.fields.at("title") : ""));
   }
   return out;
 }
@@ -128,7 +128,7 @@ std::vector<Answer> Query::behaviours(const std::string& id) const {
   std::vector<Answer> out;
   for (const auto& r : model_.index().toOfKind(id, "behaviour-of")) {
     const model::Entity* b = model_.find(r.from);
-    out.push_back(b ? entityAnswer(model_.metamodel(), *b, b->fields.count("scenario") ? b->fields.at("scenario") : "")
+    out.push_back(b ? entityAnswer(metamodel_, *b, b->fields.count("scenario") ? b->fields.at("scenario") : "")
                     : Answer{"behaviour", r.from, ""});
   }
   const model::Entity* asked = model_.find(id);
@@ -161,10 +161,10 @@ std::set<std::string> Query::select(const IFilter& filter) const { return filter
 std::vector<Answer> Query::shows(const std::string& diagram) const {
   // what the diagram takes is the filter of its kind, applied to the model: nothing is drawn (DS-127)
   const model::Entity* d = model_.find(model::Identity::ofDiagram(diagram).text());
-  const auto filter = d ? filterFor(*d) : nullptr;
+  const auto filter = d ? filterFor(metamodel_, *d) : nullptr;
   if (!filter) return {{"error", diagram, "no such diagram"}};
   std::vector<Answer> out;
-  for (const auto& id : select(*filter)) out.push_back(entityAnswer(model_.metamodel(), *model_.find(id)));
+  for (const auto& id : select(*filter)) out.push_back(entityAnswer(metamodel_, *model_.find(id)));
   return out;
 }
 

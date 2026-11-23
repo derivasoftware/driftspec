@@ -73,20 +73,20 @@ class Shop : public ::testing::Test {
 class TestClassFilter : public Shop {};
 
 TEST_F(TestClassFilter, ItsBoxesAreThePatternsLessTheExclusionsAndTheModulesAroundThemAreAdded) {
-  const ds::query::ClassFilter filter({"shop@store::*"}, {"shop@store::Ledger"}, 0);
+  const ds::query::ClassFilter filter(metamodel, {"shop@store::*"}, {"shop@store::Ledger"}, 0);
   EXPECT_EQ(filter.boxes(model), (Ids{"shop@store::Item", "shop@store::Stock"}));
   EXPECT_EQ(filter.select(model), (Ids{"shop@store", "shop@store::Item", "shop@store::Stock"}));
 }
 
 TEST_F(TestClassFilter, WithNoDiagramToTakeACutFromItShowsEveryBox) {
-  const ds::query::ClassFilter filter({"shop@*"}, {}, 0, "diagram:Nowhere");  // the cut itself is TestCut's
-  EXPECT_EQ(filter.select(model), ds::query::ClassFilter({"shop@*"}, {}, 0).select(model));
+  const ds::query::ClassFilter filter(metamodel, {"shop@*"}, {}, 0, "diagram:Nowhere");  // the cut itself is TestCut's
+  EXPECT_EQ(filter.select(model), ds::query::ClassFilter(metamodel, {"shop@*"}, {}, 0).select(model));
 }
 
 class TestSequenceFilter : public Shop {};
 
 TEST_F(TestSequenceFilter, ItTakesTheBehavioursItsPatternsNameAndWhoTakesPart) {
-  const ds::query::SequenceFilter filter({"shop@till::Till::sell"}, 1);
+  const ds::query::SequenceFilter filter(metamodel, {"shop@till::Till::sell"}, 1);
   const auto taken = filter.behaviours(model);
   ASSERT_EQ(taken.size(), 1u);
   EXPECT_EQ(taken[0].sequence->id, "shop@till::Till::sell::sequence");
@@ -105,11 +105,11 @@ TEST_F(TestStateFilter, ItTakesTheMachinesItNames) {
 class TestRequirementsFilter : public Shop {};
 
 TEST_F(TestRequirementsFilter, ItTakesItsRootsWhatRefinesThemAndAsAskedWhatRealisesAndVerifiesThem) {
-  const Ids all = ds::query::RequirementsFilter({"REQ-00001-1"}, true, true).select(model);
+  const Ids all = ds::query::RequirementsFilter(metamodel, {"REQ-00001-1"}, true, true).select(model);
   EXPECT_TRUE(all.count("REQ-00001-1") && all.count("REQ-00002-1"));
   EXPECT_TRUE(all.count("shop@till::Till"));
   EXPECT_TRUE(all.count("VER-00001-1"));
-  const Ids bare = ds::query::RequirementsFilter({"REQ-00001-1"}, false, false).select(model);
+  const Ids bare = ds::query::RequirementsFilter(metamodel, {"REQ-00001-1"}, false, false).select(model);
   EXPECT_EQ(bare, (Ids{"REQ-00001-1", "REQ-00002-1"}));
 }
 
@@ -131,8 +131,8 @@ TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnde
   binder.bind(file);
   const auto steps = ds::check::steps();
   ds::check::Checker(model, metamodel, steps).run(binder.notes());
-  EXPECT_TRUE(ds::query::RequirementsFilter({"shop@*"}, true, true).select(model).count("UC-00001-1"));
-  EXPECT_FALSE(ds::query::RequirementsFilter({"shop@*"}, false, true).select(model).count("UC-00001-1"));  // design hidden
+  EXPECT_TRUE(ds::query::RequirementsFilter(metamodel, {"shop@*"}, true, true).select(model).count("UC-00001-1"));
+  EXPECT_FALSE(ds::query::RequirementsFilter(metamodel, {"shop@*"}, false, true).select(model).count("UC-00001-1"));  // design hidden
 }
 
 class TestInPattern : public Shop {};
@@ -161,7 +161,7 @@ TEST_F(TestDrawnFrom, ABoxIsItselfAMemberItsClassAndABehaviourItsSubject) {
 class TestQuery : public Shop {};
 
 TEST_F(TestQuery, ANamedQuestionIsAnsweredByIdentityAndAnUnknownOneIsAnError) {
-  const ds::query::Query query(model);
+  const ds::query::Query query(model, metamodel);
   bool till = false;
   for (const auto& a : query.ask("entities", "shop@till")) till |= a.id == "shop@till::Till";
   EXPECT_TRUE(till);

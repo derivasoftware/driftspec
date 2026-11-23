@@ -36,7 +36,7 @@ package driftspec@ds {
       - unfolds_: bool
       - folds_: bool
       - deep_: bool
-      + Cut(model: model::Model, diagram: model::Entity)
+      + Cut(model: model::Model, metamodel: model::Metamodel, diagram: model::Entity)   // the kinds a pattern closes are the metamodel's (DS-351)
       + written() -> bool
       + closed(box: std::string) -> bool
       + standsFor(id: std::string) -> std::string

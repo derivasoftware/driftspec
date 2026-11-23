@@ -29,7 +29,7 @@ class TestCutDrawing : public ::testing::Test {
   }
 
   nlohmann::json diagram(const std::string& name) {
-    return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + name, false));
+    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + name, false));
   }
 
   static std::string kindOf(const nlohmann::json& ir, const std::string& id) {
@@ -124,7 +124,7 @@ TEST_F(TestCutDrawing, ACutTakenFromADiagramNobodyDeclaresIsAFindingAndStillDraw
 TEST_F(TestCutDrawing, TheQueryShowsWhatTheDrawingDrawsUnderEveryCut) {
   for (const char* name :
        {"CL_Everything", "HLD_Open", "HLD_Close", "HLD_Modules", "HLD_Till", "HLD_Packages", "HLD_Borrowed", "HLD_BorrowedAndMore"}) {
-    const auto filter = ds::query::filterFor(*model.find(std::string("diagram:") + name));
+    const auto filter = ds::query::filterFor(metamodel, *model.find(std::string("diagram:") + name));
     EXPECT_EQ(filter->select(model), ids(diagram(name))) << name;
   }
 }
@@ -165,7 +165,7 @@ TEST_F(TestCutDrawing, AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough) {
                                "diagram HLD {\n  kind: class\n  include: p@*\n  close: package\n}\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:HLD", false));
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:HLD", false));
   std::string use, structural = "none";
   for (const auto& e : ir["edges"]) {
     if (e["from"] != "p@app" || e["to"] != "p@tool") continue;
@@ -227,7 +227,7 @@ TEST(TestWrittenLevel, AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfT
                                "diagram HLD {\n  kind: class\n  include: shop@*\n}\n"));
   const auto steps = ds::check::steps();
   ds::check::Checker(model, metamodel, steps).run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:HLD", false));
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:HLD", false));
   std::set<std::pair<std::string, std::string>> arrows;
   for (const auto& e : ir["edges"]) {
     EXPECT_EQ(e["kind"], "dependency");  // a message is a use

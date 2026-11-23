@@ -63,9 +63,9 @@ TEST_F(TestWalker, AWalkGoesDownIntoWhatTheCallsEnterAsDeepAsAsked) {
 }
 
 TEST_F(TestWalker, AWalkWithACutFollowsTheCallsTheCutSays) {
-  const ds::axis::Cut onACut(model, *model.find("diagram:OnACut"));
+  const ds::axis::Cut onACut(model, metamodel, *model.find("diagram:OnACut"));
   EXPECT_EQ(ds::query::Walker(model).walk("shop@till::Till::sell::sequence", "", 0, &onACut).size(), 2u);  // take, and the count inside it
-  const ds::axis::Cut folded(model, *model.find("diagram:Folded"));
+  const ds::axis::Cut folded(model, metamodel, *model.find("diagram:Folded"));
   EXPECT_EQ(ds::query::Walker(model).walk("shop@till::Till::sell::sequence", "", 0, &folded).size(), 1u);  // take is not followed
 }
 

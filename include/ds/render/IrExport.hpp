@@ -17,7 +17,8 @@ namespace render {
 /// follows.
 class IrExport {
  public:
-  explicit IrExport(const model::Model& model) : model_(model) {}
+  /// Draws the diagrams of `model`, written in `metamodel`, which names the kinds it draws (DS-351).
+  IrExport(const model::Model& model, const model::Metamodel& metamodel) : model_(model), metamodel_(metamodel) {}
 
   /// The ids of the diagrams the model declares.
   std::vector<std::string> diagrams() const;
@@ -38,6 +39,7 @@ class IrExport {
   std::string renderRequirements(const model::Entity& diagram, bool pretty) const;
 
   const model::Model& model_;
+  const model::Metamodel& metamodel_;
 };
 
 }  // namespace render

@@ -30,7 +30,7 @@ class TestSceneTrace : public ::testing::Test {
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-    doc = ds::scene::Scene(model).build();
+    doc = ds::scene::Scene(model, metamodel).build();
   }
 
   const ds::scene::Requirement& requirement(const std::string& id) const {
@@ -93,7 +93,7 @@ TEST_F(TestSceneTrace, AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealises
 }
 
 TEST_F(TestSceneTrace, ThePageListsTheRequirementsInTheBottomPanel) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "hola"});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"});
   EXPECT_NE(page.find("data-tab=\"reqs\""), std::string::npos);  // a tab beside the tours
   const std::string scene = packedIn(page);
   EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\",\"signature\","

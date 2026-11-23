@@ -17,6 +17,7 @@ package driftspec@ds {
       @requirement REQ-00097-1
       @requirement REQ-00098-1
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the language of the rules: the kinds and relations they name (DS-351)
       - refs resolver_: Resolver
       - owns byKind_: std::map<std::string, std::vector<std::string>>
       - owns forward_: std::map<std::string, std::multimap<std::string, std::string>>
@@ -26,7 +27,7 @@ package driftspec@ds {
       - stratum_: std::map<std::string, int>
       - owns invalid_: std::set<std::string>
       - owns many found_: std::vector<model::Finding>
-      + Evaluator(model: model::Model, resolver: Resolver)
+      + Evaluator(model: model::Model, metamodel: model::Metamodel, resolver: Resolver)
       + run() -> std::vector<model::Finding>
       - index() -> void
       - validate(id: std::string, formula: model::Formula) -> bool
@@ -121,18 +122,20 @@ package driftspec@ds {
       - abstract check(context: Context) -> std::vector<model::Finding>
     }
 
-    // What every step of one check is given: the model, what the binder collected, the resolver,
-    // the renames linking made, what was already reported as undeclared, and what the running step
-    // found, until it takes it back.
+    // What every step of one check is given: the model, the metamodel it is written in, what the binder
+    // collected, the resolver, the renames linking made, what was already reported as undeclared, and
+    // what the running step found, until it takes it back.
     class Context {
       @requirement REQ-00012-1
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the language, handed by the checker to every step (DS-351)
       - refs resolver_: Resolver
       - owns renamed_: std::map<std::string, std::string>
       - owns reported_: std::set<std::string>
       - owns many found_: std::vector<model::Finding>
-      + Context(model: model::Model, resolver: Resolver, notes: bind::Notes)
+      + Context(model: model::Model, metamodel: model::Metamodel, resolver: Resolver, notes: bind::Notes)
       + model() -> model::Model
+      + metamodel() -> model::Metamodel
       + resolver() -> Resolver
       + current(id: std::string) -> std::string {
         @requirement REQ-00035-1
@@ -165,7 +168,7 @@ package driftspec@ds {
       @requirement REQ-00053-2
       @requirement REQ-00012-1
       - refs model_: model::Model
-      - refs metamodel_: model::Metamodel     // the language the model is written in (DS-341); the model keeps coverage apart (DS-346)
+      - refs metamodel_: model::Metamodel     // the language the model is written in (DS-341), handed to the steps in their context (DS-351)
       - owns resolver_: Resolver
       - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
       + Checker(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>)
@@ -189,6 +192,7 @@ package driftspec@ds {
       @requirement REQ-00035-1
       - refs context_: Context
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
@@ -300,6 +304,7 @@ package driftspec@ds {
       @requirement REQ-00049-3
       - refs context_: Context
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
       - refs resolver_: Resolver
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
@@ -364,6 +369,7 @@ package driftspec@ds {
       @requirement REQ-00168-1
       - refs context_: Context
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
       - refs resolver_: Resolver
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
@@ -438,6 +444,7 @@ package driftspec@ds {
       @requirement REQ-00095-2
       - refs context_: Context
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>

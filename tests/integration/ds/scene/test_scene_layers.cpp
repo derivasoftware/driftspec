@@ -30,7 +30,7 @@ class TestSceneLayersOfADesign : public ::testing::Test {
 };
 
 TEST_F(TestSceneLayersOfADesign, EveryIdentityOfTheDesignLandsOnItselfOrTheNearestBoxThatHoldsIt) {
-  const ds::scene::SceneDocument doc = ds::scene::Scene(model).build();
+  const ds::scene::SceneDocument doc = ds::scene::Scene(model, metamodel).build();
   const ds::scene::Map map(doc.nodes);
   EXPECT_EQ(map.land("p@m::A"), "p@m::A");
   EXPECT_EQ(map.land("p@m::A::run"), "p@m::A::run");
@@ -45,9 +45,9 @@ TEST_F(TestSceneLayersOfADesign, EveryIdentityOfTheDesignLandsOnItselfOrTheNeare
 }
 
 TEST_F(TestSceneLayersOfADesign, TheLayersComeInOrderAndEachAddsItsOwnPartOfTheDesign) {
-  const ds::scene::SceneDocument doc = ds::scene::Scene(model).build();
+  const ds::scene::SceneDocument doc = ds::scene::Scene(model, metamodel).build();
   const ds::scene::Map map(doc.nodes);
-  const auto all = ds::scene::layers(model, map);
+  const auto all = ds::scene::layers(model, metamodel, map);
   ASSERT_EQ(all.size(), 4u);
   EXPECT_NE(dynamic_cast<ds::scene::StructureLayer*>(all[0].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::BehaviourLayer*>(all[1].get()), nullptr);
@@ -59,10 +59,11 @@ TEST_F(TestSceneLayersOfADesign, TheLayersComeInOrderAndEachAddsItsOwnPartOfTheD
 }
 
 TEST_F(TestSceneLayersOfADesign, TheSceneBuildsTheSameDocumentEveryTime) {
-  const ds::scene::Scene scene(model);
+  const ds::scene::Scene scene(model, metamodel);
   const std::string first = ds::format::SceneJson().write(scene.build(), {});
   EXPECT_EQ(first, ds::format::SceneJson().write(scene.build(), {}));
-  EXPECT_EQ(first, ds::format::SceneJson().write(ds::scene::Scene(model).build(), {}));  // and for another scene of the same model
+  EXPECT_EQ(first,
+            ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}));  // and for another scene of the same model
 }
 
 }  // namespace

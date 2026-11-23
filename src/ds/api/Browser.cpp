@@ -24,8 +24,8 @@ struct Drawn {
   model::Location location;
 };
 
-// the artefacts as rows: what each one refines, what keeps it, what proves it
-nlohmann::json artefacts(const model::Model& model) {
+// the artefacts as rows: what each one refines, what keeps it, what proves it; each kind named by the metamodel
+nlohmann::json artefacts(const model::Metamodel& metamodel, const model::Model& model) {
   nlohmann::json rows = nlohmann::json::array();
   for (const auto& p : model.entities()) {
     const model::Entity& e = p.second;
@@ -36,7 +36,7 @@ nlohmann::json artefacts(const model::Model& model) {
       level =
           e.scope.empty() || model::Scope(e.scope).isSystem() ? "system" : model::Identity(model::Scope(e.scope).box().text()).lastName();
     nlohmann::json row{{"id", e.id},
-                       {"kind", model.metamodel().nameOf(e.kind)},
+                       {"kind", metamodel.nameOf(e.kind)},
                        {"title", e.field("title")},
                        {"status", e.field("status")},
                        {"level", level},
@@ -54,7 +54,7 @@ nlohmann::json artefacts(const model::Model& model) {
   return rows;
 }
 
-nlohmann::json diagrams(const Workspace& workspace, int width) {
+nlohmann::json diagrams(const model::Metamodel& metamodel, const Workspace& workspace, int width) {
   std::vector<Drawn> drawn;  // in the order they are written: file, then line
   for (const auto& p : workspace.model().entities()) {
     const model::Entity& e = p.second;
@@ -71,7 +71,7 @@ nlohmann::json diagrams(const Workspace& workspace, int width) {
   for (const auto& d : drawn) {
     nlohmann::json one{{"id", d.id}, {"kind", d.kind}, {"include", d.include}, {"file", d.location.file}, {"line", d.location.line}};
     one["shows"] = nlohmann::json::array();  // what it takes: a call leads to the diagram of what it calls
-    for (const auto& a : query::Query(workspace.model()).shows(d.id)) one["shows"].push_back(a.id);
+    for (const auto& a : query::Query(workspace.model(), metamodel).shows(d.id)) one["shows"].push_back(a.id);
     try {
       one["svg"] = workspace.render(d.id, "svg", width);
     } catch (const std::exception& ex) {
@@ -109,8 +109,8 @@ std::string respond(const model::Metamodel& metamodel, const std::string& reques
     const auto& at = p.second.location;
     if (!at.file.empty()) out["locations"][p.first] = {at.file, at.line, at.endLine > 0 ? at.endLine : at.line};
   }
-  out["artefacts"] = artefacts(workspace.model());
-  out["diagrams"] = diagrams(workspace, in.value("width", 0));
+  out["artefacts"] = artefacts(metamodel, workspace.model());
+  out["diagrams"] = diagrams(metamodel, workspace, in.value("width", 0));
   return out.dump();
 }
 

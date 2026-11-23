@@ -51,7 +51,7 @@ class TestScene : public ::testing::Test {
     f.fields["returns"] = "Model";
     model.declare(f);
     model.relate({"satisfies", "p@m::A", "REQ-00001-1", {}, ""});
-    for (const auto& n : ds::scene::Scene(model).build().nodes) byId[n.id] = n;
+    for (const auto& n : ds::scene::Scene(model, metamodel).build().nodes) byId[n.id] = n;
   }
 
   static bool inside(const ds::scene::Box& in, const ds::scene::Box& out) {
@@ -97,7 +97,7 @@ TEST_F(TestBox, ARowIsAsWideAsItsUnitAndOneRowTall) {
 }
 
 TEST_F(TestSceneDocument, TheWorldHoldsEveryNodeInBothVariants) {
-  const auto doc = ds::scene::Scene(model).build();
+  const auto doc = ds::scene::Scene(model, metamodel).build();
   for (const auto& n : doc.nodes) {
     EXPECT_TRUE(inside(n.full, doc.world)) << n.id;
     if (n.lean) {
@@ -107,7 +107,7 @@ TEST_F(TestSceneDocument, TheWorldHoldsEveryNodeInBothVariants) {
 }
 
 TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
-  const auto doc = nlohmann::json::parse(ds::format::SceneJson().write(ds::scene::Scene(model).build(), {}));
+  const auto doc = nlohmann::json::parse(ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}));
   EXPECT_EQ(doc["version"], 2);
   const auto& fields = doc["fields"]["node"];
   const auto column = [&fields](const std::string& name) {
@@ -128,7 +128,7 @@ TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
 }
 
 TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "a<b"});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "a<b"});
   EXPECT_EQ(page.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(page.find("<canvas"), std::string::npos);
   const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
@@ -162,7 +162,7 @@ class TestLink : public ::testing::Test {
     model.relate({"calls", "p@m::A::run::sequence::m3", "p@m::B::go", {}, ""});
     model.relate({"owns", "p@m::A::b_", "p@m::B", {}, "*"});
     model.relate({"uses", "p@m::A::run", "p@m::A", {}, ""});  // a member naming its own class stays inside the box
-    links = ds::scene::Scene(model).build().links;
+    links = ds::scene::Scene(model, metamodel).build().links;
   }
 
   const ds::scene::Link* link(const std::string& kind) const {
@@ -200,7 +200,7 @@ TEST_F(TestDiagramView, ADiagramListsTheNodesItShows) {
   diagram.fields["kind"] = "class";
   diagram.fields["include"] = "p@m::*";
   model.declare(diagram);
-  const auto doc = ds::scene::Scene(model).build();
+  const auto doc = ds::scene::Scene(model, metamodel).build();
   ASSERT_EQ(doc.diagrams.size(), 1u);
   EXPECT_EQ(doc.diagrams[0].name, "CL_M");
   EXPECT_EQ(doc.diagrams[0].kind, "class");
@@ -239,7 +239,7 @@ class TestTour : public ::testing::Test {
     model.relate({"calls", "p@m::A::run::sequence::m0", "p@m::B::go", {}, ""});
     model.relate({"calls", "p@m::B::go::sequence::m0", "p@m::B::step", {}, ""});
     model.relate({"calls", "p@m::B::go::sequence::m1", "p@m::B::step", {}, ""});
-    doc = ds::scene::Scene(model).build();
+    doc = ds::scene::Scene(model, metamodel).build();
   }
 
   int behaviour(const std::string& id) const {
@@ -303,7 +303,7 @@ class TestRequirement : public ::testing::Test {
     model.relate({"refines", "R-2", "R-1", {}, ""});
     model.relate({"satisfies", "p@m::A", "R-2", {}, ""});
     model.relate({"verifies", "V-1", "R-2", {}, ""});
-    doc = ds::scene::Scene(model).build();
+    doc = ds::scene::Scene(model, metamodel).build();
   }
 
   const ds::scene::Requirement& requirement(const std::string& id) const {
@@ -355,7 +355,7 @@ TEST_F(TestOutcome, AUseCaseCarriesItsOutcomesTheDefaultFirst) {
   model.declare(happy);
   model.relate({"realises", "p@shell::greet", "UC-1", {}, ""});
   model.relate({"satisfies", "UC-1", "R-1", {}, ""});
-  const auto doc = ds::scene::Scene(model).build();
+  const auto doc = ds::scene::Scene(model, metamodel).build();
   const auto it = std::find_if(doc.requirements.begin(), doc.requirements.end(), [](const auto& r) { return r.id == "UC-1"; });
   ASSERT_NE(it, doc.requirements.end());
   EXPECT_EQ(it->kind, "usecase");

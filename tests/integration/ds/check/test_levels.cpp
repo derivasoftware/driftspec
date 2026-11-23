@@ -51,7 +51,7 @@ class TestLevels : public ::testing::Test {
   }
 
   nlohmann::json diagram(const std::string& name) {
-    return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + name, false));
+    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + name, false));
   }
 
   /// The calls drawn, in order, as who sends to whom: a lifeline is named by what it stands for.
@@ -130,7 +130,7 @@ TEST_F(TestLevels, AScenarioOfABoxIsDrawnBetweenWhatItNames) {
 }
 
 TEST_F(TestLevels, TheQueryShowsWhoTakesPartInAWrittenScenario) {
-  const auto filter = ds::query::filterFor(*model.find("diagram:SEQ_Written"));
+  const auto filter = ds::query::filterFor(metamodel, *model.find("diagram:SEQ_Written"));
   EXPECT_EQ(filter->select(model), (std::set<std::string>{"shop@bank", "shop@sales", "shop@shell", "shop@warehouse"}));
 }
 

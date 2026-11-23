@@ -55,14 +55,14 @@ class TestLayers : public ::testing::Test {
 /// and each adds its own part of the document.
 TEST_F(TestLayers, TheLayersComeInOrderAndEachAddsItsOwnPart) {
   const ds::scene::Map map({});
-  const auto all = ds::scene::layers(model, map);
+  const auto all = ds::scene::layers(model, metamodel, map);
   ASSERT_EQ(all.size(), 4u);
   EXPECT_NE(dynamic_cast<ds::scene::StructureLayer*>(all[0].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::BehaviourLayer*>(all[1].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::TraceLayer*>(all[2].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::RulesLayer*>(all[3].get()), nullptr);
 
-  const ds::scene::Scene scene(model);
+  const ds::scene::Scene scene(model, metamodel);
   const ds::scene::SceneDocument doc = scene.build();
   EXPECT_FALSE(doc.links.empty());         // structure: A holds B
   EXPECT_FALSE(doc.behaviours.empty());    // behaviour: A::run
@@ -72,7 +72,7 @@ TEST_F(TestLayers, TheLayersComeInOrderAndEachAddsItsOwnPart) {
 /// The scene is an object that lasts (DS-126): placed and layered once, it builds the same document
 /// every time it is asked.
 TEST_F(TestLayers, TheSceneBuildsTheSameDocumentEveryTime) {
-  const ds::scene::Scene scene(model);
+  const ds::scene::Scene scene(model, metamodel);
   EXPECT_EQ(ds::format::SceneJson().write(scene.build(), {}), ds::format::SceneJson().write(scene.build(), {}));
 }
 

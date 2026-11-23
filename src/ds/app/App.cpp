@@ -183,11 +183,11 @@ struct Render {
       ds::format::FormatOptions options;
       if (format == "json") {
         options.pretty = true;
-        return emit(output, formats.at("json")->write(ds::scene::Scene(model).build(), options) + "\n");
+        return emit(output, formats.at("json")->write(ds::scene::Scene(model, metamodel).build(), options) + "\n");
       }
       std::vector<std::string> focus;
       if (!diagram.empty()) {
-        const auto shown = ds::query::Query(model).ask("shows", diagram);
+        const auto shown = ds::query::Query(model, metamodel).ask("shows", diagram);
         if (!shown.empty() && shown.front().kind == "error") {
           std::cerr << "no diagram named " << diagram << "\n";
           return 1;
@@ -199,13 +199,13 @@ struct Render {
       options.focus = focus;
       options.embed = embed;
       options.height = height;
-      return emit(output, formats.at("html")->write(ds::scene::Scene(model).build(), options));
+      return emit(output, formats.at("html")->write(ds::scene::Scene(model, metamodel).build(), options));
     }
     if (diagram.empty()) {
       std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
       return 2;
     }
-    const std::string doc = ds::render::IrExport(model).render(diagramId(diagram), false);
+    const std::string doc = ds::render::IrExport(model, metamodel).render(diagramId(diagram), false);
     if (doc.empty()) {
       std::cerr << "no diagram named " << diagram << "\n";
       return 1;
@@ -310,7 +310,7 @@ int run(int argc, char** argv) {
     std::cout << ds::exporter::JsonExport(metamodel).render(model) << "\n";
     return 0;
   }
-  const ds::query::Query query(model);
+  const ds::query::Query query(model, metamodel);
   const std::vector<ds::query::Answer> answers = query.ask(question, subject);
   if (!answers.empty() && answers.front().kind == "error") {
     if (json) std::cout << ds::format::AnswersJson().write(answers, {}) << "\n";  // asked for JSON, the error is an answer too

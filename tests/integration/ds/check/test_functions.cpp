@@ -47,7 +47,7 @@ class TestFunctions : public ::testing::Test {
   }
 
   nlohmann::json render(const std::string& diagram) const {
-    return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + diagram, false));
+    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
   }
 };
 

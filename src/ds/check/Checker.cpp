@@ -34,7 +34,7 @@ std::vector<std::string> Checker::order() const {
 }
 
 void Checker::run(const bind::Notes& notes) {
-  Context context(model_, resolver_, notes);
+  Context context(model_, metamodel_, resolver_, notes);  // the steps read the language from it (DS-351)
   for (const auto& key : order())
     for (const auto& f : steps_.at(key)->run(context)) model_.report(f);  // in the order the steps run
   model_.cover();  // what is not yet written is no finding (Owner, 2026-11-15; DS-216): the model keeps it apart

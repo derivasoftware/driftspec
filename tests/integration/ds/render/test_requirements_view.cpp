@@ -27,7 +27,7 @@ class TestRequirementsView : public ::testing::Test {
   }
 
   nlohmann::json diagram(const std::string& name) {
-    return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + name, false));
+    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + name, false));
   }
 
   static int count(const nlohmann::json& doc, const char* what, const std::string& value) {
@@ -98,7 +98,7 @@ TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsIt
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-  const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
+  const auto doc = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:REQ_Shop", false));
   bool card = false;
   for (const auto& n : doc["nodes"])
     if (n["id"] == "UC-00001-1")
@@ -145,7 +145,7 @@ TEST(TestRequirementsViewOfAnyAnswer, WhateverAnswersToARequirementIsDrawnAndAMe
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-  const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
+  const auto doc = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:REQ_Shop", false));
   std::set<std::string> nodes;
   for (const auto& n : doc["nodes"]) nodes.insert(n["id"].get<std::string>());
   EXPECT_EQ(nodes, (std::set<std::string>{"SREQ-00001-1", "shop", "shop@shell", "shop@store::price", "shop@store::Cart"}));

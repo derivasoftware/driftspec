@@ -25,6 +25,7 @@ std::vector<std::string> RuleCheck::needs() const {
 std::vector<model::Finding> RuleCheck::run(Context& out_context) {
   context_ = &out_context;
   model_ = &out_context.model();
+  metamodel_ = &out_context.metamodel();
   resolver_ = &out_context.resolver();
   checkRules();
   return out_context.take();
@@ -57,7 +58,7 @@ void RuleCheck::checkRules() {
       context_->report({"W-DEFINITION-NO-CASE", "warning", e.id + " says no case in which it holds: write if <literals>", e.location});
     }
   }
-  for (const auto& f : Evaluator(*model_, *resolver_).run()) context_->report(f);
+  for (const auto& f : Evaluator(*model_, *metamodel_, *resolver_).run()) context_->report(f);
 }
 
 }  // namespace check

@@ -26,7 +26,8 @@ class IScene {
 /// system down to a member without anything moving.
 class Scene : public IScene {
  public:
-  explicit Scene(const model::Model& model);
+  /// The scene of `model`, written in `metamodel`, which names the kinds it draws (DS-351).
+  Scene(const model::Model& model, const model::Metamodel& metamodel);
   SceneDocument build() const override;
 
  private:

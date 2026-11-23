@@ -55,7 +55,7 @@ class SceneOf : public ::testing::Test {
                                  "}\n"));
     const auto steps = ds::check::steps();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
-    placed = ds::scene::Layout(model).place();
+    placed = ds::scene::Layout(model, metamodel).place();
   }
 };
 
@@ -69,7 +69,7 @@ TEST_F(TestLayout, EveryBoxIsPlacedInsideItsParentAndTheSameModelPlacesTheSameWa
   const auto& a = by["p@m::A"].full;
   const auto& m = by["p@m"].full;
   EXPECT_TRUE(a.x >= m.x && a.y >= m.y && a.x + a.w <= m.x + m.w && a.y + a.h <= m.y + m.h);
-  const auto again = ds::scene::Layout(model).place();
+  const auto again = ds::scene::Layout(model, metamodel).place();
   ASSERT_EQ(again.nodes.size(), placed.nodes.size());
   for (size_t i = 0; i < placed.nodes.size(); ++i) EXPECT_EQ(again.nodes[i].full.x, placed.nodes[i].full.x);
 }
@@ -79,7 +79,7 @@ class TestStructureLayer : public SceneOf {};
 TEST_F(TestStructureLayer, ItAddsTheLinksBetweenBoxesAndNoBehaviour) {
   ds::scene::SceneDocument doc = placed;
   const ds::scene::Map map(doc.nodes);
-  ds::scene::StructureLayer(model, map).decorate(doc);
+  ds::scene::StructureLayer(model, metamodel, map).decorate(doc);
   EXPECT_FALSE(doc.links.empty());  // A holds B
   EXPECT_TRUE(doc.behaviours.empty());
 }
@@ -112,7 +112,7 @@ class TestRulesLayer : public SceneOf {};
 TEST_F(TestRulesLayer, ItAddsEachRuleWhereItIsWritten) {
   ds::scene::SceneDocument doc = placed;
   const ds::scene::Map map(doc.nodes);
-  ds::scene::RulesLayer(model, map).decorate(doc);
+  ds::scene::RulesLayer(model, metamodel, map).decorate(doc);
   ASSERT_EQ(doc.rules.size(), 1u);
   EXPECT_EQ(doc.rules[0].title, "A never draws");
 }

@@ -131,7 +131,7 @@ TEST_F(TestInterfaceCalls, TheSceneDrawsAModulesInterfaceInsideIt) {
        "    }\n"
        "  }\n"
        "}\n");
-  const auto document = ds::scene::Scene(model).build();
+  const auto document = ds::scene::Scene(model, metamodel).build();
   bool inside = false;
   for (const auto& n : document.nodes) inside |= n.id == "p@face::port" && n.parent == "p@face";
   EXPECT_TRUE(inside);

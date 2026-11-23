@@ -32,25 +32,23 @@ std::string ids(const std::vector<std::string>& list) { return nlohmann::json(li
 
 }  // namespace
 
-Workspace::Workspace(const model::Metamodel& metamodel, const Files& files) : model_(loaded(metamodel, files)) {}
+Workspace::Workspace(const model::Metamodel& metamodel, const Files& files) : metamodel_(metamodel), model_(loaded(metamodel, files)) {}
 
-std::string Workspace::exportModel() const { return exporter::JsonExport(model_.metamodel()).render(model_, false); }
+std::string Workspace::exportModel() const { return exporter::JsonExport(metamodel_).render(model_, false); }
 
 std::string Workspace::report() const { return Api::report(model_); }
 
 std::string Workspace::find(const std::string& id) const {
   const model::Entity* e = model_.find(id);
-  return e ? exporter::JsonExport(model_.metamodel()).entity(*e) : "null";
+  return e ? exporter::JsonExport(metamodel_).entity(*e) : "null";
 }
 
-std::string Workspace::from(const std::string& id) const {
-  return exporter::JsonExport(model_.metamodel()).relations(model_.index().from(id));
-}
+std::string Workspace::from(const std::string& id) const { return exporter::JsonExport(metamodel_).relations(model_.index().from(id)); }
 
-std::string Workspace::to(const std::string& id) const { return exporter::JsonExport(model_.metamodel()).relations(model_.index().to(id)); }
+std::string Workspace::to(const std::string& id) const { return exporter::JsonExport(metamodel_).relations(model_.index().to(id)); }
 
 std::string Workspace::touching(const std::string& id) const {
-  return exporter::JsonExport(model_.metamodel()).relations(model_.index().touching(id));
+  return exporter::JsonExport(metamodel_).relations(model_.index().touching(id));
 }
 
 std::string Workspace::members(const std::string& scope) const { return ids(model_.index().members(scope)); }
@@ -94,15 +92,15 @@ std::string Workspace::walk(const std::string& sequence, const std::string& path
 }
 
 std::string Workspace::ask(const std::string& question, const std::string& subject) const {
-  return format::AnswersJson().write(query::Query(model_).ask(question, subject), {});
+  return format::AnswersJson().write(query::Query(model_, metamodel_).ask(question, subject), {});
 }
 
 std::string Workspace::shows(const std::string& diagram) const {
-  return format::AnswersJson().write(query::Query(model_).shows(diagram), {});
+  return format::AnswersJson().write(query::Query(model_, metamodel_).shows(diagram), {});
 }
 
 std::string Workspace::render(const std::string& diagram, const std::string& format, int width) const {
-  const std::string ir = render::IrExport(model_).render(model::Identity::ofDiagram(diagram).text(), false);
+  const std::string ir = render::IrExport(model_, metamodel_).render(model::Identity::ofDiagram(diagram).text(), false);
   if (ir.empty()) return ir;
   format::FormatOptions options;
   options.width = width;
@@ -115,7 +113,7 @@ std::string Workspace::page(const std::string& title, const std::vector<std::str
   format::FormatOptions options;
   options.title = title;
   options.focus = focus;
-  return format::SceneHtml().write(scene::Scene(model_).build(), options);
+  return format::SceneHtml().write(scene::Scene(model_, metamodel_).build(), options);
 }
 
 std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }

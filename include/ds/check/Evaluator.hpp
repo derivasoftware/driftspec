@@ -17,7 +17,8 @@ namespace check {
 /// rule is broken by every binding of its ranges where its holds has no answer, or its never has one.
 class Evaluator {
  public:
-  Evaluator(model::Model& model, const Resolver& resolver);
+  /// Evaluates over `model`, written in `metamodel` (DS-351), asking `resolver` what a name means.
+  Evaluator(model::Model& model, const model::Metamodel& metamodel, const Resolver& resolver);
 
   /// Validate every formula, compute the definitions and report each rule that the model breaks.
   /// Evaluate every rule: breaches go into the model, findings come back to the step that runs it.
@@ -58,6 +59,7 @@ class Evaluator {
   void report(const std::string& code, const std::string& owner, const std::string& message, const model::Location& at);
 
   model::Model& model_;
+  const model::Metamodel& metamodel_;
   std::vector<model::Finding> found_;
   const Resolver& resolver_;
   std::map<std::string, std::vector<std::string>> byKind_;                   ///< the declared entities of each kind name
