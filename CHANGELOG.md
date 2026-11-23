@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.25
+
+The text drawing takes a tenth of the memory it took (DS-350): a cell of the drawing holds its character inline
+and its colour as an index into the drawing's palette, 7 bytes instead of some 72. A class diagram of 200 classes
+drawn as text needs 380 MB instead of 3 GB, and one of 400 classes, which used to exhaust the machine's memory, 2 GB.
+The drawing is the same, byte for byte. Nothing changes for a design.
+
 ## 0.1.24
 
 The model answers with less copying (DS-345): the relations of one kind leaving or reaching an entity come

@@ -65,18 +65,21 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
   }
 
-  verification SVER-00005-2 {
+  verification SVER-00005-3 {
     status: approved
     @requirement SREQ-00005-1
-    title: System tests confirm a selection is drawn as SVG and as text to a given width
+    title: System tests confirm a selection is drawn as SVG and as text to a given width, and a large one as text within bounded memory
     text:
       ds render <workspace> <diagram> -f svg yields an SVG with stable ids;
       -f text with -w 80 stays within 80 columns while the unbounded drawing
       exceeds them. Revises SVER-00005-1, which named --svg, --text and
-      --width (DS-80).
+      --width (DS-80). Revision 3 (DS-350): a class diagram of 250 classes is
+      drawn as text under a 3 GB address-space cap with a peak under 1 GB; it
+      once needed some 5 GB.
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
+      tests/system/ds/test_qualification.cpp::TestQualification.ALargeClassDiagramIsDrawnAsTextWithinBoundedMemory
   }
 
   verification SVER-00014-2 {
