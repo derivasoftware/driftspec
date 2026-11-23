@@ -4,6 +4,7 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/format/SceneFormats.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Layers.hpp"
 #include "ds/scene/Map.hpp"
@@ -15,11 +16,12 @@ namespace {
 /// the model lands on them, and the layers that draw each perspective over the same boxes.
 class TestSceneLayersOfADesign : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    model = ds::api::Api::load(
+    model = ds::api::Api(metamodel).load(
         {parser.parseText("p.ds",
                           "package p {\n  requirement REQ-00001-1: The system shall run\n  module m {\n"
                           "    class A {\n      @requirement REQ-00001-1\n      - b: B\n      + run() -> none\n    }\n"

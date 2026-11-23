@@ -35,7 +35,7 @@ nlohmann::json artefacts(const model::Model& model) {
       level =
           e.scope.empty() || model::Scope(e.scope).isSystem() ? "system" : model::Identity(model::Scope(e.scope).box().text()).lastName();
     nlohmann::json row{{"id", e.id},
-                       {"kind", model::kindName(e.kind)},
+                       {"kind", model.metamodel().nameOf(e.kind)},
                        {"title", e.field("title")},
                        {"status", e.field("status")},
                        {"level", level},
@@ -82,21 +82,21 @@ nlohmann::json diagrams(const Workspace& workspace, int width) {
   return out;
 }
 
-std::string respond(const std::string& request) {
+std::string respond(const model::Metamodel& metamodel, const std::string& request) {
   const auto in = nlohmann::json::parse(request);
   if (in.contains("manual")) {  // a page of the manual, or with "" its guides and topics (DS-272)
     const std::string topic = in["manual"].get<std::string>();
-    nlohmann::json out{{"topic", topic}, {"text", model::manualPage(topic)}};
+    nlohmann::json out{{"topic", topic}, {"text", model::manualPage(metamodel, topic)}};
     if (topic.empty()) {
       out["guides"] = nlohmann::json::array();
       for (const auto& guide : model::manualGuides()) out["guides"].push_back(guide.first);
-      out["topics"] = model::manualTopics();
+      out["topics"] = model::manualTopics(metamodel);
     }
     return nlohmann::json{{"manual", out}}.dump();
   }
   Files files;
   for (const auto& f : in.at("files").items()) files[f.key()] = f.value().get<std::string>();
-  const Workspace workspace(files);
+  const Workspace workspace(metamodel, files);
   nlohmann::json out;
   out["report"] = nlohmann::json::parse(workspace.report());
   out["entities"] = nlohmann::json::array();
@@ -114,9 +114,9 @@ std::string respond(const std::string& request) {
 
 }  // namespace
 
-std::string Browser::answer(const std::string& request) {
+std::string Browser::answer(const std::string& request) const {
   try {
-    return respond(request);
+    return respond(metamodel_, request);
   } catch (const std::exception& ex) {
     return nlohmann::json{{"error", ex.what()}}.dump();
   }

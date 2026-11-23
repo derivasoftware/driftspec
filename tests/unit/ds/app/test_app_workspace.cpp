@@ -5,6 +5,7 @@
 #include <string>
 
 #include "ds/app/App.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
@@ -12,6 +13,7 @@ namespace {
 /// loads texts (DS-120).
 class Workspaces : public ::testing::Test {
  protected:
+  const ds::model::Metamodel metamodel;
   const std::string hola = std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola";
   std::string empty;
   std::string file;
@@ -43,20 +45,20 @@ TEST_F(TestHoldsDesign, ADirectoryHoldsADesignWhenADsFileLiesUnderIt) {
 class TestLoad : public Workspaces {};
 
 TEST_F(TestLoad, TheFilesOfADirectoryAreReadAsOneModel) {
-  const ds::model::Model model = ds::app::load(hola);
+  const ds::model::Model model = ds::app::load(metamodel, hola);
   EXPECT_FALSE(model.entities().empty());
 }
 
 class TestLoadWorkspace : public Workspaces {};
 
 TEST_F(TestLoadWorkspace, AWorkspaceIsLoadedAndAnythingElseIsSaidAndRefused) {
-  ds::model::Model model;
-  EXPECT_TRUE(ds::app::loadWorkspace(hola, &model));
+  ds::model::Model model{metamodel};
+  EXPECT_TRUE(ds::app::loadWorkspace(metamodel, hola, &model));
   EXPECT_FALSE(model.entities().empty());
   ::testing::internal::CaptureStderr();
-  ds::model::Model none;
-  EXPECT_FALSE(ds::app::loadWorkspace(file, &none));
-  EXPECT_FALSE(ds::app::loadWorkspace(empty, &none));
+  ds::model::Model none{metamodel};
+  EXPECT_FALSE(ds::app::loadWorkspace(metamodel, file, &none));
+  EXPECT_FALSE(ds::app::loadWorkspace(metamodel, empty, &none));
   const std::string said = ::testing::internal::GetCapturedStderr();
   EXPECT_NE(said.find("not a directory"), std::string::npos);
   EXPECT_NE(said.find("no workspace"), std::string::npos);

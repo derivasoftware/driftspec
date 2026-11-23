@@ -37,7 +37,7 @@ std::vector<TSNode> childrenNamed(TSNode node, const char* fieldName) {
   return out;
 }
 
-// what an annotation means comes from the metamodel's table (model::annotations()), declared once
+// what an annotation means comes from the metamodel's table (Metamodel::knownAnnotations()), declared once
 std::string relationForAnnotation(model::Kind from, const model::AnnotationSpec& spec) {
   return from == model::Kind::Verification && !spec.onVerification.empty() ? spec.onVerification : spec.relation;
 }
@@ -219,11 +219,10 @@ void Binder::bindAnnotations(const parse::ParsedFile& file, TSNode node, const s
     TSNode c = ts_node_named_child(node, i);
     if (!is(c, "annotation")) continue;
     const std::string kind = fieldText(file, c, "kind");
-    const model::AnnotationSpec& spec = model::annotationOf(kind);
+    const model::AnnotationSpec& spec = metamodel_.annotationOf(kind);
     if (spec.relation == "refers") {  // a word the language gives no meaning to: kept as a link, and said (DS-210)
       std::string known;
-      for (const auto& a : model::annotations())
-        if (a.name.rfind("@", 0) == 0 && a.name.find('<') == std::string::npos) known += (known.empty() ? "" : ", ") + a.name;
+      for (const auto& a : metamodel_.knownAnnotations()) known += (known.empty() ? "" : ", ") + a.name;
       model_.report({"W-ANNOTATION-UNKNOWN", "warning",
                      "@" + kind + " is no annotation the language knows (" + known + "); it is kept as a link nothing reads",
                      locationOf(file, c)});

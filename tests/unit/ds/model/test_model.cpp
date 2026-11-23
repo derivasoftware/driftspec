@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace {
@@ -25,7 +26,8 @@ Entity entity(Kind kind, const std::string& id, const std::string& scope = "", b
 /// The resolved workspace: one entity per identity, relations and findings (REQ-00001-1, REQ-00002-1).
 class TestModel : public ::testing::Test {
  protected:
-  Model model;
+  const ds::model::Metamodel metamodel;
+  Model model{metamodel};
 
   int findings(const std::string& code) const {
     int n = 0;
@@ -77,7 +79,7 @@ TEST_F(TestModel, ARenameOntoADeclaredIdentityIsRefused) {
 }
 
 TEST_F(TestModel, ARelationTheMetamodelDoesNotDeclareIsRefused) {
-  Model fresh;
+  Model fresh{metamodel};
   EXPECT_THROW(fresh.relate({"depends-on", "p@m::A", "p@m::B", {}, ""}), std::logic_error);
   EXPECT_EQ(fresh.index().count(), 0u);
   fresh.relate({"uses", "p@m::A", "p@m::B", {}, ""});
@@ -98,7 +100,8 @@ TEST_F(TestEntity, HasAFlagItWasDeclaredWith) {
 class TestParam : public ::testing::Test {};
 
 TEST_F(TestParam, ARenamedEntityCarriesItsParametersAndArguments) {
-  Model model;
+  const ds::model::Metamodel metamodel;
+  Model model{metamodel};
   Entity e = entity(Kind::Function, "p@m::f", "p@m");
   e.params = {{"name", "std::string"}, {"items", "std::vector<int>"}};
   e.args = {"a", "\"b, c\""};
@@ -118,10 +121,11 @@ TEST_F(TestParam, ARenamedEntityCarriesItsParametersAndArguments) {
 namespace {
 
 TEST(TestIsArtefact, TheKindsIdentifiedByTheirRevisionAreTheArtefactsAndTheUseCase) {
+  const ds::model::Metamodel metamodel;
   for (Kind k : {Kind::Requirement, Kind::Verification, Kind::Constraint, Kind::UseCase})
-    EXPECT_TRUE(ds::model::isArtefact(k)) << ds::model::kindName(k);
+    EXPECT_TRUE(metamodel.isArtefact(k)) << metamodel.nameOf(k);
   for (Kind k : {Kind::Package, Kind::Module, Kind::Class, Kind::Interface, Kind::Rule, Kind::Outcome})
-    EXPECT_FALSE(ds::model::isArtefact(k)) << ds::model::kindName(k);
+    EXPECT_FALSE(metamodel.isArtefact(k)) << metamodel.nameOf(k);
 }
 
 }  // namespace

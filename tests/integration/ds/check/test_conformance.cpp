@@ -18,13 +18,14 @@ namespace {
 /// over the design of ds and every example corpus; a field it does not declare is reported (REQ-00067-1).
 class TestMetamodelConformance : public ::testing::Test {
  protected:
-  static ds::model::Model load(const std::string& dir) {
-    ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model load(const std::string& dir) const {
+    ds::model::Model model{metamodel};
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(dir)) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     return model;
   }
 
@@ -51,7 +52,7 @@ TEST_F(TestMetamodelConformance, EveryEntityAndRelationIsOneTheMetamodelDeclares
     const ds::model::Model model = load(dir);
     for (const auto& pair : model.entities()) {
       const ds::model::Entity& e = pair.second;
-      const ds::model::KindSpec& spec = ds::model::specOf(e.kind);
+      const ds::model::KindSpec& spec = metamodel.specOf(e.kind);
       for (const auto& flag : e.flags)
         EXPECT_NE(std::find(spec.flags.begin(), spec.flags.end(), flag), spec.flags.end()) << dir << " " << e.id << " flag " << flag;
       if (e.expected) continue;
@@ -62,18 +63,17 @@ TEST_F(TestMetamodelConformance, EveryEntityAndRelationIsOneTheMetamodelDeclares
         EXPECT_TRUE(spec.top) << dir << " " << e.id;
       else
         EXPECT_NE(std::find(spec.parents.begin(), spec.parents.end(), parent), spec.parents.end())
-            << dir << " " << e.id << " inside a " << ds::model::kindName(parent);
+            << dir << " " << e.id << " inside a " << metamodel.nameOf(parent);
     }
     for (const auto& r : model.index().all()) {
       ++relations;
-      const ds::model::RelationSpec* spec = ds::model::relationOf(r.kind);
+      const ds::model::RelationSpec* spec = metamodel.relationOf(r.kind);
       ASSERT_NE(spec, nullptr) << dir << " relation " << r.kind;
       const ds::model::Entity* from = model.find(r.from);
       const ds::model::Entity* to = model.find(r.to);
       if (!from || !to) continue;  // an end the checker reports as undeclared
-      EXPECT_TRUE(ds::model::joins(*spec, from->kind, to->kind))
-          << dir << " " << r.kind << " " << ds::model::kindName(from->kind) << " -> " << ds::model::kindName(to->kind) << " (" << r.from
-          << " -> " << r.to << ")";
+      EXPECT_TRUE(metamodel.joins(*spec, from->kind, to->kind)) << dir << " " << r.kind << " " << metamodel.nameOf(from->kind) << " -> "
+                                                                << metamodel.nameOf(to->kind) << " (" << r.from << " -> " << r.to << ")";
     }
   }
   EXPECT_GT(entities, 1000);
@@ -115,9 +115,10 @@ TEST_F(TestMetamodelConformance, ParametersAndArgumentsAreReadOnceAndAgreeWithTh
 }
 
 TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclaredOneIsNot) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n"
                                "  requirement REQ-00001-1 {\n"
@@ -127,7 +128,7 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   std::vector<std::string> unknown;
   for (const auto& f : model.findings()) {
     if (f.code == "W-FIELD-UNKNOWN") unknown.push_back(f.message);
@@ -137,9 +138,10 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
 }
 
 TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAndOneItTakesIsNot) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n"
                                "  requirement REQ-00001-1 {\n"
@@ -160,7 +162,7 @@ TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAn
                                "  kind: sequense\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   std::vector<std::string> wrong;
   for (const auto& f : model.findings())
     if (f.code == "W-FIELD-VALUE") wrong.push_back(f.message);
@@ -174,14 +176,14 @@ TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAn
 }
 
 TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNotBound) {
-  const auto check = [](const std::string& base) {
-    ds::model::Model model;
+  const auto check = [this](const std::string& base) {
+    ds::model::Model model{metamodel};
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText(
         "a.ds", "package p {\n  interface engine {\n    kind: library\n  }\n  module m {\n    class Api" + base + "\n  }\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     return model;
   };
   const ds::model::Model wrong = check(" : engine { }");  // DS-93: a class that names an interface as its base

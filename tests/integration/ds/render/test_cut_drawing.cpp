@@ -8,6 +8,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Filter.hpp"
@@ -21,10 +22,10 @@ class TestCutDrawing : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/cut")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   nlohmann::json diagram(const std::string& name) {
@@ -57,7 +58,8 @@ class TestCutDrawing : public ::testing::Test {
     return found;
   }
 
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 };
 
 TEST_F(TestCutDrawing, CloseClosesTheBoxItNamesAndTheRestStaysOpen) {
@@ -142,8 +144,8 @@ TEST_F(TestCutDrawing, ARelationLiftedOntoClosedBoxesIsOneOfTwoBondsAndOneArrowO
 
 TEST_F(TestCutDrawing, AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough) {
   ds::parse::Parser parser;
-  ds::model::Model other;
-  ds::bind::Binder binder(other);
+  ds::model::Model other{metamodel};
+  ds::bind::Binder binder(other, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n"
                                "  package tool {\n"
@@ -162,7 +164,7 @@ TEST_F(TestCutDrawing, AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough) {
                                "}\n"
                                "diagram HLD {\n  kind: class\n  include: p@*\n  close: package\n}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(other, checkSteps).run(binder);
+  ds::check::Checker(other, metamodel, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:HLD", false));
   std::string use, structural = "none";
   for (const auto& e : ir["edges"]) {
@@ -203,9 +205,10 @@ TEST_F(TestCutDrawing, AClosedBoxListsWhatItOffersByKindEachMarkedWithWhatItIs) 
 
 /// A design with only its high level: three boxes and one scenario between them (DS-230).
 TEST(TestWrittenLevel, AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfTheBoxes) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("shop.ds",
                                "package shop {\n"
                                "  usecase UC-00001-1 buy(item: string) -> int {\n"
@@ -223,7 +226,7 @@ TEST(TestWrittenLevel, AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfT
                                "}\n"
                                "diagram HLD {\n  kind: class\n  include: shop@*\n}\n"));
   const auto steps = ds::check::steps();
-  ds::check::Checker(model, steps).run(binder);
+  ds::check::Checker(model, metamodel, steps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:HLD", false));
   std::set<std::pair<std::string, std::string>> arrows;
   for (const auto& e : ir["edges"]) {

@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/model/SequenceTree.hpp"
 #include "ds/parse/Parser.hpp"
@@ -16,18 +17,19 @@ namespace {
 /// Block 3: behaviour bound to the static model, over tests/corpus/behaviour (its `!` lines are the oracle).
 class TestBehaviour : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   std::map<std::string, int> byCode;
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/behaviour")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     for (const auto& f : model.findings()) ++byCode[f.code];
   }
 
@@ -168,9 +170,10 @@ TEST_F(TestBehaviour, ADiagramThatClosesTheModulesKeepsOnlyWhatCrossesThem) {
 namespace {
 
 std::vector<std::string> unreachable(const std::string& machine, const std::string& holds = "") {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("door.ds",
                                "package app {\n"
                                "  module shop {\n"
@@ -185,7 +188,7 @@ std::vector<std::string> unreachable(const std::string& machine, const std::stri
                                    "  }\n"
                                    "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   std::vector<std::string> out;
   for (const auto& f : model.findings())
     if (f.code == "W-STATE-UNREACHABLE") out.push_back(f.message);

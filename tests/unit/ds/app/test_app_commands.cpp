@@ -7,12 +7,14 @@
 #include <vector>
 
 #include "ds/app/App.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
 /// The commands of ds run in process, with the exit codes the manual gives them (DS-79).
 class Commands : public ::testing::Test {
  protected:
+  const ds::model::Metamodel metamodel;
   const std::string hola = std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola";
 
   /// A command line as main receives it.
@@ -31,10 +33,10 @@ class TestManual : public Commands {};
 
 TEST_F(TestManual, APageIsPrintedAsTextOrJson) {
   ::testing::internal::CaptureStdout();
-  EXPECT_EQ(ds::app::manual("grammar", false), 0);
+  EXPECT_EQ(ds::app::manual(metamodel, "grammar", false), 0);
   EXPECT_FALSE(::testing::internal::GetCapturedStdout().empty());
   ::testing::internal::CaptureStdout();
-  EXPECT_EQ(ds::app::manual("class", true), 0);
+  EXPECT_EQ(ds::app::manual(metamodel, "class", true), 0);
   const auto page = nlohmann::json::parse(::testing::internal::GetCapturedStdout());
   EXPECT_EQ(page["topic"], "class");
   EXPECT_TRUE(page.contains("kind"));
@@ -42,7 +44,7 @@ TEST_F(TestManual, APageIsPrintedAsTextOrJson) {
 
 TEST_F(TestManual, AnUnknownTopicListsTheTopicsAndExitsOne) {
   ::testing::internal::CaptureStderr();
-  EXPECT_EQ(ds::app::manual("no-such-topic", false), 1);
+  EXPECT_EQ(ds::app::manual(metamodel, "no-such-topic", false), 1);
   EXPECT_NE(::testing::internal::GetCapturedStderr().find("grammar"), std::string::npos);
 }
 
@@ -50,11 +52,11 @@ class TestCheck : public Commands {};
 
 TEST_F(TestCheck, ACleanWorkspaceChecksToZeroAndNoWorkspaceIsBadUsage) {
   ::testing::internal::CaptureStdout();
-  EXPECT_EQ(ds::app::check(hola, true), 0);
+  EXPECT_EQ(ds::app::check(metamodel, hola, true), 0);
   const auto report = nlohmann::json::parse(::testing::internal::GetCapturedStdout());
   EXPECT_EQ(report["errors"], 0);
   ::testing::internal::CaptureStderr();
-  EXPECT_EQ(ds::app::check(hola + "/no-such-thing", false), 2);
+  EXPECT_EQ(ds::app::check(metamodel, hola + "/no-such-thing", false), 2);
   ::testing::internal::GetCapturedStderr();
 }
 

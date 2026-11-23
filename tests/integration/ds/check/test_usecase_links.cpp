@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -15,11 +16,12 @@ namespace {
 /// from the operation that realises it or the use case that specialises it, is pinned and follows it.
 class TestUseCaseLinks : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("a.ds",
                                        "package p {\n"
                                        "  usecase UC-00001-2 greet(name: string) -> string {\n"
@@ -40,7 +42,7 @@ class TestUseCaseLinks : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   std::vector<std::string> codes(const std::string& code) const {
@@ -70,9 +72,10 @@ TEST_F(TestUseCaseLinks, ASpecialisationThatNamesNoRevisionIsUnpinned) {
 }
 
 TEST(TestUseCaseLinksAlone, AUseCaseNobodyDeclaresIsSaidOnce) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n"
                                "  interface shell {\n"
@@ -84,7 +87,7 @@ TEST(TestUseCaseLinksAlone, AUseCaseNobodyDeclaresIsSaidOnce) {
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   ASSERT_EQ(model.findings().size(), 1u);
   EXPECT_EQ(model.findings()[0].code, "W-USECASE-UNDECLARED");
 }

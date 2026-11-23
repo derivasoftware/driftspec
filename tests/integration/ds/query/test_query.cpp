@@ -7,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/format/TextFormats.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
@@ -18,14 +19,15 @@ using ds::query::Answer;
 /// Questions about the model answered by identity, over the artefacts corpus (iris).
 class TestQuery : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   static bool names(const std::vector<Answer>& answers, const std::string& id, const std::string& kind = "") {
@@ -109,10 +111,10 @@ class TestQueryOfTheDesign : public TestQuery {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 };
 
@@ -131,10 +133,10 @@ TEST_F(TestQueryOfTheDesign, CouplingAnswersWhatEachBehaviourTouchesOutsideItsMo
 namespace {
 
 /// DS-53: a class and its operations, one with a sequence, the class with a state machine.
-ds::model::Model aMachine() {
-  ds::model::Model model;
+ds::model::Model aMachine(const ds::model::Metamodel& metamodel) {
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("door.ds",
                                "package app {\n"
                                "  module shop {\n"
@@ -153,14 +155,15 @@ ds::model::Model aMachine() {
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   return model;
 }
 
 }  // namespace
 
 TEST(TestQueryOfAClass, TheBehavioursOfAClassAreItsMachineAndTheSequencesOfItsOperations) {
-  const ds::model::Model model = aMachine();
+  const ds::model::Metamodel metamodel;
+  const ds::model::Model model = aMachine(metamodel);
   const auto answers = ds::query::Query(model).ask("behaviours", "app@shop::Door");
   std::set<std::string> ids;
   for (const auto& a : answers) ids.insert(a.id);

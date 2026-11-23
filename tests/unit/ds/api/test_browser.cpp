@@ -4,14 +4,16 @@
 #include <string>
 
 #include "ds/api/Browser.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
 /// The engine for a page in a browser (REQ-00113-1): one request of texts in, one document out.
 class TestBrowser : public ::testing::Test {
  protected:
-  static nlohmann::json ask(const nlohmann::json& files) {
-    return nlohmann::json::parse(ds::api::Browser::answer(nlohmann::json{{"files", files}}.dump()));
+  const ds::model::Metamodel metamodel;
+  nlohmann::json ask(const nlohmann::json& files) const {
+    return nlohmann::json::parse(ds::api::Browser(metamodel).answer(nlohmann::json{{"files", files}}.dump()));
   }
   const nlohmann::json shop{{"shop.ds",
                              "package shop {\n"
@@ -55,7 +57,7 @@ TEST_F(TestBrowser, AnArtefactComesAsARowWithWhatKeepsIt) {
 }
 
 TEST_F(TestBrowser, ARequestThatCannotBeReadIsAnsweredWithAnError) {
-  const auto out = nlohmann::json::parse(ds::api::Browser::answer("not json"));
+  const auto out = nlohmann::json::parse(ds::api::Browser(metamodel).answer("not json"));
   EXPECT_TRUE(out.contains("error"));
 }
 

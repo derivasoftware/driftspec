@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "ds/model/Identity.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/text/Text.hpp"
 
 namespace ds {
@@ -24,14 +25,14 @@ bool closes(const model::Entity& e) {
 }
 
 /// Whether a pattern names a box: its identity, a prefix of it with *, or its kind.
-bool names(const std::string& pattern, const model::Entity& box) {
-  if (pattern == box.id || pattern == model::kindName(box.kind)) return true;
+bool names(const model::Metamodel& metamodel, const std::string& pattern, const model::Entity& box) {
+  if (pattern == box.id || pattern == metamodel.nameOf(box.kind)) return true;
   return !pattern.empty() && pattern.back() == '*' && box.id.compare(0, pattern.size() - 1, pattern, 0, pattern.size() - 1) == 0;
 }
 
-bool namedBy(const std::vector<std::string>& patterns, const model::Entity& box) {
+bool namedBy(const model::Metamodel& metamodel, const std::vector<std::string>& patterns, const model::Entity& box) {
   for (const auto& p : patterns)
-    if (names(p, box)) return true;
+    if (names(metamodel, p, box)) return true;
   return false;
 }
 
@@ -71,11 +72,11 @@ Cut::Cut(const model::Model& model, const model::Entity& diagram)
   for (const auto& pair : model.entities()) {
     const model::Entity& box = pair.second;
     // `close:` draws the line; with none written, `open:` alone closes every box
-    if (closes(box) && (closesSome ? namedBy(close, box) : true)) closed_.insert(box.id);
+    if (closes(box) && (closesSome ? namedBy(model.metamodel(), close, box) : true)) closed_.insert(box.id);
   }
   // `open:` goes through it: the box it names stays open, and so does every box on the way to it
   for (const auto& pair : model.entities()) {
-    if (!closes(pair.second) || !namedBy(open, pair.second)) continue;
+    if (!closes(pair.second) || !namedBy(model.metamodel(), open, pair.second)) continue;
     for (const auto& step : pathTo(pair.first)) closed_.erase(step);
   }
 }

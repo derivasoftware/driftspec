@@ -21,33 +21,37 @@ namespace api {
 
 namespace {
 
-model::Model loaded(const Files& files) {
+model::Model loaded(const model::Metamodel& metamodel, const Files& files) {
   parse::Parser parser;
   std::vector<parse::ParsedFile> parsed;
   for (const auto& file : files) parsed.push_back(parser.parseText(file.first, file.second));
-  return Api::load(parsed);
+  return Api(metamodel).load(parsed);
 }
 
 std::string ids(const std::vector<std::string>& list) { return nlohmann::json(list).dump(); }
 
 }  // namespace
 
-Workspace::Workspace(const Files& files) : model_(loaded(files)) {}
+Workspace::Workspace(const model::Metamodel& metamodel, const Files& files) : model_(loaded(metamodel, files)) {}
 
-std::string Workspace::exportModel() const { return exporter::JsonExport().render(model_, false); }
+std::string Workspace::exportModel() const { return exporter::JsonExport(model_.metamodel()).render(model_, false); }
 
 std::string Workspace::report() const { return Api::report(model_); }
 
 std::string Workspace::find(const std::string& id) const {
   const model::Entity* e = model_.find(id);
-  return e ? exporter::JsonExport().entity(*e) : "null";
+  return e ? exporter::JsonExport(model_.metamodel()).entity(*e) : "null";
 }
 
-std::string Workspace::from(const std::string& id) const { return exporter::JsonExport().relations(model_.index().from(id)); }
+std::string Workspace::from(const std::string& id) const {
+  return exporter::JsonExport(model_.metamodel()).relations(model_.index().from(id));
+}
 
-std::string Workspace::to(const std::string& id) const { return exporter::JsonExport().relations(model_.index().to(id)); }
+std::string Workspace::to(const std::string& id) const { return exporter::JsonExport(model_.metamodel()).relations(model_.index().to(id)); }
 
-std::string Workspace::touching(const std::string& id) const { return exporter::JsonExport().relations(model_.index().touching(id)); }
+std::string Workspace::touching(const std::string& id) const {
+  return exporter::JsonExport(model_.metamodel()).relations(model_.index().touching(id));
+}
 
 std::string Workspace::members(const std::string& scope) const { return ids(model_.index().members(scope)); }
 

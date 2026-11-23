@@ -12,62 +12,6 @@
 namespace ds {
 namespace model {
 
-bool isArtefact(Kind kind) {
-  return kind == Kind::Requirement || kind == Kind::Verification || kind == Kind::Constraint || kind == Kind::UseCase;
-}
-
-const char* kindName(Kind kind) {
-  switch (kind) {
-    case Kind::Package:
-      return "package";
-    case Kind::Module:
-      return "module";
-    case Kind::Requirement:
-      return "requirement";
-    case Kind::Verification:
-      return "verification";
-    case Kind::Interface:
-      return "interface";
-    case Kind::View:
-      return "view";
-    case Kind::Operation:
-      return "operation";
-    case Kind::Constraint:
-      return "constraint";
-    case Kind::Class:
-      return "class";
-    case Kind::Enum:
-      return "enum";
-    case Kind::Function:
-      return "function";
-    case Kind::Method:
-      return "method";
-    case Kind::Attribute:
-      return "attribute";
-    case Kind::Operator:
-      return "operator";
-    case Kind::Sequence:
-      return "sequence";
-    case Kind::Message:
-      return "message";
-    case Kind::Frame:
-      return "frame";
-    case Kind::State:
-      return "state";
-    case Kind::Diagram:
-      return "diagram";
-    case Kind::UseCase:
-      return "usecase";
-    case Kind::Outcome:
-      return "outcome";
-    case Kind::Rule:
-      return "rule";
-    case Kind::Definition:
-      return "definition";
-  }
-  return "?";
-}
-
 bool Entity::has(const std::string& flag) const {
   for (const auto& f : flags) {
     if (f == flag) return true;
@@ -105,9 +49,9 @@ Entity& Model::declare(const Entity& entity) {
   if (behaviour(entity.kind) != behaviour(existing.kind)) {
     const Entity& member = behaviour(entity.kind) ? existing : entity;
     report({"E-NAME-RESERVED", "error",
-            std::string(kindName(member.kind)) + " '" + member.id + "' takes the identity of the " +
+            metamodel_->nameOf(member.kind) + " '" + member.id + "' takes the identity of the " +
                 ((behaviour(entity.kind) ? entity.kind : existing.kind) == Kind::State ? "state machine" : "sequence") +
-                " written for what holds it: rename the " + kindName(member.kind),
+                " written for what holds it: rename the " + metamodel_->nameOf(member.kind),
             member.location});
     if (behaviour(entity.kind)) {
       indexEntity(existing, false);
@@ -119,7 +63,7 @@ Entity& Model::declare(const Entity& entity) {
   const bool reopenable = entity.kind == Kind::Package || entity.kind == Kind::Module;
   if (!reopenable) {
     report({"E-DUPLICATE-IDENTITY", "error",
-            std::string(kindName(entity.kind)) + " '" + entity.id + "' is declared twice (first at " + existing.location.file + ":" +
+            metamodel_->nameOf(entity.kind) + " '" + entity.id + "' is declared twice (first at " + existing.location.file + ":" +
                 std::to_string(existing.location.line) + ")",
             entity.location});
   }
@@ -138,7 +82,7 @@ Entity* Model::find(const std::string& id) {
 
 void Model::relate(const Relation& relation) {
   // a relation the metamodel does not declare is a defect of ds, not of the specification read
-  if (!relationOf(relation.kind)) throw std::logic_error("the metamodel does not declare the relation '" + relation.kind + "'");
+  if (!metamodel_->relationOf(relation.kind)) throw std::logic_error("the metamodel does not declare the relation '" + relation.kind + "'");
   relations_.push_back(relation);
   const std::size_t position = relations_.size() - 1;
   indexed_.from[relation.from].push_back(position);
@@ -183,7 +127,7 @@ bool Model::rename(const std::string& from, const std::string& to) {
   if (it == entities_.end()) return false;
   if (const Entity* other = find(to); other && !other->expected) {
     report({"E-DUPLICATE-IDENTITY", "error",
-            std::string(kindName(it->second.kind)) + " '" + to + "' is declared twice (first at " + other->location.file + ":" +
+            metamodel_->nameOf(it->second.kind) + " '" + to + "' is declared twice (first at " + other->location.file + ":" +
                 std::to_string(other->location.line) + ")",
             it->second.location});
     return false;

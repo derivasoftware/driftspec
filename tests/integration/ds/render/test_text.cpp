@@ -3,6 +3,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/Ir.hpp"
@@ -14,14 +15,15 @@ namespace {
 /// The terminal drawing: the same layout on a character grid.
 class TestText : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   std::string draw(const std::string& diagram, bool color = false) {
@@ -56,9 +58,9 @@ TEST_F(TestText, BoxesDoNotCollideOnTheGrid) {
 
 TEST_F(TestText, FramesOpeningAtTheSameMessageStackTheirHeaders) {
   // DS-13: a loop whose first step is a loop drew both headers on one row (┌ l┌ loop N)
-  ds::model::Model nested;  // a workspace of its own, not the static corpus
+  ds::model::Model nested{metamodel};  // a workspace of its own, not the static corpus
   ds::parse::Parser parser;
-  ds::bind::Binder binder(nested);
+  ds::bind::Binder binder(nested, metamodel);
   binder.bind(parser.parseText("l.ds",
                                "package app {\n"
                                "  module m {\n"
@@ -85,7 +87,7 @@ TEST_F(TestText, FramesOpeningAtTheSameMessageStackTheirHeaders) {
                                "  include: app@m::A::run::sequence/nested\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(nested, checkSteps).run(binder);
+  ds::check::Checker(nested, metamodel, checkSteps).run(binder);
   const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(nested).render("diagram:SEQ_Nested", false));
   const std::string out = ds::render::Text().render(doc, false);
   const auto outer = out.find("loop N"), inner = out.find("loop M");

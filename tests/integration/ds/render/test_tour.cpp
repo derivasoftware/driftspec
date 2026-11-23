@@ -8,6 +8,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Filter.hpp"
@@ -30,10 +31,10 @@ class TestTour : public ::testing::Test {
 
   static void load(ds::model::Model& model, const std::string& corpus) {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, model.metamodel());
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus)) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, model.metamodel(), checkSteps).run(binder);
   }
 
   static std::string ir(const ds::model::Model& model, const std::string& name) {
@@ -58,8 +59,9 @@ class TestTour : public ::testing::Test {
     return out;
   }
 
-  ds::model::Model detail;
-  ds::model::Model written;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model detail{metamodel};
+  ds::model::Model written{metamodel};
 };
 
 TEST_F(TestTour, ATourIsOneDrawingOfTwoPartsTheBoxesAndTheSequence) {

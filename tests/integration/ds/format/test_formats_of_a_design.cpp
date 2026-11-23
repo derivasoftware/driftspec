@@ -11,6 +11,7 @@
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/format/TextFormats.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/scene/Scene.hpp"
@@ -22,7 +23,8 @@ namespace {
 class TestFormatsOfADesign : public ::testing::Test {
  protected:
   ds::api::Files files;
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     const std::string root = std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola";
@@ -34,7 +36,7 @@ class TestFormatsOfADesign : public ::testing::Test {
       files[entry.path().string()] = text.str();
     }
     ds::parse::Parser parser;
-    model = ds::api::Api::load(parser.parseDirectory(root));
+    model = ds::api::Api(metamodel).load(parser.parseDirectory(root));
   }
 };
 
@@ -69,13 +71,13 @@ TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheD
   const auto formats = ds::format::diagramFormats();
   ASSERT_EQ(formats.size(), 5u);
   for (const auto& f : formats) {
-    EXPECT_FALSE(ds::api::Api::render(files, "CL_Hola", f.first, 120).empty()) << f.first;
-    EXPECT_EQ(ds::api::Api::render(files, "NoSuchDiagram", f.first, 120), "") << f.first;
+    EXPECT_FALSE(ds::api::Api(metamodel).render(files, "CL_Hola", f.first, 120).empty()) << f.first;
+    EXPECT_EQ(ds::api::Api(metamodel).render(files, "NoSuchDiagram", f.first, 120), "") << f.first;
   }
 }
 
 TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDescribes) {
-  const std::string text = ds::api::Api::render(files, "CL_Hola", "ir", 0);
+  const std::string text = ds::api::Api(metamodel).render(files, "CL_Hola", "ir", 0);
   const auto ir = nlohmann::json::parse(text);
   ASSERT_FALSE(ir["nodes"].empty());
   const ds::render::IrText diagram{text};
@@ -88,7 +90,7 @@ TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDes
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find("Greeter"), std::string::npos);
   EXPECT_NE(formats.at("text")->write(diagram, {}).find("Greeter"), std::string::npos);
-  EXPECT_EQ(svg, ds::api::Api::render(files, "CL_Hola", "svg", 0));  // what ds render writes
+  EXPECT_EQ(svg, ds::api::Api(metamodel).render(files, "CL_Hola", "svg", 0));  // what ds render writes
 }
 
 /// The answers of a query and the report of a check on the design, written as text or as JSON.
@@ -119,7 +121,7 @@ TEST_F(TestTextFormatsOfADesign, TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAs
   const std::string text = formats.at("text")->write(report, {});
   EXPECT_NE(text.find(std::to_string(report.entities) + " entities"), std::string::npos) << text;
   EXPECT_NE(text.find(std::to_string(report.relations) + " relations"), std::string::npos) << text;
-  EXPECT_EQ(json, nlohmann::json::parse(ds::api::Api::check(files)));  // what ds check prints
+  EXPECT_EQ(json, nlohmann::json::parse(ds::api::Api(metamodel).check(files)));  // what ds check prints
 }
 
 }  // namespace

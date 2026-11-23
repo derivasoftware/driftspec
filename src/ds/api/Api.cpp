@@ -60,9 +60,9 @@ Unclosed unclosedBlock(const std::string& text) {
 
 }  // namespace
 
-model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
-  model::Model model;
-  bind::Binder binder(model);
+model::Model Api::load(const std::vector<parse::ParsedFile>& files) const {
+  model::Model model(metamodel_);
+  bind::Binder binder(model, metamodel_);
   std::set<std::string> broken;
   for (const auto& parsed : files) {
     if (parsed.hasSyntaxErrors) {
@@ -82,7 +82,7 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) {
     binder.bind(parsed);
   }
   const auto steps = check::steps();
-  check::Checker(model, steps).run(binder);
+  check::Checker(model, metamodel_, steps).run(binder);
   auto& findings = model.findings();
   if (!broken.empty()) {
     // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
@@ -106,17 +106,17 @@ std::string Api::report(const model::Model& model, bool pretty) {
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)
-std::string Api::check(const Files& files) { return Workspace(files).report(); }
+std::string Api::check(const Files& files) const { return Workspace(metamodel_, files).report(); }
 
-std::string Api::exportModel(const Files& files) { return Workspace(files).exportModel(); }
+std::string Api::exportModel(const Files& files) const { return Workspace(metamodel_, files).exportModel(); }
 
-std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) {
+std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) const {
   // svg, the IR itself, or text for anything else
-  return Workspace(files).render(diagram, format == "svg" || format == "ir" ? format : "text", width);
+  return Workspace(metamodel_, files).render(diagram, format == "svg" || format == "ir" ? format : "text", width);
 }
 
-std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) {
-  return Workspace(files).page(title, focus);
+std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) const {
+  return Workspace(metamodel_, files).page(title, focus);
 }
 
 std::string Api::expectedAt(const std::string& text, int line, int column) {

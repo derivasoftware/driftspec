@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <set>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "ds/model/Metamodel.hpp"
 
@@ -14,88 +17,94 @@ const Kind kAllKinds[] = {Kind::Package,   Kind::Module,     Kind::Requirement, 
                           Kind::Attribute, Kind::Operator,   Kind::Sequence,    Kind::Message,      Kind::Frame,     Kind::State,
                           Kind::Diagram,   Kind::UseCase,    Kind::Outcome,     Kind::Rule,         Kind::Definition};
 
+/// One metamodel, made for each test as the engine makes one where it starts (DS-341).
+class Metamodelled : public ::testing::Test {
+ protected:
+  const ds::model::Metamodel metamodel;
+};
+
 /// The metamodel declared once (REQ-00066-1). One fixture per unit of ds::model it tests:
 /// the kinds, the fields, the relations and joins.
-class TestKindSpec : public ::testing::Test {};
-class TestFieldSpec : public ::testing::Test {};
-class TestRelationSpec : public ::testing::Test {};
-class TestJoins : public ::testing::Test {};
+class TestKindSpec : public Metamodelled {};
+class TestFieldSpec : public Metamodelled {};
+class TestRelationSpec : public Metamodelled {};
+class TestJoins : public Metamodelled {};
 
 TEST_F(TestKindSpec, EveryKindOfTheModelIsDeclaredOnce) {
   std::set<std::string> seen;
-  for (const auto& k : ds::model::kinds()) EXPECT_TRUE(seen.insert(ds::model::kindName(k.kind)).second) << ds::model::kindName(k.kind);
-  for (Kind k : kAllKinds) EXPECT_EQ(ds::model::specOf(k).kind, k) << ds::model::kindName(k);
+  for (const auto& k : metamodel.kinds()) EXPECT_TRUE(seen.insert(metamodel.nameOf(k.kind)).second) << metamodel.nameOf(k.kind);
+  for (Kind k : kAllKinds) EXPECT_EQ(metamodel.specOf(k).kind, k) << metamodel.nameOf(k);
   EXPECT_EQ(seen.size(), sizeof(kAllKinds) / sizeof(kAllKinds[0]));
 }
 
 TEST_F(TestFieldSpec, AFieldIsFoundByItsKindAndAFamilyByAnySuffix) {
-  const auto* title = ds::model::fieldOf(Kind::Requirement, "title");
+  const auto* title = metamodel.fieldOf(Kind::Requirement, "title");
   ASSERT_NE(title, nullptr);
   EXPECT_EQ(title->source, ds::model::FieldSource::Written);
-  EXPECT_NE(ds::model::fieldOf(Kind::Sequence, "local.parser"), nullptr);
-  EXPECT_NE(ds::model::fieldOf(Kind::Operation, "exit 2"), nullptr);
-  EXPECT_EQ(ds::model::fieldOf(Kind::Sequence, "local."), nullptr);  // a family needs a suffix
-  EXPECT_EQ(ds::model::fieldOf(Kind::Diagram, "layout"), nullptr);
-  EXPECT_EQ(ds::model::fieldOf(Kind::Class, "title"), nullptr);  // a field of another kind is not this kind's
+  EXPECT_NE(metamodel.fieldOf(Kind::Sequence, "local.parser"), nullptr);
+  EXPECT_NE(metamodel.fieldOf(Kind::Operation, "exit 2"), nullptr);
+  EXPECT_EQ(metamodel.fieldOf(Kind::Sequence, "local."), nullptr);  // a family needs a suffix
+  EXPECT_EQ(metamodel.fieldOf(Kind::Diagram, "layout"), nullptr);
+  EXPECT_EQ(metamodel.fieldOf(Kind::Class, "title"), nullptr);  // a field of another kind is not this kind's
 }
 
 TEST_F(TestRelationSpec, ARelationIsFoundByItsKindAndAnUnknownOneIsNot) {
-  const auto* verifies = ds::model::relationOf("verifies");
+  const auto* verifies = metamodel.relationOf("verifies");
   ASSERT_NE(verifies, nullptr);
   EXPECT_EQ(verifies->from.size(), 1u);
   EXPECT_EQ(verifies->to.size(), 2u);
-  EXPECT_EQ(ds::model::relationOf("depends-on"), nullptr);
+  EXPECT_EQ(metamodel.relationOf("depends-on"), nullptr);
 }
 
 TEST_F(TestJoins, ARelationJoinsOnlyTheKindsItDeclares) {
-  const auto* verifies = ds::model::relationOf("verifies");
+  const auto* verifies = metamodel.relationOf("verifies");
   ASSERT_NE(verifies, nullptr);
-  EXPECT_TRUE(ds::model::joins(*verifies, Kind::Verification, Kind::Requirement));
-  EXPECT_TRUE(ds::model::joins(*verifies, Kind::Verification, Kind::Constraint));
-  EXPECT_FALSE(ds::model::joins(*verifies, Kind::Requirement, Kind::Verification));
+  EXPECT_TRUE(metamodel.joins(*verifies, Kind::Verification, Kind::Requirement));
+  EXPECT_TRUE(metamodel.joins(*verifies, Kind::Verification, Kind::Constraint));
+  EXPECT_FALSE(metamodel.joins(*verifies, Kind::Requirement, Kind::Verification));
 }
 
 TEST_F(TestJoins, ContainsJoinsAParentOnlyWithTheChildrenItMayHold) {
-  const auto* contains = ds::model::relationOf("contains");
+  const auto* contains = metamodel.relationOf("contains");
   ASSERT_NE(contains, nullptr);
-  EXPECT_TRUE(ds::model::joins(*contains, Kind::Class, Kind::Method));
-  EXPECT_TRUE(ds::model::joins(*contains, Kind::Package, Kind::Package));
-  EXPECT_FALSE(ds::model::joins(*contains, Kind::Class, Kind::Package));  // both ends are kinds contains knows, not as a pair
-  EXPECT_FALSE(ds::model::joins(*contains, Kind::Sequence, Kind::Method));
+  EXPECT_TRUE(metamodel.joins(*contains, Kind::Class, Kind::Method));
+  EXPECT_TRUE(metamodel.joins(*contains, Kind::Package, Kind::Package));
+  EXPECT_FALSE(metamodel.joins(*contains, Kind::Class, Kind::Package));  // both ends are kinds contains knows, not as a pair
+  EXPECT_FALSE(metamodel.joins(*contains, Kind::Sequence, Kind::Method));
 }
 
 TEST_F(TestJoins, ARelationWithNoEndsJoinsAnyKind) {
-  const auto* refers = ds::model::relationOf("refers");
+  const auto* refers = metamodel.relationOf("refers");
   ASSERT_NE(refers, nullptr);
-  EXPECT_TRUE(ds::model::joins(*refers, Kind::Class, Kind::Diagram));
+  EXPECT_TRUE(metamodel.joins(*refers, Kind::Class, Kind::Diagram));
 }
 
 TEST_F(TestKindSpec, OnlyPackagesAndDiagramsStandAtTheTop) {
-  for (const auto& k : ds::model::kinds()) {
-    EXPECT_EQ(k.top, k.kind == Kind::Package || k.kind == Kind::Diagram) << ds::model::kindName(k.kind);
+  for (const auto& k : metamodel.kinds()) {
+    EXPECT_EQ(k.top, k.kind == Kind::Package || k.kind == Kind::Diagram) << metamodel.nameOf(k.kind);
     if (!k.top) {
-      EXPECT_FALSE(k.parents.empty()) << ds::model::kindName(k.kind);
+      EXPECT_FALSE(k.parents.empty()) << metamodel.nameOf(k.kind);
     }
   }
 }
 
 /// The manual's tables (REQ-00079-1): a code, an annotation, a command, each found by its name.
-class TestCodeSpec : public ::testing::Test {};
-class TestAnnotationSpec : public ::testing::Test {};
-class TestCommandSpec : public ::testing::Test {};
+class TestCodeSpec : public Metamodelled {};
+class TestAnnotationSpec : public Metamodelled {};
+class TestCommandSpec : public Metamodelled {};
 
 TEST_F(TestCodeSpec, ACodeIsFoundWithItsSeverityItsMeaningAndWhatToDo) {
-  const auto* code = ds::model::codeOf("E-SYNTAX");
+  const auto* code = metamodel.codeOf("E-SYNTAX");
   ASSERT_NE(code, nullptr);
   EXPECT_EQ(code->severity, "error");
   EXPECT_FALSE(code->fix.empty());
-  EXPECT_EQ(ds::model::codeOf("E-NOTHING"), nullptr);
+  EXPECT_EQ(metamodel.codeOf("E-NOTHING"), nullptr);
 }
 
 TEST_F(TestAnnotationSpec, EveryAnnotationThatMeansSomethingNamesTheRelationItMakes) {
-  for (const auto& a : ds::model::annotations()) {
+  for (const auto& a : metamodel.annotations()) {
     if (a.relation == "refers") continue;  // any other word: a link with no meaning
-    EXPECT_NE(ds::model::relationOf(a.relation), nullptr) << a.name;
+    EXPECT_NE(metamodel.relationOf(a.relation), nullptr) << a.name;
   }
 }
 
@@ -109,37 +118,37 @@ TEST_F(TestCommandSpec, EveryCommandSaysWhatEachOfItsExitCodesMeans) {
 }
 
 /// The manual's functions (REQ-00079-1), one fixture each.
-class TestSyntaxOf : public ::testing::Test {};
-class TestExampleOf : public ::testing::Test {};
-class TestManualPage : public ::testing::Test {};
-class TestManualTopics : public ::testing::Test {};
+class TestSyntaxOf : public Metamodelled {};
+class TestExampleOf : public Metamodelled {};
+class TestManualPage : public Metamodelled {};
+class TestManualTopics : public Metamodelled {};
 
 TEST_F(TestSyntaxOf, AKindSaysHowItIsWritten) {
-  EXPECT_NE(ds::model::syntaxOf(Kind::Sequence).find("sequence <Class>::<method>"), std::string::npos);
-  EXPECT_EQ(ds::model::specOf(Kind::Sequence).syntax, ds::model::syntaxOf(Kind::Sequence));  // the metamodel carries it
+  EXPECT_NE(metamodel.syntaxOf(Kind::Sequence).find("sequence <Class>::<method>"), std::string::npos);
+  EXPECT_EQ(metamodel.specOf(Kind::Sequence).syntax, metamodel.syntaxOf(Kind::Sequence));  // the metamodel carries it
 }
 
 TEST_F(TestExampleOf, AKindsExampleDeclaresOneOfItsKind) {
-  EXPECT_NE(ds::model::exampleOf(Kind::Enum).find("enum "), std::string::npos);
-  EXPECT_NE(ds::model::exampleOf(Kind::Diagram).find("diagram "), std::string::npos);
+  EXPECT_NE(metamodel.exampleOf(Kind::Enum).find("enum "), std::string::npos);
+  EXPECT_NE(metamodel.exampleOf(Kind::Diagram).find("diagram "), std::string::npos);
 }
 
 TEST_F(TestManualPage, TheIndexListsTheKindsAndAnUnknownTopicHasNoPage) {
-  const std::string index = ds::model::manualPage("");
-  for (const auto& k : ds::model::kinds()) EXPECT_NE(index.find(ds::model::kindName(k.kind)), std::string::npos);
-  EXPECT_EQ(ds::model::manualPage("weather"), "");
+  const std::string index = ds::model::manualPage(metamodel, "");
+  for (const auto& k : metamodel.kinds()) EXPECT_NE(index.find(metamodel.nameOf(k.kind)), std::string::npos);
+  EXPECT_EQ(ds::model::manualPage(metamodel, "weather"), "");
 }
 
 TEST_F(TestManualTopics, TheTopicsAreTheTablesTheKindsAndTheCodes) {
-  const auto topics = ds::model::manualTopics();
+  const auto topics = ds::model::manualTopics(metamodel);
   const auto& guides = ds::model::manualGuides();  // the guides written in doc/manual come first (DS-272)
-  EXPECT_EQ(topics.size(), guides.size() + 4 + ds::model::kinds().size() + ds::model::codes().size());
+  EXPECT_EQ(topics.size(), guides.size() + 4 + metamodel.kinds().size() + metamodel.codes().size());
   EXPECT_EQ(topics[guides.size()], "grammar");
   for (std::size_t i = 0; i < guides.size(); ++i) EXPECT_EQ(topics[i], guides[i].first);
 }
 
 /// The guides of the manual, embedded from doc/manual when ds is built (DS-272).
-class TestManualGuides : public ::testing::Test {};
+class TestManualGuides : public Metamodelled {};
 
 TEST_F(TestManualGuides, EachGuideHasATopicOfItsOwnAndStartsWithItsTitle) {
   const auto& guides = ds::model::manualGuides();
@@ -154,10 +163,10 @@ TEST_F(TestManualGuides, EachGuideHasATopicOfItsOwnAndStartsWithItsTitle) {
 }
 
 /// The version of the tool, written in when ds is built (DS-278).
-class TestVersion : public ::testing::Test {};
+class TestVersion : public Metamodelled {};
 
 TEST_F(TestVersion, IsWrittenAsMajorMinorPatch) {
-  const std::string v = ds::model::version();
+  const std::string v = metamodel.version();
   int dots = 0;
   for (char c : v) {
     if (c == '.') {
@@ -169,13 +178,147 @@ TEST_F(TestVersion, IsWrittenAsMajorMinorPatch) {
   EXPECT_EQ(dots, 2) << v;
 }
 
-class TestSpecNamed : public ::testing::Test {};
+class TestSpecNamed : public Metamodelled {};
 
-TEST_F(TestSpecNamed, AWordNamesTheKindKindNameWritesAndNoOtherWordDoes) {
-  EXPECT_EQ(ds::model::specNamed("class"), &ds::model::specOf(Kind::Class));
-  EXPECT_EQ(ds::model::specNamed("usecase"), &ds::model::specOf(Kind::UseCase));
-  EXPECT_EQ(ds::model::specNamed("Class"), nullptr);
-  EXPECT_EQ(ds::model::specNamed("nothing"), nullptr);
+TEST_F(TestSpecNamed, AWordNamesTheKindNameOfWritesAndNoOtherWordDoes) {
+  EXPECT_EQ(metamodel.specNamed("class"), &metamodel.specOf(Kind::Class));
+  EXPECT_EQ(metamodel.specNamed("usecase"), &metamodel.specOf(Kind::UseCase));
+  EXPECT_EQ(metamodel.specNamed("Class"), nullptr);
+  EXPECT_EQ(metamodel.specNamed("nothing"), nullptr);
+}
+
+/// The class itself (DS-341): its tables are built once, when it is made, and every question reads them.
+class TestMetamodel : public Metamodelled {};
+
+TEST_F(TestMetamodel, BuildsItsTablesOnceAndAnswersEveryQuestionFromThem) {
+  EXPECT_EQ(&metamodel.kinds(), &metamodel.kinds());
+  EXPECT_EQ(&metamodel.specOf(Kind::Package), &metamodel.kinds().front());
+  EXPECT_EQ(metamodel.relationOf("contains"), &metamodel.relations().front());
+  EXPECT_EQ(&metamodel.nameOf(Kind::Class), &metamodel.nameOf(Kind::Class));  // a name is the table's, not built per call
+  const ds::model::Metamodel other;                                           // another one, made elsewhere, says the same language
+  EXPECT_EQ(other.kinds().size(), metamodel.kinds().size());
+  EXPECT_EQ(other.codes().size(), metamodel.codes().size());
+  EXPECT_EQ(other.nameOf(Kind::UseCase), metamodel.nameOf(Kind::UseCase));
+  EXPECT_EQ(other.version(), metamodel.version());
+}
+
+/// What the metamodel's builders make (DS-341: its private members), read through what the class answers.
+class TestWrittenField : public Metamodelled {};
+class TestSyntaxField : public Metamodelled {};
+class TestDerivedField : public Metamodelled {};
+class TestClosedField : public Metamodelled {};
+class TestArtefactFields : public Metamodelled {};
+class TestBuild : public Metamodelled {};
+class TestBuildRelations : public Metamodelled {};
+class TestContainment : public Metamodelled {};
+class TestFamilies : public Metamodelled {};
+class TestWrittenForms : public Metamodelled {};
+class TestBuildCodes : public Metamodelled {};
+class TestKnownAnnotations : public Metamodelled {};
+
+TEST_F(TestWrittenField, IsAFieldTheAuthorWrites) {
+  const auto* f = metamodel.fieldOf(Kind::Requirement, "title");
+  ASSERT_NE(f, nullptr);
+  EXPECT_EQ(f->type, ds::model::FieldType::Text);
+  EXPECT_EQ(f->source, ds::model::FieldSource::Written);
+  EXPECT_FALSE(f->meaning.empty());
+  EXPECT_TRUE(f->values.empty());
+}
+
+TEST_F(TestSyntaxField, IsAFieldTheBinderTakesFromTheSyntax) {
+  ASSERT_NE(metamodel.fieldOf(Kind::Method, "params"), nullptr);
+  EXPECT_EQ(metamodel.fieldOf(Kind::Method, "params")->source, ds::model::FieldSource::Syntax);
+}
+
+TEST_F(TestDerivedField, IsAFieldTheCheckerComputes) {
+  ASSERT_NE(metamodel.fieldOf(Kind::Method, "escapes"), nullptr);
+  EXPECT_EQ(metamodel.fieldOf(Kind::Method, "escapes")->source, ds::model::FieldSource::Derived);
+}
+
+TEST_F(TestClosedField, IsAWrittenFieldThatTakesOnlyItsValues) {
+  const auto* f = metamodel.fieldOf(Kind::Verification, "level");
+  ASSERT_NE(f, nullptr);
+  EXPECT_EQ(f->source, ds::model::FieldSource::Written);
+  EXPECT_EQ(f->values, (std::vector<std::string>{"unit", "integration", "system"}));
+}
+
+TEST_F(TestArtefactFields, EveryArtefactCarriesTheSameSixFieldsFirstWithAClosedStatus) {
+  for (Kind k : {Kind::Requirement, Kind::Verification, Kind::Constraint, Kind::UseCase}) {
+    const auto& fields = metamodel.specOf(k).fields;
+    ASSERT_GE(fields.size(), 6u) << metamodel.nameOf(k);
+    std::vector<std::string> names;
+    for (std::size_t i = 0; i < 6; ++i) names.push_back(fields[i].name);
+    EXPECT_EQ(names, (std::vector<std::string>{"title", "text", "rationale", "status", "tags", "owner"})) << metamodel.nameOf(k);
+    EXPECT_EQ(fields[3].values, (std::vector<std::string>{"draft", "approved", "obsolete"})) << metamodel.nameOf(k);
+  }
+  // what a kind adds comes after the six: a requirement's parent
+  EXPECT_EQ(metamodel.specOf(Kind::Requirement).fields.back().name, "parent");
+}
+
+TEST_F(TestBuild, DeclaresThePackageFirstAndAtTheTopEachKindWithHowItIsWritten) {
+  ASSERT_FALSE(metamodel.kinds().empty());
+  EXPECT_EQ(metamodel.kinds()[0].kind, Kind::Package);
+  EXPECT_TRUE(metamodel.kinds()[0].top);
+  for (const auto& k : metamodel.kinds()) {
+    EXPECT_EQ(k.syntax, metamodel.syntaxOf(k.kind)) << metamodel.nameOf(k.kind);
+    EXPECT_EQ(k.example, metamodel.exampleOf(k.kind)) << metamodel.nameOf(k.kind);
+    EXPECT_FALSE(k.syntax.empty()) << metamodel.nameOf(k.kind);
+  }
+}
+
+TEST_F(TestBuildRelations, ContainmentComesFirstAndEveryOtherRelationHasItsEndsAndNoPairs) {
+  ASSERT_FALSE(metamodel.relations().empty());
+  EXPECT_EQ(metamodel.relations()[0].kind, "contains");
+  for (std::size_t i = 1; i < metamodel.relations().size(); ++i) {
+    EXPECT_NE(metamodel.relations()[i].kind, "contains");
+    EXPECT_TRUE(metamodel.relations()[i].pairs.empty()) << metamodel.relations()[i].kind;
+  }
+  const auto* uses = metamodel.relationOf("uses");
+  ASSERT_NE(uses, nullptr);
+  EXPECT_NE(std::find(uses->to.begin(), uses->to.end(), Kind::Enum), uses->to.end());
+}
+
+TEST_F(TestContainment, JoinsAParentOnlyWithTheChildrenDeclaredInIt) {
+  const auto* contains = metamodel.relationOf("contains");
+  ASSERT_NE(contains, nullptr);
+  const std::vector<std::pair<Kind, Kind>>& pairs = contains->pairs;
+  EXPECT_NE(std::find(pairs.begin(), pairs.end(), std::make_pair(Kind::Module, Kind::Class)), pairs.end());
+  EXPECT_EQ(std::find(pairs.begin(), pairs.end(), std::make_pair(Kind::Class, Kind::Module)), pairs.end());
+}
+
+TEST_F(TestFamilies, AFamilyMatchesAnySuffixAndANameOnlyItself) {
+  EXPECT_NE(metamodel.fieldOf(Kind::Sequence, "local.x"), nullptr);
+  EXPECT_EQ(metamodel.fieldOf(Kind::Sequence, "other.x"), nullptr);
+  EXPECT_NE(metamodel.fieldOf(Kind::Requirement, "title"), nullptr);
+  EXPECT_EQ(metamodel.fieldOf(Kind::Requirement, "titles"), nullptr);
+}
+
+TEST_F(TestWrittenForms, EveryKindSaysHowItIsWrittenAndGivesAnExample) {
+  for (const auto& k : metamodel.kinds()) {
+    EXPECT_FALSE(metamodel.syntaxOf(k.kind).empty()) << metamodel.nameOf(k.kind);
+    EXPECT_FALSE(metamodel.exampleOf(k.kind).empty()) << metamodel.nameOf(k.kind);
+  }
+}
+
+TEST_F(TestBuildCodes, ListsEveryCodeSyntaxFirst) {
+  ASSERT_FALSE(metamodel.codes().empty());
+  EXPECT_EQ(metamodel.codes()[0].code, "E-SYNTAX");
+}
+
+TEST_F(TestKnownAnnotations, AreTheAnnotationsThatMeanSomethingAndTheManualListsTwoRowsMore) {
+  const auto& known = metamodel.knownAnnotations();
+  const auto& all = metamodel.annotations();
+  ASSERT_EQ(all.size(), known.size() + 2);
+  for (std::size_t i = 0; i < known.size(); ++i) {
+    EXPECT_EQ(all[i].name, known[i].name);
+    EXPECT_EQ(known[i].name.rfind("@", 0), 0u) << known[i].name;
+    EXPECT_NE(known[i].relation, "refers") << known[i].name;
+    EXPECT_EQ(&metamodel.annotationOf(known[i].name.substr(1)), &known[i]);
+  }
+  // any other word binds as the row the manual lists for it; the colon after an operation is no annotation
+  EXPECT_EQ(metamodel.annotationOf("whatever").name, "@<any other word>");
+  EXPECT_EQ(all[known.size()].name, "@<any other word>");
+  EXPECT_EQ(all.back().name, ": <UC ID> after an operation");
 }
 
 }  // namespace

@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/text/Text.hpp"
 
 namespace ds {
@@ -9,7 +10,9 @@ namespace query {
 
 namespace {
 
-Answer entityAnswer(const model::Entity& e, const std::string& detail = "") { return {model::kindName(e.kind), e.id, detail}; }
+Answer entityAnswer(const model::Metamodel& metamodel, const model::Entity& e, const std::string& detail = "") {
+  return {metamodel.nameOf(e.kind), e.id, detail};
+}
 
 bool endsWith(const std::string& s, const std::string& suffix) {
   return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
@@ -80,7 +83,7 @@ std::vector<Answer> Query::diagrams() const {
     if (p.second.kind != model::Kind::Diagram) continue;
     const auto kind = p.second.fields.find("kind");
     const std::string name = model::Identity(p.second.id).diagramName();  // named as the user names it
-    out.push_back({model::kindName(p.second.kind), name, kind == p.second.fields.end() ? "class" : kind->second});
+    out.push_back({model_.metamodel().nameOf(p.second.kind), name, kind == p.second.fields.end() ? "class" : kind->second});
   }
   return out;
 }
@@ -92,7 +95,7 @@ std::vector<Answer> Query::entities(const std::string& asked) const {
   std::vector<Answer> out;
   for (const auto& p : model_.entities()) {
     if (p.second.scope != scope || p.second.expected) continue;
-    out.push_back(entityAnswer(p.second, p.second.fields.count("title") ? p.second.fields.at("title") : ""));
+    out.push_back(entityAnswer(model_.metamodel(), p.second, p.second.fields.count("title") ? p.second.fields.at("title") : ""));
   }
   return out;
 }
@@ -126,7 +129,8 @@ std::vector<Answer> Query::behaviours(const std::string& id) const {
   for (const auto& r : model_.index().to(id)) {
     if (r.kind != "behaviour-of") continue;
     const model::Entity* b = model_.find(r.from);
-    out.push_back(b ? entityAnswer(*b, b->fields.count("scenario") ? b->fields.at("scenario") : "") : Answer{"behaviour", r.from, ""});
+    out.push_back(b ? entityAnswer(model_.metamodel(), *b, b->fields.count("scenario") ? b->fields.at("scenario") : "")
+                    : Answer{"behaviour", r.from, ""});
   }
   const model::Entity* asked = model_.find(id);
   if (!asked || asked->kind != model::Kind::Class) return out;
@@ -161,7 +165,7 @@ std::vector<Answer> Query::shows(const std::string& diagram) const {
   const auto filter = d ? filterFor(*d) : nullptr;
   if (!filter) return {{"error", diagram, "no such diagram"}};
   std::vector<Answer> out;
-  for (const auto& id : select(*filter)) out.push_back(entityAnswer(*model_.find(id)));
+  for (const auto& id : select(*filter)) out.push_back(entityAnswer(model_.metamodel(), *model_.find(id)));
   return out;
 }
 

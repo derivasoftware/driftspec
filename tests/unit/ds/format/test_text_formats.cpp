@@ -6,6 +6,7 @@
 
 #include "ds/check/Report.hpp"
 #include "ds/format/TextFormats.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
@@ -33,7 +34,8 @@ TEST(TestReportFormats, ReportsAreWrittenAsTextOrJsonByName) {
 }
 
 TEST(TestTextFormats, AReportIsBuiltOnceFromTheModelAndCountsWhatItSays) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::model::Entity e;
   e.kind = ds::model::Kind::Package;
   e.id = "p";

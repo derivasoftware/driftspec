@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -16,12 +17,13 @@ class TestStateRules : public ::testing::Test {
  protected:
   /// The codes the check of a module `m` that holds the text reports for its machines.
   std::vector<std::string> codes(const std::string& body) {
-    ds::model::Model model;
+    const ds::model::Metamodel metamodel;
+    ds::model::Model model{metamodel};
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", "package p {\n  module m {\n" + body + "  }\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code.rfind("W-STATE-", 0) == 0) out.push_back(f.code);

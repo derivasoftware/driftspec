@@ -7,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/machine/Table.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -19,10 +20,10 @@ class TestTable : public ::testing::Test {
   /// The table of the order of a module `m` of a package `p`, after the text given.
   ds::machine::Table table(const std::string& behaviours = "") {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", std::string("package p {\n  module m {\n") + kShop + behaviours + "  }\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     return ds::machine::Table(model, *model.find("p@m::Order::state"));
   }
 
@@ -53,7 +54,8 @@ class TestTable : public ::testing::Test {
       "      + rush() -> none\n"
       "    }\n";
 
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 };
 
 TEST_F(TestTable, ItsStatesGoAcrossAndItsEventsDownAsTheMachineWritesThem) {

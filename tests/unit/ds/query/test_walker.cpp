@@ -4,6 +4,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Walk.hpp"
@@ -16,7 +17,7 @@ class TestWalker : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     binder.bind(
         parser.parseText("shop.ds",
                          "package shop {\n"
@@ -40,9 +41,10 @@ class TestWalker : public ::testing::Test {
                          "diagram OnACut {\n  kind: sequence\n  include: shop@till::Till::sell\n  close: module\n}\n"
                          "diagram Folded {\n  kind: sequence\n  include: shop@till::Till::sell\n  fold: shop@till::Stock::take\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 };
 
 TEST_F(TestWalker, TheStepsOfABehaviourSayWhereEachCallGoesOn) {

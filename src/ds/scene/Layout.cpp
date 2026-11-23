@@ -8,6 +8,8 @@
 #include <set>
 #include <utility>
 
+#include "ds/model/Metamodel.hpp"
+
 namespace ds {
 namespace scene {
 
@@ -91,7 +93,8 @@ void shift(std::vector<std::pair<std::string, std::pair<double, double>>>& kids,
 /// Measures and lays out every box of the model once, for one variant (lean hides private members).
 class Variant {
  public:
-  Variant(const model::Model& model, bool lean, std::map<std::string, double>* widths) : lean_(lean), widths_(widths) {
+  Variant(const model::Model& model, bool lean, std::map<std::string, double>* widths)
+      : metamodel_(model.metamodel()), lean_(lean), widths_(widths) {
     for (const auto& pair : model.entities()) {
       const model::Entity& e = pair.second;
       if (!e.expected) byScope_[e.scope].push_back(&e);
@@ -119,6 +122,7 @@ class Variant {
   }
 
  private:
+  const model::Metamodel& metamodel_;
   bool lean_;
   std::map<std::string, double>* widths_;  // the shelf width of every box in the full layout, kept by the lean one
 
@@ -210,11 +214,11 @@ class Variant {
   }
 
   // what a box says it is: abstract is derived by the checker (R14), never written
-  static std::string stereotypeOf(const model::Entity& e) {
+  std::string stereotypeOf(const model::Entity& e) const {
     if (e.has("dataclass")) return "dataclass";
     const std::string derived = field(e, "stereotypes");
     if (derived.find("abstract") != std::string::npos) return "abstract";
-    return model::kindName(e.kind);
+    return metamodel_.nameOf(e.kind);
   }
 
   std::string unit(const model::Entity& e, const std::string& parent) {
@@ -251,7 +255,7 @@ class Variant {
         if (lean_ && vis == "-") continue;
         const std::string label = m->kind == model::Kind::Attribute ? vis + " " + m->name + ": " + unqualified(field(*m, "type"))
                                                                     : vis + " " + signature(m->name, m->params, field(*m, "returns"));
-        rows.push_back({m->id, label, model::kindName(m->kind), vis, m->id});
+        rows.push_back({m->id, label, metamodel_.nameOf(m->kind), vis, m->id});
       }
     }
     double title = static_cast<double>(characters(e.name));

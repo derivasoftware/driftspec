@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ds/api/Api.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
@@ -12,8 +13,9 @@ namespace {
 /// reported until it parses (REQ-00167-1, DS-304).
 class TestCutFile : public ::testing::Test {
  protected:
-  static std::vector<nlohmann::json> findings(const ds::api::Files& files) {
-    const auto report = nlohmann::json::parse(ds::api::Api::check(files));
+  const ds::model::Metamodel metamodel;
+  std::vector<nlohmann::json> findings(const ds::api::Files& files) const {
+    const auto report = nlohmann::json::parse(ds::api::Api(metamodel).check(files));
     return {report["findings"].begin(), report["findings"].end()};
   }
 };

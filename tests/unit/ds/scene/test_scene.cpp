@@ -7,6 +7,7 @@
 #include <string>
 
 #include "ds/format/SceneFormats.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/scene/Scene.hpp"
 
@@ -28,7 +29,8 @@ Entity entity(Kind kind, const std::string& id, const std::string& name, const s
 /// private member, a function (REQ-00069-2).
 class TestScene : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   std::map<std::string, ds::scene::Node> byId;
 
   void SetUp() override {
@@ -141,7 +143,8 @@ TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
 /// The links of a scene: each relation of the model between two of its nodes, with what produces it.
 class TestLink : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   std::vector<ds::scene::Link> links;
 
   void SetUp() override {
@@ -207,7 +210,8 @@ TEST_F(TestDiagramView, ADiagramListsTheNodesItShows) {
 /// A tour: a public behaviour walked along its scenario, each call expanded into the sequence of what it calls.
 class TestTour : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::scene::SceneDocument doc;
 
   static Entity message(const std::string& sequence, int order, const std::string& op, const std::string& expands) {
@@ -277,7 +281,8 @@ TEST_F(TestTour, AMethodWithABehaviourIsATourOffered) {
 /// the class A answers to R-2, and V-1 proves it with a test.
 class TestRequirement : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::scene::SceneDocument doc;
 
   void SetUp() override {
@@ -332,7 +337,8 @@ TEST_F(TestVerification, AVerificationCarriesItsTestsOnePerLineAndWhatItProves) 
 class TestOutcome : public ::testing::Test {};
 
 TEST_F(TestOutcome, AUseCaseCarriesItsOutcomesTheDefaultFirst) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   model.declare(entity(Kind::Package, "p", "p", ""));
   model.declare(entity(Kind::Interface, "p@shell", "shell", "p@"));
   model.declare(entity(Kind::Operation, "p@shell::greet", "greet", "p@shell"));

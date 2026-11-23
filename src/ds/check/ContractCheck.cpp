@@ -469,8 +469,9 @@ void ContractCheck::checkDiagrams() {
     for (const char* key : {"include", "exclude", "open", "close", "unfold", "fold"}) {
       for (const auto& pattern : splitTrimmed(pair.second.field(key), ',')) {
         // a cut may name a kind of box instead of a box (DS-229)
-        const bool kind = (key == std::string("open") || key == std::string("close")) &&
-                          (pattern == model::kindName(model::Kind::Module) || pattern == model::kindName(model::Kind::Package));
+        const bool kind =
+            (key == std::string("open") || key == std::string("close")) &&
+            (pattern == model_->metamodel().nameOf(model::Kind::Module) || pattern == model_->metamodel().nameOf(model::Kind::Package));
         if (kind || namesSomething(*model_, pattern)) continue;
         found_.push_back({"W-DIAGRAM-UNDECLARED", "warning",
                           pair.second.name + " " + key + "s " + pattern + ", which the workspace declares nowhere", pair.second.location});

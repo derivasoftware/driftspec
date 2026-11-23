@@ -8,6 +8,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/IrExport.hpp"
@@ -19,10 +20,10 @@ class TestOpenBoxes : public ::testing::Test {
  protected:
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/visibility")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   nlohmann::json diagram(const std::string& name) {
@@ -43,7 +44,8 @@ class TestOpenBoxes : public ::testing::Test {
     return false;
   }
 
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 };
 
 TEST_F(TestOpenBoxes, OpenAloneClosesEveryBox) {
@@ -86,23 +88,24 @@ TEST_F(TestOpenBoxes, AnEdgeReachesInsideAnOpenBoxFromAClosedOne) {
 }
 
 TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
-  ds::model::Model plain;
+  ds::model::Model plain{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(plain);
+  ds::bind::Binder binder(plain, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(plain, checkSteps).run(binder);
+  ds::check::Checker(plain, metamodel, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(plain).render("diagram:CL_Model", false));
   EXPECT_EQ(ir["nodes"][0]["kind"], "container");
 }
 
 TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawing) {
-  ds::model::Model shop;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model shop{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(shop);
+  ds::bind::Binder binder(shop, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/interfaces")) binder.bind(f);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(shop, checkSteps).run(binder);
+  ds::check::Checker(shop, metamodel, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(shop).render("diagram:HLD_Shop", false));
   bool reached = false;
   for (const auto& e : ir["edges"]) reached = reached || (e["from"] == "shop@shell" && e["to"] == "shop@till");
@@ -129,9 +132,10 @@ TEST_F(TestOpenBoxes, APatternThatNamesWhatNothingDeclaresIsAFinding) {
 }
 
 TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramDoes) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package shop {\n"
                                "  module store {\n"
@@ -151,7 +155,7 @@ TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramD
                                "  include: shop@empty::*\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Store", false));
   bool requirement = false;
   for (const auto& n : ir["nodes"]) requirement = requirement || n["id"] == "REQ-00001-1";
@@ -160,9 +164,10 @@ TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramD
 }
 
 TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package shop {\n"
                                "  package sales {\n"
@@ -181,7 +186,7 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
                                "  include: shop@*\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:HLD_Shop", false));
   std::map<std::string, std::string> parentOf;
   for (const auto& n : ir["nodes"]) parentOf[n["id"]] = n.contains("parent") ? n["parent"].get<std::string>() : "";
@@ -191,9 +196,10 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
 }
 
 TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclaredUseIsDrawn) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package shop {\n"
                                "  package front {\n"
@@ -230,7 +236,7 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
                                "  open: shop@front, shop@front@web, shop@back, shop@back@store\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   const auto edges = [&model](const std::string& d) {
     std::set<std::string> out;
     const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + d, false));

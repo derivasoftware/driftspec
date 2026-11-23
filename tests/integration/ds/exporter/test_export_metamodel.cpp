@@ -8,6 +8,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/export/JsonExport.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -20,13 +21,14 @@ class TestExportMetamodel : public ::testing::Test {
   nlohmann::json doc;
 
   void SetUp() override {
-    ds::model::Model model;
+    const ds::model::Metamodel metamodel;
+    ds::model::Model model{metamodel};
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
-    doc = nlohmann::json::parse(ds::exporter::JsonExport().render(model, false));
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    doc = nlohmann::json::parse(ds::exporter::JsonExport(metamodel).render(model, false));
   }
 };
 

@@ -7,6 +7,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/render/Ir.hpp"
@@ -28,14 +29,15 @@ const char* const kIr = R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"b
                         R"({"from":"p@m::A","to":"p@m::B","kind":"dependency","label":"calls"}]})";
 
 TEST(TestIrExport, ItListsTheDiagramsAndExportsEachAsItsIr) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n  module m {\n    class A {\n      - b: B\n    }\n    class B { }\n  }\n}\n"
                                "diagram CL_M {\n  kind: class\n  include: p@m::*\n}\n"));
   const auto steps = ds::check::steps();
-  ds::check::Checker(model, steps).run(binder);
+  ds::check::Checker(model, metamodel, steps).run(binder);
   const ds::render::IrExport ir(model);
   EXPECT_EQ(ir.diagrams(), (std::vector<std::string>{"diagram:CL_M"}));
   const auto json = nlohmann::json::parse(ir.render("diagram:CL_M", false));

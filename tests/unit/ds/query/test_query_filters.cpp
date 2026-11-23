@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Filter.hpp"
@@ -19,11 +20,12 @@ using Ids = std::set<std::string>;
 /// a shop: a store of items, a till that sells from it, a stock with a machine, two requirements.
 class Shop : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("shop.ds",
                                        "package shop {\n"
                                        "  requirement REQ-00001-1: The shop shall sell\n"
@@ -64,7 +66,7 @@ class Shop : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder);
   }
 };
 
@@ -112,9 +114,10 @@ TEST_F(TestRequirementsFilter, ItTakesItsRootsWhatRefinesThemAndAsAskedWhatReali
 }
 
 TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnderIt) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   const auto file = parser.parseText("shop.ds",
                                      "package shop {\n"
                                      "  requirement SREQ-00001-1: The shop shall sell an item\n"
@@ -127,7 +130,7 @@ TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnde
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto steps = ds::check::steps();
-  ds::check::Checker(model, steps).run(binder);
+  ds::check::Checker(model, metamodel, steps).run(binder);
   EXPECT_TRUE(ds::query::RequirementsFilter({"shop@*"}, true, true).select(model).count("UC-00001-1"));
   EXPECT_FALSE(ds::query::RequirementsFilter({"shop@*"}, false, true).select(model).count("UC-00001-1"));  // design hidden
 }

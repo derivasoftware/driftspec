@@ -14,9 +14,9 @@
 namespace ds {
 namespace model {
 
-// The pages are written from the metamodel: the kinds with how each is written, the catalogue of codes and
-// the annotations live in its files (WrittenForms.cpp, Codes.cpp, Metamodel.cpp). The manual reads the
-// metamodel and the metamodel never reads the manual (DS-340).
+// The pages are written from the metamodel they are given: the kinds with how each is written, the catalogue
+// of codes and the annotations are its (DS-340, DS-341). The manual reads the metamodel and the metamodel
+// never reads the manual.
 
 const std::vector<CommandSpec>& commands() {
   static const std::vector<CommandSpec> all = {
@@ -81,21 +81,21 @@ std::string pad(const std::string& text, size_t width) {
   return text.size() >= width ? text + " " : text + std::string(width - text.size(), ' ');
 }
 
-std::string names(const std::vector<Kind>& kinds) {
+std::string names(const Metamodel& metamodel, const std::vector<Kind>& kinds) {
   std::string out;
-  for (size_t i = 0; i < kinds.size(); ++i) out += (i ? ", " : "") + std::string(kindName(kinds[i]));
+  for (size_t i = 0; i < kinds.size(); ++i) out += (i ? ", " : "") + metamodel.nameOf(kinds[i]);
   return out;
 }
 
-std::string kindPage(const KindSpec& k) {
-  std::string out = std::string(kindName(k.kind)) + " — " + k.meaning + "\n";
-  out += "declared in: " + (k.parents.empty() ? std::string("the top of a file") : names(k.parents)) +
+std::string kindPage(const Metamodel& metamodel, const KindSpec& k) {
+  std::string out = metamodel.nameOf(k.kind) + " — " + k.meaning + "\n";
+  out += "declared in: " + (k.parents.empty() ? std::string("the top of a file") : names(metamodel, k.parents)) +
          (k.top && !k.parents.empty() ? ", or at the top" : "") + "\n\n";
   out += "How it is written\n" + indent(k.syntax, "  ") + "\n";
   if (!k.fields.empty()) {
     out += "Fields\n";
     for (const auto& f : k.fields)
-      out += "  " + pad(f.name, 14) + pad(fieldTypeName(f.type), 9) + pad(fieldSourceName(f.source), 9) + f.meaning +
+      out += "  " + pad(f.name, 14) + pad(metamodel.fieldTypeName(f.type), 9) + pad(metamodel.fieldSourceName(f.source), 9) + f.meaning +
              (f.values.empty() ? "" : " (one of: " + text::join(f.values, ", ") + ")") + "\n";
     out += "  (written: you write it as key: value; syntax: read from how it is declared; derived: computed by the check)\n\n";
   }
@@ -105,13 +105,15 @@ std::string kindPage(const KindSpec& k) {
     out += "\n\n";
   }
   std::string from, to;
-  for (const auto& r : relations()) {
+  for (const auto& r : metamodel.relations()) {
     if (r.kind == "contains" || r.kind == "refers") continue;
     for (Kind f : r.from)
       if (f == k.kind)
-        from += "  " + pad(r.kind, 20) + "to " + (r.to.empty() ? std::string("anything") : names(r.to)) + "   " + r.meaning + "\n";
+        from +=
+            "  " + pad(r.kind, 20) + "to " + (r.to.empty() ? std::string("anything") : names(metamodel, r.to)) + "   " + r.meaning + "\n";
     for (Kind t : r.to)
-      if (t == k.kind) to += "  " + pad(r.kind, 20) + "from " + (r.from.empty() ? std::string("anything") : names(r.from)) + "\n";
+      if (t == k.kind)
+        to += "  " + pad(r.kind, 20) + "from " + (r.from.empty() ? std::string("anything") : names(metamodel, r.from)) + "\n";
   }
   if (!from.empty()) out += "Relations from it\n" + from + "\n";
   if (!to.empty()) out += "Relations to it\n" + to + "\n";
@@ -119,7 +121,7 @@ std::string kindPage(const KindSpec& k) {
   return out;
 }
 
-std::string indexPage() {
+std::string indexPage(const Metamodel& metamodel) {
   std::string out =
       "ds — a software design as text: checked, drawn and asked.\n\n"
       "A workspace is a directory of .ds files, read as one model in which every entity has one identity.\n"
@@ -135,8 +137,8 @@ std::string indexPage() {
   }
   out += "\nKinds you write (ds manual <kind>: how it is written, its fields and an example)\n  ";
   size_t column = 2;
-  for (const auto& k : kinds()) {
-    const std::string name = kindName(k.kind);
+  for (const auto& k : metamodel.kinds()) {
+    const std::string name = metamodel.nameOf(k.kind);
     if (column + name.size() > 100) {
       out += "\n  ";
       column = 2;
@@ -150,7 +152,7 @@ std::string indexPage() {
   return out;
 }
 
-std::string grammarPage() {
+std::string grammarPage(const Metamodel& metamodel) {
   std::string out =
       "How a workspace is written\n\n"
       "Files\n"
@@ -164,12 +166,12 @@ std::string grammarPage() {
       "  their id, which ends in its revision: REQ-00001-1. The prefix (SREQ, REQ, VER, CST...) is a convention; the\n"
       "  level comes from where it is written.\n\n"
       "What goes inside what\n";
-  for (const auto& k : kinds()) {
+  for (const auto& k : metamodel.kinds()) {
     std::string inside;
-    for (const auto& other : kinds())
+    for (const auto& other : metamodel.kinds())
       for (Kind parent : other.parents)
-        if (parent == k.kind) inside += (inside.empty() ? "" : ", ") + std::string(kindName(other.kind));
-    if (!inside.empty()) out += "  " + pad(kindName(k.kind), 14) + inside + "\n";
+        if (parent == k.kind) inside += (inside.empty() ? "" : ", ") + metamodel.nameOf(other.kind);
+    if (!inside.empty()) out += "  " + pad(metamodel.nameOf(k.kind), 14) + inside + "\n";
   }
   out +=
       "  (and at the top of a file: package, diagram)\n\n"
@@ -206,22 +208,23 @@ std::string grammarPage() {
 
 }  // namespace detail
 
-std::vector<std::string> manualTopics() {
+std::vector<std::string> manualTopics(const Metamodel& metamodel) {
   std::vector<std::string> out;
   for (const auto& guide : manualGuides()) out.push_back(guide.first);
   for (const char* topic : {"grammar", "commands", "annotations", "codes"}) out.push_back(topic);
-  for (const auto& k : kinds()) out.push_back(kindName(k.kind));
-  for (const auto& c : codes()) out.push_back(c.code);
+  for (const auto& k : metamodel.kinds()) out.push_back(metamodel.nameOf(k.kind));
+  for (const auto& c : metamodel.codes()) out.push_back(c.code);
   return out;
 }
 
-std::string manualPage(const std::string& topic) {
-  if (topic.empty()) return detail::indexPage();
+std::string manualPage(const Metamodel& metamodel, const std::string& topic) {
+  if (topic.empty()) return detail::indexPage(metamodel);
   for (const auto& guide : manualGuides())
     if (guide.first == topic) return guide.second;
-  if (topic == "grammar") return detail::grammarPage();
-  if (const KindSpec* k = specNamed(topic)) return detail::kindPage(*k);
-  if (const CodeSpec* c = codeOf(topic)) return c->code + " (" + c->severity + ")\n\n" + c->meaning + "\n\nWhat to do: " + c->fix + "\n";
+  if (topic == "grammar") return detail::grammarPage(metamodel);
+  if (const KindSpec* k = metamodel.specNamed(topic)) return detail::kindPage(metamodel, *k);
+  if (const CodeSpec* c = metamodel.codeOf(topic))
+    return c->code + " (" + c->severity + ")\n\n" + c->meaning + "\n\nWhat to do: " + c->fix + "\n";
   if (topic == "commands") {
     std::string out;
     for (const auto& c : commands()) {
@@ -233,12 +236,12 @@ std::string manualPage(const std::string& topic) {
   }
   if (topic == "annotations") {
     std::string out = "An annotation links the entity it is written in to an artefact: @<word> <ID>.\n\n";
-    for (const auto& a : annotations()) out += "  " + detail::pad(a.name, 20) + detail::pad(a.relation, 16) + a.meaning + "\n";
+    for (const auto& a : metamodel.annotations()) out += "  " + detail::pad(a.name, 20) + detail::pad(a.relation, 16) + a.meaning + "\n";
     return out;
   }
   if (topic == "codes") {
     std::string out;
-    for (const auto& c : codes()) out += "  " + detail::pad(c.code, 26) + detail::pad(c.severity, 9) + c.meaning + "\n";
+    for (const auto& c : metamodel.codes()) out += "  " + detail::pad(c.code, 26) + detail::pad(c.severity, 9) + c.meaning + "\n";
     return out + "\nds manual <CODE> says what to do about one.\n";
   }
   return "";

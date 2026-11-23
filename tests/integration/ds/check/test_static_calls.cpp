@@ -5,6 +5,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -13,11 +14,12 @@ namespace {
 /// A sequence calls a class's static operation by its qualified name, with no instance (REQ-00108-1, DS-60).
 class TestStaticCalls : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("a.ds",
                                        "package p {\n"
                                        "  module diff {\n"
@@ -45,7 +47,7 @@ class TestStaticCalls : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors);
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
   }
 
   bool calls(const std::string& message, const std::string& op) const {

@@ -27,17 +27,17 @@ package driftspec@ds {
       }
     }
     function main(argv: std::vector<std::string>) -> int       // the program's main hands its command line here (DS-311)
-    function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279)
+    function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279); it makes the metamodel once (DS-341)
     - function work(argv: std::vector<std::string>) -> int         // runs the command; what cannot be read is said, exit 2
 
-    - function load(dir: std::string) -> model::Model
-    - function loadWorkspace(dir: std::string, model: model::Model) -> bool
+    - function load(metamodel: model::Metamodel, dir: std::string) -> model::Model
+    - function loadWorkspace(metamodel: model::Metamodel, dir: std::string, model: model::Model) -> bool
     - function titleOf(dir: std::string) -> std::string
     - function readFile(path: std::string) -> std::string
     - function emit(output: std::string, text: std::string) -> int
-    - function check(dir: std::string, json: bool) -> int
+    - function check(metamodel: model::Metamodel, dir: std::string, json: bool) -> int
     - function holdsDesign(dir: std::string) -> bool         // a directory with no .ds file under it is no workspace
-    - function manual(topic: std::string, json: bool) -> int
+    - function manual(metamodel: model::Metamodel, topic: std::string, json: bool) -> int
     - function diagramId(name: std::string) -> std::string
     - function isDirectory(path: std::string) -> bool
 
@@ -46,7 +46,7 @@ package driftspec@ds {
       opt the path is not a directory / missing {
         return false
       }
-      -> load(dir) -> loaded
+      -> load(metamodel, dir) -> loaded
       return true
     }
 
@@ -54,7 +54,7 @@ package driftspec@ds {
     sequence check {
       local model: model::Model
       local chosen: format::ReportText
-      -> loadWorkspace(dir, model) -> found
+      -> loadWorkspace(metamodel, dir, model) -> found
       -> check::Report::of(model) -> report
       -> format::reportFormats() -> formats
       -> chosen.write(report, options) -> written
@@ -63,24 +63,22 @@ package driftspec@ds {
 
     sequence load {
       local parser: parse::Parser
-      local binder: bind::Binder
-      local checker: check::Checker
+      local api: api::Api
       -> parser.parseDirectory(dir) -> files
-      loop each file {
-        -> binder.bind(file)
-      }
-      -> check::steps() -> steps
-      -> checker.run(binder)
+      -> api.load(files) -> loaded
+      return loaded
     }
 
     sequence main / check {
-      -> check(argv, json) -> code
+      local metamodel: model::Metamodel
+      -> check(metamodel, argv, json) -> code
       return code
     }
 
     sequence main / check-errors {
+      local metamodel: model::Metamodel
       local model: model::Model
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       return 1
     }
 
@@ -89,9 +87,10 @@ package driftspec@ds {
     }
 
     sequence main / export {
+      local metamodel: model::Metamodel
       local model: model::Model
       local exporter: exporter::JsonExport
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       -> exporter.render(model, pretty) -> json
       return 0
     }
@@ -105,11 +104,12 @@ package driftspec@ds {
     // still (svg, text, cells) or as its data (ir, layout); a render-IR file is drawn as it is
     // the scene builds the document; the format named by -f writes it (DS-126)
     sequence main / render {
+      local metamodel: model::Metamodel
       local model: model::Model
       local scene: scene::Scene
       local query: query::Query
       local html: format::SceneHtml
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       opt a diagram to open the viewer framed on / framed {
         -> query.ask(question, diagram) -> shown
       }
@@ -123,10 +123,11 @@ package driftspec@ds {
     }
 
     sequence main / render-scene {
+      local metamodel: model::Metamodel
       local model: model::Model
       local scene: scene::Scene
       local json: format::SceneJson
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       -> scene.build() -> document
       -> format::sceneFormats() -> formats
       -> json.write(document, options) -> text
@@ -136,10 +137,11 @@ package driftspec@ds {
 
     // a diagram is its IR, written by the format named by -f (DS-126)
     sequence main / render-diagram {
+      local metamodel: model::Metamodel
       local model: model::Model
       local ir: render::IrExport
       local chosen: format::DiagramSvg
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       -> diagramId(diagram) -> id
       -> ir.render(id, pretty) -> document
       -> format::diagramFormats() -> formats
@@ -159,18 +161,20 @@ package driftspec@ds {
     }
 
     sequence main / no-diagram {
+      local metamodel: model::Metamodel
       local model: model::Model
       local ir: render::IrExport
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       -> ir.render(name, pretty) / no-diagram -> document
       return 1
     }
 
     sequence main / query {
+      local metamodel: model::Metamodel
       local model: model::Model
       local query: query::Query
       local chosen: format::AnswersText
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       -> query.ask(question, subject) -> answers
       -> format::answerFormats() -> formats
       -> chosen.write(answers, options) -> text
@@ -178,27 +182,30 @@ package driftspec@ds {
     }
 
     sequence main / unknown-question {
+      local metamodel: model::Metamodel
       local model: model::Model
       local query: query::Query
-      -> loadWorkspace(argv, model) -> found
+      -> loadWorkspace(metamodel, argv, model) -> found
       -> query.ask(question, subject) -> answers
       return 1
     }
 
     sequence main / manual {                  // no workspace: the manual is in the tool
-      -> manual(topic, json) -> code
+      local metamodel: model::Metamodel
+      -> manual(metamodel, topic, json) -> code
       return code
     }
 
     sequence main / no-topic {
-      -> manual(topic, json) / no-topic -> code
+      local metamodel: model::Metamodel
+      -> manual(metamodel, topic, json) / no-topic -> code
       return 1
     }
 
     sequence manual {
-      -> model::manualPage(topic) -> page
+      -> model::manualPage(metamodel, topic) -> page
       opt no such topic / no-topic {
-        -> model::manualTopics() -> topics
+        -> model::manualTopics(metamodel) -> topics
         return 1
       }
       return 0

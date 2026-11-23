@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "ds/check/Evaluator.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace {
@@ -14,7 +15,8 @@ using ds::model::LiteralForm;
 /// The evaluator alone (REQ-00096-1): a model built by hand, a formula stated on it, the rule decided.
 class TestEvaluator : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     declare(Kind::Package, "p", "");

@@ -240,12 +240,12 @@ package driftspec@ds {
       - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
     }
 
-    - function entityAnswer(entity: model::Entity, detail: std::string) -> Answer
+    - function entityAnswer(metamodel: model::Metamodel, entity: model::Entity, detail: std::string) -> Answer
 
-    // An entity as an answer: its kind is named by the model.
+    // An entity as an answer: its kind is named by the metamodel the model is written in.
     sequence entityAnswer {
       local answer: Answer
-      -> model::kindName(entity.kind) -> kind
+      -> metamodel.nameOf(entity.kind) -> kind
       return answer
     }
 
@@ -294,7 +294,8 @@ package driftspec@ds {
       self -> model_.entities() -> held
       loop each entity held {
         opt it is a diagram {
-          -> model::kindName(entity.kind) -> kind
+          self -> model_.metamodel() -> metamodel
+          -> metamodel.nameOf(entity.kind) -> kind
         }
       }
       return out
@@ -306,7 +307,8 @@ package driftspec@ds {
       self -> model_.entities() -> held
       loop each entity held {
         opt in the scope, written with @ when it names a package, and not expected {
-          -> entityAnswer(entity, title) -> answer
+          self -> model_.metamodel() -> metamodel
+          -> entityAnswer(metamodel, entity, title) -> answer
         }
       }
       return out
@@ -350,7 +352,8 @@ package driftspec@ds {
         opt it is a behaviour-of {
           self -> model_.find(relation.from) -> behaviour
           opt the model holds it {
-            -> entityAnswer(behaviour, scenario) -> answer
+            self -> model_.metamodel() -> metamodel
+            -> entityAnswer(metamodel, behaviour, scenario) -> answer
           }
         }
       }
@@ -393,7 +396,8 @@ package driftspec@ds {
       -> select(filter) -> ids
       loop each id {
         self -> model_.find(id) -> taken
-        -> entityAnswer(taken, "") -> answer
+        self -> model_.metamodel() -> metamodel
+        -> entityAnswer(metamodel, taken, "") -> answer
       }
       return out
     }

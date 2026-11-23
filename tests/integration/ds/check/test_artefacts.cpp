@@ -5,6 +5,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -13,18 +14,19 @@ namespace {
 /// Block 1: requirements, constraints and verifications as decided, over tests/corpus/artefacts (its `!` lines are the oracle).
 class TestArtefacts : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   std::map<std::string, int> byCode;
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     for (const auto& f : model.findings()) ++byCode[f.code];
     for (const auto& f : model.coverage()) ++byCode[f.code];  // what is not yet written, kept apart (DS-216)
   }

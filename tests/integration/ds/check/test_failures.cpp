@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
@@ -17,17 +18,18 @@ namespace {
 /// Where a failure starts and where it is handled, over tests/corpus/failures (DS-187).
 class TestFailures : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/failures")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path << ": " << f.errorDetail;
       binder.bind(f);
     }
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder);
   }
 
   /// What a path takes, a call by its operation, an ending by what it gives back or fails with.

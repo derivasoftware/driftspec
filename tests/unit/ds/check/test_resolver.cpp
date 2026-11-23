@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "ds/check/Resolver.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace {
@@ -11,7 +12,8 @@ using ds::model::Kind;
 /// What a name means where it is written, asked of the model alone, with no checker (DS-125).
 class TestResolver : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     for (const auto& [kind, id, scope] : std::vector<std::tuple<Kind, std::string, std::string>>{{Kind::Package, "p", ""},
@@ -49,7 +51,8 @@ TEST_F(TestResolver, ATypeHasWhatItInherits) {
 /// the model's index of names, not a pass over the model (DS-336).
 class TestNamesakes : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
 
   void SetUp() override {
     for (const auto& [kind, id, scope] : std::vector<std::tuple<Kind, std::string, std::string>>{{Kind::Package, "p", ""},

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -21,7 +22,8 @@ using Files = std::map<std::string, std::string>;
 /// holding what a later load moves. Several may be loaded at once; each keeps its own model.
 class Workspace {
  public:
-  explicit Workspace(const Files& files);
+  /// The files loaded in the language of `metamodel`, which outlives it (DS-341).
+  Workspace(const model::Metamodel& metamodel, const Files& files);
   /// The model it keeps, for a caller in this process.
   const model::Model& model() const { return model_; }
 

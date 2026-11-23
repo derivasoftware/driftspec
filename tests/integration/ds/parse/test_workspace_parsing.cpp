@@ -6,6 +6,7 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/check/Report.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -15,6 +16,7 @@ namespace {
 /// the grammar reads every file of an example, and a file it cannot read is reported where it stops.
 class TestWorkspaceParsing : public ::testing::Test {
  protected:
+  const ds::model::Metamodel metamodel;
   ds::parse::Parser parser;
 
   static std::vector<ds::model::Finding> syntax(const ds::model::Model& model) {
@@ -29,16 +31,16 @@ TEST_F(TestWorkspaceParsing, AWholeWorkspaceIsReadWithoutSyntaxErrors) {
   const auto files = parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag");
   ASSERT_EQ(files.size(), 13u);
   for (const auto& f : files) EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
-  const ds::model::Model model = ds::api::Api::load(files);
+  const ds::model::Model model = ds::api::Api(metamodel).load(files);
   EXPECT_TRUE(syntax(model).empty());
   EXPECT_GT(ds::check::Report::of(model).entities, 13);  // every file gave what it declares
 }
 
 TEST_F(TestWorkspaceParsing, TheFilesOfADirectoryAreReadAsOneInAnyOrder) {
   auto files = parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag");
-  const ds::check::Report forwards = ds::check::Report::of(ds::api::Api::load(files));
+  const ds::check::Report forwards = ds::check::Report::of(ds::api::Api(metamodel).load(files));
   std::reverse(files.begin(), files.end());
-  const ds::check::Report backwards = ds::check::Report::of(ds::api::Api::load(files));
+  const ds::check::Report backwards = ds::check::Report::of(ds::api::Api(metamodel).load(files));
   EXPECT_EQ(forwards.entities, backwards.entities);
   EXPECT_EQ(forwards.expected, backwards.expected);
   EXPECT_EQ(forwards.relations, backwards.relations);
@@ -46,15 +48,15 @@ TEST_F(TestWorkspaceParsing, TheFilesOfADirectoryAreReadAsOneInAnyOrder) {
 }
 
 TEST_F(TestWorkspaceParsing, ASyntaxErrorIsReportedWhereTheFileStopsParsing) {
-  const ds::model::Model model = ds::api::Api::load({parser.parseText("x.ds",
-                                                                      "package a {\n"
-                                                                      "  module m {\n"
-                                                                      "    class A {\n"
-                                                                      "      + x: int\n"
-                                                                      "      @consumes b.c\n"
-                                                                      "    }\n"
-                                                                      "  }\n"
-                                                                      "}\n")});
+  const ds::model::Model model = ds::api::Api(metamodel).load({parser.parseText("x.ds",
+                                                                                "package a {\n"
+                                                                                "  module m {\n"
+                                                                                "    class A {\n"
+                                                                                "      + x: int\n"
+                                                                                "      @consumes b.c\n"
+                                                                                "    }\n"
+                                                                                "  }\n"
+                                                                                "}\n")});
   const auto errors = syntax(model);
   ASSERT_EQ(errors.size(), 1u);
   EXPECT_EQ(errors[0].severity, "error");
@@ -64,8 +66,9 @@ TEST_F(TestWorkspaceParsing, ASyntaxErrorIsReportedWhereTheFileStopsParsing) {
 }
 
 TEST_F(TestWorkspaceParsing, AFileThatParsesReportsNoSyntaxErrorBesideOneThatDoesNot) {
-  const ds::model::Model model = ds::api::Api::load({parser.parseText("good.ds", "package a {\n  module m {\n    class A { }\n  }\n}\n"),
-                                                     parser.parseText("bad.ds", "package b { class {")});
+  const ds::model::Model model =
+      ds::api::Api(metamodel).load({parser.parseText("good.ds", "package a {\n  module m {\n    class A { }\n  }\n}\n"),
+                                    parser.parseText("bad.ds", "package b { class {")});
   const auto errors = syntax(model);
   ASSERT_EQ(errors.size(), 1u);
   EXPECT_EQ(errors[0].location.file, "bad.ds");

@@ -11,7 +11,8 @@ namespace {
 /// held by tests/integration/ds/api/test_workspace.cpp.
 class TestWorkspace : public ::testing::Test {
  protected:
-  ds::api::Workspace ws{{{"one.ds", "package p {\n  module m {\n    class A { }\n  }\n}\n"}}};
+  const ds::model::Metamodel metamodel;
+  ds::api::Workspace ws{metamodel, {{"one.ds", "package p {\n  module m {\n    class A { }\n  }\n}\n"}}};
 };
 
 TEST_F(TestWorkspace, ItFindsWhatItsTextDeclaresAndNothingElse) {
@@ -21,7 +22,7 @@ TEST_F(TestWorkspace, ItFindsWhatItsTextDeclaresAndNothingElse) {
 }
 
 TEST_F(TestWorkspace, WithNoTextItAnswersNothing) {
-  const ds::api::Workspace empty{{}};
+  const ds::api::Workspace empty{metamodel, {}};
   EXPECT_EQ(empty.find("p"), "null");
   EXPECT_TRUE(nlohmann::json::parse(empty.members("p@")).empty());
 }

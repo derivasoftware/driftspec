@@ -7,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/format/SceneFormats.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Scene.hpp"
@@ -17,12 +18,13 @@ namespace {
 /// it placed on the map, so the logic perspective draws them without reading a finding.
 class TestSceneRules : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::scene::SceneDocument doc;
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const auto file = parser.parseText("a.ds",
                                        "package p {\n"
                                        "  requirement REQ-00001-1: The core shall not depend on render\n"
@@ -64,7 +66,7 @@ class TestSceneRules : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     doc = ds::scene::Scene(model).build();
   }
 

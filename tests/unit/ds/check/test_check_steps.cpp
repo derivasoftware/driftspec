@@ -11,6 +11,7 @@
 #include "ds/check/Context.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -19,9 +20,10 @@ namespace {
 /// Each step of the check on its own (DS-186): a workspace written here, run through that step and
 /// only the steps it needs, and the finding that step owns.
 std::vector<std::string> codesOf(const std::string& text, const std::string& step) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   const auto file = parser.parseText("a.ds", text);
   EXPECT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
@@ -35,7 +37,7 @@ std::vector<std::string> codesOf(const std::string& text, const std::string& ste
     for (const auto& need : all.at(key)->needs()) pending.push_back(need);
     chosen[key] = std::move(all.at(key));
   }
-  ds::check::Checker(model, chosen).run(binder);
+  ds::check::Checker(model, metamodel, chosen).run(binder);
   std::vector<std::string> out;
   for (const auto& f : model.findings()) out.push_back(f.code);
   for (const auto& f : model.coverage()) out.push_back(f.code);  // what is not yet written, kept apart (DS-216)
@@ -142,8 +144,9 @@ TEST(TestRuleCheck, ARuleThatAnswersToNoRequirementIsAFinding) {
 }
 
 TEST(TestContext, AnIdentityIsReadAfterTheRenamesLinkingMade) {
-  ds::model::Model model;
-  ds::bind::Binder binder(model);
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::bind::Binder binder(model, metamodel);
   const ds::check::Resolver resolver(model);
   ds::check::Context context(model, resolver, binder);
   context.renamed()["p@m::Old"] = "p@m::New";
@@ -152,7 +155,8 @@ TEST(TestContext, AnIdentityIsReadAfterTheRenamesLinkingMade) {
 }
 
 TEST(TestReport, ItCountsWhatTheModelDeclaresExpectsRelatesAndFails) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::model::Entity a;
   a.kind = ds::model::Kind::Class;
   a.id = "p@m::A";

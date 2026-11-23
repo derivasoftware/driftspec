@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "ds/model/Metamodel.hpp"
+
 namespace ds {
 namespace api {
 
@@ -14,7 +16,12 @@ namespace api {
 /// {"error": "..."}.
 class Browser {
  public:
-  static std::string answer(const std::string& request);
+  /// Answers in the language of `metamodel`, which outlives it (DS-341).
+  explicit Browser(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
+  std::string answer(const std::string& request) const;
+
+ private:
+  const model::Metamodel& metamodel_;
 };
 
 }  // namespace api

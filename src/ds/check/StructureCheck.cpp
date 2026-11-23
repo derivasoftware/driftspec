@@ -242,7 +242,7 @@ void StructureCheck::checkExtensions() {
     if (e.expected && e.has("extension") && !context_->reported().count(e.id) && said.insert(e.id).second) {
       found_.push_back(
           {"W-REF-UNDECLARED", "warning",
-           std::string(model::kindName(e.kind)) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace",
+           model_->metamodel().nameOf(e.kind) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace",
            e.location});
     }
   }
@@ -253,19 +253,19 @@ void StructureCheck::checkFields() {
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     for (const auto& f : e.fields) {
-      if (const model::FieldSpec* spec = model::fieldOf(e.kind, f.first)) {
+      if (const model::FieldSpec* spec = model_->metamodel().fieldOf(e.kind, f.first)) {
         // a closed field takes one of its values; an empty one is left to the field's own check (DS-211)
         if (!spec->values.empty() && !f.second.empty() &&
             std::find(spec->values.begin(), spec->values.end(), f.second) == spec->values.end())
           found_.push_back({"W-FIELD-VALUE", "warning",
-                            std::string(model::kindName(e.kind)) + " '" + e.id + "' has " + f.first + ": " + f.second +
+                            model_->metamodel().nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + f.second +
                                 ", which is none of " + join(spec->values, ", "),
                             e.location});
         continue;
       }
       found_.push_back({"W-FIELD-UNKNOWN", "warning",
-                        std::string(model::kindName(e.kind)) + " '" + e.id + "' has a field '" + f.first + "' that a " +
-                            model::kindName(e.kind) + " does not declare",
+                        model_->metamodel().nameOf(e.kind) + " '" + e.id + "' has a field '" + f.first + "' that a " +
+                            model_->metamodel().nameOf(e.kind) + " does not declare",
                         e.location});
     }
   }

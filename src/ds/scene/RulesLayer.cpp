@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <set>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/scene/Layers.hpp"
 
 namespace ds {
@@ -26,7 +27,7 @@ void RulesLayer::decorate(SceneDocument& out_document) {
     if (e.expected || (e.kind != model::Kind::Rule && e.kind != model::Kind::Definition)) continue;
     RuleView r;
     r.id = e.id;
-    r.kind = model::kindName(e.kind);
+    r.kind = model_.metamodel().nameOf(e.kind);
     r.name = e.name;
     r.title = e.field("title");
     r.scope = place(e.scope.empty() || e.scope.back() != '@' ? e.scope : e.scope.substr(0, e.scope.size() - 1));

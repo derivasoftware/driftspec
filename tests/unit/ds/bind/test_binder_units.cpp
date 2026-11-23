@@ -3,6 +3,7 @@
 #include <string>
 
 #include "ds/bind/Binder.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -11,9 +12,10 @@ namespace {
 /// The binder alone (DS-186): a file read into the model's entities, with the references it leaves
 /// for the linker and the messages and events it leaves for the behaviour steps.
 TEST(TestBinder, AFileBecomesEntitiesAndTheReferencesItCannotResolveAlone) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package p {\n"
                                "  module m {\n"

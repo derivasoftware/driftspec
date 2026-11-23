@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -14,18 +15,19 @@ namespace {
 /// The static rules R10–R19 over tests/corpus/static/static.ds, whose `!` comments are the oracle.
 class TestStatic : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   std::map<std::string, int> byCode;
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     for (const auto& f : model.findings()) ++byCode[f.code];
   }
 
@@ -77,9 +79,10 @@ TEST_F(TestStatic, ConstraintsAreArtefactsInBothForms) {
 }
 
 TEST(TestNesting, NestingAnArtefactInADesignEntityIsAnnotatingIt) {
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::parse::Parser parser;
-  ds::bind::Binder binder(model);
+  ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("a.ds",
                                "package shop {\n"
                                "  module store {\n"
@@ -99,7 +102,7 @@ TEST(TestNesting, NestingAnArtefactInADesignEntityIsAnnotatingIt) {
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder);
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().message;  // an attribute may annotate, as it may nest
   const auto has = [&model](const std::string& kind, const std::string& from, const std::string& to) {
     for (const auto& r : model.index().from(from))

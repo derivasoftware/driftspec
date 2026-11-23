@@ -5,6 +5,7 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
+#include "ds/model/Metamodel.hpp"
 
 namespace {
 
@@ -33,13 +34,14 @@ const char* kShop =
 /// from the texts to each answer.
 class TestWorkspace : public ::testing::Test {
  protected:
-  ds::api::Workspace ws{{{"shop.ds", kShop}}};
+  const ds::model::Metamodel metamodel;
+  ds::api::Workspace ws{metamodel, {{"shop.ds", kShop}}};
   static nlohmann::json json(const std::string& text) { return nlohmann::json::parse(text); }
 };
 
 TEST_F(TestWorkspace, ItAnswersWhatTheCommandLineAnswers) {
-  EXPECT_EQ(ws.report(), ds::api::Api::check({{"shop.ds", kShop}}));
-  EXPECT_EQ(ws.exportModel(), ds::api::Api::exportModel({{"shop.ds", kShop}}));
+  EXPECT_EQ(ws.report(), ds::api::Api(metamodel).check({{"shop.ds", kShop}}));
+  EXPECT_EQ(ws.exportModel(), ds::api::Api(metamodel).exportModel({{"shop.ds", kShop}}));
   EXPECT_EQ(json(ws.find("p@m::Desk"))["kind"], "class");
   EXPECT_EQ(ws.find("p@m::Nobody"), "null");
 }
@@ -77,7 +79,7 @@ TEST_F(TestWorkspace, ItAsksAsDsQueryAndDrawsAsDsRender) {
 TEST_F(TestWorkspace, TwoLoadedAtOnceEachKeepItsOwnModel) {
   std::string after = kShop;
   after.replace(after.find("+ take(n: int) -> int"), 21, "+ take(n: int) -> bool");
-  const ds::api::Workspace later{{{"shop.ds", after}}};
+  const ds::api::Workspace later{metamodel, {{"shop.ds", after}}};
   // the second load answers from its own model, and the first is as it was
   EXPECT_NE(later.find("p@m::Vault::take").find("bool"), std::string::npos);
   EXPECT_EQ(ws.find("p@m::Vault::take").find("bool"), std::string::npos);

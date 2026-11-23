@@ -10,6 +10,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/format/SceneFormats.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Scene.hpp"
@@ -21,17 +22,18 @@ namespace {
 /// Style inside core; Console (app) and Response (server) inherit the abstract Channel.
 class TestSceneOfTheTaxonomy : public ::testing::Test {
  protected:
-  ds::model::Model model;
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
   ds::scene::SceneDocument doc;
   std::map<std::string, const ds::scene::Node*> byId;
   std::map<std::string, size_t> order;
 
   void SetUp() override {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     doc = ds::scene::Scene(model).build();
     for (size_t i = 0; i < doc.nodes.size(); ++i) {
       byId[doc.nodes[i].id] = &doc.nodes[i];

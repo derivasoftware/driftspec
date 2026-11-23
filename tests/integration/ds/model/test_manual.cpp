@@ -21,17 +21,19 @@ namespace {
 /// example that checks clean, and the catalogue of codes is exactly the codes the engine reports.
 class TestManual : public ::testing::Test {
  protected:
+  const ds::model::Metamodel metamodel;
   // the findings of one example read as a workspace of its own; a syntax error is one of them
   static std::vector<std::string> findingsOf(const std::string& text) {
-    ds::model::Model model;
+    const ds::model::Metamodel metamodel;
+    ds::model::Model model{metamodel};
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model);
+    ds::bind::Binder binder(model, metamodel);
     const ds::parse::ParsedFile file = parser.parseText("example.ds", text);
     std::vector<std::string> out;
     if (file.hasSyntaxErrors) out.push_back("E-SYNTAX at " + std::to_string(file.errorLine) + ":" + std::to_string(file.errorColumn));
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
     for (const auto& f : model.findings()) out.push_back(f.code + " " + f.message);
     return out;
   }
@@ -55,8 +57,8 @@ class TestManual : public ::testing::Test {
 };
 
 TEST_F(TestManual, EveryKindIsWrittenDownAndItsExampleChecksClean) {
-  for (const auto& k : ds::model::kinds()) {
-    const std::string name = ds::model::kindName(k.kind);
+  for (const auto& k : metamodel.kinds()) {
+    const std::string name = metamodel.nameOf(k.kind);
     EXPECT_FALSE(k.syntax.empty()) << name << " says nothing of how it is written";
     ASSERT_FALSE(k.example.empty()) << name << " has no example";
     const auto findings = findingsOf(k.example);
@@ -70,7 +72,7 @@ TEST_F(TestManual, EveryExampleOfAGuideChecksCleanAndOneMarkedWrongHasItsFinding
   std::size_t examples = 0;
   for (const auto& guide : ds::model::manualGuides()) {
     EXPECT_EQ(guide.second.rfind("# ", 0), 0U) << guide.first << " does not start with its title";
-    EXPECT_EQ(ds::model::manualPage(guide.first), guide.second);
+    EXPECT_EQ(ds::model::manualPage(metamodel, guide.first), guide.second);
     for (std::sregex_iterator it(guide.second.begin(), guide.second.end(), example), end; it != end; ++it) {
       ++examples;
       const auto findings = findingsOf((*it)[2].str());
@@ -85,7 +87,7 @@ TEST_F(TestManual, EveryExampleOfAGuideChecksCleanAndOneMarkedWrongHasItsFinding
 
 TEST_F(TestManual, TheCatalogueHoldsExactlyTheCodesTheEngineReports) {
   std::set<std::string> catalogued;
-  for (const auto& c : ds::model::codes()) {
+  for (const auto& c : metamodel.codes()) {
     EXPECT_TRUE(catalogued.insert(c.code).second) << c.code << " is catalogued twice";
     // a coverage code is a W- that names something not yet written (DS-216)
     EXPECT_EQ(c.severity == "coverage" ? "warning" : c.severity, c.code[0] == 'E' ? "error" : "warning") << c.code;
@@ -97,19 +99,19 @@ TEST_F(TestManual, TheCatalogueHoldsExactlyTheCodesTheEngineReports) {
 }
 
 TEST_F(TestManual, EveryTopicHasAPageAndAnUnknownOneHasNone) {
-  const std::string index = ds::model::manualPage("");
+  const std::string index = ds::model::manualPage(metamodel, "");
   for (const auto& c : ds::model::commands()) EXPECT_NE(index.find(c.does), std::string::npos) << c.name;
-  for (const auto& topic : ds::model::manualTopics()) EXPECT_FALSE(ds::model::manualPage(topic).empty()) << topic;
-  const std::string classPage = ds::model::manualPage("class");
+  for (const auto& topic : ds::model::manualTopics(metamodel)) EXPECT_FALSE(ds::model::manualPage(metamodel, topic).empty()) << topic;
+  const std::string classPage = ds::model::manualPage(metamodel, "class");
   EXPECT_NE(classPage.find("How it is written"), std::string::npos);
   EXPECT_NE(classPage.find("Example (a workspace that checks clean)"), std::string::npos);
-  EXPECT_NE(ds::model::manualPage("W-REF-UNDECLARED").find("What to do:"), std::string::npos);
-  EXPECT_NE(ds::model::manualPage("annotations").find("@requirement"), std::string::npos);
-  const std::string grammar = ds::model::manualPage("grammar");  // what goes inside what, from the metamodel
+  EXPECT_NE(ds::model::manualPage(metamodel, "W-REF-UNDECLARED").find("What to do:"), std::string::npos);
+  EXPECT_NE(ds::model::manualPage(metamodel, "annotations").find("@requirement"), std::string::npos);
+  const std::string grammar = ds::model::manualPage(metamodel, "grammar");  // what goes inside what, from the metamodel
   EXPECT_NE(grammar.find("What goes inside what"), std::string::npos);
   EXPECT_NE(grammar.find("class         requirement, constraint, method, attribute, operator, rule, definition"), std::string::npos);
   EXPECT_NE(grammar.find("method        requirement, constraint, rule"), std::string::npos);  // as the grammar lets it (DS-121)
-  EXPECT_TRUE(ds::model::manualPage("weather").empty());
+  EXPECT_TRUE(ds::model::manualPage(metamodel, "weather").empty());
 }
 
 }  // namespace
