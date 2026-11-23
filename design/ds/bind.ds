@@ -128,13 +128,35 @@ package driftspec@ds {
       }
     }
 
-    // Reads the file's tree and walks it from its root with no scope and no owner, writing through one context into
-    // the model and the notes (DS-354).
+    // Reads the file's tree and binds what is written at its root, packages and diagrams, with no scope and no owner,
+    // writing through one context into the model and the notes (DS-354). The table sends each to the binder of its
+    // kind (DS-355): today both go to the walk the binder had.
     sequence Binder::bind {
       local reader: parse::TreeReader
       local ctx: BindContext
       self -> reader.root() -> root
-      self -> ctx.children(root)
+      loop each package and diagram written at the root {
+        local node: TSNode
+        self -> legacy_.bind(node, ctx)
+      }
+    }
+
+    // The context's writes are the model's (DS-355): each passes its argument on, so a binder holds no model.
+    sequence BindContext::declare {
+      self -> model.declare(entity) -> declared
+      return declared
+    }
+
+    sequence BindContext::relate {
+      self -> model.relate(relation)
+    }
+
+    sequence BindContext::annotate {
+      self -> model.annotate(id, key, value)
+    }
+
+    sequence BindContext::refine {
+      self -> model.refine(later)
     }
 
     // What an annotation means is the metamodel's (DS-341): the relation its word makes, and for a word it
