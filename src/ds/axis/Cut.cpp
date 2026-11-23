@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "ds/model/Identity.hpp"
-#include "ds/model/Words.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace axis {
@@ -49,8 +49,8 @@ bool reaches(const std::vector<std::string>& patterns, const std::string& operat
 }  // namespace
 
 Cut::Cut(const model::Model& model, const model::Entity& diagram)
-    : unfold_(model::split(diagram.field("unfold"), ',')),
-      fold_(model::split(diagram.field("fold"), ',')),
+    : unfold_(text::splitTrimmed(diagram.field("unfold"), ',')),
+      fold_(text::splitTrimmed(diagram.field("fold"), ',')),
       unfolds_(diagram.fields.count("unfold") > 0),
       folds_(diagram.fields.count("fold") > 0),
       deep_(diagram.fields.count("depth") > 0) {
@@ -62,8 +62,8 @@ Cut::Cut(const model::Model& model, const model::Entity& diagram)
        d = d->fields.count("cut") ? model.find("diagram:" + d->field("cut")) : nullptr) {
     opens = opens || d->fields.count("open") > 0;
     closesSome = closesSome || d->fields.count("close") > 0;
-    for (const auto& p : model::split(d->field("open"), ',')) open.push_back(p);
-    for (const auto& p : model::split(d->field("close"), ',')) close.push_back(p);
+    for (const auto& p : text::splitTrimmed(d->field("open"), ',')) open.push_back(p);
+    for (const auto& p : text::splitTrimmed(d->field("close"), ',')) close.push_back(p);
   }
   written_ = opens || closesSome;
   if (!written_) return;

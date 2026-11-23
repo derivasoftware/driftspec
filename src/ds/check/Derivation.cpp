@@ -56,7 +56,7 @@ void Derivation::classify() {
     if (abstractMethods > 0) stereotypes.push_back("abstract");  // all of them or some: an abstract class (DS-301)
     const auto ops = cls->fields.find("operators");
     if (ops != cls->fields.end()) {
-      for (const auto& item : split(ops->second, ',')) {
+      for (const auto& item : splitTrimmed(ops->second, ',')) {
         if (item == "==" || item == "!=") {
           if (std::find(stereotypes.begin(), stereotypes.end(), "equatable") == stereotypes.end()) stereotypes.push_back("equatable");
         } else if (item == "ordered") {
@@ -92,7 +92,7 @@ void Derivation::fillLanguages() {
     const auto written = e.fields.find("language");
     if (written == e.fields.end() || written->second.empty()) continue;
     std::set<std::string> said;
-    for (const auto& item : split(written->second, ',')) said.insert(item);
+    for (const auto& item : splitTrimmed(written->second, ',')) said.insert(item);
     const std::string first = *said.begin();
     if (said.size() > 1) {
       context_->report(

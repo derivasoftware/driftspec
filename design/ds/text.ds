@@ -1,0 +1,26 @@
+// LLD of the text namespace (ds::text, DS-344): what every module of the engine splits, joins, trims and escapes,
+// in one place instead of a copy in each. None of it knows the model.
+
+package driftspec@ds {
+  module text {
+    // a list written in a field, taken apart and put back (DS-185); the name says the items are trimmed
+    function splitTrimmed(text: std::string, sep: char) -> std::vector<std::string> {
+      @requirement REQ-00028-2
+    }
+    function join(items: std::vector<std::string>, sep: std::string) -> std::string {    // sep between every two, an empty item included
+      @requirement REQ-00028-2
+    }
+    function linesOf(label: std::string) -> std::vector<std::string>                    // a new line or a written \n ends one
+    function trimWhitespace(text: std::string_view) -> std::string_view {                 // spaces, tabs and new lines at either end
+      @requirement REQ-00028-2
+    }
+    function trimSpaces(text: std::string_view) -> std::string_view                     // only spaces at either end
+    function base64(data: unsigned char, size: std::size_t) -> std::string {
+      @requirement REQ-00075-5
+    }
+    function fromBase64(text: std::string) -> std::string {
+      @requirement REQ-00075-5
+    }
+    function escapeXml(text: std::string) -> std::string                               // & < > " as entities
+  }
+}
