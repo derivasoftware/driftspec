@@ -390,7 +390,7 @@ package driftspec@ds {
 
     // ---- the manual ds embeds (REQ-00079-2): written from the metamodel, held to the engine ----
     requirement REQ-00079-2 {
-      status: draft
+      status: approved
       @refines SREQ-00014-1
       title: The metamodel shall describe how each kind is written with a minimal example that checks clean, the catalogue of finding codes and the annotations, and the manual shall present them with the commands
       text:
@@ -438,7 +438,7 @@ package driftspec@ds {
     }
 
     requirement REQ-00160-2 {
-      status: draft
+      status: approved
       @refines SREQ-00014-1
       title: The manual shall carry its guides, written as Markdown in the repository and embedded when ds is built, the same text in the terminal and in a page
       text:

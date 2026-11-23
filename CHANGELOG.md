@@ -6,6 +6,12 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.29
+
+The Owner approves the two requirement revisions DS-342 left as drafts: REQ-00079-2 (the metamodel describes how each kind
+is written, the codes and the annotations; the manual presents them with the commands) and REQ-00160-2 (the manual's guides).
+Nothing a design writes changes.
+
 ## 0.1.28
 
 A class diagram is drawn less tall (DS-350): the gap under a layer keeps a lane only for an edge that turns in it, so
