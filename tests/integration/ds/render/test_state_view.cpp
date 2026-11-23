@@ -23,7 +23,7 @@ class TestStateView : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus)) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + diagram, false));
   }
 

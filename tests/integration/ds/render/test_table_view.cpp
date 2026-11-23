@@ -24,7 +24,7 @@ class TestTableView : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/states")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     json = ds::render::IrExport(model).render("diagram:TB_Order", false);
     ir = nlohmann::json::parse(json);
   }
@@ -104,7 +104,7 @@ TEST_F(TestTableView, ATableThatNamesNoMachineSaysSo) {
                                "package p {\n  module m {\n    class Thing { }\n  }\n}\n"
                                "diagram MX { kind: table\n include: p@m::Thing }\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(other, metamodel, checkSteps).run(binder);
+  ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
   const auto none = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:MX", false));
   EXPECT_FALSE(none.contains("table"));
   EXPECT_NE(none["notice"].get<std::string>().find("No state machine selected"), std::string::npos);
@@ -125,7 +125,7 @@ TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
       "  column proved: v where v verifies r\n  column kept: holds c satisfies r\n}\n"
       "diagram TD {\n  kind: table\n  for requirement r in p\n  where r.status = \"draft\"\n  column requirement: r.id\n}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(other, metamodel, checkSteps).run(binder);
+  ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
   const auto t = nlohmann::json::parse(ds::render::IrExport(other).render("diagram:TB", false))["table"];
   EXPECT_EQ(t["corner"], "requirement");
   EXPECT_EQ(t["columns"], (std::vector<std::string>{"says", "proved", "kept"}));

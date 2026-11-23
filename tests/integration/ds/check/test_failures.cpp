@@ -29,7 +29,7 @@ class TestFailures : public ::testing::Test {
       binder.bind(f);
     }
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, metamodel, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
   /// What a path takes, a call by its operation, an ending by what it gives back or fails with.

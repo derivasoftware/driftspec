@@ -24,7 +24,7 @@ class TestMachine : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", "package p {\n  module m {\n" + body + "  }\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   ds::machine::Machine machine(const std::string& subject) const {

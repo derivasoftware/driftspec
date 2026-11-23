@@ -23,7 +23,7 @@ class TestStateRules : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", "package p {\n  module m {\n" + body + "  }\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code.rfind("W-STATE-", 0) == 0) out.push_back(f.code);

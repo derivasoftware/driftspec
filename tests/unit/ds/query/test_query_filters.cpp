@@ -66,7 +66,7 @@ class Shop : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, metamodel, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 };
 
@@ -130,7 +130,7 @@ TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnde
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto steps = ds::check::steps();
-  ds::check::Checker(model, metamodel, steps).run(binder);
+  ds::check::Checker(model, metamodel, steps).run(binder.notes());
   EXPECT_TRUE(ds::query::RequirementsFilter({"shop@*"}, true, true).select(model).count("UC-00001-1"));
   EXPECT_FALSE(ds::query::RequirementsFilter({"shop@*"}, false, true).select(model).count("UC-00001-1"));  // design hidden
 }

@@ -24,7 +24,7 @@ class TestSatisfiesHome : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", text));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   std::vector<std::string> messages(const std::string& code) const {

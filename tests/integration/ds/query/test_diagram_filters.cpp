@@ -32,7 +32,7 @@ class TestFilters : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, metamodel, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
   Ids of(const std::string& diagram) {

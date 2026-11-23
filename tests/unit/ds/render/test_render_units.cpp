@@ -37,7 +37,7 @@ TEST(TestIrExport, ItListsTheDiagramsAndExportsEachAsItsIr) {
                                "package p {\n  module m {\n    class A {\n      - b: B\n    }\n    class B { }\n  }\n}\n"
                                "diagram CL_M {\n  kind: class\n  include: p@m::*\n}\n"));
   const auto steps = ds::check::steps();
-  ds::check::Checker(model, metamodel, steps).run(binder);
+  ds::check::Checker(model, metamodel, steps).run(binder.notes());
   const ds::render::IrExport ir(model);
   EXPECT_EQ(ir.diagrams(), (std::vector<std::string>{"diagram:CL_M"}));
   const auto json = nlohmann::json::parse(ir.render("diagram:CL_M", false));

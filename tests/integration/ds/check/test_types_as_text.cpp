@@ -25,7 +25,7 @@ class TestTypesAsText : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   bool related(const std::string& kind, const std::string& from, const std::string& to, const std::string& multiplicity = "?") const {

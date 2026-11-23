@@ -24,12 +24,12 @@ std::vector<model::Finding> BehaviourTyping::run(Context& out_context) {
   context_ = &out_context;
   model_ = &out_context.model();
   resolver_ = &out_context.resolver();
-  for (const auto& m : context_->binder().messages()) {
+  for (const auto& m : context_->notes().messages) {
     checkMessage(m);
     rememberResult(m);  // in order: a result exists for the messages after it
   }
   checkLocals();
-  for (const auto& e : context_->binder().events()) checkEvent(e);
+  for (const auto& e : context_->notes().events) checkEvent(e);
   return out_context.take();
 }
 

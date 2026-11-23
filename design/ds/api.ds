@@ -157,7 +157,8 @@ package driftspec@ds {
         -> binder.bind(file)
       }
       -> check::steps() -> steps
-      -> checker.run(binder)
+      self -> binder.notes() -> notes
+      -> checker.run(notes)
       return model
     }
 

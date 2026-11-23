@@ -3,7 +3,7 @@
 #include <set>
 #include <vector>
 
-#include "ds/bind/Binder.hpp"
+#include "ds/bind/TypeTokens.hpp"
 #include "ds/model/Metamodel.hpp"
 
 namespace ds {

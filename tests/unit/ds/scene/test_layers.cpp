@@ -47,7 +47,7 @@ class TestLayers : public ::testing::Test {
                          "    class A {\n      @requirement REQ-00001-1\n      - b: B\n      + run() -> none\n    }\n"
                          "    class B {\n      + go() -> int\n    }\n    sequence A::run {\n      self -> b.go() -> n\n    }\n  }\n}\n"));
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, metamodel, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 };
 

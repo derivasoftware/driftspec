@@ -27,7 +27,7 @@ class TestUseCases : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   void loadExample() {
@@ -35,7 +35,7 @@ class TestUseCases : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   std::vector<std::string> codes() const {

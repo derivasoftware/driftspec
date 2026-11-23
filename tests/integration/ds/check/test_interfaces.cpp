@@ -26,7 +26,7 @@ class TestInterfaces : public ::testing::Test {
       binder.bind(f);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
     for (const auto& f : model.coverage()) lines[f.code].push_back(f.message);  // kept apart (DS-216)
   }

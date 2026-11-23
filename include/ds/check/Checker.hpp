@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "ds/bind/Binder.hpp"
+#include "ds/bind/Notes.hpp"
 #include "ds/check/Resolver.hpp"
 #include "ds/check/Step.hpp"
 #include "ds/model/Metamodel.hpp"
@@ -21,7 +21,7 @@ namespace check {
 class IChecker {
  public:
   virtual ~IChecker() = default;
-  virtual void run(const bind::Binder& binder) = 0;
+  virtual void run(const bind::Notes& notes) = 0;
 };
 
 /// A runner of steps: it orders the steps it is given by what each needs and runs them over one
@@ -33,7 +33,7 @@ class Checker : public IChecker {
   Checker(model::Model& model, const model::Metamodel& metamodel, const std::map<std::string, std::unique_ptr<IStep>>& steps);
   Checker(model::Model& model, const model::Metamodel& metamodel,
           std::map<std::string, std::unique_ptr<IStep>>&& steps) = delete;  // a temporary map would die before the run
-  void run(const bind::Binder& binder) override;
+  void run(const bind::Notes& notes) override;
   /// What a name means where it is written, and the other read-only questions the checks ask (DS-125).
   const Resolver& resolver() const { return resolver_; }
   /// The steps' keys in the order they run: each after every step it needs, ties by key.
