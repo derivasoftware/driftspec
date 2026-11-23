@@ -82,7 +82,7 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) const {
     binder.bind(parsed);
   }
   const auto steps = check::steps();
-  check::Checker(model, metamodel_, steps).run(binder);
+  check::Checker(model, metamodel_, steps).run(binder.notes());
   auto& findings = model.findings();
   if (!broken.empty()) {
     // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:

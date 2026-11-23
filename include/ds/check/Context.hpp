@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "ds/bind/Binder.hpp"
+#include "ds/bind/Notes.hpp"
 #include "ds/check/Resolver.hpp"
 #include "ds/model/Model.hpp"
 
@@ -17,14 +17,14 @@ namespace check {
 /// the resolver, the renames linking made and the identities already reported as undeclared.
 class Context {
  public:
-  Context(model::Model& model, const Resolver& resolver, const bind::Binder& binder)
-      : model_(model), resolver_(resolver), binder_(binder) {}
+  Context(model::Model& model, const Resolver& resolver, const bind::Notes& notes) : model_(model), resolver_(resolver), notes_(notes) {}
 
   model::Model& model() { return model_; }
   /// What a step that only checks is given: the model, to read.
   const model::Model& model() const { return model_; }
   const Resolver& resolver() const { return resolver_; }
-  const bind::Binder& binder() const { return binder_; }
+  /// What binding left to resolve and check: the references, the messages and the events (DS-354).
+  const bind::Notes& notes() const { return notes_; }
   /// An identity after the renames linking made.
   std::string current(const std::string& id) const;
   std::map<std::string, std::string>& renamed() { return renamed_; }
@@ -41,7 +41,7 @@ class Context {
  private:
   model::Model& model_;
   const Resolver& resolver_;
-  const bind::Binder& binder_;
+  const bind::Notes& notes_;
   std::map<std::string, std::string> renamed_;
   std::set<std::string> reported_;
   std::vector<model::Finding> found_;

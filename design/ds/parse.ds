@@ -163,6 +163,28 @@ package driftspec@ds {
       }
       return files
     }
+
+    dataclass Span {                         // where a node is written: lines and columns from 1, its end included
+      @requirement REQ-00008-1
+      + file: std::string
+      + line: int
+      + column: int
+      + endLine: int
+      + endColumn: int
+    }
+    class TreeReader {                       // the syntax tree of one parsed file, read; it knows no model (DS-354)
+      @requirement REQ-00008-1
+      - refs file_: ParsedFile
+      + TreeReader(file: ParsedFile)
+      + static is(node: TSNode, type: char) -> bool
+      + static child(node: TSNode, fieldName: char) -> TSNode
+      + static childrenNamed(node: TSNode, fieldName: char) -> std::vector<TSNode>
+      + fieldText(node: TSNode, fieldName: char) -> std::string
+      + textOf(node: TSNode) -> std::string
+      + spanOf(node: TSNode) -> Span
+      + root() -> TSNode
+      + file() -> ParsedFile
+    }
   }
 }
 

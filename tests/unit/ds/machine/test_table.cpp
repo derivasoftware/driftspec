@@ -23,7 +23,7 @@ class TestTable : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", std::string("package p {\n  module m {\n") + kShop + behaviours + "  }\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     return ds::machine::Table(model, *model.find("p@m::Order::state"));
   }
 

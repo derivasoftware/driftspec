@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.30
+
+The binder starts its split into one binder per construct (DS-353, step one of four, DS-354). The binding code reads the
+syntax tree through a reader of its own in parse, writes only through one context that holds the model and the notes, and
+hands the checker those notes (the references, the messages and the events) instead of itself. Nothing a design writes
+changes, and no finding, export or drawing changes either.
+
 ## 0.1.29
 
 The Owner approves the two requirement revisions DS-342 left as drafts: REQ-00079-2 (the metamodel describes how each kind

@@ -58,7 +58,7 @@ class TestCut : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, metamodel, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
   ds::axis::Cut cut(const std::string& diagram) const { return ds::axis::Cut(model, *model.find("diagram:" + diagram)); }

@@ -47,7 +47,7 @@ class TestStaticCalls : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors);
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   bool calls(const std::string& message, const std::string& op) const {

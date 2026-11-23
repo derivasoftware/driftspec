@@ -26,7 +26,7 @@ std::vector<model::Finding> Linker::run(Context& out_context) {
   defineLoneExtensions();
   // a name read out of a type, a base or a bound relates only to what the design declares; any other name is
   // text, with no expected node and no finding: allow incompleteness, say incoherence (DS-18)
-  for (const auto& r : context_->binder().references()) {
+  for (const auto& r : context_->notes().references) {
     if (reportAmbiguous(r)) continue;
     if (r.soft) {
       const std::string target = resolver_->resolve(r.target, r.scope);
@@ -36,7 +36,7 @@ std::vector<model::Finding> Linker::run(Context& out_context) {
     resolveReference(r);
   }
   unifyBehaviours();
-  for (const auto& r : context_->binder().references()) checkTemplateBound(r);
+  for (const auto& r : context_->notes().references) checkTemplateBound(r);
   return out_context.take();
 }
 

@@ -128,14 +128,12 @@ package driftspec@ds {
       @requirement REQ-00012-1
       - refs model_: model::Model
       - refs resolver_: Resolver
-      - refs binder_: bind::Binder
       - owns renamed_: std::map<std::string, std::string>
       - owns reported_: std::set<std::string>
       - owns many found_: std::vector<model::Finding>
-      + Context(model: model::Model, resolver: Resolver, binder: bind::Binder)
+      + Context(model: model::Model, resolver: Resolver, notes: bind::Notes)
       + model() -> model::Model
       + resolver() -> Resolver
-      + binder() -> bind::Binder
       + current(id: std::string) -> std::string {
         @requirement REQ-00035-1
       }
@@ -149,13 +147,15 @@ package driftspec@ds {
       + checkLeak(from: std::string, target: std::string, location: model::Location) -> void {
         @requirement REQ-00063-1
       }
+      - refs notes_: bind::Notes
+      + notes() -> bind::Notes
     }
 
     // The check module's entry point (DS-138): what the rest of ds asks of a check.
     class IChecker {
       @requirement REQ-00053-2
       + ~IChecker()
-      + abstract run(binder: bind::Binder) -> void
+      + abstract run(notes: bind::Notes) -> void
     }
 
     // A runner of steps: it orders the steps it is given by what each needs, runs them over one
@@ -169,7 +169,7 @@ package driftspec@ds {
       - owns resolver_: Resolver
       - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
       + Checker(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>)
-      + run(binder: bind::Binder) -> void
+      + run(notes: bind::Notes) -> void
       + resolver() -> Resolver
       + order() -> std::vector<std::string>
     }
@@ -505,9 +505,8 @@ package driftspec@ds {
 
     sequence Linker::run {
       -> defineLoneExtensions()
-      self -> context_.binder() -> binder
-      self -> binder.references() -> references
-      loop each reference {
+      self -> context_.notes() -> notes
+      loop each reference the notes hold {
         -> reportAmbiguous(reference) -> ambiguous
         opt the name is no ambiguity of its package {
           -> resolveReference(reference)
@@ -589,15 +588,13 @@ package driftspec@ds {
 
     // The results of the messages are remembered as they go: each exists only for the messages after it.
     sequence BehaviourTyping::run {
-      self -> context_.binder() -> binder
-      self -> binder.messages() -> messages
-      loop each message {
+      self -> context_.notes() -> notes
+      loop each message the notes hold {
         -> checkMessage(message)
         -> rememberResult(message)
       }
       -> checkLocals()
-      self -> binder.events() -> events
-      loop each event {
+      loop each event the notes hold {
         -> checkEvent(event)
       }
     }

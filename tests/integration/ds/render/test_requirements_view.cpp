@@ -23,7 +23,7 @@ class TestRequirementsView : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   nlohmann::json diagram(const std::string& name) {
@@ -97,7 +97,7 @@ TEST(TestRequirementsViewOfAUseCase, AUseCaseThatRealisesARequirementIsDrawnAsIt
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
   bool card = false;
   for (const auto& n : doc["nodes"])
@@ -144,7 +144,7 @@ TEST(TestRequirementsViewOfAnyAnswer, WhateverAnswersToARequirementIsDrawnAndAMe
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   const auto doc = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Shop", false));
   std::set<std::string> nodes;
   for (const auto& n : doc["nodes"]) nodes.insert(n["id"].get<std::string>());

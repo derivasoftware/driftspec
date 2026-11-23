@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "ds/bind/Binder.hpp"
+#include "ds/bind/Notes.hpp"
 #include "ds/check/Context.hpp"
 #include "ds/check/Resolver.hpp"
 #include "ds/check/Step.hpp"

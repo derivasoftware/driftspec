@@ -82,7 +82,7 @@ TEST(TestFindings, TheContextHandsBackWhatAStepReportedInOrderAndOnce) {
   ds::model::Model model{metamodel};
   ds::bind::Binder binder(model, metamodel);
   const ds::check::Resolver resolver(model);
-  ds::check::Context context(model, resolver, binder);
+  ds::check::Context context(model, resolver, binder.notes());
   context.report({"W-A", "warning", "first", {}});
   context.report({"W-B", "warning", "second", {}});
   const auto taken = context.take();
@@ -119,7 +119,7 @@ TEST(TestFindings, TheCheckerAddsTheFindingsOfEachStepInTheOrderTheStepsRun) {
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> codes;
   for (const auto& f : model.findings()) codes.push_back(f.code);
   EXPECT_EQ(codes, (std::vector<std::string>{"W-LANGUAGE-UNKNOWN", "W-FIELD-UNKNOWN"}));
@@ -139,7 +139,7 @@ TEST(TestChecker, RunsTheStepsItIsGivenAfterWhatEachNeeds) {
   ds::bind::Binder binder(model, metamodel);
   ds::check::Checker checker(model, metamodel, given);
   ds::check::IChecker& entry = checker;  // what the rest of ds sees
-  entry.run(binder);
+  entry.run(binder.notes());
   EXPECT_EQ(log, (std::vector<std::string>{"b", "c", "a"}));
   std::vector<std::string> codes;
   for (const auto& f : model.findings()) codes.push_back(f.code);
