@@ -67,8 +67,13 @@ bool inPattern(const model::Model& model, const std::string& pattern, const mode
 
 // ---- class diagrams --------------------------------------------------------------------------
 
-ClassFilter::ClassFilter(std::vector<std::string> include, std::vector<std::string> exclude, int neighbours, std::string cutOf)
-    : include_(std::move(include)), exclude_(std::move(exclude)), neighbours_(neighbours), cutOf_(std::move(cutOf)) {}
+ClassFilter::ClassFilter(const model::Metamodel& metamodel, std::vector<std::string> include, std::vector<std::string> exclude,
+                         int neighbours, std::string cutOf)
+    : metamodel_(metamodel),
+      include_(std::move(include)),
+      exclude_(std::move(exclude)),
+      neighbours_(neighbours),
+      cutOf_(std::move(cutOf)) {}
 
 std::string drawnFrom(const model::Model& model, const model::Entity& entity) {
   if (isBox(entity) || entity.kind == model::Kind::Module || entity.kind == model::Kind::Package)
@@ -145,7 +150,7 @@ std::set<std::string> ClassFilter::select(const model::Model& model) const {
   for (const auto& c : around) out.insert(c);
   const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);
   if (!diagram) return out;
-  const axis::Cut cut(model, *diagram);
+  const axis::Cut cut(model, metamodel_, *diagram);
   if (!cut.written()) return out;
   std::set<std::string> shown;
   for (const auto& id : out)
@@ -155,8 +160,8 @@ std::set<std::string> ClassFilter::select(const model::Model& model) const {
 
 // ---- sequence diagrams -----------------------------------------------------------------------
 
-SequenceFilter::SequenceFilter(std::vector<std::string> include, int depth, std::string cutOf)
-    : include_(std::move(include)), depth_(depth), cutOf_(std::move(cutOf)) {}
+SequenceFilter::SequenceFilter(const model::Metamodel& metamodel, std::vector<std::string> include, int depth, std::string cutOf)
+    : metamodel_(metamodel), include_(std::move(include)), depth_(depth), cutOf_(std::move(cutOf)) {}
 
 std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) const {
   const model::Paths paths(model);
@@ -187,7 +192,7 @@ std::set<std::string> SequenceFilter::select(const model::Model& model) const {
   std::set<std::string> out;
   // on a cut each participant is the box that stands for it, and the calls followed are the ones it says (DS-231)
   const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);
-  const std::unique_ptr<axis::Cut> cut(diagram ? new axis::Cut(model, *diagram) : nullptr);
+  const std::unique_ptr<axis::Cut> cut(diagram ? new axis::Cut(model, metamodel_, *diagram) : nullptr);
   auto on = [&cut](const std::string& id) { return cut ? cut->standsFor(id) : id; };
   for (const Behaviour& b : behaviours(model)) {
     const model::Entity* subject = model.find(model::Identity(b.sequence->id).subject().text());
@@ -237,8 +242,9 @@ std::set<std::string> StateFilter::select(const model::Model& model) const {
 
 // ---- requirements diagrams -------------------------------------------------------------------
 
-RequirementsFilter::RequirementsFilter(std::vector<std::string> include, bool design, bool verifications, std::string cutOf)
-    : include_(std::move(include)), design_(design), verifications_(verifications), cutOf_(std::move(cutOf)) {}
+RequirementsFilter::RequirementsFilter(const model::Metamodel& metamodel, std::vector<std::string> include, bool design, bool verifications,
+                                       std::string cutOf)
+    : metamodel_(metamodel), include_(std::move(include)), design_(design), verifications_(verifications), cutOf_(std::move(cutOf)) {}
 
 std::set<std::string> RequirementsFilter::select(const model::Model& model) const {
   // the roots: artefacts named, or every artefact of a package / module
@@ -252,7 +258,7 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
   }
   // on a cut, what answers to a requirement is the box that stands for it (DS-231)
   const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);
-  const std::unique_ptr<axis::Cut> cut(diagram ? new axis::Cut(model, *diagram) : nullptr);
+  const std::unique_ptr<axis::Cut> cut(diagram ? new axis::Cut(model, metamodel_, *diagram) : nullptr);
   // the umbrella: what refines a root (down, transitively), what verifies it, what realises it
   std::set<std::string> selected = roots;
   bool grew = true;
@@ -281,21 +287,21 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
 
 // ---- the filter of each kind of diagram ------------------------------------------------------
 
-std::unique_ptr<IFilter> filterFor(const model::Entity& diagram) {
+std::unique_ptr<IFilter> filterFor(const model::Metamodel& metamodel, const model::Entity& diagram) {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
   const std::string kind = diagram.field("kind");
   const std::vector<std::string> include = splitTrimmed(diagram.field("include"), ',');
   if (kind == "sequence" || kind == "tour")
-    return std::unique_ptr<IFilter>(new SequenceFilter(include, number(diagram.field("depth"), 1000), diagram.id));
+    return std::unique_ptr<IFilter>(new SequenceFilter(metamodel, include, number(diagram.field("depth"), 1000), diagram.id));
   if (kind == "state" || kind == "table") return std::unique_ptr<IFilter>(new StateFilter(include));  // both are of a machine
   if (kind == "requirement") {
     const std::vector<std::string> shown = splitTrimmed(diagram.field("show"), ',');
     const std::set<std::string> show(shown.begin(), shown.end());
-    return std::unique_ptr<IFilter>(
-        new RequirementsFilter(include, show.empty() || show.count("design"), show.empty() || show.count("verifications"), diagram.id));
+    return std::unique_ptr<IFilter>(new RequirementsFilter(metamodel, include, show.empty() || show.count("design"),
+                                                           show.empty() || show.count("verifications"), diagram.id));
   }
   return std::unique_ptr<IFilter>(
-      new ClassFilter(include, splitTrimmed(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0), diagram.id));
+      new ClassFilter(metamodel, include, splitTrimmed(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0), diagram.id));
 }
 
 }  // namespace query

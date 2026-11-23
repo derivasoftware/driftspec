@@ -61,7 +61,7 @@ class TestCut : public ::testing::Test {
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
-  ds::axis::Cut cut(const std::string& diagram) const { return ds::axis::Cut(model, *model.find("diagram:" + diagram)); }
+  ds::axis::Cut cut(const std::string& diagram) const { return ds::axis::Cut(model, metamodel, *model.find("diagram:" + diagram)); }
 
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};

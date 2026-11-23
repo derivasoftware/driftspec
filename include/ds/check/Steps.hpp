@@ -47,6 +47,7 @@ class Linker : public IStep {
   void defineLoneExtensions();
   Context* context_ = nullptr;
   model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
   const Resolver* resolver_ = nullptr;
 };
 
@@ -118,6 +119,7 @@ class ContractCheck : public ACheck {
   void checkDiagrams();
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
   std::vector<model::Finding> found_;
   const Resolver* resolver_ = nullptr;
 };
@@ -224,6 +226,7 @@ class StructureCheck : public ACheck {
   void checkFields();
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
   std::vector<model::Finding> found_;
   const Resolver* resolver_ = nullptr;
 };
@@ -254,6 +257,7 @@ class RuleCheck : public IStep {
   void checkRules();  // a rule answers to a requirement and says what holds; a definition what it ranges over (DS-94)
   Context* context_ = nullptr;
   model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
   const Resolver* resolver_ = nullptr;
 };
 

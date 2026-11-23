@@ -48,6 +48,7 @@ package driftspec@ds {
       @interface workspace                   // the class the in-process interface is linked against
       @requirement REQ-00107-2
       @constraint CST-00009-1
+      - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
       - owns model_: model::Model
       + Workspace(metamodel: model::Metamodel, files: Files)   // loaded in the language it is given (DS-341)
       + model() -> model::Model

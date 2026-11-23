@@ -23,10 +23,10 @@ class ILayer {
 };
 
 /// Structure: the relations between boxes, lifted to what the map draws, what each diagram shows, and
-/// the titles of what the nodes answer to (REQ-00072-2).
+/// the titles of what the nodes answer to (REQ-00072-2). What a diagram shows is read in `metamodel` (DS-351).
 class StructureLayer : public ILayer {
  public:
-  StructureLayer(const model::Model& model, const Map& map);
+  StructureLayer(const model::Model& model, const model::Metamodel& metamodel, const Map& map);
   void decorate(SceneDocument& out_document) override;
 
  private:
@@ -34,6 +34,7 @@ class StructureLayer : public ILayer {
   void diagrams(SceneDocument& out_document) const;
   void titles(SceneDocument& out_document) const;
   const model::Model& model_;
+  const model::Metamodel& metamodel_;
   const Map& map_;
 };
 
@@ -69,20 +70,23 @@ class TraceLayer : public ILayer {
   const Map& map_;
 };
 
-/// Rules: each rule and definition where it is written, and what breaks it, placed on the map (REQ-00099-1).
+/// Rules: each rule and definition where it is written, and what breaks it, placed on the map (REQ-00099-1); the
+/// kind of each is named by `metamodel` (DS-351).
 class RulesLayer : public ILayer {
  public:
-  RulesLayer(const model::Model& model, const Map& map);
+  RulesLayer(const model::Model& model, const model::Metamodel& metamodel, const Map& map);
   void decorate(SceneDocument& out_document) override;
 
  private:
   std::string place(std::string id) const;
   const model::Model& model_;
+  const model::Metamodel& metamodel_;
   const Map& map_;
 };
 
-/// The one place that names the layers, in the order they decorate.
-std::vector<std::unique_ptr<ILayer>> layers(const model::Model& model, const Map& map);
+/// The one place that names the layers, in the order they decorate; those that read the language are handed
+/// `metamodel` (DS-351).
+std::vector<std::unique_ptr<ILayer>> layers(const model::Model& model, const model::Metamodel& metamodel, const Map& map);
 
 }  // namespace scene
 }  // namespace ds

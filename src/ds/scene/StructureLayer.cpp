@@ -10,7 +10,8 @@
 namespace ds {
 namespace scene {
 
-StructureLayer::StructureLayer(const model::Model& model, const Map& map) : model_(model), map_(map) {}
+StructureLayer::StructureLayer(const model::Model& model, const model::Metamodel& metamodel, const Map& map)
+    : model_(model), metamodel_(metamodel), map_(map) {}
 
 // the relations between boxes, lifted to what the map draws; where each box is drawn; the titles of what
 // the nodes answer to
@@ -45,9 +46,9 @@ void StructureLayer::links(SceneDocument& out_document) const {
 
 void StructureLayer::diagrams(SceneDocument& out_document) const {
   // where each box is drawn: every diagram of the workspace, taken by the filter of its kind (DS-127)
-  const query::Query query(model_);
+  const query::Query query(model_, metamodel_);
   for (const auto& pair : model_.entities()) {
-    const auto filter = query::filterFor(pair.second);
+    const auto filter = query::filterFor(metamodel_, pair.second);
     if (!filter) continue;
     DiagramView view;
     view.name = model::Identity(pair.first).diagramName();

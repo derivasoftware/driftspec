@@ -631,7 +631,8 @@ package driftspec@ds {
       @requirement REQ-00076-1
       @requirement REQ-00093-1
       - refs model_: model::Model
-      + Layout(model: model::Model)
+      - refs metamodel_: model::Metamodel     // the language of the model: the kind of each box by name (DS-351)
+      + Layout(model: model::Model, metamodel: model::Metamodel)
       + place() -> SceneDocument
     }
 
@@ -657,8 +658,8 @@ package driftspec@ds {
       + abstract decorate(out_document: SceneDocument) -> void
     }
 
-    // the one place that names the layers, in the order they decorate
-    function layers(model: model::Model, map: Map) -> std::vector<std::unique_ptr<ILayer>> {
+    // the one place that names the layers, in the order they decorate; those that read the language are handed the metamodel
+    function layers(model: model::Model, metamodel: model::Metamodel, map: Map) -> std::vector<std::unique_ptr<ILayer>> {
       @requirement REQ-00069-2
     }
 
@@ -677,8 +678,9 @@ package driftspec@ds {
     class StructureLayer : ILayer {
       @requirement REQ-00072-2
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // what each diagram shows is read in it (DS-351)
       - refs map_: Map
-      + StructureLayer(model: model::Model, map: Map)
+      + StructureLayer(model: model::Model, metamodel: model::Metamodel, map: Map)
       + decorate(out_document: SceneDocument) -> void
       - links(out_document: SceneDocument) -> void
       - diagrams(out_document: SceneDocument) -> void
@@ -717,8 +719,9 @@ package driftspec@ds {
     class RulesLayer : ILayer {
       @requirement REQ-00099-1
       - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the kind of each rule by name (DS-351)
       - refs map_: Map
-      + RulesLayer(model: model::Model, map: Map)
+      + RulesLayer(model: model::Model, metamodel: model::Metamodel, map: Map)
       + decorate(out_document: SceneDocument) -> void
       - place(id: std::string) -> std::string
     }
@@ -730,7 +733,7 @@ package driftspec@ds {
       - owns base_: SceneDocument
       - owns map_: Map
       - owns many layers_: std::vector<std::unique_ptr<ILayer>>
-      + Scene(model: model::Model)
+      + Scene(model: model::Model, metamodel: model::Metamodel)   // the language it hands what places and what decorates (DS-351)
       + build() -> SceneDocument
     }
 

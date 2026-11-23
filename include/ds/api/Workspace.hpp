@@ -22,7 +22,8 @@ using Files = std::map<std::string, std::string>;
 /// holding what a later load moves. Several may be loaded at once; each keeps its own model.
 class Workspace {
  public:
-  /// The files loaded in the language of `metamodel`, which outlives it (DS-341).
+  /// The files loaded in the language of `metamodel`, which outlives it (DS-341) and which it hands each reader of
+  /// the model it asks (DS-351).
   Workspace(const model::Metamodel& metamodel, const Files& files);
   /// The model it keeps, for a caller in this process.
   const model::Model& model() const { return model_; }
@@ -60,6 +61,7 @@ class Workspace {
   std::string page(const std::string& title, const std::vector<std::string>& focus) const;
 
  private:
+  const model::Metamodel& metamodel_;
   model::Model model_;
 };
 

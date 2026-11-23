@@ -204,7 +204,8 @@ package driftspec@ds {
       @requirement REQ-00006-1
       @requirement REQ-00121-1
       - refs model_: model::Model
-      + IrExport(model: model::Model)
+      - refs metamodel_: model::Metamodel     // the language of the model: the kinds it draws by name (DS-351)
+      + IrExport(model: model::Model, metamodel: model::Metamodel)
       + diagrams() -> std::vector<std::string>
       + render(diagramId: std::string, pretty: bool) -> std::string {
         @requirement REQ-00057-1
@@ -293,7 +294,7 @@ package driftspec@ds {
 
     sequence IrExport::renderBoxes {
       local filter: query::ClassFilter
-      -> query::filterFor(diagram) -> made
+      -> query::filterFor(metamodel_, diagram) -> made
       -> filter.boxes(model_) -> selected
       -> filter.containers(model_, selected) -> containers
       loop each selected id {

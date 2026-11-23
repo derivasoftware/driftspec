@@ -34,7 +34,7 @@ class TestSceneOfTheTaxonomy : public ::testing::Test {
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-    doc = ds::scene::Scene(model).build();
+    doc = ds::scene::Scene(model, metamodel).build();
     for (size_t i = 0; i < doc.nodes.size(); ++i) {
       byId[doc.nodes[i].id] = &doc.nodes[i];
       order[doc.nodes[i].id] = i;
@@ -107,7 +107,7 @@ TEST_F(TestSceneOfTheTaxonomy, AHeaderThatNamesABaseInAnotherModuleIsWideEnoughF
 }
 
 TEST_F(TestSceneOfTheTaxonomy, TheViewerLightsRelationsUpAndDocksItsPanels) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "hola"});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"});
   // only inheritance is a family of lines; the rest of the relations light up in their colour
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
   const std::string code = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));  // the viewer travels packed

@@ -40,7 +40,7 @@ class TestScenarios : public ::testing::Test {
   }
 
   std::vector<std::string> labels(const std::string& diagram) {
-    const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + diagram, false));
+    const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
     std::vector<std::string> out;
     for (const auto& edge : ir["edges"]) out.push_back(edge["label"].get<std::string>());
     return out;

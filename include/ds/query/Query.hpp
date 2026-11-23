@@ -32,7 +32,8 @@ class IQuery {
 /// the model without knowing which filter it is.
 class Query : public IQuery {
  public:
-  explicit Query(const model::Model& model) : model_(model) {}
+  /// Questions about `model`, written in `metamodel`, which names the kinds of the answers (DS-351).
+  Query(const model::Model& model, const model::Metamodel& metamodel) : model_(model), metamodel_(metamodel) {}
 
   /// The identities the filter takes from the model.
   std::set<std::string> select(const IFilter& filter) const override;
@@ -59,6 +60,7 @@ class Query : public IQuery {
   bool known(const std::string& id) const;                         // an entity, or a scope something is declared in
   std::vector<std::string> nearTo(const std::string& name) const;  // identities ending in the name, for a hint
   const model::Model& model_;
+  const model::Metamodel& metamodel_;
 };
 
 }  // namespace query

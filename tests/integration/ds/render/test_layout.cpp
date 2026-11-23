@@ -36,7 +36,7 @@ class TestLayout : public ::testing::Test {
   }
 
   IrDocument document(const std::string& diagram) {
-    return IrDocument::parse(ds::render::IrExport(model).render("diagram:" + diagram, false)).bundled();
+    return IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false)).bundled();
   }
 
   static bool overlap(const Rect& a, const Rect& b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
@@ -140,7 +140,7 @@ TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
                              "diagram CL_Chain {\n  kind: class\n  include: p@*\n}\n"));
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-    const IrDocument doc = IrDocument::parse(ds::render::IrExport(model).render("diagram:CL_Chain", false)).bundled();
+    const IrDocument doc = IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_Chain", false)).bundled();
     const LayoutResult lay = ds::render::Layout().place(doc);
     int bottomOfB = -1, topOfC = -1;
     for (const auto& p : lay.placed) {
@@ -157,7 +157,7 @@ TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
 }
 
 TEST_F(TestLayout, ParallelRelationsAreBundledWithTheirLabelsStacked) {
-  const IrDocument raw = IrDocument::parse(ds::render::IrExport(model).render("diagram:CL_Templates", false));
+  const IrDocument raw = IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_Templates", false));
   const IrDocument doc = raw.bundled();
   EXPECT_LT(doc.edges.size(), raw.edges.size());
   bool stacked = false;
@@ -196,7 +196,7 @@ class TestSequenceSvg : public ::testing::Test {
   }
 
   std::string svg(const std::string& diagram) {
-    return ds::render::Svg().render(IrDocument::parse(ds::render::IrExport(model).render("diagram:" + diagram, false)));
+    return ds::render::Svg().render(IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false)));
   }
 };
 

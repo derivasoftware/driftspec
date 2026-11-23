@@ -38,7 +38,7 @@ class TestFilters : public ::testing::Test {
   Ids of(const std::string& diagram) {
     const ds::model::Entity* d = model.find("diagram:" + diagram);
     if (!d) return {"no diagram " + diagram};
-    return ds::query::Query(model).select(*ds::query::filterFor(*d));
+    return ds::query::Query(model, metamodel).select(*ds::query::filterFor(metamodel, *d));
   }
 
   static const char* shop() {
@@ -114,9 +114,9 @@ TEST_F(TestFilterFor, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   ASSERT_NE(sell, nullptr);
   ASSERT_NE(none, nullptr);
   ASSERT_NE(till, nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::filterFor(*sell).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::filterFor(*none).get()), nullptr);
-  EXPECT_EQ(ds::query::filterFor(*till), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::filterFor(metamodel, *sell).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::filterFor(metamodel, *none).get()), nullptr);
+  EXPECT_EQ(ds::query::filterFor(metamodel, *till), nullptr);
 }
 
 /// A filter of our own: built with its criteria and passed in; the query knows nothing of it.
@@ -134,14 +134,14 @@ class PublicMethods : public ds::query::IFilter {
 
 TEST_F(TestFilters, TheQueryAppliesAFilterItIsGivenWithoutKnowingIt) {
   load(shop());
-  const ds::query::Query query(model);
+  const ds::query::Query query(model, metamodel);
   const ds::query::IQuery& entry = query;  // what the rest of ds sees
   EXPECT_EQ(entry.select(PublicMethods()), (Ids{"shop@store::Stock::take", "shop@till::Till::sell"}));
 }
 
 TEST_F(TestFilters, WhatADiagramShowsIsAnswerdByIdentityOnly) {
   load(std::string(shop()) + "diagram SEQ_Sell {\n  kind: sequence\n  include: shop@till::Till::sell\n}\n");
-  for (const auto& a : ds::query::Query(model).ask("shows", "SEQ_Sell")) {
+  for (const auto& a : ds::query::Query(model, metamodel).ask("shows", "SEQ_Sell")) {
     EXPECT_NE(model.find(a.id), nullptr) << a.id;  // every answer names an identity (REQ-00003-1)
   }
 }

@@ -38,7 +38,7 @@ class TestQuery : public ::testing::Test {
 };
 
 TEST_F(TestQuery, TheDiagramsAWorkspaceDeclaresWithTheirKind) {
-  const auto answers = ds::query::Query(model).ask("diagrams", "");
+  const auto answers = ds::query::Query(model, metamodel).ask("diagrams", "");
   EXPECT_TRUE(names(answers, "REQ_Tracker", "diagram"));
   EXPECT_TRUE(names(answers, "CL_Projection", "diagram"));
   for (const auto& a : answers)
@@ -48,18 +48,18 @@ TEST_F(TestQuery, TheDiagramsAWorkspaceDeclaresWithTheirKind) {
 }
 
 TEST_F(TestQuery, TheEntitiesOfAScope) {
-  const auto top = ds::query::Query(model).ask("entities", "");
+  const auto top = ds::query::Query(model, metamodel).ask("entities", "");
   EXPECT_TRUE(names(top, "iris", "package"));
-  const auto package = ds::query::Query(model).ask("entities", "iris");  // the package named plainly
+  const auto package = ds::query::Query(model, metamodel).ask("entities", "iris");  // the package named plainly
   EXPECT_TRUE(names(package, "iris@projection", "module"));
   EXPECT_TRUE(names(package, "SREQ-00001-2", "requirement"));
-  const auto module = ds::query::Query(model).ask("entities", "iris@projection");
+  const auto module = ds::query::Query(model, metamodel).ask("entities", "iris@projection");
   EXPECT_TRUE(names(module, "iris@projection::Projection", "class"));
   EXPECT_FALSE(names(module, "iris", "package"));
 }
 
 TEST_F(TestQuery, TheRelationsOfAnEntityInBothDirections) {
-  const auto answers = ds::query::Query(model).ask("relations", "SREQ-00001-2");
+  const auto answers = ds::query::Query(model, metamodel).ask("relations", "SREQ-00001-2");
   bool refinedBy = false, verifiedBy = false;
   for (const auto& a : answers) {
     refinedBy |= a.kind == "refines" && a.detail == "<-";
@@ -70,7 +70,7 @@ TEST_F(TestQuery, TheRelationsOfAnEntityInBothDirections) {
 }
 
 TEST_F(TestQuery, WhatAClassRealisesAndWhatProvesIt) {
-  const auto answers = ds::query::Query(model).ask("artefacts", "iris@projection::Projection");
+  const auto answers = ds::query::Query(model, metamodel).ask("artefacts", "iris@projection::Projection");
   EXPECT_TRUE(names(answers, "REQ-00001-2", "satisfies"));
   bool proof = false;
   for (const auto& a : answers) proof |= a.kind == "verified-by" && a.detail == "REQ-00001-2";
@@ -78,22 +78,22 @@ TEST_F(TestQuery, WhatAClassRealisesAndWhatProvesIt) {
 }
 
 TEST_F(TestQuery, WhatADiagramShows) {
-  const auto answers = ds::query::Query(model).ask("shows", "REQ_Tracker");
+  const auto answers = ds::query::Query(model, metamodel).ask("shows", "REQ_Tracker");
   EXPECT_TRUE(names(answers, "SREQ-00001-2", "requirement"));
   EXPECT_TRUE(names(answers, "iris@projection::Projection", "class"));
-  EXPECT_EQ(ds::query::Query(model).ask("shows", "nope").front().kind, "error");
+  EXPECT_EQ(ds::query::Query(model, metamodel).ask("shows", "nope").front().kind, "error");
 }
 
 TEST_F(TestQuery, TheFindingsOfAFile) {
-  const auto all = ds::query::Query(model).ask("findings", "");
-  const auto file = ds::query::Query(model).ask("findings", "artefacts.ds");
+  const auto all = ds::query::Query(model, metamodel).ask("findings", "");
+  const auto file = ds::query::Query(model, metamodel).ask("findings", "artefacts.ds");
   EXPECT_FALSE(all.empty());
   EXPECT_EQ(all.size(), file.size());
-  EXPECT_TRUE(ds::query::Query(model).ask("findings", "other.ds").empty());
+  EXPECT_TRUE(ds::query::Query(model, metamodel).ask("findings", "other.ds").empty());
 }
 
 TEST_F(TestQuery, AnUnknownQuestionIsAnError) {
-  const auto answers = ds::query::Query(model).ask("weather", "");
+  const auto answers = ds::query::Query(model, metamodel).ask("weather", "");
   ASSERT_EQ(answers.size(), 1u);
   EXPECT_EQ(answers.front().kind, "error");
 }
@@ -119,7 +119,7 @@ class TestQueryOfTheDesign : public TestQuery {
 };
 
 TEST_F(TestQueryOfTheDesign, CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule) {
-  const auto answers = ds::query::Query(model).ask("coupling", "");
+  const auto answers = ds::query::Query(model, metamodel).ask("coupling", "");
   ASSERT_FALSE(answers.empty());
   for (const auto& a : answers) {
     EXPECT_TRUE(a.kind == "couples-transient" || a.kind == "couples-structural") << a.kind;
@@ -164,13 +164,13 @@ ds::model::Model aMachine(const ds::model::Metamodel& metamodel) {
 TEST(TestQueryOfAClass, TheBehavioursOfAClassAreItsMachineAndTheSequencesOfItsOperations) {
   const ds::model::Metamodel metamodel;
   const ds::model::Model model = aMachine(metamodel);
-  const auto answers = ds::query::Query(model).ask("behaviours", "app@shop::Door");
+  const auto answers = ds::query::Query(model, metamodel).ask("behaviours", "app@shop::Door");
   std::set<std::string> ids;
   for (const auto& a : answers) ids.insert(a.id);
   EXPECT_TRUE(ids.count("app@shop::Door::state"));
   EXPECT_TRUE(ids.count("app@shop::Door::open::sequence"));
   EXPECT_EQ(answers.size(), 2U);
-  const auto ofMethod = ds::query::Query(model).ask("behaviours", "app@shop::Door::open");
+  const auto ofMethod = ds::query::Query(model, metamodel).ask("behaviours", "app@shop::Door::open");
   ASSERT_EQ(ofMethod.size(), 1U);  // a method answers its own, as before
   EXPECT_EQ(ofMethod[0].id, "app@shop::Door::open::sequence");
 }

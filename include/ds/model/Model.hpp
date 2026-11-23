@@ -166,8 +166,6 @@ struct Formula {
 class Model {
  public:
   explicit Model(const Metamodel& metamodel) : metamodel_(&metamodel) {}
-  /// The language the model is written in: what its readers ask of the kinds, the relations and the codes.
-  const Metamodel& metamodel() const { return *metamodel_; }
   /// An entity enters the model, or meets the one it keeps under that identity (R6, DS-222): what the model
   /// keeps comes back to be read. Only annotate and refine change it afterwards (DS-346).
   const Entity& declare(const Entity& entity);
@@ -224,7 +222,9 @@ class Model {
   void indexEntity(const Entity& entity, bool enters);
   /// Everything indexed, built again from the entities and the relations (after a rename).
   void indexAgain();
-  const Metamodel* metamodel_;  ///< never null: a model is always written in one
+  /// Never null: a model is always written in one. Its own, for what it declares, relates, renames and covers; a
+  /// reader of the model is handed the metamodel by whoever holds it (DS-351).
+  const Metamodel* metamodel_;
   std::map<std::string, Entity> entities_;
   std::vector<Relation> relations_;
   std::vector<Finding> findings_;

@@ -44,7 +44,7 @@ class TestFormatsOfADesign : public ::testing::Test {
 class TestSceneFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestSceneFormatsOfADesign, EachFormatFoundByItsNameWritesTheSceneOfTheDesign) {
-  const ds::scene::SceneDocument scene = ds::scene::Scene(model).build();
+  const ds::scene::SceneDocument scene = ds::scene::Scene(model, metamodel).build();
   const auto formats = ds::format::sceneFormats();
   ASSERT_EQ(formats.size(), 2u);
   const std::string written = formats.at("json")->write(scene, {});
@@ -58,7 +58,7 @@ TEST_F(TestSceneFormatsOfADesign, ThePageOfTheDesignIsAFrameCarryingItWholeWhenA
   options.title = "hola";
   options.embed = true;
   options.height = 300;
-  const std::string frame = ds::format::sceneFormats().at("html")->write(ds::scene::Scene(model).build(), options);
+  const std::string frame = ds::format::sceneFormats().at("html")->write(ds::scene::Scene(model, metamodel).build(), options);
   EXPECT_EQ(frame.rfind("<iframe", 0), 0u);
   EXPECT_NE(frame.find("height:300px"), std::string::npos);
   EXPECT_NE(frame.find("srcdoc=\""), std::string::npos);
@@ -97,7 +97,7 @@ TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDes
 class TestTextFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestTextFormatsOfADesign, TheAnswersOfAQueryAreWrittenAsTextOrJsonByName) {
-  const auto answers = ds::query::Query(model).ask("entities", "hola@core");
+  const auto answers = ds::query::Query(model, metamodel).ask("entities", "hola@core");
   ASSERT_FALSE(answers.empty());
   const auto formats = ds::format::answerFormats();
   ASSERT_EQ(formats.size(), 2u);

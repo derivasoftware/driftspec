@@ -27,7 +27,7 @@ class TestOpenBoxes : public ::testing::Test {
   }
 
   nlohmann::json diagram(const std::string& name) {
-    return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + name, false));
+    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + name, false));
   }
 
   static const nlohmann::json* node(const nlohmann::json& ir, const std::string& id) {
@@ -94,7 +94,7 @@ TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(plain, metamodel, checkSteps).run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(plain).render("diagram:CL_Model", false));
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(plain, metamodel).render("diagram:CL_Model", false));
   EXPECT_EQ(ir["nodes"][0]["kind"], "container");
 }
 
@@ -106,7 +106,7 @@ TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawin
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/interfaces")) binder.bind(f);
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(shop, metamodel, checkSteps).run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(shop).render("diagram:HLD_Shop", false));
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(shop, metamodel).render("diagram:HLD_Shop", false));
   bool reached = false;
   for (const auto& e : ir["edges"]) reached = reached || (e["from"] == "shop@shell" && e["to"] == "shop@till");
   EXPECT_TRUE(reached);  // no type says it: only the sequence of shell::buy calls till::main
@@ -156,7 +156,7 @@ TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramD
                                "}\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:REQ_Store", false));
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:REQ_Store", false));
   bool requirement = false;
   for (const auto& n : ir["nodes"]) requirement = requirement || n["id"] == "REQ-00001-1";
   EXPECT_TRUE(requirement);
@@ -187,7 +187,7 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
                                "}\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:HLD_Shop", false));
+  const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:HLD_Shop", false));
   std::map<std::string, std::string> parentOf;
   for (const auto& n : ir["nodes"]) parentOf[n["id"]] = n.contains("parent") ? n["parent"].get<std::string>() : "";
   EXPECT_TRUE(parentOf.count("shop@sales"));                        // a box with nothing inside
@@ -237,9 +237,9 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
                                "}\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-  const auto edges = [&model](const std::string& d) {
+  const auto edges = [&model, &metamodel](const std::string& d) {
     std::set<std::string> out;
-    const auto ir = nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + d, false));
+    const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + d, false));
     for (const auto& e : ir["edges"]) out.insert(e["from"].get<std::string>() + " -> " + e["to"].get<std::string>());
     return out;
   };

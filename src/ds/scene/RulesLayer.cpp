@@ -7,7 +7,8 @@
 namespace ds {
 namespace scene {
 
-RulesLayer::RulesLayer(const model::Model& model, const Map& map) : model_(model), map_(map) {}
+RulesLayer::RulesLayer(const model::Model& model, const model::Metamodel& metamodel, const Map& map)
+    : model_(model), metamodel_(metamodel), map_(map) {}
 
 // The rules and the definitions, each placed in the node it is written in, with what breaks it placed on
 // the map: a call lands on the member whose behaviour writes it, an entity on the nearest node that
@@ -27,7 +28,7 @@ void RulesLayer::decorate(SceneDocument& out_document) {
     if (e.expected || (e.kind != model::Kind::Rule && e.kind != model::Kind::Definition)) continue;
     RuleView r;
     r.id = e.id;
-    r.kind = model_.metamodel().nameOf(e.kind);
+    r.kind = metamodel_.nameOf(e.kind);
     r.name = e.name;
     r.title = e.field("title");
     r.scope = place(e.scope.empty() || e.scope.back() != '@' ? e.scope : e.scope.substr(0, e.scope.size() - 1));

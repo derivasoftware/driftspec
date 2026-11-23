@@ -41,7 +41,7 @@ class TestBehaviour : public ::testing::Test {
   }
 
   nlohmann::json diagram(const std::string& name) {
-    return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + name, false));
+    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + name, false));
   }
 };
 

@@ -43,9 +43,9 @@ TEST_F(TestCoverage, AnAbsenceIsNoFindingAndTheQueryAnswersIt) {
   EXPECT_TRUE(report.findings.empty());
   EXPECT_EQ(report.coverage.size(), 2u);  // the operation with no sequence, the approved requirement nothing verifies
   for (const auto& c : report.coverage) EXPECT_EQ(c.severity, "coverage");
-  const auto all = ds::query::Query(model).ask("coverage", "");
+  const auto all = ds::query::Query(model, metamodel).ask("coverage", "");
   EXPECT_EQ(all.size(), 2u);
-  const auto one = ds::query::Query(model).ask("coverage", "shop@shell::buy");
+  const auto one = ds::query::Query(model, metamodel).ask("coverage", "shop@shell::buy");
   ASSERT_EQ(one.size(), 1u);
   EXPECT_EQ(one[0].kind, "W-OPERATION-NO-BEHAVIOUR");
 }

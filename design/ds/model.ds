@@ -810,7 +810,7 @@ package driftspec@ds {
     class Model {                            // the resolved workspace: entities by identity, relations and findings
       @requirement REQ-00001-1
       @requirement REQ-00002-1
-      - refs metamodel_: Metamodel             // the language it is written in, made outside it and outliving it (DS-341)
+      - refs metamodel_: Metamodel             // the language it is written in, made outside it and outliving it (DS-341); for its own work, never handed out (DS-351)
       - owns many entities_: std::map<std::string, Entity>
       - owns many relations_: std::vector<Relation>
       - owns many findings_: std::vector<Finding>
@@ -820,7 +820,6 @@ package driftspec@ds {
       - owns many tables_: std::map<std::string, Tabulated>
       - owns indexed_: Indexed
       + Model(metamodel: Metamodel)
-      + metamodel() -> Metamodel               // what a reader of the model asks of its language
       + index() -> Index
       - indexEntity(entity: Entity, enters: bool) -> void
       - indexAgain() -> void

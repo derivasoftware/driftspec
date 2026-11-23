@@ -32,7 +32,7 @@ class TestSceneOfTheDesign : public ::testing::Test {
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-    nodes = ds::scene::Scene(model).build().nodes;
+    nodes = ds::scene::Scene(model, metamodel).build().nodes;
     for (const auto& n : nodes) byId[n.id] = &n;
   }
 
@@ -92,7 +92,7 @@ TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
 }
 
 TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "design"});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"});
   const std::string scene = packedIn(page);
   for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
   EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
@@ -102,8 +102,8 @@ TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesI
 }
 
 TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "design"});
-  const std::string frame = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "design", "", {}, true, 500});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"});
+  const std::string frame = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design", "", {}, true, 500});
   EXPECT_EQ(frame.rfind("<iframe ", 0), 0u);
   EXPECT_NE(frame.find("height:500px"), std::string::npos);
   EXPECT_EQ(frame.find('<', 1), frame.rfind("</iframe>"));  // the page travels escaped: no tag of it opens inside the host
@@ -114,7 +114,7 @@ TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
 }
 
 TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "design"});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"});
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
   const std::string viewer = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
   EXPECT_NE(viewer.find("window.DS_VIEW="), std::string::npos);
@@ -130,7 +130,7 @@ TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
 }
 
 TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(),
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(),
                                                          {false, "design", ":root{--k-class:#e06c75}</style><script>bad()</script>"});
   const auto theme = page.find("--k-class:#e06c75");
   ASSERT_NE(theme, std::string::npos);
@@ -144,7 +144,7 @@ TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotClos
 }
 
 TEST_F(TestSceneOfTheDesign, EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws) {
-  const auto doc = ds::scene::Scene(model).build();
+  const auto doc = ds::scene::Scene(model, metamodel).build();
   const std::set<std::string> kinds{"inherits", "realises", "owns", "shares", "refs", "uses", "consumes", "calls"};
   bool checkerCallsModel = false;  // the step that types behaviour calls the model (DS-138)
   for (const auto& l : doc.links) {
@@ -163,7 +163,7 @@ TEST_F(TestSceneOfTheDesign, EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDr
 }
 
 TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle) {
-  const auto doc = ds::scene::Scene(model).build();
+  const auto doc = ds::scene::Scene(model, metamodel).build();
   bool checkNamespace = false;
   for (const auto& d : doc.diagrams) {
     for (const auto& n : d.nodes) EXPECT_EQ(byId.count(n), 1u) << d.name << " " << n;
@@ -176,7 +176,7 @@ TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirement
 }
 
 TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce) {
-  const auto doc = ds::scene::Scene(model).build();
+  const auto doc = ds::scene::Scene(model, metamodel).build();
   std::set<std::string> seen;
   size_t calls = 0;
   for (const auto& b : doc.behaviours) {
@@ -184,7 +184,7 @@ TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce)
     calls += b.calls.size();
   }
   EXPECT_GT(calls, 0u);  // how many more steps the tours replay: tests/integration/viewer/tours.test.ts (DS-130)
-  EXPECT_LT(ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "design"}).size(),
+  EXPECT_LT(ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"}).size(),
             250u * 1024u);  // the whole viewer of ds's design
 }
 

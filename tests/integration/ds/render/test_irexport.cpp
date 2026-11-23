@@ -28,7 +28,7 @@ class TestIrExport : public ::testing::Test {
   }
 
   nlohmann::json render(const std::string& diagram) {
-    return nlohmann::json::parse(ds::render::IrExport(model).render("diagram:" + diagram, false));
+    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
   }
 
   static const nlohmann::json* node(const nlohmann::json& doc, const std::string& id) {
@@ -46,7 +46,7 @@ class TestIrExport : public ::testing::Test {
 };
 
 TEST_F(TestIrExport, ListsTheDeclaredDiagrams) {
-  const auto ids = ds::render::IrExport(model).diagrams();
+  const auto ids = ds::render::IrExport(model, metamodel).diagrams();
   EXPECT_EQ(ids.size(), 5u);
   EXPECT_EQ(ids[0], "diagram:CL_Around_Model");  // alphabetical
 }
@@ -78,7 +78,7 @@ TEST_F(TestIrExport, DerivedStereotypesAndMembersArePrinted) {
 TEST_F(TestIrExport, TheDiagramReadsARelationAsTheViewerDoes) {
   // the same relation in the scene the viewer draws and in the diagram: one reading (DS-118)
   std::string viewer;
-  for (const auto& l : ds::scene::Scene(model).build().links)
+  for (const auto& l : ds::scene::Scene(model, metamodel).build().links)
     if (l.from == "ds@ds::ScopedCheck" && l.to == "ds@ds::Check") viewer = l.kind;
   EXPECT_EQ(viewer, "inherits");
   std::string diagram;

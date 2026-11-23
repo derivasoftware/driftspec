@@ -27,7 +27,7 @@ class TestText : public ::testing::Test {
   }
 
   std::string draw(const std::string& diagram, bool color = false) {
-    const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(model).render("diagram:" + diagram, false));
+    const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
     return ds::render::Text().render(doc, color);
   }
 };
@@ -88,7 +88,7 @@ TEST_F(TestText, FramesOpeningAtTheSameMessageStackTheirHeaders) {
                                "}\n"));
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(nested, metamodel, checkSteps).run(binder.notes());
-  const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(nested).render("diagram:SEQ_Nested", false));
+  const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(nested, metamodel).render("diagram:SEQ_Nested", false));
   const std::string out = ds::render::Text().render(doc, false);
   const auto outer = out.find("loop N"), inner = out.find("loop M");
   ASSERT_NE(outer, std::string::npos);

@@ -26,8 +26,10 @@ class IFilter {
 /// cut (`open:`, `close:`, `cut:`), what a closed box holds is not shown, the box stands for it.
 class ClassFilter : public IFilter {
  public:
-  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none.
-  ClassFilter(std::vector<std::string> include, std::vector<std::string> exclude, int neighbours, std::string cutOf = "");
+  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none. The cut is read in `metamodel`,
+  /// the language of the models it is handed (DS-351).
+  ClassFilter(const model::Metamodel& metamodel, std::vector<std::string> include, std::vector<std::string> exclude, int neighbours,
+              std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
   /// What the patterns and the neighbours take, without the boxes around it.
   std::set<std::string> boxes(const model::Model& model) const;
@@ -36,6 +38,7 @@ class ClassFilter : public IFilter {
 
  private:
   bool matches(const model::Model& model, const std::string& pattern, const model::Entity& entity) const;
+  const model::Metamodel& metamodel_;
   std::vector<std::string> include_;
   std::vector<std::string> exclude_;
   int neighbours_ = 0;
@@ -53,13 +56,15 @@ struct Behaviour {
 /// one is the box that stands for it.
 class SequenceFilter : public IFilter {
  public:
-  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none.
-  SequenceFilter(std::vector<std::string> include, int depth, std::string cutOf = "");
+  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none. The cut is read in `metamodel`,
+  /// the language of the models it is handed (DS-351).
+  SequenceFilter(const model::Metamodel& metamodel, std::vector<std::string> include, int depth, std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
   /// The behaviours taken, in the order the patterns name them.
   std::vector<Behaviour> behaviours(const model::Model& model) const;
 
  private:
+  const model::Metamodel& metamodel_;
   std::vector<std::string> include_;
   int depth_ = 0;
   std::string cutOf_;
@@ -82,11 +87,14 @@ class StateFilter : public IFilter {
 /// stands for it.
 class RequirementsFilter : public IFilter {
  public:
-  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none.
-  RequirementsFilter(std::vector<std::string> include, bool design, bool verifications, std::string cutOf = "");
+  /// `cutOf` is the identity of the diagram whose cut it applies; empty for none. The cut is read in `metamodel`,
+  /// the language of the models it is handed (DS-351).
+  RequirementsFilter(const model::Metamodel& metamodel, std::vector<std::string> include, bool design, bool verifications,
+                     std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
 
  private:
+  const model::Metamodel& metamodel_;
   std::vector<std::string> include_;
   bool design_ = true;
   bool verifications_ = true;
@@ -102,9 +110,9 @@ bool inPattern(const model::Model& model, const std::string& pattern, const mode
 /// module it is written in; anything else is its scope.
 std::string drawnFrom(const model::Model& model, const model::Entity& entity);
 
-/// The one place that names the filter of each kind of diagram, built from the diagram's fields;
-/// null when the entity is no diagram.
-std::unique_ptr<IFilter> filterFor(const model::Entity& diagram);
+/// The one place that names the filter of each kind of diagram, built from the diagram's fields and read in
+/// `metamodel` (DS-351); null when the entity is no diagram.
+std::unique_ptr<IFilter> filterFor(const model::Metamodel& metamodel, const model::Entity& diagram);
 
 }  // namespace query
 }  // namespace ds

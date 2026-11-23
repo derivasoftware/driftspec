@@ -38,7 +38,8 @@ std::string bondOf(const std::string& relation);
 /// is seen only through what crosses out of it.
 class Cut {
  public:
-  Cut(const model::Model& model, const model::Entity& diagram);
+  /// The cut `diagram` writes over `model`; `metamodel` names the kinds a pattern may close (DS-351).
+  Cut(const model::Model& model, const model::Metamodel& metamodel, const model::Entity& diagram);
 
   /// Whether the diagram writes a cut at all: `open:` or `close:`, its own or the one it takes.
   bool written() const { return written_; }

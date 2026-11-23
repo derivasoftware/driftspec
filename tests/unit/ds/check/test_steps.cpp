@@ -82,7 +82,7 @@ TEST(TestFindings, TheContextHandsBackWhatAStepReportedInOrderAndOnce) {
   ds::model::Model model{metamodel};
   ds::bind::Binder binder(model, metamodel);
   const ds::check::Resolver resolver(model);
-  ds::check::Context context(model, resolver, binder.notes());
+  ds::check::Context context(model, metamodel, resolver, binder.notes());
   context.report({"W-A", "warning", "first", {}});
   context.report({"W-B", "warning", "second", {}});
   const auto taken = context.take();

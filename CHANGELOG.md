@@ -6,6 +6,15 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.33
+
+Every reader of the model is handed the metamodel by const reference instead of asking the model for it (DS-351). The
+checker puts it in the context every step of the check is given, and the evaluator of the rules takes it from there.
+The query, the filters that read a cut, the cut itself, the scene with its layout and the layers that name kinds, the
+drawing of a diagram and the workspace take it in their constructors from whoever holds it. `Model::metamodel()` is
+gone: the model keeps its metamodel for what it declares, relates, renames and covers. The findings, the export and
+every page of `ds manual` are the same. Nothing changes for a design.
+
 ## 0.1.32
 
 The model keeps its own lists (DS-346). Moving what is not yet written to the coverage, dropping what only echoes a file

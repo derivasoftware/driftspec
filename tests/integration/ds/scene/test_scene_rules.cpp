@@ -67,7 +67,7 @@ class TestSceneRules : public ::testing::Test {
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
-    doc = ds::scene::Scene(model).build();
+    doc = ds::scene::Scene(model, metamodel).build();
   }
 
   const ds::scene::RuleView& rule(const std::string& id) const {
@@ -106,11 +106,11 @@ TEST_F(TestSceneRules, WhatBreaksARuleIsPlacedOnTheMapWithTheAnswerThatBreaksIt)
 }
 
 TEST_F(TestSceneRules, TheDocumentCarriesTheRulesAndThePageItsThreePerspectives) {
-  const std::string json = ds::format::SceneJson().write(ds::scene::Scene(model).build(), {});
+  const std::string json = ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {});
   EXPECT_NE(json.find("\"rule\":[\"id\",\"kind\",\"name\",\"title\",\"scope\",\"lines\",\"requirements\",\"breaches\",\"file\",\"line\"]"),
             std::string::npos);
   EXPECT_NE(json.find("\"breach\":[\"node\",\"to\",\"bindings\",\"witness\",\"file\",\"line\"]"), std::string::npos);
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model).build(), {false, "rules"});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "rules"});
   for (const char* p : {"data-p=\"structure\"", "data-p=\"behaviour\"", "data-p=\"logic\""})
     EXPECT_NE(page.find(p), std::string::npos) << p;
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();

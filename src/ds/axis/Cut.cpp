@@ -49,7 +49,7 @@ bool reaches(const std::vector<std::string>& patterns, const std::string& operat
 
 }  // namespace
 
-Cut::Cut(const model::Model& model, const model::Entity& diagram)
+Cut::Cut(const model::Model& model, const model::Metamodel& metamodel, const model::Entity& diagram)
     : unfold_(text::splitTrimmed(diagram.field("unfold"), ',')),
       fold_(text::splitTrimmed(diagram.field("fold"), ',')),
       unfolds_(diagram.fields.count("unfold") > 0),
@@ -72,11 +72,11 @@ Cut::Cut(const model::Model& model, const model::Entity& diagram)
   for (const auto& pair : model.entities()) {
     const model::Entity& box = pair.second;
     // `close:` draws the line; with none written, `open:` alone closes every box
-    if (closes(box) && (closesSome ? namedBy(model.metamodel(), close, box) : true)) closed_.insert(box.id);
+    if (closes(box) && (closesSome ? namedBy(metamodel, close, box) : true)) closed_.insert(box.id);
   }
   // `open:` goes through it: the box it names stays open, and so does every box on the way to it
   for (const auto& pair : model.entities()) {
-    if (!closes(pair.second) || !namedBy(model.metamodel(), open, pair.second)) continue;
+    if (!closes(pair.second) || !namedBy(metamodel, open, pair.second)) continue;
     for (const auto& step : pathTo(pair.first)) closed_.erase(step);
   }
 }

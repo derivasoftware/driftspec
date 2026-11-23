@@ -25,6 +25,7 @@ std::vector<std::string> StructureCheck::needs() const {
 std::vector<model::Finding> StructureCheck::check(const Context& context) {
   context_ = &context;
   model_ = &context.model();
+  metamodel_ = &context.metamodel();
   resolver_ = &context.resolver();
   found_.clear();
   checkOwnershipCycles();
@@ -240,10 +241,9 @@ void StructureCheck::checkExtensions() {
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.expected && e.has("extension") && !context_->reported().count(e.id) && said.insert(e.id).second) {
-      found_.push_back(
-          {"W-REF-UNDECLARED", "warning",
-           model_->metamodel().nameOf(e.kind) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace",
-           e.location});
+      found_.push_back({"W-REF-UNDECLARED", "warning",
+                        metamodel_->nameOf(e.kind) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace",
+                        e.location});
     }
   }
 }
@@ -253,19 +253,19 @@ void StructureCheck::checkFields() {
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     for (const auto& f : e.fields) {
-      if (const model::FieldSpec* spec = model_->metamodel().fieldOf(e.kind, f.first)) {
+      if (const model::FieldSpec* spec = metamodel_->fieldOf(e.kind, f.first)) {
         // a closed field takes one of its values; an empty one is left to the field's own check (DS-211)
         if (!spec->values.empty() && !f.second.empty() &&
             std::find(spec->values.begin(), spec->values.end(), f.second) == spec->values.end())
           found_.push_back({"W-FIELD-VALUE", "warning",
-                            model_->metamodel().nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + f.second +
-                                ", which is none of " + join(spec->values, ", "),
+                            metamodel_->nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + f.second + ", which is none of " +
+                                join(spec->values, ", "),
                             e.location});
         continue;
       }
       found_.push_back({"W-FIELD-UNKNOWN", "warning",
-                        model_->metamodel().nameOf(e.kind) + " '" + e.id + "' has a field '" + f.first + "' that a " +
-                            model_->metamodel().nameOf(e.kind) + " does not declare",
+                        metamodel_->nameOf(e.kind) + " '" + e.id + "' has a field '" + f.first + "' that a " + metamodel_->nameOf(e.kind) +
+                            " does not declare",
                         e.location});
     }
   }

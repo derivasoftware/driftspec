@@ -29,16 +29,16 @@ class TestTour : public ::testing::Test {
     load(written, "levels");
   }
 
-  static void load(ds::model::Model& model, const std::string& corpus) {
+  void load(ds::model::Model& model, const std::string& corpus) const {
     ds::parse::Parser parser;
-    ds::bind::Binder binder(model, model.metamodel());
+    ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus)) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, model.metamodel(), checkSteps).run(binder.notes());
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
-  static std::string ir(const ds::model::Model& model, const std::string& name) {
-    return ds::render::IrExport(model).render("diagram:" + name, false);
+  std::string ir(const ds::model::Model& model, const std::string& name) const {
+    return ds::render::IrExport(model, metamodel).render("diagram:" + name, false);
   }
 
   /// The boxes of the part that draws who takes part.
@@ -110,7 +110,7 @@ TEST_F(TestTour, ABoxNamedInAScenarioTakesPartAsOneBoxWithNoCutWritten) {
 }
 
 TEST_F(TestTour, TheQueryShowsWhoTakesPart) {
-  const auto filter = ds::query::filterFor(*detail.find("diagram:TOUR_Packages"));
+  const auto filter = ds::query::filterFor(metamodel, *detail.find("diagram:TOUR_Packages"));
   EXPECT_EQ(filter->select(detail), (std::set<std::string>{"shop@bank", "shop@sales", "shop@shell", "shop@warehouse"}));
 }
 
