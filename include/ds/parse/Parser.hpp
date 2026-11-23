@@ -32,6 +32,8 @@ class Parser {
   Parser(const Parser&) = delete;
   Parser& operator=(const Parser&) = delete;
 
+  /// The DriftSpec grammar: its symbols name the kinds of node (DS-355).
+  static const TSLanguage* language();
   ParsedFile parseText(const std::string& path, const std::string& text);
   /// What the grammar takes at a place of a text (0-based line and column), read from the parse state
   /// after the last token before it: its keywords, "@annotation" and "key: value" (DS-84).

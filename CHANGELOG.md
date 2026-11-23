@@ -6,6 +6,15 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.33
+
+Each construct of the language gets its own binder (DS-353, step two of four, DS-355). A binder says which kinds of
+node it takes and binds one of them; a table built once, one slot per symbol of the grammar, finds a node's binder
+without comparing a name. The requirements, verifications and constraints are the first with a binder of their own;
+the other constructs keep the walk the binder had until DS-356 splits it. Every write goes through the context, which
+now also reads the fields and the annotations every construct shares. Binding takes a little less work than in
+0.1.30, and nothing a design writes, no finding, export or drawing changes.
+
 ## 0.1.32
 
 The model keeps its own lists (DS-346). Moving what is not yet written to the coverage, dropping what only echoes a file
