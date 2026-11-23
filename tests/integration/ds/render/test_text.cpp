@@ -23,7 +23,7 @@ class TestText : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   std::string draw(const std::string& diagram, bool color = false) {
@@ -87,7 +87,7 @@ TEST_F(TestText, FramesOpeningAtTheSameMessageStackTheirHeaders) {
                                "  include: app@m::A::run::sequence/nested\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(nested, metamodel, checkSteps).run(binder);
+  ds::check::Checker(nested, metamodel, checkSteps).run(binder.notes());
   const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(nested).render("diagram:SEQ_Nested", false));
   const std::string out = ds::render::Text().render(doc, false);
   const auto outer = out.find("loop N"), inner = out.find("loop M");

@@ -41,7 +41,7 @@ class TestWalker : public ::testing::Test {
                          "diagram OnACut {\n  kind: sequence\n  include: shop@till::Till::sell\n  close: module\n}\n"
                          "diagram Folded {\n  kind: sequence\n  include: shop@till::Till::sell\n  fold: shop@till::Stock::take\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};

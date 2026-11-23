@@ -49,7 +49,7 @@ class TestSequenceTreeOfADesign : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, metamodel, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
   static std::vector<std::string> names(const std::vector<std::string>& ids) {

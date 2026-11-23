@@ -60,7 +60,7 @@ class TestModelOfADesign : public ::testing::Test {
 
   void check() {
     const auto steps = ds::check::steps();
-    ds::check::Checker(model, metamodel, steps).run(binder);
+    ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
   int findings(const std::string& code) const {

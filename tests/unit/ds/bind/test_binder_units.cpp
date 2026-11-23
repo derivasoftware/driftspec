@@ -37,10 +37,10 @@ TEST(TestBinder, AFileBecomesEntitiesAndTheReferencesItCannotResolveAlone) {
   ASSERT_NE(model.find("p@m::Till::sell"), nullptr);
   ASSERT_NE(model.find("p@m::Till::sell::sequence"), nullptr);
   bool base = false;
-  for (const auto& r : binder.references()) base |= r.from == "p@m::Till" && r.target == "Base" && r.relation == "inherits";
+  for (const auto& r : binder.notes().references) base |= r.from == "p@m::Till" && r.target == "Base" && r.relation == "inherits";
   EXPECT_TRUE(base);  // the binder names it; the linker resolves it
-  EXPECT_FALSE(binder.messages().empty());
-  EXPECT_FALSE(binder.events().empty());
+  EXPECT_FALSE(binder.notes().messages.empty());
+  EXPECT_FALSE(binder.notes().events.empty());
 }
 
 }  // namespace

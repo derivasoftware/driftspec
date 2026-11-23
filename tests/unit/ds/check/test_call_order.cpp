@@ -23,7 +23,7 @@ class TestCallOrder : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", "package p {\n  module m {\n" + body + "  }\n}\n"));
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code == "W-STATE-ORDER") out.push_back(std::to_string(f.location.line) + ": " + f.message);

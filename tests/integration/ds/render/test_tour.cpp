@@ -34,7 +34,7 @@ class TestTour : public ::testing::Test {
     ds::bind::Binder binder(model, model.metamodel());
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus)) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, model.metamodel(), checkSteps).run(binder);
+    ds::check::Checker(model, model.metamodel(), checkSteps).run(binder.notes());
   }
 
   static std::string ir(const ds::model::Model& model, const std::string& name) {

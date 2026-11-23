@@ -33,8 +33,8 @@ std::vector<std::string> Checker::order() const {
   return out;
 }
 
-void Checker::run(const bind::Binder& binder) {
-  Context context(model_, resolver_, binder);
+void Checker::run(const bind::Notes& notes) {
+  Context context(model_, resolver_, notes);
   for (const auto& key : order())
     for (const auto& f : steps_.at(key)->run(context)) model_.report(f);  // in the order the steps run
   // what is not yet written is no finding (Owner, 2026-11-15; DS-216): it is kept apart, as coverage

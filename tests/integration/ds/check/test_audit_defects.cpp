@@ -26,7 +26,7 @@ class TestAuditDefects : public ::testing::Test {
     parsed = !file.hasSyntaxErrors;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   std::vector<std::string> said(const std::string& code) const {
@@ -202,7 +202,7 @@ TEST_F(TestAuditDefects, AMemberNamedAfterABehaviourOfItsHolderIsToldSoAndTheBeh
   ds::bind::Binder binder(other, metamodel);
   binder.bind(parser.parseText("b.ds", "package p {\n  module m {\n    class Gauge {\n      + state() -> int\n    }\n  }\n}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(other, metamodel, checkSteps).run(binder);
+  ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
   EXPECT_TRUE(other.findings().empty());
 }
 

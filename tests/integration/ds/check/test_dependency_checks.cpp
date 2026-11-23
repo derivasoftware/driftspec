@@ -43,7 +43,7 @@ class TestDependencyChecks : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   std::vector<std::string> uses() const {  // the findings about dependencies, by code
@@ -123,7 +123,7 @@ TEST_F(TestDependencyChecks, AMethodTheInterfaceDoesNotOfferIsNoBypass) {
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   EXPECT_TRUE(uses().empty());
 }
 
@@ -154,7 +154,7 @@ TEST(TestRealisation, AMethodThatAnswersAnInterfaceOperationWithAnotherSignature
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> found;
   for (const auto& f : model.findings())
     if (f.code == "W-INTERFACE-SIGNATURE") found.push_back(f.message);

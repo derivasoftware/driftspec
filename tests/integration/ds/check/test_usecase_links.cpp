@@ -42,7 +42,7 @@ class TestUseCaseLinks : public ::testing::Test {
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   std::vector<std::string> codes(const std::string& code) const {
@@ -87,7 +87,7 @@ TEST(TestUseCaseLinksAlone, AUseCaseNobodyDeclaresIsSaidOnce) {
                                "  }\n"
                                "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   ASSERT_EQ(model.findings().size(), 1u);
   EXPECT_EQ(model.findings()[0].code, "W-USECASE-UNDECLARED");
 }

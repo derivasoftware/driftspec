@@ -28,7 +28,7 @@ class TestUses : public ::testing::Test {
       binder.bind(parsed);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
   bool consumes(const std::string& from, const std::string& to) const {

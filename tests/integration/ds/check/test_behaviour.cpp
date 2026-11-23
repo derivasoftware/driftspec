@@ -29,7 +29,7 @@ class TestBehaviour : public ::testing::Test {
       binder.bind(f);
     }
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     for (const auto& f : model.findings()) ++byCode[f.code];
   }
 
@@ -188,7 +188,7 @@ std::vector<std::string> unreachable(const std::string& machine, const std::stri
                                    "  }\n"
                                    "}\n"));
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> out;
   for (const auto& f : model.findings())
     if (f.code == "W-STATE-UNREACHABLE") out.push_back(f.message);

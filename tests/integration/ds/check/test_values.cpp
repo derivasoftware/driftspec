@@ -23,7 +23,7 @@ class TestValues : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/values")) binder.bind(f);
     const auto checkSteps = ds::check::steps();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
   }
 
@@ -144,7 +144,7 @@ TEST(TestNameScopes, ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttribute
   ASSERT_FALSE(file.hasSyntaxErrors);
   binder.bind(file);
   const auto checkSteps = ds::check::steps();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder);
+  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   auto calls = [&model](const std::string& message, const std::string& op) {
     for (const auto& r : model.index().all())
       if (r.kind == "calls" && r.from == message && r.to == op) return true;

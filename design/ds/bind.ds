@@ -61,15 +61,9 @@ package driftspec@ds {
       @requirement REQ-00112-1
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel     // what an annotation means, and which ones it knows (DS-341)
-      - owns many references_: std::vector<Reference>
-      - owns many messages_: std::vector<Message>
-      - owns many events_: std::vector<Event>
       + Binder(model: model::Model, metamodel: model::Metamodel)
       + bind(file: parse::ParsedFile) -> void
-      + references() -> std::vector<Reference>
-      + messages() -> std::vector<Message>
-      + events() -> std::vector<Event>
-      - visit(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+      - visit(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00013-1
         @requirement REQ-00014-1
         @requirement REQ-00020-2
@@ -77,77 +71,79 @@ package driftspec@ds {
         @requirement REQ-00022-1
         @requirement REQ-00017-2
       }
-      - bindFields(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity) -> void {
+      - bindFields(ctx: BindContext, node: TSNode, out_entity: model::Entity) -> void {
         @requirement REQ-00032-2
       }
-      - bindAnnotations(file: parse::ParsedFile, node: TSNode, from: std::string, scope: std::string) -> void {
+      - bindAnnotations(ctx: BindContext, node: TSNode, from: std::string, scope: std::string) -> void {
         @requirement REQ-00044-1
         @requirement REQ-00114-1
       }
-      - bindFormula(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity) -> void {
+      - bindFormula(ctx: BindContext, node: TSNode, out_entity: model::Entity) -> void {
         @requirement REQ-00095-2
       }
-      - bindArtefact(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+      - bindArtefact(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00125-1
         @requirement REQ-00018-1
         @requirement REQ-00042-1
         @requirement REQ-00045-1
       }
-      - bindUseCase(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+      - bindUseCase(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00081-1
       }
-      - bindClass(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+      - bindClass(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00025-1
         @requirement REQ-00029-2
         @requirement REQ-00033-1
       }
-      - extend(file: parse::ParsedFile, node: TSNode, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
+      - extend(ctx: BindContext, node: TSNode, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
         @constraint CST-00003-2
       }
-      - bindMember(file: parse::ParsedFile, node: TSNode, out_cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
+      - bindMember(ctx: BindContext, node: TSNode, out_cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
         @requirement REQ-00170-1
         @requirement REQ-00026-2
         @requirement REQ-00101-1                 // ~Name() flagged destructor
       }
-      - bindFunction(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+      - bindFunction(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00054-2
       }
-      - bindSignature(file: parse::ParsedFile, node: TSNode, out_entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
+      - bindSignature(ctx: BindContext, node: TSNode, out_entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
         @requirement REQ-00028-2
         @requirement REQ-00055-2
         @requirement REQ-00112-1
       }
-      - bindMemberBody(file: parse::ParsedFile, member: TSNode, out_entity: model::Entity, scope: std::string) -> void {
+      - bindMemberBody(ctx: BindContext, member: TSNode, out_entity: model::Entity, scope: std::string) -> void {
         @requirement REQ-00032-2
       }
-      - bindSequence(file: parse::ParsedFile, node: TSNode, scope: std::string, owner: std::string) -> void {
+      - bindSequence(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00034-1
         @requirement REQ-00035-1
         @requirement REQ-00036-2
       }
-      - bindSteps(file: parse::ParsedFile, node: TSNode, out_sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
+      - bindSteps(ctx: BindContext, node: TSNode, out_sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
         @requirement REQ-00037-1
         @requirement REQ-00110-1
       }
-      - branch(file: parse::ParsedFile, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
+      - branch(ctx: BindContext, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
         @requirement REQ-00037-1
       }
-      - bindType(file: parse::ParsedFile, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> std::string {
+      - bindType(ctx: BindContext, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> std::string {
         @requirement REQ-00028-2
         @requirement REQ-00024-3
       }
-      - declareOperator(out_cls: model::Entity, symbol: std::string, location: model::Location) -> void {
+      - declareOperator(ctx: BindContext, out_cls: model::Entity, symbol: std::string, location: model::Location) -> void {
         @requirement REQ-00030-1
       }
-      - locationOf(file: parse::ParsedFile, node: TSNode) -> model::Location
+      - owns notes_: Notes
+      + notes() -> Notes
     }
 
-    // Takes the root of the tree and walks it with no scope and no owner. Where the root
-    // comes from cannot be said: the free C function ts_tree_root_node of tree_sitter,
-    // called on file.tree.get(), a chained call.
+    // Reads the file's tree and walks it from its root with no scope and no owner, writing through one context into
+    // the model and the notes (DS-354).
     sequence Binder::bind {
-      local root: TSNode
-      -> visit(file, root, "", "")
+      local reader: parse::TreeReader
+      local ctx: BindContext
+      self -> reader.root() -> root
+      -> visit(ctx, root)
     }
 
     // What an annotation means is the metamodel's (DS-341): the relation its word makes, and for a word it
@@ -173,9 +169,9 @@ package driftspec@ds {
         local e: model::Entity
         local relation: model::Relation
         local at: model::Scope
-        -> locationOf(file, c) -> loc
+        self -> ctx.locationOf(c) -> loc
         opt a package {
-          -> bindFields(file, c, e)
+          -> bindFields(ctx, c, e)
           self -> model_.declare(e) -> declared
           opt it has an owner {
             self -> model_.relate(relation)
@@ -190,37 +186,37 @@ package driftspec@ds {
           opt it has an owner {
             self -> model_.relate(relation)
           }
-          -> visit(file, c, declared.id, declared.id)
+          -> visit(ctx, c)
         }
         opt a requirement, a verification or a constraint {
-          -> bindArtefact(file, c, scope, owner)
+          -> bindArtefact(ctx, c)
         }
         opt a use case, with its outcomes {
-          -> bindUseCase(file, c, scope, owner)
+          -> bindUseCase(ctx, c)
         }
         opt an interface, with its operations {
           self -> at.qualify(e.name) -> id
-          -> bindFields(file, c, e)
+          -> bindFields(ctx, c, e)
           self -> model_.declare(e)
           opt it has an owner {
             self -> model_.relate(relation)
           }
-          -> bindAnnotations(file, c, e.id, scope)
+          -> bindAnnotations(ctx, c, e.id, scope)
           loop each operation {
             local op: TSNode
             local o: model::Entity
-            -> locationOf(file, op)
-            -> bindFields(file, op, o)
+            self -> ctx.locationOf(op)
+            -> bindFields(ctx, op, o)
             self -> model_.declare(o)
             self -> model_.relate(relation)
-            -> bindAnnotations(file, op, o.id, scope)
+            -> bindAnnotations(ctx, op, o.id, scope)
           }
         }
         opt a class {
-          -> bindClass(file, c, scope, owner)
+          -> bindClass(ctx, c)
         }
         opt a function {
-          -> bindFunction(file, c, scope, owner)
+          -> bindFunction(ctx, c)
         }
         opt an enum, with its values {
           self -> at.qualify(e.name) -> id
@@ -228,17 +224,17 @@ package driftspec@ds {
           opt it has an owner {
             self -> model_.relate(relation)
           }
-          -> bindAnnotations(file, c, e.id, scope)
+          -> bindAnnotations(ctx, c, e.id, scope)
         }
         opt a sequence {
-          -> bindSequence(file, c, scope, owner)
+          -> bindSequence(ctx, c)
         }
         opt a state machine: its events and actions are kept for the checker {
           local entityName: std::string
           self -> at.qualify(entityName) -> id
-          -> bindFields(file, c, e)
+          -> bindFields(ctx, c, e)
           self -> model_.declare(e)
-          -> bindAnnotations(file, c, e.id, scope)
+          -> bindAnnotations(ctx, c, e.id, scope)
           loop each view and transition {
             local t: TSNode
             local v: model::Entity
@@ -246,18 +242,35 @@ package driftspec@ds {
               self -> model_.find(e.id)
             }
             opt a view {
-              -> bindFields(file, t, v)
+              -> bindFields(ctx, t, v)
               self -> model_.declare(v)
               self -> model_.relate(relation)
-              -> bindAnnotations(file, t, v.id, scope)
+              -> bindAnnotations(ctx, t, v.id, scope)
             }
           }
         }
         opt a diagram {
-          -> bindFields(file, c, e)
+          -> bindFields(ctx, c, e)
           self -> model_.declare(e)
         }
       }
+    }
+
+    class BindContext {                      // what binding one node is given; the only place it writes (DS-354)
+      @requirement REQ-00053-2
+      + refs model: model::Model
+      + refs notes: Notes
+      + refs reader: parse::TreeReader
+      + scope: std::string
+      + owner: std::string
+      + within(inner: std::string, holder: std::string) -> BindContext
+      + locationOf(node: TSNode) -> model::Location
+    }
+    class Notes {                            // what binding leaves for the checker, the only thing it reads of bind (DS-354)
+      @requirement REQ-00053-2
+      + owns references: std::vector<Reference>
+      + owns messages: std::vector<Message>
+      + owns events: std::vector<Event>
     }
   }
 }
