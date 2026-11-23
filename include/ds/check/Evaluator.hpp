@@ -31,6 +31,9 @@ class Evaluator {
   void checkVacuity(const std::string& id, const model::Formula& formula);
   bool stratify();
   void computeDefinitions();
+  /// The definitions of one stratum, each after the ones of the stratum it applies; empty when one of them reaches
+  /// itself through the others (recursion), which is fixed by passes to its fixpoint instead (DS-338).
+  std::vector<std::string> dependencyOrder(const std::vector<std::string>& definitions) const;
   void evaluateRule(const std::string& id, const model::Formula& formula);
   /// A table (DS-268): a row per binding of its ranges that passes its where, a cell per column.
   void tabulate(const std::string& id, const model::Formula& formula);

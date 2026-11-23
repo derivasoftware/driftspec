@@ -1635,14 +1635,16 @@ package driftspec@ds {
         Owner, 2026-11-07 (DS-94): structural rules are always decidable in the design, in a formal
         or semi-formal syntax; nothing is inferred from prose or keywords. Rules about behaviour wait
         for contracts and recorded runs.
-      verification VER-00105-3 {
-        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, malformed or undecidable formulas are rejected, and the rules of a file that stops parsing are decided to the end
+      verification VER-00105-4 {
+        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, whichever argument of a definition is bound and in whatever order its stratum is fixed, malformed or undecidable formulas are rejected, and the rules of a file that stops parsing are decided to the end
         status: approved
         method: test
         tests:
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ARuleIsBrokenByEveryBindingThatBreaksIt
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationTestsWhatIsAlreadyBound
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionRecursUntilItsFixpoint
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionAnswersWhicheverOfItsArgumentsIsBound
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionThatAppliesAnotherIsFixedAfterIt
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.WhatARuleNamesMustExistAndItsVariablesBeBound
           tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationThroughRecursionIsRejected
           tests/integration/ds/check/test_half_typed.cpp::TestHalfTypedFile.TheRulesOfAFileThatStopsParsingAreDecidedAndTheCheckEnds

@@ -36,6 +36,7 @@ package driftspec@ds {
       }
       - stratify() -> bool
       - computeDefinitions() -> void
+      - dependencyOrder(definitions: std::vector<std::string>) -> std::vector<std::string>  // a stratum in the order of what it applies; empty when it recurses (DS-338)
       - evaluateRule(id: std::string, formula: model::Formula) -> void
       - tabulate(id: std::string, formula: model::Formula) -> void {
         @requirement REQ-00154-1
