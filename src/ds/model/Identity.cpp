@@ -1,6 +1,5 @@
 #include "ds/model/Identity.hpp"
 
-#include <regex>
 #include <utility>
 
 #include "Detail.hpp"
@@ -99,18 +98,41 @@ bool Scope::isSystem() const { return !text_.empty() && text_.back() == '@' && t
 
 // ---- ArtefactName -----------------------------------------------------------------------------
 
+int ArtefactName::numberParts(const std::string& text, std::size_t* lastDash) {
+  // one pass over the parts between dashes, no copy: letter parts first, then number parts (DS-335)
+  int letters = 0;
+  int numbers = 0;
+  std::size_t start = 0;
+  for (std::size_t i = 0; i <= text.size(); ++i) {
+    if (i < text.size() && text[i] != '-') continue;
+    if (i == start) return -1;  // an empty part: a dash that leads, trails or doubles
+    bool upper = true;
+    bool digit = true;
+    for (std::size_t k = start; k < i; ++k) {
+      upper = upper && text[k] >= 'A' && text[k] <= 'Z';
+      digit = digit && text[k] >= '0' && text[k] <= '9';
+    }
+    if (upper && numbers == 0) {
+      ++letters;
+    } else if (digit && letters > 0) {
+      ++numbers;
+    } else {
+      return -1;
+    }
+    if (i < text.size() && lastDash) *lastDash = i;
+    start = i + 1;
+  }
+  return numbers;
+}
+
 bool ArtefactName::writtenWithRevision(const std::string& text, std::string* stem) {
-  static const std::regex form("^([A-Z]+(?:-[A-Z]+)*-[0-9]+)-([0-9]+)$");
-  std::smatch m;
-  if (!std::regex_match(text, m, form)) return false;
-  if (stem) *stem = m[1].str();
+  std::size_t lastDash = 0;
+  if (numberParts(text, &lastDash) != 2) return false;
+  if (stem) *stem = text.substr(0, lastDash);
   return true;
 }
 
-bool ArtefactName::writtenBare(const std::string& text) {
-  static const std::regex form("^[A-Z]+(?:-[A-Z]+)*-[0-9]+$");
-  return std::regex_match(text, form);
-}
+bool ArtefactName::writtenBare(const std::string& text) { return numberParts(text, nullptr) == 1; }
 
 ArtefactName::ArtefactName(std::string text) : text_(std::move(text)) {}
 

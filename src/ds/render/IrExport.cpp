@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <limits>
 #include <nlohmann/json.hpp>
-#include <regex>
 #include <sstream>
 
 #include "ds/machine/Machine.hpp"
@@ -65,7 +64,9 @@ std::string classifierOf(const model::Entity& e) {
 /// it), none when it is not written or is no number (a finding).
 int levelsOf(const model::Entity& diagram) {
   const std::string written = diagram.field("depth");
-  return written == "*" ? 1000 : std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
+  if (written == "*") return 1000;
+  const bool digits = !written.empty() && std::all_of(written.begin(), written.end(), [](unsigned char c) { return c >= '0' && c <= '9'; });
+  return digits ? std::stoi(written) : 0;
 }
 
 std::string edgeKind(const std::string& relation) {
