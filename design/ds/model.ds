@@ -447,9 +447,9 @@ package driftspec@ds {
         there to show.
       rationale:
         Owner, 2026-11-17 (DS-272): one source for the manual in both places. The prose is
-        Markdown; what the engine uses to work stays in the engine, the kinds and the codes in
-        the metamodel and the commands in the manual, and their pages are generated. Four
-        articles by perspective and one on using the tool, in the style of PlantUML's site.
+        Markdown; what the engine uses to work (the kinds, the codes, the commands) stays in the
+        metamodel and its pages are generated. Four articles by perspective and one on using the
+        tool, in the style of PlantUML's site.
       tags: manual, guides
     }
 
