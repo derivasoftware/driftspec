@@ -76,6 +76,12 @@ std::string Index::revisionOf(const std::string& artefact) const {
   return found == model_.indexed_.revisions.end() || found->second.empty() ? "" : *found->second.rbegin();
 }
 
+std::vector<std::string> Index::named(const std::string& package, const std::string& name) const {
+  const auto found = model_.indexed_.named.find({package, name});
+  if (found == model_.indexed_.named.end()) return {};
+  return std::vector<std::string>(found->second.begin(), found->second.end());
+}
+
 // What holds what is a tree: a link that would close a cycle (a model a syntax error left half
 // bound can say a holds b and b holds a) is left out, so every walk up or down it ends. The
 // contains relations say it first, in the order stated; then the scope of what none of them holds.

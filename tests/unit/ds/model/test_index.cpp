@@ -105,6 +105,21 @@ TEST_F(TestIndex, AnExpectedNodeThatIsDeclaredMovesToTheScopeOfItsDeclaration) {
   EXPECT_EQ(model.index().members("p@m").back(), "p@m::C");
 }
 
+TEST_F(TestIndex, TheDeclaredClassesOfANameAreKeptByPackageThroughARename) {
+  // DS-336: what the resolver asks of a bare name, kept in step with declare and rename
+  Model m;
+  Entity plan = entity(Kind::Class, "p@a::Plan", "p@a");
+  plan.name = "Plan";
+  m.declare(plan);
+  Entity other = entity(Kind::Class, "q@a::Plan", "q@a");
+  other.name = "Plan";
+  m.declare(other);
+  EXPECT_EQ(m.index().named("p@", "Plan"), (std::vector<std::string>{"p@a::Plan"}));
+  EXPECT_TRUE(m.index().named("p@", "Nobody").empty());
+  ASSERT_TRUE(m.rename("p@a::Plan", "p@a::Plan2"));
+  EXPECT_EQ(m.index().named("p@", "Plan"), (std::vector<std::string>{"p@a::Plan2"}));  // the entity keeps its name
+}
+
 TEST_F(TestIndex, WhatHoldsWhatIsATreeFromContainsAndThenFromTheScope) {
   EXPECT_EQ(model.index().parent("p@m"), "p");       // the contains relation
   EXPECT_EQ(model.index().parent("p@m::A"), "p@m");  // its scope, declared

@@ -586,6 +586,7 @@ package driftspec@ds {
       + kind: std::map<std::string, std::vector<std::size_t>>
       + members: std::map<std::string, std::set<std::string>>
       + revisions: std::map<std::string, std::set<std::string>>
+      + named: std::map<std::pair<std::string, std::string>, std::set<std::string>>  // the declared classes and enums by package and simple name (DS-336)
       + parent: std::map<std::string, std::string>
       + children: std::map<std::string, std::vector<std::string>>
       + treeStale: bool
@@ -634,6 +635,7 @@ package driftspec@ds {
       + parent(id: std::string) -> std::string
       + children(id: std::string) -> std::vector<std::string>
       + revisionOf(artefact: std::string) -> std::string
+      + named(package: std::string, name: std::string) -> std::vector<std::string>
       - at(table: std::map<std::string, std::vector<std::size_t>>, key: std::string) -> std::vector<Relation>
       - tree() -> void
     }
@@ -753,12 +755,17 @@ package driftspec@ds {
 
     sequence Model::indexEntity {
       local name: ArtefactName
+      local scope: Scope
       self -> name.withoutRevision() -> bare
       alt it enters {
         opt it is declared, not only expected {
           // its identity is one of the declared revisions of bare
         }
       } else / leaves {
+      }
+      opt it is a class or an enum / named {
+        // a declared one is one of the classes of its simple name in its package (DS-336)
+        self -> scope.package() -> box
       }
     }
 
