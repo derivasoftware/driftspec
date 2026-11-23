@@ -1,8 +1,10 @@
 #include "ds/model/Model.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <limits>
 #include <stdexcept>
+#include <system_error>
 #include <utility>
 
 #include "ds/model/Metamodel.hpp"
@@ -21,6 +23,15 @@ const std::string& Entity::field(const std::string& key) const {
   static const std::string kNone;  // no copy for a field read, written or not (DS-345)
   const auto found = fields.find(key);
   return found == fields.end() ? kNone : found->second;
+}
+
+bool Entity::number(const std::string& key, int& out_number) const {
+  const std::string& written = field(key);
+  if (written.empty() || written.find_first_not_of("0123456789") != std::string::npos) return false;
+  int read = 0;  // from_chars says when the digits overflow an int, where std::stoi threw (DS-337)
+  if (std::from_chars(written.data(), written.data() + written.size(), read).ec != std::errc()) return false;
+  out_number = read;
+  return true;
 }
 
 // A member written with a behaviour's name takes the identity of the behaviour when the behaviour exists (DS-222).

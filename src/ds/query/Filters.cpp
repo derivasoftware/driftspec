@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <sstream>
 
 #include "ds/axis/Cut.hpp"
@@ -32,10 +31,11 @@ bool drawnAsEdge(const std::string& relation) {
          relation == "bounded-by" || relation == "realises" || relation == "consumes" || relation == "sends";
 }
 
-int number(const std::string& written, int every) {
-  if (written == "*") return every;
-  const bool digits = !written.empty() && std::all_of(written.begin(), written.end(), [](unsigned char c) { return c >= '0' && c <= '9'; });
-  return digits ? std::stoi(written) : 0;
+/// A number field of a diagram: `every` when it is written `*`, 0 when it is not written or is no number an int holds.
+int number(const model::Entity& diagram, const std::string& key, int every) {
+  if (diagram.field(key) == "*") return every;
+  int read = 0;
+  return diagram.number(key, read) ? read : 0;
 }
 
 bool isArtefact(const model::Entity& e) {
@@ -292,7 +292,7 @@ std::unique_ptr<IFilter> filterFor(const model::Metamodel& metamodel, const mode
   const std::string kind = diagram.field("kind");
   const std::vector<std::string> include = splitTrimmed(diagram.field("include"), ',');
   if (kind == "sequence" || kind == "tour")
-    return std::unique_ptr<IFilter>(new SequenceFilter(metamodel, include, number(diagram.field("depth"), 1000), diagram.id));
+    return std::unique_ptr<IFilter>(new SequenceFilter(metamodel, include, number(diagram, "depth", 1000), diagram.id));
   if (kind == "state" || kind == "table") return std::unique_ptr<IFilter>(new StateFilter(include));  // both are of a machine
   if (kind == "requirement") {
     const std::vector<std::string> shown = splitTrimmed(diagram.field("show"), ',');
@@ -301,7 +301,7 @@ std::unique_ptr<IFilter> filterFor(const model::Metamodel& metamodel, const mode
                                                            show.empty() || show.count("verifications"), diagram.id));
   }
   return std::unique_ptr<IFilter>(
-      new ClassFilter(metamodel, include, splitTrimmed(diagram.field("exclude"), ','), number(diagram.field("neighbours"), 0), diagram.id));
+      new ClassFilter(metamodel, include, splitTrimmed(diagram.field("exclude"), ','), number(diagram, "neighbours", 0), diagram.id));
 }
 
 }  // namespace query

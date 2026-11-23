@@ -64,10 +64,9 @@ std::string classifierOf(const model::Entity& e) {
 /// How deep a diagram follows the calls: `depth: n`, `*` for every level (the guard against recursion is what ends
 /// it), none when it is not written or is no number (a finding).
 int levelsOf(const model::Entity& diagram) {
-  const std::string written = diagram.field("depth");
-  if (written == "*") return 1000;
-  const bool digits = !written.empty() && std::all_of(written.begin(), written.end(), [](unsigned char c) { return c >= '0' && c <= '9'; });
-  return digits ? std::stoi(written) : 0;
+  if (diagram.field("depth") == "*") return 1000;
+  int levels = 0;
+  return diagram.number("depth", levels) ? levels : 0;
 }
 
 std::string edgeKind(const std::string& relation) {
