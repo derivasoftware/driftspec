@@ -132,6 +132,8 @@ bool firstError(TSNode node, const std::string& text, ParsedFile& file) {
 
 Parser::Parser() : parser_(ts_parser_new()) { ts_parser_set_language(parser_, tree_sitter_driftspec()); }
 
+const TSLanguage* Parser::language() { return tree_sitter_driftspec(); }
+
 Parser::~Parser() { ts_parser_delete(parser_); }
 
 ParsedFile Parser::parseText(const std::string& path, const std::string& text) {

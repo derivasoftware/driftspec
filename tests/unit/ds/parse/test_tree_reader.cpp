@@ -44,7 +44,7 @@ TEST_F(TestTreeReader, AFieldThatRepeatsGivesEveryChild) {
 
 TEST_F(TestTreeReader, ANodeSaysWhereItIsWrittenFromOne) {
   const ds::parse::Span span = reader.spanOf(find(reader.root(), "class"));
-  EXPECT_EQ(span.file, "a.ds");
+  EXPECT_EQ(reader.file().path, "a.ds");
   EXPECT_EQ(span.line, 3);
   EXPECT_EQ(span.column, 5);
   EXPECT_EQ(span.endLine, 4);

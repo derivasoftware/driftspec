@@ -164,9 +164,8 @@ package driftspec@ds {
       return files
     }
 
-    dataclass Span {                         // where a node is written: lines and columns from 1, its end included
+    dataclass Span {                         // where a node is written in its file: lines and columns from 1, its end included
       @requirement REQ-00008-1
-      + file: std::string
       + line: int
       + column: int
       + endLine: int
@@ -181,7 +180,7 @@ package driftspec@ds {
       + static childrenNamed(node: TSNode, fieldName: char) -> std::vector<TSNode>
       + fieldText(node: TSNode, fieldName: char) -> std::string
       + textOf(node: TSNode) -> std::string
-      + spanOf(node: TSNode) -> Span
+      + static spanOf(node: TSNode) -> Span
       + root() -> TSNode
       + file() -> ParsedFile
     }

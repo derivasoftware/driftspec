@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.33
+## 0.1.34
 
 Every reader of the model is handed the metamodel by const reference instead of asking the model for it (DS-351). The
 checker puts it in the context every step of the check is given, and the evaluator of the rules takes it from there.
@@ -14,6 +14,15 @@ The query, the filters that read a cut, the cut itself, the scene with its layou
 drawing of a diagram and the workspace take it in their constructors from whoever holds it. `Model::metamodel()` is
 gone: the model keeps its metamodel for what it declares, relates, renames and covers. The findings, the export and
 every page of `ds manual` are the same. Nothing changes for a design.
+
+## 0.1.33
+
+Each construct of the language gets its own binder (DS-353, step two of four, DS-355). A binder says which kinds of
+node it takes and binds one of them; a table built once, one slot per symbol of the grammar, finds a node's binder
+without comparing a name. The requirements, verifications and constraints are the first with a binder of their own;
+the other constructs keep the walk the binder had until DS-356 splits it. Every write goes through the context, which
+now also reads the fields and the annotations every construct shares. Binding takes a little less work than in
+0.1.30, and nothing a design writes, no finding, export or drawing changes.
 
 ## 0.1.32
 
