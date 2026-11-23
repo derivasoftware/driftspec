@@ -93,6 +93,44 @@ TEST_F(TestSequenceTree, AnAltKnowsItsElseSideAndWhatEachSideNames) {
   EXPECT_TRUE(tree.inside(kSeq + "::f0", true).empty());
 }
 
+TEST(TestSequenceTreeSides, WhatLiesDeeperOnAnElseSideIsOnItAndAnInnerElseIsNotTheOuters) {
+  // DS-345: the sides are told by the walk once; nested frames keep the answers a walk up gave
+  // f0 alt { b0: m1, f1 alt { b0: m2 | b1: m3 } | b1: f2 loop { m4 } }
+  Model model;
+  Entity s;
+  s.kind = Kind::Sequence;
+  s.id = kSeq;
+  model.declare(s);
+  auto step = [&](Kind kind, const std::string& name, const std::string& holder, const std::string& frameKind = "") {
+    Entity e;
+    e.kind = kind;
+    e.id = kSeq + "::" + name;
+    e.scope = kSeq;
+    if (!frameKind.empty()) e.fields["kind"] = frameKind;
+    model.declare(e);
+    model.relate({"contains", holder, e.id, {}, ""});
+    return e.id;
+  };
+  const std::string f0 = step(Kind::Frame, "f0", kSeq, "alt");
+  const std::string first = step(Kind::Frame, "f0::b0", f0, "branch");
+  step(Kind::Message, "m1", first);
+  const std::string f1 = step(Kind::Frame, "f1", first, "alt");
+  step(Kind::Message, "m2", step(Kind::Frame, "f1::b0", f1, "branch"));
+  step(Kind::Message, "m3", step(Kind::Frame, "f1::b1", f1, "branch"));
+  const std::string otherwise = step(Kind::Frame, "f0::b1", f0, "branch");
+  const std::string f2 = step(Kind::Frame, "f2", otherwise, "loop");
+  step(Kind::Message, "m4", f2);
+  const SequenceTree tree(model, kSeq);
+  EXPECT_TRUE(tree.onElse(f0, kSeq + "::m4"));  // inside a loop on the else side
+  EXPECT_TRUE(tree.onElse(f0, f2));
+  EXPECT_FALSE(tree.onElse(f0, otherwise));  // the side itself is the alt's, not on it
+  EXPECT_TRUE(tree.onElse(f1, kSeq + "::m3"));
+  EXPECT_FALSE(tree.onElse(f0, kSeq + "::m3"));  // the inner alt's else lies on the outer's first side
+  EXPECT_EQ(tree.elseOf(f0), kSeq + "::m4");
+  EXPECT_EQ(tree.elseOf(f1), kSeq + "::m3");
+  EXPECT_EQ(tree.elseOf(kSeq + "::nothing"), "");
+}
+
 TEST_F(TestSequenceTree, AnAltWithAnEmptyElseHasOneSide) {
   Model one;
   Entity s;

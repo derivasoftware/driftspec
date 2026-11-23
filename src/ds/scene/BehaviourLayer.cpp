@@ -43,7 +43,9 @@ void BehaviourLayer::tours(SceneDocument& out_document) {
         if (f.kind != model::Kind::Frame || f.field("kind") == "branch") continue;
         // a loop or an opt names its scenario; an alt's sides name theirs, the first then the else
         const std::vector<std::string> sides =
-            f.field("kind") == "alt" ? std::vector<std::string>{f.id + "::b0", f.id + "::b1"} : std::vector<std::string>{f.id};
+            f.field("kind") == "alt"
+                ? std::vector<std::string>{model::Identity(f.id).branch(false).text(), model::Identity(f.id).branch(true).text()}
+                : std::vector<std::string>{f.id};
         for (const auto& side : sides) {
           const model::Entity* namer = model_.find(side);
           const std::string s = namer ? namer->field("scenario") : "";

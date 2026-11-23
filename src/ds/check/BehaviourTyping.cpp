@@ -194,7 +194,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   if (sender.empty() && box && subject->kind != model::Kind::UseCase) sender = subject->id;
   if (!sender.empty() && sender != typeId) {
     bool said = false;
-    for (const auto& r : model_->index().from(sender)) said = said || (r.kind == "sends" && r.to == typeId);
+    for (const auto& r : model_->index().fromOfKind(sender, "sends")) said = said || r.to == typeId;
     if (!said) model_->relate({"sends", sender, typeId, message.location, ""});
   }
   const std::string opId = typeId + "::" + message.op;

@@ -99,6 +99,11 @@ TEST(TestScope, OnlyTheOutermostPackageIsTheSystem) {
   EXPECT_FALSE(Scope("").isSystem());
 }
 
+TEST(TestIdentity, AnAltNamesItsTwoSides) {
+  EXPECT_EQ(Identity("p@m::A::run::sequence::f0").branch(false).text(), "p@m::A::run::sequence::f0::b0");
+  EXPECT_EQ(Identity("p@m::A::run::sequence::f0").branch(true).text(), "p@m::A::run::sequence::f0::b1");
+}
+
 TEST(TestArtefactName, AnArtefactIsNamedPrefixNumberAndRevision) {
   EXPECT_TRUE(ArtefactName::matches("REQ-00001"));
   EXPECT_TRUE(ArtefactName::matches("DS-C-0001-0"));
