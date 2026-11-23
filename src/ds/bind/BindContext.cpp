@@ -5,6 +5,7 @@
 namespace ds {
 namespace bind {
 
+using parse::Field;
 using parse::TreeReader;
 
 namespace {
@@ -22,9 +23,9 @@ void BindContext::fields(TSNode node, model::Entity& out_entity) const {
   for (uint32_t i = 0; i < count; ++i) {
     TSNode c = ts_node_named_child(node, i);
     if (TreeReader::is(c, "field")) {
-      const std::string code = reader.fieldText(c, "code");
-      const std::string key = reader.fieldText(c, "key") + (code.empty() ? "" : " " + code);
-      const std::string value = std::string(text::trimWhitespace(reader.fieldText(c, "value")));
+      const std::string code = reader.fieldText(c, Field::code);
+      const std::string key = reader.fieldText(c, Field::key) + (code.empty() ? "" : " " + code);
+      const std::string value = std::string(text::trimWhitespace(reader.fieldText(c, Field::value)));
       auto existing = out_entity.fields.find(key);
       if (existing == out_entity.fields.end() || existing->second.empty()) {
         out_entity.fields[key] = value;
@@ -42,7 +43,7 @@ void BindContext::annotations(TSNode node, const std::string& from, const std::s
   for (uint32_t i = 0; i < count; ++i) {
     TSNode c = ts_node_named_child(node, i);
     if (!TreeReader::is(c, "annotation")) continue;
-    const std::string kind = reader.fieldText(c, "kind");
+    const std::string kind = reader.fieldText(c, Field::kind);
     const model::AnnotationSpec& spec = metamodel.annotationOf(kind);
     if (spec.relation == "refers") {  // a word the language gives no meaning to: kept as a link, and said (DS-210)
       std::string known;
@@ -52,7 +53,7 @@ void BindContext::annotations(TSNode node, const std::string& from, const std::s
                     locationOf(c)});
     }
     const std::string relation = relationForAnnotation(entity ? entity->kind : model::Kind::Class, spec);
-    notes.references.push_back({from, reader.fieldText(c, "target"), scope, relation, spec.target, locationOf(c), "", {}});
+    notes.references.push_back({from, reader.fieldText(c, Field::target), scope, relation, spec.target, locationOf(c), "", {}});
   }
 }
 
