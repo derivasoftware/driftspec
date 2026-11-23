@@ -29,8 +29,6 @@ class TestCodes : public Metamodelled {};
 class TestCodeOf : public Metamodelled {};
 class TestAnnotations : public Metamodelled {};
 class TestAnnotationOf : public Metamodelled {};
-class TestCommands : public Metamodelled {};
-class TestCommandOf : public Metamodelled {};
 class TestNameOf : public Metamodelled {};
 class TestFieldTypeName : public Metamodelled {};
 class TestFieldSourceName : public Metamodelled {};
@@ -98,21 +96,6 @@ TEST_F(TestAnnotationOf, AWordTheLanguageKnowsMakesItsRelationAndAnyOtherOnlyRef
   EXPECT_EQ(metamodel.annotationOf("requirement").name, "@requirement");
   EXPECT_NE(metamodel.annotationOf("requirement").relation, "refers");
   EXPECT_EQ(metamodel.annotationOf("whatever").relation, "refers");
-}
-
-TEST_F(TestCommands, EveryCommandSaysHowItIsTypedAndWhatItDoes) {
-  std::set<std::string> seen;
-  for (const auto& c : ds::model::commands()) {
-    EXPECT_TRUE(seen.insert(c.name).second) << c.name;
-    EXPECT_EQ(c.synopsis.rfind("ds " + c.name, 0), 0u) << c.name;
-    EXPECT_FALSE(c.does.empty()) << c.name;
-  }
-  EXPECT_TRUE(seen.count("check"));
-}
-
-TEST_F(TestCommandOf, ACommandIsTheRowNamedAndNothingForAnother) {
-  for (const auto& c : ds::model::commands()) EXPECT_EQ(ds::model::commandOf(c.name), &c);
-  EXPECT_EQ(ds::model::commandOf("frobnicate"), nullptr);
 }
 
 TEST_F(TestNameOf, AKindIsNamedAsTheLanguageWritesIt) {

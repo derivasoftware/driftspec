@@ -433,8 +433,8 @@ package driftspec@ds {
         tests/integration/python/test_workspace.py::TestWorkspace::test_the_package_says_the_version_of_its_engine
     }
 
-    requirement REQ-00160-1 {
-      status: approved
+    requirement REQ-00160-2 {
+      status: draft
       @refines SREQ-00014-1
       title: The manual shall carry its guides, written as Markdown in the repository and embedded when ds is built, the same text in the terminal and in a page
       text:
@@ -447,15 +447,17 @@ package driftspec@ds {
         there to show.
       rationale:
         Owner, 2026-11-17 (DS-272): one source for the manual in both places. The prose is
-        Markdown; what the engine uses to work (the kinds, the codes, the commands) stays in the
-        metamodel and its pages are generated. Four articles by perspective and one on using the
-        tool, in the style of PlantUML's site.
+        Markdown; what the engine uses to work stays in the engine, the kinds and the codes in
+        the metamodel and the commands in the manual, and their pages are generated. Four
+        articles by perspective and one on using the tool, in the style of PlantUML's site.
+        Revision 2: the commands are the manual's, a class of its own that reads the metamodel
+        (Owner, 2026-11-23, DS-342).
       tags: manual, guides
     }
 
     verification VER-00176-1 {
       status: approved
-      @requirement REQ-00160-1
+      @requirement REQ-00160-2
       title: Integration tests confirm every guide starts with its title and is the page of its topic, that each of its examples checks clean or has the finding it is marked for, and that the engine for a page answers the manual
       method: test
       tests:
@@ -474,7 +476,7 @@ package driftspec@ds {
         tests/integration/ds/model/test_manual.cpp::TestManual.EveryTopicHasAPageAndAnUnknownOneHasNone
     }
 
-    dataclass CommandSpec {                  // a command: how it is invoked, what it does, what each exit code says
+    dataclass CommandSpec {                  // a command of the manual: how it is invoked, what it does, what each exit code says
       @requirement REQ-00079-1
       + name: std::string
       + synopsis: std::string
@@ -482,21 +484,74 @@ package driftspec@ds {
       + exits: std::vector<std::pair<int, std::string>>
     }
 
-    function commands() -> std::vector<CommandSpec> {
+    // The manual ds embeds (DS-342): a class made from the metamodel whoever shows the manual already holds
+    // (the command line's run, the page's engine), which outlives it. It writes every page from the metamodel
+    // and keeps the commands, which are its own and not the metamodel's; its tables are built once, when it
+    // is made, and the page builders are its private members. The metamodel never reads the manual.
+    class Manual {
       @requirement REQ-00079-1
+      - refs metamodel_: Metamodel                                    // the language it describes, made outside it and outliving it
+      - owns many commands_: std::vector<CommandSpec>
+      - owns many guides_: std::vector<std::pair<std::string, std::string>>
+      + Manual(metamodel: Metamodel)
+      + page(topic: std::string) -> std::string                       // the index for no topic; nothing for one it does not know
+      + topics() -> std::vector<std::string>
+      + guides() -> std::vector<std::pair<std::string, std::string>> {
+        @requirement REQ-00160-2
+      }
+      + commands() -> std::vector<CommandSpec>
+      + commandOf(name: std::string) -> CommandSpec
+      // how the tables are built, once, by the constructor, and how the pages are written
+      - static buildCommands() -> std::vector<CommandSpec>
+      - static buildGuides() -> std::vector<std::pair<std::string, std::string>> {  // generated when ds is built (ManualGuides.cpp)
+        @requirement REQ-00160-2
+      }
+      - static indent(text: std::string, by: std::string) -> std::string
+      - static pad(text: std::string, width: std::size_t) -> std::string
+      - names(kinds: std::vector<Kind>) -> std::string
+      - kindPage(k: KindSpec) -> std::string
+      - indexPage() -> std::string
+      - grammarPage() -> std::string
     }
-    function commandOf(name: std::string) -> CommandSpec {
-      @requirement REQ-00079-1
+
+    sequence Manual::Manual {
+      -> buildCommands() -> commands
+      -> buildGuides() -> guides
     }
-    // the manual's pages, written from the metamodel they are given (DS-342 makes the manual a class)
-    function manualPage(metamodel: Metamodel, topic: std::string) -> std::string {
-      @requirement REQ-00079-1
-    }
-    function manualTopics(metamodel: Metamodel) -> std::vector<std::string> {
-      @requirement REQ-00079-1
-    }
-    function manualGuides() -> std::vector<std::pair<std::string, std::string>> {
-      @requirement REQ-00160-1
+
+    // a page by its topic: the index, a guide, the grammar, a kind, a code, or one of the tables of the
+    // commands, the annotations and the codes; nothing for a topic it does not know
+    sequence Manual::page {
+      opt no topic {
+        -> indexPage() -> index
+        return index
+      }
+      loop each guide {
+        opt it is the topic {
+          return guide
+        }
+      }
+      opt the grammar {
+        -> grammarPage() -> grammar
+        return grammar
+      }
+      self -> metamodel_.specNamed(topic) -> kind
+      opt a kind {
+        -> kindPage(kind) -> page
+        return page
+      }
+      self -> metamodel_.codeOf(topic) -> code
+      opt a code {                                // its severity, what it means and what to do
+        return page
+      }
+      opt the commands {                          // each with how it is typed and its exit codes
+        return page
+      }
+      opt the annotations or the codes {          // a table, each column filled to its width
+        -> pad(name, width) -> column
+        return page
+      }
+      return nothing
     }
 
     enum Kind {
@@ -986,7 +1041,8 @@ package driftspec@ds {
 
     // ---- what the package's own functions and classes share (DS-332): internal, declared in
     // src/ds/model/Detail.hpp and in no header under include/. The metamodel's builders left it for the
-    // class (DS-341); the manual's pages leave it with DS-342
+    // class (DS-341), the manual's page builders for theirs (DS-342); what is left goes to Paths and
+    // Scope (DS-343)
     - module detail {
       // the scope outside an identity or a scope
       function outerOf(text: std::string) -> std::string {
@@ -1003,26 +1059,6 @@ package driftspec@ds {
         + refs tree: SequenceTree
         + names(f: Entity, elseSide: bool) -> std::set<std::string>
         + decide(f: Entity, scenario: std::string) -> Way
-      }
-
-      // how the manual is written
-      function indent(text: std::string, by: std::string) -> std::string {
-        @requirement REQ-00079-1
-      }
-      function pad(text: std::string, width: std::size_t) -> std::string {
-        @requirement REQ-00079-1
-      }
-      function names(metamodel: Metamodel, kinds: std::vector<Kind>) -> std::string {
-        @requirement REQ-00079-1
-      }
-      function kindPage(metamodel: Metamodel, k: KindSpec) -> std::string {
-        @requirement REQ-00079-1
-      }
-      function indexPage(metamodel: Metamodel) -> std::string {
-        @requirement REQ-00079-1
-      }
-      function grammarPage(metamodel: Metamodel) -> std::string {
-        @requirement REQ-00079-1
       }
     }
   }

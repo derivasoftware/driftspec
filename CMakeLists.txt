@@ -157,7 +157,9 @@ set_property(
   PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/viewer/scene.html)
 # the guides of the manual ship inside ds too (DS-272): each
 # doc/manual/NN-topic.md becomes a page ds manual <topic> prints and the site
-# draws; one source for both
+# draws; one source for both. They are the Manual's (DS-342): the file written
+# here is the private Manual::buildGuides, which a Manual calls once, when it is
+# made
 file(GLOB DS_MANUAL_GUIDES CONFIGURE_DEPENDS
      "${CMAKE_SOURCE_DIR}/doc/manual/*.md")
 list(SORT DS_MANUAL_GUIDES)
@@ -175,7 +177,7 @@ foreach(guide ${DS_MANUAL_GUIDES})
 endforeach()
 file(
   WRITE ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp.in
-  "#include <string>\n#include <utility>\n#include <vector>\n\nnamespace ds {\nnamespace model {\nconst std::vector<std::pair<std::string, std::string>>& manualGuides() {\n  struct Written {\n    const char* topic;\n    std::vector<const char*> pieces;\n  };\n  static const std::vector<Written> written = {\n${DS_MANUAL_PAGES}  };\n  static const std::vector<std::pair<std::string, std::string>> guides = [] {\n    std::vector<std::pair<std::string, std::string>> out;\n    for (const auto& w : written) {\n      std::string text;\n      for (const char* piece : w.pieces) text += piece;\n      out.emplace_back(w.topic, text);\n    }\n    return out;\n  }();\n  return guides;\n}\n}  // namespace model\n}  // namespace ds\n"
+  "#include <string>\n#include <utility>\n#include <vector>\n\n#include \"ds/model/Manual.hpp\"\n\nnamespace ds {\nnamespace model {\nstd::vector<std::pair<std::string, std::string>> Manual::buildGuides() {\n  struct Written {\n    const char* topic;\n    std::vector<const char*> pieces;\n  };\n  const std::vector<Written> written = {\n${DS_MANUAL_PAGES}  };\n  std::vector<std::pair<std::string, std::string>> out;\n  for (const auto& w : written) {\n    std::string text;\n    for (const char* piece : w.pieces) text += piece;\n    out.emplace_back(w.topic, text);\n  }\n  return out;\n}\n}  // namespace model\n}  // namespace ds\n"
 )
 configure_file(${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp.in
                ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp COPYONLY)

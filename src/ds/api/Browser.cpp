@@ -7,6 +7,7 @@
 
 #include "ds/api/Workspace.hpp"
 #include "ds/model/Identity.hpp"
+#include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/query/Query.hpp"
@@ -86,11 +87,12 @@ std::string respond(const model::Metamodel& metamodel, const std::string& reques
   const auto in = nlohmann::json::parse(request);
   if (in.contains("manual")) {  // a page of the manual, or with "" its guides and topics (DS-272)
     const std::string topic = in["manual"].get<std::string>();
-    nlohmann::json out{{"topic", topic}, {"text", model::manualPage(metamodel, topic)}};
+    const model::Manual manual(metamodel);  // made from the metamodel the browser's engine holds (DS-342)
+    nlohmann::json out{{"topic", topic}, {"text", manual.page(topic)}};
     if (topic.empty()) {
       out["guides"] = nlohmann::json::array();
-      for (const auto& guide : model::manualGuides()) out["guides"].push_back(guide.first);
-      out["topics"] = model::manualTopics(metamodel);
+      for (const auto& guide : manual.guides()) out["guides"].push_back(guide.first);
+      out["topics"] = manual.topics();
     }
     return nlohmann::json{{"manual", out}}.dump();
   }

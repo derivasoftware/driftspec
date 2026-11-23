@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.27
+
+The manual is a class, `ds::model::Manual` (DS-342), made from the metamodel whoever shows the manual already
+holds: the command line and the page's engine. It writes every page (the index, the guides, the grammar, a kind, a
+code, the commands, the annotations and the codes) and keeps the commands with their exit codes, which are the
+manual's and no longer the metamodel's. The guides embedded from `doc/manual` are the Manual's too. The findings,
+the export and every page of `ds manual` are the same. Nothing changes for a design.
+
 ## 0.1.26
 
 The metamodel is a class, `ds::model::Metamodel` (DS-341): its tables are built once, when one is made where the
