@@ -135,6 +135,7 @@ package driftspec@ds {
       operator ==(other: ArtefactName) -> bool
       - static writtenWithRevision(text: std::string, stem: std::string) -> bool   // PREFIX(-PART)*-NUMBER-REVISION
       - static writtenBare(text: std::string) -> bool                              // PREFIX(-PART)*-NUMBER
+      - static numberParts(text: std::string, lastDash: std::size_t) -> int         // the number parts after the letter parts, or -1 (DS-335)
     }
 
     // a list written in a field, taken apart and put back, in one place for every module (DS-185)

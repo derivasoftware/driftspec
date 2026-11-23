@@ -244,8 +244,9 @@ void ContractCheck::checkInterfaces() {
 void ContractCheck::checkRealisations() {
   // a type as the idea it commits to: no qualifiers and no spaces; the rest is the code's text (DS-18)
   const auto idea = [](const std::string& text) {
-    std::string t = std::regex_replace(text, std::regex(R"(\b[A-Za-z_][A-Za-z0-9_]*::)"), "");
-    return std::regex_replace(t, std::regex(R"(\s+)"), "");
+    static const std::regex qualifier(R"(\b[A-Za-z_][A-Za-z0-9_]*::)");  // built once, not on every call (DS-335)
+    static const std::regex spaces(R"(\s+)");
+    return std::regex_replace(std::regex_replace(text, qualifier, ""), spaces, "");
   };
   const auto signature = [&idea](const model::Entity& e) {
     std::string out = "(";

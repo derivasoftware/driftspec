@@ -113,6 +113,10 @@ class ArtefactName {
   static bool writtenWithRevision(const std::string& text, std::string* stem = nullptr);
   /// Whether `text` is written PREFIX(-PART)*-NUMBER, with no revision.
   static bool writtenBare(const std::string& text);
+  /// How many number parts follow the letter parts of `text` (REQ-00001-2: two), or -1 when `text` is not
+  /// written as uppercase letter parts then number parts between single dashes; `lastDash`, when given,
+  /// takes where the last dash is.
+  static int numberParts(const std::string& text, std::size_t* lastDash);
   std::string text_;
 };
 

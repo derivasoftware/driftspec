@@ -2,7 +2,6 @@
 #include <cctype>
 #include <functional>
 #include <map>
-#include <regex>
 #include <set>
 #include <sstream>
 #include <vector>

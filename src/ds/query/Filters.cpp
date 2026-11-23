@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <regex>
 #include <sstream>
 
 #include "ds/axis/Cut.hpp"
@@ -34,7 +33,8 @@ bool drawnAsEdge(const std::string& relation) {
 
 int number(const std::string& written, int every) {
   if (written == "*") return every;
-  return std::regex_match(written, std::regex("[0-9]+")) ? std::stoi(written) : 0;
+  const bool digits = !written.empty() && std::all_of(written.begin(), written.end(), [](unsigned char c) { return c >= '0' && c <= '9'; });
+  return digits ? std::stoi(written) : 0;
 }
 
 bool isArtefact(const model::Entity& e) {
