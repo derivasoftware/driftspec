@@ -1,5 +1,6 @@
 #include "ds/model/SequenceTree.hpp"
 
+#include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -16,12 +17,18 @@ void SequenceTree::walk(const std::string& holder, const std::string& frame) {
     const Entity* step = model_.find(id);
     if (!step) continue;
     frameOf_[id] = frame;
+    // where it lies on the else side of a frame is told here, once, instead of by a walk up for each question (DS-345)
+    for (const auto& f : sides_) onElse_.insert({f, id});
     if (step->kind == Kind::Message) {
       order_[id] = static_cast<int>(messages_.size());
       messages_.push_back(id);
       for (std::string f = frame; !f.empty() && first_[f].empty(); f = frameOf_[f]) first_[f] = id;
+      for (const auto& f : sides_) elseFirst_.emplace(f, id);
     } else if (step->kind == Kind::Frame && isBranch(*step)) {
+      const bool otherwise = id == Identity(frame).branch(true).text();
+      if (otherwise) sides_.push_back(frame);
       walk(id, frame);  // its steps are the alt's, on one side
+      if (otherwise) sides_.pop_back();
     } else if (step->kind == Kind::Frame) {
       frames_.push_back(id);
       at_[id] = static_cast<int>(messages_.size());
@@ -52,31 +59,22 @@ std::string SequenceTree::first(const std::string& frame) const {
 }
 
 std::string SequenceTree::elseOf(const std::string& frame) const {
-  const std::string otherwise = frame + "::b1";
-  for (const auto& m : messages_) {
-    for (std::string up = model_.index().parent(m); !up.empty() && up != frame; up = model_.index().parent(up))
-      if (up == otherwise) return m;
-  }
-  return "";
+  const auto found = elseFirst_.find(frame);
+  return found == elseFirst_.end() ? "" : found->second;
 }
 
 bool SequenceTree::twoSides(const std::string& frame) const {
-  const Entity* otherwise = model_.find(frame + "::b1");
+  const Entity* otherwise = model_.find(Identity(frame).branch(true).text());
   return otherwise && (!elseOf(frame).empty() || !otherwise->field("scenario").empty());
 }
 
-bool SequenceTree::onElse(const std::string& frame, const std::string& id) const {
-  const std::string otherwise = frame + "::b1";
-  for (std::string up = model_.index().parent(id); !up.empty() && up != frame; up = model_.index().parent(up))
-    if (up == otherwise) return true;
-  return false;
-}
+bool SequenceTree::onElse(const std::string& frame, const std::string& id) const { return onElse_.count({frame, id}) > 0; }
 
 std::string SequenceTree::scenario(const std::string& frame, bool elseSide) const {
   const Entity* f = model_.find(frame);
   if (!f) return "";
   if (f->field("kind") != "alt") return elseSide ? "" : f->field("scenario");
-  const Entity* side = model_.find(frame + (elseSide ? "::b1" : "::b0"));
+  const Entity* side = model_.find(Identity(frame).branch(elseSide).text());
   return side ? side->field("scenario") : "";
 }
 

@@ -56,6 +56,8 @@ class Identity {
   /// The subject of a state machine X::state. Only for an entity known to be one: a member named
   /// state has the same identity, so the identity alone cannot tell them apart.
   Identity machineSubject() const;
+  /// The side of an alt written first (alt::b0) or after its else (alt::b1), by the identity of the alt (DS-345).
+  Identity branch(bool elseSide) const;
 
   bool operator==(const Identity& other) const { return text_ == other.text_; }
 

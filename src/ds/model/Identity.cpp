@@ -70,6 +70,8 @@ Identity Identity::machineSubject() const {
   return Identity(at != std::string::npos && at + kState.size() == text_.size() ? text_.substr(0, at) : "");
 }
 
+Identity Identity::branch(bool elseSide) const { return Identity(text_ + (elseSide ? "::b1" : "::b0")); }
+
 // ---- Scope ------------------------------------------------------------------------------------
 
 Scope::Scope(std::string text) : text_(std::move(text)) {}

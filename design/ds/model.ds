@@ -104,6 +104,7 @@ package driftspec@ds {
       + scenario() -> std::string
       + subject() -> Identity
       + machineSubject() -> Identity
+      + branch(elseSide: bool) -> Identity      // alt::b0, or alt::b1 after its else (DS-345)
       operator ==(other: Identity) -> bool
       - kSequence: std::string      // what a sequence adds to its subject: ::sequence
       - kState: std::string         // what a state machine adds to its subject: ::state
@@ -164,6 +165,9 @@ package driftspec@ds {
       - frameOf_: std::map<std::string, std::string>
       - at_: std::map<std::string, int>
       - first_: std::map<std::string, std::string>
+      - onElse_: std::set<std::pair<std::string, std::string>>   // (frame, step) on the else side of a frame, told by the walk (DS-345)
+      - elseFirst_: std::map<std::string, std::string>
+      - sides_: std::vector<std::string>
       + SequenceTree(model: Model, sequence: std::string)
       + model() -> Model
       + messages() -> std::vector<std::string>
@@ -627,6 +631,8 @@ package driftspec@ds {
       + Index(model: Model)
       + from(id: std::string) -> std::vector<Relation>
       + to(id: std::string) -> std::vector<Relation>
+      + fromOfKind(id: std::string, kind: std::string) -> std::vector<Relation>   // only the relations of that kind are copied (DS-345)
+      + toOfKind(id: std::string, kind: std::string) -> std::vector<Relation>
       + touching(id: std::string) -> std::vector<Relation>
       + ofKind(kind: std::string) -> std::vector<Relation>
       + ofKinds(kinds: std::vector<std::string>) -> std::vector<Relation>
@@ -638,6 +644,7 @@ package driftspec@ds {
       + revisionOf(artefact: std::string) -> std::string
       + named(package: std::string, name: std::string) -> std::vector<std::string>
       - at(table: std::map<std::string, std::vector<std::size_t>>, key: std::string) -> std::vector<Relation>
+      - atOfKind(table: std::map<std::string, std::vector<std::size_t>>, key: std::string, kind: std::string) -> std::vector<Relation>
       - tree() -> void
     }
 

@@ -105,6 +105,19 @@ TEST_F(TestIndex, AnExpectedNodeThatIsDeclaredMovesToTheScopeOfItsDeclaration) {
   EXPECT_EQ(model.index().members("p@m").back(), "p@m::C");
 }
 
+TEST_F(TestIndex, OnlyTheRelationsOfOneKindAreAnsweredInTheOrderStated) {
+  // DS-345: a reader that wants one kind gets only those, copied, not every relation to filter
+  Model m;
+  m.relate({"inherits", "a", "b", {}, ""});
+  m.relate({"owns", "a", "c", {}, ""});
+  m.relate({"inherits", "a", "d", {}, ""});
+  m.relate({"inherits", "e", "b", {}, ""});
+  EXPECT_EQ(ends(m.index().fromOfKind("a", "inherits"), true), (std::vector<std::string>{"inherits b", "inherits d"}));
+  EXPECT_EQ(ends(m.index().toOfKind("b", "inherits"), false), (std::vector<std::string>{"inherits a", "inherits e"}));
+  EXPECT_TRUE(m.index().fromOfKind("a", "uses").empty());
+  EXPECT_TRUE(m.index().toOfKind("nobody", "inherits").empty());
+}
+
 TEST_F(TestIndex, TheDeclaredClassesOfANameAreKeptByPackageThroughARename) {
   // DS-336: what the resolver asks of a bare name, kept in step with declare and rename
   Model m;

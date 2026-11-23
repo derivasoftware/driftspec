@@ -317,8 +317,7 @@ class Calls {
 }  // namespace
 
 Machine::Machine(const model::Model& model, const model::Entity& machine) : model_(model), machine_(machine) {
-  for (const auto& r : model_.index().from(machine_.id))
-    if (r.kind == "behaviour-of") subject_ = r.to;
+  for (const auto& r : model_.index().fromOfKind(machine_.id, "behaviour-of")) subject_ = r.to;
   if (subject_.empty()) subject_ = model::Identity(machine_.id).machineSubject().text();
 }
 

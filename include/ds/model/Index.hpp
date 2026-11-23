@@ -43,6 +43,10 @@ class Index {
   std::vector<Relation> from(const std::string& id) const;
   /// The relations that reach `id`, in the order stated.
   std::vector<Relation> to(const std::string& id) const;
+  /// The relations of one kind that leave `id`, in the order stated: only those are copied (DS-345).
+  std::vector<Relation> fromOfKind(const std::string& id, const std::string& kind) const;
+  /// The relations of one kind that reach `id`, in the order stated: only those are copied (DS-345).
+  std::vector<Relation> toOfKind(const std::string& id, const std::string& kind) const;
   /// The relations that leave or reach `id`, each once, in the order stated.
   std::vector<Relation> touching(const std::string& id) const;
   /// Every relation of one kind, in the order stated.
@@ -69,6 +73,8 @@ class Index {
 
  private:
   std::vector<Relation> at(const std::map<std::string, std::vector<std::size_t>>& table, const std::string& key) const;
+  std::vector<Relation> atOfKind(const std::map<std::string, std::vector<std::size_t>>& table, const std::string& key,
+                                 const std::string& kind) const;
   void tree() const;
   const Model& model_;
 };

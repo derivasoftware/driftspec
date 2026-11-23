@@ -123,8 +123,7 @@ std::vector<Answer> Query::artefacts(const std::string& id) const {
 
 std::vector<Answer> Query::behaviours(const std::string& id) const {
   std::vector<Answer> out;
-  for (const auto& r : model_.index().to(id)) {
-    if (r.kind != "behaviour-of") continue;
+  for (const auto& r : model_.index().toOfKind(id, "behaviour-of")) {
     const model::Entity* b = model_.find(r.from);
     out.push_back(b ? entityAnswer(*b, b->fields.count("scenario") ? b->fields.at("scenario") : "") : Answer{"behaviour", r.from, ""});
   }

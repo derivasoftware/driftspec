@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.24
+
+The model answers with less copying (DS-345): the relations of one kind leaving or reaching an entity come
+without copying the others, an entity's field is read without a copy, and the sides of an alt in a sequence are
+told once when the sequence is walked instead of by a walk up for each question. The two sides of an alt are
+named in one place, `Identity::branch`. Nothing changes for a design.
+
 ## 0.1.23
 
 The metamodel's tables leave the manual's file (DS-340): the catalogue of finding codes moves to

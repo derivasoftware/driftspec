@@ -75,9 +75,10 @@ bool Entity::has(const std::string& flag) const {
   return false;
 }
 
-std::string Entity::field(const std::string& key) const {
+const std::string& Entity::field(const std::string& key) const {
+  static const std::string kNone;  // no copy for a field read, written or not (DS-345)
   const auto found = fields.find(key);
-  return found == fields.end() ? "" : found->second;
+  return found == fields.end() ? kNone : found->second;
 }
 
 // A member written with a behaviour's name takes the identity of the behaviour when the behaviour exists (DS-222).
