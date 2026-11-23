@@ -371,64 +371,64 @@ std::string Binder::bindType(const BindContext& ctx, TSNode type, const std::str
 
 // ---- classes (R14, R15, R17, R19) ----------------------------------------------
 
-void Binder::declareOperator(const BindContext& ctx, model::Entity& out_cls, const std::string& symbol, const model::Location& location) {
+void Binder::declareOperator(const BindContext& ctx, const model::Entity& cls, const std::string& symbol, const model::Location& location) {
   model::Entity op;
   op.kind = model::Kind::Operator;
   op.name = "operator" + symbol;
-  op.id = out_cls.id + "::" + op.name;
-  op.scope = out_cls.id;
+  op.id = cls.id + "::" + op.name;
+  op.scope = cls.id;
   op.location = location;
   op.fields["symbol"] = symbol;
   ctx.model.declare(op);
-  ctx.model.relate({"contains", out_cls.id, op.id, location, ""});
+  ctx.model.relate({"contains", cls.id, op.id, location, ""});
 }
 
 void Binder::bindMemberBody(const BindContext& ctx, TSNode member, model::Entity& out_entity, const std::string& scope) {
   bindFields(ctx, member, out_entity);
   TSNode body = TreeReader::child(member, "body");
   if (!ts_node_is_null(body)) bindFields(ctx, body, out_entity);
-  model::Entity* declared = ctx.model.find(out_entity.id);
+  const model::Entity* declared = ctx.model.find(out_entity.id);
   // only the declaration the model kept takes the fields: a duplicate is reported and leaves the first as it was
   const model::Location& at = declared ? declared->location : out_entity.location;
   if (declared && at.file == out_entity.location.file && at.line == out_entity.location.line && at.column == out_entity.location.column)
-    declared->fields = out_entity.fields;
+    for (const auto& f : out_entity.fields) ctx.model.annotate(out_entity.id, f.first, f.second);
   if (ts_node_is_null(body)) return;
   bindAnnotations(ctx, body, out_entity.id, scope);
   visit(ctx.within(scope, out_entity.id), body);  // nested requirements and constraints are about the member (R12)
 }
 
-void Binder::bindMember(const BindContext& ctx, TSNode m, model::Entity& out_cls, const std::vector<std::string>& params,
+void Binder::bindMember(const BindContext& ctx, TSNode m, const model::Entity& cls, const std::vector<std::string>& params,
                         const std::set<std::string>& operators) {
   const model::Location loc = ctx.locationOf(m);
-  const std::string scope = out_cls.scope;
+  const std::string scope = cls.scope;
   model::Entity member;
-  member.scope = out_cls.id;
+  member.scope = cls.id;
   member.location = loc;
 
   if (TreeReader::is(m, "operator")) {
     const std::string symbol = ctx.reader.fieldText(m, "symbol");
     member.kind = model::Kind::Operator;
     member.name = "operator" + symbol;
-    member.id = out_cls.id + "::" + member.name;
+    member.id = cls.id + "::" + member.name;
     member.fields["symbol"] = symbol;
     if (operators.count(symbol) == 0) {
       ctx.model.report({"E-OPERATOR-UNDECLARED", "error",
-                        "operator " + symbol + " is refined in the body of " + out_cls.id + " but is not in its header set", loc});
+                        "operator " + symbol + " is refined in the body of " + cls.id + " but is not in its header set", loc});
     }
   } else {
     member.kind = TreeReader::is(m, "method") ? model::Kind::Method : model::Kind::Attribute;
     member.name = ctx.reader.fieldText(m, "name");
-    member.id = out_cls.id + "::" + member.name;
+    member.id = cls.id + "::" + member.name;
     member.fields["visibility"] = ctx.reader.fieldText(m, "visibility");
   }
 
   if (TreeReader::is(m, "method") || TreeReader::is(m, "operator")) {
     for (TSNode mod : TreeReader::childrenNamed(m, "modifier")) member.flags.push_back(ctx.reader.textOf(mod));
-    if (TreeReader::is(m, "method") && member.name == out_cls.name) member.flags.push_back("constructor");
-    if (TreeReader::is(m, "method") && member.name == "~" + out_cls.name) member.flags.push_back("destructor");  // DS-143
-    if (out_cls.has("dataclass") && member.has("abstract")) {
-      ctx.model.report({"E-DATACLASS-ABSTRACT", "error",
-                        out_cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
+    if (TreeReader::is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
+    if (TreeReader::is(m, "method") && member.name == "~" + cls.name) member.flags.push_back("destructor");  // DS-143
+    if (cls.has("dataclass") && member.has("abstract")) {
+      ctx.model.report(
+          {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
     }
     std::vector<std::string> own = params;  // a templated method's own parameters are no entities either (DS-18)
     for (const std::string& t : templateParams(ctx.reader, TreeReader::child(m, "params"))) own.push_back(t);
@@ -469,14 +469,10 @@ void Binder::bindMember(const BindContext& ctx, TSNode m, model::Entity& out_cls
   }
 
   if (member.kind == model::Kind::Operator && ctx.model.find(member.id)) {
-    model::Entity* declared = ctx.model.find(member.id);  // declared by the header set: the body refines it
-    for (const auto& f : member.fields) declared->fields[f.first] = f.second;
-    for (const auto& f : member.flags) declared->flags.push_back(f);
-    if (!member.params.empty()) declared->params = member.params;
-    declared->location = loc;
+    ctx.model.refine(member);  // declared by the header set: the body refines it
   } else {
     ctx.model.declare(member);
-    ctx.model.relate({"contains", out_cls.id, member.id, loc, ""});
+    ctx.model.relate({"contains", cls.id, member.id, loc, ""});
   }
   bindMemberBody(ctx, m, member, scope);
 }
@@ -585,13 +581,13 @@ void Binder::bindClass(const BindContext& ctx, TSNode c) {
 
   TSNode body = TreeReader::child(c, "body");
   bindFields(ctx, body, e);
-  model::Entity& declared = ctx.model.declare(e);
+  const model::Entity& declared = ctx.model.declare(e);
   if (!owner.empty()) ctx.model.relate({"contains", owner, declared.id, loc, ""});
   // a base is written as the code writes it (IFormat<scene::SceneDocument>) and kept so; its first name is what the
   // class inherits, and only when the design declares it: class Error : Exception is text, no arrow (DS-18)
   std::vector<std::string> baseTexts;
   for (TSNode base : TreeReader::childrenNamed(c, "base")) baseTexts.push_back(std::string(text::trimWhitespace(ctx.reader.textOf(base))));
-  if (!baseTexts.empty()) declared.fields["bases"] = join(baseTexts, "; ");
+  if (!baseTexts.empty()) ctx.model.annotate(declared.id, "bases", join(baseTexts, "; "));
   for (const std::string& written : baseTexts) {
     const std::vector<TypeToken> tokens = scanTypeTokens(written);
     if (tokens.empty()) continue;
@@ -629,11 +625,11 @@ void Binder::bindClass(const BindContext& ctx, TSNode c) {
 
 // ---- behaviour (block 3): a sequence is the behaviour of its subject ------------
 
-void Binder::bindSteps(const BindContext& ctx, TSNode node, model::Entity& out_sequence, const std::string& holder, int& out_order,
+void Binder::bindSteps(const BindContext& ctx, TSNode node, const model::Entity& sequence, const std::string& holder, int& out_order,
                        int& out_frames) {
   // The steps are a tree (DS-172): each message and frame is contained by what encloses it, the sequence
   // or a frame, in the order written; an alt holds its sides as branches. `holder` is that encloser.
-  const std::string sequenceId = out_sequence.id;
+  const std::string sequenceId = sequence.id;
   const uint32_t n = ts_node_child_count(node);
   std::string current = holder;  // an alt's steps go to its first branch, then to its else branch
   for (uint32_t i = 0; i < n; ++i) {
@@ -743,7 +739,7 @@ void Binder::bindSequence(const BindContext& ctx, TSNode c) {
   e.fields["subject"] = subject;
   if (!scenario.empty()) e.fields["scenario"] = scenario;
   bindFields(ctx, c, e);
-  model::Entity& declared = ctx.model.declare(e);
+  const model::Entity& declared = ctx.model.declare(e);
   if (!owner.empty()) ctx.model.relate({"contains", owner, declared.id, loc, ""});
   ctx.notes.references.push_back({declared.id, subject, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
   bindAnnotations(ctx, c, declared.id, scope);
@@ -760,8 +756,8 @@ void Binder::bindSequence(const BindContext& ctx, TSNode c) {
         pending.push_back(s);
       if (!TreeReader::is(s, "local") && !TreeReader::is(s, "participant")) continue;
       const std::string name = ctx.reader.fieldText(s, "name");
-      ctx.model.find(declared.id)->fields["local." + name] =
-          bindType(ctx, TreeReader::child(s, "type"), scope, declared.id, "uses", "", {}, ctx.locationOf(s));
+      ctx.model.annotate(declared.id, "local." + name,
+                         bindType(ctx, TreeReader::child(s, "type"), scope, declared.id, "uses", "", {}, ctx.locationOf(s)));
     }
   }
   int order = 0, frames = 0;
@@ -795,8 +791,8 @@ void Binder::visit(const BindContext& ctx, TSNode node) {
       e.location = loc;
       bindFields(ctx, c, e);
       const bool reopened = ctx.model.find(e.id) != nullptr;  // a box reopened adds no relation (DS-48)
-      model::Entity& declared = ctx.model.declare(e);
-      for (const auto& f : e.fields) declared.fields[f.first] = f.second;
+      const model::Entity& declared = ctx.model.declare(e);
+      for (const auto& f : e.fields) ctx.model.annotate(declared.id, f.first, f.second);
       bindAnnotations(ctx, c, declared.id, declared.id + "@");  // an HLD box realises requirements like a class does
       if (!reopened && !owner.empty())
         ctx.model.relate({"contains", owner, declared.id, loc, ""});
@@ -816,15 +812,15 @@ void Binder::visit(const BindContext& ctx, TSNode node) {
       if (isPrivate) e.fields["visibility"] = "-";
       bindFields(ctx, c, e);
       const bool reopened = ctx.model.find(e.id) != nullptr;  // a module reopened adds no relation (DS-48)
-      model::Entity& declared = ctx.model.declare(e);
+      const model::Entity& declared = ctx.model.declare(e);
       for (const auto& f : e.fields) {  // a module reopens: its fields add up, and two that differ are both kept
-        auto& kept = declared.fields[f.first];
+        const std::string& kept = declared.field(f.first);
         if (kept.empty())
-          kept = f.second;
+          ctx.model.annotate(declared.id, f.first, f.second);
         else if (kept != f.second && (", " + kept + ",").find(", " + f.second + ",") == std::string::npos)
-          kept += ", " + f.second;
+          ctx.model.annotate(declared.id, f.first, kept + ", " + f.second);
       }
-      if (isPrivate) declared.fields["visibility"] = "-";  // a module reopens: any declaration may say it
+      if (isPrivate) ctx.model.annotate(declared.id, "visibility", "-");  // a module reopens: any declaration may say it
       if (!owner.empty() && !reopened) ctx.model.relate({"contains", owner, declared.id, loc, ""});
       bindAnnotations(ctx, c, declared.id, declared.id);  // a module answers to its requirements, as a package does
       visit(ctx.within(declared.id, declared.id), c);
@@ -930,7 +926,7 @@ void Binder::visit(const BindContext& ctx, TSNode node) {
       const uint32_t n = ts_node_named_child_count(c);
       for (uint32_t j = 0; j < n; ++j) {
         TSNode t = ts_node_named_child(c, j);
-        if (TreeReader::is(t, "initial")) ctx.model.find(e.id)->fields["initial"] = ctx.reader.fieldText(t, "name");
+        if (TreeReader::is(t, "initial")) ctx.model.annotate(e.id, "initial", ctx.reader.fieldText(t, "name"));
         if (TreeReader::is(t, "state_rule")) {  // a state computed by a rule (DS-249): state|literal,literal|line, `not` as a leading !
           std::vector<std::string> literals;
           const uint32_t nl = ts_node_named_child_count(t);
@@ -941,7 +937,7 @@ void Binder::visit(const BindContext& ctx, TSNode node) {
                                ctx.reader.fieldText(l, "operator") + ctx.reader.fieldText(l, "right"));
           }
           rules.push_back(ctx.reader.fieldText(t, "name") + "|" + join(literals, ",") + "|" + std::to_string(ctx.locationOf(t).line));
-          ctx.model.find(e.id)->fields["rules"] = join(rules, "\n");
+          ctx.model.annotate(e.id, "rules", join(rules, "\n"));
         }
         if (TreeReader::is(t, "view")) {
           model::Entity v;
@@ -960,7 +956,7 @@ void Binder::visit(const BindContext& ctx, TSNode node) {
         const std::string does = ctx.reader.fieldText(t, "action");
         transitions.push_back(ctx.reader.fieldText(t, "from") + ">" + ctx.reader.fieldText(t, "to") + ">" +
                               ctx.reader.fieldText(t, "event") + (guard.empty() ? "" : " " + guard) + (does.empty() ? "" : " / " + does));
-        ctx.model.find(e.id)->fields["transitions"] = join(transitions, "\n");  // from>to>label, one per line
+        ctx.model.annotate(e.id, "transitions", join(transitions, "\n"));  // from>to>label, one per line
         ctx.notes.events.push_back({e.id, entityName, scope, ctx.reader.fieldText(t, "event"), false, ctx.locationOf(t)});
         const std::string action = ctx.reader.fieldText(t, "action");
         if (!action.empty()) ctx.notes.events.push_back({e.id, entityName, scope, action, true, ctx.locationOf(t)});

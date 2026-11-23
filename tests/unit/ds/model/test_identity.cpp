@@ -21,7 +21,6 @@ TEST(TestIdentity, ItsLastNameIsTheNameAfterTheLastSeparator) {
 TEST(TestIdentity, ItIsWrittenInTheScopeOutsideIt) {
   EXPECT_EQ(Identity("p@m::C").scope(), Scope("p@m"));
   EXPECT_EQ(Identity("p@m").scope(), Scope("p@"));
-  EXPECT_EQ(Identity("p@m::C").asScope().qualify("run"), Identity("p@m::C::run"));
 }
 
 TEST(TestIdentity, ItIsQualifiedByItsPathAndAbsoluteFromAPackage) {
@@ -35,6 +34,9 @@ TEST(TestIdentity, AMemberOrAScenarioLiesWithin) {
   EXPECT_TRUE(Identity("p@m::C::run").within(Identity("p@m::C")));
   EXPECT_TRUE(Identity("p@m::C::run::sequence/out").within(Identity("p@m::C::run::sequence")));
   EXPECT_FALSE(Identity("p@m::Cart").within(Identity("p@m::C")));
+  EXPECT_TRUE(Identity("p@m::C").within(Identity("p@m::C")));     // it is what it lies in
+  EXPECT_FALSE(Identity("p@m").within(Identity("p@m::C")));       // shorter: outside
+  EXPECT_FALSE(Identity("p@m::C:x").within(Identity("p@m::C")));  // one colon joins nothing
 }
 
 TEST(TestIdentity, ATemplateCarriesItsArity) { EXPECT_EQ(Identity("Index").withArity(2), Identity("Index<2>")); }

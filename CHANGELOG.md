@@ -6,6 +6,16 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.32
+
+The model keeps its own lists (DS-346). Moving what is not yet written to the coverage, dropping what only echoes a file
+that does not parse, sorting the findings and keeping a table are operations of `ds::model::Model`, and nobody else
+changes those lists. An entity the model keeps is read only to everyone else: a field is written through
+`Model::annotate`, and the body of a class refining an operator through `Model::refine`, so nothing can change what an
+entity is indexed by. A rename moves each entity without copying it, and the metamodel says which fields hold an
+identity it carries along. `Relation::change`, which nothing set, and `Identity::asScope`, which nothing called, are
+gone. The findings, the export and every page of `ds manual` are the same. Nothing changes for a design.
+
 ## 0.1.31
 
 The walks of a behaviour are a class, `ds::model::Paths` (DS-343), made over the model whoever asks already holds:

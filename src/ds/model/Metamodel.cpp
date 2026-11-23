@@ -13,6 +13,7 @@ Metamodel::Metamodel()
     : names_(buildNames()),
       forms_(writtenForms()),
       kinds_(describe(build())),
+      identityFields_(buildIdentityFields()),
       relations_(buildRelations()),
       codes_(buildCodes()),
       known_(buildKnownAnnotations()),
@@ -31,6 +32,19 @@ FieldSpec Metamodel::derived(const std::string& name, FieldType type, const std:
 // a field written with one of a closed set of values: any other is W-FIELD-VALUE (DS-211)
 FieldSpec Metamodel::closed(const std::string& name, FieldType type, const std::string& meaning, std::vector<std::string> values) {
   return {name, type, FieldSource::Written, meaning, std::move(values)};
+}
+
+FieldSpec Metamodel::holdingIdentity(FieldSpec field) {
+  field.identity = true;
+  return field;
+}
+
+std::vector<std::string> Metamodel::buildIdentityFields() const {
+  std::vector<std::string> out;
+  for (const auto& k : kinds_)
+    for (const auto& f : k.fields)
+      if (f.identity && std::find(out.begin(), out.end(), f.name) == out.end()) out.push_back(f.name);
+  return out;
 }
 
 // The fields every artefact carries (REQ-00045-1).
@@ -184,7 +198,7 @@ std::vector<KindSpec> Metamodel::build() {
                 derived("from-type", FieldType::Type, "who sends it, when the sender is written"),
                 derived("result_type", FieldType::Type, "the type of its result"),
                 derived("result_scope", FieldType::Name, "where that type resolves"),
-                derived("expands", FieldType::Name, "the sequence it expands to"),
+                holdingIdentity(derived("expands", FieldType::Name, "the sequence it expands to")),
                 derived("expands-path", FieldType::Names, "the path through that sequence")},
                {},
                {Kind::Sequence, Kind::Frame}});

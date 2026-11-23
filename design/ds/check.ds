@@ -165,7 +165,7 @@ package driftspec@ds {
       @requirement REQ-00053-2
       @requirement REQ-00012-1
       - refs model_: model::Model
-      - refs metamodel_: model::Metamodel     // which codes are coverage, not findings (DS-216, DS-341)
+      - refs metamodel_: model::Metamodel     // the language the model is written in (DS-341); the model keeps coverage apart (DS-346)
       - owns resolver_: Resolver
       - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
       + Checker(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>)
@@ -239,10 +239,10 @@ package driftspec@ds {
       - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
         @requirement REQ-00038-2
       }
-      - call(out_msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+      - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00037-1
       }
-      - expand(out_msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+      - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00038-2
       }
       - checkReturn(message: bind::Message) -> void {
@@ -252,7 +252,7 @@ package driftspec@ds {
         @requirement REQ-00037-1
         @requirement REQ-00056-1
       }
-      - callStatic(seq: model::Entity, out_msg: model::Entity, message: bind::Message, home: std::string) -> bool {
+      - callStatic(seq: model::Entity, msg: model::Entity, message: bind::Message, home: std::string) -> bool {
         @requirement REQ-00108-1
       }
       // a participant named as what it is: a box, an interface or a class the behaviour sees (DS-232)
@@ -260,7 +260,7 @@ package driftspec@ds {
         @requirement REQ-00133-2
       }
       // who sends: the participant written before the arrow, typed like the receiver
-      - typeSender(seq: model::Entity, cls: model::Entity, subject: model::Entity, out_msg: model::Entity, home: std::string) -> void {
+      - typeSender(seq: model::Entity, cls: model::Entity, subject: model::Entity, msg: model::Entity, home: std::string) -> void {
         @requirement REQ-00134-1
       }
       // the operation a box offers under a name: a function of a module, an operation of one interface of a package
@@ -493,14 +493,8 @@ package driftspec@ds {
           self -> model_.report(finding)
         }
       }
-      // what is not yet written is no finding: a code the metamodel calls coverage is kept apart (DS-216)
-      self -> model_.findings() -> reported
-      loop each finding reported {
-        self -> metamodel_.codeOf(code) -> spec
-        opt its code is coverage {
-          self -> model_.coverage() -> coverage
-        }
-      }
+      // what is not yet written is no finding: the model keeps apart what its metamodel calls coverage (DS-216)
+      self -> model_.cover()
     }
 
     sequence Linker::run {
@@ -679,6 +673,8 @@ package driftspec@ds {
       opt the type is not declared yet, reported once it is / type-waits {
         return
       }
+      // the message is typed by its target, written through the model that keeps it (DS-346)
+      self -> model_.annotate(messageId, key, typeId)
 
       opt the target is not self {
         -> couple(seq, type, transient)

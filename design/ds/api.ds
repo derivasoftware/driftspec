@@ -153,12 +153,19 @@ package driftspec@ds {
       local model: model::Model
       local binder: bind::Binder
       local checker: check::Checker
+      local broken: std::set<std::string>
       loop each file {
+        opt it does not parse / cut {
+          // it is said once, where the file stops parsing, and kept among the broken
+        }
         -> binder.bind(file)
       }
       -> check::steps() -> steps
       self -> binder.notes() -> notes
       -> checker.run(notes)
+      // what only echoes a file that does not parse goes until it parses (DS-304); the rest by where it is written
+      -> model.withdrawEchoes(broken)
+      -> model.sortFindings()
       return model
     }
 

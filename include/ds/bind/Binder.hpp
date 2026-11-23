@@ -38,7 +38,7 @@ class Binder {
   /// An extension block (annotations only) adds relations to an entity defined elsewhere, or expects it.
   void extend(const BindContext& ctx, TSNode node, const std::string& id, model::Kind kind, const std::string& name,
               const std::string& scope, const model::Location& loc);
-  void bindMember(const BindContext& ctx, TSNode node, model::Entity& out_cls, const std::vector<std::string>& params,
+  void bindMember(const BindContext& ctx, TSNode node, const model::Entity& cls, const std::vector<std::string>& params,
                   const std::set<std::string>& operators);
   /// A function of a module: a method's signature and body with the module as its scope.
   void bindFunction(const BindContext& ctx, TSNode node);
@@ -47,7 +47,7 @@ class Binder {
                      const std::vector<std::string>& params);
   void bindMemberBody(const BindContext& ctx, TSNode member, model::Entity& out_entity, const std::string& scope);
   void bindSequence(const BindContext& ctx, TSNode node);
-  void bindSteps(const BindContext& ctx, TSNode node, model::Entity& out_sequence, const std::string& holder, int& out_order,
+  void bindSteps(const BindContext& ctx, TSNode node, const model::Entity& sequence, const std::string& holder, int& out_order,
                  int& out_frames);
   /// One side of an alt (DS-172): a frame of kind branch the alt contains, `side` 0 for the first, 1 for the else.
   std::string branch(const BindContext& ctx, TSNode at, const std::string& sequence, const std::string& alt, int side,
@@ -55,7 +55,7 @@ class Binder {
   /// Relate `from` to every name of a type that the design declares; the type's text, trimmed (DS-18).
   std::string bindType(const BindContext& ctx, TSNode type, const std::string& scope, const std::string& from, const std::string& relation,
                        const std::string& multiplicity, const std::vector<std::string>& params, const model::Location& location);
-  void declareOperator(const BindContext& ctx, model::Entity& out_cls, const std::string& symbol, const model::Location& location);
+  void declareOperator(const BindContext& ctx, const model::Entity& cls, const std::string& symbol, const model::Location& location);
 
   model::Model& model_;
   const model::Metamodel& metamodel_;

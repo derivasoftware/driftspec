@@ -98,7 +98,7 @@ package driftspec@ds {
       - extend(ctx: BindContext, node: TSNode, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
         @constraint CST-00003-2
       }
-      - bindMember(ctx: BindContext, node: TSNode, out_cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
+      - bindMember(ctx: BindContext, node: TSNode, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
         @requirement REQ-00170-1
         @requirement REQ-00026-2
         @requirement REQ-00101-1                 // ~Name() flagged destructor
@@ -119,7 +119,7 @@ package driftspec@ds {
         @requirement REQ-00035-1
         @requirement REQ-00036-2
       }
-      - bindSteps(ctx: BindContext, node: TSNode, out_sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
+      - bindSteps(ctx: BindContext, node: TSNode, sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
         @requirement REQ-00037-1
         @requirement REQ-00110-1
       }
@@ -130,7 +130,7 @@ package driftspec@ds {
         @requirement REQ-00028-2
         @requirement REQ-00024-3
       }
-      - declareOperator(ctx: BindContext, out_cls: model::Entity, symbol: std::string, location: model::Location) -> void {
+      - declareOperator(ctx: BindContext, cls: model::Entity, symbol: std::string, location: model::Location) -> void {
         @requirement REQ-00030-1
       }
       - owns notes_: Notes
@@ -173,6 +173,10 @@ package driftspec@ds {
         opt a package {
           -> bindFields(ctx, c, e)
           self -> model_.declare(e) -> declared
+          loop each field written {
+            // a reopened package takes what this declaration writes (DS-346)
+            self -> model_.annotate(declared.id, key, value)
+          }
           opt it has an owner {
             self -> model_.relate(relation)
           }
@@ -183,6 +187,12 @@ package driftspec@ds {
             self -> model_.find(owner) -> ownerEntity
           }
           self -> model_.declare(e) -> declared
+          loop each field written {
+            opt it adds to what the module already says / reopened {
+              // two values that differ are both kept
+              self -> model_.annotate(declared.id, key, value)
+            }
+          }
           opt it has an owner {
             self -> model_.relate(relation)
           }
@@ -238,8 +248,8 @@ package driftspec@ds {
           loop each view and transition {
             local t: TSNode
             local v: model::Entity
-            opt the initial state or a transition, set on the state entity {
-              self -> model_.find(e.id)
+            opt the initial state, a state rule or a transition, written on the state entity {
+              self -> model_.annotate(e.id, key, value)
             }
             opt a view {
               -> bindFields(ctx, t, v)

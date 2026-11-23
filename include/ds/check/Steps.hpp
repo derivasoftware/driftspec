@@ -62,17 +62,17 @@ class BehaviourTyping : public IStep {
   const model::Entity* subjectClass(const model::Entity& sequence, const model::Entity** subject) const;
   void couple(const model::Entity& sequence, const model::Entity& type, bool transient);
   /// A message that reached its operation: the call, its arity, and its expansion (B5).
-  void call(model::Entity& out_msg, const model::Entity& op, const bind::Message& message);
-  void expand(model::Entity& out_msg, const model::Entity& op, const bind::Message& message);
+  void call(const model::Entity& msg, const model::Entity& op, const bind::Message& message);
+  void expand(const model::Entity& msg, const model::Entity& op, const bind::Message& message);
   void checkReturn(const bind::Message& message);
   void checkMessage(const bind::Message& message);
   /// A message with no participant that names a class's operation by its qualified name: a call on the
   /// class itself, which the operation must be static to take (DS-60). False when it names none.
-  bool callStatic(const model::Entity& seq, model::Entity& out_msg, const bind::Message& message, const std::string& home);
+  bool callStatic(const model::Entity& seq, const model::Entity& msg, const bind::Message& message, const std::string& home);
   /// The box, interface or class a participant is named as (DS-232); empty when the name is none of them.
   std::string namedEntity(const std::string& name, const std::string& home) const;
   /// Types who sends a message, the participant written before its arrow; a name nobody designs is text.
-  void typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, model::Entity& out_msg,
+  void typeSender(const model::Entity& seq, const model::Entity* cls, const model::Entity& subject, const model::Entity& msg,
                   const std::string& home);
   /// The operation a box offers under a name: a function of a module, an operation of one interface of a package.
   const model::Entity* offered(const model::Entity& box, const std::string& op) const;

@@ -281,8 +281,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   // relations: lifted from members to their class; one edge per (from, to, kind, label)
   std::set<std::string> drawn;
   for (const auto& r : model_.index().all()) {
-    const std::string& change = r.change;  // a diff marks a relation as added or removed
-    std::string kind = edgeKind(r.kind);   // drawn as written: inheriting is inheritance (DS-301)
+    std::string kind = edgeKind(r.kind);  // drawn as written: inheriting is inheritance (DS-301)
     if (kind.empty()) continue;
     const model::Entity* from = model_.find(r.from);
     const model::Entity* to = model_.find(r.to);
@@ -297,11 +296,10 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
     } else if (r.kind == "bounded-by") {
       label = "T: " + model_.find(r.to)->name;
     }
-    const std::string key = fromClass + "|" + r.to + "|" + kind + "|" + label + "|" + change;
+    const std::string key = fromClass + "|" + r.to + "|" + kind + "|" + label;
     if (!drawn.insert(key).second) continue;
     nlohmann::json edge = {{"from", fromClass}, {"to", r.to}, {"kind", kind}};
     if (!label.empty()) edge["label"] = label;
-    if (!change.empty()) edge["refs"] = {{"change", change}};
     edge["refs"]["bond"] = axis::bondOf(r.kind);  // what it reads as between boxes, once lifted (DS-230)
     out["edges"].push_back(edge);
   }

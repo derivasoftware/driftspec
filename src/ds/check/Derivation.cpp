@@ -50,7 +50,7 @@ void Derivation::classify() {
         ++attributes;
       }
     }
-    model::Entity* cls = model_->find(id);
+    const model::Entity* cls = model_->find(id);
     std::vector<std::string> stereotypes;
     if (cls->has("dataclass")) stereotypes.push_back("value");
     if (abstractMethods > 0) stereotypes.push_back("abstract");  // all of them or some: an abstract class (DS-301)
@@ -68,7 +68,7 @@ void Derivation::classify() {
         }
       }
     }
-    if (!stereotypes.empty()) cls->fields["stereotypes"] = join(stereotypes, ", ");
+    if (!stereotypes.empty()) model_->annotate(id, "stereotypes", join(stereotypes, ", "));
   }
 }
 
@@ -88,7 +88,7 @@ void Derivation::fillLanguages() {
     if (pair.second.kind == model::Kind::Package || pair.second.kind == model::Kind::Module) boxes.push_back(pair.first);
   std::map<std::string, std::string> own;
   for (const auto& id : boxes) {
-    model::Entity& e = *model_->find(id);
+    const model::Entity& e = *model_->find(id);
     const auto written = e.fields.find("language");
     if (written == e.fields.end() || written->second.empty()) continue;
     std::set<std::string> said;
@@ -104,12 +104,11 @@ void Derivation::fillLanguages() {
     own[e.id] = first;
   }
   for (const auto& id : boxes) {
-    model::Entity& e = *model_->find(id);
     std::set<std::string> seen;
-    for (std::string at = e.id; !at.empty() && seen.insert(at).second; at = parent.count(at) ? parent.at(at) : "") {
+    for (std::string at = id; !at.empty() && seen.insert(at).second; at = parent.count(at) ? parent.at(at) : "") {
       const auto it = own.find(at);
       if (it == own.end()) continue;
-      e.fields["language"] = it->second;
+      model_->annotate(id, "language", it->second);
       break;
     }
   }

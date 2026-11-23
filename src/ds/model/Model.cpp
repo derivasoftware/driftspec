@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 #include "ds/model/Metamodel.hpp"
 
@@ -25,7 +26,7 @@ const std::string& Entity::field(const std::string& key) const {
 // A member written with a behaviour's name takes the identity of the behaviour when the behaviour exists (DS-222).
 bool Model::behaviour(Kind kind) { return kind == Kind::Sequence || kind == Kind::State; }
 
-Entity& Model::declare(const Entity& entity) {
+const Entity& Model::declare(const Entity& entity) {
   auto it = entities_.find(entity.id);
   if (it == entities_.end()) {
     indexEntity(entity, true);
@@ -59,13 +60,15 @@ Entity& Model::declare(const Entity& entity) {
     return existing;
   }
   const bool reopenable = entity.kind == Kind::Package || entity.kind == Kind::Module;
-  if (!reopenable) {
-    report({"E-DUPLICATE-IDENTITY", "error",
-            metamodel_->nameOf(entity.kind) + " '" + entity.id + "' is declared twice (first at " + existing.location.file + ":" +
-                std::to_string(existing.location.line) + ")",
-            entity.location});
-  }
+  if (!reopenable) reportDuplicate(entity, entity.id, existing);
   return existing;
+}
+
+void Model::reportDuplicate(const Entity& entity, const std::string& id, const Entity& first) {
+  report({"E-DUPLICATE-IDENTITY", "error",
+          metamodel_->nameOf(entity.kind) + " '" + id + "' is declared twice (first at " + first.location.file + ":" +
+              std::to_string(first.location.line) + ")",
+          entity.location});
 }
 
 const Entity* Model::find(const std::string& id) const {
@@ -73,9 +76,21 @@ const Entity* Model::find(const std::string& id) const {
   return it == entities_.end() ? nullptr : &it->second;
 }
 
-Entity* Model::find(const std::string& id) {
+Entity& Model::held(const std::string& id) {
   auto it = entities_.find(id);
-  return it == entities_.end() ? nullptr : &it->second;
+  // a writer names what it declared or found: an identity the model does not keep is a defect of ds
+  if (it == entities_.end()) throw std::logic_error("the model keeps no entity '" + id + "' to change");
+  return it->second;
+}
+
+void Model::annotate(const std::string& id, const std::string& key, const std::string& value) { held(id).fields[key] = value; }
+
+void Model::refine(const Entity& later) {
+  Entity& kept = held(later.id);
+  for (const auto& f : later.fields) kept.fields[f.first] = f.second;
+  kept.flags.insert(kept.flags.end(), later.flags.begin(), later.flags.end());
+  if (!later.params.empty()) kept.params = later.params;
+  kept.location = later.location;
 }
 
 void Model::relate(const Relation& relation) {
@@ -124,36 +139,36 @@ bool Model::rename(const std::string& from, const std::string& to) {
   auto it = entities_.find(from);
   if (it == entities_.end()) return false;
   if (const Entity* other = find(to); other && !other->expected) {
-    report({"E-DUPLICATE-IDENTITY", "error",
-            metamodel_->nameOf(it->second.kind) + " '" + to + "' is declared twice (first at " + other->location.file + ":" +
-                std::to_string(other->location.line) + ")",
-            it->second.location});
+    reportDuplicate(it->second, to, *other);
     return false;
   }
   entities_.erase(to);  // an expected node gives way to the declaration
-  Entity moved = it->second;
-  moved.id = to;
-  entities_.erase(it);
-  entities_.emplace(to, moved);
+  // each entity moves as it is, its node taken out and put back under its new identity: nothing is copied
+  auto moved = entities_.extract(it);
+  moved.key() = to;
+  moved.mapped().id = to;
+  entities_.insert(std::move(moved));
+  const Identity outer(from);
   // members: everything whose identity or scope begins with the old one
-  std::vector<std::pair<std::string, Entity>> members;
+  std::vector<decltype(entities_)::node_type> members;
   for (auto m = entities_.begin(); m != entities_.end();) {
-    if (m->first != from && model::Identity(m->first).within(model::Identity(from))) {  // a member or a scenario of what is renamed
-      Entity e = m->second;
-      e.id = to + m->first.substr(from.size());
+    if (m->first != from && Identity(m->first).within(outer)) {  // a member or a scenario of what is renamed
+      auto member = entities_.extract(m++);
+      Entity& e = member.mapped();
+      e.id = to + member.key().substr(from.size());
       if (e.scope.rfind(from, 0) == 0) e.scope = to + e.scope.substr(from.size());
-      members.push_back({e.id, e});
-      m = entities_.erase(m);
+      member.key() = e.id;
+      members.push_back(std::move(member));
     } else {
       if (m->second.scope == from) m->second.scope = to;
       ++m;
     }
   }
-  for (auto& m : members) entities_.emplace(m.first, m.second);
+  for (auto& member : members) entities_.insert(std::move(member));  // an identity already held keeps its entity
   auto translate = [&](std::string& id) {
     if (id == from)
       id = to;
-    else if (model::Identity(id).within(model::Identity(from)))
+    else if (Identity(id).within(outer))
       id = to + id.substr(from.size());
   };
   // what a rule of a renamed class says moves with it
@@ -168,9 +183,12 @@ bool Model::rename(const std::string& from, const std::string& to) {
     translate(r.from);
     translate(r.to);
   }
+  // a field that holds an identity moves with it: the metamodel says which (DS-346)
+  const std::vector<std::string>& identities = metamodel_->identityFields();
   for (auto& e : entities_) {
-    for (auto& f : e.second.fields) {
-      if (f.first == "expands" || f.first == "subject-of") translate(f.second);
+    for (const std::string& key : identities) {
+      const auto field = e.second.fields.find(key);
+      if (field != e.second.fields.end()) translate(field->second);
     }
   }
   indexAgain();  // identities moved: what was indexed by the old ones is built again
@@ -178,6 +196,36 @@ bool Model::rename(const std::string& from, const std::string& to) {
 }
 
 void Model::report(const Finding& finding) { findings_.push_back(finding); }
+
+void Model::cover() {
+  // what is not yet written is no finding (Owner, 2026-11-15; DS-216): it is kept apart, as coverage
+  std::vector<Finding> findings;
+  for (Finding& f : findings_) {
+    const CodeSpec* spec = metamodel_->codeOf(f.code);
+    if (spec && spec->severity == "coverage") {
+      f.severity = "coverage";
+      coverage_.push_back(std::move(f));
+    } else {
+      findings.push_back(std::move(f));
+    }
+  }
+  findings_.swap(findings);
+}
+
+void Model::withdrawEchoes(const std::set<std::string>& broken) {
+  if (broken.empty()) return;
+  findings_.erase(std::remove_if(findings_.begin(), findings_.end(),
+                                 [&](const Finding& f) {
+                                   return f.code != "E-SYNTAX" && (broken.count(f.location.file) || f.code == "W-REF-UNDECLARED");
+                                 }),
+                  findings_.end());
+}
+
+void Model::sortFindings() {
+  std::stable_sort(findings_.begin(), findings_.end(), [](const Finding& a, const Finding& b) {
+    return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;
+  });
+}
 
 }  // namespace model
 }  // namespace ds
