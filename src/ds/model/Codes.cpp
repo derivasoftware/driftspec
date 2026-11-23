@@ -154,6 +154,8 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
        "Go through a public member, or make it public."},
       {"W-PRIVATE-LEAK", "warning", "Something public shows a private type in its signature.", "Make the type public, or hide the member."},
       {"W-DIAGRAM-DEPTH", "warning", "A diagram asks for a depth that is neither a number nor *.", "Write a number, or * for every level."},
+      {"W-DIAGRAM-NEIGHBOURS", "warning", "A diagram asks for neighbours that are not a number.",
+       "Write a number: how many steps of neighbours it adds."},
       {"W-REQ-NO-VERIFICATION", "coverage", "An approved requirement that nothing verifies.", "Nest a verification in it, or link one."},
       {"W-VER-NO-TEST", "coverage", "A verification by test names no tests.", "List them under tests: as <file>::<Fixture>.<Test>."},
       {"W-RULE-NO-REQUIREMENT", "coverage", "A rule answers to no requirement: nothing says what it makes real.",

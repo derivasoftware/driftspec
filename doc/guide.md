@@ -314,9 +314,12 @@ them.*
 
 ## 5. Diagrams
 
-- `diagram CL_X { kind: class | sequence | requirement | state | table | interface | tour; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
+- `diagram CL_X { kind: class | sequence | requirement | state | table | interface | tour; include: …; exclude: …; open: …; close: …; cut: …; unfold: …; fold: …; depth: n; neighbours: n; hide: fields, methods; show: ownership, multiplicity, operators, notes, derived-stereotypes }`.
 - `include` takes ids, a module (`ds@ds` or `ds@ds::*`) or a package
   (`ds@*`), read alike by every kind of diagram. A pattern that names what nothing declares is `W-DIAGRAM-UNDECLARED`.
+- `neighbours: n` widens a class diagram by what its boxes relate to, `n` steps away. The walk
+  ends at the first step that adds nothing, so a number past what the diagram reaches draws the
+  reach (DS-362). `W-DIAGRAM-NEIGHBOURS` for anything but a number.
 - A diagram is a projection: it selects and decides what to print, never
   what to draw.
 - **The cut (decided 2026-11-16, DS-229, `tests/corpus/cut`).** A cut is a set of boxes none of

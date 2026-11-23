@@ -489,12 +489,18 @@ void ContractCheck::checkDiagrams() {
                         pair.second.name + " takes the cut of " + lender + ", a diagram the workspace declares nowhere",
                         pair.second.location});
     }
-    // a depth too large for an int is no number either, and a finding where it used to abort (DS-337)
-    const auto depth = pair.second.fields.find("depth");
-    int levels = 0;
-    if (depth == pair.second.fields.end() || depth->second == "*" || pair.second.number("depth", levels)) continue;
-    found_.push_back({"W-DIAGRAM-DEPTH", "warning",
-                      pair.second.name + " asks for depth '" + depth->second + "': a number, or * for every level", pair.second.location});
+    // a number field too large for an int is no number either, and a finding where it used to abort (DS-337);
+    // neighbours: is read as depth: is, with no * of its own, and each has a code of its own (DS-362)
+    for (const char* key : {"depth", "neighbours"}) {
+      const bool depth = key == std::string("depth");
+      const auto written = pair.second.fields.find(key);
+      int read = 0;
+      if (written == pair.second.fields.end() || (depth && written->second == "*") || pair.second.number(key, read)) continue;
+      found_.push_back({depth ? "W-DIAGRAM-DEPTH" : "W-DIAGRAM-NEIGHBOURS", "warning",
+                        pair.second.name + " asks for " + key + " '" + written->second +
+                            "': " + (depth ? "a number, or * for every level" : "a number of steps"),
+                        pair.second.location});
+    }
   }
 }
 

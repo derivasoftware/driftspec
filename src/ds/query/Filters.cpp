@@ -103,7 +103,9 @@ std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
       it = matches(model, pattern, *model.find(*it)) ? selected.erase(it) : std::next(it);
     }
   }
-  // neighbours: n widens the selection to what the selected entities relate to, n steps away
+  // neighbours: n widens the selection to what the selected entities relate to, n steps away. A step that adds
+  // nothing ends the walk, since every step after it would add nothing either: an n past what the selection
+  // reaches costs what the reach costs (DS-362)
   for (int step = 0; step < neighbours_; ++step) {
     std::set<std::string> grown = selected;
     for (const auto& r : model.index().all()) {
@@ -117,7 +119,8 @@ std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
       if (selected.count(fromClass)) grown.insert(r.to);
       if (selected.count(r.to)) grown.insert(fromClass);
     }
-    selected = grown;
+    if (grown.size() == selected.size()) break;  // grown holds selected: the same size is the same set
+    selected = std::move(grown);
   }
   return selected;
 }
