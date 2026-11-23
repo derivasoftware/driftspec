@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.20
+
+A bare name no scope declares is looked up among the classes of its package through an index the model keeps
+by package and name, instead of a pass over every entity for each reference (DS-336). On DriftSpec's own
+design `ds check` goes from about 330 to 160 ms, and a generated workspace of 3,200 classes from 5 s to under
+1 s. The findings are the same. Nothing changes for a design.
+
 ## 0.1.19
 
 Artefact names are recognised by a hand-written scan instead of `std::regex` (DS-335), the regular
