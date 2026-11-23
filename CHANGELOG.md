@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.23
+
+The metamodel's tables leave the manual's file (DS-340): the catalogue of finding codes moves to
+`src/ds/model/Codes.cpp`, how each kind is written and its example to `src/ds/model/WrittenForms.cpp`, and
+the annotations to `Metamodel.cpp`. The manual reads the metamodel and the metamodel no longer reads the
+manual. The findings, the export and every page of `ds manual` are the same. Nothing changes for a design.
+
 ## 0.1.22
 
 The engine's text helpers live in one module, `ds::text` (DS-344): splitting and joining a list, the lines of a

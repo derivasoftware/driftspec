@@ -298,6 +298,46 @@ package driftspec@ds {
       @requirement REQ-00066-1
     }
 
+    // the metamodel's tables (DS-340): the catalogue of finding codes, the annotations that mean something
+    // and how each kind is written. The binder, the checker and the kinds read them here; the manual
+    // derives its pages from them and the metamodel never reads the manual
+    dataclass CodeSpec {                     // a finding code: what it means and what to do about it
+      @requirement REQ-00079-1
+      + code: std::string
+      + severity: std::string
+      + meaning: std::string
+      + fix: std::string
+    }
+
+    dataclass AnnotationSpec {               // an annotation that means something, and the relation it makes
+      @requirement REQ-00079-1
+      @requirement REQ-00088-1
+      + name: std::string
+      + relation: std::string
+      + meaning: std::string
+      + onVerification: std::string
+      + target: Kind
+    }
+
+    function codes() -> std::vector<CodeSpec> {
+      @requirement REQ-00079-1
+    }
+    function codeOf(code: std::string) -> CodeSpec {
+      @requirement REQ-00079-1
+    }
+    function annotations() -> std::vector<AnnotationSpec> {
+      @requirement REQ-00079-1
+    }
+    function annotationOf(word: std::string) -> AnnotationSpec {
+      @requirement REQ-00088-1
+    }
+    function syntaxOf(kind: Kind) -> std::string {
+      @requirement REQ-00079-1
+    }
+    function exampleOf(kind: Kind) -> std::string {
+      @requirement REQ-00079-1
+    }
+
     // ---- the manual ds embeds (REQ-00079-1): written from the metamodel, held to the engine ----
     requirement REQ-00079-1 {
       status: approved
@@ -384,24 +424,6 @@ package driftspec@ds {
         tests/integration/ds/model/test_manual.cpp::TestManual.EveryTopicHasAPageAndAnUnknownOneHasNone
     }
 
-    dataclass CodeSpec {                     // a finding code: what it means and what to do about it
-      @requirement REQ-00079-1
-      + code: std::string
-      + severity: std::string
-      + meaning: std::string
-      + fix: std::string
-    }
-
-    dataclass AnnotationSpec {               // an annotation that means something, and the relation it makes
-      @requirement REQ-00079-1
-      @requirement REQ-00088-1
-      + name: std::string
-      + relation: std::string
-      + meaning: std::string
-      + onVerification: std::string
-      + target: Kind
-    }
-
     dataclass CommandSpec {                  // a command: how it is invoked, what it does, what each exit code says
       @requirement REQ-00079-1
       + name: std::string
@@ -410,28 +432,10 @@ package driftspec@ds {
       + exits: std::vector<std::pair<int, std::string>>
     }
 
-    function codes() -> std::vector<CodeSpec> {
-      @requirement REQ-00079-1
-    }
-    function codeOf(code: std::string) -> CodeSpec {
-      @requirement REQ-00079-1
-    }
-    function annotations() -> std::vector<AnnotationSpec> {
-      @requirement REQ-00079-1
-    }
-    function annotationOf(word: std::string) -> AnnotationSpec {
-      @requirement REQ-00088-1
-    }
     function commands() -> std::vector<CommandSpec> {
       @requirement REQ-00079-1
     }
     function commandOf(name: std::string) -> CommandSpec {
-      @requirement REQ-00079-1
-    }
-    function syntaxOf(kind: Kind) -> std::string {
-      @requirement REQ-00079-1
-    }
-    function exampleOf(kind: Kind) -> std::string {
       @requirement REQ-00079-1
     }
     function manualPage(topic: std::string) -> std::string {
@@ -983,16 +987,17 @@ package driftspec@ds {
       function matches(name: std::string, key: std::string) -> bool {
         @requirement REQ-00066-1
       }
-      // how the manual is written
       function containment() -> RelationSpec {
         @requirement REQ-00066-1
       }
+      // the metamodel's tables: how each kind is written, the catalogue of codes
       function writtenForms() -> std::map<Kind, std::pair<std::string, std::string>> {
         @requirement REQ-00079-1
       }
       function buildCodes() -> std::vector<CodeSpec> {
         @requirement REQ-00079-1
       }
+      // how the manual is written
       function indent(text: std::string, by: std::string) -> std::string {
         @requirement REQ-00079-1
       }

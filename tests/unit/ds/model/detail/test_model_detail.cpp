@@ -212,7 +212,7 @@ TEST_F(TestContainment, JoinsAParentOnlyWithTheChildrenDeclaredInIt) {
   EXPECT_EQ(std::find(pairs.begin(), pairs.end(), std::make_pair(Kind::Class, Kind::Module)), pairs.end());
 }
 
-// ---- Manual.cpp --------------------------------------------------------------------------------
+// ---- WrittenForms.cpp ----------------------------------------------------------------------------
 
 class TestWrittenForms : public ::testing::Test {};
 
@@ -223,6 +223,8 @@ TEST_F(TestWrittenForms, HoldsHowAKindIsWrittenAndItsExample) {
   EXPECT_EQ(forms.at(Kind::Package).second, ds::model::exampleOf(Kind::Package));
 }
 
+// ---- Codes.cpp -----------------------------------------------------------------------------------
+
 class TestBuildCodes : public ::testing::Test {};
 
 TEST_F(TestBuildCodes, ListsEveryCodeTheEngineReportsSyntaxFirst) {
@@ -231,6 +233,8 @@ TEST_F(TestBuildCodes, ListsEveryCodeTheEngineReportsSyntaxFirst) {
   ASSERT_FALSE(built.empty());
   EXPECT_EQ(built[0].code, "E-SYNTAX");
 }
+
+// ---- Manual.cpp --------------------------------------------------------------------------------
 
 class TestIndent : public ::testing::Test {};
 
