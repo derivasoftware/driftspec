@@ -345,14 +345,47 @@ bool Evaluator::stratify() {
   return ok;
 }
 
+std::vector<std::string> Evaluator::dependencyOrder(const std::vector<std::string>& definitions) const {
+  const std::set<std::string> level(definitions.begin(), definitions.end());
+  std::map<std::string, std::vector<std::string>> applies;  // what each definition applies within the stratum
+  for (const auto& d : definitions)
+    for (const auto& c : model_.formulas().at(d).cases)
+      for (const auto& l : c)
+        if (l.form == Form::Call) {
+          const std::string callee = definitionOf(d, l.name);
+          if (level.count(callee)) applies[d].push_back(callee);
+        }
+  std::vector<std::string> order;
+  std::map<std::string, int> state;  // 1 while its callees are visited, 2 once placed
+  bool cycle = false;
+  std::function<void(const std::string&)> visit = [&](const std::string& d) {
+    if (state[d] == 2 || cycle) return;
+    if (state[d] == 1) {
+      cycle = true;  // it reaches itself: recursion
+      return;
+    }
+    state[d] = 1;
+    for (const auto& callee : applies[d]) visit(callee);
+    state[d] = 2;
+    order.push_back(d);
+  };
+  for (const auto& d : definitions) visit(d);
+  return cycle ? std::vector<std::string>{} : order;
+}
+
 void Evaluator::computeDefinitions() {
   std::map<int, std::vector<std::string>> strata;
   for (const auto& s : stratum_)
     if (!invalid_.count(s.first)) strata[s.second].push_back(s.first);
   for (const auto& level : strata) {
+    // a stratum where no definition reaches itself through the others is fixed in one pass, each definition after
+    // those of its stratum it applies; one with recursion keeps the passes to its fixpoint (DS-338)
+    const std::vector<std::string> order = dependencyOrder(level.second);
+    const bool recursive = order.empty() && !level.second.empty();
+    const std::vector<std::string>& definitions = recursive ? level.second : order;
     for (bool changed = true; changed;) {
       changed = false;
-      for (const auto& d : level.second) {
+      for (const auto& d : definitions) {
         const model::Formula& f = model_.formulas().at(d);
         for (const auto& c : f.cases) {
           for (const auto& b : solve(d, c, {}, false)) {
@@ -362,6 +395,7 @@ void Evaluator::computeDefinitions() {
           }
         }
       }
+      if (!recursive) break;  // every definition was computed after what it applies: a second pass adds nothing
     }
   }
 }
@@ -675,10 +709,24 @@ std::vector<Bindings> Evaluator::answers(const std::string& owner, const model::
     case Form::Call: {
       const auto ext = extension_.find(definitionOf(owner, l.name));
       if (ext == extension_.end()) break;
-      for (const auto& tuple : ext->second) {
+      // what the bindings already fix is tested before anything is copied, and a fixed first argument visits only
+      // the tuples that begin with it: they lie together in the ordered extension, in the order a full pass meets
+      // them (DS-338)
+      std::vector<std::pair<std::size_t, std::string>> fixed;
+      for (std::size_t i = 0; i < l.terms.size(); ++i) {
+        std::string v;
+        if (value(owner, l.terms[i], bindings, v)) fixed.push_back({i, v});
+      }
+      const bool byFirst = !fixed.empty() && fixed.front().first == 0;
+      auto tuple = byFirst ? ext->second.lower_bound({fixed.front().second}) : ext->second.begin();
+      for (; tuple != ext->second.end(); ++tuple) {
+        if (byFirst && ((*tuple).empty() || (*tuple)[0] != fixed.front().second)) break;
+        if (tuple->size() != l.terms.size()) continue;
+        bool fits = true;
+        for (std::size_t k = 0; k < fixed.size() && fits; ++k) fits = (*tuple)[fixed[k].first] == fixed[k].second;
+        if (!fits) continue;
         Bindings b = bindings;
-        bool fits = tuple.size() == l.terms.size();
-        for (std::size_t i = 0; i < tuple.size() && fits; ++i) fits = unify(owner, l.terms[i], tuple[i], b);
+        for (std::size_t i = 0; i < tuple->size() && fits; ++i) fits = unify(owner, l.terms[i], (*tuple)[i], b);
         if (fits) out.push_back(b);
       }
       break;

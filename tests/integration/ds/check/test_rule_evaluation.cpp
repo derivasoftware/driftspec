@@ -146,6 +146,43 @@ TEST_F(TestRuleEvaluation, ADefinitionRecursUntilItsFixpoint) {
   EXPECT_EQ(messages("E-RULE-BROKEN").size(), 3u);
 }
 
+// DS-338: a definition applied with its second argument bound, or with none, answers what a full pass answered
+TEST_F(TestRuleEvaluation, ADefinitionAnswersWhicheverOfItsArgumentsIsBound) {
+  load(std::string(kBoxes) +
+       "    rule reached {\n"
+       "      @requirement REQ-00001-1\n"
+       "      for class c in p@render\n"
+       "      never depends(x, c)\n"
+       "    }\n"
+       "    rule any {\n"
+       "      @requirement REQ-00001-1\n"
+       "      never depends(a, b), b in p@render\n"
+       "    }\n"
+       "  }\n"
+       "}\n");
+  EXPECT_EQ(messages("E-RULE-BROKEN"),
+            (std::vector<std::string>{"p@core::any is broken: a = p, b = p@render::Canvas",  // the first witness in order
+                                      "p@core::reached is broken for c = p@render::Canvas: x = p"}));
+}
+
+// DS-338: a definition that applies another of its stratum is fixed after it, whatever their names say of the order:
+// one pass, no recursion
+TEST_F(TestRuleEvaluation, ADefinitionThatAppliesAnotherIsFixedAfterIt) {
+  load(std::string(kBoxes) +
+       "    definition aa-through(a, b) {\n"
+       "      if depends(a, b)\n"
+       "    }\n"
+       "    rule blind-through {\n"
+       "      @requirement REQ-00001-1\n"
+       "      for class c in p@core\n"
+       "      never aa-through(c, x), x in p@render\n"
+       "    }\n"
+       "  }\n"
+       "}\n");
+  EXPECT_EQ(messages("E-RULE-BROKEN"),
+            (std::vector<std::string>{"p@core::blind-through is broken for c = p@core::Model: x = p@render::Canvas"}));
+}
+
 TEST_F(TestRuleEvaluation, WhatARuleNamesMustExistAndItsVariablesBeBound) {
   load(std::string(kBoxes) +
        "    rule wrong {\n"

@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.21
+
+The rules evaluate faster (DS-338): applying a definition visits only the tuples that begin with its first
+argument when that one is bound, and tests what the bindings fix before it copies them; a stratum of
+definitions with no recursion is fixed in one pass, each definition after those it applies. On DriftSpec's
+own design `ds check` goes from about 150 to 105 ms, and the whole repository from 810 to 370 ms. The
+findings are the same. Nothing changes for a design.
+
 ## 0.1.20
 
 A bare name no scope declares is looked up among the classes of its package through an index the model keeps
