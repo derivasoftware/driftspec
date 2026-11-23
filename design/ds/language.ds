@@ -1959,15 +1959,22 @@ package driftspec@ds {
           Revision 3 (DS-231): it no longer lifts to a level asked for with level: module;
           it stands on the cut the diagram writes (REQ-00129-1), and the calls it follows
           are said with unfold:, fold: and depth: (REQ-00130-1).
-        verification VER-00037-5 {
+        verification VER-00037-6 {
           title: Integration tests confirm a sequence diagram selects a behaviour as it is written and expands by depth
-          status: approved
+          status: draft
+          text:
+            Revision 6 (DS-337): a depth too large for an int is the finding of a depth that is no
+            number, at the same place, and is drawn as one; it no longer stops ds. The filters read
+            a neighbours: too large for an int the same way.
           method: test
           tests:
             tests/integration/ds/check/test_values.cpp::TestValues.TwoObjectsOfOneTypeAreTwoLifelines
             tests/integration/ds/check/test_values.cpp::TestValues.AFrameWithNoMessageIsStillDrawn
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.DepthStarIsEveryLevelAndNeverAnAbort
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADepthThatIsNoNumberIsAFindingAndStillDraws
+            tests/integration/ds/render/test_open_boxes.cpp::TestDepthTooLarge.ADepthTooLargeForAnIntIsTheFindingOfADepthThatIsNoNumber
+            tests/integration/ds/render/test_open_boxes.cpp::TestDepthTooLarge.ADepthTooLargeForAnIntDrawsAsADepthThatIsNoNumberAndNeverAnAbort
+            tests/integration/ds/query/test_diagram_filters.cpp::TestFilterFor.ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ASubjectAloneDrawsItsDefaultScenario
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AScenarioIsSelectedAsItIsWrittenAndItsTraceFollowsIt
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AStarSelectsEveryScenario

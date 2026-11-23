@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
@@ -248,6 +249,81 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
   EXPECT_TRUE(open.count("shop@front@web::Page -> shop@back@store::Ledger"));  // the subject, not its module
   EXPECT_FALSE(open.count("shop@front@web -> shop@back@store::Ledger"));
   EXPECT_TRUE(open.count("shop@front -> shop@back@orders"));  // the declared @consumes
+}
+
+/// A depth written with more digits than an int holds (DS-337): std::stoi threw out_of_range and ds stopped with
+/// "ds: stoi" while ds check said nothing. It is no number, as a word is: the same finding, and drawn the same.
+class TestDepthTooLarge : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    ds::parse::Parser parser;
+    ds::bind::Binder binder(model, metamodel);
+    const auto file = parser.parseText("deep.ds",
+                                       "package p {\n"
+                                       "  module m {\n"
+                                       "    class A {\n"
+                                       "      + run() -> void\n"
+                                       "      + go() -> void\n"
+                                       "    }\n"
+                                       "    sequence A::run {\n"
+                                       "      -> go()\n"
+                                       "    }\n"
+                                       "  }\n"
+                                       "}\n"
+                                       "diagram SEQ_Deep {\n"
+                                       "  kind: sequence\n"
+                                       "  include: p@m::A::run\n"
+                                       "  depth: 99999999999\n"
+                                       "}\n"
+                                       "diagram SEQ_Lots {\n"
+                                       "  kind: sequence\n"
+                                       "  include: p@m::A::run\n"
+                                       "  depth: lots\n"
+                                       "}\n");
+    ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
+    binder.bind(file);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  }
+
+  /// The W-DIAGRAM-DEPTH findings that name a diagram.
+  std::vector<ds::model::Finding> depthOf(const std::string& diagram) const {
+    std::vector<ds::model::Finding> out;
+    for (const auto& f : model.findings()) {
+      if (f.code == "W-DIAGRAM-DEPTH" && f.message.rfind(diagram + " ", 0) == 0) out.push_back(f);
+    }
+    return out;
+  }
+
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+};
+
+TEST_F(TestDepthTooLarge, ADepthTooLargeForAnIntIsTheFindingOfADepthThatIsNoNumber) {
+  const auto deep = depthOf("SEQ_Deep");
+  const auto lots = depthOf("SEQ_Lots");
+  ASSERT_EQ(deep.size(), 1U);
+  ASSERT_EQ(lots.size(), 1U);
+  EXPECT_EQ(deep[0].severity, lots[0].severity);
+  EXPECT_EQ(deep[0].message, "SEQ_Deep asks for depth '99999999999': a number, or * for every level");
+  // where the diagram is written, as for a depth that is a word
+  const ds::model::Location& at = model.find("diagram:SEQ_Deep")->location;
+  EXPECT_EQ(deep[0].location.file, "deep.ds");
+  EXPECT_EQ(deep[0].location.line, at.line);
+  EXPECT_EQ(deep[0].location.column, at.column);
+  EXPECT_EQ(deep[0].location.line, 12);
+}
+
+TEST_F(TestDepthTooLarge, ADepthTooLargeForAnIntDrawsAsADepthThatIsNoNumberAndNeverAnAbort) {
+  const ds::render::IrExport ir(model, metamodel);
+  std::string deep;
+  EXPECT_NO_THROW(deep = ir.render("diagram:SEQ_Deep", false));
+  ASSERT_FALSE(deep.empty());
+  const auto drawn = nlohmann::json::parse(deep);
+  const auto word = nlohmann::json::parse(ir.render("diagram:SEQ_Lots", false));
+  EXPECT_FALSE(drawn["edges"].empty());
+  EXPECT_EQ(drawn["nodes"], word["nodes"]);
+  EXPECT_EQ(drawn["edges"], word["edges"]);
 }
 
 }  // namespace
