@@ -6,13 +6,27 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.28
+## 0.1.30
 
 The walks of a behaviour are a class, `ds::model::Paths` (DS-343), made over the model whoever asks already holds:
 whether a behaviour names a scenario, the steps the path of one takes and who a behaviour runs on. How a path goes
 at each frame is its own, in no header. The scope outside a name is `Scope`'s to tell, and the model's internal
 helpers, `model::detail`, are gone. The findings, the export and every page of `ds manual` are the same. Nothing
 changes for a design.
+
+## 0.1.29
+
+The Owner approves the two requirement revisions DS-342 left as drafts: REQ-00079-2 (the metamodel describes how each kind
+is written, the codes and the annotations; the manual presents them with the commands) and REQ-00160-2 (the manual's guides).
+Nothing a design writes changes.
+
+## 0.1.28
+
+A class diagram is drawn less tall (DS-350): the gap under a layer keeps a lane only for an edge that turns in it, so
+a long edge running straight down its channel takes no row. Eight of DriftSpec's own thirty diagrams come out a
+little shorter, as text and as svg; the 400-class synthetic as text goes from 75,227 rows and 2 GB to 20,679 rows
+and 0.55 GB. A text drawing that would still take more than about 128 million characters is refused with what it
+would take (draw it as svg, or select less) instead of exhausting the machine's memory. Nothing changes for a design.
 
 ## 0.1.27
 

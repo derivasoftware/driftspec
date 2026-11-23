@@ -34,7 +34,7 @@ constexpr std::uint8_t kLong = 0xFF;
 
 class Grid {
  public:
-  Grid(int minX, int minY, int w, int h) : minX_(minX), minY_(minY), w_(w), h_(h), cells_(static_cast<size_t>(w) * h) {}
+  Grid(int minX, int minY, int w, int h) : minX_(minX), minY_(minY), w_(w), h_(h), cells_(sized(w, h)) {}
 
   Cell* at(int x, int y) {
     x -= minX_;
@@ -173,6 +173,16 @@ class Grid {
   }
 
  private:
+  /// A drawing too large to hold as text is refused with what it would take, instead of exhausting the machine
+  /// (DS-350): some 128 million characters, about 0.9 GB of cells, is the most it holds.
+  static std::size_t sized(int w, int h) {
+    const std::size_t cells = static_cast<std::size_t>(std::max(w, 0)) * static_cast<std::size_t>(std::max(h, 0));
+    if (cells > kMaxCells)
+      throw std::length_error("the drawing would take " + std::to_string(w) + " x " + std::to_string(h) +
+                              " characters, too large for text: draw it as svg, or select less");
+    return cells;
+  }
+  static constexpr std::size_t kMaxCells = std::size_t{128} * 1024 * 1024;
   /// The index of `color` in the palette, added the first time it is asked.
   std::uint8_t paint(const std::string& color) {
     for (std::size_t i = 0; i < palette_.size(); ++i)

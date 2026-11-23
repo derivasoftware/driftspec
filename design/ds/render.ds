@@ -64,10 +64,10 @@ package driftspec@ds {
         tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.AClassDiagramHangsItsArtefactsAsANote
     }
 
-    verification VER-00007-2 {
+    verification VER-00007-3 {
       status: approved
       @requirement REQ-00007-1
-      title: Unit tests cover placement, routing, wrapping and the determinism of both drawings
+      title: Unit tests cover placement, routing, wrapping, the lanes a gap keeps and the determinism of both drawings
       method: test
       tests:
         tests/integration/ds/render/test_layout.cpp::TestLayout.EveryNodeIsPlacedAndNoTwoLeavesOverlap
@@ -75,6 +75,7 @@ package driftspec@ds {
         tests/integration/ds/render/test_layout.cpp::TestLayout.BasesAreDrawnAboveSubtypesAndWholesAboveParts
         tests/integration/ds/render/test_layout.cpp::TestLayout.EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute
         tests/integration/ds/render/test_layout.cpp::TestLayout.LongEdgesStepAroundTheNodesTheyCross
+        tests/integration/ds/render/test_layout.cpp::TestLayoutLanes.AStraightLongEdgeReservesNoLaneRow
         tests/integration/ds/render/test_layout.cpp::TestLayout.ParallelRelationsAreBundledWithTheirLabelsStacked
         tests/integration/ds/render/test_layout.cpp::TestLayout.TheSvgIsDeterministicAndCarriesStableIds
         tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.DrawsLifelinesRowsFramesAndTheCaller

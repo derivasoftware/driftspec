@@ -487,7 +487,8 @@ TEST_F(TestQualification, EveryCorpusMeansExactlyTheFindingsItMarks) {
 }
 
 // SREQ-00005-1, DS-350: the text drawing of a large class diagram stays within bounded memory. A cell once took 72
-// bytes, so 250 classes needed some 5 GB and 400 took a machine down; the drawing runs under a 3 GB address-space
+// bytes and every gap a row per edge crossing it, so 400 classes took 14 GB and a machine down; with compact cells
+// they took 2 GB, and with lanes kept only for turning edges 0.55 GB. The drawing runs under a 3 GB address-space
 // cap, so a regression fails here instead
 TEST_F(TestQualification, ALargeClassDiagramIsDrawnAsTextWithinBoundedMemory) {
 #ifdef _WIN32
@@ -496,9 +497,9 @@ TEST_F(TestQualification, ALargeClassDiagramIsDrawnAsTextWithinBoundedMemory) {
   const std::string tmp = scratch("ds-text-memory");
   std::ofstream ws(tmp + "/big.ds");
   ws << "package big {\n  module m {\n";
-  for (int i = 0; i < 250; ++i) {
-    ws << "    class C" << i << (i > 0 ? " : C" + std::to_string((i - 1) / 3) : "") << " {\n      - owns next: C" << (i + 1) % 250
-       << "\n      + run(a: int) -> C" << (i + 7) % 250 << "\n    }\n";
+  for (int i = 0; i < 400; ++i) {
+    ws << "    class C" << i << (i > 0 ? " : C" + std::to_string((i - 1) / 3) : "") << " {\n      - owns next: C" << (i + 1) % 400
+       << "\n      + run(a: int) -> C" << (i + 7) % 400 << "\n    }\n";
   }
   ws << "  }\n}\ndiagram CL_Big {\n  kind: class\n  include: big@*\n}\n";
   ws.close();

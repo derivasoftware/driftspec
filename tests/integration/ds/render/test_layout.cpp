@@ -119,6 +119,43 @@ TEST_F(TestLayout, LongEdgesStepAroundTheNodesTheyCross) {
   }
 }
 
+// DS-350: a gap keeps a lane only for an edge that turns in it. A -> Dn turns where it leaves A and where it reaches Dn,
+// and runs straight down its channel through the gap between B and C: that gap is as tall as without it
+TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
+  const auto gapBetweenBAndC = [](const std::string& extra) {
+    const ds::model::Metamodel metamodel;
+    ds::model::Model model{metamodel};
+    ds::parse::Parser parser;
+    ds::bind::Binder binder(model, metamodel);
+    binder.bind(
+        parser.parseText("chain.ds",
+                         "package p {\n  module m {\n"
+                         "    class A {\n      - owns b: B\n" +
+                             extra +
+                             "    }\n"
+                             "    class B {\n      - owns c: C\n    }\n"
+                             "    class C {\n      - owns d1: D1\n      - owns d2: D2\n      - owns d3: D3\n      - owns d4: D4\n    }\n"
+                             "    class D1 { }\n    class D2 { }\n    class D3 { }\n    class D4 { }\n"
+                             "  }\n}\n"
+                             "diagram CL_Chain {\n  kind: class\n  include: p@*\n}\n"));
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, metamodel, checkSteps).run(binder);
+    const IrDocument doc = IrDocument::parse(ds::render::IrExport(model).render("diagram:CL_Chain", false)).bundled();
+    const LayoutResult lay = ds::render::Layout().place(doc);
+    int bottomOfB = -1, topOfC = -1;
+    for (const auto& p : lay.placed) {
+      if (p.node->id == "p@m::B") bottomOfB = p.rect.y + p.rect.h;
+      if (p.node->id == "p@m::C") topOfC = p.rect.y;
+    }
+    return bottomOfB < 0 || topOfC < 0 ? -1 : topOfC - bottomOfB;
+  };
+  const int without = gapBetweenBAndC("");
+  // four long edges, so their lanes would outgrow the gap's least height (GAP_Y) if they were kept
+  const int with = gapBetweenBAndC("      - refs f1: D1\n      - refs f2: D2\n      - refs f3: D3\n      - refs f4: D4\n");
+  ASSERT_GT(without, 0);
+  EXPECT_EQ(with, without) << "the long edge A -> D reserved a lane in the gap it only crosses";
+}
+
 TEST_F(TestLayout, ParallelRelationsAreBundledWithTheirLabelsStacked) {
   const IrDocument raw = IrDocument::parse(ds::render::IrExport(model).render("diagram:CL_Templates", false));
   const IrDocument doc = raw.bundled();
