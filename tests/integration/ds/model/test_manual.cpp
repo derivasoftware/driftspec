@@ -42,7 +42,7 @@ class TestManual : public ::testing::Test {
     const std::regex literal("\"([EW]-[A-Z0-9-]+)\"");
     for (const char* root : {"/src", "/app"}) {
       for (const auto& entry : std::filesystem::recursive_directory_iterator(std::string(DRIFTSPEC_SOURCE_DIR) + root)) {
-        if (!entry.is_regular_file() || entry.path().filename() == "Manual.cpp") continue;  // the catalogue itself
+        if (!entry.is_regular_file() || entry.path().filename() == "Codes.cpp") continue;  // the catalogue itself
         std::ifstream in(entry.path());
         std::stringstream text;
         text << in.rdbuf();

@@ -64,7 +64,7 @@ extern const FieldSpec kEscapes;
 extern const FieldSpec kEscapePath;
 extern const FieldSpec kLanguage;
 
-/// The kinds with how each is written, from the manual (Manual.cpp).
+/// The kinds with how each is written (WrittenForms.cpp).
 std::vector<KindSpec> describe(std::vector<KindSpec> kinds);
 std::vector<KindSpec> build();
 RelationSpec rel(const char* kind, const char* meaning, std::vector<Kind> from, std::vector<Kind> to);
@@ -76,7 +76,7 @@ bool matches(const std::string& name, const std::string& key);
 /// contains, from a parent to a child exactly where the child may be declared.
 RelationSpec containment();
 
-// ---- Manual.cpp --------------------------------------------------------------------------------
+// ---- WrittenForms.cpp, the metamodel's (DS-340) -------------------------------------------------
 
 extern const std::string kShopClass;
 extern const std::string kShopInterface;
@@ -85,7 +85,13 @@ extern const std::string kShopUseCase;
 
 /// How each kind is written and a minimal workspace that declares one, by kind.
 const std::map<Kind, std::pair<std::string, std::string>>& writtenForms();
+
+// ---- Codes.cpp, the metamodel's (DS-340) --------------------------------------------------------
+
 std::vector<CodeSpec> buildCodes();
+
+// ---- Manual.cpp --------------------------------------------------------------------------------
+
 std::string indent(const std::string& text, const std::string& by);
 std::string pad(const std::string& text, size_t width);
 std::string names(const std::vector<Kind>& kinds);

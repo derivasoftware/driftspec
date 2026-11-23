@@ -47,7 +47,7 @@ const FieldSpec kLanguage = writtenField("language", FieldType::Name,
                                          "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless "
                                          "that says otherwise");
 
-std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is written, from the manual (Manual.cpp)
+std::vector<KindSpec> describe(std::vector<KindSpec> kinds) {  // how each is written (WrittenForms.cpp)
   for (auto& k : kinds) {
     k.syntax = syntaxOf(k.kind);
     k.example = exampleOf(k.kind);
@@ -377,6 +377,31 @@ const RelationSpec* relationOf(const std::string& kind) {
     if (r.kind == kind) return &r;
   }
   return nullptr;
+}
+
+// The annotations that mean something, the binder's table (DS-340: the metamodel's, not the manual's). Two
+// rows only document, for the manual: "@<any other word>" (which annotationOf also gives for an unknown word)
+// and ": <UC ID> after an operation"; the binder lists as known only the names that start with @ and hold no <.
+const std::vector<AnnotationSpec>& annotations() {
+  static const std::vector<AnnotationSpec> all = {
+      {"@requirement", "satisfies", "the entity answers to the requirement; on a verification, verifies it", "verifies", Kind::Requirement},
+      {"@constraint", "constrained-by", "the entity obeys the constraint; on a verification, verifies it", "verifies", Kind::Constraint},
+      {"@refines", "refines", "the requirement details the one named (nesting says the same)", "", Kind::Requirement},
+      {"@interface", "realises", "the class or verification carries out the interface", "", Kind::Interface},
+      {"@consumes", "consumes", "the package, module or class depends on an interface another box offers", "", Kind::Interface},
+      {"@verification", "exercised-by", "the sequence is run by the verification", "", Kind::Verification},
+      {"@<any other word>", "refers", "kept as a link the language gives no meaning to, and reported (W-ANNOTATION-UNKNOWN)"},
+      {": <UC ID> after an operation", "realises", "not an annotation: an interface operation realises the use case it names"},
+  };
+  return all;
+}
+
+const AnnotationSpec& annotationOf(const std::string& word) {
+  for (const auto& a : annotations())
+    if (a.name == "@" + word) return a;
+  static const AnnotationSpec& other =
+      *std::find_if(annotations().begin(), annotations().end(), [](const AnnotationSpec& a) { return a.name == "@<any other word>"; });
+  return other;
 }
 
 bool joins(const RelationSpec& relation, Kind from, Kind to) {
