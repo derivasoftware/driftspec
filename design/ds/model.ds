@@ -254,7 +254,7 @@ package driftspec@ds {
       + flags: std::vector<std::string>
       + many parents: std::vector<Kind>
       + top: bool
-      + syntax: std::string                  // how it is written (REQ-00079-1)
+      + syntax: std::string                  // how it is written (REQ-00079-2)
       + example: std::string                 // a minimal workspace that declares one and checks clean
     }
 
@@ -271,7 +271,7 @@ package driftspec@ds {
     // and how each kind is written. The binder, the checker and the kinds read them here; the manual
     // derives its pages from them and the metamodel never reads the manual
     dataclass CodeSpec {                     // a finding code: what it means and what to do about it
-      @requirement REQ-00079-1
+      @requirement REQ-00079-2
       + code: std::string
       + severity: std::string
       + meaning: std::string
@@ -279,7 +279,7 @@ package driftspec@ds {
     }
 
     dataclass AnnotationSpec {               // an annotation that means something, and the relation it makes
-      @requirement REQ-00079-1
+      @requirement REQ-00079-2
       @requirement REQ-00088-1
       + name: std::string
       + relation: std::string
@@ -293,7 +293,7 @@ package driftspec@ds {
     // reference to the model, the binder, the checker and the manual. No static accessor reaches it.
     class Metamodel {
       @requirement REQ-00066-1
-      @requirement REQ-00079-1
+      @requirement REQ-00079-2
       - owns many names_: std::vector<std::string>                          // each kind's name, by its place in Kind
       - owns forms_: std::map<Kind, std::pair<std::string, std::string>>   // how each kind is written, and its example
       - owns many kinds_: std::vector<KindSpec>
@@ -388,24 +388,28 @@ package driftspec@ds {
       return other_
     }
 
-    // ---- the manual ds embeds (REQ-00079-1): written from the metamodel, held to the engine ----
-    requirement REQ-00079-1 {
-      status: approved
+    // ---- the manual ds embeds (REQ-00079-2): written from the metamodel, held to the engine ----
+    requirement REQ-00079-2 {
+      status: draft
       @refines SREQ-00014-1
-      title: The metamodel shall carry the manual of the language: how each kind is written with a minimal example that checks clean, the catalogue of finding codes, the annotations and the commands
+      title: The metamodel shall describe how each kind is written with a minimal example that checks clean, the catalogue of finding codes and the annotations, and the manual shall present them with the commands
       text:
         Every kind of the metamodel says how it is written and gives an
         example: a workspace of its own that declares one and checks with no
         finding. The catalogue holds every code the engine reports, with its
         severity, what it means and what to do, and nothing the engine does
         not report. The annotations that mean something name the relation
-        they make; the commands say what each exit code means. manualPage
-        renders the index, a kind, a code, the commands, the annotations or
-        the codes, and nothing for a topic it does not know.
+        they make. The manual, which reads the metamodel, holds the commands
+        and says what each exit code means; its page renders the index, a
+        kind, a code, the commands, the annotations or the codes, and nothing
+        for a topic it does not know.
       rationale:
         Owner, 2026-11-06 (DS-79): as argos embeds its body of knowledge, ds
         embeds its manual; generated from the metamodel and tested against
         the engine, it is the one place the language is described.
+        Revision 2: the language's tables are the metamodel's and the commands
+        and the pages are the manual's, a class that reads the metamodel
+        (Owner, 2026-11-23, DS-340 to DS-342).
       tags: manual, metamodel, language
     }
 
@@ -467,7 +471,7 @@ package driftspec@ds {
 
     verification VER-00088-1 {
       status: approved
-      @requirement REQ-00079-1
+      @requirement REQ-00079-2
       title: Integration tests confirm every kind is written down with an example that checks clean, the catalogue is exactly the codes the engine reports, and every topic has a page
       method: test
       tests:
@@ -477,7 +481,7 @@ package driftspec@ds {
     }
 
     dataclass CommandSpec {                  // a command of the manual: how it is invoked, what it does, what each exit code says
-      @requirement REQ-00079-1
+      @requirement REQ-00079-2
       + name: std::string
       + synopsis: std::string
       + does: std::string
@@ -489,7 +493,7 @@ package driftspec@ds {
     // and keeps the commands, which are its own and not the metamodel's; its tables are built once, when it
     // is made, and the page builders are its private members. The metamodel never reads the manual.
     class Manual {
-      @requirement REQ-00079-1
+      @requirement REQ-00079-2
       - refs metamodel_: Metamodel                                    // the language it describes, made outside it and outliving it
       - owns many commands_: std::vector<CommandSpec>
       - owns many guides_: std::vector<std::pair<std::string, std::string>>

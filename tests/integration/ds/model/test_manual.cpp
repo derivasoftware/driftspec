@@ -18,7 +18,7 @@
 
 namespace {
 
-/// The manual ds embeds (REQ-00079-1) held to the language: every kind is written down with an
+/// The manual ds embeds (REQ-00079-2) held to the language: every kind is written down with an
 /// example that checks clean, and the catalogue of codes is exactly the codes the engine reports.
 class TestManual : public ::testing::Test {
  protected:

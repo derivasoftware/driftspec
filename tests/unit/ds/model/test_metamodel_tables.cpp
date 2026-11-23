@@ -18,7 +18,7 @@ class Metamodelled : public ::testing::Test {
   const ds::model::Metamodel metamodel;
 };
 
-/// The tables of the metamodel and what finds a row in each (REQ-00066-1, REQ-00079-1): one
+/// The tables of the metamodel and what finds a row in each (REQ-00066-1, REQ-00079-2): one
 /// fixture per member of ds::model::Metamodel, each asked what a reader of the language asks of it.
 class TestKinds : public Metamodelled {};
 class TestSpecOf : public Metamodelled {};

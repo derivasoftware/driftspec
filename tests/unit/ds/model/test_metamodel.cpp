@@ -88,7 +88,7 @@ TEST_F(TestKindSpec, OnlyPackagesAndDiagramsStandAtTheTop) {
   }
 }
 
-/// The tables the manual reads (REQ-00079-1): a code and an annotation, each found by its name. A command is the
+/// The tables the manual reads (REQ-00079-2): a code and an annotation, each found by its name. A command is the
 /// manual's (DS-342): tests/unit/ds/model/test_manual_pages.cpp.
 class TestCodeSpec : public Metamodelled {};
 class TestAnnotationSpec : public Metamodelled {};
@@ -108,7 +108,7 @@ TEST_F(TestAnnotationSpec, EveryAnnotationThatMeansSomethingNamesTheRelationItMa
   }
 }
 
-/// How a kind is written and its example, the metamodel's for the manual (REQ-00079-1), one fixture each.
+/// How a kind is written and its example, the metamodel's for the manual (REQ-00079-2), one fixture each.
 class TestSyntaxOf : public Metamodelled {};
 class TestExampleOf : public Metamodelled {};
 

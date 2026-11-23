@@ -31,7 +31,7 @@ class WithAManual : public ::testing::Test {
   }
 };
 
-/// The manual's members (REQ-00079-1, REQ-00160-2): one fixture each, asked what whoever shows the manual asks.
+/// The manual's members (REQ-00079-2, REQ-00160-2): one fixture each, asked what whoever shows the manual asks.
 class TestManual : public WithAManual {};
 class TestPage : public WithAManual {};
 class TestTopics : public WithAManual {};
