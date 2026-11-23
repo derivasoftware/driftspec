@@ -158,6 +158,12 @@ void Model::indexEntity(const Entity& entity, bool enters) {
     members.erase(entity.id);
     revisions.erase(entity.id);
   }
+  // a bare name the resolver finds by package needs no pass over the model (DS-336)
+  if (entity.kind == Kind::Class || entity.kind == Kind::Enum) {
+    auto& named = indexed_.named[{Scope(entity.scope).package().text(), entity.name}];
+    if (enters && !entity.expected) named.insert(entity.id);
+    if (!enters) named.erase(entity.id);
+  }
 }
 
 void Model::indexAgain() {

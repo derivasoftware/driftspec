@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ds {
@@ -18,11 +19,13 @@ struct Relation;
 /// the declared revisions of each artefact; and what holds what, as a tree. The model keeps it in
 /// step with every declare, relate and rename; nothing here is a fact of its own.
 struct Indexed {
-  std::map<std::string, std::vector<std::size_t>> from;      ///< the relations that leave an identity, by position
-  std::map<std::string, std::vector<std::size_t>> to;        ///< the relations that reach it
-  std::map<std::string, std::vector<std::size_t>> kind;      ///< the relations of one kind
-  std::map<std::string, std::set<std::string>> members;      ///< what each scope declares
-  std::map<std::string, std::set<std::string>> revisions;    ///< the declared ids of an artefact, by its id without revision
+  std::map<std::string, std::vector<std::size_t>> from;    ///< the relations that leave an identity, by position
+  std::map<std::string, std::vector<std::size_t>> to;      ///< the relations that reach it
+  std::map<std::string, std::vector<std::size_t>> kind;    ///< the relations of one kind
+  std::map<std::string, std::set<std::string>> members;    ///< what each scope declares
+  std::map<std::string, std::set<std::string>> revisions;  ///< the declared ids of an artefact, by its id without revision
+  std::map<std::pair<std::string, std::string>, std::set<std::string>>
+      named;                                                 ///< the declared classes and enums, by package and simple name (DS-336)
   std::map<std::string, std::string> parent;                 ///< what holds each entity
   std::map<std::string, std::vector<std::string>> children;  ///< what each entity holds
   bool treeStale = true;                                     ///< the tree is built again at the next question
@@ -60,6 +63,9 @@ class Index {
   /// The identity the workspace declares for an artefact written with any revision or with none;
   /// "" when nothing declares it.
   std::string revisionOf(const std::string& artefact) const;
+  /// The declared classes and enums named `name` (simple, without arity) in the package `package`, by identity;
+  /// expected ones are not counted (DS-336).
+  std::vector<std::string> named(const std::string& package, const std::string& name) const;
 
  private:
   std::vector<Relation> at(const std::map<std::string, std::vector<std::size_t>>& table, const std::string& key) const;

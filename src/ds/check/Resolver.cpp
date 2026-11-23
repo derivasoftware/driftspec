@@ -52,14 +52,11 @@ std::vector<std::string> Resolver::namesakes(const std::string& name, const std:
   const auto open = name.find('<');
   const std::string simple = name.substr(0, open);
   const std::string arity = open == std::string::npos ? "" : name.substr(open);
+  // the model keeps the declared classes and enums by package and name: the arity is told on that short list
   std::vector<std::string> found;
-  for (const auto& pair : model_.entities()) {
-    const model::Entity& e = pair.second;
-    if (e.expected || e.name != simple || (e.kind != model::Kind::Class && e.kind != model::Kind::Enum)) continue;
-    const std::string id = pair.first;
+  for (const std::string& id : model_.index().named(package, simple)) {
     const bool templated = !id.empty() && id.back() == '>';
     if (arity.empty() ? templated : id.size() < arity.size() || id.compare(id.size() - arity.size(), arity.size(), arity) != 0) continue;
-    if (model::Scope(e.scope).package().text() != package) continue;
     found.push_back(id);
   }
   return found;

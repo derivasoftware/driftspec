@@ -726,11 +726,13 @@ package driftspec@ds {
       return found
     }
 
-    // Every class or enum of a name and arity in the package of the scope. Testing each entity is no message.
+    // Every class or enum of a name and arity in the package of the scope: the model keeps them by package and
+    // name, and the arity is told on that short list (DS-336).
     sequence Resolver::namesakes {
       local package: model::Scope
       self -> package.package() -> box
-      self -> model_.entities() -> entities
+      self -> model_.index() -> index
+      self -> index.named(box, name) -> named
       return found
     }
 
