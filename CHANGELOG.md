@@ -6,11 +6,21 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.54
+## 0.1.55
 
 The viewer's test that a behaviour is written once and replayed by many tours runs on a fixture made for it (DS-377):
 one behaviour called from four places, whose calls and steps are known, instead of a ratio of ds's own design that moved
 with every change to it. ds's design keeps the tours that name its entities. Nothing a design writes changes.
+
+## 0.1.54
+
+The rules are evaluated with far less copying (DS-381). The solver bound each variable in a map of strings and copied
+the whole map, strings included, for every candidate it tried, and climbing what holds what copied a string per step.
+Each formula's variables now get fixed slots once, and a binding is a vector of pointers to texts that the evaluation
+owns and that never move: the facts, which copy what holds what from the model's index once, and a few texts the solver
+keeps itself. A candidate copies a few pointers. Subjects, witnesses and messages are ordered exactly as before.
+Nothing a design writes changes: findings, breaches and tables read the same; `ds check` on a design with rules spends
+roughly half the instructions it did in the evaluator.
 
 ## 0.1.53
 
