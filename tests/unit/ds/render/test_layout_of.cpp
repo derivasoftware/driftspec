@@ -2,8 +2,12 @@
 
 #include "ds/render/Ir.hpp"
 #include "ds/render/Layout.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 using ds::render::IrDocument;
 using ds::render::IrNode;
@@ -22,7 +26,7 @@ IrNode box(const std::string& id, const std::string& label, std::vector<std::vec
 /// The layout of a document in one table of metrics (DS-185).
 
 TEST(TestLayout, ABoxIsAsWideAsItsLongestLineAndAsTallAsItsLines) {
-  const Metrics m = Metrics::text();
+  const Metrics m = Metrics::text(kTheme.measures(ds::theme::Sink::text));
   const Layout layout(m);
   const auto narrow = layout.sizeOf(box("a", "A"));
   const auto wide = layout.sizeOf(box("b", "B", {{"+ aMuchLongerMemberThanTheName()"}}));
@@ -33,7 +37,7 @@ TEST(TestLayout, ABoxIsAsWideAsItsLongestLineAndAsTallAsItsLines) {
 TEST(TestLayout, EveryNodeIsPlacedAndTheSameDocumentPlacesTheSameWay) {
   IrDocument doc;
   doc.nodes = {box("a", "A"), box("b", "B")};
-  const Layout layout(Metrics::svg());
+  const Layout layout(Metrics::svg(kTheme.measures(ds::theme::Sink::svg)));
   const auto first = layout.place(doc);
   const auto again = layout.place(doc);
   ASSERT_EQ(first.placed.size(), 2u);

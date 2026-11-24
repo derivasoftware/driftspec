@@ -7,6 +7,10 @@
 
 #include "ds/format/Format.hpp"
 #include "ds/render/Ir.hpp"
+#include "ds/render/Layout.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace format {
@@ -21,33 +25,50 @@ class DiagramIr : public IFormat<render::IrText> {
 /// Where each node and route goes, in cells: the portable form for hosts that draw themselves (-f layout).
 class DiagramLayout : public IFormat<render::IrText> {
  public:
+  /// In cells, measured as the theme measures text in a terminal (DS-393).
+  explicit DiagramLayout(const theme::Theme& theme);
   std::string name() const override;
   std::string write(const render::IrText& document, const FormatOptions& options) const override;
+
+ private:
+  const render::Metrics metrics_;
 };
 
 /// The diagram laid out and drawn as SVG (-f svg).
 class DiagramSvg : public IFormat<render::IrText> {
  public:
+  explicit DiagramSvg(const theme::Theme& theme) : svg_(theme) {}
   std::string name() const override;
   std::string write(const render::IrText& document, const FormatOptions& options) const override;
+
+ private:
+  const render::Svg svg_;
 };
 
 /// The diagram in characters, for a terminal (-f text).
 class DiagramText : public IFormat<render::IrText> {
  public:
+  explicit DiagramText(const theme::Theme& theme) : text_(theme) {}
   std::string name() const override;
   std::string write(const render::IrText& document, const FormatOptions& options) const override;
+
+ private:
+  const render::Text text_;
 };
 
 /// The diagram as the terminal's coloured cells (-f cells).
 class DiagramCells : public IFormat<render::IrText> {
  public:
+  explicit DiagramCells(const theme::Theme& theme) : text_(theme) {}
   std::string name() const override;
   std::string write(const render::IrText& document, const FormatOptions& options) const override;
+
+ private:
+  const render::Text text_;
 };
 
-/// The one place that names the formats of a diagram, keyed by name.
-std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> diagramFormats();
+/// The one place that names the formats of a diagram, keyed by name; those that draw draw in `theme` (DS-393).
+std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> diagramFormats(const theme::Theme& theme);
 
 }  // namespace format
 }  // namespace ds

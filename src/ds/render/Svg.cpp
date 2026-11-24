@@ -9,96 +9,12 @@
 #include <vector>
 
 #include "ds/text/Text.hpp"
+#include "ds/theme/Writers.hpp"
 
 namespace ds {
 namespace render {
 
 namespace {
-
-const Metrics M = Metrics::svg();
-
-// The stylesheet of plantuml-render's engine (shared.ts STYLE), verbatim: one theming contract.
-const char* const kStyle = R"CSS(
-  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
-    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
-    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
-    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
-    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
-    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
-    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
-    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
-    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
-    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
-    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
-  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
-    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
-    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
-    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
-  .pr-diagram text { fill: var(--pr-text); }
-  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
-  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
-  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
-  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
-  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
-  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
-  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
-  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
-  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
-  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
-  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
-  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
-  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
-  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
-  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
-  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
-  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
-  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
-  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
-  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
-  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
-  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
-  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
-  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
-  .pr-diagram .pr-name { fill: var(--pr-name); }
-  .pr-diagram .pr-type { fill: var(--pr-type); }
-  .pr-diagram .pr-param { fill: var(--pr-param); }
-  .pr-diagram .pr-punct { fill: var(--pr-punct); }
-  .pr-diagram .pr-static { text-decoration: underline; }
-  .pr-diagram .pr-abstract-member { font-style: italic; }
-  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
-  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
-  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
-  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
-  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
-  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
-  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
-  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
-  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
-  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
-  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
-  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
-  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
-  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
-  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
-  .pr-diagram marker .pr-open { fill: none; }
-  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
-  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
-  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
-  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
-  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
-  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
-  .pr-diagram .pr-change-removed .pr-head { fill: none; }
-  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
-  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
-  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
-  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
-  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
-  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
-  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
-  .pr-diagram .pr-edge-change-changed { stroke: var(--pr-changed); stroke-width: 2; } .pr-diagram .pr-edge-change-renamed { stroke: var(--pr-renamed); stroke-width: 2; }
-)CSS";
 
 std::string dataAttrs(const std::map<std::string, std::string>& refs);
 
@@ -207,7 +123,7 @@ std::pair<std::string, std::string> memberMarkup(const std::string& line) {
 std::string num(int v) { return std::to_string(v); }
 std::string num(double v) { return num(static_cast<int>(v)); }  // a position computed in doubles, drawn in whole pixels
 
-std::string emitNode(const Placed& p, const std::string& px) {
+std::string emitNode(const Placed& p, const std::string& px, const Metrics& M) {
   const IrNode& n = *p.node;
   const Rect& r = p.rect;
   std::string classes = "pr-" + n.kind;
@@ -348,45 +264,6 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
 
 namespace {
 
-const char* const kSeqStyle = R"CSS(
-  .pr-diagram .pr-lifeline-line { stroke: var(--pr-stroke); stroke-dasharray: 4 4; }
-  .pr-diagram .pr-lifeline-head > rect { fill: var(--pr-head-class); stroke: var(--pr-stroke); }
-  .pr-diagram .pr-actor circle, .pr-diagram .pr-actor path { fill: none; stroke: var(--pr-text); stroke-width: 1.4; stroke-linecap: round; }
-  .pr-diagram .pr-msg { stroke: var(--pr-edge); fill: none; pointer-events: none; }
-  .pr-diagram .pr-msg-dashed { stroke-dasharray: 6 4; }
-  .pr-diagram .pr-msg-label { fill: var(--pr-text); font-size: 11.5px; text-anchor: middle; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
-  .pr-diagram .pr-msg-self .pr-msg-label { text-anchor: start; }
-  .pr-diagram { --pr-frame-alt: #4338ca; --pr-frame-loop: #047857; --pr-frame-opt: #b45309; --pr-frame-other: #334155; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; } }
-  [data-theme="dark"] .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; }
-  .pr-diagram .pr-frame { --pr-frame: var(--pr-frame-other); }
-  .pr-diagram .pr-frame-alt { --pr-frame: var(--pr-frame-alt); }
-  .pr-diagram .pr-frame-loop { --pr-frame: var(--pr-frame-loop); }
-  .pr-diagram .pr-frame-opt { --pr-frame: var(--pr-frame-opt); }
-  .pr-diagram .pr-frame > rect { fill: none; stroke: var(--pr-frame); stroke-width: 1.6px; }
-  .pr-diagram .pr-frame-tab { fill: var(--pr-frame); stroke: none; }
-  .pr-diagram .pr-frame-label { font-weight: 700; fill: var(--pr-box-fill); font-size: 11px; letter-spacing: .3px; }
-  .pr-diagram .pr-frame-cond { fill: var(--pr-text); font-size: 11px; }
-  .pr-diagram .pr-frame-divider { stroke: var(--pr-frame); stroke-dasharray: 5 4; stroke-width: 1.2px; }
-  .pr-diagram .pr-expandable { cursor: pointer; }
-  .pr-diagram .pr-toggle { fill: var(--pr-muted); font-size: 10px; }
-  .pr-diagram .pr-toggle-closed { display: none; }
-  .pr-diagram .pr-collapsed .pr-toggle-open { display: none; }
-  .pr-diagram .pr-collapsed .pr-toggle-closed { display: inline; }
-  .pr-diagram .pr-collapsed .pr-msg-label { font-weight: 700; }
-  .pr-diagram.pr-focusing .pr-row, .pr-diagram.pr-focusing .pr-lifeline, .pr-diagram.pr-focusing .pr-frame { opacity: var(--pr-dimmed, .25); transition: opacity .12s; }
-  .pr-diagram.pr-focusing .pr-focus { opacity: 1; }
-  .pr-diagram .pr-link:hover .pr-msg-label, .pr-diagram .pr-link:hover .pr-header { text-decoration: underline; }
-  .pr-diagram .pr-row.pr-change-added .pr-msg { stroke: var(--pr-added); stroke-width: 2; }
-  .pr-diagram .pr-row.pr-change-added .pr-msg-label { fill: var(--pr-added); font-weight: 700; }
-  .pr-diagram .pr-row.pr-change-removed .pr-msg { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
-  .pr-diagram .pr-row.pr-change-removed .pr-msg-label { fill: var(--pr-removed); text-decoration: line-through; }
-  .pr-diagram .pr-row.pr-change-changed .pr-msg { stroke: var(--pr-changed); stroke-width: 2; }
-  .pr-diagram .pr-row.pr-change-changed .pr-msg-label { fill: var(--pr-changed); font-weight: 700; }
-  .pr-diagram .pr-lifeline.pr-change-renamed .pr-header { fill: var(--pr-renamed); }
-  .pr-diagram .pr-lifeline.pr-change-added .pr-header { fill: var(--pr-added); }
-)CSS";
-
 const char* const kSeqScript = R"JS(
 (function () {
   var root = document.getElementById('%ROOT%');
@@ -473,7 +350,7 @@ std::string dataAttrs(const std::map<std::string, std::string>& refs) {
   return out;
 }
 
-std::string sequenceSvg(const IrDocument& doc) {
+std::string sequenceSvg(const IrDocument& doc, const Metrics& M, const std::string& style, const std::string& sequenceStyle) {
   const int HEAD_H = 38, ROW_H = 30, SELF_H = 42, MARGIN = 20, SELF_W = 32;
   const int FRAME_LEAD = 30, FRAME_GAP = 8, FRAME_HEAD = 22, DIVIDER_LEAD = 26, FRAME_INSET = 16;
   std::vector<Lane> lanes;
@@ -494,8 +371,8 @@ std::string sequenceSvg(const IrDocument& doc) {
   if (lanes.empty()) {
     return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 40\" width=\"320\" height=\"40\" class=\"pr-diagram\" "
            "role=\"img\"><style>" +
-           std::string(kStyle) + "</style><text x=\"10\" y=\"25\">" +
-           text::escapeXml(doc.notice.empty() ? "Nothing to draw." : doc.notice) + "</text></svg>\n";
+           style + "</style><text x=\"10\" y=\"25\">" + text::escapeXml(doc.notice.empty() ? "Nothing to draw." : doc.notice) +
+           "</text></svg>\n";
   }
 
   // ---- lanes: gaps wide enough for the heads and for the labels crossing them
@@ -608,7 +485,7 @@ std::string sequenceSvg(const IrDocument& doc) {
       << "\" data-viewbox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" width=\"" << vw << "\" height=\"" << vh
       << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram pr-sequence\" role=\"img\">\n";
   if (!doc.title.empty()) out << "<title>" << text::escapeXml(doc.title) << "</title>\n";
-  out << "<style>" << kStyle << kSeqStyle << "</style>\n<defs>" << markers(px) << "  <marker id=\"" << px
+  out << "<style>" << style << sequenceStyle << "</style>\n<defs>" << markers(px) << "  <marker id=\"" << px
       << "msg\" viewBox=\"0 0 12 12\" refX=\"11\" refY=\"6\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path "
          "class=\"pr-filled\" d=\"M1,1 L11,6 L1,11 Z\"/></marker>\n</defs>\n";
   // frames under everything
@@ -718,7 +595,7 @@ std::string sequenceSvg(const IrDocument& doc) {
 
 namespace {
 /// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
-std::string tableSvg(const IrDocument& doc) {
+std::string tableSvg(const IrDocument& doc, const std::string& style) {
   const IrTable& t = doc.table;
   const int charW = 8, padX = 14, rowH = 34, headH = 38, lineH = 17;
   const std::size_t kWrap = 40;  // a cell is as wide as this many characters; what is longer goes on more lines (DS-268)
@@ -762,7 +639,7 @@ std::string tableSvg(const IrDocument& doc) {
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-10 -10 " << width + 20 << " " << height + 20 << "\" width=\"" << width + 20
       << "\" height=\"" << height + 20 << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
   if (!doc.title.empty()) out << "<title>" << text::escapeXml(doc.title) << "</title>\n";
-  out << "<style>" << kStyle
+  out << "<style>" << style
       << "\n  .pr-diagram .pr-cell rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: 1; }"
          "\n  .pr-diagram .pr-cell-head rect { fill: var(--pr-head-class); }"
          "\n  .pr-diagram .pr-cell-head text, .pr-diagram .pr-cell-jump text { font-weight: 600; }"
@@ -835,21 +712,27 @@ std::string besideEachOther(const std::vector<std::pair<std::string, std::string
 }
 }  // namespace
 
+Svg::Svg(const theme::Theme& theme)
+    : metrics_(Metrics::svg(theme.measures(theme::Sink::svg))),
+      style_(theme::ThemeWriterFactory::of().at("svg")->write(theme)),
+      sequenceStyle_(theme::ThemeWriterFactory::of().at("sequence")->write(theme)) {}
+
 std::string Svg::render(const IrDocument& doc, int maxWidth) const {
-  if (!doc.table.columns.empty()) return tableSvg(doc);
+  if (!doc.table.columns.empty()) return tableSvg(doc, style_);
   if (!doc.parts.empty()) {
     std::vector<std::pair<std::string, std::string>> drawings;
     for (const auto& name : doc.parts) drawings.push_back({name, render(doc.part(name), maxWidth)});
     return besideEachOther(drawings, maxWidth);
   }
   for (const auto& n : doc.nodes) {
-    if (n.kind == "lifeline") return sequenceSvg(doc);
+    if (n.kind == "lifeline") return sequenceSvg(doc, metrics_, style_, sequenceStyle_);
   }
   const IrDocument bundled = doc.bundled();
-  return render(bundled, Layout(Metrics::svg()).place(bundled, maxWidth));
+  return render(bundled, Layout(metrics_).place(bundled, maxWidth));
 }
 
 std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
+  const Metrics& M = metrics_;
   int minX = std::numeric_limits<int>::max(), minY = minX, maxX = std::numeric_limits<int>::min(), maxY = maxX;
   auto extend = [&](int x, int y) {
     minX = std::min(minX, x);
@@ -881,9 +764,9 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
     for (std::string s = b->node->parent; !s.empty() && byId.count(s); s = byId[s]->node->parent) ++db;
     return da < db;
   });
-  for (const Placed* f : frames) containers.push_back(emitNode(*f, px));
+  for (const Placed* f : frames) containers.push_back(emitNode(*f, px, metrics_));
   for (const auto& p : lay.placed) {
-    if (p.node->kind != "container") leaves.push_back(emitNode(p, px));
+    if (p.node->kind != "container") leaves.push_back(emitNode(p, px, metrics_));
   }
   std::vector<std::string> paths, labels, missing;
   for (size_t i = 0; i < doc.edges.size(); ++i) {
@@ -927,7 +810,7 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"" << vx << " " << vy << " " << vw << " " << vh << "\" width=\"" << vw
       << "\" height=\"" << vh << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
   if (!doc.title.empty()) out << "<title>" << text::escapeXml(doc.title) << "</title>\n";
-  out << "<style>" << kStyle << "</style>\n<defs>" << markers(px) << "</defs>\n";
+  out << "<style>" << style_ << "</style>\n<defs>" << markers(px) << "</defs>\n";
   for (const auto& s : containers) out << s << "\n";
   for (const auto& s : paths) out << s << "\n";
   for (const auto& s : leaves) out << s << "\n";

@@ -12,8 +12,12 @@
 #include "ds/render/Ir.hpp"
 #include "ds/render/IrExport.hpp"
 #include "ds/render/Layout.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 /// A state machine drawn, of an interface (its navigation) and of a class.
 class TestStateView : public ::testing::Test {
@@ -97,7 +101,7 @@ TEST(TestSelfLoop, ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack) {
   loop.to = "a";
   loop.kind = "association";
   doc.edges.push_back(loop);
-  const ds::render::LayoutResult out = ds::render::Layout().place(doc);
+  const ds::render::LayoutResult out = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
   ASSERT_EQ(out.routes.count(0), 1U);
   ASSERT_EQ(out.routes.at(0).points.size(), 4U);
   EXPECT_EQ(out.routes.at(0).points.front().x, out.routes.at(0).points.back().x);
