@@ -99,6 +99,10 @@ package driftspec@ds {
       + shows(diagram: std::string) -> std::string
       + render(diagram: std::string, format: std::string, width: int) -> std::string
       + page(title: std::string, focus: std::vector<std::string>) -> std::string
+      // each answer is written by a JSON sink built here, at the engine's edge, and taken whole (DS-397)
+      - static texts(list: std::vector<std::string>) -> std::string
+      - static text(value: std::string) -> std::string
+      - relations(relations: std::vector<model::Relation>) -> std::string
     }
 
     // How an identity is written (model/Identity), asked by another language rather than copied into it.
@@ -137,10 +141,18 @@ package driftspec@ds {
 
     // One hop asked of the model's index, written as the export writes it: the caller gets a copy.
     sequence Workspace::from {
-      local exporter: exporter::JsonExport
       self -> model_.index() -> index
       self -> index.from(id) -> leaving
-      -> exporter.relations(leaving) -> document
+      -> relations(leaving) -> document
+      return document
+    }
+
+    // the door builds the sink, lends it to the exporter and takes the document whole (DS-397)
+    sequence Workspace::relations {
+      local exporter: exporter::JsonExport
+      local sink: emit::JsonSink
+      -> exporter.relations(relations, sink)
+      -> sink.result() -> document
       return document
     }
 
@@ -183,6 +195,10 @@ package driftspec@ds {
       - refs metamodel_: model::Metamodel
       + Browser(metamodel: model::Metamodel)
       + answer(request: std::string) -> std::string
+      // the answer, written into the sink answer builds; each record's fields in byte order (DS-397)
+      - respond(request: std::string, out_sink: emit::ISink) -> void
+      - artefacts(model: model::Model, out_sink: emit::ISink) -> void
+      - diagrams(workspace: Workspace, width: int, out_sink: emit::ISink) -> void
     }
 
     // How every caller loads a workspace (DS-120): the files bound into one model written in the
@@ -241,7 +257,9 @@ package driftspec@ds {
 
     sequence Api::expectedAt {
       local parser: parse::Parser
+      local sink: emit::JsonSink
       -> parser.expectedAt(text, line, column) -> words
+      -> sink.result() -> json
       return json
     }
 
@@ -251,19 +269,38 @@ package driftspec@ds {
       return drawing
     }
 
-    // a request for the manual is answered by a manual made from the metamodel the browser holds (DS-342)
+    // the answer is written into a JSON sink built here and taken whole, so a request that fails half way is
+    // answered with its error alone (DS-397)
     sequence Browser::answer {
+      local sink: emit::JsonSink
+      -> respond(request, sink)
+      -> sink.result() -> json
+      return json
+    }
+
+    // a request for the manual is answered by a manual made from the metamodel the browser holds (DS-342)
+    sequence Browser::respond {
       local manual: model::Manual
       local workspace: Workspace
-      opt a request for the manual {
-        -> manual.page(topic) -> text
+      local report: format::ReportJson
+      alt a request for the manual / manual {
         -> manual.guides() -> guides
+        -> manual.page(topic) -> text
         -> manual.topics() -> topics
-        return json
+      } else {
+        -> artefacts(model, out_sink)
+        -> diagrams(workspace, width, out_sink)
+        -> check::Report::of(model, metamodel_) -> checked
+        -> report.describe(checked, out_sink)
       }
-      -> workspace.report() -> report
-      -> workspace.render(diagram, format, width) -> drawing
-      return json
+    }
+
+    sequence Browser::diagrams {
+      local query: query::Query
+      loop each diagram, in the order written {
+        -> workspace.render(diagram, format, width) -> drawing
+        -> query.shows(diagram) -> shown
+      }
     }
 
     sequence Api::page {

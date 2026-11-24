@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ds/check/Report.hpp"
+#include "ds/emit/Sink.hpp"
 #include "ds/format/Format.hpp"
 #include "ds/query/Query.hpp"
 
@@ -17,14 +18,14 @@ namespace format {
 class AnswersText : public IFormat<std::vector<query::Answer>> {
  public:
   std::string name() const override;
-  std::string write(const std::vector<query::Answer>& document, const FormatOptions& options) const override;
+  std::string write(const std::vector<query::Answer>& document, const FormatOptions& options, emit::ISink& out_sink) const override;
 };
 
 /// The answers of a query as a JSON array of the same three fields (ds query --json).
 class AnswersJson : public IFormat<std::vector<query::Answer>> {
  public:
   std::string name() const override;
-  std::string write(const std::vector<query::Answer>& document, const FormatOptions& options) const override;
+  std::string write(const std::vector<query::Answer>& document, const FormatOptions& options, emit::ISink& out_sink) const override;
 };
 
 /// The one place that names the formats of a query's answers.
@@ -34,14 +35,20 @@ std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> answ
 class ReportText : public IFormat<check::Report> {
  public:
   std::string name() const override;
-  std::string write(const check::Report& document, const FormatOptions& options) const override;
+  std::string write(const check::Report& document, const FormatOptions& options, emit::ISink& out_sink) const override;
 };
 
 /// A check as JSON: the findings and the counts, the one shape every caller reads (ds check --json, the API).
 class ReportJson : public IFormat<check::Report> {
  public:
   std::string name() const override;
-  std::string write(const check::Report& document, const FormatOptions& options) const override;
+  std::string write(const check::Report& document, const FormatOptions& options, emit::ISink& out_sink) const override;
+  /// The report as one value where the sink stands, for a document that carries it (the browser's answer).
+  void describe(const check::Report& document, emit::ISink& out_sink) const;
+
+ private:
+  /// Findings or coverage: code, location, message and the severity's name in the report's table.
+  static void findings(const check::Report& document, const std::vector<model::Finding>& findings, emit::ISink& out_sink);
 };
 
 /// The one place that names the formats of a check's report.

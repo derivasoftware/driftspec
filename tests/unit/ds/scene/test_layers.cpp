@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
@@ -72,8 +73,9 @@ TEST_F(TestLayers, TheLayersComeInOrderAndEachAddsItsOwnPart) {
 /// The scene is an object that lasts (DS-126): placed and layered once, it builds the same document
 /// every time it is asked.
 TEST_F(TestLayers, TheSceneBuildsTheSameDocumentEveryTime) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::scene::Scene scene(model, metamodel);
-  EXPECT_EQ(ds::format::SceneJson().write(scene.build(), {}), ds::format::SceneJson().write(scene.build(), {}));
+  EXPECT_EQ(ds::format::SceneJson().write(scene.build(), {}, sink), ds::format::SceneJson().write(scene.build(), {}, sink));
 }
 
 }  // namespace

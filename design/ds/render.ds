@@ -135,7 +135,7 @@ package driftspec@ds {
     // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
     // another tool may hand ds; the document a diagram's formats write (DS-126)
     dataclass IrText {
-      @requirement REQ-00106-1
+      @requirement REQ-00106-2
       + json: std::string
     }
 
@@ -395,7 +395,7 @@ package driftspec@ds {
     class Text {                             // the terminal drawing, box characters and optional colour
       @requirement REQ-00007-1
       + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // also over a layout already made
-      + cells(doc: IrDocument, maxWidth: int) -> std::string
+      + cells(doc: IrDocument, maxWidth: int, out_sink: emit::ISink) -> void   // as one value where the sink lent stands (DS-397)
     }
 
     // ---- what the drawings keep to their source files ----
@@ -452,7 +452,7 @@ package driftspec@ds {
       return drawing
     }
 
-    // What comes back is the JSON of the grid, so a name for it.
+    // The grid is written into the sink lent, its fields in byte order; nothing comes back (DS-397).
     sequence Text::cells {
       self -> doc.bundled() -> bundled
       alt a node of the document is a lifeline / sequence-document {
@@ -462,11 +462,12 @@ package driftspec@ds {
         self -> layout.place(bundled, width) -> lay
         -> classGrid(bundled, lay) -> grid
       }
+      self -> grid.encode() -> encoded
       self -> grid.columns() -> columns
       self -> grid.rows() -> rows
-      self -> grid.encode() -> encoded
       self -> grid.dump(false) -> text
-      return json
+      -> out_sink.beginRecord()
+      -> out_sink.endRecord()
     }
   }
 }

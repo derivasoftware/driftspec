@@ -9,6 +9,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -92,7 +93,8 @@ TEST_F(TestSceneOfTheDesign, EveryClassFunctionAndMemberOfTheModelHasAPlace) {
 }
 
 TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"});
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"}, sink);
   const std::string scene = packedIn(page);
   for (const auto& n : nodes) EXPECT_NE(scene.find("\"" + n.id + "\""), std::string::npos) << n.id;
   EXPECT_EQ(page.find("</script>"), page.rfind("</script>"));  // the scene inside never ends the viewer's script
@@ -102,8 +104,10 @@ TEST_F(TestSceneOfTheDesign, ThePageOfTheDesignCarriesEveryNodeAndNothingClosesI
 }
 
 TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"});
-  const std::string frame = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design", "", {}, true, 500});
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"}, sink);
+  const std::string frame =
+      ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design", "", {}, true, 500}, sink);
   EXPECT_EQ(frame.rfind("<iframe ", 0), 0u);
   EXPECT_NE(frame.find("height:500px"), std::string::npos);
   EXPECT_EQ(frame.find('<', 1), frame.rfind("</iframe>"));  // the page travels escaped: no tag of it opens inside the host
@@ -114,7 +118,8 @@ TEST_F(TestSceneOfTheDesign, TheDesignEmbedsAsOneFrameCarryingTheWholePage) {
 }
 
 TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"});
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"}, sink);
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
   const std::string viewer = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
   EXPECT_NE(viewer.find("window.DS_VIEW="), std::string::npos);
@@ -130,8 +135,9 @@ TEST_F(TestSceneOfTheDesign, AnEmbeddingPageSteersTheViewerAndHearsTheReader) {
 }
 
 TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(),
-                                                         {false, "design", ":root{--k-class:#e06c75}</style><script>bad()</script>"});
+                                                         {false, "design", ":root{--k-class:#e06c75}</style><script>bad()</script>"}, sink);
   const auto theme = page.find("--k-class:#e06c75");
   ASSERT_NE(theme, std::string::npos);
   // the viewer's own styles travel packed and go in before the theme, which wins
@@ -176,6 +182,7 @@ TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirement
 }
 
 TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const auto doc = ds::scene::Scene(model, metamodel).build();
   std::set<std::string> seen;
   size_t calls = 0;
@@ -184,7 +191,7 @@ TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce)
     calls += b.calls.size();
   }
   EXPECT_GT(calls, 0u);  // how many more steps the tours replay: tests/integration/viewer/tours.test.ts (DS-130)
-  EXPECT_LT(ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"}).size(),
+  EXPECT_LT(ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "design"}, sink).size(),
             250u * 1024u);  // the whole viewer of ds's design
 }
 

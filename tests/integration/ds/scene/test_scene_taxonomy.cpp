@@ -9,6 +9,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -107,7 +108,8 @@ TEST_F(TestSceneOfTheTaxonomy, AHeaderThatNamesABaseInAnotherModuleIsWideEnoughF
 }
 
 TEST_F(TestSceneOfTheTaxonomy, TheViewerLightsRelationsUpAndDocksItsPanels) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"});
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"}, sink);
   // only inheritance is a family of lines; the rest of the relations light up in their colour
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
   const std::string code = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));  // the viewer travels packed

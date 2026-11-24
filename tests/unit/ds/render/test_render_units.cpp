@@ -7,6 +7,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -79,7 +80,9 @@ TEST(TestText, TheDocumentInBoxCharactersAndAsCells) {
   EXPECT_NE(drawn.find('A'), std::string::npos);
   EXPECT_NE(drawn.find('B'), std::string::npos);
   EXPECT_EQ(drawn.find("\x1b["), std::string::npos);  // no colour unless asked
-  const auto cells = nlohmann::json::parse(text.cells(IrDocument::parse(kIr), 0));
+  ds::emit::JsonSink sink(false, true);
+  text.cells(IrDocument::parse(kIr), 0, sink);
+  const auto cells = nlohmann::json::parse(sink.result());
   EXPECT_FALSE(cells.empty());
 }
 
@@ -112,7 +115,9 @@ TEST(TestText, ADocumentMadeOfPartsIsDrawnOnePartUnderTheOther) {
   const auto first = text.find("C A");
   ASSERT_NE(first, std::string::npos);
   EXPECT_NE(text.find("C A", first + 1), std::string::npos);  // the same box twice: once for each part
-  EXPECT_NE(ds::render::Text().cells(doc).find("\"rows\""), std::string::npos);
+  ds::emit::JsonSink sink(false, true);
+  ds::render::Text().cells(doc, 0, sink);
+  EXPECT_NE(sink.result().find("\"rows\""), std::string::npos);
 }
 
 }  // namespace

@@ -67,6 +67,11 @@ class Workspace {
   std::string page(const std::string& title, const std::vector<std::string>& focus) const;
 
  private:
+  /// Texts as a JSON list; one text as a JSON string; relations as the export writes them.
+  static std::string texts(const std::vector<std::string>& list);
+  static std::string text(const std::string& value);
+  std::string relations(const std::vector<model::Relation>& relations) const;
+
   const model::Metamodel& metamodel_;
   model::Model model_;
 };

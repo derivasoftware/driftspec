@@ -6,6 +6,9 @@
 #include <vector>
 
 #include "ds/api/Workspace.hpp"
+#include "ds/check/Report.hpp"
+#include "ds/emit/JsonSink.hpp"
+#include "ds/format/TextFormats.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
@@ -15,18 +18,9 @@
 namespace ds {
 namespace api {
 
-namespace {
-
-struct Drawn {
-  std::string id;
-  std::string kind;
-  std::string include;
-  model::Location location;
-};
-
 // the artefacts as rows: what each one refines, what keeps it, what proves it; each kind named by the metamodel
-nlohmann::json artefacts(const model::Metamodel& metamodel, const model::Model& model) {
-  nlohmann::json rows = nlohmann::json::array();
+void Browser::artefacts(const model::Model& model, emit::ISink& out_sink) const {
+  out_sink.beginList();
   for (const auto& p : model.entities()) {
     const model::Entity& e = p.second;
     if (e.expected) continue;
@@ -35,92 +29,106 @@ nlohmann::json artefacts(const model::Metamodel& metamodel, const model::Model& 
     if (e.kind == model::Kind::Requirement)
       level =
           e.scope.empty() || model::Scope(e.scope).isSystem() ? "system" : model::Identity(model::Scope(e.scope).box().text()).lastName();
-    nlohmann::json row{{"id", e.id},
-                       {"kind", metamodel.nameOf(e.kind)},
-                       {"title", e.field("title")},
-                       {"status", e.field("status")},
-                       {"level", level},
-                       {"parent", ""},
-                       {"keptBy", nlohmann::json::array()},
-                       {"provedBy", nlohmann::json::array()}};
+    std::string parent;
     for (const auto& r : model.index().from(e.id))
-      if (r.kind == "refines" || (e.kind == model::Kind::UseCase && r.kind == "satisfies")) row["parent"] = r.to;
-    for (const auto& r : model.index().to(e.id)) {
-      if (r.kind == "satisfies" || r.kind == "constrained-by" || r.kind == "realises") row["keptBy"].push_back(r.from);
-      if (r.kind == "verifies") row["provedBy"].push_back(r.from);
-    }
-    rows.push_back(row);
+      if (r.kind == "refines" || (e.kind == model::Kind::UseCase && r.kind == "satisfies")) parent = r.to;
+    const std::vector<model::Relation> reaching = model.index().to(e.id);
+    out_sink.beginRecord().field("id").value(e.id).field("keptBy").beginList();
+    for (const auto& r : reaching)
+      if (r.kind == "satisfies" || r.kind == "constrained-by" || r.kind == "realises") out_sink.value(r.from);
+    out_sink.endList().field("kind").value(metamodel_.nameOf(e.kind)).field("level").value(level).field("parent").value(parent);
+    out_sink.field("provedBy").beginList();
+    for (const auto& r : reaching)
+      if (r.kind == "verifies") out_sink.value(r.from);
+    out_sink.endList().field("status").value(e.field("status")).field("title").value(e.field("title")).endRecord();
   }
-  return rows;
+  out_sink.endList();
 }
 
-nlohmann::json diagrams(const model::Metamodel& metamodel, const Workspace& workspace, int width) {
-  std::vector<Drawn> drawn;  // in the order they are written: file, then line
-  for (const auto& p : workspace.model().entities()) {
-    const model::Entity& e = p.second;
-    if (e.kind != model::Kind::Diagram) continue;
-    const auto kind = e.fields.find("kind");
-    const auto include = e.fields.find("include");
-    drawn.push_back({model::Identity(e.id).diagramName(), kind == e.fields.end() ? "class" : kind->second,
-                     include == e.fields.end() ? "" : include->second, e.location});
-  }
-  std::stable_sort(drawn.begin(), drawn.end(), [](const Drawn& a, const Drawn& b) {
-    return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;
+// the diagrams in the order they are written, file then line, each drawn as svg with what it takes
+void Browser::diagrams(const Workspace& workspace, int width, emit::ISink& out_sink) const {
+  std::vector<const model::Entity*> drawn;
+  for (const auto& p : workspace.model().entities())
+    if (p.second.kind == model::Kind::Diagram) drawn.push_back(&p.second);
+  std::stable_sort(drawn.begin(), drawn.end(), [](const model::Entity* a, const model::Entity* b) {
+    return a->location.file != b->location.file ? a->location.file < b->location.file : a->location.line < b->location.line;
   });
-  nlohmann::json out = nlohmann::json::array();
-  for (const auto& d : drawn) {
-    nlohmann::json one{{"id", d.id}, {"kind", d.kind}, {"include", d.include}, {"file", d.location.file}, {"line", d.location.line}};
-    one["shows"] = nlohmann::json::array();  // what it takes: a call leads to the diagram of what it calls
-    for (const auto& a : query::Query(workspace.model(), metamodel).shows(d.id)) one["shows"].push_back(a.id);
+  out_sink.beginList();
+  for (const model::Entity* e : drawn) {
+    const std::string id = model::Identity(e->id).diagramName();
+    const auto kind = e->fields.find("kind");
+    const auto include = e->fields.find("include");
+    std::string svg, error;
+    bool failed = false;
     try {
-      one["svg"] = workspace.render(d.id, "svg", width);
+      svg = workspace.render(id, "svg", width);
     } catch (const std::exception& ex) {
-      one["svg"] = "";
-      one["error"] = ex.what();
+      error = ex.what();
+      failed = true;
     }
-    out.push_back(one);
+    out_sink.beginRecord();
+    if (failed) out_sink.field("error").value(error);
+    out_sink.field("file").value(e->location.file).field("id").value(id);
+    out_sink.field("include").value(include == e->fields.end() ? "" : include->second);
+    out_sink.field("kind").value(kind == e->fields.end() ? "class" : kind->second).field("line").integer(e->location.line);
+    out_sink.field("shows").beginList();  // what it takes: a call leads to the diagram of what it calls
+    for (const auto& a : query::Query(workspace.model(), metamodel_).shows(id)) out_sink.value(a.id);
+    out_sink.endList().field("svg").value(svg).endRecord();
   }
-  return out;
+  out_sink.endList();
 }
 
-std::string respond(const model::Metamodel& metamodel, const std::string& request) {
-  const auto in = nlohmann::json::parse(request);
-  if (in.contains("manual")) {  // a page of the manual, or with "" its guides and topics (DS-272)
+void Browser::respond(const std::string& request, emit::ISink& out_sink) const {
+  const auto in = nlohmann::json::parse(request);  // the request is read; the answer is written by the sink
+  if (in.contains("manual")) {                     // a page of the manual, or with "" its guides and topics (DS-272)
     const std::string topic = in["manual"].get<std::string>();
-    const model::Manual manual(metamodel);  // made from the metamodel the browser's engine holds (DS-342)
-    nlohmann::json out{{"topic", topic}, {"text", manual.page(topic)}};
+    const model::Manual manual(metamodel_);  // made from the metamodel the browser's engine holds (DS-342)
+    out_sink.beginRecord().field("manual").beginRecord();
     if (topic.empty()) {
-      out["guides"] = nlohmann::json::array();
-      for (const auto& guide : manual.guides()) out["guides"].push_back(guide.first);
-      out["topics"] = manual.topics();
+      out_sink.field("guides").beginList();
+      for (const auto& guide : manual.guides()) out_sink.value(guide.first);
+      out_sink.endList();
     }
-    return nlohmann::json{{"manual", out}}.dump();
+    out_sink.field("text").value(manual.page(topic)).field("topic").value(topic);
+    if (topic.empty()) {
+      out_sink.field("topics").beginList();
+      for (const auto& t : manual.topics()) out_sink.value(t);
+      out_sink.endList();
+    }
+    out_sink.endRecord().endRecord();
+    return;
   }
   Files files;
   for (const auto& f : in.at("files").items()) files[f.key()] = f.value().get<std::string>();
-  const Workspace workspace(metamodel, files);
-  nlohmann::json out;
-  out["report"] = nlohmann::json::parse(workspace.report());
-  out["entities"] = nlohmann::json::array();
-  out["locations"] = nlohmann::json::object();  // where each identity is written: where a click on a drawing leads
+  const Workspace workspace(metamodel_, files);
+  out_sink.beginRecord().field("artefacts");
+  artefacts(workspace.model(), out_sink);
+  out_sink.field("diagrams");
+  diagrams(workspace, in.value("width", 0), out_sink);
+  out_sink.field("entities").beginList();
+  for (const auto& p : workspace.model().entities())
+    if (!p.second.expected) out_sink.value(p.first);
+  out_sink.endList().field("locations").beginRecord();  // where each identity is written: where a click on a drawing leads
   for (const auto& p : workspace.model().entities()) {
-    if (p.second.expected) continue;
-    out["entities"].push_back(p.first);
     const auto& at = p.second.location;
-    if (!at.file.empty()) out["locations"][p.first] = {at.file, at.line, at.endLine > 0 ? at.endLine : at.line};
+    if (p.second.expected || at.file.empty()) continue;
+    out_sink.field(p.first).beginList().value(at.file).integer(at.line).integer(at.endLine > 0 ? at.endLine : at.line).endList();
   }
-  out["artefacts"] = artefacts(metamodel, workspace.model());
-  out["diagrams"] = diagrams(metamodel, workspace, in.value("width", 0));
-  return out.dump();
+  out_sink.endRecord().field("report");
+  format::ReportJson().describe(check::Report::of(workspace.model(), metamodel_), out_sink);  // as ds check --json writes it
+  out_sink.endRecord();
 }
 
-}  // namespace
-
 std::string Browser::answer(const std::string& request) const {
+  // the answer is written by a JSON sink built here, at the engine's edge, and taken whole (DS-397)
   try {
-    return respond(metamodel_, request);
+    emit::JsonSink sink(false);
+    respond(request, sink);
+    return sink.result();
   } catch (const std::exception& ex) {
-    return nlohmann::json{{"error", ex.what()}}.dump();
+    emit::JsonSink sink(false);
+    sink.beginRecord().field("error").value(ex.what()).endRecord();
+    return sink.result();
   }
 }
 

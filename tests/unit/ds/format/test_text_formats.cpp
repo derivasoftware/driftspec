@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ds/check/Report.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/TextFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 
@@ -50,14 +51,15 @@ TEST(TestTextFormats, AReportIsBuiltOnceFromTheModelAndCountsWhatItSays) {
 }
 
 TEST(TestTextFormats, AReportReadsTheSameAsTextAndAsJson) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   ds::check::Report report;
   report.severities = ds::model::Metamodel().severities();
   report.findings = {finding("E-X", ds::model::Severity::error)};
   report.entities = 4;
   report.relations = 2;
   report.errors = 1;
-  EXPECT_EQ(ds::format::ReportText().write(report, {}), "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings\n");
-  const auto json = nlohmann::json::parse(ds::format::ReportJson().write(report, {}));
+  EXPECT_EQ(ds::format::ReportText().write(report, {}, sink), "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings\n");
+  const auto json = nlohmann::json::parse(ds::format::ReportJson().write(report, {}, sink));
   EXPECT_EQ(json["errors"], 1);
   EXPECT_EQ(json["findings"][0]["location"]["column"], 5);
   EXPECT_EQ(json["entities"], 4);

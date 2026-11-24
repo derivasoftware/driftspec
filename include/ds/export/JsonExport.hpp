@@ -1,39 +1,48 @@
 #ifndef DRIFTSPEC_EXPORT_JSONEXPORT_HPP
 #define DRIFTSPEC_EXPORT_JSONEXPORT_HPP
 
-#include <nlohmann/json_fwd.hpp>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "ds/emit/Sink.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
 namespace exporter {
 
-/// Serialises the resolved model (entities, relations, findings) as JSON. An entity and a list of
-/// relations are written the same way alone as inside the whole model: one shape for every reader.
+/// Serialises the resolved model (entities, relations, findings) as JSON, into the sink it is lent (DS-397). An
+/// entity and a list of relations are written the same way alone as inside the whole model: one shape for every
+/// reader. Each record writes its fields in byte order.
 class JsonExport {
  public:
   /// Writes in the language of `metamodel`: the kinds by their names, and the metamodel itself (DS-341).
   explicit JsonExport(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
-  std::string render(const model::Model& model, bool pretty = true) const;
+  /// The whole model as one document, indented or compact as the sink writes.
+  void render(const model::Model& model, emit::ISink& out_sink) const;
   /// One entity, as the export writes it.
-  std::string entity(const model::Entity& entity) const;
+  void entity(const model::Entity& entity, emit::ISink& out_sink) const;
   /// Relations, as the export writes them, in the order given.
-  std::string relations(const std::vector<model::Relation>& relations) const;
+  void relations(const std::vector<model::Relation>& relations, emit::ISink& out_sink) const;
 
  private:
   /// Where a model element is written, and where it ends when known: the place right after its last character (DS-172).
-  static nlohmann::json locationJson(const model::Location& l);
-  /// One entity: its identity, kind, name, scope, fields, flags and location.
-  nlohmann::json entityJson(const model::Entity& e) const;
+  static void location(const model::Location& l, emit::ISink& out_sink);
   /// One relation: its kind, ends, location and multiplicity when set.
-  static nlohmann::json relationJson(const model::Relation& r);
+  static void relation(const model::Relation& r, emit::ISink& out_sink);
+  /// Findings or coverage: code, location, message and severity.
+  void findings(const std::vector<model::Finding>& findings, emit::ISink& out_sink) const;
+  /// What breaks each rule, structured (DS-108): its bindings, its witness and where.
+  static void breaches(const model::Model& model, emit::ISink& out_sink);
   /// The names of kinds, in the order given.
-  nlohmann::json kindNames(const std::vector<model::Kind>& kinds) const;
+  void kindNames(const std::vector<model::Kind>& kinds, emit::ISink& out_sink) const;
   /// The language the model is written in: every kind with its fields, flags and parents, every relation with its ends.
-  nlohmann::json metamodelJson() const;
+  void metamodel(emit::ISink& out_sink) const;
+  /// Text pairs, each a list of two: the bindings and the witness of a breach.
+  static void pairs(const std::vector<std::pair<std::string, std::string>>& pairs, emit::ISink& out_sink);
+  /// Texts, as a list.
+  static void texts(const std::vector<std::string>& texts, emit::ISink& out_sink);
 
   const model::Metamodel& metamodel_;
 };

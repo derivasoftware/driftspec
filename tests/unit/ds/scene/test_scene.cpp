@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -107,7 +108,8 @@ TEST_F(TestSceneDocument, TheWorldHoldsEveryNodeInBothVariants) {
 }
 
 TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
-  const auto doc = nlohmann::json::parse(ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}));
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const auto doc = nlohmann::json::parse(ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}, sink));
   EXPECT_EQ(doc["version"], 2);
   const auto& fields = doc["fields"]["node"];
   const auto column = [&fields](const std::string& name) {
@@ -128,7 +130,8 @@ TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
 }
 
 TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "a<b"});
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "a<b"}, sink);
   EXPECT_EQ(page.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(page.find("<canvas"), std::string::npos);
   const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();

@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/scene/Scene.hpp"
 
@@ -32,22 +33,22 @@ TEST(TestSceneFormats, EachFormatOfTheSceneIsFoundByItsName) {
 }
 
 TEST(TestSceneFormats, AFormatWritesTheDocumentItIsGivenWithoutAModel) {
-  const auto written = nlohmann::json::parse(ds::format::SceneJson().write(small(), {}));
+  ds::emit::JsonSink compact(false, true), indented(true, true);
+  const auto written = nlohmann::json::parse(ds::format::SceneJson().write(small(), {}, compact));
   EXPECT_EQ(written["version"], 2);
   ASSERT_EQ(written["nodes"].size(), 1u);
-  ds::format::FormatOptions pretty;
-  pretty.pretty = true;
-  EXPECT_NE(ds::format::SceneJson().write(small(), pretty).find("\n  "), std::string::npos);  // indented for a reader
+  EXPECT_NE(ds::format::SceneJson().write(small(), {}, indented).find("\n  "), std::string::npos);  // indented as the sink lent
 }
 
 TEST(TestSceneFormats, ThePageIsAnIframeCarryingItWholeWhenAskedToEmbed) {
   ds::format::FormatOptions options;
   options.title = "p";
-  const std::string page = ds::format::SceneHtml().write(small(), options);
+  ds::emit::JsonSink sink(false, true);
+  const std::string page = ds::format::SceneHtml().write(small(), options, sink);
   EXPECT_EQ(page.rfind("<!doctype html>", 0) == 0 || page.find("<html") != std::string::npos, true);
   options.embed = true;
   options.height = 300;
-  const std::string frame = ds::format::SceneHtml().write(small(), options);
+  const std::string frame = ds::format::SceneHtml().write(small(), options, sink);
   EXPECT_EQ(frame.rfind("<iframe", 0), 0u);
   EXPECT_NE(frame.find("height:300px"), std::string::npos);
   EXPECT_NE(frame.find("srcdoc=\""), std::string::npos);

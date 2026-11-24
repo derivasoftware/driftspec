@@ -11,62 +11,65 @@ namespace format {
 
 std::string DiagramIr::name() const { return "ir"; }
 
-std::string DiagramIr::write(const render::IrText& document, const FormatOptions& options) const {
+std::string DiagramIr::write(const render::IrText& document, const FormatOptions& options, emit::ISink&) const {
   return options.pretty ? nlohmann::json::parse(document.json).dump(2) : document.json;  // as it came, unless asked to indent
 }
 
 std::string DiagramLayout::name() const { return "layout"; }
 
-namespace {
-/// The placed rectangles and routes of one drawing, in cells; of a drawing made of parts, those of each part.
-nlohmann::json placedOf(const render::IrDocument& document, int width) {
+// The placed rectangles and routes of one drawing, in cells; of a drawing made of parts, those of each part. A
+// part is named after the fields its drawing gives: part before parts, nodes before part before routes.
+void DiagramLayout::placed(const render::IrDocument& document, int width, const std::string* part, emit::ISink& out_sink) {
+  out_sink.beginRecord();
   if (!document.parts.empty()) {
-    nlohmann::json parts = nlohmann::json::array();
-    for (const auto& name : document.parts) {
-      nlohmann::json placed = placedOf(document.part(name), width);
-      placed["part"] = name;
-      parts.push_back(placed);
-    }
-    return {{"parts", parts}};
+    if (part) out_sink.field("part").value(*part);
+    out_sink.field("parts").beginList();
+    for (const auto& name : document.parts) placed(document.part(name), width, &name, out_sink);
+    out_sink.endList().endRecord();
+    return;
   }
   const render::IrDocument parsed = document.bundled();
   const render::LayoutResult lay = render::Layout(render::Metrics::text()).place(parsed, width);
-  nlohmann::json out = {{"nodes", nlohmann::json::array()}, {"routes", nlohmann::json::array()}};
+  out_sink.field("nodes").beginList();
   for (const auto& p : lay.placed) {
-    out["nodes"].push_back(
-        {{"id", p.node->id}, {"kind", p.node->kind}, {"x", p.rect.x}, {"y", p.rect.y}, {"w", p.rect.w}, {"h", p.rect.h}});
+    out_sink.beginRecord().field("h").integer(p.rect.h).field("id").value(p.node->id).field("kind").value(p.node->kind);
+    out_sink.field("w").integer(p.rect.w).field("x").integer(p.rect.x).field("y").integer(p.rect.y).endRecord();
   }
+  out_sink.endList();
+  if (part) out_sink.field("part").value(*part);
+  out_sink.field("routes").beginList();
   for (const auto& r : lay.routes) {
     const render::IrEdge& e = parsed.edges[r.first];
-    nlohmann::json points = nlohmann::json::array();
-    for (const auto& pt : r.second.points) points.push_back({pt.x, pt.y});
-    out["routes"].push_back({{"from", e.from}, {"to", e.to}, {"kind", e.kind}, {"points", points}});
+    out_sink.beginRecord().field("from").value(e.from).field("kind").value(e.kind).field("points").beginList();
+    for (const auto& pt : r.second.points) out_sink.beginList().integer(pt.x).integer(pt.y).endList();
+    out_sink.endList().field("to").value(e.to).endRecord();
   }
-  return out;
+  out_sink.endList().endRecord();
 }
-}  // namespace
 
-std::string DiagramLayout::write(const render::IrText& document, const FormatOptions& options) const {
+std::string DiagramLayout::write(const render::IrText& document, const FormatOptions& options, emit::ISink& out_sink) const {
   // the portable form for hosts that draw themselves
-  return placedOf(render::IrDocument::parse(document.json), options.width).dump() + "\n";
+  placed(render::IrDocument::parse(document.json), options.width, nullptr, out_sink);
+  return out_sink.result() + "\n";
 }
 
 std::string DiagramSvg::name() const { return "svg"; }
 
-std::string DiagramSvg::write(const render::IrText& document, const FormatOptions& options) const {
+std::string DiagramSvg::write(const render::IrText& document, const FormatOptions& options, emit::ISink&) const {
   return render::Svg().render(render::IrDocument::parse(document.json), options.width);
 }
 
 std::string DiagramText::name() const { return "text"; }
 
-std::string DiagramText::write(const render::IrText& document, const FormatOptions& options) const {
+std::string DiagramText::write(const render::IrText& document, const FormatOptions& options, emit::ISink&) const {
   return render::Text().render(render::IrDocument::parse(document.json), options.color, options.width);
 }
 
 std::string DiagramCells::name() const { return "cells"; }
 
-std::string DiagramCells::write(const render::IrText& document, const FormatOptions& options) const {
-  return render::Text().cells(render::IrDocument::parse(document.json), options.width) + "\n";
+std::string DiagramCells::write(const render::IrText& document, const FormatOptions& options, emit::ISink& out_sink) const {
+  render::Text().cells(render::IrDocument::parse(document.json), options.width, out_sink);
+  return out_sink.result() + "\n";
 }
 
 std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> diagramFormats() {

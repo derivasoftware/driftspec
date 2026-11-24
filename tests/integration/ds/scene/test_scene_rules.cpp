@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -106,11 +107,12 @@ TEST_F(TestSceneRules, WhatBreaksARuleIsPlacedOnTheMapWithTheAnswerThatBreaksIt)
 }
 
 TEST_F(TestSceneRules, TheDocumentCarriesTheRulesAndThePageItsThreePerspectives) {
-  const std::string json = ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {});
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const std::string json = ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}, sink);
   EXPECT_NE(json.find("\"rule\":[\"id\",\"kind\",\"name\",\"title\",\"scope\",\"lines\",\"requirements\",\"breaches\",\"file\",\"line\"]"),
             std::string::npos);
   EXPECT_NE(json.find("\"breach\":[\"node\",\"to\",\"bindings\",\"witness\",\"file\",\"line\"]"), std::string::npos);
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "rules"});
+  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "rules"}, sink);
   for (const char* p : {"data-p=\"structure\"", "data-p=\"behaviour\"", "data-p=\"logic\""})
     EXPECT_NE(page.find(p), std::string::npos) << p;
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
