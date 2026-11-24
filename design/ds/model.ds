@@ -17,6 +17,22 @@ package driftspec@ds {
     if m in a, s behaviour-of m, s uses b
   }
 
+  definition changes-the-model(b) {
+    title: b is one of the model's operations that change what it keeps (DS-367)
+    if b = driftspec@ds@model::Model::declare
+    if b = driftspec@ds@model::Model::annotate
+    if b = driftspec@ds@model::Model::refine
+    if b = driftspec@ds@model::Model::relate
+    if b = driftspec@ds@model::Model::report
+    if b = driftspec@ds@model::Model::rename
+    if b = driftspec@ds@model::Model::cover
+    if b = driftspec@ds@model::Model::withdrawEchoes
+    if b = driftspec@ds@model::Model::sortFindings
+    if b = driftspec@ds@model::Model::state
+    if b = driftspec@ds@model::Model::breach
+    if b = driftspec@ds@model::Model::tabulate
+  }
+
   module model {
     @requirement REQ-00175-1                 // every operation of the model is a member of a class (DS-365)
 

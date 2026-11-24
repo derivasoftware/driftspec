@@ -177,7 +177,7 @@ package driftspec@ds {
       - owns bodies_: MemberBodyBinder
       - owns members_: MemberBinder
       - owns many binders_: std::vector<std::unique_ptr<INodeBinder>>   // held as INodeBinder; the constructor names the concrete ones (DS-365)
-      - owns dispatch_: Dispatch
+      - owns dispatch_: std::optional<Dispatch>   // built from the grammar of the first file bound (DS-374)
     }
 
 

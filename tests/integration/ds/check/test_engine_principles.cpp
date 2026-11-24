@@ -62,11 +62,13 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string builtOnce = "driftspec@ds@model::the-metamodel-is-built-once";
   const std::string binderClasses = "driftspec@ds@bind::binder-operations-belong-to-classes";
   const std::string modelClasses = "driftspec@ds@model::model-operations-belong-to-classes";
+  const std::string axisClasses = "driftspec@ds@axis::axis-operations-belong-to-classes";
+  const std::string axisReads = "driftspec@ds@axis::the-axis-reads-the-model";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
-  for (const std::string& rule : {context, asInterface, alone, builtOnce, binderClasses, modelClasses})
+  for (const std::string& rule : {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -107,6 +109,26 @@ TEST_F(TestEnginePrinciples, AFunctionOfTheModelIsTold) {
       broken({{"ds/model.ds", "  module model {", "    function loose(text: std::string) -> std::string\n"}});
   EXPECT_TRUE(has(rules, modelClasses));
   EXPECT_FALSE(has(rules, binderClasses));
+}
+
+TEST_F(TestEnginePrinciples, AFunctionOfTheAxisIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/axis.ds", "  module axis {", "    function loose(text: std::string) -> std::string\n"}});
+  EXPECT_TRUE(has(rules, axisClasses));
+  EXPECT_FALSE(has(rules, axisReads));
+}
+
+TEST_F(TestEnginePrinciples, AnAxisThatChangesTheModelIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/axis.ds", "  module axis {",
+                                                  "    class Marker {\n"
+                                                  "      - refs model_: model::Model\n"
+                                                  "      + mark(e: model::Entity) -> void\n"
+                                                  "    }\n"
+                                                  "    sequence Marker::mark {\n"
+                                                  "      self -> model_.declare(e)\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, axisReads));
+  EXPECT_FALSE(has(rules, axisClasses));
 }
 
 }  // namespace

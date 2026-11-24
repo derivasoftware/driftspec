@@ -43,7 +43,7 @@ class TestDispatch : public ::testing::Test {
 TEST_F(TestDispatch, EachNodeGoesToTheBinderOfItsKind) {
   const Recorder artefacts({"requirement"});
   const Recorder boxes({"module"});
-  const ds::bind::Dispatch dispatch(ds::parse::Parser::language(), {&artefacts, &boxes});
+  const ds::bind::Dispatch dispatch(parser.language(), {&artefacts, &boxes});
   const ds::bind::BindContext ctx{model, notes, reader, metamodel, dispatch, "", ""};
   ctx.children(package());
   EXPECT_EQ(artefacts.seen, std::vector<std::string>{"requirement"});
@@ -52,7 +52,7 @@ TEST_F(TestDispatch, EachNodeGoesToTheBinderOfItsKind) {
 
 TEST_F(TestDispatch, ANodeNoBinderTakesIsSkipped) {
   const Recorder artefacts({"requirement"});
-  const ds::bind::Dispatch dispatch(ds::parse::Parser::language(), {&artefacts});
+  const ds::bind::Dispatch dispatch(parser.language(), {&artefacts});
   const ds::bind::BindContext ctx{model, notes, reader, metamodel, dispatch, "", ""};
   ctx.children(package());  // the package's name and its module go to no binder
   EXPECT_EQ(artefacts.seen, std::vector<std::string>{"requirement"});
@@ -62,10 +62,10 @@ TEST_F(TestDispatch, ANodeNoBinderTakesIsSkipped) {
 
 TEST_F(TestDispatch, AKindTheGrammarLacksOrTwoBindersTakeIsRefused) {
   const Recorder unknown({"no_such_node"});
-  EXPECT_THROW(ds::bind::Dispatch(ds::parse::Parser::language(), {&unknown}), std::logic_error);
+  EXPECT_THROW(ds::bind::Dispatch(parser.language(), {&unknown}), std::logic_error);
   const Recorder first({"requirement"});
   const Recorder second({"requirement"});
-  EXPECT_THROW(ds::bind::Dispatch(ds::parse::Parser::language(), {&first, &second}), std::logic_error);
+  EXPECT_THROW(ds::bind::Dispatch(parser.language(), {&first, &second}), std::logic_error);
 }
 
 }  // namespace

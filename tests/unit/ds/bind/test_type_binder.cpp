@@ -35,7 +35,7 @@ class TestTypeBinder : public ::testing::Test {
   const ds::bind::SignatureBinder signatures{types};
   const ds::bind::FormulaBinder formulas{};
 
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {}};
+  const ds::bind::Dispatch dispatch{parser.language(), {}};
   ds::parse::ParsedFile file;
 
   /// The first node of `type` under `node`, depth first.
@@ -70,10 +70,9 @@ TEST_F(TestTypeBinder, EveryNameOfATypeIsAReferenceAndAParameterIsNone) {
   file = parser.parseText("a.ds", "package p {\n  module m {\n    class Holder<T, U: Bound> {\n      - stock: Stock<T>\n    }\n  }\n}\n");
   const ds::parse::TreeReader reader(file);
   const ds::bind::BindContext ctx{model, notes, reader, metamodel, dispatch, "p@m", "p@m"};
-  const std::vector<std::string> params =
-      ds::bind::TypeBinder::params(reader, TreeReader::child(find(reader.root(), "class"), Field::params));
+  const std::vector<std::string> params = ds::bind::TypeBinder::params(reader, reader.child(find(reader.root(), "class"), Field::params));
   EXPECT_EQ(params, (std::vector<std::string>{"T", "U"}));
-  const TSNode type = TreeReader::child(find(reader.root(), "attribute"), Field::type);
+  const TSNode type = reader.child(find(reader.root(), "attribute"), Field::type);
   const std::string text = types.bind(type, ctx, "p@m", "p@m::Holder::stock", "owns", "", params, ctx.locationOf(type));
   EXPECT_EQ(text, "Stock<T>");
   ASSERT_EQ(notes.references.size(), 1U);  // T is the holder's parameter, never a class

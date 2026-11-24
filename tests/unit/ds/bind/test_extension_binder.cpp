@@ -35,7 +35,7 @@ class TestExtensionBinder : public ::testing::Test {
   const ds::bind::SignatureBinder signatures{types};
   const ds::bind::FormulaBinder formulas{};
 
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {}};
+  const ds::bind::Dispatch dispatch{parser.language(), {}};
   ds::parse::ParsedFile file;
 
   /// The first node of `type` under `node`, depth first.
@@ -71,7 +71,7 @@ TEST_F(TestExtensionBinder, ABlockOfAnnotationsOnlyExtendsAndExpectsWhatNothingD
   const ds::parse::TreeReader reader(file);
   const ds::bind::BindContext ctx{model, notes, reader, metamodel, dispatch, "p@m", "p@m"};
   const TSNode cls = find(reader.root(), "class");
-  const TSNode body = TreeReader::child(cls, Field::body);
+  const TSNode body = reader.child(cls, Field::body);
   EXPECT_TRUE(ds::bind::ExtensionBinder::extends(body));
   EXPECT_FALSE(ds::bind::ExtensionBinder::extends(find(reader.root(), "module")));  // a module holds a class: a definition
   extensions.bind(body, ctx, "p@m::A", ds::model::Kind::Class, "A", "p@m", ctx.locationOf(cls));

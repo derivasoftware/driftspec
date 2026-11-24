@@ -49,7 +49,7 @@ void UseCaseBinder::bind(TSNode node, const BindContext& ctx) const {
     out.scope = e.id;
     out.location = ctx.locationOf(o);
     out.fields["text"] = std::string(text::trimWhitespace(ctx.reader.fieldText(o, Field::text)));
-    const std::string returns = types_.bind(TreeReader::child(o, Field::returns), ctx, scope, out.id, "uses", "", {}, out.location);
+    const std::string returns = types_.bind(ctx.reader.child(o, Field::returns), ctx, scope, out.id, "uses", "", {}, out.location);
     if (!returns.empty()) out.fields["returns"] = returns;
     ctx.declare(out);
     ctx.relate({"contains", e.id, out.id, out.location, ""});

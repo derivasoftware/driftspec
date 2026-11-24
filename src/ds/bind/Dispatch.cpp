@@ -9,13 +9,13 @@
 namespace ds {
 namespace bind {
 
-Dispatch::Dispatch(const TSLanguage* language, const std::vector<const INodeBinder*>& binders)
-    : bySymbol_(ts_language_symbol_count(language), nullptr) {
+Dispatch::Dispatch(const TSLanguage& language, const std::vector<const INodeBinder*>& binders)
+    : bySymbol_(ts_language_symbol_count(&language), nullptr) {
   for (const INodeBinder* binder : binders) {
     for (const std::string& kind : binder->kinds()) {
       // the named node of that name; ts_node_symbol gives the same public symbol for every node of the kind
-      const TSSymbol symbol = ts_language_symbol_for_name(language, kind.c_str(), static_cast<uint32_t>(kind.size()), true);
-      if (symbol == 0 || std::strcmp(ts_language_symbol_name(language, symbol), kind.c_str()) != 0)
+      const TSSymbol symbol = ts_language_symbol_for_name(&language, kind.c_str(), static_cast<uint32_t>(kind.size()), true);
+      if (symbol == 0 || std::strcmp(ts_language_symbol_name(&language, symbol), kind.c_str()) != 0)
         throw std::logic_error("no node of the grammar is named " + kind);
       if (bySymbol_[symbol] && bySymbol_[symbol] != binder) throw std::logic_error("two binders take the node " + kind);
       bySymbol_[symbol] = binder;

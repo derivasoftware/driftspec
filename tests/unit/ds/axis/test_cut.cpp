@@ -188,21 +188,21 @@ TEST_F(TestCut, DepthSaysHowFarForTheCallsNeitherNames) {
 /// standsAmong alone: the one way anything is lifted onto a set of boxes.
 TEST(TestStandsAmong, WhatStandsForAnIdIsTheOutermostOfTheBoxesAroundItOrNothing) {
   const std::set<std::string> boxes{"shop@sales", "shop@sales@till", "shop@shell"};
-  EXPECT_EQ(ds::axis::standsAmong("shop@sales@desk::Desk::sell", boxes), "shop@sales");
-  EXPECT_EQ(ds::axis::standsAmong("shop@sales@till::Till", boxes), "shop@sales");  // the outermost, not the till
-  EXPECT_EQ(ds::axis::standsAmong("shop@shell::buy", boxes), "shop@shell");        // an interface holds its operations
-  EXPECT_EQ(ds::axis::standsAmong("shop@sales", boxes), "shop@sales");             // one of them stands for itself
-  EXPECT_EQ(ds::axis::standsAmong("shop@warehouse@stock::Shelf", boxes), "");      // none of them holds it
+  EXPECT_EQ(ds::axis::Cut::standsAmong("shop@sales@desk::Desk::sell", boxes), "shop@sales");
+  EXPECT_EQ(ds::axis::Cut::standsAmong("shop@sales@till::Till", boxes), "shop@sales");  // the outermost, not the till
+  EXPECT_EQ(ds::axis::Cut::standsAmong("shop@shell::buy", boxes), "shop@shell");        // an interface holds its operations
+  EXPECT_EQ(ds::axis::Cut::standsAmong("shop@sales", boxes), "shop@sales");             // one of them stands for itself
+  EXPECT_EQ(ds::axis::Cut::standsAmong("shop@warehouse@stock::Shelf", boxes), "");      // none of them holds it
 }
 
 /// bondOf alone: the two things a relation reads as between boxes.
 TEST(TestBondOf, ARelationReadsBetweenBoxesAsAStructuralBondOrAUseOrNothing) {
   for (const char* structural : {"owns", "refs", "shares", "inherits", "realises"})
-    EXPECT_EQ(ds::axis::bondOf(structural), "structural") << structural;
+    EXPECT_EQ(ds::axis::Cut::bondOf(structural), "structural") << structural;
   for (const char* use : {"uses", "bounded-by", "consumes", "calls", "sends", "couples-transient", "couples-structural"})
-    EXPECT_EQ(ds::axis::bondOf(use), "uses") << use;
+    EXPECT_EQ(ds::axis::Cut::bondOf(use), "uses") << use;
   for (const char* none : {"contains", "refines", "verifies", "satisfies", "behaviour-of", "expands-to"})
-    EXPECT_EQ(ds::axis::bondOf(none), "") << none;
+    EXPECT_EQ(ds::axis::Cut::bondOf(none), "") << none;
 }
 
 }  // namespace

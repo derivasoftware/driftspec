@@ -161,7 +161,7 @@ void SequenceBinder::bind(TSNode c, const BindContext& ctx) const {
       if (!TreeReader::is(s, "local") && !TreeReader::is(s, "participant")) continue;
       const std::string name = ctx.reader.fieldText(s, Field::name);
       ctx.annotate(declared.id, "local." + name,
-                   types_.bind(TreeReader::child(s, Field::type), ctx, scope, declared.id, "uses", "", {}, ctx.locationOf(s)));
+                   types_.bind(ctx.reader.child(s, Field::type), ctx, scope, declared.id, "uses", "", {}, ctx.locationOf(s)));
     }
   }
   int order = 0, frames = 0;
