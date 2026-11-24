@@ -1,0 +1,846 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@scene::RuleView",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::BreachView"
+    },
+    {
+      "from": "driftspec@ds@scene::Requirement",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Outcome"
+    },
+    {
+      "from": "driftspec@ds@scene::Behaviour",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Call"
+    },
+    {
+      "from": "driftspec@ds@scene::Node",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Box"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Node"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Box"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Link"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::DiagramView"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Behaviour"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Tour"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Requirement"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Verification"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::RuleView"
+    },
+    {
+      "from": "driftspec@ds@scene::IScene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Map",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Node"
+    },
+    {
+      "from": "driftspec@ds@scene::ILayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::layers",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::layers",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::IScene"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@scene",
+      "kind": "container",
+      "label": "scene",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Behaviour",
+      "kind": "box",
+      "label": "Behaviour",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: std::string",
+          "+ subject: std::string",
+          "+ scenario: std::string",
+          "+ calls: std::vector<Call>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "box",
+      "label": "BehaviourLayer",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- map_: Map",
+          "- index_: std::map<std::pair<std::string, std::string>, int>",
+          "- calls_: std::map<std::string, std::string>"
+        ],
+        [
+          "+ BehaviourLayer(model: model::Model, map: Map)",
+          "+ decorate(out_document: SceneDocument) -> void",
+          "- tours(out_document: SceneDocument) -> void",
+          "- behaviourOf(sequence: std::string, scenario: std::string, out_document: SceneDocument) -> int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Box",
+      "kind": "box",
+      "label": "Box",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ x: double",
+          "+ y: double",
+          "+ w: double",
+          "+ h: double"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::BreachView",
+      "kind": "box",
+      "label": "BreachView",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ node: std::string",
+          "+ to: std::string",
+          "+ bindings: std::vector<std::pair<std::string, std::string>>",
+          "+ witness: std::vector<std::pair<std::string, std::string>>",
+          "+ file: std::string",
+          "+ line: int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Call",
+      "kind": "box",
+      "label": "Call",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ to: std::string",
+          "+ label: std::string",
+          "+ expands: int",
+          "+ result: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::DiagramView",
+      "kind": "box",
+      "label": "DiagramView",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ kind: std::string",
+          "+ nodes: std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::ILayer",
+      "kind": "box",
+      "label": "ILayer",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ ~ILayer()",
+          "+ abstract decorate(out_document: SceneDocument) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::IScene",
+      "kind": "box",
+      "label": "IScene",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ ~IScene()",
+          "+ abstract build() -> SceneDocument"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::Layout",
+      "kind": "box",
+      "label": "Layout",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel"
+        ],
+        [
+          "+ Layout(model: model::Model, metamodel: model::Metamodel)",
+          "+ place() -> SceneDocument"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Link",
+      "kind": "box",
+      "label": "Link",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ from: std::string",
+          "+ to: std::string",
+          "+ kind: std::string",
+          "+ count: int",
+          "+ multiplicity: std::string",
+          "+ sequences: std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::Map",
+      "kind": "box",
+      "label": "Map",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- ids_: std::set<std::string>",
+          "- parent_: std::map<std::string, std::string>"
+        ],
+        [
+          "+ Map(nodes: std::vector<Node>)",
+          "+ land(id: std::string) -> std::string",
+          "+ has(id: std::string) -> bool",
+          "+ parentOf(id: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Node",
+      "kind": "box",
+      "label": "Node",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: std::string",
+          "+ kind: std::string",
+          "+ parent: std::string",
+          "+ label: std::string",
+          "+ stereotype: std::string",
+          "+ visibility: std::string",
+          "+ requirements: std::vector<std::string>",
+          "+ full: Box",
+          "+ lean: bool",
+          "+ leanBox: Box"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Outcome",
+      "kind": "box",
+      "label": "Outcome",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ returns: std::string",
+          "+ text: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Requirement",
+      "kind": "box",
+      "label": "Requirement",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: std::string",
+          "+ kind: std::string",
+          "+ title: std::string",
+          "+ status: std::string",
+          "+ text: std::string",
+          "+ parent: std::string",
+          "+ scope: std::string",
+          "+ nodes: std::vector<std::string>",
+          "+ signature: std::string",
+          "+ outcomes: std::vector<Outcome>",
+          "+ binds: std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::RuleView",
+      "kind": "box",
+      "label": "RuleView",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: std::string",
+          "+ kind: std::string",
+          "+ name: std::string",
+          "+ title: std::string",
+          "+ scope: std::string",
+          "+ lines: std::vector<std::pair<std::string, std::string>>",
+          "+ requirements: std::vector<std::string>",
+          "+ breaches: std::vector<BreachView>",
+          "+ file: std::string",
+          "+ line: int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::RulesLayer",
+      "kind": "box",
+      "label": "RulesLayer",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- map_: Map"
+        ],
+        [
+          "+ RulesLayer(model: model::Model, metamodel: model::Metamodel, map: Map)",
+          "+ decorate(out_document: SceneDocument) -> void",
+          "- place(id: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::Scene",
+      "kind": "box",
+      "label": "Scene",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- base_: SceneDocument",
+          "- map_: Map",
+          "- layers_: std::vector<std::unique_ptr<ILayer>>"
+        ],
+        [
+          "+ Scene(model: model::Model, metamodel: model::Metamodel)",
+          "+ build() -> SceneDocument"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::SceneDocument",
+      "kind": "box",
+      "label": "SceneDocument",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ nodes: std::vector<Node>",
+          "+ world: Box",
+          "+ leanWorld: Box",
+          "+ links: std::vector<Link>",
+          "+ diagrams: std::vector<DiagramView>",
+          "+ titles: std::map<std::string, std::string>",
+          "+ behaviours: std::vector<Behaviour>",
+          "+ tours: std::vector<Tour>",
+          "+ requirements: std::vector<Requirement>",
+          "+ verifications: std::vector<Verification>",
+          "+ rules: std::vector<RuleView>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::StructureLayer",
+      "kind": "box",
+      "label": "StructureLayer",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- map_: Map"
+        ],
+        [
+          "+ StructureLayer(model: model::Model, metamodel: model::Metamodel, map: Map)",
+          "+ decorate(out_document: SceneDocument) -> void",
+          "- links(out_document: SceneDocument) -> void",
+          "- diagrams(out_document: SceneDocument) -> void",
+          "- titles(out_document: SceneDocument) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Tour",
+      "kind": "box",
+      "label": "Tour",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ behaviour: int",
+          "+ group: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::TraceLayer",
+      "kind": "box",
+      "label": "TraceLayer",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- map_: Map",
+          "- at_: std::map<std::string, size_t>",
+          "- verificationAt_: std::map<std::string, size_t>"
+        ],
+        [
+          "+ TraceLayer(model: model::Model, map: Map)",
+          "+ decorate(out_document: SceneDocument) -> void",
+          "- requirements(out_document: SceneDocument) -> void",
+          "- verifications(out_document: SceneDocument) -> void",
+          "- answers(out_document: SceneDocument) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Verification",
+      "kind": "box",
+      "label": "Verification",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: std::string",
+          "+ title: std::string",
+          "+ status: std::string",
+          "+ method: std::string",
+          "+ tests: std::vector<std::string>",
+          "+ requirements: std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@scene::layers",
+      "kind": "box",
+      "label": "layers",
+      "parent": "driftspec@ds@scene",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ layers(model: model::Model, metamodel: model::Metamodel, map: Map) -> std::vector<std::unique_ptr<ILayer>>"
+        ]
+      ],
+      "stereotype": "function"
+    }
+  ],
+  "title": "CL_SceneNamespace"
+}

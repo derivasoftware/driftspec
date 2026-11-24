@@ -1,0 +1,416 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@driftspec@live_http::Handler",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@live_session::Live"
+    },
+    {
+      "from": "driftspec@driftspec@live_http::handler_for",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_session::Live"
+    },
+    {
+      "from": "driftspec@driftspec@live_http::handler_for",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_http::Handler"
+    },
+    {
+      "from": "driftspec@driftspec@live_http::serve",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_session::Live"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@driftspec",
+      "kind": "container",
+      "label": "driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live",
+      "kind": "container",
+      "label": "live",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_http",
+      "kind": "container",
+      "label": "live_http",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_mcp",
+      "kind": "container",
+      "label": "live_mcp",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_page",
+      "kind": "container",
+      "label": "live_page",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_session",
+      "kind": "container",
+      "label": "live_session",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@live::Command",
+      "kind": "box",
+      "label": "Command",
+      "parent": "driftspec@driftspec@live",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ port: int",
+          "+ tone: str",
+          "+ add: bool",
+          "+ args: list[str]",
+          "+ name: str"
+        ],
+        [
+          "+ static option(args: list[str], flag: str, default)",
+          "+ word(k: int, default: str) -> str",
+          "+ ask(path: str, data: dict | None, indent: int | None) -> None",
+          "+ state() -> None"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live::main",
+      "kind": "box",
+      "label": "main",
+      "parent": "driftspec@driftspec@live",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ main(argv: list[str] | None) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@live_http::Handler",
+      "kind": "box",
+      "label": "Handler",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ live: Live"
+        ],
+        [
+          "+ log_message(*a)",
+          "+ local() -> bool",
+          "+ send(code: int, body: bytes, ctype: str) -> None",
+          "+ json(obj, code: int) -> None",
+          "+ do_GET()",
+          "+ page() -> None",
+          "+ events() -> None",
+          "+ stream(q: queue.Queue) -> None",
+          "+ do_POST()"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_http::browser_open",
+      "kind": "box",
+      "label": "browser_open",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ browser_open(url: str) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_http::handler_for",
+      "kind": "box",
+      "label": "handler_for",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ handler_for(live: Live) -> type[Handler]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_http::serve",
+      "kind": "box",
+      "label": "serve",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ serve(workspace: str, port: int, open_browser: bool, block: bool) -> Live"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::answer",
+      "kind": "box",
+      "label": "answer",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ answer(port: int, msg: dict, opened: dict, stdout) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::call",
+      "kind": "box",
+      "label": "call",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ call(port: int, path: str, data: dict | None) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::called",
+      "kind": "box",
+      "label": "called",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ called(port: int, msg: dict, opened: dict) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::initialize",
+      "kind": "box",
+      "label": "initialize",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ initialize(port: int, msg: dict, opened: dict) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::mcp",
+      "kind": "box",
+      "label": "mcp",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ mcp(port: int, stdin, stdout) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::open_workspace",
+      "kind": "box",
+      "label": "open_workspace",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ open_workspace(port: int, args: dict, opened: dict) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::reply",
+      "kind": "box",
+      "label": "reply",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ reply(stdout, i, result, error) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::state",
+      "kind": "box",
+      "label": "state",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ state(port: int) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::tool",
+      "kind": "box",
+      "label": "tool",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ tool(port: int, name: str, args: dict, opened: dict) -> object"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_page::shell",
+      "kind": "box",
+      "label": "shell",
+      "parent": "driftspec@driftspec@live_page",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ shell(title: str, workspace: str) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@live_session::Live",
+      "kind": "box",
+      "label": "Live",
+      "parent": "driftspec@driftspec@live_session",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ workspace: str",
+          "+ title: str",
+          "+ lock: threading.Lock",
+          "+ version: int",
+          "+ page: str",
+          "+ loaded: driftspec.Workspace | None",
+          "+ history: list[dict]",
+          "+ findings: list[dict]",
+          "+ counts: dict",
+          "+ selection: dict",
+          "+ notes: list[dict]",
+          "+ highlights: list[dict]",
+          "+ rules: list[dict]",
+          "+ comments: list[dict]",
+          "+ isolated: list[str]",
+          "+ listeners: list[queue.Queue]",
+          "+ stamp: None",
+          "+ error: str",
+          "+ boot: str",
+          "+ store: str"
+        ],
+        [
+          "+ reload() -> bool",
+          "+ files_stamp()",
+          "+ rules_of(model, findings) -> list[dict]",
+          "+ state() -> dict",
+          "+ broadcast(event: str, data: dict) -> None",
+          "+ watch(every: float) -> None",
+          "+ annotations(frame: list[str]) -> None",
+          "+ focus(identity: str, also: list[str] | None) -> int",
+          "+ note(identity: str, text: str, tone: str, frame: bool) -> int",
+          "+ highlight(ids: list[str], tone: str, add: bool, frame: bool) -> int",
+          "+ clear(what: str) -> None",
+          "+ select(identity: str | None, label: str) -> None",
+          "+ load() -> None",
+          "+ save() -> None",
+          "+ seen(ids: list[str], seen: bool) -> int",
+          "+ comment(identity: str, text: str) -> int",
+          "+ unread(mark: bool) -> list[dict]",
+          "+ isolate(ids: list[str], tell: bool) -> list[str]"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_LiveModule"
+}

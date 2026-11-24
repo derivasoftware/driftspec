@@ -1,0 +1,61 @@
+// The grammar box: the rules of the text itself and what it ships to the
+// editors. The language's DAG lives in design/ds/language.ds; the text node
+// refines its root through design/wiring.ds.
+
+package driftspec@grammar {
+
+  requirement REQ-00051-1 {
+    tags: language, grammar
+    status: approved
+    title: The grammar shall read a specification as text, unambiguously
+    rationale: A formal grammar is what gives every text one tree (SREQ-00012-1).
+    verification VER-00039-2 {
+      title: Integration tests confirm the grammar reads a specification as text, unambiguously
+      status: approved
+      method: test
+      tests:
+        tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AWholeWorkspaceIsReadWithoutSyntaxErrors
+    }
+    verification VER-00181-1 {
+      title: Integration tests confirm every case of the grammar's corpus parses to the tree it records, and the cases reach every named node of the grammar
+      status: approved
+      method: test
+      tests:
+        tests/integration/ds/parse/test_grammar_corpus.cpp::TestGrammarCorpus.EveryCaseParsesToTheTreeItRecords
+        tests/integration/ds/parse/test_grammar_corpus.cpp::TestGrammarCorpus.TheCasesReachEveryNamedNodeOfTheGrammar
+    }
+    constraint CST-00007-1 {
+      tags: language, grammar
+      status: approved
+      category: language
+      bok: BOK-00004-1
+      title: Every file shall be braces that enclose one thing per line, // always a comment, a field value to the end of its line, multiline text by indentation
+      rationale: R7: one shape for every construct, readable without a parser in the head.
+    }
+    requirement REQ-00052-1 {
+      tags: language, grammar
+      status: approved
+      title: The grammar shall ship highlight and fold queries that name only nodes it defines
+      rationale: An editor loads them as any other language's.
+      verification VER-00040-2 {
+        title: Integration tests confirm the grammar takes the highlight and fold queries it ships and each finds something in a specification
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/parse/test_grammar_queries.cpp::TestGrammarQueries.TheHighlightQueryIsTakenByTheGrammarAndColoursASpecification
+          tests/integration/ds/parse/test_grammar_queries.cpp::TestGrammarQueries.TheFoldQueryIsTakenByTheGrammarAndFoldsASpecification
+      }
+    }
+  }
+
+  verification VER-00047-3 {
+    status: approved
+    @constraint CST-00007-1
+    title: Integration tests confirm a file parses as one thing per line and a syntax error is reported where the file stops parsing
+    method: test
+    tests:
+      tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AWholeWorkspaceIsReadWithoutSyntaxErrors
+      tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.ASyntaxErrorIsReportedWhereTheFileStopsParsing
+      tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AFileThatParsesReportsNoSyntaxErrorBesideOneThatDoesNot
+  }
+}

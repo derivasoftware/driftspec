@@ -1,0 +1,33 @@
+{
+  "edges": [],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@cli",
+      "kind": "box",
+      "label": "cli",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "check(workspace: path) -> none",
+          "export(workspace: path) -> none",
+          "render(input: path, diagram: string) -> none",
+          "query(workspace: path, question: string, subject: string) -> none",
+          "manual(topic: string) -> none"
+        ]
+      ]
+    }
+  ],
+  "title": "IF_Cli"
+}

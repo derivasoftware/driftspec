@@ -1,0 +1,936 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@api",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@workspace"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@exporter"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@browser"
+    },
+    {
+      "from": "driftspec@ds@api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind"
+    },
+    {
+      "from": "driftspec@ds@browser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api"
+    },
+    {
+      "from": "driftspec@ds@engine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api"
+    },
+    {
+      "from": "driftspec@ds@workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@exporter"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render"
+    },
+    {
+      "from": "driftspec@ds@axis",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@bind",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@bind",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@bind",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse"
+    },
+    {
+      "from": "driftspec@ds@bind",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@parse"
+    },
+    {
+      "from": "driftspec@ds@check",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind"
+    },
+    {
+      "from": "driftspec@ds@check",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind"
+    },
+    {
+      "from": "driftspec@ds@exporter",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@exporter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@format",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene"
+    },
+    {
+      "from": "driftspec@ds@format",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render"
+    },
+    {
+      "from": "driftspec@ds@format",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query"
+    },
+    {
+      "from": "driftspec@ds@format",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check"
+    },
+    {
+      "from": "driftspec@ds@machine",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@machine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@query",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@axis"
+    },
+    {
+      "from": "driftspec@ds@render",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@render",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@render",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@axis"
+    },
+    {
+      "from": "driftspec@ds@render",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query"
+    },
+    {
+      "from": "driftspec@ds@scene",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@scene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check"
+    },
+    {
+      "from": "driftspec@ds@cli",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@app"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@api",
+      "kind": "box",
+      "label": "api",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "enum"
+      ],
+      "sections": [
+        [
+          "Api",
+          "Browser",
+          "Identity",
+          "Workspace"
+        ],
+        [
+          "Output"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@app",
+      "kind": "box",
+      "label": "app",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "function"
+      ],
+      "sections": [
+        [
+          "main",
+          "run"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@axis",
+      "kind": "box",
+      "label": "axis",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class"
+      ],
+      "sections": [
+        [
+          "Cut"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@bind",
+      "kind": "box",
+      "label": "bind",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass"
+      ],
+      "sections": [
+        [
+          "AnnotationBinder",
+          "ArtefactBinder",
+          "BindContext",
+          "Binder",
+          "ClassBinder",
+          "DiagramBinder",
+          "Dispatch",
+          "EnumBinder",
+          "ExtensionBinder",
+          "FieldBinder",
+          "FormulaBinder",
+          "FunctionBinder",
+          "INodeBinder",
+          "InterfaceBinder",
+          "MemberBinder",
+          "MemberBodyBinder",
+          "ModuleBinder",
+          "Notes",
+          "PackageBinder",
+          "RuleBinder",
+          "SequenceBinder",
+          "SignatureBinder",
+          "StateBinder",
+          "TypeBinder",
+          "UseCaseBinder"
+        ],
+        [
+          "Event",
+          "Message",
+          "Reference",
+          "TypeToken"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@check",
+      "kind": "box",
+      "label": "check",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass",
+        "enum",
+        "function"
+      ],
+      "sections": [
+        [
+          "ACheck",
+          "BehaviourTyping",
+          "CallOrder",
+          "Checker",
+          "Context",
+          "ContractCheck",
+          "DependencyCheck",
+          "Derivation",
+          "Evaluator",
+          "Facts",
+          "FailureFlow",
+          "IChecker",
+          "IStep",
+          "LevelCoherence",
+          "Linker",
+          "Resolver",
+          "RuleCheck",
+          "RuleValidator",
+          "Selection",
+          "Solver",
+          "StateRules",
+          "Strata",
+          "StructureCheck",
+          "Variables"
+        ],
+        [
+          "Escape",
+          "Report"
+        ],
+        [
+          "Step"
+        ],
+        [
+          "steps"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@exporter",
+      "kind": "box",
+      "label": "exporter",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class"
+      ],
+      "sections": [
+        [
+          "JsonExport"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@format",
+      "kind": "box",
+      "label": "format",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "namespace",
+        "class",
+        "dataclass",
+        "function"
+      ],
+      "sections": [
+        [
+          "common"
+        ],
+        [
+          "AnswersJson",
+          "AnswersText",
+          "DiagramCells",
+          "DiagramIr",
+          "DiagramLayout",
+          "DiagramSvg",
+          "DiagramText",
+          "IFormat<D>",
+          "ReportJson",
+          "ReportText",
+          "SceneHtml",
+          "SceneJson"
+        ],
+        [
+          "FormatOptions"
+        ],
+        [
+          "answerFormats",
+          "diagramFormats",
+          "reportFormats",
+          "sceneFormats",
+          "viewerTemplate"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@machine",
+      "kind": "box",
+      "label": "machine",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass"
+      ],
+      "sections": [
+        [
+          "Machine",
+          "Table"
+        ],
+        [
+          "Call",
+          "Cell",
+          "Row"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@model",
+      "kind": "box",
+      "label": "model",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass",
+        "enum"
+      ],
+      "sections": [
+        [
+          "ArtefactName",
+          "Identity",
+          "Index",
+          "Manual",
+          "Metamodel",
+          "Model",
+          "Paths",
+          "Scope",
+          "SequenceTree"
+        ],
+        [
+          "AnnotationSpec",
+          "Breach",
+          "CodeSpec",
+          "Column",
+          "CommandSpec",
+          "Entity",
+          "FieldSpec",
+          "Finding",
+          "Formula",
+          "Indexed",
+          "KindSpec",
+          "Literal",
+          "Location",
+          "Param",
+          "Range",
+          "Relation",
+          "RelationSpec",
+          "SeveritySpec",
+          "Tabulated",
+          "Term"
+        ],
+        [
+          "Code",
+          "FieldSource",
+          "FieldType",
+          "Kind",
+          "LiteralForm",
+          "Severity"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@parse",
+      "kind": "box",
+      "label": "parse",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass",
+        "enum"
+      ],
+      "sections": [
+        [
+          "Lookahead",
+          "Parser",
+          "SyntaxError",
+          "TreeReader"
+        ],
+        [
+          "ParsedFile",
+          "Span"
+        ],
+        [
+          "Field"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@query",
+      "kind": "box",
+      "label": "query",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass",
+        "function"
+      ],
+      "sections": [
+        [
+          "ClassFilter",
+          "IFilter",
+          "IQuery",
+          "Query",
+          "RequirementsFilter",
+          "SequenceFilter",
+          "StateFilter",
+          "Walker"
+        ],
+        [
+          "Answer",
+          "Behaviour",
+          "Taken",
+          "Walked"
+        ],
+        [
+          "drawnFrom",
+          "filterFor",
+          "inPattern"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@render",
+      "kind": "box",
+      "label": "render",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass",
+        "function"
+      ],
+      "sections": [
+        [
+          "IrExport",
+          "Layout",
+          "Svg",
+          "Text"
+        ],
+        [
+          "IrCell",
+          "IrDocument",
+          "IrEdge",
+          "IrNode",
+          "IrRow",
+          "IrTable",
+          "IrText",
+          "LayoutResult",
+          "Metrics",
+          "Placed",
+          "Point",
+          "Rect",
+          "Route"
+        ],
+        [
+          "badgeOf",
+          "holdsMembers"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@scene",
+      "kind": "box",
+      "label": "scene",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "class",
+        "dataclass",
+        "function"
+      ],
+      "sections": [
+        [
+          "BehaviourLayer",
+          "ILayer",
+          "IScene",
+          "Layout",
+          "Map",
+          "RulesLayer",
+          "Scene",
+          "StructureLayer",
+          "TraceLayer"
+        ],
+        [
+          "Behaviour",
+          "Box",
+          "BreachView",
+          "Call",
+          "DiagramView",
+          "Link",
+          "Node",
+          "Outcome",
+          "Requirement",
+          "RuleView",
+          "SceneDocument",
+          "Tour",
+          "Verification"
+        ],
+        [
+          "layers"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@text",
+      "kind": "box",
+      "label": "text",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "function"
+      ],
+      "sections": [
+        [
+          "base64",
+          "escapeXml",
+          "fromBase64",
+          "join",
+          "linesOf",
+          "splitTrimmed",
+          "trimSpaces",
+          "trimWhitespace"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@browser",
+      "kind": "box",
+      "label": "browser",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "answer(request: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@cli",
+      "kind": "box",
+      "label": "cli",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "check(workspace: path) -> none",
+          "export(workspace: path) -> none",
+          "render(input: path, diagram: string) -> none",
+          "query(workspace: path, question: string, subject: string) -> none",
+          "manual(topic: string) -> none"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@engine",
+      "kind": "box",
+      "label": "engine",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "check(files: api::Files) -> std::string",
+          "export(files: api::Files) -> std::string",
+          "render(files: api::Files, diagram: std::string, format: std::string, width: int) -> std::string",
+          "page(files: api::Files, title: std::string, focus: std::vector<std::string>) -> std::string",
+          "expectedAt(text: std::string, line: int, column: int) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@workspace",
+      "kind": "box",
+      "label": "workspace",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "export() -> std::string",
+          "report() -> std::string",
+          "find(id: std::string) -> std::string",
+          "from(id: std::string) -> std::string",
+          "to(id: std::string) -> std::string",
+          "touching(id: std::string) -> std::string",
+          "members(scope: std::string) -> std::string",
+          "parent(id: std::string) -> std::string",
+          "children(id: std::string) -> std::string",
+          "revisionOf(artefact: std::string) -> std::string",
+          "tree(sequence: std::string) -> std::string",
+          "steps(sequence: std::string, path: std::string) -> std::string",
+          "walk(sequence: std::string, path: std::string, depth: int) -> std::string",
+          "ask(question: std::string, subject: std::string) -> std::string",
+          "shows(diagram: std::string) -> std::string",
+          "render(diagram: std::string, format: std::string, width: int) -> std::string",
+          "page(title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ]
+    }
+  ],
+  "title": "HLD_Ds"
+}

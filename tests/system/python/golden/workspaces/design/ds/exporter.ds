@@ -1,0 +1,166 @@
+// LLD of the exporter namespace (ds::exporter): the model as JSON for other
+// tools (SREQ-00006-1). The namespace is called exporter because export is a
+// C++ keyword; the box convention (name = namespace) bends here, once.
+
+package driftspec@ds {
+
+  module exporter {
+    @requirement REQ-00182-1                 // every operation of the exporter is a member of a class (DS-367)
+
+    requirement REQ-00005-1 {
+      status: approved
+      @refines SREQ-00006-1
+      title: The exporter shall render the whole model as JSON with every entity, relation and finding located
+      text:
+        One document with three arrays: entities (id, kind, name, scope,
+        expected, fields, flags, location), relations (kind, from, to,
+        location, multiplicity when set) and findings (code, severity,
+        message, location). Pretty-printed by default, compact on request.
+      rationale:
+        argos and every other host read the model, not the files; the
+        document is the contract between ds and them.
+      tags: export, json
+    }
+
+    verification VER-00005-2 {
+      status: approved
+      @requirement REQ-00005-1
+      title: Integration tests cover the three arrays, their fields and the compact form
+      method: test
+      tests:
+        tests/integration/ds/exporter/test_export_of_a_design.cpp::TestExportOfADesign.TheThreeArraysCarryWhatTheTextDeclaresRelatesAndGetsWrong
+        tests/integration/ds/exporter/test_export_of_a_design.cpp::TestExportOfADesign.TheCompactFormSaysTheSameOnOneLine
+    }
+
+    requirement REQ-00068-1 {
+      status: approved
+      @refines SREQ-00006-1
+      title: The exporter shall carry the metamodel the model is written in, so a reader learns the language from the document
+      text:
+        Beside entities, relations and findings, the document holds
+        metamodel: kinds (kind, meaning, fields with name, type, source and
+        meaning, flags, parents, top) and relations (kind, meaning, from, to),
+        as the metamodel declares them (REQ-00066-1).
+      rationale:
+        A host reading the export (argos, folio, the render of DS-67) needs
+        the shape of what it reads; carried in the document, it cannot drift
+        from the ds that wrote it.
+      tags: export, json, metamodel
+    }
+
+    verification VER-00074-1 {
+      status: approved
+      @requirement REQ-00068-1
+      title: Integration tests confirm the document of ds's own design names every kind and relation it holds in its metamodel, each field with its type and source
+      method: test
+      tests:
+        tests/integration/ds/exporter/test_export_metamodel.cpp::TestExportMetamodel.EveryKindAndRelationOfTheDocumentIsInItsMetamodel
+        tests/integration/ds/exporter/test_export_metamodel.cpp::TestExportMetamodel.EachFieldSaysItsTypeAndWhoSetsIt
+    }
+
+    // ---- what the exporter is, as requirements and the rules that hold them (DS-367) -----------------------
+    requirement REQ-00182-1 {
+      tags: architecture, export
+      status: approved
+      @refines REQ-00005-1
+      title: Every operation of the exporter shall be a member of the class whose responsibility it is
+      text:
+        What writes the document, an entity, a relation, a location and the metamodel is JsonExport's. A function of
+        the module would be a responsibility no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-367): every module has its architecture decisions and patterns, and its rules
+        check that they hold; a free function means a responsibility is missing.
+      verification VER-00202-1 {
+        status: approved
+        title: Integration tests confirm the design of the exporter holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheExporterIsTold
+      }
+    }
+
+    requirement REQ-00183-1 {
+      tags: architecture, export
+      status: approved
+      @refines REQ-00005-1
+      title: The exporter shall read the model it writes and leave it as it is
+      text:
+        The document is written from what the model keeps: its entities, the relations its index answers with, its
+        findings and its metamodel. The exporter asks the model its questions and calls none of what changes it.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-367): the document is the contract between ds and every host; writing it must
+        not change the model the next reader asks.
+      verification VER-00203-1 {
+        status: approved
+        title: Integration tests confirm the design of the exporter reads the model, and is told when a behaviour of the exporter changes it
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AnExporterThatChangesTheModelIsTold
+      }
+    }
+
+    rule exporter-operations-belong-to-classes {
+      title: no function is written in the exporter's module, so every operation of the exporter is a member of a class
+      @requirement REQ-00182-1
+      for function f in driftspec@ds@exporter
+      never f in driftspec@ds@exporter
+    }
+
+    rule the-exporter-reads-the-model {
+      title: no behaviour of the exporter calls what changes the model, so the exporter reads the model and leaves it as it is
+      @requirement REQ-00183-1
+      for class c in driftspec@ds@exporter, method b in driftspec@ds@model::Model
+      where changes-the-model(b)
+      never m in c, s behaviour-of m, x in s, x calls b
+    }
+
+    class JsonExport {
+      @requirement REQ-00183-1
+      @requirement REQ-00005-1
+      @requirement REQ-00068-1
+      - refs metamodel_: model::Metamodel     // the language it writes in: the kinds by name, and itself (DS-341)
+      + JsonExport(metamodel: model::Metamodel)
+      + render(model: model::Model, pretty: bool) -> std::string
+      + entity(entity: model::Entity) -> std::string     // one entity, as the whole model writes it (DS-173)
+      + relations(relations: std::vector<model::Relation>) -> std::string
+      - static locationJson(l: model::Location) -> nlohmann::json
+      - entityJson(e: model::Entity) -> nlohmann::json
+      - static relationJson(r: model::Relation) -> nlohmann::json
+      - kindNames(kinds: std::vector<model::Kind>) -> nlohmann::json
+      - metamodelJson() -> nlohmann::json
+    }
+
+    // The document under construction is an nlohmann::json, a type the design does not
+    // know, so it is not a participant; what comes back is its dump().
+    sequence JsonExport::render {
+      self -> model.entities() -> entities
+      loop each entity {
+        self -> metamodel_.nameOf(entity.kind) -> kind
+      }
+      self -> model.index() -> index
+      self -> index.all() -> relations
+      loop each relation {
+        opt it has a multiplicity {
+        }
+      }
+      self -> model.findings() -> findings
+      loop each finding {
+      }
+      self -> metamodel_.version() -> version
+      self -> metamodel_.kinds() -> kinds
+      self -> metamodel_.relations() -> relationSpecs
+      alt pretty {
+        return indented
+      } else {
+        return compact
+      }
+    }
+  }
+}
+
+diagram CL_ExporterNamespace {
+  kind: class
+  include: driftspec@ds@exporter::*
+}

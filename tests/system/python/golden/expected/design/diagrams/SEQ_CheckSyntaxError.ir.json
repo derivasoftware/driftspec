@@ -1,0 +1,137 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "check(workspace: path)",
+      "order": 0,
+      "refs": {
+        "location": "design/ds/cli.ds:12"
+      },
+      "title": "driftspec@ds@cli::check",
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "app::main(workspace) / check-errors",
+      "order": 1,
+      "refs": {
+        "expands": "driftspec@ds@app::main::sequence/check-errors",
+        "location": "design/ds/cli.ds:65",
+        "span": "2-7"
+      },
+      "title": "driftspec@ds@app::app::main\nexpanded below: main/check-errors",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loadWorkspace(metamodel, argv, findings, diagram, model)",
+      "order": 2,
+      "refs": {
+        "expands": "driftspec@ds@app::loadWorkspace::sequence",
+        "location": "design/ds/app.ds:82",
+        "span": "3-6"
+      },
+      "title": "driftspec@ds@app::loadWorkspace\nexpanded below: loadWorkspace",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "isDirectory(dir)",
+      "order": 3,
+      "refs": {
+        "location": "design/ds/app.ds:46"
+      },
+      "title": "driftspec@ds@app::isDirectory",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 4,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "href": "#driftspec@ds@app::load::sequence",
+      "kind": "message",
+      "label": "load(metamodel, dir, output, diagram)",
+      "order": 5,
+      "refs": {
+        "expands": "driftspec@ds@app::load::sequence",
+        "location": "design/ds/app.ds:50"
+      },
+      "title": "driftspec@ds@app::load\nexpands to: load",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loaded",
+      "order": 6,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 7,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "code",
+      "order": 8,
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "none",
+      "order": 9,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@cli",
+      "id": "driftspec@ds@cli",
+      "kind": "lifeline",
+      "label": "self: cli",
+      "refs": {
+        "location": "design/ds/cli.ds:6"
+      },
+      "title": "driftspec@ds@cli"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@app",
+      "id": "driftspec@ds@app",
+      "kind": "lifeline",
+      "label": "app",
+      "refs": {
+        "location": "design/ds/app.ds:8"
+      },
+      "title": "driftspec@ds@app"
+    }
+  ],
+  "title": "SEQ_CheckSyntaxError"
+}

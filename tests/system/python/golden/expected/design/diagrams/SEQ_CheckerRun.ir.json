@@ -1,0 +1,148 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "run(notes: bind::Notes)",
+      "order": 0,
+      "refs": {
+        "location": "design/ds/check.ds:300"
+      },
+      "title": "driftspec@ds@check::Checker::run",
+      "to": "driftspec@ds@check::Checker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "message",
+      "label": "order()",
+      "order": 1,
+      "refs": {
+        "location": "design/ds/check.ds:657"
+      },
+      "title": "driftspec@ds@check::Checker::order",
+      "to": "driftspec@ds@check::Checker"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Checker",
+      "kind": "message",
+      "label": "keys",
+      "order": 2,
+      "to": "driftspec@ds@check::Checker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "message",
+      "label": "run(context)",
+      "order": 3,
+      "refs": {
+        "location": "design/ds/check.ds:659"
+      },
+      "title": "driftspec@ds@check::IStep::run",
+      "to": "driftspec@ds@check::IStep|step"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::IStep|step",
+      "kind": "message",
+      "label": "found",
+      "order": 4,
+      "to": "driftspec@ds@check::Checker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "message",
+      "label": "report(finding)",
+      "order": 5,
+      "refs": {
+        "location": "design/ds/check.ds:661"
+      },
+      "title": "driftspec@ds@model::Model::report",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "href": "#driftspec@ds@model::Model::cover::sequence",
+      "kind": "message",
+      "label": "cover()",
+      "order": 6,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::cover::sequence",
+        "location": "design/ds/check.ds:665"
+      },
+      "title": "driftspec@ds@model::Model::cover\nexpands to: Model::cover",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Checker",
+      "kind": "message",
+      "label": "void",
+      "order": 7,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Checker",
+      "id": "driftspec@ds@check::Checker",
+      "kind": "lifeline",
+      "label": "self: Checker",
+      "refs": {
+        "location": "design/ds/check.ds:292"
+      },
+      "title": "driftspec@ds@check::Checker"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::IStep",
+      "id": "driftspec@ds@check::IStep|step",
+      "kind": "lifeline",
+      "label": "step: IStep",
+      "refs": {
+        "location": "design/ds/check.ds:234"
+      },
+      "title": "driftspec@ds@check::IStep"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@model::Model",
+      "id": "driftspec@ds@model::Model|model_",
+      "kind": "lifeline",
+      "label": "model_: Model",
+      "refs": {
+        "location": "design/ds/model.ds:1000"
+      },
+      "title": "driftspec@ds@model::Model"
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@check::Checker::run::sequence::f0",
+      "kind": "frame",
+      "label": "loop each key, in order",
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@check::Checker::run::sequence::f1",
+      "kind": "frame",
+      "label": "loop each finding found",
+      "span": [
+        5,
+        5
+      ]
+    }
+  ],
+  "title": "SEQ_CheckerRun"
+}

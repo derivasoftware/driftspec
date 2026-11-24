@@ -45,6 +45,16 @@ package driftspec@ds {
         tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheAnswersOfAQueryAreWrittenAsTextOrJsonByName
         tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAsTextAndAsJson
     }
+    verification VER-00250-1 {
+      status: draft
+      text: DS-395, before the format refactor (DS-394). The scene (json, html), each diagram (ir, layout, svg, text, cells), the report and the answers (text, json) and the export of three frozen workspaces are compared with the files under tests/system/python/golden/expected; updating them is a reviewed change, made by the same file that compares them.
+      title: System tests confirm every document ds writes, in every format, is what its golden file pins, over ds's design, a diagram of every kind and a small workspace with findings
+      method: test
+      tests:
+        tests/system/python/test_golden.py::TestGolden::test_every_document_of_ds_s_design_matches_its_golden_file
+        tests/system/python/test_golden.py::TestGolden::test_every_document_of_a_diagram_of_every_kind_matches_its_golden_file
+        tests/system/python/test_golden.py::TestGolden::test_every_document_of_a_small_workspace_with_findings_matches_its_golden_file
+    }
   }
 
   module format {

@@ -1,0 +1,1820 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@model::Identity",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@model::Scope",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Identity"
+    },
+    {
+      "from": "driftspec@ds@model::Paths",
+      "kind": "aggregation",
+      "label": "model_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Paths",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Paths",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::Branches",
+      "kind": "aggregation",
+      "label": "tree_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::SequenceTree"
+    },
+    {
+      "from": "driftspec@ds@model::Branches",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::SequenceTree"
+    },
+    {
+      "from": "driftspec@ds@model::Branches",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::SequenceTree",
+      "kind": "aggregation",
+      "label": "model_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::SequenceTree",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::SequenceTree",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::FieldSpec",
+      "kind": "association",
+      "label": "type",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::FieldType"
+    },
+    {
+      "from": "driftspec@ds@model::FieldSpec",
+      "kind": "association",
+      "label": "source",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::FieldSource"
+    },
+    {
+      "from": "driftspec@ds@model::KindSpec",
+      "kind": "association",
+      "label": "kind",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::KindSpec",
+      "kind": "composition",
+      "label": "fields",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::FieldSpec"
+    },
+    {
+      "from": "driftspec@ds@model::KindSpec",
+      "kind": "association",
+      "label": "parents",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::RelationSpec",
+      "kind": "association",
+      "label": "from",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::RelationSpec",
+      "kind": "association",
+      "label": "to",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::RelationSpec",
+      "kind": "association",
+      "label": "pairs",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::CodeSpec",
+      "kind": "association",
+      "label": "id",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Code"
+    },
+    {
+      "from": "driftspec@ds@model::CodeSpec",
+      "kind": "association",
+      "label": "severity",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::SeveritySpec",
+      "kind": "association",
+      "label": "id",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::AnnotationSpec",
+      "kind": "association",
+      "label": "target",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "association",
+      "label": "forms_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "label": "kinds_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::KindSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "label": "relations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::RelationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "label": "codes_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::CodeSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "label": "severities_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::SeveritySpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "label": "known_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::AnnotationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "label": "other_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::AnnotationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::AnnotationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::KindSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::RelationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::FieldSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::CodeSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Code"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::SeveritySpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::AnnotationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::FieldType"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::FieldSource"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "aggregation",
+      "label": "metamodel_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "composition",
+      "label": "commands_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::CommandSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::CommandSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::KindSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Entity",
+      "kind": "association",
+      "label": "kind",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Entity",
+      "kind": "composition",
+      "label": "params",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Param"
+    },
+    {
+      "from": "driftspec@ds@model::Entity",
+      "kind": "composition",
+      "label": "location",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Relation",
+      "kind": "composition",
+      "label": "location",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Literal",
+      "kind": "association",
+      "label": "form",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::LiteralForm"
+    },
+    {
+      "from": "driftspec@ds@model::Literal",
+      "kind": "composition",
+      "label": "terms",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Term"
+    },
+    {
+      "from": "driftspec@ds@model::Literal",
+      "kind": "composition",
+      "label": "location",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Range",
+      "kind": "composition",
+      "label": "location",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Column",
+      "kind": "composition",
+      "label": "body",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@model::Column",
+      "kind": "composition",
+      "label": "location",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "label": "ranges",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Range"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "label": "where",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "label": "claims",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "label": "cases",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "label": "columns",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Column"
+    },
+    {
+      "from": "driftspec@ds@model::Breach",
+      "kind": "composition",
+      "label": "location",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Finding",
+      "kind": "association",
+      "label": "severity",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::Finding",
+      "kind": "composition",
+      "label": "location",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "aggregation",
+      "label": "model_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "aggregation",
+      "label": "metamodel_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "entities_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "relations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "findings_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "coverage_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "formulas_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "breaches_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Breach"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "tables_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Tabulated"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "label": "indexed_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Indexed"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Breach"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Tabulated"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::ArtefactName"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::ArtefactName"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@model",
+      "kind": "container",
+      "label": "model",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::AnnotationSpec",
+      "kind": "box",
+      "label": "AnnotationSpec",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ relation: std::string",
+          "+ meaning: std::string",
+          "+ onVerification: std::string",
+          "+ target: Kind"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::ArtefactName",
+      "kind": "box",
+      "label": "ArtefactName",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- text_: std::string"
+        ],
+        [
+          "+ ArtefactName(text: std::string)",
+          "+ static matches(text: std::string) -> bool",
+          "+ text() -> std::string",
+          "+ hasRevision() -> bool",
+          "+ withoutRevision() -> ArtefactName",
+          "- static writtenWithRevision(text: std::string, stem: std::string) -> bool",
+          "- static writtenBare(text: std::string) -> bool",
+          "- static numberParts(text: std::string, lastDash: std::size_t) -> int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Branches",
+      "kind": "box",
+      "label": "Branches",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- tree_: SequenceTree"
+        ],
+        [
+          "+ Branches(tree: SequenceTree)",
+          "+ names(f: Entity, elseSide: bool) -> std::set<std::string>",
+          "+ decide(f: Entity, scenario: std::string) -> Way"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Breach",
+      "kind": "box",
+      "label": "Breach",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ bindings: std::vector<std::pair<std::string, std::string>>",
+          "+ witness: std::vector<std::pair<std::string, std::string>>",
+          "+ location: Location"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::Code",
+      "kind": "box",
+      "label": "Code",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "E_SYNTAX",
+          "E_NAME_RESERVED",
+          "E_DUPLICATE_IDENTITY",
+          "E_MSG_ARITY",
+          "E_MODIFIER_CONFLICT",
+          "E_OPERATOR_UNDECLARED",
+          "E_OWNERSHIP_CYCLE",
+          "E_RELATION_KIND",
+          "E_REF_UNPINNED",
+          "E_REFINES_CYCLE",
+          "E_INHERITANCE_CYCLE",
+          "E_TEMPLATE_BOUND",
+          "E_DATACLASS_ABSTRACT",
+          "W_REF_UNDECLARED",
+          "W_NAME_AMBIGUOUS",
+          "W_REVISION_DRIFT",
+          "W_PARENT_IGNORED",
+          "W_FIELD_UNKNOWN",
+          "W_ANNOTATION_UNKNOWN",
+          "W_DIAGRAM_UNDECLARED",
+          "W_RULE_NEVER_MATCHES",
+          "W_REFINES_UPWARD",
+          "W_SATISFIES_OUTSIDE_HOME",
+          "W_INTERFACE_SIGNATURE",
+          "W_HANDLER_UNREACHED",
+          "W_FIELD_VALUE",
+          "W_MSG_UNDECLARED",
+          "W_MSG_NOT_STATIC",
+          "W_ARG_TYPE",
+          "W_RETURN_TYPE",
+          "W_SCENARIO_UNDECLARED",
+          "W_SCENARIO_TWICE",
+          "W_LEVEL_NO_CROSSING",
+          "W_LEVEL_ORDER",
+          "W_LEVEL_NOT_BELOW",
+          "W_STATE_OVERLAP",
+          "W_STATE_VALUE",
+          "W_STATE_UNDECLARED",
+          "W_STATE_IMPOSSIBLE",
+          "W_STATE_ORDER",
+          "W_MESSAGE_NO_OPERATION",
+          "W_OPERATION_NO_BEHAVIOUR",
+          "W_OUTCOME_MISMATCH",
+          "W_EVENT_UNDECLARED",
+          "W_ACTION_UNDECLARED",
+          "W_VIEW_UNDECLARED",
+          "W_VIEW_UNREACHABLE",
+          "W_STATE_UNREACHABLE",
+          "W_FAILURE_UNDECLARED",
+          "W_FAILURE_UNREACHED",
+          "W_VIEW_NO_WAY_OUT",
+          "W_NOT_VISIBLE",
+          "W_PRIVATE_LEAK",
+          "W_DIAGRAM_DEPTH",
+          "W_DIAGRAM_NEIGHBOURS",
+          "W_REQ_NO_VERIFICATION",
+          "W_VER_NO_TEST",
+          "W_RULE_NO_REQUIREMENT",
+          "W_RULE_NO_CLAIM",
+          "W_DEFINITION_NO_CASE",
+          "E_RULE_BROKEN",
+          "E_RULE_UNKNOWN",
+          "E_RULE_ARITY",
+          "E_RULE_UNSAFE",
+          "E_RULE_UNSTRATIFIED",
+          "W_CONSUMES_UNDECLARED",
+          "W_CONSUMES_UNUSED",
+          "W_CONSUMES_BYPASS",
+          "W_LANGUAGE_UNKNOWN",
+          "W_USECASE_UNDECLARED",
+          "W_USECASE_SIGNATURE",
+          "W_USECASE_OUTCOME_UNHANDLED",
+          "W_SCENARIO_NO_OUTCOME",
+          "W_USECASE_UNREALISED"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::CodeSpec",
+      "kind": "box",
+      "label": "CodeSpec",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: Code",
+          "+ code: std::string",
+          "+ severity: Severity",
+          "+ meaning: std::string",
+          "+ fix: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Column",
+      "kind": "box",
+      "label": "Column",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ form: std::string",
+          "+ variable: std::string",
+          "+ field: std::string",
+          "+ body: std::vector<Literal>",
+          "+ location: Location"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::CommandSpec",
+      "kind": "box",
+      "label": "CommandSpec",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ synopsis: std::string",
+          "+ does: std::string",
+          "+ exits: std::vector<std::pair<int, std::string>>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Entity",
+      "kind": "box",
+      "label": "Entity",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ kind: Kind",
+          "+ id: std::string",
+          "+ name: std::string",
+          "+ scope: std::string",
+          "+ fields: std::map<std::string, std::string>",
+          "+ flags: std::vector<std::string>",
+          "+ params: std::vector<Param>",
+          "+ args: std::vector<std::string>",
+          "+ location: Location",
+          "+ expected: bool"
+        ],
+        [
+          "+ has(flag: std::string) -> bool",
+          "+ field(key: std::string) -> std::string",
+          "+ number(key: std::string, out_number: int) -> bool"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::FieldSource",
+      "kind": "box",
+      "label": "FieldSource",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Written",
+          "Syntax",
+          "Derived"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::FieldSpec",
+      "kind": "box",
+      "label": "FieldSpec",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ type: FieldType",
+          "+ source: FieldSource",
+          "+ meaning: std::string",
+          "+ values: std::vector<std::string>",
+          "+ identity: bool"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::FieldType",
+      "kind": "box",
+      "label": "FieldType",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Text",
+          "Name",
+          "Names",
+          "Type",
+          "Params",
+          "Number",
+          "Status",
+          "Patterns"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Finding",
+      "kind": "box",
+      "label": "Finding",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ code: std::string",
+          "+ severity: Severity",
+          "+ message: std::string",
+          "+ location: Location"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Formula",
+      "kind": "box",
+      "label": "Formula",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ ranges: std::vector<Range>",
+          "+ where: std::vector<Literal>",
+          "+ claims: std::vector<std::vector<Literal>>",
+          "+ never: bool",
+          "+ parameters: std::vector<std::string>",
+          "+ cases: std::vector<std::vector<Literal>>",
+          "+ columns: std::vector<Column>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Identity",
+      "kind": "box",
+      "label": "Identity",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- text_: std::string",
+          "- kSequence: std::string",
+          "- kState: std::string",
+          "- kDiagram: std::string"
+        ],
+        [
+          "+ Identity(text: std::string)",
+          "+ static ofDiagram(name: std::string) -> Identity",
+          "+ text() -> std::string",
+          "+ empty() -> bool",
+          "+ lastName() -> std::string",
+          "+ scope() -> Scope",
+          "+ isQualified() -> bool",
+          "+ isAbsolute() -> bool",
+          "+ within(outer: Identity) -> bool",
+          "+ withArity(arity: std::size_t) -> Identity",
+          "+ diagramName() -> std::string",
+          "+ sequence(scenario: std::string) -> Identity",
+          "+ state() -> Identity",
+          "+ withScenario(scenario: std::string) -> Identity",
+          "+ behaviour() -> Identity",
+          "+ scenario() -> std::string",
+          "+ subject() -> Identity",
+          "+ machineSubject() -> Identity",
+          "+ branch(elseSide: bool) -> Identity"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Index",
+      "kind": "box",
+      "label": "Index",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: Model"
+        ],
+        [
+          "+ Index(model: Model)",
+          "+ from(id: std::string) -> std::vector<Relation>",
+          "+ to(id: std::string) -> std::vector<Relation>",
+          "+ fromOfKind(id: std::string, kind: std::string) -> std::vector<Relation>",
+          "+ toOfKind(id: std::string, kind: std::string) -> std::vector<Relation>",
+          "+ touching(id: std::string) -> std::vector<Relation>",
+          "+ ofKind(kind: std::string) -> std::vector<Relation>",
+          "+ ofKinds(kinds: std::vector<std::string>) -> std::vector<Relation>",
+          "+ all() -> std::vector<Relation>",
+          "+ count() -> std::size_t",
+          "+ members(scope: std::string) -> std::vector<std::string>",
+          "+ parent(id: std::string) -> std::string",
+          "+ children(id: std::string) -> std::vector<std::string>",
+          "+ revisionOf(artefact: std::string) -> std::string",
+          "+ named(package: std::string, name: std::string) -> std::vector<std::string>",
+          "- at(table: std::map<std::string, std::vector<std::size_t>>, key: std::string) -> std::vector<Relation>",
+          "- atOfKind(table: std::map<std::string, std::vector<std::size_t>>, key: std::string, kind: std::string) -> std::vector<Relation>",
+          "- tree() -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Indexed",
+      "kind": "box",
+      "label": "Indexed",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ from: std::map<std::string, std::vector<std::size_t>>",
+          "+ to: std::map<std::string, std::vector<std::size_t>>",
+          "+ kind: std::map<std::string, std::vector<std::size_t>>",
+          "+ members: std::map<std::string, std::set<std::string>>",
+          "+ revisions: std::map<std::string, std::set<std::string>>",
+          "+ named: std::map<std::pair<std::string, std::string>, std::set<std::string>>",
+          "+ parent: std::map<std::string, std::string>",
+          "+ children: std::map<std::string, std::vector<std::string>>",
+          "+ treeStale: bool"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::Kind",
+      "kind": "box",
+      "label": "Kind",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Package",
+          "Module",
+          "Requirement",
+          "Verification",
+          "Interface",
+          "Operation",
+          "View",
+          "Constraint",
+          "Class",
+          "Enum",
+          "Function",
+          "Method",
+          "Attribute",
+          "Operator",
+          "Sequence",
+          "Message",
+          "Frame",
+          "State",
+          "Diagram",
+          "UseCase",
+          "Outcome",
+          "Rule",
+          "Definition"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::KindSpec",
+      "kind": "box",
+      "label": "KindSpec",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ kind: Kind",
+          "+ meaning: std::string",
+          "+ fields: std::vector<FieldSpec>",
+          "+ flags: std::vector<std::string>",
+          "+ parents: std::vector<Kind>",
+          "+ top: bool",
+          "+ syntax: std::string",
+          "+ example: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Literal",
+      "kind": "box",
+      "label": "Literal",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ form: LiteralForm",
+          "+ negated: bool",
+          "+ name: std::string",
+          "+ terms: std::vector<Term>",
+          "+ location: Location"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::LiteralForm",
+      "kind": "box",
+      "label": "LiteralForm",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Relation",
+          "Kind",
+          "In",
+          "Equal",
+          "NotEqual",
+          "Less",
+          "LessEqual",
+          "Greater",
+          "GreaterEqual",
+          "Call",
+          "Arg"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Location",
+      "kind": "box",
+      "label": "Location",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ file: std::string",
+          "+ line: int",
+          "+ column: int",
+          "+ endLine: int",
+          "+ endColumn: int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Manual",
+      "kind": "box",
+      "label": "Manual",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: Metamodel",
+          "- commands_: std::vector<CommandSpec>",
+          "- guides_: std::vector<std::pair<std::string, std::string>>"
+        ],
+        [
+          "+ Manual(metamodel: Metamodel)",
+          "+ page(topic: std::string) -> std::string",
+          "+ topics() -> std::vector<std::string>",
+          "+ guides() -> std::vector<std::pair<std::string, std::string>>",
+          "+ commands() -> std::vector<CommandSpec>",
+          "+ commandOf(name: std::string) -> CommandSpec",
+          "- static buildCommands() -> std::vector<CommandSpec>",
+          "- static buildGuides() -> std::vector<std::pair<std::string, std::string>>",
+          "- static indent(text: std::string, by: std::string) -> std::string",
+          "- static pad(text: std::string, width: std::size_t) -> std::string",
+          "- names(kinds: std::vector<Kind>) -> std::string",
+          "- kindPage(k: KindSpec) -> std::string",
+          "- indexPage() -> std::string",
+          "- grammarPage() -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Metamodel",
+      "kind": "box",
+      "label": "Metamodel",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- names_: std::vector<std::string>",
+          "- forms_: std::map<Kind, std::pair<std::string, std::string>>",
+          "- kinds_: std::vector<KindSpec>",
+          "- identityFields_: std::vector<std::string>",
+          "- relations_: std::vector<RelationSpec>",
+          "- codes_: std::vector<CodeSpec>",
+          "- severities_: std::vector<SeveritySpec>",
+          "- known_: std::vector<AnnotationSpec>",
+          "- other_: AnnotationSpec",
+          "- annotations_: std::vector<AnnotationSpec>"
+        ],
+        [
+          "+ Metamodel()",
+          "+ kinds() -> std::vector<KindSpec>",
+          "+ relations() -> std::vector<RelationSpec>",
+          "+ specOf(kind: Kind) -> KindSpec",
+          "+ specNamed(name: std::string) -> KindSpec",
+          "+ fieldOf(kind: Kind, key: std::string) -> FieldSpec",
+          "+ identityFields() -> std::vector<std::string>",
+          "+ relationOf(kind: std::string) -> RelationSpec",
+          "+ joins(relation: RelationSpec, from: Kind, to: Kind) -> bool",
+          "+ codes() -> std::vector<CodeSpec>",
+          "+ codeOf(code: std::string) -> CodeSpec",
+          "+ rowOf(code: Code) -> CodeSpec",
+          "+ severities() -> std::vector<SeveritySpec>",
+          "+ severityOf(severity: Severity) -> SeveritySpec",
+          "+ finding(code: Code, message: std::string, location: Location) -> Finding",
+          "+ annotations() -> std::vector<AnnotationSpec>",
+          "+ knownAnnotations() -> std::vector<AnnotationSpec>",
+          "+ annotationOf(word: std::string) -> AnnotationSpec",
+          "+ syntaxOf(kind: Kind) -> std::string",
+          "+ exampleOf(kind: Kind) -> std::string",
+          "+ nameOf(kind: Kind) -> std::string",
+          "+ isArtefact(kind: Kind) -> bool",
+          "+ fieldTypeName(type: FieldType) -> std::string",
+          "+ fieldSourceName(source: FieldSource) -> std::string",
+          "+ version() -> std::string",
+          "- static buildNames() -> std::vector<std::string>",
+          "- static writtenField(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec",
+          "- static syntax(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec",
+          "- static derived(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec",
+          "- static closed(name: std::string, type: FieldType, meaning: std::string, values: std::vector<std::string>) -> FieldSpec",
+          "- static holdingIdentity(field: FieldSpec) -> FieldSpec",
+          "- static artefact() -> std::vector<FieldSpec>",
+          "- static plus(base: std::vector<FieldSpec>, more: std::vector<FieldSpec>) -> std::vector<FieldSpec>",
+          "- static build() -> std::vector<KindSpec>",
+          "- buildIdentityFields() -> std::vector<std::string>",
+          "- static rel(kind: std::string, meaning: std::string, from: std::vector<Kind>, to: std::vector<Kind>) -> RelationSpec",
+          "- buildRelations() -> std::vector<RelationSpec>",
+          "- static among(kinds: std::vector<Kind>, kind: Kind) -> bool",
+          "- static matches(name: std::string, key: std::string) -> bool",
+          "- static writtenForms() -> std::map<Kind, std::pair<std::string, std::string>>",
+          "- static buildCodes() -> std::vector<CodeSpec>",
+          "- static buildSeverities() -> std::vector<SeveritySpec>",
+          "- static buildKnownAnnotations() -> std::vector<AnnotationSpec>",
+          "- static buildOtherAnnotation() -> AnnotationSpec",
+          "- buildAnnotations() -> std::vector<AnnotationSpec>",
+          "- describe(kinds: std::vector<KindSpec>) -> std::vector<KindSpec>",
+          "- containment() -> RelationSpec"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Model",
+      "kind": "box",
+      "label": "Model",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: Metamodel",
+          "- entities_: std::map<std::string, Entity>",
+          "- relations_: std::vector<Relation>",
+          "- findings_: std::vector<Finding>",
+          "- coverage_: std::vector<Finding>",
+          "- formulas_: std::map<std::string, Formula>",
+          "- breaches_: std::map<std::string, std::vector<Breach>>",
+          "- tables_: std::map<std::string, Tabulated>",
+          "- indexed_: Indexed"
+        ],
+        [
+          "+ Model(metamodel: Metamodel)",
+          "+ index() -> Index",
+          "- indexEntity(entity: Entity, enters: bool) -> void",
+          "- indexAgain() -> void",
+          "+ declare(entity: Entity) -> Entity",
+          "+ find(id: std::string) -> Entity",
+          "+ annotate(id: std::string, key: std::string, value: std::string) -> void",
+          "+ refine(later: Entity) -> void",
+          "+ relate(relation: Relation) -> void",
+          "+ report(finding: Finding) -> void",
+          "+ rename(from: std::string, to: std::string) -> bool",
+          "+ entities() -> std::map<std::string, Entity>",
+          "- relations() -> std::vector<Relation>",
+          "+ findings() -> std::vector<Finding>",
+          "+ coverage() -> std::vector<Finding>",
+          "+ cover() -> void",
+          "+ withdrawEchoes(broken: std::set<std::string>) -> void",
+          "+ sortFindings() -> void",
+          "+ formulas() -> std::map<std::string, Formula>",
+          "+ state(id: std::string, formula: Formula) -> void",
+          "+ breaches() -> std::map<std::string, std::vector<Breach>>",
+          "+ breach(rule: std::string, breach: Breach) -> void",
+          "+ tables() -> std::map<std::string, Tabulated>",
+          "+ tabulate(diagram: std::string, table: Tabulated) -> void",
+          "- static behaviour(kind: Kind) -> bool",
+          "- held(id: std::string) -> Entity",
+          "- reportDuplicate(entity: Entity, id: std::string, first: Entity) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Param",
+      "kind": "box",
+      "label": "Param",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ type: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Paths",
+      "kind": "box",
+      "label": "Paths",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: Model"
+        ],
+        [
+          "+ Paths(model: Model)",
+          "+ hasScenario(sequence: std::string, scenario: std::string) -> bool",
+          "+ pathOf(sequence: std::string, scenario: std::string, kept: std::set<std::string>) -> std::vector<const Entity*>",
+          "+ holderOf(sequence: std::string) -> std::string",
+          "- static fieldIn(e: Entity, key: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Range",
+      "kind": "box",
+      "label": "Range",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ kind: std::string",
+          "+ variable: std::string",
+          "+ scope: std::string",
+          "+ location: Location"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Relation",
+      "kind": "box",
+      "label": "Relation",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ kind: std::string",
+          "+ from: std::string",
+          "+ to: std::string",
+          "+ location: Location",
+          "+ multiplicity: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::RelationSpec",
+      "kind": "box",
+      "label": "RelationSpec",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ kind: std::string",
+          "+ meaning: std::string",
+          "+ from: std::vector<Kind>",
+          "+ to: std::vector<Kind>",
+          "+ pairs: std::vector<std::pair<Kind, Kind>>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Scope",
+      "kind": "box",
+      "label": "Scope",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- text_: std::string"
+        ],
+        [
+          "+ Scope(text: std::string)",
+          "+ static inside(package: Identity) -> Scope",
+          "+ text() -> std::string",
+          "+ empty() -> bool",
+          "+ qualify(name: std::string) -> Identity",
+          "+ outer() -> Scope",
+          "+ package() -> Scope",
+          "+ box() -> Identity",
+          "+ isSystem() -> bool",
+          "- static outerOf(text: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::SequenceTree",
+      "kind": "box",
+      "label": "SequenceTree",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: Model",
+          "- messages_: std::vector<std::string>",
+          "- frames_: std::vector<std::string>",
+          "- order_: std::map<std::string, int>",
+          "- frameOf_: std::map<std::string, std::string>",
+          "- at_: std::map<std::string, int>",
+          "- first_: std::map<std::string, std::string>",
+          "- onElse_: std::set<std::pair<std::string, std::string>>",
+          "- elseFirst_: std::map<std::string, std::string>",
+          "- sides_: std::vector<std::string>"
+        ],
+        [
+          "+ SequenceTree(model: Model, sequence: std::string)",
+          "+ model() -> Model",
+          "+ messages() -> std::vector<std::string>",
+          "+ frames() -> std::vector<std::string>",
+          "+ orderOf(message: std::string) -> int",
+          "+ frameOf(id: std::string) -> std::string",
+          "+ at(frame: std::string) -> int",
+          "+ first(frame: std::string) -> std::string",
+          "+ elseOf(frame: std::string) -> std::string",
+          "+ twoSides(frame: std::string) -> bool",
+          "+ onElse(frame: std::string, id: std::string) -> bool",
+          "+ scenario(frame: std::string, elseSide: bool) -> std::string",
+          "+ inside(frame: std::string, elseSide: bool) -> std::vector<std::string>",
+          "- walk(holder: std::string, frame: std::string) -> void",
+          "- static isBranch(e: Entity) -> bool"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::Severity",
+      "kind": "box",
+      "label": "Severity",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "error",
+          "warning",
+          "coverage"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::SeveritySpec",
+      "kind": "box",
+      "label": "SeveritySpec",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: Severity",
+          "+ name: std::string",
+          "+ fails: bool",
+          "+ keptApart: bool",
+          "+ editor: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Tabulated",
+      "kind": "box",
+      "label": "Tabulated",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ columns: std::vector<std::string>",
+          "+ rows: std::vector<std::vector<std::string>>",
+          "+ kinds: std::vector<std::vector<std::string>>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Term",
+      "kind": "box",
+      "label": "Term",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ text: std::string",
+          "+ variable: bool",
+          "+ value: bool",
+          "+ field: std::string"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_ModelNamespace"
+}

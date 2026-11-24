@@ -1,0 +1,975 @@
+// LLD of the check namespace (ds::check): the bound model resolved and checked.
+// Every reference resolves outward through its scopes and then the extern
+// catalogue; what nobody declares becomes an expected node reported once;
+// behaviours are unified under their subject and checked against the static
+// context (SREQ-00002-1, SREQ-00004-1).
+
+package driftspec@ds {
+
+  module check {
+
+    // Datalog with stratified negation over the finite model: every structural rule is decided (DS-94).
+    // The facts are the declared entities by kind, every relation both ways and containment; a
+    // definition is computed bottom-up to its fixpoint, stratum by stratum, and a rule is broken by
+    // each binding of its ranges where holds has no answer or never has one.
+    // ---- the evaluator in its pieces (DS-380), as a requirement and the rule that holds it -------------------------
+    requirement REQ-00192-1 {
+      tags: architecture, check, rules
+      status: draft
+      @refines REQ-00096-1
+      title: The evaluator shall direct four pieces, and the solver shall read the facts and never the model
+      text:
+        Facts reads the model once into what a rule is evaluated over: the declared entities of each kind, every
+        relation both ways, the names a formula writes resolved, and what each definition holds for; it is the
+        pieces' one reader of the model. RuleValidator checks each formula before it is evaluated, Strata orders the
+        definitions, and Solver answers a body over the facts alone. Evaluator directs them: it records into the
+        facts what the validator resolved and what the definitions derive, and writes the breaches and the tables
+        into the model.
+      rationale:
+        Owner, 2026-11-24 (DS-378, DS-380): one class did five things; split, the solver can run over facts
+        without a design, and each piece can be read and tested on its own.
+      verification VER-00212-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps the solver on the facts, and is told when the solver depends on the model
+        method: test
+        tests:
+          tests/integration/ds/check/test_evaluator_principles.cpp::TestEvaluatorPrinciples.TheDesignOfDsKeepsTheSolverOnTheFacts
+          tests/integration/ds/check/test_evaluator_principles.cpp::TestEvaluatorPrinciples.ASolverThatReadsTheModelIsTold
+      }
+    }
+
+    rule the-solver-reads-facts {
+      title: the solver reads facts and never the model, so the rule engine runs without a design
+      @requirement REQ-00192-1
+      for class c in driftspec@ds@check
+      where c = driftspec@ds@check::Solver
+      never depends(c, driftspec@ds@model::Model)
+    }
+
+    class Evaluator {                        // decides the structural rules over the model: it directs the four pieces (DS-380)
+      @requirement REQ-00096-1
+      @requirement REQ-00097-1
+      @requirement REQ-00098-1
+      @requirement REQ-00192-1
+      - refs model_: model::Model            // written: the breaches and the tables; read through the facts
+      - refs metamodel_: model::Metamodel     // the language of the rules: the kinds and relations they name (DS-351)
+      - owns facts_: Facts
+      - owns validator_: RuleValidator
+      - owns strata_: Strata
+      - owns solver_: Solver
+      - owns many found_: std::vector<model::Finding>
+      - owns invalid_: std::set<std::string>
+      - owns variables_: std::map<std::string, Variables>   // each formula's variables and their slots (DS-381)
+      - kReportsPerRule: std::size_t            // how many findings a broken rule gets; the rest are counted in one
+      + Evaluator(model: model::Model, metamodel: model::Metamodel, resolver: Resolver)
+      + run() -> std::vector<model::Finding>
+      - computeDefinitions() -> void
+      - evaluateRule(id: std::string, formula: model::Formula) -> void
+      - tabulate(id: std::string, formula: model::Formula) -> void {
+        @requirement REQ-00154-1
+      }
+      - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
+      - static describe(bindings: std::vector<std::pair<std::string, std::string>>) -> std::string
+    }
+
+    // Every text a binding points at lives in the facts or among the solver's own texts: storage the evaluation owns,
+    // that does not move while it runs (DS-381). What holds what is copied from the index once, so no binding points
+    // into the model, which the evaluator writes breaches and tables into while it runs.
+    class Facts {                            // the model as facts a rule is evaluated over; the pieces' one reader of the model (DS-380)
+      @requirement REQ-00096-1
+      @requirement REQ-00192-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - owns byKind_: std::map<std::string, std::vector<std::string>>
+      - owns forward_: std::map<std::string, std::multimap<std::string, std::string>>
+      - owns backward_: std::map<std::string, std::multimap<std::string, std::string>>
+      - owns constants_: std::map<std::string, std::string>
+      - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
+      - owns parent_: std::unordered_map<std::string, std::string>                 // what holds each entity, copied from the index (DS-381)
+      - owns children_: std::unordered_map<std::string, std::vector<std::string>>  // what each entity holds, in the index's order
+      - readers_: std::size_t                                                      // solves reading now: the facts do not grow meanwhile
+      + Facts(model: model::Model, metamodel: model::Metamodel)
+      + index() -> void
+      + ofKind(kind: std::string) -> std::vector<std::string>
+      + forward(relation: std::string) -> std::multimap<std::string, std::string>
+      + backward(relation: std::string) -> std::multimap<std::string, std::string>
+      + record(owner: std::string, written: std::string, identity: std::string) -> void
+      + constant(owner: std::string, written: std::string, out_identity: std::string) -> bool
+      + constantOf(owner: std::string, written: std::string) -> std::string   // where the facts keep it; none when never resolved
+      + definitionOf(owner: std::string, name: std::string) -> std::string
+      + derived(definition: std::string) -> std::set<std::vector<std::string>>
+      + derive(definition: std::string, tuple: std::vector<std::string>) -> bool
+      + reading() -> void                    // a solve starts reading the facts
+      + done() -> void
+      + formulas() -> std::map<std::string, model::Formula>
+      + kindIs(id: std::string, kind: model::Kind) -> bool
+      + kindOf(id: std::string, out_kind: model::Kind) -> bool
+      + isOfKind(id: std::string, kind: std::string) -> bool
+      + scopeOf(id: std::string) -> std::string
+      + locationOf(id: std::string) -> model::Location
+      + fieldOf(id: std::string, field: std::string) -> std::string
+      + holds(rule: std::string) -> bool
+      + parentOf(id: std::string) -> std::string                        // where the facts keep it; none at the top
+      + childrenOf(id: std::string) -> std::vector<std::string>         // where the facts keep them; none when it holds nothing
+      + contains(outer: std::string, inner: std::string) -> bool
+      + argsTo(call: std::string) -> std::vector<std::pair<std::string, std::string>>
+      - static key(owner: std::string, written: std::string) -> std::string
+    }
+
+    class RuleValidator {                    // whether each formula is well formed before it is evaluated (DS-380)
+      @requirement REQ-00097-1
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - refs facts_: Facts
+      - owns many found_: std::vector<model::Finding>
+      + RuleValidator(metamodel: model::Metamodel, resolver: Resolver, facts: Facts)
+      + validate(id: std::string, formula: model::Formula, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool
+      + checkVacuity(id: std::string, formula: model::Formula) -> void {
+        @requirement REQ-00117-1
+      }
+      + take() -> std::vector<model::Finding>
+      - validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool
+      - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
+      - static joinsAtEnd(spec: model::RelationSpec, kind: model::Kind, from: bool) -> bool
+    }
+
+    class Strata {                           // the order the definitions are computed in (DS-380)
+      @requirement REQ-00096-1
+      - refs facts_: Facts
+      - stratum_: std::map<std::string, int>
+      + Strata(facts: Facts)
+      + stratify(invalid: std::set<std::string>) -> std::vector<std::string>
+      + levels(invalid: std::set<std::string>) -> std::map<int, std::vector<std::string>>
+      + dependencyOrder(definitions: std::vector<std::string>) -> std::vector<std::string>  // a stratum in the order of what it applies; empty when it recurses (DS-338)
+    }
+
+    // A binding is a vector with one slot per variable of the formula, in the order Variables gives them: each slot
+    // points at the text its variable is bound to, in the facts or among the solver's texts, or is none while unbound
+    // (DS-381). A candidate copies a few pointers and never a string.
+    class Solver {                           // answers a body over the facts, never the model (DS-380)
+      @requirement REQ-00096-1
+      @requirement REQ-00192-1
+      - refs facts_: Facts
+      - owns texts_: std::unordered_set<std::string>   // what it binds from outside the facts, each once; an element never moves (DS-381)
+      + Solver(facts: Facts)
+      + solve(owner: std::string, body: std::vector<model::Literal>, variables: Variables, bindings: std::vector<const std::string*>, first: bool) -> std::vector<std::vector<const std::string*>>
+      + static compares(form: model::LiteralForm) -> bool
+      - solveFrom(owner: std::string, body: std::vector<model::Literal>, variables: Variables, done: std::vector<bool>, bindings: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> void
+      - ready(literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> bool
+      - answers(owner: std::string, literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> std::vector<std::vector<const std::string*>>
+      - value(owner: std::string, term: model::Term, variables: Variables, bindings: std::vector<const std::string*>) -> std::string
+      - unify(owner: std::string, term: model::Term, variables: Variables, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
+      - text(text: std::string) -> std::string
+      - static number(text: std::string, out_number: double) -> bool
+      - static literal(text: std::string) -> bool
+      - static compare(form: model::LiteralForm, a: std::string, z: std::string) -> bool
+    }
+
+    class Variables {                        // a formula's variables, each given a fixed slot once, in the order of their names (DS-381)
+      @requirement REQ-00096-1
+      - owns many names_: std::vector<std::string>
+      + Variables(formula: model::Formula)
+      + size() -> std::size_t
+      + slotOf(name: std::string) -> int
+      + name(slot: std::size_t) -> std::string
+      + before(a: std::vector<const std::string*>, b: std::vector<const std::string*>) -> bool   // as a map of name to text would sort them
+      + pairs(bindings: std::vector<const std::string*>) -> std::vector<std::pair<std::string, std::string>>
+      - collect(body: std::vector<model::Literal>) -> void
+    }
+
+    // Read-only questions about the model: what a name means where it is written, what a type inherits
+    // and holds, what is private on a way down (DS-125). The checker and the evaluator ask it.
+    class Resolver {
+      @requirement REQ-00023-1
+      - refs model_: model::Model
+      + Resolver(model: model::Model)
+      + resolve(name: std::string, scope: std::string) -> std::string {
+        @requirement REQ-00023-1
+        @requirement REQ-00169-2
+      }
+      // the classes a bare name could be when two or more of its package share it (DS-325)
+      + ambiguous(name: std::string, scope: std::string) -> std::vector<std::string> {
+        @requirement REQ-00169-2
+      }
+      + derives(derived: std::string, base: std::string) -> bool {
+        @requirement REQ-00029-2
+      }
+      + member(type: std::string, name: std::string) -> model::Entity {
+        @requirement REQ-00036-2
+      }
+      + resolveTypeText(text: std::string, scope: std::string) -> std::string {
+        @requirement REQ-00023-1
+        @requirement REQ-00058-3
+      }
+      // the one class of a name in the package of a scope, as argos finds it in the code (DS-18)
+      - inPackage(name: std::string, scope: std::string) -> std::string {
+        @requirement REQ-00169-2
+      }
+      - namesakes(name: std::string, scope: std::string) -> std::vector<std::string> {  // every class of the name in the package
+        @requirement REQ-00169-2
+      }
+      + privateOnTheWay(from: std::string, target: std::string) -> std::string {
+        @requirement REQ-00063-1
+      }
+    }
+
+    // What a check of a workspace says: its findings in order and the counts of the model (DS-120);
+    // built once from the model, written by its formats without it (DS-126)
+    dataclass Report {
+      @requirement REQ-00106-1
+      + many findings: std::vector<model::Finding>
+      + many coverage: std::vector<model::Finding>
+      + entities: int
+      + expected: int
+      + relations: int
+      + errors: int                          // findings of a severity that fails
+      + many severities: std::vector<model::SeveritySpec>   // what each severity means, copied from the metamodel (DS-379)
+      + static of(model: model::Model, metamodel: model::Metamodel) -> Report  // the report of a checked model
+      + severityOf(severity: model::Severity) -> model::SeveritySpec          // what the formats ask (DS-379)
+    }
+
+
+    // One step of the check (DS-138): its key, the steps it needs done before it, and what it found,
+    // which it gives back. The checker orders the steps by what they need and runs them, knowing none of them.
+    class IStep {
+      @requirement REQ-00012-1
+      + ~IStep()
+      + abstract name() -> std::string
+      + abstract needs() -> std::vector<std::string>
+      + abstract run(out_context: Context) -> std::vector<model::Finding>
+    }
+
+    // A step that only checks (DS-138): run hands check the context to read, whose model is const,
+    // so no check can change the model; what it finds it gives back. The one abstract class here.
+    class ACheck : IStep {
+      @requirement REQ-00012-1
+      + run(out_context: Context) -> std::vector<model::Finding>
+      - abstract check(context: Context) -> std::vector<model::Finding>
+    }
+
+    // What every step of one check is given: the model, the metamodel it is written in, what the binder
+    // collected, the resolver, the renames linking made, what was already reported as undeclared, and
+    // what the running step found, until it takes it back.
+    class Context {
+      @requirement REQ-00012-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the language, handed by the checker to every step (DS-351)
+      - refs resolver_: Resolver
+      - owns renamed_: std::map<std::string, std::string>
+      - owns reported_: std::set<std::string>
+      - owns many found_: std::vector<model::Finding>
+      + Context(model: model::Model, metamodel: model::Metamodel, resolver: Resolver, notes: bind::Notes)
+      + model() -> model::Model
+      + metamodel() -> model::Metamodel
+      + resolver() -> Resolver
+      + current(id: std::string) -> std::string {
+        @requirement REQ-00035-1
+      }
+      + renamed() -> std::map<std::string, std::string>
+      + reported() -> std::set<std::string>
+      + report(finding: model::Finding) -> void
+      + take() -> std::vector<model::Finding>
+      + checkVisibility(from: std::string, target: std::string, location: model::Location) -> void {
+        @requirement REQ-00063-1
+      }
+      + checkLeak(from: std::string, target: std::string, location: model::Location) -> void {
+        @requirement REQ-00063-1
+      }
+      - refs notes_: bind::Notes
+      + notes() -> bind::Notes
+    }
+
+    // The check module's entry point (DS-138): what the rest of ds asks of a check.
+    class IChecker {
+      @requirement REQ-00053-2
+      + ~IChecker()
+      + abstract run(notes: bind::Notes) -> void
+    }
+
+    // A runner of steps: it orders the steps it is given by what each needs, runs them over one
+    // context and adds what each found to the model when it ends. The map is built outside and
+    // outlives it.
+    class Checker : IChecker {               // realises the language step by step: each step names its requirements
+      @requirement REQ-00053-2
+      @requirement REQ-00012-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the language the model is written in (DS-341), handed to the steps in their context (DS-351)
+      - owns resolver_: Resolver
+      - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
+      + Checker(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>)
+      + run(notes: bind::Notes) -> void
+      + resolver() -> Resolver
+      + order() -> std::vector<std::string>
+    }
+
+    // the one place that names each step: it pairs each with what it does, makes the ones a selection names and
+    // every one they need, and keys them by name (DS-376)
+    function steps(selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>> {
+      @requirement REQ-00012-1
+      @requirement REQ-00085-1
+    }
+
+    // Each step of the check, by what it does (DS-376): what a selection is made of. steps() pairs each with the
+    // step it makes, so the names the steps are keyed by stay theirs.
+    enum Step {
+      @requirement REQ-00085-1
+      @constraint CST-00001-1
+      Linker, Behaviour, Derivation, Failures, Contracts, Structure, Dependencies, Rules, Levels, States, Order
+    }
+
+    // The steps of the check a load runs (DS-376): chosen by the Api for what the load is to give, and read by
+    // steps(), which makes them and every step they need. The checker runs what it is given and knows nothing
+    // of it; a drawing that runs fewer steps reads the same model where it looks.
+    class Selection {
+      @requirement REQ-00085-1
+      @constraint CST-00001-1
+      - owns steps_: std::set<Step>
+      + static every() -> Selection                   // what the findings, the export, a query and the viewer read
+      + static of(steps: std::vector<Step>) -> Selection   // the steps named, and no other
+      + with(step: Step) -> Selection                 // the same steps and one more
+      + has(step: Step) -> bool
+    }
+
+    // the steps a selection names and every step they need: a step chosen never runs without what it reads
+    sequence steps {
+      local step: IStep
+      local made: std::map<std::string, std::unique_ptr<IStep>>
+      loop each step of the check {
+        -> selection.has(kind) -> named
+      }
+      loop each step taken, until none it needs is missing {
+        -> step.needs() -> needs
+      }
+      return made
+    }
+
+    class Linker : IStep {                // references become relations, behaviours take their subject's identity
+      @requirement REQ-00043-1
+      @requirement REQ-00053-2
+      @constraint CST-00006-1
+      @constraint CST-00003-2
+      @requirement REQ-00066-1
+      @requirement REQ-00029-2
+      @requirement REQ-00035-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(out_context: Context) -> std::vector<model::Finding>
+      - resolveReference(reference: bind::Reference) -> void {
+        @requirement REQ-00043-1
+        @requirement REQ-00053-2
+        @constraint CST-00006-1
+      }
+      - reportAmbiguous(reference: bind::Reference) -> bool {  // a bare name two classes share, said once (DS-325)
+        @requirement REQ-00169-2
+      }
+      - kindAllowed(reference: bind::Reference, target: std::string) -> bool {
+        @requirement REQ-00066-1
+      }
+      - checkTemplateBound(reference: bind::Reference) -> void {
+        @requirement REQ-00029-2
+      }
+      - unifyBehaviours() -> void {
+        @requirement REQ-00035-1
+      }
+      - defineLoneExtensions() -> void {  // a class of annotations only that nothing else defines is the class (DS-20)
+        @constraint CST-00003-2
+      }
+    }
+
+    class BehaviourTyping : IStep {       // messages typed against the static context: calls, types, expansions
+      @requirement REQ-00036-2
+      @requirement REQ-00038-2
+      @requirement REQ-00037-1
+      @requirement REQ-00059-2
+      @requirement REQ-00056-1
+      @requirement REQ-00058-3
+      @requirement REQ-00039-1
+      @requirement REQ-00040-1
+      @requirement REQ-00132-1
+      @requirement REQ-00138-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(out_context: Context) -> std::vector<model::Finding>
+      - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
+        @requirement REQ-00036-2
+      }
+      - couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void {
+        @requirement REQ-00038-2
+      }
+      - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00037-1
+      }
+      - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00038-2
+      }
+      - checkReturn(message: bind::Message) -> void {
+        @requirement REQ-00059-2
+      }
+      - checkMessage(message: bind::Message) -> void {
+        @requirement REQ-00037-1
+        @requirement REQ-00056-1
+      }
+      - callStatic(seq: model::Entity, msg: model::Entity, message: bind::Message, home: std::string) -> bool {
+        @requirement REQ-00108-1
+      }
+      // a participant named as what it is: a box, an interface or a class the behaviour sees (DS-232)
+      - namedEntity(name: std::string, home: std::string) -> std::string {
+        @requirement REQ-00133-2
+      }
+      // who sends: the participant written before the arrow, typed like the receiver
+      - typeSender(seq: model::Entity, cls: model::Entity, subject: model::Entity, msg: model::Entity, home: std::string) -> void {
+        @requirement REQ-00134-1
+      }
+      // the operation a box offers under a name: a function of a module, an operation of one interface of a package
+      - offered(box: model::Entity, op: std::string) -> model::Entity {
+        @requirement REQ-00135-1
+      }
+      - typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool {
+        @requirement REQ-00036-2
+      }
+      - compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>, literal: bool) -> bool {
+        @requirement REQ-00058-3
+      }
+      - checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
+        @requirement REQ-00058-3
+      }
+      - rememberResult(message: bind::Message) -> void {
+        @requirement REQ-00058-3
+      }
+      - checkLocals() -> void {
+        @requirement REQ-00036-2
+      }
+      - checkEvent(event: bind::Event) -> void {
+        @requirement REQ-00039-1
+        @requirement REQ-00040-1
+      }
+    }
+
+    class ContractCheck : ACheck {         // interfaces, use cases, scenarios, outcomes and diagrams
+      @requirement REQ-00060-1
+      @requirement REQ-00123-1
+      @requirement REQ-00119-2
+      @requirement REQ-00082-1
+      @requirement REQ-00061-1
+      @requirement REQ-00109-2
+      @requirement REQ-00112-1
+      @requirement REQ-00065-1
+      @requirement REQ-00049-3
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+      - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
+        @requirement REQ-00060-1
+      }
+      - checkUseCases() -> void {
+        @requirement REQ-00082-1
+      }
+      - checkInterfaces() -> void {
+        @requirement REQ-00060-1
+      }
+      - checkHandlers() -> void {
+        @requirement REQ-00123-1
+      }
+      - checkRealisations() -> void {
+        @requirement REQ-00119-2
+      }
+      - checkViews(state: model::Entity) -> void {
+        @requirement REQ-00061-1
+      }
+      - checkStates(state: model::Entity) -> void {
+        @requirement REQ-00109-2
+      }
+      - checkFailures(operation: model::Entity) -> void {
+        @requirement REQ-00112-1
+      }
+      - checkScenarios() -> void {
+        @requirement REQ-00065-1
+      }
+      - checkDiagrams() -> void {
+        @requirement REQ-00049-3
+      }
+    }
+
+    class Derivation : IStep {            // what the model says without writing it: the stereotypes, the languages
+      @requirement REQ-00031-2
+      @requirement REQ-00084-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(out_context: Context) -> std::vector<model::Finding>
+      - classify() -> void {
+        @requirement REQ-00031-2
+        @requirement REQ-00101-1                 // a destructor is no part of the contract
+      }
+      - fillLanguages() -> void {
+        @requirement REQ-00084-1
+      }
+    }
+
+    class StructureCheck : ACheck {        // ownership, artefacts, extensions and fields
+      @requirement REQ-00028-2
+      @requirement REQ-00045-1
+      @constraint CST-00003-2
+      @requirement REQ-00067-1
+      @requirement REQ-00118-1
+      @requirement REQ-00168-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+      - checkOwnershipCycles() -> void {
+        @requirement REQ-00028-2
+      }
+      - checkCycles(relation: std::string, code: model::Code, verb: std::string) -> void {
+        @requirement REQ-00118-1
+      }
+      - checkRefinesUpward() -> void {
+        @requirement REQ-00118-1
+      }
+      - checkSatisfiesHome() -> void {
+        @requirement REQ-00168-1
+      }
+      - checkArtefacts() -> void {
+        @requirement REQ-00045-1
+      }
+      - checkExtensions() -> void {
+        @constraint CST-00003-2
+      }
+      - checkFields() -> void {
+        @requirement REQ-00067-1
+        @requirement REQ-00115-2
+      }
+    }
+
+    // two levels of one behaviour, both written, agree (DS-233): the scenario of a use case is held to the
+    // behaviour of the operation it is asked through, unfolded and lifted onto the scenario's participants
+    class LevelCoherence : ACheck {
+      @requirement REQ-00136-1
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
+    // the states of a machine, written as rules over what its subject holds (DS-249), held to each other
+    // and to the structure
+    class StateRules : ACheck {
+      @requirement REQ-00141-1
+      @requirement REQ-00142-1
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
+    // the calls of the behaviours written, held to the machine of what they are made on (DS-250)
+    class CallOrder : ACheck {
+      @requirement REQ-00145-1
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+    }
+
+    class DependencyCheck : ACheck {       // what a box declares it uses against what its behaviours call
+      @requirement REQ-00094-2
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+      - checkDependencies() -> void {
+        @requirement REQ-00094-2
+      }
+    }
+
+    class RuleCheck : IStep {             // rules and definitions, decided by the evaluator
+      @requirement REQ-00095-2
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(out_context: Context) -> std::vector<model::Finding>
+      - checkRules() -> void {
+        @requirement REQ-00095-2
+      }
+    }
+
+    // one failure escaping an operation: the operations it comes up through, and where it starts
+    dataclass Escape {
+      @requirement REQ-00111-1
+      + through: std::vector<std::string>
+      + origin: std::string
+    }
+
+    class FailureFlow : IStep {           // what failures escape each operation, and the path each comes by (DS-188)
+      @requirement REQ-00111-1
+      - refs model_: model::Model
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      + run(out_context: Context) -> std::vector<model::Finding>
+      - handledAround(step: std::string) -> std::set<std::string>
+      - originOf(step: std::string, sequence: std::string) -> std::string
+      - hasBehaviour(operation: std::string) -> bool
+      - callee(message: std::string) -> std::string
+      - pass(out_escapes: std::map<std::string, std::map<std::string, Escape>>) -> bool
+      - write(escapes: std::map<std::string, std::map<std::string, Escape>>) -> void
+    }
+
+    // Until nothing changes: a pass over every behaviour adds what starts in it and what its calls
+    // let escape, unless an attempt around the call handles it; then each operation is written.
+    sequence FailureFlow::run {
+      self -> out_context.model() -> model
+      loop until a pass adds nothing {
+        -> pass(escapes) -> changed
+      }
+      -> write(escapes)
+      self -> out_context.take() -> found
+      return found
+    }
+
+    // What ds check does: the steps, each after the steps that write what it reads. The linker
+    // first; behaviour typing and derivation each need only the linker; the checks of contracts and
+    // dependencies need the calls typing made; structure and rules read the finished model.
+    sequence Checker::run {
+      local context: Context
+      local step: IStep
+      self -> order() -> keys
+      loop each key, in order {
+        -> step.run(context) -> found
+        loop each finding found {
+          self -> model_.report(finding)
+        }
+      }
+      // what is not yet written is no finding: the model keeps apart what its metamodel calls coverage (DS-216)
+      self -> model_.cover()
+    }
+
+    sequence Linker::run {
+      -> defineLoneExtensions()
+      self -> context_.notes() -> notes
+      loop each reference the notes hold {
+        -> reportAmbiguous(reference) -> ambiguous
+        opt the name is no ambiguity of its package {
+          -> resolveReference(reference)
+        }
+      }
+      -> unifyBehaviours()
+      loop each reference {
+        -> checkTemplateBound(reference)
+      }
+    }
+
+    // One reference becomes one relation, or a finding. An artefact is linked by its revision: the
+    // declared one is asked of the model's index, with no pass over the entities (DS-171).
+    sequence Linker::resolveReference {
+      opt it names an artefact by its id {
+        local name: model::ArtefactName
+        self -> name.hasRevision() -> pinned
+        opt it carries no revision / unpinned {
+          self -> context_.report(finding)
+          return
+        }
+        self -> model_.index() -> index
+        self -> index.revisionOf(reference.target) -> declared
+        opt the workspace declares another revision of it / drift {
+          self -> context_.report(finding)
+          self -> model_.relate(relation)
+          return
+        }
+      }
+      self -> resolver_.resolve(reference.target, reference.scope) -> target
+      opt nothing declares it / undeclared {
+        // an expected node takes its place, and it is said once
+        self -> model_.declare(expected) -> node
+        opt it is no use case and nobody said it yet {
+          self -> context_.report(finding)
+        }
+      }
+      opt a package reopened by its path / part-of {
+        self -> model_.relate(relation)
+        return
+      }
+      -> kindAllowed(reference, target) -> allowed
+      opt the language does not join those two kinds that way / refused {
+        return
+      }
+      self -> model_.relate(relation)
+      opt a relation that reaches into another box {
+        self -> context_.checkVisibility(reference.from, target, reference.location)
+        self -> context_.checkLeak(reference.from, target, reference.location)
+      }
+    }
+
+    // A member is found where it is declared: the type first, then its bases, nearest first (DS-105).
+    sequence Resolver::member {
+      loop each level of types, the type first {
+        loop each type of the level not seen before {
+          self -> model_.find(id) -> found
+          opt the type declares it / found {
+            return found
+          }
+          // its bases are the next level, asked of the index
+          self -> model_.index() -> index
+          self -> index.from(type) -> leaving
+        }
+      }
+      return found
+    }
+
+    sequence Facts::contains {
+      self -> model_.index() -> index
+      loop each holder of inner, outward {
+        self -> index.parent(inner) -> up
+        opt it is outer / held {
+          return true
+        }
+      }
+      return false
+    }
+
+    // The results of the messages are remembered as they go: each exists only for the messages after it.
+    sequence BehaviourTyping::run {
+      self -> context_.notes() -> notes
+      loop each message the notes hold {
+        -> checkMessage(message)
+        -> rememberResult(message)
+      }
+      -> checkLocals()
+      loop each event the notes hold {
+        -> checkEvent(event)
+      }
+    }
+
+    sequence ContractCheck::check {
+      -> checkInterfaces()
+      -> checkUseCases()
+      -> checkDiagrams()
+      -> checkScenarios()
+      loop each operation, method and function {
+        -> checkFailures(operation)
+      }
+    }
+
+    sequence StructureCheck::check {
+      -> checkOwnershipCycles()
+      -> checkArtefacts()
+      -> checkExtensions()
+      -> checkFields()
+    }
+
+    // The heart of ds, as one behaviour: a chain of "if this, it ends here". Each named
+    // branch is a scenario, a path through it; what they all share is written once.
+    sequence BehaviourTyping::checkMessage {
+      local subject: model::Entity
+      local value: std::pair<std::string, std::string>
+      local transient: bool
+      local home: std::string
+      local typeId: std::string
+      local opId: std::string
+      local finding: model::Finding
+
+      opt it is a return of the behaviour, not a call / a-return {
+        -> checkReturn(message)
+        return
+      }
+
+      self -> context_.current(message.sequence) -> sequenceId
+      self -> model_.find(sequenceId) -> seq
+      self -> context_.current(message.message) -> messageId
+      self -> model_.find(messageId) -> msg
+      opt the behaviour or the message is gone from the model / unknown-message {
+        return
+      }
+
+      -> subjectClass(seq, subject) -> cls
+      opt nothing declares the subject yet, it waits / subject-waits {
+        return
+      }
+
+      // A call with no target, from a function always, from a method when its class does
+      // not declare the name: a function of the module, resolved outward like any name.
+      opt a call to self the class does not declare {
+        self -> resolver_.resolve(message.op, home) -> id
+        self -> model_.find(id) -> target
+        opt it is a function of the module / function {
+          -> couple(seq, target, true)
+          -> call(msg, target, message)
+          return
+        }
+        opt the caller is itself a function / no-function {
+          self -> context_.report(finding)
+          return
+        }
+      }
+
+      // Who it is called on: self, or a name of the context of the behaviour.
+      alt the target is self / on-self {
+      } else {
+        -> typeOfName(seq, cls, subject, message.to, value, transient) -> known
+        opt the context has nothing by that name / unknown-participant {
+          self -> context_.report(finding)
+          return
+        }
+        self -> resolver_.resolveTypeText(value.first, value.second) -> typeId
+      }
+
+      opt a primitive or an unknown spelling, nothing to check / no-type {
+        return
+      }
+      self -> model_.find(typeId) -> type
+      opt the type is not declared yet, reported once it is / type-waits {
+        return
+      }
+      // the message is typed by its target, written through the model that keeps it (DS-346)
+      self -> model_.annotate(messageId, key, typeId)
+
+      opt the target is not self {
+        -> couple(seq, type, transient)
+      }
+      self -> model_.find(opId) -> op
+      opt the type does not declare the operation / undeclared-op {
+        self -> context_.report(finding)
+        return
+      }
+      -> call(msg, op, message)
+    }
+
+    // How a name resolves: one scenario per place it can be found. The default is the
+    // common one, found in a scope, walking outward from where it was written.
+    sequence Resolver::resolve {
+      local bare: std::string
+      local s: model::Scope
+      local written: model::ArtefactName
+      self -> model_.find(name)
+      opt the model declares it as written: a full id, a global artefact, a package / declared {
+        return name
+      }
+      self -> written.withoutRevision() -> bare
+      opt the name carries a revision {
+        self -> model_.find(bare)
+      }
+      opt the model declares the id without its revision / revision {
+        return bare
+      }
+      opt the name has a package path and nobody declares it: no scope is tried / absolute {
+        return ""
+      }
+      loop each scope, from the innermost outward, until one declares it {
+        self -> s.qualify(name) -> candidate
+        self -> model_.find(candidate)
+        self -> s.outer() -> s
+      }
+      opt no scope declares it, and the name is bare: the one class of that name in the package / package {
+        -> inPackage(name, scope) -> found
+        return found
+      }
+      return candidate
+    }
+
+    // The class or enum of a bare name in the package of the scope it is written in, as argos finds a class in
+    // the code: one of that name and arity, or none when two share it (DS-18). Testing each entity is no message.
+    sequence Resolver::inPackage {
+      -> namesakes(name, scope) -> found
+      opt two classes of the package have that name / ambiguous {
+        return ""
+      }
+      return found
+    }
+
+    // Every class or enum of a name and arity in the package of the scope: the model keeps them by package and
+    // name, and the arity is told on that short list (DS-336).
+    sequence Resolver::namesakes {
+      local package: model::Scope
+      self -> package.package() -> box
+      self -> model_.index() -> index
+      self -> index.named(box, name) -> named
+      return found
+    }
+
+    // A bare name is ambiguous when it resolves to nothing and two or more classes of its package share it (DS-325)
+    sequence Resolver::ambiguous {
+      -> resolve(name, scope) -> resolved
+      opt the name is qualified, an artefact, or resolves / resolved {
+        return candidates
+      }
+      -> namesakes(name, scope) -> candidates
+      return candidates
+    }
+
+    // A bare name two classes of its package share relates nothing, and is said once for each place it is written
+    sequence Linker::reportAmbiguous {
+      self -> resolver_.ambiguous(reference.target, reference.scope) -> candidates
+      opt no candidates: the name is no ambiguity / clear {
+        return false
+      }
+      self -> context_.reported() -> said
+      opt it was said for that place already / said {
+        return true
+      }
+      self -> context_.report(finding)
+      return true
+    }
+
+    // Walks the inherits relations up from derived. The stack of pending names and
+    // the set of seen ones are std containers, whose operations the design does not have.
+    sequence Resolver::derives {
+      opt derived is base: the first name taken ends the walk / itself {
+        return true
+      }
+      loop while names are pending and the last taken is not base {
+        opt the name was not seen before {
+          // what it inherits from, asked of the index: no pass over the relations
+          self -> model_.index() -> index
+          self -> index.from(name) -> leaving
+        }
+      }
+      opt nothing pending is left and base never came up / unrelated {
+        return false
+      }
+      return true
+    }
+
+  }
+}
+
+diagram SEQ_CheckerRun {
+  kind: sequence
+  include: driftspec@ds@check::Checker::run
+}
+
+diagram CL_CheckNamespace {
+  kind: class
+  include: driftspec@ds@check::*
+  show: ownership
+}
+
+diagram SEQ_CheckMessage {                 // the whole behaviour, every branch with its frame
+  kind: sequence
+  include: driftspec@ds@check::BehaviourTyping::checkMessage
+}
+
+diagram SEQ_CheckMessageUndeclared {       // one scenario: what is shared, then its branch
+  kind: sequence
+  include: driftspec@ds@check::BehaviourTyping::checkMessage / undeclared-op
+}

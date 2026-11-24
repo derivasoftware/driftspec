@@ -1,0 +1,7246 @@
+{
+  "breaches": {},
+  "coverage": [],
+  "entities": [
+    {
+      "expected": false,
+      "fields": {
+        "title": "Every view shall take its colours from the palette's CSS variables, never a literal value"
+      },
+      "flags": [],
+      "id": "CST-00001-1",
+      "kind": "constraint",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 116,
+          "line": 19
+        },
+        "file": "kinds/requirements.ds",
+        "line": 19
+      },
+      "name": "CST-00001-1",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "status": "draft",
+        "title": "The greeter shall build the greeting of a name"
+      },
+      "flags": [],
+      "id": "REQ-00001-1",
+      "kind": "requirement",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 26
+        },
+        "file": "kinds/requirements.ds",
+        "line": 22
+      },
+      "name": "REQ-00001-1",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "status": "draft",
+        "title": "The command shall exit 2 when the name is empty"
+      },
+      "flags": [],
+      "id": "REQ-00002-1",
+      "kind": "requirement",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 34
+        },
+        "file": "kinds/requirements.ds",
+        "line": 30
+      },
+      "name": "REQ-00002-1",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "status": "draft",
+        "title": "The server shall answer an empty name with an error the page can show"
+      },
+      "flags": [],
+      "id": "REQ-00003-1",
+      "kind": "requirement",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 10
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 6
+      },
+      "name": "REQ-00003-1",
+      "scope": "hola@server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "status": "draft",
+        "title": "The system shall greet a person by name from the command line"
+      },
+      "flags": [],
+      "id": "SREQ-00001-1",
+      "kind": "requirement",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 7
+        },
+        "file": "kinds/requirements.ds",
+        "line": 4
+      },
+      "name": "SREQ-00001-1",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "status": "draft",
+        "title": "The system shall answer within 100 milliseconds"
+      },
+      "flags": [],
+      "id": "SREQ-00002-1",
+      "kind": "requirement",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 12
+        },
+        "file": "kinds/requirements.ds",
+        "line": 9
+      },
+      "name": "SREQ-00002-1",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "status": "draft",
+        "title": "The system shall let a person correct a wrong name without losing the page"
+      },
+      "flags": [],
+      "id": "SREQ-00003-1",
+      "kind": "requirement",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 17
+        },
+        "file": "kinds/requirements.ds",
+        "line": 14
+      },
+      "name": "SREQ-00003-1",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "operation": "greet",
+        "params": "name: string",
+        "returns": "core::Greeting",
+        "status": "draft",
+        "title": "Greet a person by name"
+      },
+      "flags": [],
+      "id": "UC-00001-1",
+      "kind": "usecase",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 17
+        },
+        "file": "kinds/usecases.ds",
+        "line": 9
+      },
+      "name": "UC-00001-1",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "text": "the greeting of the name"
+      },
+      "flags": [],
+      "id": "UC-00001-1::default",
+      "kind": "outcome",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 46,
+          "line": 15
+        },
+        "file": "kinds/usecases.ds",
+        "line": 15
+      },
+      "name": "default",
+      "scope": "UC-00001-1"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "returns": "none",
+        "text": "no name was given; nobody is greeted and the reason is said"
+      },
+      "flags": [],
+      "id": "UC-00001-1::empty-name",
+      "kind": "outcome",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 92,
+          "line": 16
+        },
+        "file": "kinds/usecases.ds",
+        "line": 16
+      },
+      "name": "empty-name",
+      "scope": "UC-00001-1"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "operation": "greet",
+        "params": "name: string",
+        "returns": "core::Greeting",
+        "status": "draft",
+        "title": "Greet a person by name from a page, keeping what was typed when it fails"
+      },
+      "flags": [],
+      "id": "UC-00002-1",
+      "kind": "usecase",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 24
+        },
+        "file": "kinds/usecases.ds",
+        "line": 20
+      },
+      "name": "UC-00002-1",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "method": "test",
+        "tests": "tests/unit/core/test_greeter.cpp::TestGreeter.GreetsByName\n        tests/unit/core/test_greeter.cpp::TestGreeter.RejectsAnEmptyName",
+        "title": "Unit tests cover a name and an empty name"
+      },
+      "flags": [],
+      "id": "VER-00001-1",
+      "kind": "verification",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 12
+        },
+        "file": "kinds/verifications.ds",
+        "line": 5
+      },
+      "name": "VER-00001-1",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "method": "test",
+        "tests": "tests/system/test_hola.cpp::TestHola.ExitsTwoOnAnEmptyName",
+        "title": "System tests run the binary and read its exit code"
+      },
+      "flags": [],
+      "id": "VER-00002-1",
+      "kind": "verification",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 22
+        },
+        "file": "kinds/verifications.ds",
+        "line": 16
+      },
+      "name": "VER-00002-1",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@*",
+        "kind": "class"
+      },
+      "flags": [],
+      "id": "diagram:CL_Hola",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 4
+        },
+        "file": "kinds/diagrams/class.ds",
+        "line": 1
+      },
+      "name": "CL_Hola",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@*",
+        "kind": "class",
+        "open": "hola@app"
+      },
+      "flags": [],
+      "id": "diagram:HLD_App",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 16
+        },
+        "file": "kinds/diagrams/class.ds",
+        "line": 12
+      },
+      "name": "HLD_App",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@*",
+        "kind": "class",
+        "open": ""
+      },
+      "flags": [],
+      "id": "diagram:HLD_Hola",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 10
+        },
+        "file": "kinds/diagrams/class.ds",
+        "line": 6
+      },
+      "name": "HLD_Hola",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@shell",
+        "kind": "interface"
+      },
+      "flags": [],
+      "id": "diagram:IF_Hola",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 6
+        },
+        "file": "kinds/diagrams/interface.ds",
+        "line": 3
+      },
+      "name": "IF_Hola",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@web",
+        "kind": "interface"
+      },
+      "flags": [],
+      "id": "diagram:IF_Web",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 17
+        },
+        "file": "kinds/diagrams/interface.ds",
+        "line": 14
+      },
+      "name": "IF_Web",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@*",
+        "kind": "requirement"
+      },
+      "flags": [],
+      "id": "diagram:REQ_Hola",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 4
+        },
+        "file": "kinds/diagrams/requirements.ds",
+        "line": 1
+      },
+      "name": "REQ_Hola",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "depth": "1",
+        "include": "hola@app::App::run / empty-name",
+        "kind": "sequence"
+      },
+      "flags": [],
+      "id": "diagram:SEQ_EmptyName",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 11
+        },
+        "file": "kinds/diagrams/sequence.ds",
+        "line": 7
+      },
+      "name": "SEQ_EmptyName",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "depth": "*",
+        "include": "hola@shell::greet",
+        "kind": "sequence"
+      },
+      "flags": [],
+      "id": "diagram:SEQ_Greet",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 12
+        },
+        "file": "kinds/diagrams/interface.ds",
+        "line": 8
+      },
+      "name": "SEQ_Greet",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "depth": "*",
+        "include": "hola@shell::greet / empty-name",
+        "kind": "sequence"
+      },
+      "flags": [],
+      "id": "diagram:SEQ_GreetEmpty",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 34
+        },
+        "file": "kinds/diagrams/interface.ds",
+        "line": 30
+      },
+      "name": "SEQ_GreetEmpty",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "depth": "1",
+        "include": "hola@app::App::run",
+        "kind": "sequence"
+      },
+      "flags": [],
+      "id": "diagram:SEQ_Run",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 5
+        },
+        "file": "kinds/diagrams/sequence.ds",
+        "line": 1
+      },
+      "name": "SEQ_Run",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "depth": "*",
+        "include": "hola@web::greet",
+        "kind": "sequence"
+      },
+      "flags": [],
+      "id": "diagram:SEQ_WebGreet",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 28
+        },
+        "file": "kinds/diagrams/interface.ds",
+        "line": 24
+      },
+      "name": "SEQ_WebGreet",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@web",
+        "kind": "state"
+      },
+      "flags": [],
+      "id": "diagram:ST_Web",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 22
+        },
+        "file": "kinds/diagrams/interface.ds",
+        "line": 19
+      },
+      "name": "ST_Web",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "include": "hola@web",
+        "kind": "table"
+      },
+      "flags": [],
+      "id": "diagram:TB_Web",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 7
+        },
+        "file": "kinds/diagrams/golden.ds",
+        "line": 4
+      },
+      "name": "TB_Web",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {
+        "close": "module",
+        "include": "hola@shell::greet",
+        "kind": "tour"
+      },
+      "flags": [],
+      "id": "diagram:TOUR_Greet",
+      "kind": "diagram",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 13
+        },
+        "file": "kinds/diagrams/golden.ds",
+        "line": 9
+      },
+      "name": "TOUR_Greet",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {},
+      "flags": [],
+      "id": "hola",
+      "kind": "package",
+      "location": {
+        "column": 1,
+        "end": {
+          "column": 2,
+          "line": 33
+        },
+        "file": "kinds/app/App.ds",
+        "line": 4
+      },
+      "name": "hola",
+      "scope": ""
+    },
+    {
+      "expected": false,
+      "fields": {},
+      "flags": [],
+      "id": "hola@app",
+      "kind": "module",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 32
+        },
+        "file": "kinds/app/App.ds",
+        "line": 5
+      },
+      "name": "app",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "visibility": "-"
+      },
+      "flags": [],
+      "id": "hola@app::App",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 13
+        },
+        "file": "kinds/app/App.ds",
+        "line": 6
+      },
+      "name": "App",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "Console",
+        "visibility": "-"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@app::App::console",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 9
+        },
+        "file": "kinds/app/App.ds",
+        "line": 9
+      },
+      "name": "console",
+      "scope": "hola@app::App"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "text: std::string",
+        "returns": "void",
+        "visibility": "-"
+      },
+      "flags": [],
+      "id": "hola@app::App::fail",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 12
+        },
+        "file": "kinds/app/App.ds",
+        "line": 12
+      },
+      "name": "fail",
+      "scope": "hola@app::App"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "core::Greeter",
+        "visibility": "-"
+      },
+      "flags": [
+        "shares"
+      ],
+      "id": "hola@app::App::greeter",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 8
+        },
+        "file": "kinds/app/App.ds",
+        "line": 8
+      },
+      "name": "greeter",
+      "scope": "hola@app::App"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "greeting: core::Greeting",
+        "returns": "void",
+        "visibility": "-"
+      },
+      "flags": [],
+      "id": "hola@app::App::print",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 48,
+          "line": 11
+        },
+        "file": "kinds/app/App.ds",
+        "line": 11
+      },
+      "name": "print",
+      "scope": "hola@app::App"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "name: std::string",
+        "returns": "int",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@app::App::run",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 10
+        },
+        "file": "kinds/app/App.ds",
+        "line": 10
+      },
+      "name": "run",
+      "scope": "hola@app::App"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "subject": "App::run"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence",
+      "kind": "sequence",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 25
+        },
+        "file": "kinds/app/App.ds",
+        "line": 20
+      },
+      "name": "App::run",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "scenario": "empty-name",
+        "subject": "App::run"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence/empty-name",
+      "kind": "sequence",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 31
+        },
+        "file": "kinds/app/App.ds",
+        "line": 27
+      },
+      "name": "App::run/empty-name",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "from": "self",
+        "op": "valid",
+        "result": "ok",
+        "result_scope": "hola@core",
+        "result_type": "bool",
+        "to": "greeter",
+        "type": "hola@core::Greeter"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence/empty-name::m0",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 28
+        },
+        "file": "kinds/app/App.ds",
+        "line": 28
+      },
+      "name": "greeter.valid",
+      "scope": "hola@app::App::run::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "reason",
+        "from": "self",
+        "op": "fail",
+        "result_scope": "hola@app",
+        "result_type": "void",
+        "to": "self",
+        "type": "hola@app::App"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence/empty-name::m1",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 22,
+          "line": 29
+        },
+        "file": "kinds/app/App.ds",
+        "line": 29
+      },
+      "name": "self.fail",
+      "scope": "hola@app::App::run::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "0",
+        "args": "",
+        "from": "self",
+        "op": "",
+        "result": "2",
+        "return": "true",
+        "to": "self"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence/empty-name::m2",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 15,
+          "line": 30
+        },
+        "file": "kinds/app/App.ds",
+        "line": 30
+      },
+      "name": "return",
+      "scope": "hola@app::App::run::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "from": "self",
+        "op": "valid",
+        "result": "ok",
+        "result_scope": "hola@core",
+        "result_type": "bool",
+        "to": "greeter",
+        "type": "hola@core::Greeter"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence::m0",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 21
+        },
+        "file": "kinds/app/App.ds",
+        "line": 21
+      },
+      "name": "greeter.valid",
+      "scope": "hola@app::App::run::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@core::Greeter::greet::sequence",
+        "from": "self",
+        "op": "greet",
+        "result": "greeting",
+        "result_scope": "hola@core",
+        "result_type": "Greeting",
+        "to": "greeter",
+        "type": "hola@core::Greeter"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence::m1",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 22
+        },
+        "file": "kinds/app/App.ds",
+        "line": 22
+      },
+      "name": "greeter.greet",
+      "scope": "hola@app::App::run::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "greeting",
+        "from": "self",
+        "op": "print",
+        "result_scope": "hola@app",
+        "result_type": "void",
+        "to": "self",
+        "type": "hola@app::App"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence::m2",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 25,
+          "line": 23
+        },
+        "file": "kinds/app/App.ds",
+        "line": 23
+      },
+      "name": "self.print",
+      "scope": "hola@app::App::run::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "0",
+        "args": "",
+        "from": "self",
+        "op": "",
+        "result": "0",
+        "return": "true",
+        "to": "self"
+      },
+      "flags": [],
+      "id": "hola@app::App::run::sequence::m3",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 15,
+          "line": 24
+        },
+        "file": "kinds/app/App.ds",
+        "line": 24
+      },
+      "name": "return",
+      "scope": "hola@app::App::run::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "bases": "core::Channel"
+      },
+      "flags": [],
+      "id": "hola@app::Console",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/app/App.ds",
+        "line": 15
+      },
+      "name": "Console",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "bool",
+        "visibility": "-"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@app::Console::colour",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 21,
+          "line": 17
+        },
+        "file": "kinds/app/App.ds",
+        "line": 17
+      },
+      "name": "colour",
+      "scope": "hola@app::Console"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "text: std::string",
+        "returns": "void",
+        "visibility": "#"
+      },
+      "flags": [],
+      "id": "hola@app::Console::write",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 16
+        },
+        "file": "kinds/app/App.ds",
+        "line": 16
+      },
+      "name": "write",
+      "scope": "hola@app::Console"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "argv: std::vector<std::string>",
+        "returns": "int",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@app::main",
+      "kind": "function",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 7
+        },
+        "file": "kinds/app/main.ds",
+        "line": 5
+      },
+      "name": "main",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "local.app": "App",
+        "subject": "main"
+      },
+      "flags": [],
+      "id": "hola@app::main::sequence",
+      "kind": "sequence",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 13
+        },
+        "file": "kinds/app/main.ds",
+        "line": 9
+      },
+      "name": "main",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "local.app": "App",
+        "scenario": "empty-name",
+        "subject": "main"
+      },
+      "flags": [],
+      "id": "hola@app::main::sequence/empty-name",
+      "kind": "sequence",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 19
+        },
+        "file": "kinds/app/main.ds",
+        "line": 15
+      },
+      "name": "main/empty-name",
+      "scope": "hola@app"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@app::App::run::sequence/empty-name",
+        "from": "self",
+        "op": "run",
+        "result": "code",
+        "result_scope": "hola@app",
+        "result_type": "int",
+        "scenario": "empty-name",
+        "to": "app",
+        "type": "hola@app::App"
+      },
+      "flags": [],
+      "id": "hola@app::main::sequence/empty-name::m0",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 17
+        },
+        "file": "kinds/app/main.ds",
+        "line": 17
+      },
+      "name": "app.run",
+      "scope": "hola@app::main::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "0",
+        "args": "",
+        "from": "self",
+        "op": "",
+        "result": "code",
+        "return": "true",
+        "to": "self"
+      },
+      "flags": [],
+      "id": "hola@app::main::sequence/empty-name::m1",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 18,
+          "line": 18
+        },
+        "file": "kinds/app/main.ds",
+        "line": 18
+      },
+      "name": "return",
+      "scope": "hola@app::main::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@app::App::run::sequence",
+        "from": "self",
+        "op": "run",
+        "result": "code",
+        "result_scope": "hola@app",
+        "result_type": "int",
+        "to": "app",
+        "type": "hola@app::App"
+      },
+      "flags": [],
+      "id": "hola@app::main::sequence::m0",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 11
+        },
+        "file": "kinds/app/main.ds",
+        "line": 11
+      },
+      "name": "app.run",
+      "scope": "hola@app::main::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "0",
+        "args": "",
+        "from": "self",
+        "op": "",
+        "result": "code",
+        "return": "true",
+        "to": "self"
+      },
+      "flags": [],
+      "id": "hola@app::main::sequence::m1",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 18,
+          "line": 12
+        },
+        "file": "kinds/app/main.ds",
+        "line": 12
+      },
+      "name": "return",
+      "scope": "hola@app::main::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {},
+      "flags": [],
+      "id": "hola@core",
+      "kind": "module",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 10
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 5
+      },
+      "name": "core",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "bases": "Style"
+      },
+      "flags": [],
+      "id": "hola@core::Casual",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 17
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 14
+      },
+      "name": "Casual",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "text: std::string",
+        "returns": "std::string",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@core::Casual::apply",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 48,
+          "line": 15
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 15
+      },
+      "name": "apply",
+      "scope": "hola@core::Casual"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "std::string",
+        "visibility": "-"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@core::Casual::emoji",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 27,
+          "line": 16
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 16
+      },
+      "name": "emoji",
+      "scope": "hola@core::Casual"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "stereotypes": "abstract"
+      },
+      "flags": [],
+      "id": "hola@core::Channel",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 9
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 6
+      },
+      "name": "Channel",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "greeting: Greeting",
+        "returns": "void",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@core::Channel::deliver",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 7
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 7
+      },
+      "name": "deliver",
+      "scope": "hola@core::Channel"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "text: std::string",
+        "returns": "void",
+        "visibility": "#"
+      },
+      "flags": [
+        "abstract"
+      ],
+      "id": "hola@core::Channel::write",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 50,
+          "line": 8
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 8
+      },
+      "name": "write",
+      "scope": "hola@core::Channel"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "bases": "Style"
+      },
+      "flags": [],
+      "id": "hola@core::Formal",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 12
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 10
+      },
+      "name": "Formal",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "text: std::string",
+        "returns": "std::string",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@core::Formal::apply",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 48,
+          "line": 11
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 11
+      },
+      "name": "apply",
+      "scope": "hola@core::Formal"
+    },
+    {
+      "expected": false,
+      "fields": {},
+      "flags": [],
+      "id": "hola@core::Greeter",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 16
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 7
+      },
+      "name": "Greeter",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "GreetingCache",
+        "visibility": "-"
+      },
+      "flags": [
+        "shares"
+      ],
+      "id": "hola@core::Greeter::cache",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 36,
+          "line": 12
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 12
+      },
+      "name": "cache",
+      "scope": "hola@core::Greeter"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "name: std::string",
+        "returns": "std::string",
+        "visibility": "-"
+      },
+      "flags": [],
+      "id": "hola@core::Greeter::format",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 49,
+          "line": 15
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 15
+      },
+      "name": "format",
+      "scope": "hola@core::Greeter"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "name: std::string",
+        "returns": "Greeting",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@core::Greeter::greet",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 45,
+          "line": 13
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 13
+      },
+      "name": "greet",
+      "scope": "hola@core::Greeter"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "subject": "Greeter::greet"
+      },
+      "flags": [],
+      "id": "hola@core::Greeter::greet::sequence",
+      "kind": "sequence",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 21
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 18
+      },
+      "name": "Greeter::greet",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "from": "self",
+        "op": "format",
+        "result": "text",
+        "result_scope": "hola@core",
+        "result_type": "std::string",
+        "to": "self",
+        "type": "hola@core::Greeter"
+      },
+      "flags": [],
+      "id": "hola@core::Greeter::greet::sequence::m0",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 19
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 19
+      },
+      "name": "self.format",
+      "scope": "hola@core::Greeter::greet::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "text",
+        "from": "self",
+        "op": "apply",
+        "result": "styled",
+        "result_scope": "hola@core",
+        "result_type": "std::string",
+        "to": "style",
+        "type": "hola@core::Style"
+      },
+      "flags": [],
+      "id": "hola@core::Greeter::greet::sequence::m1",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 37,
+          "line": 20
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 20
+      },
+      "name": "style.apply",
+      "scope": "hola@core::Greeter::greet::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "std::vector<Greeting>",
+        "visibility": "-"
+      },
+      "flags": [
+        "owns",
+        "many"
+      ],
+      "id": "hola@core::Greeter::history",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 49,
+          "line": 10
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 10
+      },
+      "name": "history",
+      "scope": "hola@core::Greeter"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "Locale",
+        "visibility": "-"
+      },
+      "flags": [
+        "refs"
+      ],
+      "id": "hola@core::Greeter::locale",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 11
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 11
+      },
+      "name": "locale",
+      "scope": "hola@core::Greeter"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "Style",
+        "visibility": "-"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@core::Greeter::style",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 26,
+          "line": 9
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 9
+      },
+      "name": "style",
+      "scope": "hola@core::Greeter"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "name: std::string",
+        "returns": "bool",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@core::Greeter::valid",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 14
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 14
+      },
+      "name": "valid",
+      "scope": "hola@core::Greeter"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "stereotypes": "value"
+      },
+      "flags": [
+        "dataclass"
+      ],
+      "id": "hola@core::Greeting",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 5
+        },
+        "file": "kinds/core/Greeting.ds",
+        "line": 3
+      },
+      "name": "Greeting",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "std::string",
+        "visibility": "+"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@core::Greeting::text",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 26,
+          "line": 4
+        },
+        "file": "kinds/core/Greeting.ds",
+        "line": 4
+      },
+      "name": "text",
+      "scope": "hola@core::Greeting"
+    },
+    {
+      "expected": false,
+      "fields": {},
+      "flags": [],
+      "id": "hola@core::GreetingCache",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 12
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 8
+      },
+      "name": "GreetingCache",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "std::map<std::string, Greeting>",
+        "visibility": "-"
+      },
+      "flags": [
+        "owns",
+        "many"
+      ],
+      "id": "hola@core::GreetingCache::entries",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 59,
+          "line": 11
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 11
+      },
+      "name": "entries",
+      "scope": "hola@core::GreetingCache"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "name: std::string",
+        "returns": "std::optional<Greeting>",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@core::GreetingCache::find",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 59,
+          "line": 9
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 9
+      },
+      "name": "find",
+      "scope": "hola@core::GreetingCache"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "greeting: Greeting",
+        "returns": "void",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@core::GreetingCache::keep",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 10
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 10
+      },
+      "name": "keep",
+      "scope": "hola@core::GreetingCache"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "stereotypes": "value"
+      },
+      "flags": [
+        "dataclass"
+      ],
+      "id": "hola@core::Locale",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 6
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 3
+      },
+      "name": "Locale",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "std::string",
+        "visibility": "+"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@core::Locale::language",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 4
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 4
+      },
+      "name": "language",
+      "scope": "hola@core::Locale"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "std::string",
+        "visibility": "+"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@core::Locale::region",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 5
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 5
+      },
+      "name": "region",
+      "scope": "hola@core::Locale"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "stereotypes": "abstract"
+      },
+      "flags": [],
+      "id": "hola@core::Style",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 8
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 6
+      },
+      "name": "Style",
+      "scope": "hola@core"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "text: std::string",
+        "returns": "std::string",
+        "visibility": "+"
+      },
+      "flags": [
+        "abstract"
+      ],
+      "id": "hola@core::Style::apply",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 57,
+          "line": 7
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 7
+      },
+      "name": "apply",
+      "scope": "hola@core::Style"
+    },
+    {
+      "expected": false,
+      "fields": {},
+      "flags": [],
+      "id": "hola@server",
+      "kind": "module",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 20,
+          "line": 16
+        },
+        "file": "kinds/hld.ds",
+        "line": 16
+      },
+      "name": "server",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "bases": "core::Channel"
+      },
+      "flags": [],
+      "id": "hola@server::Response",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 23
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 20
+      },
+      "name": "Response",
+      "scope": "hola@server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "int",
+        "visibility": "+"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@server::Response::status",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 20,
+          "line": 22
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 22
+      },
+      "name": "status",
+      "scope": "hola@server::Response"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "text: std::string",
+        "returns": "void",
+        "visibility": "#"
+      },
+      "flags": [],
+      "id": "hola@server::Response::write",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 21
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 21
+      },
+      "name": "write",
+      "scope": "hola@server::Response"
+    },
+    {
+      "expected": false,
+      "fields": {},
+      "flags": [],
+      "id": "hola@server::Server",
+      "kind": "class",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 12
+      },
+      "name": "Server",
+      "scope": "hola@server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "name: std::string",
+        "returns": "core::Greeting",
+        "visibility": "+"
+      },
+      "flags": [],
+      "id": "hola@server::Server::greet",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 51,
+          "line": 16
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 16
+      },
+      "name": "greet",
+      "scope": "hola@server::Server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "subject": "Server::greet"
+      },
+      "flags": [],
+      "id": "hola@server::Server::greet::sequence",
+      "kind": "sequence",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 28
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 25
+      },
+      "name": "Server::greet",
+      "scope": "hola@server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "scenario": "empty-name",
+        "subject": "Server::greet"
+      },
+      "flags": [],
+      "id": "hola@server::Server::greet::sequence/empty-name",
+      "kind": "sequence",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 33
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 30
+      },
+      "name": "Server::greet/empty-name",
+      "scope": "hola@server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "from": "self",
+        "op": "valid",
+        "result": "ok",
+        "result_scope": "hola@core",
+        "result_type": "bool",
+        "to": "greeter",
+        "type": "hola@core::Greeter"
+      },
+      "flags": [],
+      "id": "hola@server::Server::greet::sequence/empty-name::m0",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 31
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 31
+      },
+      "name": "greeter.valid",
+      "scope": "hola@server::Server::greet::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "reason",
+        "from": "self",
+        "op": "reject",
+        "result_scope": "hola@server",
+        "result_type": "void",
+        "to": "self",
+        "type": "hola@server::Server"
+      },
+      "flags": [],
+      "id": "hola@server::Server::greet::sequence/empty-name::m1",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 24,
+          "line": 32
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 32
+      },
+      "name": "self.reject",
+      "scope": "hola@server::Server::greet::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "from": "self",
+        "op": "valid",
+        "result": "ok",
+        "result_scope": "hola@core",
+        "result_type": "bool",
+        "to": "greeter",
+        "type": "hola@core::Greeter"
+      },
+      "flags": [],
+      "id": "hola@server::Server::greet::sequence::m0",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 26
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 26
+      },
+      "name": "greeter.valid",
+      "scope": "hola@server::Server::greet::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@core::Greeter::greet::sequence",
+        "from": "self",
+        "op": "greet",
+        "result": "greeting",
+        "result_scope": "hola@core",
+        "result_type": "Greeting",
+        "to": "greeter",
+        "type": "hola@core::Greeter"
+      },
+      "flags": [],
+      "id": "hola@server::Server::greet::sequence::m1",
+      "kind": "message",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 27
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 27
+      },
+      "name": "greeter.greet",
+      "scope": "hola@server::Server::greet::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "core::Greeter",
+        "visibility": "-"
+      },
+      "flags": [
+        "shares"
+      ],
+      "id": "hola@server::Server::greeter",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 14
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 14
+      },
+      "name": "greeter",
+      "scope": "hola@server::Server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "reason: std::string",
+        "returns": "void",
+        "visibility": "-"
+      },
+      "flags": [],
+      "id": "hola@server::Server::reject",
+      "kind": "method",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 17
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 17
+      },
+      "name": "reject",
+      "scope": "hola@server::Server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "type": "Response",
+        "visibility": "-"
+      },
+      "flags": [
+        "owns"
+      ],
+      "id": "hola@server::Server::response",
+      "kind": "attribute",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 32,
+          "line": 15
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 15
+      },
+      "name": "response",
+      "scope": "hola@server::Server"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "encoding": "utf-8 text",
+        "kind": "cli",
+        "transport": "process"
+      },
+      "flags": [],
+      "id": "hola@shell",
+      "kind": "interface",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 19
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 6
+      },
+      "name": "shell",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "command": "hola <name>",
+        "exit 0": "default",
+        "exit 2": "empty-name",
+        "params": "name: string",
+        "returns": "core::Greeting",
+        "stdout": "Greeting.text"
+      },
+      "flags": [],
+      "id": "hola@shell::greet",
+      "kind": "operation",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 12
+      },
+      "name": "greet",
+      "scope": "hola@shell"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "subject": "shell::greet"
+      },
+      "flags": [],
+      "id": "hola@shell::greet::sequence",
+      "kind": "sequence",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 23
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 21
+      },
+      "name": "shell::greet",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "scenario": "empty-name",
+        "subject": "shell::greet"
+      },
+      "flags": [],
+      "id": "hola@shell::greet::sequence/empty-name",
+      "kind": "sequence",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 27
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 25
+      },
+      "name": "shell::greet/empty-name",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@app::main::sequence/empty-name",
+        "from": "self",
+        "op": "app::main",
+        "result": "code",
+        "result_scope": "hola@app",
+        "result_type": "int",
+        "scenario": "empty-name",
+        "to": "self",
+        "type": "hola@app"
+      },
+      "flags": [],
+      "id": "hola@shell::greet::sequence/empty-name::m0",
+      "kind": "message",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 44,
+          "line": 26
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 26
+      },
+      "name": "self.app::main",
+      "scope": "hola@shell::greet::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@app::main::sequence",
+        "from": "self",
+        "op": "app::main",
+        "result": "code",
+        "result_scope": "hola@app",
+        "result_type": "int",
+        "to": "self",
+        "type": "hola@app"
+      },
+      "flags": [],
+      "id": "hola@shell::greet::sequence::m0",
+      "kind": "message",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 31,
+          "line": 22
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 22
+      },
+      "name": "self.app::main",
+      "scope": "hola@shell::greet::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "kind": "gui"
+      },
+      "flags": [],
+      "id": "hola@web",
+      "kind": "interface",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 13
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 8
+      },
+      "name": "web",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "params": "name: string",
+        "returns": "core::Greeting"
+      },
+      "flags": [],
+      "id": "hola@web::greet",
+      "kind": "operation",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 65,
+          "line": 12
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 12
+      },
+      "name": "greet",
+      "scope": "hola@web"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "local.server": "server::Server",
+        "subject": "web::greet"
+      },
+      "flags": [],
+      "id": "hola@web::greet::sequence",
+      "kind": "sequence",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 49
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 46
+      },
+      "name": "web::greet",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "local.server": "server::Server",
+        "scenario": "empty-name",
+        "subject": "web::greet"
+      },
+      "flags": [],
+      "id": "hola@web::greet::sequence/empty-name",
+      "kind": "sequence",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 54
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 51
+      },
+      "name": "web::greet/empty-name",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@server::Server::greet::sequence/empty-name",
+        "from": "self",
+        "op": "greet",
+        "result": "failure",
+        "result_scope": "hola@server",
+        "result_type": "core::Greeting",
+        "scenario": "empty-name",
+        "to": "server",
+        "type": "hola@server::Server"
+      },
+      "flags": [],
+      "id": "hola@web::greet::sequence/empty-name::m0",
+      "kind": "message",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 50,
+          "line": 53
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 53
+      },
+      "name": "server.greet",
+      "scope": "hola@web::greet::sequence/empty-name"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "argc": "1",
+        "args": "name",
+        "expands": "hola@server::Server::greet::sequence",
+        "from": "self",
+        "op": "greet",
+        "result": "greeting",
+        "result_scope": "hola@server",
+        "result_type": "core::Greeting",
+        "to": "server",
+        "type": "hola@server::Server"
+      },
+      "flags": [],
+      "id": "hola@web::greet::sequence::m0",
+      "kind": "message",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 38,
+          "line": 48
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 48
+      },
+      "name": "server.greet",
+      "scope": "hola@web::greet::sequence"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "initial": "Home",
+        "transitions": "Home>Result>greet\nHome>Home>greet [empty name]\nHome>About>about\nResult>Home>back\nAbout>Home>back"
+      },
+      "flags": [],
+      "id": "hola@web::state",
+      "kind": "state",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 43
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 15
+      },
+      "name": "web",
+      "scope": "hola@"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "text": "What this is and who made it."
+      },
+      "flags": [],
+      "id": "hola@web::state::About",
+      "kind": "view",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 36
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 33
+      },
+      "name": "About",
+      "scope": "hola@web::state"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "text": "A field for the name and a button to greet. When the name is empty the\n        button says why it did nothing, next to the field, and what was typed\n        stays there."
+      },
+      "flags": [],
+      "id": "hola@web::state::Home",
+      "kind": "view",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 25
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 18
+      },
+      "name": "Home",
+      "scope": "hola@web::state"
+    },
+    {
+      "expected": false,
+      "fields": {
+        "text": "The greeting, large, and a way back to greet someone else."
+      },
+      "flags": [],
+      "id": "hola@web::state::Result",
+      "kind": "view",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 31
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 27
+      },
+      "name": "Result",
+      "scope": "hola@web::state"
+    }
+  ],
+  "findings": [],
+  "format": 1,
+  "metamodel": {
+    "kinds": [
+      {
+        "fields": [
+          {
+            "meaning": "what the package is",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "who answers for it",
+            "name": "owner",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless that says otherwise",
+            "name": "language",
+            "source": "written",
+            "type": "name",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "package",
+        "meaning": "a box of the system: organisation above the code; packages nest and reopen",
+        "parents": [
+          "package"
+        ],
+        "top": true
+      },
+      {
+        "fields": [
+          {
+            "meaning": "- when private to its parent, + otherwise",
+            "name": "visibility",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "what its code is written in: cpp, c, python, typescript or lua; held by what it holds unless that says otherwise",
+            "name": "language",
+            "source": "written",
+            "type": "name",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "module",
+        "meaning": "a namespace of the code inside a package; modules nest and reopen",
+        "parents": [
+          "package",
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "one sentence that names it",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it says, in full",
+            "name": "text",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "why it is so",
+            "name": "rationale",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "draft, approved or obsolete",
+            "name": "status",
+            "source": "written",
+            "type": "status",
+            "values": [
+              "draft",
+              "approved",
+              "obsolete"
+            ]
+          },
+          {
+            "meaning": "words to find it by",
+            "name": "tags",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "who answers for it",
+            "name": "owner",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "ignored: nesting or @refines say it (W-PARENT-IGNORED)",
+            "name": "parent",
+            "source": "written",
+            "type": "name",
+            "values": []
+          }
+        ],
+        "flags": [
+          "extension"
+        ],
+        "kind": "requirement",
+        "meaning": "what the system or a module promises",
+        "parents": [
+          "package",
+          "module",
+          "requirement",
+          "class",
+          "method",
+          "attribute",
+          "function",
+          "operator"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "one sentence that names it",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it says, in full",
+            "name": "text",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "why it is so",
+            "name": "rationale",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "draft, approved or obsolete",
+            "name": "status",
+            "source": "written",
+            "type": "status",
+            "values": [
+              "draft",
+              "approved",
+              "obsolete"
+            ]
+          },
+          {
+            "meaning": "words to find it by",
+            "name": "tags",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "who answers for it",
+            "name": "owner",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "test, review, analysis or inspection",
+            "name": "method",
+            "source": "written",
+            "type": "name",
+            "values": [
+              "test",
+              "review",
+              "analysis",
+              "inspection"
+            ]
+          },
+          {
+            "meaning": "the tests that prove it, file::test",
+            "name": "tests",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "one test that proves it",
+            "name": "test",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what was observed",
+            "name": "evidence",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "unit, integration or system",
+            "name": "level",
+            "source": "written",
+            "type": "name",
+            "values": [
+              "unit",
+              "integration",
+              "system"
+            ]
+          },
+          {
+            "meaning": "the state before",
+            "name": "precondition",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "the state after",
+            "name": "postcondition",
+            "source": "written",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [
+          "extension"
+        ],
+        "kind": "verification",
+        "meaning": "how a requirement or a constraint is proved",
+        "parents": [
+          "package",
+          "module",
+          "requirement"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "one sentence that names it",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it says, in full",
+            "name": "text",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "why it is so",
+            "name": "rationale",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "draft, approved or obsolete",
+            "name": "status",
+            "source": "written",
+            "type": "status",
+            "values": [
+              "draft",
+              "approved",
+              "obsolete"
+            ]
+          },
+          {
+            "meaning": "words to find it by",
+            "name": "tags",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "who answers for it",
+            "name": "owner",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the category it applies to",
+            "name": "category",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the guides that ground it",
+            "name": "bok",
+            "source": "written",
+            "type": "names",
+            "values": []
+          }
+        ],
+        "flags": [
+          "extension"
+        ],
+        "kind": "constraint",
+        "meaning": "a requirement every instance of what it binds obeys",
+        "parents": [
+          "package",
+          "module",
+          "requirement",
+          "class",
+          "method",
+          "attribute",
+          "function",
+          "operator"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "one sentence that names it",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it says, in full",
+            "name": "text",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "why it is so",
+            "name": "rationale",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "draft, approved or obsolete",
+            "name": "status",
+            "source": "written",
+            "type": "status",
+            "values": [
+              "draft",
+              "approved",
+              "obsolete"
+            ]
+          },
+          {
+            "meaning": "words to find it by",
+            "name": "tags",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "who answers for it",
+            "name": "owner",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the name of its contract, when it has a signature",
+            "name": "operation",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the parameters, name: type",
+            "name": "params",
+            "source": "syntax",
+            "type": "params",
+            "values": []
+          },
+          {
+            "meaning": "what it gives back",
+            "name": "returns",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "usecase",
+        "meaning": "a contract an interface operation realises: what goes in, what comes out, the outcomes it ends in",
+        "parents": [
+          "package",
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "what is obtained, in a line",
+            "name": "text",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it gives back when not what the use case returns",
+            "name": "returns",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "outcome",
+        "meaning": "one way a use case ends: default when it goes well, a named scenario when it does not",
+        "parents": [
+          "usecase"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "cli, gui, http, ...",
+            "name": "kind",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "how it travels",
+            "name": "transport",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "how it is serialised",
+            "name": "encoding",
+            "source": "written",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "interface",
+        "meaning": "an external interface of a process or a library",
+        "parents": [
+          "package",
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "the parameters, name: type",
+            "name": "params",
+            "source": "syntax",
+            "type": "params",
+            "values": []
+          },
+          {
+            "meaning": "what it gives back",
+            "name": "returns",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "what it promises it may fail with: fails A, B; fails nothing promises none (DS-189)",
+            "name": "fails",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "the failures that escape it, from where they start and where they are handled (DS-188)",
+            "name": "escapes",
+            "source": "derived",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "how a failure escapes it: the operations it comes up through, and the behaviour that starts it",
+            "name": "escape.*",
+            "source": "derived",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "how it is invoked",
+            "name": "command",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it writes out",
+            "name": "stdout",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it writes as errors",
+            "name": "stderr",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "the scenario each exit code stands for",
+            "name": "exit *",
+            "source": "written",
+            "type": "name",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "operation",
+        "meaning": "an operation an interface offers",
+        "parents": [
+          "interface"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "what it shows",
+            "name": "text",
+            "source": "written",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "view",
+        "meaning": "a state of an interface's navigation",
+        "parents": [
+          "state"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "- when private to its parent, + otherwise",
+            "name": "visibility",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "a remark kept with the declaration",
+            "name": "note",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what the check reads from the declaration: interface, abstract, value, equatable, ordered, hashable, printable",
+            "name": "stereotypes",
+            "source": "derived",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "the template parameters",
+            "name": "params",
+            "source": "syntax",
+            "type": "params",
+            "values": []
+          },
+          {
+            "meaning": "the operators it declares",
+            "name": "operators",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "the bound of a template parameter",
+            "name": "bound.*",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "its bases as written, template arguments and all",
+            "name": "bases",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [
+          "dataclass",
+          "extension"
+        ],
+        "kind": "class",
+        "meaning": "a class or a dataclass",
+        "parents": [
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "- when private to its parent, + otherwise",
+            "name": "visibility",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "its values",
+            "name": "values",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "enum",
+        "meaning": "a closed set of values",
+        "parents": [
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "the parameters, name: type",
+            "name": "params",
+            "source": "syntax",
+            "type": "params",
+            "values": []
+          },
+          {
+            "meaning": "what it gives back",
+            "name": "returns",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "- when private to its parent, + otherwise",
+            "name": "visibility",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "a remark kept with the declaration",
+            "name": "note",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it promises it may fail with: fails A, B; fails nothing promises none (DS-189)",
+            "name": "fails",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "the failures that escape it, from where they start and where they are handled (DS-188)",
+            "name": "escapes",
+            "source": "derived",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "how a failure escapes it: the operations it comes up through, and the behaviour that starts it",
+            "name": "escape.*",
+            "source": "derived",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "its own template parameters",
+            "name": "template",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "function",
+        "meaning": "a free function of a module",
+        "parents": [
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "the parameters, name: type",
+            "name": "params",
+            "source": "syntax",
+            "type": "params",
+            "values": []
+          },
+          {
+            "meaning": "what it gives back",
+            "name": "returns",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "- when private to its parent, + otherwise",
+            "name": "visibility",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "a remark kept with the declaration",
+            "name": "note",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it promises it may fail with: fails A, B; fails nothing promises none (DS-189)",
+            "name": "fails",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "the failures that escape it, from where they start and where they are handled (DS-188)",
+            "name": "escapes",
+            "source": "derived",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "how a failure escapes it: the operations it comes up through, and the behaviour that starts it",
+            "name": "escape.*",
+            "source": "derived",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "its own template parameters",
+            "name": "template",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          }
+        ],
+        "flags": [
+          "abstract",
+          "static",
+          "const",
+          "constructor",
+          "destructor"
+        ],
+        "kind": "method",
+        "meaning": "an operation of a class",
+        "parents": [
+          "class"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "its type",
+            "name": "type",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "- when private to its parent, + otherwise",
+            "name": "visibility",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "its initial value",
+            "name": "default",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [
+          "owns",
+          "refs",
+          "shares",
+          "many",
+          "optional"
+        ],
+        "kind": "attribute",
+        "meaning": "a field of a class",
+        "parents": [
+          "class"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "the operator",
+            "name": "symbol",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the parameters, name: type",
+            "name": "params",
+            "source": "syntax",
+            "type": "params",
+            "values": []
+          },
+          {
+            "meaning": "what it gives back",
+            "name": "returns",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "operator",
+        "meaning": "an operator of a class",
+        "parents": [
+          "class"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "whose behaviour it is",
+            "name": "subject",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the scenario, when written apart",
+            "name": "scenario",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "a local and its type",
+            "name": "local.*",
+            "source": "syntax",
+            "type": "type",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "sequence",
+        "meaning": "the behaviour of an operation, a function or a class, as messages in order",
+        "parents": [
+          "package",
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "who sends it",
+            "name": "from",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "who receives it",
+            "name": "to",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the operation called",
+            "name": "op",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the arguments",
+            "name": "args",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "how many arguments",
+            "name": "argc",
+            "source": "syntax",
+            "type": "number",
+            "values": []
+          },
+          {
+            "meaning": "the value it produces",
+            "name": "result",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "what a return gives back",
+            "name": "return",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "the failure a path ends with: fail <Failure>",
+            "name": "fails",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the scenario of the callee it follows",
+            "name": "scenario",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the type of its target",
+            "name": "type",
+            "source": "derived",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "who sends it, when the sender is written",
+            "name": "from-type",
+            "source": "derived",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "the type of its result",
+            "name": "result_type",
+            "source": "derived",
+            "type": "type",
+            "values": []
+          },
+          {
+            "meaning": "where that type resolves",
+            "name": "result_scope",
+            "source": "derived",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the sequence it expands to",
+            "name": "expands",
+            "source": "derived",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the path through that sequence",
+            "name": "expands-path",
+            "source": "derived",
+            "type": "names",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "message",
+        "meaning": "one call of a sequence",
+        "parents": [
+          "sequence",
+          "frame"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "loop, alt, opt, attempt, branch for a side of an alt, handler of an attempt",
+            "name": "kind",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "its guard, as prose",
+            "name": "condition",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "the failure a handler handles: on <Failure>",
+            "name": "failure",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the scenario a loop, an opt or a branch names",
+            "name": "scenario",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "frame",
+        "meaning": "a loop, alt, opt or attempt around the steps it holds, in the order written; an alt holds its sides as branches, an attempt its handlers",
+        "parents": [
+          "sequence",
+          "frame"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "the initial state",
+            "name": "initial",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "its transitions",
+            "name": "transitions",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "its states as rules over the context of its subject: state|literals|line, one per line",
+            "name": "rules",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "state",
+        "meaning": "the state machine of a class or the navigation of an interface",
+        "parents": [
+          "package",
+          "module"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "class, sequence, state, table, requirement, interface or tour",
+            "name": "kind",
+            "source": "written",
+            "type": "name",
+            "values": [
+              "class",
+              "sequence",
+              "state",
+              "table",
+              "requirement",
+              "interface",
+              "tour"
+            ]
+          },
+          {
+            "meaning": "what it shows",
+            "name": "include",
+            "source": "written",
+            "type": "patterns",
+            "values": []
+          },
+          {
+            "meaning": "what it leaves out",
+            "name": "exclude",
+            "source": "written",
+            "type": "patterns",
+            "values": []
+          },
+          {
+            "meaning": "the boxes it keeps open, and the way to each; alone, every other box closes",
+            "name": "open",
+            "source": "written",
+            "type": "patterns",
+            "values": []
+          },
+          {
+            "meaning": "the boxes it closes, by name, prefix or kind (module, package); what a closed box holds is lifted to it",
+            "name": "close",
+            "source": "written",
+            "type": "patterns",
+            "values": []
+          },
+          {
+            "meaning": "the diagram whose open and close it takes as well",
+            "name": "cut",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "how deep a sequence expands, or *",
+            "name": "depth",
+            "source": "written",
+            "type": "number",
+            "values": []
+          },
+          {
+            "meaning": "the calls a sequence follows: *, a box, an operation; alone, every other call is folded",
+            "name": "unfold",
+            "source": "written",
+            "type": "patterns",
+            "values": []
+          },
+          {
+            "meaning": "the calls a sequence does not follow",
+            "name": "fold",
+            "source": "written",
+            "type": "patterns",
+            "values": []
+          },
+          {
+            "meaning": "the extras it draws",
+            "name": "show",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "the compartments it leaves out",
+            "name": "hide",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "how many steps of neighbours it adds",
+            "name": "neighbours",
+            "source": "written",
+            "type": "number",
+            "values": []
+          },
+          {
+            "meaning": "the rows of a table: what it ranges over, as a rule does",
+            "name": "for",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "the rows of a table that stay: the literals each must answer",
+            "name": "where",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "diagram",
+        "meaning": "a view asked of the model",
+        "parents": [],
+        "top": true
+      },
+      {
+        "fields": [
+          {
+            "meaning": "what it states, in one sentence",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what it speaks about: for <kind> <variable> [in <box>], ...",
+            "name": "for",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "which of them: literals over the model",
+            "name": "where",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what holds for each of them: literals over the model",
+            "name": "holds",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "what must never happen, instead of holds: literals over the model",
+            "name": "never",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "the tests that prove a rule the model cannot evaluate",
+            "name": "verified-by",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "why it is so",
+            "name": "rationale",
+            "source": "written",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "rule",
+        "meaning": "a design statement that makes a requirement real: what it speaks about, which of them, what holds or must never happen",
+        "parents": [
+          "package",
+          "module",
+          "class",
+          "method",
+          "attribute",
+          "function",
+          "operator"
+        ],
+        "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "what it names, in one sentence",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "the cases in which it holds: literals over the model, one line each",
+            "name": "if",
+            "source": "syntax",
+            "type": "text",
+            "values": []
+          },
+          {
+            "meaning": "why it is so",
+            "name": "rationale",
+            "source": "written",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "definition",
+        "meaning": "a relation derived from others: its parameters, and each case in which it holds for them",
+        "parents": [
+          "package",
+          "module",
+          "class"
+        ],
+        "top": false
+      }
+    ],
+    "relations": [
+      {
+        "from": [
+          "package",
+          "module",
+          "requirement",
+          "class",
+          "method",
+          "attribute",
+          "function",
+          "operator",
+          "usecase",
+          "interface",
+          "state",
+          "sequence",
+          "frame"
+        ],
+        "kind": "contains",
+        "meaning": "the parent holds the child",
+        "pairs": [
+          [
+            "package",
+            "package"
+          ],
+          [
+            "package",
+            "module"
+          ],
+          [
+            "module",
+            "module"
+          ],
+          [
+            "package",
+            "requirement"
+          ],
+          [
+            "module",
+            "requirement"
+          ],
+          [
+            "requirement",
+            "requirement"
+          ],
+          [
+            "class",
+            "requirement"
+          ],
+          [
+            "method",
+            "requirement"
+          ],
+          [
+            "attribute",
+            "requirement"
+          ],
+          [
+            "function",
+            "requirement"
+          ],
+          [
+            "operator",
+            "requirement"
+          ],
+          [
+            "package",
+            "verification"
+          ],
+          [
+            "module",
+            "verification"
+          ],
+          [
+            "requirement",
+            "verification"
+          ],
+          [
+            "package",
+            "constraint"
+          ],
+          [
+            "module",
+            "constraint"
+          ],
+          [
+            "requirement",
+            "constraint"
+          ],
+          [
+            "class",
+            "constraint"
+          ],
+          [
+            "method",
+            "constraint"
+          ],
+          [
+            "attribute",
+            "constraint"
+          ],
+          [
+            "function",
+            "constraint"
+          ],
+          [
+            "operator",
+            "constraint"
+          ],
+          [
+            "package",
+            "usecase"
+          ],
+          [
+            "module",
+            "usecase"
+          ],
+          [
+            "usecase",
+            "outcome"
+          ],
+          [
+            "package",
+            "interface"
+          ],
+          [
+            "module",
+            "interface"
+          ],
+          [
+            "interface",
+            "operation"
+          ],
+          [
+            "state",
+            "view"
+          ],
+          [
+            "module",
+            "class"
+          ],
+          [
+            "module",
+            "enum"
+          ],
+          [
+            "module",
+            "function"
+          ],
+          [
+            "class",
+            "method"
+          ],
+          [
+            "class",
+            "attribute"
+          ],
+          [
+            "class",
+            "operator"
+          ],
+          [
+            "package",
+            "sequence"
+          ],
+          [
+            "module",
+            "sequence"
+          ],
+          [
+            "sequence",
+            "message"
+          ],
+          [
+            "frame",
+            "message"
+          ],
+          [
+            "sequence",
+            "frame"
+          ],
+          [
+            "frame",
+            "frame"
+          ],
+          [
+            "package",
+            "state"
+          ],
+          [
+            "module",
+            "state"
+          ],
+          [
+            "package",
+            "rule"
+          ],
+          [
+            "module",
+            "rule"
+          ],
+          [
+            "class",
+            "rule"
+          ],
+          [
+            "method",
+            "rule"
+          ],
+          [
+            "attribute",
+            "rule"
+          ],
+          [
+            "function",
+            "rule"
+          ],
+          [
+            "operator",
+            "rule"
+          ],
+          [
+            "package",
+            "definition"
+          ],
+          [
+            "module",
+            "definition"
+          ],
+          [
+            "class",
+            "definition"
+          ]
+        ],
+        "to": [
+          "package",
+          "module",
+          "requirement",
+          "verification",
+          "constraint",
+          "usecase",
+          "outcome",
+          "interface",
+          "operation",
+          "view",
+          "class",
+          "enum",
+          "function",
+          "method",
+          "attribute",
+          "operator",
+          "sequence",
+          "message",
+          "frame",
+          "state",
+          "rule",
+          "definition"
+        ]
+      },
+      {
+        "from": [
+          "package",
+          "module"
+        ],
+        "kind": "exposes",
+        "meaning": "a package or a module offers an interface",
+        "to": [
+          "interface"
+        ]
+      },
+      {
+        "from": [
+          "package",
+          "module",
+          "class",
+          "enum",
+          "function",
+          "method",
+          "attribute",
+          "operator",
+          "interface",
+          "operation",
+          "view",
+          "sequence",
+          "state",
+          "usecase",
+          "rule",
+          "definition"
+        ],
+        "kind": "satisfies",
+        "meaning": "the entity satisfies a requirement",
+        "to": [
+          "requirement"
+        ]
+      },
+      {
+        "from": [
+          "package",
+          "module",
+          "class",
+          "enum",
+          "function",
+          "method",
+          "attribute",
+          "operator",
+          "interface",
+          "operation",
+          "view",
+          "sequence",
+          "state",
+          "usecase",
+          "rule",
+          "definition"
+        ],
+        "kind": "constrained-by",
+        "meaning": "the entity obeys a constraint",
+        "to": [
+          "constraint"
+        ]
+      },
+      {
+        "from": [
+          "requirement"
+        ],
+        "kind": "refines",
+        "meaning": "a requirement details another",
+        "to": [
+          "requirement"
+        ]
+      },
+      {
+        "from": [
+          "verification"
+        ],
+        "kind": "verifies",
+        "meaning": "a verification proves a requirement or a constraint",
+        "to": [
+          "requirement",
+          "constraint"
+        ]
+      },
+      {
+        "from": [
+          "requirement",
+          "verification",
+          "constraint",
+          "usecase"
+        ],
+        "kind": "about",
+        "meaning": "an artefact concerns the box it is declared in, where it gives its level",
+        "to": []
+      },
+      {
+        "from": [
+          "class",
+          "verification",
+          "operation"
+        ],
+        "kind": "realises",
+        "meaning": "the entity carries out an interface, or an interface operation a use case",
+        "to": [
+          "interface",
+          "usecase"
+        ]
+      },
+      {
+        "from": [
+          "sequence"
+        ],
+        "kind": "exercised-by",
+        "meaning": "a behaviour is run by a verification",
+        "to": [
+          "verification"
+        ]
+      },
+      {
+        "from": [
+          "class",
+          "usecase"
+        ],
+        "kind": "inherits",
+        "meaning": "a class derives from another; a use case specialises another",
+        "to": [
+          "class",
+          "usecase"
+        ]
+      },
+      {
+        "from": [
+          "class"
+        ],
+        "kind": "bounded-by",
+        "meaning": "a template parameter is bounded by a class",
+        "to": [
+          "class"
+        ]
+      },
+      {
+        "from": [
+          "attribute"
+        ],
+        "kind": "owns",
+        "meaning": "an attribute owns its value",
+        "to": [
+          "class",
+          "enum"
+        ]
+      },
+      {
+        "from": [
+          "attribute"
+        ],
+        "kind": "refs",
+        "meaning": "an attribute refers to a value it does not own",
+        "to": [
+          "class",
+          "enum",
+          "interface"
+        ]
+      },
+      {
+        "from": [
+          "attribute"
+        ],
+        "kind": "shares",
+        "meaning": "an attribute shares ownership of its value",
+        "to": [
+          "class",
+          "enum"
+        ]
+      },
+      {
+        "from": [
+          "attribute",
+          "function",
+          "method",
+          "operation",
+          "operator",
+          "sequence",
+          "usecase",
+          "outcome"
+        ],
+        "kind": "uses",
+        "meaning": "the entity names a type",
+        "to": [
+          "class",
+          "enum",
+          "interface"
+        ]
+      },
+      {
+        "from": [
+          "sequence",
+          "state"
+        ],
+        "kind": "behaviour-of",
+        "meaning": "a sequence or a state machine is the behaviour of its subject",
+        "to": [
+          "class",
+          "function",
+          "method",
+          "operation",
+          "interface",
+          "package",
+          "module",
+          "usecase"
+        ]
+      },
+      {
+        "from": [
+          "message"
+        ],
+        "kind": "calls",
+        "meaning": "a message calls an operation",
+        "to": [
+          "function",
+          "method",
+          "operation"
+        ]
+      },
+      {
+        "from": [
+          "message"
+        ],
+        "kind": "expands-to",
+        "meaning": "a message expands to the sequence of what it calls",
+        "to": [
+          "sequence"
+        ]
+      },
+      {
+        "from": [
+          "sequence"
+        ],
+        "kind": "couples-transient",
+        "meaning": "a behaviour touches a type for the length of a call",
+        "to": [
+          "class",
+          "enum",
+          "function",
+          "interface"
+        ]
+      },
+      {
+        "from": [
+          "sequence"
+        ],
+        "kind": "couples-structural",
+        "meaning": "a behaviour reaches a type through an attribute",
+        "to": [
+          "class",
+          "enum",
+          "interface"
+        ]
+      },
+      {
+        "from": [
+          "state"
+        ],
+        "kind": "on",
+        "meaning": "a transition fires on an operation",
+        "to": [
+          "method",
+          "operation"
+        ]
+      },
+      {
+        "from": [
+          "state"
+        ],
+        "kind": "does",
+        "meaning": "a transition runs an operation",
+        "to": [
+          "method",
+          "operation"
+        ]
+      },
+      {
+        "from": [
+          "package",
+          "module",
+          "class"
+        ],
+        "kind": "consumes",
+        "meaning": "a box depends on an interface another box offers (@consumes)",
+        "to": [
+          "interface"
+        ]
+      },
+      {
+        "from": [
+          "package",
+          "module",
+          "interface",
+          "class"
+        ],
+        "kind": "sends",
+        "meaning": "in a scenario written between them, one participant sends a message to another",
+        "to": [
+          "package",
+          "module",
+          "interface",
+          "class",
+          "enum",
+          "function"
+        ]
+      },
+      {
+        "from": [],
+        "kind": "refers",
+        "meaning": "an annotation the language gives no meaning to",
+        "to": []
+      }
+    ]
+  },
+  "relations": [
+    {
+      "from": "hola",
+      "kind": "contains",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 32
+        },
+        "file": "kinds/app/App.ds",
+        "line": 5
+      },
+      "to": "hola@app"
+    },
+    {
+      "from": "hola@app",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 13
+        },
+        "file": "kinds/app/App.ds",
+        "line": 6
+      },
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 8
+        },
+        "file": "kinds/app/App.ds",
+        "line": 8
+      },
+      "to": "hola@app::App::greeter"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 9
+        },
+        "file": "kinds/app/App.ds",
+        "line": 9
+      },
+      "to": "hola@app::App::console"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 10
+        },
+        "file": "kinds/app/App.ds",
+        "line": 10
+      },
+      "to": "hola@app::App::run"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 48,
+          "line": 11
+        },
+        "file": "kinds/app/App.ds",
+        "line": 11
+      },
+      "to": "hola@app::App::print"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 12
+        },
+        "file": "kinds/app/App.ds",
+        "line": 12
+      },
+      "to": "hola@app::App::fail"
+    },
+    {
+      "from": "hola@app",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/app/App.ds",
+        "line": 15
+      },
+      "to": "hola@app::Console"
+    },
+    {
+      "from": "hola@app::Console",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 16
+        },
+        "file": "kinds/app/App.ds",
+        "line": 16
+      },
+      "to": "hola@app::Console::write"
+    },
+    {
+      "from": "hola@app::Console",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 21,
+          "line": 17
+        },
+        "file": "kinds/app/App.ds",
+        "line": 17
+      },
+      "to": "hola@app::Console::colour"
+    },
+    {
+      "from": "hola@app",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 25
+        },
+        "file": "kinds/app/App.ds",
+        "line": 20
+      },
+      "to": "hola@app::App::run::sequence"
+    },
+    {
+      "from": "hola@app::App::run::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 21
+        },
+        "file": "kinds/app/App.ds",
+        "line": 21
+      },
+      "to": "hola@app::App::run::sequence::m0"
+    },
+    {
+      "from": "hola@app::App::run::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 22
+        },
+        "file": "kinds/app/App.ds",
+        "line": 22
+      },
+      "to": "hola@app::App::run::sequence::m1"
+    },
+    {
+      "from": "hola@app::App::run::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 25,
+          "line": 23
+        },
+        "file": "kinds/app/App.ds",
+        "line": 23
+      },
+      "to": "hola@app::App::run::sequence::m2"
+    },
+    {
+      "from": "hola@app::App::run::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 15,
+          "line": 24
+        },
+        "file": "kinds/app/App.ds",
+        "line": 24
+      },
+      "to": "hola@app::App::run::sequence::m3"
+    },
+    {
+      "from": "hola@app",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 31
+        },
+        "file": "kinds/app/App.ds",
+        "line": 27
+      },
+      "to": "hola@app::App::run::sequence/empty-name"
+    },
+    {
+      "from": "hola@app::App::run::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 28
+        },
+        "file": "kinds/app/App.ds",
+        "line": 28
+      },
+      "to": "hola@app::App::run::sequence/empty-name::m0"
+    },
+    {
+      "from": "hola@app::App::run::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 22,
+          "line": 29
+        },
+        "file": "kinds/app/App.ds",
+        "line": 29
+      },
+      "to": "hola@app::App::run::sequence/empty-name::m1"
+    },
+    {
+      "from": "hola@app::App::run::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 15,
+          "line": 30
+        },
+        "file": "kinds/app/App.ds",
+        "line": 30
+      },
+      "to": "hola@app::App::run::sequence/empty-name::m2"
+    },
+    {
+      "from": "hola@app",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 7
+        },
+        "file": "kinds/app/main.ds",
+        "line": 5
+      },
+      "to": "hola@app::main"
+    },
+    {
+      "from": "hola@app",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 13
+        },
+        "file": "kinds/app/main.ds",
+        "line": 9
+      },
+      "to": "hola@app::main::sequence"
+    },
+    {
+      "from": "hola@app::main::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 11
+        },
+        "file": "kinds/app/main.ds",
+        "line": 11
+      },
+      "to": "hola@app::main::sequence::m0"
+    },
+    {
+      "from": "hola@app::main::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 18,
+          "line": 12
+        },
+        "file": "kinds/app/main.ds",
+        "line": 12
+      },
+      "to": "hola@app::main::sequence::m1"
+    },
+    {
+      "from": "hola@app",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 19
+        },
+        "file": "kinds/app/main.ds",
+        "line": 15
+      },
+      "to": "hola@app::main::sequence/empty-name"
+    },
+    {
+      "from": "hola@app::main::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 17
+        },
+        "file": "kinds/app/main.ds",
+        "line": 17
+      },
+      "to": "hola@app::main::sequence/empty-name::m0"
+    },
+    {
+      "from": "hola@app::main::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 18,
+          "line": 18
+        },
+        "file": "kinds/app/main.ds",
+        "line": 18
+      },
+      "to": "hola@app::main::sequence/empty-name::m1"
+    },
+    {
+      "from": "hola",
+      "kind": "contains",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 10
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 5
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 9
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 6
+      },
+      "to": "hola@core::Channel"
+    },
+    {
+      "from": "hola@core::Channel",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 7
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 7
+      },
+      "to": "hola@core::Channel::deliver"
+    },
+    {
+      "from": "hola@core::Channel",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 50,
+          "line": 8
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 8
+      },
+      "to": "hola@core::Channel::write"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 16
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 7
+      },
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 26,
+          "line": 9
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 9
+      },
+      "to": "hola@core::Greeter::style"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 49,
+          "line": 10
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 10
+      },
+      "to": "hola@core::Greeter::history"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 11
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 11
+      },
+      "to": "hola@core::Greeter::locale"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 36,
+          "line": 12
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 12
+      },
+      "to": "hola@core::Greeter::cache"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 45,
+          "line": 13
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 13
+      },
+      "to": "hola@core::Greeter::greet"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 14
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 14
+      },
+      "to": "hola@core::Greeter::valid"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 49,
+          "line": 15
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 15
+      },
+      "to": "hola@core::Greeter::format"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 21
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 18
+      },
+      "to": "hola@core::Greeter::greet::sequence"
+    },
+    {
+      "from": "hola@core::Greeter::greet::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 19
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 19
+      },
+      "to": "hola@core::Greeter::greet::sequence::m0"
+    },
+    {
+      "from": "hola@core::Greeter::greet::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 37,
+          "line": 20
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 20
+      },
+      "to": "hola@core::Greeter::greet::sequence::m1"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 5
+        },
+        "file": "kinds/core/Greeting.ds",
+        "line": 3
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::Greeting",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 26,
+          "line": 4
+        },
+        "file": "kinds/core/Greeting.ds",
+        "line": 4
+      },
+      "to": "hola@core::Greeting::text"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 8
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 6
+      },
+      "to": "hola@core::Style"
+    },
+    {
+      "from": "hola@core::Style",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 57,
+          "line": 7
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 7
+      },
+      "to": "hola@core::Style::apply"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 12
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 10
+      },
+      "to": "hola@core::Formal"
+    },
+    {
+      "from": "hola@core::Formal",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 48,
+          "line": 11
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 11
+      },
+      "to": "hola@core::Formal::apply"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 17
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 14
+      },
+      "to": "hola@core::Casual"
+    },
+    {
+      "from": "hola@core::Casual",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 48,
+          "line": 15
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 15
+      },
+      "to": "hola@core::Casual::apply"
+    },
+    {
+      "from": "hola@core::Casual",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 27,
+          "line": 16
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 16
+      },
+      "to": "hola@core::Casual::emoji"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 6
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 3
+      },
+      "to": "hola@core::Locale"
+    },
+    {
+      "from": "hola@core::Locale",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 4
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 4
+      },
+      "to": "hola@core::Locale::language"
+    },
+    {
+      "from": "hola@core::Locale",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 5
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 5
+      },
+      "to": "hola@core::Locale::region"
+    },
+    {
+      "from": "hola@core",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 12
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 8
+      },
+      "to": "hola@core::GreetingCache"
+    },
+    {
+      "from": "hola@core::GreetingCache",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 59,
+          "line": 9
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 9
+      },
+      "to": "hola@core::GreetingCache::find"
+    },
+    {
+      "from": "hola@core::GreetingCache",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 10
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 10
+      },
+      "to": "hola@core::GreetingCache::keep"
+    },
+    {
+      "from": "hola@core::GreetingCache",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 59,
+          "line": 11
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 11
+      },
+      "to": "hola@core::GreetingCache::entries"
+    },
+    {
+      "from": "hola",
+      "kind": "contains",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 20,
+          "line": 16
+        },
+        "file": "kinds/hld.ds",
+        "line": 16
+      },
+      "to": "hola@server"
+    },
+    {
+      "from": "hola",
+      "kind": "exposes",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 19
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 6
+      },
+      "to": "hola@shell"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 12
+      },
+      "to": "hola@shell::greet"
+    },
+    {
+      "from": "hola",
+      "kind": "contains",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 23
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 21
+      },
+      "to": "hola@shell::greet::sequence"
+    },
+    {
+      "from": "hola@shell::greet::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 31,
+          "line": 22
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 22
+      },
+      "to": "hola@shell::greet::sequence::m0"
+    },
+    {
+      "from": "hola",
+      "kind": "contains",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 27
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 25
+      },
+      "to": "hola@shell::greet::sequence/empty-name"
+    },
+    {
+      "from": "hola@shell::greet::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 44,
+          "line": 26
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 26
+      },
+      "to": "hola@shell::greet::sequence/empty-name::m0"
+    },
+    {
+      "from": "hola",
+      "kind": "exposes",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 13
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 8
+      },
+      "to": "hola@web"
+    },
+    {
+      "from": "hola@web",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 65,
+          "line": 12
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 12
+      },
+      "to": "hola@web::greet"
+    },
+    {
+      "from": "hola@web::state",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 25
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 18
+      },
+      "to": "hola@web::state::Home"
+    },
+    {
+      "from": "hola@web::state",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 31
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 27
+      },
+      "to": "hola@web::state::Result"
+    },
+    {
+      "from": "hola@web::state",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 36
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 33
+      },
+      "to": "hola@web::state::About"
+    },
+    {
+      "from": "hola",
+      "kind": "contains",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 49
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 46
+      },
+      "to": "hola@web::greet::sequence"
+    },
+    {
+      "from": "hola@web::greet::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 38,
+          "line": 48
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 48
+      },
+      "to": "hola@web::greet::sequence::m0"
+    },
+    {
+      "from": "hola",
+      "kind": "contains",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 54
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 51
+      },
+      "to": "hola@web::greet::sequence/empty-name"
+    },
+    {
+      "from": "hola@web::greet::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 50,
+          "line": 53
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 53
+      },
+      "to": "hola@web::greet::sequence/empty-name::m0"
+    },
+    {
+      "from": "SREQ-00001-1",
+      "kind": "about",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 7
+        },
+        "file": "kinds/requirements.ds",
+        "line": 4
+      },
+      "to": "hola"
+    },
+    {
+      "from": "SREQ-00002-1",
+      "kind": "about",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 12
+        },
+        "file": "kinds/requirements.ds",
+        "line": 9
+      },
+      "to": "hola"
+    },
+    {
+      "from": "SREQ-00003-1",
+      "kind": "about",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 17
+        },
+        "file": "kinds/requirements.ds",
+        "line": 14
+      },
+      "to": "hola"
+    },
+    {
+      "from": "CST-00001-1",
+      "kind": "about",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 116,
+          "line": 19
+        },
+        "file": "kinds/requirements.ds",
+        "line": 19
+      },
+      "to": "hola"
+    },
+    {
+      "from": "REQ-00001-1",
+      "kind": "about",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 26
+        },
+        "file": "kinds/requirements.ds",
+        "line": 22
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "REQ-00002-1",
+      "kind": "about",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 34
+        },
+        "file": "kinds/requirements.ds",
+        "line": 30
+      },
+      "to": "hola@app"
+    },
+    {
+      "from": "REQ-00003-1",
+      "kind": "about",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 10
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 6
+      },
+      "to": "hola@server"
+    },
+    {
+      "from": "hola@server",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 12
+      },
+      "to": "hola@server::Server"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 14
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 14
+      },
+      "to": "hola@server::Server::greeter"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 32,
+          "line": 15
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 15
+      },
+      "to": "hola@server::Server::response"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 51,
+          "line": 16
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 16
+      },
+      "to": "hola@server::Server::greet"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 17
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 17
+      },
+      "to": "hola@server::Server::reject"
+    },
+    {
+      "from": "hola@server",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 23
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 20
+      },
+      "to": "hola@server::Response"
+    },
+    {
+      "from": "hola@server::Response",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 41,
+          "line": 21
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 21
+      },
+      "to": "hola@server::Response::write"
+    },
+    {
+      "from": "hola@server::Response",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 20,
+          "line": 22
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 22
+      },
+      "to": "hola@server::Response::status"
+    },
+    {
+      "from": "hola@server",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 28
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 25
+      },
+      "to": "hola@server::Server::greet::sequence"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 26
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 26
+      },
+      "to": "hola@server::Server::greet::sequence::m0"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 27
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 27
+      },
+      "to": "hola@server::Server::greet::sequence::m1"
+    },
+    {
+      "from": "hola@server",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 33
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 30
+      },
+      "to": "hola@server::Server::greet::sequence/empty-name"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 31
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 31
+      },
+      "to": "hola@server::Server::greet::sequence/empty-name::m0"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence/empty-name",
+      "kind": "contains",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 24,
+          "line": 32
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 32
+      },
+      "to": "hola@server::Server::greet::sequence/empty-name::m1"
+    },
+    {
+      "from": "UC-00001-1",
+      "kind": "about",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 17
+        },
+        "file": "kinds/usecases.ds",
+        "line": 9
+      },
+      "to": "hola"
+    },
+    {
+      "from": "UC-00001-1",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 46,
+          "line": 15
+        },
+        "file": "kinds/usecases.ds",
+        "line": 15
+      },
+      "to": "UC-00001-1::default"
+    },
+    {
+      "from": "UC-00001-1",
+      "kind": "contains",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 92,
+          "line": 16
+        },
+        "file": "kinds/usecases.ds",
+        "line": 16
+      },
+      "to": "UC-00001-1::empty-name"
+    },
+    {
+      "from": "UC-00002-1",
+      "kind": "about",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 24
+        },
+        "file": "kinds/usecases.ds",
+        "line": 20
+      },
+      "to": "hola"
+    },
+    {
+      "from": "VER-00001-1",
+      "kind": "about",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 12
+        },
+        "file": "kinds/verifications.ds",
+        "line": 5
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "VER-00002-1",
+      "kind": "about",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 22
+        },
+        "file": "kinds/verifications.ds",
+        "line": 16
+      },
+      "to": "hola@app"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "satisfies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 7
+        },
+        "file": "kinds/app/App.ds",
+        "line": 7
+      },
+      "to": "REQ-00002-1"
+    },
+    {
+      "from": "hola@app::App::greeter",
+      "kind": "shares",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 8
+        },
+        "file": "kinds/app/App.ds",
+        "line": 8
+      },
+      "multiplicity": "1",
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@app::App::console",
+      "kind": "owns",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 9
+        },
+        "file": "kinds/app/App.ds",
+        "line": 9
+      },
+      "multiplicity": "1",
+      "to": "hola@app::Console"
+    },
+    {
+      "from": "hola@app::App::print",
+      "kind": "uses",
+      "location": {
+        "column": 15,
+        "end": {
+          "column": 39,
+          "line": 11
+        },
+        "file": "kinds/app/App.ds",
+        "line": 11
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@app::Console",
+      "kind": "inherits",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/app/App.ds",
+        "line": 15
+      },
+      "to": "hola@core::Channel"
+    },
+    {
+      "from": "hola@app::App::run::sequence",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 25
+        },
+        "file": "kinds/app/App.ds",
+        "line": 20
+      },
+      "to": "hola@app::App::run"
+    },
+    {
+      "from": "hola@app::App::run::sequence/empty-name",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 31
+        },
+        "file": "kinds/app/App.ds",
+        "line": 27
+      },
+      "to": "hola@app::App::run"
+    },
+    {
+      "from": "hola@app::main",
+      "kind": "satisfies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 6
+        },
+        "file": "kinds/app/main.ds",
+        "line": 6
+      },
+      "to": "REQ-00002-1"
+    },
+    {
+      "from": "hola@app::main::sequence",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 13
+        },
+        "file": "kinds/app/main.ds",
+        "line": 9
+      },
+      "to": "hola@app::main"
+    },
+    {
+      "from": "hola@app::main::sequence",
+      "kind": "uses",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 21,
+          "line": 10
+        },
+        "file": "kinds/app/main.ds",
+        "line": 10
+      },
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@app::main::sequence/empty-name",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 19
+        },
+        "file": "kinds/app/main.ds",
+        "line": 15
+      },
+      "to": "hola@app::main"
+    },
+    {
+      "from": "hola@app::main::sequence/empty-name",
+      "kind": "uses",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 21,
+          "line": 16
+        },
+        "file": "kinds/app/main.ds",
+        "line": 16
+      },
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@core::Channel::deliver",
+      "kind": "uses",
+      "location": {
+        "column": 17,
+        "end": {
+          "column": 35,
+          "line": 7
+        },
+        "file": "kinds/core/Channel.ds",
+        "line": 7
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "satisfies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 8
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 8
+      },
+      "to": "REQ-00001-1"
+    },
+    {
+      "from": "hola@core::Greeter::style",
+      "kind": "owns",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 26,
+          "line": 9
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 9
+      },
+      "multiplicity": "1",
+      "to": "hola@core::Style"
+    },
+    {
+      "from": "hola@core::Greeter::history",
+      "kind": "owns",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 49,
+          "line": 10
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 10
+      },
+      "multiplicity": "*",
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::Greeter::locale",
+      "kind": "refs",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 11
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 11
+      },
+      "multiplicity": "1",
+      "to": "hola@core::Locale"
+    },
+    {
+      "from": "hola@core::Greeter::cache",
+      "kind": "shares",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 36,
+          "line": 12
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 12
+      },
+      "multiplicity": "1",
+      "to": "hola@core::GreetingCache"
+    },
+    {
+      "from": "hola@core::Greeter::greet",
+      "kind": "uses",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 45,
+          "line": 13
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 13
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::Greeter::greet::sequence",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 21
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 18
+      },
+      "to": "hola@core::Greeter::greet"
+    },
+    {
+      "from": "hola@core::Formal",
+      "kind": "inherits",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 12
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 10
+      },
+      "to": "hola@core::Style"
+    },
+    {
+      "from": "hola@core::Casual",
+      "kind": "inherits",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 17
+        },
+        "file": "kinds/core/Style.ds",
+        "line": 14
+      },
+      "to": "hola@core::Style"
+    },
+    {
+      "from": "hola@core::GreetingCache::find",
+      "kind": "uses",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 59,
+          "line": 9
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 9
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::GreetingCache::keep",
+      "kind": "uses",
+      "location": {
+        "column": 14,
+        "end": {
+          "column": 32,
+          "line": 10
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 10
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::GreetingCache::entries",
+      "kind": "owns",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 59,
+          "line": 11
+        },
+        "file": "kinds/core/Values.ds",
+        "line": 11
+      },
+      "multiplicity": "*",
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "satisfies",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 30,
+          "line": 10
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 10
+      },
+      "to": "SREQ-00002-1"
+    },
+    {
+      "from": "hola@shell::greet",
+      "kind": "uses",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 12
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@shell::greet",
+      "kind": "realises",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 18
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 12
+      },
+      "to": "UC-00001-1"
+    },
+    {
+      "from": "hola@shell::greet",
+      "kind": "satisfies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 32,
+          "line": 13
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 13
+      },
+      "to": "SREQ-00001-1"
+    },
+    {
+      "from": "hola@shell::greet::sequence",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 23
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 21
+      },
+      "to": "hola@shell::greet"
+    },
+    {
+      "from": "hola@shell::greet::sequence/empty-name",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 27
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 25
+      },
+      "to": "hola@shell::greet"
+    },
+    {
+      "from": "hola@web",
+      "kind": "satisfies",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 30,
+          "line": 10
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 10
+      },
+      "to": "SREQ-00002-1"
+    },
+    {
+      "from": "hola@web::greet",
+      "kind": "uses",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 65,
+          "line": 12
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 12
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@web::greet",
+      "kind": "realises",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 65,
+          "line": 12
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 12
+      },
+      "to": "UC-00002-1"
+    },
+    {
+      "from": "hola@web::state",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 43
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 15
+      },
+      "to": "hola@web"
+    },
+    {
+      "from": "hola@web::state::Home",
+      "kind": "satisfies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 32,
+          "line": 23
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 23
+      },
+      "to": "SREQ-00003-1"
+    },
+    {
+      "from": "hola@web::state::Home",
+      "kind": "constrained-by",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 24
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 24
+      },
+      "to": "CST-00001-1"
+    },
+    {
+      "from": "hola@web::state::Result",
+      "kind": "constrained-by",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 30
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 30
+      },
+      "to": "CST-00001-1"
+    },
+    {
+      "from": "hola@web::greet::sequence",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 49
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 46
+      },
+      "to": "hola@web::greet"
+    },
+    {
+      "from": "hola@web::greet::sequence",
+      "kind": "uses",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 33,
+          "line": 47
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 47
+      },
+      "to": "hola@server::Server"
+    },
+    {
+      "from": "hola@web::greet::sequence/empty-name",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 54
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 51
+      },
+      "to": "hola@web::greet"
+    },
+    {
+      "from": "hola@web::greet::sequence/empty-name",
+      "kind": "uses",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 33,
+          "line": 52
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 52
+      },
+      "to": "hola@server::Server"
+    },
+    {
+      "from": "REQ-00001-1",
+      "kind": "refines",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 23
+        },
+        "file": "kinds/requirements.ds",
+        "line": 23
+      },
+      "to": "SREQ-00001-1"
+    },
+    {
+      "from": "REQ-00002-1",
+      "kind": "refines",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 31
+        },
+        "file": "kinds/requirements.ds",
+        "line": 31
+      },
+      "to": "SREQ-00001-1"
+    },
+    {
+      "from": "REQ-00003-1",
+      "kind": "refines",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 28,
+          "line": 7
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 7
+      },
+      "to": "SREQ-00003-1"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "satisfies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 13
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 13
+      },
+      "to": "REQ-00003-1"
+    },
+    {
+      "from": "hola@server::Server::greeter",
+      "kind": "shares",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 38,
+          "line": 14
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 14
+      },
+      "multiplicity": "1",
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@server::Server::response",
+      "kind": "owns",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 32,
+          "line": 15
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 15
+      },
+      "multiplicity": "1",
+      "to": "hola@server::Response"
+    },
+    {
+      "from": "hola@server::Server::greet",
+      "kind": "uses",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 51,
+          "line": 16
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 16
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@server::Response",
+      "kind": "inherits",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 23
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 20
+      },
+      "to": "hola@core::Channel"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 28
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 25
+      },
+      "to": "hola@server::Server::greet"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence/empty-name",
+      "kind": "behaviour-of",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 33
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 30
+      },
+      "to": "hola@server::Server::greet"
+    },
+    {
+      "from": "UC-00001-1",
+      "kind": "uses",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 17
+        },
+        "file": "kinds/usecases.ds",
+        "line": 9
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "UC-00001-1",
+      "kind": "satisfies",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 30,
+          "line": 12
+        },
+        "file": "kinds/usecases.ds",
+        "line": 12
+      },
+      "to": "SREQ-00001-1"
+    },
+    {
+      "from": "UC-00001-1",
+      "kind": "satisfies",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 30,
+          "line": 13
+        },
+        "file": "kinds/usecases.ds",
+        "line": 13
+      },
+      "to": "SREQ-00002-1"
+    },
+    {
+      "from": "UC-00002-1",
+      "kind": "uses",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 24
+        },
+        "file": "kinds/usecases.ds",
+        "line": 20
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "UC-00002-1",
+      "kind": "inherits",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 24
+        },
+        "file": "kinds/usecases.ds",
+        "line": 20
+      },
+      "to": "UC-00001-1"
+    },
+    {
+      "from": "UC-00002-1",
+      "kind": "satisfies",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 30,
+          "line": 23
+        },
+        "file": "kinds/usecases.ds",
+        "line": 23
+      },
+      "to": "SREQ-00003-1"
+    },
+    {
+      "from": "VER-00001-1",
+      "kind": "verifies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 6
+        },
+        "file": "kinds/verifications.ds",
+        "line": 6
+      },
+      "to": "REQ-00001-1"
+    },
+    {
+      "from": "VER-00002-1",
+      "kind": "verifies",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 17
+        },
+        "file": "kinds/verifications.ds",
+        "line": 17
+      },
+      "to": "REQ-00002-1"
+    },
+    {
+      "from": "hola@app::App::run::sequence",
+      "kind": "couples-structural",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 25
+        },
+        "file": "kinds/app/App.ds",
+        "line": 20
+      },
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@app::App::run::sequence::m0",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 21
+        },
+        "file": "kinds/app/App.ds",
+        "line": 21
+      },
+      "to": "hola@core::Greeter::valid"
+    },
+    {
+      "from": "hola@app::App::run::sequence::m1",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 22
+        },
+        "file": "kinds/app/App.ds",
+        "line": 22
+      },
+      "to": "hola@core::Greeter::greet"
+    },
+    {
+      "from": "hola@app::App::run::sequence::m1",
+      "kind": "expands-to",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 22
+        },
+        "file": "kinds/app/App.ds",
+        "line": 22
+      },
+      "to": "hola@core::Greeter::greet::sequence"
+    },
+    {
+      "from": "hola@app::App::run::sequence::m2",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 25,
+          "line": 23
+        },
+        "file": "kinds/app/App.ds",
+        "line": 23
+      },
+      "to": "hola@app::App::print"
+    },
+    {
+      "from": "hola@app::App::run::sequence/empty-name",
+      "kind": "couples-structural",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 31
+        },
+        "file": "kinds/app/App.ds",
+        "line": 27
+      },
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@app::App::run::sequence/empty-name::m0",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 28
+        },
+        "file": "kinds/app/App.ds",
+        "line": 28
+      },
+      "to": "hola@core::Greeter::valid"
+    },
+    {
+      "from": "hola@app::App::run::sequence/empty-name::m1",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 22,
+          "line": 29
+        },
+        "file": "kinds/app/App.ds",
+        "line": 29
+      },
+      "to": "hola@app::App::fail"
+    },
+    {
+      "from": "hola@app::main::sequence::m0",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 11
+        },
+        "file": "kinds/app/main.ds",
+        "line": 11
+      },
+      "to": "hola@app::App::run"
+    },
+    {
+      "from": "hola@app::main::sequence::m0",
+      "kind": "expands-to",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 31,
+          "line": 11
+        },
+        "file": "kinds/app/main.ds",
+        "line": 11
+      },
+      "to": "hola@app::App::run::sequence"
+    },
+    {
+      "from": "hola@app::main::sequence/empty-name::m0",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 17
+        },
+        "file": "kinds/app/main.ds",
+        "line": 17
+      },
+      "to": "hola@app::App::run"
+    },
+    {
+      "from": "hola@app::main::sequence/empty-name::m0",
+      "kind": "expands-to",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 44,
+          "line": 17
+        },
+        "file": "kinds/app/main.ds",
+        "line": 17
+      },
+      "to": "hola@app::App::run::sequence/empty-name"
+    },
+    {
+      "from": "hola@core::Greeter::greet::sequence::m0",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 30,
+          "line": 19
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 19
+      },
+      "to": "hola@core::Greeter::format"
+    },
+    {
+      "from": "hola@core::Greeter::greet::sequence::m1",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 37,
+          "line": 20
+        },
+        "file": "kinds/core/Greeter.ds",
+        "line": 20
+      },
+      "to": "hola@core::Style::apply"
+    },
+    {
+      "from": "hola@shell::greet::sequence",
+      "kind": "couples-transient",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 23
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 21
+      },
+      "to": "hola@app::main"
+    },
+    {
+      "from": "hola@shell::greet::sequence::m0",
+      "kind": "calls",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 31,
+          "line": 22
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 22
+      },
+      "to": "hola@app::main"
+    },
+    {
+      "from": "hola@shell::greet::sequence::m0",
+      "kind": "expands-to",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 31,
+          "line": 22
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 22
+      },
+      "to": "hola@app::main::sequence"
+    },
+    {
+      "from": "hola@shell::greet::sequence/empty-name",
+      "kind": "couples-transient",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 27
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 25
+      },
+      "to": "hola@app::main"
+    },
+    {
+      "from": "hola@shell::greet::sequence/empty-name::m0",
+      "kind": "calls",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 44,
+          "line": 26
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 26
+      },
+      "to": "hola@app::main"
+    },
+    {
+      "from": "hola@shell::greet::sequence/empty-name::m0",
+      "kind": "expands-to",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 44,
+          "line": 26
+        },
+        "file": "kinds/interfaces/shell.ds",
+        "line": 26
+      },
+      "to": "hola@app::main::sequence/empty-name"
+    },
+    {
+      "from": "hola@web::greet::sequence",
+      "kind": "couples-transient",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 49
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 46
+      },
+      "to": "hola@server::Server"
+    },
+    {
+      "from": "hola@web::greet::sequence::m0",
+      "kind": "calls",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 38,
+          "line": 48
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 48
+      },
+      "to": "hola@server::Server::greet"
+    },
+    {
+      "from": "hola@web::greet::sequence::m0",
+      "kind": "expands-to",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 38,
+          "line": 48
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 48
+      },
+      "to": "hola@server::Server::greet::sequence"
+    },
+    {
+      "from": "hola@web::greet::sequence/empty-name",
+      "kind": "couples-transient",
+      "location": {
+        "column": 3,
+        "end": {
+          "column": 4,
+          "line": 54
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 51
+      },
+      "to": "hola@server::Server"
+    },
+    {
+      "from": "hola@web::greet::sequence/empty-name::m0",
+      "kind": "calls",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 50,
+          "line": 53
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 53
+      },
+      "to": "hola@server::Server::greet"
+    },
+    {
+      "from": "hola@web::greet::sequence/empty-name::m0",
+      "kind": "expands-to",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 50,
+          "line": 53
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 53
+      },
+      "to": "hola@server::Server::greet::sequence/empty-name"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence",
+      "kind": "couples-structural",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 28
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 25
+      },
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence::m0",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 26
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 26
+      },
+      "to": "hola@core::Greeter::valid"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence::m1",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 27
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 27
+      },
+      "to": "hola@core::Greeter::greet"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence::m1",
+      "kind": "expands-to",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 46,
+          "line": 27
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 27
+      },
+      "to": "hola@core::Greeter::greet::sequence"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence/empty-name",
+      "kind": "couples-structural",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 6,
+          "line": 33
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 30
+      },
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence/empty-name::m0",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 40,
+          "line": 31
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 31
+      },
+      "to": "hola@core::Greeter::valid"
+    },
+    {
+      "from": "hola@server::Server::greet::sequence/empty-name::m1",
+      "kind": "calls",
+      "location": {
+        "column": 7,
+        "end": {
+          "column": 24,
+          "line": 32
+        },
+        "file": "kinds/server/Server.ds",
+        "line": 32
+      },
+      "to": "hola@server::Server::reject"
+    },
+    {
+      "from": "hola@web::state",
+      "kind": "on",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 28,
+          "line": 38
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 38
+      },
+      "to": "hola@web::greet"
+    },
+    {
+      "from": "hola@web::state",
+      "kind": "on",
+      "location": {
+        "column": 5,
+        "end": {
+          "column": 39,
+          "line": 39
+        },
+        "file": "kinds/interfaces/web.ds",
+        "line": 39
+      },
+      "to": "hola@web::greet"
+    }
+  ],
+  "version": "<version>"
+}

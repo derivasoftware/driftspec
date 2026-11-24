@@ -1,0 +1,50 @@
+// A small synthetic workspace for the golden outputs (DS-395): two classes, one behaviour called
+// from two places, a branch with a scenario, and findings of both severities for the report.
+package p {
+  module m {
+    class Leaf {
+      + work(n: int) -> bool
+      + step() -> none
+    }
+    class A {
+      - leaf: Leaf
+      + run() -> none
+    }
+    class B {
+      - leaf: Leaf
+      - ghost: Missing
+      + run() -> none
+    }
+    sequence A::run {
+      self -> leaf.work(1) -> done
+    }
+    sequence B::run {
+      self -> leaf.work(2) -> done
+      self -> leaf.nothing()
+      self -> leaf.work(1, 2)
+    }
+    sequence Leaf::work {
+      self -> step()
+      alt [n > 1] as many {
+        self -> step()
+        return true
+      }
+      return false
+    }
+  }
+}
+
+diagram CL_Small {
+  kind: class
+  include: p@m::*
+}
+
+diagram SEQ_Run {
+  kind: sequence
+  include: p@m::A::run
+}
+
+diagram SEQ_Loose {
+  kind: sequence
+  include: p@m::Nobody::run
+}

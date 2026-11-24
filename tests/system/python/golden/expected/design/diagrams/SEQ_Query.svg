@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="pryrl173-root" viewBox="0 0 1890 1666" data-viewbox="0 0 1890 1666" width="1890" height="1666" style="max-width:100%;height:auto" class="pr-diagram pr-sequence" role="img">
+<title>SEQ_Query</title>
+<style>
+  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
+    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
+    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
+    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+  .pr-diagram text { fill: var(--pr-text); }
+  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
+  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
+  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
+  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
+  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
+  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
+  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
+  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
+  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-name { fill: var(--pr-name); }
+  .pr-diagram .pr-type { fill: var(--pr-type); }
+  .pr-diagram .pr-param { fill: var(--pr-param); }
+  .pr-diagram .pr-punct { fill: var(--pr-punct); }
+  .pr-diagram .pr-static { text-decoration: underline; }
+  .pr-diagram .pr-abstract-member { font-style: italic; }
+  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
+  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
+  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
+  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
+  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
+  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
+  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
+  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
+  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
+  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
+  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
+  .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+
+  .pr-diagram .pr-lifeline-line { stroke: var(--pr-stroke); stroke-dasharray: 4 4; }
+  .pr-diagram .pr-lifeline-head > rect { fill: var(--pr-head-class); stroke: var(--pr-stroke); }
+  .pr-diagram .pr-actor circle, .pr-diagram .pr-actor path { fill: none; stroke: var(--pr-text); stroke-width: 1.4; stroke-linecap: round; }
+  .pr-diagram .pr-msg { stroke: var(--pr-edge); fill: none; pointer-events: none; }
+  .pr-diagram .pr-msg-dashed { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-msg-label { fill: var(--pr-text); font-size: 11.5px; text-anchor: middle; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram .pr-msg-self .pr-msg-label { text-anchor: start; }
+  .pr-diagram { --pr-frame-alt: #4338ca; --pr-frame-loop: #047857; --pr-frame-opt: #b45309; --pr-frame-other: #334155; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; } }
+  [data-theme="dark"] .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; }
+  .pr-diagram .pr-frame { --pr-frame: var(--pr-frame-other); }
+  .pr-diagram .pr-frame-alt { --pr-frame: var(--pr-frame-alt); }
+  .pr-diagram .pr-frame-loop { --pr-frame: var(--pr-frame-loop); }
+  .pr-diagram .pr-frame-opt { --pr-frame: var(--pr-frame-opt); }
+  .pr-diagram .pr-frame > rect { fill: none; stroke: var(--pr-frame); stroke-width: 1.6px; }
+  .pr-diagram .pr-frame-tab { fill: var(--pr-frame); stroke: none; }
+  .pr-diagram .pr-frame-label { font-weight: 700; fill: var(--pr-box-fill); font-size: 11px; letter-spacing: .3px; }
+  .pr-diagram .pr-frame-cond { fill: var(--pr-text); font-size: 11px; }
+  .pr-diagram .pr-frame-divider { stroke: var(--pr-frame); stroke-dasharray: 5 4; stroke-width: 1.2px; }
+  .pr-diagram .pr-expandable { cursor: pointer; }
+  .pr-diagram .pr-toggle { fill: var(--pr-muted); font-size: 10px; }
+  .pr-diagram .pr-toggle-closed { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-open { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-closed { display: inline; }
+  .pr-diagram .pr-collapsed .pr-msg-label { font-weight: 700; }
+  .pr-diagram.pr-focusing .pr-row, .pr-diagram.pr-focusing .pr-lifeline, .pr-diagram.pr-focusing .pr-frame { opacity: var(--pr-dimmed, .25); transition: opacity .12s; }
+  .pr-diagram.pr-focusing .pr-focus { opacity: 1; }
+  .pr-diagram .pr-link:hover .pr-msg-label, .pr-diagram .pr-link:hover .pr-header { text-decoration: underline; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg-label { fill: var(--pr-added); font-weight: 700; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg-label { fill: var(--pr-removed); text-decoration: line-through; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg-label { fill: var(--pr-changed); font-weight: 700; }
+  .pr-diagram .pr-lifeline.pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-lifeline.pr-change-added .pr-header { fill: var(--pr-added); }
+</style>
+<defs>
+  <marker id="pryrl173-tri" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" orient="auto"><path d="M1,1 L13,6 L1,11 Z"/></marker>
+  <marker id="pryrl173-diamond-filled" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="pr-filled" d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pryrl173-diamond" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pryrl173-arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path class="pr-open" d="M1,1 L11,6 L1,11"/></marker>
+  <marker id="pryrl173-msg" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path class="pr-filled" d="M1,1 L11,6 L1,11 Z"/></marker>
+</defs>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f0" data-first="9" data-last="11" data-top="424" data-bottom="538" transform="translate(0,424)"><title>opt: question is diagrams</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is diagrams</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f1" data-first="12" data-last="14" data-top="552" data-bottom="666" transform="translate(0,552)"><title>opt: question is entities</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is entities</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f2" data-first="15" data-last="17" data-top="680" data-bottom="794" transform="translate(0,680)"><title>opt: question is relations</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is relations</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f3" data-first="18" data-last="20" data-top="808" data-bottom="922" transform="translate(0,808)"><title>opt: question is artefacts</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is artefacts</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f4" data-first="21" data-last="23" data-top="936" data-bottom="1050" transform="translate(0,936)"><title>opt: question is behaviours</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is behaviours</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f5" data-first="24" data-last="26" data-top="1064" data-bottom="1178" transform="translate(0,1064)"><title>opt: question is failures</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is failures</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f6" data-first="27" data-last="29" data-top="1192" data-bottom="1306" transform="translate(0,1192)"><title>opt: question is shows</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is shows</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@query::Query::ask::sequence::f7" data-first="30" data-last="32" data-top="1320" data-bottom="1434" transform="translate(0,1320)"><title>opt: question is findings</title><rect x="764" y="0" width="816" height="114" rx="3"/><path class="pr-frame-tab" d="M764,0 H801 V16 L795,22 H764 Z"/><text class="pr-frame-label" x="772" y="15">opt</text><text class="pr-frame-cond" x="811" y="15">question is findings</text></g>
+<g class="pr-lifeline pr-actor" data-id="caller"><line class="pr-lifeline-line" x1="64" y1="58" x2="64" y2="1656" data-y2="1656"/><g class="pr-lifeline-head"><circle cx="64" cy="26" r="5"/><path d="M64,31 V42 M56,35 H72 M64,42 L57,52 M64,42 L71,52"/><text class="pr-header" x="64" y="68" text-anchor="middle" font-size="11">caller</text></g></g>
+<g class="pr-lifeline" data-id="driftspec@ds@cli" data-ref-location="design/ds/cli.ds:6"><title>driftspec@ds@cli</title><line class="pr-lifeline-line" x1="552" y1="58" x2="552" y2="1656" data-y2="1656"/><a href="#driftspec@ds@cli" class="pr-link"><g class="pr-lifeline-head"><rect x="506" y="20" width="92" height="38" rx="4"/><text class="pr-header" x="552" y="44" text-anchor="middle">self: cli</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@app" data-ref-location="design/ds/app.ds:8"><title>driftspec@ds@app</title><line class="pr-lifeline-line" x1="808" y1="58" x2="808" y2="1656" data-y2="1656"/><a href="#driftspec@ds@app" class="pr-link"><g class="pr-lifeline-head"><rect x="786" y="20" width="44" height="38" rx="4"/><text class="pr-header" x="808" y="44" text-anchor="middle">app</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@query::Query|query" data-ref-location="design/ds/query.ds:225"><title>driftspec@ds@query::Query</title><line class="pr-lifeline-line" x1="1352" y1="58" x2="1352" y2="1656" data-y2="1656"/><a href="#driftspec@ds@query::Query" class="pr-link"><g class="pr-lifeline-head"><rect x="1294" y="20" width="116" height="38" rx="4"/><text class="pr-header" x="1352" y="44" text-anchor="middle">query: Query</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@query::Query" data-ref-location="design/ds/query.ds:225"><title>driftspec@ds@query::Query</title><line class="pr-lifeline-line" x1="1536" y1="58" x2="1536" y2="1656" data-y2="1656"/><a href="#driftspec@ds@query::Query" class="pr-link"><g class="pr-lifeline-head"><rect x="1506" y="20" width="60" height="38" rx="4"/><text class="pr-header" x="1536" y="44" text-anchor="middle">Query</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@format" data-ref-location="design/ds/format.ds:50"><title>driftspec@ds@format</title><line class="pr-lifeline-line" x1="1624" y1="58" x2="1624" y2="1656" data-y2="1656"/><a href="#driftspec@ds@format" class="pr-link"><g class="pr-lifeline-head"><rect x="1590" y="20" width="68" height="38" rx="4"/><text class="pr-header" x="1624" y="44" text-anchor="middle">format</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@format::AnswersText|chosen" data-ref-location="design/ds/format.ds:187"><title>driftspec@ds@format::AnswersText</title><line class="pr-lifeline-line" x1="1768" y1="58" x2="1768" y2="1656" data-y2="1656"/><a href="#driftspec@ds@format::AnswersText" class="pr-link"><g class="pr-lifeline-head"><rect x="1682" y="20" width="172" height="38" rx="4"/><text class="pr-header" x="1768" y="44" text-anchor="middle">chosen: AnswersText</text></g></a></g>
+<g class="pr-row pr-msg-group" data-row="0" data-y="74" data-h="30" data-from="caller" data-to="driftspec@ds@cli" data-ref-location="design/ds/cli.ds:41"><title>driftspec@ds@cli::query</title><path class="pr-edge-hit" d="M64,94 L550,94"/><path class="pr-msg" d="M64,94 L550,94" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="308" y="89">query(workspace: path, question: string, subject: string)</text></g>
+<g class="pr-row pr-msg-group" data-row="1" data-y="104" data-h="30" data-from="driftspec@ds@cli" data-to="driftspec@ds@app" data-ref-expands="driftspec@ds@app::main::sequence/query" data-ref-location="design/ds/cli.ds:93" data-ref-span="2-37"><title>driftspec@ds@app::app::main
+expanded below: main/query</title><path class="pr-edge-hit" d="M552,124 L806,124"/><path class="pr-msg" d="M552,124 L806,124" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="680" y="119">app::main(workspace) / query</text><text class="pr-toggle pr-toggle-open" x="800" y="119">▾ fold</text><text class="pr-toggle pr-toggle-closed" x="800" y="119">▸ unfold</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="2" data-y="134" data-h="42" data-from="driftspec@ds@app" data-to="driftspec@ds@app" data-ref-expands="driftspec@ds@app::loadWorkspace::sequence" data-ref-location="design/ds/app.ds:179" data-ref-span="3-6"><title>driftspec@ds@app::loadWorkspace
+expanded below: loadWorkspace</title><path class="pr-edge-hit" d="M808,154 H840 V170 H811"/><path class="pr-msg" d="M808,154 H840 V170 H811" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="846" y="166">loadWorkspace(metamodel, argv, answers, diagram, model)</text><text class="pr-toggle pr-toggle-open" x="1292" y="166">▾ fold</text><text class="pr-toggle pr-toggle-closed" x="1292" y="166">▸ unfold</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="3" data-y="176" data-h="42" data-from="driftspec@ds@app" data-to="driftspec@ds@app" data-ref-location="design/ds/app.ds:46"><title>driftspec@ds@app::isDirectory</title><path class="pr-edge-hit" d="M808,196 H840 V212 H811"/><path class="pr-msg" d="M808,196 H840 V212 H811" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="846" y="208">isDirectory(dir)</text></g>
+<g class="pr-row pr-msg-group pr-msg-self pr-msg-return" data-row="4" data-y="218" data-h="42" data-from="driftspec@ds@app" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M808,238 H840 V254 H811"/><path class="pr-msg pr-msg-dashed" d="M808,238 H840 V254 H811" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="846" y="250">found</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="5" data-y="260" data-h="42" data-from="driftspec@ds@app" data-to="driftspec@ds@app" data-ref-expands="driftspec@ds@app::load::sequence" data-ref-location="design/ds/app.ds:50"><a href="#driftspec@ds@app::load::sequence" class="pr-link"><title>driftspec@ds@app::load
+expands to: load</title><path class="pr-edge-hit" d="M808,280 H840 V296 H811"/><path class="pr-msg" d="M808,280 H840 V296 H811" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="846" y="292">load(metamodel, dir, output, diagram)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-self pr-msg-return" data-row="6" data-y="302" data-h="42" data-from="driftspec@ds@app" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M808,322 H840 V338 H811"/><path class="pr-msg pr-msg-dashed" d="M808,322 H840 V338 H811" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="846" y="334">loaded</text></g>
+<g class="pr-row pr-msg-group pr-msg-self pr-msg-return" data-row="7" data-y="344" data-h="42" data-from="driftspec@ds@app" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M808,364 H840 V380 H811"/><path class="pr-msg pr-msg-dashed" d="M808,364 H840 V380 H811" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="846" y="376">found</text></g>
+<g class="pr-row pr-msg-group" data-row="8" data-y="386" data-h="30" data-from="driftspec@ds@app" data-to="driftspec@ds@query::Query|query" data-ref-expands="driftspec@ds@query::Query::ask::sequence" data-ref-location="design/ds/app.ds:180" data-ref-span="9-32"><title>driftspec@ds@query::Query::ask
+expanded below: Query::ask</title><path class="pr-edge-hit" d="M808,406 L1350,406"/><path class="pr-msg" d="M808,406 L1350,406" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1080" y="401">ask(question, subject)</text><text class="pr-toggle pr-toggle-open" x="1176" y="401">▾ fold</text><text class="pr-toggle pr-toggle-closed" x="1176" y="401">▸ unfold</text></g>
+<g class="pr-row pr-msg-group" data-row="9" data-y="416" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-expands="driftspec@ds@query::Query::diagrams::sequence" data-ref-location="design/ds/query.ds:264"><a href="#driftspec@ds@query::Query::diagrams::sequence" class="pr-link"><title>driftspec@ds@query::Query::diagrams
+expands to: Query::diagrams</title><path class="pr-edge-hit" d="M1352,466 L1534,466"/><path class="pr-msg" d="M1352,466 L1534,466" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="461">diagrams()</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="10" data-y="476" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,496 L1354,496"/><path class="pr-msg pr-msg-dashed" d="M1536,496 L1354,496" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="491">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="11" data-y="506" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,526 L810,526"/><path class="pr-msg pr-msg-dashed" d="M1352,526 L810,526" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="521">return answers</text></g>
+<g class="pr-row pr-msg-group" data-row="12" data-y="544" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-expands="driftspec@ds@query::Query::entities::sequence" data-ref-location="design/ds/query.ds:268"><a href="#driftspec@ds@query::Query::entities::sequence" class="pr-link"><title>driftspec@ds@query::Query::entities
+expands to: Query::entities</title><path class="pr-edge-hit" d="M1352,594 L1534,594"/><path class="pr-msg" d="M1352,594 L1534,594" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="589">entities(subject)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="13" data-y="604" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,624 L1354,624"/><path class="pr-msg pr-msg-dashed" d="M1536,624 L1354,624" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="619">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="14" data-y="634" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,654 L810,654"/><path class="pr-msg pr-msg-dashed" d="M1352,654 L810,654" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="649">return answers</text></g>
+<g class="pr-row pr-msg-group" data-row="15" data-y="672" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-expands="driftspec@ds@query::Query::relations::sequence" data-ref-location="design/ds/query.ds:272"><a href="#driftspec@ds@query::Query::relations::sequence" class="pr-link"><title>driftspec@ds@query::Query::relations
+expands to: Query::relations</title><path class="pr-edge-hit" d="M1352,722 L1534,722"/><path class="pr-msg" d="M1352,722 L1534,722" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="717">relations(subject)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="16" data-y="732" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,752 L1354,752"/><path class="pr-msg pr-msg-dashed" d="M1536,752 L1354,752" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="747">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="17" data-y="762" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,782 L810,782"/><path class="pr-msg pr-msg-dashed" d="M1352,782 L810,782" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="777">return answers</text></g>
+<g class="pr-row pr-msg-group" data-row="18" data-y="800" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-expands="driftspec@ds@query::Query::artefacts::sequence" data-ref-location="design/ds/query.ds:276"><a href="#driftspec@ds@query::Query::artefacts::sequence" class="pr-link"><title>driftspec@ds@query::Query::artefacts
+expands to: Query::artefacts</title><path class="pr-edge-hit" d="M1352,850 L1534,850"/><path class="pr-msg" d="M1352,850 L1534,850" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="845">artefacts(subject)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="19" data-y="860" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,880 L1354,880"/><path class="pr-msg pr-msg-dashed" d="M1536,880 L1354,880" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="875">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="20" data-y="890" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,910 L810,910"/><path class="pr-msg pr-msg-dashed" d="M1352,910 L810,910" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="905">return answers</text></g>
+<g class="pr-row pr-msg-group" data-row="21" data-y="928" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-expands="driftspec@ds@query::Query::behaviours::sequence" data-ref-location="design/ds/query.ds:280"><a href="#driftspec@ds@query::Query::behaviours::sequence" class="pr-link"><title>driftspec@ds@query::Query::behaviours
+expands to: Query::behaviours</title><path class="pr-edge-hit" d="M1352,978 L1534,978"/><path class="pr-msg" d="M1352,978 L1534,978" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="973">behaviours(subject)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="22" data-y="988" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,1008 L1354,1008"/><path class="pr-msg pr-msg-dashed" d="M1536,1008 L1354,1008" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="1003">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="23" data-y="1018" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,1038 L810,1038"/><path class="pr-msg pr-msg-dashed" d="M1352,1038 L810,1038" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="1033">return answers</text></g>
+<g class="pr-row pr-msg-group" data-row="24" data-y="1056" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-location="design/ds/query.ds:284"><title>driftspec@ds@query::Query::failures</title><path class="pr-edge-hit" d="M1352,1106 L1534,1106"/><path class="pr-msg" d="M1352,1106 L1534,1106" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="1101">failures(subject)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="25" data-y="1116" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,1136 L1354,1136"/><path class="pr-msg pr-msg-dashed" d="M1536,1136 L1354,1136" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="1131">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="26" data-y="1146" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,1166 L810,1166"/><path class="pr-msg pr-msg-dashed" d="M1352,1166 L810,1166" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="1161">return answers</text></g>
+<g class="pr-row pr-msg-group" data-row="27" data-y="1184" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-expands="driftspec@ds@query::Query::shows::sequence" data-ref-location="design/ds/query.ds:288"><a href="#driftspec@ds@query::Query::shows::sequence" class="pr-link"><title>driftspec@ds@query::Query::shows
+expands to: Query::shows</title><path class="pr-edge-hit" d="M1352,1234 L1534,1234"/><path class="pr-msg" d="M1352,1234 L1534,1234" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="1229">shows(subject)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="28" data-y="1244" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,1264 L1354,1264"/><path class="pr-msg pr-msg-dashed" d="M1536,1264 L1354,1264" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="1259">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="29" data-y="1274" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,1294 L810,1294"/><path class="pr-msg pr-msg-dashed" d="M1352,1294 L810,1294" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="1289">return answers</text></g>
+<g class="pr-row pr-msg-group" data-row="30" data-y="1312" data-h="60" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@query::Query" data-ref-expands="driftspec@ds@query::Query::findings::sequence" data-ref-location="design/ds/query.ds:292"><a href="#driftspec@ds@query::Query::findings::sequence" class="pr-link"><title>driftspec@ds@query::Query::findings
+expands to: Query::findings</title><path class="pr-edge-hit" d="M1352,1362 L1534,1362"/><path class="pr-msg" d="M1352,1362 L1534,1362" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1444" y="1357">findings(subject)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="31" data-y="1372" data-h="30" data-from="driftspec@ds@query::Query" data-to="driftspec@ds@query::Query|query"><path class="pr-edge-hit" d="M1536,1392 L1354,1392"/><path class="pr-msg pr-msg-dashed" d="M1536,1392 L1354,1392" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1444" y="1387">answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="32" data-y="1402" data-h="38" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,1422 L810,1422"/><path class="pr-msg pr-msg-dashed" d="M1352,1422 L810,1422" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="1417">return answers</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="33" data-y="1440" data-h="30" data-from="driftspec@ds@query::Query|query" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1352,1460 L810,1460"/><path class="pr-msg pr-msg-dashed" d="M1352,1460 L810,1460" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1080" y="1455">answers</text></g>
+<g class="pr-row pr-msg-group" data-row="34" data-y="1470" data-h="30" data-from="driftspec@ds@app" data-to="driftspec@ds@format" data-ref-location="design/ds/app.ds:181"><title>driftspec@ds@format::format::answerFormats</title><path class="pr-edge-hit" d="M808,1490 L1622,1490"/><path class="pr-msg" d="M808,1490 L1622,1490" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1216" y="1485">format::answerFormats()</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="35" data-y="1500" data-h="30" data-from="driftspec@ds@format" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1624,1520 L810,1520"/><path class="pr-msg pr-msg-dashed" d="M1624,1520 L810,1520" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1216" y="1515">formats</text></g>
+<g class="pr-row pr-msg-group" data-row="36" data-y="1530" data-h="30" data-from="driftspec@ds@app" data-to="driftspec@ds@format::AnswersText|chosen" data-ref-location="design/ds/app.ds:182"><title>driftspec@ds@format::AnswersText::write</title><path class="pr-edge-hit" d="M808,1550 L1766,1550"/><path class="pr-msg" d="M808,1550 L1766,1550" marker-end="url(#pryrl173-msg)"/><text class="pr-msg-label" x="1288" y="1545">write(answers, options)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="37" data-y="1560" data-h="30" data-from="driftspec@ds@format::AnswersText|chosen" data-to="driftspec@ds@app"><path class="pr-edge-hit" d="M1768,1580 L810,1580"/><path class="pr-msg pr-msg-dashed" d="M1768,1580 L810,1580" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="1288" y="1575">text</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="38" data-y="1590" data-h="30" data-from="driftspec@ds@app" data-to="driftspec@ds@cli"><path class="pr-edge-hit" d="M808,1610 L554,1610"/><path class="pr-msg pr-msg-dashed" d="M808,1610 L554,1610" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="680" y="1605">code</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="39" data-y="1620" data-h="30" data-from="driftspec@ds@cli" data-to="caller"><path class="pr-edge-hit" d="M552,1640 L66,1640"/><path class="pr-msg pr-msg-dashed" d="M552,1640 L66,1640" marker-end="url(#pryrl173-arrow)"/><text class="pr-msg-label" x="308" y="1635">none</text></g>
+<script><![CDATA[
+(function () {
+  var root = document.getElementById('pryrl173-root');
+  if (!root || root.dataset.wired) return;
+  root.dataset.wired = '1';
+  var rows = Array.prototype.slice.call(root.querySelectorAll('.pr-row')).map(function (el) {
+    return { el: el, row: +el.dataset.row, y: +el.dataset.y, h: +el.dataset.h, span: el.dataset.refSpan };
+  }).sort(function (a, b) { return a.row - b.row; });
+  var frames = Array.prototype.slice.call(root.querySelectorAll('.pr-frame'));
+  var lines = Array.prototype.slice.call(root.querySelectorAll('.pr-lifeline-line'));
+  var collapsed = {};
+  function relayout() {
+    var hidden = {};
+    rows.forEach(function (r) {
+      if (!collapsed[r.row] || !r.span) return;
+      var ab = r.span.split('-').map(Number);
+      rows.forEach(function (q) { if (q.row >= ab[0] && q.row <= ab[1]) hidden[q.row] = true; });
+    });
+    var shift = 0, shiftOf = {}, endOf = {};
+    rows.forEach(function (r) {
+      shiftOf[r.row] = shift;
+      if (hidden[r.row]) { r.el.style.display = 'none'; shift += r.h; return; }
+      r.el.style.display = '';
+      r.el.setAttribute('transform', 'translate(0,' + (-shift) + ')');
+      r.el.classList.toggle('pr-collapsed', !!collapsed[r.row]);
+      endOf[r.row] = r.y + r.h - shift;
+    });
+    frames.forEach(function (f) {
+      var first = +f.dataset.first, last = +f.dataset.last, top = +f.dataset.top, bottom = +f.dataset.bottom;
+      var lastVisible = -1;
+      for (var q = last; q >= first; q--) { if (!hidden[q] && endOf[q] !== undefined) { lastVisible = q; break; } }
+      if (hidden[first] || lastVisible < 0) { f.style.display = 'none'; return; }
+      f.style.display = '';
+      var newTop = top - shiftOf[first];
+      var newBottom = lastVisible === last ? bottom - shiftOf[last] : endOf[lastVisible] - 2;
+      f.setAttribute('transform', 'translate(0,' + newTop + ')');
+      f.querySelector('rect').setAttribute('height', Math.max(24, newBottom - newTop));
+      Array.prototype.forEach.call(f.querySelectorAll('[data-divider-row]'), function (d) {
+        var row = +d.dataset.dividerRow, dy = +d.dataset.y - shiftOf[row] - newTop;
+        if (d.tagName === 'line') { d.setAttribute('y1', dy); d.setAttribute('y2', dy); } else { d.setAttribute('y', dy + 4); }
+        d.style.display = hidden[row] ? 'none' : '';
+      });
+    });
+    lines.forEach(function (l) { l.setAttribute('y2', +l.dataset.y2 - shift); });
+    var vb = root.dataset.viewbox.split(' ').map(Number);
+    vb[3] -= shift;
+    root.setAttribute('viewBox', vb.join(' '));
+    root.setAttribute('height', vb[3]);
+  }
+  rows.forEach(function (r) {
+    if (!r.span) return;
+    r.el.classList.add('pr-expandable');
+    r.el.addEventListener('click', function (e) { e.preventDefault(); collapsed[r.row] = !collapsed[r.row]; relayout(); });
+  });
+  function focus(ids, rowEl) {
+    root.classList.add('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (el) { el.classList.toggle('pr-focus', !!ids[el.dataset.id]); });
+    rows.forEach(function (r) { r.el.classList.toggle('pr-focus', rowEl ? r.el === rowEl : !!(ids[r.el.dataset.from] || ids[r.el.dataset.to])); });
+  }
+  function unfocus() {
+    root.classList.remove('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-focus'), function (el) { el.classList.remove('pr-focus'); });
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (l) {
+    l.addEventListener('mouseenter', function () { var ids = {}; ids[l.dataset.id] = true; focus(ids); });
+    l.addEventListener('mouseleave', unfocus);
+  });
+  rows.forEach(function (r) {
+    r.el.addEventListener('mouseenter', function () { var ids = {}; ids[r.el.dataset.from] = true; ids[r.el.dataset.to] = true; focus(ids, r.el); });
+    r.el.addEventListener('mouseleave', unfocus);
+  });
+})();
+]]></script>
+</svg>

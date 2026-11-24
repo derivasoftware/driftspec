@@ -1,0 +1,25 @@
+// What the system is for, as contracts its interfaces realise (DS-77). A use case says what goes
+// in, what comes out and how it may end; it names no interface: an interface operation realises
+// it (`operation greet(...) : UC-00001-1`), whoever drives that interface. How each one does it
+// is in its sequences, replayed by the viewer, never written here.
+
+package hola {
+
+  // generic: greeting by name, wherever it is asked from
+  usecase UC-00001-1 greet(name: string) -> core::Greeting {
+    title: Greet a person by name
+    status: draft
+    @requirement SREQ-00001-1
+    @requirement SREQ-00002-1
+
+    outcome default: the greeting of the name
+    outcome empty-name -> none: no name was given; nobody is greeted and the reason is said
+  }
+
+  // specific: on a page, a failed greeting keeps what was typed
+  usecase UC-00002-1 greet(name: string) -> core::Greeting : UC-00001-1 {
+    title: Greet a person by name from a page, keeping what was typed when it fails
+    status: draft
+    @requirement SREQ-00003-1
+  }
+}

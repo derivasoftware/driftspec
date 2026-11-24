@@ -1,0 +1,36 @@
+
+ ┌─ ds ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │                                                                                                                         │
+ │ ┌─ axis ──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐ │
+ │ │                                                                                                                     │ │
+ │ │ ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮ │ │
+ │ │ │ C Cut                                                                                                           │ │ │
+ │ │ ├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤ │ │
+ │ │ │ - written_: bool                                                                                                │ │ │
+ │ │ │ - closed_: std::set<std::string>                                                                                │ │ │
+ │ │ │ - unfold_: std::vector<std::string>                                                                             │ │ │
+ │ │ │ - fold_: std::vector<std::string>                                                                               │ │ │
+ │ │ │ - unfolds_: bool                                                                                                │ │ │
+ │ │ │ - folds_: bool                                                                                                  │ │ │
+ │ │ │ - deep_: bool                                                                                                   │ │ │
+ │ │ ├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤ │ │
+ │ │ │ + Cut(model: model::Model, metamodel: model::Metamodel, diagram: model::Entity)                                 │ │ │
+ │ │ │ + written() -> bool                                                                                             │ │ │
+ │ │ │ + closed(box: std::string) -> bool                                                                              │ │ │
+ │ │ │ + standsFor(id: std::string) -> std::string                                                                     │ │ │
+ │ │ │ + follows(operation: std::string, left: int) -> bool                                                            │ │ │
+ │ │ │ + static standsAmong(id: std::string, boxes: std::set<std::string>) -> std::string                              │ │ │
+ │ │ │ + static bondOf(relation: std::string) -> std::string                                                           │ │ │
+ │ │ │ - static outerOf(id: std::string) -> std::string                                                                │ │ │
+ │ │ │ - static pathTo(id: std::string) -> std::vector<std::string>                                                    │ │ │
+ │ │ │ - static closes(e: model::Entity) -> bool                                                                       │ │ │
+ │ │ │ - static names(metamodel: model::Metamodel, pattern: std::string, box: model::Entity) -> bool                   │ │ │
+ │ │ │ - static namedBy(metamodel: model::Metamodel, patterns: std::vector<std::string>, box: model::Entity) -> bool   │ │ │
+ │ │ │ - static reaches(patterns: std::vector<std::string>, operation: std::string) -> bool                            │ │ │
+ │ │ ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯ │ │
+ │ │                                                                                                                     │ │
+ │ └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+ │                                                                                                                         │
+ └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+

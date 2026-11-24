@@ -388,3 +388,19 @@ else()
   # noticed
   add_test(NAME viewer_tours COMMAND ${CMAKE_COMMAND} -E false)
 endif()
+
+# ---- every format of every document, pinned as golden files (DS-395): the ds
+# built here against tests/system/python/golden/expected ----
+find_program(DS_PYTHON3 python3)
+if(DS_PYTHON3)
+  add_test(
+    NAME golden
+    COMMAND ${DS_PYTHON3} -m pytest -q -p no:cacheprovider
+            ${CMAKE_SOURCE_DIR}/tests/system/python/test_golden.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  set_tests_properties(golden PROPERTIES ENVIRONMENT "DS=$<TARGET_FILE:ds>")
+else()
+  # no python: the test fails rather than vanish, so a runner without it is
+  # noticed
+  add_test(NAME golden COMMAND ${CMAKE_COMMAND} -E false)
+endif()

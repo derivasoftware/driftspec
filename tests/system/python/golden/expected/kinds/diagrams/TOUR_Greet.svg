@@ -1,0 +1,311 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 870 442" width="870" height="442" class="pr-parts"><svg x="0" y="0" data-part="boxes" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 184 442" width="184" height="442" style="max-width:100%;height:auto" class="pr-diagram" role="img">
+<title>TOUR_Greet boxes</title>
+<style>
+  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
+    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
+    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
+    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+  .pr-diagram text { fill: var(--pr-text); }
+  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
+  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
+  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
+  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
+  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
+  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
+  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
+  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
+  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-name { fill: var(--pr-name); }
+  .pr-diagram .pr-type { fill: var(--pr-type); }
+  .pr-diagram .pr-param { fill: var(--pr-param); }
+  .pr-diagram .pr-punct { fill: var(--pr-punct); }
+  .pr-diagram .pr-static { text-decoration: underline; }
+  .pr-diagram .pr-abstract-member { font-style: italic; }
+  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
+  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
+  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
+  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
+  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
+  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
+  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
+  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
+  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
+  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
+  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
+  .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+</style>
+<defs>
+  <marker id="pr1axhvho-tri" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" orient="auto"><path d="M1,1 L13,6 L1,11 Z"/></marker>
+  <marker id="pr1axhvho-diamond-filled" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="pr-filled" d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pr1axhvho-diamond" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pr1axhvho-arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path class="pr-open" d="M1,1 L11,6 L1,11"/></marker>
+</defs>
+<g class="pr-edge-group" data-from="hola@app" data-to="hola@core" data-ref-bond="structural"><path class="pr-edge-hit" d="M56,176 L56,190 L36,190 L36,232"/><path class="pr-edge pr-edge-association" d="M56,176 L56,190 L36,190 L36,232" marker-end="url(#pr1axhvho-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@app" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M88,176 L88,204 L72,204 L72,232"/><path class="pr-edge pr-edge-dependency" d="M88,176 L88,204 L72,204 L72,232" marker-end="url(#pr1axhvho-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@shell" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M131,38 L131,75 L164,75 L164,218 L108,218 L108,232"/><path class="pr-edge pr-edge-dependency" d="M131,38 L131,75 L164,75 L164,218 L108,218 L108,232" marker-end="url(#pr1axhvho-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@shell" data-to="hola@app" data-ref-bond="uses"><path class="pr-edge-hit" d="M104,38 L104,56 L72,56 L72,94"/><path class="pr-edge pr-edge-dependency" d="M104,38 L104,56 L72,56 L72,94" marker-end="url(#pr1axhvho-arrow)"/></g>
+<g id="pr1axhvho-hola@app" data-id="hola@app" class="pr-box pr-classifier-namespace"><rect x="24" y="94" width="96" height="82" rx="4"/><path class="pr-head" d="M28,94 H116 A4,4 0 0 1 120,98 V126 H24 V98 A4,4 0 0 1 28,94 Z"/><circle class="pr-badge" cx="41" cy="112" r="7"/><text class="pr-badge-text" x="41" y="115.5" text-anchor="middle">N</text><text class="pr-header" x="54" y="116">app</text><line class="pr-sep" x1="24" y1="126" x2="120" y2="126"/><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="40" cy="134" r="6"/><text class="pr-badge-text" x="40" y="137" text-anchor="middle">C</text></g><text x="54" y="138">Console</text><line class="pr-sep" x1="24" y1="148" x2="120" y2="148"/><g class="pr-offered pr-classifier-function"><circle class="pr-badge" cx="40" cy="156" r="6"/><text class="pr-badge-text" x="40" y="159" text-anchor="middle">f</text></g><text x="54" y="160">main</text></g>
+<g id="pr1axhvho-hola@core" data-id="hola@core" class="pr-box pr-classifier-namespace"><rect x="0" y="232" width="144" height="190" rx="4"/><path class="pr-head" d="M4,232 H140 A4,4 0 0 1 144,236 V264 H0 V236 A4,4 0 0 1 4,232 Z"/><circle class="pr-badge" cx="17" cy="250" r="7"/><text class="pr-badge-text" x="17" y="253.5" text-anchor="middle">N</text><text class="pr-header" x="30" y="254">core</text><line class="pr-sep" x1="0" y1="264" x2="144" y2="264"/><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="16" cy="272" r="6"/><text class="pr-badge-text" x="16" y="275" text-anchor="middle">C</text></g><text x="30" y="276">Casual</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="16" cy="290" r="6"/><text class="pr-badge-text" x="16" y="293" text-anchor="middle">C</text></g><text x="30" y="294">Channel</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="16" cy="308" r="6"/><text class="pr-badge-text" x="16" y="311" text-anchor="middle">C</text></g><text x="30" y="312">Formal</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="16" cy="326" r="6"/><text class="pr-badge-text" x="16" y="329" text-anchor="middle">C</text></g><text x="30" y="330">Greeter</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="16" cy="344" r="6"/><text class="pr-badge-text" x="16" y="347" text-anchor="middle">C</text></g><text x="30" y="348">GreetingCache</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="16" cy="362" r="6"/><text class="pr-badge-text" x="16" y="365" text-anchor="middle">C</text></g><text x="30" y="366">Style</text><line class="pr-sep" x1="0" y1="376" x2="144" y2="376"/><g class="pr-offered pr-classifier-dataclass"><circle class="pr-badge" cx="16" cy="384" r="6"/><text class="pr-badge-text" x="16" y="387" text-anchor="middle">D</text></g><text x="30" y="388">Greeting</text><g class="pr-offered pr-classifier-dataclass"><circle class="pr-badge" cx="16" cy="402" r="6"/><text class="pr-badge-text" x="16" y="405" text-anchor="middle">D</text></g><text x="30" y="406">Locale</text></g>
+<g id="pr1axhvho-hola@shell" data-id="hola@shell" class="pr-box pr-classifier-interface pr-abstract"><rect x="78" y="0" width="80" height="38" rx="4"/><path class="pr-head" d="M82,0 H154 A4,4 0 0 1 158,4 V38 H78 V4 A4,4 0 0 1 82,0 Z"/><circle class="pr-badge" cx="95" cy="18" r="7"/><text class="pr-badge-text" x="95" y="21.5" text-anchor="middle">I</text><text class="pr-header" x="108" y="22">shell</text></g>
+</svg>
+<svg x="216" y="0" data-part="sequence" xmlns="http://www.w3.org/2000/svg" id="prvrdi3y-root" viewBox="0 0 654 330" data-viewbox="0 0 654 330" width="654" height="330" style="max-width:100%;height:auto" class="pr-diagram pr-sequence" role="img">
+<title>TOUR_Greet sequence</title>
+<style>
+  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
+    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
+    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
+    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+  .pr-diagram text { fill: var(--pr-text); }
+  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
+  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
+  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
+  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
+  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
+  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
+  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
+  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
+  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-name { fill: var(--pr-name); }
+  .pr-diagram .pr-type { fill: var(--pr-type); }
+  .pr-diagram .pr-param { fill: var(--pr-param); }
+  .pr-diagram .pr-punct { fill: var(--pr-punct); }
+  .pr-diagram .pr-static { text-decoration: underline; }
+  .pr-diagram .pr-abstract-member { font-style: italic; }
+  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
+  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
+  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
+  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
+  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
+  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
+  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
+  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
+  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
+  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
+  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
+  .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+
+  .pr-diagram .pr-lifeline-line { stroke: var(--pr-stroke); stroke-dasharray: 4 4; }
+  .pr-diagram .pr-lifeline-head > rect { fill: var(--pr-head-class); stroke: var(--pr-stroke); }
+  .pr-diagram .pr-actor circle, .pr-diagram .pr-actor path { fill: none; stroke: var(--pr-text); stroke-width: 1.4; stroke-linecap: round; }
+  .pr-diagram .pr-msg { stroke: var(--pr-edge); fill: none; pointer-events: none; }
+  .pr-diagram .pr-msg-dashed { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-msg-label { fill: var(--pr-text); font-size: 11.5px; text-anchor: middle; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram .pr-msg-self .pr-msg-label { text-anchor: start; }
+  .pr-diagram { --pr-frame-alt: #4338ca; --pr-frame-loop: #047857; --pr-frame-opt: #b45309; --pr-frame-other: #334155; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; } }
+  [data-theme="dark"] .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; }
+  .pr-diagram .pr-frame { --pr-frame: var(--pr-frame-other); }
+  .pr-diagram .pr-frame-alt { --pr-frame: var(--pr-frame-alt); }
+  .pr-diagram .pr-frame-loop { --pr-frame: var(--pr-frame-loop); }
+  .pr-diagram .pr-frame-opt { --pr-frame: var(--pr-frame-opt); }
+  .pr-diagram .pr-frame > rect { fill: none; stroke: var(--pr-frame); stroke-width: 1.6px; }
+  .pr-diagram .pr-frame-tab { fill: var(--pr-frame); stroke: none; }
+  .pr-diagram .pr-frame-label { font-weight: 700; fill: var(--pr-box-fill); font-size: 11px; letter-spacing: .3px; }
+  .pr-diagram .pr-frame-cond { fill: var(--pr-text); font-size: 11px; }
+  .pr-diagram .pr-frame-divider { stroke: var(--pr-frame); stroke-dasharray: 5 4; stroke-width: 1.2px; }
+  .pr-diagram .pr-expandable { cursor: pointer; }
+  .pr-diagram .pr-toggle { fill: var(--pr-muted); font-size: 10px; }
+  .pr-diagram .pr-toggle-closed { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-open { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-closed { display: inline; }
+  .pr-diagram .pr-collapsed .pr-msg-label { font-weight: 700; }
+  .pr-diagram.pr-focusing .pr-row, .pr-diagram.pr-focusing .pr-lifeline, .pr-diagram.pr-focusing .pr-frame { opacity: var(--pr-dimmed, .25); transition: opacity .12s; }
+  .pr-diagram.pr-focusing .pr-focus { opacity: 1; }
+  .pr-diagram .pr-link:hover .pr-msg-label, .pr-diagram .pr-link:hover .pr-header { text-decoration: underline; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg-label { fill: var(--pr-added); font-weight: 700; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg-label { fill: var(--pr-removed); text-decoration: line-through; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg-label { fill: var(--pr-changed); font-weight: 700; }
+  .pr-diagram .pr-lifeline.pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-lifeline.pr-change-added .pr-header { fill: var(--pr-added); }
+</style>
+<defs>
+  <marker id="prvrdi3y-tri" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" orient="auto"><path d="M1,1 L13,6 L1,11 Z"/></marker>
+  <marker id="prvrdi3y-diamond-filled" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="pr-filled" d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="prvrdi3y-diamond" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="prvrdi3y-arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path class="pr-open" d="M1,1 L11,6 L1,11"/></marker>
+  <marker id="prvrdi3y-msg" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path class="pr-filled" d="M1,1 L11,6 L1,11 Z"/></marker>
+</defs>
+<g class="pr-lifeline pr-actor" data-id="caller"><line class="pr-lifeline-line" x1="64" y1="58" x2="64" y2="320" data-y2="320"/><g class="pr-lifeline-head"><circle cx="64" cy="26" r="5"/><path d="M64,31 V42 M56,35 H72 M64,42 L57,52 M64,42 L71,52"/><text class="pr-header" x="64" y="68" text-anchor="middle" font-size="11">caller</text></g></g>
+<g class="pr-lifeline" data-id="hola@shell" data-ref-location="kinds/interfaces/shell.ds:6"><title>hola@shell</title><line class="pr-lifeline-line" x1="248" y1="58" x2="248" y2="320" data-y2="320"/><a href="#hola@shell" class="pr-link"><g class="pr-lifeline-head"><rect x="194" y="20" width="108" height="38" rx="4"/><text class="pr-header" x="248" y="44" text-anchor="middle">self: shell</text></g></a></g>
+<g class="pr-lifeline" data-id="hola@app" data-ref-location="kinds/app/App.ds:5"><title>hola@app</title><line class="pr-lifeline-line" x1="400" y1="58" x2="400" y2="320" data-y2="320"/><a href="#hola@app" class="pr-link"><g class="pr-lifeline-head"><rect x="378" y="20" width="44" height="38" rx="4"/><text class="pr-header" x="400" y="44" text-anchor="middle">app</text></g></a></g>
+<g class="pr-lifeline" data-id="hola@core" data-ref-location="kinds/core/Channel.ds:5"><title>hola@core</title><line class="pr-lifeline-line" x1="592" y1="58" x2="592" y2="320" data-y2="320"/><a href="#hola@core" class="pr-link"><g class="pr-lifeline-head"><rect x="566" y="20" width="52" height="38" rx="4"/><text class="pr-header" x="592" y="44" text-anchor="middle">core</text></g></a></g>
+<g class="pr-row pr-msg-group" data-row="0" data-y="74" data-h="30" data-from="caller" data-to="hola@shell" data-ref-location="kinds/interfaces/shell.ds:12"><title>hola@shell::greet</title><path class="pr-edge-hit" d="M64,94 L246,94"/><path class="pr-msg" d="M64,94 L246,94" marker-end="url(#prvrdi3y-msg)"/><text class="pr-msg-label" x="156" y="89">greet(name: string)</text></g>
+<g class="pr-row pr-msg-group" data-row="1" data-y="104" data-h="30" data-from="hola@shell" data-to="hola@app" data-ref-expands="hola@app::main::sequence" data-ref-location="kinds/interfaces/shell.ds:22" data-ref-span="2-5"><title>hola@app::app::main
+expanded below: main</title><path class="pr-edge-hit" d="M248,124 L398,124"/><path class="pr-msg" d="M248,124 L398,124" marker-end="url(#prvrdi3y-msg)"/><text class="pr-msg-label" x="324" y="119">app::main(name)</text><text class="pr-toggle pr-toggle-open" x="392" y="119">▾ fold</text><text class="pr-toggle pr-toggle-closed" x="392" y="119">▸ unfold</text></g>
+<g class="pr-row pr-msg-group" data-row="2" data-y="134" data-h="30" data-from="hola@app" data-to="hola@core" data-ref-location="kinds/app/App.ds:21"><title>hola@core::Greeter::valid</title><path class="pr-edge-hit" d="M400,154 L590,154"/><path class="pr-msg" d="M400,154 L590,154" marker-end="url(#prvrdi3y-msg)"/><text class="pr-msg-label" x="496" y="149">Greeter::valid(name)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="3" data-y="164" data-h="30" data-from="hola@core" data-to="hola@app"><path class="pr-edge-hit" d="M592,184 L402,184"/><path class="pr-msg pr-msg-dashed" d="M592,184 L402,184" marker-end="url(#prvrdi3y-arrow)"/><text class="pr-msg-label" x="496" y="179">ok</text></g>
+<g class="pr-row pr-msg-group" data-row="4" data-y="194" data-h="30" data-from="hola@app" data-to="hola@core" data-ref-expands="hola@core::Greeter::greet::sequence" data-ref-location="kinds/app/App.ds:22"><title>hola@core::Greeter::greet
+expanded below: Greeter::greet</title><path class="pr-edge-hit" d="M400,214 L590,214"/><path class="pr-msg" d="M400,214 L590,214" marker-end="url(#prvrdi3y-msg)"/><text class="pr-msg-label" x="496" y="209">Greeter::greet(name)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="5" data-y="224" data-h="30" data-from="hola@core" data-to="hola@app"><path class="pr-edge-hit" d="M592,244 L402,244"/><path class="pr-msg pr-msg-dashed" d="M592,244 L402,244" marker-end="url(#prvrdi3y-arrow)"/><text class="pr-msg-label" x="496" y="239">greeting</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="6" data-y="254" data-h="30" data-from="hola@app" data-to="hola@shell"><path class="pr-edge-hit" d="M400,274 L250,274"/><path class="pr-msg pr-msg-dashed" d="M400,274 L250,274" marker-end="url(#prvrdi3y-arrow)"/><text class="pr-msg-label" x="324" y="269">code</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="7" data-y="284" data-h="30" data-from="hola@shell" data-to="caller"><path class="pr-edge-hit" d="M248,304 L66,304"/><path class="pr-msg pr-msg-dashed" d="M248,304 L66,304" marker-end="url(#prvrdi3y-arrow)"/><text class="pr-msg-label" x="156" y="299">core::Greeting</text></g>
+<script><![CDATA[
+(function () {
+  var root = document.getElementById('prvrdi3y-root');
+  if (!root || root.dataset.wired) return;
+  root.dataset.wired = '1';
+  var rows = Array.prototype.slice.call(root.querySelectorAll('.pr-row')).map(function (el) {
+    return { el: el, row: +el.dataset.row, y: +el.dataset.y, h: +el.dataset.h, span: el.dataset.refSpan };
+  }).sort(function (a, b) { return a.row - b.row; });
+  var frames = Array.prototype.slice.call(root.querySelectorAll('.pr-frame'));
+  var lines = Array.prototype.slice.call(root.querySelectorAll('.pr-lifeline-line'));
+  var collapsed = {};
+  function relayout() {
+    var hidden = {};
+    rows.forEach(function (r) {
+      if (!collapsed[r.row] || !r.span) return;
+      var ab = r.span.split('-').map(Number);
+      rows.forEach(function (q) { if (q.row >= ab[0] && q.row <= ab[1]) hidden[q.row] = true; });
+    });
+    var shift = 0, shiftOf = {}, endOf = {};
+    rows.forEach(function (r) {
+      shiftOf[r.row] = shift;
+      if (hidden[r.row]) { r.el.style.display = 'none'; shift += r.h; return; }
+      r.el.style.display = '';
+      r.el.setAttribute('transform', 'translate(0,' + (-shift) + ')');
+      r.el.classList.toggle('pr-collapsed', !!collapsed[r.row]);
+      endOf[r.row] = r.y + r.h - shift;
+    });
+    frames.forEach(function (f) {
+      var first = +f.dataset.first, last = +f.dataset.last, top = +f.dataset.top, bottom = +f.dataset.bottom;
+      var lastVisible = -1;
+      for (var q = last; q >= first; q--) { if (!hidden[q] && endOf[q] !== undefined) { lastVisible = q; break; } }
+      if (hidden[first] || lastVisible < 0) { f.style.display = 'none'; return; }
+      f.style.display = '';
+      var newTop = top - shiftOf[first];
+      var newBottom = lastVisible === last ? bottom - shiftOf[last] : endOf[lastVisible] - 2;
+      f.setAttribute('transform', 'translate(0,' + newTop + ')');
+      f.querySelector('rect').setAttribute('height', Math.max(24, newBottom - newTop));
+      Array.prototype.forEach.call(f.querySelectorAll('[data-divider-row]'), function (d) {
+        var row = +d.dataset.dividerRow, dy = +d.dataset.y - shiftOf[row] - newTop;
+        if (d.tagName === 'line') { d.setAttribute('y1', dy); d.setAttribute('y2', dy); } else { d.setAttribute('y', dy + 4); }
+        d.style.display = hidden[row] ? 'none' : '';
+      });
+    });
+    lines.forEach(function (l) { l.setAttribute('y2', +l.dataset.y2 - shift); });
+    var vb = root.dataset.viewbox.split(' ').map(Number);
+    vb[3] -= shift;
+    root.setAttribute('viewBox', vb.join(' '));
+    root.setAttribute('height', vb[3]);
+  }
+  rows.forEach(function (r) {
+    if (!r.span) return;
+    r.el.classList.add('pr-expandable');
+    r.el.addEventListener('click', function (e) { e.preventDefault(); collapsed[r.row] = !collapsed[r.row]; relayout(); });
+  });
+  function focus(ids, rowEl) {
+    root.classList.add('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (el) { el.classList.toggle('pr-focus', !!ids[el.dataset.id]); });
+    rows.forEach(function (r) { r.el.classList.toggle('pr-focus', rowEl ? r.el === rowEl : !!(ids[r.el.dataset.from] || ids[r.el.dataset.to])); });
+  }
+  function unfocus() {
+    root.classList.remove('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-focus'), function (el) { el.classList.remove('pr-focus'); });
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (l) {
+    l.addEventListener('mouseenter', function () { var ids = {}; ids[l.dataset.id] = true; focus(ids); });
+    l.addEventListener('mouseleave', unfocus);
+  });
+  rows.forEach(function (r) {
+    r.el.addEventListener('mouseenter', function () { var ids = {}; ids[r.el.dataset.from] = true; ids[r.el.dataset.to] = true; focus(ids, r.el); });
+    r.el.addEventListener('mouseleave', unfocus);
+  });
+})();
+]]></script>
+</svg>
+</svg>

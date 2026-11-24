@@ -1,0 +1,34 @@
+// The interfaces as black boxes, the navigation of the web, and the traces.
+
+diagram IF_Hola {
+  kind: interface
+  include: hola@shell
+}
+
+diagram SEQ_Greet {
+  kind: sequence
+  include: hola@shell::greet
+  depth: *
+}
+
+diagram IF_Web {
+  kind: interface
+  include: hola@web
+}
+
+diagram ST_Web {                     // the navigation: the views and the jumps
+  kind: state
+  include: hola@web
+}
+
+diagram SEQ_WebGreet {
+  kind: sequence
+  include: hola@web::greet
+  depth: *
+}
+
+diagram SEQ_GreetEmpty {             // the error, from the command line to return 2
+  kind: sequence
+  include: hola@shell::greet / empty-name
+  depth: *
+}

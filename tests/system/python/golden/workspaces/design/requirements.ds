@@ -1,0 +1,381 @@
+// The system requirements of DriftSpec, in DriftSpec. Package level: what the
+// tool promises at its boundaries (the ds command, the export, the editors).
+// One capability per requirement, in the positive; the design and the
+// verifications refine and verify them from the modules.
+
+package driftspec {
+
+  requirement SREQ-00001-1 {
+    status: approved
+    title: The system shall load a workspace of .ds files into one model in which every entity has one identity
+    text:
+      A workspace is a directory; its files are read whole and in any order.
+      A design entity is identified by its full name (package with @, modules
+      with ::) and a process artefact by its id with its revision. A second
+      declaration of one identity is reported; packages and modules reopen
+      across files.
+    rationale:
+      A specification that lives per file cannot say that two files talk about
+      the same thing. Identity across the workspace is what makes references,
+      diagrams and diffs mean the same entity everywhere.
+    tags: workspace, identity
+  }
+
+  requirement SREQ-00002-1 {
+    status: approved
+    title: The system shall report every incoherence of the model as a finding with a code, a severity and a location
+    text:
+      A reference nobody declares, a duplicate identity, a template argument
+      outside its bound, a composition cycle, an operator refined but not
+      declared, a message to an operation that does not exist, a link to an
+      artefact revision the workspace no longer declares: each is one finding
+      at the place it was written. Loading never fails on a dangling
+      reference, only on syntax.
+    rationale:
+      The tool's value is saying where the model contradicts itself. A tool
+      that stopped at the first problem, or that failed to load a workspace
+      with a missing declaration, could not be used while the design is being
+      written.
+    tags: coherence, findings
+  }
+
+  requirement SREQ-00003-2 {
+    status: approved
+    title: The system shall keep requirements, constraints and verifications as artefacts linked to the design by revision
+    text:
+      Requirements, constraints and verifications are declared in the same
+      language as the design, with an id that carries their revision. Every
+      link to an artefact names a revision; nesting gives the relation
+      (a requirement in a requirement refines it, a verification in a
+      requirement verifies it) and annotations add relations from elsewhere:
+      a package (an HLD box) and a class realise a requirement the same way
+      (revision 2, decided 2026-10-26).
+    rationale:
+      The design and the artefacts about it belong to one model: a box or a
+      class realises a requirement, a constraint binds it, a verification proves it.
+      Pinning links to a revision is what lets the tool tell who stayed behind
+      when an artefact moved.
+    tags: requirements, traceability
+  }
+
+  requirement SREQ-00004-1 {
+    status: approved
+    title: The system shall model behaviour as sequences and state machines bound to the static entities they describe
+    text:
+      A sequence or a state machine is the behaviour of a method or a class and
+      is identified by it. Its participants are the static context of the
+      subject: self, the attributes of the class and the parameters of the
+      method; only what the behaviour creates is declared. A message is checked
+      against the operation it names and its arity; a message to an operation
+      that has a behaviour expands to it.
+    rationale:
+      A sequence diagram drawn apart from the classes it names drifts from them
+      without anyone noticing. Bound by identity, the behaviour is checked like
+      the rest of the model and the abstraction level of a diagram comes from
+      the architecture instead of from the author.
+    tags: behaviour, sequences
+  }
+
+  requirement SREQ-00005-1 {
+    status: approved
+    title: The system shall draw any selection of the model as a diagram, in SVG and in the terminal, adapting to a given width
+    text:
+      A diagram selects entities and decides what to print; it never draws.
+      The same selection is drawn as an SVG that a browser, an editor or a
+      document embeds, and as box-drawing text for a terminal, from one layout
+      that wraps to the width it is given. The SVG carries stable ids, links by
+      identity, tooltips and the interaction to fold and focus.
+    rationale:
+      If the drawing is a projection, it cannot drift from the model, and the
+      reader can ask for the view that explains what they need rather than
+      maintain pictures by hand.
+    tags: render, diagrams
+  }
+
+  requirement SREQ-00013-1 {
+    status: approved
+    title: The system shall lay out the whole model once, every box nested in its parent, so a viewer can zoom from the system down to a member
+    text:
+      One scene of the whole workspace: every package, module, interface,
+      class, function, enum and member has one place, inside the box that
+      holds it and apart from its siblings, computed once so that nothing
+      moves while a reader zooms. It comes in two variants, with every member
+      and with public members only, and as JSON from the command line.
+    rationale:
+      Owner, 2026-11-05 (DS-67): one diagram of the whole model, information
+      shown on demand, instead of many diagrams drawn apart. Depth is the
+      level of abstraction; the scene is what makes it possible.
+    tags: render, scene
+  }
+
+  requirement SREQ-00020-1 {
+    status: approved
+    title: The system shall install its command line beside its Python package with one pip install
+    text:
+      pip install driftspec puts the ds command in the environment's scripts, next to the package,
+      driftspec-lsp and driftspec-live: one installation gives every way of using the engine,
+      without a compiler on the reader's side once the release ships built wheels.
+    rationale: Owner, 2026-11-18 (DS-303): the command line was only to be had by building it with CMake.
+    tags: python, cli, release
+  }
+
+  requirement SREQ-00015-1 {
+    status: approved
+    title: The system shall serve its engine in process to Python, as a package to depend on
+    text:
+      pip install driftspec gives a package whose engine runs in the same process: load a
+      workspace, from a directory or from the texts an editor holds, into a typed model; check
+      it; draw a diagram; write the viewer. One native module serves every Python from 3.10
+      on, and it speaks the JSON of the command line, so a tool sees one contract.
+    rationale:
+      Owner, 2026-11-06 (DS-84): argos reads DriftSpec designs through a plugin that ran the
+      binary and parsed its output; a dependency with a pinned version replaces the search for
+      a binary on the PATH, and a language server needs the engine at hand.
+    tags: python, api
+  }
+
+  requirement SREQ-00016-1 {
+    status: approved
+    title: The system shall serve .ds files to an editor through the language server protocol
+    text:
+      driftspec-lsp checks the workspace a file belongs to on every change, with the buffers
+      the editor holds, and publishes each file's findings; it leads from a name to its
+      declaration and to what refers to it, says what an entity is, completes with what the
+      grammar takes and the names the model declares, and draws the entity or the diagram
+      under the cursor, as text or in the viewer.
+    rationale:
+      Owner, 2026-11-06 (DS-85): a server in Python on the Python face; the engine stays C++.
+    tags: lsp, editor
+  }
+
+  requirement SREQ-00017-1 {
+    status: approved
+    title: The system shall show a design live while it is written, to a reader and to an agent who point at the same identities
+    text:
+      A session over a workspace follows its .ds files: on every change the reader sees the design
+      again where they were looking, with what changed marked and the findings beside it. The one
+      who writes, a person or an agent, takes the reader to an identity, highlights identities and
+      puts notes on them; the reader's selection reaches the one who writes. The same contract serves
+      a browser page and an editor's panel, and an agent through MCP.
+    rationale:
+      Owner, 2026-11-07 (DS-95, DS-97): DriftSpec as the medium in which a person and an agent talk
+      about a design and watch it change; tried end to end in a spike before consolidating.
+    tags: live, viewer, mcp
+  }
+
+  requirement SREQ-00018-2 {
+    status: approved
+    title: The system shall be driven by one command, ds, with a verb for each use case and an exit code that names how it ended
+    text:
+      A person at a terminal and a script drive the tool the same way: ds, a verb (check, export,
+      render, query, manual), the workspace and the options of that verb. What is asked for
+      goes to standard output, why nothing was done to standard error, and the exit code names the
+      outcome of the use case the verb serves: 0 when it went well, another for each way it may
+      end. The command reads the arguments, loads the workspace and hands it to whoever answers;
+      nothing else in the tool knows of a command line.
+    rationale:
+      The command line was there and nothing asked for it: the use cases say what goes in and what
+      comes out, the operations of the cli interface say how each is typed, and no requirement said
+      that a command exists and owns the arguments and the exits (found by argos as diagrams with no
+      requirement, DS-137). It is the owner of the app module in the sense of bottom-up ownership:
+      why the module exists; what it does are the use cases, which hang from the requirements they
+      serve.
+      Revision 2: ds diff left the tool before its first release (Owner, 2026-11-18, DS-277).
+    tags: cli, app
+  }
+
+  requirement SREQ-00019-1 {
+    status: approved
+    title: The system shall come with a page that edits a workspace in a browser, draws its diagrams beside the text as it is typed, and teaches the language in guided lessons in English and Spanish
+    text:
+      The playground is a static page over the engine compiled to WebAssembly (REQ-00113-1): the
+      files of a workspace in a tree, the text in an editor, one pane per diagram and a table of the
+      requirements beside it, the problems below, and a click on a drawing leading to where it is
+      written. Fifteen lessons, from the page itself to rules, grow one example from a class to a
+      small system: the lesson types its own code in front of the reader, asks the reader to write
+      the rest and says when the engine sees it done, offers to write a step for a reader who is
+      stuck, and starts again whenever it is chosen. Each lesson is a test too: replayed with its
+      solutions, it ends with a clean model.
+    rationale:
+      Owner, 2026-11-15 (DS-201): the way into DriftSpec for a person who has never seen it, and the
+      place to review the syntax by writing the tutorial from the bottom up. Designed in the spike
+      spike/wasm-playground and consolidated in DS-202, DS-203 and DS-204.
+    tags: playground, browser, tutorial
+  }
+
+  requirement SREQ-00014-1 {
+    status: approved
+    title: The system shall carry its own manual: how each kind of the language is written, what each finding means and what each command's exit codes say
+    text:
+      ds manual prints, from the tool itself and with no workspace: an index
+      of the commands and the kinds; for each kind, how it is written, its
+      fields, flags and relations, and a minimal example that checks clean;
+      for each finding code, what it means and what to do; the annotations
+      that mean something; the commands with their exit codes, which every
+      command's help repeats. The manual is generated from the metamodel and
+      held to the engine, so it cannot drift from the language.
+    rationale:
+      Owner, 2026-11-06, like argos: a newcomer agent with only the binary
+      understood what ds does (7/10) but could not write a design without
+      guessing its syntax (3/10, some 35 attempts); the metamodel named every
+      kind and field but not how any of them is written.
+    tags: manual, cli, language
+  }
+
+  requirement SREQ-00006-1 {
+    status: approved
+    title: The system shall export the model, with its relations and findings, for other tools
+    text:
+      The whole model, every entity with its fields and flags, every relation
+      with its kind and multiplicity and every finding with its location, is
+      available as JSON from the command line, and the drawing of a diagram is
+      available as the render-IR of the plantuml family.
+    rationale:
+      argos compares the declared design with the code and the tests; it needs
+      the model, not the files. The IR keeps the family's renderers
+      interchangeable.
+    tags: export, argos
+  }
+
+  requirement SREQ-00008-1 {
+    status: approved
+    title: The system shall provide its grammar to editors so that a .ds file is parsed, highlighted and folded as it is typed
+    text:
+      The language is defined by a tree-sitter grammar with its highlight and
+      fold queries, built from this repository, and an editor loads them as it
+      loads any other language's.
+    rationale:
+      A specification language that is not supported where it is written will
+      not be written.
+    tags: grammar, editors
+  }
+
+  requirement SREQ-00009-2 {
+    status: approved
+    title: The system shall model the static design: packages, modules, classes with their members, ownership, inheritance, templates, operators and boundaries
+    text:
+      A package is the black box and declares the boundaries it exposes; a
+      package holds packages, written nested or reopened by its full path,
+      every level adding its name with @, so that one workspace models one
+      system of several packages and the level of an artefact follows from
+      where it is declared (revision 2, decided 2026-10-26); a
+      module is a namespace and opens the white box; classes, data classes
+      and enumerations carry attributes and methods with visibility,
+      modifiers and types; an attribute owns, references or shares what it
+      holds; a class inherits, is parameterised with bounds, and declares its
+      operators in its header. Interfaces, abstract classes and value types
+      are derived from the members, never declared.
+    rationale:
+      This is the vocabulary a design is written in. What is derived cannot
+      contradict what is declared, and the ownership written on the
+      attribute is what the drawings and the checks read.
+    tags: metamodel, static
+  }
+
+  requirement SREQ-00010-1 {
+    status: approved
+    title: The system shall provide a diagram kind for each view of the model: class, requirement, sequence and state
+    text:
+      A diagram is a selection of the model with what to print: a class
+      diagram over the static design, a requirement diagram over the
+      artefacts and what refines, verifies and realises them, a sequence
+      diagram over a behaviour at the level asked for, a state diagram over
+      the state machine of a class. A diagram never draws; the model draws
+      itself through it.
+    rationale:
+      Each part of the metamodel needs its view, and keeping the views as
+      selections is what keeps them from drifting from the model.
+    tags: diagrams, views
+  }
+
+  requirement SREQ-00011-1 {
+    status: approved
+    title: The system shall answer questions about the model: what exists, what an entity relates to, what a diagram shows
+    text:
+      From the command line and from any host, the model can be asked: the
+      diagrams a workspace declares, the entities of a module, the relations
+      an entity has and in which direction, the requirements a class
+      realises and the verifications that prove them, the behaviours of a
+      method, the findings of a file. An answer names entities by their
+      identity, so that it can be followed by another question or by a
+      drawing.
+    rationale:
+      A model is only as useful as the questions it answers without reading
+      the files. The same mechanism serves a person at the terminal, an
+      editor, an agent and argos, and the drawings become one answer among
+      others.
+    tags: query, model
+  }
+
+  requirement SREQ-00012-1 {
+    status: approved
+    title: The system shall define a formal language in which a software design is specified as text: its high-level design, its low-level design, the artefacts about it and the views of it
+    text:
+      The language has a grammar that reads every specification unambiguously,
+      a vocabulary of entities with one identity each, and rules that give
+      every construct one meaning; a workspace of files written in it is one
+      specification. The rules are written as requirements and constraints of
+      the language, each decided with its rationale and fixed by an oracle
+      corpus.
+    rationale:
+      Everything else the system promises, loading, checking, drawing,
+      comparing, asking, exists because a specification means one thing.
+      Without a formal language the model would be whatever the tool happened
+      to read.
+    tags: language, grammar
+  }
+
+  constraint CST-00011-1 {
+    status: approved
+    category: release
+    bok: BOK-00001-1
+    title: Everything DriftSpec ships shall carry its licence, Apache 2.0 with its notice, and the grammar its own, MIT
+    text:
+      LICENSE is the Apache License 2.0; NOTICE names the holder, ARGOSQA SLU (deriva), and points at
+      the third-party notices. grammar/LICENSE is the MIT License, as tree-sitter grammars are; the
+      grammar's manifest says MIT. The wheel and the site carry the three files, and so does every
+      binary a release attaches.
+    rationale:
+      Owner, 2026-11-18 (DS-287): Apache 2.0 for its patent grant and its trademark clause, MIT for
+      the grammar as is the custom of the ecosystem, held by the company.
+    tags: release, licence
+  }
+
+  constraint CST-00010-1 {
+    status: approved
+    category: release
+    bok: BOK-00001-1
+    title: Everything DriftSpec ships shall carry the notices of the third-party code compiled into it
+    text:
+      THIRD_PARTY_NOTICES.md names each library the build fetches, with the version built and its
+      licence text, and the Emscripten runtime the WebAssembly engine is made with; it goes in the
+      wheel and in the site, and with every binary a release attaches.
+    rationale:
+      Owner, 2026-11-18 (DS-284), audit for the first release: tree-sitter, nlohmann json and miniz
+      (MIT) and CLI11 (BSD-3-Clause) ask that their notice go with any copy.
+    tags: release, licence
+  }
+
+  constraint CST-00001-1 {
+    status: approved
+    category: performance
+    bok: BOK-00002-1
+    title: Every command of the tool shall complete in under one hundred milliseconds on a workspace of a hundred classes
+    text:
+      Loading, checking, exporting, diffing and drawing a workspace of a
+      hundred classes with their relations, behaviours and diagrams completes
+      in under one hundred milliseconds on a development machine, so that an
+      editor preview or an agent loop can redraw on every change.
+    rationale:
+      Measured at the proof of concept: five milliseconds for the engine's own
+      design, eight for a synthetic hundred-class document. A budget keeps the
+      property as the tool grows; it applies to every command, which is why it
+      is a constraint and not a capability.
+    tags: performance
+  }
+}
+
+diagram REQ_System {
+  kind: requirement
+  include: driftspec@*           // every artefact of the package: the system requirements and what hangs from them
+}

@@ -1,0 +1,294 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::SyntaxError",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "aggregation",
+      "label": "file_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::Field"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::Span"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@parse",
+      "kind": "container",
+      "label": "parse",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@parse::Field",
+      "kind": "box",
+      "label": "Field",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "action",
+          "base",
+          "body",
+          "bound",
+          "call",
+          "code",
+          "condition",
+          "default_",
+          "definition",
+          "else_scenario",
+          "entity",
+          "event",
+          "fails",
+          "failure",
+          "family",
+          "field",
+          "from",
+          "guard",
+          "id",
+          "key",
+          "kind",
+          "left",
+          "many",
+          "modifier",
+          "name",
+          "negated",
+          "of",
+          "op",
+          "operator_",
+          "operators",
+          "optional",
+          "otherwise",
+          "ownership",
+          "package",
+          "parameter",
+          "params",
+          "prefix",
+          "realises",
+          "relation",
+          "result",
+          "returns",
+          "right",
+          "scenario",
+          "scope",
+          "show",
+          "subject",
+          "symbol",
+          "target",
+          "text",
+          "title",
+          "to",
+          "type",
+          "value",
+          "variable",
+          "visibility"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::Lookahead",
+      "kind": "box",
+      "label": "Lookahead",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- keywords_: std::vector<std::string>",
+          "- annotation_: bool",
+          "- field_: bool"
+        ],
+        [
+          "+ Lookahead(language: TSLanguage, state: TSStateId)",
+          "+ keywords() -> std::vector<std::string>",
+          "+ words() -> std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@parse::ParsedFile",
+      "kind": "box",
+      "label": "ParsedFile",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ path: std::string",
+          "+ text: std::string",
+          "+ tree: std::shared_ptr<TSTree>",
+          "+ hasSyntaxErrors: bool",
+          "+ errorLine: int",
+          "+ errorColumn: int",
+          "+ errorDetail: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::Parser",
+      "kind": "box",
+      "label": "Parser",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- parser_: TSParser"
+        ],
+        [
+          "+ Parser()",
+          "+ language() -> TSLanguage",
+          "+ parseText(path: std::string, text: std::string) -> ParsedFile",
+          "+ parseFile(path: std::string) -> ParsedFile",
+          "+ parseDirectory(directory: std::string) -> std::vector<ParsedFile>",
+          "+ expectedAt(text: std::string, line: int, column: int) -> std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@parse::Span",
+      "kind": "box",
+      "label": "Span",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ line: int",
+          "+ column: int",
+          "+ endLine: int",
+          "+ endColumn: int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::SyntaxError",
+      "kind": "box",
+      "label": "SyntaxError",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- text_: std::string"
+        ],
+        [
+          "+ SyntaxError(text: std::string)",
+          "+ place(node: TSNode, file: ParsedFile) -> bool",
+          "- static contextOf(node: TSNode) -> std::string",
+          "- static expectedAt(node: TSNode) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::TreeReader",
+      "kind": "box",
+      "label": "TreeReader",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- file_: ParsedFile",
+          "- ids_: std::vector<TSFieldId>"
+        ],
+        [
+          "+ TreeReader(file: ParsedFile)",
+          "+ static is(node: TSNode, type: char) -> bool",
+          "+ child(node: TSNode, field: Field) -> TSNode",
+          "+ childrenNamed(node: TSNode, field: Field) -> std::vector<TSNode>",
+          "+ fieldText(node: TSNode, field: Field) -> std::string",
+          "+ textOf(node: TSNode) -> std::string",
+          "+ static spanOf(node: TSNode) -> Span",
+          "+ root() -> TSNode",
+          "+ file() -> ParsedFile",
+          "+ language() -> TSLanguage",
+          "+ static nameOf(field: Field) -> char",
+          "- idOf(field: Field) -> TSFieldId",
+          "- static resolve(language: TSLanguage) -> std::vector<TSFieldId>"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_ParseNamespace"
+}
