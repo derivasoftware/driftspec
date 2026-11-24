@@ -8,10 +8,10 @@
 package driftspec@ds {
 
   module axis {
-    @requirement REQ-00176-1                 // every operation of the axis is a member of a class (DS-367)
+    @requirement REQ-00180-1                 // every operation of the axis is a member of a class (DS-367)
 
     // ---- what the axis is, as requirements and the rules that hold them (DS-367) ---------------------------
-    requirement REQ-00176-1 {
+    requirement REQ-00180-1 {
       tags: architecture, axis
       status: approved
       @refines REQ-00126-1
@@ -22,7 +22,7 @@ package driftspec@ds {
       rationale:
         Owner, 2026-11-24 (DS-366, DS-367): every module has its architecture decisions and patterns, and its rules
         check that they hold; a free function means a responsibility is missing.
-      verification VER-00193-1 {
+      verification VER-00200-1 {
         status: approved
         title: Integration tests confirm the design of the axis holds no function of the module, and is told when one is written
         method: test
@@ -32,7 +32,7 @@ package driftspec@ds {
       }
     }
 
-    requirement REQ-00177-1 {
+    requirement REQ-00181-1 {
       tags: architecture, axis
       status: approved
       @refines REQ-00126-1
@@ -43,7 +43,7 @@ package driftspec@ds {
       rationale:
         Owner, 2026-11-24 (DS-366, DS-367): everything that reads a design at a cut reads the same cut; an axis that
         changed the model would change what the next reader sees.
-      verification VER-00194-1 {
+      verification VER-00201-1 {
         status: approved
         title: Integration tests confirm the design of the axis reads the model, and is told when a behaviour of the axis changes it
         method: test
@@ -55,14 +55,14 @@ package driftspec@ds {
 
     rule axis-operations-belong-to-classes {
       title: no function is written in the axis's module, so every operation of the axis is a member of a class
-      @requirement REQ-00176-1
+      @requirement REQ-00180-1
       for function f in driftspec@ds@axis
       never f in driftspec@ds@axis
     }
 
     rule the-axis-reads-the-model {
       title: no behaviour of the axis calls what changes the model, so the axis reads the model and leaves it as it is
-      @requirement REQ-00177-1
+      @requirement REQ-00181-1
       for class c in driftspec@ds@axis, method b in driftspec@ds@model::Model
       where changes-the-model(b)
       never m in c, s behaviour-of m, x in s, x calls b
@@ -71,7 +71,7 @@ package driftspec@ds {
     // the cut of a diagram (DS-229): what closes and what opens. close: draws the line (a name, a
     // prefix, a kind of box), open: goes through it, cut: adds another diagram's
     class Cut {
-      @requirement REQ-00177-1
+      @requirement REQ-00181-1
       @requirement REQ-00064-5
       @requirement REQ-00126-1
       @requirement REQ-00127-1
