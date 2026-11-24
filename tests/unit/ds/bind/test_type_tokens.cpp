@@ -12,11 +12,11 @@ namespace {
 
 std::vector<std::string> names(const std::string& text) {
   std::vector<std::string> out;
-  for (const auto& t : ds::bind::scanTypeTokens(text)) out.push_back(t.name);
+  for (const auto& t : ds::bind::TypeToken::scan(text)) out.push_back(t.name);
   return out;
 }
 
-TEST(TestScanTypeTokens, EveryNameOfTheTextIsReadLeftToRight) {
+TEST(TestTypeToken, EveryNameOfTheTextIsReadLeftToRight) {
   EXPECT_EQ(names("std::map<std::string, std::unique_ptr<IStep>>"),
             (std::vector<std::string>{"std::map", "std::string", "std::unique_ptr", "IStep"}));
   EXPECT_EQ(names("Pool*"), (std::vector<std::string>{"Pool"}));
@@ -27,15 +27,15 @@ TEST(TestScanTypeTokens, EveryNameOfTheTextIsReadLeftToRight) {
   EXPECT_EQ(names("shop@store::Cart"), (std::vector<std::string>{"shop@store::Cart"}));
 }
 
-TEST(TestScanTypeTokens, ADotQualifiesAsTwoColonsDo) {
+TEST(TestTypeToken, ADotQualifiesAsTwoColonsDo) {
   EXPECT_EQ(names("lsp.Location"), (std::vector<std::string>{"lsp::Location"}));
   EXPECT_EQ(names("lsp.Hover | None"), (std::vector<std::string>{"lsp::Hover", "None"}));
   EXPECT_EQ(names("typing.Optional[x.Y]"), (std::vector<std::string>{"typing::Optional", "x::Y"}));
   EXPECT_EQ(names("a.b.C"), (std::vector<std::string>{"a::b::C"}));
-  EXPECT_EQ(ds::bind::scanTypeTokens("typing.Optional[x.Y]")[0].args, (std::vector<std::string>{"x.Y"}));
+  EXPECT_EQ(ds::bind::TypeToken::scan("typing.Optional[x.Y]")[0].args, (std::vector<std::string>{"x.Y"}));
 }
 
-TEST(TestScanTypeTokens, ADotThatQualifiesNoNameGivesNoToken) {
+TEST(TestTypeToken, ADotThatQualifiesNoNameGivesNoToken) {
   EXPECT_EQ(names("Foo."), (std::vector<std::string>{"Foo"}));
   EXPECT_EQ(names(".Foo"), (std::vector<std::string>{"Foo"}));
   EXPECT_EQ(names("Literal[1.5]"), (std::vector<std::string>{"Literal"}));
@@ -45,14 +45,14 @@ TEST(TestScanTypeTokens, ADotThatQualifiesNoNameGivesNoToken) {
   EXPECT_EQ(names("Ts...Rest"), (std::vector<std::string>{"Ts", "Rest"}));
 }
 
-TEST(TestScanTypeTokens, ABracketRightAfterANameGivesItsArguments) {
-  const auto tokens = ds::bind::scanTypeTokens("std::map<std::string, std::vector<Item>>");
+TEST(TestTypeToken, ABracketRightAfterANameGivesItsArguments) {
+  const auto tokens = ds::bind::TypeToken::scan("std::map<std::string, std::vector<Item>>");
   ASSERT_FALSE(tokens.empty());
   EXPECT_EQ(tokens[0].args, (std::vector<std::string>{"std::string", "std::vector<Item>"}));
-  const auto python = ds::bind::scanTypeTokens("dict[str, list[Item]]");
+  const auto python = ds::bind::TypeToken::scan("dict[str, list[Item]]");
   ASSERT_FALSE(python.empty());
   EXPECT_EQ(python[0].args, (std::vector<std::string>{"str", "list[Item]"}));
-  EXPECT_TRUE(ds::bind::scanTypeTokens("Item")[0].args.empty());
+  EXPECT_TRUE(ds::bind::TypeToken::scan("Item")[0].args.empty());
 }
 
 }  // namespace

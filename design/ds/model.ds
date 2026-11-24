@@ -18,6 +18,7 @@ package driftspec@ds {
   }
 
   module model {
+    @requirement REQ-00175-1                 // every operation of the model is a member of a class (DS-365)
 
     requirement REQ-00001-1 {
       status: approved
@@ -309,10 +310,70 @@ package driftspec@ds {
       + target: Kind
     }
 
+    requirement REQ-00175-1 {
+      tags: architecture, model
+      status: approved
+      @refines REQ-00001-1
+      title: Every operation of the model shall be a member of the class whose responsibility it is
+      text:
+        What the model holds and answers is the Model's, what it is indexed by is the Index's, a path through a
+        behaviour is the Paths', an identity's form is the Identity's and the language is the Metamodel's. A
+        function of the module would be a responsibility no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-339, DS-365): every module has its architecture decisions and patterns, and its rules
+        check that they hold; a free function means a responsibility is missing.
+      verification VER-00192-1 {
+        status: approved
+        title: Integration tests confirm the design of the model holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheModelIsTold
+      }
+    }
+
+    rule model-operations-belong-to-classes {
+      title: no function is written in the model's module, so every operation of the model is a member of a class
+      @requirement REQ-00175-1
+      for function f in driftspec@ds@model
+      never f in driftspec@ds@model
+    }
+
+    requirement REQ-00174-1 {
+      tags: architecture, model
+      status: approved
+      @refines REQ-00066-1
+      title: The metamodel shall build its own tables when it is created
+      text:
+        The kinds, the relations, the codes, the annotations and how each kind is written are built by the
+        metamodel's own builders when it is made, once where the engine starts, and read from then on through its
+        questions. What builds them belongs to the metamodel and nothing outside the model calls it.
+      rationale:
+        Owner, 2026-11-24 (DS-339, DS-365): the language is declared once (DS-341); a metamodel that others could
+        build or change would no longer be the one every reader is handed.
+      verification VER-00190-1 {
+        status: approved
+        title: Integration tests confirm the design of ds builds the metamodel's tables in the metamodel, and is told when something outside the model calls what builds them
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ACallFromOutsideTheModelToWhatBuildsTheMetamodelIsTold
+      }
+    }
+
+    rule the-metamodel-is-built-once {
+      title: nothing outside the model calls what builds the metamodel's tables, so the metamodel builds them itself when it is made
+      @requirement REQ-00174-1
+      for class c in driftspec@ds, method b in driftspec@ds@model::Metamodel
+      where not c in driftspec@ds@model, b.visibility = "-"
+      never m in c, s behaviour-of m, x in s, x calls b
+    }
+
     // The language declared once (DS-341): a class whose tables are built when it is made, one made where
     // the engine starts (the command line's run, the Python module, the page's engine) and handed by const
     // reference to the model, the binder, the checker and the manual. No static accessor reaches it.
     class Metamodel {
+      @requirement REQ-00174-1
       @requirement REQ-00066-1
       @requirement REQ-00079-2
       - owns many names_: std::vector<std::string>                          // each kind's name, by its place in Kind
