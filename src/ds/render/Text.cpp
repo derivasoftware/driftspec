@@ -697,10 +697,7 @@ Grid tableGrid(const IrDocument& doc) {
     return cell.kind == "against" ? "! " + cell.text : cell.kind == "none" ? "\xC2\xB7" : cell.text;
   };
   const auto wide = [](const std::string& s) {  // in cells: one for each UTF-8 code point
-    int n = 0;
-    for (const char c : s)
-      if ((static_cast<unsigned char>(c) & 0xC0) != 0x80) ++n;
-    return n;
+    return static_cast<int>(text::characters(s));
   };
   std::vector<int> widths{wide(t.corner)};
   for (const IrRow& row : t.rows) widths[0] = std::max(widths[0], wide(row.label));

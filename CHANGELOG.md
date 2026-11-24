@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.70
+
+The scene hides nothing (DS-390). The one place that names the concrete layers is a class, `LayerFactory`; the
+count of a text's characters is the text module's, which render's cells use as well; and a type is read without the
+names that qualify it by the model's `WrittenType`, with a scan instead of a regular expression, for the rows of a
+box and for the types an interface's contract compares. Nothing a design writes changes: findings, the viewer, its
+scene and every drawing are the same.
+
 ## 0.1.69
 
 The Owner approves the roadmap's drafts: check's finding order and architecture (REQ-00193-1..REQ-00195-1 with

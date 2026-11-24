@@ -47,7 +47,7 @@ TEST_F(TestSceneLayersOfADesign, EveryIdentityOfTheDesignLandsOnItselfOrTheNeare
 TEST_F(TestSceneLayersOfADesign, TheLayersComeInOrderAndEachAddsItsOwnPartOfTheDesign) {
   const ds::scene::SceneDocument doc = ds::scene::Scene(model, metamodel).build();
   const ds::scene::Map map(doc.nodes);
-  const auto all = ds::scene::layers(model, metamodel, map);
+  const auto all = ds::scene::LayerFactory::of(model, metamodel, map);
   ASSERT_EQ(all.size(), 4u);
   EXPECT_NE(dynamic_cast<ds::scene::StructureLayer*>(all[0].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::BehaviourLayer*>(all[1].get()), nullptr);
