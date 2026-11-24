@@ -8,13 +8,9 @@
 namespace ds {
 namespace machine {
 
-namespace {
-
-void note(std::vector<std::string>& all, const std::string& name) {
+void Table::note(std::vector<std::string>& all, const std::string& name) {
   if (std::find(all.begin(), all.end(), name) == all.end()) all.push_back(name);
 }
-
-}  // namespace
 
 Table::Table(const model::Model& model, const model::Entity& machine) {
   const Machine written(model, machine);

@@ -15,6 +15,15 @@ a function, and the box a relation is drawn from, with the helpers the filters h
 serve. A rule of ds's design holds that the query writes no function, refining what the query answers. Nothing changes
 for a design: every finding, export, drawing, viewer page, answer and exit code is the same.
 
+## 0.1.56
+
+The machine is written as requirements held by rules (DS-367): every operation of the machine is a member of the class
+whose responsibility it is, and the machine reads the model it reads a state machine from and leaves it as it is. What
+its source hid is now classes of the machine: the lists the binder writes into a field (`WrittenFields`), a condition
+of a state's rule (`Literal`), the rules and the jumps of a machine (`StateRule`, `Jump`), what its subject holds
+(`Subject`), what each name of a context may be worth (`Context`) and the walk of the behaviours for the calls of its
+events (`Calls`). Nothing a design writes, no finding, export or drawing changes.
+
 ## 0.1.55
 
 The viewer's test that a behaviour is written once and replayed by many tours runs on a fixture made for it (DS-377):
