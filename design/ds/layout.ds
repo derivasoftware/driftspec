@@ -1,0 +1,155 @@
+// The layout (DS-392): pure geometry. Nested boxes of given sizes and the edges between them go in; where the boxes
+// land and how the edges run come out. Nothing in it knows what a box stands for: the scene and render project their
+// content into boxes and read the places back, through an IEngine the factory hands them.
+
+package driftspec@ds {
+
+  module layout {
+    @requirement REQ-00210-1                 // the layout places boxes, knowing nothing of what they stand for (DS-392)
+    @requirement REQ-00211-1                 // the layout depends on nothing of the model (DS-392)
+    requirement REQ-00210-1 {
+      tags: layout, scene, render
+      status: draft
+      @refines SREQ-00013-1
+      title: The layout shall place nested boxes of given sizes and the edges between them, knowing nothing of what they stand for
+      text:
+        An engine is given boxes, each with its size or how its children are arranged, and the edges between them,
+        and says where every box lands and how every edge runs. The packing engine fills shelves, fixed places and
+        trees, for the scene; render's layered engine joins it. Whoever places reaches an engine through IEngine,
+        from the factory that names the engines.
+      rationale:
+        Owner, 2026-11-24 (DS-368, DS-392): the layout engine is abstracted, so the scene and the drawings share one
+        geometry and each projects its own content into it.
+      verification VER-00230-1 {
+        status: draft
+        title: Integration tests confirm the engine the factory hands out places every box of a nested graph inside its parent and apart from its siblings, and a second placement following the first is never wider
+        method: test
+        tests:
+          tests/integration/ds/layout/test_layout_placement.cpp::TestLayoutPlacement.EveryBoxLandsInsideItsParentApartFromItsSiblings
+          tests/integration/ds/layout/test_layout_placement.cpp::TestLayoutPlacement.ASecondPlacementOfShorterBoxesFollowingTheFirstIsNeverWider
+      }
+    }
+
+    requirement REQ-00211-1 {
+      tags: architecture, layout
+      status: draft
+      @refines REQ-00210-1
+      title: The layout shall depend on nothing of the model
+      text:
+        Boxes, sizes, arrangements, edges and identities are all an engine is given. A class of the layout that
+        reached the model could place a box by what it stands for, and the geometry would no longer serve every
+        drawing.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-392): every module has its architecture decisions and patterns, and its rules
+        check that they hold. REQ-00189-1 said it of the packer while the packer was the scene's.
+      verification VER-00231-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when a class of the layout depends on the model
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.APackerThatKnowsTheModelIsTold
+      }
+    }
+
+    rule layout-knows-no-model {
+      title: no class of the layout depends on the model, so an engine places boxes from their sizes and arrangements alone
+      @requirement REQ-00211-1
+      for class c in driftspec@ds@layout
+      never depends(c, x), x in driftspec@ds@model
+    }
+
+    // a layout engine: nested sized boxes and the edges between them in, where they land and how the edges run out
+    class IEngine {
+      @requirement REQ-00210-1
+      + ~IEngine()
+      + abstract place(graph: Graph) -> Placement
+    }
+
+    // the one place that names the engines; whoever places is handed an IEngine
+    class EngineFactory {
+      @requirement REQ-00210-1
+      + static packing() -> std::unique_ptr<IEngine>
+    }
+
+    // the scene's engine (DS-389): a frame is fixed, fills shelves or is a tree, and a graph can hold its shelves to
+    // the widths an earlier placement kept. It routes no edge
+    class PackingEngine : IEngine {
+      @requirement REQ-00210-1
+      + place(graph: Graph) -> Placement
+      - size(frame: Frame, graph: Graph, out: Placement) -> Packed
+      - fixed(frame: Frame, graph: Graph, out: Placement) -> Packed
+      - shelves(frame: Frame, graph: Graph, out: Placement) -> Packed
+      - tree(frame: Frame, graph: Graph, out: Placement) -> Packed
+      - static width(id: std::string, computed: double, graph: Graph) -> double
+      - static shelf(kids: std::vector<Packed>, gap: double, target: double, at: std::vector<std::pair<double, double>>) -> std::pair<double, double>
+      - static target(kids: std::vector<Packed>, atLeast: double, factor: double) -> double
+      - static land(frame: Frame, packed: Packed, x: double, y: double, out: std::map<std::string, Box>) -> void
+    }
+
+    dataclass Graph {                        // what an engine is given: the boxes it refers to, the edges, how wide it may be
+      @requirement REQ-00210-1
+      + refs root: Frame
+      + edges: std::vector<Edge>
+      + maxWidth: double
+      + widths: std::map<std::string, double>   // kept by an earlier placement, for this one to follow
+      + following: bool
+    }
+
+    dataclass Placement {                    // where the boxes landed, how the edges run, and the widths kept
+      @requirement REQ-00210-1
+      + boxes: std::map<std::string, Box>
+      + routes: std::map<std::size_t, Route>
+      + widths: std::map<std::string, double>
+    }
+
+    dataclass Edge {                         // an edge between two boxes, by their identities, with its kind
+      @requirement REQ-00210-1
+      + from: std::string
+      + to: std::string
+      + kind: std::string
+    }
+
+    dataclass Route {                        // how an edge runs: the corners of its polyline, in order
+      @requirement REQ-00210-1
+      + points: std::vector<std::pair<double, double>>
+    }
+
+    dataclass Box {                          // where a box lands: its top left corner, its width and its height
+      @requirement REQ-00210-1
+      + x: double
+      + y: double
+      + w: double
+      + h: double
+    }
+
+    dataclass Frame {                        // a box to pack (DS-389): its identity, how its children are arranged, and their frames
+      @requirement REQ-00210-1
+      + id: std::string
+      + arrangement: Arrangement               // fixed, in shelves, or a tree
+      + kids: std::vector<Frame>
+      + w: double
+      + h: double
+      + at: std::vector<std::pair<double, double>>
+      + gap: double
+      + atLeast: double
+      + factor: double
+      + left: double
+      + top: double
+      + right: double
+      + bottom: double
+      + ports: std::vector<Frame>
+      + portTop: double
+      + portGap: double
+      + drop: double
+    }
+
+    dataclass Packed {                       // a frame packed (DS-389): its size and where each child sits, from its top left corner
+      @requirement REQ-00210-1
+      + w: double
+      + h: double
+      + at: std::vector<std::pair<double, double>>
+      + kids: std::vector<Packed>                 // its kids, then its ports
+    }
+  }
+}

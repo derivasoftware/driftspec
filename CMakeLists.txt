@@ -299,6 +299,11 @@ target_link_libraries(
   PUBLIC driftspec
   PRIVATE CLI11::CLI11 Threads::Threads)
 add_executable(ds app/ds/main.cpp)
+# what one writer of the theme writes (DS-393): built from the theme alone,
+# never shipped; the pages carry it
+add_executable(ds_theme app/theme/main.cpp src/ds/theme/Theme.cpp
+                        src/ds/theme/Writers.cpp)
+target_include_directories(ds_theme PRIVATE include)
 target_link_libraries(ds PRIVATE ds_app)
 if(SKBUILD) # pip install driftspec gives the ds command too, beside the package
             # (DS-303)
@@ -387,6 +392,18 @@ else()
   # no node: the test fails rather than vanish, so a runner without it is
   # noticed
   add_test(NAME viewer_tours COMMAND ${CMAKE_COMMAND} -E false)
+endif()
+
+# ---- the pages' theme regions as the theme writes them (DS-393) ----
+find_program(DS_THEME_PYTHON3 python3)
+if(DS_THEME_PYTHON3)
+  add_test(
+    NAME theme_pages
+    COMMAND ${DS_THEME_PYTHON3} ${CMAKE_SOURCE_DIR}/tools/theme.py --ds-theme
+            $<TARGET_FILE:ds_theme> --check
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+else()
+  add_test(NAME theme_pages COMMAND ${CMAKE_COMMAND} -E false)
 endif()
 
 # ---- every format of every document, pinned as golden files (DS-395): the ds

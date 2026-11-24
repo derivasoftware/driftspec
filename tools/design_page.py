@@ -113,6 +113,7 @@ def workspace_data(binary, name, root):
 
 STYLE = """
 /* Layout: a drafting table. The index on the left, the drawing and its text side by side. */
+/* theme: design-page, written from the theme (DS-393): tools/theme.py --write */
 :root {
   --bg: #eef1ee; --panel: #fbfcfa; --ink: #18211e; --muted: #5d6b65; --rule: #cfd7d1;
   --accent: #0b6e69; --accent-soft: #d5ebe7; --mark: #fdf0c4; --warn: #a8530a;
@@ -128,6 +129,7 @@ STYLE = """
   --bg: #0f1614; --panel: #161f1c; --ink: #e4ebe7; --muted: #93a39c; --rule: #2b3833;
   --accent: #58c4b8; --accent-soft: #1b3a36; --mark: #4a3f14; --warn: #e5a15e;
   --kw: #c79bf0; --ty: #58c4b8; --id: #e5a15e; --cm: #7d8d86; --st: #8fce9d; --ar: #93a39c; color-scheme: dark }
+/* end theme: design-page */
 html, body { height: 100% }
 body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--sans); }
 .app { display: grid; grid-template-columns: 250px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); height: 100% }

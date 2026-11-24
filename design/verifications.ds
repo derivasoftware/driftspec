@@ -332,6 +332,17 @@ package driftspec {
       tests/system/python/test_release.py::TestRelease::test_the_wheel_installs_the_ds_command_beside_the_package
   }
 
+  verification SVER-00031-1 {
+    status: draft
+    @constraint CST-00012-1
+    title: System tests confirm no colour is written outside the theme in what DriftSpec ships, and that a colour written by hand is found
+    text: DS-393. The engine, the viewer, the playground's page, the Python face and the tools that write pages are read; a colour may stand only in the theme's values and in a page's region between its theme markers, which the ctest theme_pages holds to what the theme writes.
+    method: test
+    tests:
+      tests/system/python/test_theme.py::TestTheme::test_no_colour_is_written_outside_the_theme
+      tests/system/python/test_theme.py::TestTheme::test_a_colour_written_by_hand_is_found_and_one_in_a_region_or_a_mask_is_not
+  }
+
   verification SVER-00027-1 {
     status: approved
     @constraint CST-00011-1

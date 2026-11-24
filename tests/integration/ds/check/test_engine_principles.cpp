@@ -76,7 +76,7 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string sceneClasses = "driftspec@ds@scene::scene-operations-belong-to-classes";
   const std::string sceneReads = "driftspec@ds@scene::the-scene-reads-the-model";
   const std::string layerLayout = "driftspec@ds@scene::no-layer-knows-the-layout";
-  const std::string packerModel = "driftspec@ds@scene::the-packer-knows-no-model";
+  const std::string packerModel = "driftspec@ds@layout::layout-knows-no-model";
   const std::string layersAlone = "driftspec@ds@scene::no-layer-knows-another";
 };
 
@@ -259,10 +259,14 @@ TEST_F(TestEnginePrinciples, ALayerThatKnowsTheLayoutIsTold) {
   const std::vector<std::string> rules = broken({{"ds/scene.ds", "    class StructureLayer : ILayer {", "      - refs layout_: Layout\n"}});
   EXPECT_TRUE(has(rules, layerLayout));
   EXPECT_FALSE(has(rules, layersAlone));  // the layout is no layer
+  const std::vector<std::string> engine =
+      broken({{"ds/scene.ds", "    class StructureLayer : ILayer {", "      - refs engine_: layout::IEngine\n"}});
+  EXPECT_TRUE(has(engine, layerLayout));  // every class of the layout module places boxes
 }
 
 TEST_F(TestEnginePrinciples, APackerThatKnowsTheModelIsTold) {
-  const std::vector<std::string> rules = broken({{"ds/scene.ds", "    class Packer {", "      - refs model_: model::Model\n"}});
+  const std::vector<std::string> rules =
+      broken({{"ds/layout.ds", "    class PackingEngine : IEngine {", "      - refs model_: model::Model\n"}});
   EXPECT_TRUE(has(rules, packerModel));
   EXPECT_FALSE(has(rules, sceneReads));  // holding the model is not changing it
 }

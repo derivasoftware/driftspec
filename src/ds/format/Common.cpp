@@ -46,7 +46,7 @@ std::string encode(const scene::SceneDocument& doc, bool pretty) {
   for (size_t i = 0; i < doc.nodes.size(); ++i) at[doc.nodes[i].id] = static_cast<int>(i);
   const Map landing(doc.nodes);  // where a link's sequence lands: the behaviour it is
   const auto index = [&at](const std::string& id) { return at.count(id) ? at.at(id) : -1; };
-  const auto ints = [](const Box& b) {
+  const auto ints = [](const layout::Box& b) {
     return nlohmann::json::array({std::lround(b.x), std::lround(b.y), std::lround(b.w), std::lround(b.h)});
   };
   std::map<std::string, int> behaviourOf;  // "subject / scenario" -> its index

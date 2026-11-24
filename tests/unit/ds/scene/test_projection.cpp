@@ -7,15 +7,15 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/layout/Frame.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
-#include "ds/scene/Frame.hpp"
 #include "ds/scene/Projection.hpp"
 
 namespace {
 
-using ds::scene::Frame;
+using ds::layout::Frame;
 using ds::scene::Projection;
 
 /// What the scene places, before it is placed (DS-389): the model as nested frames, each sized by what it shows,

@@ -11,9 +11,11 @@ import driftspec
 SHELL = r"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>driftspec live · __TITLE__</title>
 <style>
-:root{--bg:#f4f6f8;--panel:#fff;--fg:#1b2129;--muted:#5a6573;--line:#d5dbe2;--accent:#d9822b;--ok:#2f8a4a;--err:#c2410c;--warn:#a16207;--info:#0e7490;--sel:#2f62c9;
+/* theme: live, written from the theme (DS-393): tools/theme.py --write */
+:root{--bg:#f4f6f8;--panel:#fff;--fg:#1b2129;--muted:#5a6573;--line:#d5dbe2;--accent:#d9822b;--ok:#2f8a4a;--err:#c2410c;--warn:#a16207;--info:#0e7490;--sel:#2f62c9;--on-sel:#fff;
  font-family:system-ui,"Segoe UI",sans-serif;font-size:13px;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--bg:#12161b;--panel:#1a2027;--fg:#e4e9ef;--muted:#9aa6b4;--line:#2f3943;--accent:#f0a35a;--ok:#6cc68a;--err:#f08a5d;--warn:#e3b341;--info:#5cc8d9;--sel:#7aa2f2;color-scheme:dark}}
+/* end theme: live */
 *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg)}
 body{display:grid;grid-template-rows:auto 1fr;grid-template-columns:1fr 300px;height:100%}
 header{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -46,7 +48,7 @@ details>summary h3{flex:1} .n{font-size:11px;color:var(--muted)} .acts{display:f
 .nt{border:1px solid var(--line);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:4px} .nt.seen{opacity:.5} .nt.you{border-color:var(--sel)}
 .nt .hd{display:flex;gap:6px;align-items:center} .nt .hd button.id{flex:1;text-align:left} .nt .b.on{border-color:var(--ok);color:var(--ok)}
 .thread{display:flex;flex-direction:column;gap:6px} textarea{width:100%;min-height:58px;resize:vertical;font:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);color:var(--fg)}
-.send{display:flex;justify-content:space-between;align-items:center;margin-top:4px} .send button{all:unset;cursor:pointer;font-size:12px;padding:3px 12px;border-radius:999px;background:var(--sel);color:#fff}
+.send{display:flex;justify-content:space-between;align-items:center;margin-top:4px} .send button{all:unset;cursor:pointer;font-size:12px;padding:3px 12px;border-radius:999px;background:var(--sel);color:var(--on-sel)}
 .pill.iso{cursor:pointer;border-color:var(--accent);color:var(--accent)}
 .add{color:var(--ok)} .chg{color:var(--accent)}
 @media (max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr 40%} aside{border-left:0;border-top:1px solid var(--line)}}
