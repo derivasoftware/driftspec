@@ -23,6 +23,7 @@
 #include "ds/bind/Notes.hpp"
 #include "ds/bind/PackageBinder.hpp"
 #include "ds/bind/RuleBinder.hpp"
+#include "ds/bind/SequenceBinder.hpp"
 #include "ds/bind/SignatureBinder.hpp"
 #include "ds/bind/StateBinder.hpp"
 #include "ds/bind/TypeBinder.hpp"
@@ -71,7 +72,8 @@ class Binder {
   StateBinder states_{fields_, annotations_};
   ClassBinder classes_{fields_, annotations_, extensions_, members_};
   FunctionBinder functions_{signatures_, bodies_};
-  LegacyBinder legacy_{fields_, annotations_, types_};
+  SequenceBinder sequences_{fields_, annotations_, types_};
+  LegacyBinder legacy_;
   Dispatch dispatch_;
 };
 

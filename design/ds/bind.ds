@@ -84,12 +84,12 @@ package driftspec@ds {
       - owns states_: StateBinder
       - owns classes_: ClassBinder
       - owns functions_: FunctionBinder
+      - owns sequences_: SequenceBinder
       - owns legacy_: LegacyBinder
       - owns dispatch_: Dispatch
     }
 
-    class LegacyBinder : INodeBinder {       // the constructs with no binder of their own yet: DS-356 splits it, DS-357 removes it
-      + LegacyBinder(fields: FieldBinder, annotations: AnnotationBinder, types: TypeBinder)
+    class LegacyBinder : INodeBinder {       // the walk the binder had: since DS-356 it takes no kind; DS-357 removes it
       + kinds() -> std::vector<std::string>
       + bind(node: TSNode, ctx: BindContext) -> void {
         @requirement REQ-00013-1
@@ -97,21 +97,6 @@ package driftspec@ds {
         @requirement REQ-00015-1
         @requirement REQ-00022-1
       }
-      - bindSequence(ctx: BindContext, node: TSNode) -> void {
-        @requirement REQ-00034-1
-        @requirement REQ-00035-1
-        @requirement REQ-00036-2
-      }
-      - bindSteps(ctx: BindContext, node: TSNode, sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
-        @requirement REQ-00037-1
-        @requirement REQ-00110-1
-      }
-      - branch(ctx: BindContext, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
-        @requirement REQ-00037-1
-      }
-      - refs fields_: FieldBinder
-      - refs annotations_: AnnotationBinder
-      - refs types_: TypeBinder
     }
 
     // Reads the file's tree and binds what is written at its root, packages and diagrams, with no scope and no owner,
@@ -159,16 +144,6 @@ package driftspec@ds {
           self -> metamodel.knownAnnotations() -> known
           self -> ctx.report(finding)
         }
-      }
-    }
-
-    // The constructs no binder of their own takes yet (DS-355, DS-356): the node is declared by its kind, related to its
-    // owner, and its children bound in turn. The identities are built by expressions, so e appears with its fields
-    // already set. A package's children are bound with its id plus @ as scope, an expression: that call and its
-    // annotations are not told here.
-    sequence LegacyBinder::bind {
-      opt a sequence {
-        -> bindSequence(ctx, node)
       }
     }
 
@@ -513,6 +488,26 @@ package driftspec@ds {
       + MemberBodyBinder(fields: FieldBinder, annotations: AnnotationBinder)
       + bind(member: TSNode, ctx: BindContext, out_entity: model::Entity, scope: std::string) -> void {
         @requirement REQ-00032-2
+      }
+    }
+
+    class SequenceBinder : INodeBinder {     // a sequence: the behaviour of an operation, its steps and frames (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs types_: TypeBinder
+      + SequenceBinder(fields: FieldBinder, annotations: AnnotationBinder, types: TypeBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00034-1
+        @requirement REQ-00035-1
+        @requirement REQ-00036-2
+      }
+      - bindSteps(ctx: BindContext, node: TSNode, sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
+        @requirement REQ-00037-1
+        @requirement REQ-00110-1
+      }
+      - branch(ctx: BindContext, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
+        @requirement REQ-00037-1
       }
     }
   }
