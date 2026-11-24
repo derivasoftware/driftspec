@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "ds/layout/Box.hpp"
 #include "ds/model/Model.hpp"
-#include "ds/scene/Box.hpp"
 
 namespace ds {
 namespace scene {
@@ -24,9 +24,9 @@ struct Node {
   std::string stereotype;  ///< the model kind it stands for: class, dataclass, function, enum, method, attribute, operation...
   std::string visibility;  ///< + or -
   std::vector<std::string> requirements;  ///< the requirements and constraints it is linked to
-  Box full;                               ///< its place with every member drawn
+  layout::Box full;                       ///< its place with every member drawn
   bool lean = false;                      ///< whether it keeps a place when private members are hidden
-  Box leanBox;                            ///< its place with private members hidden
+  layout::Box leanBox;                    ///< its place with private members hidden
 };
 
 /// A relation between two nodes of the scene, of one kind, with what produces it: the
@@ -134,8 +134,8 @@ struct RuleView {
 /// The whole model laid out once, nested, in two variants: every member, public members only.
 struct SceneDocument {
   std::vector<Node> nodes;
-  Box world;
-  Box leanWorld;
+  layout::Box world;
+  layout::Box leanWorld;
   std::vector<Link> links;
   std::vector<DiagramView> diagrams;
   std::map<std::string, std::string> titles;  ///< the title of every requirement and constraint a node links

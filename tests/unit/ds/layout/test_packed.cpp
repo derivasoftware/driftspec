@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 
-#include "ds/scene/Packed.hpp"
+#include "ds/layout/Packed.hpp"
 
 namespace {
 
 /// A frame packed (DS-389): until the packer sizes it, it has no size and nothing sits in it.
 TEST(TestPacked, APackedFrameHasNoSizeAndNothingInItUntilItIsPacked) {
-  ds::scene::Packed p;
+  ds::layout::Packed p;
   EXPECT_DOUBLE_EQ(p.w + p.h, 0);
   EXPECT_TRUE(p.at.empty());
   EXPECT_TRUE(p.kids.empty());

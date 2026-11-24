@@ -20,7 +20,7 @@ class Layout {
 
  private:
   /// The rectangle that holds every node, or every node with a lean place.
-  static Box bounds(const std::vector<Node>& nodes, bool lean);
+  static layout::Box bounds(const std::vector<Node>& nodes, bool lean);
 
   const model::Model& model_;
   const model::Metamodel& metamodel_;
