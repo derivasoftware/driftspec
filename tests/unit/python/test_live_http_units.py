@@ -64,7 +64,7 @@ class TestHandler:
         live, port = served
         assert request(port, "/state", host="evil.example:80")[0] == 403
         assert request(port, "/note", {"id": "x", "text": "t"}, origin="http://evil.example")[0] == 403
-        assert live.notes == []
+        assert live.annotations.notes == []
         assert request(port, "/state", origin=f"http://localhost:{port}", host=f"localhost:{port}")[0] == 200
 
 

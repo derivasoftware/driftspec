@@ -6,6 +6,15 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.60
+
+The live session is split into its parts, and its contract is declared once (DS-412). `Live` holds the version shown
+and composes `Annotations` (the notes, highlights and comments, kept in `.driftspec/live.json`), `Events` (the pages
+that follow it) and `Watcher` (the .ds files it watches). The contract is one table in `driftspec.live_contract`: each
+operation with its route, what the session answers, its MCP tool and its command word. The HTTP routes, the MCP tools and
+the command line are read from it, and a test checks that they agree. What a client sees does not change: GET /contract,
+the state, the events, tools/list and the command line are the same, byte for byte (contract version 4).
+
 ## 0.1.59
 
 The Owner approves the roadmap's drafts: the evaluator's requirement and its verification (REQ-00192-1,
