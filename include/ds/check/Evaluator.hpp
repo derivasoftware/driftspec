@@ -56,7 +56,7 @@ class Evaluator {
   std::string definitionOf(const std::string& owner, const std::string& name) const;
   std::string scopeOf(const std::string& owner) const;
   bool contains(const std::string& outer, const std::string& inner) const;
-  void report(const std::string& code, const std::string& owner, const std::string& message, const model::Location& at);
+  void report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at);
 
   model::Model& model_;
   const model::Metamodel& metamodel_;

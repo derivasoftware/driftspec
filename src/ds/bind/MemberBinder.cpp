@@ -29,8 +29,9 @@ void MemberBinder::bind(TSNode m, const BindContext& ctx, const model::Entity& c
     member.id = cls.id + "::" + member.name;
     member.fields["symbol"] = symbol;
     if (operators.count(symbol) == 0) {
-      ctx.report({"E-OPERATOR-UNDECLARED", "error",
-                  "operator " + symbol + " is refined in the body of " + cls.id + " but is not in its header set", loc});
+      ctx.report(ctx.metamodel.finding(model::Code::E_OPERATOR_UNDECLARED,
+                                       "operator " + symbol + " is refined in the body of " + cls.id + " but is not in its header set",
+                                       loc));
     }
   } else {
     member.kind = TreeReader::is(m, "method") ? model::Kind::Method : model::Kind::Attribute;
@@ -44,8 +45,8 @@ void MemberBinder::bind(TSNode m, const BindContext& ctx, const model::Entity& c
     if (TreeReader::is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
     if (TreeReader::is(m, "method") && member.name == "~" + cls.name) member.flags.push_back("destructor");  // DS-143
     if (cls.has("dataclass") && member.has("abstract")) {
-      ctx.report(
-          {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
+      ctx.report(ctx.metamodel.finding(model::Code::E_DATACLASS_ABSTRACT,
+                                       cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc));
     }
     std::vector<std::string> own = params;  // a templated method's own parameters are no entities either (DS-18)
     for (const std::string& t : TypeBinder::params(ctx.reader, ctx.reader.child(m, Field::params))) own.push_back(t);
@@ -69,10 +70,10 @@ void MemberBinder::bind(TSNode m, const BindContext& ctx, const model::Entity& c
     for (const auto* said : {&owning, &counting}) {
       if (said->size() < 2) continue;
       const bool aboutOwnership = said == &owning;
-      ctx.report({"E-MODIFIER-CONFLICT", "error",
-                  member.id + " is written " + join(*said, " ") + ": an attribute has at most one " +
-                      (aboutOwnership ? "ownership (owns, refs or shares)" : "multiplicity (many or optional)"),
-                  loc});
+      ctx.report(ctx.metamodel.finding(model::Code::E_MODIFIER_CONFLICT,
+                                       member.id + " is written " + join(*said, " ") + ": an attribute has at most one " +
+                                           (aboutOwnership ? "ownership (owns, refs or shares)" : "multiplicity (many or optional)"),
+                                       loc));
     }
     const std::string counted = counting.empty() ? "" : counting.front();
     if (!counted.empty()) member.flags.push_back(counted);

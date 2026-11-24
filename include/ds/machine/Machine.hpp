@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -37,7 +38,8 @@ class Machine {
   std::string initial() const;
   /// What the rules say that cannot be: an attribute the subject does not hold, a value its type does not
   /// have, a rule that excludes itself, and two states that can hold at once, with a context in which they do.
-  std::vector<model::Finding> faults() const;
+  /// Each is made by `metamodel` from its code (DS-379).
+  std::vector<model::Finding> faults(const model::Metamodel& metamodel) const;
   /// The events its jumps are made on, in the order written.
   std::vector<std::string> events() const;
   /// What the machine is of: the identity of its subject.

@@ -39,10 +39,10 @@ TEST_F(TestCoverage, AnAbsenceIsNoFindingAndTheQueryAnswersIt) {
   const auto checkSteps = ds::check::steps();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().code;
-  const auto report = ds::check::Report::of(model);
+  const auto report = ds::check::Report::of(model, metamodel);
   EXPECT_TRUE(report.findings.empty());
   EXPECT_EQ(report.coverage.size(), 2u);  // the operation with no sequence, the approved requirement nothing verifies
-  for (const auto& c : report.coverage) EXPECT_EQ(c.severity, "coverage");
+  for (const auto& c : report.coverage) EXPECT_EQ(c.severity, ds::model::Severity::coverage);
   const auto all = ds::query::Query(model, metamodel).ask("coverage", "");
   EXPECT_EQ(all.size(), 2u);
   const auto one = ds::query::Query(model, metamodel).ask("coverage", "shop@shell::buy");

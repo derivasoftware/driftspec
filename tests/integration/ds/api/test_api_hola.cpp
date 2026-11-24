@@ -41,8 +41,8 @@ TEST_F(TestApiOverHola, TheExampleChecksCleanAsTheCommandLineSays) {
 TEST_F(TestApiOverHola, TheApiReturnsTheReportTheCommandLinePrints) {
   // the command line loads the directory and prints Api::report; the Api loads the texts: one report (DS-120)
   ds::parse::Parser parser;
-  const auto cli = nlohmann::json::parse(
-      ds::api::Api::report(ds::api::Api(metamodel).load(parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts"))));
+  const auto cli = nlohmann::json::parse(ds::api::Api(metamodel).report(
+      ds::api::Api(metamodel).load(parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts"))));
   ds::api::Files texts;
   for (const auto& entry : std::filesystem::recursive_directory_iterator(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) {
     if (entry.path().extension() != ".ds") continue;

@@ -29,8 +29,8 @@ std::vector<model::Finding> StructureCheck::check(const Context& context) {
   resolver_ = &context.resolver();
   found_.clear();
   checkOwnershipCycles();
-  checkCycles("refines", "E-REFINES-CYCLE", "refines");
-  checkCycles("inherits", "E-INHERITANCE-CYCLE", "derives from");
+  checkCycles("refines", model::Code::E_REFINES_CYCLE, "refines");
+  checkCycles("inherits", model::Code::E_INHERITANCE_CYCLE, "derives from");
   checkRefinesUpward();
   checkSatisfiesHome();
   checkArtefacts();
@@ -69,8 +69,8 @@ void StructureCheck::checkOwnershipCycles() {
         std::vector<std::string> key = cycle;
         std::sort(key.begin(), key.end());
         if (reportedCycles.insert(join(key, "|")).second) {
-          found_.push_back(
-              {"E-OWNERSHIP-CYCLE", "error", "composition cycle: " + join(cycle, " owns ") + " owns " + edge.to, edge.location});
+          found_.push_back(context_->metamodel().finding(
+              model::Code::E_OWNERSHIP_CYCLE, "composition cycle: " + join(cycle, " owns ") + " owns " + edge.to, edge.location));
         }
       } else if (!done.count(edge.to)) {
         walk(edge.to);
@@ -87,7 +87,7 @@ void StructureCheck::checkOwnershipCycles() {
 
 // A requirement that refines itself through others, a class that derives from itself: a chain of the relation
 // that comes back to where it starts is a contradiction between written things (DS-214). Reported once per cycle.
-void StructureCheck::checkCycles(const std::string& relation, const std::string& code, const std::string& verb) {
+void StructureCheck::checkCycles(const std::string& relation, model::Code code, const std::string& verb) {
   std::map<std::string, std::vector<std::pair<std::string, model::Location>>> next;
   for (const auto& r : model_->index().ofKind(relation)) {
     const model::Entity* to = model_->find(r.to);
@@ -105,7 +105,8 @@ void StructureCheck::checkCycles(const std::string& relation, const std::string&
         std::vector<std::string> key = cycle;
         std::sort(key.begin(), key.end());
         if (reported.insert(join(key, "|")).second)
-          found_.push_back({code, "error", "a cycle: " + join(cycle, " " + verb + " ") + " " + verb + " " + edge.first, edge.second});
+          found_.push_back(context_->metamodel().finding(code, "a cycle: " + join(cycle, " " + verb + " ") + " " + verb + " " + edge.first,
+                                                         edge.second));
       } else if (!done.count(edge.first)) {
         walk(edge.first);
       }
@@ -131,11 +132,11 @@ void StructureCheck::checkRefinesUpward() {
     const model::Entity* parent = model_->find(r.to);
     if (!child || !parent || parent->expected || child->scope.empty() || parent->scope.empty()) continue;
     if (!inside(parent->scope, child->scope)) continue;
-    found_.push_back({"W-REFINES-UPWARD", "warning",
-                      child->id + " (in " + model::Scope(child->scope).box().text() + ") refines " + parent->id +
-                          ", which is written inside it (in " + model::Scope(parent->scope).box().text() +
-                          "): the detail stands above what it details",
-                      r.location});
+    found_.push_back(context_->metamodel().finding(
+        model::Code::W_REFINES_UPWARD,
+        child->id + " (in " + model::Scope(child->scope).box().text() + ") refines " + parent->id + ", which is written inside it (in " +
+            model::Scope(parent->scope).box().text() + "): the detail stands above what it details",
+        r.location));
   }
 }
 
@@ -209,10 +210,11 @@ void StructureCheck::checkSatisfiesHome() {
     if (common.empty()) continue;
     const std::string where = common + " holds it and every piece that realises it";
     for (const auto& o : pair.second)
-      found_.push_back({"W-SATISFIES-OUTSIDE-HOME", "warning",
-                        o.piece->id + " satisfies " + pair.first + ", whose home " + home +
-                            " does not hold it: the requirement is written at one place and realised outside it; " + where,
-                        o.location});
+      found_.push_back(
+          context_->metamodel().finding(model::Code::W_SATISFIES_OUTSIDE_HOME,
+                                        o.piece->id + " satisfies " + pair.first + ", whose home " + home +
+                                            " does not hold it: the requirement is written at one place and realised outside it; " + where,
+                                        o.location));
   }
 }
 
@@ -224,13 +226,15 @@ void StructureCheck::checkArtefacts() {
     if (e.expected) continue;
     const auto status = e.fields.find("status");
     if (e.kind == model::Kind::Requirement && status != e.fields.end() && status->second == "approved" && !verified.count(e.id)) {
-      found_.push_back({"W-REQ-NO-VERIFICATION", "warning", e.id + " is approved and nothing verifies it", e.location});
+      found_.push_back(
+          context_->metamodel().finding(model::Code::W_REQ_NO_VERIFICATION, e.id + " is approved and nothing verifies it", e.location));
     }
     const auto method = e.fields.find("method");
     if (e.kind == model::Kind::Verification && method != e.fields.end() && method->second == "test") {
       const auto tests = e.fields.find("tests");
       if (tests == e.fields.end() || tests->second.empty())
-        found_.push_back({"W-VER-NO-TEST", "warning", e.id + " verifies by test but names no tests", e.location});
+        found_.push_back(
+            context_->metamodel().finding(model::Code::W_VER_NO_TEST, e.id + " verifies by test but names no tests", e.location));
     }
   }
 }
@@ -241,9 +245,9 @@ void StructureCheck::checkExtensions() {
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.expected && e.has("extension") && !context_->reported().count(e.id) && said.insert(e.id).second) {
-      found_.push_back({"W-REF-UNDECLARED", "warning",
-                        metamodel_->nameOf(e.kind) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace",
-                        e.location});
+      found_.push_back(context_->metamodel().finding(
+          model::Code::W_REF_UNDECLARED,
+          metamodel_->nameOf(e.kind) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace", e.location));
     }
   }
 }
@@ -257,16 +261,16 @@ void StructureCheck::checkFields() {
         // a closed field takes one of its values; an empty one is left to the field's own check (DS-211)
         if (!spec->values.empty() && !f.second.empty() &&
             std::find(spec->values.begin(), spec->values.end(), f.second) == spec->values.end())
-          found_.push_back({"W-FIELD-VALUE", "warning",
-                            metamodel_->nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + f.second + ", which is none of " +
-                                join(spec->values, ", "),
-                            e.location});
+          found_.push_back(context_->metamodel().finding(model::Code::W_FIELD_VALUE,
+                                                         metamodel_->nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + f.second +
+                                                             ", which is none of " + join(spec->values, ", "),
+                                                         e.location));
         continue;
       }
-      found_.push_back({"W-FIELD-UNKNOWN", "warning",
-                        metamodel_->nameOf(e.kind) + " '" + e.id + "' has a field '" + f.first + "' that a " + metamodel_->nameOf(e.kind) +
-                            " does not declare",
-                        e.location});
+      found_.push_back(context_->metamodel().finding(model::Code::W_FIELD_UNKNOWN,
+                                                     metamodel_->nameOf(e.kind) + " '" + e.id + "' has a field '" + f.first + "' that a " +
+                                                         metamodel_->nameOf(e.kind) + " does not declare",
+                                                     e.location));
     }
   }
 }

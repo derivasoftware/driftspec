@@ -308,12 +308,111 @@ package driftspec@ds {
     // the metamodel's tables (DS-340): the catalogue of finding codes, the annotations that mean something
     // and how each kind is written. The binder, the checker and the kinds read them here; the manual
     // derives its pages from them and the metamodel never reads the manual
+    // ---- a finding is made from its code (DS-379), as requirements and the rules that hold them ------------------
+    requirement REQ-00190-1 {
+      tags: architecture, model, findings
+      status: draft
+      @refines REQ-00079-2
+      title: Every finding shall be made from its code by the metamodel, which reads its printed code and its severity from the catalogue
+      text:
+        A finding is made by Metamodel::finding from a Code, the message and where it is: the catalogue's row for
+        the code gives the code as it is printed and its severity, one slot read by the code's place. Nobody writes
+        a code as text or a severity by hand, and a code the catalogue does not hold is no Code, so it does not
+        compile. Outside the model, nothing reads a code's row.
+      rationale:
+        Owner, 2026-11-24 (DS-378, DS-379): seventy sites wrote the code and the severity as two strings, and agreed
+        with the catalogue only by discipline; the catalogue was read for coverage alone.
+      verification VER-00210-1 {
+        status: draft
+        title: Tests confirm every finding is made from its code with the catalogue's severity, the catalogue holds one row per code in its order, and a class outside the model that reads a code's row is told
+        method: test
+        tests:
+          tests/integration/ds/check/test_finding_principles.cpp::TestFindingPrinciples.EveryFindingOfADesignCarriesTheSeverityOfItsCode
+          tests/integration/ds/check/test_finding_principles.cpp::TestFindingPrinciples.TheDesignOfDsKeepsTheRulesOfFindings
+          tests/integration/ds/check/test_finding_principles.cpp::TestFindingPrinciples.AClassOutsideTheModelThatReadsTheCatalogueIsTold
+      }
+    }
+
+    requirement REQ-00191-1 {
+      tags: architecture, model, findings
+      status: draft
+      @refines REQ-00079-2
+      title: What a severity means shall be a row of the metamodel's severity table, which every reader asks
+      text:
+        Severity is a value, and its row says its printed name, whether a finding of it fails the check, whether it
+        is kept apart as coverage and what an editor shows it as. The check counts what fails, the model keeps apart
+        what is kept apart, and the exports, the formats and the manual print the name. A report carries the table it
+        was built in, so a format asks it without the metamodel. A new severity is one value and one row.
+      rationale:
+        Owner, 2026-11-24 (DS-379): a severity read as a string was compared by its spelling in each reader; asked as
+        a row, a reader never names one, and a severity added later reaches each of them.
+      verification VER-00211-1 {
+        status: draft
+        title: Tests confirm each severity is a row that says what it means, the report carries the table, and a class outside the model and the report that holds a row is told
+        method: test
+        tests:
+          tests/integration/ds/check/test_finding_principles.cpp::TestFindingPrinciples.TheReportCountsWhatFailsAndPrintsEachSeverityByName
+          tests/integration/ds/check/test_finding_principles.cpp::TestFindingPrinciples.TheDesignOfDsKeepsTheRulesOfFindings
+          tests/integration/ds/check/test_finding_principles.cpp::TestFindingPrinciples.AClassThatHoldsASeverityRowIsTold
+      }
+    }
+
+    rule findings-come-from-the-catalogue {
+      title: no class outside the model depends on a code's row, so every finding is made from its code by the metamodel
+      @requirement REQ-00190-1
+      for class c in driftspec@ds
+      where not c in driftspec@ds@model
+      never depends(c, driftspec@ds@model::CodeSpec)
+    }
+
+    rule severities-are-asked-of-their-table {
+      title: what a severity means is held only by the metamodel and by the report it hands to the formats, so every reader asks the row
+      @requirement REQ-00191-1
+      for class c in driftspec@ds
+      where not c in driftspec@ds@model, c != driftspec@ds@check::Report
+      never depends(c, driftspec@ds@model::SeveritySpec)
+    }
+
+    enum Code {                              // a finding code of the catalogue, in its order: E-SYNTAX is E_SYNTAX (DS-379)
+      @requirement REQ-00190-1
+      E_SYNTAX, E_NAME_RESERVED, E_DUPLICATE_IDENTITY, E_MSG_ARITY, E_MODIFIER_CONFLICT, E_OPERATOR_UNDECLARED,
+      E_OWNERSHIP_CYCLE, E_RELATION_KIND, E_REF_UNPINNED, E_REFINES_CYCLE, E_INHERITANCE_CYCLE, E_TEMPLATE_BOUND,
+      E_DATACLASS_ABSTRACT, W_REF_UNDECLARED, W_NAME_AMBIGUOUS, W_REVISION_DRIFT, W_PARENT_IGNORED, W_FIELD_UNKNOWN,
+      W_ANNOTATION_UNKNOWN, W_DIAGRAM_UNDECLARED, W_RULE_NEVER_MATCHES, W_REFINES_UPWARD, W_SATISFIES_OUTSIDE_HOME,
+      W_INTERFACE_SIGNATURE, W_HANDLER_UNREACHED, W_FIELD_VALUE, W_MSG_UNDECLARED, W_MSG_NOT_STATIC, W_ARG_TYPE,
+      W_RETURN_TYPE, W_SCENARIO_UNDECLARED, W_SCENARIO_TWICE, W_LEVEL_NO_CROSSING, W_LEVEL_ORDER, W_LEVEL_NOT_BELOW,
+      W_STATE_OVERLAP, W_STATE_VALUE, W_STATE_UNDECLARED, W_STATE_IMPOSSIBLE, W_STATE_ORDER, W_MESSAGE_NO_OPERATION,
+      W_OPERATION_NO_BEHAVIOUR, W_OUTCOME_MISMATCH, W_EVENT_UNDECLARED, W_ACTION_UNDECLARED, W_VIEW_UNDECLARED,
+      W_VIEW_UNREACHABLE, W_STATE_UNREACHABLE, W_FAILURE_UNDECLARED, W_FAILURE_UNREACHED, W_VIEW_NO_WAY_OUT,
+      W_NOT_VISIBLE, W_PRIVATE_LEAK, W_DIAGRAM_DEPTH, W_DIAGRAM_NEIGHBOURS, W_REQ_NO_VERIFICATION, W_VER_NO_TEST,
+      W_RULE_NO_REQUIREMENT, W_RULE_NO_CLAIM, W_DEFINITION_NO_CASE, E_RULE_BROKEN, E_RULE_UNKNOWN, E_RULE_ARITY,
+      E_RULE_UNSAFE, E_RULE_UNSTRATIFIED, W_CONSUMES_UNDECLARED, W_CONSUMES_UNUSED, W_CONSUMES_BYPASS,
+      W_LANGUAGE_UNKNOWN, W_USECASE_UNDECLARED, W_USECASE_SIGNATURE, W_USECASE_OUTCOME_UNHANDLED,
+      W_SCENARIO_NO_OUTCOME, W_USECASE_UNREALISED
+    }
+
+    enum Severity {                          // how much a finding weighs; what it means is its row of the severity table (DS-379)
+      @requirement REQ-00191-1
+      error, warning, coverage
+    }
+
     dataclass CodeSpec {                     // a finding code: what it means and what to do about it
       @requirement REQ-00079-2
-      + code: std::string
-      + severity: std::string
+      @requirement REQ-00190-1
+      + id: Code
+      + code: std::string                    // as it is printed: E-SYNTAX
+      + severity: Severity
       + meaning: std::string
       + fix: std::string
+    }
+
+    dataclass SeveritySpec {                 // what a severity means: its name, whether it fails, whether it is kept apart, how an editor shows it
+      @requirement REQ-00191-1
+      + id: Severity
+      + name: std::string
+      + fails: bool
+      + keptApart: bool
+      + editor: std::string                  // error, warning, information or hint
     }
 
     dataclass AnnotationSpec {               // an annotation that means something, and the relation it makes
@@ -398,6 +497,7 @@ package driftspec@ds {
       - owns many identityFields_: std::vector<std::string>             // the fields that hold an identity, from the kinds
       - owns many relations_: std::vector<RelationSpec>
       - owns many codes_: std::vector<CodeSpec>
+      - owns many severities_: std::vector<SeveritySpec>
       - owns many known_: std::vector<AnnotationSpec>
       - owns other_: AnnotationSpec
       - owns many annotations_: std::vector<AnnotationSpec>
@@ -415,7 +515,17 @@ package driftspec@ds {
       + relationOf(kind: std::string) -> RelationSpec
       + joins(relation: RelationSpec, from: Kind, to: Kind) -> bool
       + codes() -> std::vector<CodeSpec>
-      + codeOf(code: std::string) -> CodeSpec
+      + codeOf(code: std::string) -> CodeSpec                       // by its printed name, as a reader asks for it
+      + rowOf(code: Code) -> CodeSpec {                             // a code's row: one slot, by its place in Code (DS-379)
+        @requirement REQ-00190-1
+      }
+      + severities() -> std::vector<SeveritySpec>
+      + severityOf(severity: Severity) -> SeveritySpec {            // one slot, by its place in Severity (DS-379)
+        @requirement REQ-00191-1
+      }
+      + finding(code: Code, message: std::string, location: Location) -> Finding {   // the one maker of a finding (DS-379)
+        @requirement REQ-00190-1
+      }
       + annotations() -> std::vector<AnnotationSpec>                // the rows the manual lists: the known, any other word, the colon after an operation
       + knownAnnotations() -> std::vector<AnnotationSpec> {         // the binder's: nothing else binds as an annotation
         @requirement REQ-00088-1
@@ -451,6 +561,7 @@ package driftspec@ds {
       - static matches(name: std::string, key: std::string) -> bool
       - static writtenForms() -> std::map<Kind, std::pair<std::string, std::string>>
       - static buildCodes() -> std::vector<CodeSpec>
+      - static buildSeverities() -> std::vector<SeveritySpec>
       - static buildKnownAnnotations() -> std::vector<AnnotationSpec>
       - static buildOtherAnnotation() -> AnnotationSpec
       - buildAnnotations() -> std::vector<AnnotationSpec>
@@ -468,6 +579,7 @@ package driftspec@ds {
       -> buildIdentityFields() -> identities
       -> buildRelations() -> relations
       -> buildCodes() -> codes
+      -> buildSeverities() -> severities
       -> buildKnownAnnotations() -> known
       -> buildOtherAnnotation() -> other
       -> buildAnnotations() -> annotations
@@ -781,10 +893,10 @@ package driftspec@ds {
       + owns location: Location
     }
 
-    dataclass Finding {                      // one diagnostic of the engine
+    dataclass Finding {                      // one diagnostic of the engine, made by Metamodel::finding (DS-379)
       @requirement REQ-00001-1
       + code: std::string
-      + severity: std::string
+      + severity: Severity
       + message: std::string
       + owns location: Location
     }
@@ -988,12 +1100,13 @@ package driftspec@ds {
       // its flags join those kept; its parameters, when it writes any, replace them; it is found where it is written
     }
 
-    // What is not yet written is no finding (DS-216): the metamodel says which codes are coverage.
+    // What is not yet written is no finding (DS-216): the row of its severity says whether it is kept apart; a
+    // finding is born with the severity its code has in the catalogue (DS-379).
     sequence Model::cover {
       loop each finding, in the order reported {
-        self -> metamodel_.codeOf(code) -> spec
-        alt its code is coverage / covered {
-          // marked so, it joins the coverage
+        self -> metamodel_.severityOf(severity) -> row
+        alt its severity is kept apart / covered {
+          // it joins the coverage
         } else {
           // it stays a finding
         }

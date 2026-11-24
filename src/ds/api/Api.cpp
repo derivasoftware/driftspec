@@ -68,14 +68,14 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) const {
       broken.insert(parsed.path);
       const Unclosed u = unclosedBlock(parsed.text);
       if (u.line > 0 && u.line <= parsed.errorLine) {  // a lost brace: say which block, where it opens
-        model.report(
-            {"E-SYNTAX",
-             "error",
-             "the file does not parse: `" + u.opener + "` is not closed; line " + std::to_string(u.until) + " is written outside it",
-             {parsed.path, u.line, 1}});
+        model.report(metamodel_.finding(
+            model::Code::E_SYNTAX,
+            "the file does not parse: `" + u.opener + "` is not closed; line " + std::to_string(u.until) + " is written outside it",
+            {parsed.path, u.line, 1}));
       } else {
         const std::string detail = parsed.errorDetail.empty() ? "" : ": " + parsed.errorDetail;
-        model.report({"E-SYNTAX", "error", "the file does not parse" + detail, {parsed.path, parsed.errorLine, parsed.errorColumn}});
+        model.report(metamodel_.finding(model::Code::E_SYNTAX, "the file does not parse" + detail,
+                                        {parsed.path, parsed.errorLine, parsed.errorColumn}));
       }
     }
     binder.bind(parsed);
@@ -89,10 +89,10 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) const {
   return model;
 }
 
-std::string Api::report(const model::Model& model, bool pretty) {
+std::string Api::report(const model::Model& model, bool pretty) const {
   format::FormatOptions options;  // the one report of a check (DS-120), as JSON (DS-126)
   options.pretty = pretty;
-  return format::ReportJson().write(check::Report::of(model), options);
+  return format::ReportJson().write(check::Report::of(model, metamodel_), options);
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)

@@ -39,7 +39,7 @@ package driftspec@ds {
       // the state written, else the one the defaults of the subject are in
       + initial() -> std::string
       // an attribute the subject lacks, a value its type lacks, a rule that excludes itself, two states at once
-      + faults() -> std::vector<model::Finding>
+      + faults(metamodel: model::Metamodel) -> std::vector<model::Finding>   // each made by the metamodel from its code (DS-379)
       // what it is of, by identity
       + subject() -> std::string
       // where the jumps on an event lead from a state, each with its guard
