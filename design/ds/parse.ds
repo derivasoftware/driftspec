@@ -12,7 +12,7 @@ package driftspec@ds {
     @requirement REQ-00177-1                 // every operation of parse is a member of a class (DS-374)
 
     requirement REQ-00008-2 {
-      status: draft
+      status: approved
       @refines SREQ-00001-1
       title: The parser shall read every .ds file under a directory into a tree, in any order, marking the files that do not parse or are not UTF-8
       text:
@@ -37,7 +37,7 @@ package driftspec@ds {
     }
 
     verification VER-00008-3 {
-      status: draft
+      status: approved
       @requirement REQ-00008-2
       title: Integration tests cover a whole workspace parsed without errors, a syntax error marked, and a file that is not UTF-8 reported once at the line and byte column of its first such byte while the others load
       text:

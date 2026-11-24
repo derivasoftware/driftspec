@@ -87,7 +87,7 @@ package driftspec@ds {
     // ---- UTF-8, what the parser holds a file to before it reads it (DS-411) ---------------------------------------
     requirement REQ-00201-1 {
       tags: text, encoding
-      status: draft
+      status: approved
       @refines REQ-00008-2
       title: The text module shall find the first byte of a text that is not part of a well-formed UTF-8 character
       text:
@@ -100,7 +100,7 @@ package driftspec@ds {
         telling where a text stops being UTF-8 is text work, the member of a named class of text. One pass with
         no allocation keeps a valid design as fast to read as before.
       verification VER-00221-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm every well-formed character is read, and a character cut short, an overlong form, a surrogate, a code point above U+10FFFF, a byte that leads nothing and a lone continuation byte are each E-ENCODING at that byte
         method: test
         tests:

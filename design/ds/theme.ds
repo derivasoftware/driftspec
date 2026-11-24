@@ -4,7 +4,7 @@
 package driftspec@ds {
   // its home is the package: the theme module holds the theme, render the drawings that are handed it
   requirement REQ-00231-1 {
-    status: draft
+    status: approved
     @refines SREQ-00005-1
     title: The renderers shall read their colours, their font and their text measures from a theme handed to them
     text:
@@ -25,7 +25,7 @@ package driftspec@ds {
     @constraint CST-00012-1
 
     verification VER-00257-1 {
-      status: draft
+      status: approved
       @requirement REQ-00231-1
       title: Integration tests confirm the SVG carries the stylesheets its theme writes, the terminal drawing colours each role as the theme says, and boxes are sized by the theme's measures
       text: DS-393, the first merge request (drawings). The unit tests of the theme pin each writer to the stylesheet Svg.cpp held at 0.1.74.

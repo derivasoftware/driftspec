@@ -9,7 +9,7 @@ package driftspec@ds {
     @requirement REQ-00211-1                 // the layout depends on nothing of the model (DS-392)
     requirement REQ-00210-1 {
       tags: layout, scene, render
-      status: draft
+      status: approved
       @refines SREQ-00013-1
       title: The layout shall place nested boxes of given sizes and the edges between them, knowing nothing of what they stand for
       text:
@@ -21,7 +21,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-368, DS-392): the layout engine is abstracted, so the scene and the drawings share one
         geometry and each projects its own content into it.
       verification VER-00230-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the engine the factory hands out places every box of a nested graph inside its parent and apart from its siblings, and a second placement following the first is never wider
         method: test
         tests:
@@ -32,7 +32,7 @@ package driftspec@ds {
 
     requirement REQ-00211-1 {
       tags: architecture, layout
-      status: draft
+      status: approved
       @refines REQ-00210-1
       title: The layout shall depend on nothing of the model
       text:
@@ -43,7 +43,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-366, DS-392): every module has its architecture decisions and patterns, and its rules
         check that they hold. REQ-00189-1 said it of the packer while the packer was the scene's.
       verification VER-00231-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds keeps it, and is told when a class of the layout depends on the model
         method: test
         tests:

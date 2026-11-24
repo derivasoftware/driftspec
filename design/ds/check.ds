@@ -50,14 +50,14 @@ package driftspec@ds {
     // The checker runs what it is given through IStep and knows no concrete step; StepFactory is the one place that names
     // them. A step reads what the steps it needs wrote into the model, never those steps; and every operation of
     // the check is a member of the class whose responsibility it is.
-    requirement REQ-00194-1 {
+    requirement REQ-00194-2 {
       tags: architecture, check
       status: approved
       @refines REQ-00053-3
       title: The checker shall run each step of the check through IStep, and no step shall know another
       text:
         The checker is handed the steps, keyed by name, and runs each one after the steps it needs, knowing each only
-        as an IStep; Steps is the one place that names the concrete steps. A step reads what the steps it needs
+        as an IStep; StepFactory is the one place that names the concrete steps. A step reads what the steps it needs
         wrote into the model, and never holds, calls or makes another step, so a step added, removed or split leaves
         the checker and the other steps as they are.
       rationale:
@@ -75,14 +75,14 @@ package driftspec@ds {
       }
     }
 
-    requirement REQ-00195-1 {
+    requirement REQ-00195-2 {
       tags: architecture, check
       status: approved
       @refines REQ-00053-3
       title: Every operation of the check shall be a member of the class whose responsibility it is
       text:
         What a step checks is the step's, what resolves a name is the resolver's, what decides a rule is one of the
-        evaluator's pieces, and what makes the steps is Steps'. A function of the module would be a responsibility
+        evaluator's pieces, and what makes the steps is StepFactory's. A function of the module would be a responsibility
         no class names.
       rationale:
         Owner, 2026-11-24 (DS-378, DS-382, DS-383): the hidden helpers of the steps became members of their step;
@@ -105,7 +105,7 @@ package driftspec@ds {
 
     rule checker-knows-steps-as-istep {
       title: the checker holds the steps as IStep and names none of the concrete ones, so every step is run through the one interface
-      @requirement REQ-00194-1
+      @requirement REQ-00194-2
       for class c in driftspec@ds@check
       where c = driftspec@ds@check::Checker
       never depends(c, x), is-step(x)
@@ -113,7 +113,7 @@ package driftspec@ds {
 
     rule no-step-knows-another {
       title: a step depends on no other step, so each reads what the steps it needs wrote into the model and never the steps themselves
-      @requirement REQ-00194-1
+      @requirement REQ-00194-2
       for class a in driftspec@ds@check, class b in driftspec@ds@check
       where is-step(a), is-step(b), a != b, b != driftspec@ds@check::ACheck
       never depends(a, b)
@@ -121,7 +121,7 @@ package driftspec@ds {
 
     rule check-operations-belong-to-classes {
       title: no function is written in the check's module, so every operation of the check is a member of a class
-      @requirement REQ-00195-1
+      @requirement REQ-00195-2
       for function f in driftspec@ds@check
       never f in driftspec@ds@check
     }

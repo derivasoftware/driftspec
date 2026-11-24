@@ -218,7 +218,7 @@ package driftspec@ds {
 
     requirement REQ-00189-2 {
       tags: architecture, scene
-      status: draft
+      status: approved
       @refines REQ-00069-2
       title: The scene shall place its boxes with an engine that knows nothing of the model
       text:
@@ -229,7 +229,7 @@ package driftspec@ds {
         check that they hold. Revision 2 (DS-392, 2026-11-24): the packer left the scene for the layout module, as
         the packing engine; what it may not know is the layout's rule now, and the scene's part is to place with it.
       verification VER-00209-2 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds keeps it, and every box of the scene is where the layout's packing engine places the projection's frames
         method: test
         tests:

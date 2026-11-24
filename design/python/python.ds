@@ -37,7 +37,7 @@ package driftspec@driftspec {
       answers. The native module is built against the limited API (abi3).
     tags: python, api
     verification VER-00095-3 {
-      status: draft
+      status: approved
       title: Integration tests confirm the package loads a directory or the texts an editor holds into a typed model, checks it, draws and pages it, and hands the engine a file's bytes so a file that is not UTF-8 is the engine's finding
       text:
         Revision 3 (DS-411): a directory's files and a mapping's bytes reach the engine as they are, so a
@@ -82,7 +82,7 @@ package driftspec@driftspec {
         tests/integration/python/test_lsp.py::TestLanguageServer::test_completion_offers_every_kind_a_reference_names
     }
     verification VER-00254-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm the language server publishes each finding with the editor mapping the severity table gives its severity, and never the coverage
       text: DS-386, the regression test of the language server reading the severity table instead of naming a severity.
       method: test
@@ -200,7 +200,7 @@ package driftspec@driftspec {
         tests/integration/python/test_live.py::TestLiveSession::test_the_page_goes_fullscreen_whole_when_the_viewer_asks
     }
     verification VER-00250-2 {
-      status: draft
+      status: approved
       title: Integration tests confirm the HTTP routes, the MCP tools and the command line are read from one contract, agree with it, and publish their contract byte for byte
       text: Revision 2 (DS-386): the contract is version 5, with the coverage in the state; the pin follows it.
       method: test
@@ -225,7 +225,7 @@ package driftspec@driftspec {
   }
 
   requirement REQ-00230-1 {
-    status: draft
+    status: approved
     @refines SREQ-00017-1
     title: The live session shall show the coverage apart from the findings, and colour each finding by the severity the severity table gives it
     text:
@@ -238,7 +238,7 @@ package driftspec@driftspec {
     rationale: Owner, 2026-11-24 (DS-386): the page painted every finding red and the pill red on any finding; the coverage, kept apart since DS-216, reached no Python door.
     tags: live, viewer, severity
     verification VER-00253-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm the coverage reaches the state apart from the findings and the page carries the severity table it colours by
       method: test
       tests:
@@ -373,7 +373,7 @@ package driftspec@driftspec {
         tests/integration/python/test_live.py::TestLiveSession::test_the_rules_reach_the_state_as_written_with_what_breaks_them
     }
     verification VER-00256-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm each rule and definition carries the problems written inside it, every rule finding of the language included, and keeps them when their message is reworded
       text: DS-421. The problems were matched by the start of their message and broke silently on any rewording; they are now the rule findings written inside the rule's span. The scene keeps a record of the same rules of its own, a duplication DS-406/DS-409 retire.
       method: test

@@ -21,7 +21,7 @@ package driftspec@ds {
         findings, every one an echo of it, and the error stood lines below the block left open.
       tags: parse, syntax
       verification VER-00184-2 {
-        status: draft
+        status: approved
         title: Integration tests confirm a lost brace is reported at the block it leaves open, and the findings that echo the cut go while an intact file keeps its own, a file that is not UTF-8 included
         text:
           Revision 2 (DS-411): a file that is not UTF-8 is cut whole. Its one finding, E-ENCODING at its
@@ -147,7 +147,7 @@ package driftspec@ds {
     }
 
     verification VER-00255-1 {
-      status: draft
+      status: approved
       @requirement REQ-00107-2
       title: Integration tests confirm a workspace loaded again in place answers as one made anew from the same files, both ways across a file that stops parsing, and what it answered before stays as it was
       text: DS-420, the long-lived workspace the language server keeps and DS-408 absorbs.

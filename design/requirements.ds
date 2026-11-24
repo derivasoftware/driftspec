@@ -342,7 +342,7 @@ package driftspec {
   }
 
   constraint CST-00012-1 {
-    status: draft
+    status: approved
     category: style
     bok: BOK-00005-1
     title: Every drawing and page DriftSpec writes shall take its colours, fonts and text measures from one theme
