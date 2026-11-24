@@ -1,0 +1,5 @@
+contains  p@m  <-
+contains  p@m::Leaf::work  ->
+contains  p@m::Leaf::step  ->
+owns  p@m::A::leaf  <-
+owns  p@m::B::leaf  <-

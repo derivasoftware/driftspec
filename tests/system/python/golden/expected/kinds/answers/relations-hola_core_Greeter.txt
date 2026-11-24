@@ -1,0 +1,15 @@
+contains  hola@core  <-
+contains  hola@core::Greeter::style  ->
+contains  hola@core::Greeter::history  ->
+contains  hola@core::Greeter::locale  ->
+contains  hola@core::Greeter::cache  ->
+contains  hola@core::Greeter::greet  ->
+contains  hola@core::Greeter::valid  ->
+contains  hola@core::Greeter::format  ->
+shares  hola@app::App::greeter  <-
+satisfies  REQ-00001-1  ->
+shares  hola@server::Server::greeter  <-
+couples-structural  hola@app::App::run::sequence  <-
+couples-structural  hola@app::App::run::sequence/empty-name  <-
+couples-structural  hola@server::Server::greet::sequence  <-
+couples-structural  hola@server::Server::greet::sequence/empty-name  <-

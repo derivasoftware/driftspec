@@ -1,0 +1,114 @@
+{
+  "edges": [
+    {
+      "from": "hola@web::state::initial",
+      "kind": "association",
+      "to": "hola@web::state::Home"
+    },
+    {
+      "from": "hola@web::state::Home",
+      "kind": "association",
+      "label": "greet",
+      "to": "hola@web::state::Result"
+    },
+    {
+      "from": "hola@web::state::Home",
+      "kind": "association",
+      "label": "greet [empty name]",
+      "to": "hola@web::state::Home"
+    },
+    {
+      "from": "hola@web::state::Home",
+      "kind": "association",
+      "label": "about",
+      "to": "hola@web::state::About"
+    },
+    {
+      "from": "hola@web::state::Result",
+      "kind": "association",
+      "label": "back",
+      "to": "hola@web::state::Home"
+    },
+    {
+      "from": "hola@web::state::About",
+      "kind": "association",
+      "label": "back",
+      "to": "hola@web::state::Home"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "initial",
+      "id": "hola@web::state::initial",
+      "kind": "box",
+      "label": "start"
+    },
+    {
+      "classifier": "state",
+      "id": "hola@web::state::Home",
+      "kind": "box",
+      "label": "Home",
+      "refs": {
+        "location": "kinds/interfaces/web.ds:18"
+      },
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "A field for the name and a button to",
+          "greet. When the name is empty the",
+          "button says why it did nothing, next",
+          "to the field, and what was typed",
+          "stays there."
+        ],
+        [
+          "SREQ-00003-1",
+          "CST-00001-1"
+        ]
+      ]
+    },
+    {
+      "classifier": "state",
+      "id": "hola@web::state::Result",
+      "kind": "box",
+      "label": "Result",
+      "refs": {
+        "location": "kinds/interfaces/web.ds:27"
+      },
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "The greeting, large, and a way back",
+          "to greet someone else."
+        ],
+        [
+          "CST-00001-1"
+        ]
+      ]
+    },
+    {
+      "classifier": "state",
+      "id": "hola@web::state::About",
+      "kind": "box",
+      "label": "About",
+      "refs": {
+        "location": "kinds/interfaces/web.ds:33"
+      },
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "What this is and who made it."
+        ]
+      ]
+    }
+  ],
+  "title": "ST_Web"
+}

@@ -1,0 +1,22 @@
+{
+  "edges": [],
+  "ir": 1,
+  "nodes": [
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "hola@web",
+      "kind": "box",
+      "label": "web",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "greet(name: string) -> core::Greeting"
+        ]
+      ]
+    }
+  ],
+  "title": "IF_Web"
+}

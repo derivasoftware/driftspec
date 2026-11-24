@@ -1,0 +1,4 @@
+module  p@m
+class  p@m::A
+class  p@m::B
+class  p@m::Leaf

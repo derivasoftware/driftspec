@@ -1,0 +1,16 @@
+diagram CL_Hola {
+  kind: class
+  include: hola@*
+}
+
+diagram HLD_Hola {                   // every box closed: what each one offers, and who depends on whom
+  kind: class
+  include: hola@*
+  open:
+}
+
+diagram HLD_App {                    // the command line open, the rest closed
+  kind: class
+  include: hola@*
+  open: hola@app
+}

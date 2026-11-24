@@ -1,0 +1,230 @@
+{
+  "edges": [
+    {
+      "from": "hola@app",
+      "kind": "association",
+      "part": "boxes",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@app",
+      "kind": "dependency",
+      "part": "boxes",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "dependency",
+      "part": "boxes",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "dependency",
+      "part": "boxes",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@app"
+    },
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "greet(name: string)",
+      "order": 0,
+      "part": "sequence",
+      "refs": {
+        "location": "kinds/interfaces/shell.ds:12"
+      },
+      "title": "hola@shell::greet",
+      "to": "hola@shell"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "message",
+      "label": "app::main(name)",
+      "order": 1,
+      "part": "sequence",
+      "refs": {
+        "expands": "hola@app::main::sequence",
+        "location": "kinds/interfaces/shell.ds:22",
+        "span": "2-5"
+      },
+      "title": "hola@app::app::main\nexpanded below: main",
+      "to": "hola@app"
+    },
+    {
+      "from": "hola@app",
+      "kind": "message",
+      "label": "Greeter::valid(name)",
+      "order": 2,
+      "part": "sequence",
+      "refs": {
+        "location": "kinds/app/App.ds:21"
+      },
+      "title": "hola@core::Greeter::valid",
+      "to": "hola@core"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core",
+      "kind": "message",
+      "label": "ok",
+      "order": 3,
+      "part": "sequence",
+      "to": "hola@app"
+    },
+    {
+      "from": "hola@app",
+      "kind": "message",
+      "label": "Greeter::greet(name)",
+      "order": 4,
+      "part": "sequence",
+      "refs": {
+        "expands": "hola@core::Greeter::greet::sequence",
+        "location": "kinds/app/App.ds:22"
+      },
+      "title": "hola@core::Greeter::greet\nexpanded below: Greeter::greet",
+      "to": "hola@core"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core",
+      "kind": "message",
+      "label": "greeting",
+      "order": 5,
+      "part": "sequence",
+      "to": "hola@app"
+    },
+    {
+      "dashed": true,
+      "from": "hola@app",
+      "kind": "message",
+      "label": "code",
+      "order": 6,
+      "part": "sequence",
+      "to": "hola@shell"
+    },
+    {
+      "dashed": true,
+      "from": "hola@shell",
+      "kind": "message",
+      "label": "core::Greeting",
+      "order": 7,
+      "part": "sequence",
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "namespace",
+      "id": "hola@app",
+      "kind": "box",
+      "label": "app",
+      "part": "boxes",
+      "sectionKinds": [
+        "class",
+        "function"
+      ],
+      "sections": [
+        [
+          "Console"
+        ],
+        [
+          "main"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "hola@core",
+      "kind": "box",
+      "label": "core",
+      "part": "boxes",
+      "sectionKinds": [
+        "class",
+        "dataclass"
+      ],
+      "sections": [
+        [
+          "Casual",
+          "Channel",
+          "Formal",
+          "Greeter",
+          "GreetingCache",
+          "Style"
+        ],
+        [
+          "Greeting",
+          "Locale"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "hola@shell",
+      "kind": "box",
+      "label": "shell",
+      "part": "boxes"
+    },
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller",
+      "part": "sequence"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@shell",
+      "id": "hola@shell",
+      "kind": "lifeline",
+      "label": "self: shell",
+      "part": "sequence",
+      "refs": {
+        "location": "kinds/interfaces/shell.ds:6"
+      },
+      "title": "hola@shell"
+    },
+    {
+      "classifier": "namespace",
+      "href": "#hola@app",
+      "id": "hola@app",
+      "kind": "lifeline",
+      "label": "app",
+      "part": "sequence",
+      "refs": {
+        "location": "kinds/app/App.ds:5"
+      },
+      "title": "hola@app"
+    },
+    {
+      "classifier": "namespace",
+      "href": "#hola@core",
+      "id": "hola@core",
+      "kind": "lifeline",
+      "label": "core",
+      "part": "sequence",
+      "refs": {
+        "location": "kinds/core/Channel.ds:5"
+      },
+      "title": "hola@core"
+    }
+  ],
+  "parts": [
+    "boxes",
+    "sequence"
+  ],
+  "title": "TOUR_Greet"
+}

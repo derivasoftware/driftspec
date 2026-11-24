@@ -1,0 +1,19 @@
+// How a greeting sounds. Every method abstract and no data: an interface,
+// which Formal and Casual realise.
+
+package hola {
+  module core {
+    class Style {
+      + abstract apply(text: std::string) -> std::string
+    }
+
+    class Formal : Style {
+      + apply(text: std::string) -> std::string
+    }
+
+    class Casual : Style {
+      + apply(text: std::string) -> std::string
+      - emoji: std::string
+    }
+  }
+}

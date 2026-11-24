@@ -1,0 +1,91 @@
+// LLD of the machine namespace (ds::machine): a state machine as its author wrote it (DS-249).
+// A state is computed by a rule over what the subject of the machine holds, and the rules of a machine
+// exclude each other. Its jumps are made on events, and the behaviours written call them (DS-250).
+// This namespace reads a machine once for whoever needs it: the checks that hold its rules to each
+// other and to the structure and the calls of the behaviours to its jumps, and the drawing of it.
+// It also says what the table of a machine holds (DS-251): the table itself is drawn by ds::render.
+// Not its jobs: running the check (ds::check), drawing (ds::render).
+
+package driftspec@ds {
+
+  module machine {
+
+    // one call of an event of a machine, found in a behaviour written: who makes it, on what, the
+    // states its receiver may be in when it is made, and whether a jump lets it happen from one of them
+    dataclass Call {
+      @requirement REQ-00145-1
+      + behaviour: std::string
+      + message: std::string
+      + receiver: std::string
+      + event: std::string
+      + from: std::vector<std::string>
+      + fits: bool
+    }
+
+    // a machine read from the model: its states in the order written, the rules that compute each,
+    // where it starts, what its rules say that cannot be, and the calls of its events
+    class Machine {
+      @requirement REQ-00140-1
+      @requirement REQ-00141-1
+      @requirement REQ-00142-1
+      @requirement REQ-00143-1
+      @requirement REQ-00145-1
+      - refs model_: model::Model
+      - refs machine_: model::Entity
+      - subject_: std::string
+      + Machine(model: model::Model, machine: model::Entity)
+      + states() -> std::vector<std::string>
+      + rules(state: std::string) -> std::vector<std::string>
+      // the state written, else the one the defaults of the subject are in
+      + initial() -> std::string
+      // an attribute the subject lacks, a value its type lacks, a rule that excludes itself, two states at once
+      + faults(metamodel: model::Metamodel) -> std::vector<model::Finding>   // each made by the metamodel from its code (DS-379)
+      // what it is of, by identity
+      + subject() -> std::string
+      // where the jumps on an event lead from a state, each with its guard
+      + targets(event: std::string, from: std::string) -> std::vector<std::string>
+      // the events its jumps are made on, and the states the jumps let one happen from
+      + events() -> std::vector<std::string>
+      + sources(event: std::string) -> std::vector<std::string>
+      // every call of one of its events in the behaviours written, each behaviour in the order written
+      + calls() -> std::vector<Call>
+    }
+
+    // one cell of the table of a machine: where an event takes a state, and the behaviours that call
+    // the event when its receiver can only be where the machine has no jump, this state among them
+    dataclass Cell {
+      @requirement REQ-00147-2
+      @requirement REQ-00148-2
+      + to: std::string
+      + against: std::vector<std::string>
+    }
+
+    // one row of the table: an event, the behaviours that call it, and its cell under each state
+    dataclass Row {
+      @requirement REQ-00147-2
+      @requirement REQ-00148-2
+      + event: std::string
+      + callers: std::vector<std::string>
+      + owns many cells: std::vector<Cell>
+    }
+
+    // a machine as a table: its events down, its states across, and over it what the behaviours do
+    class Table {
+      @requirement REQ-00147-2
+      @requirement REQ-00148-2
+      - subject_: std::string
+      - states_: std::vector<std::string>
+      - owns many rows_: std::vector<Row>
+      + Table(model: model::Model, machine: model::Entity)
+      + subject() -> std::string
+      + states() -> std::vector<std::string>
+      + rows() -> std::vector<Row>
+    }
+
+  }
+}
+
+diagram CL_MachineNamespace {
+  kind: class
+  include: driftspec@ds@machine::*
+}

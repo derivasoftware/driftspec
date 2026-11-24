@@ -1,0 +1,460 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@query::IQuery",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@query::IQuery",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::filterFor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::ClassFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::SequenceFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::SequenceFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Behaviour"
+    },
+    {
+      "from": "driftspec@ds@query::StateFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::RequirementsFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::Walker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Taken"
+    },
+    {
+      "from": "driftspec@ds@query::Walker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Walked"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IQuery"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@query::entityAnswer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@query",
+      "kind": "container",
+      "label": "query",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Answer",
+      "kind": "box",
+      "label": "Answer",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ kind: std::string",
+          "+ id: std::string",
+          "+ detail: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Behaviour",
+      "kind": "box",
+      "label": "Behaviour",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ sequence: model::Entity",
+          "+ path: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::ClassFilter",
+      "kind": "box",
+      "label": "ClassFilter",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel",
+          "- include_: std::vector<std::string>",
+          "- exclude_: std::vector<std::string>",
+          "- neighbours_: int",
+          "- cutOf_: std::string"
+        ],
+        [
+          "+ ClassFilter(metamodel: model::Metamodel, include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, cutOf: std::string)",
+          "+ select(model: model::Model) -> std::set<std::string>",
+          "+ boxes(model: model::Model) -> std::set<std::string>",
+          "+ static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>",
+          "- matches(model: model::Model, pattern: std::string, entity: model::Entity) -> bool"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@query::IFilter",
+      "kind": "box",
+      "label": "IFilter",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ ~IFilter()",
+          "+ abstract select(model: model::Model) -> std::set<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@query::IQuery",
+      "kind": "box",
+      "label": "IQuery",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ ~IQuery()",
+          "+ abstract ask(question: std::string, subject: std::string) -> std::vector<Answer>",
+          "+ abstract select(filter: IFilter) -> std::set<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::Query",
+      "kind": "box",
+      "label": "Query",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel"
+        ],
+        [
+          "+ Query(model: model::Model, metamodel: model::Metamodel)",
+          "+ select(filter: IFilter) -> std::set<std::string>",
+          "+ static questions() -> std::vector<std::pair<std::string, std::string>>",
+          "+ ask(question: std::string, subject: std::string) -> std::vector<Answer>",
+          "+ diagrams() -> std::vector<Answer>",
+          "+ entities(scope: std::string) -> std::vector<Answer>",
+          "+ relations(id: std::string) -> std::vector<Answer>",
+          "+ artefacts(id: std::string) -> std::vector<Answer>",
+          "+ behaviours(id: std::string) -> std::vector<Answer>",
+          "+ failures(id: std::string) -> std::vector<Answer>",
+          "+ shows(diagram: std::string) -> std::vector<Answer>",
+          "+ findings(file: std::string) -> std::vector<Answer>",
+          "+ coverage(identity: std::string) -> std::vector<Answer>",
+          "+ coupling() -> std::vector<Answer>",
+          "- known(id: std::string) -> bool",
+          "- nearTo(name: std::string) -> std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::RequirementsFilter",
+      "kind": "box",
+      "label": "RequirementsFilter",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel",
+          "- include_: std::vector<std::string>",
+          "- design_: bool",
+          "- verifications_: bool",
+          "- cutOf_: std::string"
+        ],
+        [
+          "+ RequirementsFilter(metamodel: model::Metamodel, include: std::vector<std::string>, design: bool, verifications: bool, cutOf: std::string)",
+          "+ select(model: model::Model) -> std::set<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::SequenceFilter",
+      "kind": "box",
+      "label": "SequenceFilter",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel",
+          "- include_: std::vector<std::string>",
+          "- depth_: int",
+          "- cutOf_: std::string"
+        ],
+        [
+          "+ SequenceFilter(metamodel: model::Metamodel, include: std::vector<std::string>, depth: int, cutOf: std::string)",
+          "+ select(model: model::Model) -> std::set<std::string>",
+          "+ behaviours(model: model::Model) -> std::vector<Behaviour>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::StateFilter",
+      "kind": "box",
+      "label": "StateFilter",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- include_: std::vector<std::string>"
+        ],
+        [
+          "+ StateFilter(include: std::vector<std::string>)",
+          "+ select(model: model::Model) -> std::set<std::string>",
+          "+ machines(model: model::Model) -> std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Taken",
+      "kind": "box",
+      "label": "Taken",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ message: std::string",
+          "+ next: std::string",
+          "+ nextPath: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Walked",
+      "kind": "box",
+      "label": "Walked",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ message: std::string",
+          "+ depth: int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::Walker",
+      "kind": "box",
+      "label": "Walker",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model"
+        ],
+        [
+          "+ Walker(model: model::Model)",
+          "+ steps(sequence: std::string, path: std::string, out_kept: std::set<std::string>) -> std::vector<Taken>",
+          "+ walk(sequence: std::string, path: std::string, depth: int, cut: axis::Cut) -> std::vector<Walked>"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::drawnFrom",
+      "kind": "box",
+      "label": "drawnFrom",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ drawnFrom(model: model::Model, entity: model::Entity) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::entityAnswer",
+      "kind": "box",
+      "label": "entityAnswer",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "- entityAnswer(metamodel: model::Metamodel, entity: model::Entity, detail: std::string) -> Answer"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::filterFor",
+      "kind": "box",
+      "label": "filterFor",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ filterFor(metamodel: model::Metamodel, diagram: model::Entity) -> std::unique_ptr<IFilter>"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::inPattern",
+      "kind": "box",
+      "label": "inPattern",
+      "parent": "driftspec@ds@query",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ inPattern(model: model::Model, pattern: std::string, entity: model::Entity) -> bool"
+        ]
+      ],
+      "stereotype": "function"
+    }
+  ],
+  "title": "CL_QueryNamespace"
+}

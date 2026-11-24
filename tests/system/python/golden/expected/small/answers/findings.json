@@ -1,0 +1,1 @@
+[{"detail":"B::run calls p@m::Leaf::nothing, which p@m::Leaf does not declare","id":"small/small.ds:23:7","kind":"W-MSG-UNDECLARED"},{"detail":"p@m::Leaf::work takes 1 parameter, 2 given","id":"small/small.ds:24:7","kind":"E-MSG-ARITY"},{"detail":"SEQ_Loose includes p@m::Nobody::run, which the workspace declares nowhere","id":"small/small.ds:47:1","kind":"W-DIAGRAM-UNDECLARED"}]

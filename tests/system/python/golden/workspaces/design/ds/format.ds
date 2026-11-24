@@ -1,0 +1,230 @@
+// LLD of the format namespace (ds::format, DS-126): every output of ds is a document written by
+// a format. A document is an information contract; a format is one way to write it, found by name,
+// and it never reads the model. To add one: a class implementing IFormat<its document>, and one
+// line in the map of that document: the scene, a diagram, a query's answers, a check's report.
+
+package driftspec@ds {
+  // every document ds writes, whichever module builds it: the package's, not the format module's
+  requirement REQ-00106-1 {
+    status: approved
+    @refines SREQ-00013-1
+    title: Each document ds writes shall be written by formats behind one interface, found by name, none of which reads the model
+    text:
+      A format has a name and writes one kind of document with the options it is given (indented,
+      the title, a reader's stylesheet, the identities a page opens framed on, whether a page is
+      embedded and how tall). The formats of a document are named in one map, so a command finds
+      the one asked for by name. A format writes what the document says and never reads the
+      model; what two formats need (packing, the scene's JSON) lives apart and knows none of them.
+    rationale:
+      Owner, 2026-11-10 (DS-126): the scene, a diagram's IR, a query's answers and a check's
+      findings are each written in several forms, each in its own way; one shape for all of them
+      and the command line finding a format by name.
+    tags: format, render, scene
+    verification VER-00115-2 {
+      status: approved
+      title: Integration tests confirm the scene's formats are found by name, write the scene of a design, and the page becomes a frame when asked
+      method: test
+      tests:
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestSceneFormatsOfADesign.EachFormatFoundByItsNameWritesTheSceneOfTheDesign
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestSceneFormatsOfADesign.ThePageOfTheDesignIsAFrameCarryingItWholeWhenAskedToEmbed
+    }
+    verification VER-00116-2 {
+      status: approved
+      title: Integration tests confirm a diagram's five formats are found by name, the IR is written as it came unless asked to indent, and each drawing format draws the same diagram
+      method: test
+      tests:
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestDiagramFormatsOfADesign.EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestDiagramFormatsOfADesign.EachDrawingFormatDrawsTheSameDiagramItsIrDescribes
+    }
+    verification VER-00117-3 {
+      status: approved
+      text: Revision 2 (DS-185) gives the formats of an answer and of a report a test each, named after their factory. Revision 3 (DS-137) verifies them over the answers and the report of a design.
+      title: Integration tests confirm a query's answers and a check's report are written as text or JSON by name, and the report is built once from the model and read the same either way
+      method: test
+      tests:
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheAnswersOfAQueryAreWrittenAsTextOrJsonByName
+        tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAsTextAndAsJson
+    }
+  }
+
+  module format {
+    // ---- the principles, as rules ----------------------------------------------------------
+    rule formats-read-no-model {
+      title: a format writes the document it is given; it never reads the model
+      @requirement REQ-00106-1
+      for class c in driftspec@ds@format
+      never depends(c, driftspec@ds@model::Model)
+    }
+
+    rule no-format-uses-another {
+      title: formats are siblings: none uses another; what two of them need goes in common
+      @requirement REQ-00106-1
+      for class a in driftspec@ds@format, class b in driftspec@ds@format
+      where a != b, a inherits x, b inherits y
+      never depends(a, b)
+    }
+
+    rule common-knows-no-format {
+      title: what formats share knows none of them
+      @requirement REQ-00106-1
+      for function f in driftspec@ds@format::common
+      never depends(f, x), x in driftspec@ds@format, not x in driftspec@ds@format::common
+    }
+
+    // ---- the contract ------------------------------------------------------------------------
+    // what every format is given besides its document
+    dataclass FormatOptions {
+      @requirement REQ-00106-1
+      + pretty: bool
+      + title: std::string
+      + css: std::string
+      + focus: std::vector<std::string>
+      + embed: bool
+      + height: int
+      + width: int
+      + color: bool
+    }
+
+    // THE EXTENSION POINT: IFormat<D>, D the document a format writes; each format names its document in its
+    // base, as the code does (DS-18)
+    class IFormat<D> {
+      @requirement REQ-00106-1
+      + ~IFormat()
+      + abstract name() -> std::string
+      + abstract write(document: D, options: FormatOptions) -> std::string
+    }
+
+
+    // ---- what two formats or more need: knows no format, never reads the model ---------------
+    module common {
+      function pack(text: std::string) -> std::string {
+        @requirement REQ-00075-5
+      }
+      function unpack(packed: std::string) -> std::string {
+        @requirement REQ-00075-5
+      }
+      // compact JSON that says how to read itself: every record an array whose columns fields names
+      function encode(document: scene::SceneDocument, pretty: bool) -> std::string {
+        @requirement REQ-00106-1
+      }
+    }
+
+    // ---- the scene's formats -----------------------------------------------------------------
+    // the one place that names them
+    function sceneFormats() -> std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>> {
+      @requirement REQ-00106-1
+    }
+
+    // the page ds carries inside: viewer/scene.html compiled in, with the places the scene fills
+    function viewerTemplate() -> std::string {
+      @requirement REQ-00070-1
+    }
+
+    // ds render -f json
+    class SceneJson : IFormat<scene::SceneDocument> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: scene::SceneDocument, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f html: the viewer as one page, or that page as an iframe when options.embed asks
+    class SceneHtml : IFormat<scene::SceneDocument> {
+      @requirement REQ-00070-1
+      @requirement REQ-00071-2
+      @requirement REQ-00077-1
+      @requirement REQ-00092-3
+      + name() -> std::string
+      + write(document: scene::SceneDocument, options: FormatOptions) -> std::string
+    }
+
+    // ---- a diagram's formats: its IR, as its contract writes it (render::IrText) -------------
+    // the one place that names them
+    function diagramFormats() -> std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> {
+      @requirement REQ-00106-1
+    }
+
+    // ds render -f ir: the IR as it came, indented when asked
+    class DiagramIr : IFormat<render::IrText> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
+    class DiagramLayout : IFormat<render::IrText> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f svg
+    class DiagramSvg : IFormat<render::IrText> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f text: boxes in characters for a terminal
+    class DiagramText : IFormat<render::IrText> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ds render -f cells: the terminal's coloured cells
+    class DiagramCells : IFormat<render::IrText> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: render::IrText, options: FormatOptions) -> std::string
+    }
+
+    // ---- a query's answers -------------------------------------------------------------------
+    function answerFormats() -> std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> {
+      @requirement REQ-00106-1
+    }
+
+    // ds query: kind  identity  detail, one answer per line
+    class AnswersText : IFormat<std::vector<query::Answer>> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
+    }
+
+    // ds query --json: an array of the same three fields
+    class AnswersJson : IFormat<std::vector<query::Answer>> {
+      @requirement REQ-00106-1
+      + name() -> std::string
+      + write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string
+    }
+
+    // ---- a check's report ---------------------------------------------------------------------
+    function reportFormats() -> std::map<std::string, std::unique_ptr<IFormat<check::Report>>> {
+      @requirement REQ-00106-1
+    }
+
+    // ds check: each finding where it is, then the counts
+    class ReportText : IFormat<check::Report> {
+      @requirement SREQ-00002-1
+      + name() -> std::string
+      + write(document: check::Report, options: FormatOptions) -> std::string
+    }
+
+    // ds check --json and the API: the one shape every caller reads
+    class ReportJson : IFormat<check::Report> {
+      @requirement SREQ-00002-1
+      + name() -> std::string
+      + write(document: check::Report, options: FormatOptions) -> std::string
+    }
+
+    sequence SceneHtml::write {
+      -> common::encode(document, false) -> json
+      -> common::pack(json) -> packed
+      return page
+    }
+  }
+}
+
+diagram CL_Format {
+  kind: class
+  include: driftspec@ds@format::*
+}

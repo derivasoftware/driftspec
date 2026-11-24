@@ -1,0 +1,92 @@
+
+ ┌─ ds ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │                                                                                                                                                                 │
+ │ ┌─ render ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐ │
+ │ │                                                                                                                                                             │ │
+ │ │                                                 ╭───────────────────────────────────────────────────╮                                                       │ │
+ │ │                                                 │ D IrDocument                                      │                                                       │ │
+ │ │                                                 ├───────────────────────────────────────────────────┤                                                       │ │
+ │ │                                                 │ + title: std::string                              │                                                       │ │
+ │ │                                                 │ + notice: std::string                             │                                                       │ │
+ │ │                                                 │ + table: IrTable                                  │                                                       │ │
+ │ │                                                 │ + nodes: std::vector<IrNode>                      │                                                       │ │
+ │ │                                                 │ + edges: std::vector<IrEdge>                      │                                                       │ │
+ │ │                                                 │ + parts: std::vector<std::string>                 │                                                       │ │
+ │ │                                                 ├───────────────────────────────────────────────────┤                                                       │ │
+ │ │                                                 │ + static parse(json: std::string) -> IrDocument   │                                                       │ │
+ │ │                                                 │ + part(name: std::string) -> IrDocument           │                                                       │ │
+ │ │                                                 │ + bundled() -> IrDocument                         │                                                       │ │
+ │ │                                                 ╰───────────────────────────────────────────────────╯                                                       │ │
+ │ │                                   edges                 ◆        ┆        ◆        ◆        ┆                                                               │ │
+ │ │                 ┌───────────────────────────────────────┘        ┆        │ table  │        ┆                                                               │ │
+ │ │                 │               ┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘        │        │        ┆                                                               │ │
+ │ │                 │               ┆                                       ┌─┘        │        ┆    nodes                                                      │ │
+ │ │                 │               ┆                                       │          └────────┼───────────────────────┐                                       │ │
+ │ │                 │               ▼                                       │                   └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄▶                    │ │
+ │ │ ╭──────────────────────────────────────────────╮    ╭───────────────────────────────────────╮    ╭────────────────────────────────────────────────────────╮ │ │
+ │ │ │ D IrEdge                                     │    │ D IrTable                             │    │ D IrNode                                               │ │ │
+ │ │ ├──────────────────────────────────────────────┤    ├───────────────────────────────────────┤    ├────────────────────────────────────────────────────────┤ │ │
+ │ │ │ + from: std::string                          │    │ + corner: std::string                 │    │ + id: std::string                                      │ │ │
+ │ │ │ + to: std::string                            │    │ + columns: std::vector<std::string>   │    │ + kind: std::string                                    │ │ │
+ │ │ │ + kind: std::string                          │    │ + rows: std::vector<IrRow>            │    │ + label: std::string                                   │ │ │
+ │ │ │ + label: std::string                         │    ╰───────────────────────────────────────╯    │ + classifier: std::string                              │ │ │
+ │ │ │ + title: std::string                         │                        ◆                        │ + stereotype: std::string                              │ │ │
+ │ │ │ + href: std::string                          │                        │                        │ + parent: std::string                                  │ │ │
+ │ │ │ + part: std::string                          │                        │                        │ + title: std::string                                   │ │ │
+ │ │ │ + dashed: bool                               │                        │                        │ + href: std::string                                    │ │ │
+ │ │ │ + order: int                                 │                        │                        │ + part: std::string                                    │ │ │
+ │ │ │ + refs: std::map<std::string, std::string>   │                        │                        │ + abstract: bool                                       │ │ │
+ │ │ ╰──────────────────────────────────────────────╯                        │                        │ + refs: std::map<std::string, std::string>             │ │ │
+ │ │                                                                         │ rows                   │ + sections: std::vector<std::vector<std::string>>      │ │ │
+ │ │                                                                         │                        │ + sectionKinds: std::vector<std::string>               │ │ │
+ │ │                                                                         │                        │ + span: std::pair<int, int>                            │ │ │
+ │ │                                                                         │                        │ + dividers: std::vector<std::pair<int, std::string>>   │ │ │
+ │ │                                                                         │                        ╰────────────────────────────────────────────────────────╯ │ │
+ │ │                                                                         │                                                                                   │ │
+ │ │                                                                         │                                                                                   │ │
+ │ │                                                                         │                                                                                   │ │
+ │ │                                                                         │                                                                                   │ │
+ │ │                                                        ╭────────────────────────────────╮                                                                   │ │
+ │ │                                                        │ D IrRow                        │                                                                   │ │
+ │ │                                                        ├────────────────────────────────┤                                                                   │ │
+ │ │                                                        │ + label: std::string           │                                                                   │ │
+ │ │                                                        │ + title: std::string           │                                                                   │ │
+ │ │                                                        │ + cells: std::vector<IrCell>   │                                                                   │ │
+ │ │                                                        ╰────────────────────────────────╯                                                                   │ │
+ │ │                                                                         ◆                                                                                   │ │
+ │ │                                                                         │ cells                                                                             │ │
+ │ │                                                                         │                                                                                   │ │
+ │ │                                                                         │                                                                                   │ │
+ │ │                                                            ╭────────────────────────╮                                                                       │ │
+ │ │                                                            │ D IrCell               │                                                                       │ │
+ │ │                                                            ├────────────────────────┤                                                                       │ │
+ │ │                                                            │ + text: std::string    │                                                                       │ │
+ │ │                                                            │ + kind: std::string    │                                                                       │ │
+ │ │                                                            │ + title: std::string   │                                                                       │ │
+ │ │                                                            ╰────────────────────────╯                                                                       │ │
+ │ │                                                                                                                                                             │ │
+ │ │                                                                                                                                                             │ │
+ │ │                                                                                                                                                             │ │
+ │ │ ╭──────────────────────────────────────────────────────────────────────────────╮                                                                            │ │
+ │ │ │ C IrExport                                                                   │                                                                            │ │
+ │ │ ├──────────────────────────────────────────────────────────────────────────────┤                                                                            │ │
+ │ │ │ - model_: model::Model                                                       │                                                                            │ │
+ │ │ │ - metamodel_: model::Metamodel                                               │                                                                            │ │
+ │ │ ├──────────────────────────────────────────────────────────────────────────────┤                                                                            │ │
+ │ │ │ + IrExport(model: model::Model, metamodel: model::Metamodel)                 │                                                                            │ │
+ │ │ │ + diagrams() -> std::vector<std::string>                                     │                                                                            │ │
+ │ │ │ + render(diagramId: std::string, pretty: bool) -> std::string                │                                                                            │ │
+ │ │ │ - closeBoxes(ir: std::string, cut: axis::Cut, pretty: bool) -> std::string   │                                                                            │ │
+ │ │ │ - renderState(diagram: model::Entity, pretty: bool) -> std::string           │                                                                            │ │
+ │ │ │ - renderTable(diagram: model::Entity, pretty: bool) -> std::string           │                                                                            │ │
+ │ │ │ - renderSequence(diagram: model::Entity, pretty: bool) -> std::string        │                                                                            │ │
+ │ │ │ - renderTour(tour: model::Entity, pretty: bool) -> std::string               │                                                                            │ │
+ │ │ │ - renderBoxes(diagram: model::Entity, pretty: bool) -> std::string           │                                                                            │ │
+ │ │ │ - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string    │                                                                            │ │
+ │ │ ╰──────────────────────────────────────────────────────────────────────────────╯                                                                            │ │
+ │ │                                                                                                                                                             │ │
+ │ └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+ │                                                                                                                                                                 │
+ └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+

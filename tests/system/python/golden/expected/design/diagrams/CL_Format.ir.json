@@ -1,0 +1,616 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@format::IFormat<1>",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::sceneFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::SceneJson",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::SceneJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::diagramFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramIr",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramIr",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramLayout",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramLayout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramSvg",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramSvg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramText",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramCells",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramCells",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::answerFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersText",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersJson",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::reportFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::ReportText",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::ReportText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::ReportJson",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::ReportJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::common::encode"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::common::pack"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@format",
+      "kind": "container",
+      "label": "format",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@format::common",
+      "kind": "container",
+      "label": "format::common",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::AnswersJson",
+      "kind": "box",
+      "label": "AnswersJson",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::AnswersText",
+      "kind": "box",
+      "label": "AnswersText",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: std::vector<query::Answer>, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramCells",
+      "kind": "box",
+      "label": "DiagramCells",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: render::IrText, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramIr",
+      "kind": "box",
+      "label": "DiagramIr",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: render::IrText, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramLayout",
+      "kind": "box",
+      "label": "DiagramLayout",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: render::IrText, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramSvg",
+      "kind": "box",
+      "label": "DiagramSvg",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: render::IrText, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramText",
+      "kind": "box",
+      "label": "DiagramText",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: render::IrText, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@format::FormatOptions",
+      "kind": "box",
+      "label": "FormatOptions",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ pretty: bool",
+          "+ title: std::string",
+          "+ css: std::string",
+          "+ focus: std::vector<std::string>",
+          "+ embed: bool",
+          "+ height: int",
+          "+ width: int",
+          "+ color: bool"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@format::IFormat<1>",
+      "kind": "box",
+      "label": "IFormat<D>",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ ~IFormat()",
+          "+ abstract name() -> std::string",
+          "+ abstract write(document: D, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::ReportJson",
+      "kind": "box",
+      "label": "ReportJson",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: check::Report, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::ReportText",
+      "kind": "box",
+      "label": "ReportText",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: check::Report, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::SceneHtml",
+      "kind": "box",
+      "label": "SceneHtml",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: scene::SceneDocument, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::SceneJson",
+      "kind": "box",
+      "label": "SceneJson",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ write(document: scene::SceneDocument, options: FormatOptions) -> std::string"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::answerFormats",
+      "kind": "box",
+      "label": "answerFormats",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ answerFormats() -> std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>>"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::common::encode",
+      "kind": "box",
+      "label": "encode",
+      "parent": "driftspec@ds@format::common",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ encode(document: scene::SceneDocument, pretty: bool) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::common::pack",
+      "kind": "box",
+      "label": "pack",
+      "parent": "driftspec@ds@format::common",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ pack(text: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::common::unpack",
+      "kind": "box",
+      "label": "unpack",
+      "parent": "driftspec@ds@format::common",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ unpack(packed: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::diagramFormats",
+      "kind": "box",
+      "label": "diagramFormats",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ diagramFormats() -> std::map<std::string, std::unique_ptr<IFormat<render::IrText>>>"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::reportFormats",
+      "kind": "box",
+      "label": "reportFormats",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ reportFormats() -> std::map<std::string, std::unique_ptr<IFormat<check::Report>>>"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::sceneFormats",
+      "kind": "box",
+      "label": "sceneFormats",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ sceneFormats() -> std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>>"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::viewerTemplate",
+      "kind": "box",
+      "label": "viewerTemplate",
+      "parent": "driftspec@ds@format",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ viewerTemplate() -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    }
+  ],
+  "title": "CL_Format"
+}

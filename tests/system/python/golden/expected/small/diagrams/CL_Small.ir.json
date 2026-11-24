@@ -1,0 +1,88 @@
+{
+  "edges": [
+    {
+      "from": "p@m::A",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "p@m::Leaf"
+    },
+    {
+      "from": "p@m::B",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "p@m::Leaf"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "namespace",
+      "id": "p@m",
+      "kind": "container",
+      "label": "m"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "p@m::A",
+      "kind": "box",
+      "label": "A",
+      "parent": "p@m",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- leaf: Leaf"
+        ],
+        [
+          "+ run() -> none"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "p@m::B",
+      "kind": "box",
+      "label": "B",
+      "parent": "p@m",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- leaf: Leaf",
+          "- ghost: Missing"
+        ],
+        [
+          "+ run() -> none"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "p@m::Leaf",
+      "kind": "box",
+      "label": "Leaf",
+      "parent": "p@m",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ work(n: int) -> bool",
+          "+ step() -> none"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_Small"
+}

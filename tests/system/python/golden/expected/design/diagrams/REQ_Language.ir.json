@@ -1,0 +1,2811 @@
+{
+  "edges": [
+    {
+      "from": "REQ-00066-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00067-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00066-1"
+    },
+    {
+      "from": "REQ-00115-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00066-1"
+    },
+    {
+      "from": "REQ-00053-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00164-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00053-2"
+    },
+    {
+      "from": "REQ-00013-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00014-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00013-1"
+    },
+    {
+      "from": "REQ-00015-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00017-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00084-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00018-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00019-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00020-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00088-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00093-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00094-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00119-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00081-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00082-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00014-1"
+    },
+    {
+      "from": "REQ-00021-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00022-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00021-1"
+    },
+    {
+      "from": "REQ-00023-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00022-1"
+    },
+    {
+      "from": "REQ-00024-3",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00022-1"
+    },
+    {
+      "from": "REQ-00169-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00022-1"
+    },
+    {
+      "from": "REQ-00025-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00021-1"
+    },
+    {
+      "from": "REQ-00026-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00170-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00028-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00029-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00030-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00031-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00032-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00101-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00033-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00025-1"
+    },
+    {
+      "from": "REQ-00063-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00021-1"
+    },
+    {
+      "from": "REQ-00054-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00021-1"
+    },
+    {
+      "from": "REQ-00055-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00054-2"
+    },
+    {
+      "from": "REQ-00056-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00054-2"
+    },
+    {
+      "from": "REQ-00057-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00054-2"
+    },
+    {
+      "from": "REQ-00034-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00021-1"
+    },
+    {
+      "from": "REQ-00035-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00036-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00132-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00133-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00134-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00135-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00136-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00138-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00059-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00060-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00061-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00065-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00110-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00111-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00112-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00123-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00058-3",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00037-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00108-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00038-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00034-1"
+    },
+    {
+      "from": "REQ-00039-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00021-1"
+    },
+    {
+      "from": "REQ-00040-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00039-1"
+    },
+    {
+      "from": "REQ-00109-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00039-1"
+    },
+    {
+      "from": "REQ-00140-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00039-1"
+    },
+    {
+      "from": "REQ-00141-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00039-1"
+    },
+    {
+      "from": "REQ-00142-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00039-1"
+    },
+    {
+      "from": "REQ-00143-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00039-1"
+    },
+    {
+      "from": "REQ-00145-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00039-1"
+    },
+    {
+      "from": "REQ-00095-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00117-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00096-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00097-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00098-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00042-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00043-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00125-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00044-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00114-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00118-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00168-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00124-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00045-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00042-1"
+    },
+    {
+      "from": "REQ-00047-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    },
+    {
+      "from": "REQ-00048-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00116-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00049-3",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00129-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00130-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00131-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00139-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00120-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00121-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00064-5",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00126-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00127-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00128-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00137-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00155-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00062-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00144-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00146-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00147-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00148-2",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00154-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00122-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00050-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00047-1"
+    },
+    {
+      "from": "REQ-00052-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00051-1"
+    },
+    {
+      "from": "REQ-00180-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00126-1"
+    },
+    {
+      "from": "REQ-00181-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00126-1"
+    },
+    {
+      "from": "REQ-00171-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00053-2"
+    },
+    {
+      "from": "REQ-00172-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00053-2"
+    },
+    {
+      "from": "REQ-00173-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00053-2"
+    },
+    {
+      "from": "REQ-00192-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00096-1"
+    },
+    {
+      "from": "REQ-00174-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00066-1"
+    },
+    {
+      "from": "REQ-00178-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00028-2"
+    },
+    {
+      "from": "REQ-00179-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00028-2"
+    },
+    {
+      "from": "REQ-00051-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "REQ-00012-1"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "requirement",
+      "id": "REQ-00012-1",
+      "kind": "box",
+      "label": "REQ-00012-1",
+      "refs": {
+        "location": "design/ds/language.ds:13"
+      },
+      "sections": [
+        [
+          "The language shall specify a software design",
+          "as text: its high-level design, its",
+          "low-level design, the artefacts about it and",
+          "the views of it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00013-1",
+      "kind": "box",
+      "label": "REQ-00013-1",
+      "refs": {
+        "location": "design/ds/language.ds:186"
+      },
+      "sections": [
+        [
+          "The language shall model the high-level",
+          "design as packages, the organisation above",
+          "the implementation"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00014-1",
+      "kind": "box",
+      "label": "REQ-00014-1",
+      "refs": {
+        "location": "design/ds/language.ds:201"
+      },
+      "sections": [
+        [
+          "A package shall be a box of the high-level",
+          "design: a black box that holds packages,",
+          "modules and artefacts"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00015-1",
+      "kind": "box",
+      "label": "REQ-00015-1",
+      "refs": {
+        "location": "design/ds/language.ds:215"
+      },
+      "sections": [
+        [
+          "A package shall nest in a package, written",
+          "nested or reopened flat by its full path"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "package app { package core { } } and package app@core { } are the\n            same box; the flat form needs the outer package declared somewhere."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00017-2",
+      "kind": "box",
+      "label": "REQ-00017-2",
+      "refs": {
+        "location": "design/ds/language.ds:243"
+      },
+      "sections": [
+        [
+          "A package or a module shall realise",
+          "requirements and carry constraints through",
+          "annotations, like a class"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "@requirement and @constraint in the package or module body."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00018-1",
+      "kind": "box",
+      "label": "REQ-00018-1",
+      "refs": {
+        "location": "design/ds/language.ds:287"
+      },
+      "sections": [
+        [
+          "The outermost package shall be the system,",
+          "and the level of an artefact shall follow",
+          "from where it is declared"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "In the outermost package an artefact is of the system; in an inner\n            package or a module, of that level. No keyword, no field."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00019-1",
+      "kind": "box",
+      "label": "REQ-00019-1",
+      "refs": {
+        "location": "design/ds/language.ds:303"
+      },
+      "sections": [
+        [
+          "A package shall draw as a container of its",
+          "modules in a class diagram"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00020-2",
+      "kind": "box",
+      "label": "REQ-00020-2",
+      "refs": {
+        "location": "design/ds/language.ds:315"
+      },
+      "sections": [
+        [
+          "A package shall declare the external",
+          "interfaces of what it builds, with their",
+          "kind and typed operations"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "interface shell { kind: cli; operation buy(sku: string) -> int { exit 2: refused } }, at any\n            level of packages. The kind and the fields of an operation are data, not grammar, so a new\n            kind changes no syntax. Quality is a requirement or a constraint linked to the interface or\n            to an operation. Replaces boundary (DS-54): an interface of the high level design is the\n            external interface of a process, or of a library when it is binary."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00021-1",
+      "kind": "box",
+      "label": "REQ-00021-1",
+      "refs": {
+        "location": "design/ds/language.ds:498"
+      },
+      "sections": [
+        [
+          "The language shall model the low-level",
+          "design as modules of classes and their",
+          "behaviours"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00022-1",
+      "kind": "box",
+      "label": "REQ-00022-1",
+      "refs": {
+        "location": "design/ds/language.ds:512"
+      },
+      "sections": [
+        [
+          "A module shall be a namespace that reopens",
+          "across files and resolves names outward"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00023-1",
+      "kind": "box",
+      "label": "REQ-00023-1",
+      "refs": {
+        "location": "design/ds/language.ds:525"
+      },
+      "sections": [
+        [
+          "A bare name shall resolve from the innermost",
+          "scope outward, a qualified name across",
+          "modules, a pkg@ one across packages"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "No includes, no using; what already encloses you is omitted."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00024-3",
+      "kind": "box",
+      "label": "REQ-00024-3",
+      "refs": {
+        "location": "design/ds/language.ds:541"
+      },
+      "sections": [
+        [
+          "A name the design does not declare shall be",
+          "text in a type, a base, a bound or a call,",
+          "relating nothing and reported nowhere"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A design declares what it designs and nothing else. A name read out of a\n            type, a base, a template bound or a call that resolves to nothing the\n            design declares is text: no relation, no expected node, no finding\n            (std::string, Exception, subprocess::run). There is no extern module:\n            a design that still writes one fails with E-SYNTAX until it is migrated."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00025-1",
+      "kind": "box",
+      "label": "REQ-00025-1",
+      "refs": {
+        "location": "design/ds/language.ds:601"
+      },
+      "sections": [
+        [
+          "A class shall be a type of the design:",
+          "class, dataclass or enum, with members"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00026-2",
+      "kind": "box",
+      "label": "REQ-00026-2",
+      "refs": {
+        "location": "design/ds/language.ds:615"
+      },
+      "sections": [
+        [
+          "A member shall carry visibility, modifiers,",
+          "a name, a type and an optional default"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "+ # -, then abstract | static | const for methods, or owns | refs |\n            shares and many | optional for attributes, then the name; a method\n            named like its class is a constructor; name: type = default, the\n            type as the code writes it. *args and **kwargs are parameter names\n            like any other. Members are identified by name: an overload is one\n            member."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00028-2",
+      "kind": "box",
+      "label": "REQ-00028-2",
+      "refs": {
+        "location": "design/ds/language.ds:665"
+      },
+      "sections": [
+        [
+          "Ownership and multiplicity shall be written",
+          "on the attribute, and every name of its type",
+          "that the design declares shall be related;",
+          "parameters and returns shall give use"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "owns (default), refs, shares; many is *, optional 0..1, neither 1.\n            A type is the code's text (std::map<std::string, Pool*>, list[Step],\n            Pool | None): each name in it that the design declares is related\n            with the attribute's ownership and multiplicity, or as a use from a\n            parameter or a return; ds knows no container of any language. The\n            one designed name of a type is what a call through it reaches.\n            E-OWNERSHIP-CYCLE."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00029-2",
+      "kind": "box",
+      "label": "REQ-00029-2",
+      "refs": {
+        "location": "design/ds/language.ds:694"
+      },
+      "sections": [
+        [
+          "A template shall be identified by name and",
+          "arity and its arguments checked against",
+          "their bounds, and a base or a method shall",
+          "carry its template arguments as written"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "class Repository<T: Entity>; E-TEMPLATE-BOUND, never against an\n            argument that is the user's own parameter (class Holder<T> : Base<T>).\n            A base is written as the code writes it, IFormat<scene::SceneDocument>\n            or Box[int]: its first name is what the class inherits and the whole\n            text is kept; a method or a function takes parameters of its own,\n            each<F>(f: F)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00030-1",
+      "kind": "box",
+      "label": "REQ-00030-1",
+      "refs": {
+        "location": "design/ds/language.ds:716"
+      },
+      "sections": [
+        [
+          "Operators shall be declared in the class",
+          "header as a set and refined in the body"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "class Vector <<==, ordered, +, []>>; E-OPERATOR-UNDECLARED."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00031-2",
+      "kind": "box",
+      "label": "REQ-00031-2",
+      "refs": {
+        "location": "design/ds/language.ds:730"
+      },
+      "sections": [
+        [
+          "Abstract and value shall be derived from the",
+          "members, never written"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00032-2",
+      "kind": "box",
+      "label": "REQ-00032-2",
+      "refs": {
+        "location": "design/ds/language.ds:746"
+      },
+      "sections": [
+        [
+          "Any entity or member shall open a body with",
+          "fields, notes, annotations and nested",
+          "artefacts, and a member's body with rules"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00033-1",
+      "kind": "box",
+      "label": "REQ-00033-1",
+      "refs": {
+        "location": "design/ds/language.ds:781"
+      },
+      "sections": [
+        [
+          "An enum shall be a value type with its",
+          "values, annotated like a class"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00034-1",
+      "kind": "box",
+      "label": "REQ-00034-1",
+      "refs": {
+        "location": "design/ds/language.ds:894"
+      },
+      "sections": [
+        [
+          "A sequence shall be the behaviour of a",
+          "method, identified by it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00035-1",
+      "kind": "box",
+      "label": "REQ-00035-1",
+      "refs": {
+        "location": "design/ds/language.ds:907"
+      },
+      "sections": [
+        [
+          "A sequence shall be identified by its",
+          "resolved subject and scenario, wherever it",
+          "is written"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "sequence Class::method [/ scenario]; two declarations are a duplicate; the unnamed scenario is the default."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00036-2",
+      "kind": "box",
+      "label": "REQ-00036-2",
+      "refs": {
+        "location": "design/ds/language.ds:920"
+      },
+      "sections": [
+        [
+          "The participants of a sequence shall be its",
+          "static context: self, the attributes, the",
+          "parameters, the locals written and the",
+          "results of earlier messages"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00037-1",
+      "kind": "box",
+      "label": "REQ-00037-1",
+      "refs": {
+        "location": "design/ds/language.ds:1323"
+      },
+      "sections": [
+        [
+          "A message shall name an operation of its",
+          "target's type and match its arity, inside",
+          "loop, alt and opt frames with prose",
+          "conditions"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00038-2",
+      "kind": "box",
+      "label": "REQ-00038-2",
+      "refs": {
+        "location": "design/ds/language.ds:1359"
+      },
+      "sections": [
+        [
+          "A message to an operation with a behaviour",
+          "shall expand to its default scenario or to",
+          "the one it names, and coupling to another",
+          "module shall be derived"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A call names a scenario as a declaration does, with a slash, and a scenario\n            the operation does not declare is W-SCENARIO-UNDECLARED. Revision 2 adds the\n            naming (DS-52): a trace could only go down through the default scenario."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00039-1",
+      "kind": "box",
+      "label": "REQ-00039-1",
+      "refs": {
+        "location": "design/ds/language.ds:1382"
+      },
+      "sections": [
+        [
+          "A state machine shall be the behaviour of a",
+          "class"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00040-1",
+      "kind": "box",
+      "label": "REQ-00040-1",
+      "refs": {
+        "location": "design/ds/language.ds:1395"
+      },
+      "sections": [
+        [
+          "The events and actions of a transition shall",
+          "be operations of the class, and the guard",
+          "shall be prose"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Idle -> Running on run [guard] / report; no nested states until a design asks for them."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00042-1",
+      "kind": "box",
+      "label": "REQ-00042-1",
+      "refs": {
+        "location": "design/ds/language.ds:1704"
+      },
+      "sections": [
+        [
+          "The language shall hold requirements,",
+          "constraints and verifications as artefacts",
+          "of the same model"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00043-1",
+      "kind": "box",
+      "label": "REQ-00043-1",
+      "refs": {
+        "location": "design/ds/language.ds:1717"
+      },
+      "sections": [
+        [
+          "An artefact shall be identified by its id",
+          "with its revision"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "REQ-00001-2: the revision is part of the identity; a link to a revision no longer declared is W-REVISION-DRIFT, resolved to the declared one."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00044-1",
+      "kind": "box",
+      "label": "REQ-00044-1",
+      "refs": {
+        "location": "design/ds/language.ds:1767"
+      },
+      "sections": [
+        [
+          "Nesting shall give the relation between",
+          "artefacts, and annotations shall add",
+          "relations from elsewhere"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "a requirement in a requirement refines it; a verification in a requirement verifies it; @refines, @requirement, @constraint elsewhere."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00045-1",
+      "kind": "box",
+      "label": "REQ-00045-1",
+      "refs": {
+        "location": "design/ds/language.ds:1884"
+      },
+      "sections": [
+        [
+          "An artefact shall carry title, text,",
+          "rationale, status and tags; a verification",
+          "its method and tests; a constraint its",
+          "category and bok"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "One-line forms for a requirement and a constraint; draft when no status."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00047-1",
+      "kind": "box",
+      "label": "REQ-00047-1",
+      "refs": {
+        "location": "design/ds/language.ds:1901"
+      },
+      "sections": [
+        [
+          "A diagram shall be a selection of the model",
+          "that decides what to print and never what to",
+          "draw"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00048-1",
+      "kind": "box",
+      "label": "REQ-00048-1",
+      "refs": {
+        "location": "design/ds/language.ds:1915"
+      },
+      "sections": [
+        [
+          "A diagram shall select by id, module or",
+          "package, with include and exclude, and print",
+          "by hide and show"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00049-3",
+      "kind": "box",
+      "label": "REQ-00049-3",
+      "refs": {
+        "location": "design/ds/language.ds:1954"
+      },
+      "sections": [
+        [
+          "A sequence diagram shall select a behaviour",
+          "as it is written and expand by depth"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Revision 3 (DS-231): it no longer lifts to a level asked for with level: module;\n          it stands on the cut the diagram writes (REQ-00129-1), and the calls it follows\n          are said with unfold:, fold: and depth: (REQ-00130-1)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00050-1",
+      "kind": "box",
+      "label": "REQ-00050-1",
+      "refs": {
+        "location": "design/ds/language.ds:2458"
+      },
+      "sections": [
+        [
+          "A requirement diagram shall show the",
+          "umbrella of an artefact: what refines,",
+          "verifies and realises it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00051-1",
+      "kind": "box",
+      "label": "REQ-00051-1",
+      "refs": {
+        "location": "design/grammar/grammar.ds:7"
+      },
+      "sections": [
+        [
+          "The grammar shall read a specification as",
+          "text, unambiguously"
+        ]
+      ],
+      "stereotype": "requirement, approved, grammar"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00052-1",
+      "kind": "box",
+      "label": "REQ-00052-1",
+      "refs": {
+        "location": "design/grammar/grammar.ds:35"
+      },
+      "sections": [
+        [
+          "The grammar shall ship highlight and fold",
+          "queries that name only nodes it defines"
+        ]
+      ],
+      "stereotype": "requirement, approved, grammar"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00053-2",
+      "kind": "box",
+      "label": "REQ-00053-2",
+      "refs": {
+        "location": "design/ds/language.ds:115"
+      },
+      "sections": [
+        [
+          "A specification shall be a directory of .ds",
+          "files read as one, in any order"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Files are read whole and are not units of meaning; a link nobody\n        declares (an annotation, the subject of a behaviour) is an expected node\n        reported once (W-REF-UNDECLARED) and never stops the load; a name in a\n        type, a base, a bound or a call is text instead (REQ-00024-3); only\n        syntax stops a file (E-SYNTAX)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00054-2",
+      "kind": "box",
+      "label": "REQ-00054-2",
+      "refs": {
+        "location": "design/ds/language.ds:827"
+      },
+      "sections": [
+        [
+          "A function shall be an operation of a",
+          "module, outside any class, identified by its",
+          "module and its name"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "function name(params) -> type in a module, with a member's optional\n          visibility in front, public when absent; two of one name are\n          E-DUPLICATE-IDENTITY. A call to a function nobody designs is text\n          (REQ-00024-3)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00055-2",
+      "kind": "box",
+      "label": "REQ-00055-2",
+      "refs": {
+        "location": "design/ds/language.ds:849"
+      },
+      "sections": [
+        [
+          "A function shall carry a method's signature",
+          "and body"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Parameters and the return give use; the body holds notes, annotations, rules and nested artefacts."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00056-1",
+      "kind": "box",
+      "label": "REQ-00056-1",
+      "refs": {
+        "location": "design/ds/language.ds:863"
+      },
+      "sections": [
+        [
+          "The behaviour of a function shall run on its",
+          "parameters and locals, and a call with no",
+          "target shall reach a function of the module"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "sequence gather { }; there is no self. A call with no target is a\n            function resolved outward from the module, `-> tasks::gather()` one\n            of another module; a method reaches one its class does not declare.\n            In a sequence diagram a function runs on its module's lifeline."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00057-1",
+      "kind": "box",
+      "label": "REQ-00057-1",
+      "refs": {
+        "location": "design/ds/language.ds:880"
+      },
+      "sections": [
+        [
+          "A class diagram shall draw each function as",
+          "a box of its own, stereotyped function"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00058-3",
+      "kind": "box",
+      "label": "REQ-00058-3",
+      "refs": {
+        "location": "design/ds/language.ds:1292"
+      },
+      "sections": [
+        [
+          "A value of a sequence shall have the type of",
+          "what produced it, and its uses shall be",
+          "checked against that type"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The result of a message has the type its operation returns. A call on a\n            result is checked as a call on any other participant, and an argument\n            against its parameter (W-ARG-TYPE): a value of a designed class must\n            derive from the designed class the parameter names, and a literal, a\n            number or a string, fits no designed class. A type the design does not\n            declare (int, std::string, None) is the code's word, which ds does not\n            read: it is never compared, and the result of any operation may be\n            taken. A value whose type is not known, because its operation declares\n            no return or does not resolve, has nothing to be checked against and\n            gives no finding."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00059-2",
+      "kind": "box",
+      "label": "REQ-00059-2",
+      "refs": {
+        "location": "design/ds/language.ds:1102"
+      },
+      "sections": [
+        [
+          "A behaviour shall say what it gives back",
+          "with return, and that value shall be checked",
+          "against what its operation declares"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "return takes a name or a literal, never an expression. When the operation\n            promises a designed class, a value of another class, or a literal, is\n            reported (W-RETURN-TYPE); a return the design does not declare (void, int,\n            None) is never compared. A name the context does not know is left alone,\n            as an argument is. An operation that declares no return has nothing to\n            check against."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00060-1",
+      "kind": "box",
+      "label": "REQ-00060-1",
+      "refs": {
+        "location": "design/ds/language.ds:1123"
+      },
+      "sections": [
+        [
+          "An operation of an interface shall have a",
+          "sequence, and each outcome it promises shall",
+          "name a scenario whose trace ends in that",
+          "value"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "sequence shell::buy / refused goes down through the scenario each call names.\n            An operation with no sequence is W-OPERATION-NO-BEHAVIOUR, an outcome naming no\n            scenario W-SCENARIO-UNDECLARED, and one whose trace ends in another value\n            W-OUTCOME-MISMATCH. What cannot be told, a value that is not a literal at the end\n            of the trace, gives no finding."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00061-1",
+      "kind": "box",
+      "label": "REQ-00061-1",
+      "refs": {
+        "location": "design/ds/language.ds:1146"
+      },
+      "sections": [
+        [
+          "The state machine of an interface shall be",
+          "its navigation, with views as its states,",
+          "and shall report the views with no way in or",
+          "out"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "state web { view Home { text: ... } Home -> Done on buy }. A view holds free text and\n            the requirements and constraints that bind it, nothing that reinvents HTML. An event\n            that names an operation goes down to it; any other is a label. W-VIEW-UNDECLARED,\n            W-VIEW-UNREACHABLE and W-VIEW-NO-WAY-OUT. Views are optional: a bare machine asks nothing."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00062-1",
+      "kind": "box",
+      "label": "REQ-00062-1",
+      "refs": {
+        "location": "design/ds/language.ds:2308"
+      },
+      "sections": [
+        [
+          "A state diagram shall draw the states and",
+          "the jumps of a machine, and of an interface",
+          "its navigation with what each view shows"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "diagram ST_Web { kind: state; include: shop@web }. It reads from the initial state down;\n          a jump is an edge with its event and guard, a jump to the same state is a loop, and a view\n          shows its text and what binds it. A view no jump names is still drawn."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00063-1",
+      "kind": "box",
+      "label": "REQ-00063-1",
+      "refs": {
+        "location": "design/ds/language.ds:796"
+      },
+      "sections": [
+        [
+          "Any child of a box may be private, and",
+          "nothing outside its parent shall reach it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "One rule at every level: a box connects to another through a public child. A package's\n          public children are its interfaces and modules, a module's its classes and functions, a\n          class's its methods and attributes. A child is public unless it says -, and is seen from\n          inside its parent, so siblings see each other. A member that says # is protected: seen\n          from inside its class and from a class that derives from it (DS-224). A call or a type\n          that crosses anything private or protected on its way down is W-NOT-VISIBLE; a public\n          member showing a private type is W-PRIVATE-LEAK."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00064-5",
+      "kind": "box",
+      "label": "REQ-00064-5",
+      "refs": {
+        "location": "design/ds/language.ds:2153"
+      },
+      "sections": [
+        [
+          "A class diagram shall open the boxes it",
+          "names and close the rest, each closed box",
+          "showing only its public children"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "open: shop@store@stock opens that box and the way to it; open: written alone closes every\n          other box, and open: with nothing after it closes them all; a diagram that writes no cut\n          draws everything open. An edge that loses an end to a closed box is lifted to it, and what\n          stays inside a closed box is not drawn. A behaviour that crosses boxes counts too, so an\n          interface reaches what handles it though no type says so. The component view is derived,\n          never written.\n          Revision 3 (DS-229): open: is one of the ways a cut is written (REQ-00126-1,\n          REQ-00127-1, REQ-00128-1); alone it means what it meant.\n          Revision 4 (DS-230): a lifted edge no longer says only that one box depends on the other;\n          it is a structural bond or a use (REQ-00137-1).\n          Revision 5 (DS-244): a closed box lists what it offers as a class lists its members, a\n          compartment for each kind of thing in one order (packages, modules, interfaces, classes,\n          dataclasses, enums, functions), each by name and each marked with the badge a box of\n          its own would carry."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00065-1",
+      "kind": "box",
+      "label": "REQ-00065-1",
+      "refs": {
+        "location": "design/ds/language.ds:1166"
+      },
+      "sections": [
+        [
+          "A branch of a sequence shall name a",
+          "scenario, a path through that one behaviour,",
+          "so what scenarios share is written once"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "opt <prose> / refused { ... return 2 } names a branch; a bare return ends it. The path of a\n            scenario takes what is shared and its own branch, up to the return that ends it; the default\n            path takes no named branch; of an alt with one named side, the other side is taken; a branch it\n            cannot tell is kept as a frame. A call, a diagram and an exit code ask for the path by its\n            name, as they do for a sequence of its own, which stays for paths that share nothing. A name\n            given twice is W-SCENARIO-TWICE. A behaviour asked for by its subject is drawn whole, its early\n            returns included; an unnamed call follows the default path."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00066-1",
+      "kind": "box",
+      "label": "REQ-00066-1",
+      "refs": {
+        "location": "design/ds/language.ds:31"
+      },
+      "sections": [
+        [
+          "The language shall be declared once as a",
+          "metamodel: every kind with its fields, flags",
+          "and parents, every relation with the kinds",
+          "it joins"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Each kind names the fields it carries, each with a type (text, name,\n        names, type, params, number, status, patterns) and who sets it (the\n        author, the syntax, or the checker), the flags it takes and the kinds\n        it may be declared inside; a field whose name ends in * is a family\n        (local.*, exit *, contract.*). Each relation names the kinds it may go\n        from and to. Everything the binder and the checker put in a model is\n        something the metamodel declares."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00067-1",
+      "kind": "box",
+      "label": "REQ-00067-1",
+      "refs": {
+        "location": "design/ds/language.ds:66"
+      },
+      "sections": [
+        [
+          "A field that its kind does not declare shall",
+          "be reported as W-FIELD-UNKNOWN"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A key: value an entity carries that the metamodel does not declare\n          for its kind (a typo, or a field the language does not know) is a\n          warning at the entity, naming the field and the kind. It is kept in\n          the model: the warning does not drop it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00081-1",
+      "kind": "box",
+      "label": "REQ-00081-1",
+      "refs": {
+        "location": "design/ds/language.ds:439"
+      },
+      "sections": [
+        [
+          "A use case shall be declared as a contract",
+          "with its outcomes, realised by interface",
+          "operations and specialised by a specific use",
+          "case"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "usecase UC-00001-1 greet(name: string) -> Greeting { outcome default: ...; outcome\n            empty-name -> none: ... } is an artefact identified by its id with its revision: a\n            title, a status, the requirements that bind it (@requirement), an optional signature\n            and its outcomes, default the ending that goes well and every other one a scenario.\n            It names no interface: an interface operation realises it (operation greet(...) :\n            UC-00001-1), whoever drives that interface. A specific use case specialises a\n            generic one after a colon and keeps its signature, its outcomes and its\n            requirements. A design without use cases owes none."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00082-1",
+      "kind": "box",
+      "label": "REQ-00082-1",
+      "refs": {
+        "location": "design/ds/language.ds:467"
+      },
+      "sections": [
+        [
+          "The check shall hold every operation that",
+          "realises a use case to its contract, outcome",
+          "by outcome"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "An operation that takes or gives something else than the use case it realises, or a\n            specific use case that does so against its generic, is W-USECASE-SIGNATURE. An\n            outcome, its own or inherited, that the operation handles with no scenario is\n            W-USECASE-OUTCOME-UNHANDLED; a scenario the operation handles that no outcome names\n            is W-SCENARIO-NO-OUTCOME. A use case no operation realises, directly or through one\n            that specialises it, is W-USECASE-UNREALISED; a realisation or a specialisation of an\n            id that is no use case is W-USECASE-UNDECLARED."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00084-1",
+      "kind": "box",
+      "label": "REQ-00084-1",
+      "refs": {
+        "location": "design/ds/language.ds:261"
+      },
+      "sections": [
+        [
+          "A package or a module shall say what its",
+          "code is written in, and what it holds shall",
+          "be written in the same unless it says",
+          "otherwise"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "language: cpp in a package or a module; cpp, c, python, typescript or lua, the\n            languages argos reads. What a box holds is written in its language unless it says\n            another, and the check fills the language down, so every package and module of the\n            model carries it. One ds does not know, or two at once (a reopened box that says\n            two), is W-LANGUAGE-UNKNOWN. A box that says nothing and is held by nothing that\n            says has no language."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00088-1",
+      "kind": "box",
+      "label": "REQ-00088-1",
+      "refs": {
+        "location": "design/ds/language.ds:336"
+      },
+      "sections": [
+        [
+          "A package, a module or a class shall declare",
+          "that it uses an interface another box",
+          "offers, in its own body or from another file"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "@consumes sistema@broker@publish in a box binds a consumes relation from the box to the interface; the\n            box that offers the interface is the provider. Like every annotation it binds the same\n            written in the box or in an extension block anywhere else, so the wiring of a system can\n            live in a file of its own (as design/wiring.ds does for requirements) and a design brought\n            in whole can be connected from above without being touched. What an annotation means is\n            read from the metamodel's table of annotations, declared once."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00093-1",
+      "kind": "box",
+      "label": "REQ-00093-1",
+      "refs": {
+        "location": "design/ds/language.ds:362"
+      },
+      "sections": [
+        [
+          "A module shall offer interfaces like a",
+          "package, and a behaviour shall call an",
+          "interface's operation through a local, a",
+          "parameter or an attribute typed by it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "interface port { ... } inside module face is p@face::port, offered by the module. A\n            behaviour reaches an interface's operation as it reaches a method: local ds: p@engine\n            then -> ds.check(text), or a parameter or an attribute typed by the interface; the call\n            names the operation, so the consumer depends on the contract and not on the class that\n            realises it. In the viewer a module's interfaces come first inside it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00094-2",
+      "kind": "box",
+      "label": "REQ-00094-2",
+      "refs": {
+        "location": "design/ds/language.ds:387"
+      },
+      "sections": [
+        [
+          "The checker shall compare what a box",
+          "declares it uses with what its behaviours",
+          "call, and report what is not declared, what",
+          "is declared and never called, and a call",
+          "that goes around an interface"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A call to an operation of an interface another box offers needs a @consumes of that interface\n            on the caller or on a box it lives in, written there or in a wiring file\n            (W-CONSUMES-UNDECLARED). A @consumes that none of the box's behaviours calls is dead, said only once\n            the box has behaviours (W-CONSUMES-UNUSED). A call to a method of a class that realises an\n            interface, from outside the class's module, goes around the contract when the method\n            answers an operation of that interface (W-CONSUMES-BYPASS); a method the interface does not\n            offer cannot be called through it and is no bypass (DS-106). An\n            interface's own sequences realise it, and a box calling an interface it offers depends on\n            nothing."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00095-2",
+      "kind": "box",
+      "label": "REQ-00095-2",
+      "refs": {
+        "location": "design/ds/language.ds:1559"
+      },
+      "sections": [
+        [
+          "The language shall declare rules and",
+          "definitions in the box they apply to, in a",
+          "formal syntax: what they speak about, which",
+          "of them, and what holds, answering to a",
+          "requirement"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "rule <name> { @requirement <ID>; for <kind> <variable> [in <box>], ...; where <literals>;\n        holds <literals> | never <literals> } in a package, a module, a class or a member;\n        definition <name>(<parameters>) { if <literals> ... } names a relation derived from others,\n        one case per if line. A literal is a relation of the metamodel (c uses x), a kind (x is\n        class), containment (x in p@core), a comparison (=, !=, <, <=, >, >=) of entities or values,\n        a definition applied (reaches(c, x)) or the literal argument of a call (arg(k, msg, v)),\n        negated by not; a bare name is a variable, an entity is written qualified and a value is a\n        number or a string. What a rule\n        says is read from this syntax and never from prose: holds: <words> does not parse. A rule\n        is a design piece with a name, not an artefact with a revision: it makes a requirement real\n        in a narrower context and may name the entities of the design, which a requirement does not.\n        A rule that answers to no requirement, or says no claim or more than one, and a definition\n        with no case, are findings."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00096-1",
+      "kind": "box",
+      "label": "REQ-00096-1",
+      "refs": {
+        "location": "design/ds/language.ds:1620"
+      },
+      "sections": [
+        [
+          "The checker shall decide every structural",
+          "rule over the model and report each binding",
+          "of its ranges that breaks it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Rules are evaluated as Datalog with stratified negation over the model: the facts are the\n        declared entities with their kinds, every relation of the metamodel and containment at any\n        depth. A definition is computed to its fixpoint, recursion included; a rule's holds is broken\n        by each binding of its ranges and where that has no answer, its never by each binding that\n        has one, reported with the binding and the answer (E-RULE-BROKEN). The model is finite, so\n        every rule is decided. A formula that names an unknown kind, relation, entity or definition\n        (E-RULE-UNKNOWN), applies a definition to the wrong number of arguments (E-RULE-ARITY),\n        tests a variable no positive literal binds (E-RULE-UNSAFE) or negates a definition through\n        its own recursion (E-RULE-UNSTRATIFIED) is reported and not evaluated."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00097-1",
+      "kind": "box",
+      "label": "REQ-00097-1",
+      "refs": {
+        "location": "design/ds/language.ds:1655"
+      },
+      "sections": [
+        [
+          "The checker shall decide the rules over the",
+          "calls of the sequences against the literal",
+          "arguments they pass, and report each call",
+          "that breaks one where the call is written"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A call of a sequence is a message entity that calls an operation; arg(k, p, v) holds when\n        the call k passes to the parameter p of what it calls a value v written as a literal in the\n        sequence, a number or a string. Values compare numbers as numbers and anything else as\n        written. A call that passes a name instead of a literal has no arg fact for that parameter,\n        so a rule that asks for one in its where leaves it out: undecided in the design, it is\n        neither kept nor broken. A broken rule is reported at the first thing it ranges over, the\n        call in its sequence."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00098-1",
+      "kind": "box",
+      "label": "REQ-00098-1",
+      "refs": {
+        "location": "design/ds/language.ds:1680"
+      },
+      "sections": [
+        [
+          "The engine shall keep every binding that",
+          "breaks a rule, with its answer and where it",
+          "lands, and hand it structured to the export",
+          "and to the Python package"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Each breach the evaluator finds is kept by the rule's identity: the variables of its ranges\n        and where as bound, for a never the answer that breaks it, and the location of the first\n        thing the rule ranges over. All of them are kept, although the findings stop at a few per\n        rule. The JSON export carries them under breaches, and the Python package loads them as Model.breaches, so\n        a reader lights what breaks a rule without reading the findings' prose."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00101-1",
+      "kind": "box",
+      "label": "REQ-00101-1",
+      "refs": {
+        "location": "design/ds/language.ds:762"
+      },
+      "sections": [
+        [
+          "A class shall declare its destructor as",
+          "~Name(), and an interface may have one"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A method named ~ and the class's name is its destructor (flag destructor). It is no\n            part of the contract: like a constructor, it does not count against the derived\n            interface stereotype, so an interface declares the virtual destructor the C++ guide\n            asks of it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00108-1",
+      "kind": "box",
+      "label": "REQ-00108-1",
+      "refs": {
+        "location": "design/ds/language.ds:1337"
+      },
+      "sections": [
+        [
+          "A message shall call a class's static",
+          "operation by its qualified name, with no",
+          "instance"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "`-> diff::Diff::compare(a, b)`: a message with no participant whose qualified name\n            names an operation of a class calls it on the class itself, as `-> tasks::gather(x)`\n            calls a function of another module. The operation must be static; one that is not\n            is W-MSG-NOT-STATIC, since it needs an instance: a local, an attribute or a parameter."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00109-2",
+      "kind": "box",
+      "label": "REQ-00109-2",
+      "refs": {
+        "location": "design/ds/language.ds:1410"
+      },
+      "sections": [
+        [
+          "The checker shall report a state of a",
+          "class's machine that no transition leads to",
+          "from its initial state"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A state named in the transitions that the walk from the initial state never enters is\n            W-STATE-UNREACHABLE: a state left over, or a transition missing. The initial state is\n            the one written, or the one the machine starts in when it is not written (REQ-00143-1).\n            A machine with neither says nothing, since where it starts cannot be told. The\n            navigation of an interface has its own (W-VIEW-UNREACHABLE)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00110-1",
+      "kind": "box",
+      "label": "REQ-00110-1",
+      "refs": {
+        "location": "design/ds/language.ds:1196"
+      },
+      "sections": [
+        [
+          "A sequence shall say where a path ends",
+          "failing and where a failure of what it calls",
+          "is handled, whatever the mechanism"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "fail ParseError ends a path where a return would go, with the failure's name as text, as a\n            type is written. attempt { ... } on IoError / unreadable { ... } runs its steps and handles\n            what they fail with, one on each: a handler that fails with another translates the failure,\n            one that returns resolves it, and a failure no handler names goes on to the caller. The\n            default path does not fail: it takes the attempt's steps and no handler; a handler that\n            names a scenario is the path of that failure. The diagram draws the failure and each handler."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00111-1",
+      "kind": "box",
+      "label": "REQ-00111-1",
+      "refs": {
+        "location": "design/ds/language.ds:1221"
+      },
+      "sections": [
+        [
+          "The checker shall compute what failures",
+          "escape each operation, with the path each",
+          "comes up by, and the query shall answer it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A failure starts where a path ends failing and goes up to every caller that does not handle\n            it: an attempt handles, around the steps it runs, what its handlers name; a handler's own\n            steps are not handled by its attempt. Computed until nothing changes, so calls that call\n            each other end. Each operation carries escapes, the failures, and escape.<failure>, the\n            operations it comes up through and the behaviour (or the scenario of one) that starts it.\n            A call ds cannot follow, to an operation with no behaviour, is taken not to fail.\n            ds query <workspace> failures <operation> answers each escaping failure, named by the\n            operation it starts in."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00112-1",
+      "kind": "box",
+      "label": "REQ-00112-1",
+      "refs": {
+        "location": "design/ds/language.ds:1248"
+      },
+      "sections": [
+        [
+          "A signature shall say what an operation may",
+          "fail with, and the checker shall hold it to",
+          "what escapes, and a boundary to saying it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "+ load(path: string) -> Book fails LoadError, ParseError promises what may escape; fails\n            nothing promises none. What escapes and the signature does not say is W-FAILURE-UNDECLARED;\n            what it says and no path of its behaviour fails with is W-FAILURE-UNREACHED. An interface\n            operation is a boundary: what escapes it is said in its signature, or nothing may. Any other\n            operation is held to its signature only when it writes one. An operation with no behaviour\n            fails as its signature says, so a call into a library can be said to fail."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00114-1",
+      "kind": "box",
+      "label": "REQ-00114-1",
+      "refs": {
+        "location": "design/ds/language.ds:1782"
+      },
+      "sections": [
+        [
+          "An annotation word the language gives no",
+          "meaning to shall be reported as",
+          "W-ANNOTATION-UNKNOWN"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A @word outside the table of annotations is a warning where it is written,\n          naming the word and the words the language knows. The link it makes is kept\n          (refers): the warning does not drop it, and loading never fails on it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00115-2",
+      "kind": "box",
+      "label": "REQ-00115-2",
+      "refs": {
+        "location": "design/ds/language.ds:87"
+      },
+      "sections": [
+        [
+          "A closed field carrying a value it does not",
+          "take shall be reported as W-FIELD-VALUE"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The metamodel names the values of its closed fields: status (draft,\n          approved, obsolete), a verification's method and level, a diagram's\n          kind. Any other value is a warning at the entity, naming the\n          field, the value and the values it takes; an empty value is left alone.\n          The value is kept in the model.\n          Revision 2 (DS-231): a diagram has no level any more; the cut is written\n          with close: (REQ-00126-1)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00116-1",
+      "kind": "box",
+      "label": "REQ-00116-1",
+      "refs": {
+        "location": "design/ds/language.ds:1928"
+      },
+      "sections": [
+        [
+          "A diagram pattern shall read the same in",
+          "every kind of diagram, and one that names",
+          "what nothing declares shall be reported as",
+          "W-DIAGRAM-UNDECLARED"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "include, exclude and open take an identity, a prefix with * over the identity or\n          the scope (p@m::* is the module p@m and everything in it), a module named as such,\n          or a template written without its arity, read alike by class, sequence, state and\n          requirement diagrams. A pattern that names nothing the workspace declares is a\n          warning at the diagram. A pattern over a box that exists and is empty is not: a\n          level with no children is valid."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00117-1",
+      "kind": "box",
+      "label": "REQ-00117-1",
+      "refs": {
+        "location": "design/ds/language.ds:1596"
+      },
+      "sections": [
+        [
+          "A relation literal that binds an end to a",
+          "kind the relation never joins there shall be",
+          "reported as W-RULE-NEVER-MATCHES"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The kind of a variable is read from its range or from a positive kind literal, and the kind\n        of an entity from the model. When a relation literal binds its source to a kind the relation\n        never leaves, or its target to a kind it never reaches, by the metamodel, the literal matches\n        nothing: the rule is decided by vacuity. It is a warning at the literal; the rule is still\n        evaluated."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00118-1",
+      "kind": "box",
+      "label": "REQ-00118-1",
+      "refs": {
+        "location": "design/ds/language.ds:1803"
+      },
+      "sections": [
+        [
+          "A cycle of refines or of inherits shall be",
+          "an error, and a requirement that refines one",
+          "written inside its own box shall be reported",
+          "as W-REFINES-UPWARD"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Requirements that refine each other through any chain are E-REFINES-CYCLE; classes or\n          use cases that derive from each other are E-INHERITANCE-CYCLE; each cycle is said once.\n          A requirement whose refined requirement is written inside its own box, further down the\n          containment axis, is a warning: the detail stands above what it details. The axis is\n          read from where each is written, never from the prefix of its id."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00119-2",
+      "kind": "box",
+      "label": "REQ-00119-2",
+      "refs": {
+        "location": "design/ds/language.ds:415"
+      },
+      "sections": [
+        [
+          "A method that answers an operation of an",
+          "interface its class realises shall take and",
+          "give what the operation does, or be reported",
+          "as W-INTERFACE-SIGNATURE"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "When a class realises an interface (@interface) and declares, or inherits, a method named\n            like one of the interface's operations, their parameters and returns are compared as the\n            idea each type commits to: qualifiers and spaces dropped, the rest as the code writes it.\n            A difference is a warning at the method. An operation the class does not declare is no\n            finding: that is absence."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00120-1",
+      "kind": "box",
+      "label": "REQ-00120-1",
+      "refs": {
+        "location": "design/ds/language.ds:2109"
+      },
+      "sections": [
+        [
+          "A class diagram shall draw every box it",
+          "includes, whatever the box holds"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A package below the system or a module that a pattern takes is drawn as a box, with or\n          without children, and an entity is drawn inside the box its scope names, a package scope\n          included: an interface declared in a package sits in that package. Nothing below a box is\n          needed to see the box."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00121-1",
+      "kind": "box",
+      "label": "REQ-00121-1",
+      "refs": {
+        "location": "design/ds/language.ds:2130"
+      },
+      "sections": [
+        [
+          "A class diagram shall draw a behaviour's",
+          "dependencies from its subject, count",
+          "behaviour with or without open, and draw a",
+          "declared @consumes"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "What a sequence uses or couples to is drawn from its subject's box (a method's class, a\n          function, an operation's interface), not from the module it is written in. Behaviour that\n          crosses boxes is drawn whether or not the diagram writes open:, so a diagram that does not\n          write open: draws what one that opens every box draws; a coupling an edge between the\n          two already says gives no second arrow. A box's @consumes of an interface is drawn as a\n          dependency, before any behaviour confirms it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00122-1",
+      "kind": "box",
+      "label": "REQ-00122-1",
+      "refs": {
+        "location": "design/ds/language.ds:2436"
+      },
+      "sections": [
+        [
+          "A requirement diagram shall draw whatever",
+          "answers to a requirement, a member through",
+          "the class or interface that holds it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Every source of satisfies and constrained-by is drawn under the artefact: a package, a module,\n          an interface, a class, an enum, a function, a use case, a rule. A method, an attribute, an\n          operator or an operation answers through the class or the interface that holds it, and a\n          holder and its member that answer the same artefact draw one edge."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00123-1",
+      "kind": "box",
+      "label": "REQ-00123-1",
+      "refs": {
+        "location": "design/ds/language.ds:1271"
+      },
+      "sections": [
+        [
+          "A handler of a failure that no step of its",
+          "attempt can fail with shall be reported as",
+          "W-HANDLER-UNREACHED"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The failures the steps of an attempt can raise are those its messages fail with and those\n            that escape the operations they call. A handler that names none of them handles nothing.\n            Said only when every operation called in the attempt says how it fails, by a behaviour or by\n            a signature; a call that says nothing leaves the handler alone."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00124-1",
+      "kind": "box",
+      "label": "REQ-00124-1",
+      "refs": {
+        "location": "design/ds/language.ds:1856"
+      },
+      "sections": [
+        [
+          "What is not yet written shall be no finding,",
+          "kept apart as coverage and answered when",
+          "asked"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Six codes say that something is not yet written: an interface operation with no\n          sequence (W-OPERATION-NO-BEHAVIOUR), an outcome with no scenario\n          (W-USECASE-OUTCOME-UNHANDLED), a use case nothing realises (W-USECASE-UNREALISED), an\n          approved requirement nothing verifies (W-REQ-NO-VERIFICATION), a verification by test\n          with no tests (W-VER-NO-TEST), a rule that answers to no requirement\n          (W-RULE-NO-REQUIREMENT). They are of severity coverage: ds check does not report or\n          count them, the check's JSON and the export carry them apart, and ds query <workspace>\n          coverage [identity] lists them. An oracle corpus marks them with // ? as it marks a\n          finding with // !."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00125-1",
+      "kind": "box",
+      "label": "REQ-00125-1",
+      "refs": {
+        "location": "design/ds/language.ds:1742"
+      },
+      "sections": [
+        [
+          "Nesting an artefact in a design entity shall",
+          "say what annotating it says, and whatever",
+          "may nest an artefact may annotate it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A requirement nested in a class, a member, a function or another design entity binds\n          requires from the entity, and a nested constraint binds constrained-by, as @requirement\n          and @constraint do: two syntaxes that only change where the artefact is filed. Every kind\n          that may nest an artefact, an attribute and an operator among them, may carry either\n          annotation, and satisfies and constrained-by leave the same kinds, a state machine\n          included. In a package or a module a nested artefact still gives its level."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00126-1",
+      "kind": "box",
+      "label": "REQ-00126-1",
+      "refs": {
+        "location": "design/ds/language.ds:2188"
+      },
+      "sections": [
+        [
+          "A diagram shall close the boxes close:",
+          "names, by name, by prefix or by kind, and",
+          "leave every other box open"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "close: shop@warehouse closes that box; close: shop@sales@* every box that begins so;\n          close: module every module wherever it is, and close: package every package below the\n          outermost one, so a cut runs at one kind of box without counting levels. What a closed box\n          holds is lifted to it, as with open:. The outermost package is the drawing itself and\n          never closes. The drawing and ds query shows read the same cut. A pattern that names no\n          box is W-DIAGRAM-UNDECLARED; a kind names no box and is none."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00127-1",
+      "kind": "box",
+      "label": "REQ-00127-1",
+      "refs": {
+        "location": "design/ds/language.ds:2216"
+      },
+      "sections": [
+        [
+          "A box that open: names shall stay open, with",
+          "the way to it, whatever close: closes"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "With both written, close: draws the line and open: goes through it: close: module with\n          open: shop@sales@till closes every module but the till. One rule for the two fields, with\n          no order between patterns to learn. open: written alone keeps its meaning (REQ-00064-3)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00128-1",
+      "kind": "box",
+      "label": "REQ-00128-1",
+      "refs": {
+        "location": "design/ds/language.ds:2237"
+      },
+      "sections": [
+        [
+          "A diagram shall take the cut of the diagram",
+          "cut: names and add what it writes itself"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "cut: HLD_Till takes the open: and close: of that diagram, and what the diagram writes\n          itself is added to them, so several drawings share one cut written once. A diagram named\n          that nothing declares is W-DIAGRAM-UNDECLARED, and the diagram is drawn with what it\n          writes itself. Diagrams that take each other's cut are read once each."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00129-1",
+      "kind": "box",
+      "label": "REQ-00129-1",
+      "refs": {
+        "location": "design/ds/language.ds:1990"
+      },
+      "sections": [
+        [
+          "A sequence diagram shall stand on the cut",
+          "the diagram writes: one lifeline for each",
+          "closed box, and the messages that cross from",
+          "one to another"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The open:, close: and cut: of a class diagram mean the same in a sequence diagram. Every\n          participant is drawn as what stands for it on the cut: a closed box is one lifeline for\n          everything inside it, and what no closed box holds keeps a lifeline of its own. A message\n          whose two ends have the same representative is internal and is not drawn; one that\n          crosses is drawn between the representatives, and into a closed box it says which of its\n          children takes it (Desk::sell). A frame of the detail is kept around what crosses inside\n          it, and one in which nothing crosses is not drawn. ds query shows answers the same\n          participants. It replaces level: module, which lifted to one fixed rung, drew only the\n          direct calls and ignored depth; a diagram that still writes it is told so\n          (W-FIELD-UNKNOWN)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00130-1",
+      "kind": "box",
+      "label": "REQ-00130-1",
+      "refs": {
+        "location": "design/ds/language.ds:2026"
+      },
+      "sections": [
+        [
+          "A sequence diagram shall follow the calls",
+          "that unfold:, fold: and depth: say, and",
+          "every call when it stands on a cut and they",
+          "say nothing"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The calls have a cut of their own, written like the cut of the boxes. fold: names the\n          calls that are not followed (* for every call, a box for every call that lands in it, an\n          operation), and every other call is followed. unfold: names the calls that are followed,\n          whatever fold: says; written alone it folds every other call, and with nothing after it\n          the diagram draws only what the behaviour itself writes. depth: n is the uniform case\n          for the calls neither names. With none of the three, a diagram that writes a cut follows\n          every call, since what a closed box does inside is seen only through what crosses out of\n          it, and a diagram that writes no cut follows none, as before. A pattern that names\n          nothing is W-DIAGRAM-UNDECLARED."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00131-1",
+      "kind": "box",
+      "label": "REQ-00131-1",
+      "refs": {
+        "location": "design/ds/language.ds:2057"
+      },
+      "sections": [
+        [
+          "A requirement diagram shall draw what",
+          "answers to a requirement as the box that",
+          "stands for it on the cut the diagram writes"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "With close: module, a requirement a class answers to is drawn realised by the module\n          that holds the class, once. The artefacts themselves are never lifted. ds query shows\n          answers the same boxes."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00132-1",
+      "kind": "box",
+      "label": "REQ-00132-1",
+      "refs": {
+        "location": "design/ds/language.ds:946"
+      },
+      "sections": [
+        [
+          "A sequence shall be the behaviour of a use",
+          "case, a package or a module as well: a",
+          "scenario written at their cut"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "sequence UC-00001-1 { } is a scenario of the use case, and sequence UC-00001-1 / sold-out\n            another; sequence sales { } is what a box does. Its names resolve from the scope the use\n            case is declared in, or from inside the box. In a scenario of a use case a message with\n            nobody written before its arrow is sent by whoever asks for the use case, from outside the\n            design; in one of a box, by the box. A level written alone is a complete design: nothing\n            below it has to exist."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00133-2",
+      "kind": "box",
+      "label": "REQ-00133-2",
+      "refs": {
+        "location": "design/ds/language.ds:972"
+      },
+      "sections": [
+        [
+          "A participant of a sequence shall be",
+          "nameable as what it is: a package, a module,",
+          "an interface or a class the behaviour sees"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "sales in shell -> sales.sell(item) is the package shop@sales, resolved like any name, from\n            the innermost scope outward; no local declares it. A value of the static context of that\n            name comes first (REQ-00036-2). A name that is neither, the sender's included, is\n            text, and its message is not checked (REQ-00024-3). In a drawing a box that is named is one lifeline, the same one\n            a closed box has on a cut (REQ-00129-1), and ds query shows answers it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00134-1",
+      "kind": "box",
+      "label": "REQ-00134-1",
+      "refs": {
+        "location": "design/ds/language.ds:995"
+      },
+      "sections": [
+        [
+          "A message shall be sent by the participant",
+          "written before its arrow, and by the subject",
+          "of the behaviour when none is written"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "sales -> warehouse.take(item) leaves the sales. The sender is who calls: what it may see\n            (W-NOT-VISIBLE) and what it declares to use (W-CONSUMES-UNDECLARED) are checked from it, and\n            it is where the message leaves in a drawing. A message with no sender written is the\n            subject's, as before."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00135-1",
+      "kind": "box",
+      "label": "REQ-00135-1",
+      "refs": {
+        "location": "design/ds/language.ds:1016"
+      },
+      "sections": [
+        [
+          "A message to a box shall be bound to the",
+          "operation the box offers under that name,",
+          "and be kept as a label, listed as coverage,",
+          "when it offers none"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A package offers the operations of its interfaces, a module its functions. Bound, the\n            message is a call like any other: its arguments are checked (E-MSG-ARITY, W-ARG-TYPE), it\n            expands to the behaviour of the operation, one step below, and the box stays the\n            participant. With no operation of that name, or with more than one, the message is a\n            label: the level below is not written yet, which is W-MESSAGE-NO-OPERATION in the coverage\n            (REQ-00124-1) and never a finding. A message to an interface or a class that lacks the\n            operation is still W-MSG-UNDECLARED: what is written is written."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00136-1",
+      "kind": "box",
+      "label": "REQ-00136-1",
+      "refs": {
+        "location": "design/ds/language.ds:1044"
+      },
+      "sections": [
+        [
+          "The scenario of a use case and the behaviour",
+          "below it shall agree on what crosses between",
+          "the participants of the scenario, and in",
+          "what order"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The level below a scenario of a use case is the behaviour of the operation it is asked\n            through: a message nobody sends, bound to an operation that has a behaviour (the scenario\n            of the same name, when the operation has one). That behaviour is unfolded and lifted onto\n            the participants of the scenario: whatever one of them holds, it stands for. The crossings\n            the scenario writes have to be found among those of the level below, in order: a message\n            bound to an operation finds a call of that operation, a label a crossing between the same\n            two. The higher level may leave crossings out. One it writes that the level below never\n            makes, or makes fewer times, is W-LEVEL-NO-CROSSING; one made at another place is\n            W-LEVEL-ORDER. Both need the sender to be all written below: something is seen to happen\n            in it, and every call made in it has a behaviour. Otherwise what the sender does is not\n            known yet and the crossing is W-LEVEL-NOT-BELOW in the coverage (REQ-00124-1), which says\n            which steps of the high level have their detail beneath. A scenario with no behaviour\n            below it is held to nothing."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00137-1",
+      "kind": "box",
+      "label": "REQ-00137-1",
+      "refs": {
+        "location": "design/ds/language.ds:2259"
+      },
+      "sections": [
+        [
+          "A relation lifted onto a closed box shall",
+          "read as one of two bonds, structural or",
+          "uses, with one arrow of each at most between",
+          "two boxes"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Between classes a relation keeps its own kind: composition, aggregation, inheritance,\n          realisation, use. When an end of it is lost to a closed box it is lifted, and between\n          boxes it is one of two things. A structural bond: one owns, refers to, derives from or\n          realises something of the other; drawn as a solid arrow. A use: it names a type of the\n          other, calls it, sends it a message or declares its use; drawn as a dashed arrow. Each\n          is drawn once between two boxes, however many relations of the detail make it, and what\n          stays inside a closed box is not drawn. With the boxes open nothing changes."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00138-1",
+      "kind": "box",
+      "label": "REQ-00138-1",
+      "refs": {
+        "location": "design/ds/language.ds:1079"
+      },
+      "sections": [
+        [
+          "A message written between two participants",
+          "shall say that the sender uses the receiver"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "sales -> warehouse.take(item) gives the relation sends from the sales to the warehouse,\n            once, however many messages say it. The sender is the participant written before the\n            arrow, or the box a scenario is of; whoever asks for a use case is outside the design\n            and gives none. Between boxes it is a use (REQ-00137-1), so a design that has only its\n            high level draws its boxes connected by what its scenarios say."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00139-1",
+      "kind": "box",
+      "label": "REQ-00139-1",
+      "refs": {
+        "location": "design/ds/language.ds:2076"
+      },
+      "sections": [
+        [
+          "A tour shall draw, in one diagram and on one",
+          "cut, the boxes that take part in a behaviour",
+          "and the sequence between them"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "diagram TOUR_Buy { kind: tour; include: shop@shell::buy; close: module } takes the fields\n          of a sequence diagram: the behaviour it follows, the cut, and the calls it follows. It is\n          one drawing of two parts. The sequence, as a sequence diagram of the same fields draws\n          it. And who takes part, drawn as boxes: each lifeline of the sequence is one box of the\n          other part, whether the cut closes it or a scenario written between boxes names it, with\n          the relations between them lifted (REQ-00137-1) and the boxes around them as open\n          context. The parts are drawn side by side, and one under the other where the width asked\n          for does not hold them, or in a terminal. ds query shows answers who takes part."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00140-1",
+      "kind": "box",
+      "label": "REQ-00140-1",
+      "refs": {
+        "location": "design/ds/language.ds:1435"
+      },
+      "sections": [
+        [
+          "A state of a machine shall be written with",
+          "the rule that computes it over what its",
+          "subject holds"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "Paid if status = Paid, not cancelled. A state is computed, not kept: its rule says when the\n            subject of the machine is in it, over what the subject holds. The literals are joined by\n            commas and all hold. A literal is an attribute compared with a value (=, !=), or a name\n            alone: a boolean attribute, or a condition with a name when the subject holds nothing so\n            called; `not` turns a literal round. A state may have several rules, each one way of being\n            in it. The jumps are written beside the rules as they always were (REQ-00040-1), and a\n            state with no rule is a name, as before."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00141-1",
+      "kind": "box",
+      "label": "REQ-00141-1",
+      "refs": {
+        "location": "design/ds/language.ds:1461"
+      },
+      "sections": [
+        [
+          "The checker shall report two states of a",
+          "machine that can hold at once, with a",
+          "context in which both do"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The rules of a machine exclude each other, so that whatever its subject holds it is in one\n            state. Two rules of different states that some context satisfies together are\n            W-STATE-OVERLAP, and the finding says one such context: Lamps can be Left and Both at once:\n            when hazard = true, lever = Left. It is read from the rules alone: two rules exclude each\n            other when they ask one name for values that cannot both be. Two rules of one state may\n            hold together. What no rule covers is nothing to report: a machine that says less is\n            complete."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00142-1",
+      "kind": "box",
+      "label": "REQ-00142-1",
+      "refs": {
+        "location": "design/ds/language.ds:1486"
+      },
+      "sections": [
+        [
+          "The checker shall report a rule of a state",
+          "that cannot hold as it is written"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A comparison with a value the type of the attribute does not have is W-STATE-VALUE, and it\n            says the values the type has. A comparison of something the subject does not hold is\n            W-STATE-UNDECLARED. A rule whose literals exclude each other is W-STATE-IMPOSSIBLE: the\n            subject can never be in that state. A rule reported so is said once and is not held to the\n            others. An attribute whose values cannot be listed (a number, a text) is compared as\n            written."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00143-1",
+      "kind": "box",
+      "label": "REQ-00143-1",
+      "refs": {
+        "location": "design/ds/language.ds:1509"
+      },
+      "sections": [
+        [
+          "A machine shall start in the state the",
+          "defaults of its subject are in, when its",
+          "start is not written"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The start of a machine whose states have rules is derived: the state in which the defaults\n            of the attributes its rules read are. A start that is written is the start. Defaults that\n            are in no state, and an attribute with no default, give no start."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00144-1",
+      "kind": "box",
+      "label": "REQ-00144-1",
+      "refs": {
+        "location": "design/ds/language.ds:2330"
+      },
+      "sections": [
+        [
+          "A state diagram shall draw each state with",
+          "the rule that computes it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A state a rule computes shows its rule under its name, one line for each rule it has, and\n          is drawn though no jump names it. The arrow from the start goes to the state the machine\n          starts in (REQ-00143-1)."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00145-1",
+      "kind": "box",
+      "label": "REQ-00145-1",
+      "refs": {
+        "location": "design/ds/language.ds:1527"
+      },
+      "sections": [
+        [
+          "The checker shall report a call of an event",
+          "that the machine of its receiver lets happen",
+          "from no state the receiver may be in"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The behaviours written are read as they are, and nothing is asked of them. Along a\n            behaviour, what it calls an event on may be in any state to begin with; a call of an\n            event moves it by the jumps on that event, and a jump with a guard may leave it where it\n            was. A frame may not happen: what comes after it finds the receiver as the frame leaves it\n            or as it was; the sides of an alt are each one way, and a loop is read once, since its\n            receiver may be another each time. An operation that is no event of the machine moves\n            nothing. A call the machine lets happen from none of the states its receiver may be in is\n            W-STATE-ORDER, where the call is made: Desk::rush calls order.cancel() when order can only\n            be Shipped: the machine of Order lets cancel happen from Open or Paid."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00146-1",
+      "kind": "box",
+      "label": "REQ-00146-1",
+      "refs": {
+        "location": "design/ds/language.ds:2348"
+      },
+      "sections": [
+        [
+          "A state diagram shall say, on each jump, the",
+          "behaviours that call its event"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The jump keeps its label as it is written, and says besides the behaviours written that\n          call its event: pay is called in Desk::rush, Desk::sell. A jump whose event no behaviour\n          calls says nothing more."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00147-2",
+      "kind": "box",
+      "label": "REQ-00147-2",
+      "refs": {
+        "location": "design/ds/language.ds:2365"
+      },
+      "sections": [
+        [
+          "A table diagram shall draw a machine as a",
+          "table: its events down, its states across,",
+          "and in each cell where the event takes the",
+          "state"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "diagram TB_Order { kind: table; include: shop@order::Order }. The events and the states\n          are in the order the machine writes them. A cell says the state the jumps on the event\n          lead to from the state above it, with the guard of a jump that has one and every jump when\n          there are several; where the machine has no jump the cell is empty. It is drawn as SVG and\n          as terminal text, like every diagram."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00148-2",
+      "kind": "box",
+      "label": "REQ-00148-2",
+      "refs": {
+        "location": "design/ds/language.ds:2390"
+      },
+      "sections": [
+        [
+          "A table diagram shall say who calls each",
+          "event, and the cell in which a behaviour",
+          "calls one against the machine"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "The heading of a row says the behaviours written that call its event. A call the machine\n          lets happen from no state its receiver may be in (REQ-00145-1) is said in the cell of each\n          of those states, with the behaviour that makes it: the place in the table where the\n          behaviours and the machine disagree."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00154-1",
+      "kind": "box",
+      "label": "REQ-00154-1",
+      "refs": {
+        "location": "design/ds/language.ds:2408"
+      },
+      "sections": [
+        [
+          "A table diagram shall list what its ranges",
+          "and its filter answer, a row each, with a",
+          "cell under each column it writes"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "diagram TB { kind: table; for <kind> <variable> [in <box>], ...; where <literals>;\n          column <name>: <what> ... }. The rows are said as a rule says what it speaks about: every\n          binding of the ranges that passes the filter. A column is a field of the row (r.title;\n          name and id are what every entity has, holds says of a rule whether the model keeps it),\n          what is related to the row (x where r satisfies x: every x that answers, by its name), or\n          a yes or no (holds <literals>). The first column heads each row. A comparison reads a\n          field of what a variable is bound to (r.status = \"draft\"), in a table and in a rule alike,\n          and an artefact is in the box it is written in. A table written this way is the model's\n          answer, kept when the design is checked; one that names a machine is REQ-00147-2. A cell\n          too long for one line goes on several."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00155-1",
+      "kind": "box",
+      "label": "REQ-00155-1",
+      "refs": {
+        "location": "design/ds/language.ds:2286"
+      },
+      "sections": [
+        [
+          "A use drawn between two boxes shall say the",
+          "interfaces of the one it reaches that the",
+          "other goes through, with the operations",
+          "asked of each"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "What a box consumes, uses or calls of an interface of another box is said by the use\n          drawn between the two, lifted or written between them as they are: a line per interface,\n          its name and the operations asked of it. A use that goes through no interface says\n          nothing, and a structural bond never does. The drawing carries it as what the arrow says\n          when pointed at."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00164-1",
+      "kind": "box",
+      "label": "REQ-00164-1",
+      "refs": {
+        "location": "design/ds/language.ds:146"
+      },
+      "sections": [
+        [
+          "A member named after a behaviour its holder",
+          "has shall be E-NAME-RESERVED, and the",
+          "behaviour keep its identity"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A state machine is its subject's identity with ::state, and a sequence its subject's with\n          ::sequence; a member written with that name takes the identity of the behaviour when the\n          behaviour is written too. The member is reported where it is written, once, and the\n          behaviour keeps the identity whichever of the two is written first, with nothing else said\n          of the collision. A member named state or sequence whose holder has no such behaviour is\n          an ordinary member."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00168-1",
+      "kind": "box",
+      "label": "REQ-00168-1",
+      "refs": {
+        "location": "design/ds/language.ds:1827"
+      },
+      "sections": [
+        [
+          "A piece that answers to a requirement whose",
+          "home does not hold it shall be reported as",
+          "W-SATISFIES-OUTSIDE-HOME, naming the box",
+          "that holds the home and every piece that",
+          "realises it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "A requirement written in a box has that box as its home. A box, interface, class,\n          function or member that answers to it from outside that box is a warning: the\n          requirement is written at one place and realised outside it. The finding names the\n          innermost box around the home that holds every piece realising the requirement: where\n          the requirement would stand with all of them inside. What holds a piece is read from\n          where it is written, never from the prefix of its id. A requirement written at the root\n          holds everything, and a requirement nothing realises is no finding. A system that\n          adopts the requirement of another, written in a package of its own that no box shares\n          with it (a library's), answers to it as to any artefact: no finding either."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00169-2",
+      "kind": "box",
+      "label": "REQ-00169-2",
+      "refs": {
+        "location": "design/ds/language.ds:568"
+      },
+      "sections": [
+        [
+          "A bare name that no scope declares shall",
+          "resolve to the one class of that name in its",
+          "package, and warn when two share it"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "After the scopes, from the innermost outward, a bare name (no :: and no\n            @) is looked for among the classes and enums of the package it is\n            written in, at any depth of its modules: the one of that name and arity\n            is it, and another package is never asked. When two or more share it,\n            it relates nothing and W-NAME-AMBIGUOUS is reported once where it is\n            written, naming every candidate by its identity. A name written from\n            the top package, a name nobody declares and a template parameter say\n            nothing. It is the rule argos applies to the code, so Plan, written as\n            a Python module imports it from a sibling module, finds the class there."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00170-1",
+      "kind": "box",
+      "label": "REQ-00170-1",
+      "refs": {
+        "location": "design/ds/language.ds:637"
+      },
+      "sections": [
+        [
+          "An attribute written with two ownerships or",
+          "two multiplicities shall be reported as",
+          "E-MODIFIER-CONFLICT"
+        ]
+      ],
+      "stereotype": "requirement, approved, ds",
+      "title": "An attribute has one ownership (owns, refs, shares) and one\n            multiplicity (many, optional). Two of either kind, or one written\n            twice, say two things at once: an error at the attribute, which keeps\n            the first one written."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00171-1",
+      "kind": "box",
+      "label": "REQ-00171-1",
+      "refs": {
+        "location": "design/ds/bind.ds:58"
+      },
+      "sections": [
+        [
+          "The binder shall bind each construct of the",
+          "language through a binder of its own,",
+          "reached through one interface"
+        ]
+      ],
+      "stereotype": "requirement, approved, bind",
+      "title": "A node binder takes the kinds of node of one construct and binds one of them. The binder reaches every one\n        through INodeBinder, by the table, and what several constructs share is a part each is given by reference.\n        A construct added to the language is a binder added beside the others, which do not change."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00172-1",
+      "kind": "box",
+      "label": "REQ-00172-1",
+      "refs": {
+        "location": "design/ds/bind.ds:81"
+      },
+      "sections": [
+        [
+          "Every binder shall write into the model",
+          "through the bind context"
+        ]
+      ],
+      "stereotype": "requirement, approved, bind",
+      "title": "A node binder and a part declare, relate, annotate and note through the context they are given, which holds\n        the model, the notes and where the node is written. What binds a file holds no model of its own."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00173-1",
+      "kind": "box",
+      "label": "REQ-00173-1",
+      "refs": {
+        "location": "design/ds/bind.ds:102"
+      },
+      "sections": [
+        [
+          "Every operation of the binder shall be a",
+          "member of the class whose responsibility it",
+          "is"
+        ]
+      ],
+      "stereotype": "requirement, approved, bind",
+      "title": "What binds a construct is its node binder's, what several share is a part's, what reads the tree is the\n        reader's and what reads a type's text is the token's. A function of the module would be a responsibility\n        no class names."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00174-1",
+      "kind": "box",
+      "label": "REQ-00174-1",
+      "refs": {
+        "location": "design/ds/model.ds:457"
+      },
+      "sections": [
+        [
+          "The metamodel shall build its own tables",
+          "when it is created"
+        ]
+      ],
+      "stereotype": "requirement, approved, model",
+      "title": "The kinds, the relations, the codes, the annotations and how each kind is written are built by the\n        metamodel's own builders when it is made, once where the engine starts, and read from then on through its\n        questions. What builds them belongs to the metamodel and nothing outside the model calls it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00178-1",
+      "kind": "box",
+      "label": "REQ-00178-1",
+      "refs": {
+        "location": "design/ds/text.ds:9"
+      },
+      "sections": [
+        [
+          "The text module shall depend on no other",
+          "module of the engine"
+        ]
+      ],
+      "stereotype": "requirement, approved, text",
+      "title": "What splits, joins, trims and escapes text takes text and gives text. It reads no model, no tree and no\n        document, so every module of the engine can use it and it uses none of them."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00179-1",
+      "kind": "box",
+      "label": "REQ-00179-1",
+      "refs": {
+        "location": "design/ds/text.ds:30"
+      },
+      "sections": [
+        [
+          "The text module shall hold no state"
+        ]
+      ],
+      "stereotype": "requirement, approved, text",
+      "title": "Each function of text answers from what it is given: no attribute of the module keeps anything between two\n        calls, so a call reads the same in any order and from any module."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00180-1",
+      "kind": "box",
+      "label": "REQ-00180-1",
+      "refs": {
+        "location": "design/ds/axis.ds:14"
+      },
+      "sections": [
+        [
+          "Every operation of the axis shall be a",
+          "member of the class whose responsibility it",
+          "is"
+        ]
+      ],
+      "stereotype": "requirement, approved, axis",
+      "title": "What a cut is, what stands for an id on it, how a box is lifted and how a relation reads once lifted are the\n        Cut's. A function of the module would be a responsibility no class names."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00181-1",
+      "kind": "box",
+      "label": "REQ-00181-1",
+      "refs": {
+        "location": "design/ds/axis.ds:35"
+      },
+      "sections": [
+        [
+          "The axis shall read the model it cuts and",
+          "leave it as it is"
+        ]
+      ],
+      "stereotype": "requirement, approved, axis",
+      "title": "A cut is computed from what the model keeps and the diagram writes, and read by the query, the drawing and\n        the check alike. The axis asks the model its questions and calls none of what changes it."
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00192-1",
+      "kind": "box",
+      "label": "REQ-00192-1",
+      "refs": {
+        "location": "design/ds/check.ds:16"
+      },
+      "sections": [
+        [
+          "The evaluator shall direct four pieces, and",
+          "the solver shall read the facts and never",
+          "the model"
+        ]
+      ],
+      "stereotype": "requirement, draft, check",
+      "title": "Facts reads the model once into what a rule is evaluated over: the declared entities of each kind, every\n        relation both ways, the names a formula writes resolved, and what each definition holds for; it is the\n        pieces' one reader of the model. RuleValidator checks each formula before it is evaluated, Strata orders the\n        definitions, and Solver answers a body over the facts alone. Evaluator directs them: it records into the\n        facts what the validator resolved and what the definitions derive, and writes the breaches and the tables\n        into the model."
+    }
+  ],
+  "title": "REQ_Language"
+}

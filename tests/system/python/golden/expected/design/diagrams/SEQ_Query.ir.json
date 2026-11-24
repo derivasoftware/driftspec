@@ -1,0 +1,550 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "query(workspace: path, question: string, subject: string)",
+      "order": 0,
+      "refs": {
+        "location": "design/ds/cli.ds:41"
+      },
+      "title": "driftspec@ds@cli::query",
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "app::main(workspace) / query",
+      "order": 1,
+      "refs": {
+        "expands": "driftspec@ds@app::main::sequence/query",
+        "location": "design/ds/cli.ds:93",
+        "span": "2-37"
+      },
+      "title": "driftspec@ds@app::app::main\nexpanded below: main/query",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loadWorkspace(metamodel, argv, answers, diagram, model)",
+      "order": 2,
+      "refs": {
+        "expands": "driftspec@ds@app::loadWorkspace::sequence",
+        "location": "design/ds/app.ds:179",
+        "span": "3-6"
+      },
+      "title": "driftspec@ds@app::loadWorkspace\nexpanded below: loadWorkspace",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "isDirectory(dir)",
+      "order": 3,
+      "refs": {
+        "location": "design/ds/app.ds:46"
+      },
+      "title": "driftspec@ds@app::isDirectory",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 4,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "href": "#driftspec@ds@app::load::sequence",
+      "kind": "message",
+      "label": "load(metamodel, dir, output, diagram)",
+      "order": 5,
+      "refs": {
+        "expands": "driftspec@ds@app::load::sequence",
+        "location": "design/ds/app.ds:50"
+      },
+      "title": "driftspec@ds@app::load\nexpands to: load",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loaded",
+      "order": 6,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 7,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "ask(question, subject)",
+      "order": 8,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::ask::sequence",
+        "location": "design/ds/app.ds:180",
+        "span": "9-32"
+      },
+      "title": "driftspec@ds@query::Query::ask\nexpanded below: Query::ask",
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "href": "#driftspec@ds@query::Query::diagrams::sequence",
+      "kind": "message",
+      "label": "diagrams()",
+      "order": 9,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::diagrams::sequence",
+        "location": "design/ds/query.ds:264"
+      },
+      "title": "driftspec@ds@query::Query::diagrams\nexpands to: Query::diagrams",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 10,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 11,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "href": "#driftspec@ds@query::Query::entities::sequence",
+      "kind": "message",
+      "label": "entities(subject)",
+      "order": 12,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::entities::sequence",
+        "location": "design/ds/query.ds:268"
+      },
+      "title": "driftspec@ds@query::Query::entities\nexpands to: Query::entities",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 13,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 14,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "href": "#driftspec@ds@query::Query::relations::sequence",
+      "kind": "message",
+      "label": "relations(subject)",
+      "order": 15,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::relations::sequence",
+        "location": "design/ds/query.ds:272"
+      },
+      "title": "driftspec@ds@query::Query::relations\nexpands to: Query::relations",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 16,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 17,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "href": "#driftspec@ds@query::Query::artefacts::sequence",
+      "kind": "message",
+      "label": "artefacts(subject)",
+      "order": 18,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::artefacts::sequence",
+        "location": "design/ds/query.ds:276"
+      },
+      "title": "driftspec@ds@query::Query::artefacts\nexpands to: Query::artefacts",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 19,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 20,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "href": "#driftspec@ds@query::Query::behaviours::sequence",
+      "kind": "message",
+      "label": "behaviours(subject)",
+      "order": 21,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::behaviours::sequence",
+        "location": "design/ds/query.ds:280"
+      },
+      "title": "driftspec@ds@query::Query::behaviours\nexpands to: Query::behaviours",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 22,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 23,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "failures(subject)",
+      "order": 24,
+      "refs": {
+        "location": "design/ds/query.ds:284"
+      },
+      "title": "driftspec@ds@query::Query::failures",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 25,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 26,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "href": "#driftspec@ds@query::Query::shows::sequence",
+      "kind": "message",
+      "label": "shows(subject)",
+      "order": 27,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::shows::sequence",
+        "location": "design/ds/query.ds:288"
+      },
+      "title": "driftspec@ds@query::Query::shows\nexpands to: Query::shows",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 28,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 29,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@query::Query|query",
+      "href": "#driftspec@ds@query::Query::findings::sequence",
+      "kind": "message",
+      "label": "findings(subject)",
+      "order": 30,
+      "refs": {
+        "expands": "driftspec@ds@query::Query::findings::sequence",
+        "location": "design/ds/query.ds:292"
+      },
+      "title": "driftspec@ds@query::Query::findings\nexpands to: Query::findings",
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query",
+      "kind": "message",
+      "label": "answers",
+      "order": 31,
+      "to": "driftspec@ds@query::Query|query"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "return answers",
+      "order": 32,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@query::Query|query",
+      "kind": "message",
+      "label": "answers",
+      "order": 33,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "format::answerFormats()",
+      "order": 34,
+      "refs": {
+        "location": "design/ds/app.ds:181"
+      },
+      "title": "driftspec@ds@format::format::answerFormats",
+      "to": "driftspec@ds@format"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format",
+      "kind": "message",
+      "label": "formats",
+      "order": 35,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "write(answers, options)",
+      "order": 36,
+      "refs": {
+        "location": "design/ds/app.ds:182"
+      },
+      "title": "driftspec@ds@format::AnswersText::write",
+      "to": "driftspec@ds@format::AnswersText|chosen"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format::AnswersText|chosen",
+      "kind": "message",
+      "label": "text",
+      "order": 37,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "code",
+      "order": 38,
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "none",
+      "order": 39,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@cli",
+      "id": "driftspec@ds@cli",
+      "kind": "lifeline",
+      "label": "self: cli",
+      "refs": {
+        "location": "design/ds/cli.ds:6"
+      },
+      "title": "driftspec@ds@cli"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@app",
+      "id": "driftspec@ds@app",
+      "kind": "lifeline",
+      "label": "app",
+      "refs": {
+        "location": "design/ds/app.ds:8"
+      },
+      "title": "driftspec@ds@app"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@query::Query",
+      "id": "driftspec@ds@query::Query|query",
+      "kind": "lifeline",
+      "label": "query: Query",
+      "refs": {
+        "location": "design/ds/query.ds:225"
+      },
+      "title": "driftspec@ds@query::Query"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@query::Query",
+      "id": "driftspec@ds@query::Query",
+      "kind": "lifeline",
+      "label": "Query",
+      "refs": {
+        "location": "design/ds/query.ds:225"
+      },
+      "title": "driftspec@ds@query::Query"
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f0",
+      "kind": "frame",
+      "label": "opt question is diagrams",
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f1",
+      "kind": "frame",
+      "label": "opt question is entities",
+      "span": [
+        12,
+        14
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f2",
+      "kind": "frame",
+      "label": "opt question is relations",
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f3",
+      "kind": "frame",
+      "label": "opt question is artefacts",
+      "span": [
+        18,
+        20
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f4",
+      "kind": "frame",
+      "label": "opt question is behaviours",
+      "span": [
+        21,
+        23
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f5",
+      "kind": "frame",
+      "label": "opt question is failures",
+      "span": [
+        24,
+        26
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f6",
+      "kind": "frame",
+      "label": "opt question is shows",
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@query::Query::ask::sequence::f7",
+      "kind": "frame",
+      "label": "opt question is findings",
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@format",
+      "id": "driftspec@ds@format",
+      "kind": "lifeline",
+      "label": "format",
+      "refs": {
+        "location": "design/ds/format.ds:50"
+      },
+      "title": "driftspec@ds@format"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@format::AnswersText",
+      "id": "driftspec@ds@format::AnswersText|chosen",
+      "kind": "lifeline",
+      "label": "chosen: AnswersText",
+      "refs": {
+        "location": "design/ds/format.ds:187"
+      },
+      "title": "driftspec@ds@format::AnswersText"
+    }
+  ],
+  "title": "SEQ_Query"
+}

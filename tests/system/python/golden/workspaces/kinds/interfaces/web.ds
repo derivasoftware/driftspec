@@ -1,0 +1,55 @@
+// The same greeting, now for a person with a browser.
+//
+// A graphical interface is its navigation: a state machine, the same concept as
+// the state of a class, whose states are the views. Each view says in plain text
+// what it shows, and links the requirements and constraints that bind it.
+
+package hola {
+  interface web {
+    kind: gui
+    @requirement SREQ-00002-1        // 100 ms, the same promise as the command line
+
+    operation greet(name: string) -> core::Greeting : UC-00002-1
+  }
+
+  state web {
+    initial Home
+
+    view Home {
+      text:
+        A field for the name and a button to greet. When the name is empty the
+        button says why it did nothing, next to the field, and what was typed
+        stays there.
+      @requirement SREQ-00003-1
+      @constraint CST-00001-1
+    }
+
+    view Result {
+      text:
+        The greeting, large, and a way back to greet someone else.
+      @constraint CST-00001-1
+    }
+
+    view About {
+      text:
+        What this is and who made it.
+    }
+
+    Home -> Result on greet
+    Home -> Home on greet [empty name]
+    Home -> About on about
+    Result -> Home on back
+    About -> Home on back
+  }
+
+  // The trace: down to the same classes the command line reaches.
+  sequence web::greet {
+    local server: server::Server
+    -> server.greet(name) -> greeting
+  }
+
+  sequence web::greet / empty-name {
+    local server: server::Server
+    -> server.greet(name) / empty-name -> failure
+  }
+}

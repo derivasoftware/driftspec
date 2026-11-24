@@ -1,0 +1,33 @@
+// One run of the command: validates the name, greets or fails. Private: only main
+// needs it, and nothing outside the process should.
+
+package hola {
+  module app {
+    - class App {
+      @requirement REQ-00002-1
+      - shares greeter: core::Greeter
+      - owns console: Console
+      + run(name: std::string) -> int
+      - print(greeting: core::Greeting) -> void
+      - fail(text: std::string) -> void
+    }
+
+    class Console : core::Channel {
+      # write(text: std::string) -> void
+      - colour: bool
+    }
+
+    sequence App::run {
+      self -> greeter.valid(name) -> ok
+      self -> greeter.greet(name) -> greeting
+      -> print(greeting)
+      return 0
+    }
+
+    sequence App::run / empty-name {
+      self -> greeter.valid(name) -> ok
+      -> fail(reason)
+      return 2
+    }
+  }
+}
