@@ -15,8 +15,10 @@ A document over 256 KiB is pinned by its sha256 and size (NAME.sha256) instead o
 
 The test runs the ds that DS names: ctest passes the one it built, and CI's golden job the one
 cpp-test built. Without DS it is skipped, as in the python job, whose build has no ds. Updating the
-goldens is a change reviewed like any other; regenerate them with this same file:
+goldens is a change reviewed like any other; regenerate them with this same file, which also compares
+them without pytest (--check), as ctest runs it:
   python tests/system/python/test_golden.py --ds <ds binary> [design kinds small]
+  python tests/system/python/test_golden.py --check --ds <ds binary>
 """
 
 from __future__ import annotations
@@ -151,16 +153,23 @@ def expected(ws: str) -> dict[str, str]:
     return {str(p.relative_to(root)): p.read_text() for p in sorted(root.rglob("*")) if p.is_file()}
 
 
-def matches(ws: str) -> None:
-    got = written(ds_binary(), ws)
+def mismatch(ds: str, ws: str) -> str:
+    """What differs between the documents ds writes for a workspace and their golden files; "" when nothing."""
+    got = written(ds, ws)
     want = expected(ws)
     missing, extra = sorted(set(want) - set(got)), sorted(set(got) - set(want))
-    assert not missing and not extra, f"{ws}: pinned but no longer written {missing}; written but not pinned {extra}"
+    if missing or extra:
+        return f"{ws}: pinned but no longer written {missing}; written but not pinned {extra}"
     differ = [name for name in sorted(got) if got[name] != want[name]]
-    first = "" if not differ else "".join(
-        list(difflib.unified_diff(want[differ[0]].splitlines(True), got[differ[0]].splitlines(True), "golden", "ds"))[:60]
-    )
-    assert not differ, f"{len(differ)} of {len(got)} documents of {ws} differ from their golden file: {differ[:20]}\n{first}"
+    if not differ:
+        return ""
+    first = "".join(list(difflib.unified_diff(want[differ[0]].splitlines(True), got[differ[0]].splitlines(True), "golden", "ds"))[:60])
+    return f"{len(differ)} of {len(got)} documents of {ws} differ from their golden file: {differ[:20]}\n{first}"
+
+
+def matches(ws: str) -> None:
+    problem = mismatch(ds_binary(), ws)
+    assert not problem, problem
 
 
 class TestGolden:
@@ -175,12 +184,24 @@ class TestGolden:
 
 
 def main(argv: list[str]) -> int:
+    """--check compares, as ctest runs it without pytest, and exits 1 when a document differs; otherwise the
+    golden files are written again from the ds given."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="regenerate the golden files from a ds binary")
+    parser = argparse.ArgumentParser(description="compare (--check) or regenerate the golden files with a ds binary")
     parser.add_argument("--ds", default=os.environ.get("DS"), required=os.environ.get("DS") is None)
+    parser.add_argument("--check", action="store_true", help="compare only, and exit 1 when a document differs")
     parser.add_argument("workspaces", nargs="*", default=sorted(QUESTIONS))
     a = parser.parse_args(argv)
+    if a.check:
+        failed = False
+        for ws in a.workspaces:
+            problem = mismatch(a.ds, ws)
+            print(f"{ws}: {'differs' if problem else 'matches its golden files'}")
+            if problem:
+                print(problem, file=sys.stderr)
+                failed = True
+        return 1 if failed else 0
     for ws in a.workspaces:
         root = EXPECTED / ws
         for old in sorted(root.rglob("*"), reverse=True) if root.exists() else []:
