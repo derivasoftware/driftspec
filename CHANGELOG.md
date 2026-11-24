@@ -6,6 +6,15 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.68
+
+A workspace's files are read by one rule, the engine's, wherever Python reads them (DS-413). `driftspec.files()` lists
+the .ds files of a folder as `ds` reads a workspace: every regular .ds file in every folder below it, dot-folders included;
+a link to a file is followed and a link to a folder is not; a broken link, and a file named only `.ds`, are skipped; sorted.
+`driftspec.read()` reads with it, so a broken link no longer stops it and `.ds` is no longer read. The live session's
+watcher stamps with it, so a save inside a dot-folder now reaches a new version, as the engine already read it. The
+language server finds a folder's own files with it.
+
 ## 0.1.67
 
 The scene builds what it places from the model apart from how it is placed (DS-389). A projection reads the model
