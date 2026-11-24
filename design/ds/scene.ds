@@ -608,7 +608,7 @@ package driftspec@ds {
     // the boxes and gives the base document; the map, built once from them, says where each identity
     // lands; each layer is an object that adds what its perspective draws over the same boxes. Scene
     // passes the document through the layers in order. Every layer is a place that can grow private
-    // methods; layers() is the one place that names them.
+    // methods; LayerFactory is the one place that names them.
 
     // ---- the principles, as rules ----------------------------------------------------------
     rule no-layer-knows-another {
@@ -620,7 +620,7 @@ package driftspec@ds {
     }
 
     rule scene-knows-layers-as-ilayer {
-      title: the scene holds the layers as ILayer; only layers() names a concrete one
+      title: the scene holds the layers as ILayer; only LayerFactory names a concrete one
       @requirement REQ-00069-2
       for class c in driftspec@ds@scene
       where c = driftspec@ds@scene::Scene
@@ -757,9 +757,11 @@ package driftspec@ds {
       + abstract decorate(out_document: SceneDocument) -> void
     }
 
-    // the one place that names the layers, in the order they decorate; those that read the language are handed the metamodel
-    function layers(model: model::Model, metamodel: model::Metamodel, map: Map) -> std::vector<std::unique_ptr<ILayer>> {
+    // the one place that names the concrete layers (DS-390), as check's Steps names the steps: in the order they
+    // decorate; those that read the language are handed the metamodel
+    class LayerFactory {
       @requirement REQ-00069-2
+      + static of(model: model::Model, metamodel: model::Metamodel, map: Map) -> std::vector<std::unique_ptr<ILayer>>
     }
 
     verification VER-00118-2 {

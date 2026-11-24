@@ -70,20 +70,28 @@ def workspace_files(ls: LanguageServer, ws: str) -> dict[str, str | bytes]:
 
 
 def use(ls: LanguageServer, uri: str) -> str:
-    """The workspace of a document, loaded if it is not yet: the model the request answers from."""
+    """The workspace of a document, loaded if it is not yet: the model the request answers from, read from the
+    engine once per version and only when a request asks for it (DS-420)."""
     ws = workspace_of(ls, path_of(uri))
-    if ws not in models:
+    if ws not in workspaces:
         refresh(ls, ws)
+    if ws not in models:
+        models[ws] = workspaces[ws].model()
     state["model"] = models[ws]
     return ws
 
 
 def refresh(ls: LanguageServer, ws: str) -> None:
+    """The workspace loaded again with the buffers on top, in place (DS-420), and each file's diagnostics from its
+    check: the model the requests read is read again only when one asks."""
     files = workspace_files(ls, ws)
-    workspaces[ws] = driftspec.Workspace(files)  # loaded once: the findings, the drawings and the viewer ask it
-    models[ws] = state["model"] = workspaces[ws].model()
+    if ws in workspaces:
+        workspaces[ws].reload(files)
+    else:
+        workspaces[ws] = driftspec.Workspace(files)  # kept: the findings, the drawings and the viewer ask it
+    models.pop(ws, None)
     by_file: dict[str, list[lsp.Diagnostic]] = {path: [] for path in files}
-    for f in state["model"].findings:
+    for f in workspaces[ws].report().findings:
         line, col = max(f.location.line - 1, 0), max(f.location.column - 1, 0)
         by_file.setdefault(f.location.file, []).append(
             lsp.Diagnostic(

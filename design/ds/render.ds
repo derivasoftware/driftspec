@@ -83,6 +83,8 @@ package driftspec@ds {
         tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.IsDeterministic
         tests/integration/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
         tests/integration/ds/render/test_text.cpp::TestText.IsDeterministicAndPlainWithoutColor
+        tests/integration/ds/render/test_text.cpp::TestText.MarksAChangeOnARelationOrAMessageAsOnABox
+        tests/integration/ds/render/test_layout.cpp::TestLayout.EveryChangeOfARelationHasItsStyleInTheSvg
         tests/integration/ds/render/test_text.cpp::TestText.BoxesDoNotCollideOnTheGrid
         tests/integration/ds/render/test_text.cpp::TestText.FramesOpeningAtTheSameMessageStackTheirHeaders
     }

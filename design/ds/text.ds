@@ -82,6 +82,7 @@ package driftspec@ds {
       @requirement REQ-00075-5
     }
     function escapeXml(text: std::string) -> std::string                               // & < > " as entities
+    function characters(text: std::string) -> std::size_t                             // each UTF-8 code point once (DS-390)
 
     // ---- UTF-8, what the parser holds a file to before it reads it (DS-411) ---------------------------------------
     requirement REQ-00201-1 {

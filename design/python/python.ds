@@ -617,6 +617,7 @@ package driftspec@driftspec {
       @constraint CST-00009-1
       - owns workspace: driftspec@ds@api::Workspace
       + Workspace(files: std::map<std::string, std::string>)
+      + reload(files: std::map<std::string, std::string>) -> none  // loaded again in place (DS-420)
       + export() -> std::string
       + report() -> std::string
       + find(id: std::string) -> std::string
@@ -730,6 +731,11 @@ package driftspec@driftspec {
       local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
       -> loaded.render(diagram, format, width) -> json
       return json
+    }
+
+    sequence Workspace::reload {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      -> loaded.reload(files)
     }
 
     sequence Workspace::page {
@@ -884,6 +890,7 @@ package driftspec@driftspec {
       @requirement REQ-00086-1
       @constraint CST-00009-1
       - owns _native: _native.Workspace
+      + reload(source: Source) -> None         // loaded again in place: a file whose text has not changed is not parsed again (DS-420)
       + model() -> Model
       + report() -> Report
       + find(identity: str) -> Entity | None
