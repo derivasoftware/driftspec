@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.62
+
+A live event carries what it was sent with (DS-414). Each event shared the session's own notes, highlights and comments,
+and a page serialised them when it took the event off its queue, so an event could show a change made after it was
+sent (an annotate event for a clear, carrying the comment written next). The events now carry a copy taken when they
+are sent, one for every page. Nothing else a page reads changes.
+
 ## 0.1.61
 
 The live session is split into its parts, and its contract is declared once (DS-412). `Live` holds the version shown
