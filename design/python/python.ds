@@ -554,36 +554,43 @@ package driftspec@driftspec {
   }
 
   sequence editor::did_change {
-    -> lsp::changed(ls, params)
+    local server: lsp::DesignServer
+    -> server.changed(ls, params)
   }
 
   sequence editor::definition {
-    -> lsp::definition(ls, params) -> locations
+    local server: lsp::DesignServer
+    -> server.definition(ls, params) -> locations
     return locations
   }
 
   sequence editor::references {
-    -> lsp::references(ls, params) -> locations
+    local server: lsp::DesignServer
+    -> server.references(ls, params) -> locations
     return locations
   }
 
   sequence editor::hover {
-    -> lsp::hover(ls, params) -> hover
+    local server: lsp::DesignServer
+    -> server.hover(ls, params) -> hover
     return hover
   }
 
   sequence editor::completion {
-    -> lsp::completion(ls, params) -> items
+    local server: lsp::DesignServer
+    -> server.completion(ls, params) -> items
     return items
   }
 
   sequence editor::draw {
-    -> lsp::draw(ls, uri, line, character, rest) -> drawing
+    local server: lsp::DesignServer
+    -> server.draw(ls, uri, line, character, rest) -> drawing
     return drawing
   }
 
   sequence editor::view {
-    -> lsp::view(ls, uri, line, character, rest) -> opened
+    local server: lsp::DesignServer
+    -> server.view(ls, uri, line, character, rest) -> opened
     return opened
   }
 
@@ -977,36 +984,64 @@ package driftspec@driftspec {
   module lsp {
     @requirement REQ-00087-1
 
+    // The server is a door (DS-422): DesignServer owns the protocol and one Editor per design; every feature is a
+    // method, and nothing is kept at the module's level but what never changes.
+    rule the-language-server-asks-the-facade {
+      title: the language server reaches the engine through the facade, never through the native module
+      @requirement REQ-00087-1
+      for class c in driftspec@driftspec@lsp
+      never depends(c, x), x in driftspec@driftspec@_native
+    }
+
+    // The kinds the door names, in one place, until the metamodel gives each its category (DS-427): its tables,
+    // STRUCTURE, ARTEFACT, DRAWN (what a line written in it draws as), SYMBOL (a kind as an outline shows it) and HOVER
+    // (the fields hover says, in order), are class constants; a test holds every kind and field named to the metamodel.
+    class Kinds {
+      @requirement REQ-00087-1
+      + static named() -> set[str]
+    }
+
+    class Editor {                             // one design as an editor works on it
+      @requirement REQ-00087-1
+      + root: str
+      + optional workspace: driftspec.Workspace | None   // kept and loaded again in place (DS-420)
+      + optional model: driftspec.Model | None           // the version's model, read when a request asks
+      + published: set[str]                    // the files that carry diagnostics
+      + files(ls: LanguageServer) -> dict[str, str]   // the buffers on top of the disk
+      + refresh(ls: LanguageServer) -> None
+      + typed() -> driftspec.Model
+      + entities_for(word: str) -> list[driftspec.Entity]
+      + enclosing(path: str, line: int) -> driftspec.Entity | None
+      + subject_of(word: str) -> tuple[str, str]
+      + with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]
+    }
+
+    class DesignServer {                       // the protocol, and the Editor of each design a document belongs to
+      @requirement REQ-00087-1
+      + ls: LanguageServer
+      + owns many editors: dict[str, Editor]
+      + static handler(feature)                // a feature as pygls registers it: a function of its own
+      + static command(feature)
+      + workspace_of(ls: LanguageServer, path: str) -> str
+      + editor_of(ls: LanguageServer, uri: str) -> Editor
+      + word_at(ls: LanguageServer, uri: str, position: lsp.Position) -> str
+      + subject_at(ls: LanguageServer, editor: Editor, uri: str, line: int, character: int, typed: str) -> tuple[str, str]
+      + changed(ls: LanguageServer, params) -> None
+      + definition(ls: LanguageServer, params: lsp.DefinitionParams) -> list[lsp.Location]
+      + references(ls: LanguageServer, params: lsp.ReferenceParams) -> list[lsp.Location]
+      + hover(ls: LanguageServer, params: lsp.HoverParams) -> lsp.Hover | None
+      + completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.CompletionList
+      + symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.SymbolInformation]
+      + draw(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
+      + view(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
+    }
+
     function path_of(uri: str) -> str
     function uri_of(path: str) -> str
     function holds_ds(directory: str) -> bool
-    function workspace_of(ls: LanguageServer, path: str) -> str
-    function workspace_files(ls: LanguageServer, ws: str) -> dict[str, str]
-    function use(ls: LanguageServer, uri: str) -> str
-    function refresh(ls: LanguageServer, ws: str) -> None
-    function word_at(ls: LanguageServer, uri: str, position: lsp.Position) -> str
-    function entities_for(word: str) -> list[driftspec.Entity]
     function location_of(e: driftspec.Entity) -> lsp.Location
-    function changed(ls: LanguageServer, params) -> None
-    function definition(ls: LanguageServer, params: lsp.DefinitionParams) -> list[lsp.Location]
-    function references(ls: LanguageServer, params: lsp.ReferenceParams) -> list[lsp.Location]
-    function hover(ls: LanguageServer, params: lsp.HoverParams) -> lsp.Hover | None
-    function completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.CompletionList
-    function symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.SymbolInformation]
-    function subject_at(ls: LanguageServer, uri: str, line: int, character: int, typed: str) -> tuple[str, str]
-    function enclosing(path: str, line: int) -> driftspec.Entity | None
-    function subject_of(word: str) -> tuple[str, str]
-    function with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]
     function optional(rest: tuple) -> tuple[int, str]      // the width and the word typed, from what pygls passes on
-    function draw(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
-    function open_in_browser(path: str) -> None
-    function view(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict
     function main() -> None
-
-    sequence changed {
-      -> workspace_of(ls, path) -> ws
-      -> refresh(ls, ws)
-    }
 
     // a folder's own .ds files, by the rule the engine reads a workspace with
     sequence holds_ds {
@@ -1014,39 +1049,56 @@ package driftspec@driftspec {
       return held
     }
 
-    // The design loaded once in the engine: its findings, its drawings and the viewer ask it (DS-173).
-    sequence refresh {
+    // The design kept loaded and loaded again in place (DS-420); its findings published from its check.
+    sequence Editor::refresh {
       local workspace: driftspec.Workspace
-      -> workspace_files(ls, ws) -> files
-      -> workspace.model() -> model
+      -> files(ls) -> files
+      -> workspace.reload(files)
+      -> workspace.report() -> report
     }
 
-    sequence definition {
-      -> use(ls, uri) -> ws
-      -> entities_for(word) -> found
+    sequence DesignServer::changed {
+      local editor: Editor
+      -> workspace_of(ls, path) -> ws
+      -> editor.refresh(ls)
+    }
+
+    sequence DesignServer::definition {
+      local editor: Editor
+      -> editor_of(ls, uri) -> editor
+      -> editor.entities_for(word) -> found
       return locations
     }
 
-    sequence draw {
+    sequence DesignServer::draw {
+      local editor: Editor
       -> optional(rest) -> options
-      -> use(ls, uri) -> ws
-      -> subject_at(ls, uri, line, character, typed) -> subject
-      -> workspace_files(ls, ws) -> files
-      -> with_focus(files, identity) -> focused
+      -> editor_of(ls, uri) -> editor
+      -> subject_at(ls, editor, uri, line, character, typed) -> subject
+      -> editor.files(ls) -> files
+      -> editor.with_focus(files, identity) -> focused
       -> driftspec::render(focused, diagram, format, width) -> drawing
       return answer
     }
 
-    sequence view {
+    sequence DesignServer::view {
+      local editor: Editor
       local workspace: driftspec.Workspace
       -> optional(rest) -> options
-      -> use(ls, uri) -> ws
-      -> subject_at(ls, uri, line, character, typed) -> subject
+      -> editor_of(ls, uri) -> editor
+      -> subject_at(ls, editor, uri, line, character, typed) -> subject
       -> workspace.page(title, focus) -> html
-      -> open_in_browser(path)
+      -> browser::open_in_browser(target)
       return answer
     }
   }
+
+  module browser {                             // the browser this machine has, for the doors that open a page
+    @requirement REQ-00087-1
+    @requirement REQ-00089-2
+    function open_in_browser(target: str) -> None   // a URL or a local file: on WSL the Windows browser, elsewhere the default
+  }
+
 
   // ---- the live session ---------------------------------------------------------------------------
   // The live session is split by what each part does (DS-322): the session and its contract, the page
@@ -1322,7 +1374,6 @@ package driftspec@driftspec {
     }
 
     function handler_for(live: Live) -> type[Handler]
-    function browser_open(url: str) -> None
     function serve(workspace: str, port: int, open_browser: bool, block: bool) -> Live
   }
 
