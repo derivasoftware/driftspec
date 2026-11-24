@@ -15,7 +15,7 @@ namespace bind {
 class Dispatch {
  public:
   /// The table of `language` for `binders`. Throws when a kind names no node of the grammar or two binders take it.
-  Dispatch(const TSLanguage* language, const std::vector<const INodeBinder*>& binders);
+  Dispatch(const TSLanguage& language, const std::vector<const INodeBinder*>& binders);
 
   /// The binder of a node: the one its kind is given to; null when no binder takes it.
   const INodeBinder* of(TSNode node) const {

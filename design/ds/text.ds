@@ -3,6 +3,66 @@
 
 package driftspec@ds {
   module text {
+    @requirement REQ-00178-1                 // text depends on no other module of the engine (DS-374)
+    @requirement REQ-00179-1                 // text holds no state (DS-374)
+    // ---- what text is, as requirements and the rules that hold them (DS-374) ----------------------------------------
+    requirement REQ-00178-1 {
+      tags: architecture, text
+      status: draft
+      @refines REQ-00028-2
+      title: The text module shall depend on no other module of the engine
+      text:
+        What splits, joins, trims and escapes text takes text and gives text. It reads no model, no tree and no
+        document, so every module of the engine can use it and it uses none of them.
+      rationale:
+        Owner, 2026-11-24 (DS-344, DS-374): text is a module of functions by design, the one level under every other;
+        a dependence on another module would make it a level of its own.
+      verification VER-00195-1 {
+        status: draft
+        title: Integration tests confirm the design of text depends on no other module of the engine, and is told when a function of text does
+        method: test
+        tests:
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.TheDesignOfDsKeepsTheRulesOfParseAndText
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.AFunctionOfTextThatKnowsTheModelIsTold
+      }
+    }
+
+    requirement REQ-00179-1 {
+      tags: architecture, text
+      status: draft
+      @refines REQ-00028-2
+      title: The text module shall hold no state
+      text:
+        Each function of text answers from what it is given: no attribute of the module keeps anything between two
+        calls, so a call reads the same in any order and from any module.
+      rationale:
+        Owner, 2026-11-24 (DS-344, DS-374): a module of functions is sound only while it holds nothing; state would
+        need a class that owns it and says why.
+      verification VER-00196-1 {
+        status: draft
+        title: Integration tests confirm the design of text holds no attribute, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.TheDesignOfDsKeepsTheRulesOfParseAndText
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.StateInTextIsTold
+      }
+    }
+
+    // ---- the principles of text, as rules (DS-374) ------------------------------------------------------------
+    rule text-depends-on-no-engine-module {
+      title: a function of text depends on nothing of the engine outside text, so every module may use it and it uses none
+      @requirement REQ-00178-1
+      for function f in driftspec@ds@text
+      never depends(f, x), x in driftspec@ds, not x in driftspec@ds@text
+    }
+
+    rule text-holds-no-state {
+      title: no attribute is written in the module of text, so its functions answer from what they are given
+      @requirement REQ-00179-1
+      for attribute a in driftspec@ds@text
+      never a in driftspec@ds@text
+    }
+
     // a list written in a field, taken apart and put back (DS-185); the name says the items are trimmed
     function splitTrimmed(text: std::string, sep: char) -> std::vector<std::string> {
       @requirement REQ-00028-2

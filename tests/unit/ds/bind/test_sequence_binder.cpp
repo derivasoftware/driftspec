@@ -42,7 +42,7 @@ class TestSequenceBinder : public ::testing::Test {
   const ds::bind::MemberBinder members{types, signatures, bodies};
   const ds::bind::ClassBinder classes{fields, annotations, extensions, members};
   const ds::bind::SequenceBinder sequences{fields, annotations, types};
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&packages, &modules, &classes, &sequences}};
+  const ds::bind::Dispatch dispatch{parser.language(), {&packages, &modules, &classes, &sequences}};
 };
 
 TEST_F(TestSequenceBinder, ItTakesSequences) { EXPECT_EQ(sequences.kinds(), std::vector<std::string>{"sequence"}); }

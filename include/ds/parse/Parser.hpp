@@ -19,9 +19,6 @@ struct ParsedFile {
   int errorLine = 0;  ///< where the file stops parsing, 1-based; 0 when it parses
   int errorColumn = 0;
   std::string errorDetail;  ///< what is wrong there: unexpected `text`, or missing `token`
-
-  /// The text a node of its tree spans.
-  std::string textOf(TSNode node) const;
 };
 
 /// Wraps the tree-sitter parser for the DriftSpec grammar.
@@ -32,8 +29,9 @@ class Parser {
   Parser(const Parser&) = delete;
   Parser& operator=(const Parser&) = delete;
 
-  /// The DriftSpec grammar: its symbols name the kinds of node (DS-355).
-  static const TSLanguage* language();
+  /// The DriftSpec grammar this parser reads with: its symbols name the kinds of node (DS-355). A parsed file carries it
+  /// in its tree, so what reads a file is given it with the file and nothing reaches for it (DS-374).
+  const TSLanguage& language() const { return *ts_parser_language(parser_); }
   ParsedFile parseText(const std::string& path, const std::string& text);
   /// What the grammar takes at a place of a text (0-based line and column), read from the parse state
   /// after the last token before it: its keywords, "@annotation" and "key: value" (DS-84).

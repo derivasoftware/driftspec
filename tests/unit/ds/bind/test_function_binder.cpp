@@ -44,7 +44,7 @@ class TestFunctionBinder : public ::testing::Test {
   const ds::bind::PackageBinder packages{fields, annotations};
   const ds::bind::ModuleBinder modules{fields, annotations};
   const ds::bind::FunctionBinder functions{signatures, bodies};
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&packages, &modules, &functions}};
+  const ds::bind::Dispatch dispatch{parser.language(), {&packages, &modules, &functions}};
   ds::parse::ParsedFile file;
 
   /// The first node of `type` under `node`, depth first.

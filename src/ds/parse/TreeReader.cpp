@@ -20,19 +20,24 @@ const char* TreeReader::nameOf(Field field) {
   return names[static_cast<std::size_t>(field)];
 }
 
-std::vector<TSFieldId> TreeReader::resolve() {
-  const TSLanguage* language = Parser::language();
+std::vector<TSFieldId> TreeReader::resolve(const TSLanguage& language) {
   std::vector<TSFieldId> out;
+  out.reserve(static_cast<std::size_t>(Field::visibility) + 1);
   for (std::size_t i = 0; i <= static_cast<std::size_t>(Field::visibility); ++i) {
     const char* name = nameOf(static_cast<Field>(i));
-    const TSFieldId id = ts_language_field_id_for_name(language, name, static_cast<uint32_t>(std::strlen(name)));
+    // the grammar numbers its fields in the order of Field from 1, so the id is confirmed by its name, one comparison;
+    // a grammar numbered otherwise is looked up by name. Every file resolves its own table: this keeps it cheap (DS-374)
+    const auto guess = static_cast<TSFieldId>(i + 1);
+    const char* at = ts_language_field_name_for_id(&language, guess);
+    const TSFieldId id =
+        at && std::strcmp(at, name) == 0 ? guess : ts_language_field_id_for_name(&language, name, static_cast<uint32_t>(std::strlen(name)));
     if (id == 0) throw std::logic_error(std::string("the grammar has no field ") + name);
     out.push_back(id);
   }
   return out;
 }
 
-std::vector<TSNode> TreeReader::childrenNamed(TSNode node, Field field) {
+std::vector<TSNode> TreeReader::childrenNamed(TSNode node, Field field) const {
   std::vector<TSNode> out;
   const TSFieldId id = idOf(field);
   TSTreeCursor cursor = ts_tree_cursor_new(node);

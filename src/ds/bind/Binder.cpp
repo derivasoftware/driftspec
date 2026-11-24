@@ -34,16 +34,16 @@ Binder::Binder(model::Model& model, const model::Metamodel& metamodel)
         out.push_back(std::make_unique<FunctionBinder>(signatures_, bodies_));
         out.push_back(std::make_unique<SequenceBinder>(fields_, annotations_, types_));
         return out;
-      }()),
-      dispatch_(parse::Parser::language(), [this] {
-        std::vector<const INodeBinder*> table;
-        for (const auto& binder : binders_) table.push_back(binder.get());
-        return table;
       }()) {}
 
 void Binder::bind(const parse::ParsedFile& file) {
   const parse::TreeReader reader(file);
-  const BindContext ctx{model_, notes_, reader, metamodel_, dispatch_, "", ""};
+  if (!dispatch_) {  // the table, from the grammar the first file was parsed with: a workspace is read by one grammar (DS-374)
+    std::vector<const INodeBinder*> table;
+    for (const auto& binder : binders_) table.push_back(binder.get());
+    dispatch_.emplace(reader.language(), table);
+  }
+  const BindContext ctx{model_, notes_, reader, metamodel_, *dispatch_, "", ""};
   ctx.children(reader.root());
 }
 

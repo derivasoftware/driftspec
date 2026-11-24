@@ -38,7 +38,7 @@ class TestInterfaceBinder : public ::testing::Test {
   const ds::bind::FormulaBinder formulas{};
   const ds::bind::PackageBinder packages{fields, annotations};
   const ds::bind::InterfaceBinder interfaces{fields, annotations, signatures};
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&packages, &interfaces}};
+  const ds::bind::Dispatch dispatch{parser.language(), {&packages, &interfaces}};
   ds::parse::ParsedFile file;
 
   /// The first node of `type` under `node`, depth first.

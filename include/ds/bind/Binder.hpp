@@ -2,6 +2,7 @@
 #define DRIFTSPEC_BIND_BINDER_HPP
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -26,7 +27,8 @@ namespace ds {
 namespace bind {
 
 /// Walks the syntax trees of a workspace and declares its entities (R1-R5, R9). Each construct of the language goes to
-/// its binder by the dispatch table (DS-353), the binders built once with the binder.
+/// its binder by the dispatch table (DS-353), the binders built once with the binder and the table with the first file
+/// it binds, from the grammar that file was parsed with (DS-374).
 class Binder {
  public:
   /// Binds into `model`, reading the language from `metamodel` (DS-341): what an annotation means, which ones it knows.
@@ -53,7 +55,7 @@ class Binder {
   // the node binders, held as what they are to the binder: each binds the kinds it takes; only the constructor
   // names the concrete ones (DS-365)
   std::vector<std::unique_ptr<INodeBinder>> binders_;
-  Dispatch dispatch_;
+  std::optional<Dispatch> dispatch_;  // built from the grammar of the first file: a workspace is read by one grammar
 };
 
 }  // namespace bind

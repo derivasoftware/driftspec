@@ -34,11 +34,26 @@ TEST_F(TestTreeReader, ANodeIsKnownByItsTypeAndItsFieldsAreRead) {
   EXPECT_FALSE(TreeReader::is(cls, "module"));
   EXPECT_EQ(reader.fieldText(cls, ds::parse::Field::name), "A");
   EXPECT_EQ(reader.fieldText(cls, ds::parse::Field::guard), "");  // a field the node lacks reads as nothing
-  EXPECT_TRUE(ts_node_is_null(TreeReader::child(cls, ds::parse::Field::guard)));
+  EXPECT_TRUE(ts_node_is_null(reader.child(cls, ds::parse::Field::guard)));
 }
 
+/// One file read: the text a node of its tree spans is the text written there; the file is data, the reader reads it
+/// (DS-374).
+TEST(TestTreeReaderText, ANodeSpansTheTextWrittenThere) {
+  ds::parse::Parser parser;
+  const auto file = parser.parseText("a.ds", "package shop {\n  module till {\n  }\n}\n");
+  ASSERT_FALSE(file.hasSyntaxErrors);
+  const TreeReader reader(file);
+  EXPECT_EQ(reader.textOf(reader.root()), file.text);
+  const TSNode package = ts_node_named_child(reader.root(), 0);
+  EXPECT_EQ(reader.textOf(package).rfind("package shop {", 0), 0u);
+}
+
+/// The reader reads with the grammar its file was parsed with, which the tree carries (DS-374).
+TEST_F(TestTreeReader, TheGrammarIsTheOneTheFileWasParsedWith) { EXPECT_EQ(&reader.language(), &parser.language()); }
+
 TEST_F(TestTreeReader, EveryFieldIsAFieldOfTheGrammarByItsName) {
-  const TSLanguage* language = ds::parse::Parser::language();
+  const TSLanguage* language = &parser.language();
   const uint32_t count = ts_language_field_count(language);
   EXPECT_EQ(static_cast<uint32_t>(ds::parse::Field::visibility) + 1, count);  // every field of the grammar, none more
   for (uint32_t i = 0; i < count; ++i) {
@@ -52,7 +67,7 @@ TEST_F(TestTreeReader, EveryFieldIsAFieldOfTheGrammarByItsName) {
 TEST_F(TestTreeReader, AFieldThatRepeatsGivesEveryChild) {
   const TSNode cls = find(reader.root(), "class");
   std::vector<std::string> bases;
-  for (const TSNode base : TreeReader::childrenNamed(cls, ds::parse::Field::base)) bases.push_back(reader.textOf(base));
+  for (const TSNode base : reader.childrenNamed(cls, ds::parse::Field::base)) bases.push_back(reader.textOf(base));
   EXPECT_EQ(bases, (std::vector<std::string>{"B", "C"}));
 }
 

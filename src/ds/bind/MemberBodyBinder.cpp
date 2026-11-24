@@ -16,7 +16,7 @@ using text::join;
 
 void MemberBodyBinder::bind(TSNode member, const BindContext& ctx, model::Entity& out_entity, const std::string& scope) const {
   fields_.bind(member, ctx, out_entity);
-  TSNode body = TreeReader::child(member, Field::body);
+  TSNode body = ctx.reader.child(member, Field::body);
   if (!ts_node_is_null(body)) fields_.bind(body, ctx, out_entity);
   const model::Entity* declared = ctx.find(out_entity.id);
   // only the declaration the model kept takes the fields: a duplicate is reported and leaves the first as it was

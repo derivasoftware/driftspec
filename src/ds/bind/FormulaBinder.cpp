@@ -37,30 +37,30 @@ void FormulaBinder::bind(TSNode node, const BindContext& ctx, model::Entity& out
       TSNode lit = ts_node_named_child(clause, i);
       if (!TreeReader::is(lit, "literal")) continue;
       model::Literal l;
-      l.negated = !ts_node_is_null(TreeReader::child(lit, Field::negated));
+      l.negated = !ts_node_is_null(ctx.reader.child(lit, Field::negated));
       l.location = ctx.locationOf(lit);
       TSNode atom = ts_node_named_child(lit, 0);
       if (TreeReader::is(atom, "relation_atom")) {
         l.form = model::LiteralForm::Relation;
         l.name = ctx.reader.fieldText(atom, Field::relation);
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left)), termOf(ctx.reader, TreeReader::child(atom, Field::right))};
+        l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::left)), termOf(ctx.reader, ctx.reader.child(atom, Field::right))};
       } else if (TreeReader::is(atom, "kind_atom")) {
         l.form = model::LiteralForm::Kind;
         l.name = ctx.reader.fieldText(atom, Field::kind);
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left))};
+        l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::left))};
       } else if (TreeReader::is(atom, "in_atom")) {
         l.form = model::LiteralForm::In;
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left)), termOf(ctx.reader, TreeReader::child(atom, Field::right))};
+        l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::left)), termOf(ctx.reader, ctx.reader.child(atom, Field::right))};
       } else if (TreeReader::is(atom, "compare_atom")) {
         static const std::map<std::string, model::LiteralForm> kOperators = {
             {"=", model::LiteralForm::Equal},      {"!=", model::LiteralForm::NotEqual}, {"<", model::LiteralForm::Less},
             {"<=", model::LiteralForm::LessEqual}, {">", model::LiteralForm::Greater},   {">=", model::LiteralForm::GreaterEqual}};
         l.form = kOperators.at(ctx.reader.fieldText(atom, Field::operator_));
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::left)), termOf(ctx.reader, TreeReader::child(atom, Field::right))};
+        l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::left)), termOf(ctx.reader, ctx.reader.child(atom, Field::right))};
       } else if (TreeReader::is(atom, "arg_atom")) {
         l.form = model::LiteralForm::Arg;
         l.name = ctx.reader.fieldText(atom, Field::parameter);
-        l.terms = {termOf(ctx.reader, TreeReader::child(atom, Field::call)), termOf(ctx.reader, TreeReader::child(atom, Field::value))};
+        l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::call)), termOf(ctx.reader, ctx.reader.child(atom, Field::value))};
       } else if (TreeReader::is(atom, "call_atom")) {
         l.form = model::LiteralForm::Call;
         l.name = ctx.reader.fieldText(atom, Field::definition);

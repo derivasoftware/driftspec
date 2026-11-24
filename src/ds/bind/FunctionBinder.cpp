@@ -28,7 +28,7 @@ void FunctionBinder::bind(TSNode node, const BindContext& ctx) const {
   const std::string visibility = ctx.reader.fieldText(node, Field::visibility);
   e.fields["visibility"] = visibility.empty() ? "+" : visibility;
   const std::vector<std::string> own =
-      TypeBinder::params(ctx.reader, TreeReader::child(node, Field::params));  // a templated function (DS-18)
+      TypeBinder::params(ctx.reader, ctx.reader.child(node, Field::params));  // a templated function (DS-18)
   if (!own.empty()) e.fields["template"] = join(own, ", ");
   signatures_.bind(node, ctx, e, scope, own);
   ctx.declare(e);

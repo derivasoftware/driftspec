@@ -33,11 +33,11 @@ void ClassBinder::bind(TSNode node, const BindContext& ctx) const {
   const std::string& scope = ctx.scope;
   const std::string& owner = ctx.owner;
   const model::Location loc = ctx.locationOf(node);
-  if (ctx.reader.fieldText(node, Field::visibility).empty() && ts_node_is_null(TreeReader::child(node, Field::params)) &&
-      TreeReader::childrenNamed(node, Field::base).empty() && ts_node_is_null(TreeReader::child(node, Field::operators)) &&
-      ExtensionBinder::extends(TreeReader::child(node, Field::body))) {
+  if (ctx.reader.fieldText(node, Field::visibility).empty() && ts_node_is_null(ctx.reader.child(node, Field::params)) &&
+      ctx.reader.childrenNamed(node, Field::base).empty() && ts_node_is_null(ctx.reader.child(node, Field::operators)) &&
+      ExtensionBinder::extends(ctx.reader.child(node, Field::body))) {
     const std::string name = ctx.reader.fieldText(node, Field::name);
-    extensions_.bind(TreeReader::child(node, Field::body), ctx, model::Scope(scope).qualify(name).text(), model::Kind::Class, name, scope,
+    extensions_.bind(ctx.reader.child(node, Field::body), ctx, model::Scope(scope).qualify(name).text(), model::Kind::Class, name, scope,
                      loc);  // the annotations sit in the body
     return;
   }
@@ -51,7 +51,7 @@ void ClassBinder::bind(TSNode node, const BindContext& ctx) const {
 
   std::vector<std::string> params;
   std::map<std::string, std::string> bounds;
-  TSNode paramsNode = TreeReader::child(node, Field::params);
+  TSNode paramsNode = ctx.reader.child(node, Field::params);
   if (!ts_node_is_null(paramsNode)) {
     const uint32_t n = ts_node_named_child_count(paramsNode);
     for (uint32_t i = 0; i < n; ++i) {
@@ -69,26 +69,26 @@ void ClassBinder::bind(TSNode node, const BindContext& ctx) const {
 
   std::set<std::string> operators;
   std::vector<std::string> operatorTexts;
-  TSNode opSet = TreeReader::child(node, Field::operators);
+  TSNode opSet = ctx.reader.child(node, Field::operators);
   if (!ts_node_is_null(opSet)) {
     const uint32_t n = ts_node_named_child_count(opSet);
     for (uint32_t i = 0; i < n; ++i) {
       TSNode item = ts_node_named_child(opSet, i);
       const std::string text = std::string(text::trimWhitespace(ctx.reader.textOf(item)));
       operatorTexts.push_back(text);
-      if (ts_node_is_null(TreeReader::child(item, Field::family))) operators.insert(text);
+      if (ts_node_is_null(ctx.reader.child(item, Field::family))) operators.insert(text);
     }
     e.fields["operators"] = join(operatorTexts, ", ");
   }
 
-  TSNode body = TreeReader::child(node, Field::body);
+  TSNode body = ctx.reader.child(node, Field::body);
   fields_.bind(body, ctx, e);
   const model::Entity& declared = ctx.declare(e);
   if (!owner.empty()) ctx.relate({"contains", owner, declared.id, loc, ""});
   // a base is written as the code writes it (IFormat<scene::SceneDocument>) and kept so; its first name is what the
   // class inherits, and only when the design declares it: class Error : Exception is text, no arrow (DS-18)
   std::vector<std::string> baseTexts;
-  for (TSNode base : TreeReader::childrenNamed(node, Field::base))
+  for (TSNode base : ctx.reader.childrenNamed(node, Field::base))
     baseTexts.push_back(std::string(text::trimWhitespace(ctx.reader.textOf(base))));
   if (!baseTexts.empty()) ctx.annotate(declared.id, "bases", join(baseTexts, "; "));
   for (const std::string& written : baseTexts) {

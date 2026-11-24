@@ -40,7 +40,7 @@ class TestEnumBinder : public ::testing::Test {
   const ds::bind::PackageBinder packages{fields, annotations};
   const ds::bind::ModuleBinder modules{fields, annotations};
   const ds::bind::EnumBinder enums{annotations};
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&packages, &modules, &enums}};
+  const ds::bind::Dispatch dispatch{parser.language(), {&packages, &modules, &enums}};
   ds::parse::ParsedFile file;
 
   /// The first node of `type` under `node`, depth first.
