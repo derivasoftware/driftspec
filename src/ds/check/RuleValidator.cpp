@@ -14,6 +14,12 @@ void RuleValidator::report(model::Code code, const std::string& owner, const std
   found_.push_back(metamodel_.finding(code, owner + " " + message, at));
 }
 
+std::vector<std::pair<std::string, std::regex>> RuleValidator::takePatterns() {
+  std::vector<std::pair<std::string, std::regex>> out;
+  out.swap(patterns_);
+  return out;
+}
+
 std::vector<model::Finding> RuleValidator::take() {
   std::vector<model::Finding> out;
   out.swap(found_);
@@ -57,6 +63,12 @@ bool RuleValidator::validate(const std::string& id, const model::Formula& formul
       ok = validateBody(id, claim, inClaim, out_resolved) && ok;
     }
   } else {
+    const std::string name = facts_.fieldOf(id, "name");
+    if (name == "name" || name == "id" || name == "kind") {  // what a rule reads of an entity: never a definition (DS-403)
+      report(model::Code::E_RULE_RESERVED, id, "takes the name '" + name + "', which a rule reads as " + name + "(x): name it otherwise",
+             facts_.locationOf(id));
+      ok = false;
+    }
     for (const auto& c : formula.cases) {
       std::set<std::string> inCase;
       ok = validateBody(id, c, inCase, out_resolved) && ok;
@@ -69,6 +81,25 @@ bool RuleValidator::validate(const std::string& id, const model::Formula& formul
     }
   }
   return ok;
+}
+
+// The pattern a value matches is a string, compiled here once for every binding the solver will test (DS-403); one
+// that does not compile is a finding at the literal, and the formula is not evaluated.
+bool RuleValidator::validatePattern(const std::string& id, const model::Literal& l) {
+  const model::Term& pattern = l.terms[1];
+  const std::string& written = pattern.text;
+  if (!pattern.value || written.size() < 2 || written.front() != '"' || written.back() != '"') {
+    report(model::Code::E_RULE_PATTERN, id, "matches against '" + written + "', which is no string: write the pattern in quotes",
+           l.location);
+    return false;
+  }
+  try {
+    patterns_.push_back({written, std::regex(written.substr(1, written.size() - 2), std::regex::ECMAScript)});
+  } catch (const std::regex_error& e) {
+    report(model::Code::E_RULE_PATTERN, id, "matches against " + written + ", which does not compile: " + e.what(), l.location);
+    return false;
+  }
+  return true;
 }
 
 bool RuleValidator::joinsAtEnd(const model::RelationSpec& spec, model::Kind kind, bool from) {
@@ -134,6 +165,8 @@ bool RuleValidator::validateBody(const std::string& id, const std::vector<model:
     } else if (l.form == Form::Kind && !metamodel_.specNamed(l.name)) {
       report(model::Code::E_RULE_UNKNOWN, id, "names the kind '" + l.name + "', which is no kind of the language", l.location);
       ok = false;
+    } else if (l.form == Form::Matches) {
+      ok = validatePattern(id, l) && ok;
     } else if (l.form == Form::Call) {
       const std::string d = resolver_.resolve(l.name, scope);
       if (d.empty() || !facts_.kindIs(d, model::Kind::Definition)) {
@@ -169,8 +202,9 @@ bool RuleValidator::validateBody(const std::string& id, const std::vector<model:
       const bool binds = l.form == Form::Relation || l.form == Form::Kind || l.form == Form::Call || l.form == Form::Arg ||
                          std::any_of(l.terms.begin(), l.terms.end(), known);  // in and = bind one side from the other
       if (!binds) continue;
+      // name(x) reads what x is bound to and never binds x: the entity comes from a positive literal (DS-403)
       for (const auto& t : l.terms)
-        if (t.variable && out_bound.insert(t.text).second) changed = true;
+        if (t.variable && t.property.empty() && out_bound.insert(t.text).second) changed = true;
     }
   }
   std::set<std::string> told;

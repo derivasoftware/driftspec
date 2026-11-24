@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <map>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -95,6 +96,21 @@ class Facts {
   model::Location locationOf(const std::string& id) const;
   /// A field of an entity: its name, its identity or a field it writes; "" when the model holds none.
   std::string fieldOf(const std::string& id, const std::string& field) const;
+  /// What an entity is, as a rule reads it with name(x), id(x) or kind(x): its name, its identity or the name of its
+  /// kind; "" when the model holds none of that identity (DS-403).
+  std::string propertyOf(const std::string& id, const std::string& property) const;
+  /// Whether an entity carries a flag, as `m is abstract` reads it (DS-403).
+  bool flagged(const std::string& id, const std::string& flag) const;
+  /// Keeps the pattern a formula matches against, compiled once by the validator (DS-403).
+  void learn(const std::string& owner, const std::string& written, std::regex pattern) {
+    if (readers_) throw std::logic_error("the facts grow only between solves: a binding points into them");
+    patterns_.insert_or_assign(key(owner, written), std::move(pattern));
+  }
+  /// The pattern a formula writes, as compiled; nullptr when it was never compiled.
+  const std::regex* patternOf(const std::string& owner, const std::string& written) const {
+    const auto it = patterns_.find(key(owner, written));
+    return it == patterns_.end() ? nullptr : &it->second;
+  }
   /// Whether the model keeps a rule: it has no breach.
   bool holds(const std::string& rule) const;
   /// What holds an entity, by contains, where the facts keep it; nullptr at the top.
@@ -123,6 +139,7 @@ class Facts {
   std::map<std::string, std::multimap<std::string, std::string>> forward_;   ///< relation, from, to
   std::map<std::string, std::multimap<std::string, std::string>> backward_;  ///< relation, to, from
   std::map<std::string, std::string> constants_;                             ///< owner and name as written, to identity
+  std::map<std::string, std::regex> patterns_;                               ///< owner and pattern as written, compiled
   std::map<std::string, std::set<std::vector<std::string>>> extension_;      ///< what each definition holds for
   std::unordered_map<std::string, std::string> parent_;                      ///< what holds each entity, copied from the index
   std::unordered_map<std::string, std::vector<std::string>> children_;       ///< what each entity holds, in the index's order

@@ -418,7 +418,7 @@ package driftspec@ds {
       W_RULE_NO_REQUIREMENT, W_RULE_NO_CLAIM, W_DEFINITION_NO_CASE, E_RULE_BROKEN, E_RULE_UNKNOWN, E_RULE_ARITY,
       E_RULE_UNSAFE, E_RULE_UNSTRATIFIED, W_CONSUMES_UNDECLARED, W_CONSUMES_UNUSED, W_CONSUMES_BYPASS,
       W_LANGUAGE_UNKNOWN, W_USECASE_UNDECLARED, W_USECASE_SIGNATURE, W_USECASE_OUTCOME_UNHANDLED,
-      W_SCENARIO_NO_OUTCOME, W_USECASE_UNREALISED
+      W_SCENARIO_NO_OUTCOME, W_USECASE_UNREALISED, E_RULE_PATTERN, E_RULE_RESERVED
     }
 
     enum Severity {                          // how much a finding weighs; what it means is its row of the severity table (DS-379)
@@ -540,6 +540,12 @@ package driftspec@ds {
       }
       + specOf(kind: Kind) -> KindSpec
       + specNamed(name: std::string) -> KindSpec                    // the kind a word names, as nameOf writes it; none when it names no kind
+      + static reservedField(name: std::string) -> bool {          // name and id: the entity's own, never a declared field (DS-403)
+        @requirement REQ-00196-1
+      }
+      + flagNamed(name: std::string) -> bool {                      // a flag some kind declares: what `m is abstract` tests (DS-403)
+        @requirement REQ-00196-1
+      }
       + fieldOf(kind: Kind, key: std::string) -> FieldSpec
       + identityFields() -> std::vector<std::string>                 // the fields that hold an identity, each once: what a rename carries
       + relationOf(kind: std::string) -> RelationSpec
@@ -576,6 +582,9 @@ package driftspec@ds {
       }
       // how the tables are built: once, by the constructor
       - static buildNames() -> std::vector<std::string>
+      - static spec(name: std::string, type: FieldType, source: FieldSource, meaning: std::string) -> FieldSpec {   // refused when reserved (DS-403)
+        @requirement REQ-00196-1
+      }
       - static writtenField(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
       - static syntax(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
       - static derived(name: std::string, type: FieldType, meaning: std::string) -> FieldSpec
@@ -860,15 +869,18 @@ package driftspec@ds {
 
     enum LiteralForm {                       // how a literal of a rule reads (DS-94)
       @requirement REQ-00095-2
-      Relation, Kind, In, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Call, Arg
+      @requirement REQ-00196-1
+      Relation, Kind, In, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Call, Arg, Matches, Flag
     }
 
     dataclass Term {                         // a variable (a bare name), an entity (a qualified name) or a value, as written
       @requirement REQ-00095-2
+      @requirement REQ-00196-1
       + text: std::string
       + variable: bool
       + value: bool
       + field: std::string
+      + property: std::string                // name, id or kind: what the entity is, read as a function (DS-403)
     }
 
     dataclass Literal {                      // one literal of a rule or a definition

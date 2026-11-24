@@ -63,6 +63,18 @@ std::string Facts::fieldOf(const std::string& id, const std::string& field) cons
   return !e ? "" : field == "name" ? e->name : field == "id" ? e->id : e->field(field);
 }
 
+std::string Facts::propertyOf(const std::string& id, const std::string& property) const {
+  const model::Entity* e = model_.find(id);
+  if (!e) return "";
+  if (property == "kind") return metamodel_.nameOf(e->kind);
+  return property == "name" ? e->name : e->id;
+}
+
+bool Facts::flagged(const std::string& id, const std::string& flag) const {
+  const model::Entity* e = model_.find(id);
+  return e && e->has(flag);
+}
+
 bool Facts::holds(const std::string& rule) const {
   const auto broken = model_.breaches().find(rule);
   return broken == model_.breaches().end() || broken->second.empty();

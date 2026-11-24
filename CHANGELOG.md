@@ -6,13 +6,26 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.70
+## 0.1.71
 
 The scene hides nothing (DS-390). The one place that names the concrete layers is a class, `LayerFactory`; the
 count of a text's characters is the text module's, which render's cells use as well; and a type is read without the
 names that qualify it by the model's `WrittenType`, with a scan instead of a regular expression, for the rows of a
 box and for the types an interface's contract compares. Nothing a design writes changes: findings, the viewer, its
 scene and every drawing are the same.
+
+## 0.1.70
+
+A rule reads what an entity is, matches a value against a pattern and reads a member's flag (DS-403). `name(x)`,
+`id(x)` and `kind(x)` are the name, the identity and the kind of the entity bound to x; they read it and never bind
+it. `name(c) matches "^I[A-Z]"` holds when the value contains a match of the pattern, an ECMAScript regular
+expression compiled once when the rule is checked. `m is abstract` holds when m carries the flag.
+
+What a design written for the release before has to change: `name`, `id` and `kind` are now words of the rule
+language. A definition of one of those names is reported (E-RULE-RESERVED) and can no longer be applied, and none of
+the three can stand as a variable where a literal begins. A pattern that is no string or does not compile is reported
+at the rule (E-RULE-PATTERN). No kind may declare a field named `name` or `id`. Every design that used none of them
+checks, draws and exports as before.
 
 ## 0.1.69
 
