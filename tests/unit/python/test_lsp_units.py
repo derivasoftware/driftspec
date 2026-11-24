@@ -152,6 +152,17 @@ class TestRefresh:
         assert use(editor, uri_of(os.path.join(design, "p.ds"))) == design
         assert server.state["model"] is server.models[design] and design in server.workspaces
 
+    def test_a_change_reloads_the_workspace_it_keeps_and_reads_the_model_only_when_asked(self, project):
+        _, design, editor = project
+        path = os.path.join(design, "p.ds")
+        use(editor, uri_of(path))
+        kept = server.workspaces[design]
+        editor.workspace.text_documents[uri_of(path)] = Doc(DESIGN.replace("package p {", "package p {\n  // a comment"))
+        changed(editor, at(path, 0, 0))
+        assert server.workspaces[design] is kept and design not in server.models  # reloaded in place, the model not read
+        use(editor, uri_of(path))
+        assert server.models[design] is server.state["model"]  # read when a request asks
+
 
 class TestNames:
     def test_the_word_under_the_cursor_and_what_it_names(self, project):
