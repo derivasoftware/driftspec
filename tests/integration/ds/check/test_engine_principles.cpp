@@ -147,6 +147,8 @@ TEST_F(TestEnginePrinciples, AnExporterThatChangesTheModelIsTold) {
       broken({{"ds/exporter.ds", "    sequence JsonExport::render {", "      local e: model::Entity\n      self -> model.declare(e)\n"}});
   EXPECT_TRUE(has(rules, exporterReads));
   EXPECT_FALSE(has(rules, exporterClasses));
+}
+
 /// Only the Api chooses which steps of the check a load runs (DS-376): a function of the command line or a class of
 /// the drawing that names the selection is told, and so is a behaviour outside the Api that makes the steps itself.
 TEST_F(TestEnginePrinciples, ASelectionOfStepsNamedOutsideTheApiIsTold) {
