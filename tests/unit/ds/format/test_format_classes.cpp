@@ -13,8 +13,12 @@
 #include "ds/format/TextFormats.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/scene/Document.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 /// Each format on its own (DS-186): its name, and what it writes from the document it is given.
 
@@ -39,7 +43,7 @@ TEST(TestDiagramIr, TheIrAsItCameOrIndented) {
 
 TEST(TestDiagramLayout, EveryNodePlacedAndEveryEdgeRouted) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramLayout f;
+  const ds::format::DiagramLayout f(kTheme);
   EXPECT_EQ(f.name(), "layout");
   const auto json = nlohmann::json::parse(f.write(kDiagram, {}, sink));
   EXPECT_EQ(json["nodes"].size(), 2u);
@@ -48,7 +52,7 @@ TEST(TestDiagramLayout, EveryNodePlacedAndEveryEdgeRouted) {
 
 TEST(TestDiagramSvg, AnSvgThatNamesEveryBox) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramSvg f;
+  const ds::format::DiagramSvg f(kTheme);
   EXPECT_EQ(f.name(), "svg");
   const std::string svg = f.write(kDiagram, {}, sink);
   EXPECT_EQ(svg.find("<svg"), svg.find('<'));
@@ -58,7 +62,7 @@ TEST(TestDiagramSvg, AnSvgThatNamesEveryBox) {
 
 TEST(TestDiagramText, BoxCharactersWithinTheWidthAsked) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramText f;
+  const ds::format::DiagramText f(kTheme);
   EXPECT_EQ(f.name(), "text");
   const std::string text = f.write(kDiagram, wide(60), sink);
   EXPECT_NE(text.find('A'), std::string::npos);
@@ -72,7 +76,7 @@ TEST(TestDiagramText, BoxCharactersWithinTheWidthAsked) {
 
 TEST(TestDiagramCells, TheGridAsJson) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramCells f;
+  const ds::format::DiagramCells f(kTheme);
   EXPECT_EQ(f.name(), "cells");
   const auto json = nlohmann::json::parse(f.write(kDiagram, wide(60), sink));
   EXPECT_FALSE(json.empty());

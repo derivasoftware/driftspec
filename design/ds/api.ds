@@ -20,13 +20,18 @@ package driftspec@ds {
         Audit for 0.1.0 (DS-7, DS-304): one lost brace in DriftSpec's own design gave dozens of
         findings, every one an echo of it, and the error stood lines below the block left open.
       tags: parse, syntax
-      verification VER-00184-1 {
-        status: approved
-        title: Integration tests confirm a lost brace is reported at the block it leaves open, and the findings that echo the cut go while an intact file keeps its own
+      verification VER-00184-2 {
+        status: draft
+        title: Integration tests confirm a lost brace is reported at the block it leaves open, and the findings that echo the cut go while an intact file keeps its own, a file that is not UTF-8 included
+        text:
+          Revision 2 (DS-411): a file that is not UTF-8 is cut whole. Its one finding, E-ENCODING at its
+          first such byte, stays; the names it declared and the findings in it go; another file keeps its
+          own, and the export and the scene are written.
         method: test
         tests:
           tests/integration/ds/api/test_cut_file.cpp::TestCutFile.ALostBraceIsReportedAtTheBlockItLeavesOpen
           tests/integration/ds/api/test_cut_file.cpp::TestCutFile.WhatOnlyEchoesTheCutGoesAndTheOtherFilesKeepTheirFindings
+          tests/integration/ds/api/test_cut_file.cpp::TestCutFile.AFileThatIsNotUtf8IsSaidOnceAndWhatOnlyEchoesItGoes
       }
     }
 
@@ -78,6 +83,7 @@ package driftspec@ds {
       @requirement REQ-00107-2
       @constraint CST-00009-1
       - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
+      - owns theme_: theme::Theme             // the style its drawings are written in, made once with it (DS-393)
       - output_: Output                       // what it is loaded to give, kept for each reload (DS-420)
       - diagram_: std::string
       - owns many parsed_: std::map<std::string, parse::ParsedFile>  // each file as last parsed: a reload parses only what changed
@@ -227,15 +233,20 @@ package driftspec@ds {
     }
 
     // How every caller loads a workspace (DS-120): the files bound into one model written in the
-    // metamodel the Api holds, then checked; what only echoes a cut file goes (DS-304).
+    // metamodel the Api holds, then checked; what only echoes a cut file, or one that is not UTF-8,
+    // goes (DS-304, DS-411).
     sequence Api::load {
       local model: model::Model
       local binder: bind::Binder
       local broken: std::set<std::string>
       loop each file {
+        opt it is not UTF-8 / not-utf8 {
+          // it is said once, at its first byte that is not, and kept among the broken (DS-411)
+        }
         opt it does not parse / cut {
           // it is said once, where the file stops parsing, and kept among the broken
         }
+        // a file that is not UTF-8 has the empty tree: nothing of it is bound
         -> binder.bind(file)
       }
       // the steps the output reads, chosen here and nowhere else (DS-376)

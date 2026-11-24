@@ -182,7 +182,7 @@ package driftspec@ds {
 
     // ---- a diagram's formats: its IR, as its contract writes it (render::IrText) -------------
     // the one place that names them
-    function diagramFormats() -> std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> {
+    function diagramFormats(theme: theme::Theme) -> std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> {
       @requirement REQ-00106-2
     }
 
@@ -196,14 +196,18 @@ package driftspec@ds {
     // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
     class DiagramLayout : IFormat<render::IrText> {
       @requirement REQ-00106-2
+      - owns metrics_: render::Metrics
+      + DiagramLayout(theme: theme::Theme)            // in cells, measured as the theme measures text in a terminal (DS-393)
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
-      - static placed(document: render::IrDocument, width: int, part: std::string, out_sink: emit::ISink) -> void   // a part names itself
+      - placed(document: render::IrDocument, width: int, part: std::string, out_sink: emit::ISink) -> void   // a part names itself
     }
 
     // ds render -f svg
     class DiagramSvg : IFormat<render::IrText> {
       @requirement REQ-00106-2
+      - owns svg_: render::Svg
+      + DiagramSvg(theme: theme::Theme)            // drawn in the theme (DS-393)
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }
@@ -211,6 +215,8 @@ package driftspec@ds {
     // ds render -f text: boxes in characters for a terminal
     class DiagramText : IFormat<render::IrText> {
       @requirement REQ-00106-2
+      - owns text_: render::Text
+      + DiagramText(theme: theme::Theme)            // drawn in the theme (DS-393)
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }
@@ -218,6 +224,8 @@ package driftspec@ds {
     // ds render -f cells: the terminal's coloured cells
     class DiagramCells : IFormat<render::IrText> {
       @requirement REQ-00106-2
+      - owns text_: render::Text
+      + DiagramCells(theme: theme::Theme)            // drawn in the theme (DS-393)
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }

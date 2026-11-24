@@ -22,8 +22,12 @@
 #include "ds/query/Query.hpp"
 #include "ds/render/IrExport.hpp"
 #include "ds/scene/Scene.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 /// Every JSON document ds writes, over designs of every size (DS-397): each writer lent a checked sink, and each
 /// door that builds its own, writes its fields in byte order and the bytes nlohmann writes for the same document,
@@ -95,7 +99,7 @@ TEST_F(TestJsonOfADesign, EveryWriterLentACheckedSinkWritesWhatNlohmannWrote) {
       const ds::render::IrText diagram{ir.render(id, false)};
       if (diagram.json.size() > 64 * 1024) continue;  // a large drawing lays out slowly in a debug build; the goldens hold one
       for (const char* format : {"layout", "cells"}) {
-        std::string drawn = ds::format::diagramFormats().at(format)->write(diagram, {}, sink);
+        std::string drawn = ds::format::diagramFormats(kTheme).at(format)->write(diagram, {}, sink);
         ASSERT_FALSE(drawn.empty());
         drawn.pop_back();  // the line both end in
         asNlohmannWrites(drawn, false, id + " " + format);

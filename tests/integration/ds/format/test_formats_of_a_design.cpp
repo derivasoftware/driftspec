@@ -16,8 +16,12 @@
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/scene/Scene.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 /// Every output of ds is a document written by a format found by its name (REQ-00070-1), here over
 /// examples/hola: the document comes from the design, the format only writes it.
@@ -71,7 +75,7 @@ TEST_F(TestSceneFormatsOfADesign, ThePageOfTheDesignIsAFrameCarryingItWholeWhenA
 class TestDiagramFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares) {
-  const auto formats = ds::format::diagramFormats();
+  const auto formats = ds::format::diagramFormats(kTheme);
   ASSERT_EQ(formats.size(), 5u);
   for (const auto& f : formats) {
     EXPECT_FALSE(ds::api::Api(metamodel).render(files, "CL_Hola", f.first, 120).empty()) << f.first;
@@ -85,7 +89,7 @@ TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDes
   const auto ir = nlohmann::json::parse(text);
   ASSERT_FALSE(ir["nodes"].empty());
   const ds::render::IrText diagram{text};
-  const auto formats = ds::format::diagramFormats();
+  const auto formats = ds::format::diagramFormats(kTheme);
   EXPECT_EQ(formats.at("ir")->write(diagram, {}, sink), text);  // as it came
   ds::format::FormatOptions indented;
   indented.pretty = true;

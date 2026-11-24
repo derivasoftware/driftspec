@@ -144,7 +144,7 @@ std::string Workspace::render(const std::string& diagram, const std::string& for
   if (ir.empty()) return ir;
   format::FormatOptions options;
   options.width = width;
-  const auto formats = format::diagramFormats();
+  const auto formats = format::diagramFormats(theme_);
   const auto chosen = formats.find(format);
   emit::JsonSink sink(false);  // what layout and cells write
   return (chosen != formats.end() ? chosen->second : formats.at("text"))->write({ir}, options, sink);

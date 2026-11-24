@@ -8,6 +8,7 @@
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace api {
@@ -80,6 +81,7 @@ class Workspace {
   std::string relations(const std::vector<model::Relation>& relations) const;
 
   const model::Metamodel& metamodel_;
+  const theme::Theme theme_;  ///< the style its drawings are written in, made once with it (DS-393)
   Output output_;
   std::string diagram_;
   std::map<std::string, parse::ParsedFile> parsed_;  ///< each file as it was last parsed, by its path

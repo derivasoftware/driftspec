@@ -15,11 +15,13 @@ std::string DiagramIr::write(const render::IrText& document, const FormatOptions
   return options.pretty ? nlohmann::json::parse(document.json).dump(2) : document.json;  // as it came, unless asked to indent
 }
 
+DiagramLayout::DiagramLayout(const theme::Theme& theme) : metrics_(render::Metrics::text(theme.measures(theme::Sink::text))) {}
+
 std::string DiagramLayout::name() const { return "layout"; }
 
 // The placed rectangles and routes of one drawing, in cells; of a drawing made of parts, those of each part. A
 // part is named after the fields its drawing gives: part before parts, nodes before part before routes.
-void DiagramLayout::placed(const render::IrDocument& document, int width, const std::string* part, emit::ISink& out_sink) {
+void DiagramLayout::placed(const render::IrDocument& document, int width, const std::string* part, emit::ISink& out_sink) const {
   out_sink.beginRecord();
   if (!document.parts.empty()) {
     if (part) out_sink.field("part").value(*part);
@@ -29,7 +31,7 @@ void DiagramLayout::placed(const render::IrDocument& document, int width, const 
     return;
   }
   const render::IrDocument parsed = document.bundled();
-  const render::LayoutResult lay = render::Layout(render::Metrics::text()).place(parsed, width);
+  const render::LayoutResult lay = render::Layout(metrics_).place(parsed, width);
   out_sink.field("nodes").beginList();
   for (const auto& p : lay.placed) {
     out_sink.beginRecord().field("h").integer(p.rect.h).field("id").value(p.node->id).field("kind").value(p.node->kind);
@@ -56,29 +58,29 @@ std::string DiagramLayout::write(const render::IrText& document, const FormatOpt
 std::string DiagramSvg::name() const { return "svg"; }
 
 std::string DiagramSvg::write(const render::IrText& document, const FormatOptions& options, emit::ISink&) const {
-  return render::Svg().render(render::IrDocument::parse(document.json), options.width);
+  return svg_.render(render::IrDocument::parse(document.json), options.width);
 }
 
 std::string DiagramText::name() const { return "text"; }
 
 std::string DiagramText::write(const render::IrText& document, const FormatOptions& options, emit::ISink&) const {
-  return render::Text().render(render::IrDocument::parse(document.json), options.color, options.width);
+  return text_.render(render::IrDocument::parse(document.json), options.color, options.width);
 }
 
 std::string DiagramCells::name() const { return "cells"; }
 
 std::string DiagramCells::write(const render::IrText& document, const FormatOptions& options, emit::ISink& out_sink) const {
-  render::Text().cells(render::IrDocument::parse(document.json), options.width, out_sink);
+  text_.cells(render::IrDocument::parse(document.json), options.width, out_sink);
   return out_sink.result() + "\n";
 }
 
-std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> diagramFormats() {
+std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> diagramFormats(const theme::Theme& theme) {
   std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> out;
   out["ir"] = std::make_unique<DiagramIr>();
-  out["layout"] = std::make_unique<DiagramLayout>();
-  out["svg"] = std::make_unique<DiagramSvg>();
-  out["text"] = std::make_unique<DiagramText>();
-  out["cells"] = std::make_unique<DiagramCells>();
+  out["layout"] = std::make_unique<DiagramLayout>(theme);
+  out["svg"] = std::make_unique<DiagramSvg>(theme);
+  out["text"] = std::make_unique<DiagramText>(theme);
+  out["cells"] = std::make_unique<DiagramCells>(theme);
   return out;
 }
 

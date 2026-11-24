@@ -86,7 +86,7 @@ class Editor:
         self.model: driftspec.Model | None = None  # the version's model, read when a request asks
         self.published: set[str] = set()           # the files that carry diagnostics
 
-    def files(self, ls: LanguageServer) -> dict[str, str]:
+    def files(self, ls: LanguageServer) -> dict[str, str | bytes]:
         """The design's files, the buffers on top: unsaved text is what is checked."""
         files = {os.path.realpath(p): text for p, text in driftspec.read(self.root).items()}
         for uri, doc in ls.workspace.text_documents.items():  # the buffers, saved or not, win over the disk
@@ -158,7 +158,7 @@ class Editor:
         found = self.entities_for(word)
         return ("entity", found[0].id) if found else ("", "")
 
-    def with_focus(self, files: dict[str, str], identity: str) -> tuple[dict[str, str], str]:
+    def with_focus(self, files: dict[str, str | bytes], identity: str) -> tuple[dict[str, str | bytes], str]:
         """The workspace with a diagram of one entity and what it relates to, written on the fly; a member is drawn
         as the class it belongs to."""
         model = self.typed()
