@@ -92,7 +92,7 @@ TEST(TestBehaviourTyping, AMessageGivenMoreArgumentsThanItsOperationTakesIsAnErr
   EXPECT_TRUE(has(codes, "E-MSG-ARITY"));
 }
 
-TEST(TestContractCheck, AStateNothingLeadsToIsAFinding) {
+TEST(TestInterfaceContracts, AStateNothingLeadsToIsAFinding) {
   const auto codes = codesOf(std::string(kShop) +
                                  "    state Stock {\n"
                                  "      initial Full\n"
@@ -101,7 +101,7 @@ TEST(TestContractCheck, AStateNothingLeadsToIsAFinding) {
                                  "    }\n"
                                  "  }\n"
                                  "}\n",
-                             "contracts");
+                             "interfaces");
   EXPECT_TRUE(has(codes, "W-STATE-UNREACHABLE"));
 }
 
