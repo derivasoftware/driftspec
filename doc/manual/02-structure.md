@@ -103,6 +103,41 @@ diagram IF_Shell {
 A box that goes through an interface of another says so with `@consumes`, and the arrow between
 the two tells which interface it is when you point at it.
 
+Inside a package an interface is also a contract in code: a module offers it, a class carries
+it out with `@interface`, and others hold it without knowing the class. Its operation's sequence
+says which class answers; until it has one, the operation is an open item of coverage.
+
+```ds
+package shop {
+  module store {
+    interface IPricing {
+      operation price(item: string) -> int
+    }
+
+    class ListPricing {
+      @interface IPricing
+      + price(item: string) -> int
+    }
+
+    class Cart {
+      - refs pricing: IPricing
+      + total() -> int
+    }
+
+    sequence IPricing::price {
+      local pricing: ListPricing
+      self -> pricing.price(item) -> cents
+      return cents
+    }
+  }
+}
+
+diagram CL_Pricing {
+  kind: class
+  include: shop@store::*
+}
+```
+
 ## Classes and their members
 
 A member starts with its visibility: `+` public, `#` protected, `-` private. An attribute is
