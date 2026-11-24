@@ -164,6 +164,7 @@ package driftspec@ds {
       - owns forward_: std::map<std::string, std::multimap<std::string, std::string>>
       - owns backward_: std::map<std::string, std::multimap<std::string, std::string>>
       - owns constants_: std::map<std::string, std::string>
+      - owns patterns_: std::map<std::string, std::regex>                        // the patterns formulas match against, compiled (DS-403)
       - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
       - owns parent_: std::unordered_map<std::string, std::string>                 // what holds each entity, copied from the index (DS-381)
       - owns children_: std::unordered_map<std::string, std::vector<std::string>>  // what each entity holds, in the index's order
@@ -188,6 +189,18 @@ package driftspec@ds {
       + scopeOf(id: std::string) -> std::string
       + locationOf(id: std::string) -> model::Location
       + fieldOf(id: std::string, field: std::string) -> std::string
+      + propertyOf(id: std::string, property: std::string) -> std::string {     // name(x), id(x), kind(x) (DS-403)
+        @requirement REQ-00196-1
+      }
+      + flagged(id: std::string, flag: std::string) -> bool {                    // m is abstract (DS-403)
+        @requirement REQ-00196-1
+      }
+      + learn(owner: std::string, written: std::string, pattern: std::regex) -> void {
+        @requirement REQ-00196-1
+      }
+      + patternOf(owner: std::string, written: std::string) -> std::regex {       // as compiled; none when never compiled
+        @requirement REQ-00196-1
+      }
       + holds(rule: std::string) -> bool
       + parentOf(id: std::string) -> std::string                        // where the facts keep it; none at the top
       + childrenOf(id: std::string) -> std::vector<std::string>         // where the facts keep them; none when it holds nothing
@@ -202,13 +215,20 @@ package driftspec@ds {
       - refs resolver_: Resolver
       - refs facts_: Facts
       - owns many found_: std::vector<model::Finding>
+      - owns many patterns_: std::vector<std::pair<std::string, std::regex>>      // compiled since the last takePatterns (DS-403)
       + RuleValidator(metamodel: model::Metamodel, resolver: Resolver, facts: Facts)
       + validate(id: std::string, formula: model::Formula, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool
       + checkVacuity(id: std::string, formula: model::Formula) -> void {
         @requirement REQ-00117-1
       }
       + take() -> std::vector<model::Finding>
+      + takePatterns() -> std::vector<std::pair<std::string, std::regex>> {     // each compiled once (DS-403)
+        @requirement REQ-00196-1
+      }
       - validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool
+      - validatePattern(id: std::string, l: model::Literal) -> bool {          // a string that compiles (DS-403)
+        @requirement REQ-00196-1
+      }
       - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
       - static joinsAtEnd(spec: model::RelationSpec, kind: model::Kind, from: bool) -> bool
     }

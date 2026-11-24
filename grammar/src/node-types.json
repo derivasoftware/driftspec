@@ -198,6 +198,10 @@
             "named": true
           },
           {
+            "type": "property_term",
+            "named": true
+          },
+          {
             "type": "qualified_name",
             "named": true
           },
@@ -663,6 +667,10 @@
             "named": true
           },
           {
+            "type": "property_term",
+            "named": true
+          },
+          {
             "type": "qualified_name",
             "named": true
           },
@@ -699,6 +707,10 @@
           {
             "type": ">=",
             "named": false
+          },
+          {
+            "type": "matches",
+            "named": false
           }
         ]
       },
@@ -712,6 +724,10 @@
           },
           {
             "type": "number",
+            "named": true
+          },
+          {
+            "type": "property_term",
             "named": true
           },
           {
@@ -2186,6 +2202,40 @@
     }
   },
   {
+    "type": "property_term",
+    "named": true,
+    "fields": {
+      "of": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      },
+      "property": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "id",
+            "named": false
+          },
+          {
+            "type": "kind",
+            "named": false
+          },
+          {
+            "type": "name",
+            "named": false
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "qualified_name",
     "named": true,
     "fields": {
@@ -3119,6 +3169,10 @@
     "named": false
   },
   {
+    "type": "id",
+    "named": false
+  },
+  {
     "type": "if",
     "named": false
   },
@@ -3139,6 +3193,10 @@
     "named": false
   },
   {
+    "type": "kind",
+    "named": false
+  },
+  {
     "type": "line_text",
     "named": true
   },
@@ -3155,7 +3213,15 @@
     "named": false
   },
   {
+    "type": "matches",
+    "named": false
+  },
+  {
     "type": "module",
+    "named": false
+  },
+  {
+    "type": "name",
     "named": false
   },
   {

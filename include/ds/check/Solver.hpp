@@ -28,7 +28,8 @@ class Solver {
   std::vector<std::vector<const std::string*>> solve(const std::string& owner, const std::vector<model::Literal>& body,
                                                      const Variables& variables, const std::vector<const std::string*>& bindings,
                                                      bool first) const;
-  /// Whether a literal compares (!=, <, <=, >, >=): it tests only what positive literals bind.
+  /// Whether a literal tests what is bound and binds nothing: a comparison (!=, <, <=, >, >=), a match against a pattern
+  /// or a member's flag (DS-403); it tests only what positive literals bind.
   static bool compares(model::LiteralForm form);
 
  private:

@@ -1052,6 +1052,10 @@
               {
                 "type": "STRING",
                 "value": ">="
+              },
+              {
+                "type": "STRING",
+                "value": "matches"
               }
             ]
           }
@@ -1071,6 +1075,10 @@
       "members": [
         {
           "type": "SYMBOL",
+          "name": "property_term"
+        },
+        {
+          "type": "SYMBOL",
           "name": "field_term"
         },
         {
@@ -1084,6 +1092,48 @@
         {
           "type": "SYMBOL",
           "name": "string"
+        }
+      ]
+    },
+    "property_term": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "property",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "name"
+              },
+              {
+                "type": "STRING",
+                "value": "id"
+              },
+              {
+                "type": "STRING",
+                "value": "kind"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "FIELD",
+          "name": "of",
+          "content": {
+            "type": "SYMBOL",
+            "name": "name"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ")"
         }
       ]
     },
