@@ -18,7 +18,7 @@ TEST(TestEngineFactory, ThePackingEngineIsHandedOutAsAnEngine) {
   unit.h = 40;
   ds::layout::Graph graph;
   graph.root = &unit;
-  EXPECT_DOUBLE_EQ(engine->place(graph).boxes.at("u").w, 120);
+  EXPECT_DOUBLE_EQ(engine->place(graph).boxes.at(0).w, 120);  // the root is the first box read
 }
 
 }  // namespace

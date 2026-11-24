@@ -112,8 +112,8 @@ double PackingEngine::target(const std::vector<Packed>& kids, double atLeast, do
   return std::max(widest, std::sqrt(area) * factor);
 }
 
-void PackingEngine::land(const Frame& frame, const Packed& packed, double x, double y, std::map<std::string, Box>& out) {
-  out[frame.id] = {x, y, packed.w, packed.h};
+void PackingEngine::land(const Frame& frame, const Packed& packed, double x, double y, std::vector<Box>& out) {
+  out.push_back({x, y, packed.w, packed.h});
   const size_t shelved = frame.kids.size();
   for (size_t i = 0; i < packed.kids.size(); ++i) {
     const Frame& k = i < shelved ? frame.kids[i] : frame.ports[i - shelved];

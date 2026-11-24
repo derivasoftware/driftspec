@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <functional>
 #include <map>
 #include <string>
 
@@ -9,6 +10,21 @@
 #include "ds/layout/Placement.hpp"
 
 namespace {
+
+/// The boxes of a placement by the identities of their frames, which the engine numbers in the order the graph is read:
+/// the root first, then each frame followed by its kids and its ports.
+std::map<std::string, ds::layout::Box> byId(const ds::layout::Frame& root, const ds::layout::Placement& placed) {
+  std::map<std::string, ds::layout::Box> out;
+  std::size_t n = 0;
+  std::function<void(const ds::layout::Frame&)> walk = [&](const ds::layout::Frame& f) {
+    if (n < placed.boxes.size()) out[f.id] = placed.boxes[n];
+    ++n;
+    for (const ds::layout::Frame& k : f.kids) walk(k);
+    for (const ds::layout::Frame& p : f.ports) walk(p);
+  };
+  walk(root);
+  return out;
+}
 
 using ds::layout::Box;
 using ds::layout::Frame;
@@ -70,8 +86,7 @@ class TestLayoutPlacement : public ::testing::Test {
 
 TEST_F(TestLayoutPlacement, EveryBoxLandsInsideItsParentApartFromItsSiblings) {
   const Frame root = package(50);
-  const Placement placed = place(root);
-  const auto& b = placed.boxes;
+  const auto b = byId(root, place(root));
   for (const char* unit : {"base", "heir1", "heir2"}) EXPECT_TRUE(inside(b.at(unit), b.at("p@m1"))) << unit;
   for (const char* unit : {"a", "b"}) EXPECT_TRUE(inside(b.at(unit), b.at("p@m2"))) << unit;
   EXPECT_TRUE(inside(b.at("p@m1"), b.at("p")));
@@ -83,11 +98,13 @@ TEST_F(TestLayoutPlacement, EveryBoxLandsInsideItsParentApartFromItsSiblings) {
 }
 
 TEST_F(TestLayoutPlacement, ASecondPlacementOfShorterBoxesFollowingTheFirstIsNeverWider) {
-  const Placement full = place(package(80));
-  const Placement lean = place(package(30), full.widths, true);
-  for (const auto& entry : lean.boxes) {
-    const auto f = full.boxes.find(entry.first);
-    ASSERT_NE(f, full.boxes.end()) << entry.first;
+  const Frame tall = package(80), shorter = package(30);
+  const Placement full = place(tall);
+  const auto fullBoxes = byId(tall, full);
+  const auto leanBoxes = byId(shorter, place(shorter, full.widths, true));
+  for (const auto& entry : leanBoxes) {
+    const auto f = fullBoxes.find(entry.first);
+    ASSERT_NE(f, fullBoxes.end()) << entry.first;
     EXPECT_LE(entry.second.w, f->second.w) << entry.first;
     EXPECT_LE(entry.second.h, f->second.h) << entry.first;
   }

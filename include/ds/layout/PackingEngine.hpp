@@ -33,8 +33,8 @@ class PackingEngine : public IEngine {
                                          std::vector<std::pair<double, double>>& at);
   /// The width to aim at: the widest child, at least `atLeast`, or the side of the children's area by `factor`.
   static double target(const std::vector<Packed>& kids, double atLeast, double factor);
-  /// Writes where a frame and everything under it land, the frame at `x`, `y`.
-  static void land(const Frame& frame, const Packed& packed, double x, double y, std::map<std::string, Box>& out);
+  /// Writes where a frame and everything under it land, the frame at `x`, `y`, in the order the graph is read.
+  static void land(const Frame& frame, const Packed& packed, double x, double y, std::vector<Box>& out);
 };
 
 }  // namespace layout
