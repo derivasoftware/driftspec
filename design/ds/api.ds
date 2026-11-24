@@ -292,7 +292,7 @@ package driftspec@ds {
     // revision 3 (DS-376): a drawing runs only the steps of the check it reads, chosen by the Api alone, and draws
     // byte for byte as after the whole check
     verification VER-00094-3 {
-      status: draft
+      status: approved
       title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, says what the grammar takes at a place, and draws a diagram with only the steps of the check it reads, chosen by the Api alone, as after the whole check
       method: test
       tests:

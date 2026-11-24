@@ -6,10 +6,10 @@ import json
 import os
 
 import driftspec.live_http as live_http
-from driftspec.live import Command, main
+from driftspec.live import Command, asking, main
 from live_fixtures import no_browser, session, ws  # noqa: F401 (fixtures)
 
-__covers__ = (Command, main)
+__covers__ = (Command, asking, main)
 
 
 class TestMain:
@@ -19,19 +19,26 @@ class TestMain:
         main(["highlight", "a", "b", "--add", *port])
         main(["focus", "s@core::Broker", *port])
         main(["isolate", "s@core", *port])
-        assert session.notes[0]["text"] == "two words" and session.notes[0]["tone"] == "ok"
-        assert [h["id"] for h in session.highlights] == ["a", "b"] and session.isolated == ["s@core"]
+        assert session.annotations.notes[0]["text"] == "two words" and session.annotations.notes[0]["tone"] == "ok"
+        assert [h["id"] for h in session.annotations.highlights] == ["a", "b"] and session.isolated == ["s@core"]
         main(["clear", "highlights", *port])
-        assert session.highlights == [] and session.notes
+        assert session.annotations.highlights == [] and session.annotations.notes
         session.comment("s@core::Broker", "why?")
         capsys.readouterr()
         main(["comments", "--peek", *port])
-        assert "why?" in capsys.readouterr().out and session.comments[0]["read"] is False
+        assert "why?" in capsys.readouterr().out and session.annotations.comments[0]["read"] is False
         session.select("s@core::Broker", "Broker")
         main(["selection", *port])
         assert json.loads(capsys.readouterr().out)["label"] == "Broker"
         main(["state", *port])
         assert json.loads(capsys.readouterr().out)["version"] == 1
+
+    def test_a_command_of_the_contract_prints_what_its_word_shows(self, session, capsys):
+        from driftspec.live_contract import LIVE
+
+        state = next(op for op in LIVE.words() if op.word.word == "state")
+        asking(state)(Command(["state", "--port", str(session.port)]))
+        assert list(json.loads(capsys.readouterr().out)) == ["version", "counts", "error", "findings"]
 
     def test_mcp_speaks_on_stdio_and_anything_else_prints_the_usage(self, session, monkeypatch, capsys):
         monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"id": 1, "method": "tools/list"}) + "\n"))

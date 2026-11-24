@@ -15,7 +15,7 @@ package driftspec@ds {
     // ---- the evaluator in its pieces (DS-380), as a requirement and the rule that holds it -------------------------
     requirement REQ-00192-1 {
       tags: architecture, check, rules
-      status: draft
+      status: approved
       @refines REQ-00096-1
       title: The evaluator shall direct four pieces, and the solver shall read the facts and never the model
       text:
@@ -29,7 +29,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-378, DS-380): one class did five things; split, the solver can run over facts
         without a design, and each piece can be read and tested on its own.
       verification VER-00212-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds keeps the solver on the facts, and is told when the solver depends on the model
         method: test
         tests:
