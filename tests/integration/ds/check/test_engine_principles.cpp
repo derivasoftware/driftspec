@@ -67,12 +67,14 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string exporterClasses = "driftspec@ds@exporter::exporter-operations-belong-to-classes";
   const std::string exporterReads = "driftspec@ds@exporter::the-exporter-reads-the-model";
   const std::string apiChooses = "driftspec@ds@api::only-the-api-chooses-the-steps";
+  const std::string machineClasses = "driftspec@ds@machine::machine-operations-belong-to-classes";
+  const std::string machineReads = "driftspec@ds@machine::the-machine-reads-the-model";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule : {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads,
-                                  exporterClasses, exporterReads, apiChooses})
+                                  exporterClasses, exporterReads, apiChooses, machineClasses, machineReads})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -165,6 +167,26 @@ TEST_F(TestEnginePrinciples, StepsMadeOutsideTheApiAreTold) {
       broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::steps(selection) -> steps\n"}});
   EXPECT_TRUE(has(rules, apiChooses));
   EXPECT_FALSE(has(rules, builtOnce));
+}
+
+TEST_F(TestEnginePrinciples, AFunctionOfTheMachineIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/machine.ds", "  module machine {", "    function loose(text: std::string) -> std::string\n"}});
+  EXPECT_TRUE(has(rules, machineClasses));
+  EXPECT_FALSE(has(rules, machineReads));
+}
+
+TEST_F(TestEnginePrinciples, AMachineThatChangesTheModelIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/machine.ds", "  module machine {",
+                                                  "    class Marker {\n"
+                                                  "      - refs model_: model::Model\n"
+                                                  "      + mark(e: model::Entity) -> void\n"
+                                                  "    }\n"
+                                                  "    sequence Marker::mark {\n"
+                                                  "      self -> model_.declare(e)\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, machineReads));
+  EXPECT_FALSE(has(rules, machineClasses));
 }
 
 }  // namespace

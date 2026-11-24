@@ -57,6 +57,11 @@ class Machine {
   std::vector<Call> calls() const;
 
  private:
+  /// Where a line of the machine is written: the machine's place, on that line when it is known.
+  static model::Location at(const model::Entity& machine, int line);
+  /// A name added once, in the order met; an empty one adds nothing.
+  static void note(std::vector<std::string>& all, const std::string& name);
+
   const model::Model& model_;
   const model::Entity& machine_;
   std::string subject_;

@@ -9,6 +9,67 @@
 package driftspec@ds {
 
   module machine {
+    @requirement REQ-00184-1                 // every operation of the machine is a member of a class (DS-367)
+    // ---- what the machine is, as requirements and the rules that hold them (DS-367) ------------------------
+    requirement REQ-00184-1 {
+      tags: architecture, machine
+      status: approved
+      @refines REQ-00140-1
+      title: Every operation of the machine shall be a member of the class whose responsibility it is
+      text:
+        A literal reads itself, a rule and a jump are read from the machine's fields, the subject answers for its
+        attributes and their values, a context for what its names may be worth, the walk of the behaviours for the
+        calls of the events, and the fields' lists for how they are joined. A function of the module would be a
+        responsibility no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-367): every module has its architecture decisions and patterns, and its rules
+        check that they hold; a free function means a responsibility is missing.
+      verification VER-00204-1 {
+        status: approved
+        title: Integration tests confirm the design of the machine holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheMachineIsTold
+      }
+    }
+
+    requirement REQ-00185-1 {
+      tags: architecture, machine
+      status: approved
+      @refines REQ-00140-1
+      title: The machine shall read the model it reads a state machine from and leave it as it is
+      text:
+        A machine and its table are read from what the model keeps, for the checks that hold its rules and calls and
+        for the drawing of it. The machine asks the model its questions and calls none of what changes it.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-367): the check and the drawing read the same machine; a reader that changed
+        the model would change what the next one sees.
+      verification VER-00205-1 {
+        status: approved
+        title: Integration tests confirm the design of the machine reads the model, and is told when a behaviour of the machine changes it
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AMachineThatChangesTheModelIsTold
+      }
+    }
+
+    rule machine-operations-belong-to-classes {
+      title: no function is written in the machine's module, so every operation of the machine is a member of a class
+      @requirement REQ-00184-1
+      for function f in driftspec@ds@machine
+      never f in driftspec@ds@machine
+    }
+
+    rule the-machine-reads-the-model {
+      title: no behaviour of the machine calls what changes the model, so the machine reads the model and leaves it as it is
+      @requirement REQ-00185-1
+      for class c in driftspec@ds@machine, method b in driftspec@ds@model::Model
+      where changes-the-model(b)
+      never m in c, s behaviour-of m, x in s, x calls b
+    }
+
 
     // one call of an event of a machine, found in a behaviour written: who makes it, on what, the
     // states its receiver may be in when it is made, and whether a jump lets it happen from one of them
@@ -25,6 +86,7 @@ package driftspec@ds {
     // a machine read from the model: its states in the order written, the rules that compute each,
     // where it starts, what its rules say that cannot be, and the calls of its events
     class Machine {
+      @requirement REQ-00185-1
       @requirement REQ-00140-1
       @requirement REQ-00141-1
       @requirement REQ-00142-1
@@ -49,6 +111,8 @@ package driftspec@ds {
       + sources(event: std::string) -> std::vector<std::string>
       // every call of one of its events in the behaviours written, each behaviour in the order written
       + calls() -> std::vector<Call>
+      - static at(machine: model::Entity, line: int) -> model::Location
+      - static note(all: std::vector<std::string>, name: std::string) -> void
     }
 
     // one cell of the table of a machine: where an event takes a state, and the behaviours that call
@@ -71,6 +135,7 @@ package driftspec@ds {
 
     // a machine as a table: its events down, its states across, and over it what the behaviours do
     class Table {
+      @requirement REQ-00185-1
       @requirement REQ-00147-2
       @requirement REQ-00148-2
       - subject_: std::string
@@ -80,8 +145,73 @@ package driftspec@ds {
       + subject() -> std::string
       + states() -> std::vector<std::string>
       + rows() -> std::vector<Row>
+      - static note(all: std::vector<std::string>, name: std::string) -> void
     }
 
+
+    class Calls {                            // one walk of the behaviours written, for the calls of one machine's events (DS-250)
+      @requirement REQ-00145-1
+      - refs model_: model::Model
+      - subject_: std::string
+      - refs many jumps_: std::vector<Jump>
+      - states_: std::vector<std::string>
+      + Calls(model: model::Model, subject: std::string, jumps: std::vector<Jump>, states: std::vector<std::string>)
+      + of(sequence: model::Entity, found: std::vector<Call>) -> void
+      - walk(sequence: model::Entity, holder: std::string, may: May, found: std::vector<Call>) -> void
+      - call(sequence: model::Entity, m: model::Entity, may: May, found: std::vector<Call>) -> void
+      - static named(sequence: model::Entity) -> std::string
+      - static either(a: May, b: May) -> May
+    }
+    class Context {                          // what each name of a context may be worth; a name absent may be worth anything (DS-249)
+      @requirement REQ-00141-1
+      @requirement REQ-00142-1
+      @requirement REQ-00143-1
+      - values_: std::map<std::string, std::set<std::string>>
+      + static allowed(subject: Subject, rule: StateRule, out: Context) -> bool
+      + together(b: Context, out: Context) -> bool
+      + told() -> std::string
+      + within(rule: Context) -> bool
+      + set(name: std::string, values: std::set<std::string>) -> void
+    }
+    dataclass Jump {                         // a jump as written: from a state to another on an event, with its guard (DS-250)
+      @requirement REQ-00145-1
+      + from: std::string
+      + to: std::string
+      + event: std::string
+      + guard: std::string
+      + static of(machine: model::Entity) -> std::vector<Jump>
+    }
+    dataclass Literal {                      // one literal of a state rule: a name, alone or compared with a value, perhaps negated (DS-249)
+      @requirement REQ-00140-1
+      + negated: bool
+      + name: std::string
+      + op: std::string
+      + value: std::string
+      + static read(text: std::string) -> Literal
+      + written() -> std::string
+    }
+    dataclass StateRule {                    // one rule of a machine: the state it computes and the literals that all hold in it (DS-249)
+      @requirement REQ-00140-1
+      + state: std::string
+      + owns literals: std::vector<Literal>
+      + text: std::string
+      + line: int
+      + static of(machine: model::Entity) -> std::vector<StateRule>
+    }
+    class Subject {                          // the class a machine is of: the attributes its rules name and the values each may take (DS-249)
+      @requirement REQ-00140-1
+      @requirement REQ-00142-1
+      - refs model_: model::Model
+      - id_: std::string
+      + Subject(model: model::Model, id: std::string)
+      + attribute(name: std::string) -> model::Entity
+      + values(name: std::string) -> std::vector<std::string>
+    }
+    class WrittenFields {                    // the lists the binder writes into a field, kept as joined text; DS-384's grammar takes it away (DS-367)
+      @requirement REQ-00140-1
+      + static pieces(text: std::string, separator: char) -> std::vector<std::string>
+      + static joined(parts: std::vector<std::string>, with: std::string) -> std::string
+    }
   }
 }
 
