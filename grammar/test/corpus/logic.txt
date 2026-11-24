@@ -560,3 +560,56 @@ diagram TB_Order {
     (field
       (name)
       (line_text))))
+
+========================================
+logic: What an entity is, a pattern and a flag (DS-403)
+========================================
+
+package p {
+  rule interfaces-are-named-i {
+    for interface i in p, method m in p
+    where m is abstract, kind(i) = "interface", id(i) != "p@x"
+    holds name(i) matches "^I[A-Z]"
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (rule
+      (name)
+      (rule_for
+        (range
+          (name)
+          (name)
+          (qualified_name
+            (name)))
+        (range
+          (name)
+          (name)
+          (qualified_name
+            (name))))
+      (rule_where
+        (literal
+          (kind_atom
+            (qualified_name
+              (name))
+            (name)))
+        (literal
+          (compare_atom
+            (property_term
+              (name))
+            (string)))
+        (literal
+          (compare_atom
+            (property_term
+              (name))
+            (string))))
+      (rule_holds
+        (literal
+          (compare_atom
+            (property_term
+              (name))
+            (string)))))))

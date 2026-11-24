@@ -47,6 +47,7 @@ enum class Field : std::uint8_t {
   parameter,
   params,
   prefix,
+  property,
   realises,
   relation,
   result,

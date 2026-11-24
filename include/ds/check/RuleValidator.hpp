@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_CHECK_RULEVALIDATOR_HPP
 #define DRIFTSPEC_CHECK_RULEVALIDATOR_HPP
 
+#include <regex>
 #include <set>
 #include <string>
 #include <utility>
@@ -30,10 +31,15 @@ class RuleValidator {
   void checkVacuity(const std::string& id, const model::Formula& formula);
   /// What it has found so far, in the order found; the list is left empty.
   std::vector<model::Finding> take();
+  /// The patterns the formula it last validated matches against, each as written and compiled once (DS-403); the list
+  /// is left empty.
+  std::vector<std::pair<std::string, std::regex>> takePatterns();
 
  private:
   bool validateBody(const std::string& id, const std::vector<model::Literal>& body, std::set<std::string>& out_bound,
                     std::vector<std::pair<std::string, std::string>>& out_resolved);
+  /// Whether the pattern a literal matches against is a string that compiles; kept compiled when it does (DS-403).
+  bool validatePattern(const std::string& id, const model::Literal& l);
   void report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at);
   /// Whether a relation of the metamodel may leave (or reach) an entity of a kind.
   static bool joinsAtEnd(const model::RelationSpec& spec, model::Kind kind, bool from);
@@ -42,6 +48,7 @@ class RuleValidator {
   const Resolver& resolver_;
   const Facts& facts_;
   std::vector<model::Finding> found_;
+  std::vector<std::pair<std::string, std::regex>> patterns_;  ///< compiled since the last takePatterns
 };
 
 }  // namespace check
