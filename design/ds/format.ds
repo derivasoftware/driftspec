@@ -147,6 +147,16 @@ package driftspec@ds {
         - static texts(texts: std::vector<std::string>, out_sink: emit::ISink) -> void
         - static pairs(pairs: std::vector<std::pair<std::string, std::string>>, out_sink: emit::ISink) -> void
       }
+      // a check's report as one record of its findings and counts, written into the sink it is lent: what ReportJson
+      // writes whole and the browser's answer carries as a field. It belongs to no family, so the browser names no
+      // format (DS-397)
+      class ReportEncoder {
+        @requirement SREQ-00002-1
+        - refs report_: check::Report
+        + ReportEncoder(report: check::Report)
+        + encode(out_sink: emit::ISink) -> void
+        - findings(findings: std::vector<model::Finding>, out_sink: emit::ISink) -> void   // code, location, message, the severity's name
+      }
     }
 
     // ---- the scene's formats -----------------------------------------------------------------
@@ -266,8 +276,14 @@ package driftspec@ds {
       @requirement SREQ-00002-1
       + name() -> std::string
       + write(document: check::Report, options: FormatOptions, out_sink: emit::ISink) -> std::string
-      + describe(document: check::Report, out_sink: emit::ISink) -> void        // as one value where the sink stands: the browser carries it
-      - static findings(document: check::Report, findings: std::vector<model::Finding>, out_sink: emit::ISink) -> void
+    }
+
+    // the report written by its encoder, and taken whole from the sink lent
+    sequence ReportJson::write {
+      local encoder: common::ReportEncoder
+      -> encoder.encode(out_sink)
+      -> out_sink.result() -> json
+      return json
     }
 
     // the scene and the focus, each taken from the sink lent as one document; the page is the viewer with both inside

@@ -49,27 +49,8 @@ std::string ReportText::write(const check::Report& document, const FormatOptions
 
 std::string ReportJson::name() const { return "json"; }
 
-void ReportJson::findings(const check::Report& document, const std::vector<model::Finding>& findings, emit::ISink& out_sink) {
-  out_sink.beginList();
-  for (const auto& f : findings) {
-    out_sink.beginRecord().field("code").value(f.code).field("location").beginRecord();
-    out_sink.field("column").integer(f.location.column).field("file").value(f.location.file).field("line").integer(f.location.line);
-    out_sink.endRecord().field("message").value(f.message).field("severity").value(document.severityOf(f.severity).name).endRecord();
-  }
-  out_sink.endList();
-}
-
-void ReportJson::describe(const check::Report& document, emit::ISink& out_sink) const {
-  out_sink.beginRecord().field("coverage");
-  findings(document, document.coverage, out_sink);
-  out_sink.field("entities").integer(document.entities).field("errors").integer(document.errors);
-  out_sink.field("expected").integer(document.expected).field("findings");
-  findings(document, document.findings, out_sink);
-  out_sink.field("relations").integer(document.relations).endRecord();
-}
-
 std::string ReportJson::write(const check::Report& document, const FormatOptions&, emit::ISink& out_sink) const {
-  describe(document, out_sink);
+  common::ReportEncoder(document).encode(out_sink);
   return out_sink.result();
 }
 

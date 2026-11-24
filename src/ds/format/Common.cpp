@@ -180,6 +180,27 @@ void SceneEncoder::encode(emit::ISink& out_sink) const {
   out_sink.endRecord();
 }
 
+ReportEncoder::ReportEncoder(const check::Report& report) : report_(report) {}
+
+void ReportEncoder::findings(const std::vector<model::Finding>& findings, emit::ISink& out_sink) const {
+  out_sink.beginList();
+  for (const auto& f : findings) {
+    out_sink.beginRecord().field("code").value(f.code).field("location").beginRecord();
+    out_sink.field("column").integer(f.location.column).field("file").value(f.location.file).field("line").integer(f.location.line);
+    out_sink.endRecord().field("message").value(f.message).field("severity").value(report_.severityOf(f.severity).name).endRecord();
+  }
+  out_sink.endList();
+}
+
+void ReportEncoder::encode(emit::ISink& out_sink) const {
+  out_sink.beginRecord().field("coverage");
+  findings(report_.coverage, out_sink);
+  out_sink.field("entities").integer(report_.entities).field("errors").integer(report_.errors);
+  out_sink.field("expected").integer(report_.expected).field("findings");
+  findings(report_.findings, out_sink);
+  out_sink.field("relations").integer(report_.relations).endRecord();
+}
+
 }  // namespace common
 }  // namespace format
 }  // namespace ds

@@ -7,7 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
-#include "ds/emit/JsonSink.hpp"
+#include "ds/emit/SinkFactory.hpp"
 #include "ds/format/TextFormats.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
@@ -105,8 +105,9 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
 }
 
 std::string Api::report(const model::Model& model, bool pretty) const {
-  emit::JsonSink sink(pretty);  // the one report of a check (DS-120), as JSON (DS-126), written by the sink built here (DS-397)
-  return format::ReportJson().write(check::Report::of(model, metamodel_), {}, sink);
+  // the one report of a check (DS-120), as JSON (DS-126), written by the sink asked for here (DS-397)
+  const auto sink = emit::SinkFactory::json(pretty);
+  return format::ReportJson().write(check::Report::of(model, metamodel_), {}, *sink);
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)
@@ -124,10 +125,10 @@ std::string Api::page(const Files& files, const std::string& title, const std::v
 }
 
 std::string Api::severities() const {
-  emit::JsonSink sink(false);  // built here, at the engine's edge (DS-397)
-  sink.beginList();
+  const auto sink = emit::SinkFactory::json(false);  // asked for here, at the engine's edge (DS-397)
+  sink->beginList();
   for (const auto& s : metamodel_.severities())
-    sink.beginRecord()
+    sink->beginRecord()
         .field("editor")
         .value(s.editor)
         .field("fails")
@@ -137,17 +138,17 @@ std::string Api::severities() const {
         .field("name")
         .value(s.name)
         .endRecord();
-  sink.endList();
-  return sink.result();
+  sink->endList();
+  return sink->result();
 }
 
 std::string Api::expectedAt(const std::string& text, int line, int column) {
   parse::Parser parser;
-  emit::JsonSink sink(false);
-  sink.beginList();
-  for (const auto& word : parser.expectedAt(text, line, column)) sink.value(word);
-  sink.endList();
-  return sink.result();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
+  for (const auto& word : parser.expectedAt(text, line, column)) sink->value(word);
+  sink->endList();
+  return sink->result();
 }
 
 }  // namespace api

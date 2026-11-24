@@ -42,13 +42,8 @@ class ReportText : public IFormat<check::Report> {
 class ReportJson : public IFormat<check::Report> {
  public:
   std::string name() const override;
+  /// Written by the report's encoder, and taken whole from the sink.
   std::string write(const check::Report& document, const FormatOptions& options, emit::ISink& out_sink) const override;
-  /// The report as one value where the sink stands, for a document that carries it (the browser's answer).
-  void describe(const check::Report& document, emit::ISink& out_sink) const;
-
- private:
-  /// Findings or coverage: code, location, message and the severity's name in the report's table.
-  static void findings(const check::Report& document, const std::vector<model::Finding>& findings, emit::ISink& out_sink);
 };
 
 /// The one place that names the formats of a check's report.

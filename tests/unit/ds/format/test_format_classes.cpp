@@ -171,4 +171,16 @@ TEST(TestReportJson, TheFindingsAndTheCountsAsJson) {
   EXPECT_EQ(json["findings"][0]["code"], "W-Y");
 }
 
+TEST(TestReportEncoder, TheReportAsOneValueWhereTheSinkStandsAsReportJsonWritesIt) {
+  // the browser carries the report as one field of its answer (DS-397): the same value ds check --json writes whole
+  const ds::check::Report report = aReport();
+  ds::emit::JsonSink whole(false, true);
+  const std::string written = ds::format::ReportJson().write(report, {}, whole);
+  ds::emit::JsonSink carried(false, true);
+  carried.beginRecord().field("report");
+  ds::format::common::ReportEncoder(report).encode(carried);
+  carried.endRecord();
+  EXPECT_EQ(carried.result(), R"({"report":)" + written + "}");
+}
+
 }  // namespace

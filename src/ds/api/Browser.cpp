@@ -7,8 +7,8 @@
 
 #include "ds/api/Workspace.hpp"
 #include "ds/check/Report.hpp"
-#include "ds/emit/JsonSink.hpp"
-#include "ds/format/TextFormats.hpp"
+#include "ds/emit/SinkFactory.hpp"
+#include "ds/format/Format.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
@@ -53,6 +53,7 @@ void Browser::diagrams(const Workspace& workspace, int width, emit::ISink& out_s
   std::stable_sort(drawn.begin(), drawn.end(), [](const model::Entity* a, const model::Entity* b) {
     return a->location.file != b->location.file ? a->location.file < b->location.file : a->location.line < b->location.line;
   });
+  const auto questions = query::QueryFactory::of(workspace.model(), metamodel_);  // what each diagram takes
   out_sink.beginList();
   for (const model::Entity* e : drawn) {
     const std::string id = model::Identity(e->id).diagramName();
@@ -72,7 +73,7 @@ void Browser::diagrams(const Workspace& workspace, int width, emit::ISink& out_s
     out_sink.field("include").value(include == e->fields.end() ? "" : include->second);
     out_sink.field("kind").value(kind == e->fields.end() ? "class" : kind->second).field("line").integer(e->location.line);
     out_sink.field("shows").beginList();  // what it takes: a call leads to the diagram of what it calls
-    for (const auto& a : query::Query(workspace.model(), metamodel_).shows(id)) out_sink.value(a.id);
+    for (const auto& a : questions->ask("shows", id)) out_sink.value(a.id);
     out_sink.endList().field("svg").value(svg).endRecord();
   }
   out_sink.endList();
@@ -115,20 +116,21 @@ void Browser::respond(const std::string& request, emit::ISink& out_sink) const {
     out_sink.field(p.first).beginList().value(at.file).integer(at.line).integer(at.endLine > 0 ? at.endLine : at.line).endList();
   }
   out_sink.endRecord().field("report");
-  format::ReportJson().describe(check::Report::of(workspace.model(), metamodel_), out_sink);  // as ds check --json writes it
+  const check::Report report = check::Report::of(workspace.model(), metamodel_);
+  format::common::ReportEncoder(report).encode(out_sink);  // as ds check --json writes it
   out_sink.endRecord();
 }
 
 std::string Browser::answer(const std::string& request) const {
-  // the answer is written by a JSON sink built here, at the engine's edge, and taken whole (DS-397)
+  // the answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397)
   try {
-    emit::JsonSink sink(false);
-    respond(request, sink);
-    return sink.result();
+    const auto sink = emit::SinkFactory::json(false);
+    respond(request, *sink);
+    return sink->result();
   } catch (const std::exception& ex) {
-    emit::JsonSink sink(false);
-    sink.beginRecord().field("error").value(ex.what()).endRecord();
-    return sink.result();
+    const auto sink = emit::SinkFactory::json(false);
+    sink->beginRecord().field("error").value(ex.what()).endRecord();
+    return sink->result();
   }
 }
 

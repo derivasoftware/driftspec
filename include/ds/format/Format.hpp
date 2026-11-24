@@ -6,7 +6,9 @@
 #include <utility>
 #include <vector>
 
+#include "ds/check/Report.hpp"
 #include "ds/emit/Sink.hpp"
+#include "ds/model/Model.hpp"
 #include "ds/scene/Map.hpp"
 #include "ds/scene/Scene.hpp"
 
@@ -72,6 +74,22 @@ class SceneEncoder {
   std::map<std::string, int> behaviourAt_;    ///< "subject / scenario" -> its index
   std::map<std::string, int> requirementAt_;  ///< each requirement's index
   scene::Map landing_;                        ///< where a link's sequence lands: the behaviour it is
+};
+
+/// A check's report as one record of its findings and counts, the one shape every caller reads (DS-397): what
+/// ds check --json writes whole, and what the browser's answer carries as one of its fields. It belongs to no
+/// family, so a door that carries the report names no format.
+class ReportEncoder {
+ public:
+  explicit ReportEncoder(const check::Report& report);
+  /// The report as one value where the sink stands.
+  void encode(emit::ISink& out_sink) const;
+
+ private:
+  /// Findings or coverage: code, location, message and the severity's name in the report's table.
+  void findings(const std::vector<model::Finding>& findings, emit::ISink& out_sink) const;
+
+  const check::Report& report_;
 };
 
 }  // namespace common

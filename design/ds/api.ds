@@ -110,7 +110,7 @@ package driftspec@ds {
       + shows(diagram: std::string) -> std::string
       + render(diagram: std::string, format: std::string, width: int) -> std::string
       + page(title: std::string, focus: std::vector<std::string>) -> std::string
-      // each answer is written by a JSON sink built here, at the engine's edge, and taken whole (DS-397)
+      // each answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397)
       - static texts(list: std::vector<std::string>) -> std::string
       - static text(value: std::string) -> std::string
       - relations(relations: std::vector<model::Relation>) -> std::string
@@ -178,10 +178,10 @@ package driftspec@ds {
       return document
     }
 
-    // the door builds the sink, lends it to the exporter and takes the document whole (DS-397)
+    // the door asks for the sink, lends it to the exporter and takes the document whole (DS-397)
     sequence Workspace::relations {
       local exporter: exporter::JsonExport
-      local sink: emit::JsonSink
+      -> emit::SinkFactory::json(false) -> sink
       -> exporter.relations(relations, sink)
       -> sink.result() -> document
       return document
@@ -292,7 +292,7 @@ package driftspec@ds {
 
     sequence Api::expectedAt {
       local parser: parse::Parser
-      local sink: emit::JsonSink
+      -> emit::SinkFactory::json(false) -> sink
       -> parser.expectedAt(text, line, column) -> words
       -> sink.result() -> json
       return json
@@ -304,10 +304,10 @@ package driftspec@ds {
       return drawing
     }
 
-    // the answer is written into a JSON sink built here and taken whole, so a request that fails half way is
+    // the answer is written into a JSON sink asked for here and taken whole, so a request that fails half way is
     // answered with its error alone (DS-397)
     sequence Browser::answer {
-      local sink: emit::JsonSink
+      -> emit::SinkFactory::json(false) -> sink
       -> respond(request, sink)
       -> sink.result() -> json
       return json
@@ -317,7 +317,7 @@ package driftspec@ds {
     sequence Browser::respond {
       local manual: model::Manual
       local workspace: Workspace
-      local report: format::ReportJson
+      local encoder: format::common::ReportEncoder   // the report as ds check --json writes it, one field of the answer
       alt a request for the manual / manual {
         -> manual.guides() -> guides
         -> manual.page(topic) -> text
@@ -326,15 +326,15 @@ package driftspec@ds {
         -> artefacts(model, out_sink)
         -> diagrams(workspace, width, out_sink)
         -> check::Report::of(model, metamodel_) -> checked
-        -> report.describe(checked, out_sink)
+        -> encoder.encode(out_sink)
       }
     }
 
     sequence Browser::diagrams {
-      local query: query::Query
+      -> query::QueryFactory::of(model, metamodel_) -> questions   // what each diagram takes
       loop each diagram, in the order written {
         -> workspace.render(diagram, format, width) -> drawing
-        -> query.shows(diagram) -> shown
+        -> questions.ask(shows, diagram) -> shown
       }
     }
 

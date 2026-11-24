@@ -2,7 +2,7 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/check/Report.hpp"
-#include "ds/emit/JsonSink.hpp"
+#include "ds/emit/SinkFactory.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
@@ -36,43 +36,43 @@ model::Model Workspace::loaded(const Files& files) {
   return Api(metamodel_).load(parsed, output_, diagram_);
 }
 
-// Every answer is written by a JSON sink built here, at the engine's edge, and taken whole (DS-397).
+// Every answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397).
 std::string Workspace::texts(const std::vector<std::string>& list) {
-  emit::JsonSink sink(false);
-  sink.beginList();
-  for (const auto& t : list) sink.value(t);
-  sink.endList();
-  return sink.result();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
+  for (const auto& t : list) sink->value(t);
+  sink->endList();
+  return sink->result();
 }
 
 std::string Workspace::text(const std::string& value) {
-  emit::JsonSink sink(false);
-  sink.value(value);
-  return sink.result();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->value(value);
+  return sink->result();
 }
 
 std::string Workspace::exportModel() const {
-  emit::JsonSink sink(false);
-  exporter::JsonExport(metamodel_).render(model_, sink);
-  return sink.result();
+  const auto sink = emit::SinkFactory::json(false);
+  exporter::JsonExport(metamodel_).render(model_, *sink);
+  return sink->result();
 }
 
 std::string Workspace::report() const { return Api(metamodel_).report(model_); }
 
 std::string Workspace::find(const std::string& id) const {
-  emit::JsonSink sink(false);
+  const auto sink = emit::SinkFactory::json(false);
   const model::Entity* e = model_.find(id);
   if (e)
-    exporter::JsonExport(metamodel_).entity(*e, sink);
+    exporter::JsonExport(metamodel_).entity(*e, *sink);
   else
-    sink.null();
-  return sink.result();
+    sink->null();
+  return sink->result();
 }
 
 std::string Workspace::relations(const std::vector<model::Relation>& relations) const {
-  emit::JsonSink sink(false);
-  exporter::JsonExport(metamodel_).relations(relations, sink);
-  return sink.result();
+  const auto sink = emit::SinkFactory::json(false);
+  exporter::JsonExport(metamodel_).relations(relations, *sink);
+  return sink->result();
 }
 
 std::string Workspace::from(const std::string& id) const { return relations(model_.index().from(id)); }
@@ -91,52 +91,52 @@ std::string Workspace::revisionOf(const std::string& artefact) const { return te
 
 std::string Workspace::tree(const std::string& sequence) const {
   const model::SequenceTree tree(model_, sequence);
-  emit::JsonSink sink(false);
-  sink.beginRecord().field("frames").beginList();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginRecord().field("frames").beginList();
   for (const auto& f : tree.frames()) {
-    sink.beginRecord()
+    sink->beginRecord()
         .field("at")
         .integer(tree.at(f))
         .field("else")
         .value(tree.elseOf(f))
         .field("else_scenario")
         .value(tree.scenario(f, true));
-    sink.field("first").value(tree.first(f)).field("frame").value(tree.frameOf(f)).field("id").value(f);
-    sink.field("kind").value(model_.find(f)->field("kind")).field("scenario").value(tree.scenario(f, false));
-    sink.field("two_sides").boolean(tree.twoSides(f)).endRecord();
+    sink->field("first").value(tree.first(f)).field("frame").value(tree.frameOf(f)).field("id").value(f);
+    sink->field("kind").value(model_.find(f)->field("kind")).field("scenario").value(tree.scenario(f, false));
+    sink->field("two_sides").boolean(tree.twoSides(f)).endRecord();
   }
-  sink.endList().field("messages").beginList();
-  for (const auto& m : tree.messages()) sink.beginRecord().field("frame").value(tree.frameOf(m)).field("id").value(m).endRecord();
-  sink.endList().field("sequence").value(sequence).endRecord();
-  return sink.result();
+  sink->endList().field("messages").beginList();
+  for (const auto& m : tree.messages()) sink->beginRecord().field("frame").value(tree.frameOf(m)).field("id").value(m).endRecord();
+  sink->endList().field("sequence").value(sequence).endRecord();
+  return sink->result();
 }
 
 std::string Workspace::steps(const std::string& sequence, const std::string& path) const {
-  emit::JsonSink sink(false);
-  sink.beginList();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
   for (const auto& t : query::Walker(model_).steps(sequence, path))
-    sink.beginRecord().field("message").value(t.message).field("next").value(t.next).field("next_path").value(t.nextPath).endRecord();
-  sink.endList();
-  return sink.result();
+    sink->beginRecord().field("message").value(t.message).field("next").value(t.next).field("next_path").value(t.nextPath).endRecord();
+  sink->endList();
+  return sink->result();
 }
 
 std::string Workspace::walk(const std::string& sequence, const std::string& path, int depth) const {
-  emit::JsonSink sink(false);
-  sink.beginList();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
   for (const auto& w : query::Walker(model_).walk(sequence, path, depth))
-    sink.beginRecord().field("depth").integer(w.depth).field("message").value(w.message).endRecord();
-  sink.endList();
-  return sink.result();
+    sink->beginRecord().field("depth").integer(w.depth).field("message").value(w.message).endRecord();
+  sink->endList();
+  return sink->result();
 }
 
 std::string Workspace::ask(const std::string& question, const std::string& subject) const {
-  emit::JsonSink sink(false);
-  return format::AnswersJson().write(query::Query(model_, metamodel_).ask(question, subject), {}, sink);
+  const auto sink = emit::SinkFactory::json(false);
+  return format::AnswersJson().write(query::Query(model_, metamodel_).ask(question, subject), {}, *sink);
 }
 
 std::string Workspace::shows(const std::string& diagram) const {
-  emit::JsonSink sink(false);
-  return format::AnswersJson().write(query::Query(model_, metamodel_).shows(diagram), {}, sink);
+  const auto sink = emit::SinkFactory::json(false);
+  return format::AnswersJson().write(query::Query(model_, metamodel_).shows(diagram), {}, *sink);
 }
 
 std::string Workspace::render(const std::string& diagram, const std::string& format, int width) const {
@@ -146,16 +146,16 @@ std::string Workspace::render(const std::string& diagram, const std::string& for
   options.width = width;
   const auto formats = format::diagramFormats(theme_);
   const auto chosen = formats.find(format);
-  emit::JsonSink sink(false);  // what layout and cells write
-  return (chosen != formats.end() ? chosen->second : formats.at("text"))->write({ir}, options, sink);
+  const auto sink = emit::SinkFactory::json(false);  // what layout and cells write
+  return (chosen != formats.end() ? chosen->second : formats.at("text"))->write({ir}, options, *sink);
 }
 
 std::string Workspace::page(const std::string& title, const std::vector<std::string>& focus) const {
   format::FormatOptions options;
   options.title = title;
   options.focus = focus;
-  emit::JsonSink sink(false);  // the scene and the focus travel compact inside the page
-  return format::SceneHtml().write(scene::Scene(model_, metamodel_).build(), options, sink);
+  const auto sink = emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
+  return format::SceneHtml().write(scene::Scene(model_, metamodel_).build(), options, *sink);
 }
 
 std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }
