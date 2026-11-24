@@ -6,6 +6,12 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.59
+
+The Owner approves the roadmap's drafts: the evaluator's requirement and its verification (REQ-00192-1,
+VER-00212-1), the render steps' verification (VER-00094-3), the viewer's compression fixture (VER-00083-4) and the golden
+outputs' system verification (SVER-00029-1). Nothing a design writes changes.
+
 ## 0.1.58
 
 The check names its steps in a class, and its steps keep no hidden helpers (DS-382). The free function that made the
