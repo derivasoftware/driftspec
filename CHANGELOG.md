@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.58
+## 0.1.57
 
 The check names its steps in a class, and its steps keep no hidden helpers (DS-382). The free function that made the
 steps a selection asks for is `Steps::of`, the one place that names the concrete steps. What three steps did in
