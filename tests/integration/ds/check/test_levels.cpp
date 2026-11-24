@@ -25,7 +25,7 @@ class TestLevels : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/levels")) binder.bind(f);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 

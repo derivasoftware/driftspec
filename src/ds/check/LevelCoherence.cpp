@@ -13,32 +13,19 @@
 namespace ds {
 namespace check {
 
-namespace {
+std::string LevelCoherence::name() const { return "levels"; }
 
-/// One message that crosses from a participant of the scenario to another.
-struct Crossing {
-  std::string from;
-  std::string to;
-  std::string op;     ///< the operation it calls; empty for a label
-  std::string label;  ///< the operation as written
-  model::Location location;
-};
+std::vector<std::string> LevelCoherence::needs() const { return {"behaviour"}; }
 
-/// What the level below a scenario does, seen from the scenario's participants.
-struct Below {
-  std::vector<Crossing> crossings;  ///< in the order they happen
-  std::set<std::string> entered;    ///< the participants something is seen to happen in
-  std::set<std::string> open;       ///< those in which a call is made whose behaviour is not written
-};
-
-std::string calleeOf(const model::Model& model, const std::string& message) {
+std::string LevelCoherence::calleeOf(const model::Model& model, const std::string& message) {
   const auto calls = model.index().fromOfKind(message, "calls");
   return calls.empty() ? "" : calls.front().to;
 }
 
 /// The behaviour a scenario is asked through at one of its entries: the scenario of the same name of the
 /// operation, when it has one (an outcome and the path that ends in it), or the one the call enters.
-std::pair<std::string, std::string> behaviourBelow(const model::Model& model, const model::Entity& scenario, const model::Entity& entry) {
+std::pair<std::string, std::string> LevelCoherence::behaviourBelow(const model::Model& model, const model::Entity& scenario,
+                                                                   const model::Entity& entry) {
   const std::string named = scenario.field("scenario");
   const std::string op = calleeOf(model, entry.id);
   if (!named.empty() && !op.empty()) {
@@ -53,8 +40,8 @@ std::pair<std::string, std::string> behaviourBelow(const model::Model& model, co
 
 /// Walks a behaviour into everything its calls enter, keeping what crosses between the participants.
 template <typename On>
-void collect(const model::Model& model, const std::string& sequence, const std::string& path, const On& on, std::set<std::string>& stack,
-             Below& out) {
+void LevelCoherence::collect(const model::Model& model, const std::string& sequence, const std::string& path, const On& on,
+                             std::set<std::string>& stack, Below& out) {
   const std::string key = model::Identity(sequence).withScenario(path).text();
   if (!stack.insert(key).second) return;  // a behaviour already being walked: the cycle ends here
   const model::Paths paths(model);
@@ -77,13 +64,13 @@ void collect(const model::Model& model, const std::string& sequence, const std::
 
 /// Whether a crossing of the level below is the one the scenario says: the same two ends, and the same operation
 /// when the scenario's message is bound to one.
-bool same(const Crossing& said, const Crossing& done) {
+bool LevelCoherence::same(const Crossing& said, const Crossing& done) {
   return said.from == done.from && said.to == done.to && (said.op.empty() || said.op == done.op);
 }
 
 /// Where each crossing said finds its place, in order, among those done: the longest such choice; -1 for one
 /// that finds none.
-std::vector<int> placed(const std::vector<Crossing>& said, const std::vector<Crossing>& done) {
+std::vector<int> LevelCoherence::placed(const std::vector<Crossing>& said, const std::vector<Crossing>& done) {
   const size_t n = said.size(), m = done.size();
   std::vector<std::vector<int>> best(n + 1, std::vector<int>(m + 1, 0));
   for (size_t i = n; i-- > 0;)
@@ -102,12 +89,6 @@ std::vector<int> placed(const std::vector<Crossing>& said, const std::vector<Cro
   }
   return out;
 }
-
-}  // namespace
-
-std::string LevelCoherence::name() const { return "levels"; }
-
-std::vector<std::string> LevelCoherence::needs() const { return {"behaviour"}; }
 
 std::vector<model::Finding> LevelCoherence::check(const Context& context) {
   const model::Model& model = context.model();

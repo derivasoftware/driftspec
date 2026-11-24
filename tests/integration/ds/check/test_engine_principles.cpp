@@ -43,7 +43,7 @@ class TestEnginePrinciples : public ::testing::Test {
       }
       binder.bind(file);
     }
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
@@ -162,7 +162,7 @@ TEST_F(TestEnginePrinciples, ASelectionOfStepsNamedOutsideTheApiIsTold) {
 
 TEST_F(TestEnginePrinciples, StepsMadeOutsideTheApiAreTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::steps(selection) -> steps\n"}});
+      broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::Steps::of(selection) -> steps\n"}});
   EXPECT_TRUE(has(rules, apiChooses));
   EXPECT_FALSE(has(rules, builtOnce));
 }

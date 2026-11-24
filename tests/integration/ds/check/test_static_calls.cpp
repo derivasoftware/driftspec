@@ -46,7 +46,7 @@ class TestStaticCalls : public ::testing::Test {
                                        "}\n");
     ASSERT_FALSE(file.hasSyntaxErrors);
     binder.bind(file);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 

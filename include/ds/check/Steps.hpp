@@ -9,7 +9,9 @@
 #include <vector>
 
 #include "ds/bind/Notes.hpp"
+#include "ds/check/Below.hpp"
 #include "ds/check/Context.hpp"
+#include "ds/check/Crossing.hpp"
 #include "ds/check/Resolver.hpp"
 #include "ds/check/Selection.hpp"
 #include "ds/check/Step.hpp"
@@ -105,6 +107,9 @@ class ContractCheck : public ACheck {
   std::vector<model::Finding> check(const Context& context) override;
   /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
   std::string outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const;
+  /// Whether a pattern a diagram writes names something the model declares: itself, a prefix ending in *, or a
+  /// template of it; a scenario by its behaviour's subject.
+  bool namesSomething(const std::string& written) const;
   void checkUseCases();  // a use case is a contract its operations realise, outcomes included (DS-77)
   void checkInterfaces();
   /// A class's method against the operation of the interface it realises, when the class declares it.
@@ -182,6 +187,21 @@ class LevelCoherence : public ACheck {
 
  private:
   std::vector<model::Finding> check(const Context& context) override;
+  /// The operation a message calls; "" when it calls none.
+  static std::string calleeOf(const model::Model& model, const std::string& message);
+  /// The behaviour a scenario's entry runs below it, and the scenario of it: the scenario's own, else the shared one
+  /// that has it, else what the entry expands.
+  static std::pair<std::string, std::string> behaviourBelow(const model::Model& model, const model::Entity& scenario,
+                                                            const model::Entity& entry);
+  /// Every crossing of the behaviour, entering the behaviours its calls expand, each participant named by `on`.
+  template <typename On>
+  static void collect(const model::Model& model, const std::string& sequence, const std::string& path, const On& on,
+                      std::set<std::string>& stack, Below& out);
+  /// Whether a crossing said is the one done: the same two participants, and the same operation when it names one.
+  static bool same(const Crossing& said, const Crossing& done);
+  /// Where each crossing said finds its place, in order, among those done: the longest such choice; -1 for one that
+  /// finds none.
+  static std::vector<int> placed(const std::vector<Crossing>& said, const std::vector<Crossing>& done);
 };
 
 /// The states of a machine, written as rules over the context of its subject (DS-249), held to each other
@@ -206,6 +226,8 @@ class CallOrder : public ACheck {
 
  private:
   std::vector<model::Finding> check(const Context& context) override;
+  /// The states a call could have come from, as the message says them: Open or Paid.
+  static std::string either(const std::vector<std::string>& names);
 };
 
 /// Ownership, artefacts, extensions and fields.
@@ -262,9 +284,14 @@ class RuleCheck : public IStep {
   const Resolver* resolver_ = nullptr;
 };
 
-/// The steps of the check a selection names and every step they need, made in one place and keyed by name (DS-138):
-/// what a load runs is chosen outside, by the Api (DS-376); every step, unless a selection says otherwise.
-std::map<std::string, std::unique_ptr<IStep>> steps(const Selection& selection = Selection::every());
+/// The one place that names the concrete steps (DS-138, DS-382): it builds what a Selection asks for (DS-376), the
+/// steps it names and every step they need, keyed by name. The checker runs them through IStep, knowing none of them.
+class Steps {
+ public:
+  /// The steps a selection names and every step they need, keyed by name; every step, unless a selection says
+  /// otherwise.
+  static std::map<std::string, std::unique_ptr<IStep>> of(const Selection& selection = Selection::every());
+};
 
 }  // namespace check
 }  // namespace ds

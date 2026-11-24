@@ -25,7 +25,7 @@ class TestPackages : public ::testing::Test {
       EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -173,7 +173,7 @@ ds::model::Model loneClass(const ds::model::Metamodel& metamodel) {
                                "    }\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   return model;
 }

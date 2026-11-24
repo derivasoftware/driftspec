@@ -41,7 +41,7 @@ class TestUseCaseLinks : public ::testing::Test {
                                        "}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -86,7 +86,7 @@ TEST(TestUseCaseLinksAlone, AUseCaseNobodyDeclaresIsSaidOnce) {
                                "    return name\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   ASSERT_EQ(model.findings().size(), 1u);
   EXPECT_EQ(model.findings()[0].code, "W-USECASE-UNDECLARED");

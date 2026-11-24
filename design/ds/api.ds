@@ -59,8 +59,8 @@ package driftspec@ds {
       if x is class, depends(x, driftspec@ds@check::Selection)
       if x is function, depends(x, driftspec@ds@check::Selection)
       if x is function, s behaviour-of x, s uses driftspec@ds@check::Selection
-      if x is class, m in x, s behaviour-of m, y in s, y calls driftspec@ds@check::steps
-      if x is function, s behaviour-of x, y in s, y calls driftspec@ds@check::steps
+      if x is class, m in x, s behaviour-of m, y in s, y calls driftspec@ds@check::Steps::of
+      if x is function, s behaviour-of x, y in s, y calls driftspec@ds@check::Steps::of
     }
 
     rule only-the-api-chooses-the-steps {
@@ -199,7 +199,7 @@ package driftspec@ds {
       }
       // the steps the output reads, chosen here and nowhere else (DS-376)
       -> stepsFor(output, model, diagram) -> selection
-      -> check::steps(selection) -> steps
+      -> check::Steps::of(selection) -> steps
       self -> binder.notes() -> notes
       -> checker.run(notes)
       // what only echoes a file that does not parse goes until it parses (DS-304); the rest by where it is written

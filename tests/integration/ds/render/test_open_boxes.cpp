@@ -26,7 +26,7 @@ class TestOpenBoxes : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/visibility")) binder.bind(f);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -96,7 +96,7 @@ TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
   ds::parse::Parser parser;
   ds::bind::Binder binder(plain, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(plain, metamodel, checkSteps).run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(plain, metamodel).render("diagram:CL_Model", false));
   EXPECT_EQ(ir["nodes"][0]["kind"], "container");
@@ -108,7 +108,7 @@ TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawin
   ds::parse::Parser parser;
   ds::bind::Binder binder(shop, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/interfaces")) binder.bind(f);
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(shop, metamodel, checkSteps).run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(shop, metamodel).render("diagram:HLD_Shop", false));
   bool reached = false;
@@ -158,7 +158,7 @@ TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramD
                                "  kind: requirement\n"
                                "  include: shop@empty::*\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:REQ_Store", false));
   bool requirement = false;
@@ -189,7 +189,7 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
                                "  kind: class\n"
                                "  include: shop@*\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:HLD_Shop", false));
   std::map<std::string, std::string> parentOf;
@@ -239,7 +239,7 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
                                "  include: shop@*\n"
                                "  open: shop@front, shop@front@web, shop@back, shop@back@store\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   const auto edges = [&model, &metamodel](const std::string& d) {
     std::set<std::string> out;
@@ -285,7 +285,7 @@ class TestDepthTooLarge : public ::testing::Test {
                                        "}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -345,7 +345,7 @@ class TestPastTheReach : public ::testing::Test {
     const auto parsed = parser.parseText(file, text);
     ASSERT_FALSE(parsed.hasSyntaxErrors) << parsed.errorDetail;
     binder.bind(parsed);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 

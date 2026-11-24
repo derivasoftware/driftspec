@@ -41,7 +41,7 @@ class TestParseTextPrinciples : public ::testing::Test {
       }
       binder.bind(file);
     }
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())

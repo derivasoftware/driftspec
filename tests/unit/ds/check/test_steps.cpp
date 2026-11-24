@@ -40,7 +40,7 @@ class FakeStep : public ds::check::IStep {
 /// The checker is a runner of steps (DS-138): every step is made in one place, keyed by its name,
 /// and run after every step it needs.
 TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
-  const auto all = ds::check::steps();
+  const auto all = ds::check::Steps::of();
   ASSERT_EQ(all.size(), 11u);
   for (const auto& s : all) EXPECT_EQ(s.first, s.second->name());
 }
@@ -48,12 +48,12 @@ TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
 TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   const ds::check::Checker checker(model, metamodel, checkSteps);
   const std::vector<std::string> order = checker.order();
   EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "contracts", "levels",
                                              "order", "rules", "states", "structure"}));
-  const auto all = ds::check::steps();
+  const auto all = ds::check::Steps::of();
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())
       EXPECT_LT(std::find(order.begin(), order.end(), need) - order.begin(), static_cast<long>(i)) << order[i] << " needs " << need;
@@ -63,7 +63,7 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
 /// behaviour typing and derivation both start from the linker and neither reads the other, and a
 /// step that reads the whole model runs after every step that enriches it.
 TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
-  const auto all = ds::check::steps();
+  const auto all = ds::check::Steps::of();
   using Needs = std::vector<std::string>;
   EXPECT_EQ(all.at("linker")->needs(), Needs{});
   EXPECT_EQ(all.at("behaviour")->needs(), Needs{"linker"});
@@ -78,7 +78,7 @@ TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
 /// The keys of the steps made for a selection, in the order of the map.
 std::vector<std::string> keysOf(const ds::check::Selection& selection) {
   std::vector<std::string> out;
-  for (const auto& s : ds::check::steps(selection)) out.push_back(s.first);
+  for (const auto& s : ds::check::Steps::of(selection)) out.push_back(s.first);
   return out;
 }
 
@@ -100,7 +100,7 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
                                                         {Step::Order, "order"}};
   std::vector<std::string> names;
   for (const auto& n : named) {
-    const auto made = ds::check::steps(Selection::of({n.first}));
+    const auto made = ds::check::Steps::of(Selection::of({n.first}));
     ASSERT_TRUE(made.count(n.second)) << n.second;
     EXPECT_EQ(made.at(n.second)->name(), n.second);
     names.push_back(n.second);
@@ -108,8 +108,8 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
   std::sort(names.begin(), names.end());
   EXPECT_EQ(keysOf(Selection::every()), names);  // one step each, and every step of the check
   EXPECT_EQ(keysOf(Selection::every()), keysOf(Selection::every().with(Step::Rules)));
-  EXPECT_EQ(ds::check::steps().size(), 11u);  // with no selection, every step
-  EXPECT_TRUE(ds::check::steps(Selection::of({})).empty());
+  EXPECT_EQ(ds::check::Steps::of().size(), 11u);  // with no selection, every step
+  EXPECT_TRUE(ds::check::Steps::of(Selection::of({})).empty());
 }
 
 /// A step chosen brings every step it needs (DS-376), so none runs without what it reads: the rules bring what
@@ -124,7 +124,7 @@ TEST(TestSteps, AStepChosenBringsEveryStepItNeeds) {
   EXPECT_EQ(keysOf(Selection::of({Step::Order})), (Keys{"behaviour", "linker", "order"}));
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
-  const auto drawing = ds::check::steps(Selection::of({Step::Derivation, Step::Behaviour}));
+  const auto drawing = ds::check::Steps::of(Selection::of({Step::Derivation, Step::Behaviour}));
   EXPECT_EQ(ds::check::Checker(model, metamodel, drawing).order(), (Keys{"linker", "behaviour", "derivation"}));
 }
 
@@ -171,7 +171,7 @@ TEST(TestFindings, TheCheckerAddsTheFindingsOfEachStepInTheOrderTheStepsRun) {
   const auto file = parser.parseText("s.ds", "package shop {\n  language: cobol\n  colour: red\n}\n");
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> codes;
   for (const auto& f : model.findings()) codes.push_back(f.code);

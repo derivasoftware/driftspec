@@ -7,12 +7,12 @@
 namespace ds {
 namespace check {
 
-/// Each step of the check, by what it does (DS-376): what a selection is made of. steps() pairs each with the step
+/// Each step of the check, by what it does (DS-376): what a selection is made of. Steps::of pairs each with the step
 /// it makes, so the names the steps are keyed by stay theirs.
 enum class Step { Linker, Behaviour, Derivation, Failures, Contracts, Structure, Dependencies, Rules, Levels, States, Order };
 
 /// The steps of the check a load runs (DS-376): chosen by the one that knows what the load is for, the Api, and read
-/// by steps(), which makes them and every step they need. The checker runs what it is given and knows nothing of it.
+/// by Steps::of, which makes them and every step they need. The checker runs what it is given and knows nothing of it.
 class Selection {
  public:
   /// Every step: what the findings, the export, a query and the viewer read.
