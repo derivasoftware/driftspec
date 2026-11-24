@@ -4,7 +4,8 @@ namespace ds {
 namespace check {
 
 Selection Selection::every() {
-  return of({Step::Linker, Step::Behaviour, Step::Derivation, Step::Failures, Step::Contracts, Step::Structure, Step::Dependencies,
+  return of({Step::Linker, Step::Behaviour, Step::Derivation, Step::Failures, Step::Interfaces, Step::UseCases, Step::Diagrams,
+             Step::Scenarios, Step::FailureChecks, Step::Structure, Step::Dependencies,
              Step::Rules, Step::Levels, Step::States, Step::Order});
 }
 

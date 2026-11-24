@@ -454,16 +454,11 @@ package driftspec@ds {
       }
     }
 
-    class ContractCheck : ACheck {         // interfaces, use cases, scenarios, outcomes and diagrams
+    class InterfaceContracts : ACheck {    // an interface's operations, its navigation, a machine's reachable states, a method against its operation (DS-382)
       @requirement REQ-00060-1
-      @requirement REQ-00123-1
-      @requirement REQ-00119-2
-      @requirement REQ-00082-1
       @requirement REQ-00061-1
       @requirement REQ-00109-2
-      @requirement REQ-00112-1
-      @requirement REQ-00065-1
-      @requirement REQ-00049-3
+      @requirement REQ-00119-2
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
@@ -475,14 +470,8 @@ package driftspec@ds {
       - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
         @requirement REQ-00060-1
       }
-      - checkUseCases() -> void {
-        @requirement REQ-00082-1
-      }
       - checkInterfaces() -> void {
         @requirement REQ-00060-1
-      }
-      - checkHandlers() -> void {
-        @requirement REQ-00123-1
       }
       - checkRealisations() -> void {
         @requirement REQ-00119-2
@@ -493,12 +482,67 @@ package driftspec@ds {
       - checkStates(state: model::Entity) -> void {
         @requirement REQ-00109-2
       }
+    }
+
+    class UseCaseContracts : ACheck {      // a use case as a contract its operations realise, outcome by outcome (DS-77, DS-382)
+      @requirement REQ-00082-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+      - checkUseCases() -> void {
+        @requirement REQ-00082-1
+      }
+    }
+
+    class FailureCheck : ACheck {          // what escapes each operation against its promise, and handlers that handle nothing; reads only (DS-382)
+      @requirement REQ-00112-1
+      @requirement REQ-00123-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+      - checkHandlers() -> void {
+        @requirement REQ-00123-1
+      }
       - checkFailures(operation: model::Entity) -> void {
         @requirement REQ-00112-1
       }
+    }
+
+    class ScenarioCheck : ACheck {         // a scenario written twice for one behaviour (DS-382)
+      @requirement REQ-00065-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
       - checkScenarios() -> void {
         @requirement REQ-00065-1
       }
+    }
+
+    class DiagramCheck : ACheck {          // what a diagram names exists, and how deep it asks to be drawn (DS-382)
+      @requirement REQ-00049-3
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
       - checkDiagrams() -> void {
         @requirement REQ-00049-3
       }
@@ -785,11 +829,26 @@ package driftspec@ds {
       }
     }
 
-    sequence ContractCheck::check {
+    sequence InterfaceContracts::check {
       -> checkInterfaces()
+      -> checkRealisations()
+    }
+
+    sequence UseCaseContracts::check {
       -> checkUseCases()
+    }
+
+    sequence DiagramCheck::check {
       -> checkDiagrams()
+    }
+
+    sequence ScenarioCheck::check {
       -> checkScenarios()
+    }
+
+    // what FailureFlow wrote, read: the handlers, then each operation, method and function
+    sequence FailureCheck::check {
+      -> checkHandlers()
       loop each operation, method and function {
         -> checkFailures(operation)
       }
