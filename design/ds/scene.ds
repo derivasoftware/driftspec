@@ -628,7 +628,8 @@ package driftspec@ds {
     }
 
     // ---- placing the boxes, and the map --------------------------------------------------------
-    // where every box goes, once per variant (lean hides private members): the base document
+    // where every box goes, once per variant (lean hides private members): the model projected into frames, then
+    // packed; the base document
     class Layout {
       @requirement REQ-00069-2
       @requirement REQ-00076-1
@@ -637,6 +638,101 @@ package driftspec@ds {
       - refs metamodel_: model::Metamodel     // the language of the model: the kind of each box by name (DS-351)
       + Layout(model: model::Model, metamodel: model::Metamodel)
       + place() -> SceneDocument
+      - static bounds(nodes: std::vector<Node>, lean: bool) -> Box
+    }
+
+    // the model projected and packed once per variant: the lean packing follows the widths the full one kept, so
+    // hiding private members never widens a box, only shortens it
+    sequence Layout::place {
+      local full: Projection
+      local lean: Projection
+      local packer: Packer
+      -> full.root() -> fullRoot
+      -> packer.pack(fullRoot) -> fullBoxes
+      -> lean.root() -> leanRoot
+      -> packer.pack(leanRoot) -> leanBoxes
+      -> bounds(nodes, false) -> world
+      -> bounds(nodes, true) -> leanWorld
+      return document
+    }
+
+    // what the scene places (DS-389): the model as nested frames, each sized by what it shows and its children in
+    // the order they are read, with what each box drawn says it is; how the frames are packed is the packer's
+    class Projection {
+      @requirement REQ-00069-2
+      @requirement REQ-00076-1
+      @requirement REQ-00093-1
+      - refs metamodel_: model::Metamodel
+      - lean_: bool                           // private members are left out
+      - byScope_: std::map<std::string, std::vector<const model::Entity*>>
+      - linked_: std::map<std::string, std::vector<std::string>>   // requirements and constraints, by what is linked to them
+      - bases_: std::map<std::string, std::vector<std::string>>    // what each class inherits from or realises
+      - owns nodes_: std::map<std::string, Node>
+      - owns root_: Frame
+      + Projection(model: model::Model, metamodel: model::Metamodel, lean: bool)
+      + root() -> Frame
+      + nodes() -> std::map<std::string, Node>
+      - package(e: model::Entity, parent: std::string) -> Frame
+      - module(e: model::Entity, parent: std::string) -> Frame
+      - interface(e: model::Entity, parent: std::string) -> Frame
+      - unit(e: model::Entity, parent: std::string) -> Frame
+      - tree(base: Frame, units: std::map<std::string, Frame>, below: std::map<std::string, std::vector<std::string>>) -> Frame
+      - taxonomy(units: std::vector<Frame>) -> std::map<std::string, std::string>
+      - order(boxes: std::vector<Frame>) -> void
+      - children(scope: std::string) -> std::vector<const model::Entity*>
+      - node(id: std::string, kind: std::string, parent: std::string, label: std::string, stereotype: std::string, vis: std::string, linkedFrom: std::string) -> Node
+      - stereotypeOf(e: model::Entity) -> std::string
+      - static leaf(id: std::string, w: double, h: double) -> Frame
+      - static visibility(e: model::Entity) -> std::string
+      - static signature(name: std::string, params: std::vector<model::Param>, returns: std::string) -> std::string
+    }
+
+    // where nested boxes go (DS-389): frames in, a box for each out. It knows no model, only sizes, arrangements and
+    // identities; a shelf can be held to the width it came out at in an earlier packing
+    class Packer {
+      @requirement REQ-00069-2
+      @requirement REQ-00076-1
+      - widths_: std::map<std::string, double>   // the width each shelved frame came out at, kept or followed
+      - following_: bool
+      + Packer(widths: std::map<std::string, double>, following: bool)
+      + pack(root: Frame) -> std::map<std::string, Box>
+      - size(frame: Frame) -> Packed
+      - fixed(frame: Frame) -> Packed
+      - shelves(frame: Frame) -> Packed
+      - tree(frame: Frame) -> Packed
+      - width(id: std::string, computed: double) -> double
+      - static shelf(kids: std::vector<Packed>, gap: double, target: double, at: std::vector<std::pair<double, double>>) -> std::pair<double, double>
+      - static target(kids: std::vector<Packed>, atLeast: double, factor: double) -> double
+      - static place(frame: Frame, packed: Packed, x: double, y: double, out: std::map<std::string, Box>) -> void
+    }
+
+    dataclass Packed {                       // a frame packed (DS-389): its size and where each child sits, from its top left corner
+      @requirement REQ-00069-2
+      + w: double
+      + h: double
+      + at: std::vector<std::pair<double, double>>
+      + kids: std::vector<Packed>                 // its kids, then its ports
+    }
+
+    dataclass Frame {                        // a box to pack (DS-389): its identity, how its children are arranged, and their frames
+      @requirement REQ-00069-2
+      + id: std::string
+      + arrangement: Arrangement               // fixed, in shelves, or a tree
+      + kids: std::vector<Frame>
+      + w: double
+      + h: double
+      + at: std::vector<std::pair<double, double>>
+      + gap: double
+      + atLeast: double
+      + factor: double
+      + left: double
+      + top: double
+      + right: double
+      + bottom: double
+      + ports: std::vector<Frame>
+      + portTop: double
+      + portGap: double
+      + drop: double
     }
 
     // the boxes placed and where each identity of the model lands among them: built once, read by

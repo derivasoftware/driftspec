@@ -1959,9 +1959,9 @@ package driftspec@ds {
           Revision 3 (DS-231): it no longer lifts to a level asked for with level: module;
           it stands on the cut the diagram writes (REQ-00129-1), and the calls it follows
           are said with unfold:, fold: and depth: (REQ-00130-1).
-        verification VER-00037-7 {
+        verification VER-00037-8 {
           title: Integration tests confirm a sequence diagram selects a behaviour as it is written and expands by depth
-          status: approved
+          status: draft
           text:
             Revision 6 (DS-337): a depth too large for an int is the finding of a depth that is no
             number, at the same place, and is drawn as one; it no longer stops ds. The filters read
@@ -1969,6 +1969,8 @@ package driftspec@ds {
             Revision 7 (DS-362): the check of a depth is the check of a neighbours: too, which, as a
             word or too large for an int, is W-DIAGRAM-NEIGHBOURS at the diagram and draws no
             neighbours; and a depth past what the calls reach draws as *, at once.
+            Revision 8 (DS-385): the depth and the neighbours are read by Filters, which names the
+            filter of each kind, so the test that reads a number too large is TestFilters'.
           method: test
           tests:
             tests/integration/ds/check/test_values.cpp::TestValues.TwoObjectsOfOneTypeAreTwoLifelines
@@ -1977,7 +1979,7 @@ package driftspec@ds {
             tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADepthThatIsNoNumberIsAFindingAndStillDraws
             tests/integration/ds/render/test_open_boxes.cpp::TestDepthTooLarge.ADepthTooLargeForAnIntIsTheFindingOfADepthThatIsNoNumber
             tests/integration/ds/render/test_open_boxes.cpp::TestDepthTooLarge.ADepthTooLargeForAnIntDrawsAsADepthThatIsNoNumberAndNeverAnAbort
-            tests/integration/ds/query/test_diagram_filters.cpp::TestFilterFor.ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort
+            tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort
             tests/integration/ds/render/test_open_boxes.cpp::TestNeighboursPastTheReach.NeighboursThatAreNoNumberAreAFindingAtTheDiagramAsADepthIs
             tests/integration/ds/render/test_open_boxes.cpp::TestDepthPastTheReach.ADepthPastTheCallsDrawsAsEveryLevelAndEndsPromptly
             tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ASubjectAloneDrawsItsDefaultScenario

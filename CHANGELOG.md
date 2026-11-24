@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.64
+## 0.1.68
 
 A workspace's files are read by one rule, the engine's, wherever Python reads them (DS-413). `driftspec.files()` lists
 the .ds files of a folder as `ds` reads a workspace: every regular .ds file in every folder below it, dot-folders included;
@@ -14,6 +14,51 @@ a link to a file is followed and a link to a folder is not; a broken link, and a
 `driftspec.read()` reads with it, so a broken link no longer stops it and `.ds` is no longer read. The live session's
 watcher stamps with it, so a save inside a dot-folder now reaches a new version, as the engine already read it. The
 language server finds a folder's own files with it.
+
+## 0.1.67
+
+The scene builds what it places from the model apart from how it is placed (DS-389). A projection reads the model
+into nested frames, each package, module, interface, unit and row sized by what it shows, its children in the order
+they are read and the room each kind of box asks for; a packer that knows no model turns those frames into boxes:
+a frame keeps its size, fills shelves no wider than a target, or centres its first child over the row of the others.
+Nothing a design writes changes: the viewer, its scene and every drawing are the same.
+
+## 0.1.66
+
+The check's architecture decisions are requirements held by rules (DS-383). The checker runs each step through IStep
+and knows none of the concrete ones, no step knows another, and every operation of the check is a member of a class;
+three rules of ds's own design hold them, each proven by a deliberate violation. SEQ_Load draws a load from the command
+line two levels down. Nothing a design writes changes.
+
+## 0.1.65
+
+The contracts are checked in five steps, and the order of what the check reports no longer follows its steps
+(DS-382). ContractCheck becomes InterfaceContracts, UseCaseContracts, DiagramCheck, ScenarioCheck and FailureCheck,
+each run on its own and chosen on its own (`interfaces`, `usecases`, `diagrams`, `scenarios`, `failure-check`); the
+findings each one says are the ones ContractCheck said.
+
+An intended change of output: the findings and the coverage are both ordered by file, then line, and on one line by
+code, then message. The coverage was never sorted and came out in the order the steps ran in, so a design whose
+coverage spans several steps now reads it by where each entry is written. On the 28 workspaces of the comparison this
+reorders the coverage of three (the audit and levels corpora and the repository) and two pairs of findings on one
+line; nothing is added or removed, and the golden files do not move.
+
+## 0.1.64
+
+Every operation of the query is a member of its class (DS-385). A pattern of a diagram's include or exclude is read
+once, by Pattern, which then takes or leaves each entity by comparing its identity and scope with what it read, with
+no text built for each one. The one place that names the filter of each kind of diagram is the class Filters, where it
+was a function, with a static of() as check's Steps has (DS-382), and the box a relation is drawn from, with the
+helpers the filters hid, are members of the filter they serve. A rule of ds's design holds that the query writes no
+function, refining what the query answers. Nothing changes for a design: every finding, export, drawing, viewer page,
+answer and exit code is the same.
+
+## 0.1.63
+
+The golden ctest compares without pytest (DS-415). `ctest` ran the golden files through `python3 -m pytest`, so on a
+machine whose python3 has no pytest the test failed for that reason alone. `tests/system/python/test_golden.py --check
+--ds <ds>` makes the same comparison as a plain script and exits 1 when a document differs; ctest runs it that way and
+needs only python3. CI's golden job still runs it under pytest, for its report.
 
 ## 0.1.62
 

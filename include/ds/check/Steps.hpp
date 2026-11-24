@@ -97,8 +97,9 @@ class BehaviourTyping : public IStep {
   std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>> results_;  ///< per behaviour, the results so far
 };
 
-/// Interfaces, use cases, scenarios, outcomes and diagrams.
-class ContractCheck : public ACheck {
+/// An interface's operations against their behaviours and outcomes, its machine as navigation, a class machine's
+/// reachable states, and a method against the operation it answers (DS-382: the interfaces of ContractCheck).
+class InterfaceContracts : public ACheck {
  public:
   std::string name() const override;
   std::vector<std::string> needs() const override;
@@ -107,22 +108,83 @@ class ContractCheck : public ACheck {
   std::vector<model::Finding> check(const Context& context) override;
   /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
   std::string outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const;
-  /// Whether a pattern a diagram writes names something the model declares: itself, a prefix ending in *, or a
-  /// template of it; a scenario by its behaviour's subject.
-  bool namesSomething(const std::string& written) const;
-  void checkUseCases();  // a use case is a contract its operations realise, outcomes included (DS-77)
   void checkInterfaces();
   /// A class's method against the operation of the interface it realises, when the class declares it.
   void checkRealisations();
   void checkViews(const model::Entity& state);
   /// A state of a class's machine that no transition leads to from the initial one.
   void checkStates(const model::Entity& state);
-  /// What an operation lets escape against what its signature promises, and at a boundary (DS-189).
-  void checkFailures(const model::Entity& operation);
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
+  std::vector<model::Finding> found_;
+  const Resolver* resolver_ = nullptr;
+};
+
+/// A use case as a contract its operations realise, outcome by outcome (DS-77, DS-382).
+class UseCaseContracts : public ACheck {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check(const Context& context) override;
+  void checkUseCases();  // a use case is a contract its operations realise, outcomes included (DS-77)
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
+  std::vector<model::Finding> found_;
+  const Resolver* resolver_ = nullptr;
+};
+
+/// What a diagram names exists, and how deep it asks to be drawn (DS-382).
+class DiagramCheck : public ACheck {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check(const Context& context) override;
+  /// Whether a pattern a diagram writes names something the model declares: itself, a prefix ending in *, or a
+  /// template of it; a scenario by its behaviour's subject.
+  bool namesSomething(const std::string& written) const;
+  void checkDiagrams();
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
+  std::vector<model::Finding> found_;
+  const Resolver* resolver_ = nullptr;
+};
+
+/// A scenario written twice for one behaviour (REQ-00065-1, DS-382).
+class ScenarioCheck : public ACheck {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check(const Context& context) override;
   void checkScenarios();
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
+  std::vector<model::Finding> found_;
+  const Resolver* resolver_ = nullptr;
+};
+
+/// What each operation lets escape against what its signature promises, and handlers that handle nothing; it reads
+/// what FailureFlow wrote and writes nothing (DS-189, DS-224, DS-382).
+class FailureCheck : public ACheck {
+ public:
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check(const Context& context) override;
   /// A handler of a failure no step of its attempt can fail with.
   void checkHandlers();
-  void checkDiagrams();
+  /// What an operation lets escape against what its signature promises, and at a boundary (DS-189).
+  void checkFailures(const model::Entity& operation);
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
   const model::Metamodel* metamodel_ = nullptr;

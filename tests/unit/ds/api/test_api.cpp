@@ -44,10 +44,11 @@ class TestApiSteps : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
   ds::model::Model bound{metamodel};
-  const std::vector<ds::check::Step> every{ds::check::Step::Linker,       ds::check::Step::Behaviour, ds::check::Step::Derivation,
-                                           ds::check::Step::Failures,     ds::check::Step::Contracts, ds::check::Step::Structure,
-                                           ds::check::Step::Dependencies, ds::check::Step::Rules,     ds::check::Step::Levels,
-                                           ds::check::Step::States,       ds::check::Step::Order};
+  const std::vector<ds::check::Step> every{ds::check::Step::Linker,    ds::check::Step::Behaviour,    ds::check::Step::Derivation,
+                                           ds::check::Step::Failures,  ds::check::Step::Interfaces,   ds::check::Step::UseCases,
+                                           ds::check::Step::Diagrams,  ds::check::Step::Scenarios,    ds::check::Step::FailureChecks,
+                                           ds::check::Step::Structure, ds::check::Step::Dependencies, ds::check::Step::Rules,
+                                           ds::check::Step::Levels,    ds::check::Step::States,       ds::check::Step::Order};
 
   /// A workspace with a class diagram and a table written as rows and columns, bound and not yet checked.
   void SetUp() override {

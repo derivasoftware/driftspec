@@ -46,6 +46,86 @@ package driftspec@ds {
       never depends(c, driftspec@ds@model::Model)
     }
 
+    // ---- the check as a runner of steps, as requirements and the rules that hold them (DS-383) ----------------
+    // The checker runs what it is given through IStep and knows no concrete step; Steps is the one place that names
+    // them. A step reads what the steps it needs wrote into the model, never those steps; and every operation of
+    // the check is a member of the class whose responsibility it is.
+    requirement REQ-00194-1 {
+      tags: architecture, check
+      status: draft
+      @refines REQ-00053-2
+      title: The checker shall run each step of the check through IStep, and no step shall know another
+      text:
+        The checker is handed the steps, keyed by name, and runs each one after the steps it needs, knowing each only
+        as an IStep; Steps is the one place that names the concrete steps. A step reads what the steps it needs
+        wrote into the model, and never holds, calls or makes another step, so a step added, removed or split leaves
+        the checker and the other steps as they are.
+      rationale:
+        Owner, 2026-11-24 (DS-378, DS-383): a requirement is often an architecture decision, and the rules make it
+        hold. ContractCheck split into five (DS-382) without touching the checker, because the checker and the steps
+        already kept to it.
+      verification VER-00214-1 {
+        status: draft
+        title: Integration tests confirm the design of ds runs the steps through IStep with no step knowing another, and is told when the checker holds a concrete step or one step knows another
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheCheckerHoldingAConcreteStepIsTold
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AStepThatKnowsAnotherIsTold
+      }
+    }
+
+    requirement REQ-00195-1 {
+      tags: architecture, check
+      status: draft
+      @refines REQ-00053-2
+      title: Every operation of the check shall be a member of the class whose responsibility it is
+      text:
+        What a step checks is the step's, what resolves a name is the resolver's, what decides a rule is one of the
+        evaluator's pieces, and what makes the steps is Steps'. A function of the module would be a responsibility
+        no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-378, DS-382, DS-383): the hidden helpers of the steps became members of their step;
+        the rule keeps a new one from being written outside a class.
+      verification VER-00215-1 {
+        status: draft
+        title: Integration tests confirm the design of the check holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheCheckIsTold
+      }
+    }
+
+    definition is-step(x) {
+      title: x is a step of the check: it inherits IStep, itself or through ACheck
+      if x inherits driftspec@ds@check::IStep
+      if x inherits driftspec@ds@check::ACheck
+    }
+
+    rule checker-knows-steps-as-istep {
+      title: the checker holds the steps as IStep and names none of the concrete ones, so every step is run through the one interface
+      @requirement REQ-00194-1
+      for class c in driftspec@ds@check
+      where c = driftspec@ds@check::Checker
+      never depends(c, x), is-step(x)
+    }
+
+    rule no-step-knows-another {
+      title: a step depends on no other step, so each reads what the steps it needs wrote into the model and never the steps themselves
+      @requirement REQ-00194-1
+      for class a in driftspec@ds@check, class b in driftspec@ds@check
+      where is-step(a), is-step(b), a != b, b != driftspec@ds@check::ACheck
+      never depends(a, b)
+    }
+
+    rule check-operations-belong-to-classes {
+      title: no function is written in the check's module, so every operation of the check is a member of a class
+      @requirement REQ-00195-1
+      for function f in driftspec@ds@check
+      never f in driftspec@ds@check
+    }
+
     class Evaluator {                        // decides the structural rules over the model: it directs the four pieces (DS-380)
       @requirement REQ-00096-1
       @requirement REQ-00097-1
@@ -454,16 +534,11 @@ package driftspec@ds {
       }
     }
 
-    class ContractCheck : ACheck {         // interfaces, use cases, scenarios, outcomes and diagrams
+    class InterfaceContracts : ACheck {    // an interface's operations, its navigation, a machine's reachable states, a method against its operation (DS-382)
       @requirement REQ-00060-1
-      @requirement REQ-00123-1
-      @requirement REQ-00119-2
-      @requirement REQ-00082-1
       @requirement REQ-00061-1
       @requirement REQ-00109-2
-      @requirement REQ-00112-1
-      @requirement REQ-00065-1
-      @requirement REQ-00049-3
+      @requirement REQ-00119-2
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
@@ -475,14 +550,8 @@ package driftspec@ds {
       - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
         @requirement REQ-00060-1
       }
-      - checkUseCases() -> void {
-        @requirement REQ-00082-1
-      }
       - checkInterfaces() -> void {
         @requirement REQ-00060-1
-      }
-      - checkHandlers() -> void {
-        @requirement REQ-00123-1
       }
       - checkRealisations() -> void {
         @requirement REQ-00119-2
@@ -493,12 +562,67 @@ package driftspec@ds {
       - checkStates(state: model::Entity) -> void {
         @requirement REQ-00109-2
       }
+    }
+
+    class UseCaseContracts : ACheck {      // a use case as a contract its operations realise, outcome by outcome (DS-77, DS-382)
+      @requirement REQ-00082-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+      - checkUseCases() -> void {
+        @requirement REQ-00082-1
+      }
+    }
+
+    class FailureCheck : ACheck {          // what escapes each operation against its promise, and handlers that handle nothing; reads only (DS-382)
+      @requirement REQ-00112-1
+      @requirement REQ-00123-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
+      - checkHandlers() -> void {
+        @requirement REQ-00123-1
+      }
       - checkFailures(operation: model::Entity) -> void {
         @requirement REQ-00112-1
       }
+    }
+
+    class ScenarioCheck : ACheck {         // a scenario written twice for one behaviour (DS-382)
+      @requirement REQ-00065-1
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
       - checkScenarios() -> void {
         @requirement REQ-00065-1
       }
+    }
+
+    class DiagramCheck : ACheck {          // what a diagram names exists, and how deep it asks to be drawn (DS-382)
+      @requirement REQ-00049-3
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check(context: Context) -> std::vector<model::Finding>
       - checkDiagrams() -> void {
         @requirement REQ-00049-3
       }
@@ -785,11 +909,26 @@ package driftspec@ds {
       }
     }
 
-    sequence ContractCheck::check {
+    sequence InterfaceContracts::check {
       -> checkInterfaces()
+      -> checkRealisations()
+    }
+
+    sequence UseCaseContracts::check {
       -> checkUseCases()
+    }
+
+    sequence DiagramCheck::check {
       -> checkDiagrams()
+    }
+
+    sequence ScenarioCheck::check {
       -> checkScenarios()
+    }
+
+    // what FailureFlow wrote, read: the handlers, then each operation, method and function
+    sequence FailureCheck::check {
+      -> checkHandlers()
       loop each operation, method and function {
         -> checkFailures(operation)
       }
@@ -980,6 +1119,12 @@ package driftspec@ds {
 diagram SEQ_CheckerRun {
   kind: sequence
   include: driftspec@ds@check::Checker::run
+}
+
+diagram SEQ_Load {                         // a load from the command line, two levels down: parse, then the Api's steps (DS-383)
+  kind: sequence
+  include: driftspec@ds@app::load
+  depth: 2
 }
 
 diagram CL_CheckNamespace {

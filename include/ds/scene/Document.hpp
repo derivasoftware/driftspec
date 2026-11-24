@@ -7,19 +7,12 @@
 #include <vector>
 
 #include "ds/model/Model.hpp"
+#include "ds/scene/Box.hpp"
 
 namespace ds {
 namespace scene {
 
 // The scene's document (DS-126): the data the layout, the map, the layers and the formats share.
-
-/// A rectangle in the coordinates of the scene: one unit is a pixel at zoom 1.
-struct Box {
-  double x = 0;
-  double y = 0;
-  double w = 0;
-  double h = 0;
-};
 
 /// One thing drawn in the scene: a package, a module, an interface, a unit (class,
 /// function, enum) or a row (a member, an operation, a function's signature).

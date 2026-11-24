@@ -8,18 +8,6 @@
 namespace ds {
 namespace query {
 
-namespace {
-
-Answer entityAnswer(const model::Metamodel& metamodel, const model::Entity& e, const std::string& detail = "") {
-  return {metamodel.nameOf(e.kind), e.id, detail};
-}
-
-bool endsWith(const std::string& s, const std::string& suffix) {
-  return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
-
-}  // namespace
-
 std::vector<std::pair<std::string, std::string>> Query::questions() {
   return {{"diagrams", ""},
           {"entities", "<scope>"},
@@ -54,6 +42,15 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   if (question == "coverage") return coverage(subject);
   if (question == "coupling") return coupling();
   return {{"error", question, "not a question ds answers"}};
+}
+
+// an entity as an answer: its kind named by the metamodel the model is written in
+Answer Query::entityAnswer(const model::Entity& entity, const std::string& detail) const {
+  return {metamodel_.nameOf(entity.kind), entity.id, detail};
+}
+
+bool Query::endsWith(const std::string& text, const std::string& suffix) {
+  return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 bool Query::known(const std::string& id) const {
@@ -95,7 +92,7 @@ std::vector<Answer> Query::entities(const std::string& asked) const {
   std::vector<Answer> out;
   for (const auto& p : model_.entities()) {
     if (p.second.scope != scope || p.second.expected) continue;
-    out.push_back(entityAnswer(metamodel_, p.second, p.second.fields.count("title") ? p.second.fields.at("title") : ""));
+    out.push_back(entityAnswer(p.second, p.second.fields.count("title") ? p.second.fields.at("title") : ""));
   }
   return out;
 }
@@ -128,8 +125,7 @@ std::vector<Answer> Query::behaviours(const std::string& id) const {
   std::vector<Answer> out;
   for (const auto& r : model_.index().toOfKind(id, "behaviour-of")) {
     const model::Entity* b = model_.find(r.from);
-    out.push_back(b ? entityAnswer(metamodel_, *b, b->fields.count("scenario") ? b->fields.at("scenario") : "")
-                    : Answer{"behaviour", r.from, ""});
+    out.push_back(b ? entityAnswer(*b, b->fields.count("scenario") ? b->fields.at("scenario") : "") : Answer{"behaviour", r.from, ""});
   }
   const model::Entity* asked = model_.find(id);
   if (!asked || asked->kind != model::Kind::Class) return out;
@@ -161,10 +157,10 @@ std::set<std::string> Query::select(const IFilter& filter) const { return filter
 std::vector<Answer> Query::shows(const std::string& diagram) const {
   // what the diagram takes is the filter of its kind, applied to the model: nothing is drawn (DS-127)
   const model::Entity* d = model_.find(model::Identity::ofDiagram(diagram).text());
-  const auto filter = d ? filterFor(metamodel_, *d) : nullptr;
+  const auto filter = d ? Filters::of(metamodel_, *d) : nullptr;
   if (!filter) return {{"error", diagram, "no such diagram"}};
   std::vector<Answer> out;
-  for (const auto& id : select(*filter)) out.push_back(entityAnswer(metamodel_, *model_.find(id)));
+  for (const auto& id : select(*filter)) out.push_back(entityAnswer(*model_.find(id), ""));
   return out;
 }
 
