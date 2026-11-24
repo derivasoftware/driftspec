@@ -206,6 +206,25 @@ PyObject* ask3(PyObject* self, PyObject* args) {
   return run([self, x, y, n] { return (held(self).*Q)(x, y, n); });
 }
 
+// reload(files): the workspace loaded again from the files given, in place (DS-420)
+PyObject* workspaceReload(PyObject* self, PyObject* args) {
+  PyObject* dict = nullptr;
+  ds::api::Files files;
+  if (!PyArg_ParseTuple(args, "O", &dict) || !filesOf(dict, &files)) return nullptr;
+  std::string failure;
+  ds::api::Workspace* workspace = reinterpret_cast<WorkspaceObject*>(self)->workspace;
+  Py_BEGIN_ALLOW_THREADS try { workspace->reload(files); } catch (const std::exception& e) {
+    failure = e.what();
+  } catch (...) {
+    failure = "the engine failed";
+  }
+  Py_END_ALLOW_THREADS if (!failure.empty()) {
+    PyErr_SetString(PyExc_RuntimeError, failure.c_str());
+    return nullptr;
+  }
+  Py_RETURN_NONE;
+}
+
 PyObject* workspacePage(PyObject* self, PyObject* args) {
   const char* title = nullptr;
   PyObject* ids = nullptr;
@@ -233,6 +252,7 @@ PyMethodDef kWorkspaceMethods[] = {
     {"shows", ask1<&ds::api::Workspace::shows>, METH_VARARGS, "shows(diagram) -> str: what a diagram takes"},
     {"render", ask3<&ds::api::Workspace::render>, METH_VARARGS, "render(diagram, format, width) -> str: '' when none"},
     {"page", workspacePage, METH_VARARGS, "page(title, focus) -> str: the viewer, framed on the identities given"},
+    {"reload", workspaceReload, METH_VARARGS, "reload(files) -> None: loaded again from the files given, in place"},
     {nullptr, nullptr, 0, nullptr}};
 
 PyType_Slot kWorkspaceSlots[] = {

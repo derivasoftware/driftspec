@@ -2,7 +2,6 @@
 #include <cctype>
 #include <functional>
 #include <map>
-#include <regex>
 #include <set>
 #include <sstream>
 #include <vector>
@@ -14,6 +13,7 @@
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/model/Paths.hpp"
+#include "ds/model/WrittenType.hpp"
 
 namespace ds {
 namespace check {
@@ -110,9 +110,9 @@ void InterfaceContracts::checkInterfaces() {
 void InterfaceContracts::checkRealisations() {
   // a type as the idea it commits to: no qualifiers and no spaces; the rest is the code's text (DS-18)
   const auto idea = [](const std::string& text) {
-    static const std::regex qualifier(R"(\b[A-Za-z_][A-Za-z0-9_]*::)");  // built once, not on every call (DS-335)
-    static const std::regex spaces(R"(\s+)");
-    return std::regex_replace(std::regex_replace(text, qualifier, ""), spaces, "");
+    std::string out = model::WrittenType(text).unqualified();
+    out.erase(std::remove_if(out.begin(), out.end(), [](unsigned char c) { return std::isspace(c) != 0; }), out.end());
+    return out;
   };
   const auto signature = [&idea](const model::Entity& e) {
     std::string out = "(";

@@ -9,6 +9,7 @@
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/query/ClassBoxes.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Query.hpp"
 
@@ -134,11 +135,11 @@ TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnde
 }
 
 TEST_F(TestClassFilter, ARelationIsDrawnFromItsBoxAMembersClassOrABehavioursSubject) {  // DS-219
-  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till::Till")), "shop@till::Till");
-  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till")), "shop@till");
-  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till::Till::stock")), "shop@till::Till");
-  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till::Till::sell::sequence")), "shop@till::Till");
-  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@store::Stock::state")), "shop@store::Stock");
+  EXPECT_EQ(ds::query::ClassBoxes::drawnFrom(model, *model.find("shop@till::Till")), "shop@till::Till");
+  EXPECT_EQ(ds::query::ClassBoxes::drawnFrom(model, *model.find("shop@till")), "shop@till");
+  EXPECT_EQ(ds::query::ClassBoxes::drawnFrom(model, *model.find("shop@till::Till::stock")), "shop@till::Till");
+  EXPECT_EQ(ds::query::ClassBoxes::drawnFrom(model, *model.find("shop@till::Till::sell::sequence")), "shop@till::Till");
+  EXPECT_EQ(ds::query::ClassBoxes::drawnFrom(model, *model.find("shop@store::Stock::state")), "shop@store::Stock");
 }
 
 class TestQuery : public Shop {};
@@ -151,6 +152,17 @@ TEST_F(TestQuery, ANamedQuestionIsAnsweredByIdentityAndAnUnknownOneIsAnError) {
   const auto wrong = query.ask("colours", "");
   ASSERT_EQ(wrong.size(), 1u);
   EXPECT_EQ(wrong[0].kind, "error");
+}
+
+/// What a class diagram draws, read of the model by itself (DS-423): the modules around a box are drawn around it.
+class TestClassBoxes : public Shop {};
+
+TEST_F(TestClassBoxes, TheModulesAroundWhatIsTakenAreDrawnAroundIt) {
+  const std::set<std::string> around = ds::query::ClassBoxes::containers(model, {"shop@till::Till"});
+  EXPECT_EQ(around.count("shop@till"), 1u);
+  EXPECT_TRUE(ds::query::ClassBoxes::isBox(*model.find("shop@till::Till")));
+  EXPECT_FALSE(ds::query::ClassBoxes::isBox(*model.find("shop@till")));
+  EXPECT_TRUE(ds::query::ClassBoxes::drawnAsEdge("inherits"));
 }
 
 }  // namespace

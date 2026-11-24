@@ -21,19 +21,27 @@ namespace api {
 
 namespace {
 
-model::Model loaded(const model::Metamodel& metamodel, const Files& files, Output output, const std::string& diagram) {
-  parse::Parser parser;
-  std::vector<parse::ParsedFile> parsed;
-  for (const auto& file : files) parsed.push_back(parser.parseText(file.first, file.second));
-  return Api(metamodel).load(parsed, output, diagram);
-}
-
 std::string ids(const std::vector<std::string>& list) { return nlohmann::json(list).dump(); }
 
 }  // namespace
 
 Workspace::Workspace(const model::Metamodel& metamodel, const Files& files, Output output, const std::string& diagram)
-    : metamodel_(metamodel), model_(loaded(metamodel, files, output, diagram)) {}
+    : metamodel_(metamodel), output_(output), diagram_(diagram), model_(loaded(files)) {}
+
+void Workspace::reload(const Files& files) { model_ = loaded(files); }
+
+model::Model Workspace::loaded(const Files& files) {
+  parse::Parser parser;
+  std::map<std::string, parse::ParsedFile> kept;
+  std::vector<parse::ParsedFile> parsed;
+  for (const auto& [path, text] : files) {
+    const auto held = parsed_.find(path);
+    kept[path] = held != parsed_.end() && held->second.text == text ? held->second : parser.parseText(path, text);
+    parsed.push_back(kept[path]);
+  }
+  parsed_ = std::move(kept);
+  return Api(metamodel_).load(parsed, output_, diagram_);
+}
 
 std::string Workspace::exportModel() const { return exporter::JsonExport(metamodel_).render(model_, false); }
 

@@ -84,9 +84,12 @@ class RulesLayer : public ILayer {
   const Map& map_;
 };
 
-/// The one place that names the layers, in the order they decorate; those that read the language are handed
-/// `metamodel` (DS-351).
-std::vector<std::unique_ptr<ILayer>> layers(const model::Model& model, const model::Metamodel& metamodel, const Map& map);
+/// The one place that names the concrete layers (DS-390), as check's Steps names the steps.
+class LayerFactory {
+ public:
+  /// The layers, in the order they decorate; those that read the language are handed `metamodel` (DS-351).
+  static std::vector<std::unique_ptr<ILayer>> of(const model::Model& model, const model::Metamodel& metamodel, const Map& map);
+};
 
 }  // namespace scene
 }  // namespace ds

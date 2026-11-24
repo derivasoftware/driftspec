@@ -75,6 +75,11 @@ driftspec-lsp
 
 Any editor that speaks the Language Server Protocol can start it for files ending in `.ds`.
 
+It keeps each design loaded and loads it again on a change, reading again only the files that
+changed: the diagnostics of an edit arrive in under 200 ms on DriftSpec's own design. The first
+hover, definition or completion after a change takes longer, since it reads the whole model
+again. An error shows as an error and a warning as a warning.
+
 ## Syntax: the tree-sitter grammar
 
 The language is a tree-sitter grammar (`grammar/`), with its queries for highlighting and
@@ -92,13 +97,24 @@ model = driftspec.load("design")
 model.find("shop@store::Cart").kind       # 'class'
 driftspec.check("design").errors               # the findings of ds check, typed
 driftspec.render("design", "CL_Store", "text", 120)
+
+ws = driftspec.Workspace("design")              # loaded once, asked as often as needed
+ws.reload("design")                             # after a change: loaded again in place
+driftspec.severities()                          # each severity: whether it fails, how an editor shows it
 ```
 
 ## A design seen live
 
 `driftspec-live serve design --open` opens the viewer in the browser and draws the design
-again on every save, where you were looking, with the findings beside it. An agent can point
-at the design through the same contract, served as MCP tools:
+again on every save, where you were looking, with the findings beside it. Pass the design's
+folder: everything below it is read and watched.
+
+Errors are red and warnings amber, and the findings count at the top says how many fail, with
+the rest beside it. Coverage, what is not written yet (a requirement nothing verifies, an
+operation with no sequence), has a folded section of its own. The rules panel lists each rule
+with what breaks it and the problems written in it.
+
+An agent can point at the design through the same contract, served as MCP tools:
 
 ```bash
 claude mcp add driftspec-live -- driftspec-live mcp
