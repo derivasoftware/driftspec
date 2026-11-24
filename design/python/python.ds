@@ -366,6 +366,15 @@ package driftspec@driftspec {
       tests:
         tests/integration/python/test_live.py::TestLiveSession::test_the_rules_reach_the_state_as_written_with_what_breaks_them
     }
+    verification VER-00256-1 {
+      status: draft
+      title: Integration tests confirm each rule and definition carries the problems written inside it, every rule finding of the language included, and keeps them when their message is reworded
+      text: DS-421. The problems were matched by the start of their message and broke silently on any rewording; they are now the rule findings written inside the rule's span. The scene keeps a record of the same rules of its own, a duplication DS-406/DS-409 retire.
+      method: test
+      tests:
+        tests/integration/python/test_live_rules.py::TestRuleProblems::test_each_rule_has_the_problems_written_inside_it
+        tests/integration/python/test_live_rules.py::TestRuleProblems::test_a_reworded_message_still_reaches_its_rule
+    }
   }
 
   interface session {                          // what a page or an editor's panel relies on
@@ -1114,6 +1123,9 @@ package driftspec@driftspec {
       + owns watcher: Watcher                  // the .ds files, watched
       + reload() -> bool
       + rules_of(model, findings) -> list[dict] {
+        @requirement REQ-00100-1
+      }
+      + static within(place, span) -> bool {   // a place written inside a declaration's span: a rule's problems by where they are (DS-421)
         @requirement REQ-00100-1
       }
       + state() -> dict
