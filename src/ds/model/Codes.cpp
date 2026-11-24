@@ -247,11 +247,17 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
       {Code::E_RULE_RESERVED, "E-RULE-RESERVED", Severity::error,
        "A definition takes the name of what an entity is, name, id or kind, which a rule reads as name(x), id(x) and kind(x).",
        "Name the definition otherwise."},
+      {Code::W_REQ_UNREALISED, "W-REQ-UNREALISED", Severity::coverage,
+       "An approved requirement that nothing satisfies: no class, function, interface or box names it with @requirement, "
+       "and not every requirement that refines it is satisfied.",
+       "Name it with @requirement in what realises it, or refine it into requirements that are."},
+      {Code::W_CST_NO_VERIFICATION, "W-CST-NO-VERIFICATION", Severity::coverage, "An approved constraint that nothing verifies.",
+       "Name it with @constraint in a verification that shows it is kept."},
   };
   // a finding is made by its slot: a row out of the order of Code, or a Code with no row, would give another code
   for (std::size_t i = 0; i < out.size(); ++i)
     if (static_cast<std::size_t>(out[i].id) != i) throw std::logic_error("the catalogue is out of the order of Code at " + out[i].code);
-  if (out.size() != static_cast<std::size_t>(Code::E_RULE_RESERVED) + 1)
+  if (out.size() != static_cast<std::size_t>(Code::W_CST_NO_VERIFICATION) + 1)
     throw std::logic_error("the catalogue does not hold one row per Code");
   return out;
 }

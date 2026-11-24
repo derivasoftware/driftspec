@@ -55,7 +55,7 @@ class TestScene : public ::testing::Test {
     for (const auto& n : ds::scene::Scene(model, metamodel).build().nodes) byId[n.id] = n;
   }
 
-  static bool inside(const ds::scene::Box& in, const ds::scene::Box& out) {
+  static bool inside(const ds::layout::Box& in, const ds::layout::Box& out) {
     return in.x >= out.x && in.y >= out.y && in.x + in.w <= out.x + out.w && in.y + in.h <= out.y + out.h;
   }
 };

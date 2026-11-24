@@ -1025,7 +1025,7 @@ package driftspec@ds {
             expands to the behaviour of the operation, one step below, and the box stays the
             participant. With no operation of that name, or with more than one, the message is a
             label: the level below is not written yet, which is W-MESSAGE-NO-OPERATION in the coverage
-            (REQ-00124-1) and never a finding. A message to an interface or a class that lacks the
+            (REQ-00124-2) and never a finding. A message to an interface or a class that lacks the
             operation is still W-MSG-UNDECLARED: what is written is written.
           rationale:
             Owner, 2026-11-16 (DS-232): write the high level, and when the level below is implemented
@@ -1058,7 +1058,7 @@ package driftspec@ds {
             makes, or makes fewer times, is W-LEVEL-NO-CROSSING; one made at another place is
             W-LEVEL-ORDER. Both need the sender to be all written below: something is seen to happen
             in it, and every call made in it has a behaviour. Otherwise what the sender does is not
-            known yet and the crossing is W-LEVEL-NOT-BELOW in the coverage (REQ-00124-1), which says
+            known yet and the crossing is W-LEVEL-NOT-BELOW in the coverage (REQ-00124-2), which says
             which steps of the high level have their detail beneath. A scenario with no behaviour
             below it is held to nothing.
           rationale:
@@ -1888,17 +1888,19 @@ package driftspec@ds {
             tests/integration/ds/check/test_satisfies_home.cpp::TestSatisfiesHome.APieceInsideTheHomeARequirementAtTheRootOrOneAnotherSystemAdoptsIsNoFinding
         }
       }
-      requirement REQ-00124-1 {
+      requirement REQ-00124-2 {
         tags: language, check, coverage
-        status: approved
+        status: draft
         title: What is not yet written shall be no finding, kept apart as coverage and answered when asked
         text:
-          Six codes say that something is not yet written: an interface operation with no
+          Eight codes say that something is not yet written: an interface operation with no
           sequence (W-OPERATION-NO-BEHAVIOUR), an outcome with no scenario
           (W-USECASE-OUTCOME-UNHANDLED), a use case nothing realises (W-USECASE-UNREALISED), an
-          approved requirement nothing verifies (W-REQ-NO-VERIFICATION), a verification by test
-          with no tests (W-VER-NO-TEST), a rule that answers to no requirement
-          (W-RULE-NO-REQUIREMENT). They are of severity coverage: ds check does not report or
+          approved requirement nothing verifies (W-REQ-NO-VERIFICATION), an approved requirement
+          nothing satisfies, by itself or through every requirement that refines it
+          (W-REQ-UNREALISED), an approved constraint nothing verifies (W-CST-NO-VERIFICATION), a
+          verification by test with no tests (W-VER-NO-TEST), a rule that answers to no requirement
+          (W-RULE-NO-REQUIREMENT). A draft owes none of them. They are of severity coverage: ds check does not report or
           count them, the check's JSON and the export carry them apart, and ds query <workspace>
           coverage [identity] lists them. An oracle corpus marks them with // ? as it marks a
           finding with // !.
@@ -1906,14 +1908,18 @@ package driftspec@ds {
           Owner, 2026-11-15, on the model audit (finding I12, DS-216): the mechanism punishes
           information that is not consistent, never information that is missing. A finding needs
           two written facts that clash. A design with only its high level drew five warnings and no
-          contradiction. Where else coverage is asked (argos's report) is left open.
-        verification VER-00140-1 {
-          title: Integration and system tests confirm the six absences are kept apart as coverage, not reported by the check, and every corpus means exactly the coverage it marks
-          status: approved
+          contradiction. Where else coverage is asked (argos's report) is left open. Revision 2
+          (Owner, 2026-11-24, DS-429, DS-430): first readers of the manual took a clean check for a
+          finished design; an approved requirement nothing satisfies and an approved constraint
+          nothing verifies are coverage too, as the intent chapter says DriftSpec tells.
+        verification VER-00140-2 {
+          title: Integration and system tests confirm the eight absences are kept apart as coverage, not reported by the check, and every corpus means exactly the coverage it marks
+          status: draft
           method: test
           tests:
             tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
             tests/integration/ds/check/test_coverage.cpp::TestCoverage.AnAbsenceIsNoFindingAndTheQueryAnswersIt
+            tests/integration/ds/check/test_coverage.cpp::TestCoverage.AnApprovedRequirementNothingRealisesAndAConstraintNothingVerifiesAreCoverage
         }
       }
       requirement REQ-00045-1 {

@@ -25,18 +25,20 @@ namespace check {
 /// by that guarantee (GUIDE-cpp-design).
 class ACheck : public IStep {
  public:
-  std::vector<model::Finding> run(Context& out_context) final;
+  std::vector<model::Finding> run() final;
 
  private:
-  virtual std::vector<model::Finding> check(const Context& context) = 0;
+  virtual std::vector<model::Finding> check() = 0;
 };
 
 /// References become relations, behaviours take their subject's identity.
 class Linker : public IStep {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit Linker(Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& out_context) override;
+  std::vector<model::Finding> run() override;
 
  private:
   void resolveReference(const bind::Reference& reference);
@@ -57,9 +59,11 @@ class Linker : public IStep {
 /// Messages typed against the static context: calls, types, expansions.
 class BehaviourTyping : public IStep {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit BehaviourTyping(Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& out_context) override;
+  std::vector<model::Finding> run() override;
 
  private:
   /// The class a behaviour is about, and whether its subject is a method.
@@ -101,11 +105,13 @@ class BehaviourTyping : public IStep {
 /// reachable states, and a method against the operation it answers (DS-382: the interfaces of ContractCheck).
 class InterfaceContracts : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit InterfaceContracts(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   /// The literal a behaviour ends in, following the scenarios its calls enter; empty when it cannot be told.
   std::string outcomeOf(const std::string& sequence, const std::string& path, std::set<std::string>* seen) const;
   void checkInterfaces();
@@ -124,11 +130,13 @@ class InterfaceContracts : public ACheck {
 /// A use case as a contract its operations realise, outcome by outcome (DS-77, DS-382).
 class UseCaseContracts : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit UseCaseContracts(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   void checkUseCases();  // a use case is a contract its operations realise, outcomes included (DS-77)
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
@@ -140,11 +148,13 @@ class UseCaseContracts : public ACheck {
 /// What a diagram names exists, and how deep it asks to be drawn (DS-382).
 class DiagramCheck : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit DiagramCheck(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   /// Whether a pattern a diagram writes names something the model declares: itself, a prefix ending in *, or a
   /// template of it; a scenario by its behaviour's subject.
   bool namesSomething(const std::string& written) const;
@@ -159,11 +169,13 @@ class DiagramCheck : public ACheck {
 /// A scenario written twice for one behaviour (REQ-00065-1, DS-382).
 class ScenarioCheck : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit ScenarioCheck(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   void checkScenarios();
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
@@ -176,11 +188,13 @@ class ScenarioCheck : public ACheck {
 /// what FailureFlow wrote and writes nothing (DS-189, DS-224, DS-382).
 class FailureCheck : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit FailureCheck(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   /// A handler of a failure no step of its attempt can fail with.
   void checkHandlers();
   /// What an operation lets escape against what its signature promises, and at a boundary (DS-189).
@@ -195,9 +209,11 @@ class FailureCheck : public ACheck {
 /// What the model says without writing it: the stereotypes and the languages.
 class Derivation : public IStep {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit Derivation(Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& out_context) override;
+  std::vector<model::Finding> run() override;
 
  private:
   void fillLanguages();  // what each package and module is written in, held down by containment (DS-86)
@@ -219,9 +235,11 @@ struct Escape {
 /// changes; written on the operation as derived fields, escapes and escape.<failure>.
 class FailureFlow : public IStep {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit FailureFlow(Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& out_context) override;
+  std::vector<model::Finding> run() override;
 
  private:
   /// The failures the attempts around a step handle: a step in an attempt's steps, not in its handlers.
@@ -236,6 +254,7 @@ class FailureFlow : public IStep {
   bool pass(std::map<std::string, std::map<std::string, Escape>>& out_escapes) const;
   void write(const std::map<std::string, std::map<std::string, Escape>>& escapes);
   model::Model* model_ = nullptr;
+  Context* context_ = nullptr;  ///< what it reads, given at construction (DS-425)
 };
 
 /// Two levels of one behaviour, both written, agree (DS-233). A scenario of a use case says what crosses between
@@ -244,11 +263,13 @@ class FailureFlow : public IStep {
 /// not add one or turn two around. What the level below does not say yet is coverage, never a finding.
 class LevelCoherence : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit LevelCoherence(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   /// The operation a message calls; "" when it calls none.
   static std::string calleeOf(const model::Model& model, const std::string& message);
   /// The behaviour a scenario's entry runs below it, and the scenario of it: the scenario's own, else the shared one
@@ -264,6 +285,7 @@ class LevelCoherence : public ACheck {
   /// Where each crossing said finds its place, in order, among those done: the longest such choice; -1 for one that
   /// finds none.
   static std::vector<int> placed(const std::vector<Crossing>& said, const std::vector<Crossing>& done);
+  const Context* context_ = nullptr;  ///< what it reads, given at construction (DS-425)
 };
 
 /// The states of a machine, written as rules over the context of its subject (DS-249), held to each other
@@ -271,11 +293,14 @@ class LevelCoherence : public ACheck {
 /// does not hold, a rule that excludes itself.
 class StateRules : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit StateRules(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
+  const Context* context_ = nullptr;  ///< what it reads, given at construction (DS-425)
 };
 
 /// The calls of the behaviours written, held to the machine of what they are made on (DS-250): a call of an
@@ -283,23 +308,28 @@ class StateRules : public ACheck {
 /// read as they are: nothing is asked of them.
 class CallOrder : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit CallOrder(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   /// The states a call could have come from, as the message says them: Open or Paid.
   static std::string either(const std::vector<std::string>& names);
+  const Context* context_ = nullptr;  ///< what it reads, given at construction (DS-425)
 };
 
 /// Ownership, artefacts, extensions and fields.
 class StructureCheck : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit StructureCheck(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   void checkOwnershipCycles();
   /// A chain of one relation that comes back to where it starts (refines, inherits).
   void checkCycles(const std::string& relation, model::Code code, const std::string& verb);
@@ -307,6 +337,10 @@ class StructureCheck : public ACheck {
   void checkRefinesUpward();
   void checkSatisfiesHome();
   void checkArtefacts();
+  /// Whether a requirement is realised (DS-429): something satisfies it, or it is refined and every requirement that
+  /// refines it is realised; one met again on the way down (a cycle, a finding of its own) is not. `seen` holds that way.
+  bool realised(const std::string& requirement, const std::set<std::string>& satisfied,
+                const std::map<std::string, std::vector<std::string>>& refinedBy, std::set<std::string>& seen) const;
   void checkExtensions();
   void checkFields();
   const Context* context_ = nullptr;
@@ -319,11 +353,13 @@ class StructureCheck : public ACheck {
 /// What a box declares it uses against what its behaviours call.
 class DependencyCheck : public ACheck {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit DependencyCheck(const Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
 
  private:
-  std::vector<model::Finding> check(const Context& context) override;
+  std::vector<model::Finding> check() override;
   void checkDependencies();  // what a box declares it uses against what its behaviours call (DS-96)
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
@@ -334,9 +370,11 @@ class DependencyCheck : public ACheck {
 /// Rules and definitions, decided by the evaluator.
 class RuleCheck : public IStep {
  public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit RuleCheck(Context& context);
   std::string name() const override;
   std::vector<std::string> needs() const override;
-  std::vector<model::Finding> run(Context& out_context) override;
+  std::vector<model::Finding> run() override;
 
  private:
   void checkRules();  // a rule answers to a requirement and says what holds; a definition what it ranges over (DS-94)
@@ -351,8 +389,8 @@ class RuleCheck : public IStep {
 class StepFactory {
  public:
   /// The steps a selection names and every step they need, keyed by name; every step, unless a selection says
-  /// otherwise.
-  static std::map<std::string, std::unique_ptr<IStep>> of(const Selection& selection = Selection::every());
+  /// otherwise. Each is made with the context it reads, once (DS-425).
+  static std::map<std::string, std::unique_ptr<IStep>> of(Context& context, const Selection& selection = Selection::every());
 };
 
 }  // namespace check

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <set>
 #include <string>
 
 #include "ds/bind/Binder.hpp"
@@ -36,8 +37,7 @@ TEST_F(TestCoverage, AnAbsenceIsNoFindingAndTheQueryAnswersIt) {
                                "    @requirement SREQ-00001-1\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().code;
   const auto report = ds::check::Report::of(model, metamodel);
   EXPECT_TRUE(report.findings.empty());
@@ -48,6 +48,71 @@ TEST_F(TestCoverage, AnAbsenceIsNoFindingAndTheQueryAnswersIt) {
   const auto one = ds::query::Query(model, metamodel).ask("coverage", "shop@shell::buy");
   ASSERT_EQ(one.size(), 1u);
   EXPECT_EQ(one[0].kind, "W-OPERATION-NO-BEHAVIOUR");
+}
+
+// DS-429, DS-430: an approved requirement is realised by what satisfies it, or through every requirement that refines
+// it (a diamond is asked by each way, a cycle realises nothing); an approved constraint is verified; a draft owes nothing
+TEST_F(TestCoverage, AnApprovedRequirementNothingRealisesAndAConstraintNothingVerifiesAreCoverage) {
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model, metamodel);
+  binder.bind(parser.parseText("a.ds",
+                               "package p {\n"
+                               "  requirement SREQ-00001-1 {\n"  // realised through its one refinement
+                               "    title: The system shall be whole\n"
+                               "    status: approved\n"
+                               "    requirement REQ-00001-1 {\n"
+                               "      title: A shall be done\n"
+                               "      status: approved\n"
+                               "    }\n"
+                               "  }\n"
+                               "  requirement SREQ-00002-1 {\n"  // half realised: one refinement of two
+                               "    title: The system shall be half done\n"
+                               "    status: approved\n"
+                               "    requirement REQ-00002-1 {\n"
+                               "      title: B shall be done\n"
+                               "      status: approved\n"
+                               "    }\n"
+                               "    requirement REQ-00003-1 {\n"
+                               "      title: Nothing does this\n"
+                               "      status: approved\n"
+                               "    }\n"
+                               "  }\n"
+                               "  requirement REQ-00009-1: A draft owes nothing\n"
+                               "  constraint CST-00001-1 {\n"
+                               "    category: design\n"
+                               "    title: Every class shall be tidy\n"
+                               "    status: approved\n"
+                               "  }\n"
+                               "  constraint CST-00002-1 {\n"
+                               "    category: design\n"
+                               "    title: Every class shall be kept\n"
+                               "    status: approved\n"
+                               "  }\n"
+                               "  constraint CST-00003-1: A draft constraint owes nothing\n"
+                               "  verification VER-00001-1 {\n"
+                               "    @constraint CST-00002-1\n"
+                               "    title: Review that every class is kept\n"
+                               "    method: review\n"
+                               "  }\n"
+                               "  module m {\n"
+                               "    class C {\n"
+                               "      @requirement REQ-00001-1\n"
+                               "      @requirement REQ-00002-1\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"));
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
+  std::set<std::string> unrealised, unverified;
+  for (const auto& c : model.coverage()) {
+    EXPECT_EQ(c.severity, ds::model::Severity::coverage) << c.code;
+    if (c.code == "W-REQ-UNREALISED") unrealised.insert(c.message.substr(0, c.message.find(' ')));
+    if (c.code == "W-CST-NO-VERIFICATION") unverified.insert(c.message.substr(0, c.message.find(' ')));
+  }
+  EXPECT_EQ(unrealised, (std::set<std::string>{"SREQ-00002-1", "REQ-00003-1"}));
+  EXPECT_EQ(unverified, (std::set<std::string>{"CST-00001-1"}));
+  for (const auto& f : model.findings()) EXPECT_NE(f.severity, ds::model::Severity::coverage) << f.code;  // never a finding
 }
 
 }  // namespace

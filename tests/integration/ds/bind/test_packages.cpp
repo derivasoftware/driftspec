@@ -25,8 +25,7 @@ class TestPackages : public ::testing::Test {
       EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   bool related(const std::string& kind, const std::string& from, const std::string& to) const {
@@ -173,8 +172,7 @@ ds::model::Model loneClass(const ds::model::Metamodel& metamodel) {
                                "    }\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   return model;
 }
 

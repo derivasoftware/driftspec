@@ -45,8 +45,7 @@ class TestFindingPrinciples : public ::testing::Test {
       }
       binder.bind(file);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code == "E-RULE-BROKEN") out.push_back(f.message.substr(0, f.message.find(' ')));
@@ -63,8 +62,7 @@ class TestFindingPrinciples : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& file : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/audit")) binder.bind(file);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   const ds::model::Metamodel metamodel;

@@ -1,50 +1,50 @@
-#include "ds/scene/Packer.hpp"
+#include "ds/layout/PackingEngine.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <utility>
 
 namespace ds {
-namespace scene {
+namespace layout {
 
-Packer::Packer(std::map<std::string, double>* widths, bool following) : widths_(widths), following_(following) {}
-
-std::map<std::string, Box> Packer::pack(const Frame& root) const {
-  std::map<std::string, Box> out;
-  place(root, size(root), 0, 0, out);
+Placement PackingEngine::place(const Graph& graph) const {
+  Placement out;
+  if (graph.root == nullptr) return out;
+  const Packed packed = size(*graph.root, graph, out);
+  land(*graph.root, packed, 0, 0, out.boxes);
   return out;
 }
 
-Packed Packer::size(const Frame& frame) const {
+Packed PackingEngine::size(const Frame& frame, const Graph& graph, Placement& out) const {
   switch (frame.arrangement) {
     case Frame::Arrangement::Shelves:
-      return shelves(frame);
+      return shelves(frame, graph, out);
     case Frame::Arrangement::Tree:
-      return tree(frame);
+      return tree(frame, graph, out);
     case Frame::Arrangement::Fixed:
       break;
   }
-  return fixed(frame);
+  return fixed(frame, graph, out);
 }
 
-Packed Packer::fixed(const Frame& frame) const {
+Packed PackingEngine::fixed(const Frame& frame, const Graph& graph, Placement& out) const {
   Packed p;
   p.w = frame.w;
   p.h = frame.h;
   p.at = frame.at;
-  for (const Frame& k : frame.kids) p.kids.push_back(size(k));
+  for (const Frame& k : frame.kids) p.kids.push_back(size(k, graph, out));
   return p;
 }
 
-Packed Packer::shelves(const Frame& frame) const {
+Packed PackingEngine::shelves(const Frame& frame, const Graph& graph, Placement& out) const {
   Packed p;
-  for (const Frame& k : frame.kids) p.kids.push_back(size(k));
-  const auto used = shelf(p.kids, frame.gap, width(frame.id, target(p.kids, frame.atLeast, frame.factor)), p.at);
-  if (!following_) (*widths_)[frame.id] = used.first;
+  for (const Frame& k : frame.kids) p.kids.push_back(size(k, graph, out));
+  const auto used = shelf(p.kids, frame.gap, width(frame.id, target(p.kids, frame.atLeast, frame.factor), graph), p.at);
+  if (!graph.following) out.widths[frame.id] = used.first;
   for (auto& a : p.at) a = {a.first + frame.left, a.second + frame.top};
   double y = frame.portTop;
   for (const Frame& port : frame.ports) {  // on the left border: half outside, half inside
-    Packed s = size(port);
+    Packed s = size(port, graph, out);
     p.at.push_back({-s.w / 2, y});
     y += s.h + frame.portGap;
     p.kids.push_back(std::move(s));
@@ -54,15 +54,15 @@ Packed Packer::shelves(const Frame& frame) const {
   return p;
 }
 
-Packed Packer::tree(const Frame& frame) const {
+Packed PackingEngine::tree(const Frame& frame, const Graph& graph, Placement& out) const {
   Packed p;
   if (frame.kids.empty()) return p;
-  Packed base = size(frame.kids.front());
+  Packed base = size(frame.kids.front(), graph, out);
   std::vector<Packed> row;
   std::vector<double> xs;
   double x = 0, rowH = 0;
   for (size_t i = 1; i < frame.kids.size(); ++i) {
-    row.push_back(size(frame.kids[i]));
+    row.push_back(size(frame.kids[i], graph, out));
     xs.push_back(x);
     x += row.back().w + frame.gap;
     rowH = std::max(rowH, row.back().h);
@@ -79,14 +79,14 @@ Packed Packer::tree(const Frame& frame) const {
   return p;
 }
 
-double Packer::width(const std::string& id, double computed) const {
-  if (!following_) return computed;
-  const auto kept = widths_->find(id);
-  return kept == widths_->end() ? computed : kept->second;
+double PackingEngine::width(const std::string& id, double computed, const Graph& graph) {
+  if (!graph.following) return computed;
+  const auto kept = graph.widths.find(id);
+  return kept == graph.widths.end() ? computed : kept->second;
 }
 
-std::pair<double, double> Packer::shelf(const std::vector<Packed>& kids, double gap, double target,
-                                        std::vector<std::pair<double, double>>& at) {
+std::pair<double, double> PackingEngine::shelf(const std::vector<Packed>& kids, double gap, double target,
+                                               std::vector<std::pair<double, double>>& at) {
   double x = 0, y = 0, rowH = 0, width = 0;
   for (const Packed& s : kids) {
     if (x > 0 && x + s.w > target) {
@@ -102,7 +102,7 @@ std::pair<double, double> Packer::shelf(const std::vector<Packed>& kids, double 
   return {width, y + rowH};
 }
 
-double Packer::target(const std::vector<Packed>& kids, double atLeast, double factor) {
+double PackingEngine::target(const std::vector<Packed>& kids, double atLeast, double factor) {
   double area = 0, widest = atLeast;
   for (const Packed& s : kids) {
     area += s.w * s.h;
@@ -111,14 +111,14 @@ double Packer::target(const std::vector<Packed>& kids, double atLeast, double fa
   return std::max(widest, std::sqrt(area) * factor);
 }
 
-void Packer::place(const Frame& frame, const Packed& packed, double x, double y, std::map<std::string, Box>& out) {
+void PackingEngine::land(const Frame& frame, const Packed& packed, double x, double y, std::map<std::string, Box>& out) {
   out[frame.id] = {x, y, packed.w, packed.h};
   const size_t shelved = frame.kids.size();
   for (size_t i = 0; i < packed.kids.size(); ++i) {
     const Frame& k = i < shelved ? frame.kids[i] : frame.ports[i - shelved];
-    place(k, packed.kids[i], x + packed.at[i].first, y + packed.at[i].second, out);
+    land(k, packed.kids[i], x + packed.at[i].first, y + packed.at[i].second, out);
   }
 }
 
-}  // namespace scene
+}  // namespace layout
 }  // namespace ds

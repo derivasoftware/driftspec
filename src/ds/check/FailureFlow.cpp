@@ -17,13 +17,14 @@ std::string FailureFlow::name() const { return "failures"; }
 // the calls must be resolved, and each behaviour bound to the operation it is the behaviour of
 std::vector<std::string> FailureFlow::needs() const { return {"linker", "behaviour"}; }
 
-std::vector<model::Finding> FailureFlow::run(Context& out_context) {
-  model_ = &out_context.model();
+FailureFlow::FailureFlow(Context& context) : context_(&context), model_(&context.model()) {}
+
+std::vector<model::Finding> FailureFlow::run() {
   std::map<std::string, std::map<std::string, Escape>> escapes;  // operation -> failure -> how it escapes
   while (pass(escapes)) {
   }
   write(escapes);
-  return out_context.take();
+  return context_->take();
 }
 
 std::set<std::string> FailureFlow::handledAround(const std::string& step) const {

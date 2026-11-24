@@ -31,17 +31,16 @@ class TestSceneOfTheDesign : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     nodes = ds::scene::Scene(model, metamodel).build().nodes;
     for (const auto& n : nodes) byId[n.id] = &n;
   }
 
-  static bool inside(const ds::scene::Box& in, const ds::scene::Box& out) {
+  static bool inside(const ds::layout::Box& in, const ds::layout::Box& out) {
     const double e = 0.01;
     return in.x >= out.x - e && in.y >= out.y - e && in.x + in.w <= out.x + out.w + e && in.y + in.h <= out.y + out.h + e;
   }
-  static bool apart(const ds::scene::Box& a, const ds::scene::Box& b) {
+  static bool apart(const ds::layout::Box& a, const ds::layout::Box& b) {
     return a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y;
   }
 
@@ -49,7 +48,7 @@ class TestSceneOfTheDesign : public ::testing::Test {
     std::map<std::string, std::vector<const ds::scene::Node*>> siblings;
     for (const auto& n : nodes) {
       if (lean && !n.lean) continue;
-      const ds::scene::Box& box = lean ? n.leanBox : n.full;
+      const ds::layout::Box& box = lean ? n.leanBox : n.full;
       if (!n.parent.empty() && n.kind != "interface") {  // an interface sits on its package's border, as a port
         const ds::scene::Node* p = byId.at(n.parent);
         EXPECT_TRUE(inside(box, lean ? p->leanBox : p->full)) << n.id << (lean ? " (lean)" : "");

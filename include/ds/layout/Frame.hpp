@@ -1,12 +1,12 @@
-#ifndef DRIFTSPEC_SCENE_FRAME_HPP
-#define DRIFTSPEC_SCENE_FRAME_HPP
+#ifndef DRIFTSPEC_LAYOUT_FRAME_HPP
+#define DRIFTSPEC_LAYOUT_FRAME_HPP
 
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace ds {
-namespace scene {
+namespace layout {
 
 /// A box to pack (DS-389): its identity, how its children are arranged and their frames. It is all the packer is
 /// given: what the box stands for stays with the projection that made it.
@@ -37,7 +37,7 @@ struct Frame {
   double drop = 0;                               ///< Tree: between the first child and the row
 };
 
-}  // namespace scene
+}  // namespace layout
 }  // namespace ds
 
-#endif  // DRIFTSPEC_SCENE_FRAME_HPP
+#endif  // DRIFTSPEC_LAYOUT_FRAME_HPP

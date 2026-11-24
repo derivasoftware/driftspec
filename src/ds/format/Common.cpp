@@ -60,7 +60,7 @@ int SceneEncoder::behaviourOf(const std::string& sequence) const {
   return at == behaviourAt_.end() ? -1 : at->second;
 }
 
-void SceneEncoder::box(const scene::Box& b, emit::ISink& out_sink) {
+void SceneEncoder::box(const layout::Box& b, emit::ISink& out_sink) {
   out_sink.beginList().integer(std::lround(b.x)).integer(std::lround(b.y)).integer(std::lround(b.w)).integer(std::lround(b.h)).endList();
 }
 

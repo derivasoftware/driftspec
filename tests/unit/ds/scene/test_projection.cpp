@@ -7,15 +7,15 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/layout/Frame.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
-#include "ds/scene/Frame.hpp"
 #include "ds/scene/Projection.hpp"
 
 namespace {
 
-using ds::scene::Frame;
+using ds::layout::Frame;
 using ds::scene::Projection;
 
 /// What the scene places, before it is placed (DS-389): the model as nested frames, each sized by what it shows,
@@ -51,8 +51,7 @@ class TestProjection : public ::testing::Test {
                                  "    }\n"
                                  "  }\n"
                                  "}\n"));
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   static const Frame& only(const std::vector<Frame>& frames, const std::string& id) {

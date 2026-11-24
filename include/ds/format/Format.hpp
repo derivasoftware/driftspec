@@ -63,7 +63,7 @@ class SceneEncoder {
   /// says; -1 when none.
   int behaviourOf(const std::string& sequence) const;
   /// A box as its four whole numbers: x, y, w, h.
-  static void box(const scene::Box& b, emit::ISink& out_sink);
+  static void box(const layout::Box& b, emit::ISink& out_sink);
   static void texts(const std::vector<std::string>& texts, emit::ISink& out_sink);
   static void pairs(const std::vector<std::pair<std::string, std::string>>& pairs, emit::ISink& out_sink);
 

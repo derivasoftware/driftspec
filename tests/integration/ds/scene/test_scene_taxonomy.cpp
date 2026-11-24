@@ -33,8 +33,7 @@ class TestSceneOfTheTaxonomy : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_EXAMPLES_DIR) + "/hola")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     doc = ds::scene::Scene(model, metamodel).build();
     for (size_t i = 0; i < doc.nodes.size(); ++i) {
       byId[doc.nodes[i].id] = &doc.nodes[i];
@@ -55,7 +54,7 @@ class TestSceneOfTheTaxonomy : public ::testing::Test {
   }
 
   // a base above the row of its heirs, centred over it, in one variant
-  static void baseOverItsHeirs(const ds::scene::Box& base, const std::vector<ds::scene::Box>& heirs) {
+  static void baseOverItsHeirs(const ds::layout::Box& base, const std::vector<ds::layout::Box>& heirs) {
     double left = heirs.front().x, right = heirs.front().x + heirs.front().w;
     for (const auto& h : heirs) {
       EXPECT_GT(h.y, base.y + base.h);         // below the base, with room for the trunk

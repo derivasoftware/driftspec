@@ -85,7 +85,9 @@ enum class Code : std::size_t {
   W_SCENARIO_NO_OUTCOME,
   W_USECASE_UNREALISED,
   E_RULE_PATTERN,
-  E_RULE_RESERVED
+  E_RULE_RESERVED,
+  W_REQ_UNREALISED,      ///< an approved requirement that nothing satisfies (DS-429)
+  W_CST_NO_VERIFICATION  ///< an approved constraint that nothing verifies (DS-430)
 };
 
 }  // namespace model

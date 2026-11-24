@@ -20,17 +20,16 @@ std::string BehaviourTyping::name() const { return "behaviour"; }
 
 std::vector<std::string> BehaviourTyping::needs() const { return {"linker"}; }
 
-std::vector<model::Finding> BehaviourTyping::run(Context& out_context) {
-  context_ = &out_context;
-  model_ = &out_context.model();
-  resolver_ = &out_context.resolver();
+BehaviourTyping::BehaviourTyping(Context& context) : context_(&context), model_(&context.model()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> BehaviourTyping::run() {
   for (const auto& m : context_->notes().messages) {
     checkMessage(m);
     rememberResult(m);  // in order: a result exists for the messages after it
   }
   checkLocals();
   for (const auto& e : context_->notes().events) checkEvent(e);
-  return out_context.take();
+  return context_->take();
 }
 
 const model::Entity* BehaviourTyping::subjectClass(const model::Entity& sequence, const model::Entity** subject) const {

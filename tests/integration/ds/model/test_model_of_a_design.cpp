@@ -58,10 +58,7 @@ class TestModelOfADesign : public ::testing::Test {
     binder.bind(file);
   }
 
-  void check() {
-    const auto steps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, steps).run(binder.notes());
-  }
+  void check() { ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes()); }
 
   int findings(const std::string& code) const {
     int n = 0;

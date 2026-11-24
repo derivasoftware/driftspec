@@ -1,1 +1,2 @@
-3483 entities · 0 expected · 6450 relations · 0 findings
+3483 entities · 0 expected · 6450 relations · 0 findings · 2 open
+2 open items of coverage: ds query design coverage lists them

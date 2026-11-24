@@ -24,8 +24,7 @@ class TestCutDrawing : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/cut")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   nlohmann::json diagram(const std::string& name) {
@@ -163,8 +162,7 @@ TEST_F(TestCutDrawing, AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough) {
                                "  }\n"
                                "}\n"
                                "diagram HLD {\n  kind: class\n  include: p@*\n  close: package\n}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(other, metamodel)->run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:HLD", false));
   std::string use, structural = "none";
   for (const auto& e : ir["edges"]) {
@@ -225,8 +223,7 @@ TEST(TestWrittenLevel, AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfT
                                "  }\n"
                                "}\n"
                                "diagram HLD {\n  kind: class\n  include: shop@*\n}\n"));
-  const auto steps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, steps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:HLD", false));
   std::set<std::pair<std::string, std::string>> arrows;
   for (const auto& e : ir["edges"]) {

@@ -28,8 +28,7 @@ class TestTableView : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/states")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     json = ds::render::IrExport(model, metamodel).render("diagram:TB_Order", false);
     ir = nlohmann::json::parse(json);
   }
@@ -110,8 +109,7 @@ TEST_F(TestTableView, ATableThatNamesNoMachineSaysSo) {
   binder.bind(parser.parseText("a.ds",
                                "package p {\n  module m {\n    class Thing { }\n  }\n}\n"
                                "diagram MX { kind: table\n include: p@m::Thing }\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(other, metamodel)->run(binder.notes());
   const auto none = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:MX", false));
   EXPECT_FALSE(none.contains("table"));
   EXPECT_NE(none["notice"].get<std::string>().find("No state machine selected"), std::string::npos);
@@ -131,8 +129,7 @@ TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
       "diagram TB {\n  kind: table\n  for requirement r in p\n  column requirement: r.id\n  column says: r.title\n"
       "  column proved: v where v verifies r\n  column kept: holds c satisfies r\n}\n"
       "diagram TD {\n  kind: table\n  for requirement r in p\n  where r.status = \"draft\"\n  column requirement: r.id\n}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(other, metamodel)->run(binder.notes());
   const auto t = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:TB", false))["table"];
   EXPECT_EQ(t["corner"], "requirement");
   EXPECT_EQ(t["columns"], (std::vector<std::string>{"says", "proved", "kept"}));

@@ -27,8 +27,7 @@ class TestUses : public ::testing::Test {
       ASSERT_FALSE(parsed.hasSyntaxErrors) << f.first << ": " << parsed.errorDetail;
       binder.bind(parsed);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   bool consumes(const std::string& from, const std::string& to) const {

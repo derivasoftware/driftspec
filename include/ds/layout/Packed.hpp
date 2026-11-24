@@ -1,11 +1,11 @@
-#ifndef DRIFTSPEC_SCENE_PACKED_HPP
-#define DRIFTSPEC_SCENE_PACKED_HPP
+#ifndef DRIFTSPEC_LAYOUT_PACKED_HPP
+#define DRIFTSPEC_LAYOUT_PACKED_HPP
 
 #include <utility>
 #include <vector>
 
 namespace ds {
-namespace scene {
+namespace layout {
 
 /// A frame packed (DS-389): its size and where each of its children sits, from its top left corner, its ports after
 /// its kids. What the packer works out before it says where everything lands.
@@ -16,7 +16,7 @@ struct Packed {
   std::vector<Packed> kids;
 };
 
-}  // namespace scene
+}  // namespace layout
 }  // namespace ds
 
-#endif  // DRIFTSPEC_SCENE_PACKED_HPP
+#endif  // DRIFTSPEC_LAYOUT_PACKED_HPP

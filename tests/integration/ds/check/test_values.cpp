@@ -22,8 +22,7 @@ class TestValues : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/values")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
   }
 
@@ -143,8 +142,7 @@ TEST(TestNameScopes, ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttribute
                                      "}\n");
   ASSERT_FALSE(file.hasSyntaxErrors);
   binder.bind(file);
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   auto calls = [&model](const std::string& message, const std::string& op) {
     for (const auto& r : model.index().all())
       if (r.kind == "calls" && r.from == message && r.to == op) return true;
