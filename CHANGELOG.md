@@ -15,6 +15,12 @@ and a tour so that every kind of diagram is drawn, and a small workspace with fi
 compare them with what the ds just built writes; `python tests/system/python/test_golden.py --ds <ds>` writes them again,
 a change reviewed like any other. Nothing a design writes changes.
 
+## 0.1.55
+
+The viewer's test that a behaviour is written once and replayed by many tours runs on a fixture made for it (DS-377):
+one behaviour called from four places, whose calls and steps are known, instead of a ratio of ds's own design that moved
+with every change to it. ds's design keeps the tours that name its entities. Nothing a design writes changes.
+
 ## 0.1.54
 
 The rules are evaluated with far less copying (DS-381). The solver bound each variable in a map of strings and copied

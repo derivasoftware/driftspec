@@ -102,10 +102,33 @@ describe('the tours the viewer replays', () => {
     assert.equal(check.steps.at(-1).ret, 1); // the command answers
   });
 
-  test('the page stays small because each behaviour is written once and the tours replay many more steps', () => {
-    const raw = JSON.parse(execFileSync(DS, ['render', join(ROOT, 'design'), '-f', 'json'], { maxBuffer: 1 << 28 }).toString());
+  // one behaviour of STEPS calls, called from CALLERS places: each caller's tour replays it
+  test('a behaviour written once is replayed by every tour that calls it', () => {
+    const CALLERS = 4;
+    const STEPS = 5;
+    const dir = mkdtempSync(join(tmpdir(), 'ds-tours-'));
+    const callers = Array.from({ length: CALLERS }, (_, i) => `C${i + 1}`);
+    writeFileSync(join(dir, 'p.ds'), `package p {
+  module m {
+    class Leaf {
+      + work() -> none
+      + step() -> none
+    }
+${callers.map((c) => `    class ${c} {\n      - leaf: Leaf\n      + run() -> none\n    }\n    sequence ${c}::run {\n      self -> leaf.work()\n    }\n`).join('')}    sequence Leaf::work {
+${'      self -> step()\n'.repeat(STEPS)}    }
+  }
+}
+`);
+    const raw = JSON.parse(execFileSync(DS, ['render', dir, '-f', 'json']).toString());
     const calls = raw.behaviours.reduce((n: number, b: Scene) => n + b[raw.fields.behaviour.indexOf('calls')].length, 0);
-    const steps = decode(raw).tours.reduce((n: number, t: Scene) => n + t.steps.length, 0);
-    assert.ok(calls * 5 < steps, `${calls} calls written, ${steps} steps replayed`);
+    assert.equal(calls, CALLERS + STEPS); // each caller's one call, and work's steps written once
+    const s = decode(raw);
+    for (const c of callers) {
+      const steps = tour(s, `p@m::${c}::run`).steps;
+      assert.equal(steps.length, 1 + STEPS + 1, c); // the call, work's steps, work's answer back
+      assert.equal(steps.filter((x: Scene) => x.f === 'p@m::Leaf::work' && x.t === 'p@m::Leaf::step').length, STEPS, c);
+    }
+    const replayed = s.tours.reduce((n: number, t: Scene) => n + t.steps.length, 0);
+    assert.equal(replayed, CALLERS * (STEPS + 2) + STEPS); // and work's own tour
   });
 });
