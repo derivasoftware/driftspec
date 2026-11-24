@@ -157,6 +157,14 @@ package driftspec@ds {
       - static writtenBare(text: std::string) -> bool                              // PREFIX(-PART)*-NUMBER
       - static numberParts(text: std::string, lastDash: std::size_t) -> int         // the number parts after the letter parts, or -1 (DS-335)
     }
+    class WrittenType {            // a type as the design writes it: std::vector<model::Entity>, the code's text (DS-390)
+      @requirement REQ-00119-2                 // a contract compares the idea each type commits to; the scene's rows read it too
+      - text_: std::string
+      + WrittenType(text: std::string)
+      + unqualified() -> std::string            // std::vector<model::Entity> is vector<Entity>
+      - static inWord(c: char) -> bool
+      - static startsName(c: char) -> bool
+    }
 
     // The walks of a model's behaviours (DS-343): which scenarios a behaviour names, the steps the path of one
     // takes, and who a behaviour runs on, which the check and the state machines ask the same. Made over a model
