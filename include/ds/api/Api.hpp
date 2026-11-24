@@ -39,6 +39,9 @@ class Api {
   /// What the grammar takes at a place of a text (0-based line and column): keywords, an
   /// annotation, a field; the words an editor completes with.
   static std::string expectedAt(const std::string& text, int line, int column);
+  /// The severity table of the language (DS-379), as JSON: each severity's name, whether a finding of it fails, whether
+  /// it is kept apart as coverage, and what an editor shows it as; in the order of Severity (DS-386).
+  std::string severities() const;
   /// A diagram of the workspace drawn as text (box characters) or svg, wrapped to a width (0: none);
   /// empty when there is no such diagram.
   std::string render(const Files& files, const std::string& diagram, const std::string& format, int width) const;

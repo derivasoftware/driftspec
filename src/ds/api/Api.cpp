@@ -118,6 +118,13 @@ std::string Api::page(const Files& files, const std::string& title, const std::v
   return Workspace(metamodel_, files, Output::Viewer).page(title, focus);
 }
 
+std::string Api::severities() const {
+  nlohmann::json out = nlohmann::json::array();
+  for (const auto& s : metamodel_.severities())
+    out.push_back({{"name", s.name}, {"fails", s.fails}, {"keptApart", s.keptApart}, {"editor", s.editor}});
+  return out.dump();
+}
+
 std::string Api::expectedAt(const std::string& text, int line, int column) {
   parse::Parser parser;
   return nlohmann::json(parser.expectedAt(text, line, column)).dump();

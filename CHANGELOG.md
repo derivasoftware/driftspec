@@ -6,12 +6,22 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.71
+## 0.1.72
 
 The one place that names the concrete classes of an interface is a factory, named so (DS-404). Steps is StepFactory
 and Filters is FilterFactory; the node binders are made by NodeBinderFactory instead of the binder's constructor; and
 the Api asks CheckerFactory for the checker and holds it as the IChecker it is, so the load names no concrete checker
 (the viewer's tour of a load now reaches the check at IChecker::run). Nothing a design writes changes.
+
+## 0.1.71
+
+The language server and the live viewer show a finding's severity as the severity table gives it (DS-386). The engine
+hands the table to Python (`driftspec.severities()`: each severity's name, whether it fails, whether it is kept apart as
+coverage, and what an editor shows it as), and no severity is named in Python. The language server publishes each finding
+with the table's editor mapping; what it publishes does not change. The live viewer colours each finding by its row,
+errors red and warnings amber; its findings pill counts what fails, with the rest beside it; and the coverage, which
+reached no Python door, has a folded section of its own in the information colour, fed by a new `coverage` field of the
+state. The live contract is version 5.
 
 ## 0.1.70
 

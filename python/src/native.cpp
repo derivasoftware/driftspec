@@ -57,6 +57,10 @@ PyObject* run(F work) {
 
 PyObject* version(PyObject*, PyObject*) { return PyUnicode_FromString(kMetamodel.version().c_str()); }
 
+PyObject* severities(PyObject*, PyObject*) {
+  return run([] { return kApi.severities(); });
+}
+
 PyObject* check(PyObject*, PyObject* args) {
   PyObject* dict = nullptr;
   ds::api::Files files;
@@ -267,6 +271,7 @@ PyMethodDef kMethods[] = {
     {"scenario_of", identity1<&ds::api::Identity::scenarioOf>, METH_VARARGS, "scenario_of(id) -> str: the scenario a behaviour names"},
     {"without_revision", identity1<&ds::api::Identity::withoutRevision>, METH_VARARGS, "without_revision(id) -> str: an artefact id bare"},
     {"version", version, METH_NOARGS, "version() -> str: the version of the engine, as ds --version says it"},
+    {"severities", severities, METH_NOARGS, "severities() -> str: the severity table, as JSON (DS-386)"},
     {"check", check, METH_VARARGS, "check(files: dict[str, str]) -> str: the findings and counts, as ds check --json"},
     {"export", exportModel, METH_VARARGS, "export(files: dict[str, str]) -> str: the model, as ds export"},
     {"expected_at", expectedAt, METH_VARARGS, "expected_at(text, line, column) -> str: what the grammar takes there, as JSON"},
