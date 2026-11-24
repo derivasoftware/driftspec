@@ -3029,6 +3029,20 @@
             "source": "syntax",
             "type": "type",
             "values": []
+          },
+          {
+            "meaning": "the failures that escape it, from where they start and where they are handled (DS-188)",
+            "name": "escapes",
+            "source": "derived",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "how a failure escapes it: the operations it comes up through, and the behaviour that starts it",
+            "name": "escape.*",
+            "source": "derived",
+            "type": "text",
+            "values": []
           }
         ],
         "flags": [],
