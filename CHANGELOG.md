@@ -14,6 +14,12 @@ time grew with the square of the design: a synthetic design of 3 200 classes spe
 class now reads only its own members, the same ones in the same order. Nothing changes for a design: no finding,
 export or drawing.
 
+## 0.1.49
+
+The Owner approves the requirements DS-379 left as drafts, with their verifications (every finding is made from the
+catalogue; nothing else writes a severity: REQ-00190-1, REQ-00191-1), and the viewer-tours verification VER-00082-3.
+Nothing a design writes changes.
+
 ## 0.1.48
 
 A finding is made from its code (DS-379). Seventy places wrote a finding's code and severity as two strings, which

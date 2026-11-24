@@ -311,7 +311,7 @@ package driftspec@ds {
     // ---- a finding is made from its code (DS-379), as requirements and the rules that hold them ------------------
     requirement REQ-00190-1 {
       tags: architecture, model, findings
-      status: draft
+      status: approved
       @refines REQ-00079-2
       title: Every finding shall be made from its code by the metamodel, which reads its printed code and its severity from the catalogue
       text:
@@ -323,7 +323,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-378, DS-379): seventy sites wrote the code and the severity as two strings, and agreed
         with the catalogue only by discipline; the catalogue was read for coverage alone.
       verification VER-00210-1 {
-        status: draft
+        status: approved
         title: Tests confirm every finding is made from its code with the catalogue's severity, the catalogue holds one row per code in its order, and a class outside the model that reads a code's row is told
         method: test
         tests:
@@ -335,7 +335,7 @@ package driftspec@ds {
 
     requirement REQ-00191-1 {
       tags: architecture, model, findings
-      status: draft
+      status: approved
       @refines REQ-00079-2
       title: What a severity means shall be a row of the metamodel's severity table, which every reader asks
       text:
@@ -347,7 +347,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-379): a severity read as a string was compared by its spelling in each reader; asked as
         a row, a reader never names one, and a severity added later reaches each of them.
       verification VER-00211-1 {
-        status: draft
+        status: approved
         title: Tests confirm each severity is a row that says what it means, the report carries the table, and a class outside the model and the report that holds a row is told
         method: test
         tests:
