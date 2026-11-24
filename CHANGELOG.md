@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.67
+
+The scene builds what it places from the model apart from how it is placed (DS-389). A projection reads the model
+into nested frames, each package, module, interface, unit and row sized by what it shows, its children in the order
+they are read and the room each kind of box asks for; a packer that knows no model turns those frames into boxes:
+a frame keeps its size, fills shelves no wider than a target, or centres its first child over the row of the others.
+Nothing a design writes changes: the viewer, its scene and every drawing are the same.
+
 ## 0.1.66
 
 The check's architecture decisions are requirements held by rules (DS-383). The checker runs each step through IStep
