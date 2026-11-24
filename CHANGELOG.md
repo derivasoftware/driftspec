@@ -6,6 +6,16 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.52
+
+The evaluator of the rules is five pieces (DS-380). `Facts` reads the model once into what a rule is evaluated over:
+the entities of each kind, every relation both ways, the names a formula writes resolved, and what each definition holds
+for; it is the pieces' one reader of the model. `RuleValidator` checks each formula before it is evaluated, `Strata`
+orders the definitions, and `Solver` answers a body over the facts and never the model. `Evaluator` directs them: it
+records into the facts what the validator resolved and what the definitions derive, and writes the breaches and the
+tables into the model. The design of ds holds the solver to the facts with a rule. Nothing a design writes changes:
+findings, breaches and tables read the same.
+
 ## 0.1.51
 
 A drawing loads only the steps of the check it reads (DS-376). `ds render` to svg, text, cells, ir or layout, and the
