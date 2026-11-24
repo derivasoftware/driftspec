@@ -437,8 +437,11 @@ package driftspec@ds {
       + owns renamed: ChangeMark
       + owns changed: ChangeMark
       + cellColours: std::map<std::string, std::uint32_t>   // what a host that paints cells gives each colour
+      + badges: std::map<std::string, std::string>          // a badge's colour by its classifier, one per kind (DS-441)
+      + abstractBadge: std::string
       + TextPen(t: theme::Theme)
       + changeMarkOf(change: std::string) -> ChangeMark      // one it does not name is drawn as changed
+      + badgeColour(classifier: std::string, abstract: bool) -> std::string   // its kind's, an abstract class's, or the badge's
     }
 
     // ---- what the drawings keep to their source files ----

@@ -127,6 +127,12 @@ TEST(TestTextPen, ItReadsItsMetricsAndColoursFromTheTheme) {
   EXPECT_EQ(pen.changeMarkOf("renamed").colour, kTheme.sgr(ds::theme::Role::renamed));
   EXPECT_EQ(pen.changeMarkOf("anything else").mark, std::string("~"));
   EXPECT_EQ(pen.cellColours, kTheme.cellColours());
+  // a badge in its kind's colour (DS-441): an abstract class its own, a classifier the palette does not name the badge's
+  EXPECT_EQ(pen.badgeColour("interface", false), kTheme.sgr(ds::theme::Role::interfaceBadge));
+  EXPECT_EQ(pen.badgeColour("dataclass", false), kTheme.sgr(ds::theme::Role::dataclassBadge));
+  EXPECT_EQ(pen.badgeColour("", true), kTheme.sgr(ds::theme::Role::abstractBadge));
+  EXPECT_EQ(pen.badgeColour("verification", false), kTheme.sgr(ds::theme::Role::verificationBadge));
+  EXPECT_EQ(pen.badgeColour("struct", false), kTheme.sgr(ds::theme::Role::badge));
 }
 
 }  // namespace

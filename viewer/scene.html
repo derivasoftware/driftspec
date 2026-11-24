@@ -10,7 +10,7 @@
   --bg:#f6f4ef;--panel:#fffdf8;--fg:#1d1c1a;--muted:#6b675f;--line:#d6d0c3;--soft:#ece8de;
   --accent:#2f5d8a;--accent-soft:#d6e4f2;--req:#8a4b2f;--req-soft:#f3e3d8;
   --priv:#8c8579;--pkg:#efe9dc;--mod:#f8f5ee;--ifc:#e3edf7;
-  --k-class:#3567a0;--k-function:#2a8a6e;--k-dataclass:#8a5cb3;--k-enum:#b07a22;--ok:#2f8a4a;--warn:#d9822b;--bad:#c0392b;
+  --k-class:#4f46e5;--k-function:#475569;--k-dataclass:#b45309;--k-enum:#047857;--k-interface:#be185d;--k-abstract:#7c3aed;--ok:#2f8a4a;--warn:#d9822b;--bad:#c0392b;
   --r-owns:#c2185b;--r-agg:#00838f;--r-uses:#5c6bc0;--r-calls:#c62828;
   --you:#2f62c9;--shadow:rgba(0,0,0,.18);--shadow-pop:rgba(0,0,0,.2);--shadow-soft:rgba(0,0,0,.12);
   --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
@@ -20,7 +20,7 @@
   --bg:#151618;--panel:#1d1f22;--fg:#e8e6e1;--muted:#9a968d;--line:#3a3d42;--soft:#26292d;
   --accent:#7fb0e0;--accent-soft:#203a55;--req:#e3a27f;--req-soft:#3a271d;
   --priv:#857f75;--pkg:#1a1c1f;--mod:#212427;--ifc:#1c2a37;
-  --k-class:#78a6dc;--k-function:#5cc4a2;--k-dataclass:#b994dc;--k-enum:#ddb25e;--ok:#6cc68a;--warn:#f0a35a;--bad:#f07a6a;
+  --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#6cc68a;--warn:#f0a35a;--bad:#f07a6a;
   --r-owns:#f06292;--r-agg:#4dd0e1;--r-uses:#9fa8da;--r-calls:#ef7f7f;}}
 /* end theme: viewer */
 *{box-sizing:border-box}
@@ -162,7 +162,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 <style id="theme">
 /* ds render --css: the reader's stylesheet goes here, after the viewer's, so it wins.
    The viewer draws with these variables: --bg --panel --fg --muted --line --soft --accent --accent-soft
-   --req --req-soft --priv --pkg --mod --ifc --k-class --k-function --k-dataclass --k-enum
+   --req --req-soft --priv --pkg --mod --ifc --k-class --k-function --k-dataclass --k-enum --k-interface --k-abstract
    --r-owns --r-agg --r-uses --r-calls --ok --warn --bad --you --shadow --shadow-pop --shadow-soft --mono --sans */
 /*CSS*/
 </style>
@@ -262,7 +262,7 @@ const mini=document.getElementById('mini'), mctx=mini.getContext('2d');
 let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
   K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),you:g('--you'),shadow:g('--shadow'),ok:g('--ok'),warn:g('--warn'),bad:g('--bad'),mono:g('--mono'),sans:g('--sans'),
-    kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-class'),abstract:g('--k-class')},
+    kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-interface'),abstract:g('--k-abstract')},
     rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')}};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
 function resize(){const r=stage.getBoundingClientRect(); DPR=devicePixelRatio||1; U=r.width<560?.6:(r.width<800?.8:1); W=r.width/U; H=r.height/U;
