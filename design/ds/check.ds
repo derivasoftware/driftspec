@@ -388,7 +388,7 @@ package driftspec@ds {
 
     // The one place that makes the checker (DS-404): what asks for a check holds it as the IChecker it is.
     class CheckerFactory {
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       + static make(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>) -> std::unique_ptr<IChecker>
     }
 
