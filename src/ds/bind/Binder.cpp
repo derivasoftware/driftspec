@@ -4,7 +4,9 @@ namespace ds {
 namespace bind {
 
 Binder::Binder(model::Model& model, const model::Metamodel& metamodel)
-    : model_(model), metamodel_(metamodel), dispatch_(parse::Parser::language(), {&artefacts_, &legacy_}) {}
+    : model_(model),
+      metamodel_(metamodel),
+      dispatch_(parse::Parser::language(), {&artefacts_, &packages_, &modules_, &interfaces_, &enums_, &rules_, &diagrams_, &legacy_}) {}
 
 void Binder::bind(const parse::ParsedFile& file) {
   const parse::TreeReader reader(file);

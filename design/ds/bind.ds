@@ -65,23 +65,31 @@ package driftspec@ds {
       + bind(file: parse::ParsedFile) -> void
       - owns notes_: Notes
       + notes() -> Notes
+      - owns fields_: FieldBinder
+      - owns annotations_: AnnotationBinder
+      - owns extensions_: ExtensionBinder
+      - owns types_: TypeBinder
+      - owns signatures_: SignatureBinder
+      - owns formulas_: FormulaBinder
       - owns artefacts_: ArtefactBinder
+      - owns packages_: PackageBinder
+      - owns modules_: ModuleBinder
+      - owns interfaces_: InterfaceBinder
+      - owns enums_: EnumBinder
+      - owns rules_: RuleBinder
+      - owns diagrams_: DiagramBinder
       - owns legacy_: LegacyBinder
       - owns dispatch_: Dispatch
     }
 
     class LegacyBinder : INodeBinder {       // the constructs with no binder of their own yet: DS-356 splits it, DS-357 removes it
+      + LegacyBinder(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder, types: TypeBinder, signatures: SignatureBinder)
       + kinds() -> std::vector<std::string>
       + bind(node: TSNode, ctx: BindContext) -> void {
         @requirement REQ-00013-1
         @requirement REQ-00014-1
-        @requirement REQ-00020-2
         @requirement REQ-00015-1
         @requirement REQ-00022-1
-        @requirement REQ-00017-2
-      }
-      - bindFormula(ctx: BindContext, node: TSNode, out_entity: model::Entity) -> void {
-        @requirement REQ-00095-2
       }
       - bindUseCase(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00081-1
@@ -99,11 +107,6 @@ package driftspec@ds {
       - bindFunction(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00054-2
       }
-      - bindSignature(ctx: BindContext, node: TSNode, out_entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
-        @requirement REQ-00028-2
-        @requirement REQ-00055-2
-        @requirement REQ-00112-1
-      }
       - bindMemberBody(ctx: BindContext, member: TSNode, out_entity: model::Entity, scope: std::string) -> void {
         @requirement REQ-00032-2
       }
@@ -119,25 +122,30 @@ package driftspec@ds {
       - branch(ctx: BindContext, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
         @requirement REQ-00037-1
       }
-      - bindType(ctx: BindContext, type: TSNode, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> std::string {
-        @requirement REQ-00028-2
-        @requirement REQ-00024-3
-      }
       - declareOperator(ctx: BindContext, cls: model::Entity, symbol: std::string, location: model::Location) -> void {
         @requirement REQ-00030-1
       }
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs extensions_: ExtensionBinder
+      - refs types_: TypeBinder
+      - refs signatures_: SignatureBinder
     }
 
     // Reads the file's tree and binds what is written at its root, packages and diagrams, with no scope and no owner,
     // writing through one context into the model and the notes (DS-354). The table sends each to the binder of its
-    // kind (DS-355): today both go to the walk the binder had.
+    // kind (DS-355, DS-356).
     sequence Binder::bind {
       local reader: parse::TreeReader
       local ctx: BindContext
       self -> reader.root() -> root
       loop each package and diagram written at the root {
         local node: TSNode
-        self -> legacy_.bind(node, ctx)
+        alt a package {
+          self -> packages_.bind(node, ctx)
+        } else {
+          self -> diagrams_.bind(node, ctx)
+        }
       }
     }
 
@@ -161,17 +169,18 @@ package driftspec@ds {
 
     // What an annotation means is the metamodel's (DS-341): the relation its word makes, and for a word it
     // does not know a link that refers, said with the annotations it knows. The reference is linked later.
-    sequence BindContext::annotations {
+    sequence AnnotationBinder::bind {
+      local metamodel: model::Metamodel        // the context's
       loop each annotation written in the node {
         self -> metamodel.annotationOf(word) -> spec
         opt the language gives the word no meaning {
           self -> metamodel.knownAnnotations() -> known
-          self -> model.report(finding)
+          self -> ctx.report(finding)
         }
       }
     }
 
-    // The constructs no binder of their own takes yet (DS-355): the node is declared by its kind, related to its
+    // The constructs no binder of their own takes yet (DS-355, DS-356): the node is declared by its kind, related to its
     // owner, and its children bound in turn. The identities are built by expressions, so e appears with its fields
     // already set. A package's children are bound with its id plus @ as scope, an expression: that call and its
     // annotations are not told here.
@@ -180,54 +189,8 @@ package driftspec@ds {
       local relation: model::Relation
       local at: model::Scope
       self -> ctx.locationOf(node) -> loc
-      opt a package {
-        self -> ctx.fields(node, e)
-        self -> ctx.declare(e) -> declared
-        loop each field written {
-          // a reopened package takes what this declaration writes (DS-346)
-          self -> ctx.annotate(declared.id, key, value)
-        }
-        opt it has an owner {
-          self -> ctx.relate(relation)
-        }
-      }
-      opt a module {
-        self -> at.qualify(e.name) -> id
-        opt it has an owner {
-          self -> ctx.find(owner) -> ownerEntity
-        }
-        self -> ctx.declare(e) -> declared
-        loop each field written {
-          opt it adds to what the module already says / reopened {
-            // two values that differ are both kept
-            self -> ctx.annotate(declared.id, key, value)
-          }
-        }
-        opt it has an owner {
-          self -> ctx.relate(relation)
-        }
-        self -> ctx.children(node)
-      }
       opt a use case, with its outcomes {
         -> bindUseCase(ctx, node)
-      }
-      opt an interface, with its operations {
-        self -> at.qualify(e.name) -> id
-        self -> ctx.fields(node, e)
-        self -> ctx.declare(e)
-        opt it has an owner {
-          self -> ctx.relate(relation)
-        }
-        self -> ctx.annotations(node, e.id, scope)
-        loop each operation {
-          local op: TSNode
-          local o: model::Entity
-          self -> ctx.locationOf(op)
-          self -> ctx.fields(op, o)
-          self -> ctx.declare(o)
-          self -> ctx.relate(relation)
-          self -> ctx.annotations(op, o.id, scope)
-        }
       }
       opt a class {
         -> bindClass(ctx, node)
@@ -235,23 +198,15 @@ package driftspec@ds {
       opt a function {
         -> bindFunction(ctx, node)
       }
-      opt an enum, with its values {
-        self -> at.qualify(e.name) -> id
-        self -> ctx.declare(e)
-        opt it has an owner {
-          self -> ctx.relate(relation)
-        }
-        self -> ctx.annotations(node, e.id, scope)
-      }
       opt a sequence {
         -> bindSequence(ctx, node)
       }
       opt a state machine: its events and actions are kept for the checker {
         local entityName: std::string
         self -> at.qualify(entityName) -> id
-        self -> ctx.fields(node, e)
+        self -> fields_.bind(node, ctx, e)
         self -> ctx.declare(e)
-        self -> ctx.annotations(node, e.id, scope)
+        self -> annotations_.bind(node, ctx, e.id, scope)
         loop each view and transition {
           local t: TSNode
           local v: model::Entity
@@ -259,17 +214,93 @@ package driftspec@ds {
             self -> ctx.annotate(e.id, key, value)
           }
           opt a view {
-            self -> ctx.fields(t, v)
+            self -> fields_.bind(t, ctx, v)
             self -> ctx.declare(v)
             self -> ctx.relate(relation)
-            self -> ctx.annotations(t, v.id, scope)
+            self -> annotations_.bind(t, ctx, v.id, scope)
           }
         }
       }
-      opt a diagram {
-        self -> ctx.fields(node, e)
-        self -> ctx.declare(e)
+    }
+
+    sequence PackageBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      self -> ctx.locationOf(node) -> loc
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e) -> declared
+      loop each field written {
+        // a reopened package takes what this declaration writes (DS-346)
+        self -> ctx.annotate(declared.id, key, value)
       }
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+    }
+
+    sequence ModuleBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      self -> at.qualify(e.name) -> id
+      opt it has an owner {
+        self -> ctx.find(owner) -> ownerEntity
+      }
+      self -> ctx.declare(e) -> declared
+      loop each field written {
+        opt it adds to what the module already says / reopened {
+          // two values that differ are both kept
+          self -> ctx.annotate(declared.id, key, value)
+        }
+      }
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> ctx.children(node)
+    }
+
+    sequence InterfaceBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      self -> at.qualify(e.name) -> id
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e)
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> annotations_.bind(node, ctx, e.id, scope)
+      loop each operation {
+        local op: TSNode
+        local o: model::Entity
+        self -> ctx.locationOf(op)
+        self -> fields_.bind(op, ctx, o)
+        self -> ctx.declare(o)
+        self -> ctx.relate(relation)
+        self -> annotations_.bind(op, ctx, o.id, scope)
+      }
+    }
+
+    sequence EnumBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      self -> at.qualify(e.name) -> id
+      self -> ctx.declare(e)
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> annotations_.bind(node, ctx, e.id, scope)
+    }
+
+    sequence DiagramBinder::bind {
+      local e: model::Entity
+      self -> ctx.locationOf(node) -> loc
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e)
     }
 
     class BindContext {                      // what binding one node is given; the only place it writes (DS-354)
@@ -294,17 +325,6 @@ package driftspec@ds {
       + refer(reference: Reference) -> void
       + noteMessage(message: Message) -> void
       + noteEvent(event: Event) -> void
-      + fields(node: TSNode, out_entity: model::Entity) -> void {
-        @requirement REQ-00032-2
-      }
-      + annotations(node: TSNode, from: std::string, scope: std::string) -> void {
-        @requirement REQ-00044-1
-        @requirement REQ-00114-1
-      }
-      + extend(node: TSNode, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
-        @constraint CST-00003-2
-      }
-      + static annotationsOnly(body: TSNode, idNode: TSNode) -> bool
     }
     class Notes {                            // what binding leaves for the checker, the only thing it reads of bind (DS-354)
       @requirement REQ-00053-2
@@ -321,6 +341,10 @@ package driftspec@ds {
         @requirement REQ-00042-1
         @requirement REQ-00045-1
       }
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs extensions_: ExtensionBinder
+      + ArtefactBinder(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder)
     }
     class Dispatch {                         // which binder binds a node: one slot per grammar symbol, built once (DS-355)
       @requirement REQ-00053-2
@@ -346,6 +370,108 @@ package driftspec@ds {
       + ~INodeBinder()
       + abstract kinds() -> std::vector<std::string>
       + abstract bind(node: TSNode, ctx: BindContext) -> void
+    }
+
+    class AnnotationBinder {                 // the annotations every construct may write, each a reference for the checker (DS-356)
+      + bind(node: TSNode, ctx: BindContext, from: std::string, scope: std::string) -> void {
+        @requirement REQ-00044-1
+        @requirement REQ-00114-1
+      }
+      - static relationOf(from: model::Kind, spec: model::AnnotationSpec) -> std::string
+    }
+    class DiagramBinder : INodeBinder {      // a diagram: its fields and the table its clauses say (DS-356)
+      - refs fields_: FieldBinder
+      - refs formulas_: FormulaBinder
+      + DiagramBinder(fields: FieldBinder, formulas: FormulaBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00048-1
+      }
+    }
+    class EnumBinder : INodeBinder {         // an enum and its values (DS-356)
+      - refs annotations_: AnnotationBinder
+      + EnumBinder(annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00033-1
+      }
+    }
+    class ExtensionBinder {                  // a block of annotations only adds them to what is defined elsewhere (DS-356)
+      @requirement REQ-00053-2
+      - refs annotations_: AnnotationBinder
+      + ExtensionBinder(annotations: AnnotationBinder)
+      + static extends(body: TSNode, idNode: TSNode) -> bool
+      + bind(node: TSNode, ctx: BindContext, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
+        @constraint CST-00003-2
+      }
+    }
+    class FieldBinder {                      // the key: value fields every construct may write (DS-356)
+      + bind(node: TSNode, ctx: BindContext, out_entity: model::Entity) -> void {
+        @requirement REQ-00032-2
+      }
+    }
+    class FormulaBinder {                    // what a rule, a definition or a table says, as the model's formula (DS-356)
+      + bind(node: TSNode, ctx: BindContext, out_entity: model::Entity) -> void {
+        @requirement REQ-00095-2
+      }
+      - static termOf(reader: parse::TreeReader, node: TSNode) -> model::Term
+      - static clauseText(reader: parse::TreeReader, clause: TSNode) -> std::string
+    }
+    class InterfaceBinder : INodeBinder {    // an interface of a box and its operations (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs signatures_: SignatureBinder
+      + InterfaceBinder(fields: FieldBinder, annotations: AnnotationBinder, signatures: SignatureBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00020-2
+      }
+    }
+    class ModuleBinder : INodeBinder {       // a module: qualified in its package, its reopenings adding up (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + ModuleBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00017-2
+      }
+    }
+    class PackageBinder : INodeBinder {      // a package: named with @, reopened with no new relation (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + PackageBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00017-2
+      }
+    }
+    class RuleBinder : INodeBinder {         // a rule or a definition, in the box, class or member it applies to (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs formulas_: FormulaBinder
+      + RuleBinder(fields: FieldBinder, annotations: AnnotationBinder, formulas: FormulaBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00095-2
+      }
+    }
+    class SignatureBinder {                  // the parameters and the return of an operation, a method or a function (DS-356)
+      - refs types_: TypeBinder
+      + SignatureBinder(types: TypeBinder)
+      + bind(node: TSNode, ctx: BindContext, out_entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
+        @requirement REQ-00028-2
+        @requirement REQ-00055-2
+        @requirement REQ-00112-1
+      }
+    }
+    class TypeBinder {                       // a type as the code writes it: each name it declares related from the holder (DS-356)
+      + bind(type: TSNode, ctx: BindContext, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> std::string {
+        @requirement REQ-00028-2
+        @requirement REQ-00024-3
+      }
+      + static params(reader: parse::TreeReader, node: TSNode) -> std::vector<std::string>
+      - static isOwnership(relation: std::string) -> bool
+      - static contains(items: std::vector<std::string>, item: std::string) -> bool
     }
   }
 }

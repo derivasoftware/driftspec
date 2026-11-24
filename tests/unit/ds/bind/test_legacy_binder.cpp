@@ -4,9 +4,16 @@
 #include <string>
 #include <vector>
 
+#include "ds/bind/AnnotationBinder.hpp"
 #include "ds/bind/BindContext.hpp"
 #include "ds/bind/Dispatch.hpp"
+#include "ds/bind/ExtensionBinder.hpp"
+#include "ds/bind/FieldBinder.hpp"
 #include "ds/bind/LegacyBinder.hpp"
+#include "ds/bind/ModuleBinder.hpp"
+#include "ds/bind/PackageBinder.hpp"
+#include "ds/bind/SignatureBinder.hpp"
+#include "ds/bind/TypeBinder.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -21,18 +28,26 @@ class TestLegacyBinder : public ::testing::Test {
   ds::model::Model model{metamodel};
   ds::bind::Notes notes;
   ds::parse::Parser parser;
-  const ds::bind::LegacyBinder legacy;
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&legacy}};
+  const ds::bind::FieldBinder fields{};
+  const ds::bind::AnnotationBinder annotations{};
+  const ds::bind::ExtensionBinder extensions{annotations};
+  const ds::bind::TypeBinder types{};
+  const ds::bind::SignatureBinder signatures{types};
+  const ds::bind::PackageBinder packages{fields, annotations};
+  const ds::bind::ModuleBinder modules{fields, annotations};
+  const ds::bind::LegacyBinder legacy{fields, annotations, extensions, types, signatures};
+  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&packages, &modules, &legacy}};
 };
 
 TEST_F(TestLegacyBinder, ItTakesTheConstructsNoBinderOfTheirOwnTakesYet) {
   const std::vector<std::string> kinds = legacy.kinds();
-  for (const char* kind : {"package", "module", "class", "function", "sequence", "state", "diagram"})
+  for (const char* kind : {"usecase", "class", "function", "sequence", "state"})
     EXPECT_NE(std::find(kinds.begin(), kinds.end(), kind), kinds.end()) << kind;
   EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "requirement"), kinds.end());  // the artefacts have their binder
+  EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "package"), kinds.end());      // and the boxes theirs (DS-356)
 }
 
-TEST_F(TestLegacyBinder, APackageItsModuleAndItsClassAreDeclaredAndContained) {
+TEST_F(TestLegacyBinder, AClassInAModuleIsDeclaredAndContained) {
   const ds::parse::ParsedFile file = parser.parseText("a.ds",
                                                       "package shop {\n"
                                                       "  module till {\n"
