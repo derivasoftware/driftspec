@@ -10,30 +10,13 @@ import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from driftspec.live_contract import LIVE, PORT
 from driftspec.live_page import shell
-from driftspec.live_session import CONTRACT, PORT, Live
+from driftspec.live_session import Live
 
-# What each GET answers as JSON, asked of the session.
-GETS = {
-    "/state": lambda live: live.state(),
-    "/selection": lambda live: live.selection,
-    "/contract": lambda live: CONTRACT,
-}
-
-# What each POST does to the session with the body it sends, and what it answers; select and clear
-# answer nothing, so their answer is {}.
-POSTS = {
-    "/selection": lambda live, d: live.select(d.get("id"), d.get("label", "")) or {},
-    "/focus": lambda live, d: {"sent": d.get("id", ""), "listeners": live.focus(d.get("id", ""), d.get("also", []))},
-    "/note": lambda live, d: {"notes": live.note(d.get("id", ""), d.get("text", ""), d.get("tone", "accent"), d.get("frame", True))},
-    "/highlight": lambda live, d: {"highlights": live.highlight(d.get("ids", []), d.get("tone", "accent"), d.get("add", False),
-                                                                d.get("frame", True))},
-    "/seen": lambda live, d: {"seen": live.seen(d.get("ids", []), d.get("seen", True))},
-    "/comment": lambda live, d: {"comments": live.comment(d.get("id", ""), d.get("text", ""))},
-    "/unread": lambda live, d: {"comments": live.unread(d.get("mark", True))},
-    "/isolate": lambda live, d: {"isolated": live.isolate(d.get("ids", []), d.get("tell", True))},
-    "/clear": lambda live, d: live.clear(d.get("what", "all")) or {},
-}
+# What each GET answers as JSON, and what each POST does with the body it sends: read from the contract.
+GETS = LIVE.gets()
+POSTS = LIVE.posts()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -97,8 +80,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         live = self.live
-        q: queue.Queue = queue.Queue()
-        live.listeners.append(q)
+        q = live.events.listen()
         q.put(("model", live.state()))
         try:
             while not getattr(live, "stopped", False):
@@ -106,8 +88,7 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError, OSError):
             pass
         finally:
-            if q in live.listeners:
-                live.listeners.remove(q)
+            live.events.leave(q)
 
     def stream(self, q: queue.Queue) -> None:
         """The next event a page follows, or a keep-alive when none came for 15 seconds."""

@@ -6,10 +6,11 @@ import json
 
 import pytest
 
-from driftspec.live_mcp import answer, call, called, initialize, mcp, open_workspace, reply, state, tool
+from driftspec.live_contract import LIVE, STATE
+from driftspec.live_mcp import LIVE_STATE, answer, answering, asked, call, called, initialize, mcp, open_workspace, reply, state, tool
 from live_fixtures import free_port, no_browser, session, ws  # noqa: F401 (fixtures)
 
-__covers__ = (call, open_workspace, state, tool, initialize, called, reply, answer, mcp)
+__covers__ = (call, open_workspace, state, asked, answering, tool, initialize, called, reply, answer, mcp)
 
 
 class TestTool:
@@ -27,6 +28,13 @@ class TestTool:
         assert tool(port, "live_state", {}, {})["version"] == 1
         with pytest.raises(KeyError):
             tool(port, "live_nothing", {}, {})
+
+    def test_an_operation_is_asked_with_the_body_its_tool_makes_and_answers_what_the_tool_keeps(self, session):
+        port = session.port
+        note = next(op for op in LIVE.tools() if op.tool.name == "live_note")
+        assert asked(port, note, {"id": "x", "text": "t"}) == {"notes": 1} and session.annotations.notes[0]["tone"] == "accent"
+        st = answering(LIVE_STATE)(port, {}, {})
+        assert st["version"] == 1 and len(st["findings"]) <= 30 and list(st) == STATE
 
     def test_open_refuses_a_port_that_serves_another_workspace(self, session, tmp_path):
         assert tool(session.port, "live_open", {"workspace": str(tmp_path)}, {}).startswith("error: port")
@@ -60,7 +68,7 @@ class TestMcp:
         assert replies[1]["result"]["protocolVersion"] == "2025-01-01"
         assert {t["name"] for t in replies[2]["result"]["tools"]} >= {"live_open", "live_state", "live_comments"}
         assert json.loads(replies[3]["result"]["content"][0]["text"])["version"] == 1
-        assert json.loads(replies[4]["result"]["content"][0]["text"]) == {"notes": 1} and session.notes[0]["id"] == "x"
+        assert json.loads(replies[4]["result"]["content"][0]["text"]) == {"notes": 1} and session.annotations.notes[0]["id"] == "x"
         assert replies[5]["error"]["message"] == "no tool live_nothing" and replies[6]["result"] == {}
 
     def test_a_tool_that_fails_answers_an_error_result(self, free_port):

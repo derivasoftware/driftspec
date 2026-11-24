@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import sys
 
+from driftspec.live_contract import LIVE, Operation
 from driftspec.live_http import browser_open, handler_for, serve
 from driftspec.live_mcp import TOOLS, call, mcp, tool
 from driftspec.live_page import SHELL
@@ -61,26 +62,22 @@ class Command:
     def word(self, k: int, default: str) -> str:
         return self.args[k] if len(self.args) > k else default
 
-    def ask(self, path: str, data: dict | None = None, indent: int | None = None) -> None:
-        """The session's answer to a route, printed as JSON."""
-        print(json.dumps(call(self.port, path, data), indent=indent))
-
-    def state(self) -> None:
-        st = call(self.port, "/state")
-        print(json.dumps({k: st[k] for k in ("version", "counts", "error")} | {"findings": st["findings"][:20]}, indent=1))
+    def ask(self, op: Operation) -> None:
+        """The session's answer to an operation of the contract, printed as JSON."""
+        word = op.word
+        print(json.dumps(word.show(call(self.port, op.path, word.body(self))), indent=word.indent))
 
 
-# What each command does with its command line.
+def asking(op: Operation):
+    """The command of an operation: its answer asked of the session and printed."""
+    return lambda c: c.ask(op)
+
+
+# What each command does with its command line: serving and mcp are this door's own; every other
+# command is an operation of the contract, read from it.
 COMMANDS = {
     "serve": lambda c: serve(c.word(1, "."), c.port, open_browser="--open" in c.args),
-    "focus": lambda c: c.ask("/focus", {"id": c.args[1], "also": c.args[2:]}),
-    "note": lambda c: c.ask("/note", {"id": c.args[1], "text": " ".join(c.args[2:]), "tone": c.tone}),
-    "highlight": lambda c: c.ask("/highlight", {"ids": c.args[1:], "tone": c.tone, "add": c.add}),
-    "clear": lambda c: c.ask("/clear", {"what": c.word(1, "all")}),
-    "comments": lambda c: c.ask("/unread", {"mark": "--peek" not in c.args}, indent=1),
-    "isolate": lambda c: c.ask("/isolate", {"ids": c.args[1:]}),
-    "selection": lambda c: c.ask("/selection"),
-    "state": lambda c: c.state(),
+    **{op.word.word: asking(op) for op in LIVE.words()},
     "mcp": lambda c: mcp(c.port),
 }
 
