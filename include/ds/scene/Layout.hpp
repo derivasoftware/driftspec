@@ -1,6 +1,9 @@
 #ifndef DRIFTSPEC_SCENE_LAYOUT_HPP
 #define DRIFTSPEC_SCENE_LAYOUT_HPP
 
+#include <vector>
+
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/scene/Document.hpp"
 
@@ -16,6 +19,9 @@ class Layout {
   SceneDocument place() const;
 
  private:
+  /// The rectangle that holds every node, or every node with a lean place.
+  static Box bounds(const std::vector<Node>& nodes, bool lean);
+
   const model::Model& model_;
   const model::Metamodel& metamodel_;
 };
