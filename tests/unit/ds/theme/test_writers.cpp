@@ -44,9 +44,13 @@ void writesItsPage(const ds::theme::IThemeWriter& writer, const char* page) {
   const ds::theme::Theme theme;
   const std::string written = writer.write(theme);
   for (const auto& t : theme.page(page)) {
-    if (!t.light.empty()) EXPECT_NE(written.find("--" + t.name), std::string::npos) << page << " " << t.name;
-    if (!t.light.empty()) EXPECT_NE(written.find(t.light), std::string::npos) << page << " " << t.name;
-    if (!t.dark.empty()) EXPECT_NE(written.find(t.dark), std::string::npos) << page << " " << t.name << " dark";
+    EXPECT_NE(written.find("--" + t.name), std::string::npos) << page << " " << t.name;
+    if (!t.light.empty()) {
+      EXPECT_NE(written.find(t.light), std::string::npos) << page << " " << t.name;
+    }
+    if (!t.dark.empty()) {
+      EXPECT_NE(written.find(t.dark), std::string::npos) << page << " " << t.name << " dark";
+    }
   }
   EXPECT_EQ(written.find("{{"), std::string::npos) << page << ": a placeholder left";
 }
