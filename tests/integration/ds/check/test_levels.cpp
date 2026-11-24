@@ -25,7 +25,7 @@ class TestLevels : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/levels")) binder.bind(f);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -130,7 +130,7 @@ TEST_F(TestLevels, AScenarioOfABoxIsDrawnBetweenWhatItNames) {
 }
 
 TEST_F(TestLevels, TheQueryShowsWhoTakesPartInAWrittenScenario) {
-  const auto filter = ds::query::Filters::of(metamodel, *model.find("diagram:SEQ_Written"));
+  const auto filter = ds::query::FilterFactory::of(metamodel, *model.find("diagram:SEQ_Written"));
   EXPECT_EQ(filter->select(model), (std::set<std::string>{"shop@bank", "shop@sales", "shop@shell", "shop@warehouse"}));
 }
 

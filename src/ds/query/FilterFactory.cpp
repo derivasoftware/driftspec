@@ -258,14 +258,14 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
 
 // ---- the filter of each kind of diagram ------------------------------------------------------
 
-int Filters::number(const model::Entity& diagram, const std::string& key, int every) {
+int FilterFactory::number(const model::Entity& diagram, const std::string& key, int every) {
   if (diagram.field(key) == "*") return every;
   int read = 0;
   return diagram.number(key, read) ? read : 0;
 }
 
 // the one place that names each filter: what a diagram takes is asked of it, by the kind the diagram writes
-std::unique_ptr<IFilter> Filters::of(const model::Metamodel& metamodel, const model::Entity& diagram) {
+std::unique_ptr<IFilter> FilterFactory::of(const model::Metamodel& metamodel, const model::Entity& diagram) {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
   const std::string kind = diagram.field("kind");
   const std::vector<std::string> include = splitTrimmed(diagram.field("include"), ',');

@@ -57,7 +57,7 @@ class TestCut : public ::testing::Test {
         "diagram Gnir {\n  kind: class\n  include: shop@*\n  cut: Ring\n  close: package\n}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto steps = ds::check::Steps::of();
+    const auto steps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
