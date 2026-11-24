@@ -300,7 +300,7 @@ package driftspec@ds {
     }
 
     verification VER-00082-3 {
-      status: draft
+      status: approved
       @requirement REQ-00073-2
       title: Viewer tests, on the viewer's own code over scenes ds writes, confirm a call expands into what it calls and its answer comes back, a named scenario is followed, and ds check is a tour from the CLI down to the Checker and back
       method: test

@@ -15,6 +15,11 @@ orders the definitions, and `Solver` answers a body over the facts and never the
 records into the facts what the validator resolved and what the definitions derive, and writes the breaches and the
 tables into the model. The design of ds holds the solver to the facts with a rule. Nothing a design writes changes:
 findings, breaches and tables read the same.
+## 0.1.49
+
+The Owner approves the requirements DS-379 left as drafts, with their verifications (every finding is made from the
+catalogue; nothing else writes a severity: REQ-00190-1, REQ-00191-1), and the viewer-tours verification VER-00082-3.
+Nothing a design writes changes.
 
 ## 0.1.48
 
