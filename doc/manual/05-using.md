@@ -19,13 +19,16 @@ design/
   diagrams/structure.ds
 ```
 
+Every `.ds` file under the folder belongs to it, in subfolders too. Keep a copy of a design
+outside the folder you check: inside it, every entity would be declared twice.
+
 ## The commands
 
 ```bash
 ds check design                     # the findings, then the counts of the model
 ds render design                    # the whole design in the viewer, one HTML file
 ds render design CL_Store -f svg    # one diagram drawn: svg, or text for a terminal
-ds query design entities shop@store # ask the model: entities, relations, coverage, findings
+ds query design coverage            # ask the model: what is still open, and more (below)
 ds export design                    # the model as JSON, for another tool
 ds manual                           # this manual; ds manual <kind> or <CODE> for one page
 ```
@@ -42,6 +45,94 @@ all.
 
 ```
 store/Cart.ds:4:7  W-REF-UNDECLARED  class 'Line' is referenced by shop@store::Cart::lines but declared nowhere in the workspace
+```
+
+The last line of `ds check` counts the model: its entities, the names it uses and nobody
+declares (`expected`, each one a `W-REF-UNDECLARED`), its relations and its findings.
+
+## What is still open: coverage
+
+A finding says something is wrong. Coverage says something is not done yet: an approved
+requirement that nothing verifies, a verification by test that names no tests, an interface
+operation with no sequence that says how it is handled, an outcome of a use case with no
+scenario. A design written halfway is not a wrong design, so coverage never makes `ds check`
+fail; it is kept apart, and `ds check` only counts it and says where to read it.
+
+```
+$ ds check design
+7 entities · 0 expected · 7 relations · 0 findings · 2 open
+2 open items of coverage: ds query design coverage lists them
+$ ds query design coverage
+W-REQ-NO-VERIFICATION  design/shop.ds:2:3  REQ-00001-1 is approved and nothing verifies it
+W-OPERATION-NO-BEHAVIOUR  design/shop.ds:9:5  shop@shell::buy has no sequence that says how it is handled
+```
+
+When nothing is open, the counts line ends at the findings and `ds query design coverage`
+prints nothing. A requirement counts once it is approved: a draft is not a promise yet. In
+`ds check --json` the open items are the list `coverage`, each with `"severity": "coverage"`,
+and the live viewer shows them in a folded section of their own. `ds manual codes` marks every
+code of coverage as such.
+
+## Adding to a design you did not write
+
+A package or a module reopens in any file, so a change can live in a file of its own. A class
+written again with only annotations in its body is the same class, linked to one more thing:
+
+```
+design/shop.ds        the design as it was, untouched
+design/discount.ds:
+
+package shop {
+  module store {
+    requirement REQ-00002-1 {
+      title: The cart shall lower its total by a discount
+      status: draft
+    }
+
+    class Cart {
+      @requirement REQ-00002-1
+    }
+  }
+}
+```
+
+`ds query design relations REQ-00002-1` then shows the cart satisfying it. A new member is
+written where the class is defined: a second definition of one entity is a finding.
+
+## Asking the model
+
+`ds query <workspace> <question> [subject]` answers one question about the design, a line per
+answer, and `--json` gives the same as data. The subject is an identity as the design writes
+it: `shop@sales@desk::Desk` for a class, `REQ-00001-1` for a requirement or any artefact (an
+artefact is named by its id alone, with no package).
+
+| Question | Asked of | Answers |
+|---|---|---|
+| `diagrams` | nothing | every diagram, with its kind |
+| `entities <scope>` | a package or a module | what it holds, one level down; ask again to go deeper |
+| `relations <id>` | anything | every relation it takes part in, both ways |
+| `artefacts <id>` | a piece of the design | the requirements it satisfies and what verifies them |
+| `behaviours <id>` | an operation | its sequence and each scenario apart |
+| `shows <diagram>` | a diagram | what the diagram draws |
+| `failures <operation>` | an operation | the failures that can escape it, and where from |
+| `findings [file]` | a file, or nothing | the findings, of one file or all |
+| `coverage [id]` | an identity, or nothing | the open items, of that one entity or all |
+| `coupling` | nothing | which boxes depend on which, and through what |
+
+In `relations`, `->` means the subject points at the other entity and `<-` that the other
+points at the subject. What a requirement is made of is asked with `relations`, and what a
+class answers for with `artefacts`:
+
+```
+$ ds query shop relations SREQ-00001-1
+about  shop  ->
+verifies  SVER-00001-1  <-
+satisfies  UC-00001-1  <-
+satisfies  shop@sales  <-
+refines  REQ-00001-1  <-
+$ ds query shop artefacts shop@sales@desk::Desk
+satisfies  REQ-00001-1
+verified-by  VER-00001-1  REQ-00001-1
 ```
 
 ## Building it
@@ -131,10 +222,10 @@ DriftSpec is young. This is what a first release leaves out, so that nothing her
 
 - **The language may still change.** The grammar is not frozen and some words are under review
   before 1.0; a release that renames one says so in its changelog.
-- **Some types of real code cannot be written yet.** In C++: pointers (`Node*`), the ownership a
-  `std::unique_ptr` or a `std::shared_ptr` gives, a base class with its template arguments, and
-  `long`. In Python: unions, `Callable`, `Literal` and tuples of any length. Write the nearest type
-  the language has, or a class that stands for it.
+- **A type does not say who owns.** Any type your code writes is accepted, `Node*`,
+  `std::unique_ptr<Node>`, `int | None` or `Callable[[int], str]`, but ownership is what the
+  attribute says: it owns what it names unless it is written `refs` or `shares`, whatever the
+  pointer.
 - **No type aliases, and no deployment.** A name for a type that is not a class, and the
   libraries and binaries a system is built into, are not part of the language yet.
 - **A sequence does not say that it creates an object**, and a message sent to a collection has
