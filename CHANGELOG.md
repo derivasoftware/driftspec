@@ -6,6 +6,10 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+A merge request does not edit this file: it writes its entry as `changelog.d/<card>.md`, and
+`tools/changelog.py` later moves each entry under the version its merge was released as (see
+`changelog.d/README.md`).
+
 ## 0.1.70
 
 A rule reads what an entity is, matches a value against a pattern and reads a member's flag (DS-403). `name(x)`,
