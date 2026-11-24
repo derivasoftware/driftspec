@@ -7,6 +7,7 @@
 
 #include "ds/check/Facts.hpp"
 #include "ds/check/Solver.hpp"
+#include "ds/check/Variables.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
@@ -51,14 +52,25 @@ class TestSolver : public ::testing::Test {
   }
 };
 
+/// The answers of `body`, each as (name, text) pairs: the body solved with the slots of a formula that holds it.
+std::vector<std::vector<std::pair<std::string, std::string>>> named(const ds::check::Solver& solver,
+                                                                    const std::vector<ds::model::Literal>& body) {
+  ds::model::Formula formula;
+  formula.where = body;
+  const ds::check::Variables variables(formula);
+  std::vector<std::vector<std::pair<std::string, std::string>>> out;
+  for (const auto& answer : solver.solve("p@m::r", body, variables, std::vector<const std::string*>(variables.size(), nullptr), false))
+    out.push_back(variables.pairs(answer));
+  return out;
+}
+
 TEST_F(TestSolver, ARelationBindsWhatItJoins) {
   ds::check::Facts facts(model, metamodel);
   facts.index();
   const ds::check::Solver solver(facts);
-  const auto answers = solver.solve("p@m::r", {literal(LiteralForm::Relation, "inherits", {{"x", true}, {"y", true}})}, {}, false);
+  const auto answers = named(solver, {literal(LiteralForm::Relation, "inherits", {{"x", true}, {"y", true}})});
   ASSERT_EQ(answers.size(), 1u);
-  EXPECT_EQ(answers[0].at("x"), "p@m::A");
-  EXPECT_EQ(answers[0].at("y"), "p@m::B");
+  EXPECT_EQ(answers[0], (std::vector<std::pair<std::string, std::string>>{{"x", "p@m::A"}, {"y", "p@m::B"}}));
 }
 
 TEST_F(TestSolver, ANegationTestsWhatAPositiveLiteralBound) {
@@ -67,12 +79,10 @@ TEST_F(TestSolver, ANegationTestsWhatAPositiveLiteralBound) {
   facts.record("p@m::r", "B", "p@m::B");  // the name the rule writes, as the validator resolved it
   const ds::check::Solver solver(facts);
   // the classes that do not inherit B: B itself
-  const auto answers = solver.solve(
-      "p@m::r",
-      {literal(LiteralForm::Kind, "class", {{"c", true}}), literal(LiteralForm::Relation, "inherits", {{"c", true}, {"B", false}}, true)},
-      {}, false);
+  const auto answers = named(solver, {literal(LiteralForm::Kind, "class", {{"c", true}}),
+                                      literal(LiteralForm::Relation, "inherits", {{"c", true}, {"B", false}}, true)});
   ASSERT_EQ(answers.size(), 1u);
-  EXPECT_EQ(answers[0].at("c"), "p@m::B");
+  EXPECT_EQ(answers[0], (std::vector<std::pair<std::string, std::string>>{{"c", "p@m::B"}}));
 }
 
 TEST_F(TestSolver, ADefinitionAnswersWhatIsDerivedForIt) {
@@ -81,9 +91,9 @@ TEST_F(TestSolver, ADefinitionAnswersWhatIsDerivedForIt) {
   facts.record("p@m::r", "call:d", "p@m::d");
   facts.derive("p@m::d", {"p@m::A"});
   const ds::check::Solver solver(facts);
-  const auto answers = solver.solve("p@m::r", {literal(LiteralForm::Call, "d", {{"x", true}})}, {}, false);
+  const auto answers = named(solver, {literal(LiteralForm::Call, "d", {{"x", true}})});
   ASSERT_EQ(answers.size(), 1u);
-  EXPECT_EQ(answers[0].at("x"), "p@m::A");
+  EXPECT_EQ(answers[0], (std::vector<std::pair<std::string, std::string>>{{"x", "p@m::A"}}));
   EXPECT_TRUE(ds::check::Solver::compares(LiteralForm::Less));
   EXPECT_FALSE(ds::check::Solver::compares(LiteralForm::Equal));
 }
