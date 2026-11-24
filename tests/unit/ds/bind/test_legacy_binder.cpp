@@ -41,10 +41,10 @@ class TestLegacyBinder : public ::testing::Test {
 
 TEST_F(TestLegacyBinder, ItTakesTheConstructsNoBinderOfTheirOwnTakesYet) {
   const std::vector<std::string> kinds = legacy.kinds();
-  for (const char* kind : {"usecase", "class", "function", "sequence", "state"})
-    EXPECT_NE(std::find(kinds.begin(), kinds.end(), kind), kinds.end()) << kind;
+  for (const char* kind : {"class", "function", "sequence"}) EXPECT_NE(std::find(kinds.begin(), kinds.end(), kind), kinds.end()) << kind;
   EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "requirement"), kinds.end());  // the artefacts have their binder
   EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "package"), kinds.end());      // and the boxes theirs (DS-356)
+  EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "state"), kinds.end());        // and the state machines theirs
 }
 
 TEST_F(TestLegacyBinder, AClassInAModuleIsDeclaredAndContained) {

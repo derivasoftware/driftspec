@@ -20,8 +20,10 @@
 #include "ds/bind/PackageBinder.hpp"
 #include "ds/bind/RuleBinder.hpp"
 #include "ds/bind/SignatureBinder.hpp"
+#include "ds/bind/StateBinder.hpp"
 #include "ds/bind/TypeBinder.hpp"
 #include "ds/bind/TypeTokens.hpp"
+#include "ds/bind/UseCaseBinder.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -59,6 +61,8 @@ class Binder {
   EnumBinder enums_{annotations_};
   RuleBinder rules_{fields_, annotations_, formulas_};
   DiagramBinder diagrams_{fields_, formulas_};
+  UseCaseBinder usecases_{fields_, annotations_, types_, signatures_};
+  StateBinder states_{fields_, annotations_};
   LegacyBinder legacy_{fields_, annotations_, extensions_, types_, signatures_};
   Dispatch dispatch_;
 };

@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.38
+
+Use cases and state machines get binders of their own (DS-356, group two of four). A use case keeps its signature and
+its outcomes; a state machine is still the behaviour of its class, its events and actions kept for the checker. The
+walk the binder had keeps classes, functions and sequences until the next groups. Nothing a design writes, no
+finding, export or drawing changes.
+
 ## 0.1.37
 
 The boxes and the plain constructs get binders of their own (DS-356, group one of four): packages, modules, interfaces,
