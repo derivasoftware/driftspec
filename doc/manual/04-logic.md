@@ -119,6 +119,52 @@ diagram REQ_Shop {
 }
 ```
 
+## What an entity is, and its name against a pattern
+
+A rule reads what an entity is as a function of the variable bound to it: `name(x)` is its name as written,
+`id(x)` its identity and `kind(x)` the name of its kind. They read what `x` is bound to and never bind it, and no
+definition may take those names. The dot stays for a field the design writes, as `r.status`.
+
+`matches` holds when a value contains a match of a pattern, written as a string in ECMAScript regular expression
+syntax; `^` and `$` anchor it. Each pattern is compiled once, when its rule is checked, and a pattern that does not
+compile is a finding at the rule (E-RULE-PATTERN). A member's flag reads as a kind does: `m is abstract`.
+
+These rules ask that every interface be named I and a capital, and every class with an abstract member A and a
+capital.
+
+```ds
+package shop {
+  requirement REQ-00001-1 {
+    title: The shop shall name its boxes by their role
+  }
+
+  module store {
+    interface IPricing {
+      operation price(item: string) -> int
+    }
+    class APricing {
+      + abstract price(item: string) -> int
+      + currency() -> string
+    }
+  }
+
+  rule interfaces-are-named-i {
+    title: An interface is named I and a capital
+    @requirement REQ-00001-1
+    for interface i in shop
+    holds name(i) matches "^I[A-Z]"
+  }
+
+  rule abstract-classes-are-named-a {
+    title: A class with an abstract member is named A and a capital
+    @requirement REQ-00001-1
+    for class c in shop
+    where m in c, m is abstract
+    holds name(c) matches "^A[A-Z]"
+  }
+}
+```
+
 ## The rules as a table
 
 A table lists whatever a rule may range over. This one lists the rules of the shop: what each

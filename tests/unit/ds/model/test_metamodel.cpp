@@ -104,7 +104,7 @@ TEST_F(TestCodeSpec, ACodeIsFoundWithItsSeverityItsMeaningAndWhatToDo) {
 
 /// The catalogue holds one row per Code, in its order, each printed as its value is named (DS-379).
 TEST_F(TestCodeSpec, EveryCodeHasItsRowInTheOrderOfCode) {
-  ASSERT_EQ(metamodel.codes().size(), static_cast<std::size_t>(ds::model::Code::W_USECASE_UNREALISED) + 1);
+  ASSERT_EQ(metamodel.codes().size(), static_cast<std::size_t>(ds::model::Code::E_RULE_RESERVED) + 1);
   for (std::size_t i = 0; i < metamodel.codes().size(); ++i) {
     const auto& c = metamodel.codes()[i];
     EXPECT_EQ(static_cast<std::size_t>(c.id), i) << c.code;
@@ -320,6 +320,19 @@ TEST_F(TestKnownAnnotations, AreTheAnnotationsThatMeanSomethingAndTheManualLists
   EXPECT_EQ(metamodel.annotationOf("whatever").name, "@<any other word>");
   EXPECT_EQ(all[known.size()].name, "@<any other word>");
   EXPECT_EQ(all.back().name, ": <UC ID> after an operation");
+}
+
+/// name and id are what an entity is, read by a rule as name(x) and id(x) (DS-403): no kind declares a field of either
+/// name, and the metamodel refuses one.
+class TestReservedFields : public Metamodelled {};
+
+TEST_F(TestReservedFields, NoKindDeclaresAFieldNamedNameOrId) {
+  EXPECT_TRUE(ds::model::Metamodel::reservedField("name"));
+  EXPECT_TRUE(ds::model::Metamodel::reservedField("id"));
+  EXPECT_FALSE(ds::model::Metamodel::reservedField("kind"));  // a diagram writes kind: sequence; kind(x) is read apart
+  EXPECT_FALSE(ds::model::Metamodel::reservedField("status"));
+  for (const auto& k : metamodel.kinds())
+    for (const auto& f : k.fields) EXPECT_FALSE(ds::model::Metamodel::reservedField(f.name)) << metamodel.nameOf(k.kind) << " " << f.name;
 }
 
 }  // namespace

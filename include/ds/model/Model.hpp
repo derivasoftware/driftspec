@@ -115,14 +115,15 @@ struct Term {
   std::string text;
   bool variable = false;
   bool value = false;
-  std::string field = {};  ///< the field read of what the variable is bound to (`r.status`); "" for the entity itself
+  std::string field = {};     ///< the field read of what the variable is bound to (`r.status`); "" for the entity itself
+  std::string property = {};  ///< what the entity bound is, read as a function: name, id or kind (DS-403); "" for none
 };
 
 /// One literal of a rule or a definition (DS-94): a relation of the metamodel, a kind, containment,
 /// (in)equality or a definition applied to terms; negated when written after `not`.
 /// How a literal reads: a relation, a kind, containment, a comparison, a definition applied or the
-/// literal argument a call passes.
-enum class LiteralForm { Relation, Kind, In, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Call, Arg };
+/// literal argument a call passes; a value that matches a pattern, and a member's flag (DS-403).
+enum class LiteralForm { Relation, Kind, In, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Call, Arg, Matches, Flag };
 
 struct Literal {
   LiteralForm form = LiteralForm::Relation;

@@ -240,11 +240,18 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
       {Code::W_USECASE_UNREALISED, "W-USECASE-UNREALISED", Severity::coverage,
        "No interface operation realises a use case, nor any use case that specialises it.",
        "Realise it from an operation (operation <name>(...) : <UC ID>), or drop it."},
+      {Code::E_RULE_PATTERN, "E-RULE-PATTERN", Severity::error,
+       "A rule, a definition or a table matches a value against a pattern that is no string, or that does not compile as a regular "
+       "expression.",
+       "Write the pattern as a string of ECMAScript regular expression syntax: name(c) matches \"^I[A-Z]\"."},
+      {Code::E_RULE_RESERVED, "E-RULE-RESERVED", Severity::error,
+       "A definition takes the name of what an entity is, name, id or kind, which a rule reads as name(x), id(x) and kind(x).",
+       "Name the definition otherwise."},
   };
   // a finding is made by its slot: a row out of the order of Code, or a Code with no row, would give another code
   for (std::size_t i = 0; i < out.size(); ++i)
     if (static_cast<std::size_t>(out[i].id) != i) throw std::logic_error("the catalogue is out of the order of Code at " + out[i].code);
-  if (out.size() != static_cast<std::size_t>(Code::W_USECASE_UNREALISED) + 1)
+  if (out.size() != static_cast<std::size_t>(Code::E_RULE_RESERVED) + 1)
     throw std::logic_error("the catalogue does not hold one row per Code");
   return out;
 }
