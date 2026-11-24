@@ -43,7 +43,7 @@ class TestEnginePrinciples : public ::testing::Test {
       }
       binder.bind(file);
     }
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
@@ -73,13 +73,19 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string stepsAsInterface = "driftspec@ds@check::checker-knows-steps-as-istep";
   const std::string stepsAlone = "driftspec@ds@check::no-step-knows-another";
   const std::string checkClasses = "driftspec@ds@check::check-operations-belong-to-classes";
+  const std::string sceneClasses = "driftspec@ds@scene::scene-operations-belong-to-classes";
+  const std::string sceneReads = "driftspec@ds@scene::the-scene-reads-the-model";
+  const std::string layerLayout = "driftspec@ds@scene::no-layer-knows-the-layout";
+  const std::string packerModel = "driftspec@ds@scene::the-packer-knows-no-model";
+  const std::string layersAlone = "driftspec@ds@scene::no-layer-knows-another";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule :
-       {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads, exporterClasses, exporterReads,
-        apiChooses, machineClasses, machineReads, queryClasses, stepsAsInterface, stepsAlone, checkClasses})
+       {context,          asInterface,     alone,         builtOnce,    binderClasses,  modelClasses, axisClasses,
+        axisReads,        exporterClasses, exporterReads, apiChooses,   machineClasses, machineReads, queryClasses,
+        stepsAsInterface, stepsAlone,      checkClasses,  sceneClasses, sceneReads,     layerLayout,  packerModel})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -182,7 +188,7 @@ TEST_F(TestEnginePrinciples, ASelectionOfStepsNamedOutsideTheApiIsTold) {
 
 TEST_F(TestEnginePrinciples, StepsMadeOutsideTheApiAreTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::Steps::of(selection) -> steps\n"}});
+      broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::StepFactory::of(selection) -> steps\n"}});
   EXPECT_TRUE(has(rules, apiChooses));
   EXPECT_FALSE(has(rules, builtOnce));
 }
@@ -227,6 +233,38 @@ TEST_F(TestEnginePrinciples, AMachineThatChangesTheModelIsTold) {
                                                   "    }\n"}});
   EXPECT_TRUE(has(rules, machineReads));
   EXPECT_FALSE(has(rules, machineClasses));
+}
+
+TEST_F(TestEnginePrinciples, AFunctionOfTheSceneIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/scene.ds", "  module scene {", "    function loose(text: std::string) -> std::string\n"}});
+  EXPECT_TRUE(has(rules, sceneClasses));
+  EXPECT_FALSE(has(rules, sceneReads));
+}
+
+TEST_F(TestEnginePrinciples, ASceneThatChangesTheModelIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/scene.ds", "  module scene {",
+                                                  "    class Marker {\n"
+                                                  "      - refs model_: model::Model\n"
+                                                  "      + mark(e: model::Entity) -> void\n"
+                                                  "    }\n"
+                                                  "    sequence Marker::mark {\n"
+                                                  "      self -> model_.declare(e)\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, sceneReads));
+  EXPECT_FALSE(has(rules, sceneClasses));
+}
+
+TEST_F(TestEnginePrinciples, ALayerThatKnowsTheLayoutIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/scene.ds", "    class StructureLayer : ILayer {", "      - refs layout_: Layout\n"}});
+  EXPECT_TRUE(has(rules, layerLayout));
+  EXPECT_FALSE(has(rules, layersAlone));  // the layout is no layer
+}
+
+TEST_F(TestEnginePrinciples, APackerThatKnowsTheModelIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/scene.ds", "    class Packer {", "      - refs model_: model::Model\n"}});
+  EXPECT_TRUE(has(rules, packerModel));
+  EXPECT_FALSE(has(rules, sceneReads));  // holding the model is not changing it
 }
 
 }  // namespace

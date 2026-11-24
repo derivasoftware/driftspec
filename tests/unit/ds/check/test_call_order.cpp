@@ -22,7 +22,7 @@ class TestCallOrder : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", "package p {\n  module m {\n" + body + "  }\n}\n"));
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
@@ -48,7 +48,7 @@ const char* const kDoor =
     "    }\n";
 
 TEST_F(TestCallOrder, ItIsAStepOfTheCheckThatNeedsTheMessagesTyped) {
-  const auto all = ds::check::Steps::of();
+  const auto all = ds::check::StepFactory::of();
   ASSERT_EQ(all.count("order"), 1u);
   EXPECT_EQ(all.at("order")->name(), "order");
   EXPECT_EQ(all.at("order")->needs(), (std::vector<std::string>{"behaviour"}));

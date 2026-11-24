@@ -7,9 +7,9 @@ import json
 import queue
 import sys
 import threading
-import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from driftspec.browser import open_in_browser as browser_open
 from driftspec.live_contract import LIVE, PORT
 from driftspec.live_page import shell
 from driftspec.live_session import Live
@@ -117,16 +117,6 @@ class Handler(BaseHTTPRequestHandler):
 def handler_for(live: Live) -> type[Handler]:
     """The HTTP handler class serving one session."""
     return type("Handler", (Handler,), {"live": live})
-
-
-def browser_open(url: str) -> None:
-    import shutil
-    import subprocess
-
-    if shutil.which("explorer.exe"):  # WSL: the Windows browser reaches localhost
-        subprocess.Popen(["explorer.exe", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    else:
-        webbrowser.open(url)
 
 
 def serve(workspace: str, port: int = PORT, open_browser: bool = False, block: bool = True) -> Live:

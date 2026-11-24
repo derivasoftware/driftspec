@@ -121,8 +121,9 @@ an editor in the browser, the engine compiled to WebAssembly, and twenty guided 
 
 ## Editors, Python and agents
 
-- **Language server.** `driftspec-lsp` checks each design on every change, and gives
-  definition, references, hover, completion and symbols, and draws what is under the cursor.
+- **Language server.** `driftspec-lsp` keeps each design loaded and checks it again on every
+  change, so the diagnostics of an edit arrive in under 200 ms on DriftSpec's own design. It
+  gives definition, references, hover, completion and symbols, and draws what is under the cursor.
   Any editor that speaks LSP can run it on `.ds` files; the tree-sitter grammar in `grammar/`,
   with its highlight and fold queries, colours them.
 - **Python.** The engine is also a Python package that runs in the same process:
@@ -134,9 +135,10 @@ an editor in the browser, the engine compiled to WebAssembly, and twenty guided 
   print(driftspec.render("examples/hola", "CL_Hola", "text", 120))
   ```
 
-- **A design seen live.** `driftspec-live serve <workspace> --open` keeps the viewer open in the
-  browser and draws the design again on every save. A person or an agent can point at it: take
-  the reader to an element, highlight elements and leave notes. `driftspec-live mcp` serves the
+- **A design seen live.** `driftspec-live serve design --open` keeps the viewer open in the
+  browser and draws the design again on every save, errors in red and warnings in amber, with
+  coverage (what is not written yet) in a section of its own. A person or an agent can point at
+  it: take the reader to an element, highlight elements and leave notes. `driftspec-live mcp` serves the
   same as MCP tools, so an agent such as Claude Code can use it:
 
   ```bash

@@ -19,6 +19,9 @@ class IFilter {
  public:
   virtual ~IFilter() = default;
   virtual std::set<std::string> select(const model::Model& model) const = 0;
+  /// What the diagram's patterns take, without what is drawn around it (DS-423): for a class diagram its boxes, for
+  /// any other diagram what it selects.
+  virtual std::set<std::string> boxes(const model::Model& model) const = 0;
 };
 
 /// A class diagram: its include patterns minus its exclude patterns, grown by its neighbours,
@@ -32,19 +35,9 @@ class ClassFilter : public IFilter {
               std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
   /// What the patterns and the neighbours take, without the boxes around it.
-  std::set<std::string> boxes(const model::Model& model) const;
-  /// The modules and nested packages that hold what is taken: drawn around it.
-  static std::set<std::string> containers(const model::Model& model, const std::set<std::string>& taken);
-  /// The box a class diagram draws a relation of `entity` from (DS-219): a box, a module or a package is itself; a
-  /// member is its class; a behaviour is its subject's box (a method's class, a function, an operation's interface),
-  /// not the module it is written in; anything else is its scope.
-  static std::string drawnFrom(const model::Model& model, const model::Entity& entity);
+  std::set<std::string> boxes(const model::Model& model) const override;
 
  private:
-  static bool isBox(const model::Entity& entity);        // a class, an enum, an interface or a function of a module
-  static bool isContainer(const model::Entity& entity);  // a module, or a package below the system
-  static bool drawable(const model::Entity& entity);     // a box, or a box that holds others
-  static bool drawnAsEdge(const std::string& relation);  // the relations drawn as edges, the ones the neighbours follow
   const model::Metamodel& metamodel_;
   std::vector<std::string> include_;
   std::vector<std::string> exclude_;
@@ -67,6 +60,8 @@ class SequenceFilter : public IFilter {
   /// the language of the models it is handed (DS-351).
   SequenceFilter(const model::Metamodel& metamodel, std::vector<std::string> include, int depth, std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
+  /// What it selects: nothing is drawn around it (DS-423).
+  std::set<std::string> boxes(const model::Model& model) const override { return select(model); }
   /// The behaviours taken, in the order the patterns name them.
   std::vector<Behaviour> behaviours(const model::Model& model) const;
 
@@ -82,6 +77,8 @@ class StateFilter : public IFilter {
  public:
   explicit StateFilter(std::vector<std::string> include);
   std::set<std::string> select(const model::Model& model) const override;
+  /// What it selects: nothing is drawn around it (DS-423).
+  std::set<std::string> boxes(const model::Model& model) const override { return select(model); }
   /// The machines taken, in the order the patterns name them.
   std::vector<std::string> machines(const model::Model& model) const;
 
@@ -99,6 +96,8 @@ class RequirementsFilter : public IFilter {
   RequirementsFilter(const model::Metamodel& metamodel, std::vector<std::string> include, bool design, bool verifications,
                      std::string cutOf = "");
   std::set<std::string> select(const model::Model& model) const override;
+  /// What it selects: nothing is drawn around it (DS-423).
+  std::set<std::string> boxes(const model::Model& model) const override { return select(model); }
 
  private:
   static bool isArtefact(const model::Entity& entity);  // a requirement, a constraint or a verification
@@ -109,9 +108,9 @@ class RequirementsFilter : public IFilter {
   std::string cutOf_;
 };
 
-/// The one place that names the filter of each kind of diagram (DS-385), as Steps names the steps of the check
+/// The one place that names the filter of each kind of diagram (DS-385), as StepFactory names the steps of the check
 /// (DS-382): what asks what a diagram takes asks it here, and never names a filter itself.
-class Filters {
+class FilterFactory {
  public:
   /// The filter of `diagram`'s kind, built from its fields and read in `metamodel` (DS-351); null when the entity is
   /// no diagram.

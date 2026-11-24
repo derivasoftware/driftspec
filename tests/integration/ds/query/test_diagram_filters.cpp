@@ -31,14 +31,14 @@ class TestFilters : public ::testing::Test {
     const auto file = parser.parseText("f.ds", text);
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto steps = ds::check::Steps::of();
+    const auto steps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 
   Ids of(const std::string& diagram) {
     const ds::model::Entity* d = model.find("diagram:" + diagram);
     if (!d) return {"no diagram " + diagram};
-    return ds::query::Query(model, metamodel).select(*ds::query::Filters::of(metamodel, *d));
+    return ds::query::Query(model, metamodel).select(*ds::query::FilterFactory::of(metamodel, *d));
   }
 
   static const char* shop() {
@@ -125,9 +125,9 @@ TEST_F(TestFilters, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   ASSERT_NE(sell, nullptr);
   ASSERT_NE(none, nullptr);
   ASSERT_NE(till, nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::Filters::of(metamodel, *sell).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::Filters::of(metamodel, *none).get()), nullptr);
-  EXPECT_EQ(ds::query::Filters::of(metamodel, *till), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::FilterFactory::of(metamodel, *sell).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::FilterFactory::of(metamodel, *none).get()), nullptr);
+  EXPECT_EQ(ds::query::FilterFactory::of(metamodel, *till), nullptr);
 }
 
 /// Each form of a pattern, read once by Pattern (DS-385), takes in a class diagram what it names: a template written
@@ -163,6 +163,7 @@ TEST_F(TestFilters, ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort) {  /
 /// A filter of our own: built with its criteria and passed in; the query knows nothing of it.
 class PublicMethods : public ds::query::IFilter {
  public:
+  std::set<std::string> boxes(const ds::model::Model& model) const override { return select(model); }
   std::set<std::string> select(const ds::model::Model& model) const override {
     std::set<std::string> out;
     for (const auto& pair : model.entities()) {

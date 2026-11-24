@@ -105,7 +105,7 @@ TEST_F(TestMetamodelTruth, EveryFlagTheBinderSetsIsOneItsKindDeclares) {
   binder.bind(parser.parseText("x.ds",
                                "package x {\n  verification VER-09001-1 {\n    @requirement REQ-09001-1\n  }\n"
                                "  constraint CST-09001-1 {\n    @requirement REQ-09001-1\n  }\n}\n"));
-  const auto checkSteps = ds::check::Steps::of();
+  const auto checkSteps = ds::check::StepFactory::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::size_t flagged = 0;
   for (const auto& pair : model.entities()) {

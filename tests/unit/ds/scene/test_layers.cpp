@@ -47,7 +47,7 @@ class TestLayers : public ::testing::Test {
                          "package p {\n  requirement REQ-00001-1: The system shall run\n  module m {\n"
                          "    class A {\n      @requirement REQ-00001-1\n      - b: B\n      + run() -> none\n    }\n"
                          "    class B {\n      + go() -> int\n    }\n    sequence A::run {\n      self -> b.go() -> n\n    }\n  }\n}\n"));
-    const auto steps = ds::check::Steps::of();
+    const auto steps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 };
@@ -56,7 +56,7 @@ class TestLayers : public ::testing::Test {
 /// and each adds its own part of the document.
 TEST_F(TestLayers, TheLayersComeInOrderAndEachAddsItsOwnPart) {
   const ds::scene::Map map({});
-  const auto all = ds::scene::layers(model, metamodel, map);
+  const auto all = ds::scene::LayerFactory::of(model, metamodel, map);
   ASSERT_EQ(all.size(), 4u);
   EXPECT_NE(dynamic_cast<ds::scene::StructureLayer*>(all[0].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::BehaviourLayer*>(all[1].get()), nullptr);

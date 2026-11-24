@@ -90,7 +90,7 @@ class TestBrowserOpen:
 
         opened = []
         monkeypatch.setattr(subprocess, "Popen", lambda argv, **_: opened.append(argv))
-        monkeypatch.setattr(live_http.webbrowser, "open", lambda url: opened.append(["webbrowser", url]))
+        monkeypatch.setattr("webbrowser.open", lambda url: opened.append(["webbrowser", url]))
         monkeypatch.setattr(shutil, "which", lambda name: "/bin/explorer.exe")
         browser_open("http://localhost:1/")
         monkeypatch.setattr(shutil, "which", lambda name: None)

@@ -27,7 +27,7 @@ class TestQuery : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) binder.bind(f);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -115,7 +115,7 @@ class TestQueryOfTheDesign : public TestQuery {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 };
@@ -127,7 +127,9 @@ TEST_F(TestQueryOfTheDesign, CouplingAnswersWhatEachBehaviourTouchesOutsideItsMo
     EXPECT_TRUE(a.kind == "couples-transient" || a.kind == "couples-structural") << a.kind;
     EXPECT_NE(a.detail.find(" in "), std::string::npos) << a.detail;  // the behaviour and the module it lives in
   }
-  EXPECT_TRUE(names(answers, "driftspec@ds@check::Checker", "couples-transient"));  // load creates a Checker
+  // load asks the factory for the checker and holds it as the IChecker it is (DS-404): it names no concrete checker
+  EXPECT_TRUE(names(answers, "driftspec@ds@check::CheckerFactory", "couples-transient"));
+  EXPECT_FALSE(names(answers, "driftspec@ds@check::Checker", "couples-transient"));
 }
 
 }  // namespace
@@ -156,7 +158,7 @@ ds::model::Model aMachine(const ds::model::Metamodel& metamodel) {
                                "    }\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::Steps::of();
+  const auto checkSteps = ds::check::StepFactory::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   return model;
 }

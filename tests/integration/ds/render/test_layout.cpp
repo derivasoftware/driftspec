@@ -31,7 +31,7 @@ class TestLayout : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -138,7 +138,7 @@ TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
                              "    class D1 { }\n    class D2 { }\n    class D3 { }\n    class D4 { }\n"
                              "  }\n}\n"
                              "diagram CL_Chain {\n  kind: class\n  include: p@*\n}\n"));
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     const IrDocument doc = IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_Chain", false)).bundled();
     const LayoutResult lay = ds::render::Layout().place(doc);
@@ -166,6 +166,18 @@ TEST_F(TestLayout, ParallelRelationsAreBundledWithTheirLabelsStacked) {
   EXPECT_TRUE(stacked);
 }
 
+/// Every change a diff marks on a relation has its style in the SVG (DS-419): a changed or renamed relation is drawn in
+/// its colour, not as one that did not change.
+TEST_F(TestLayout, EveryChangeOfARelationHasItsStyleInTheSvg) {
+  const IrDocument doc = IrDocument::parse(R"({"ir": 1, "title": "diff", "nodes": [{"id": "A", "kind": "box", "label": "A"},
+    {"id": "B", "kind": "box", "label": "B"}],
+    "edges": [{"from": "A", "to": "B", "kind": "dependency", "label": "alters", "refs": {"change": "changed"}}]})");
+  const std::string svg = ds::render::Svg().render(doc);
+  EXPECT_NE(svg.find("pr-edge-change-changed"), std::string::npos);
+  for (const char* change : {"added", "removed", "changed", "renamed"})
+    EXPECT_NE(svg.find(std::string(".pr-diagram .pr-edge-change-") + change + " {"), std::string::npos) << change;
+}
+
 TEST_F(TestLayout, TheSvgIsDeterministicAndCarriesStableIds) {
   const IrDocument doc = document("CL_Values");
   const std::string once = ds::render::Svg().render(doc);
@@ -191,7 +203,7 @@ class TestSequenceSvg : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/behaviour")) binder.bind(f);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 

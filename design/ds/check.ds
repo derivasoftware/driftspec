@@ -47,7 +47,7 @@ package driftspec@ds {
     }
 
     // ---- the check as a runner of steps, as requirements and the rules that hold them (DS-383) ----------------
-    // The checker runs what it is given through IStep and knows no concrete step; Steps is the one place that names
+    // The checker runs what it is given through IStep and knows no concrete step; StepFactory is the one place that names
     // them. A step reads what the steps it needs wrote into the model, never those steps; and every operation of
     // the check is a member of the class whose responsibility it is.
     requirement REQ-00194-1 {
@@ -386,6 +386,12 @@ package driftspec@ds {
       + abstract run(notes: bind::Notes) -> void
     }
 
+    // The one place that makes the checker (DS-404): what asks for a check holds it as the IChecker it is.
+    class CheckerFactory {
+      @requirement REQ-00053-2
+      + static make(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>) -> std::unique_ptr<IChecker>
+    }
+
     // A runner of steps: it orders the steps it is given by what each needs, runs them over one
     // context and adds what each found to the model when it ends. The map is built outside and
     // outlives it.
@@ -404,13 +410,13 @@ package driftspec@ds {
 
     // the one place that names each step: it pairs each with what it does, makes the ones a selection names and
     // every one they need, and keys them by name (DS-376); a class, as every operation of check is (DS-382)
-    class Steps {
+    class StepFactory {
       @requirement REQ-00012-1
       @requirement REQ-00085-1
       + static of(selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>>
     }
 
-    // Each step of the check, by what it does (DS-376): what a selection is made of. Steps::of pairs each with the
+    // Each step of the check, by what it does (DS-376): what a selection is made of. StepFactory::of pairs each with the
     // step it makes, so the names the steps are keyed by stay theirs.
     enum Step {
       @requirement REQ-00085-1
@@ -419,7 +425,7 @@ package driftspec@ds {
     }
 
     // The steps of the check a load runs (DS-376): chosen by the Api for what the load is to give, and read by
-    // Steps::of, which makes them and every step they need. The checker runs what it is given and knows nothing
+    // StepFactory::of, which makes them and every step they need. The checker runs what it is given and knows nothing
     // of it; a drawing that runs fewer steps reads the same model where it looks.
     class Selection {
       @requirement REQ-00085-1
@@ -432,7 +438,7 @@ package driftspec@ds {
     }
 
     // the steps a selection names and every step they need: a step chosen never runs without what it reads
-    sequence Steps::of {
+    sequence StepFactory::of {
       local step: IStep
       local made: std::map<std::string, std::unique_ptr<IStep>>
       loop each step of the check {

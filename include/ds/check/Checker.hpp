@@ -25,7 +25,7 @@ class IChecker {
 };
 
 /// A runner of steps: it orders the steps it is given by what each needs and runs them over one
-/// context, knowing none of them. The steps, keyed by name, are built outside it, by Steps::of or by a
+/// context, knowing none of them. The steps, keyed by name, are built outside it, by StepFactory::of or by a
 /// test; it holds the map by reference, so the map outlives it.
 class Checker : public IChecker {
  public:
@@ -45,6 +45,14 @@ class Checker : public IChecker {
   const model::Metamodel& metamodel_;
   Resolver resolver_;
   const std::map<std::string, std::unique_ptr<IStep>>& steps_;
+};
+
+/// The one place that makes the checker (DS-404): what asks for a check holds it as the IChecker it is, and names no
+/// concrete checker. The steps are held by reference, so the map outlives the checker made.
+class CheckerFactory {
+ public:
+  static std::unique_ptr<IChecker> make(model::Model& model, const model::Metamodel& metamodel,
+                                        const std::map<std::string, std::unique_ptr<IStep>>& steps);
 };
 
 }  // namespace check

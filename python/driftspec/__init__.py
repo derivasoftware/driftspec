@@ -285,6 +285,11 @@ class Workspace:
     def __init__(self, source: Source):
         self._native = _native.Workspace(read(source))
 
+    def reload(self, source: Source) -> None:
+        """Loaded again from the source given, in place (DS-420): a file whose text has not changed is not parsed
+        again. What it answered before stays as it was; what it answers after reads the new files."""
+        self._native.reload(read(source))
+
     def model(self) -> Model:
         """The whole model, typed: what ds export says."""
         return _model(json.loads(self._native.export()))

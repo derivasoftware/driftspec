@@ -23,7 +23,9 @@ ds::model::Entity diagram(const std::string& kind) {
 class TestFilters : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
-  std::unique_ptr<ds::query::IFilter> of(const ds::model::Entity& diagram) const { return ds::query::Filters::of(metamodel, diagram); }
+  std::unique_ptr<ds::query::IFilter> of(const ds::model::Entity& diagram) const {
+    return ds::query::FilterFactory::of(metamodel, diagram);
+  }
 };
 
 TEST_F(TestFilters, ADiagramGetsTheFilterOfItsKind) {
@@ -43,6 +45,16 @@ TEST_F(TestFilters, WhatIsNoDiagramHasNoFilter) {
   ds::model::Entity c = diagram("class");
   c.kind = ds::model::Kind::Class;
   EXPECT_EQ(of(c), nullptr);
+}
+
+/// The factory by its own name (DS-404): a diagram gets a filter, anything else none.
+TEST(TestFilterFactory, ADiagramGetsAFilterAndNothingElseDoes) {
+  const ds::model::Metamodel metamodel;
+  EXPECT_NE(ds::query::FilterFactory::of(metamodel, diagram("class")), nullptr);
+  ds::model::Entity cls;
+  cls.kind = ds::model::Kind::Class;
+  cls.id = "p@m::C";
+  EXPECT_EQ(ds::query::FilterFactory::of(metamodel, cls), nullptr);
 }
 
 }  // namespace

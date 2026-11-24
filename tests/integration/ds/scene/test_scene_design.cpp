@@ -31,7 +31,7 @@ class TestSceneOfTheDesign : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     nodes = ds::scene::Scene(model, metamodel).build().nodes;
     for (const auto& n : nodes) byId[n.id] = &n;
