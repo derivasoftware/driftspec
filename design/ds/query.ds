@@ -148,13 +148,12 @@ package driftspec@ds {
     }
 
     // the one place that names the filter of each kind of diagram, built from the diagram's fields and read in the
-    // metamodel (DS-385): what asks what a diagram takes asks it here, and never names a filter itself
+    // metamodel (DS-385), as Steps names the steps of the check (DS-382): what asks what a diagram takes asks it here,
+    // and never names a filter itself
     class Filters {
       @requirement REQ-00003-2
       @requirement REQ-00200-1
-      - refs metamodel_: model::Metamodel     // the language the filters it makes read their cut in (DS-351)
-      + Filters(metamodel: model::Metamodel)
-      + of(diagram: model::Entity) -> std::unique_ptr<IFilter>
+      + static of(metamodel: model::Metamodel, diagram: model::Entity) -> std::unique_ptr<IFilter>
       // a number field of a diagram: every when it is written *, 0 when it is not written or no int holds it
       - static number(diagram: model::Entity, key: std::string, every: int) -> int
     }
@@ -445,13 +444,12 @@ package driftspec@ds {
     // What a diagram shows is the filter of its kind, applied to the model: nothing is drawn (DS-127).
     sequence Query::shows {
       local out: std::vector<Answer>
-      local filters: Filters
       local filter: IFilter
       self -> model_.find(diagram) -> entity
       opt no diagram has that name / no-such-diagram {
         return error
       }
-      -> filters.of(entity) -> filter
+      -> Filters::of(metamodel_, entity) -> filter
       -> select(filter) -> ids
       loop each id {
         self -> model_.find(id) -> taken

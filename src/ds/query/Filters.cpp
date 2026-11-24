@@ -265,21 +265,21 @@ int Filters::number(const model::Entity& diagram, const std::string& key, int ev
 }
 
 // the one place that names each filter: what a diagram takes is asked of it, by the kind the diagram writes
-std::unique_ptr<IFilter> Filters::of(const model::Entity& diagram) const {
+std::unique_ptr<IFilter> Filters::of(const model::Metamodel& metamodel, const model::Entity& diagram) {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
   const std::string kind = diagram.field("kind");
   const std::vector<std::string> include = splitTrimmed(diagram.field("include"), ',');
   if (kind == "sequence" || kind == "tour")
-    return std::unique_ptr<IFilter>(new SequenceFilter(metamodel_, include, number(diagram, "depth", 1000), diagram.id));
+    return std::unique_ptr<IFilter>(new SequenceFilter(metamodel, include, number(diagram, "depth", 1000), diagram.id));
   if (kind == "state" || kind == "table") return std::unique_ptr<IFilter>(new StateFilter(include));  // both are of a machine
   if (kind == "requirement") {
     const std::vector<std::string> shown = splitTrimmed(diagram.field("show"), ',');
     const std::set<std::string> show(shown.begin(), shown.end());
-    return std::unique_ptr<IFilter>(new RequirementsFilter(metamodel_, include, show.empty() || show.count("design"),
+    return std::unique_ptr<IFilter>(new RequirementsFilter(metamodel, include, show.empty() || show.count("design"),
                                                            show.empty() || show.count("verifications"), diagram.id));
   }
   return std::unique_ptr<IFilter>(
-      new ClassFilter(metamodel_, include, splitTrimmed(diagram.field("exclude"), ','), number(diagram, "neighbours", 0), diagram.id));
+      new ClassFilter(metamodel, include, splitTrimmed(diagram.field("exclude"), ','), number(diagram, "neighbours", 0), diagram.id));
 }
 
 }  // namespace query

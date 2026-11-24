@@ -124,7 +124,7 @@ TEST_F(TestCutDrawing, ACutTakenFromADiagramNobodyDeclaresIsAFindingAndStillDraw
 TEST_F(TestCutDrawing, TheQueryShowsWhatTheDrawingDrawsUnderEveryCut) {
   for (const char* name :
        {"CL_Everything", "HLD_Open", "HLD_Close", "HLD_Modules", "HLD_Till", "HLD_Packages", "HLD_Borrowed", "HLD_BorrowedAndMore"}) {
-    const auto filter = ds::query::Filters(metamodel).of(*model.find(std::string("diagram:") + name));
+    const auto filter = ds::query::Filters::of(metamodel, *model.find(std::string("diagram:") + name));
     EXPECT_EQ(filter->select(model), ids(diagram(name))) << name;
   }
 }

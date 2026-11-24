@@ -38,7 +38,7 @@ class TestFilters : public ::testing::Test {
   Ids of(const std::string& diagram) {
     const ds::model::Entity* d = model.find("diagram:" + diagram);
     if (!d) return {"no diagram " + diagram};
-    return ds::query::Query(model, metamodel).select(*ds::query::Filters(metamodel).of(*d));
+    return ds::query::Query(model, metamodel).select(*ds::query::Filters::of(metamodel, *d));
   }
 
   static const char* shop() {
@@ -125,9 +125,9 @@ TEST_F(TestFilters, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   ASSERT_NE(sell, nullptr);
   ASSERT_NE(none, nullptr);
   ASSERT_NE(till, nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::Filters(metamodel).of(*sell).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::Filters(metamodel).of(*none).get()), nullptr);
-  EXPECT_EQ(ds::query::Filters(metamodel).of(*till), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::Filters::of(metamodel, *sell).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::Filters::of(metamodel, *none).get()), nullptr);
+  EXPECT_EQ(ds::query::Filters::of(metamodel, *till), nullptr);
 }
 
 /// Each form of a pattern, read once by Pattern (DS-385), takes in a class diagram what it names: a template written

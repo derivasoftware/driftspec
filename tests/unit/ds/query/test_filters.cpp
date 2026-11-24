@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <string>
 
 #include "ds/model/Metamodel.hpp"
@@ -22,26 +23,26 @@ ds::model::Entity diagram(const std::string& kind) {
 class TestFilters : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
-  const ds::query::Filters filters{metamodel};
+  std::unique_ptr<ds::query::IFilter> of(const ds::model::Entity& diagram) const { return ds::query::Filters::of(metamodel, diagram); }
 };
 
 TEST_F(TestFilters, ADiagramGetsTheFilterOfItsKind) {
-  EXPECT_NE(dynamic_cast<ds::query::ClassFilter*>(filters.of(diagram("class")).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(filters.of(diagram("sequence")).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::StateFilter*>(filters.of(diagram("state")).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(filters.of(diagram("requirement")).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::ClassFilter*>(of(diagram("class")).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(of(diagram("sequence")).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::StateFilter*>(of(diagram("state")).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(of(diagram("requirement")).get()), nullptr);
 }
 
 TEST_F(TestFilters, ATourIsASequenceATableIsAMachineAndAnUnwrittenKindIsAClassDiagram) {
-  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(filters.of(diagram("tour")).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::StateFilter*>(filters.of(diagram("table")).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::ClassFilter*>(filters.of(diagram("")).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(of(diagram("tour")).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::StateFilter*>(of(diagram("table")).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::ClassFilter*>(of(diagram("")).get()), nullptr);
 }
 
 TEST_F(TestFilters, WhatIsNoDiagramHasNoFilter) {
   ds::model::Entity c = diagram("class");
   c.kind = ds::model::Kind::Class;
-  EXPECT_EQ(filters.of(c), nullptr);
+  EXPECT_EQ(of(c), nullptr);
 }
 
 }  // namespace

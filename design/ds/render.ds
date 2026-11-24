@@ -293,9 +293,8 @@ package driftspec@ds {
     }
 
     sequence IrExport::renderBoxes {
-      local filters: query::Filters
       local filter: query::ClassFilter
-      -> filters.of(diagram) -> made
+      -> query::Filters::of(metamodel_, diagram) -> made
       -> filter.boxes(model_) -> selected
       -> filter.containers(model_, selected) -> containers
       loop each selected id {

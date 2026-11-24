@@ -47,9 +47,8 @@ void StructureLayer::links(SceneDocument& out_document) const {
 void StructureLayer::diagrams(SceneDocument& out_document) const {
   // where each box is drawn: every diagram of the workspace, taken by the filter of its kind (DS-127)
   const query::Query query(model_, metamodel_);
-  const query::Filters filters(metamodel_);
   for (const auto& pair : model_.entities()) {
-    const auto filter = filters.of(pair.second);
+    const auto filter = query::Filters::of(metamodel_, pair.second);
     if (!filter) continue;
     DiagramView view;
     view.name = model::Identity(pair.first).diagramName();

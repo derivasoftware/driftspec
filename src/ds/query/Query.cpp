@@ -157,7 +157,7 @@ std::set<std::string> Query::select(const IFilter& filter) const { return filter
 std::vector<Answer> Query::shows(const std::string& diagram) const {
   // what the diagram takes is the filter of its kind, applied to the model: nothing is drawn (DS-127)
   const model::Entity* d = model_.find(model::Identity::ofDiagram(diagram).text());
-  const auto filter = d ? Filters(metamodel_).of(*d) : nullptr;
+  const auto filter = d ? Filters::of(metamodel_, *d) : nullptr;
   if (!filter) return {{"error", diagram, "no such diagram"}};
   std::vector<Answer> out;
   for (const auto& id : select(*filter)) out.push_back(entityAnswer(*model_.find(id), ""));

@@ -109,19 +109,17 @@ class RequirementsFilter : public IFilter {
   std::string cutOf_;
 };
 
-/// The one place that names the filter of each kind of diagram (DS-385): what asks what a diagram takes asks it here,
-/// and never names a filter itself. Each filter is built from the diagram's fields and read in the metamodel it is
-/// given (DS-351).
+/// The one place that names the filter of each kind of diagram (DS-385), as Steps names the steps of the check
+/// (DS-382): what asks what a diagram takes asks it here, and never names a filter itself.
 class Filters {
  public:
-  explicit Filters(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
-  /// The filter of `diagram`'s kind, built from its fields; null when the entity is no diagram.
-  std::unique_ptr<IFilter> of(const model::Entity& diagram) const;
+  /// The filter of `diagram`'s kind, built from its fields and read in `metamodel` (DS-351); null when the entity is
+  /// no diagram.
+  static std::unique_ptr<IFilter> of(const model::Metamodel& metamodel, const model::Entity& diagram);
 
  private:
   /// A number field of a diagram: `every` when it is written `*`, 0 when it is not written or is no number an int holds.
   static int number(const model::Entity& diagram, const std::string& key, int every);
-  const model::Metamodel& metamodel_;
 };
 
 }  // namespace query
