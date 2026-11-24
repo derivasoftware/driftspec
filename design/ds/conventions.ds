@@ -5,7 +5,7 @@ package driftspec@ds {
 
   requirement REQ-00197-1 {
     tags: architecture, conventions
-    status: draft
+    status: approved
     @refines REQ-00053-3
     title: What a class of the engine is named shall say what it is: a pure interface I and a capital, an abstract class A and a capital, a factory its product and Factory
     text:
@@ -16,7 +16,7 @@ package driftspec@ds {
     rationale:
       Owner, 2026-11-24 (DS-402, DS-405): the conventions the Owner uses in every design, checked by the design itself.
     verification VER-00217-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm ds's design names its interfaces, abstract classes and factories by what they are, and is told when one is named otherwise
       method: test
       tests:
@@ -29,7 +29,7 @@ package driftspec@ds {
 
   requirement REQ-00198-1 {
     tags: architecture, conventions
-    status: draft
+    status: approved
     @refines REQ-00053-3
     title: A class of a family shall be reached through the family's interface by every class but its own family and the factories
     text:
@@ -40,7 +40,7 @@ package driftspec@ds {
       Owner, 2026-11-24 (DS-402, DS-405): horizontal extension through interfaces; tried on a copy, the rule found
       the exporter reaching a concrete filter (DS-423).
     verification VER-00218-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm ds's design reaches every family through its interface, and is told when a class outside it names one of its classes
       method: test
       tests:
@@ -51,7 +51,7 @@ package driftspec@ds {
 
   requirement REQ-00199-1 {
     tags: architecture, conventions
-    status: draft
+    status: approved
     @refines REQ-00053-3
     title: What a class refers to shall be given to its constructor, itself or inside what it is given
     text:
@@ -64,7 +64,7 @@ package driftspec@ds {
       rule found the check steps storing what they read in run() (DS-425) and the bind context with no constructor
       in the design (DS-424).
     verification VER-00219-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm every class of ds's design is given what it refers to at construction, and is told when one is not
       method: test
       tests:
