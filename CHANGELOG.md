@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.42
+
+The test of CST-00001-1, a hundred classes checked and drawn in under a hundred milliseconds, times each command
+five times and holds the fastest to the budget (DS-363). Load on the machine, other pipelines on a shared runner, only
+ever adds to a run's time, so the fastest run is the work's own; the budget itself does not change. Nothing a design
+writes changes.
+
 ## 0.1.41
 
 The walk the binder had is gone (DS-357, the end of DS-353): every construct of the language binds through its own
