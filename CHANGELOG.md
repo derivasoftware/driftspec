@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.41
+
+The walk the binder had is gone (DS-357, the end of DS-353): every construct of the language binds through its own
+binder, found by the table, and the binder only builds them and binds each file. The requirements the walk still
+answered to move to the binders that realise them: the high-level design as packages, a package as a box and its
+nesting to the package binder, a module that reopens to the module binder. Nothing a design writes, no finding,
+export or drawing changes.
+
 ## 0.1.40
 
 Sequences get a binder of their own (DS-356, group four of four): a sequence is the behaviour of an operation, with

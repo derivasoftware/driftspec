@@ -16,7 +16,6 @@
 #include "ds/bind/FormulaBinder.hpp"
 #include "ds/bind/FunctionBinder.hpp"
 #include "ds/bind/InterfaceBinder.hpp"
-#include "ds/bind/LegacyBinder.hpp"
 #include "ds/bind/MemberBinder.hpp"
 #include "ds/bind/MemberBodyBinder.hpp"
 #include "ds/bind/ModuleBinder.hpp"
@@ -73,7 +72,6 @@ class Binder {
   ClassBinder classes_{fields_, annotations_, extensions_, members_};
   FunctionBinder functions_{signatures_, bodies_};
   SequenceBinder sequences_{fields_, annotations_, types_};
-  LegacyBinder legacy_;
   Dispatch dispatch_;
 };
 
