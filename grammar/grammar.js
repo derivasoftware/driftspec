@@ -253,8 +253,9 @@ module.exports = grammar({
     // ---- representations --------------------------------------------------
     // a table says its rows as a rule says its ranges (`for`, `where`) and a column per question (DS-268)
     diagram: $ => seq('diagram', field('name', $.name), '{', repeat(choice($.field, $.rule_for, $.rule_where, $.column)), '}'),
-    column: $ => seq('column', field('name', $.name), ':', choice($.column_field, $.column_related, $.column_holds)),
+    column: $ => seq('column', field('name', $.name), ':', choice($.column_field, $.property_term, $.column_related, $.column_holds)),
     column_field: $ => seq(field('of', $.name), '.', field('field', $.name)),           // a field of the row: r.title
+    // what an entity of the row is, as a rule reads it: kind(r), id(r), name(r) (DS-437); a property_term, as in a literal
     column_related: $ => seq(field('show', $.name), 'where', $._literals),               // what is related to it: x where r requires x
     column_holds: $ => seq('holds', $._literals),                                        // yes or no
 

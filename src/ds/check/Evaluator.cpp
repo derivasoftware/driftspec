@@ -121,6 +121,9 @@ void Evaluator::tabulate(const std::string& id, const model::Formula& formula) {
         } else if (bound) {
           text = facts_.fieldOf(entity, column.field);
         }
+      } else if (column.form == "property") {  // what the entity is, as a rule reads it (DS-437)
+        const int slot = variables.slotOf(column.variable);
+        if (slot >= 0 && subject[slot]) text = facts_.propertyOf(*subject[slot], column.property);
       } else if (column.form == "related") {
         std::set<std::string> seen;
         const int slot = variables.slotOf(column.variable);

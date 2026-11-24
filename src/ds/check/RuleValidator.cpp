@@ -54,7 +54,7 @@ bool RuleValidator::validate(const std::string& id, const model::Formula& formul
     ok = validateBody(id, formula.where, bound, out_resolved) && ok;
     for (const auto& column : formula.columns) {
       std::set<std::string> inColumn = bound;
-      if (column.form != "field") ok = validateBody(id, column.body, inColumn, out_resolved) && ok;
+      if (column.form != "field" && column.form != "property") ok = validateBody(id, column.body, inColumn, out_resolved) && ok;
     }
   } else if (kind == model::Kind::Rule) {
     ok = validateBody(id, formula.where, bound, out_resolved) && ok;
