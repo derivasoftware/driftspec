@@ -16,8 +16,12 @@
 #include "ds/render/Ir.hpp"
 #include "ds/render/IrExport.hpp"
 #include "ds/render/Svg.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 /// A diagram opens the boxes it names and closes the rest, over tests/corpus/visibility.
 class TestOpenBoxes : public ::testing::Test {
@@ -353,7 +357,7 @@ class TestPastTheReach : public ::testing::Test {
     Drawn out;
     const auto start = std::chrono::steady_clock::now();
     out.ir = ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false);
-    out.svg = ds::render::Svg().render(ds::render::IrDocument::parse(out.ir));
+    out.svg = ds::render::Svg(kTheme).render(ds::render::IrDocument::parse(out.ir));
     out.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
     return out;
   }

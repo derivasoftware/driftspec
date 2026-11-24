@@ -15,8 +15,12 @@
 #include "ds/render/Layout.hpp"
 #include "ds/render/Svg.hpp"
 #include "ds/render/Text.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 using ds::render::IrDocument;
 
@@ -58,8 +62,8 @@ TEST(TestIrDocument, ItParsesItsContractAndBundlesRelationsThatDifferOnlyInText)
 }
 
 TEST(TestMetrics, AScreenCellIsOneCharacterWhereAPixelTableIsWider) {
-  const auto svg = ds::render::Metrics::svg();
-  const auto text = ds::render::Metrics::text();
+  const auto svg = ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg));
+  const auto text = ds::render::Metrics::text(kTheme.measures(ds::theme::Sink::text));
   EXPECT_EQ(text.CHAR_W, 1);
   EXPECT_EQ(text.LINE_H, 1);
   EXPECT_GT(svg.CHAR_W, text.CHAR_W);
@@ -67,14 +71,14 @@ TEST(TestMetrics, AScreenCellIsOneCharacterWhereAPixelTableIsWider) {
 }
 
 TEST(TestSvg, AnSvgOfTheDocumentWithEveryBox) {
-  const std::string svg = ds::render::Svg().render(IrDocument::parse(kIr), 0);
+  const std::string svg = ds::render::Svg(kTheme).render(IrDocument::parse(kIr), 0);
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find(">A<"), std::string::npos);
   EXPECT_NE(svg.find(">B<"), std::string::npos);
 }
 
 TEST(TestText, TheDocumentInBoxCharactersAndAsCells) {
-  const ds::render::Text text;
+  const ds::render::Text text(kTheme);
   const std::string drawn = text.render(IrDocument::parse(kIr), false, 0);
   EXPECT_NE(drawn.find('A'), std::string::npos);
   EXPECT_NE(drawn.find('B'), std::string::npos);
@@ -100,7 +104,7 @@ TEST(TestIrDocument, ADocumentMadeOfPartsGivesEachAsADocumentOfItsOwn) {
 }
 
 TEST(TestSvg, ADocumentMadeOfPartsIsOneSvgThatHoldsOneForEachPart) {
-  const std::string svg = ds::render::Svg().render(IrDocument::parse(kParts));
+  const std::string svg = ds::render::Svg(kTheme).render(IrDocument::parse(kParts));
   EXPECT_EQ(svg.find("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox="), 0u);
   EXPECT_NE(svg.find("data-part=\"boxes\""), std::string::npos);
   EXPECT_NE(svg.find("data-part=\"again\""), std::string::npos);
@@ -108,11 +112,22 @@ TEST(TestSvg, ADocumentMadeOfPartsIsOneSvgThatHoldsOneForEachPart) {
 
 TEST(TestText, ADocumentMadeOfPartsIsDrawnOnePartUnderTheOther) {
   const IrDocument doc = IrDocument::parse(kParts);
-  const std::string text = ds::render::Text().render(doc, false);
+  const std::string text = ds::render::Text(kTheme).render(doc, false);
   const auto first = text.find("C A");
   ASSERT_NE(first, std::string::npos);
   EXPECT_NE(text.find("C A", first + 1), std::string::npos);  // the same box twice: once for each part
-  EXPECT_NE(ds::render::Text().cells(doc).find("\"rows\""), std::string::npos);
+  EXPECT_NE(ds::render::Text(kTheme).cells(doc).find("\"rows\""), std::string::npos);
+}
+
+/// What the terminal drawing draws with is read from the theme (DS-393): its cells and each role's colour.
+TEST(TestTextPen, ItReadsItsMetricsAndColoursFromTheTheme) {
+  const ds::render::TextPen pen(kTheme);
+  EXPECT_EQ(pen.M.CHAR_W, kTheme.measures(ds::theme::Sink::text).advance);
+  EXPECT_EQ(pen.type, kTheme.sgr(ds::theme::Role::type));
+  EXPECT_EQ(pen.changeMarkOf("renamed").mark, std::string(">"));
+  EXPECT_EQ(pen.changeMarkOf("renamed").colour, kTheme.sgr(ds::theme::Role::renamed));
+  EXPECT_EQ(pen.changeMarkOf("anything else").mark, std::string("~"));
+  EXPECT_EQ(pen.cellColours, kTheme.cellColours());
 }
 
 }  // namespace

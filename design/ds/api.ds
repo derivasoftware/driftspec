@@ -78,6 +78,7 @@ package driftspec@ds {
       @requirement REQ-00107-2
       @constraint CST-00009-1
       - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
+      - owns theme_: theme::Theme             // the style its drawings are written in, made once with it (DS-393)
       - output_: Output                       // what it is loaded to give, kept for each reload (DS-420)
       - diagram_: std::string
       - owns many parsed_: std::map<std::string, parse::ParsedFile>  // each file as last parsed: a reload parses only what changed

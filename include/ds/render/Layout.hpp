@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "ds/render/Ir.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace render {
@@ -14,8 +15,8 @@ namespace render {
 /// pixel table; `text()` is the same table in character cells, so the same
 /// layout lands on a terminal grid.
 struct Metrics {
-  int CHAR_W = 8;
-  int LINE_H = 18;
+  int CHAR_W = 0;  ///< the advance of a character: the theme's measures, never written here (DS-393)
+  int LINE_H = 0;  ///< the height of a line: the theme's measures
   int PAD_X = 10;
   int PAD_Y = 10;
   int SECTION_GAP = 4;
@@ -30,11 +31,18 @@ struct Metrics {
   int CONTAINER_LABEL_H = 22;
   double ASPECT = 1.6;  ///< width/height the packing aims at, in this table's units
 
-  static Metrics svg() { return Metrics{}; }
-  static Metrics text() {
+  /// The pixel table, its text measures read from the theme (DS-393, DS-392).
+  static Metrics svg(const theme::Measures& text) {
     Metrics m;
-    m.CHAR_W = 1;
-    m.LINE_H = 1;
+    m.CHAR_W = text.advance;
+    m.LINE_H = text.lineHeight;
+    return m;
+  }
+  /// The same table in character cells, its text measures read from the theme.
+  static Metrics text(const theme::Measures& text) {
+    Metrics m;
+    m.CHAR_W = text.advance;
+    m.LINE_H = text.lineHeight;
     m.PAD_X = 2;        // border and one space
     m.PAD_Y = 1;        // border
     m.SECTION_GAP = 1;  // the separator row
@@ -83,7 +91,7 @@ struct LayoutResult {
 /// The layout of a document in one table of metrics (DS-185).
 class Layout {
  public:
-  explicit Layout(const Metrics& m = Metrics::svg()) : m_(m) {}
+  explicit Layout(const Metrics& m) : m_(m) {}
 
   /// The size a node takes, from its text alone.
   Rect sizeOf(const IrNode& node) const;

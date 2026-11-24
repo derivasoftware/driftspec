@@ -12,13 +12,12 @@
 #include <vector>
 
 #include "ds/text/Text.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace render {
 
 namespace {
-
-const Metrics M = Metrics::text();
 
 /// One character of the drawing, in 7 bytes (DS-350): its UTF-8 bytes inline, the index of its colour in the
 /// grid's palette and what an edge drew there. A glyph longer than one code point (never drawn today) is kept
@@ -85,9 +84,7 @@ class Grid {
   }
 
   /// base64 of u32 little-endian triplets per cell: codepoint, foreground, background
-  std::string encode() const {
-    static const std::map<std::string, uint32_t> rgb = {{"2", 0x64748b},  {"34", 0x2563eb}, {"32", 0x16a34a},
-                                                        {"31", 0xdc2626}, {"33", 0xd97706}, {"35", 0x7c3aed}};
+  std::string encode(const std::map<std::string, std::uint32_t>& rgb) const {
     std::string bytes;
     bytes.reserve(cells_.size() * 12);
     auto put32 = [&](uint32_t v) {
@@ -215,31 +212,6 @@ class Grid {
   std::vector<std::string> long_;         ///< the glyphs longer than one code point
 };
 
-// palette roles, as SGR parameters: the SVG tokens' nearest terminal colours
-const char* const kMuted = "2";
-const char* const kName = "1";
-const char* const kType = "34";
-const char* const kPublic = "32";
-const char* const kPrivate = "31";
-const char* const kProtected = "33";
-const char* const kNote = "33";
-const char* const kContainer = "2";
-const char* const kEdge = "";
-
-/// What a change a diff marks is drawn as (DS-419): its mark and its ANSI colour, one row per change, the same for a box,
-/// a relation and a message. A change the table does not name is drawn as changed.
-struct ChangeMark {
-  const char* mark;
-  const char* colour;
-};
-
-ChangeMark changeMarkOf(const std::string& change) {
-  if (change == "added") return {"+", "32"};
-  if (change == "removed") return {"-", "31"};
-  if (change == "renamed") return {">", "34"};
-  return {"~", "33"};
-}
-
 void frame(Grid& g, const Rect& r, bool rounded, const std::string& color) {
   const char* tl = rounded ? "\xE2\x95\xAD" : "\xE2\x94\x8C";  // ╭ ┌
   const char* tr = rounded ? "\xE2\x95\xAE" : "\xE2\x94\x90";  // ╮ ┐
@@ -266,7 +238,12 @@ void clear(Grid& g, const Rect& r) {
 }
 
 /// `+ abstract run(model: Model) -> list<Finding>`: visibility coloured, types coloured.
-void member(Grid& g, int x, int y, const std::string& line) {
+void member(Grid& g, int x, int y, const std::string& line, const TextPen& pen) {
+  const Metrics& M = pen.M;
+  const std::string& kType = pen.type;
+  const std::string& kPublic = pen.publicMember;
+  const std::string& kPrivate = pen.privateMember;
+  const std::string& kProtected = pen.protectedMember;
   static const std::regex head(R"(^\s*([+\-#~])?\s*(.*)$)");
   std::smatch m;
   std::string body = line;
@@ -319,7 +296,14 @@ void member(Grid& g, int x, int y, const std::string& line) {
   }
 }
 
-void box(Grid& g, const Placed& p) {
+void box(Grid& g, const Placed& p, const TextPen& pen) {
+  const Metrics& M = pen.M;
+  const std::string& kMuted = pen.muted;
+  const std::string& kName = pen.name;
+  const std::string& kPublic = pen.publicMember;
+  const std::string& kProtected = pen.protectedMember;
+  const std::string& kBadge = pen.badge;
+  const std::string& kNote = pen.note;
   const IrNode& n = *p.node;
   const Rect& r = p.rect;
   clear(g, r);
@@ -330,19 +314,19 @@ void box(Grid& g, const Placed& p) {
     return;
   }
   const auto change = n.refs.find("change");
-  const std::string changeColor = change == n.refs.end() ? "" : changeMarkOf(change->second).colour;
+  const std::string changeColor = change == n.refs.end() ? "" : pen.changeMarkOf(change->second).colour;
   frame(g, r, true, changeColor);
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
   const std::string badge = badgeOf(n.classifier, n.abstract);  // the same letter as the SVG
   if (change != n.refs.end()) {
-    const std::string mark = changeMarkOf(change->second).mark;
+    const std::string mark = pen.changeMarkOf(change->second).mark;
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
     g.text(r.x + M.PAD_X, y, badge,
            n.classifier == "interface" || n.classifier == "verification" ? kPublic
            : n.classifier == "enum" || n.classifier == "constraint"      ? kProtected
-                                                                         : "35");
+                                                                         : kBadge);
   }
   g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
@@ -358,17 +342,18 @@ void box(Grid& g, const Placed& p) {
     const std::string offered = s < n.sectionKinds.size() && !holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
     for (const auto& line : section) {
       if (!offered.empty()) {
-        g.text(r.x + M.PAD_X, y, badgeOf(offered, false), offered == "interface" ? kPublic : offered == "enum" ? kProtected : "35");
+        g.text(r.x + M.PAD_X, y, badgeOf(offered, false), offered == "interface" ? kPublic : offered == "enum" ? kProtected : kBadge);
         g.text(r.x + M.PAD_X + M.BADGE_W, y++, line);
       } else if (members)
-        member(g, r.x + M.PAD_X, y++, line);
+        member(g, r.x + M.PAD_X, y++, line, pen);
       else
         g.text(r.x + M.PAD_X, y++, line);
     }
   }
 }
 
-void container(Grid& g, const Placed& p) {
+void container(Grid& g, const Placed& p, const TextPen& pen) {
+  const std::string& kContainer = pen.container;
   const Rect& r = p.rect;
   frame(g, r, false, kContainer);
   g.text(r.x + 2, r.y, " " + p.node->label + " ", kContainer);
@@ -384,13 +369,15 @@ std::string marker(const std::string& kind, int dx, int dy) {
   return dy < 0 ? "\xE2\x96\xB2" : dy > 0 ? "\xE2\x96\xBC" : dx < 0 ? "\xE2\x97\x80" : "\xE2\x96\xB6";  // ▲ ▼ ◀ ▶
 }
 
-void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId) {
+void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId, const TextPen& pen) {
+  const std::string& kMuted = pen.muted;
+  const std::string& kEdge = pen.edge;
   if (route.points.size() < 2) return;
   const bool diamond = e.kind == "composition" || e.kind == "aggregation";
   const auto change = e.refs.find("change");
   const bool removed = change != e.refs.end() && change->second == "removed";
   const bool dashed = removed || e.kind == "dependency" || e.kind == "realization" || e.kind == "attachment";
-  const std::string edgeColor = change == e.refs.end() ? std::string(kEdge) : changeMarkOf(change->second).colour;
+  const std::string edgeColor = change == e.refs.end() ? std::string(kEdge) : pen.changeMarkOf(change->second).colour;
   // an anchor on a top or left border names the border cell itself: step outside it
   auto outside = [&](Point& p, const std::string& id, bool first) {
     const auto it = byId.find(id);
@@ -457,7 +444,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
       }
     }
     const Point a = pts[best], b = pts[best + 1];
-    const auto lines = text::linesOf(change == e.refs.end() ? e.label : changeMarkOf(change->second).mark + std::string(" ") + e.label);
+    const auto lines = text::linesOf(change == e.refs.end() ? e.label : pen.changeMarkOf(change->second).mark + std::string(" ") + e.label);
     if (a.y == b.y) {
       std::string joined;
       for (const auto& l : lines) joined += (joined.empty() ? "" : ", ") + l;
@@ -481,7 +468,10 @@ struct SeqLine {
   int width = 0;
 };
 
-Grid sequenceGrid(const IrDocument& doc) {
+Grid sequenceGrid(const IrDocument& doc, const TextPen& pen) {
+  const std::string& kMuted = pen.muted;
+  const std::string& kName = pen.name;
+  const std::string& kEdge = pen.edge;
   std::vector<SeqLine> lines;
   std::map<std::string, size_t> index;
   for (const auto& n : doc.nodes) {
@@ -615,9 +605,9 @@ Grid sequenceGrid(const IrDocument& doc) {
     const int y = rowOf[m->order] + 1;
     const int a = lines[index[m->from]].centre, b = lines[index[m->to]].centre;
     const auto change = m->refs.find("change");
-    const std::string colour = change == m->refs.end() ? std::string(kEdge) : changeMarkOf(change->second).colour;
+    const std::string colour = change == m->refs.end() ? std::string(kEdge) : pen.changeMarkOf(change->second).colour;
     const std::string labelColour = change == m->refs.end() ? std::string(kMuted) : colour;
-    const std::string label = change == m->refs.end() ? m->label : changeMarkOf(change->second).mark + std::string(" ") + m->label;
+    const std::string label = change == m->refs.end() ? m->label : pen.changeMarkOf(change->second).mark + std::string(" ") + m->label;
     const std::string dash =
         m->dashed || (change != m->refs.end() && change->second == "removed") ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
     if (a == b) {
@@ -641,7 +631,7 @@ Grid sequenceGrid(const IrDocument& doc) {
 
 namespace {
 
-Grid classGrid(const IrDocument& doc, const LayoutResult& lay) {
+Grid classGrid(const IrDocument& doc, const LayoutResult& lay, const TextPen& pen) {
   int minX = 0, minY = 0, maxX = 1, maxY = 1;
   for (const auto& p : lay.placed) {
     minX = std::min(minX, p.rect.x - 1);
@@ -667,13 +657,13 @@ Grid classGrid(const IrDocument& doc, const LayoutResult& lay) {
   }
   std::stable_sort(frames.begin(), frames.end(),
                    [](const Placed* a, const Placed* b) { return a->rect.w * a->rect.h > b->rect.w * b->rect.h; });
-  for (const Placed* f : frames) container(g, *f);
+  for (const Placed* f : frames) container(g, *f, pen);
   for (size_t i = 0; i < doc.edges.size(); ++i) {
     const auto r = lay.routes.find(i);
-    if (r != lay.routes.end()) edge(g, doc.edges[i], r->second, byId);
+    if (r != lay.routes.end()) edge(g, doc.edges[i], r->second, byId, pen);
   }
   for (const auto& p : lay.placed) {
-    if (p.node->kind != "container") box(g, p);
+    if (p.node->kind != "container") box(g, p, pen);
   }
   return g;
 }
@@ -694,7 +684,9 @@ namespace {
 /// The parts of a drawing (DS-245), one under the other with a line between: a terminal reads down.
 // A drawing that is a table (DS-251): a row of headings, a rule under it, and a row for each of its rows; a
 // cell against the machine is marked with a bang.
-Grid tableGrid(const IrDocument& doc) {
+Grid tableGrid(const IrDocument& doc, const TextPen& pen) {
+  const std::string& kMuted = pen.muted;
+  const std::string& kAgainst = pen.against;
   const IrTable& t = doc.table;
   const auto shown = [](const IrCell& cell) {
     return cell.kind == "against" ? "! " + cell.text : cell.kind == "none" ? "\xC2\xB7" : cell.text;
@@ -734,19 +726,20 @@ Grid tableGrid(const IrDocument& doc) {
       x += widths[c] + 3;
       g.put(x - 2, y, "\xE2\x94\x82", kMuted);  // │
       const IrCell& cell = t.rows[r].cells[c];
-      g.text(x, y, shown(cell), cell.kind == "against" ? "31" : cell.kind == "none" ? kMuted : "");
+      g.text(x, y, shown(cell), cell.kind == "against" ? kAgainst : cell.kind == "none" ? kMuted : "");
     }
   }
   return g;
 }
 
-Grid partsGrid(const IrDocument& doc, int maxWidth) {
+Grid partsGrid(const IrDocument& doc, int maxWidth, const TextPen& pen) {
+  const Metrics& M = pen.M;
   std::vector<Grid> grids;
   int w = 1, h = 0;
   for (const auto& name : doc.parts) {
     const IrDocument part = doc.part(name);
     const IrDocument bundled = part.bundled();
-    grids.push_back(isSequence(part) ? sequenceGrid(part) : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth))));
+    grids.push_back(isSequence(part) ? sequenceGrid(part, pen) : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth)), pen));
     w = std::max(w, grids.back().columns());
     h += grids.back().rows() + (h ? 1 : 0);
   }
@@ -760,26 +753,28 @@ Grid partsGrid(const IrDocument& doc, int maxWidth) {
 }
 }  // namespace
 
+Text::Text(const theme::Theme& theme) : pen_(theme) {}
+
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
-  if (!doc.table.columns.empty()) return tableGrid(doc).dump(color);
-  if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
-  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
+  if (!doc.table.columns.empty()) return tableGrid(doc, pen_).dump(color);
+  if (!doc.parts.empty()) return partsGrid(doc, maxWidth, pen_).dump(color);
+  if (isSequence(doc)) return sequenceGrid(doc, pen_).dump(color);
   const IrDocument bundled = doc.bundled();
-  return render(bundled, Layout(M).place(bundled, contentWidth(maxWidth)), color);
+  return render(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)), color);
 }
 
 std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
-  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
-  return classGrid(doc, lay).dump(color);
+  if (isSequence(doc)) return sequenceGrid(doc, pen_).dump(color);
+  return classGrid(doc, lay, pen_).dump(color);
 }
 
 std::string Text::cells(const IrDocument& doc, int maxWidth) const {
   const IrDocument bundled = doc.bundled();
-  const Grid g = !doc.table.columns.empty() ? tableGrid(doc)
-                 : !doc.parts.empty()       ? partsGrid(doc, maxWidth)
-                 : isSequence(doc)          ? sequenceGrid(doc)
-                                            : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth)));
-  nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode()}, {"text", g.dump(false)}};
+  const Grid g = !doc.table.columns.empty() ? tableGrid(doc, pen_)
+                 : !doc.parts.empty()       ? partsGrid(doc, maxWidth, pen_)
+                 : isSequence(doc)          ? sequenceGrid(doc, pen_)
+                                            : classGrid(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)), pen_);
+  nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode(pen_.cellColours)}, {"text", g.dump(false)}};
   return out.dump();
 }
 

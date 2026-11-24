@@ -42,6 +42,7 @@
 #include "ds/render/Svg.hpp"
 #include "ds/render/Text.hpp"
 #include "ds/scene/Scene.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace app {
@@ -164,7 +165,7 @@ struct Render {
   int width = 0, height = 640;
   bool embed = false;
 
-  int run(const ds::model::Metamodel& metamodel) const {
+  int run(const ds::model::Metamodel& metamodel, const ds::theme::Theme& theme) const {
     if (!isDirectory(input)) {  // a render-IR document someone else produced: drawn like a diagram of a workspace
       std::ifstream probe(input);
       if (!probe) {
@@ -176,7 +177,7 @@ struct Render {
         std::cerr << "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace\n";
         return 2;
       }
-      return emit(output, diagramFormat(false)->write({doc}, drawingOptions(false)));  // as it came, drawn by the format named
+      return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(false)));  // as it came, drawn by the format named
     }
     // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376)
     const bool viewer = format == "html" || format == "json";
@@ -215,12 +216,12 @@ struct Render {
       std::cerr << "no diagram named " << diagram << "\n";
       return 1;
     }
-    return emit(output, diagramFormat(true)->write({doc}, drawingOptions(true)) + (format == "ir" ? "\n" : ""));
+    return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(true)) + (format == "ir" ? "\n" : ""));
   }
 
   // a diagram is its IR, written by the format named (DS-126); the IR of a workspace is indented
-  std::unique_ptr<ds::format::IFormat<ds::render::IrText>> diagramFormat(bool) const {
-    auto formats = ds::format::diagramFormats();
+  std::unique_ptr<ds::format::IFormat<ds::render::IrText>> diagramFormat(const ds::theme::Theme& theme) const {
+    auto formats = ds::format::diagramFormats(theme);
     return std::move(formats.at(format));
   }
   ds::format::FormatOptions drawingOptions(bool workspace) const {
@@ -237,6 +238,7 @@ struct Render {
 int run(int argc, char** argv) {
   const ds::model::Metamodel metamodel;     // the language, made once where the command starts (DS-341)
   const ds::model::Manual book(metamodel);  // its manual, with the commands and their exit codes (DS-342)
+  const ds::theme::Theme theme;             // the style every drawing is written in, made once (DS-393)
   CLI::App app{"ds: a software design as text, checked, drawn and asked", "ds"};
   app.set_version_flag("--version", "ds " + metamodel.version());
   app.require_subcommand(1);
@@ -308,7 +310,7 @@ int run(int argc, char** argv) {
 
   if (manualCmd->parsed()) return manual(metamodel, book, topic, json);
   if (checkCmd->parsed()) return check(metamodel, dir, json);
-  if (renderCmd->parsed()) return render.run(metamodel);
+  if (renderCmd->parsed()) return render.run(metamodel, theme);
   ds::model::Model model(metamodel);
   if (!loadWorkspace(metamodel, dir, exportCmd->parsed() ? ds::api::Output::Model : ds::api::Output::Answers, "", &model)) return 2;
   if (exportCmd->parsed()) {

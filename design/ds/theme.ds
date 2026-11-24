@@ -1,0 +1,130 @@
+// LLD of the theme namespace (ds::theme, DS-393): the one source of style. Every colour, the font and how it measures,
+// light and dark, and the terminal's palette, held once; one writer per form puts them where that form reads it.
+
+package driftspec@ds {
+  // its home is the package: the theme module holds the theme, render the drawings that are handed it
+  requirement REQ-00231-1 {
+    status: draft
+    @refines SREQ-00005-1
+    title: The renderers shall read their colours, their font and their text measures from a theme handed to them
+    text:
+      The theme holds every token of the --pr-* contract shared with plantuml-render, light and
+      dark, the font with how it measures in pixels and in terminal cells, and the terminal's
+      palette. A writer per form puts it where that form reads it: the stylesheet every SVG
+      carries and what a sequence adds to it. The SVG and the terminal drawing are handed the
+      theme; their sizes of text are its measures.
+    rationale:
+      Owner, 2026-11-24 (DS-393): style lived in five places with four vocabularies, and the
+      SVG's font size was coupled silently to the layout's measures. Handed one theme, a drawing
+      changes colour in one place, and geometry takes its text measures from the theme alone
+      (DS-392).
+    tags: render, style
+  }
+
+  module theme {
+
+    verification VER-00256-1 {
+      status: draft
+      @requirement REQ-00231-1
+      title: Integration tests confirm the SVG carries the stylesheets its theme writes, the terminal drawing colours each role as the theme says, and boxes are sized by the theme's measures
+      text: DS-393, the first merge request (drawings). The unit tests of the theme pin each writer to the stylesheet Svg.cpp held at 0.1.74.
+      method: test
+      tests:
+        tests/integration/ds/theme/test_theme_drawings.cpp::TestThemeDrawings.ADrawingCarriesTheStyleSheetItsThemeWrites
+        tests/integration/ds/theme/test_theme_drawings.cpp::TestThemeDrawings.ASequenceCarriesWhatItsThemeAddsForSequences
+        tests/integration/ds/theme/test_theme_drawings.cpp::TestThemeDrawings.TheTerminalDrawingColoursEachRoleAsItsThemeSays
+        tests/integration/ds/theme/test_theme_drawings.cpp::TestThemeDrawings.ABoxGrowsByTheThemesAdvanceForEachCharacter
+    }
+
+    // How text measures on one sink: the advance of a character and the height of a line, in that sink's units. A plain
+    // value: who sizes a box from its text takes it, and geometry never sees the font (DS-392).
+    dataclass Measures {
+      @requirement REQ-00231-1
+      + advance: int
+      + lineHeight: int
+    }
+
+    // where a drawing goes: a page, in pixels, or a terminal, in cells
+    enum Sink {
+      @requirement REQ-00231-1
+      svg, text
+    }
+
+    dataclass Font {
+      @requirement REQ-00231-1
+      + family: std::string
+      + sizePx: int
+      + owns svg: Measures
+      + owns text: Measures
+    }
+
+    // One token of the --pr-* contract: its light value and its dark one ("" when a dark page uses the light one).
+    dataclass Token {
+      @requirement REQ-00231-1
+      + name: std::string
+      + light: std::string
+      + dark: std::string
+    }
+
+    enum Role {                              // what the terminal drawing colours
+      @requirement REQ-00231-1
+      muted, name, type, publicMember, privateMember, protectedMember, badge, note, container, edge, added, removed, renamed, changed, against
+    }
+
+    // A role's terminal colour, and the token whose light value a host that paints cells gives it.
+    dataclass Terminal {
+      @requirement REQ-00231-1
+      + role: Role
+      + sgr: std::string
+      + token: std::string
+    }
+
+    // Made once where the engine starts (the command line, a Workspace) and handed by const reference to what draws.
+    class Theme {
+      @requirement REQ-00231-1
+      - owns many tokens_: std::vector<Token>
+      - owns font_: Font
+      - owns many terminal_: std::vector<Terminal>
+      - cellColours_: std::map<std::string, std::uint32_t>
+      + Theme()
+      + tokens() -> std::vector<Token>
+      + token(name: std::string) -> Token     // a name it lacks is a logic error
+      + font() -> Font
+      + measures(sink: Sink) -> Measures
+      + terminal() -> std::vector<Terminal>
+      + sgr(role: Role) -> std::string
+      + cellColours() -> std::map<std::string, std::uint32_t>   // the light value of the first role that names each code
+    }
+
+    // What writes the theme in one form a drawing or a page reads: it holds where the values go, never a value.
+    class IThemeWriter {
+      @requirement REQ-00231-1
+      + ~IThemeWriter()
+      + abstract write(theme: Theme) -> std::string
+    }
+
+    // The stylesheet every SVG carries: the contract, light, and dark twice (a page that follows the system, one that sets
+    // data-theme), then the rules that read the tokens.
+    class SvgStyleSheet : IThemeWriter {
+      @requirement REQ-00231-1
+      + write(theme: Theme) -> std::string
+    }
+
+    class SequenceStyleSheet : IThemeWriter {  // what a sequence's SVG adds: lifelines, rows, frames and their tokens
+      @requirement REQ-00231-1
+      + write(theme: Theme) -> std::string
+    }
+
+    class ThemeWriterFactory {                // the one place naming the writers, by the form they write
+      @requirement REQ-00231-1
+      + static of() -> std::map<std::string, std::unique_ptr<IThemeWriter>>
+    }
+
+  }
+}
+
+diagram CL_ThemeNamespace {
+  kind: class
+  include: driftspec@ds@theme::*
+  show: ownership
+}

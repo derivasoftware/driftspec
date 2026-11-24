@@ -361,6 +361,7 @@ package driftspec@ds {
 
     dataclass Metrics {                      // the runtime table of sizes: one for SVG pixels, one for terminal cells
       @requirement REQ-00007-1
+      @requirement REQ-00231-1              // its text measures are the theme's (DS-393)
       + CHAR_W: int
       + LINE_H: int
       + PAD_X: int
@@ -376,8 +377,8 @@ package driftspec@ds {
       + CONTAINER_PAD: int
       + CONTAINER_LABEL_H: int
       + ASPECT: double
-      + static svg() -> Metrics
-      + static text() -> Metrics
+      + static svg(text: theme::Measures) -> Metrics
+      + static text(text: theme::Measures) -> Metrics
     }
 
     // The layout itself, in one table of metrics (DS-185).
@@ -391,42 +392,82 @@ package driftspec@ds {
 
     class Svg {                              // the SVG drawing, with its links, tooltips and script
       @requirement REQ-00007-1
+      @requirement REQ-00231-1
+      - owns metrics_: Metrics                 // in pixels, its text measured as the theme measures it
+      - style_: std::string                    // the stylesheet every drawing carries, written from the theme
+      - sequenceStyle_: std::string            // what a sequence adds to it
+      + Svg(theme: theme::Theme)
       + render(doc: IrDocument, maxWidth: int) -> std::string   // also over a layout already made: one identity per member
     }
 
     class Text {                             // the terminal drawing, box characters and optional colour
       @requirement REQ-00007-1
+      @requirement REQ-00231-1
+      - owns pen_: TextPen
+      + Text(theme: theme::Theme)
       + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // also over a layout already made
       + cells(doc: IrDocument, maxWidth: int) -> std::string
     }
 
+    // What a change a diff marks is drawn as in a terminal (DS-419): its mark and its colour.
+    dataclass ChangeMark {
+      @requirement REQ-00007-1
+      + mark: std::string
+      + colour: std::string
+    }
+
+    // What the terminal drawing draws with (DS-393): the metrics in cells and each role's colour, read from the theme once.
+    dataclass TextPen {
+      @requirement REQ-00007-1
+      @requirement REQ-00231-1
+      + owns M: Metrics
+      + muted: std::string
+      + name: std::string
+      + type: std::string
+      + publicMember: std::string
+      + privateMember: std::string
+      + protectedMember: std::string
+      + badge: std::string
+      + note: std::string
+      + container: std::string
+      + edge: std::string
+      + against: std::string
+      + owns added: ChangeMark
+      + owns removed: ChangeMark
+      + owns renamed: ChangeMark
+      + owns changed: ChangeMark
+      + cellColours: std::map<std::string, std::uint32_t>   // what a host that paints cells gives each colour
+      + TextPen(t: theme::Theme)
+      + changeMarkOf(change: std::string) -> ChangeMark      // one it does not name is drawn as changed
+    }
+
     // ---- what the drawings keep to their source files ----
 
-    - function sequenceSvg(doc: IrDocument) -> std::string     // a sequence document, drawn without the layout
-    - function tableSvg(doc: IrDocument) -> std::string        // a table document, drawn cell by cell
+    - function sequenceSvg(doc: IrDocument, M: Metrics, style: std::string, sequenceStyle: std::string) -> std::string     // a sequence document, drawn without the layout
+    - function tableSvg(doc: IrDocument, style: std::string) -> std::string        // a table document, drawn cell by cell
 
     - class Grid {                           // the character grid Text fills, cell by cell
       @requirement REQ-00007-1
       + dump(color: bool) -> std::string
-      + encode() -> std::string
+      + encode(rgb: std::map<std::string, std::uint32_t>) -> std::string
       + columns() -> int
       + rows() -> int
     }
 
-    - function sequenceGrid(doc: IrDocument) -> Grid
-    - function classGrid(doc: IrDocument, lay: LayoutResult) -> Grid
-    - function tableGrid(doc: IrDocument) -> Grid
+    - function sequenceGrid(doc: IrDocument, pen: TextPen) -> Grid
+    - function classGrid(doc: IrDocument, lay: LayoutResult, pen: TextPen) -> Grid
+    - function tableGrid(doc: IrDocument, pen: TextPen) -> Grid
 
-    // metrics is the pixel table, Metrics::svg(), a static call. The drawing over the
+    // metrics is the pixel table, made from the theme's measures with the Svg. The drawing over the
     // layout is the second render, an overload: neither can be told, so the drawing of a
     // class document comes back as a name.
     sequence Svg::render {
       opt the document is a table / table-document {
-        -> tableSvg(doc) -> drawing
+        -> tableSvg(doc, style_) -> drawing
         return drawing
       }
       opt a node of the document is a lifeline / sequence-document {
-        -> sequenceSvg(doc) -> drawing
+        -> sequenceSvg(doc, metrics_, style_, sequenceStyle_) -> drawing
         return drawing
       }
       self -> doc.bundled() -> bundled
@@ -435,16 +476,16 @@ package driftspec@ds {
       return drawing
     }
 
-    // metrics is the cell table, Metrics::text(), and width is maxWidth less the grid's
+    // metrics is the cell table, the pen's, and width is maxWidth less the grid's
     // margin. The drawing over the layout is the second render, an overload.
     sequence Text::render {
       opt the document is a table / table-document {
-        -> tableGrid(doc) -> grid
+        -> tableGrid(doc, pen_) -> grid
         self -> grid.dump(color) -> drawing
         return drawing
       }
       opt a node of the document is a lifeline / sequence-document {
-        -> sequenceGrid(doc) -> grid
+        -> sequenceGrid(doc, pen_) -> grid
         self -> grid.dump(color) -> drawing
         return drawing
       }
@@ -458,15 +499,15 @@ package driftspec@ds {
     sequence Text::cells {
       self -> doc.bundled() -> bundled
       alt a node of the document is a lifeline / sequence-document {
-        -> sequenceGrid(doc) -> grid         // bundled all the same, and not used
+        -> sequenceGrid(doc, pen_) -> grid         // bundled all the same, and not used
       } else {
         local layout: Layout
         self -> layout.place(bundled, width) -> lay
-        -> classGrid(bundled, lay) -> grid
+        -> classGrid(bundled, lay, pen_) -> grid
       }
       self -> grid.columns() -> columns
       self -> grid.rows() -> rows
-      self -> grid.encode() -> encoded
+      self -> grid.encode(pen_.cellColours) -> encoded
       self -> grid.dump(false) -> text
       return json
     }
@@ -491,7 +532,7 @@ diagram CL_RenderIr {
 
 diagram CL_RenderDrawing {
   kind: class
-  include: driftspec@ds@render::Point, driftspec@ds@render::Rect, driftspec@ds@render::Route, driftspec@ds@render::Placed, driftspec@ds@render::LayoutResult, driftspec@ds@render::Metrics, driftspec@ds@render::Svg, driftspec@ds@render::Text
+  include: driftspec@ds@render::Point, driftspec@ds@render::Rect, driftspec@ds@render::Route, driftspec@ds@render::Placed, driftspec@ds@render::LayoutResult, driftspec@ds@render::Metrics, driftspec@ds@render::Svg, driftspec@ds@render::Text, driftspec@ds@render::TextPen, driftspec@ds@render::ChangeMark
   show: ownership
   hide: fields
 }
