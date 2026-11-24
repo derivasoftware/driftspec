@@ -150,6 +150,7 @@ int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool js
   const ds::check::Report report = ds::check::Report::of(model, metamodel);
   ds::format::FormatOptions options;
   options.pretty = true;
+  options.title = dir;  // the workspace as it was given: where the report says the open coverage is listed (DS-431)
   std::cout << ds::format::reportFormats().at(json ? "json" : "text")->write(report, options) << (json ? "\n" : "");
   return report.errors ? 1 : 0;
 }

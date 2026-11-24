@@ -352,4 +352,14 @@ package driftspec {
       tests/system/python/test_golden.py::TestGolden::test_every_document_of_a_diagram_of_every_kind_matches_its_golden_file
       tests/system/python/test_golden.py::TestGolden::test_every_document_of_a_small_workspace_with_findings_matches_its_golden_file
   }
+
+  verification SVER-00030-1 {
+    status: draft
+    @requirement SREQ-00002-1
+    title: System tests confirm ds check says how much coverage is open and where it is listed, never fails for it, and says nothing more when nothing is open
+    text: DS-431, the Owner's decision of 2026-11-24 after first readers took a clean check for a finished design while coverage held open items.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheCheckSaysHowMuchCoverageIsOpenAndWhereItIsListed
+  }
 }
