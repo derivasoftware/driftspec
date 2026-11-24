@@ -22,6 +22,7 @@ package driftspec@ds {
   }
 
   module theme {
+    @constraint CST-00012-1
 
     verification VER-00257-1 {
       status: draft
@@ -83,11 +84,13 @@ package driftspec@ds {
     class Theme {
       @requirement REQ-00231-1
       - owns many tokens_: std::vector<Token>
+      - owns many pages_: std::map<std::string, std::vector<Token>>   // each page's variables, in its own vocabulary
       - owns font_: Font
       - owns many terminal_: std::vector<Terminal>
       - cellColours_: std::map<std::string, std::uint32_t>
       + Theme()
       + tokens() -> std::vector<Token>
+      + page(name: std::string) -> std::vector<Token>   // a page it lacks is a logic error
       + token(name: std::string) -> Token     // a name it lacks is a logic error
       + font() -> Font
       + measures(sink: Sink) -> Measures
@@ -112,6 +115,36 @@ package driftspec@ds {
 
     class SequenceStyleSheet : IThemeWriter {  // what a sequence's SVG adds: lifelines, rows, frames and their tokens
       @requirement REQ-00231-1
+      + write(theme: Theme) -> std::string
+    }
+
+    class ViewerVariables : IThemeWriter {               // the viewer page's variables (viewer/scene.html): light, and dark when the system is
+      @requirement REQ-00231-1
+      @constraint CST-00012-1
+      + write(theme: Theme) -> std::string
+    }
+
+    class ViewerNightVariables : IThemeWriter {               // the viewer's night theme (viewer/themes/night.css), a stylesheet a reader lays over the viewer
+      @requirement REQ-00231-1
+      @constraint CST-00012-1
+      + write(theme: Theme) -> std::string
+    }
+
+    class LivePageVariables : IThemeWriter {               // the live page's variables (python/driftspec/live_page.py): light, and dark when the system is
+      @requirement REQ-00231-1
+      @constraint CST-00012-1
+      + write(theme: Theme) -> std::string
+    }
+
+    class PlaygroundVariables : IThemeWriter {               // the playground's variables (playground/web/index.html): dark first, light where a page sets it
+      @requirement REQ-00231-1
+      @constraint CST-00012-1
+      + write(theme: Theme) -> std::string
+    }
+
+    class DesignPageVariables : IThemeWriter {               // the design page's variables (tools/design_page.py): light, and dark twice
+      @requirement REQ-00231-1
+      @constraint CST-00012-1
       + write(theme: Theme) -> std::string
     }
 
