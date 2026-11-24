@@ -7,14 +7,18 @@
 #include "ds/bind/AnnotationBinder.hpp"
 #include "ds/bind/ArtefactBinder.hpp"
 #include "ds/bind/BindContext.hpp"
+#include "ds/bind/ClassBinder.hpp"
 #include "ds/bind/DiagramBinder.hpp"
 #include "ds/bind/Dispatch.hpp"
 #include "ds/bind/EnumBinder.hpp"
 #include "ds/bind/ExtensionBinder.hpp"
 #include "ds/bind/FieldBinder.hpp"
 #include "ds/bind/FormulaBinder.hpp"
+#include "ds/bind/FunctionBinder.hpp"
 #include "ds/bind/InterfaceBinder.hpp"
 #include "ds/bind/LegacyBinder.hpp"
+#include "ds/bind/MemberBinder.hpp"
+#include "ds/bind/MemberBodyBinder.hpp"
 #include "ds/bind/ModuleBinder.hpp"
 #include "ds/bind/Notes.hpp"
 #include "ds/bind/PackageBinder.hpp"
@@ -54,6 +58,8 @@ class Binder {
   TypeBinder types_;
   SignatureBinder signatures_{types_};
   FormulaBinder formulas_;
+  MemberBodyBinder bodies_{fields_, annotations_};
+  MemberBinder members_{types_, signatures_, bodies_};
   ArtefactBinder artefacts_{fields_, annotations_, extensions_};
   PackageBinder packages_{fields_, annotations_};
   ModuleBinder modules_{fields_, annotations_};
@@ -63,7 +69,9 @@ class Binder {
   DiagramBinder diagrams_{fields_, formulas_};
   UseCaseBinder usecases_{fields_, annotations_, types_, signatures_};
   StateBinder states_{fields_, annotations_};
-  LegacyBinder legacy_{fields_, annotations_, extensions_, types_, signatures_};
+  ClassBinder classes_{fields_, annotations_, extensions_, members_};
+  FunctionBinder functions_{signatures_, bodies_};
+  LegacyBinder legacy_{fields_, annotations_, types_};
   Dispatch dispatch_;
 };
 

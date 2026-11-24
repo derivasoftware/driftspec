@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.39
+
+Classes and functions get binders of their own (DS-356, group three of four). A class's members, its methods,
+attributes and operators, are bound by a member part, and what a member or a function writes in its body by another,
+both shared. The walk the binder had keeps only the sequences, until the last group. Nothing a design writes, no
+finding, export or drawing changes.
+
 ## 0.1.38
 
 Use cases and state machines get binders of their own (DS-356, group two of four). A use case keeps its signature and

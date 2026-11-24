@@ -6,10 +6,13 @@
 
 #include "ds/bind/AnnotationBinder.hpp"
 #include "ds/bind/BindContext.hpp"
+#include "ds/bind/ClassBinder.hpp"
 #include "ds/bind/Dispatch.hpp"
 #include "ds/bind/ExtensionBinder.hpp"
 #include "ds/bind/FieldBinder.hpp"
 #include "ds/bind/LegacyBinder.hpp"
+#include "ds/bind/MemberBinder.hpp"
+#include "ds/bind/MemberBodyBinder.hpp"
 #include "ds/bind/ModuleBinder.hpp"
 #include "ds/bind/PackageBinder.hpp"
 #include "ds/bind/SignatureBinder.hpp"
@@ -35,40 +38,41 @@ class TestLegacyBinder : public ::testing::Test {
   const ds::bind::SignatureBinder signatures{types};
   const ds::bind::PackageBinder packages{fields, annotations};
   const ds::bind::ModuleBinder modules{fields, annotations};
-  const ds::bind::LegacyBinder legacy{fields, annotations, extensions, types, signatures};
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&packages, &modules, &legacy}};
+  const ds::bind::MemberBodyBinder bodies{fields, annotations};
+  const ds::bind::MemberBinder members{types, signatures, bodies};
+  const ds::bind::ClassBinder classes{fields, annotations, extensions, members};
+  const ds::bind::LegacyBinder legacy{fields, annotations, types};
+  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&packages, &modules, &classes, &legacy}};
 };
 
 TEST_F(TestLegacyBinder, ItTakesTheConstructsNoBinderOfTheirOwnTakesYet) {
   const std::vector<std::string> kinds = legacy.kinds();
-  for (const char* kind : {"class", "function", "sequence"}) EXPECT_NE(std::find(kinds.begin(), kinds.end(), kind), kinds.end()) << kind;
+  for (const char* kind : {"sequence"}) EXPECT_NE(std::find(kinds.begin(), kinds.end(), kind), kinds.end()) << kind;
   EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "requirement"), kinds.end());  // the artefacts have their binder
   EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "package"), kinds.end());      // and the boxes theirs (DS-356)
   EXPECT_EQ(std::find(kinds.begin(), kinds.end(), "state"), kinds.end());        // and the state machines theirs
 }
 
-TEST_F(TestLegacyBinder, AClassInAModuleIsDeclaredAndContained) {
+TEST_F(TestLegacyBinder, ASequenceIsTheBehaviourOfItsOperationWithItsMessages) {
   const ds::parse::ParsedFile file = parser.parseText("a.ds",
                                                       "package shop {\n"
                                                       "  module till {\n"
-                                                      "    class Till : Base {\n"
+                                                      "    class Stock { + take() -> none }\n"
+                                                      "    class Till {\n"
+                                                      "      - stock: Stock\n"
                                                       "      + sell() -> none\n"
+                                                      "    }\n"
+                                                      "    sequence Till::sell {\n"
+                                                      "      self -> stock.take()\n"
                                                       "    }\n"
                                                       "  }\n"
                                                       "}\n");
   const ds::parse::TreeReader reader(file);
   const ds::bind::BindContext ctx{model, notes, reader, metamodel, dispatch, "", ""};
   ctx.children(reader.root());
-  ASSERT_NE(model.find("shop"), nullptr);
-  ASSERT_NE(model.find("shop@till"), nullptr);
-  ASSERT_NE(model.find("shop@till::Till"), nullptr);
-  ASSERT_NE(model.find("shop@till::Till::sell"), nullptr);
-  bool contained = false;
-  for (const auto& r : model.index().fromOfKind("shop@till", "contains")) contained |= r.to == "shop@till::Till";
-  EXPECT_TRUE(contained);
-  bool base = false;  // the base is a name for the checker to resolve
-  for (const auto& r : notes.references) base |= r.from == "shop@till::Till" && r.target == "Base" && r.relation == "inherits";
-  EXPECT_TRUE(base);
+  ASSERT_NE(model.find("shop@till::Till::sell::sequence"), nullptr);
+  ASSERT_EQ(notes.messages.size(), 1U);  // the message, for the checker to type
+  EXPECT_EQ(notes.messages[0].op, "take");
 }
 
 }  // namespace
