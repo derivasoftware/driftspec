@@ -187,6 +187,11 @@ diagram SEQ_Checkout {
 An operation says what it may fail with (`fails SoldOut`). A sequence ends a path with
 `fail`, and whoever calls it handles the failure with `attempt … on`.
 
+What a signature promises depends on how it is written. A method with no `fails` promises
+nothing, and nothing is checked; `fails nothing`, or a list, is a promise, and a failure that
+escapes it is a finding (`W-FAILURE-UNDECLARED`). An operation of an interface is a boundary,
+so it always says what escapes it.
+
 ```ds
 package shop {
   module store {
@@ -265,6 +270,57 @@ diagram SEQ_Buy {
   kind: sequence
   include: shop@shell::buy
   depth: *
+}
+```
+
+## Carrying out a use case
+
+A use case is carried out by an operation of an interface that names it after its signature.
+Each outcome of the use case is a scenario of that operation with the same name, and a command
+line says which exit code ends each one. An outcome with no scenario is an open item of
+coverage, and so is a use case that no operation carries out.
+
+```ds
+package shop {
+  requirement SREQ-00001-1: The shop shall sell an item from the command line
+
+  usecase UC-00001-1 buy(item: string) -> int {
+    title: Buy an item
+    status: draft
+    @requirement SREQ-00001-1
+    outcome default: the number of the order
+    outcome sold-out: the item is not in stock
+  }
+
+  interface shell {
+    kind: cli
+    operation buy(item: string) -> int : UC-00001-1 {
+      command: shop buy <item>
+      exit 0: default
+      exit 3: sold-out
+    }
+  }
+
+  sequence shell::buy {
+    local cart: store::Cart
+    self -> cart.add(item) -> added
+    alt the item is in stock {
+      return 0
+    } else / sold-out {
+      return 3
+    }
+  }
+
+  module store {
+    class Cart {
+      + add(item: std::string) -> bool
+    }
+  }
+}
+
+diagram SEQ_SoldOut {
+  kind: sequence
+  include: shop@shell::buy / sold-out
 }
 ```
 
