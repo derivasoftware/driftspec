@@ -6,12 +6,9 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.72
-
-The one place that names the concrete classes of an interface is a factory, named so (DS-404). Steps is StepFactory
-and Filters is FilterFactory; the node binders are made by NodeBinderFactory instead of the binder's constructor; and
-the Api asks CheckerFactory for the checker and holds it as the IChecker it is, so the load names no concrete checker
-(the viewer's tour of a load now reaches the check at IChecker::run). Nothing a design writes changes.
+A merge request does not edit this file: it writes its entry as `changelog.d/<card>.md`, and
+`tools/changelog.py` later moves each entry under the version its merge was released as (see
+`changelog.d/README.md`).
 
 ## 0.1.71
 
