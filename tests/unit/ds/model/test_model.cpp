@@ -185,7 +185,7 @@ TEST_F(TestModel, ARenameCarriesTheFieldsTheMetamodelSaysHoldAnIdentity) {
   EXPECT_EQ(metamodel.identityFields(), (std::vector<std::string>{"expands"}));
 }
 
-/// An entity knows the flags it was declared with.
+/// An entity knows the flags it was declared with, and reads a field written as a number.
 class TestEntity : public ::testing::Test {};
 
 TEST_F(TestEntity, HasAFlagItWasDeclaredWith) {
@@ -193,6 +193,41 @@ TEST_F(TestEntity, HasAFlagItWasDeclaredWith) {
   e.flags = {"abstract", "dataclass"};
   EXPECT_TRUE(e.has("abstract"));
   EXPECT_FALSE(e.has("many"));
+}
+
+TEST_F(TestEntity, ANumberFieldIsReadWholeUpToTheLargestInt) {
+  Entity e = entity(Kind::Diagram, "diagram:SEQ_A");
+  int n = -1;
+  e.fields["depth"] = "2147483647";
+  EXPECT_TRUE(e.number("depth", n));
+  EXPECT_EQ(n, 2147483647);
+  e.fields["depth"] = "007";  // a leading zero is still the number
+  EXPECT_TRUE(e.number("depth", n));
+  EXPECT_EQ(n, 7);
+  e.fields["depth"] = "0";
+  EXPECT_TRUE(e.number("depth", n));
+  EXPECT_EQ(n, 0);
+}
+
+TEST_F(TestEntity, ANumberTooLargeForAnIntIsNoNumberAndNeverAnAbort) {  // DS-337: std::stoi threw out_of_range
+  Entity e = entity(Kind::Diagram, "diagram:SEQ_A");
+  int n = -1;
+  for (const char* written : {"2147483648", "99999999999", "000000000000000000002147483648"}) {
+    e.fields["depth"] = written;
+    EXPECT_FALSE(e.number("depth", n)) << written;
+    EXPECT_EQ(n, -1) << written;  // left as it was
+  }
+}
+
+TEST_F(TestEntity, AnEmptyUnwrittenOrSignedFieldIsNoNumber) {
+  Entity e = entity(Kind::Diagram, "diagram:SEQ_A");
+  int n = -1;
+  EXPECT_FALSE(e.number("depth", n));  // not written
+  for (const char* written : {"", "lots", "*", "-1", "+1", " 3", "3 ", "1.5"}) {
+    e.fields["depth"] = written;
+    EXPECT_FALSE(e.number("depth", n)) << "'" << written << "'";
+  }
+  EXPECT_EQ(n, -1);
 }
 
 /// A parameter is kept as the binder read it, and a renamed entity carries its parameters and arguments.

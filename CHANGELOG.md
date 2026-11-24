@@ -6,13 +6,20 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.36
+## 0.1.37
 
 The boxes and the plain constructs get binders of their own (DS-356, group one of four): packages, modules, interfaces,
 enums, rules and definitions, and diagrams. What every construct shares is a part binder each binder is given by
 reference: the fields, the annotations, an extension block, a type, a signature and a formula. The context goes back
 to holding only what a binder writes through. The walk the binder had keeps use cases, classes, functions,
 sequences and state machines until the next groups. Nothing a design writes, no finding, export or drawing changes.
+
+## 0.1.36
+
+A number too large for an int no longer stops ds (DS-337). A diagram that wrote `depth: 99999999999` passed
+`ds check` and then made `ds render` stop with `ds: stoi`; it now gets `W-DIAGRAM-DEPTH`, the finding of a depth
+that is no number, at the same place, and is drawn as one. A `neighbours:` too large for an int adds no neighbours,
+as a word there does. A diagram reads such a field in one place, and nothing else a design writes changes.
 
 ## 0.1.35
 

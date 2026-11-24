@@ -75,6 +75,10 @@ struct Entity {
   bool has(const std::string& flag) const;
   /// The value of a field; "" when it does not carry it.
   const std::string& field(const std::string& key) const;
+  /// Whether a field is written as a whole number an int holds (`depth: 3`), read into out_number: the one
+  /// reading of a number field. False, out_number untouched, when it is not written, holds anything but the
+  /// digits 0 to 9 or is too large for an int; then it is no number, and never an abort (DS-337).
+  bool number(const std::string& key, int& out_number) const;
 };
 
 /// A typed relation between two identities.

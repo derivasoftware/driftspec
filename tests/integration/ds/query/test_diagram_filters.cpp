@@ -119,6 +119,19 @@ TEST_F(TestFilterFor, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   EXPECT_EQ(ds::query::filterFor(metamodel, *till), nullptr);
 }
 
+TEST_F(TestFilterFor, ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort) {  // DS-337: std::stoi threw out_of_range
+  load(std::string(shop()) + "diagram SEQ_Deep {\n  kind: sequence\n  include: shop@till::Till::sell\n  depth: 99999999999\n}\n" +
+       "diagram SEQ_Lots {\n  kind: sequence\n  include: shop@till::Till::sell\n  depth: lots\n}\n" +
+       "diagram CL_Wide {\n  kind: class\n  include: shop@till::Till\n  neighbours: 99999999999\n}\n" +
+       "diagram CL_Some {\n  kind: class\n  include: shop@till::Till\n  neighbours: some\n}\n");
+  Ids deep, wide;
+  EXPECT_NO_THROW(deep = of("SEQ_Deep"));
+  EXPECT_NO_THROW(wide = of("CL_Wide"));
+  EXPECT_EQ(deep, of("SEQ_Lots"));
+  EXPECT_EQ(wide, of("CL_Some"));
+  EXPECT_EQ(wide, (Ids{"shop@till", "shop@till::Till"}));  // no neighbours, as for a word
+}
+
 /// A filter of our own: built with its criteria and passed in; the query knows nothing of it.
 class PublicMethods : public ds::query::IFilter {
  public:

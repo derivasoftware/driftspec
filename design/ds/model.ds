@@ -618,6 +618,7 @@ package driftspec@ds {
       + expected: bool
       + has(flag: std::string) -> bool
       + field(key: std::string) -> std::string
+      + number(key: std::string, out_number: int) -> bool   // a field written as a whole number an int holds; no number otherwise, never an abort (DS-337)
     }
 
     sequence Entity::has {
