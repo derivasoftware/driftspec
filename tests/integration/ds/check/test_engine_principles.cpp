@@ -64,14 +64,16 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string modelClasses = "driftspec@ds@model::model-operations-belong-to-classes";
   const std::string axisClasses = "driftspec@ds@axis::axis-operations-belong-to-classes";
   const std::string axisReads = "driftspec@ds@axis::the-axis-reads-the-model";
+  const std::string exporterClasses = "driftspec@ds@exporter::exporter-operations-belong-to-classes";
+  const std::string exporterReads = "driftspec@ds@exporter::the-exporter-reads-the-model";
   const std::string apiChooses = "driftspec@ds@api::only-the-api-chooses-the-steps";
   const std::string queryClasses = "driftspec@ds@query::query-operations-belong-to-classes";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
-  for (const std::string& rule :
-       {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads, apiChooses, queryClasses})
+  for (const std::string& rule : {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads,
+                                  exporterClasses, exporterReads, apiChooses, queryClasses})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -145,6 +147,20 @@ TEST_F(TestEnginePrinciples, AnAxisThatChangesTheModelIsTold) {
                                                   "    }\n"}});
   EXPECT_TRUE(has(rules, axisReads));
   EXPECT_FALSE(has(rules, axisClasses));
+}
+
+TEST_F(TestEnginePrinciples, AFunctionOfTheExporterIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/exporter.ds", "  module exporter {", "    function loose(text: std::string) -> std::string\n"}});
+  EXPECT_TRUE(has(rules, exporterClasses));
+  EXPECT_FALSE(has(rules, exporterReads));
+}
+
+TEST_F(TestEnginePrinciples, AnExporterThatChangesTheModelIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/exporter.ds", "    sequence JsonExport::render {", "      local e: model::Entity\n      self -> model.declare(e)\n"}});
+  EXPECT_TRUE(has(rules, exporterReads));
+  EXPECT_FALSE(has(rules, exporterClasses));
 }
 
 /// Only the Api chooses which steps of the check a load runs (DS-376): a function of the command line or a class of

@@ -1,7 +1,9 @@
 #ifndef DRIFTSPEC_EXPORT_JSONEXPORT_HPP
 #define DRIFTSPEC_EXPORT_JSONEXPORT_HPP
 
+#include <nlohmann/json_fwd.hpp>
 #include <string>
+#include <vector>
 
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -22,6 +24,17 @@ class JsonExport {
   std::string relations(const std::vector<model::Relation>& relations) const;
 
  private:
+  /// Where a model element is written, and where it ends when known: the place right after its last character (DS-172).
+  static nlohmann::json locationJson(const model::Location& l);
+  /// One entity: its identity, kind, name, scope, fields, flags and location.
+  nlohmann::json entityJson(const model::Entity& e) const;
+  /// One relation: its kind, ends, location and multiplicity when set.
+  static nlohmann::json relationJson(const model::Relation& r);
+  /// The names of kinds, in the order given.
+  nlohmann::json kindNames(const std::vector<model::Kind>& kinds) const;
+  /// The language the model is written in: every kind with its fields, flags and parents, every relation with its ends.
+  nlohmann::json metamodelJson() const;
+
   const model::Metamodel& metamodel_;
 };
 

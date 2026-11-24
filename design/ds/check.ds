@@ -12,46 +12,142 @@ package driftspec@ds {
     // The facts are the declared entities by kind, every relation both ways and containment; a
     // definition is computed bottom-up to its fixpoint, stratum by stratum, and a rule is broken by
     // each binding of its ranges where holds has no answer or never has one.
-    class Evaluator {                        // decides the structural rules over the model
+    // ---- the evaluator in its pieces (DS-380), as a requirement and the rule that holds it -------------------------
+    requirement REQ-00192-1 {
+      tags: architecture, check, rules
+      status: draft
+      @refines REQ-00096-1
+      title: The evaluator shall direct four pieces, and the solver shall read the facts and never the model
+      text:
+        Facts reads the model once into what a rule is evaluated over: the declared entities of each kind, every
+        relation both ways, the names a formula writes resolved, and what each definition holds for; it is the
+        pieces' one reader of the model. RuleValidator checks each formula before it is evaluated, Strata orders the
+        definitions, and Solver answers a body over the facts alone. Evaluator directs them: it records into the
+        facts what the validator resolved and what the definitions derive, and writes the breaches and the tables
+        into the model.
+      rationale:
+        Owner, 2026-11-24 (DS-378, DS-380): one class did five things; split, the solver can run over facts
+        without a design, and each piece can be read and tested on its own.
+      verification VER-00212-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps the solver on the facts, and is told when the solver depends on the model
+        method: test
+        tests:
+          tests/integration/ds/check/test_evaluator_principles.cpp::TestEvaluatorPrinciples.TheDesignOfDsKeepsTheSolverOnTheFacts
+          tests/integration/ds/check/test_evaluator_principles.cpp::TestEvaluatorPrinciples.ASolverThatReadsTheModelIsTold
+      }
+    }
+
+    rule the-solver-reads-facts {
+      title: the solver reads facts and never the model, so the rule engine runs without a design
+      @requirement REQ-00192-1
+      for class c in driftspec@ds@check
+      where c = driftspec@ds@check::Solver
+      never depends(c, driftspec@ds@model::Model)
+    }
+
+    class Evaluator {                        // decides the structural rules over the model: it directs the four pieces (DS-380)
       @requirement REQ-00096-1
       @requirement REQ-00097-1
       @requirement REQ-00098-1
-      - refs model_: model::Model
+      @requirement REQ-00192-1
+      - refs model_: model::Model            // written: the breaches and the tables; read through the facts
       - refs metamodel_: model::Metamodel     // the language of the rules: the kinds and relations they name (DS-351)
-      - refs resolver_: Resolver
+      - owns facts_: Facts
+      - owns validator_: RuleValidator
+      - owns strata_: Strata
+      - owns solver_: Solver
+      - owns many found_: std::vector<model::Finding>
+      - owns invalid_: std::set<std::string>
+      - kReportsPerRule: std::size_t            // how many findings a broken rule gets; the rest are counted in one
+      + Evaluator(model: model::Model, metamodel: model::Metamodel, resolver: Resolver)
+      + run() -> std::vector<model::Finding>
+      - computeDefinitions() -> void
+      - evaluateRule(id: std::string, formula: model::Formula) -> void
+      - tabulate(id: std::string, formula: model::Formula) -> void {
+        @requirement REQ-00154-1
+      }
+      - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
+      - static describe(bindings: std::map<std::string, std::string>) -> std::string
+    }
+
+    class Facts {                            // the model as facts a rule is evaluated over; the pieces' one reader of the model (DS-380)
+      @requirement REQ-00096-1
+      @requirement REQ-00192-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
       - owns byKind_: std::map<std::string, std::vector<std::string>>
       - owns forward_: std::map<std::string, std::multimap<std::string, std::string>>
       - owns backward_: std::map<std::string, std::multimap<std::string, std::string>>
       - owns constants_: std::map<std::string, std::string>
       - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
-      - stratum_: std::map<std::string, int>
-      - owns invalid_: std::set<std::string>
+      + Facts(model: model::Model, metamodel: model::Metamodel)
+      + index() -> void
+      + ofKind(kind: std::string) -> std::vector<std::string>
+      + forward(relation: std::string) -> std::multimap<std::string, std::string>
+      + backward(relation: std::string) -> std::multimap<std::string, std::string>
+      + record(owner: std::string, written: std::string, identity: std::string) -> void
+      + constant(owner: std::string, written: std::string, out_identity: std::string) -> bool
+      + definitionOf(owner: std::string, name: std::string) -> std::string
+      + derived(definition: std::string) -> std::set<std::vector<std::string>>
+      + derive(definition: std::string, tuple: std::vector<std::string>) -> bool
+      + formulas() -> std::map<std::string, model::Formula>
+      + kindIs(id: std::string, kind: model::Kind) -> bool
+      + kindOf(id: std::string, out_kind: model::Kind) -> bool
+      + isOfKind(id: std::string, kind: std::string) -> bool
+      + scopeOf(id: std::string) -> std::string
+      + locationOf(id: std::string) -> model::Location
+      + fieldOf(id: std::string, field: std::string) -> std::string
+      + holds(rule: std::string) -> bool
+      + parentOf(id: std::string) -> std::string
+      + childrenOf(id: std::string) -> std::vector<std::string>
+      + contains(outer: std::string, inner: std::string) -> bool
+      + argsTo(call: std::string) -> std::vector<std::pair<std::string, std::string>>
+      - static key(owner: std::string, written: std::string) -> std::string
+    }
+
+    class RuleValidator {                    // whether each formula is well formed before it is evaluated (DS-380)
+      @requirement REQ-00097-1
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - refs facts_: Facts
       - owns many found_: std::vector<model::Finding>
-      + Evaluator(model: model::Model, metamodel: model::Metamodel, resolver: Resolver)
-      + run() -> std::vector<model::Finding>
-      - index() -> void
-      - validate(id: std::string, formula: model::Formula) -> bool
-      - validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>) -> bool
-      - checkVacuity(id: std::string, formula: model::Formula) -> void {
+      + RuleValidator(metamodel: model::Metamodel, resolver: Resolver, facts: Facts)
+      + validate(id: std::string, formula: model::Formula, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool
+      + checkVacuity(id: std::string, formula: model::Formula) -> void {
         @requirement REQ-00117-1
       }
-      - stratify() -> bool
-      - computeDefinitions() -> void
-      - dependencyOrder(definitions: std::vector<std::string>) -> std::vector<std::string>  // a stratum in the order of what it applies; empty when it recurses (DS-338)
-      - evaluateRule(id: std::string, formula: model::Formula) -> void
-      - tabulate(id: std::string, formula: model::Formula) -> void {
-        @requirement REQ-00154-1
-      }
-      - solve(owner: std::string, body: std::vector<model::Literal>, bindings: std::map<std::string, std::string>, first: bool) -> std::vector<std::map<std::string, std::string>>
+      + take() -> std::vector<model::Finding>
+      - validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool
+      - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
+      - static joinsAtEnd(spec: model::RelationSpec, kind: model::Kind, from: bool) -> bool
+    }
+
+    class Strata {                           // the order the definitions are computed in (DS-380)
+      @requirement REQ-00096-1
+      - refs facts_: Facts
+      - stratum_: std::map<std::string, int>
+      + Strata(facts: Facts)
+      + stratify(invalid: std::set<std::string>) -> std::vector<std::string>
+      + levels(invalid: std::set<std::string>) -> std::map<int, std::vector<std::string>>
+      + dependencyOrder(definitions: std::vector<std::string>) -> std::vector<std::string>  // a stratum in the order of what it applies; empty when it recurses (DS-338)
+    }
+
+    class Solver {                           // answers a body over the facts, never the model (DS-380)
+      @requirement REQ-00096-1
+      @requirement REQ-00192-1
+      - refs facts_: Facts
+      + Solver(facts: Facts)
+      + solve(owner: std::string, body: std::vector<model::Literal>, bindings: std::map<std::string, std::string>, first: bool) -> std::vector<std::map<std::string, std::string>>
+      + static compares(form: model::LiteralForm) -> bool
       - solveFrom(owner: std::string, body: std::vector<model::Literal>, done: std::vector<bool>, bindings: std::map<std::string, std::string>, first: bool, out_answers: std::vector<std::map<std::string, std::string>>) -> void
       - ready(literal: model::Literal, bindings: std::map<std::string, std::string>) -> bool
       - answers(owner: std::string, literal: model::Literal, bindings: std::map<std::string, std::string>) -> std::vector<std::map<std::string, std::string>>
       - value(owner: std::string, term: model::Term, bindings: std::map<std::string, std::string>, out_value: std::string) -> bool
       - unify(owner: std::string, term: model::Term, entity: std::string, out_bindings: std::map<std::string, std::string>) -> bool
-      - definitionOf(owner: std::string, name: std::string) -> std::string
-      - scopeOf(owner: std::string) -> std::string
-      - contains(outer: std::string, inner: std::string) -> bool
-      - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
+      - static number(text: std::string, out_number: double) -> bool
+      - static literal(text: std::string) -> bool
+      - static compare(form: model::LiteralForm, a: std::string, z: std::string) -> bool
     }
 
     // Read-only questions about the model: what a name means where it is written, what a type inherits
@@ -614,7 +710,7 @@ package driftspec@ds {
       return found
     }
 
-    sequence Evaluator::contains {
+    sequence Facts::contains {
       self -> model_.index() -> index
       loop each holder of inner, outward {
         self -> index.parent(inner) -> up

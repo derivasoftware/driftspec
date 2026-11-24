@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.52
+## 0.1.54
 
 Every operation of the query is a member of its class (DS-385). A pattern of a diagram's include or exclude is read
 once, by Pattern, which then takes or leaves each entity by comparing its identity and scope with what it read, with no
@@ -14,6 +14,23 @@ text built for each one. The one place that names the filter of each kind of dia
 a function, and the box a relation is drawn from, with the helpers the filters hid, are members of the filter they
 serve. A rule of ds's design holds that the query writes no function, refining what the query answers. Nothing changes
 for a design: every finding, export, drawing, viewer page, answer and exit code is the same.
+
+## 0.1.53
+
+The exporter is written as requirements held by rules (DS-367): every operation of the exporter is a member of the
+class whose responsibility it is, and the exporter reads the model it writes and leaves it as it is. The helpers
+JsonExport's source hid (a location, an entity, a relation, the names of kinds and the metamodel as JSON) are its
+private members. Nothing a design writes, no finding, export or drawing changes.
+
+## 0.1.52
+
+The evaluator of the rules is five pieces (DS-380). `Facts` reads the model once into what a rule is evaluated over:
+the entities of each kind, every relation both ways, the names a formula writes resolved, and what each definition holds
+for; it is the pieces' one reader of the model. `RuleValidator` checks each formula before it is evaluated, `Strata`
+orders the definitions, and `Solver` answers a body over the facts and never the model. `Evaluator` directs them: it
+records into the facts what the validator resolved and what the definitions derive, and writes the breaches and the
+tables into the model. The design of ds holds the solver to the facts with a rule. Nothing a design writes changes:
+findings, breaches and tables read the same.
 
 ## 0.1.51
 
