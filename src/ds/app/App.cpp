@@ -298,12 +298,12 @@ int run(int argc, char** argv) {
   renderCmd->add_option("--css", render.css, "a stylesheet over the viewer's; it may redefine its colour and font variables")
       ->check(CLI::ExistingFile);
 
-  auto* queryCmd = app.add_subcommand(
-      "query",
-      "ask the model: diagrams · entities · relations · artefacts · behaviours · shows · findings · coverage · coupling · failures");
+  auto* queryCmd = app.add_subcommand("query", "ask the model: " + ds::query::Query::usage());
   workspace(queryCmd, &dir);
   queryCmd->add_option("question", question, "what to ask")->required();
-  queryCmd->add_option("subject", subject, "what it is asked about");
+  std::string takes = "what it is asked about:";  // each question's, from the table the check of a subject reads (DS-436)
+  for (const auto& q : ds::query::Query::questions()) takes += "\n  " + q.name + ": " + q.takes;
+  queryCmd->add_option("subject", subject, takes);
   queryCmd->add_flag("--json", json, "answer as JSON");
 
   std::string topic;
@@ -345,9 +345,7 @@ int run(int argc, char** argv) {
     if (json) std::cout << ds::format::AnswersJson().write(answers, {}, *sink) << "\n";  // asked for JSON, the error is an answer too
     std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
     if (answers.front().detail.find("not a question") != std::string::npos) {
-      std::cerr << "questions:";
-      for (const auto& q : ds::query::Query::questions()) std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
-      std::cerr << "\n";
+      std::cerr << "questions: " << ds::query::Query::usage() << "\n";
     }
     return 1;
   }
