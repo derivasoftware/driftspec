@@ -331,14 +331,14 @@ package driftspec@ds {
       tags: render, scene, size
     }
 
-    verification VER-00083-3 {
+    verification VER-00083-4 {
       status: draft
       @requirement REQ-00074-1
-      title: Integration tests confirm ds's design writes each behaviour once, its tours replay far more steps than it writes, and its page stays under 250 KB
+      title: Integration tests confirm ds's design writes each behaviour once and its page stays under 250 KB, and a behaviour written once is replayed by every tour that calls it
       method: test
       tests:
         tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
-        tests/integration/viewer/tours.test.ts::the page stays small because each behaviour is written once and the tours replay many more steps
+        tests/integration/viewer/tours.test.ts::a behaviour written once is replayed by every tour that calls it
     }
 
     verification VER-00084-5 {
