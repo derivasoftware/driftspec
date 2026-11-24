@@ -71,6 +71,8 @@ package driftspec@ds {
       - owns types_: TypeBinder
       - owns signatures_: SignatureBinder
       - owns formulas_: FormulaBinder
+      - owns bodies_: MemberBodyBinder
+      - owns members_: MemberBinder
       - owns artefacts_: ArtefactBinder
       - owns packages_: PackageBinder
       - owns modules_: ModuleBinder
@@ -80,34 +82,20 @@ package driftspec@ds {
       - owns diagrams_: DiagramBinder
       - owns usecases_: UseCaseBinder
       - owns states_: StateBinder
+      - owns classes_: ClassBinder
+      - owns functions_: FunctionBinder
       - owns legacy_: LegacyBinder
       - owns dispatch_: Dispatch
     }
 
     class LegacyBinder : INodeBinder {       // the constructs with no binder of their own yet: DS-356 splits it, DS-357 removes it
-      + LegacyBinder(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder, types: TypeBinder, signatures: SignatureBinder)
+      + LegacyBinder(fields: FieldBinder, annotations: AnnotationBinder, types: TypeBinder)
       + kinds() -> std::vector<std::string>
       + bind(node: TSNode, ctx: BindContext) -> void {
         @requirement REQ-00013-1
         @requirement REQ-00014-1
         @requirement REQ-00015-1
         @requirement REQ-00022-1
-      }
-      - bindClass(ctx: BindContext, node: TSNode) -> void {
-        @requirement REQ-00025-1
-        @requirement REQ-00029-2
-        @requirement REQ-00033-1
-      }
-      - bindMember(ctx: BindContext, node: TSNode, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
-        @requirement REQ-00170-1
-        @requirement REQ-00026-2
-        @requirement REQ-00101-1                 // ~Name() flagged destructor
-      }
-      - bindFunction(ctx: BindContext, node: TSNode) -> void {
-        @requirement REQ-00054-2
-      }
-      - bindMemberBody(ctx: BindContext, member: TSNode, out_entity: model::Entity, scope: std::string) -> void {
-        @requirement REQ-00032-2
       }
       - bindSequence(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00034-1
@@ -121,14 +109,9 @@ package driftspec@ds {
       - branch(ctx: BindContext, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
         @requirement REQ-00037-1
       }
-      - declareOperator(ctx: BindContext, cls: model::Entity, symbol: std::string, location: model::Location) -> void {
-        @requirement REQ-00030-1
-      }
       - refs fields_: FieldBinder
       - refs annotations_: AnnotationBinder
-      - refs extensions_: ExtensionBinder
       - refs types_: TypeBinder
-      - refs signatures_: SignatureBinder
     }
 
     // Reads the file's tree and binds what is written at its root, packages and diagrams, with no scope and no owner,
@@ -184,12 +167,6 @@ package driftspec@ds {
     // already set. A package's children are bound with its id plus @ as scope, an expression: that call and its
     // annotations are not told here.
     sequence LegacyBinder::bind {
-      opt a class {
-        -> bindClass(ctx, node)
-      }
-      opt a function {
-        -> bindFunction(ctx, node)
-      }
       opt a sequence {
         -> bindSequence(ctx, node)
       }
@@ -491,6 +468,51 @@ package driftspec@ds {
       + kinds() -> std::vector<std::string>
       + bind(node: TSNode, ctx: BindContext) -> void {
         @requirement REQ-00081-1
+      }
+    }
+
+    class ClassBinder : INodeBinder {        // a class or a dataclass: its bases, header operators and members (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs extensions_: ExtensionBinder
+      - refs members_: MemberBinder
+      + ClassBinder(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder, members: MemberBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00025-1
+        @requirement REQ-00029-2
+        @requirement REQ-00033-1
+      }
+      - declareOperator(ctx: BindContext, cls: model::Entity, symbol: std::string, location: model::Location) -> void {
+        @requirement REQ-00030-1
+      }
+    }
+    class FunctionBinder : INodeBinder {     // a function of a module: a method's signature and body in the module (DS-356)
+      - refs signatures_: SignatureBinder
+      - refs bodies_: MemberBodyBinder
+      + FunctionBinder(signatures: SignatureBinder, bodies: MemberBodyBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00054-2
+      }
+    }
+    class MemberBinder {                     // a member of a class: a method, an attribute or an operator (DS-356)
+      - refs types_: TypeBinder
+      - refs signatures_: SignatureBinder
+      - refs bodies_: MemberBodyBinder
+      + MemberBinder(types: TypeBinder, signatures: SignatureBinder, bodies: MemberBodyBinder)
+      + bind(m: TSNode, ctx: BindContext, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
+        @requirement REQ-00170-1
+        @requirement REQ-00026-2
+        @requirement REQ-00101-1                 // ~Name() flagged destructor
+      }
+    }
+    class MemberBodyBinder {                 // what a member or a function writes in its body (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + MemberBodyBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + bind(member: TSNode, ctx: BindContext, out_entity: model::Entity, scope: std::string) -> void {
+        @requirement REQ-00032-2
       }
     }
   }
