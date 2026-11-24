@@ -112,20 +112,22 @@ package driftspec@ds {
     }
 
     // ======================= workspace ====================================
-    requirement REQ-00053-2 {
+    requirement REQ-00053-3 {
       tags: language, workspace
-      status: approved
+      status: draft
       title: A specification shall be a directory of .ds files read as one, in any order
       text:
         Files are read whole and are not units of meaning; a link nobody
         declares (an annotation, the subject of a behaviour) is an expected node
         reported once (W-REF-UNDECLARED) and never stops the load; a name in a
         type, a base, a bound or a call is text instead (REQ-00024-3); only
-        syntax stops a file (E-SYNTAX).
+        syntax (E-SYNTAX) or an encoding that is not UTF-8 (E-ENCODING) stops
+        a file.
       rationale:
         A specification that lives per file cannot say that two files talk
         about the same thing (R1, R6). Revision 2 (DS-18, 2026-11-20): names in
-        types are text.
+        types are text. Revision 3 (DS-411, 2026-11-24): a file that is not
+        UTF-8 stops too, as a syntax error does.
       verification VER-00041-2 {
         title: Integration tests confirm a specification is a directory of .ds files read as one, in any order
         status: approved
