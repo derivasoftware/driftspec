@@ -174,6 +174,7 @@ package driftspec@ds {
       + report(model: model::Model, pretty: bool) -> std::string   // reads the severity table of its metamodel (DS-379)
       + exportModel(files: Files) -> std::string
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
+      + severities() -> std::string            // the severity table, as JSON: name, fails, keptApart, editor (DS-386)
       + render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string
       + page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
     }

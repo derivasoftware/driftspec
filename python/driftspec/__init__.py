@@ -34,7 +34,7 @@ Source = Union[str, os.PathLike, Mapping[str, Union[str, bytes]]]
 __all__ = [
     "Location", "Entity", "Relation", "Finding", "Model", "Report", "Answer", "Step", "Walked", "Frame", "Tree",
     "Workspace", "files", "read", "load", "check", "expected_at", "render", "page", "qualify", "outer", "box_of",
-    "package_of", "behaviour_of", "subject_of", "scenario_of", "without_revision",
+    "package_of", "behaviour_of", "subject_of", "scenario_of", "without_revision", "severities",
 ]
 
 
@@ -160,6 +160,7 @@ class Model:
 class Report:
     findings: list[Finding]
     counts: Mapping[str, int]
+    coverage: list[Finding] = field(default_factory=list)  # kept apart from the findings: what is not yet written (DS-216)
 
     @property
     def errors(self) -> int:
@@ -223,7 +224,7 @@ def _model(data: Mapping) -> Model:
 def _report(data: Mapping) -> Report:
     counts = {k: int(data[k]) for k in ("entities", "expected", "relations", "errors")}
     counts["findings"] = len(data["findings"])
-    return Report([_finding(f) for f in data["findings"]], counts)
+    return Report([_finding(f) for f in data["findings"]], counts, [_finding(f) for f in data.get("coverage", [])])
 
 
 # ---- what the engine answers about a loaded workspace (DS-173) -----------------------------------
@@ -379,6 +380,13 @@ behaviour_of = _native.behaviour_of
 subject_of = _native.subject_of
 scenario_of = _native.scenario_of
 without_revision = _native.without_revision
+
+
+def severities() -> list[dict]:
+    """The severity table of the language, as the engine writes it (DS-386): each severity's name, whether a finding
+    of it fails (fails), whether it is kept apart as coverage (keptApart), and what an editor shows it as (editor:
+    error, warning, information or hint), in the engine's order. A door reads a severity here, never by its name."""
+    return json.loads(_native.severities())
 
 
 def expected_at(text: str, line: int, column: int) -> list[str]:

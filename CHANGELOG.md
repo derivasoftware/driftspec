@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.71
+## 0.1.72
 
 A design file that is not valid UTF-8 is now reported with its file, line and column (DS-411). Such a file, one Latin-1
 é in a title for instance, used to check clean while `ds export`, `ds render -f json` and `ds query --json` exited with
@@ -20,6 +20,16 @@ file's bytes (`driftspec.read` gives a directory's files as bytes, and a mapping
 
 Valid designs are unchanged: every finding, export, drawing, viewer page, answer and exit code is the same. The manual
 gains the page of E-ENCODING and its row in `ds manual codes`.
+
+## 0.1.71
+
+The language server and the live viewer show a finding's severity as the severity table gives it (DS-386). The engine
+hands the table to Python (`driftspec.severities()`: each severity's name, whether it fails, whether it is kept apart as
+coverage, and what an editor shows it as), and no severity is named in Python. The language server publishes each finding
+with the table's editor mapping; what it publishes does not change. The live viewer colours each finding by its row,
+errors red and warnings amber; its findings pill counts what fails, with the rest beside it; and the coverage, which
+reached no Python door, has a folded section of its own in the information colour, fed by a new `coverage` field of the
+state. The live contract is version 5.
 
 ## 0.1.70
 

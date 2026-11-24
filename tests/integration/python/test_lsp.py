@@ -5,7 +5,7 @@ import shutil
 
 import pytest
 
-from conftest import uri
+from conftest import ROOT, uri
 
 
 @pytest.fixture
@@ -77,3 +77,28 @@ class TestLanguageServer:
         path = os.path.join(root, "requirements.ds")
         open_file(s, path)
         assert not any(d["code"] == "E-DUPLICATE-IDENTITY" for d in diagnostics_of(s, path))
+
+
+class TestSeverityThroughTheTable:
+    """DS-386: the language server shows each finding as the severity table's editor mapping says, and no severity by
+    its name; it publishes the findings only, never the coverage."""
+
+    def test_each_diagnostic_carries_the_editor_mapping_of_its_finding_s_severity(self, tmp_path, lsp):
+        from collections import Counter
+
+        import driftspec
+        from driftspec.lsp import EDITOR
+
+        root = os.path.join(tmp_path, "audit")
+        shutil.copytree(os.path.join(ROOT, "tests", "corpus", "audit"), root)
+        report = driftspec.check(root)
+        editor = {s["name"]: EDITOR[s["editor"]] for s in driftspec.severities()}
+        want = Counter((os.path.realpath(f.location.file), f.location.line, f.code, editor[f.severity]) for f in report.findings)
+        s = lsp(root)
+        first = driftspec.files(root)[0]
+        open_file(s, first)
+        published = []
+        rid = s.send("textDocument/hover", {"textDocument": {"uri": uri(first)}, "position": {"line": 0, "character": 0}}, request=True)
+        s.until(lambda m: (published.append(m["params"]) if m.get("method") == "textDocument/publishDiagnostics" else None) or m.get("id") == rid)
+        got = Counter((p["uri"][len("file://"):], d["range"]["start"]["line"] + 1, d["code"], d["severity"]) for p in published for d in p["diagnostics"])
+        assert got == want and sum(got.values()) == len(report.findings) and report.coverage  # coverage there, not published

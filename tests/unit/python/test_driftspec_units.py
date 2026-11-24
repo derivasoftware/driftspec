@@ -5,9 +5,9 @@ import os
 import pytest
 
 import driftspec
-from driftspec import Workspace, check, expected_at, files, load, page, read, render
+from driftspec import Workspace, check, expected_at, files, load, page, read, render, severities
 
-__covers__ = (files, read, load, check, render, page, expected_at, Workspace)
+__covers__ = (files, read, load, check, render, page, expected_at, severities, Workspace)
 
 DESIGN = (
     "package p {\n"
@@ -50,6 +50,14 @@ def directory(tmp_path):
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "b.ds").write_text("package q { }\n")
     return str(tmp_path)
+
+
+class TestSeverities:
+    def test_the_table_says_of_each_severity_whether_it_fails_is_kept_apart_and_how_an_editor_shows_it(self):
+        table = severities()
+        assert table and all(set(s) == {"name", "fails", "keptApart", "editor"} for s in table)
+        assert {s["editor"] for s in table} <= {"error", "warning", "information", "hint"}
+        assert any(s["fails"] for s in table) and any(s["keptApart"] for s in table)
 
 
 class TestFiles:
