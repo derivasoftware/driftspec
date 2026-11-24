@@ -9,6 +9,7 @@
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/format/TextFormats.hpp"
+#include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -59,7 +60,15 @@ Unclosed unclosedBlock(const std::string& text) {
 
 }  // namespace
 
-model::Model Api::load(const std::vector<parse::ParsedFile>& files) const {
+check::Selection Api::stepsFor(Output output, const model::Model& bound, const std::string& diagram) {
+  if (output != Output::Drawing) return check::Selection::every();  // findings, the model, answers and the viewer read all
+  // a drawing shows relations, calls and couplings, and stereotypes; it reads no finding, coverage, escape or breach
+  const check::Selection drawing = check::Selection::of({check::Step::Linker, check::Step::Behaviour, check::Step::Derivation});
+  // a table written as rows and columns is the answers of its rules (DS-268): they are computed for it
+  return bound.formulas().count(model::Identity::ofDiagram(diagram).text()) ? drawing.with(check::Step::Rules) : drawing;
+}
+
+model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output output, const std::string& diagram) const {
   model::Model model(metamodel_);
   bind::Binder binder(model, metamodel_);
   std::set<std::string> broken;
@@ -80,7 +89,7 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files) const {
     }
     binder.bind(parsed);
   }
-  const auto steps = check::steps();
+  const auto steps = check::steps(stepsFor(output, model, diagram));  // only the steps the output reads (DS-376)
   check::Checker(model, metamodel_, steps).run(binder.notes());
   // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
   // the rest of that file, and every name now declared nowhere. They go until the file parses (DS-304)
@@ -96,17 +105,17 @@ std::string Api::report(const model::Model& model, bool pretty) const {
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)
-std::string Api::check(const Files& files) const { return Workspace(metamodel_, files).report(); }
+std::string Api::check(const Files& files) const { return Workspace(metamodel_, files, Output::Findings).report(); }
 
-std::string Api::exportModel(const Files& files) const { return Workspace(metamodel_, files).exportModel(); }
+std::string Api::exportModel(const Files& files) const { return Workspace(metamodel_, files, Output::Model).exportModel(); }
 
 std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) const {
-  // svg, the IR itself, or text for anything else
-  return Workspace(metamodel_, files).render(diagram, format == "svg" || format == "ir" ? format : "text", width);
+  // svg, the IR itself, or text for anything else; loaded with the steps the drawing reads (DS-376)
+  return Workspace(metamodel_, files, Output::Drawing, diagram).render(diagram, format == "svg" || format == "ir" ? format : "text", width);
 }
 
 std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) const {
-  return Workspace(metamodel_, files).page(title, focus);
+  return Workspace(metamodel_, files, Output::Viewer).page(title, focus);
 }
 
 std::string Api::expectedAt(const std::string& text, int line, int column) {

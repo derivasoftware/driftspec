@@ -21,18 +21,19 @@ namespace api {
 
 namespace {
 
-model::Model loaded(const model::Metamodel& metamodel, const Files& files) {
+model::Model loaded(const model::Metamodel& metamodel, const Files& files, Output output, const std::string& diagram) {
   parse::Parser parser;
   std::vector<parse::ParsedFile> parsed;
   for (const auto& file : files) parsed.push_back(parser.parseText(file.first, file.second));
-  return Api(metamodel).load(parsed);
+  return Api(metamodel).load(parsed, output, diagram);
 }
 
 std::string ids(const std::vector<std::string>& list) { return nlohmann::json(list).dump(); }
 
 }  // namespace
 
-Workspace::Workspace(const model::Metamodel& metamodel, const Files& files) : metamodel_(metamodel), model_(loaded(metamodel, files)) {}
+Workspace::Workspace(const model::Metamodel& metamodel, const Files& files, Output output, const std::string& diagram)
+    : metamodel_(metamodel), model_(loaded(metamodel, files, output, diagram)) {}
 
 std::string Workspace::exportModel() const { return exporter::JsonExport(metamodel_).render(model_, false); }
 
