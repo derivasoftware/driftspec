@@ -1,0 +1,67 @@
+// The Owner's design conventions, held over every box of the engine (DS-402, DS-405): what a class is named says
+// what it is, a family of classes is reached through its interface, and what a class refers to is given to it.
+
+package driftspec@ds {
+
+  definition has-abstract(c) {
+    title: c has an abstract member
+    if m is method, m in c, m is abstract
+  }
+
+  definition has-concrete(c) {
+    title: c has a member that is not abstract: an attribute, or a method that is no constructor or destructor
+    if m in c, m is method, not m is abstract, not m is constructor, not m is destructor
+    if m in c, m is attribute
+  }
+
+  definition pure-interface(c) {
+    title: c is a pure interface: it declares abstract members and nothing concrete
+    if c is class, has-abstract(c), not has-concrete(c)
+  }
+
+  definition implements(x, i) {
+    title: x is a class of the family of the pure interface i, directly or through a class between
+    if x inherits i, pure-interface(i)
+    if x inherits y, implements(y, i)
+  }
+
+  definition factory(f) {
+    title: f names two classes of one family: the one place that makes them
+    if f is class, depends(f, a), depends(f, b), implements(a, i), implements(b, i), a != b, not implements(f, i)
+  }
+
+  rule pure-interfaces-are-named-i {
+    title: a pure interface is named I and a capital
+    for class c in driftspec@ds
+    where pure-interface(c)
+    holds name(c) matches "^I[A-Z]"
+  }
+
+  rule abstract-classes-are-named-a {
+    title: a class with abstract and concrete members is named A and a capital
+    for class c in driftspec@ds
+    where has-abstract(c), has-concrete(c)
+    holds name(c) matches "^A[A-Z]"
+  }
+
+  rule factories-are-named-factory {
+    title: the one place that makes the classes of a family is named after what it makes and Factory
+    for class f in driftspec@ds
+    where factory(f)
+    holds name(f) matches "Factory$"
+  }
+
+  rule families-are-reached-through-their-interface {
+    title: a class of a family is reached through its interface by every class but its own family and the factories
+    for class c in driftspec@ds, class x in driftspec@ds
+    where implements(x, i), c != x, not implements(c, i), not factory(c)
+    never depends(c, x)
+  }
+
+  rule what-a-class-refers-to-is-given-to-it {
+    title: what a class refers to is given to its constructor, never set later
+    for class c in driftspec@ds
+    where not c is dataclass, a in c, a is attribute, a refs t
+    holds k in c, k is constructor, k uses t
+  }
+}
