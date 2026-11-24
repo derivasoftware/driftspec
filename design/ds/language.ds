@@ -1681,7 +1681,7 @@ package driftspec@ds {
           tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.APatternThatIsNoStringOrDoesNotCompileIsReported
           tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.ADefinitionThatTakesAReservedNameIsReported
           tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.APropertyNeverBindsItsVariable
-          tests/unit/ds/model/test_metamodel.cpp::TestReservedFields.NoKindDeclaresAFieldNamedNameOrId
+          tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.NameAndIdAreNoFieldAKindDeclares
       }
     }
 

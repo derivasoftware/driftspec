@@ -34,7 +34,7 @@ std::vector<model::Finding> Evaluator::run() {
   for (const auto& f : facts_.formulas()) {
     std::vector<std::pair<std::string, std::string>> resolved;
     if (!validator_.validate(f.first, f.second, resolved)) invalid_.insert(f.first);
-    for (const auto& r : resolved) facts_.record(f.first, r.first, r.second);  // the one who directs writes the facts
+    for (const auto& r : resolved) facts_.record(f.first, r.first, r.second);                       // the one who directs writes the facts
     for (auto& p : validator_.takePatterns()) facts_.learn(f.first, p.first, std::move(p.second));  // compiled once (DS-403)
     validator_.checkVacuity(f.first, f.second);
   }

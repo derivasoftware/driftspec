@@ -169,4 +169,28 @@ TEST_F(TestRuleProperties, APropertyNeverBindsItsVariable) {
   EXPECT_TRUE(broken().empty());
 }
 
+/// name and id are what an entity is: no kind declares a field of either name, so name(x) and id(x) never meet a
+/// field that would say otherwise; kind stays a field a diagram writes, and kind(x) is read apart from it.
+TEST_F(TestRuleProperties, NameAndIdAreNoFieldAKindDeclares) {
+  for (const auto& k : metamodel.kinds())
+    for (const auto& f : k.fields) {
+      EXPECT_NE(f.name, "name") << metamodel.nameOf(k.kind);
+      EXPECT_NE(f.name, "id") << metamodel.nameOf(k.kind);
+    }
+  load(
+      "package p {\n"
+      "  requirement REQ-00001-1: The diagrams shall be kept apart\n"
+      "  rule sequences-are-diagrams {\n"
+      "    @requirement REQ-00001-1\n"
+      "    for diagram d\n"
+      "    where d.kind = \"sequence\"\n"
+      "    never kind(d) = \"diagram\"\n"
+      "  }\n"
+      "}\n"
+      "diagram SEQ_One {\n"
+      "  kind: sequence\n"
+      "}\n");
+  EXPECT_EQ(broken().size(), 1u);  // the field it writes is sequence, the kind it is is diagram
+}
+
 }  // namespace
