@@ -11,7 +11,9 @@ entry says which word and what to write instead.
 The golden ctest compares without pytest (DS-415). `ctest` ran the golden files through `python3 -m pytest`, so on a
 machine whose python3 has no pytest the test failed for that reason alone. `tests/system/python/test_golden.py --check
 --ds <ds>` makes the same comparison as a plain script and exits 1 when a document differs; ctest runs it that way and
-needs only python3. CI's golden job still runs it under pytest, for its report.## 0.1.62
+needs only python3. CI's golden job still runs it under pytest, for its report.
+
+## 0.1.62
 
 A live event carries what it was sent with (DS-414). Each event shared the session's own notes, highlights and comments,
 and a page serialised them when it took the event off its queue, so an event could show a change made after it was
