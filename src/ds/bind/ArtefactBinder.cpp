@@ -14,11 +14,11 @@ void ArtefactBinder::bind(TSNode node, const BindContext& ctx) const {
   const std::string& scope = ctx.scope;
   const std::string& owner = ctx.owner;
   const model::Location loc = ctx.locationOf(node);
-  if (BindContext::annotationsOnly(node, TreeReader::child(node, Field::id))) {
+  if (ExtensionBinder::extends(node, TreeReader::child(node, Field::id))) {
     const model::Kind kind = TreeReader::is(node, "requirement")    ? model::Kind::Requirement
                              : TreeReader::is(node, "verification") ? model::Kind::Verification
                                                                     : model::Kind::Constraint;
-    ctx.extend(node, ctx.reader.fieldText(node, Field::id), kind, ctx.reader.fieldText(node, Field::id), scope, loc);
+    extensions_.bind(node, ctx, ctx.reader.fieldText(node, Field::id), kind, ctx.reader.fieldText(node, Field::id), scope, loc);
     return;
   }
   model::Entity e;
@@ -29,7 +29,7 @@ void ArtefactBinder::bind(TSNode node, const BindContext& ctx) const {
   e.id = e.name;  // process artefacts are identified by id (R5)
   e.scope = scope;
   e.location = loc;
-  ctx.fields(node, e);
+  fields_.bind(node, ctx, e);
   const std::string title = ctx.reader.fieldText(node, Field::title);
   if (!title.empty()) e.fields["title"] = std::string(text::trimWhitespace(title));  // the one-line form
   ctx.declare(e);
@@ -58,7 +58,7 @@ void ArtefactBinder::bind(TSNode node, const BindContext& ctx) const {
     ctx.report(
         {"W-PARENT-IGNORED", "warning", e.id + " carries a parent: field; nest it in its parent or write @refines <id-revision>", loc});
   }
-  ctx.annotations(node, e.id, scope);
+  annotations_.bind(node, ctx, e.id, scope);
   ctx.within(scope, e.id).children(node);  // nested verifications and constraints
 }
 

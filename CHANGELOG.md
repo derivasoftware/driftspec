@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.37
+## 0.1.43
 
 A large `neighbours:` no longer keeps `ds render` busy for good (DS-362). The walk took every step a class diagram
 asked for, each over every relation, so `neighbours: 2000000000` over three classes never ended while `ds check`
@@ -14,6 +14,50 @@ said nothing; it now ends at the first step that adds nothing, so a number past 
 reach at once. A `neighbours:` that is no number, a word or one too large for an int, gets the new
 `W-DIAGRAM-NEIGHBOURS` at the diagram, as such a depth gets `W-DIAGRAM-DEPTH`, and still adds no neighbours. A large
 depth already ended where the calls end. Nothing a design writes draws differently.
+
+## 0.1.42
+
+The test of CST-00001-1, a hundred classes checked and drawn in under a hundred milliseconds, times each command
+five times and holds the fastest to the budget (DS-363). Load on the machine, other pipelines on a shared runner, only
+ever adds to a run's time, so the fastest run is the work's own; the budget itself does not change. Nothing a design
+writes changes.
+
+## 0.1.41
+
+The walk the binder had is gone (DS-357, the end of DS-353): every construct of the language binds through its own
+binder, found by the table, and the binder only builds them and binds each file. The requirements the walk still
+answered to move to the binders that realise them: the high-level design as packages, a package as a box and its
+nesting to the package binder, a module that reopens to the module binder. Nothing a design writes, no finding,
+export or drawing changes.
+
+## 0.1.40
+
+Sequences get a binder of their own (DS-356, group four of four): a sequence is the behaviour of an operation, with
+its steps, the frames that hold them and an alt in two branches, its messages kept for the checker. Every construct
+of the language now binds through its own binder; the walk the binder had takes no kind any more, and DS-357 removes
+it. Nothing a design writes, no finding, export or drawing changes.
+
+## 0.1.39
+
+Classes and functions get binders of their own (DS-356, group three of four). A class's members, its methods,
+attributes and operators, are bound by a member part, and what a member or a function writes in its body by another,
+both shared. The walk the binder had keeps only the sequences, until the last group. Nothing a design writes, no
+finding, export or drawing changes.
+
+## 0.1.38
+
+Use cases and state machines get binders of their own (DS-356, group two of four). A use case keeps its signature and
+its outcomes; a state machine is still the behaviour of its class, its events and actions kept for the checker. The
+walk the binder had keeps classes, functions and sequences until the next groups. Nothing a design writes, no
+finding, export or drawing changes.
+
+## 0.1.37
+
+The boxes and the plain constructs get binders of their own (DS-356, group one of four): packages, modules, interfaces,
+enums, rules and definitions, and diagrams. What every construct shares is a part binder each binder is given by
+reference: the fields, the annotations, an extension block, a type, a signature and a formula. The context goes back
+to holding only what a binder writes through. The walk the binder had keeps use cases, classes, functions,
+sequences and state machines until the next groups. Nothing a design writes, no finding, export or drawing changes.
 
 ## 0.1.36
 

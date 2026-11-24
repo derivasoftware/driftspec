@@ -15,7 +15,7 @@ namespace bind {
 /// What binding one node is given (DS-354, DS-355): the model it declares into and the notes it leaves for the checker,
 /// the only two things it writes; the reader of the file's tree; the language's metamodel; the table that binds the
 /// node's children; and where the node is written, its scope and the entity that holds it. A binder writes through
-/// this alone, so a file could later bind into a batch of its own.
+/// this alone, so a file could later bind into a batch of its own. It holds no binding of its own (DS-356).
 struct BindContext {
   model::Model& model;
   Notes& notes;
@@ -54,17 +54,6 @@ struct BindContext {
   void noteMessage(const Message& message) const { notes.messages.push_back(message); }
   /// An event of a state machine, for the checker to find on its entity.
   void noteEvent(const Event& event) const { notes.events.push_back(event); }
-
-  /// The `key: value` fields written in `node`, into `out_entity`; a repeated key accumulates.
-  void fields(TSNode node, model::Entity& out_entity) const;
-  /// The annotations written in `node`, noted as references from `from` read in `scope`; a word the language does not
-  /// know is kept as a link and said (DS-210).
-  void annotations(TSNode node, const std::string& from, const std::string& scope) const;
-  /// An extension block: annotations added to `id`, which is expected when nothing has defined it yet (R6).
-  void extend(TSNode node, const std::string& id, model::Kind kind, const std::string& name, const std::string& scope,
-              const model::Location& loc) const;
-  /// Whether `body` holds annotations only, its id `idNode` aside: the block extends what is defined elsewhere.
-  static bool annotationsOnly(TSNode body, TSNode idNode = TSNode{});
 };
 
 }  // namespace bind
