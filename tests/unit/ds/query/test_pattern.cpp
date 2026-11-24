@@ -39,7 +39,7 @@ class TestPattern : public ::testing::Test {
                                        "}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto steps = ds::check::Steps::of();
+    const auto steps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 

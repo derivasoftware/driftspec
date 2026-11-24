@@ -53,7 +53,7 @@ class SceneOf : public ::testing::Test {
                                  "    }\n"
                                  "  }\n"
                                  "}\n"));
-    const auto steps = ds::check::Steps::of();
+    const auto steps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
     placed = ds::scene::Layout(model, metamodel).place();
   }

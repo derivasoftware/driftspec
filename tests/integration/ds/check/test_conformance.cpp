@@ -24,7 +24,7 @@ class TestMetamodelConformance : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(dir)) binder.bind(f);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     return model;
   }
@@ -127,7 +127,7 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
                                "    priority: high\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::Steps::of();
+  const auto checkSteps = ds::check::StepFactory::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> unknown;
   for (const auto& f : model.findings()) {
@@ -161,7 +161,7 @@ TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAn
                                "diagram SEQ_X {\n"
                                "  kind: sequense\n"
                                "}\n"));
-  const auto checkSteps = ds::check::Steps::of();
+  const auto checkSteps = ds::check::StepFactory::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> wrong;
   for (const auto& f : model.findings())
@@ -182,7 +182,7 @@ TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNo
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText(
         "a.ds", "package p {\n  interface engine {\n    kind: library\n  }\n  module m {\n    class Api" + base + "\n  }\n}\n"));
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     return model;
   };

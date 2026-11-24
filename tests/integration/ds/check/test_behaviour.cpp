@@ -28,7 +28,7 @@ class TestBehaviour : public ::testing::Test {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     for (const auto& f : model.findings()) ++byCode[f.code];
   }
@@ -187,7 +187,7 @@ std::vector<std::string> unreachable(const std::string& machine, const std::stri
                                    "    }\n"
                                    "  }\n"
                                    "}\n"));
-  const auto checkSteps = ds::check::Steps::of();
+  const auto checkSteps = ds::check::StepFactory::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> out;
   for (const auto& f : model.findings())

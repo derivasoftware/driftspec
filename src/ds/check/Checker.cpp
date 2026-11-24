@@ -40,5 +40,10 @@ void Checker::run(const bind::Notes& notes) {
   model_.cover();  // what is not yet written is no finding (Owner, 2026-11-15; DS-216): the model keeps it apart
 }
 
+std::unique_ptr<IChecker> CheckerFactory::make(model::Model& model, const model::Metamodel& metamodel,
+                                               const std::map<std::string, std::unique_ptr<IStep>>& steps) {
+  return std::make_unique<Checker>(model, metamodel, steps);
+}
+
 }  // namespace check
 }  // namespace ds

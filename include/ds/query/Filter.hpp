@@ -109,9 +109,9 @@ class RequirementsFilter : public IFilter {
   std::string cutOf_;
 };
 
-/// The one place that names the filter of each kind of diagram (DS-385), as Steps names the steps of the check
+/// The one place that names the filter of each kind of diagram (DS-385), as StepFactory names the steps of the check
 /// (DS-382): what asks what a diagram takes asks it here, and never names a filter itself.
-class Filters {
+class FilterFactory {
  public:
   /// The filter of `diagram`'s kind, built from its fields and read in `metamodel` (DS-351); null when the entity is
   /// no diagram.
