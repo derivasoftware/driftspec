@@ -18,7 +18,7 @@
 namespace ds {
 namespace check {
 
-std::string InterfaceContracts::name() const { return "contract-1-interfaces"; }
+std::string InterfaceContracts::name() const { return "interfaces"; }
 
 std::vector<std::string> InterfaceContracts::needs() const {
   // what ContractCheck needed: the expansions behaviour typing made, over the links the linker made, and what
