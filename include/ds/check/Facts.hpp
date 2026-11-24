@@ -1,9 +1,12 @@
 #ifndef DRIFTSPEC_CHECK_FACTS_HPP
 #define DRIFTSPEC_CHECK_FACTS_HPP
 
+#include <cstddef>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -17,12 +20,15 @@ namespace check {
 /// the names a rule writes resolved to identities, and what each definition holds for. It is the one reader of the
 /// model for the evaluator's pieces: the solver, the validator and the strata ask it, never the model. Only the
 /// evaluator, which directs, writes into it: the constants the validator resolves and what the definitions derive.
+/// Every string a binding of the solver points at lives here or among the solver's own texts (DS-381): storage the
+/// evaluation owns and that does not move while it runs. What holds what is copied from the model's index once, so
+/// nothing the solver binds points into the model, which the evaluator writes breaches and tables into.
 class Facts {
  public:
   Facts(const model::Model& model, const model::Metamodel& metamodel) : model_(model), metamodel_(metamodel) {}
 
-  /// Reads the model's relations and declared entities into the joins a rule asks for (what holds what stays the
-  /// model's own index, DS-171).
+  /// Reads the model's relations and declared entities into the joins a rule asks for, and copies what holds what
+  /// from the model's index (DS-171), once.
   void index();
 
   /// The declared entities of a kind, by its name; nullptr when there are none.
@@ -40,6 +46,7 @@ class Facts {
 
   /// Records what a name written in a formula resolves to (the evaluator records what the validator resolved).
   void record(const std::string& owner, const std::string& written, const std::string& identity) {
+    if (readers_) throw std::logic_error("the facts grow only between solves: a binding points into them");
     constants_[key(owner, written)] = identity;
   }
   /// What a name written in a formula resolves to; false when it was never resolved.
@@ -48,6 +55,11 @@ class Facts {
     if (it == constants_.end()) return false;
     out_identity = it->second;
     return true;
+  }
+  /// What a name written in a formula resolves to, where the facts keep it; nullptr when it was never resolved.
+  const std::string* constantOf(const std::string& owner, const std::string& written) const {
+    const auto it = constants_.find(key(owner, written));
+    return it == constants_.end() ? nullptr : &it->second;
   }
   /// The definition a formula applies by the name it writes; "" when it names none.
   std::string definitionOf(const std::string& owner, const std::string& name) const {
@@ -61,7 +73,13 @@ class Facts {
     return it == extension_.end() ? nullptr : &it->second;
   }
   /// Adds a tuple a definition holds for; true when it is new.
-  bool derive(const std::string& definition, const std::vector<std::string>& tuple) { return extension_[definition].insert(tuple).second; }
+  bool derive(const std::string& definition, const std::vector<std::string>& tuple) {
+    if (readers_) throw std::logic_error("the facts grow only between solves: a binding points into them");
+    return extension_[definition].insert(tuple).second;
+  }
+  /// A solve starts reading the facts, and ends; while one reads, the facts refuse to grow (DS-381).
+  void reading() const { ++readers_; }
+  void done() const { --readers_; }
 
   /// The formulas of the model, by the identity of the rule, definition or table that writes each.
   const std::map<std::string, model::Formula>& formulas() const { return model_.formulas(); }
@@ -79,10 +97,16 @@ class Facts {
   std::string fieldOf(const std::string& id, const std::string& field) const;
   /// Whether the model keeps a rule: it has no breach.
   bool holds(const std::string& rule) const;
-  /// What holds an entity, by contains; "" at the top.
-  std::string parentOf(const std::string& id) const { return model_.index().parent(id); }
-  /// What an entity holds, by contains.
-  std::vector<std::string> childrenOf(const std::string& id) const { return model_.index().children(id); }
+  /// What holds an entity, by contains, where the facts keep it; nullptr at the top.
+  const std::string* parentOf(const std::string& id) const {
+    const auto it = parent_.find(id);
+    return it == parent_.end() ? nullptr : &it->second;
+  }
+  /// What an entity holds, by contains, where the facts keep it; nullptr when it holds nothing.
+  const std::vector<std::string>* childrenOf(const std::string& id) const {
+    const auto it = children_.find(id);
+    return it == children_.end() ? nullptr : &it->second;
+  }
   /// Whether `outer` holds `inner`, by contains, else by the box an artefact was written in (DS-268).
   bool contains(const std::string& outer, const std::string& inner) const;
   /// What a call passes, as the sequence writes it: each parameter of the operation it calls with the argument in
@@ -100,6 +124,9 @@ class Facts {
   std::map<std::string, std::multimap<std::string, std::string>> backward_;  ///< relation, to, from
   std::map<std::string, std::string> constants_;                             ///< owner and name as written, to identity
   std::map<std::string, std::set<std::vector<std::string>>> extension_;      ///< what each definition holds for
+  std::unordered_map<std::string, std::string> parent_;                      ///< what holds each entity, copied from the index
+  std::unordered_map<std::string, std::vector<std::string>> children_;       ///< what each entity holds, in the index's order
+  mutable std::size_t readers_ = 0;                                          ///< solves reading now
 };
 
 }  // namespace check
