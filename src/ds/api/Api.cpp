@@ -94,8 +94,8 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
     }
     binder.bind(parsed);  // a file that is not UTF-8 has the empty tree: nothing of it is bound
   }
-  const auto steps = check::Steps::of(stepsFor(output, model, diagram));  // only the steps the output reads (DS-376)
-  check::Checker(model, metamodel_, steps).run(binder.notes());
+  const auto steps = check::StepFactory::of(stepsFor(output, model, diagram));  // only the steps the output reads (DS-376)
+  check::CheckerFactory::make(model, metamodel_, steps)->run(binder.notes());   // held as the IChecker it is (DS-404)
   // what a file that does not parse, or is not UTF-8, leaves out of the model comes back as findings that only echo
   // the cut: the rest of that file, and every name now declared nowhere. They go until the file is read whole (DS-304,
   // DS-411)

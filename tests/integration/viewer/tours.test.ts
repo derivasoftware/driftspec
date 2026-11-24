@@ -97,7 +97,8 @@ describe('the tours the viewer replays', () => {
     const check = tour(s, 'driftspec@ds@cli::check');
     assert.equal(check.group, 'interface');
     tour(s, 'driftspec@ds@cli::check / errors'); // a named scenario is a tour of its own
-    assert.ok(check.steps.some((x: Scene) => x.t.startsWith('driftspec@ds@check::Checker::')));
+    // the load holds the checker as the IChecker it is (DS-404): the tour reaches the check through the interface
+    assert.ok(check.steps.some((x: Scene) => x.t === 'driftspec@ds@check::IChecker::run'));
     assert.ok(Math.max(...check.steps.map((x: Scene) => x.d)) >= 4);
     assert.equal(check.steps.at(-1).ret, 1); // the command answers
   });

@@ -348,7 +348,7 @@ class RuleCheck : public IStep {
 
 /// The one place that names the concrete steps (DS-138, DS-382): it builds what a Selection asks for (DS-376), the
 /// steps it names and every step they need, keyed by name. The checker runs them through IStep, knowing none of them.
-class Steps {
+class StepFactory {
  public:
   /// The steps a selection names and every step they need, keyed by name; every step, unless a selection says
   /// otherwise.

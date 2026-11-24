@@ -7,7 +7,7 @@ std::vector<model::Finding> ACheck::run(Context& out_context) { return check(out
 
 // the one place that names each step: it pairs each with what it does, makes the ones a selection names and the
 // ones they need, and keys them by name; the checker runs them through IStep, knowing none of them
-std::map<std::string, std::unique_ptr<IStep>> Steps::of(const Selection& selection) {
+std::map<std::string, std::unique_ptr<IStep>> StepFactory::of(const Selection& selection) {
   std::vector<std::pair<Step, std::unique_ptr<IStep>>> all;
   all.emplace_back(Step::Linker, std::make_unique<Linker>());
   all.emplace_back(Step::Behaviour, std::make_unique<BehaviourTyping>());

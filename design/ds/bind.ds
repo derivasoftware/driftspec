@@ -134,7 +134,7 @@ package driftspec@ds {
     }
 
     rule binder-knows-binders-as-inodebinder {
-      title: the binder holds the node binders as INodeBinder and its constructor names the concrete ones, so every construct is reached through the one interface
+      title: the binder holds the node binders as INodeBinder and NodeBinderFactory names the concrete ones, so every construct is reached through the one interface
       @requirement REQ-00171-1
       for class c in driftspec@ds@bind
       where c = driftspec@ds@bind::Binder
@@ -154,6 +154,13 @@ package driftspec@ds {
       @requirement REQ-00173-1
       for function f in driftspec@ds@bind
       never f in driftspec@ds@bind
+    }
+
+    // The one place that names the concrete node binders (DS-404): each made with the parts it uses, handed back as
+    // the INodeBinder it is to the binder.
+    class NodeBinderFactory {
+      @requirement REQ-00171-1
+      + static make(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder, types: TypeBinder, signatures: SignatureBinder, formulas: FormulaBinder, bodies: MemberBodyBinder, members: MemberBinder) -> std::vector<std::unique_ptr<INodeBinder>>
     }
 
     class Binder {                           // builds the binders and their table once, then binds each file through it (DS-355)
@@ -176,7 +183,7 @@ package driftspec@ds {
       - owns formulas_: FormulaBinder
       - owns bodies_: MemberBodyBinder
       - owns members_: MemberBinder
-      - owns many binders_: std::vector<std::unique_ptr<INodeBinder>>   // held as INodeBinder; the constructor names the concrete ones (DS-365)
+      - owns many binders_: std::vector<std::unique_ptr<INodeBinder>>   // held as INodeBinder; NodeBinderFactory names the concrete ones (DS-365, DS-404)
       - owns dispatch_: std::optional<Dispatch>   // built from the grammar of the first file bound (DS-374)
     }
 

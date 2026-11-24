@@ -153,7 +153,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
 
   // what the diagram takes is the query's filter of it (DS-127); the boxes around are drawn here
-  const auto filter = query::Filters::of(metamodel_, *diagram);
+  const auto filter = query::FilterFactory::of(metamodel_, *diagram);
   const std::set<std::string> selected = static_cast<const query::ClassFilter&>(*filter).boxes(model_);
   const std::set<std::string> containers = query::ClassFilter::containers(model_, selected);
   auto up = [](const std::string& s) { return model::Scope(model::Scope(s).outer().text()).box().text(); };

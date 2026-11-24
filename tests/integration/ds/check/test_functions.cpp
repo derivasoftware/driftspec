@@ -27,7 +27,7 @@ class TestFunctions : public ::testing::Test {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     for (const auto& f : model.findings()) ++byCode[f.code];
   }

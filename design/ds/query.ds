@@ -148,9 +148,9 @@ package driftspec@ds {
     }
 
     // the one place that names the filter of each kind of diagram, built from the diagram's fields and read in the
-    // metamodel (DS-385), as Steps names the steps of the check (DS-382): what asks what a diagram takes asks it here,
+    // metamodel (DS-385), as StepFactory names the steps of the check (DS-382): what asks what a diagram takes asks it here,
     // and never names a filter itself
-    class Filters {
+    class FilterFactory {
       @requirement REQ-00003-2
       @requirement REQ-00200-1
       + static of(metamodel: model::Metamodel, diagram: model::Entity) -> std::unique_ptr<IFilter>
@@ -449,7 +449,7 @@ package driftspec@ds {
       opt no diagram has that name / no-such-diagram {
         return error
       }
-      -> Filters::of(metamodel_, entity) -> filter
+      -> FilterFactory::of(metamodel_, entity) -> filter
       -> select(filter) -> ids
       loop each id {
         self -> model_.find(id) -> taken

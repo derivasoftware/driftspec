@@ -35,7 +35,7 @@ class TestManual : public ::testing::Test {
     std::vector<std::string> out;
     if (file.hasSyntaxErrors) out.push_back("E-SYNTAX at " + std::to_string(file.errorLine) + ":" + std::to_string(file.errorColumn));
     binder.bind(file);
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     for (const auto& f : model.findings()) out.push_back(f.code + " " + f.message);
     return out;

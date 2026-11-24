@@ -52,8 +52,8 @@ class Binder {
   FormulaBinder formulas_;
   MemberBodyBinder bodies_{fields_, annotations_};
   MemberBinder members_{types_, signatures_, bodies_};
-  // the node binders, held as what they are to the binder: each binds the kinds it takes; only the constructor
-  // names the concrete ones (DS-365)
+  // the node binders, held as what they are to the binder: each binds the kinds it takes; NodeBinderFactory names
+  // the concrete ones (DS-365, DS-404)
   std::vector<std::unique_ptr<INodeBinder>> binders_;
   std::optional<Dispatch> dispatch_;  // built from the grammar of the first file: a workspace is read by one grammar
 };

@@ -27,7 +27,7 @@ std::vector<std::string> codesOf(const std::string& text, const std::string& ste
   const auto file = parser.parseText("a.ds", text);
   EXPECT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  auto all = ds::check::Steps::of();
+  auto all = ds::check::StepFactory::of();
   std::map<std::string, std::unique_ptr<ds::check::IStep>> chosen;
   std::vector<std::string> pending{step};
   while (!pending.empty()) {  // the step and every step it needs, nothing else

@@ -27,7 +27,7 @@ class TestUses : public ::testing::Test {
       ASSERT_FALSE(parsed.hasSyntaxErrors) << f.first << ": " << parsed.errorDetail;
       binder.bind(parsed);
     }
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 

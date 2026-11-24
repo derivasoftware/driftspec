@@ -36,7 +36,7 @@ TEST(TestIrExport, ItListsTheDiagramsAndExportsEachAsItsIr) {
   binder.bind(parser.parseText("a.ds",
                                "package p {\n  module m {\n    class A {\n      - b: B\n    }\n    class B { }\n  }\n}\n"
                                "diagram CL_M {\n  kind: class\n  include: p@m::*\n}\n"));
-  const auto steps = ds::check::Steps::of();
+  const auto steps = ds::check::StepFactory::of();
   ds::check::Checker(model, metamodel, steps).run(binder.notes());
   const ds::render::IrExport ir(model, metamodel);
   EXPECT_EQ(ir.diagrams(), (std::vector<std::string>{"diagram:CL_M"}));

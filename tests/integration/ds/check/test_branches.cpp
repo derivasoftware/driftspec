@@ -28,7 +28,7 @@ class TestBranches : public ::testing::Test {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::Steps::of();
+    const auto checkSteps = ds::check::StepFactory::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
   }
