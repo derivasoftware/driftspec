@@ -6,6 +6,15 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.56
+
+The machine is written as requirements held by rules (DS-367): every operation of the machine is a member of the class
+whose responsibility it is, and the machine reads the model it reads a state machine from and leaves it as it is. What
+its source hid is now classes of the machine: the lists the binder writes into a field (`WrittenFields`), a condition
+of a state's rule (`Literal`), the rules and the jumps of a machine (`StateRule`, `Jump`), what its subject holds
+(`Subject`), what each name of a context may be worth (`Context`) and the walk of the behaviours for the calls of its
+events (`Calls`). Nothing a design writes, no finding, export or drawing changes.
+
 ## 0.1.55
 
 The viewer's test that a behaviour is written once and replayed by many tours runs on a fixture made for it (DS-377):
