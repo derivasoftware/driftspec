@@ -24,8 +24,7 @@ class TestMetamodelConformance : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(dir)) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     return model;
   }
 
@@ -127,8 +126,7 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
                                "    priority: high\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   std::vector<std::string> unknown;
   for (const auto& f : model.findings()) {
     if (f.code == "W-FIELD-UNKNOWN") unknown.push_back(f.message);
@@ -161,8 +159,7 @@ TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAn
                                "diagram SEQ_X {\n"
                                "  kind: sequense\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   std::vector<std::string> wrong;
   for (const auto& f : model.findings())
     if (f.code == "W-FIELD-VALUE") wrong.push_back(f.message);
@@ -182,8 +179,7 @@ TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNo
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText(
         "a.ds", "package p {\n  interface engine {\n    kind: library\n  }\n  module m {\n    class Api" + base + "\n  }\n}\n"));
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     return model;
   };
   const ds::model::Model wrong = check(" : engine { }");  // DS-93: a class that names an interface as its base

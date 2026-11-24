@@ -23,8 +23,7 @@ class TestVisibility : public ::testing::Test {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
   }
 
@@ -98,8 +97,7 @@ TEST(TestVisibilityAlone, APublicOperatorThatShowsAPrivateTypeIsALeak) {
                                      "}\n");
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   std::vector<std::string> leaks;
   for (const auto& f : model.findings())
     if (f.code == "W-PRIVATE-LEAK") leaks.push_back(f.message);

@@ -22,11 +22,10 @@ std::vector<std::string> StructureCheck::needs() const {
   return {"linker", "behaviour", "derivation"};
 }
 
-std::vector<model::Finding> StructureCheck::check(const Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  metamodel_ = &context.metamodel();
-  resolver_ = &context.resolver();
+StructureCheck::StructureCheck(const Context& context)
+    : context_(&context), model_(&context.model()), metamodel_(&context.metamodel()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> StructureCheck::check() {
   found_.clear();
   checkOwnershipCycles();
   checkCycles("refines", model::Code::E_REFINES_CYCLE, "refines");

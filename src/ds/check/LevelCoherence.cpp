@@ -90,8 +90,10 @@ std::vector<int> LevelCoherence::placed(const std::vector<Crossing>& said, const
   return out;
 }
 
-std::vector<model::Finding> LevelCoherence::check(const Context& context) {
-  const model::Model& model = context.model();
+LevelCoherence::LevelCoherence(const Context& context) : context_(&context) {}
+
+std::vector<model::Finding> LevelCoherence::check() {
+  const model::Model& model = context_->model();
   const model::Paths paths(model);
   std::vector<model::Finding> found;
   for (const auto& pair : model.entities()) {
@@ -146,7 +148,7 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
       const std::string says = scenario.name + " has " + c.from + " send " + c.label + " to " + c.to;
       // a sender is known below when something is seen to happen in it and every call made in it is written
       if (!below.entered.count(c.from) || below.open.count(c.from)) {
-        found.push_back(context.metamodel().finding(
+        found.push_back(context_->metamodel().finding(
             model::Code::W_LEVEL_NOT_BELOW,
             says + ", which the behaviour below it (" + through + ") does not show yet: what " + c.from + " does is not all written",
             c.location));
@@ -160,10 +162,10 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
         elsewhere = elsewhere || !taken.count(static_cast<int>(j));
       }
       if (elsewhere) {
-        found.push_back(context.metamodel().finding(
+        found.push_back(context_->metamodel().finding(
             model::Code::W_LEVEL_ORDER, says + " here, and the behaviour below it (" + through + ") does it in another order", c.location));
       } else {
-        found.push_back(context.metamodel().finding(
+        found.push_back(context_->metamodel().finding(
             model::Code::W_LEVEL_NO_CROSSING,
             says + ", and the behaviour below it (" + through + ") " + (atAll ? "does not do it that many times" : "never does"),
             c.location));

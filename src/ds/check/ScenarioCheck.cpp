@@ -26,11 +26,10 @@ std::vector<std::string> ScenarioCheck::needs() const {
   return {"linker", "behaviour", "failures"};
 }
 
-std::vector<model::Finding> ScenarioCheck::check(const Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  metamodel_ = &context.metamodel();
-  resolver_ = &context.resolver();
+ScenarioCheck::ScenarioCheck(const Context& context)
+    : context_(&context), model_(&context.model()), metamodel_(&context.metamodel()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> ScenarioCheck::check() {
   found_.clear();
   checkScenarios();
   std::vector<model::Finding> out;

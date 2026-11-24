@@ -26,8 +26,7 @@ class TestSceneOrderOfModules : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("order.ds", text));
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     const ds::scene::SceneDocument doc = ds::scene::Scene(model, metamodel).build();
     std::vector<std::string> out;
     for (const auto& n : doc.nodes)

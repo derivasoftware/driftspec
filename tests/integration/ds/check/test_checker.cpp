@@ -20,8 +20,7 @@ class TestChecker : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     std::map<std::string, int> byCode;
     for (const auto& f : model.findings()) ++byCode[f.code];
     return byCode;
@@ -53,8 +52,9 @@ TEST_F(TestChecker, ResolvesInnermostScopeFirst) {
   ds::parse::Parser parser;
   ds::bind::Binder binder(model, metamodel);
   binder.bind(parser.parseText("t.ds", "package p { module a { class X { } module b { class Y : X { } } } }"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker checker(model, metamodel, checkSteps);
+  ds::check::Context context(model, metamodel);
+  const auto checkSteps = ds::check::StepFactory::of(context);
+  ds::check::Checker checker(context, checkSteps);
   checker.run(binder.notes());
   EXPECT_EQ(checker.resolver().resolve("X", "p@a::b"), "p@a::X");
   EXPECT_EQ(model.findings().size(), 0u);

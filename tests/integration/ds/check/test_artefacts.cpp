@@ -25,8 +25,7 @@ class TestArtefacts : public ::testing::Test {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     for (const auto& f : model.findings()) ++byCode[f.code];
     for (const auto& f : model.coverage()) ++byCode[f.code];  // what is not yet written, kept apart (DS-216)
   }

@@ -57,8 +57,7 @@ class TestCut : public ::testing::Test {
         "diagram Gnir {\n  kind: class\n  include: shop@*\n  cut: Ring\n  close: package\n}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto steps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, steps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   ds::axis::Cut cut(const std::string& diagram) const { return ds::axis::Cut(model, metamodel, *model.find("diagram:" + diagram)); }

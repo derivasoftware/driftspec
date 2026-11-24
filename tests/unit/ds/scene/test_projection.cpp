@@ -51,8 +51,7 @@ class TestProjection : public ::testing::Test {
                                  "    }\n"
                                  "  }\n"
                                  "}\n"));
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   static const Frame& only(const std::vector<Frame>& frames, const std::string& id) {

@@ -26,11 +26,10 @@ std::vector<std::string> FailureCheck::needs() const {
   return {"linker", "behaviour", "failures"};
 }
 
-std::vector<model::Finding> FailureCheck::check(const Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  metamodel_ = &context.metamodel();
-  resolver_ = &context.resolver();
+FailureCheck::FailureCheck(const Context& context)
+    : context_(&context), model_(&context.model()), metamodel_(&context.metamodel()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> FailureCheck::check() {
   found_.clear();
   checkHandlers();
   for (const auto& pair : model_->entities()) {

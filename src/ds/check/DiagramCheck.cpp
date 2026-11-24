@@ -26,11 +26,10 @@ std::vector<std::string> DiagramCheck::needs() const {
   return {"linker", "behaviour", "failures"};
 }
 
-std::vector<model::Finding> DiagramCheck::check(const Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  metamodel_ = &context.metamodel();
-  resolver_ = &context.resolver();
+DiagramCheck::DiagramCheck(const Context& context)
+    : context_(&context), model_(&context.model()), metamodel_(&context.metamodel()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> DiagramCheck::check() {
   found_.clear();
   checkDiagrams();
   std::vector<model::Finding> out;

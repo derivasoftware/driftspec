@@ -31,8 +31,7 @@ class TestFilters : public ::testing::Test {
     const auto file = parser.parseText("f.ds", text);
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto steps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, steps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   Ids of(const std::string& diagram) {

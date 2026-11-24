@@ -30,8 +30,7 @@ class TestOpenBoxes : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/visibility")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   nlohmann::json diagram(const std::string& name) {
@@ -100,8 +99,7 @@ TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
   ds::parse::Parser parser;
   ds::bind::Binder binder(plain, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(plain, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(plain, metamodel)->run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(plain, metamodel).render("diagram:CL_Model", false));
   EXPECT_EQ(ir["nodes"][0]["kind"], "container");
 }
@@ -112,8 +110,7 @@ TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawin
   ds::parse::Parser parser;
   ds::bind::Binder binder(shop, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/interfaces")) binder.bind(f);
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(shop, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(shop, metamodel)->run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(shop, metamodel).render("diagram:HLD_Shop", false));
   bool reached = false;
   for (const auto& e : ir["edges"]) reached = reached || (e["from"] == "shop@shell" && e["to"] == "shop@till");
@@ -162,8 +159,7 @@ TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramD
                                "  kind: requirement\n"
                                "  include: shop@empty::*\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:REQ_Store", false));
   bool requirement = false;
   for (const auto& n : ir["nodes"]) requirement = requirement || n["id"] == "REQ-00001-1";
@@ -193,8 +189,7 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
                                "  kind: class\n"
                                "  include: shop@*\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:HLD_Shop", false));
   std::map<std::string, std::string> parentOf;
   for (const auto& n : ir["nodes"]) parentOf[n["id"]] = n.contains("parent") ? n["parent"].get<std::string>() : "";
@@ -243,8 +238,7 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
                                "  include: shop@*\n"
                                "  open: shop@front, shop@front@web, shop@back, shop@back@store\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   const auto edges = [&model, &metamodel](const std::string& d) {
     std::set<std::string> out;
     const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + d, false));
@@ -289,8 +283,7 @@ class TestDepthTooLarge : public ::testing::Test {
                                        "}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   /// The W-DIAGRAM-DEPTH findings that name a diagram.
@@ -349,8 +342,7 @@ class TestPastTheReach : public ::testing::Test {
     const auto parsed = parser.parseText(file, text);
     ASSERT_FALSE(parsed.hasSyntaxErrors) << parsed.errorDetail;
     binder.bind(parsed);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   Drawn draw(const std::string& diagram) const {
