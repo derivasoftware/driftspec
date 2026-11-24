@@ -5,22 +5,11 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
 namespace axis {
-
-/// What stands for an id among a set of boxes: the outermost of them around it, or the id when it is one of
-/// them; empty when none of them holds it. The one way anything is lifted onto a cut: the cut of a diagram,
-/// and the participants of a scenario written between boxes (DS-233).
-std::string standsAmong(const std::string& id, const std::set<std::string>& boxes);
-
-/// How a relation reads between two boxes, once what they hold is not looked at (DS-230): "structural" (one
-/// owns, refers to, derives from or realises something of the other), "uses" (it names a type of the other,
-/// calls it, sends it a message or declares its use), or empty when it is no relation between boxes. Two
-/// bonds and no more: lifted, the kinds of a relation between classes do not weigh the same, and more than
-/// two would be noise between boxes.
-std::string bondOf(const std::string& relation);
 
 /// The cut of a diagram (DS-229): a set of boxes none of which holds another. Every entity below it
 /// has one representative on it, the outermost closed box around it, and what is above it stays open.
@@ -49,8 +38,33 @@ class Cut {
   std::string standsFor(const std::string& id) const;
   /// Whether a sequence follows a call into the behaviour of `operation`, `left` levels of its depth being left.
   bool follows(const std::string& operation, int left) const;
+  /// What stands for an id among a set of boxes: the outermost of them around it, or the id when it is one of
+  /// them; empty when none of them holds it. The one way anything is lifted onto a cut: the cut of a diagram,
+  /// and the participants of a scenario written between boxes (DS-233).
+  static std::string standsAmong(const std::string& id, const std::set<std::string>& boxes);
+
+  /// How a relation reads between two boxes, once what they hold is not looked at (DS-230): "structural" (one
+  /// owns, refers to, derives from or realises something of the other), "uses" (it names a type of the other,
+  /// calls it, sends it a message or declares its use), or empty when it is no relation between boxes. Two
+  /// bonds and no more: lifted, the kinds of a relation between classes do not weigh the same, and more than
+  /// two would be noise between boxes.
+  static std::string bondOf(const std::string& relation);
 
  private:
+  /// The box outside an id.
+  static std::string outerOf(const std::string& id);
+  /// The boxes from the outermost one down to the id.
+  static std::vector<std::string> pathTo(const std::string& id);
+  /// A box that holds others and can close: a module, or a package below the outermost one.
+  static bool closes(const model::Entity& e);
+  /// Whether a pattern names a box: its identity, a prefix of it with *, or its kind.
+  static bool names(const model::Metamodel& metamodel, const std::string& pattern, const model::Entity& box);
+  /// Whether one of the patterns names the box.
+  static bool namedBy(const model::Metamodel& metamodel, const std::vector<std::string>& patterns, const model::Entity& box);
+  /// Whether a pattern reaches a call: its operation, a prefix of it with * (`*` alone is every call), or a box
+  /// or a class the operation lives in.
+  static bool reaches(const std::vector<std::string>& patterns, const std::string& operation);
+
   bool written_ = false;
   std::set<std::string> closed_;
   std::vector<std::string> unfold_;

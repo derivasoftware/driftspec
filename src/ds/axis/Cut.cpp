@@ -9,36 +9,30 @@
 namespace ds {
 namespace axis {
 
-namespace {
+std::string Cut::outerOf(const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); }
 
-std::string outerOf(const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); }  // the box outside
-
-std::vector<std::string> pathTo(const std::string& id) {  // from the outermost box down to the id
+std::vector<std::string> Cut::pathTo(const std::string& id) {
   std::vector<std::string> path;
   for (std::string s = id; !s.empty(); s = outerOf(s)) path.insert(path.begin(), s);
   return path;
 }
 
-/// A box that holds others and can close: a module, or a package below the outermost one.
-bool closes(const model::Entity& e) {
+bool Cut::closes(const model::Entity& e) {
   return !e.expected && (e.kind == model::Kind::Module || (e.kind == model::Kind::Package && !e.scope.empty()));
 }
 
-/// Whether a pattern names a box: its identity, a prefix of it with *, or its kind.
-bool names(const model::Metamodel& metamodel, const std::string& pattern, const model::Entity& box) {
+bool Cut::names(const model::Metamodel& metamodel, const std::string& pattern, const model::Entity& box) {
   if (pattern == box.id || pattern == metamodel.nameOf(box.kind)) return true;
   return !pattern.empty() && pattern.back() == '*' && box.id.compare(0, pattern.size() - 1, pattern, 0, pattern.size() - 1) == 0;
 }
 
-bool namedBy(const model::Metamodel& metamodel, const std::vector<std::string>& patterns, const model::Entity& box) {
+bool Cut::namedBy(const model::Metamodel& metamodel, const std::vector<std::string>& patterns, const model::Entity& box) {
   for (const auto& p : patterns)
     if (names(metamodel, p, box)) return true;
   return false;
 }
 
-/// Whether a pattern reaches a call: its operation, a prefix of it with * (`*` alone is every call), or a box
-/// or a class the operation lives in.
-bool reaches(const std::vector<std::string>& patterns, const std::string& operation) {
+bool Cut::reaches(const std::vector<std::string>& patterns, const std::string& operation) {
   for (const auto& p : patterns) {
     if (p == operation) return true;
     if (!p.empty() && p.back() == '*' && operation.compare(0, p.size() - 1, p, 0, p.size() - 1) == 0) return true;
@@ -46,8 +40,6 @@ bool reaches(const std::vector<std::string>& patterns, const std::string& operat
   }
   return false;
 }
-
-}  // namespace
 
 Cut::Cut(const model::Model& model, const model::Metamodel& metamodel, const model::Entity& diagram)
     : unfold_(text::splitTrimmed(diagram.field("unfold"), ',')),
@@ -81,7 +73,7 @@ Cut::Cut(const model::Model& model, const model::Metamodel& metamodel, const mod
   }
 }
 
-std::string bondOf(const std::string& relation) {
+std::string Cut::bondOf(const std::string& relation) {
   for (const char* structural : {"owns", "refs", "shares", "inherits", "realises"})
     if (relation == structural) return "structural";
   for (const char* use : {"uses", "bounded-by", "consumes", "calls", "sends", "couples-transient", "couples-structural"})
@@ -89,7 +81,7 @@ std::string bondOf(const std::string& relation) {
   return "";
 }
 
-std::string standsAmong(const std::string& id, const std::set<std::string>& boxes) {
+std::string Cut::standsAmong(const std::string& id, const std::set<std::string>& boxes) {
   for (const auto& step : pathTo(id)) {
     if (boxes.count(step)) return step;
   }

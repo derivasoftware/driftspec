@@ -128,7 +128,9 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
         if (!m->field(end).empty()) participants.insert(m->field(end));
     }
     // what stands for anything below, or nothing when it is outside what the scenario shows
-    const auto on = [&participants](const std::string& id) { return id.empty() ? std::string() : axis::standsAmong(id, participants); };
+    const auto on = [&participants](const std::string& id) {
+      return id.empty() ? std::string() : axis::Cut::standsAmong(id, participants);
+    };
 
     // what it says crosses, and the operations it is asked through: a message nobody sends comes from outside
     std::vector<Crossing> said;
