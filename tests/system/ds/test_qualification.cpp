@@ -20,6 +20,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -125,6 +126,22 @@ TEST_F(TestQualification, TheCheckJsonSaysTheFindingsAndTheCounts) {
   EXPECT_EQ(check.code, 1);
 }
 
+// DS-431: a check that says nothing of the coverage reads as a design done; it says how much is open and where it is
+// listed, never fails for it, and says nothing more when nothing is open
+TEST_F(TestQualification, TheCheckSaysHowMuchCoverageIsOpenAndWhereItIsListed) {
+  std::vector<std::string> lines;
+  const Outcome open = ds("check " + examples("diag"));
+  std::istringstream text(open.out);
+  for (std::string l; std::getline(text, l);) lines.push_back(l.empty() || l.back() != '\r' ? l : l.substr(0, l.size() - 1));
+  ASSERT_GE(lines.size(), 2u);
+  EXPECT_NE(lines[lines.size() - 2].find(" findings · 3 open"), std::string::npos) << lines[lines.size() - 2];
+  EXPECT_EQ(lines.back(), "3 open items of coverage: ds query " + examples("diag") + " coverage lists them");
+  EXPECT_EQ(open.code, 0);  // coverage is no finding: it never fails the check
+  const Outcome clean = ds("check " + examples("branches"));
+  EXPECT_EQ(clean.out.find("open"), std::string::npos) << clean.out;
+  EXPECT_EQ(clean.code, 0);
+}
+
 // SREQ-00002-1: a file that does not parse is a finding like any other, whatever the text it quotes (DS-334)
 TEST_F(TestQualification, ASyntaxErrorQuotingAWideCharacterComesBackAsJson) {
   const std::string tmp = scratch("ds-wide-quote");
@@ -134,6 +151,46 @@ TEST_F(TestQualification, ASyntaxErrorQuotingAWideCharacterComesBackAsJson) {
   const auto out = nlohmann::json::parse(check.out);
   ASSERT_FALSE(out["findings"].empty());
   EXPECT_EQ(out["findings"][0]["code"], "E-SYNTAX");
+}
+
+// SREQ-00002-1: a file that is not UTF-8 is a finding at its first such byte, and every command still writes (DS-411):
+// a Latin-1 é once checked clean while export, render -f json and query --json failed naming no file
+TEST_F(TestQualification, AFileThatIsNotUtf8IsAFindingAtItsByteAndEveryCommandStillWrites) {
+  const std::string tmp = scratch("ds-latin1");
+  std::ofstream(tmp + "/latin1.ds", std::ios::binary)
+      << "package p {\n  requirement REQ-00001-1 {\n    status: draft\n    title: caf\xe9 latin1\n  }\n}\n";
+  std::ofstream(tmp + "/good.ds", std::ios::binary) << "package q {\n  module n {\n    class C {\n      bogus: field\n    }\n  "
+                                                       "}\n}\n\ndiagram CL_Q {\n  kind: class\n  include: q@n::*\n}\n";
+  const Outcome text = ds("check " + tmp);
+  EXPECT_EQ(text.code, 1) << text.out;
+  EXPECT_NE(text.out.find("latin1.ds:4:15"), std::string::npos) << text.out;
+  EXPECT_NE(text.out.find("E-ENCODING"), std::string::npos) << text.out;
+
+  const Outcome check = ds("check --json " + tmp);
+  EXPECT_EQ(check.code, 1) << check.out;
+  bool encoding = false, other = false;
+  const auto report = nlohmann::json::parse(check.out);
+  for (const auto& f : report["findings"]) {
+    encoding |= f["code"] == "E-ENCODING" && f["location"]["line"] == 4 && f["location"]["column"] == 15 &&
+                f["location"]["file"].get<std::string>().find("latin1.ds") != std::string::npos;
+    other |= f["code"] == "W-FIELD-UNKNOWN" && f["location"]["file"].get<std::string>().find("good.ds") != std::string::npos;
+  }
+  EXPECT_TRUE(encoding) << check.out;
+  EXPECT_TRUE(other) << check.out;  // the other file is checked as usual
+
+  // what reaches a writer is UTF-8: each command writes, and what it writes reads as JSON
+  for (const std::string& args :
+       {"export " + tmp, "render " + tmp + " -f json", "query " + tmp + " findings --json", "query " + tmp + " entities q --json"}) {
+    const Outcome run = ds(args);
+    EXPECT_EQ(run.code, 0) << args;
+    EXPECT_TRUE(nlohmann::json::accept(run.out)) << args << ": " << run.out.substr(0, 200);
+  }
+  EXPECT_NE(ds("export " + tmp).out.find("E-ENCODING"), std::string::npos);
+  EXPECT_NE(ds("query " + tmp + " findings --json").out.find("E-ENCODING"), std::string::npos);
+  const Outcome svg = ds("render " + tmp + " CL_Q -f svg");
+  EXPECT_EQ(svg.code, 0);
+  EXPECT_NE(svg.out.find("<svg"), std::string::npos);
+  std::filesystem::remove_all(tmp);
 }
 
 TEST_F(TestQualification, ArtefactsAreLinkedByRevision) {

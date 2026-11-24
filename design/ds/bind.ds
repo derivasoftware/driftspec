@@ -58,7 +58,7 @@ package driftspec@ds {
     requirement REQ-00171-1 {
       tags: architecture, bind
       status: approved
-      @refines REQ-00053-2
+      @refines REQ-00053-3
       title: The binder shall bind each construct of the language through a binder of its own, reached through one interface
       text:
         A node binder takes the kinds of node of one construct and binds one of them. The binder reaches every one
@@ -81,7 +81,7 @@ package driftspec@ds {
     requirement REQ-00172-1 {
       tags: architecture, bind
       status: approved
-      @refines REQ-00053-2
+      @refines REQ-00053-3
       title: Every binder shall write into the model through the bind context
       text:
         A node binder and a part declare, relate, annotate and note through the context they are given, which holds
@@ -102,7 +102,7 @@ package driftspec@ds {
     requirement REQ-00173-1 {
       tags: architecture, bind
       status: approved
-      @refines REQ-00053-2
+      @refines REQ-00053-3
       title: Every operation of the binder shall be a member of the class whose responsibility it is
       text:
         What binds a construct is its node binder's, what several share is a part's, what reads the tree is the
@@ -166,7 +166,7 @@ package driftspec@ds {
 
     class Binder {                           // builds the binders and their table once, then binds each file through it (DS-355)
       @requirement REQ-00171-1
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       @requirement REQ-00021-1
       @requirement REQ-00110-1
       @requirement REQ-00112-1
@@ -361,7 +361,7 @@ package driftspec@ds {
     class BindContext {                      // what binding one node is given; the only place it writes (DS-354)
       @requirement REQ-00199-1
       @requirement REQ-00172-1
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       + BindContext(model: model::Model, notes: Notes, reader: parse::TreeReader, metamodel: model::Metamodel, dispatch: Dispatch, scope: std::string, owner: std::string)   // given whole (DS-424)
       + refs model: model::Model
       + refs notes: Notes
@@ -385,7 +385,7 @@ package driftspec@ds {
       + noteEvent(event: Event) -> void
     }
     class Notes {                            // what binding leaves for the checker, the only thing it reads of bind (DS-354)
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       + owns references: std::vector<Reference>
       + owns messages: std::vector<Message>
       + owns events: std::vector<Event>
@@ -406,7 +406,7 @@ package driftspec@ds {
     }
     class Dispatch {                         // which binder binds a node: one slot per grammar symbol, built once (DS-355)
       @requirement REQ-00171-1
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       - refs bySymbol_: std::vector<const INodeBinder*>
       + Dispatch(language: TSLanguage, binders: std::vector<const INodeBinder*>)
       + of(node: TSNode) -> INodeBinder
@@ -426,7 +426,7 @@ package driftspec@ds {
     }
     class INodeBinder {                      // what binds one construct: the kinds it takes, and one node bound (DS-355)
       @requirement REQ-00171-1
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       + ~INodeBinder()
       + abstract kinds() -> std::vector<std::string>
       + abstract bind(node: TSNode, ctx: BindContext) -> void
@@ -457,7 +457,7 @@ package driftspec@ds {
       }
     }
     class ExtensionBinder {                  // a block of annotations only adds them to what is defined elsewhere (DS-356)
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       - refs annotations_: AnnotationBinder
       + ExtensionBinder(annotations: AnnotationBinder)
       + static extends(body: TSNode, idNode: TSNode) -> bool

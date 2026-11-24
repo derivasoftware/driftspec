@@ -63,6 +63,36 @@ TEST_F(TestParser, AFileThatParsesHasNoErrorPlace) {
   EXPECT_EQ(file.errorLine, 0);
 }
 
+TEST_F(TestParser, AFileThatIsNotUtf8IsMarkedAtTheLineAndColumnOfItsFirstSuchByte) {
+  // DS-411: a Latin-1 é once checked clean and failed every JSON output; it is marked where it is, and read no further
+  ds::parse::Parser parser;
+  const auto file = parser.parseText("x.ds", "package p {\n  requirement REQ-00001-1 {\n    title: caf\xe9 latin1\n  }\n}\n");
+  EXPECT_TRUE(file.hasEncodingError);
+  EXPECT_FALSE(file.hasSyntaxErrors);
+  EXPECT_EQ(file.errorLine, 3);
+  EXPECT_EQ(file.errorColumn, 15);  // "    title: caf" is 14 bytes before it
+  EXPECT_EQ(file.errorDetail, "byte 0xE9 is not part of a character");
+  EXPECT_TRUE(file.text.empty());  // nothing of it reaches the model
+  ASSERT_TRUE(file.tree);
+  EXPECT_EQ(ts_node_child_count(ts_tree_root_node(file.tree.get())), 0u);
+
+  // the column counts bytes, as a syntax error's does: a character of two bytes before it on its line is two columns
+  const auto wide = parser.parseText("w.ds", "// \xc3\xa9\xff\n");
+  EXPECT_EQ(wide.errorLine, 1);
+  EXPECT_EQ(wide.errorColumn, 6);
+  EXPECT_EQ(wide.errorDetail, "byte 0xFF is not part of a character");
+  // a file written on Windows: its carriage returns end no line and move no column
+  const auto crlf = parser.parseText("c.ds", "package p {\r\n  \x80\r\n}\r\n");
+  EXPECT_EQ(crlf.errorLine, 2);
+  EXPECT_EQ(crlf.errorColumn, 3);
+  // the first byte of the text
+  const auto first = parser.parseText("f.ds", "\xc0\x80package p { }\n");
+  EXPECT_EQ(first.errorLine, 1);
+  EXPECT_EQ(first.errorColumn, 1);
+  // a file that is UTF-8 is not marked
+  EXPECT_FALSE(parser.parseText("u.ds", "package p { }  // caf\xc3\xa9\n").hasEncodingError);
+}
+
 TEST_F(TestParser, WhatTheGrammarTakesAtAPlaceFollowsTheTokenBeforeIt) {
   ds::parse::Parser parser;
   const auto inModule = parser.expectedAt("package p {\n  module m {\n    \n  }\n}\n", 2, 4);

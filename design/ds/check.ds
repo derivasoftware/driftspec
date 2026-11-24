@@ -53,7 +53,7 @@ package driftspec@ds {
     requirement REQ-00194-1 {
       tags: architecture, check
       status: approved
-      @refines REQ-00053-2
+      @refines REQ-00053-3
       title: The checker shall run each step of the check through IStep, and no step shall know another
       text:
         The checker is handed the steps, keyed by name, and runs each one after the steps it needs, knowing each only
@@ -78,7 +78,7 @@ package driftspec@ds {
     requirement REQ-00195-1 {
       tags: architecture, check
       status: approved
-      @refines REQ-00053-2
+      @refines REQ-00053-3
       title: Every operation of the check shall be a member of the class whose responsibility it is
       text:
         What a step checks is the step's, what resolves a name is the resolver's, what decides a rule is one of the
@@ -385,7 +385,7 @@ package driftspec@ds {
 
     // The check module's entry point (DS-138): what the rest of ds asks of a check.
     class IChecker {
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       + ~IChecker()
       + abstract run(notes: bind::Notes) -> void
     }
@@ -393,7 +393,7 @@ package driftspec@ds {
     // The one place that makes the checker (DS-404): what asks for a check holds it as the IChecker it is.
     class CheckerFactory {
       @requirement REQ-00197-1
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       + static make(model: model::Model, metamodel: model::Metamodel, selection: Selection) -> std::unique_ptr<IChecker>
     }
 
@@ -401,7 +401,7 @@ package driftspec@ds {
     // that runs them, so what the factory hands back lives as long as it is held.
     class SelectedChecker : IChecker {
       @requirement REQ-00199-1
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       - owns context_: Context
       - owns many steps_: std::map<std::string, std::unique_ptr<IStep>>
       - owns checker_: Checker
@@ -413,7 +413,7 @@ package driftspec@ds {
     // context and adds what each found to the model when it ends. The map is built outside and
     // outlives it.
     class Checker : IChecker {               // realises the language step by step: each step names its requirements
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       @requirement REQ-00012-1
       - refs context_: Context                // the model, its language and the resolver, reset for each run (DS-425)
       - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
@@ -468,7 +468,7 @@ package driftspec@ds {
 
     class Linker : IStep {                // references become relations, behaviours take their subject's identity
       @requirement REQ-00043-1
-      @requirement REQ-00053-2
+      @requirement REQ-00053-3
       + Linker(context: Context)                 // given what it reads once, when it is made (DS-425)
       @constraint CST-00006-1
       @constraint CST-00003-2
@@ -484,7 +484,7 @@ package driftspec@ds {
       + run() -> std::vector<model::Finding>
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
-        @requirement REQ-00053-2
+        @requirement REQ-00053-3
         @constraint CST-00006-1
       }
       - reportAmbiguous(reference: bind::Reference) -> bool {  // a bare name two classes share, said once (DS-325)

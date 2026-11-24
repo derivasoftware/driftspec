@@ -6,7 +6,7 @@ package driftspec@ds {
   requirement REQ-00197-1 {
     tags: architecture, conventions
     status: draft
-    @refines REQ-00053-2
+    @refines REQ-00053-3
     title: What a class of the engine is named shall say what it is: a pure interface I and a capital, an abstract class A and a capital, a factory its product and Factory
     text:
       A pure interface declares abstract members and nothing concrete; a class with both abstract and concrete
@@ -30,7 +30,7 @@ package driftspec@ds {
   requirement REQ-00198-1 {
     tags: architecture, conventions
     status: draft
-    @refines REQ-00053-2
+    @refines REQ-00053-3
     title: A class of a family shall be reached through the family's interface by every class but its own family and the factories
     text:
       A family is the classes that implement a pure interface, directly or through a class between. Outside the
@@ -52,7 +52,7 @@ package driftspec@ds {
   requirement REQ-00199-1 {
     tags: architecture, conventions
     status: draft
-    @refines REQ-00053-2
+    @refines REQ-00053-3
     title: What a class refers to shall be given to its constructor, itself or inside what it is given
     text:
       A class that holds a reference to something takes it when it is made, as a parameter of its constructor or held

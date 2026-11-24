@@ -88,6 +88,25 @@ class TestCheck:
         finding = report.findings[0]
         assert finding.code == "E-SYNTAX" and finding.location.file == "x.ds" and finding.location.line == 2
 
+    def test_a_file_that_is_not_utf8_is_the_engines_finding_where_it_is(self, tmp_path):
+        # DS-411: a Latin-1 é; Python hands the engine the bytes, and the engine says where they stop being UTF-8
+        latin1 = b"package p {\n  requirement REQ-00001-1 {\n    status: draft\n    title: caf\xe9 latin1\n  }\n}\n"
+        (tmp_path / "p.ds").write_bytes(latin1)
+        for source in ({"p.ds": latin1}, tmp_path):
+            report = driftspec.check(source)
+            assert report.errors == 1
+            (finding,) = report.findings
+            assert finding.code == "E-ENCODING" and finding.location.file.endswith("p.ds")
+            assert (finding.location.line, finding.location.column) == (4, 15)
+        model = driftspec.load(tmp_path)  # the model and the export are written: nothing of the file reached them
+        assert model.find("REQ-00001-1") is None and model.findings[0].code == "E-ENCODING"
+
+    def test_bytes_and_str_load_alike(self):
+        text = "package p {\n  requirement REQ-00001-1 {\n    status: draft\n    title: caf\u00e9\n  }\n}\n"
+        as_str, as_bytes = driftspec.load({"a.ds": text}), driftspec.load({"a.ds": text.encode()})
+        assert as_str.find("REQ-00001-1").fields["title"] == as_bytes.find("REQ-00001-1").fields["title"] == "caf\u00e9"
+        assert set(as_str.entities) == set(as_bytes.entities) and not as_str.findings and not as_bytes.findings
+
 
 class TestDrawing:
     def test_a_diagram_draws_as_text_and_none_draws_nothing(self, hola):

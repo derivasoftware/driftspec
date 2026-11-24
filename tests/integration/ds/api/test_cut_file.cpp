@@ -45,4 +45,32 @@ TEST_F(TestCutFile, WhatOnlyEchoesTheCutGoesAndTheOtherFilesKeepTheirFindings) {
   EXPECT_FALSE(echo);
 }
 
+TEST_F(TestCutFile, AFileThatIsNotUtf8IsSaidOnceAndWhatOnlyEchoesItGoes) {
+  // DS-411: a.ds, with a Latin-1 é, declares the requirement b.ds names and breaks a rule of its own; nothing of it is
+  // read, so the name b.ds gives is declared nowhere and its field goes unread: only echoes of the cut
+  const std::string latin1 =
+      "package p {\n  requirement REQ-00001-1 {\n    title: caf\xe9\n  }\n  module m {\n    class A {\n      bogus: field\n    }\n  }\n}\n";
+  const std::string other = "package q {\n  module n {\n    class C {\n      @requirement REQ-00001-1\n      bogus: field\n    }\n  }\n}\n";
+  const ds::api::Files files{{"a.ds", latin1}, {"b.ds", other}};
+  int encoding = 0;
+  bool own = false, echo = false;
+  for (const auto& f : findings(files)) {
+    if (f["code"] == "E-ENCODING") {
+      ++encoding;
+      EXPECT_EQ(f["location"]["file"], "a.ds");
+      EXPECT_EQ(f["location"]["line"], 3);
+      EXPECT_EQ(f["location"]["column"], 15);
+    }
+    own |= f["code"] == "W-FIELD-UNKNOWN" && f["location"]["file"] == "b.ds";
+    echo |= f["code"] == "W-REF-UNDECLARED" || (f["location"]["file"] == "a.ds" && f["code"] != "E-ENCODING");
+  }
+  EXPECT_EQ(encoding, 1);
+  EXPECT_TRUE(own);  // a finding of an intact file stays
+  EXPECT_FALSE(echo);
+  // what the writers are handed is UTF-8: the export and the viewer are written, the finding among them
+  const auto exported = nlohmann::json::parse(ds::api::Api(metamodel).exportModel(files));
+  EXPECT_EQ(exported["findings"][0]["code"], "E-ENCODING");
+  EXPECT_FALSE(ds::api::Api(metamodel).page(files, "cut", {}).empty());
+}
+
 }  // namespace

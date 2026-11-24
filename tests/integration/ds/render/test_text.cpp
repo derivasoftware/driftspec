@@ -9,8 +9,12 @@
 #include "ds/render/Ir.hpp"
 #include "ds/render/IrExport.hpp"
 #include "ds/render/Text.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
+
+/// The style the drawings are written in, made once for the file (DS-393).
+const ds::theme::Theme kTheme;
 
 /// The terminal drawing: the same layout on a character grid.
 class TestText : public ::testing::Test {
@@ -27,7 +31,7 @@ class TestText : public ::testing::Test {
 
   std::string draw(const std::string& diagram, bool color = false) {
     const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
-    return ds::render::Text().render(doc, color);
+    return ds::render::Text(kTheme).render(doc, color);
   }
 };
 
@@ -53,7 +57,7 @@ TEST_F(TestText, MarksAChangeOnARelationOrAMessageAsOnABox) {
             R"J({"ir": 1, "title": "diff", "nodes": [{"id": "A", "kind": "box", "label": "A"}, {"id": "B", "kind": "box", "label": "B"}],
     "edges": [{"from": "A", "to": "B", "kind": "dependency", "label": "uses", "refs": {"change": ")J") +
         change + R"J("}}]})J");
-    const std::string plain = ds::render::Text().render(doc, false);
+    const std::string plain = ds::render::Text(kTheme).render(doc, false);
     EXPECT_NE(plain.find(marked), std::string::npos) << change << "\n" << plain;
     EXPECT_EQ(plain.find("- uses") != std::string::npos, std::string(change) == "removed") << change;
   }
@@ -65,14 +69,14 @@ TEST_F(TestText, MarksAChangeOnARelationOrAMessageAsOnABox) {
             R"J({"ir": 1, "title": "diff", "nodes": [{"id": "A", "kind": "box", "label": "A"}, {"id": "B", "kind": "box", "label": "B"}],
     "edges": [{"from": "A", "to": "B", "kind": "dependency", "label": "uses", "refs": {"change": ")J") +
         changes[k].first + R"J("}}]})J");
-    EXPECT_NE(ds::render::Text().render(doc, true).find(colours[k]), std::string::npos) << changes[k].first;
+    EXPECT_NE(ds::render::Text(kTheme).render(doc, true).find(colours[k]), std::string::npos) << changes[k].first;
   }
 
   const std::string messages = R"J({"ir": 1, "title": "diff", "nodes": [{"id": "a", "kind": "lifeline", "label": "a"},
     {"id": "b", "kind": "lifeline", "label": "b"}],
     "edges": [{"from": "a", "to": "b", "kind": "message", "label": "run()", "order": 0, "refs": {"change": "renamed"}},
               {"from": "b", "to": "a", "kind": "message", "label": "done()", "order": 1, "refs": {"change": "changed"}}]})J";
-  const std::string sequence = ds::render::Text().render(ds::render::IrDocument::parse(messages), false);
+  const std::string sequence = ds::render::Text(kTheme).render(ds::render::IrDocument::parse(messages), false);
   EXPECT_NE(sequence.find("> run()"), std::string::npos) << sequence;
   EXPECT_NE(sequence.find("~ done()"), std::string::npos) << sequence;
 }
@@ -123,7 +127,7 @@ TEST_F(TestText, FramesOpeningAtTheSameMessageStackTheirHeaders) {
                                "}\n"));
   ds::check::CheckerFactory::make(nested, metamodel)->run(binder.notes());
   const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(nested, metamodel).render("diagram:SEQ_Nested", false));
-  const std::string out = ds::render::Text().render(doc, false);
+  const std::string out = ds::render::Text(kTheme).render(doc, false);
   const auto outer = out.find("loop N"), inner = out.find("loop M");
   ASSERT_NE(outer, std::string::npos);
   ASSERT_NE(inner, std::string::npos);

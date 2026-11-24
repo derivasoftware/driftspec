@@ -21,10 +21,12 @@ namespace {
 const ds::model::Metamodel kMetamodel;
 const ds::api::Api kApi(kMetamodel);
 
-// a dict {path: text} as the engine's files; false, with a Python error set, when it is not one
+// a dict {path: text} as the engine's files, each text a str or the file's bytes as they are, so a file that is not
+// UTF-8 reaches the engine and is its finding, as on the command line (DS-411); false, with a Python error set, when
+// it is not one
 bool filesOf(PyObject* dict, ds::api::Files* out) {
   if (!PyDict_Check(dict)) {
-    PyErr_SetString(PyExc_TypeError, "files must be a dict of path -> text");
+    PyErr_SetString(PyExc_TypeError, "files must be a dict of path -> text or bytes");
     return false;
   }
   PyObject *key = nullptr, *value = nullptr;
@@ -32,8 +34,15 @@ bool filesOf(PyObject* dict, ds::api::Files* out) {
   while (PyDict_Next(dict, &pos, &key, &value)) {
     Py_ssize_t klen = 0, vlen = 0;
     const char* k = PyUnicode_AsUTF8AndSize(key, &klen);
-    const char* v = k ? PyUnicode_AsUTF8AndSize(value, &vlen) : nullptr;
-    if (!k || !v) return false;  // not str: the conversion set the error
+    if (!k) return false;  // not str: the conversion set the error
+    const char* v = nullptr;
+    if (PyBytes_Check(value)) {
+      char* bytes = nullptr;
+      if (PyBytes_AsStringAndSize(value, &bytes, &vlen) < 0) return false;
+      v = bytes;
+    } else if (!(v = PyUnicode_AsUTF8AndSize(value, &vlen))) {
+      return false;  // neither bytes nor str: the conversion set the error
+    }
     (*out)[std::string(k, klen)] = std::string(v, vlen);
   }
   return true;
@@ -259,7 +268,7 @@ PyType_Slot kWorkspaceSlots[] = {
     {Py_tp_new, reinterpret_cast<void*>(workspaceNew)},
     {Py_tp_dealloc, reinterpret_cast<void*>(workspaceDealloc)},
     {Py_tp_methods, kWorkspaceMethods},
-    {Py_tp_doc, const_cast<char*>("Workspace(files: dict[str, str]): a workspace loaded once, asked as often as needed")},
+    {Py_tp_doc, const_cast<char*>("Workspace(files: dict[str, str | bytes]): a workspace loaded once, asked as often as needed")},
     {0, nullptr}};
 
 PyType_Spec kWorkspaceSpec = {"driftspec._native.Workspace", sizeof(WorkspaceObject), 0, Py_TPFLAGS_DEFAULT, kWorkspaceSlots};
@@ -292,8 +301,8 @@ PyMethodDef kMethods[] = {
     {"without_revision", identity1<&ds::api::Identity::withoutRevision>, METH_VARARGS, "without_revision(id) -> str: an artefact id bare"},
     {"version", version, METH_NOARGS, "version() -> str: the version of the engine, as ds --version says it"},
     {"severities", severities, METH_NOARGS, "severities() -> str: the severity table, as JSON (DS-386)"},
-    {"check", check, METH_VARARGS, "check(files: dict[str, str]) -> str: the findings and counts, as ds check --json"},
-    {"export", exportModel, METH_VARARGS, "export(files: dict[str, str]) -> str: the model, as ds export"},
+    {"check", check, METH_VARARGS, "check(files: dict[str, str | bytes]) -> str: the findings and counts, as ds check --json"},
+    {"export", exportModel, METH_VARARGS, "export(files: dict[str, str | bytes]) -> str: the model, as ds export"},
     {"expected_at", expectedAt, METH_VARARGS, "expected_at(text, line, column) -> str: what the grammar takes there, as JSON"},
     {"render", render, METH_VARARGS, "render(files, diagram, format, width) -> str: a diagram drawn as text or svg; '' when none"},
     {"page", page, METH_VARARGS, "page(files, title, focus) -> str: the viewer, framed on the identities given"},
