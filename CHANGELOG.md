@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.57
+## 0.1.56
 
 Every format of every document ds writes is pinned as a golden file (DS-395), before the formats are refactored
 (DS-394): the scene as json and html, each diagram as ir, layout, svg, text and cells, the report and the answers as text
