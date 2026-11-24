@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.48
+
+The check finds what each class declares through the index of its members (DS-375). To derive a class's
+stereotypes (abstract, value and the operator families) it read every entity of the model, once per class, so the
+time grew with the square of the design: a synthetic design of 3 200 classes spent most of its check there. Each
+class now reads only its own members, the same ones in the same order. Nothing changes for a design: no finding,
+export or drawing.
+
 ## 0.1.47
 
 The Owner approves the white-box requirements DS-374 left as drafts, with their verifications: parse knows no model and its
