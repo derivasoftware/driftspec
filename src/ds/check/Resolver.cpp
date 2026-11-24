@@ -117,7 +117,7 @@ std::string Resolver::privateOnTheWay(const std::string& from, const std::string
 // has no element: calls through it are not typed, and nothing is said (DS-18)
 std::string Resolver::resolveTypeText(const std::string& text, const std::string& scope) const {
   std::set<std::string> designed;
-  for (const bind::TypeToken& token : bind::scanTypeTokens(text)) {
+  for (const bind::TypeToken& token : bind::TypeToken::scan(text)) {
     const std::string name = token.args.empty() ? token.name : model::Identity(token.name).withArity(token.args.size()).text();
     const std::string id = resolve(name, scope);
     const model::Entity* e = id.empty() ? nullptr : model_.find(id);

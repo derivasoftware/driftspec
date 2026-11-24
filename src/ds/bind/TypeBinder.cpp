@@ -35,7 +35,7 @@ std::string TypeBinder::bind(TSNode type, const BindContext& ctx, const std::str
                              const model::Location& location) const {
   if (ts_node_is_null(type)) return "";
   const std::string text = std::string(text::trimWhitespace(ctx.reader.textOf(type)));
-  for (const TypeToken& token : scanTypeTokens(text)) {
+  for (const TypeToken& token : TypeToken::scan(text)) {
     if (contains(params, token.name)) continue;  // a template parameter may be anything (R15)
     Reference ref;
     ref.from = from;

@@ -7,7 +7,7 @@
 namespace ds {
 namespace bind {
 
-std::vector<TypeToken> scanTypeTokens(const std::string& text) {
+std::vector<TypeToken> TypeToken::scan(const std::string& text) {
   std::vector<TypeToken> out;
   const auto start = [](char c) { return std::isalpha(static_cast<unsigned char>(c)) || c == '_'; };
   const auto inWord = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_'; };

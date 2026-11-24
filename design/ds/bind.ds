@@ -6,6 +6,7 @@
 package driftspec@ds {
 
   module bind {
+    @requirement REQ-00173-1                 // every operation of the binder is a member of a class (DS-365)
 
     dataclass Reference {                    // a name as written, with where and for which relation
       @requirement REQ-00023-1
@@ -25,12 +26,11 @@ package driftspec@ds {
       @requirement REQ-00028-2
       + name: std::string
       + args: std::vector<std::string>
-    }
-
-    // the names of a type as the code writes it, left to right: no name of any language is known (DS-18);
-    // a dot qualifies as :: does, so lsp.Location is read lsp::Location (DS-319)
-    function scanTypeTokens(text: std::string) -> std::vector<TypeToken> {
-      @requirement REQ-00028-2
+      // the names of a type as the code writes it, left to right: no name of any language is known (DS-18);
+      // a dot qualifies as :: does, so lsp.Location is read lsp::Location (DS-319)
+      + static scan(text: std::string) -> std::vector<TypeToken> {
+        @requirement REQ-00028-2
+      }
     }
 
     dataclass Message {                      // a message of a behaviour, checked later against the static context
@@ -54,7 +54,110 @@ package driftspec@ds {
       + owns location: model::Location
     }
 
+    // ---- what the binder is, as requirements and the rules that hold them (DS-365) ---------------------------
+    requirement REQ-00171-1 {
+      tags: architecture, bind
+      status: approved
+      @refines REQ-00053-2
+      title: The binder shall bind each construct of the language through a binder of its own, reached through one interface
+      text:
+        A node binder takes the kinds of node of one construct and binds one of them. The binder reaches every one
+        through INodeBinder, by the table, and what several constructs share is a part each is given by reference.
+        A construct added to the language is a binder added beside the others, which do not change.
+      rationale:
+        Owner, 2026-11-24 (DS-353, DS-365): a requirement is often an architecture decision, and the rules make it
+        hold. One walk bound every construct; split by construct, each binds alone and can be read on its own.
+      verification VER-00188-1 {
+        status: approved
+        title: Integration tests confirm the design of ds binds each construct through a binder of its own reached through INodeBinder, and is told when the binder holds a concrete binder or one binder knows another
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheBinderHoldingAConcreteBinderIsTold
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ABinderThatKnowsAnotherIsTold
+      }
+    }
+
+    requirement REQ-00172-1 {
+      tags: architecture, bind
+      status: approved
+      @refines REQ-00053-2
+      title: Every binder shall write into the model through the bind context
+      text:
+        A node binder and a part declare, relate, annotate and note through the context they are given, which holds
+        the model, the notes and where the node is written. What binds a file holds no model of its own.
+      rationale:
+        Owner, 2026-11-24 (DS-353, DS-365): with every write in one place, a file can later bind into a context of
+        its own and be merged into the model in file order (per-file contexts, DS-358).
+      verification VER-00189-1 {
+        status: approved
+        title: Integration tests confirm the design of ds writes into the model through the bind context, and is told when a binder holds the model
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ABinderThatHoldsTheModelIsTold
+      }
+    }
+
+    requirement REQ-00173-1 {
+      tags: architecture, bind
+      status: approved
+      @refines REQ-00053-2
+      title: Every operation of the binder shall be a member of the class whose responsibility it is
+      text:
+        What binds a construct is its node binder's, what several share is a part's, what reads the tree is the
+        reader's and what reads a type's text is the token's. A function of the module would be a responsibility
+        no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-339, DS-365): every module has its architecture decisions and patterns, and its rules
+        check that they hold; a free function means a responsibility is missing.
+      verification VER-00191-1 {
+        status: approved
+        title: Integration tests confirm the design of the binder holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheBinderIsTold
+      }
+    }
+
+    // ---- the principles of the binder, as rules (DS-365) -----------------------------------------------
+    // Each construct binds through its own binder, a node binder registered by kind in the table; what several
+    // share is a part, given by reference; and all of them write through the context, never through the model
+    // itself, so a file can later bind into a batch of its own (DS-358).
+    rule binders-write-through-the-context {
+      title: a binder and a part depend on the context they are given and never on the model itself, so every write of a file goes through its context
+      @requirement REQ-00172-1
+      for class c in driftspec@ds@bind
+      where c != driftspec@ds@bind::Binder, c != driftspec@ds@bind::BindContext
+      never depends(c, driftspec@ds@model::Model)
+    }
+
+    rule binder-knows-binders-as-inodebinder {
+      title: the binder holds the node binders as INodeBinder and its constructor names the concrete ones, so every construct is reached through the one interface
+      @requirement REQ-00171-1
+      for class c in driftspec@ds@bind
+      where c = driftspec@ds@bind::Binder
+      never depends(c, x), x inherits driftspec@ds@bind::INodeBinder
+    }
+
+    rule no-binder-knows-another {
+      title: a node binder depends on no other node binder, so each construct binds through a binder of its own; what they share goes through the parts
+      @requirement REQ-00171-1
+      for class a in driftspec@ds@bind, class b in driftspec@ds@bind
+      where a inherits driftspec@ds@bind::INodeBinder, b inherits driftspec@ds@bind::INodeBinder, a != b
+      never depends(a, b)
+    }
+
+    rule binder-operations-belong-to-classes {
+      title: no function is written in the binder's module, so every operation of the binder is a member of a class
+      @requirement REQ-00173-1
+      for function f in driftspec@ds@bind
+      never f in driftspec@ds@bind
+    }
+
     class Binder {                           // builds the binders and their table once, then binds each file through it (DS-355)
+      @requirement REQ-00171-1
       @requirement REQ-00053-2
       @requirement REQ-00021-1
       @requirement REQ-00110-1
@@ -73,37 +176,40 @@ package driftspec@ds {
       - owns formulas_: FormulaBinder
       - owns bodies_: MemberBodyBinder
       - owns members_: MemberBinder
-      - owns artefacts_: ArtefactBinder
-      - owns packages_: PackageBinder
-      - owns modules_: ModuleBinder
-      - owns interfaces_: InterfaceBinder
-      - owns enums_: EnumBinder
-      - owns rules_: RuleBinder
-      - owns diagrams_: DiagramBinder
-      - owns usecases_: UseCaseBinder
-      - owns states_: StateBinder
-      - owns classes_: ClassBinder
-      - owns functions_: FunctionBinder
-      - owns sequences_: SequenceBinder
+      - owns many binders_: std::vector<std::unique_ptr<INodeBinder>>   // held as INodeBinder; the constructor names the concrete ones (DS-365)
       - owns dispatch_: Dispatch
     }
 
 
     // Reads the file's tree and binds what is written at its root, packages and diagrams, with no scope and no owner,
     // writing through one context into the model and the notes (DS-354). The table sends each to the binder of its
-    // kind (DS-355, DS-356).
+    // kind (DS-355, DS-356), which the binder knows as INodeBinder (DS-365).
     sequence Binder::bind {
       local reader: parse::TreeReader
       local ctx: BindContext
       self -> reader.root() -> root
-      loop each package and diagram written at the root {
-        local node: TSNode
-        alt a package {
-          self -> packages_.bind(node, ctx)
-        } else {
-          self -> diagrams_.bind(node, ctx)
-        }
+      self -> ctx.children(root)
+    }
+
+    // The context binds a node's children through the table it was given (DS-355).
+    sequence BindContext::children {
+      self -> dispatch.bindChildren(node, self)
+    }
+
+    // What every binder does with a node of its kinds (DS-365): it declares the entity the node writes through the
+    // context, writes the fields the declaration says on what the model keeps, relates it to the entity that holds
+    // it, and binds the children the node holds in turn. Each binder says more in its own.
+    sequence INodeBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      self -> ctx.declare(e) -> declared
+      loop each field written {
+        self -> ctx.annotate(declared.id, key, value)
       }
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> ctx.children(node)
     }
 
     // The context's writes are the model's (DS-355): each passes its argument on, so a binder holds no model.
@@ -245,6 +351,7 @@ package driftspec@ds {
     }
 
     class BindContext {                      // what binding one node is given; the only place it writes (DS-354)
+      @requirement REQ-00172-1
       @requirement REQ-00053-2
       + refs model: model::Model
       + refs notes: Notes
@@ -288,6 +395,7 @@ package driftspec@ds {
       + ArtefactBinder(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder)
     }
     class Dispatch {                         // which binder binds a node: one slot per grammar symbol, built once (DS-355)
+      @requirement REQ-00171-1
       @requirement REQ-00053-2
       - refs bySymbol_: std::vector<const INodeBinder*>
       + Dispatch(language: TSLanguage, binders: std::vector<const INodeBinder*>)
@@ -307,6 +415,7 @@ package driftspec@ds {
       }
     }
     class INodeBinder {                      // what binds one construct: the kinds it takes, and one node bound (DS-355)
+      @requirement REQ-00171-1
       @requirement REQ-00053-2
       + ~INodeBinder()
       + abstract kinds() -> std::vector<std::string>

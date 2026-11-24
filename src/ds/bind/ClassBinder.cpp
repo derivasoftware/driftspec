@@ -92,7 +92,7 @@ void ClassBinder::bind(TSNode node, const BindContext& ctx) const {
     baseTexts.push_back(std::string(text::trimWhitespace(ctx.reader.textOf(base))));
   if (!baseTexts.empty()) ctx.annotate(declared.id, "bases", join(baseTexts, "; "));
   for (const std::string& written : baseTexts) {
-    const std::vector<TypeToken> tokens = scanTypeTokens(written);
+    const std::vector<TypeToken> tokens = TypeToken::scan(written);
     if (tokens.empty()) continue;
     const TypeToken& token = tokens.front();
     std::vector<std::string> args = token.args;
