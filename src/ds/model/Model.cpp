@@ -225,7 +225,9 @@ void Model::withdrawEchoes(const std::set<std::string>& broken) {
   if (broken.empty()) return;
   findings_.erase(std::remove_if(findings_.begin(), findings_.end(),
                                  [&](const Finding& f) {
-                                   return f.code != "E-SYNTAX" && (broken.count(f.location.file) || f.code == "W-REF-UNDECLARED");
+                                   // what says a file is broken stays: it does not parse, or it is not UTF-8 (DS-411)
+                                   return f.code != "E-SYNTAX" && f.code != "E-ENCODING" &&
+                                          (broken.count(f.location.file) || f.code == "W-REF-UNDECLARED");
                                  }),
                   findings_.end());
 }

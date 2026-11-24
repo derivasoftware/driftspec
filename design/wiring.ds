@@ -6,7 +6,7 @@ package driftspec@ds {
   requirement REQ-00012-1 {
     @refines SREQ-00012-1
   }
-  requirement REQ-00053-2 {
+  requirement REQ-00053-3 {
     @refines SREQ-00002-1
   }
   requirement REQ-00013-1 {

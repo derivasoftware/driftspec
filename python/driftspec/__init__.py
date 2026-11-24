@@ -29,7 +29,7 @@ from . import _native
 
 __version__ = _native.version()  # the engine's, as ds --version says it (DS-278)
 
-Source = Union[str, os.PathLike, Mapping[str, str]]
+Source = Union[str, os.PathLike, Mapping[str, Union[str, bytes]]]
 
 __all__ = [
     "Location", "Entity", "Relation", "Finding", "Model", "Report", "Answer", "Step", "Walked", "Frame", "Tree",
@@ -183,17 +183,19 @@ def files(root: Union[str, os.PathLike], nested: bool = True) -> list[str]:
     return sorted(found)
 
 
-def read(source: Source) -> dict[str, str]:
-    """The texts of a workspace: the .ds files of the design's folder (e.g. design/; files() says which), or a
-    mapping given as it is."""
+def read(source: Source) -> dict[str, str | bytes]:
+    """The texts of a workspace: the .ds files of the design's folder (e.g. design/; files() says which) as their
+    bytes, or a mapping given as it is, each text a str or bytes. The engine reads the bytes, so a file that is not
+    UTF-8 is its finding, E-ENCODING, as it is on the command line, rather than a failure of Python's before the
+    engine sees it (DS-411)."""
     if isinstance(source, Mapping):
-        return {str(k): str(v) for k, v in source.items()}
+        return {str(k): bytes(v) if isinstance(v, (bytes, bytearray)) else str(v) for k, v in source.items()}
     root = os.fspath(source)
     if not os.path.isdir(root):
         raise NotADirectoryError(root)
-    texts: dict[str, str] = {}
+    texts: dict[str, str | bytes] = {}
     for path in files(root):
-        with open(path, encoding="utf-8") as fh:
+        with open(path, "rb") as fh:
             texts[path] = fh.read()
     return texts
 
