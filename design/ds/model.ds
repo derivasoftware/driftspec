@@ -903,7 +903,7 @@ package driftspec@ds {
 
     dataclass Column {                       // one column of a table: a field of the row, what it is, what is related to it, or a yes/no
       @requirement REQ-00154-1
-      @requirement REQ-00235-1
+      @requirement REQ-00250-1
       + name: std::string
       + form: std::string
       + variable: std::string
