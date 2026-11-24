@@ -6,20 +6,9 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.72
-
-A design file that is not valid UTF-8 is now reported with its file, line and column (DS-411). Such a file, one Latin-1
-é in a title for instance, used to check clean while `ds export`, `ds render -f json` and `ds query --json` exited with
-2 and an empty output, naming no file. Each file's encoding is checked when it is read: a file that is not UTF-8 is the
-new error E-ENCODING at its first byte that is not part of a character, on its line and at its column, both counted
-from 1 and the column in bytes, as E-SYNTAX counts them (`ds manual E-ENCODING`). As with a file that does not parse,
-it is reported once and read no further, the findings that only echo its absence are left out, and every other file is
-checked as usual: `ds check` exits with 1, and export, render and query write. The Python face hands the engine each
-file's bytes (`driftspec.read` gives a directory's files as bytes, and a mapping may hold bytes or str), so
-`driftspec.check` gives the same finding instead of failing in Python first; a mapping of str loads as before.
-
-Valid designs are unchanged: every finding, export, drawing, viewer page, answer and exit code is the same. The manual
-gains the page of E-ENCODING and its row in `ds manual codes`.
+A merge request does not edit this file: it writes its entry as `changelog.d/<card>.md`, and
+`tools/changelog.py` later moves each entry under the version its merge was released as (see
+`changelog.d/README.md`).
 
 ## 0.1.71
 
