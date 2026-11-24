@@ -4,26 +4,29 @@ new version of the viewer without losing the reader's camera, selection, notes o
 from __future__ import annotations
 
 import html
+import json
+
+import driftspec
 
 SHELL = r"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>driftspec live · __TITLE__</title>
 <style>
-:root{--bg:#f4f6f8;--panel:#fff;--fg:#1b2129;--muted:#5a6573;--line:#d5dbe2;--accent:#d9822b;--ok:#2f8a4a;--err:#c2410c;--sel:#2f62c9;
+:root{--bg:#f4f6f8;--panel:#fff;--fg:#1b2129;--muted:#5a6573;--line:#d5dbe2;--accent:#d9822b;--ok:#2f8a4a;--err:#c2410c;--warn:#a16207;--info:#0e7490;--sel:#2f62c9;
  font-family:system-ui,"Segoe UI",sans-serif;font-size:13px;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#12161b;--panel:#1a2027;--fg:#e4e9ef;--muted:#9aa6b4;--line:#2f3943;--accent:#f0a35a;--ok:#6cc68a;--err:#f08a5d;--sel:#7aa2f2;color-scheme:dark}}
+@media (prefers-color-scheme:dark){:root{--bg:#12161b;--panel:#1a2027;--fg:#e4e9ef;--muted:#9aa6b4;--line:#2f3943;--accent:#f0a35a;--ok:#6cc68a;--err:#f08a5d;--warn:#e3b341;--info:#5cc8d9;--sel:#7aa2f2;color-scheme:dark}}
 *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--fg)}
 body{display:grid;grid-template-rows:auto 1fr;grid-template-columns:1fr 300px;height:100%}
 header{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
 header b{font-size:15px} .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);display:inline-block} .dot.on{background:var(--ok)} .dot.err{background:var(--err)}
 .pill{font-family:ui-monospace,Consolas,monospace;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px}
-.pill.err{border-color:var(--err);color:var(--err)} .pill.sel{border-color:var(--sel);color:var(--sel)}
+.pill.err{border-color:var(--err);color:var(--err)} .pill.warn{border-color:var(--warn);color:var(--warn)} .pill.sel{border-color:var(--sel);color:var(--sel)}
 #views{position:relative;min-width:0} #views iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
 aside{border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:12px}
 h3{margin:0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
 li button{all:unset;cursor:pointer;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;word-break:break-all} li button:hover{text-decoration:underline}
 .v{font-size:11px;color:var(--muted)} .ch{color:var(--accent)} .rm{color:var(--err);text-decoration:line-through}
-.f{font-size:12px} .f code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--err)}
+.f{font-size:12px} .f code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--err)} .f code.warn{color:var(--warn)} .f code.info{color:var(--info)}
 .flash{animation:fl 1.2s ease-out} @keyframes fl{from{background:color-mix(in srgb,var(--accent) 30%,var(--panel))}to{background:var(--panel)}}
 body{grid-template-columns:1fr 380px}
 .rules{gap:8px} .rule{border:1px solid var(--line);border-radius:8px;padding:7px 9px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
@@ -60,8 +63,10 @@ details>summary h3{flex:1} .n{font-size:11px;color:var(--muted)} .acts{display:f
 <div id="rulesbox" hidden><div class="hd" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Rules</h3>
 <div class="tabs"><button data-f="all" class="on">all</button><button data-f="bad">broken</button><button data-f="sel">selected</button></div></div>
 <ul class="rules" id="rules"><li class="v">none</li></ul></div>
-<details data-k="find"><summary><h3>Findings</h3><span class="n" id="findn"></span></summary><ul id="findings"></ul></details><details data-k="hist"><summary><h3>History</h3></summary><ul id="hist"></ul></details></aside>
+<details data-k="find"><summary><h3>Findings</h3><span class="n" id="findn"></span></summary><ul id="findings"></ul></details><details data-k="cov"><summary><h3>Coverage</h3><span class="n" id="covn"></span></summary><ul id="coverage"></ul></details><details data-k="hist"><summary><h3>History</h3></summary><ul id="hist"></ul></details></aside>
 <script>
+const SEVERITIES=__SEVERITIES__;  // the severity table, as the engine writes it (DS-386): a finding is coloured by its row
+const sevOf=name=>SEVERITIES.find(s=>s.name===name)||{}; const tone=name=>{const s=sevOf(name); return s.fails?'':(s.keptApart?'info':'warn');};
 const views=document.getElementById('views'); let cur=null, version=0, keepSel=null, pending=null, busy=false, ann={notes:[],highlights:[]};
 const $=id=>document.getElementById(id); const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function view(){return cur&&cur.contentWindow&&cur.contentWindow.DS_VIEW;}
@@ -127,9 +132,13 @@ document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('[data-f]')
 function applyAnn(d){ann={notes:d.notes||[],highlights:d.highlights||[]}; COMMENTS=d.comments||COMMENTS; paint(); notesList(); thread();}
 function side(s){
   $('ver').textContent='v'+s.version; const c=s.counts||{}; $('counts').textContent=`${c.entities||0} entities · ${c.relations||0} relations`;
-  const n=(s.findings||[]).length; $('find').textContent=n?`${n} findings`:'no findings'; $('find').className='pill'+(n?' err':''); $('findn').textContent=n?String(n):'';
+  const fs=s.findings||[], n=fs.length, failing=fs.filter(f=>sevOf(f.severity).fails).length;
+  const rest=SEVERITIES.filter(x=>!x.fails).map(x=>[x.name,fs.filter(f=>f.severity===x.name).length]).filter(([,k])=>k).map(([nm,k])=>`${k} ${nm}${k===1?'':'s'}`).join(', ');
+  $('find').textContent=n?`${failing} failing`+(rest?` · ${rest}`:''):'no findings'; $('find').className='pill'+(failing?' err':(n?' warn':'')); $('findn').textContent=n?String(n):'';
+  const cov=s.coverage||[]; $('covn').textContent=cov.length?String(cov.length):'';
+  $('coverage').innerHTML=cov.slice(0,60).map(f=>`<li class="f"><code class="${tone(f.severity)}">${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
   ISOLATED=s.isolated||ISOLATED; isoPill();
-  $('findings').innerHTML=(s.findings||[]).slice(0,60).map(f=>`<li class="f"><code>${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
+  $('findings').innerHTML=(s.findings||[]).slice(0,60).map(f=>`<li class="f"><code class="${tone(f.severity)}">${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
   RULES=s.rules||[]; if(ACTIVE&&!RULES.find(r=>r.id===ACTIVE)) ACTIVE=null; rules();
   $('hist').innerHTML=(s.history||[]).slice().reverse().map(h=>`<li class="v">v${h.version} · ${h.at} · ${h.ms} ms</li>`).join('');
   $('side').classList.remove('flash'); void $('side').offsetWidth; $('side').classList.add('flash');}
@@ -157,5 +166,6 @@ connect();
 
 
 def shell(title: str, workspace: str) -> str:
-    """The shell for one session, named by its title and its workspace."""
-    return SHELL.replace("__TITLE__", html.escape(title)).replace("__WS__", html.escape(workspace))
+    """The shell for one session, named by its title and its workspace, with the severity table it colours by."""
+    table = json.dumps(driftspec.severities()).replace("</", "<\\/")
+    return SHELL.replace("__TITLE__", html.escape(title)).replace("__WS__", html.escape(workspace)).replace("__SEVERITIES__", table)
