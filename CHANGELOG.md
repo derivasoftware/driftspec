@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.56
+## 0.1.58
 
 The check names its steps in a class, and its steps keep no hidden helpers (DS-382). The free function that made the
 steps a selection asks for is `Steps::of`, the one place that names the concrete steps. What three steps did in
@@ -14,6 +14,15 @@ functions hidden in their files is now theirs: CallOrder says the states a call 
 whether a pattern names something declared, and LevelCoherence finds the operation a message calls, the behaviour below
 an entry, the crossings below it and where each one said finds its place. The crossings and what lies below an entry are
 written in the design. Nothing a design writes changes.
+
+## 0.1.56
+
+The machine is written as requirements held by rules (DS-367): every operation of the machine is a member of the class
+whose responsibility it is, and the machine reads the model it reads a state machine from and leaves it as it is. What
+its source hid is now classes of the machine: the lists the binder writes into a field (`WrittenFields`), a condition
+of a state's rule (`Literal`), the rules and the jumps of a machine (`StateRule`, `Jump`), what its subject holds
+(`Subject`), what each name of a context may be worth (`Context`) and the walk of the behaviours for the calls of its
+events (`Calls`). Nothing a design writes, no finding, export or drawing changes.
 
 ## 0.1.55
 

@@ -39,6 +39,8 @@ class Table {
   const std::vector<Row>& rows() const { return rows_; }
 
  private:
+  /// A name added once, in the order met.
+  static void note(std::vector<std::string>& all, const std::string& name);
   std::string subject_;
   std::vector<std::string> states_;
   std::vector<Row> rows_;
