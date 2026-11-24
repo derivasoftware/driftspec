@@ -166,7 +166,7 @@ package driftspec@ds {
         @requirement REQ-00085-1
         @constraint CST-00001-1
       }
-      + static report(model: model::Model, pretty: bool) -> std::string
+      + report(model: model::Model, pretty: bool) -> std::string   // reads the severity table of its metamodel (DS-379)
       + exportModel(files: Files) -> std::string
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
       + render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string

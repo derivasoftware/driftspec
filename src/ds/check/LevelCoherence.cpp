@@ -165,10 +165,10 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
       const std::string says = scenario.name + " has " + c.from + " send " + c.label + " to " + c.to;
       // a sender is known below when something is seen to happen in it and every call made in it is written
       if (!below.entered.count(c.from) || below.open.count(c.from)) {
-        found.push_back(
-            {"W-LEVEL-NOT-BELOW", "coverage",
-             says + ", which the behaviour below it (" + through + ") does not show yet: what " + c.from + " does is not all written",
-             c.location});
+        found.push_back(context.metamodel().finding(
+            model::Code::W_LEVEL_NOT_BELOW,
+            says + ", which the behaviour below it (" + through + ") does not show yet: what " + c.from + " does is not all written",
+            c.location));
         continue;
       }
       // it is done below, at a place no other crossing said takes: the order is what differs
@@ -179,13 +179,13 @@ std::vector<model::Finding> LevelCoherence::check(const Context& context) {
         elsewhere = elsewhere || !taken.count(static_cast<int>(j));
       }
       if (elsewhere) {
-        found.push_back({"W-LEVEL-ORDER", "warning", says + " here, and the behaviour below it (" + through + ") does it in another order",
-                         c.location});
+        found.push_back(context.metamodel().finding(
+            model::Code::W_LEVEL_ORDER, says + " here, and the behaviour below it (" + through + ") does it in another order", c.location));
       } else {
-        found.push_back(
-            {"W-LEVEL-NO-CROSSING", "warning",
-             says + ", and the behaviour below it (" + through + ") " + (atAll ? "does not do it that many times" : "never does"),
-             c.location});
+        found.push_back(context.metamodel().finding(
+            model::Code::W_LEVEL_NO_CROSSING,
+            says + ", and the behaviour below it (" + through + ") " + (atAll ? "does not do it that many times" : "never does"),
+            c.location));
       }
     }
   }

@@ -89,23 +89,24 @@ TEST_F(TestModel, ARelationTheMetamodelDoesNotDeclareIsRefused) {
 }
 
 TEST_F(TestModel, WhatIsNotYetWrittenLeavesTheFindingsForTheCoverage) {
-  model.report({"W-REQ-NO-VERIFICATION", "warning", "first", {"a.ds", 3, 1}});
-  model.report({"E-DUPLICATE-IDENTITY", "error", "kept", {"a.ds", 2, 1}});
-  model.report({"W-MESSAGE-NO-OPERATION", "coverage", "second", {"a.ds", 1, 1}});
+  // each made from its code, as every finding is (DS-379): a coverage code is born coverage
+  model.report(metamodel.finding(ds::model::Code::W_REQ_NO_VERIFICATION, "first", {"a.ds", 3, 1}));
+  model.report(metamodel.finding(ds::model::Code::E_DUPLICATE_IDENTITY, "kept", {"a.ds", 2, 1}));
+  model.report(metamodel.finding(ds::model::Code::W_MESSAGE_NO_OPERATION, "second", {"a.ds", 1, 1}));
   model.cover();
   ASSERT_EQ(model.findings().size(), 1u);
   EXPECT_EQ(model.findings().front().message, "kept");
   ASSERT_EQ(model.coverage().size(), 2u);  // in the order reported, each marked as coverage (DS-216)
   EXPECT_EQ(model.coverage()[0].message, "first");
-  EXPECT_EQ(model.coverage()[0].severity, "coverage");
+  EXPECT_EQ(model.coverage()[0].severity, ds::model::Severity::coverage);
   EXPECT_EQ(model.coverage()[1].message, "second");
 }
 
 TEST_F(TestModel, AFileThatDoesNotParseTakesTheFindingsThatOnlyEchoIt) {
-  model.report({"E-SYNTAX", "error", "the file does not parse", {"cut.ds", 4, 1}});
-  model.report({"W-FIELD-UNKNOWN", "warning", "in the cut file", {"cut.ds", 9, 1}});
-  model.report({"W-REF-UNDECLARED", "warning", "declared nowhere now", {"whole.ds", 2, 1}});
-  model.report({"W-FIELD-UNKNOWN", "warning", "in a whole file", {"whole.ds", 1, 1}});
+  model.report({"E-SYNTAX", ds::model::Severity::error, "the file does not parse", {"cut.ds", 4, 1}});
+  model.report({"W-FIELD-UNKNOWN", ds::model::Severity::warning, "in the cut file", {"cut.ds", 9, 1}});
+  model.report({"W-REF-UNDECLARED", ds::model::Severity::warning, "declared nowhere now", {"whole.ds", 2, 1}});
+  model.report({"W-FIELD-UNKNOWN", ds::model::Severity::warning, "in a whole file", {"whole.ds", 1, 1}});
   model.withdrawEchoes({});  // every file parses: nothing echoes
   EXPECT_EQ(model.findings().size(), 4u);
   model.withdrawEchoes({"cut.ds"});
@@ -115,10 +116,10 @@ TEST_F(TestModel, AFileThatDoesNotParseTakesTheFindingsThatOnlyEchoIt) {
 }
 
 TEST_F(TestModel, TheFindingsAreSortedByFileThenLineAndKeepTheirOrderOnALine) {
-  model.report({"W-B", "warning", "b2", {"b.ds", 2, 1}});
-  model.report({"W-A", "warning", "a5 first", {"a.ds", 5, 9}});
-  model.report({"W-A", "warning", "a1", {"a.ds", 1, 1}});
-  model.report({"W-A", "warning", "a5 second", {"a.ds", 5, 1}});
+  model.report({"W-B", ds::model::Severity::warning, "b2", {"b.ds", 2, 1}});
+  model.report({"W-A", ds::model::Severity::warning, "a5 first", {"a.ds", 5, 9}});
+  model.report({"W-A", ds::model::Severity::warning, "a1", {"a.ds", 1, 1}});
+  model.report({"W-A", ds::model::Severity::warning, "a5 second", {"a.ds", 5, 1}});
   model.sortFindings();
   std::vector<std::string> order;
   for (const auto& f : model.findings()) order.push_back(f.message);

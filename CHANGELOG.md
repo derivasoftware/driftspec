@@ -6,6 +6,18 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.48
+
+A finding is made from its code (DS-379). Seventy places wrote a finding's code and severity as two strings, which
+agreed with the catalogue only by care; each now asks the metamodel for the finding of a `Code`, and the catalogue
+gives the code as it is printed and its severity, read from one slot. A code the catalogue does not hold is no `Code`
+and does not compile. Severity is a value whose meaning is a row of the metamodel's severity table: its printed name,
+whether it fails the check, whether it is kept apart as coverage and what an editor shows it as. The check, the model,
+the export, the formats and the manual ask the row instead of naming a severity, and a check's report carries the
+table, so a format asks it without the metamodel. A coverage finding is born coverage. The design of ds says so in two
+rules: no class outside the model reads a code's row, and only the metamodel and the report hold a severity's row.
+Nothing a design writes changes: findings, the JSON export and every drawing read the same.
+
 ## 0.1.47
 
 The Owner approves the white-box requirements DS-374 left as drafts, with their verifications: parse knows no model and its

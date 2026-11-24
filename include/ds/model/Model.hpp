@@ -6,8 +6,10 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Code.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Index.hpp"
+#include "ds/model/Severity.hpp"
 
 namespace ds {
 namespace model {
@@ -99,9 +101,10 @@ struct Breach {
 };
 
 /// One diagnostic of the engine.
+/// A finding: made only by Metamodel::finding from its code, which gives the printed code and the severity (DS-379).
 struct Finding {
   std::string code;
-  std::string severity;  ///< "error" or "warning"
+  Severity severity;  ///< what the catalogue says of the code; the metamodel's severity table says what it means
   std::string message;
   Location location;
 };

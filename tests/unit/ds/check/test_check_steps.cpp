@@ -165,9 +165,9 @@ TEST(TestReport, ItCountsWhatTheModelDeclaresExpectsRelatesAndFails) {
   b.id = "p@m::B";
   b.expected = true;
   model.declare(b);
-  model.report({"E-X", "error", "broken", {}});
-  model.report({"W-Y", "warning", "odd", {}});
-  const auto report = ds::check::Report::of(model);
+  model.report({"E-X", ds::model::Severity::error, "broken", {}});
+  model.report({"W-Y", ds::model::Severity::warning, "odd", {}});
+  const auto report = ds::check::Report::of(model, metamodel);
   EXPECT_EQ(report.entities, 1);
   EXPECT_EQ(report.expected, 1);
   EXPECT_EQ(report.errors, 1);

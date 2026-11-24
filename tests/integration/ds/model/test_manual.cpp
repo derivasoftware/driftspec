@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <regex>
@@ -44,6 +45,7 @@ class TestManual : public ::testing::Test {
   static std::set<std::string> codesInTheSource() {
     std::set<std::string> out;
     const std::regex literal("\"([EW]-[A-Z0-9-]+)\"");
+    const std::regex value("Code::([EW]_[A-Z0-9_]+)");  // a finding made from its code (DS-379): E_SYNTAX is E-SYNTAX
     for (const char* root : {"/src", "/app"}) {
       for (const auto& entry : std::filesystem::recursive_directory_iterator(std::string(DRIFTSPEC_SOURCE_DIR) + root)) {
         if (!entry.is_regular_file() || entry.path().filename() == "Codes.cpp") continue;  // the catalogue itself
@@ -52,6 +54,11 @@ class TestManual : public ::testing::Test {
         text << in.rdbuf();
         const std::string s = text.str();
         for (std::sregex_iterator it(s.begin(), s.end(), literal), end; it != end; ++it) out.insert((*it)[1]);
+        for (std::sregex_iterator it(s.begin(), s.end(), value), end; it != end; ++it) {
+          std::string code = (*it)[1];
+          std::replace(code.begin(), code.end(), '_', '-');
+          out.insert(code);
+        }
       }
     }
     return out;
@@ -92,7 +99,7 @@ TEST_F(TestManual, TheCatalogueHoldsExactlyTheCodesTheEngineReports) {
   for (const auto& c : metamodel.codes()) {
     EXPECT_TRUE(catalogued.insert(c.code).second) << c.code << " is catalogued twice";
     // a coverage code is a W- that names something not yet written (DS-216)
-    EXPECT_EQ(c.severity == "coverage" ? "warning" : c.severity, c.code[0] == 'E' ? "error" : "warning") << c.code;
+    EXPECT_EQ(c.severity == ds::model::Severity::error, c.code[0] == 'E') << c.code;
     EXPECT_FALSE(c.meaning.empty() || c.fix.empty()) << c.code;
   }
   for (const auto& code : codesInTheSource()) EXPECT_TRUE(catalogued.count(code)) << code << " is reported but not in the manual";

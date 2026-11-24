@@ -30,9 +30,9 @@ void AnnotationBinder::bind(TSNode node, const BindContext& ctx, const std::stri
     if (spec.relation == "refers") {  // a word the language gives no meaning to: kept as a link, and said (DS-210)
       std::string known;
       for (const auto& a : ctx.metamodel.knownAnnotations()) known += (known.empty() ? "" : ", ") + a.name;
-      ctx.report({"W-ANNOTATION-UNKNOWN", "warning",
-                  "@" + kind + " is no annotation the language knows (" + known + "); it is kept as a link nothing reads",
-                  ctx.locationOf(c)});
+      ctx.report(ctx.metamodel.finding(
+          model::Code::W_ANNOTATION_UNKNOWN,
+          "@" + kind + " is no annotation the language knows (" + known + "); it is kept as a link nothing reads", ctx.locationOf(c)));
     }
     const std::string relation = relationOf(entity ? entity->kind : model::Kind::Class, spec);
     ctx.refer({from, ctx.reader.fieldText(c, Field::target), scope, relation, spec.target, ctx.locationOf(c), "", {}});

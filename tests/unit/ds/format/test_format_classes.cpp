@@ -128,11 +128,12 @@ ds::check::Report aReport() {
   ds::check::Report r;
   ds::model::Finding f;
   f.code = "W-Y";
-  f.severity = "warning";
+  f.severity = ds::model::Severity::warning;
   f.message = "odd";
   f.location.file = "a.ds";
   f.location.line = 2;
   f.location.column = 1;
+  r.severities = ds::model::Metamodel().severities();
   r.findings = {f};
   r.entities = 3;
   r.relations = 1;

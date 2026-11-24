@@ -55,8 +55,8 @@ void ArtefactBinder::bind(TSNode node, const BindContext& ctx) const {
   }
   if (e.fields.count("parent")) {
     // one representation per concept: nesting or @refines, never a field
-    ctx.report(
-        {"W-PARENT-IGNORED", "warning", e.id + " carries a parent: field; nest it in its parent or write @refines <id-revision>", loc});
+    ctx.report(ctx.metamodel.finding(model::Code::W_PARENT_IGNORED,
+                                     e.id + " carries a parent: field; nest it in its parent or write @refines <id-revision>", loc));
   }
   annotations_.bind(node, ctx, e.id, scope);
   ctx.within(scope, e.id).children(node);  // nested verifications and constraints

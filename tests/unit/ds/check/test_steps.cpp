@@ -28,7 +28,7 @@ class FakeStep : public ds::check::IStep {
   std::vector<std::string> needs() const override { return needs_; }
   std::vector<ds::model::Finding> run(ds::check::Context&) override {
     log_.push_back(name_);
-    return {{"W-" + name_, "warning", name_ + " ran", {}}};
+    return {{"W-" + name_, ds::model::Severity::warning, name_ + " ran", {}}};
   }
 
  private:
@@ -136,8 +136,8 @@ TEST(TestFindings, TheContextHandsBackWhatAStepReportedInOrderAndOnce) {
   ds::bind::Binder binder(model, metamodel);
   const ds::check::Resolver resolver(model);
   ds::check::Context context(model, metamodel, resolver, binder.notes());
-  context.report({"W-A", "warning", "first", {}});
-  context.report({"W-B", "warning", "second", {}});
+  context.report({"W-A", ds::model::Severity::warning, "first", {}});
+  context.report({"W-B", ds::model::Severity::warning, "second", {}});
   const auto taken = context.take();
   ASSERT_EQ(taken.size(), 2u);
   EXPECT_EQ(taken[0].code, "W-A");

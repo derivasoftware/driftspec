@@ -429,7 +429,7 @@ TEST_F(TestNeighboursPastTheReach, NeighboursThatAreNoNumberAreAFindingAtTheDiag
   const auto wide = neighboursOf("CL_Wide");
   ASSERT_EQ(lots.size(), 1U);
   ASSERT_EQ(wide.size(), 1U);
-  EXPECT_EQ(lots[0].severity, "warning");
+  EXPECT_EQ(lots[0].severity, ds::model::Severity::warning);
   EXPECT_EQ(lots[0].message, "CL_Lots asks for neighbours 'lots': a number of steps");
   EXPECT_EQ(wide[0].message, "CL_Wide asks for neighbours '99999999999': a number of steps");  // too large for an int
   // where the diagram is written, as for a depth

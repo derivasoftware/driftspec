@@ -65,10 +65,10 @@ void BehaviourTyping::call(const model::Entity& msg, const model::Entity& op, co
   context_->checkVisibility(msg.field("from-type").empty() ? msg.scope : msg.field("from-type"), op.id, message.location);
   const int expected = static_cast<int>(op.params.size());
   if (expected != message.argc) {
-    context_->report({"E-MSG-ARITY", "error",
-                      op.id + " takes " + std::to_string(expected) + " parameter" + (expected == 1 ? "" : "s") + ", " +
-                          std::to_string(message.argc) + " given",
-                      message.location});
+    context_->report(context_->metamodel().finding(model::Code::E_MSG_ARITY,
+                                                   op.id + " takes " + std::to_string(expected) + " parameter" +
+                                                       (expected == 1 ? "" : "s") + ", " + std::to_string(message.argc) + " given",
+                                                   message.location));
   }
   if (expected == message.argc) checkArguments(msg, op, message);
   const auto returns = op.fields.find("returns");
@@ -96,7 +96,8 @@ void BehaviourTyping::expand(const model::Entity& msg, const model::Entity& op, 
     model_->annotate(msg.id, "expands", model::Identity(op.id).sequence().text());
     model_->annotate(msg.id, "expands-path", scenario->second);
   } else if (named) {
-    context_->report({"W-SCENARIO-UNDECLARED", "warning", op.id + " has no scenario '" + scenario->second + "'", message.location});
+    context_->report(context_->metamodel().finding(model::Code::W_SCENARIO_UNDECLARED,
+                                                   op.id + " has no scenario '" + scenario->second + "'", message.location));
   }
 }
 
@@ -130,8 +131,8 @@ void BehaviourTyping::checkReturn(const bind::Message& message) {
     mismatch = !compatible(named, {returns->second, home});
   }
   if (mismatch) {
-    context_->report(
-        {"W-RETURN-TYPE", "warning", subject->id + " returns " + returns->second + ", and '" + value + "' is " + given, message.location});
+    context_->report(context_->metamodel().finding(
+        model::Code::W_RETURN_TYPE, subject->id + " returns " + returns->second + ", and '" + value + "' is " + given, message.location));
   }
 }
 
@@ -205,13 +206,14 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
   if (aBox) op = offered(*type, message.op);  // a message to a box goes down to the operation the box offers under that name
   if (!op && aBox) {
     // and when it offers none the message is a label: the level below is not written yet, which is coverage, no finding
-    context_->report({"W-MESSAGE-NO-OPERATION", "coverage",
-                      seq->name + " sends " + message.op + " to " + typeId + ", which offers no operation of that name", message.location});
+    context_->report(context_->metamodel().finding(
+        model::Code::W_MESSAGE_NO_OPERATION,
+        seq->name + " sends " + message.op + " to " + typeId + ", which offers no operation of that name", message.location));
     return;
   }
   if (!op) {
-    context_->report(
-        {"W-MSG-UNDECLARED", "warning", seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location});
+    context_->report(context_->metamodel().finding(
+        model::Code::W_MSG_UNDECLARED, seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location));
     return;
   }
   call(*msg, *op, message);
@@ -277,8 +279,9 @@ bool BehaviourTyping::callStatic(const model::Entity& seq, const model::Entity& 
   model_->annotate(msg.id, "type", typeId);
   couple(seq, *type, true);  // the class is reached for one call, like a local
   if (!op->has("static")) {
-    context_->report({"W-MSG-NOT-STATIC", "warning",
-                      seq.name + " calls " + op->id + " on its class, and it is not static: it needs an instance", message.location});
+    context_->report(context_->metamodel().finding(
+        model::Code::W_MSG_NOT_STATIC, seq.name + " calls " + op->id + " on its class, and it is not static: it needs an instance",
+        message.location));
     return true;
   }
   call(msg, *op, message);
@@ -360,10 +363,10 @@ void BehaviourTyping::checkArguments(const model::Entity& msg, const model::Enti
     }
     const std::pair<std::string, std::string> parameter{parameters[i].type, scope};
     if (compatible(argument, parameter, literal)) continue;
-    context_->report({"W-ARG-TYPE", "warning",
-                      op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" + arguments[i] + "' is " +
-                          (literal ? std::string("a literal") : argument.first),
-                      message.location});
+    context_->report(context_->metamodel().finding(model::Code::W_ARG_TYPE,
+                                                   op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" +
+                                                       arguments[i] + "' is " + (literal ? std::string("a literal") : argument.first),
+                                                   message.location));
   }
 }
 
@@ -407,12 +410,14 @@ void BehaviourTyping::checkEvent(const bind::Event& event) {
   }
   if (entity->kind == model::Kind::Interface) return;  // a jump with nothing behind it is a label of the navigation
   if (event.action) {
-    context_->report({"W-ACTION-UNDECLARED", "warning",
-                      "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type, event.location});
+    context_->report(context_->metamodel().finding(
+        model::Code::W_ACTION_UNDECLARED, "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type,
+        event.location));
     return;
   }
-  context_->report({"W-EVENT-UNDECLARED", "warning",
-                    "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type, event.location});
+  context_->report(context_->metamodel().finding(
+      model::Code::W_EVENT_UNDECLARED, "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type,
+      event.location));
 }
 
 }  // namespace check

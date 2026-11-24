@@ -51,7 +51,7 @@ package driftspec@ds {
       - definitionOf(owner: std::string, name: std::string) -> std::string
       - scopeOf(owner: std::string) -> std::string
       - contains(outer: std::string, inner: std::string) -> bool
-      - report(code: std::string, owner: std::string, message: std::string, at: model::Location) -> void
+      - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
     }
 
     // Read-only questions about the model: what a name means where it is written, what a type inherits
@@ -99,8 +99,10 @@ package driftspec@ds {
       + entities: int
       + expected: int
       + relations: int
-      + errors: int
-      + static of(model: model::Model) -> Report  // the report of a checked model
+      + errors: int                          // findings of a severity that fails
+      + many severities: std::vector<model::SeveritySpec>   // what each severity means, copied from the metamodel (DS-379)
+      + static of(model: model::Model, metamodel: model::Metamodel) -> Report  // the report of a checked model
+      + severityOf(severity: model::Severity) -> model::SeveritySpec          // what the formats ask (DS-379)
     }
 
 
@@ -414,7 +416,7 @@ package driftspec@ds {
       - checkOwnershipCycles() -> void {
         @requirement REQ-00028-2
       }
-      - checkCycles(relation: std::string, code: std::string, verb: std::string) -> void {
+      - checkCycles(relation: std::string, code: model::Code, verb: std::string) -> void {
         @requirement REQ-00118-1
       }
       - checkRefinesUpward() -> void {

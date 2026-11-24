@@ -33,7 +33,7 @@ class Api {
   static check::Selection stepsFor(Output output, const model::Model& bound, const std::string& diagram);
   /// The findings, then the counts: entities declared, expected, relations, errors. The one shape of
   /// a check, printed by `ds check --json` and returned by check (DS-120).
-  static std::string report(const model::Model& model, bool pretty = false);
+  std::string report(const model::Model& model, bool pretty = false) const;
   /// The model with its relations, findings and metamodel: what `ds export` prints.
   std::string exportModel(const Files& files) const;
   /// What the grammar takes at a place of a text (0-based line and column): keywords, an

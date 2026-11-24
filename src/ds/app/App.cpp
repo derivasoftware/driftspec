@@ -135,7 +135,7 @@ int manual(const ds::model::Metamodel& metamodel, const ds::model::Manual& book,
     out["kind"] = {{"meaning", k.meaning}, {"syntax", k.syntax}, {"fields", fields}, {"flags", k.flags}, {"example", k.example}};
   }
   if (const ds::model::CodeSpec* c = metamodel.codeOf(topic))
-    out["code"] = {{"code", c->code}, {"severity", c->severity}, {"meaning", c->meaning}, {"fix", c->fix}};
+    out["code"] = {{"code", c->code}, {"severity", metamodel.severityOf(c->severity).name}, {"meaning", c->meaning}, {"fix", c->fix}};
   if (topic.empty()) out["topics"] = book.topics();
   std::cout << out.dump(2) << "\n";
   return 0;
@@ -146,7 +146,7 @@ int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool js
   if (!loadWorkspace(metamodel, dir, ds::api::Output::Findings, "", &model))
     return 2;  // no workspace to check: the command line is wrong, not the design
   // the one report of a check (DS-120), written by the format asked for (DS-126)
-  const ds::check::Report report = ds::check::Report::of(model);
+  const ds::check::Report report = ds::check::Report::of(model, metamodel);
   ds::format::FormatOptions options;
   options.pretty = true;
   std::cout << ds::format::reportFormats().at(json ? "json" : "text")->write(report, options) << (json ? "\n" : "");

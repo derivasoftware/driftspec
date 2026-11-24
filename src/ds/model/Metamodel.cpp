@@ -16,6 +16,7 @@ Metamodel::Metamodel()
       identityFields_(buildIdentityFields()),
       relations_(buildRelations()),
       codes_(buildCodes()),
+      severities_(buildSeverities()),
       known_(buildKnownAnnotations()),
       other_(buildOtherAnnotation()),
       annotations_(buildAnnotations()) {}

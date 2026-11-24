@@ -109,7 +109,7 @@ TEST_F(TestTextFormatsOfADesign, TheAnswersOfAQueryAreWrittenAsTextOrJsonByName)
 }
 
 TEST_F(TestTextFormatsOfADesign, TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAsTextAndAsJson) {
-  const ds::check::Report report = ds::check::Report::of(model);
+  const ds::check::Report report = ds::check::Report::of(model, metamodel);
   EXPECT_GT(report.entities, 0);
   EXPECT_EQ(report.errors, 0);
   const auto formats = ds::format::reportFormats();

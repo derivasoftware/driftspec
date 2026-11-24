@@ -58,11 +58,11 @@ const Entity& Model::declare(const Entity& entity) {
   // what is written about it (its jumps, its diagram) is still read as it was meant (DS-222)
   if (behaviour(entity.kind) != behaviour(existing.kind)) {
     const Entity& member = behaviour(entity.kind) ? existing : entity;
-    report({"E-NAME-RESERVED", "error",
-            metamodel_->nameOf(member.kind) + " '" + member.id + "' takes the identity of the " +
-                ((behaviour(entity.kind) ? entity.kind : existing.kind) == Kind::State ? "state machine" : "sequence") +
-                " written for what holds it: rename the " + metamodel_->nameOf(member.kind),
-            member.location});
+    report(metamodel_->finding(Code::E_NAME_RESERVED,
+                               metamodel_->nameOf(member.kind) + " '" + member.id + "' takes the identity of the " +
+                                   ((behaviour(entity.kind) ? entity.kind : existing.kind) == Kind::State ? "state machine" : "sequence") +
+                                   " written for what holds it: rename the " + metamodel_->nameOf(member.kind),
+                               member.location));
     if (behaviour(entity.kind)) {
       indexEntity(existing, false);
       existing = entity;
@@ -76,10 +76,10 @@ const Entity& Model::declare(const Entity& entity) {
 }
 
 void Model::reportDuplicate(const Entity& entity, const std::string& id, const Entity& first) {
-  report({"E-DUPLICATE-IDENTITY", "error",
-          metamodel_->nameOf(entity.kind) + " '" + id + "' is declared twice (first at " + first.location.file + ":" +
-              std::to_string(first.location.line) + ")",
-          entity.location});
+  report(metamodel_->finding(Code::E_DUPLICATE_IDENTITY,
+                             metamodel_->nameOf(entity.kind) + " '" + id + "' is declared twice (first at " + first.location.file + ":" +
+                                 std::to_string(first.location.line) + ")",
+                             entity.location));
 }
 
 const Entity* Model::find(const std::string& id) const {
@@ -212,9 +212,7 @@ void Model::cover() {
   // what is not yet written is no finding (Owner, 2026-11-15; DS-216): it is kept apart, as coverage
   std::vector<Finding> findings;
   for (Finding& f : findings_) {
-    const CodeSpec* spec = metamodel_->codeOf(f.code);
-    if (spec && spec->severity == "coverage") {
-      f.severity = "coverage";
+    if (metamodel_->severityOf(f.severity).keptApart) {  // born with the severity the catalogue gives its code (DS-379)
       coverage_.push_back(std::move(f));
     } else {
       findings.push_back(std::move(f));
