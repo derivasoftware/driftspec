@@ -37,7 +37,7 @@ package driftspec@ds {
 
     requirement REQ-00200-1 {
       tags: architecture, query
-      status: draft
+      status: approved
       @refines REQ-00003-2
       title: Every operation of the query shall be a member of the class whose responsibility it is
       text:
@@ -49,7 +49,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-366, DS-385): every module has its architecture decisions and patterns, and its rules
         check that they hold; a free function means a responsibility is missing.
       verification VER-00220-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of the query holds no function of the module, and is told when one is written
         method: test
         tests:
@@ -91,7 +91,7 @@ package driftspec@ds {
     }
 
     verification VER-00003-7 {
-      status: draft
+      status: approved
       @requirement REQ-00003-2
       title: Integration tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram; revision 3 adds that a class answers its machine and its operations' sequences (DS-53)
       text:

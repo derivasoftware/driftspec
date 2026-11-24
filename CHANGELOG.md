@@ -6,6 +6,12 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.69
+
+The Owner approves the roadmap's drafts: check's finding order and architecture (REQ-00193-1..REQ-00195-1 with
+VER-00213-1..VER-00215-1), query's (REQ-00200-1, VER-00220-1, VER-00003-7, VER-00037-8) and the live viewer's and files
+rule's verifications (VER-00250-1..VER-00252-1). Nothing a design writes changes.
+
 ## 0.1.68
 
 A workspace's files are read by one rule, the engine's, wherever Python reads them (DS-413). `driftspec.files()` lists

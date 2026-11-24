@@ -52,7 +52,7 @@ package driftspec@ds {
     // the check is a member of the class whose responsibility it is.
     requirement REQ-00194-1 {
       tags: architecture, check
-      status: draft
+      status: approved
       @refines REQ-00053-2
       title: The checker shall run each step of the check through IStep, and no step shall know another
       text:
@@ -65,7 +65,7 @@ package driftspec@ds {
         hold. ContractCheck split into five (DS-382) without touching the checker, because the checker and the steps
         already kept to it.
       verification VER-00214-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds runs the steps through IStep with no step knowing another, and is told when the checker holds a concrete step or one step knows another
         method: test
         tests:
@@ -77,7 +77,7 @@ package driftspec@ds {
 
     requirement REQ-00195-1 {
       tags: architecture, check
-      status: draft
+      status: approved
       @refines REQ-00053-2
       title: Every operation of the check shall be a member of the class whose responsibility it is
       text:
@@ -88,7 +88,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-378, DS-382, DS-383): the hidden helpers of the steps became members of their step;
         the rule keeps a new one from being written outside a class.
       verification VER-00215-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of the check holds no function of the module, and is told when one is written
         method: test
         tests:
