@@ -360,6 +360,7 @@ package driftspec@ds {
     class BindContext {                      // what binding one node is given; the only place it writes (DS-354)
       @requirement REQ-00172-1
       @requirement REQ-00053-3
+      + BindContext(model: model::Model, notes: Notes, reader: parse::TreeReader, metamodel: model::Metamodel, dispatch: Dispatch, scope: std::string, owner: std::string)   // given whole (DS-424)
       + refs model: model::Model
       + refs notes: Notes
       + refs reader: parse::TreeReader
