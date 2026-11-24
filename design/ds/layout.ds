@@ -15,8 +15,8 @@ package driftspec@ds {
       text:
         An engine is given boxes, each with its size or how its children are arranged, and the edges between them,
         and says where every box lands and how every edge runs. The packing engine fills shelves, fixed places and
-        trees, for the scene; render's layered engine joins it. Whoever places reaches an engine through IEngine,
-        from the factory that names the engines.
+        trees, for the scene; the layered engine layers boxes along their edges and routes them, for render's
+        drawings. Whoever places reaches an engine through IEngine, from the factory that names the engines.
       rationale:
         Owner, 2026-11-24 (DS-368, DS-392): the layout engine is abstracted, so the scene and the drawings share one
         geometry and each projects its own content into it.
@@ -70,6 +70,29 @@ package driftspec@ds {
     class EngineFactory {
       @requirement REQ-00210-1
       + static packing() -> std::unique_ptr<IEngine>
+      + static layered(spacing: Spacing) -> std::unique_ptr<IEngine>
+    }
+
+    // render's engine (DS-185): in every layered frame, bases above what inherits and wholes above parts, components
+    // packed towards a readable aspect, routes orthogonal through lanes; a frame wider than the graph's width wraps its
+    // layers onto further lines. It computes in whole units, which the doubles of a graph and a placement carry exactly
+    class LayeredEngine : IEngine {
+      @requirement REQ-00210-1
+      - owns spacing_: Spacing
+      + LayeredEngine(spacing: Spacing)
+      + place(graph: Graph) -> Placement
+    }
+
+    dataclass Spacing {                      // the room the layered engine leaves, in pixels or in cells
+      @requirement REQ-00210-1
+      + channel: int                          // the width a long edge runs down; a container is never narrower than eight
+      + gapX: int
+      + gapY: int
+      + lane: int                             // one row per edge that turns between two layers
+      + lanePad: int
+      + containerPad: int
+      + containerLabelH: int
+      + aspect: double
     }
 
     // the scene's engine (DS-389): a frame is fixed, fills shelves or is a tree, and a graph can hold its shelves to
@@ -103,11 +126,11 @@ package driftspec@ds {
       + widths: std::map<std::string, double>
     }
 
-    dataclass Edge {                         // an edge between two boxes, by their identities, with its kind
+    dataclass Edge {                         // an edge between two boxes, by their identities: whether it points up is all an engine reads
       @requirement REQ-00210-1
       + from: std::string
       + to: std::string
-      + kind: std::string
+      + upward: bool                          // the to box sits above the from box: a base above what inherits
     }
 
     dataclass Route {                        // how an edge runs: the corners of its polyline, in order
@@ -126,7 +149,7 @@ package driftspec@ds {
     dataclass Frame {                        // a box to pack (DS-389): its identity, how its children are arranged, and their frames
       @requirement REQ-00210-1
       + id: std::string
-      + arrangement: Arrangement               // fixed, in shelves, or a tree
+      + arrangement: Arrangement               // fixed, in shelves, a tree, or layered along its edges
       + kids: std::vector<Frame>
       + w: double
       + h: double
@@ -142,6 +165,7 @@ package driftspec@ds {
       + portTop: double
       + portGap: double
       + drop: double
+      + label: double                         // a layered frame: the width its label takes
     }
 
     dataclass Packed {                       // a frame packed (DS-389): its size and where each child sits, from its top left corner

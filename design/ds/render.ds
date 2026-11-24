@@ -1,8 +1,8 @@
 // LLD of the render namespace (ds::render): the model drawn. A diagram selects
 // and decides what to print (IrExport → the render-IR of the plantuml family,
 // SREQ-00006-1, SREQ-00010-1); the IR is laid out once and drawn twice, as SVG
-// and as terminal text, wrapping to a width (SREQ-00005-1). Layout itself is the
-// class Layout, over the types below.
+// and as terminal text, wrapping to a width (SREQ-00005-1). Layout projects the IR
+// into a graph for the layout module's layered engine and reads the places back (DS-392).
 
 package driftspec@ds {
 
@@ -389,6 +389,20 @@ package driftspec@ds {
       + Layout(m: Metrics)
       + sizeOf(node: IrNode) -> Rect                                  // from its text alone
       + place(doc: IrDocument, maxWidth: int) -> LayoutResult         // layered, wrapped to the width
+    }
+
+    // the IR as a graph for the layout's layered engine (DS-392): each node a frame under its parent, a container
+    // layered with the width of its label, any other node sized from its text, every edge told whether it points up;
+    // the places come back in whole units
+    sequence Layout::place {
+      local node: IrNode
+      local engine: layout::IEngine           // from the layout's EngineFactory
+      local graph: layout::Graph
+      loop each node of the document {
+        -> sizeOf(node) -> size
+      }
+      -> engine.place(graph) -> placed
+      return result
     }
 
     class Svg {                              // the SVG drawing, with its links, tooltips and script
