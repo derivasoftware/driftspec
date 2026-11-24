@@ -6,6 +6,10 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+A merge request does not edit this file: it writes its entry as `changelog.d/<card>.md`, and
+`tools/changelog.py` later moves each entry under the version its merge was released as (see
+`changelog.d/README.md`).
+
 ## 0.1.71
 
 The language server and the live viewer show a finding's severity as the severity table gives it (DS-386). The engine
