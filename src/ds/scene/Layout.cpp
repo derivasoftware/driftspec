@@ -6,6 +6,7 @@
 #include <map>
 #include <regex>
 #include <set>
+#include <unordered_map>
 #include <utility>
 
 #include "ds/model/Metamodel.hpp"
@@ -359,30 +360,47 @@ class Variant {
     return e.id;
   }
 
-  // a box whose classes are inherited from comes before the boxes that inherit: bases read first
+  // a box whose classes are inherited from comes before the boxes that inherit: bases read first. Each inheritance is
+  // read once, as the boxes it joins; then the first box in the order written that waits for none of the boxes left is
+  // taken, and when every box left waits for another (a cycle) the first one left is, so the order written is kept
   void order(std::vector<std::pair<std::string, std::pair<double, double>>>& boxes) const {
-    const auto inside = [](const std::string& id, const std::string& box) { return id.compare(0, box.size() + 2, box + "::") == 0; };
-    const auto heirOf = [&](const std::string& heir, const std::string& base) {
-      for (const auto& pair : bases_) {
-        if (!inside(pair.first, heir)) continue;
-        for (const auto& b : pair.second)
-          if (inside(b, base)) return true;
+    std::unordered_map<std::string, std::vector<size_t>> at;  // the boxes by their identity
+    for (size_t i = 0; i < boxes.size(); ++i) at[boxes[i].first].push_back(i);
+    const auto holders = [&](const std::string& id) {  // the boxes an identity is inside: its prefixes that end before a ::
+      std::vector<size_t> out;
+      for (size_t p = id.find("::"); p != std::string::npos; p = id.find("::", p + 1)) {
+        const auto it = at.find(id.substr(0, p));
+        if (it != at.end()) out.insert(out.end(), it->second.begin(), it->second.end());
       }
-      return false;
+      return out;
     };
+    std::vector<std::set<size_t>> waits(boxes.size());  // the boxes each box inherits from
+    for (const auto& pair : bases_) {
+      const std::vector<size_t> heirs = holders(pair.first);
+      if (heirs.empty()) continue;
+      for (const auto& b : pair.second)
+        for (const size_t j : holders(b))
+          for (const size_t i : heirs)
+            if (i != j) waits[i].insert(j);
+    }
+    std::vector<size_t> left(boxes.size());  // how many of the boxes not yet taken each box waits for
+    std::vector<std::vector<size_t>> waitedBy(boxes.size());
+    std::set<size_t> untaken, ready;
+    for (size_t i = 0; i < boxes.size(); ++i) {
+      left[i] = waits[i].size();
+      for (const size_t j : waits[i]) waitedBy[j].push_back(i);
+      untaken.insert(i);
+      if (left[i] == 0) ready.insert(i);
+    }
     std::vector<std::pair<std::string, std::pair<double, double>>> done;
-    std::vector<bool> taken(boxes.size(), false);
-    while (done.size() < boxes.size()) {
-      size_t pick = boxes.size();
-      for (size_t i = 0; i < boxes.size() && pick == boxes.size(); ++i) {
-        if (taken[i]) continue;
-        bool waits = false;
-        for (size_t j = 0; j < boxes.size() && !waits; ++j) waits = !taken[j] && j != i && heirOf(boxes[i].first, boxes[j].first);
-        if (!waits) pick = i;
-      }
-      if (pick == boxes.size()) pick = std::find(taken.begin(), taken.end(), false) - taken.begin();  // a cycle: keep the order written
-      taken[pick] = true;
+    done.reserve(boxes.size());
+    while (!untaken.empty()) {
+      const size_t pick = ready.empty() ? *untaken.begin() : *ready.begin();
+      untaken.erase(pick);
+      ready.erase(pick);
       done.push_back(boxes[pick]);
+      for (const size_t i : waitedBy[pick])
+        if (--left[i] == 0 && untaken.count(i)) ready.insert(i);
     }
     boxes = done;
   }

@@ -6,6 +6,16 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.60
+
+The viewer orders the boxes of a package in one pass over the inheritances (DS-388). To put a module whose classes
+are inherited from before the modules that inherit, the layout asked of every pair of boxes, again for each box it
+placed, whether one inherits from the other, by walking every inheritance of the model; on a design of a few
+thousand classes that was half of the layout and a sixth of `ds render -f json`. Each inheritance is now read once, as the boxes it
+joins, and the boxes are taken in the same order as before: the first one written that waits for none of those
+left, and the first one left when they wait for each other. Nothing a design writes changes: the viewer, its scene
+and every drawing are the same.
+
 ## 0.1.59
 
 The Owner approves the roadmap's drafts: the evaluator's requirement and its verification (REQ-00192-1,
