@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.45
+## 0.1.46
 
 Parse and text keep their own rules (DS-374). Describing a syntax error is a class of its own, `SyntaxError`, and what
 the grammar takes in a parse state is `Lookahead`, which the error's hint and an editor's completion now share instead
@@ -16,6 +16,13 @@ the grammar it was parsed with, the reader resolves its fields from it and the b
 file. The design of ds says so in four rules, that parse knows no model and writes no free function, and that text
 depends on no other module of the engine and holds no state. Nothing a design writes changes: findings, syntax errors,
 completions and every drawing read the same.
+
+## 0.1.45
+
+The axis is written as requirements held by rules (DS-367): every operation of the axis is a member of the class
+whose responsibility it is, and the axis reads the model it cuts and leaves it as it is. standsAmong and bondOf are
+static members of Cut, and so are the helpers its source hid. Nothing a design writes, no finding, export or
+drawing changes.
 
 ## 0.1.44
 

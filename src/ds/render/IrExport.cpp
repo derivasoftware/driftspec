@@ -300,7 +300,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
     if (!drawn.insert(key).second) continue;
     nlohmann::json edge = {{"from", fromClass}, {"to", r.to}, {"kind", kind}};
     if (!label.empty()) edge["label"] = label;
-    edge["refs"]["bond"] = axis::bondOf(r.kind);  // what it reads as between boxes, once lifted (DS-230)
+    edge["refs"]["bond"] = axis::Cut::bondOf(r.kind);  // what it reads as between boxes, once lifted (DS-230)
     out["edges"].push_back(edge);
   }
   // what a box does counts as much as what it declares, with or without open: (DS-219): its behaviours cross
@@ -315,7 +315,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
     const auto at = drawn.lower_bound(pair);
     if (at != drawn.end() && at->compare(0, pair.size(), pair) == 0) continue;
     drawn.insert(pair + "dependency||");
-    out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}, {"refs", {{"bond", axis::bondOf(r.kind)}}}});
+    out["edges"].push_back({{"from", owner}, {"to", r.to}, {"kind", "dependency"}, {"refs", {{"bond", axis::Cut::bondOf(r.kind)}}}});
   }
   // a cut written (`open:`, `close:`, `cut:`) says which boxes close: the drawing is lifted onto it (DS-229)
   const axis::Cut cut(model_, metamodel_, *diagram);
