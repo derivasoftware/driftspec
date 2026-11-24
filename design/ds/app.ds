@@ -30,8 +30,9 @@ package driftspec@ds {
     function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279); it makes the metamodel (DS-341) and its manual (DS-342) once
     - function work(argv: std::vector<std::string>) -> int         // runs the command; what cannot be read is said, exit 2
 
-    - function load(metamodel: model::Metamodel, dir: std::string) -> model::Model
-    - function loadWorkspace(metamodel: model::Metamodel, dir: std::string, model: model::Model) -> bool
+    // loaded for what the command gives (DS-376); the Api chooses which steps of the check run for it
+    - function load(metamodel: model::Metamodel, dir: std::string, output: api::Output, diagram: std::string) -> model::Model
+    - function loadWorkspace(metamodel: model::Metamodel, dir: std::string, output: api::Output, diagram: std::string, model: model::Model) -> bool
     - function titleOf(dir: std::string) -> std::string
     - function readFile(path: std::string) -> std::string
     - function emit(output: std::string, text: std::string) -> int
@@ -46,7 +47,7 @@ package driftspec@ds {
       opt the path is not a directory / missing {
         return false
       }
-      -> load(metamodel, dir) -> loaded
+      -> load(metamodel, dir, output, diagram) -> loaded
       return true
     }
 
@@ -54,7 +55,7 @@ package driftspec@ds {
     sequence check {
       local model: model::Model
       local chosen: format::ReportText
-      -> loadWorkspace(metamodel, dir, model) -> found
+      -> loadWorkspace(metamodel, dir, findings, diagram, model) -> found
       -> check::Report::of(model) -> report
       -> format::reportFormats() -> formats
       -> chosen.write(report, options) -> written
@@ -65,7 +66,7 @@ package driftspec@ds {
       local parser: parse::Parser
       local api: api::Api
       -> parser.parseDirectory(dir) -> files
-      -> api.load(files) -> loaded
+      -> api.load(files, output, diagram) -> loaded
       return loaded
     }
 
@@ -78,7 +79,7 @@ package driftspec@ds {
     sequence main / check-errors {
       local metamodel: model::Metamodel
       local model: model::Model
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, findings, diagram, model) -> found
       return 1
     }
 
@@ -90,7 +91,7 @@ package driftspec@ds {
       local metamodel: model::Metamodel
       local model: model::Model
       local exporter: exporter::JsonExport
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, whole, diagram, model) -> found
       -> exporter.render(model, pretty) -> json
       return 0
     }
@@ -109,7 +110,7 @@ package driftspec@ds {
       local scene: scene::Scene
       local query: query::Query
       local html: format::SceneHtml
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, viewer, diagram, model) -> found
       opt a diagram to open the viewer framed on / framed {
         -> query.ask(question, diagram) -> shown
       }
@@ -127,7 +128,7 @@ package driftspec@ds {
       local model: model::Model
       local scene: scene::Scene
       local json: format::SceneJson
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, viewer, diagram, model) -> found
       -> scene.build() -> document
       -> format::sceneFormats() -> formats
       -> json.write(document, options) -> text
@@ -135,13 +136,14 @@ package driftspec@ds {
       return 0
     }
 
-    // a diagram is its IR, written by the format named by -f (DS-126)
+    // a diagram is its IR, written by the format named by -f (DS-126); loaded with only the steps of the
+    // check a drawing reads (DS-376)
     sequence main / render-diagram {
       local metamodel: model::Metamodel
       local model: model::Model
       local ir: render::IrExport
       local chosen: format::DiagramSvg
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
       -> diagramId(diagram) -> id
       -> ir.render(id, pretty) -> document
       -> format::diagramFormats() -> formats
@@ -164,7 +166,7 @@ package driftspec@ds {
       local metamodel: model::Metamodel
       local model: model::Model
       local ir: render::IrExport
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
       -> ir.render(name, pretty) / no-diagram -> document
       return 1
     }
@@ -174,7 +176,7 @@ package driftspec@ds {
       local model: model::Model
       local query: query::Query
       local chosen: format::AnswersText
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
       -> query.ask(question, subject) -> answers
       -> format::answerFormats() -> formats
       -> chosen.write(answers, options) -> text
@@ -185,7 +187,7 @@ package driftspec@ds {
       local metamodel: model::Metamodel
       local model: model::Model
       local query: query::Query
-      -> loadWorkspace(metamodel, argv, model) -> found
+      -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
       -> query.ask(question, subject) -> answers
       return 1
     }

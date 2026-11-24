@@ -75,6 +75,59 @@ TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
   EXPECT_EQ(all.at("failures")->needs(), (Needs{"linker", "behaviour"}));  // the calls resolved (DS-188)
 }
 
+/// The keys of the steps made for a selection, in the order of the map.
+std::vector<std::string> keysOf(const ds::check::Selection& selection) {
+  std::vector<std::string> out;
+  for (const auto& s : ds::check::steps(selection)) out.push_back(s.first);
+  return out;
+}
+
+/// A load runs the steps it is given (DS-376): each step a selection names is made under its own name, the eleven
+/// steps of the check are eleven steps of a selection, and with none named none is made.
+TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
+  using ds::check::Selection;
+  using ds::check::Step;
+  const std::vector<std::pair<Step, std::string>> named{{Step::Linker, "linker"},
+                                                        {Step::Behaviour, "behaviour"},
+                                                        {Step::Derivation, "derivation"},
+                                                        {Step::Failures, "failures"},
+                                                        {Step::Contracts, "contracts"},
+                                                        {Step::Structure, "structure"},
+                                                        {Step::Dependencies, "dependencies"},
+                                                        {Step::Rules, "rules"},
+                                                        {Step::Levels, "levels"},
+                                                        {Step::States, "states"},
+                                                        {Step::Order, "order"}};
+  std::vector<std::string> names;
+  for (const auto& n : named) {
+    const auto made = ds::check::steps(Selection::of({n.first}));
+    ASSERT_TRUE(made.count(n.second)) << n.second;
+    EXPECT_EQ(made.at(n.second)->name(), n.second);
+    names.push_back(n.second);
+  }
+  std::sort(names.begin(), names.end());
+  EXPECT_EQ(keysOf(Selection::every()), names);  // one step each, and every step of the check
+  EXPECT_EQ(keysOf(Selection::every()), keysOf(Selection::every().with(Step::Rules)));
+  EXPECT_EQ(ds::check::steps().size(), 11u);  // with no selection, every step
+  EXPECT_TRUE(ds::check::steps(Selection::of({})).empty());
+}
+
+/// A step chosen brings every step it needs (DS-376), so none runs without what it reads: the rules bring what
+/// writes the finished model, the contracts what escapes each operation, and the checker orders what it is given.
+TEST(TestSteps, AStepChosenBringsEveryStepItNeeds) {
+  using ds::check::Selection;
+  using ds::check::Step;
+  using Keys = std::vector<std::string>;
+  EXPECT_EQ(keysOf(Selection::of({Step::Linker})), Keys{"linker"});
+  EXPECT_EQ(keysOf(Selection::of({Step::Rules})), (Keys{"behaviour", "derivation", "linker", "rules"}));
+  EXPECT_EQ(keysOf(Selection::of({Step::Contracts})), (Keys{"behaviour", "contracts", "failures", "linker"}));
+  EXPECT_EQ(keysOf(Selection::of({Step::Order})), (Keys{"behaviour", "linker", "order"}));
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  const auto drawing = ds::check::steps(Selection::of({Step::Derivation, Step::Behaviour}));
+  EXPECT_EQ(ds::check::Checker(model, metamodel, drawing).order(), (Keys{"linker", "behaviour", "derivation"}));
+}
+
 /// A step gives back what it found (DS-138): a step that enriches reports to the context, which
 /// hands the findings back in the order they were said, once.
 TEST(TestFindings, TheContextHandsBackWhatAStepReportedInOrderAndOnce) {

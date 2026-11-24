@@ -11,6 +11,7 @@
 #include "ds/bind/Notes.hpp"
 #include "ds/check/Context.hpp"
 #include "ds/check/Resolver.hpp"
+#include "ds/check/Selection.hpp"
 #include "ds/check/Step.hpp"
 #include "ds/model/Model.hpp"
 
@@ -261,8 +262,9 @@ class RuleCheck : public IStep {
   const Resolver* resolver_ = nullptr;
 };
 
-/// Every step of the check, made in one place, by key (DS-138).
-std::map<std::string, std::unique_ptr<IStep>> steps();
+/// The steps of the check a selection names and every step they need, made in one place and keyed by name (DS-138):
+/// what a load runs is chosen outside, by the Api (DS-376); every step, unless a selection says otherwise.
+std::map<std::string, std::unique_ptr<IStep>> steps(const Selection& selection = Selection::every());
 
 }  // namespace check
 }  // namespace ds

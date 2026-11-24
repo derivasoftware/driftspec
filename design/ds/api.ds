@@ -42,6 +42,35 @@ package driftspec@ds {
       tags: python, api
     }
 
+    // What a workspace is loaded to give (DS-376), which says which steps of the check its load runs: the
+    // findings (ds check), the whole model (ds export, and a workspace kept for many questions), the answers of
+    // a query, the viewer (its page or its scene) or one diagram drawn (svg, text, cells, the IR or its layout).
+    enum Output {
+      @requirement REQ-00085-1
+      @constraint CST-00001-1
+      Findings, Model, Answers, Viewer, Drawing
+    }
+
+    // ---- who chooses the steps of the check (DS-376) ----------------------------------------------------
+    // The Api chooses, for what a load is to give, which steps of the check it runs; the check makes and runs
+    // what it is given. A command, a format or any other box names what it wants, an Output, never the steps.
+    definition chooses-steps(x) {
+      title: x, a class or a function, names the selection of the steps a load runs, or a behaviour of it makes the steps of the check
+      if x is class, depends(x, driftspec@ds@check::Selection)
+      if x is function, depends(x, driftspec@ds@check::Selection)
+      if x is function, s behaviour-of x, s uses driftspec@ds@check::Selection
+      if x is class, m in x, s behaviour-of m, y in s, y calls driftspec@ds@check::steps
+      if x is function, s behaviour-of x, y in s, y calls driftspec@ds@check::steps
+    }
+
+    rule only-the-api-chooses-the-steps {
+      title: no class or function outside the api and the check names the selection of the steps a load runs or makes them, so the Api alone chooses which steps of the check run for what each command gives
+      @requirement REQ-00085-1
+      for module b in driftspec@ds
+      where b != driftspec@ds@api, b != driftspec@ds@check
+      never chooses-steps(x), x in b
+    }
+
     // A workspace loaded once (DS-173): its model kept for every question. When it grows, it becomes a
     // module of its own with its questions grouped by what they look at.
     class Workspace {
@@ -50,7 +79,8 @@ package driftspec@ds {
       @constraint CST-00009-1
       - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
       - owns model_: model::Model
-      + Workspace(metamodel: model::Metamodel, files: Files)   // loaded in the language it is given (DS-341)
+      // loaded in the language it is given (DS-341), for every question unless it is loaded to draw one diagram (DS-376)
+      + Workspace(metamodel: model::Metamodel, files: Files, output: Output, diagram: std::string)
       + model() -> model::Model
       + exportModel() -> std::string
       + report() -> std::string
@@ -127,8 +157,14 @@ package driftspec@ds {
       - refs metamodel_: model::Metamodel
       + Api(metamodel: model::Metamodel)
       + check(files: Files) -> std::string
-      + load(files: std::vector<parse::ParsedFile>) -> model::Model {
+      + load(files: std::vector<parse::ParsedFile>, output: Output, diagram: std::string) -> model::Model {
         @requirement REQ-00167-1
+        @requirement REQ-00085-1
+      }
+      // the one place that chooses the steps of the check a load runs, for what it is to give (DS-376)
+      + static stepsFor(output: Output, bound: model::Model, diagram: std::string) -> check::Selection {
+        @requirement REQ-00085-1
+        @constraint CST-00001-1
       }
       + static report(model: model::Model, pretty: bool) -> std::string
       + exportModel(files: Files) -> std::string
@@ -161,7 +197,9 @@ package driftspec@ds {
         }
         -> binder.bind(file)
       }
-      -> check::steps() -> steps
+      // the steps the output reads, chosen here and nowhere else (DS-376)
+      -> stepsFor(output, model, diagram) -> selection
+      -> check::steps(selection) -> steps
       self -> binder.notes() -> notes
       -> checker.run(notes)
       // what only echoes a file that does not parse goes until it parses (DS-304); the rest by where it is written
@@ -170,7 +208,24 @@ package driftspec@ds {
       return model
     }
 
-    // The functions of text to JSON: a Workspace loaded for one question (DS-173).
+    // Every step for every output but a drawing. A drawing shows the relations the linker makes, the calls
+    // and couplings behaviour typing makes and the stereotypes derivation makes; it reads no finding, coverage,
+    // escape or breach. A table written as rows and columns is the answers of its rules (DS-268), so they run
+    // for it.
+    sequence Api::stepsFor {
+      opt anything but a drawing / whole {
+        -> check::Selection::every() -> every
+        return every
+      }
+      -> check::Selection::of(steps) -> drawing
+      opt a table written as rows and columns / table {
+        -> drawing.with(step) -> table
+        return table
+      }
+      return drawing
+    }
+
+    // The functions of text to JSON: a Workspace loaded for one question (DS-173), and for what it gives (DS-376).
     sequence Api::check {
       local workspace: Workspace
       -> workspace.report() -> json
@@ -234,9 +289,11 @@ package driftspec@ds {
       Owner, 2026-11-06 (DS-84): a Python face to depend on, and a language server; text in
       and JSON out keeps one contract for every caller.
     tags: api, python
-    verification VER-00094-2 {
-      status: approved
-      title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, and says what the grammar takes at a place
+    // revision 3 (DS-376): a drawing runs only the steps of the check it reads, chosen by the Api alone, and draws
+    // byte for byte as after the whole check
+    verification VER-00094-3 {
+      status: draft
+      title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, says what the grammar takes at a place, and draws a diagram with only the steps of the check it reads, chosen by the Api alone, as after the whole check
       method: test
       tests:
         tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheExampleChecksCleanAsTheCommandLineSays
@@ -246,6 +303,13 @@ package driftspec@ds {
         tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.ADiagramDrawsAsTextOrAsItsRenderIr
         tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheViewerOpensFramedOnWhatItIsAsked
         tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.WhatTheGrammarTakesWhereAnEditorAsksInTheExample
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.EveryKindOfDiagramOfTheDesignIsDrawnAsAfterTheWholeCheck
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.AStateMachineAndItsTableAreDrawnAsAfterTheWholeCheck
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.TheApiDrawsADiagramAsTheWorkspaceLoadedWholeDoes
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.AStepADrawingReadsChangesItWhenItIsLeftOut
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ASelectionOfStepsNamedOutsideTheApiIsTold
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.StepsMadeOutsideTheApiAreTold
     }
   }
 

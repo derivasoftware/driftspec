@@ -177,9 +177,45 @@ package driftspec@ds {
       + order() -> std::vector<std::string>
     }
 
-    // the one place that names each step: it makes them and keys them by name
-    function steps() -> std::map<std::string, std::unique_ptr<IStep>> {
+    // the one place that names each step: it pairs each with what it does, makes the ones a selection names and
+    // every one they need, and keys them by name (DS-376)
+    function steps(selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>> {
       @requirement REQ-00012-1
+      @requirement REQ-00085-1
+    }
+
+    // Each step of the check, by what it does (DS-376): what a selection is made of. steps() pairs each with the
+    // step it makes, so the names the steps are keyed by stay theirs.
+    enum Step {
+      @requirement REQ-00085-1
+      @constraint CST-00001-1
+      Linker, Behaviour, Derivation, Failures, Contracts, Structure, Dependencies, Rules, Levels, States, Order
+    }
+
+    // The steps of the check a load runs (DS-376): chosen by the Api for what the load is to give, and read by
+    // steps(), which makes them and every step they need. The checker runs what it is given and knows nothing
+    // of it; a drawing that runs fewer steps reads the same model where it looks.
+    class Selection {
+      @requirement REQ-00085-1
+      @constraint CST-00001-1
+      - owns steps_: std::set<Step>
+      + static every() -> Selection                   // what the findings, the export, a query and the viewer read
+      + static of(steps: std::vector<Step>) -> Selection   // the steps named, and no other
+      + with(step: Step) -> Selection                 // the same steps and one more
+      + has(step: Step) -> bool
+    }
+
+    // the steps a selection names and every step they need: a step chosen never runs without what it reads
+    sequence steps {
+      local step: IStep
+      local made: std::map<std::string, std::unique_ptr<IStep>>
+      loop each step of the check {
+        -> selection.has(kind) -> named
+      }
+      loop each step taken, until none it needs is missing {
+        -> step.needs() -> needs
+      }
+      return made
     }
 
     class Linker : IStep {                // references become relations, behaviours take their subject's identity

@@ -51,9 +51,10 @@ bool isDirectory(const std::string& path) {
   return std::filesystem::is_directory(path, error);
 }
 
-ds::model::Model load(const ds::model::Metamodel& metamodel, const std::string& dir) {
+ds::model::Model load(const ds::model::Metamodel& metamodel, const std::string& dir, ds::api::Output output, const std::string& diagram) {
   ds::parse::Parser parser;
-  return ds::api::Api(metamodel).load(parser.parseDirectory(dir));  // loaded as the Api loads texts (DS-120)
+  // loaded as the Api loads texts (DS-120); the Api chooses which steps of the check run for the output (DS-376)
+  return ds::api::Api(metamodel).load(parser.parseDirectory(dir), output, diagram);
 }
 
 /// Whether any .ds file lies under a directory: a directory with none is no workspace (a mistyped path, most often).
@@ -64,9 +65,10 @@ bool holdsDesign(const std::string& dir) {
   return false;
 }
 
-/// The workspace loaded, or nothing when the path is no workspace (reported on stderr): every command
-/// then exits 2, bad usage, since the command line names no design (DS-83).
-bool loadWorkspace(const ds::model::Metamodel& metamodel, const std::string& dir, ds::model::Model* model) {
+/// The workspace loaded for what the command gives of it (DS-376), or nothing when the path is no workspace
+/// (reported on stderr): every command then exits 2, bad usage, since the command line names no design (DS-83).
+bool loadWorkspace(const ds::model::Metamodel& metamodel, const std::string& dir, ds::api::Output output, const std::string& diagram,
+                   ds::model::Model* model) {
   if (!isDirectory(dir)) {
     std::cerr << "cannot read " << dir << ": not a directory\n";
     return false;
@@ -75,7 +77,7 @@ bool loadWorkspace(const ds::model::Metamodel& metamodel, const std::string& dir
     std::cerr << "no .ds file under " << dir << ": it is no workspace\n";
     return false;
   }
-  *model = load(metamodel, dir);
+  *model = load(metamodel, dir, output, diagram);
   return true;
 }
 
@@ -141,7 +143,8 @@ int manual(const ds::model::Metamodel& metamodel, const ds::model::Manual& book,
 
 int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool json) {
   ds::model::Model model(metamodel);
-  if (!loadWorkspace(metamodel, dir, &model)) return 2;  // no workspace to check: the command line is wrong, not the design
+  if (!loadWorkspace(metamodel, dir, ds::api::Output::Findings, "", &model))
+    return 2;  // no workspace to check: the command line is wrong, not the design
   // the one report of a check (DS-120), written by the format asked for (DS-126)
   const ds::check::Report report = ds::check::Report::of(model);
   ds::format::FormatOptions options;
@@ -175,9 +178,11 @@ struct Render {
       }
       return emit(output, diagramFormat(false)->write({doc}, drawingOptions(false)));  // as it came, drawn by the format named
     }
+    // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376)
+    const bool viewer = format == "html" || format == "json";
     ds::model::Model model(metamodel);
-    if (!loadWorkspace(metamodel, input, &model)) return 2;
-    if (format == "html" || format == "json") {
+    if (!loadWorkspace(metamodel, input, viewer ? ds::api::Output::Viewer : ds::api::Output::Drawing, diagram, &model)) return 2;
+    if (viewer) {
       // the scene is the document; the format named writes it (DS-126)
       const auto formats = ds::format::sceneFormats();
       ds::format::FormatOptions options;
@@ -305,7 +310,7 @@ int run(int argc, char** argv) {
   if (checkCmd->parsed()) return check(metamodel, dir, json);
   if (renderCmd->parsed()) return render.run(metamodel);
   ds::model::Model model(metamodel);
-  if (!loadWorkspace(metamodel, dir, &model)) return 2;
+  if (!loadWorkspace(metamodel, dir, exportCmd->parsed() ? ds::api::Output::Model : ds::api::Output::Answers, "", &model)) return 2;
   if (exportCmd->parsed()) {
     std::cout << ds::exporter::JsonExport(metamodel).render(model) << "\n";
     return 0;

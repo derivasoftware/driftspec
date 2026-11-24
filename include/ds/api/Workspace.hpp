@@ -14,6 +14,11 @@ namespace api {
 /// A workspace as text: each .ds file by its path, as an editor holds it (saved or not).
 using Files = std::map<std::string, std::string>;
 
+/// What a workspace is loaded to give (DS-376), which says which steps of the check its load runs: the findings (ds
+/// check), the whole model (ds export, and a workspace kept for many questions), the answers of a query, the viewer
+/// (its page or its scene) or one diagram drawn (svg, text, cells, the IR or its layout). The Api chooses the steps.
+enum class Output { Findings, Model, Answers, Viewer, Drawing };
+
 /// A workspace loaded once (DS-173): its files and its model, parsed, bound and checked, kept for as
 /// many questions as the caller asks. Its questions are the engine's own: what the index answers in
 /// one hop, a behaviour's tree, path and walk, what ds query answers and a diagram takes, a diagram
@@ -23,8 +28,9 @@ using Files = std::map<std::string, std::string>;
 class Workspace {
  public:
   /// The files loaded in the language of `metamodel`, which outlives it (DS-341) and which it hands each reader of
-  /// the model it asks (DS-351).
-  Workspace(const model::Metamodel& metamodel, const Files& files);
+  /// the model it asks (DS-351), for what it is to give (DS-376): every question, unless it is loaded to draw one
+  /// diagram; then only the drawing of that diagram is an answer.
+  Workspace(const model::Metamodel& metamodel, const Files& files, Output output = Output::Model, const std::string& diagram = "");
   /// The model it keeps, for a caller in this process.
   const model::Model& model() const { return model_; }
 
