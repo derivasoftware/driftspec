@@ -39,9 +39,9 @@ void Derivation::classify() {
   }
   for (const auto& id : classes) {
     int methods = 0, abstractMethods = 0, attributes = 0;
-    for (const auto& pair : model_->entities()) {
-      const model::Entity& m = pair.second;
-      if (m.scope != id) continue;
+    // what the class declares, by the index of each scope's members: no pass over the model per class (DS-375)
+    for (const auto& member : model_->index().members(id)) {
+      const model::Entity& m = *model_->find(member);
       // a constructor, a destructor and a static method are no part of the contract (DS-143)
       if (m.kind == model::Kind::Method && !m.has("constructor") && !m.has("destructor") && !m.has("static")) {
         ++methods;
