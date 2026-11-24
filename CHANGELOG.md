@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.69
+## 0.1.70
 
 A rule reads what an entity is, matches a value against a pattern and reads a member's flag (DS-403). `name(x)`,
 `id(x)` and `kind(x)` are the name, the identity and the kind of the entity bound to x; they read it and never bind
@@ -18,6 +18,12 @@ language. A definition of one of those names is reported (E-RULE-RESERVED) and c
 the three can stand as a variable where a literal begins. A pattern that is no string or does not compile is reported
 at the rule (E-RULE-PATTERN). No kind may declare a field named `name` or `id`. Every design that used none of them
 checks, draws and exports as before.
+
+## 0.1.69
+
+The Owner approves the roadmap's drafts: check's finding order and architecture (REQ-00193-1..REQ-00195-1 with
+VER-00213-1..VER-00215-1), query's (REQ-00200-1, VER-00220-1, VER-00003-7, VER-00037-8) and the live viewer's and files
+rule's verifications (VER-00250-1..VER-00252-1). Nothing a design writes changes.
 
 ## 0.1.68
 

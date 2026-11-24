@@ -1994,7 +1994,7 @@ package driftspec@ds {
           are said with unfold:, fold: and depth: (REQ-00130-1).
         verification VER-00037-8 {
           title: Integration tests confirm a sequence diagram selects a behaviour as it is written and expands by depth
-          status: draft
+          status: approved
           text:
             Revision 6 (DS-337): a depth too large for an int is the finding of a depth that is no
             number, at the same place, and is drawn as one; it no longer stops ds. The filters read

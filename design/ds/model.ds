@@ -311,7 +311,7 @@ package driftspec@ds {
     // ---- a finding is made from its code (DS-379), as requirements and the rules that hold them ------------------
     requirement REQ-00193-1 {
       tags: architecture, model, findings
-      status: draft
+      status: approved
       @refines REQ-00001-1
       title: The findings and the coverage shall be ordered by where they are written and then by what they say, never by the order the check's steps ran in
       text:
@@ -322,7 +322,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-382): splitting one step into five reordered the coverage, which no sort ever ordered,
         and could reorder two findings on one line; the order of the output should follow the design, not the engine.
       verification VER-00213-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the findings and the coverage of a design are ordered by file, line, code and message, and the same findings reported in another order come out in the same order
         method: test
         tests:
