@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.40
+
+Sequences get a binder of their own (DS-356, group four of four): a sequence is the behaviour of an operation, with
+its steps, the frames that hold them and an alt in two branches, its messages kept for the checker. Every construct
+of the language now binds through its own binder; the walk the binder had takes no kind any more, and DS-357 removes
+it. Nothing a design writes, no finding, export or drawing changes.
+
 ## 0.1.39
 
 Classes and functions get binders of their own (DS-356, group three of four). A class's members, its methods,
