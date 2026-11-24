@@ -139,7 +139,106 @@ package driftspec@ds {
     tags: render, scene, size
   }
 
+  // what places the boxes: the layout, its projection and packer, and their frames (DS-391)
+  definition lays-out(b) {
+    title: b is one of the pieces that place the boxes of the scene (DS-391)
+    if b = driftspec@ds@scene::Layout
+    if b = driftspec@ds@scene::Projection
+    if b = driftspec@ds@scene::Packer
+    if b = driftspec@ds@scene::Frame
+    if b = driftspec@ds@scene::Packed
+  }
+
   module scene {
+    @requirement REQ-00186-1                 // every operation of the scene is a member of a class (DS-391)
+    @requirement REQ-00187-1                 // the scene reads the model and leaves it as it is (DS-391)
+    // ---- what the scene is, as requirements and the rules that hold them (DS-391) ---------------------------
+    requirement REQ-00186-1 {
+      tags: architecture, scene
+      status: approved
+      @refines REQ-00069-2
+      title: Every operation of the scene shall be a member of the class whose responsibility it is
+      text:
+        The layout places, the projection reads the model into frames, the packer packs them, the map says where an
+        identity lands, each layer adds its part and the factory names the layers: every operation is one of theirs.
+        A function of the module would be a responsibility no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-387): every module has its architecture decisions and patterns, and its rules
+        check that they hold.
+      verification VER-00206-1 {
+        status: approved
+        title: Integration tests confirm the design of ds keeps it, and is told when a function of scene is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheSceneIsTold
+      }
+    }
+
+    requirement REQ-00187-1 {
+      tags: architecture, scene
+      status: approved
+      @refines REQ-00069-2
+      title: The scene shall read the model it places and draws, and leave it as it is
+      text:
+        The layout, the map and every layer ask the model their questions and call none of what changes it, so the
+        model the scene draws is the one the check reported on and the export wrote.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-387): every module has its architecture decisions and patterns, and its rules
+        check that they hold.
+      verification VER-00207-1 {
+        status: approved
+        title: Integration tests confirm the design of ds keeps it, and is told when a behaviour of scene changes the model
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ASceneThatChangesTheModelIsTold
+      }
+    }
+
+    requirement REQ-00188-1 {
+      tags: architecture, scene
+      status: approved
+      @refines REQ-00069-2
+      title: No layer of the scene shall know the layout: a layer reaches the boxes placed only through the map and the document
+      text:
+        The boxes are placed once, for both variants, before any layer draws. A layer finds where an identity lands
+        through the map and draws over the document; one that held the layout, its projection, its packer or their
+        frames could place boxes again, and two perspectives would disagree on where a box is.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-387): every module has its architecture decisions and patterns, and its rules
+        check that they hold.
+      verification VER-00208-1 {
+        status: approved
+        title: Integration tests confirm the design of ds keeps it, and is told when a layer depends on what places the boxes
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ALayerThatKnowsTheLayoutIsTold
+      }
+    }
+
+    requirement REQ-00189-1 {
+      tags: architecture, scene
+      status: approved
+      @refines REQ-00069-2
+      title: The packer shall place boxes knowing nothing of the model
+      text:
+        Frames in, boxes out: sizes, arrangements and identities are all it is given. So it can pack the boxes of any
+        drawing; DS-368 moves it, with render's layered engine, into a geometry module.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-387): every module has its architecture decisions and patterns, and its rules
+        check that they hold.
+      verification VER-00209-1 {
+        status: approved
+        title: Integration tests confirm the design of ds keeps it, and is told when the packer depends on the model
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.APackerThatKnowsTheModelIsTold
+      }
+    }
+
 
     requirement REQ-00069-2 {
       status: approved
@@ -627,6 +726,37 @@ package driftspec@ds {
       never depends(c, x), x inherits driftspec@ds@scene::ILayer
     }
 
+    rule scene-operations-belong-to-classes {
+      title: no function is written in the module of scene, so every operation of the scene is a member of a class
+      @requirement REQ-00186-1
+      for function f in driftspec@ds@scene
+      never f in driftspec@ds@scene
+    }
+
+    rule the-scene-reads-the-model {
+      title: no behaviour of the scene calls what changes the model, so the scene reads the model and leaves it as it is
+      @requirement REQ-00187-1
+      for class c in driftspec@ds@scene, method b in driftspec@ds@model::Model
+      where changes-the-model(b)
+      never m in c, s behaviour-of m, x in s, x calls b
+    }
+
+    rule no-layer-knows-the-layout {
+      title: no layer depends on what places the boxes, so a layer reaches them only through the map and the document
+      @requirement REQ-00188-1
+      for class a in driftspec@ds@scene, class b in driftspec@ds@scene
+      where a inherits driftspec@ds@scene::ILayer, lays-out(b)
+      never depends(a, b)
+    }
+
+    rule the-packer-knows-no-model {
+      title: the packer depends on nothing of the model, so it places boxes from their sizes and arrangements alone
+      @requirement REQ-00189-1
+      for class c in driftspec@ds@scene
+      where c = driftspec@ds@scene::Packer
+      never depends(c, x), x in driftspec@ds@model
+    }
+
     // ---- placing the boxes, and the map --------------------------------------------------------
     // where every box goes, once per variant (lean hides private members): the model projected into frames, then
     // packed; the base document
@@ -692,6 +822,7 @@ package driftspec@ds {
     class Packer {
       @requirement REQ-00069-2
       @requirement REQ-00076-1
+      @requirement REQ-00189-1                 // it knows no model (DS-391)
       - widths_: std::map<std::string, double>   // the width each shelved frame came out at, kept or followed
       - following_: bool
       + Packer(widths: std::map<std::string, double>, following: bool)
@@ -753,6 +884,7 @@ package driftspec@ds {
     // a layer adds its part of the document; it is built with the model and the map and keeps them
     class ILayer {
       @requirement REQ-00069-2
+      @requirement REQ-00188-1                 // a layer knows the boxes through the map, never the layout (DS-391)
       + ~ILayer()
       + abstract decorate(out_document: SceneDocument) -> void
     }
