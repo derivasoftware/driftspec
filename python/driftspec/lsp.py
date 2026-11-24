@@ -27,6 +27,12 @@ models: dict[str, driftspec.Model] = {}  # every workspace open, by its director
 workspaces: dict[str, driftspec.Workspace] = {}  # the same, loaded once in the engine for drawing and the viewer (DS-173)
 published: dict[str, set[str]] = {}       # the files of each workspace that carry diagnostics
 
+# What an editor shows a finding as, read from the severity table (DS-386): each severity by its editor mapping, so
+# no severity is named here; the words on the right are the protocol's own.
+EDITOR = {"error": lsp.DiagnosticSeverity.Error, "warning": lsp.DiagnosticSeverity.Warning,
+          "information": lsp.DiagnosticSeverity.Information, "hint": lsp.DiagnosticSeverity.Hint}
+SEVERITY = {s["name"]: EDITOR[s["editor"]] for s in driftspec.severities()}
+
 
 def path_of(uri: str) -> str:
     return os.path.realpath(unquote(urlparse(uri).path))
@@ -83,7 +89,7 @@ def refresh(ls: LanguageServer, ws: str) -> None:
             lsp.Diagnostic(
                 range=lsp.Range(lsp.Position(line, col), lsp.Position(line, col + 1)),
                 message=f.message,
-                severity=lsp.DiagnosticSeverity.Error if f.severity == "error" else lsp.DiagnosticSeverity.Warning,
+                severity=SEVERITY[f.severity],
                 code=f.code,
                 source="ds",
             )

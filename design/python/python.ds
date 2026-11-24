@@ -75,6 +75,14 @@ package driftspec@driftspec {
         tests/integration/python/test_lsp.py::TestLanguageServer::test_the_outline_lists_every_declaration_of_the_file
         tests/integration/python/test_lsp.py::TestLanguageServer::test_completion_offers_every_kind_a_reference_names
     }
+    verification VER-00254-1 {
+      status: draft
+      title: Integration tests confirm the language server publishes each finding with the editor mapping the severity table gives its severity, and never the coverage
+      text: DS-386, the regression test of the language server reading the severity table instead of naming a severity.
+      method: test
+      tests:
+        tests/integration/python/test_lsp.py::TestSeverityThroughTheTable::test_each_diagnostic_carries_the_editor_mapping_of_its_finding_s_severity
+    }
   }
 
   // ---- the library: what a Python caller sees -------------------------------------------------
@@ -185,12 +193,13 @@ package driftspec@driftspec {
         tests/integration/python/test_live.py::TestLiveSession::test_the_contract_says_its_routes_and_its_version
         tests/integration/python/test_live.py::TestLiveSession::test_the_page_goes_fullscreen_whole_when_the_viewer_asks
     }
-    verification VER-00250-1 {
-      status: approved
-      title: Integration tests confirm the HTTP routes, the MCP tools and the command line are read from one contract, agree with it, and publish what version 4 did byte for byte
+    verification VER-00250-2 {
+      status: draft
+      title: Integration tests confirm the HTTP routes, the MCP tools and the command line are read from one contract, agree with it, and publish their contract byte for byte
+      text: Revision 2 (DS-386): the contract is version 5, with the coverage in the state; the pin follows it.
       method: test
       tests:
-        tests/integration/python/test_live_contract.py::TestContract::test_the_contract_publishes_what_version_4_did_byte_for_byte
+        tests/integration/python/test_live_contract.py::TestContract::test_the_contract_publishes_its_version_byte_for_byte
         tests/integration/python/test_live_contract.py::TestContract::test_the_tools_an_agent_lists_are_what_version_4_listed_byte_for_byte
         tests/integration/python/test_live_contract.py::TestContract::test_every_route_of_the_contract_is_served_and_nothing_else
         tests/integration/python/test_live_contract.py::TestContract::test_every_route_answers_on_a_session
@@ -206,6 +215,29 @@ package driftspec@driftspec {
       tests:
         tests/integration/python/test_live_events.py::TestEventsCarryWhatTheyWereSentWith::test_an_annotate_event_keeps_the_annotations_it_was_sent_with
         tests/integration/python/test_live_events.py::TestEventsCarryWhatTheyWereSentWith::test_a_model_event_keeps_the_state_it_was_sent_with
+    }
+  }
+
+  requirement REQ-00230-1 {
+    status: draft
+    @refines SREQ-00017-1
+    title: The live session shall show the coverage apart from the findings, and colour each finding by the severity the severity table gives it
+    text:
+      The state carries the coverage (what is not yet written: a requirement nothing verifies, an
+      operation with no behaviour) in a field of its own, apart from the findings, and the page lists it
+      in a folded section of its own in the information colour. Each finding is coloured by its row of
+      the severity table: one that fails red, one that does not amber. The findings pill counts what
+      fails, with the rest beside it. The page carries the table as the engine writes it and names no
+      severity itself.
+    rationale: Owner, 2026-11-24 (DS-386): the page painted every finding red and the pill red on any finding; the coverage, kept apart since DS-216, reached no Python door.
+    tags: live, viewer, severity
+    verification VER-00253-1 {
+      status: draft
+      title: Integration tests confirm the coverage reaches the state apart from the findings and the page carries the severity table it colours by
+      method: test
+      tests:
+        tests/integration/python/test_live_severities.py::TestSeveritiesOnThePage::test_the_coverage_reaches_the_state_apart_from_the_findings
+        tests/integration/python/test_live_severities.py::TestSeveritiesOnThePage::test_the_page_carries_the_severity_table_it_colours_by
     }
   }
 
@@ -556,6 +588,7 @@ package driftspec@driftspec {
     // Workspace it loads (DS-341); version() is that metamodel's
 
     function version() -> std::string
+    function severities() -> std::string        // the severity table, as the engine writes it (DS-386)
     function check(files: std::map<std::string, std::string>) -> std::string
     function export(files: std::map<std::string, std::string>) -> std::string
     function expected_at(text: std::string, line: int, column: int) -> std::string
@@ -798,6 +831,7 @@ package driftspec@driftspec {
       @requirement REQ-00086-1
       + many findings: list[Finding]
       + counts: Mapping[str, int]
+      + many coverage: list[Finding]           // kept apart from the findings: what is not yet written (DS-216)
       + errors() -> int                        // a property: the count of errors
     }
 
@@ -882,6 +916,7 @@ package driftspec@driftspec {
     function render(source: Source, diagram: str, format: str, width: int) -> str
     function page(source: Source, title: str, focus: list[str] | tuple[str, ...]) -> str
     function expected_at(text: str, line: int, column: int) -> list[str]
+    function severities() -> list[dict]        // the severity table as the engine writes it: a door reads a severity here, never by name
     // the engine's JSON read into the types above, one shape each
     - function _location(d: Mapping) -> Location
     - function _finding(d: Mapping) -> Finding
@@ -1022,6 +1057,7 @@ package driftspec@driftspec {
   }
 
   module live_session {                        // the session over one workspace, and the parts it is made of
+    @requirement REQ-00230-1
     @requirement REQ-00089-2
     @requirement REQ-00090-1
     @requirement REQ-00102-1
@@ -1048,6 +1084,7 @@ package driftspec@driftspec {
     }
 
     class Live {                               // a session over one workspace: its model version by version, and what both sides point at
+      @requirement REQ-00230-1
       @requirement REQ-00089-2
       @requirement REQ-00090-1
       + workspace: str                         // the workspace's real path
@@ -1058,6 +1095,7 @@ package driftspec@driftspec {
       + optional loaded: driftspec.Workspace | None      // the version shown, loaded once in the engine (DS-173)
       + history: list[dict]                    // the last reloads: version, when, how long
       + findings: list[dict]
+      + coverage: list[dict]                   // what is not yet written, kept apart from the findings (DS-386)
       + counts: dict
       + selection: dict
       + rules: list[dict]
@@ -1072,6 +1110,7 @@ package driftspec@driftspec {
         @requirement REQ-00100-1
       }
       + state() -> dict
+      + shown(f) -> dict                       // a finding as a page reads it: code, severity, message, file, line
       + tick() -> None                         // one look at the files; an error is kept, never raised
       + watch(every: float) -> None
       + annotated(frame: list[str]) -> None    // what is kept, saved and told to every page
@@ -1234,6 +1273,7 @@ package driftspec@driftspec {
   }
 
   module live_page {                           // the page around the viewer, which follows the session
+    @requirement REQ-00230-1
     @requirement REQ-00089-2
     @requirement REQ-00102-1
     @requirement REQ-00103-1
