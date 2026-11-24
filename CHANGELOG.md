@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.63
+## 0.1.64
 
 The contracts are checked in five steps, and the order of what the check reports no longer follows its steps
 (DS-382). ContractCheck becomes InterfaceContracts, UseCaseContracts, DiagramCheck, ScenarioCheck and FailureCheck,
@@ -18,6 +18,13 @@ code, then message. The coverage was never sorted and came out in the order the 
 coverage spans several steps now reads it by where each entry is written. On the 28 workspaces of the comparison this
 reorders the coverage of three (the audit and levels corpora and the repository) and two pairs of findings on one
 line; nothing is added or removed, and the golden files do not move.
+
+## 0.1.63
+
+The golden ctest compares without pytest (DS-415). `ctest` ran the golden files through `python3 -m pytest`, so on a
+machine whose python3 has no pytest the test failed for that reason alone. `tests/system/python/test_golden.py --check
+--ds <ds>` makes the same comparison as a plain script and exits 1 when a document differs; ctest runs it that way and
+needs only python3. CI's golden job still runs it under pytest, for its report.
 
 ## 0.1.62
 
