@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.55
+## 0.1.56
 
 The check names its steps in a class, and its steps keep no hidden helpers (DS-382). The free function that made the
 steps a selection asks for is `Steps::of`, the one place that names the concrete steps. What three steps did in
@@ -14,6 +14,12 @@ functions hidden in their files is now theirs: CallOrder says the states a call 
 whether a pattern names something declared, and LevelCoherence finds the operation a message calls, the behaviour below
 an entry, the crossings below it and where each one said finds its place. The crossings and what lies below an entry are
 written in the design. Nothing a design writes changes.
+
+## 0.1.55
+
+The viewer's test that a behaviour is written once and replayed by many tours runs on a fixture made for it (DS-377):
+one behaviour called from four places, whose calls and steps are known, instead of a ratio of ds's own design that moved
+with every change to it. ds's design keeps the tours that name its entities. Nothing a design writes changes.
 
 ## 0.1.54
 
