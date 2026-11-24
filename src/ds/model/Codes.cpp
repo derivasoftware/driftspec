@@ -29,6 +29,14 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
        "the model, and until the file parses the findings that only echo the cut are left out: the rest of that file's, and "
        "every name declared nowhere.",
        "Fix this one first and check again. The message says what the place takes; ds manual grammar says what goes where."},
+      {Code::E_ENCODING, "E-ENCODING", Severity::error,
+       "A file is not UTF-8: the byte at the place shown is not part of a character. It is a continuation byte nothing leads, "
+       "a byte that leads nothing (0xC0, 0xC1, 0xF5 to 0xFF), or the lead of a character cut short, written in an overlong "
+       "form, a surrogate or above U+10FFFF. The place is the line and the column of that byte, both counted from 1 and the "
+       "column in bytes, as E-SYNTAX counts them. Nothing of the file is read, and until it is UTF-8 the findings that only "
+       "echo its absence are left out: every name declared nowhere. The other files are read and checked as usual.",
+       "Save the file as UTF-8 and check again. A byte from 0x80 to 0xFF on its own is most often a letter written in Latin-1 or "
+       "Windows-1252, such as 0xE9 for \u00e9."},
       {Code::E_NAME_RESERVED, "E-NAME-RESERVED", Severity::error,
        "A member is named state or sequence and its holder has that behaviour: a state machine is X::state and a sequence "
        "X::name::sequence, so the member takes the identity of the behaviour.",

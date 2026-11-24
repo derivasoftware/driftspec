@@ -73,6 +73,11 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
   bind::Binder binder(model, metamodel_);
   std::set<std::string> broken;
   for (const auto& parsed : files) {
+    if (parsed.hasEncodingError) {  // read no further: said once, at its first byte that is not UTF-8 (DS-411)
+      broken.insert(parsed.path);
+      model.report(metamodel_.finding(model::Code::E_ENCODING, "the file is not UTF-8: " + parsed.errorDetail + "; nothing of it is read",
+                                      {parsed.path, parsed.errorLine, parsed.errorColumn}));
+    }
     if (parsed.hasSyntaxErrors) {
       broken.insert(parsed.path);
       const Unclosed u = unclosedBlock(parsed.text);
@@ -87,12 +92,13 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
                                         {parsed.path, parsed.errorLine, parsed.errorColumn}));
       }
     }
-    binder.bind(parsed);
+    binder.bind(parsed);  // a file that is not UTF-8 has the empty tree: nothing of it is bound
   }
   const auto steps = check::Steps::of(stepsFor(output, model, diagram));  // only the steps the output reads (DS-376)
   check::Checker(model, metamodel_, steps).run(binder.notes());
-  // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
-  // the rest of that file, and every name now declared nowhere. They go until the file parses (DS-304)
+  // what a file that does not parse, or is not UTF-8, leaves out of the model comes back as findings that only echo
+  // the cut: the rest of that file, and every name now declared nowhere. They go until the file is read whole (DS-304,
+  // DS-411)
   model.withdrawEchoes(broken);
   model.sortFindings();
   return model;

@@ -1,6 +1,8 @@
 #include "ds/parse/Parser.hpp"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -10,6 +12,7 @@
 
 #include "ds/parse/Lookahead.hpp"
 #include "ds/parse/SyntaxError.hpp"
+#include "ds/text/Utf8.hpp"
 
 extern "C" const TSLanguage* tree_sitter_driftspec(void);
 
@@ -21,6 +24,22 @@ Parser::Parser() : parser_(ts_parser_new()) { ts_parser_set_language(parser_, tr
 Parser::~Parser() { ts_parser_delete(parser_); }
 
 ParsedFile Parser::parseText(const std::string& path, const std::string& text) {
+  const std::size_t bad = ds::text::Utf8::invalidAt(text);
+  if (bad != std::string::npos) {
+    // not UTF-8 (DS-411): marked at the first byte that is not part of a character, its line and its column in bytes
+    // counted from 1 as a syntax error's are; read no further, so none of its text reaches the model or a writer
+    ParsedFile file;
+    file.path = path;
+    file.hasEncodingError = true;
+    const std::size_t lineStart = text.rfind('\n', bad);  // the byte is no new line: a new line is ASCII
+    file.errorLine = 1 + static_cast<int>(std::count(text.begin(), text.begin() + static_cast<std::ptrdiff_t>(bad), '\n'));
+    file.errorColumn = 1 + static_cast<int>(lineStart == std::string::npos ? bad : bad - lineStart - 1);
+    char byte[8];
+    std::snprintf(byte, sizeof byte, "0x%02X", static_cast<unsigned>(static_cast<unsigned char>(text[bad])));
+    file.errorDetail = std::string("byte ") + byte + " is not part of a character";
+    file.tree = std::shared_ptr<TSTree>(ts_parser_parse_string(parser_, nullptr, "", 0), ts_tree_delete);
+    return file;
+  }
   // a file written on Windows ends its lines in CRLF: read as LF, so no text the model keeps ends in a
   // carriage return; lines and columns stay where they were (DS-315)
   std::string read;

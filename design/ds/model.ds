@@ -397,7 +397,7 @@ package driftspec@ds {
 
     enum Code {                              // a finding code of the catalogue, in its order: E-SYNTAX is E_SYNTAX (DS-379)
       @requirement REQ-00190-1
-      E_SYNTAX, E_NAME_RESERVED, E_DUPLICATE_IDENTITY, E_MSG_ARITY, E_MODIFIER_CONFLICT, E_OPERATOR_UNDECLARED,
+      E_SYNTAX, E_ENCODING, E_NAME_RESERVED, E_DUPLICATE_IDENTITY, E_MSG_ARITY, E_MODIFIER_CONFLICT, E_OPERATOR_UNDECLARED,
       E_OWNERSHIP_CYCLE, E_RELATION_KIND, E_REF_UNPINNED, E_REFINES_CYCLE, E_INHERITANCE_CYCLE, E_TEMPLATE_BOUND,
       E_DATACLASS_ABSTRACT, W_REF_UNDECLARED, W_NAME_AMBIGUOUS, W_REVISION_DRIFT, W_PARENT_IGNORED, W_FIELD_UNKNOWN,
       W_ANNOTATION_UNKNOWN, W_DIAGRAM_UNDECLARED, W_RULE_NEVER_MATCHES, W_REFINES_UPWARD, W_SATISFIES_OUTSIDE_HOME,
@@ -1054,7 +1054,7 @@ package driftspec@ds {
       + cover() -> void {                     // what the metamodel calls coverage leaves the findings (DS-216)
         @requirement REQ-00124-1
       }
-      + withdrawEchoes(broken: std::set<std::string>) -> void   // what only echoes files that do not parse (DS-304)
+      + withdrawEchoes(broken: std::set<std::string>) -> void   // what only echoes files that do not parse or are not UTF-8 (DS-304, DS-411)
       + sortFindings() -> void {              // findings and coverage by file, line, code and message: no order of the steps (DS-382)
         @requirement REQ-00193-1
       }
@@ -1137,13 +1137,14 @@ package driftspec@ds {
       }
     }
 
-    // A file that does not parse leaves names declared nowhere and a rest that echoes the cut (DS-304).
+    // A file that does not parse leaves names declared nowhere and a rest that echoes the cut (DS-304); so does a
+    // file that is not UTF-8, of which nothing is read (DS-411).
     sequence Model::withdrawEchoes {
       opt every file parses / whole {
         return
       }
       loop each finding {
-        opt it says nothing of its own: in a broken file, or a name declared nowhere, and not the syntax error {
+        opt it says nothing of its own: in a broken file, or a name declared nowhere, and neither the syntax error nor the encoding error {
           // it goes
         }
       }

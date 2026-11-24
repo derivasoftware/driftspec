@@ -7,34 +7,48 @@ package driftspec@ds {
 
 
   module parse {
-    @requirement REQ-00008-1
+    @requirement REQ-00008-2
     @requirement REQ-00176-1                 // parse reads syntax and knows no model (DS-374)
     @requirement REQ-00177-1                 // every operation of parse is a member of a class (DS-374)
 
-    requirement REQ-00008-1 {
-      status: approved
+    requirement REQ-00008-2 {
+      status: draft
       @refines SREQ-00001-1
-      title: The parser shall read every .ds file under a directory into a tree, in any order, marking the files that do not parse
+      title: The parser shall read every .ds file under a directory into a tree, in any order, marking the files that do not parse or are not UTF-8
       text:
         A directory is walked recursively; every .ds file is read whole and
         parsed with the DriftSpec grammar into a tree that lives as long as
         the parsed file. A file with a syntax error is still returned, marked,
         so the workspace loads whole and the error is reported once at the
-        file. Text is parsed the same way without a file.
+        file. A file is UTF-8 text: one whose bytes are not is returned marked
+        at its first byte that is not part of a character, on its line and at
+        its column in bytes, both counted from 1 as a syntax error's are, and
+        is read no further: no text and the empty tree, so nothing of it
+        reaches the model and the error is reported once at that byte
+        (E-ENCODING). Text is parsed the same way without a file.
       rationale:
         Loading never fails on one file; the model absorbs the rest and says
-        which file did not parse.
+        which file did not parse. Revision 2 (DS-411, Owner 2026-11-24): a
+        file with one Latin-1 byte checked clean, while ds export and every
+        JSON output failed on it naming no file or line. The encoding is
+        checked where a file is read, so every command says the same at the
+        same place and no writer is handed text that is not UTF-8.
       tags: parse, workspace
     }
 
-    verification VER-00008-2 {
-      status: approved
-      @requirement REQ-00008-1
-      title: Integration tests cover a whole workspace parsed without errors and a syntax error marked
+    verification VER-00008-3 {
+      status: draft
+      @requirement REQ-00008-2
+      title: Integration tests cover a whole workspace parsed without errors, a syntax error marked, and a file that is not UTF-8 reported once at the line and byte column of its first such byte while the others load
+      text:
+        Revision 3 (DS-411): a file that is not UTF-8 is reported once, as
+        E-ENCODING at its first such byte, and nothing of it reaches the
+        model; the file beside it is read as before.
       method: test
       tests:
         tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AWholeWorkspaceIsReadWithoutSyntaxErrors
         tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.ASyntaxErrorIsReportedWhereTheFileStopsParsing
+        tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AFileThatIsNotUtf8IsReportedOnceAtItsFirstSuchByteAndTheOthersLoad
     }
 
     requirement REQ-00080-1 {
@@ -70,7 +84,7 @@ package driftspec@ds {
     requirement REQ-00176-1 {
       tags: architecture, parse
       status: approved
-      @refines REQ-00008-1
+      @refines REQ-00008-2
       title: The parser shall read the syntax of a file and know nothing of the model
       text:
         Parsing reads text into a tree, says where a syntax error is and what the grammar takes there, and reads a
@@ -92,7 +106,7 @@ package driftspec@ds {
     requirement REQ-00177-1 {
       tags: architecture, parse
       status: approved
-      @refines REQ-00008-1
+      @refines REQ-00008-2
       title: Every operation of parse shall be a member of the class whose responsibility it is
       text:
         Reading a text into a tree is the Parser's, finding and describing the first syntax error is the
@@ -127,25 +141,26 @@ package driftspec@ds {
     }
 
     dataclass ParsedFile {                   // one file read: its path, text, tree and whether it parsed
-      @requirement REQ-00008-1
+      @requirement REQ-00008-2
       @requirement REQ-00080-1
       + path: std::string
       + text: std::string
       + owns tree: std::shared_ptr<TSTree>
       + hasSyntaxErrors: bool
-      + errorLine: int                       // where it stops parsing (SREQ-00002-1: a finding at its place)
-      + errorColumn: int
-      + errorDetail: std::string             // where it sits and what the grammar takes there (REQ-00080-1)
+      + hasEncodingError: bool               // a byte that is not part of a UTF-8 character: read no further (DS-411)
+      + errorLine: int                       // where it stops parsing, or its first byte that is not UTF-8 (SREQ-00002-1: a finding at its place)
+      + errorColumn: int                     // counted in bytes, from 1
+      + errorDetail: std::string             // where it sits and what the grammar takes there (REQ-00080-1), or the byte
     }
 
     class Parser {                           // the tree-sitter parser with the DriftSpec language set
-      @requirement REQ-00008-1
+      @requirement REQ-00008-2
       @requirement REQ-00012-1
       @constraint CST-00007-1
       - owns parser_: TSParser
       + Parser()
       + language() -> TSLanguage             // the grammar it reads with; a parsed file carries it in its tree (DS-374)
-      + parseText(path: std::string, text: std::string) -> ParsedFile
+      + parseText(path: std::string, text: std::string) -> ParsedFile   // a text that is not UTF-8 is read no further (DS-411)
       + parseFile(path: std::string) -> ParsedFile
       + parseDirectory(directory: std::string) -> std::vector<ParsedFile>
       + expectedAt(text: std::string, line: int, column: int) -> std::vector<std::string> {
@@ -174,9 +189,16 @@ package driftspec@ds {
     }
 
     // Most of parsing is the tree-sitter C API, whose functions the design does not declare: what
-    // is left of parseText is the file it fills and, when the tree has an error, where it is.
+    // is left of parseText is the file it fills and, when the tree has an error, where it is. A text
+    // that is not UTF-8 is marked at its first such byte and read no further (DS-411): its file has
+    // no text and the empty tree, so nothing of it reaches the model.
     sequence Parser::parseText {
+      -> text::Utf8::invalidAt(text) -> bad
       local file: ParsedFile
+      opt the text is not UTF-8 {
+        // its line and its column in bytes, from 1, as a syntax error's
+        return file
+      }
       opt the tree has an error {
         local root: TSNode
         local error: SyntaxError
@@ -246,14 +268,14 @@ package driftspec@ds {
     }
 
     dataclass Span {                         // where a node is written in its file: lines and columns from 1, its end included
-      @requirement REQ-00008-1
+      @requirement REQ-00008-2
       + line: int
       + column: int
       + endLine: int
       + endColumn: int
     }
     class TreeReader {                       // the syntax tree of one parsed file, read; it knows no model (DS-354)
-      @requirement REQ-00008-1
+      @requirement REQ-00008-2
       - refs file_: ParsedFile
       - ids_: std::vector<TSFieldId>         // each field's id in the grammar of the file, resolved with the reader (DS-374)
       + TreeReader(file: ParsedFile)
@@ -272,7 +294,7 @@ package driftspec@ds {
     }
 
     enum Field {                             // a field of the grammar, as grammar.js names it, read by its id (DS-360)
-      @requirement REQ-00008-1
+      @requirement REQ-00008-2
       action, base, body, bound, call, code, condition, default_, definition, else_scenario, entity, event, fails, failure, family, field, from, guard, id, key, kind, left, many, modifier, name, negated, of, op, operator_, operators, optional, otherwise, ownership, package, parameter, params, prefix, realises, relation, result, returns, right, scenario, scope, show, subject, symbol, target, text, title, to, type, value, variable, visibility
     }
   }

@@ -54,7 +54,7 @@ def workspace_of(ls: LanguageServer, path: str) -> str:
         here = up
 
 
-def workspace_files(ls: LanguageServer, ws: str) -> dict[str, str]:
+def workspace_files(ls: LanguageServer, ws: str) -> dict[str, str | bytes]:
     files = {os.path.realpath(p): text for p, text in driftspec.read(ws).items()}
     for uri, doc in ls.workspace.text_documents.items():  # the buffers, saved or not, win over the disk
         path = path_of(uri)
@@ -235,7 +235,7 @@ def subject_of(word: str) -> tuple[str, str]:
     return ("entity", found[0].id) if found else ("", "")
 
 
-def with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]:
+def with_focus(files: dict[str, str | bytes], identity: str) -> tuple[dict[str, str | bytes], str]:
     """The workspace with a diagram of one entity and what it relates to, written on the fly; a member
     is drawn as the class it belongs to."""
     entity = state["model"].find(identity)

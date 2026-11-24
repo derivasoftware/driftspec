@@ -17,10 +17,10 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
   }
 
-  verification SVER-00002-4 {
-    status: approved
+  verification SVER-00002-5 {
+    status: draft
     @requirement SREQ-00002-1
-    title: System tests confirm every incoherence is a finding with code, severity and location, and a path that is no workspace is bad usage
+    title: System tests confirm every incoherence is a finding with code, severity and location, a file that is not UTF-8 among them, and a path that is no workspace is bad usage
     text:
       ds check prints file:line:column, code and message per finding and
       exits with 1 when an error is among them; a workspace with an
@@ -28,12 +28,17 @@ package driftspec {
       that is no workspace (none there, or no .ds file under it) exits with
       2 on every command, as a command line to correct. A file that does not
       parse comes back the same way, whatever the text its message quotes
-      (revision 4, DS-334).
+      (revision 4, DS-334). A file that is not UTF-8 is E-ENCODING at the
+      line and byte column of its first such byte: ds check exits with 1,
+      and ds export, ds render (the scene as JSON, a diagram as svg) and
+      ds query --json write, the other files checked as usual (revision 5,
+      DS-411).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
       tests/system/ds/test_qualification.cpp::TestQualification.TheCheckJsonSaysTheFindingsAndTheCounts
       tests/system/ds/test_qualification.cpp::TestQualification.ASyntaxErrorQuotingAWideCharacterComesBackAsJson
+      tests/system/ds/test_qualification.cpp::TestQualification.AFileThatIsNotUtf8IsAFindingAtItsByteAndEveryCommandStillWrites
       tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
   }

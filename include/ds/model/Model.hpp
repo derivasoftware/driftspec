@@ -197,8 +197,8 @@ class Model {
   /// Every finding whose code the metamodel calls coverage leaves the findings for the coverage, marked so, each
   /// list in the order reported (DS-216).
   void cover();
-  /// The findings that only echo what files that do not parse leave out of the model go: everything else said
-  /// in those files, and every name declared nowhere. What says the files do not parse stays (DS-304).
+  /// The findings that only echo what files that do not parse, or are not UTF-8, leave out of the model go: everything
+  /// else said in those files, and every name declared nowhere. What says the files are broken stays (DS-304, DS-411).
   void withdrawEchoes(const std::set<std::string>& broken);
   /// The findings, and the coverage, in the order of where they are written: by file, then by line, and on one line
   /// by code, then by message (DS-382). Neither depends on the order the steps of the check ran in.
