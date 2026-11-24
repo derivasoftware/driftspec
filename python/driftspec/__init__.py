@@ -10,6 +10,9 @@
     driftspec.expected_at(text, line, column)     # what the grammar takes there
     driftspec.qualify("p@m", "C")                 # how an identity is written, asked of the engine
 
+A workspace is the design's folder (e.g. design/): every .ds file below it is read, as ds reads it, so a
+folder that holds more than the design is read whole, and is slower for it.
+
 The engine answers in JSON it writes itself (the shapes of ds export, ds check --json and
 ds query --json); this module only reads it into its own types, and computes nothing the engine
 knows, so a tool sees the same thing whether it calls Python or the binary.
@@ -164,10 +167,10 @@ class Report:
 
 
 def files(root: Union[str, os.PathLike], nested: bool = True) -> list[str]:
-    """The .ds files of a directory, as the engine reads a workspace (Parser::parseDirectory): every regular
-    file whose extension is .ds in every folder below it, dot-folders too; a link to a file is followed and a
-    link to a folder is not; a broken link and a file named only ".ds" are no file of it; sorted. Only the
-    directory's own files when nested is false."""
+    """The .ds files of the design's folder (e.g. design/), as the engine reads a workspace
+    (Parser::parseDirectory): every regular file whose extension is .ds in every folder below it, dot-folders
+    too; a link to a file is followed and a link to a folder is not; a broken link and a file named only ".ds"
+    are no file of it; sorted. Only the folder's own files when nested is false."""
     found: list[str] = []
     for here, _, names in os.walk(os.fspath(root)):
         for name in names:
@@ -180,7 +183,8 @@ def files(root: Union[str, os.PathLike], nested: bool = True) -> list[str]:
 
 
 def read(source: Source) -> dict[str, str]:
-    """The texts of a workspace: a directory's .ds files (files() says which), or a mapping given as it is."""
+    """The texts of a workspace: the .ds files of the design's folder (e.g. design/; files() says which), or a
+    mapping given as it is."""
     if isinstance(source, Mapping):
         return {str(k): str(v) for k, v in source.items()}
     root = os.fspath(source)

@@ -114,7 +114,8 @@ class Events:
 
 
 class Watcher:
-    """The .ds files of a workspace, watched: what they were at the last look, and whether a save changed them."""
+    """The .ds files of the design's folder (e.g. design/), watched as the engine reads them: what they were at
+    the last look, and whether a save changed them."""
 
     def __init__(self, workspace: str):
         self.workspace: str = workspace
