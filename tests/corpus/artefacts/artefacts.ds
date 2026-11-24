@@ -21,7 +21,7 @@ package iris {
 
   // --- system level: in the package ---------------------------------------------
 
-  requirement SREQ-00001-2 {
+  requirement SREQ-00001-2 {  // ? W-REQ-UNREALISED
     title: The system shall keep one work item per requirement in the tracker
     text:
       iris maintains a development's requirement cards in the configured
@@ -53,7 +53,7 @@ package iris {
       doc/reviews/2026-09-19-projection.md
   }
 
-  constraint CST-00002-1 {
+  constraint CST-00002-1 {  // ? W-CST-NO-VERIFICATION
     category: architecture
     title: Every command entry shall run inside an observation scope
     text:

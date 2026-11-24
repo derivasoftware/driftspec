@@ -1,5 +1,26 @@
 {
-  "coverage": [],
+  "coverage": [
+    {
+      "code": "W-REQ-UNREALISED",
+      "location": {
+        "column": 3,
+        "file": "design/grammar/grammar.ds",
+        "line": 7
+      },
+      "message": "REQ-00051-1 is approved and nothing satisfies it, by itself or through its refinements",
+      "severity": "coverage"
+    },
+    {
+      "code": "W-REQ-UNREALISED",
+      "location": {
+        "column": 5,
+        "file": "design/grammar/grammar.ds",
+        "line": 35
+      },
+      "message": "REQ-00052-1 is approved and nothing satisfies it, by itself or through its refinements",
+      "severity": "coverage"
+    }
+  ],
   "entities": 3483,
   "errors": 0,
   "expected": 0,

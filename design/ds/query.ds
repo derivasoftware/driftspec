@@ -303,7 +303,7 @@ package driftspec@ds {
       + shows(diagram: std::string) -> std::vector<Answer>
       + findings(file: std::string) -> std::vector<Answer>
       + coverage(identity: std::string) -> std::vector<Answer> {
-        @requirement REQ-00124-1
+        @requirement REQ-00124-2
       }
       + coupling() -> std::vector<Answer>
       - known(id: std::string) -> bool                       // an entity, or a scope something is declared in
