@@ -1,0 +1,39 @@
+{
+  "coverage": [],
+  "entities": 28,
+  "errors": 1,
+  "expected": 0,
+  "findings": [
+    {
+      "code": "W-MSG-UNDECLARED",
+      "location": {
+        "column": 7,
+        "file": "small/small.ds",
+        "line": 23
+      },
+      "message": "B::run calls p@m::Leaf::nothing, which p@m::Leaf does not declare",
+      "severity": "warning"
+    },
+    {
+      "code": "E-MSG-ARITY",
+      "location": {
+        "column": 7,
+        "file": "small/small.ds",
+        "line": 24
+      },
+      "message": "p@m::Leaf::work takes 1 parameter, 2 given",
+      "severity": "error"
+    },
+    {
+      "code": "W-DIAGRAM-UNDECLARED",
+      "location": {
+        "column": 1,
+        "file": "small/small.ds",
+        "line": 47
+      },
+      "message": "SEQ_Loose includes p@m::Nobody::run, which the workspace declares nowhere",
+      "severity": "warning"
+    }
+  ],
+  "relations": 37
+}

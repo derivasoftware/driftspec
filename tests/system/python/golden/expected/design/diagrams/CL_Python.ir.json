@@ -1,0 +1,2246 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "realization",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@ds@engine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Api"
+    },
+    {
+      "from": "driftspec@driftspec@python",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Report"
+    },
+    {
+      "from": "driftspec@driftspec@python",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Model"
+    },
+    {
+      "from": "driftspec@driftspec@session",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_session::Live"
+    },
+    {
+      "from": "driftspec@driftspec@_native",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@driftspec@_native::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@driftspec@_native::export",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@driftspec@_native::expected_at",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@driftspec@_native::render",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@driftspec@_native::page",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Entity",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Location"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Relation",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Location"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Finding",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Location"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Breach",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Location"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Entity"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Relation"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Finding"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Breach"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Entity"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Relation"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Report",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Finding"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Tree",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Frame"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@_native::Workspace"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Model"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Report"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Entity"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Relation"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Tree"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Step"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Walked"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Answer"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::load",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Model"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Report"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::_location",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Location"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::_finding",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Finding"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::_entity",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Entity"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::_relation",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Relation"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::_model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Model"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::_report",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Report"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::load",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Workspace"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Workspace"
+    },
+    {
+      "from": "driftspec@driftspec@lsp::entities_for",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Entity"
+    },
+    {
+      "from": "driftspec@driftspec@lsp::location_of",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Entity"
+    },
+    {
+      "from": "driftspec@driftspec@lsp::enclosing",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Entity"
+    },
+    {
+      "from": "driftspec@driftspec@lsp::refresh",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Workspace"
+    },
+    {
+      "from": "driftspec@driftspec@lsp::view",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Workspace"
+    },
+    {
+      "from": "driftspec@driftspec@live_session::Live",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@driftspec::Workspace"
+    },
+    {
+      "from": "driftspec@driftspec@live_session::Live",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::Workspace"
+    },
+    {
+      "from": "driftspec@driftspec@live_http::Handler",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@driftspec@live_session::Live"
+    },
+    {
+      "from": "driftspec@driftspec@live_http::handler_for",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_session::Live"
+    },
+    {
+      "from": "driftspec@driftspec@live_http::handler_for",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_http::Handler"
+    },
+    {
+      "from": "driftspec@driftspec@live_http::serve",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_session::Live"
+    },
+    {
+      "from": "driftspec@driftspec@python",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::check"
+    },
+    {
+      "from": "driftspec@driftspec@python",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::read"
+    },
+    {
+      "from": "driftspec@driftspec@python",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::load"
+    },
+    {
+      "from": "driftspec@driftspec@python",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::render"
+    },
+    {
+      "from": "driftspec@driftspec@agent",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@live_mcp::tool"
+    },
+    {
+      "from": "driftspec@driftspec@editor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@lsp::changed"
+    },
+    {
+      "from": "driftspec@driftspec@editor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@lsp::definition"
+    },
+    {
+      "from": "driftspec@driftspec@editor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@lsp::references"
+    },
+    {
+      "from": "driftspec@driftspec@editor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@lsp::hover"
+    },
+    {
+      "from": "driftspec@driftspec@editor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@lsp::completion"
+    },
+    {
+      "from": "driftspec@driftspec@editor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@lsp::draw"
+    },
+    {
+      "from": "driftspec@driftspec@editor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@lsp::view"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::render",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@_native::render"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::page",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@_native::page"
+    },
+    {
+      "from": "driftspec@driftspec@driftspec::expected_at",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@_native::expected_at"
+    },
+    {
+      "from": "driftspec@driftspec@lsp::draw",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@driftspec@driftspec::render"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@driftspec",
+      "kind": "container",
+      "label": "driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@_native",
+      "kind": "container",
+      "label": "_native",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@driftspec",
+      "kind": "container",
+      "label": "driftspec",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live",
+      "kind": "container",
+      "label": "live",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_http",
+      "kind": "container",
+      "label": "live_http",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_mcp",
+      "kind": "container",
+      "label": "live_mcp",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_page",
+      "kind": "container",
+      "label": "live_page",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@live_session",
+      "kind": "container",
+      "label": "live_session",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@lsp",
+      "kind": "container",
+      "label": "lsp",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@api",
+      "kind": "container",
+      "label": "api",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@_native::Workspace",
+      "kind": "box",
+      "label": "Workspace",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- workspace: driftspec@ds@api::Workspace"
+        ],
+        [
+          "+ Workspace(files: std::map<std::string, std::string>)",
+          "+ export() -> std::string",
+          "+ report() -> std::string",
+          "+ find(id: std::string) -> std::string",
+          "+ relations_from(id: std::string) -> std::string",
+          "+ relations_to(id: std::string) -> std::string",
+          "+ touching(id: std::string) -> std::string",
+          "+ members(scope: std::string) -> std::string",
+          "+ parent(id: std::string) -> std::string",
+          "+ children(id: std::string) -> std::string",
+          "+ revision_of(artefact: std::string) -> std::string",
+          "+ tree(sequence: std::string) -> std::string",
+          "+ steps(sequence: std::string, path: std::string) -> std::string",
+          "+ walk(sequence: std::string, path: std::string, depth: int) -> std::string",
+          "+ ask(question: std::string, subject: std::string) -> std::string",
+          "+ shows(diagram: std::string) -> std::string",
+          "+ render(diagram: std::string, format: std::string, width: int) -> std::string",
+          "+ page(title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::behaviour_of",
+      "kind": "box",
+      "label": "behaviour_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ behaviour_of(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::box_of",
+      "kind": "box",
+      "label": "box_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ box_of(scope: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::check",
+      "kind": "box",
+      "label": "check",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ check(files: std::map<std::string, std::string>) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::expected_at",
+      "kind": "box",
+      "label": "expected_at",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ expected_at(text: std::string, line: int, column: int) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::export",
+      "kind": "box",
+      "label": "export",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ export(files: std::map<std::string, std::string>) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::outer",
+      "kind": "box",
+      "label": "outer",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ outer(scope: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::package_of",
+      "kind": "box",
+      "label": "package_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ package_of(scope: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::page",
+      "kind": "box",
+      "label": "page",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ page(files: std::map<std::string, std::string>, title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::qualify",
+      "kind": "box",
+      "label": "qualify",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ qualify(scope: std::string, name: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::render",
+      "kind": "box",
+      "label": "render",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ render(files: std::map<std::string, std::string>, diagram: std::string, format: std::string, width: int) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::scenario_of",
+      "kind": "box",
+      "label": "scenario_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ scenario_of(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::subject_of",
+      "kind": "box",
+      "label": "subject_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ subject_of(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::version",
+      "kind": "box",
+      "label": "version",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ version() -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::without_revision",
+      "kind": "box",
+      "label": "without_revision",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ without_revision(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@driftspec@agent",
+      "kind": "box",
+      "label": "agent",
+      "parent": "driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "live_open(workspace: string) -> string",
+          "live_focus(id: string) -> object",
+          "live_note(id: string, text: string) -> object",
+          "live_highlight(ids: list<string>) -> object",
+          "live_clear(what: string) -> object",
+          "live_selection() -> object",
+          "live_state() -> object",
+          "live_comments(peek: bool) -> object",
+          "live_isolate(ids: list<string>) -> object"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Answer",
+      "kind": "box",
+      "label": "Answer",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ kind: str",
+          "+ id: str",
+          "+ detail: str"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Breach",
+      "kind": "box",
+      "label": "Breach",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ bindings: tuple[tuple[str, str], ...]",
+          "+ witness: tuple[tuple[str, str], ...]",
+          "+ location: Location"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Entity",
+      "kind": "box",
+      "label": "Entity",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: str",
+          "+ kind: str",
+          "+ name: str",
+          "+ scope: str",
+          "+ location: Location",
+          "+ fields: Mapping[str, str]",
+          "+ flags: tuple[str, ...]",
+          "+ expected: bool"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Finding",
+      "kind": "box",
+      "label": "Finding",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ code: str",
+          "+ severity: str",
+          "+ message: str",
+          "+ location: Location"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Frame",
+      "kind": "box",
+      "label": "Frame",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: str",
+          "+ kind: str",
+          "+ frame: str",
+          "+ at: int",
+          "+ first: str",
+          "+ else_: str",
+          "+ two_sides: bool",
+          "+ scenario: str",
+          "+ else_scenario: str"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Location",
+      "kind": "box",
+      "label": "Location",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ file: str",
+          "+ line: int",
+          "+ column: int",
+          "+ end_line: int",
+          "+ end_column: int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@driftspec::Model",
+      "kind": "box",
+      "label": "Model",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ entities: dict[str, Entity]",
+          "+ relations: list[Relation]",
+          "+ findings: list[Finding]",
+          "+ metamodel: dict",
+          "+ breaches: dict[str, list[Breach]]"
+        ],
+        [
+          "+ find(identity: str) -> Entity | None",
+          "+ of_kind(kind: str) -> Iterator[Entity]",
+          "+ named(name: str) -> list[Entity]",
+          "+ relations_of(identity: str) -> list[Relation]",
+          "+ in_file(path: str) -> list[Entity]",
+          "+ parents_of(kind: str) -> list[str]",
+          "+ in_a_box(kind: str) -> bool",
+          "+ laid_out(kind: str) -> bool",
+          "+ named_kinds() -> set[str]",
+          "+ owner(entity: Entity) -> Entity"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Relation",
+      "kind": "box",
+      "label": "Relation",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ kind: str",
+          "+ source: str",
+          "+ target: str",
+          "+ location: Location",
+          "+ multiplicity: str"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Report",
+      "kind": "box",
+      "label": "Report",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ findings: list[Finding]",
+          "+ counts: Mapping[str, int]"
+        ],
+        [
+          "+ errors() -> int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Step",
+      "kind": "box",
+      "label": "Step",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ message: str",
+          "+ next: str",
+          "+ next_path: str"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Tree",
+      "kind": "box",
+      "label": "Tree",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ sequence: str",
+          "+ messages: tuple[tuple[str, str], ...]",
+          "+ frames: tuple[Frame, ...]"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@driftspec@driftspec::Walked",
+      "kind": "box",
+      "label": "Walked",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ message: str",
+          "+ depth: int"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@driftspec::Workspace",
+      "kind": "box",
+      "label": "Workspace",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- _native: _native.Workspace"
+        ],
+        [
+          "+ model() -> Model",
+          "+ report() -> Report",
+          "+ find(identity: str) -> Entity | None",
+          "+ relations_from(identity: str) -> list[Relation]",
+          "+ relations_to(identity: str) -> list[Relation]",
+          "+ touching(identity: str) -> list[Relation]",
+          "+ members(scope: str) -> list[str]",
+          "+ parent(identity: str) -> str",
+          "+ children(identity: str) -> list[str]",
+          "+ revision_of(artefact: str) -> str",
+          "+ tree(sequence: str) -> Tree",
+          "+ steps(sequence: str, path: str) -> list[Step]",
+          "+ walk(sequence: str, path: str, depth: int) -> list[Walked]",
+          "+ ask(question: str, subject: str) -> list[Answer]",
+          "+ shows(diagram: str) -> list[Answer]",
+          "+ render(diagram: str, format: str, width: int) -> str",
+          "+ page(title: str, focus: list[str] | tuple[str, ...]) -> str"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::_entity",
+      "kind": "box",
+      "label": "_entity",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "- _entity(e: Mapping) -> Entity"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::_finding",
+      "kind": "box",
+      "label": "_finding",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "- _finding(d: Mapping) -> Finding"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::_location",
+      "kind": "box",
+      "label": "_location",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "- _location(d: Mapping) -> Location"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::_model",
+      "kind": "box",
+      "label": "_model",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "- _model(data: Mapping) -> Model"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::_relation",
+      "kind": "box",
+      "label": "_relation",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "- _relation(r: Mapping) -> Relation"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::_report",
+      "kind": "box",
+      "label": "_report",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "- _report(data: Mapping) -> Report"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::check",
+      "kind": "box",
+      "label": "check",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ check(source: Source) -> Report"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::expected_at",
+      "kind": "box",
+      "label": "expected_at",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ expected_at(text: str, line: int, column: int) -> list[str]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::load",
+      "kind": "box",
+      "label": "load",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ load(source: Source) -> Model"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::page",
+      "kind": "box",
+      "label": "page",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ page(source: Source, title: str, focus: list[str] | tuple[str, ...]) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::read",
+      "kind": "box",
+      "label": "read",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ read(source: Source) -> dict[str, str]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@driftspec::render",
+      "kind": "box",
+      "label": "render",
+      "parent": "driftspec@driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ render(source: Source, diagram: str, format: str, width: int) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@driftspec@editor",
+      "kind": "box",
+      "label": "editor",
+      "parent": "driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "did_change(uri: string, text: string) -> none",
+          "definition(uri: string, line: int, character: int) -> lsprotocol::Location",
+          "references(uri: string, line: int, character: int) -> lsprotocol::Location",
+          "hover(uri: string, line: int, character: int) -> lsprotocol::Hover",
+          "completion(uri: string, line: int, character: int) -> lsprotocol::CompletionList",
+          "draw(uri: string, line: int, character: int) -> string",
+          "view(uri: string, line: int, character: int) -> string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@live::Command",
+      "kind": "box",
+      "label": "Command",
+      "parent": "driftspec@driftspec@live",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ port: int",
+          "+ tone: str",
+          "+ add: bool",
+          "+ args: list[str]",
+          "+ name: str"
+        ],
+        [
+          "+ static option(args: list[str], flag: str, default)",
+          "+ word(k: int, default: str) -> str",
+          "+ ask(path: str, data: dict | None, indent: int | None) -> None",
+          "+ state() -> None"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live::main",
+      "kind": "box",
+      "label": "main",
+      "parent": "driftspec@driftspec@live",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ main(argv: list[str] | None) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@live_http::Handler",
+      "kind": "box",
+      "label": "Handler",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ live: Live"
+        ],
+        [
+          "+ log_message(*a)",
+          "+ local() -> bool",
+          "+ send(code: int, body: bytes, ctype: str) -> None",
+          "+ json(obj, code: int) -> None",
+          "+ do_GET()",
+          "+ page() -> None",
+          "+ events() -> None",
+          "+ stream(q: queue.Queue) -> None",
+          "+ do_POST()"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_http::browser_open",
+      "kind": "box",
+      "label": "browser_open",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ browser_open(url: str) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_http::handler_for",
+      "kind": "box",
+      "label": "handler_for",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ handler_for(live: Live) -> type[Handler]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_http::serve",
+      "kind": "box",
+      "label": "serve",
+      "parent": "driftspec@driftspec@live_http",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ serve(workspace: str, port: int, open_browser: bool, block: bool) -> Live"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::answer",
+      "kind": "box",
+      "label": "answer",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ answer(port: int, msg: dict, opened: dict, stdout) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::call",
+      "kind": "box",
+      "label": "call",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ call(port: int, path: str, data: dict | None) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::called",
+      "kind": "box",
+      "label": "called",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ called(port: int, msg: dict, opened: dict) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::initialize",
+      "kind": "box",
+      "label": "initialize",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ initialize(port: int, msg: dict, opened: dict) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::mcp",
+      "kind": "box",
+      "label": "mcp",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ mcp(port: int, stdin, stdout) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::open_workspace",
+      "kind": "box",
+      "label": "open_workspace",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ open_workspace(port: int, args: dict, opened: dict) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::reply",
+      "kind": "box",
+      "label": "reply",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ reply(stdout, i, result, error) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::state",
+      "kind": "box",
+      "label": "state",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ state(port: int) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_mcp::tool",
+      "kind": "box",
+      "label": "tool",
+      "parent": "driftspec@driftspec@live_mcp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ tool(port: int, name: str, args: dict, opened: dict) -> object"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@live_page::shell",
+      "kind": "box",
+      "label": "shell",
+      "parent": "driftspec@driftspec@live_page",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ shell(title: str, workspace: str) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@live_session::Live",
+      "kind": "box",
+      "label": "Live",
+      "parent": "driftspec@driftspec@live_session",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ workspace: str",
+          "+ title: str",
+          "+ lock: threading.Lock",
+          "+ version: int",
+          "+ page: str",
+          "+ loaded: driftspec.Workspace | None",
+          "+ history: list[dict]",
+          "+ findings: list[dict]",
+          "+ counts: dict",
+          "+ selection: dict",
+          "+ notes: list[dict]",
+          "+ highlights: list[dict]",
+          "+ rules: list[dict]",
+          "+ comments: list[dict]",
+          "+ isolated: list[str]",
+          "+ listeners: list[queue.Queue]",
+          "+ stamp: None",
+          "+ error: str",
+          "+ boot: str",
+          "+ store: str"
+        ],
+        [
+          "+ reload() -> bool",
+          "+ files_stamp()",
+          "+ rules_of(model, findings) -> list[dict]",
+          "+ state() -> dict",
+          "+ broadcast(event: str, data: dict) -> None",
+          "+ watch(every: float) -> None",
+          "+ annotations(frame: list[str]) -> None",
+          "+ focus(identity: str, also: list[str] | None) -> int",
+          "+ note(identity: str, text: str, tone: str, frame: bool) -> int",
+          "+ highlight(ids: list[str], tone: str, add: bool, frame: bool) -> int",
+          "+ clear(what: str) -> None",
+          "+ select(identity: str | None, label: str) -> None",
+          "+ load() -> None",
+          "+ save() -> None",
+          "+ seen(ids: list[str], seen: bool) -> int",
+          "+ comment(identity: str, text: str) -> int",
+          "+ unread(mark: bool) -> list[dict]",
+          "+ isolate(ids: list[str], tell: bool) -> list[str]"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::changed",
+      "kind": "box",
+      "label": "changed",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ changed(ls: LanguageServer, params) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::completion",
+      "kind": "box",
+      "label": "completion",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ completion(ls: LanguageServer, params: lsp.CompletionParams) -> lsp.CompletionList"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::definition",
+      "kind": "box",
+      "label": "definition",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ definition(ls: LanguageServer, params: lsp.DefinitionParams) -> list[lsp.Location]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::draw",
+      "kind": "box",
+      "label": "draw",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ draw(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::enclosing",
+      "kind": "box",
+      "label": "enclosing",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ enclosing(path: str, line: int) -> driftspec.Entity | None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::entities_for",
+      "kind": "box",
+      "label": "entities_for",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ entities_for(word: str) -> list[driftspec.Entity]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::holds_ds",
+      "kind": "box",
+      "label": "holds_ds",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ holds_ds(directory: str) -> bool"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::hover",
+      "kind": "box",
+      "label": "hover",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ hover(ls: LanguageServer, params: lsp.HoverParams) -> lsp.Hover | None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::location_of",
+      "kind": "box",
+      "label": "location_of",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ location_of(e: driftspec.Entity) -> lsp.Location"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::main",
+      "kind": "box",
+      "label": "main",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ main() -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::open_in_browser",
+      "kind": "box",
+      "label": "open_in_browser",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ open_in_browser(path: str) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::optional",
+      "kind": "box",
+      "label": "optional",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ optional(rest: tuple) -> tuple[int, str]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::path_of",
+      "kind": "box",
+      "label": "path_of",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ path_of(uri: str) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::references",
+      "kind": "box",
+      "label": "references",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ references(ls: LanguageServer, params: lsp.ReferenceParams) -> list[lsp.Location]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::refresh",
+      "kind": "box",
+      "label": "refresh",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ refresh(ls: LanguageServer, ws: str) -> None"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::subject_at",
+      "kind": "box",
+      "label": "subject_at",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ subject_at(ls: LanguageServer, uri: str, line: int, character: int, typed: str) -> tuple[str, str]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::subject_of",
+      "kind": "box",
+      "label": "subject_of",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ subject_of(word: str) -> tuple[str, str]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::symbols",
+      "kind": "box",
+      "label": "symbols",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ symbols(ls: LanguageServer, params: lsp.DocumentSymbolParams) -> list[lsp.SymbolInformation]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::uri_of",
+      "kind": "box",
+      "label": "uri_of",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ uri_of(path: str) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::use",
+      "kind": "box",
+      "label": "use",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ use(ls: LanguageServer, uri: str) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::view",
+      "kind": "box",
+      "label": "view",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ view(ls: LanguageServer, uri: str, line: int, character: int, *rest) -> dict"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::with_focus",
+      "kind": "box",
+      "label": "with_focus",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ with_focus(files: dict[str, str], identity: str) -> tuple[dict[str, str], str]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::word_at",
+      "kind": "box",
+      "label": "word_at",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ word_at(ls: LanguageServer, uri: str, position: lsp.Position) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::workspace_files",
+      "kind": "box",
+      "label": "workspace_files",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ workspace_files(ls: LanguageServer, ws: str) -> dict[str, str]"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@lsp::workspace_of",
+      "kind": "box",
+      "label": "workspace_of",
+      "parent": "driftspec@driftspec@lsp",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ workspace_of(ls: LanguageServer, path: str) -> str"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@driftspec@python",
+      "kind": "box",
+      "label": "python",
+      "parent": "driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "check(source: driftspec::Source) -> driftspec::Report",
+          "load(source: driftspec::Source) -> driftspec::Model",
+          "render(source: driftspec::Source, diagram: string) -> string"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@driftspec@session",
+      "kind": "box",
+      "label": "session",
+      "parent": "driftspec@driftspec",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "state() -> object",
+          "events() -> object",
+          "focus(id: string, also: list<string>) -> object",
+          "note(id: string, text: string, tone: string) -> object",
+          "highlight(ids: list<string>, tone: string, add: bool) -> object",
+          "clear(what: string) -> object",
+          "selection(id: string, label: string) -> object",
+          "seen(ids: list<string>, seen: bool) -> object",
+          "comment(id: string, text: string) -> object",
+          "unread(mark: bool) -> object",
+          "isolate(ids: list<string>, tell: bool) -> object"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Api",
+      "kind": "box",
+      "label": "Api",
+      "parent": "driftspec@ds@api",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel"
+        ],
+        [
+          "+ Api(metamodel: model::Metamodel)",
+          "+ check(files: Files) -> std::string",
+          "+ load(files: std::vector<parse::ParsedFile>, output: Output, diagram: std::string) -> model::Model",
+          "+ static stepsFor(output: Output, bound: model::Model, diagram: std::string) -> check::Selection",
+          "+ report(model: model::Model, pretty: bool) -> std::string",
+          "+ exportModel(files: Files) -> std::string",
+          "+ static expectedAt(text: std::string, line: int, column: int) -> std::string",
+          "+ render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string",
+          "+ page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@engine",
+      "kind": "box",
+      "label": "engine",
+      "parent": "driftspec@ds",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "check(files: api::Files) -> std::string",
+          "export(files: api::Files) -> std::string",
+          "render(files: api::Files, diagram: std::string, format: std::string, width: int) -> std::string",
+          "page(files: api::Files, title: std::string, focus: std::vector<std::string>) -> std::string",
+          "expectedAt(text: std::string, line: int, column: int) -> std::string"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_Python"
+}

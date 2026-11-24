@@ -1,0 +1,72 @@
+// What DriftSpec is for, as use cases (DS-77): contracts the operations of its interfaces realise.
+// A use case says what goes in, what comes out and how it may end; how ds does it is in the
+// sequences of each operation, which the viewer replays. Who drives the interface (a person at a
+// terminal, argos reading the design, an editor) does not matter: the interface does.
+
+package driftspec {
+
+  usecase UC-00001-1 {
+    title: Check a design: load a workspace into one model and report what does not hold
+    status: approved
+    @requirement SREQ-00001-1
+    @requirement SREQ-00002-1
+    @requirement SREQ-00003-2
+    @requirement SREQ-00004-1
+    @requirement SREQ-00009-2
+    @requirement SREQ-00012-1
+
+    outcome default: every finding of the model, then its counts
+    outcome errors: an error is among the findings; they say where and what to do
+    outcome bad-usage: the command is not understood, or the path holds no design; nothing is read
+  }
+
+  usecase UC-00002-1 {
+    title: See the design: the whole model as one viewer, or one diagram drawn
+    status: approved
+    @requirement SREQ-00005-1
+    @requirement SREQ-00010-1
+    @requirement SREQ-00013-1
+
+    outcome default: the viewer framed on the diagram, or the diagram in the format asked
+    outcome no-diagram: the diagram named is not in the workspace; nothing is drawn
+    outcome no-workspace: nothing to read at the path
+  }
+
+  usecase UC-00004-1 {
+    title: Ask the model what exists, what an entity relates to and what a diagram shows
+    status: approved
+    @requirement SREQ-00011-1
+    @requirement SREQ-00004-1
+
+    outcome default: one answer per line, or JSON
+    outcome unknown-question: the question, or the identity it is about, is not one the model answers
+    outcome no-workspace: there is no workspace at the path
+  }
+
+  usecase UC-00005-1 {
+    title: Hand the model to another tool, with its relations, findings and metamodel
+    status: approved
+    @requirement SREQ-00006-1
+
+    outcome default: the model as JSON
+    outcome no-workspace: there is no workspace at the path; nothing is written
+  }
+
+  usecase UC-00006-1 {
+    title: Learn how a design is written, what a finding means and what a command's exit says
+    status: approved
+    @requirement SREQ-00014-1
+
+    outcome default: the page asked for, or the index
+    outcome no-topic: there is no such page; the topics are listed
+  }
+
+  usecase UC-00007-1 {
+    title: Edit a design: see its findings as it is typed, and move through it by name
+    status: approved
+    @requirement SREQ-00016-1
+    @requirement SREQ-00008-1
+
+    outcome default: the findings of the design beside its text, and every name leading to what it is
+  }
+}

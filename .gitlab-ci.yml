@@ -196,3 +196,20 @@ viewer-js:
     when: always
     reports:
       junit: viewer.junit.xml
+
+# Every format of every document, pinned as golden files (DS-395): the ds that cpp-test built
+# against tests/system/python/golden/expected. cpp-test runs each gtest binary, not ctest, so the
+# goldens need a job of their own, like the viewer's tests.
+golden:
+  extends: [.on-mr]
+  stage: test
+  needs: [cpp-test]
+  script:
+    - python3 -m venv .golden && . .golden/bin/activate
+    - pip install -q pytest
+    - DS="$CI_PROJECT_DIR/build-ci/ds" python -m pytest -q -p no:cacheprovider tests/system/python/test_golden.py
+      --junitxml=golden.junit.xml
+  artifacts:
+    when: always
+    reports:
+      junit: golden.junit.xml

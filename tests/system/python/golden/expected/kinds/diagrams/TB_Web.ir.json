@@ -1,0 +1,79 @@
+{
+  "edges": [],
+  "ir": 1,
+  "nodes": [],
+  "table": {
+    "columns": [
+      "Home",
+      "Result",
+      "About"
+    ],
+    "corner": "web",
+    "rows": [
+      {
+        "cells": [
+          {
+            "kind": "jump",
+            "text": "Result / Home [empty name]",
+            "title": "greet takes Home to Result / Home [empty name]"
+          },
+          {
+            "kind": "none",
+            "text": "",
+            "title": ""
+          },
+          {
+            "kind": "none",
+            "text": "",
+            "title": ""
+          }
+        ],
+        "label": "greet",
+        "title": ""
+      },
+      {
+        "cells": [
+          {
+            "kind": "jump",
+            "text": "About",
+            "title": "about takes Home to About"
+          },
+          {
+            "kind": "none",
+            "text": "",
+            "title": ""
+          },
+          {
+            "kind": "none",
+            "text": "",
+            "title": ""
+          }
+        ],
+        "label": "about",
+        "title": ""
+      },
+      {
+        "cells": [
+          {
+            "kind": "none",
+            "text": "",
+            "title": ""
+          },
+          {
+            "kind": "jump",
+            "text": "Home",
+            "title": "back takes Result to Home"
+          },
+          {
+            "kind": "jump",
+            "text": "Home",
+            "title": "back takes About to Home"
+          }
+        ],
+        "label": "back",
+        "title": ""
+      }
+    ]
+  },
+  "title": "TB_Web"
+}

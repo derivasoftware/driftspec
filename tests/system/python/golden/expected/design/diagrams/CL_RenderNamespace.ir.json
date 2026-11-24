@@ -1,0 +1,469 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@render::IrRow",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrCell"
+    },
+    {
+      "from": "driftspec@ds@render::IrTable",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrRow"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrTable"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrEdge"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrEdge"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::Route",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Point"
+    },
+    {
+      "from": "driftspec@ds@render::Placed",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::Placed",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Rect"
+    },
+    {
+      "from": "driftspec@ds@render::LayoutResult",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Placed"
+    },
+    {
+      "from": "driftspec@ds@render::LayoutResult",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Route"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Metrics"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Metrics"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Rect"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::LayoutResult"
+    },
+    {
+      "from": "driftspec@ds@render::Svg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::Text",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::sequenceSvg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::tableSvg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::sequenceGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::sequenceGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Grid"
+    },
+    {
+      "from": "driftspec@ds@render::classGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::classGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::LayoutResult"
+    },
+    {
+      "from": "driftspec@ds@render::classGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Grid"
+    },
+    {
+      "from": "driftspec@ds@render::tableGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::tableGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Grid"
+    },
+    {
+      "from": "driftspec@ds@render::Svg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Layout"
+    },
+    {
+      "from": "driftspec@ds@render::Text",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Layout"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@render",
+      "kind": "container",
+      "label": "render",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Grid",
+      "kind": "box",
+      "label": "Grid",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrCell",
+      "kind": "box",
+      "label": "IrCell",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrDocument",
+      "kind": "box",
+      "label": "IrDocument",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrEdge",
+      "kind": "box",
+      "label": "IrEdge",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::IrExport",
+      "kind": "box",
+      "label": "IrExport",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrNode",
+      "kind": "box",
+      "label": "IrNode",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrRow",
+      "kind": "box",
+      "label": "IrRow",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrTable",
+      "kind": "box",
+      "label": "IrTable",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrText",
+      "kind": "box",
+      "label": "IrText",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Layout",
+      "kind": "box",
+      "label": "Layout",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::LayoutResult",
+      "kind": "box",
+      "label": "LayoutResult",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Metrics",
+      "kind": "box",
+      "label": "Metrics",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Placed",
+      "kind": "box",
+      "label": "Placed",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Point",
+      "kind": "box",
+      "label": "Point",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Rect",
+      "kind": "box",
+      "label": "Rect",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Route",
+      "kind": "box",
+      "label": "Route",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Svg",
+      "kind": "box",
+      "label": "Svg",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Text",
+      "kind": "box",
+      "label": "Text",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::badgeOf",
+      "kind": "box",
+      "label": "badgeOf",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::classGrid",
+      "kind": "box",
+      "label": "classGrid",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::holdsMembers",
+      "kind": "box",
+      "label": "holdsMembers",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::sequenceGrid",
+      "kind": "box",
+      "label": "sequenceGrid",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::sequenceSvg",
+      "kind": "box",
+      "label": "sequenceSvg",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::tableGrid",
+      "kind": "box",
+      "label": "tableGrid",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::tableSvg",
+      "kind": "box",
+      "label": "tableSvg",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    }
+  ],
+  "title": "CL_RenderNamespace"
+}

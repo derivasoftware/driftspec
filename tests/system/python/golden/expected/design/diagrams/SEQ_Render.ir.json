@@ -1,0 +1,369 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "render(input: path, diagram: string)",
+      "order": 0,
+      "refs": {
+        "location": "design/ds/cli.ds:30"
+      },
+      "title": "driftspec@ds@cli::render",
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "app::main(input) / render",
+      "order": 1,
+      "refs": {
+        "expands": "driftspec@ds@app::main::sequence/render",
+        "location": "design/ds/cli.ds:81",
+        "span": "2-24"
+      },
+      "title": "driftspec@ds@app::app::main\nexpanded below: main/render",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loadWorkspace(metamodel, argv, viewer, diagram, model)",
+      "order": 2,
+      "refs": {
+        "expands": "driftspec@ds@app::loadWorkspace::sequence",
+        "location": "design/ds/app.ds:113",
+        "span": "3-6"
+      },
+      "title": "driftspec@ds@app::loadWorkspace\nexpanded below: loadWorkspace",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "isDirectory(dir)",
+      "order": 3,
+      "refs": {
+        "location": "design/ds/app.ds:46"
+      },
+      "title": "driftspec@ds@app::isDirectory",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 4,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "href": "#driftspec@ds@app::load::sequence",
+      "kind": "message",
+      "label": "load(metamodel, dir, output, diagram)",
+      "order": 5,
+      "refs": {
+        "expands": "driftspec@ds@app::load::sequence",
+        "location": "design/ds/app.ds:50"
+      },
+      "title": "driftspec@ds@app::load\nexpands to: load",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loaded",
+      "order": 6,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 7,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "titleOf(argv)",
+      "order": 8,
+      "refs": {
+        "location": "design/ds/app.ds:117"
+      },
+      "title": "driftspec@ds@app::titleOf",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "title",
+      "order": 9,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "readFile(css)",
+      "order": 10,
+      "refs": {
+        "location": "design/ds/app.ds:118"
+      },
+      "title": "driftspec@ds@app::readFile",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "style",
+      "order": 11,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "build()",
+      "order": 12,
+      "refs": {
+        "expands": "driftspec@ds@scene::Scene::build::sequence",
+        "location": "design/ds/app.ds:119",
+        "span": "13-13"
+      },
+      "title": "driftspec@ds@scene::Scene::build\nexpanded below: Scene::build",
+      "to": "driftspec@ds@scene::Scene|scene"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene|scene",
+      "kind": "message",
+      "label": "decorate(document)",
+      "order": 13,
+      "refs": {
+        "location": "design/ds/scene.ds:745"
+      },
+      "title": "driftspec@ds@scene::ILayer::decorate",
+      "to": "driftspec@ds@scene::ILayer|layer"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@scene::Scene|scene",
+      "kind": "message",
+      "label": "document",
+      "order": 14,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "format::sceneFormats()",
+      "order": 15,
+      "refs": {
+        "location": "design/ds/app.ds:120"
+      },
+      "title": "driftspec@ds@format::format::sceneFormats",
+      "to": "driftspec@ds@format"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format",
+      "kind": "message",
+      "label": "formats",
+      "order": 16,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "write(document, options)",
+      "order": 17,
+      "refs": {
+        "expands": "driftspec@ds@format::SceneHtml::write::sequence",
+        "location": "design/ds/app.ds:121",
+        "span": "18-21"
+      },
+      "title": "driftspec@ds@format::SceneHtml::write\nexpanded below: SceneHtml::write",
+      "to": "driftspec@ds@format::SceneHtml|html"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml|html",
+      "kind": "message",
+      "label": "common::encode(document, false)",
+      "order": 18,
+      "refs": {
+        "location": "design/ds/format.ds:220"
+      },
+      "title": "driftspec@ds@format::common::common::encode",
+      "to": "driftspec@ds@format::common"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format::common",
+      "kind": "message",
+      "label": "json",
+      "order": 19,
+      "to": "driftspec@ds@format::SceneHtml|html"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml|html",
+      "kind": "message",
+      "label": "common::pack(json)",
+      "order": 20,
+      "refs": {
+        "location": "design/ds/format.ds:221"
+      },
+      "title": "driftspec@ds@format::common::common::pack",
+      "to": "driftspec@ds@format::common"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format::common",
+      "kind": "message",
+      "label": "packed",
+      "order": 21,
+      "to": "driftspec@ds@format::SceneHtml|html"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format::SceneHtml|html",
+      "kind": "message",
+      "label": "page",
+      "order": 22,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "emit(output, page)",
+      "order": 23,
+      "refs": {
+        "location": "design/ds/app.ds:122"
+      },
+      "title": "driftspec@ds@app::emit",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "written",
+      "order": 24,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "code",
+      "order": 25,
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "none",
+      "order": 26,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@cli",
+      "id": "driftspec@ds@cli",
+      "kind": "lifeline",
+      "label": "self: cli",
+      "refs": {
+        "location": "design/ds/cli.ds:6"
+      },
+      "title": "driftspec@ds@cli"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@app",
+      "id": "driftspec@ds@app",
+      "kind": "lifeline",
+      "label": "app",
+      "refs": {
+        "location": "design/ds/app.ds:8"
+      },
+      "title": "driftspec@ds@app"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@scene::Scene",
+      "id": "driftspec@ds@scene::Scene|scene",
+      "kind": "lifeline",
+      "label": "scene: Scene",
+      "refs": {
+        "location": "design/ds/scene.ds:731"
+      },
+      "title": "driftspec@ds@scene::Scene"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@scene::ILayer",
+      "id": "driftspec@ds@scene::ILayer|layer",
+      "kind": "lifeline",
+      "label": "layer: ILayer",
+      "refs": {
+        "location": "design/ds/scene.ds:655"
+      },
+      "title": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@scene::Scene::build::sequence::f0",
+      "kind": "frame",
+      "label": "loop each layer, in order",
+      "span": [
+        13,
+        13
+      ]
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@format",
+      "id": "driftspec@ds@format",
+      "kind": "lifeline",
+      "label": "format",
+      "refs": {
+        "location": "design/ds/format.ds:50"
+      },
+      "title": "driftspec@ds@format"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@format::SceneHtml",
+      "id": "driftspec@ds@format::SceneHtml|html",
+      "kind": "lifeline",
+      "label": "html: SceneHtml",
+      "refs": {
+        "location": "design/ds/format.ds:131"
+      },
+      "title": "driftspec@ds@format::SceneHtml"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@format::common",
+      "id": "driftspec@ds@format::common",
+      "kind": "lifeline",
+      "label": "common",
+      "refs": {
+        "location": "design/ds/format.ds:99"
+      },
+      "title": "driftspec@ds@format::common"
+    }
+  ],
+  "title": "SEQ_Render"
+}

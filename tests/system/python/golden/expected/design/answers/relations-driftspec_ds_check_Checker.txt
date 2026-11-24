@@ -1,0 +1,14 @@
+contains  driftspec@ds@check  <-
+contains  driftspec@ds@check::Checker::model_  ->
+contains  driftspec@ds@check::Checker::metamodel_  ->
+contains  driftspec@ds@check::Checker::resolver_  ->
+contains  driftspec@ds@check::Checker::steps_  ->
+contains  driftspec@ds@check::Checker::Checker  ->
+contains  driftspec@ds@check::Checker::run  ->
+contains  driftspec@ds@check::Checker::resolver  ->
+contains  driftspec@ds@check::Checker::order  ->
+uses  driftspec@ds@api::Api::load::sequence  <-
+inherits  driftspec@ds@check::IChecker  ->
+satisfies  REQ-00053-2  ->
+satisfies  REQ-00012-1  ->
+couples-transient  driftspec@ds@api::Api::load::sequence  <-

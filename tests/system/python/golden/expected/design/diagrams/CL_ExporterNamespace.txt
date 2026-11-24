@@ -1,0 +1,26 @@
+
+ ┌─ ds ──────────────────────────────────────────────────────────────────────────┐
+ │                                                                               │
+ │ ┌─ exporter ────────────────────────────────────────────────────────────────┐ │
+ │ │                                                                           │ │
+ │ │ ╭───────────────────────────────────────────────────────────────────────╮ │ │
+ │ │ │ C JsonExport                                                          │ │ │
+ │ │ ├───────────────────────────────────────────────────────────────────────┤ │ │
+ │ │ │ - metamodel_: model::Metamodel                                        │ │ │
+ │ │ ├───────────────────────────────────────────────────────────────────────┤ │ │
+ │ │ │ + JsonExport(metamodel: model::Metamodel)                             │ │ │
+ │ │ │ + render(model: model::Model, pretty: bool) -> std::string            │ │ │
+ │ │ │ + entity(entity: model::Entity) -> std::string                        │ │ │
+ │ │ │ + relations(relations: std::vector<model::Relation>) -> std::string   │ │ │
+ │ │ │ - static locationJson(l: model::Location) -> nlohmann::json           │ │ │
+ │ │ │ - entityJson(e: model::Entity) -> nlohmann::json                      │ │ │
+ │ │ │ - static relationJson(r: model::Relation) -> nlohmann::json           │ │ │
+ │ │ │ - kindNames(kinds: std::vector<model::Kind>) -> nlohmann::json        │ │ │
+ │ │ │ - metamodelJson() -> nlohmann::json                                   │ │ │
+ │ │ ╰───────────────────────────────────────────────────────────────────────╯ │ │
+ │ │                                                                           │ │
+ │ └───────────────────────────────────────────────────────────────────────────┘ │
+ │                                                                               │
+ └───────────────────────────────────────────────────────────────────────────────┘
+
+

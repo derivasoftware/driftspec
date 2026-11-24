@@ -1,0 +1,21 @@
+// The entry point of the process.
+
+package hola {
+  module app {
+    function main(argv: std::vector<std::string>) -> int {
+      @requirement REQ-00002-1
+    }
+
+    sequence main {
+      local app: App
+      -> app.run(name) -> code
+      return code
+    }
+
+    sequence main / empty-name {
+      local app: App
+      -> app.run(name) / empty-name -> code
+      return code
+    }
+  }
+}

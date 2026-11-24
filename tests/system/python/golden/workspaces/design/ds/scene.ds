@@ -1,0 +1,755 @@
+// LLD of the scene namespace (ds::scene): the whole model laid out once, nested, for a
+// viewer that zooms from the system down to a member (SREQ-00013-1, DS-69). Every box is
+// measured from what it holds and placed inside its parent in shelves, a module's classes
+// grouped by their taxonomy, bases above heirs; the layout runs twice, with every member
+// and with public members only, and nothing moves between zooms.
+
+package driftspec@ds {
+
+  // the page ds writes and the tours it plays: scene builds them, format writes the page, query walks the
+  // behaviour; the package's, not one module's. The viewer's own code realises the page's interaction.
+  requirement REQ-00070-1 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The viewer shall be one self-contained page that ds writes with the scene inside, titled after the workspace
+    text:
+      viewer/scene.html is compiled into ds; ds fills it with the scene and
+      the workspace's name, so the page opens in a browser as it is, with
+      no server and nothing to fetch. What the scene holds never closes the
+      page's script. In the page a reader zooms from the system down to a
+      member (what fits is shown), sees each kind in its colour and a dot
+      for whether a box is linked to a requirement, hides private members,
+      and taps a box for its card.
+    rationale:
+      Owner, 2026-11-06: a JSON is not something to read; the page is what
+      a person opens, on a desktop or a phone.
+    tags: render, scene, viewer
+  }
+
+  requirement REQ-00071-2 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The viewer shall embed into any HTML document as one iframe, and take a reader's stylesheet over its own
+    text:
+      ds render --embed prints an iframe whose srcdoc is the whole page, so
+      pasting it into a document is all it takes; --height sets its height.
+      ds render --css file puts the file after the viewer's own styles: it
+      redefines the variables the viewer draws with (background, panels,
+      accent, the colour of each kind, the requirement dot, the fonts), and
+      cannot close the page's style.
+    rationale:
+      Owner, 2026-11-06: embed the design in any HTML page with a compact
+      command line, and give it the host's look. Colours with a meaning in
+      the model belong to the language instead (DS-76). Revises
+      REQ-00071-1, which named ds view (DS-80).
+    tags: render, scene, viewer
+  }
+
+  requirement REQ-00092-3 {
+    status: approved
+    @refines SREQ-00017-1
+    title: The viewer shall let a page that embeds it read and set its camera, select and frame any identity, mark what changed, highlight, annotate and isolate, and tell the page what the reader does
+    text:
+      window.DS_VIEW: cam and setCam, selected and select, show (a node is selected, a requirement
+      opens in its list, a sequence opens as its tour), frame and frameAny, mark (what changed,
+      fading), highlight (identities of any perspective, each with a tone), notes (bubbles that
+      follow the camera and keep out of each other's way; a folded one is a dot on its box, a seen
+      one is dimmed), isolate (only the given boxes are drawn, with the relations between them;
+      each box they use from outside is a stub on their right edge, and touching it adds that box).
+      The viewer posts {ds: 'ready'} when it can be steered, {ds: 'select', id} whenever the reader
+      selects, {ds: 'note', ids, act} when a note is folded, opened or marked seen, and {ds:
+      'isolate', ids} when the reader isolates (the isolate button or i, Esc with nothing selected
+      to undo), so a live session keeps the reader's place and hears them.
+    rationale: Revision 2: notes that fold and are seen, isolation and the diff (DS-102, DS-139, DS-148). Revision 3: the diff left with ds diff (DS-277).
+    tags: render, scene, viewer, live
+  }
+
+  requirement REQ-00077-1 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The viewer shall dock the card of a box on the right and play a tour along the bottom, so a reader keeps both open beside the canvas
+    text:
+      On a desktop the card of the box touched docks on the right and the
+      canvas makes room for it; a tour plays in a panel along the bottom,
+      its controls in one row above the sequence, and the canvas keeps the
+      space between them. The legend and the minimap step aside while a
+      tour plays. On a phone there is room for one panel at the bottom: the
+      tour hides the card, which comes back when the tour closes.
+    rationale:
+      Owner, 2026-11-06: the card floating over the canvas hid what lit
+      up, and opening a tour pushed it away; "en pc se ve mucho mejor así".
+    tags: render, viewer
+  }
+
+  requirement REQ-00073-2 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The scene shall carry a tour of every interface operation and public behaviour, each call expanded into the sequence of what it calls, along each named scenario
+    text:
+      A tour walks a sequence along a scenario (the default path, each
+      branch it names, each scenario written apart) and expands every call
+      into the behaviour it goes on into, on the branch the call names, to a
+      depth of twelve: a step from the caller to the callee, then the steps
+      of the callee, then its answer coming back. Each step knows its depth.
+      ds decides where each call goes on, in the one walk of a behaviour
+      (query::Walker::steps); the scene writes each behaviour once with that link,
+      and the viewer only follows it. Private behaviours are replayed inside the public ones that
+      reach them. The viewer replays a tour over the structure: the camera
+      frames each call, the member called lights up in its box, a sequence
+      window keeps the same step, and a depth slider hides what lies below.
+    rationale:
+      Owner, 2026-11-05 (DS-67, the fourth dimension): the dynamic part
+      played over the static one. Revision 2 (DS-130): a call that names a
+      scenario goes on into that branch (it went on into the default path),
+      and the depth is the one the viewer uses.
+    tags: render, scene, behaviour
+  }
+
+  requirement REQ-00075-5 {
+    status: approved
+    @refines SREQ-00013-1
+    title: The page shall carry its scene, the viewer's code and its styles deflated and written in base64, and inflate them in the browser
+    text:
+      The scene, the viewer's code and its own styles travel inside the page as
+      zlib-deflated text written in base64, which needs no escaping in a
+      script or in an iframe's srcdoc; what changes from one page to another
+      (the scene, the identities it opens framed on) stays outside the code's
+      pack. A short loader inflates the code with the browser's own
+      DecompressionStream and runs it, and says so when the browser has
+      none. Unpacking a pack gives back the text it was made from. What the
+      page carries beside its scene stays under 64 KB, the scene's pack under
+      128 bytes for each node it lays out, and the embedded frame within 16
+      KB of the page it escapes.
+    rationale:
+      Owner, 2026-11-06: keep the page small and usable. After writing each
+      behaviour once the page weighed 147 KB, and the frame 196 KB because
+      every quote of the scene was escaped for the attribute; packed, 77 KB
+      and 82 KB. Listing the requirements took the page to 123 KB, two
+      thirds of it the viewer's code as written; packing the code brings it
+      back to 92 KB. Use cases and the manual took it to 104 KB, a seventh of
+      it the viewer's styles as written; packed, before the reader's
+      theme so the theme still wins, 95 KB. The design of the Python face took it to
+      104 KB with the viewer unchanged: 37 KB of the page is the tool, the
+      rest is the scene, and the scene grows with the design it draws, so
+      each is bounded on its own. Revises REQ-00075-3, which bounded the
+      whole page of ds's design. Owner, 2026-11-09 (DS-108): the three
+      perspectives, the right-angle routes and the rules took the tool from
+      39 KB to 46 KB; the bound goes to 64 KB, room for the rest of the
+      viewer's work (compartments, zoom, visibility).
+    tags: render, scene, size
+  }
+
+  module scene {
+
+    requirement REQ-00069-2 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall place every package, module, interface, class, function, enum and member inside its parent, once, apart from its siblings, with and without private members
+      text:
+        A unit (class, function, enum) is as wide as its longest row and as
+        tall as its rows; a module and a package lay their children out in
+        shelves no wider than the square root of their area allows; an
+        interface sits on its package's border, half outside, as a port. Rows
+        read unqualified, each type as written: run(name) -> vector<Entity>.
+        The second variant leaves private members out and shrinks their
+        class; a private class keeps its place. Expected nodes are not drawn.
+      rationale:
+        A viewer that shows what fits at each zoom needs places that do not
+        move; computed once by ds, the same scene feeds the interactive
+        viewer and any snapshot. Revision 2 (DS-18, 2026-11-20): there are no
+        extern modules to leave out.
+      tags: render, scene
+    }
+
+    verification VER-00076-1 {
+      status: approved
+      @requirement REQ-00069-2
+      title: Integration tests confirm every class, function and member of ds's design has a place, nested and apart, in both variants
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryClassFunctionAndMemberOfTheModelHasAPlace
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryBoxNestsInItsParentApartFromItsSiblings
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.WithPrivateMembersHiddenEveryBoxStillNestsAndKeepsApart
+    }
+
+    verification VER-00077-1 {
+      status: approved
+      @requirement REQ-00070-1
+      title: Integration tests confirm the page of ds's design carries every node of its scene and one script only
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
+    }
+
+    verification VER-00078-2 {
+      status: approved
+      @requirement REQ-00071-2
+      title: Integration tests confirm ds's design embeds as one frame carrying the whole page, and a reader's stylesheet lands after the viewer's
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.TheDesignEmbedsAsOneFrameCarryingTheWholePage
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
+        tests/integration/ds/scene/test_themes.cpp::TestThemes.TheNightThemeSetsEveryVariableTheViewerDrawsWith
+        tests/integration/ds/scene/test_themes.cpp::TestThemes.TheNoteToThemeAuthorsNamesEveryVariable
+    }
+
+    verification VER-00101-2 {
+      status: approved
+      @requirement REQ-00092-3
+      title: Integration tests confirm the viewer of ds's design carries the hook a page steers it with, and says when it is ready and what the reader selects
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AnEmbeddingPageSteersTheViewerAndHearsTheReader
+    }
+
+    requirement REQ-00072-2 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall carry each relation between its nodes with its kind and what produces it, and the viewer shall draw only inheritance as lines and light the rest up on the box touched
+      text:
+        A link joins the nodes that stand for a relation's ends: a call goes
+        from the member whose behaviour writes it to the member it calls,
+        with how many times and the sequences that write it; ownership,
+        sharing and reference go from the attribute to the type, with their
+        multiplicity; inheritance, realisation and use join the boxes they
+        name, and inheriting from a class the checker derives as an interface
+        is realising it. A relation inside one box is no link. Every diagram
+        of the workspace lists the nodes it shows, through the same
+        projection a drawing uses, and the scene carries the title of every
+        requirement linked.
+        The viewer draws inheritance and realisation as lines, a hollow
+        triangle on the base, solid or dashed; across modules a line is drawn
+        only when one of its boxes is touched, and the heir's header names
+        its base (Console ◁ Channel). The other relations are never lines:
+        touching a box lights up every box related to it in the colour of the
+        relation (composes, aggregates, calls, uses) and the member rows that
+        hold it in both boxes, and a related box out of sight shows as a pill
+        on the edge of the screen that frames both. The card of the box lists
+        its relations in the same colours, each with the member it goes
+        through (history → Greeting [*], App.run() → valid()).
+      rationale:
+        Owner, 2026-11-06: an arrow for every relation made the design of ds
+        "un caos", lines crossing boxes; the colours "quitan el horror de las
+        flechas por el medio", and inheritance is the one relation whose line
+        reads, because it is the taxonomy. Revises REQ-00072-1, which drew
+        every kind in its notation.
+      tags: render, scene, relations
+    }
+
+    verification VER-00080-2 {
+      status: approved
+      @requirement REQ-00072-2
+      title: Integration tests confirm every link of ds's design joins two nodes in a kind the viewer knows, every diagram lists nodes of the scene, every requirement has its title, inheriting from an interface realises it, and the page lights relations up instead of drawing them
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDraws
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AClassThatInheritsIsDrawnInheritingWhateverItsBase
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
+    }
+
+    requirement REQ-00076-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall place a module's classes by their taxonomy, each base centred above the row of what inherits from it, and modules that hold bases before those that inherit
+      text:
+        Inside a module every tree of inheritance and realisation is one
+        block: the base on top, centred over the row of its heirs, with room
+        between them for one trunk; a class with no base in its module stands
+        alone. A tree only groups: its classes stay children of their module.
+        In a package, a module whose classes are inherited from comes before
+        the modules that inherit from them. A box says the stereotype the
+        checker derives, interface or abstract, and its header is wide enough
+        to name a base in another module.
+      rationale:
+        Owner, 2026-11-06: the classes should be ordered by inheritance,
+        which is what defines a taxonomy; placed by it, the lines of
+        inheritance come out short and straight and the rest of the module
+        reads around them.
+      tags: render, scene, layout
+    }
+
+    verification VER-00085-1 {
+      status: approved
+      @requirement REQ-00076-1
+      title: Integration tests confirm the classes of examples/hola sit under their bases in both variants, with derived stereotypes, and core comes before the modules that inherit from it
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.HeirsSitInARowBelowTheirBaseCentredOverThem
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AbstractIsTheStereotypeTheCheckerDerives
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheModuleThatHoldsTheBasesComesBeforeTheModulesThatInherit
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AHeaderThatNamesABaseInAnotherModuleIsWideEnoughForIt
+    }
+
+    verification VER-00086-1 {
+      status: approved
+      @requirement REQ-00077-1
+      title: Integration tests confirm the page of examples/hola docks its card on the right and plays its tour along the bottom
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
+    }
+
+    verification VER-00081-1 {
+      status: approved
+      @requirement REQ-00069-2
+      title: Integration tests confirm hiding private members makes no box of ds's design wider
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.HidingPrivateMembersMakesNoBoxWider
+    }
+
+    verification VER-00082-3 {
+      status: approved
+      @requirement REQ-00073-2
+      title: Viewer tests, on the viewer's own code over scenes ds writes, confirm a call expands into what it calls and its answer comes back, a named scenario is followed, and ds check is a tour from the CLI down to the Checker and back
+      method: test
+      tests:
+        tests/integration/viewer/tours.test.ts::a call expands into the behaviour of what it calls, and its answer comes back
+        tests/integration/viewer/tours.test.ts::a step goes one level deeper for each behaviour entered
+        tests/integration/viewer/tours.test.ts::a call that names a scenario goes on into that branch, not the default path
+        tests/integration/viewer/tours.test.ts::every interface command of ds's design is a tour that reaches the model and comes back
+    }
+
+    requirement REQ-00074-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The scene shall write each behaviour once and name its nodes by index, so the page of a design stays small
+      text:
+        A behaviour (a sequence along one scenario) is written once with its
+        calls in order, each call naming the behaviour it goes on into; a tour
+        names the behaviour it starts from, and a viewer expands it to the
+        depth asked. Every record of the document is an array whose columns
+        the document names in fields, nodes, links, calls and diagrams name
+        nodes and behaviours by index, and places are whole units. The page
+        of ds's own design stays under 250 KB with the viewer in it.
+      rationale:
+        Owner, 2026-11-06: keep the page small and usable. The tours of ds
+        replayed 3,147 steps out of 229 distinct calls, every identity spelt
+        in full: written once, the page went from 593 KB to 146 KB, and depth
+        is no longer capped by what was written.
+      tags: render, scene, size
+    }
+
+    verification VER-00083-3 {
+      status: draft
+      @requirement REQ-00074-1
+      title: Integration tests confirm ds's design writes each behaviour once, its tours replay far more steps than it writes, and its page stays under 250 KB
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
+        tests/integration/viewer/tours.test.ts::the page stays small because each behaviour is written once and the tours replay many more steps
+    }
+
+    verification VER-00084-5 {
+      status: approved
+      @requirement REQ-00075-5
+      title: Integration tests confirm ds's design page and frame carry packs that unpack to the whole scene and to the viewer's code, within their size bounds
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageOfTheDesignCarriesEveryNodeAndNothingClosesItsScript
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.TheDesignEmbedsAsOneFrameCarryingTheWholePage
+        tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheViewerLightsRelationsUpAndDocksItsPanels
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.AReadersStylesheetLandsAfterTheViewersAndCannotCloseIt
+    }
+
+    requirement REQ-00078-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall list every requirement and constraint beside the tours, and on one show what it refines, what answers to it and what proves it
+      text:
+        The scene carries every requirement and constraint with its title,
+        status and text, the requirement it refines, the node it is written
+        in and the nodes whose entities answer to it; and every verification
+        with its method, status, tests and what it proves. The bottom panel
+        has a tab beside the tours: a table of the requirements as the tree of
+        what refines what, then the constraints, with their status, the
+        verifications that prove them and how many nodes answer to them,
+        filtered by text, by unverified, by unlinked or by draft. Touching a
+        requirement lights up in the canvas what answers to it and opens its
+        card: what it says, the one it refines, the ones that refine it, what
+        answers to it and the verifications with their tests. Touching a
+        verification lights up what its requirements reach. On a phone the
+        card opens over the list.
+      rationale:
+        Owner, 2026-11-06: as the sequences can be replayed, a list "al
+        estilo Excel" of the requirements, and on each one what exactly it is
+        linked to.
+      tags: render, viewer, requirements
+    }
+
+    verification VER-00087-1 {
+      status: approved
+      @requirement REQ-00078-1
+      title: Integration tests confirm examples/hola lists its requirements with what they refine, what answers to them and what proves them, and its page lists them beside the tours
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.EveryRequirementAndConstraintIsListedWithTheOneItRefines
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.WhatAnswersToARequirementIsTheNodeThatStandsForIt
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.AVerificationCarriesItsMethodItsTestsAndWhatItProves
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.ThePageListsTheRequirementsInTheBottomPanel
+    }
+
+    requirement REQ-00083-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall list the use cases at the head of the requirements, and on one replay each of its outcomes from each interface that realises it
+      text:
+        The scene carries every use case with the requirements: its contract,
+        its own outcomes (the default first), the use case it specialises, the
+        operations that realise it and the requirements that bind it. The
+        requirements tab heads with the use cases, as the tree of what
+        specialises what, their outcomes in place of verifications. Touching
+        one lights up the operations that realise it, its own and those of
+        every use case that specialises it, and opens its card: the contract,
+        a grid of its outcomes (inherited ones too) against those operations,
+        each cell replaying that ending from that interface or saying it is
+        not handled, what it specialises and what binds it. A requirement's
+        card names the use cases it binds. Use cases are not drawn in the
+        canvas: they are artefacts, like the requirements.
+      rationale:
+        Owner, 2026-11-06 (DS-77): see a use case whole from each of its
+        interfaces; and not as a card of the design, but as a kind of
+        requirement.
+      tags: render, viewer, usecase
+    }
+
+    verification VER-00092-1 {
+      status: approved
+      @requirement REQ-00083-1
+      title: Integration tests confirm hola's use cases are listed with their contract, outcomes, specialisation, realisations and bindings
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_trace.cpp::TestSceneTrace.AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealisesIt
+    }
+
+    requirement REQ-00099-1 {
+      status: approved
+      @refines SREQ-00013-1
+      title: The viewer shall show one map in three perspectives, structure, behaviour and logic, each with the relations, the marks and the panel of its own
+      text:
+        A switch at the top picks the perspective; the boxes never move. Structure draws what crosses
+        two boxes as one dependency between them, as a component diagram does, and inheritance and
+        ownership inside a module; its lines run at right angles around the boxes in their way, a
+        corridor shared by several lines split into lanes, and a line leaves the box that holds only
+        one end early and enters the other's late. Behaviour draws who calls whom and which interfaces
+        each box consumes, in curves, and opens the tours. Logic draws the rules: each box says how
+        many rules live in it and whether they all hold, what breaks one is ringed, a broken never is
+        a dashed line from what breaks it to its answer, and the requirements open below. The scene
+        carries every rule and definition placed: the node it is written in, its clauses as written,
+        what it answers to, and each breach on the node of what breaks it (a call on the member whose
+        behaviour writes it) with the node of its answer; a host lights one rule, framed, its breaches
+        with their answer.
+      rationale:
+        Owner, 2026-11-09 (DS-101, DS-108): the three perspectives over one map; structure at right
+        angles because it is built, behaviour in curves because it flows; without seeing the rules
+        they cannot be understood.
+      tags: render, viewer, logic
+    }
+
+    verification VER-00108-1 {
+      status: approved
+      @requirement REQ-00099-1
+      title: Integration tests confirm the scene places each rule where it is written with what breaks it on the map, and the page carries the three perspectives and their strokes
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_rules.cpp::TestSceneRules.ARuleIsPlacedWhereItIsWrittenWithWhatItSaysAndAnswersTo
+        tests/integration/ds/scene/test_scene_rules.cpp::TestSceneRules.WhatBreaksARuleIsPlacedOnTheMapWithTheAnswerThatBreaksIt
+        tests/integration/ds/scene/test_scene_rules.cpp::TestSceneRules.TheDocumentCarriesTheRulesAndThePageItsThreePerspectives
+    }
+
+    dataclass BreachView {                   // one breach of a rule, placed on the map
+      @requirement REQ-00099-1
+      + node: std::string
+      + to: std::string
+      + bindings: std::vector<std::pair<std::string, std::string>>
+      + witness: std::vector<std::pair<std::string, std::string>>
+      + file: std::string
+      + line: int
+    }
+
+    dataclass RuleView {                     // a rule or a definition as the logic perspective shows it
+      @requirement REQ-00099-1
+      + id: std::string
+      + kind: std::string
+      + name: std::string
+      + title: std::string
+      + scope: std::string
+      + lines: std::vector<std::pair<std::string, std::string>>
+      + requirements: std::vector<std::string>
+      + many breaches: std::vector<BreachView>
+      + file: std::string
+      + line: int
+    }
+
+    dataclass Outcome {                      // one way a use case may end, as the viewer lists it
+      @requirement REQ-00083-1
+      + name: std::string
+      + returns: std::string
+      + text: std::string
+    }
+
+    dataclass Requirement {                  // a requirement, a constraint or a use case as the viewer lists it
+      @requirement REQ-00078-1
+      @requirement REQ-00083-1
+      + id: std::string
+      + kind: std::string
+      + title: std::string
+      + status: std::string
+      + text: std::string
+      + parent: std::string
+      + scope: std::string
+      + nodes: std::vector<std::string>
+      + signature: std::string
+      + many outcomes: std::vector<Outcome>
+      + binds: std::vector<std::string>
+    }
+
+    dataclass Verification {                 // a verification and what it proves
+      @requirement REQ-00078-1
+      + id: std::string
+      + title: std::string
+      + status: std::string
+      + method: std::string
+      + tests: std::vector<std::string>
+      + requirements: std::vector<std::string>
+    }
+
+    dataclass Call {                         // one call of a behaviour: whom it calls, the behaviour it goes on into
+      @requirement REQ-00074-1
+      + to: std::string
+      + label: std::string
+      + expands: int
+      + result: std::string
+    }
+
+    dataclass Behaviour {                    // a sequence along one scenario, its calls in order, written once
+      @requirement REQ-00074-1
+      + id: std::string
+      + subject: std::string
+      + scenario: std::string
+      + many calls: std::vector<Call>
+    }
+
+    dataclass Tour {                         // a behaviour a viewer offers to replay
+      @requirement REQ-00073-2
+      + behaviour: int
+      + group: std::string
+    }
+
+    dataclass Link {                         // a relation between two nodes, with what produces it
+      @requirement REQ-00072-2
+      + from: std::string
+      + to: std::string
+      + kind: std::string
+      + count: int
+      + multiplicity: std::string
+      + sequences: std::vector<std::string>
+    }
+
+    dataclass DiagramView {                  // a diagram of the workspace and the nodes it shows
+      @requirement REQ-00072-2
+      + name: std::string
+      + kind: std::string
+      + nodes: std::vector<std::string>
+    }
+
+    dataclass Box {                          // a rectangle of the scene: one unit is a pixel at zoom 1
+      @requirement REQ-00069-2
+      + x: double
+      + y: double
+      + w: double
+      + h: double
+    }
+
+    dataclass Node {                         // one thing drawn: a package, module, interface, unit or row
+      @requirement REQ-00069-2
+      + id: std::string
+      + kind: std::string
+      + parent: std::string
+      + label: std::string
+      + stereotype: std::string
+      + visibility: std::string
+      + requirements: std::vector<std::string>
+      + owns full: Box
+      + lean: bool
+      + owns leanBox: Box
+    }
+
+    dataclass SceneDocument {                // the scene: its nodes in drawing order and the world each variant spans
+      @requirement REQ-00069-2
+      + many nodes: std::vector<Node>
+      + owns world: Box
+      + owns leanWorld: Box
+      + owns many links: std::vector<Link>
+      + owns many diagrams: std::vector<DiagramView>
+      + titles: std::map<std::string, std::string>
+      + owns many behaviours: std::vector<Behaviour>
+      + owns many tours: std::vector<Tour>
+      + owns many requirements: std::vector<Requirement>
+      + owns many verifications: std::vector<Verification>
+      + owns many rules: std::vector<RuleView>
+    }
+
+    // The scene builds the document and nothing else (DS-126): writing it as JSON or as the viewer
+    // page is the formats' job (ds::format). Next, inside: the layout and the four fillers.
+    class IScene {
+      @requirement REQ-00069-2
+      + ~IScene()
+      + abstract build() -> SceneDocument
+    }
+
+    // the node that stands for a model identity among the nodes: itself, a signature row or the
+    // nearest enclosing node; a behaviour stands for its subject
+    // The scene as a map and the layers over it (DS-126). Layout places
+    // the boxes and gives the base document; the map, built once from them, says where each identity
+    // lands; each layer is an object that adds what its perspective draws over the same boxes. Scene
+    // passes the document through the layers in order. Every layer is a place that can grow private
+    // methods; layers() is the one place that names them.
+
+    // ---- the principles, as rules ----------------------------------------------------------
+    rule no-layer-knows-another {
+      title: a layer adds its own part; it never depends on another layer
+      @requirement REQ-00069-2
+      for class a in driftspec@ds@scene, class b in driftspec@ds@scene
+      where a inherits driftspec@ds@scene::ILayer, b inherits driftspec@ds@scene::ILayer, a != b
+      never depends(a, b)
+    }
+
+    rule scene-knows-layers-as-ilayer {
+      title: the scene holds the layers as ILayer; only layers() names a concrete one
+      @requirement REQ-00069-2
+      for class c in driftspec@ds@scene
+      where c = driftspec@ds@scene::Scene
+      never depends(c, x), x inherits driftspec@ds@scene::ILayer
+    }
+
+    // ---- placing the boxes, and the map --------------------------------------------------------
+    // where every box goes, once per variant (lean hides private members): the base document
+    class Layout {
+      @requirement REQ-00069-2
+      @requirement REQ-00076-1
+      @requirement REQ-00093-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the language of the model: the kind of each box by name (DS-351)
+      + Layout(model: model::Model, metamodel: model::Metamodel)
+      + place() -> SceneDocument
+    }
+
+    // the boxes placed and where each identity of the model lands among them: built once, read by
+    // every layer
+    class Map {
+      @requirement REQ-00069-2
+      - ids_: std::set<std::string>
+      - parent_: std::map<std::string, std::string>
+      + Map(nodes: std::vector<Node>)
+      + land(id: std::string) -> std::string {
+        @requirement REQ-00072-2
+      }
+      + has(id: std::string) -> bool
+      + parentOf(id: std::string) -> std::string
+    }
+
+    // ---- the layers: what each perspective draws over the map ----------------------------------
+    // a layer adds its part of the document; it is built with the model and the map and keeps them
+    class ILayer {
+      @requirement REQ-00069-2
+      + ~ILayer()
+      + abstract decorate(out_document: SceneDocument) -> void
+    }
+
+    // the one place that names the layers, in the order they decorate; those that read the language are handed the metamodel
+    function layers(model: model::Model, metamodel: model::Metamodel, map: Map) -> std::vector<std::unique_ptr<ILayer>> {
+      @requirement REQ-00069-2
+    }
+
+    verification VER-00118-2 {
+      status: approved
+      @requirement REQ-00069-2
+      title: Integration tests confirm the map says where each identity lands, the layers come in order each adding its own part, and the scene builds the same document every time
+      method: test
+      tests:
+        tests/integration/ds/scene/test_scene_layers.cpp::TestSceneLayersOfADesign.EveryIdentityOfTheDesignLandsOnItselfOrTheNearestBoxThatHoldsIt
+        tests/integration/ds/scene/test_scene_layers.cpp::TestSceneLayersOfADesign.TheLayersComeInOrderAndEachAddsItsOwnPartOfTheDesign
+        tests/integration/ds/scene/test_scene_layers.cpp::TestSceneLayersOfADesign.TheSceneBuildsTheSameDocumentEveryTime
+    }
+
+    // structure: the relations between boxes and what each diagram shows
+    class StructureLayer : ILayer {
+      @requirement REQ-00072-2
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // what each diagram shows is read in it (DS-351)
+      - refs map_: Map
+      + StructureLayer(model: model::Model, metamodel: model::Metamodel, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - links(out_document: SceneDocument) -> void
+      - diagrams(out_document: SceneDocument) -> void
+      - titles(out_document: SceneDocument) -> void
+    }
+
+    // behaviour: every public behaviour, each written once, and the tours that replay them
+    class BehaviourLayer : ILayer {
+      @requirement REQ-00073-2
+      - refs model_: model::Model
+      - refs map_: Map
+      - index_: std::map<std::pair<std::string, std::string>, int>
+      - calls_: std::map<std::string, std::string>
+      + BehaviourLayer(model: model::Model, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - tours(out_document: SceneDocument) -> void
+      - behaviourOf(sequence: std::string, scenario: std::string, out_document: SceneDocument) -> int
+    }
+
+    // trace: requirements, constraints and use cases, what answers to them and what proves them
+    class TraceLayer : ILayer {
+      @requirement REQ-00078-1
+      @requirement REQ-00083-1
+      - refs model_: model::Model
+      - refs map_: Map
+      + TraceLayer(model: model::Model, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - at_: std::map<std::string, size_t>
+      - verificationAt_: std::map<std::string, size_t>
+      - requirements(out_document: SceneDocument) -> void
+      - verifications(out_document: SceneDocument) -> void
+      - answers(out_document: SceneDocument) -> void
+    }
+
+    // rules: each rule and definition where it is written, and what breaks it, placed on the map
+    class RulesLayer : ILayer {
+      @requirement REQ-00099-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the kind of each rule by name (DS-351)
+      - refs map_: Map
+      + RulesLayer(model: model::Model, metamodel: model::Metamodel, map: Map)
+      + decorate(out_document: SceneDocument) -> void
+      - place(id: std::string) -> std::string
+    }
+
+    // ---- the scene: the entry point the rest of ds uses -------------------------------------------
+    // built once: it places, makes the map and takes the layers, and keeps them
+    class Scene : IScene {
+      @requirement REQ-00069-2
+      - owns base_: SceneDocument
+      - owns map_: Map
+      - owns many layers_: std::vector<std::unique_ptr<ILayer>>
+      + Scene(model: model::Model, metamodel: model::Metamodel)   // the language it hands what places and what decorates (DS-351)
+      + build() -> SceneDocument
+    }
+
+    // the base document passed through every layer, in order
+    sequence Scene::build {
+      local layer: ILayer
+      local document: SceneDocument
+      loop each layer, in order {
+        -> layer.decorate(document)
+      }
+      return document
+    }
+  }
+}
+
+diagram CL_SceneNamespace {
+  kind: class
+  include: driftspec@ds@scene::*
+}

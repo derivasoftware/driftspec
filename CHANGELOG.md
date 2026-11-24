@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.57
+## 0.1.58
 
 Every operation of the query is a member of its class (DS-385). A pattern of a diagram's include or exclude is read
 once, by Pattern, which then takes or leaves each entity by comparing its identity and scope with what it read, with no
@@ -14,6 +14,15 @@ text built for each one. The one place that names the filter of each kind of dia
 a function, and the box a relation is drawn from, with the helpers the filters hid, are members of the filter they
 serve. A rule of ds's design holds that the query writes no function, refining what the query answers. Nothing changes
 for a design: every finding, export, drawing, viewer page, answer and exit code is the same.
+
+## 0.1.57
+
+Every format of every document ds writes is pinned as a golden file (DS-395), before the formats are refactored
+(DS-394): the scene as json and html, each diagram as ir, layout, svg, text and cells, the report and the answers as text
+and json, and the export, over three frozen workspaces: a copy of ds's own design, a copy of the hola example with a table
+and a tour so that every kind of diagram is drawn, and a small workspace with findings. ctest and a CI job of their own
+compare them with what the ds just built writes; `python tests/system/python/test_golden.py --ds <ds>` writes them again,
+a change reviewed like any other. Nothing a design writes changes.
 
 ## 0.1.56
 

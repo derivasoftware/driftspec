@@ -1,0 +1,16 @@
+constraint  CST-00001-1  Every view shall take its colours from the palette's CSS variables, never a literal value
+requirement  SREQ-00001-1  The system shall greet a person by name from the command line
+requirement  SREQ-00002-1  The system shall answer within 100 milliseconds
+requirement  SREQ-00003-1  The system shall let a person correct a wrong name without losing the page
+usecase  UC-00001-1  Greet a person by name
+usecase  UC-00002-1  Greet a person by name from a page, keeping what was typed when it fails
+module  hola@app
+module  hola@core
+module  hola@server
+interface  hola@shell
+sequence  hola@shell::greet::sequence
+sequence  hola@shell::greet::sequence/empty-name
+interface  hola@web
+sequence  hola@web::greet::sequence
+sequence  hola@web::greet::sequence/empty-name
+state  hola@web::state

@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 716 512" width="716" height="512" style="max-width:100%;height:auto" class="pr-diagram" role="img">
+<title>HLD_Hola</title>
+<style>
+  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
+    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
+    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
+    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+  .pr-diagram text { fill: var(--pr-text); }
+  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
+  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
+  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
+  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
+  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
+  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
+  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
+  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
+  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-name { fill: var(--pr-name); }
+  .pr-diagram .pr-type { fill: var(--pr-type); }
+  .pr-diagram .pr-param { fill: var(--pr-param); }
+  .pr-diagram .pr-punct { fill: var(--pr-punct); }
+  .pr-diagram .pr-static { text-decoration: underline; }
+  .pr-diagram .pr-abstract-member { font-style: italic; }
+  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
+  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
+  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
+  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
+  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
+  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
+  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
+  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
+  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
+  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
+  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
+  .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+</style>
+<defs>
+  <marker id="prig0w26-tri" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" orient="auto"><path d="M1,1 L13,6 L1,11 Z"/></marker>
+  <marker id="prig0w26-diamond-filled" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="pr-filled" d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="prig0w26-diamond" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="prig0w26-arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path class="pr-open" d="M1,1 L11,6 L1,11"/></marker>
+</defs>
+<g class="pr-edge-group" data-from="hola@app" data-to="hola@core" data-ref-bond="structural"><path class="pr-edge-hit" d="M102,222 L102,233 L66,233 L66,302"/><path class="pr-edge pr-edge-association" d="M102,222 L102,233 L66,233 L66,302" marker-end="url(#prig0w26-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@app" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M134,222 L134,244 L87,244 L87,302"/><path class="pr-edge pr-edge-dependency" d="M134,222 L134,244 L87,244 L87,302" marker-end="url(#prig0w26-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@shell" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M218,60 L218,92 L210,92 L210,256 L107,256 L107,302"/><path class="pr-edge pr-edge-dependency" d="M218,60 L218,92 L210,92 L210,256 L107,256 L107,302" marker-end="url(#prig0w26-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@web" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M586,60 L586,124 L402,124 L402,290 L169,290 L169,302"/><path class="pr-edge pr-edge-dependency" d="M586,60 L586,124 L402,124 L402,290 L169,290 L169,302" marker-end="url(#prig0w26-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@web" data-to="hola@server" data-ref-bond="uses"><path class="pr-edge-hit" d="M477,60 L477,108 L306,108 L306,140"/><path class="pr-edge pr-edge-dependency" d="M477,60 L477,108 L306,108 L306,140" marker-end="url(#prig0w26-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@server" data-to="hola@core" data-ref-bond="structural"><path class="pr-edge-hit" d="M288,218 L288,267 L128,267 L128,302"/><path class="pr-edge pr-edge-association" d="M288,218 L288,267 L128,267 L128,302" marker-end="url(#prig0w26-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@server" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M323,218 L323,279 L148,279 L148,302"/><path class="pr-edge pr-edge-dependency" d="M323,218 L323,279 L148,279 L148,302" marker-end="url(#prig0w26-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@shell" data-to="hola@app" data-ref-bond="uses"><path class="pr-edge-hit" d="M109,60 L109,76 L118,76 L118,140"/><path class="pr-edge pr-edge-dependency" d="M109,60 L109,76 L118,76 L118,140" marker-end="url(#prig0w26-arrow)"/></g>
+<g id="prig0w26-hola@app" data-id="hola@app" class="pr-box pr-classifier-namespace"><rect x="70" y="140" width="96" height="82" rx="4"/><path class="pr-head" d="M74,140 H162 A4,4 0 0 1 166,144 V172 H70 V144 A4,4 0 0 1 74,140 Z"/><circle class="pr-badge" cx="87" cy="158" r="7"/><text class="pr-badge-text" x="87" y="161.5" text-anchor="middle">N</text><text class="pr-header" x="100" y="162">app</text><line class="pr-sep" x1="70" y1="172" x2="166" y2="172"/><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="86" cy="180" r="6"/><text class="pr-badge-text" x="86" y="183" text-anchor="middle">C</text></g><text x="100" y="184">Console</text><line class="pr-sep" x1="70" y1="194" x2="166" y2="194"/><g class="pr-offered pr-classifier-function"><circle class="pr-badge" cx="86" cy="202" r="6"/><text class="pr-badge-text" x="86" y="205" text-anchor="middle">f</text></g><text x="100" y="206">main</text></g>
+<g id="prig0w26-hola@core" data-id="hola@core" class="pr-box pr-classifier-namespace"><rect x="46" y="302" width="144" height="190" rx="4"/><path class="pr-head" d="M50,302 H186 A4,4 0 0 1 190,306 V334 H46 V306 A4,4 0 0 1 50,302 Z"/><circle class="pr-badge" cx="63" cy="320" r="7"/><text class="pr-badge-text" x="63" y="323.5" text-anchor="middle">N</text><text class="pr-header" x="76" y="324">core</text><line class="pr-sep" x1="46" y1="334" x2="190" y2="334"/><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="62" cy="342" r="6"/><text class="pr-badge-text" x="62" y="345" text-anchor="middle">C</text></g><text x="76" y="346">Casual</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="62" cy="360" r="6"/><text class="pr-badge-text" x="62" y="363" text-anchor="middle">C</text></g><text x="76" y="364">Channel</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="62" cy="378" r="6"/><text class="pr-badge-text" x="62" y="381" text-anchor="middle">C</text></g><text x="76" y="382">Formal</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="62" cy="396" r="6"/><text class="pr-badge-text" x="62" y="399" text-anchor="middle">C</text></g><text x="76" y="400">Greeter</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="62" cy="414" r="6"/><text class="pr-badge-text" x="62" y="417" text-anchor="middle">C</text></g><text x="76" y="418">GreetingCache</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="62" cy="432" r="6"/><text class="pr-badge-text" x="62" y="435" text-anchor="middle">C</text></g><text x="76" y="436">Style</text><line class="pr-sep" x1="46" y1="446" x2="190" y2="446"/><g class="pr-offered pr-classifier-dataclass"><circle class="pr-badge" cx="62" cy="454" r="6"/><text class="pr-badge-text" x="62" y="457" text-anchor="middle">D</text></g><text x="76" y="458">Greeting</text><g class="pr-offered pr-classifier-dataclass"><circle class="pr-badge" cx="62" cy="472" r="6"/><text class="pr-badge-text" x="62" y="475" text-anchor="middle">D</text></g><text x="76" y="476">Locale</text></g>
+<g id="prig0w26-hola@server" data-id="hola@server" class="pr-box pr-classifier-namespace"><rect x="254" y="140" width="104" height="78" rx="4"/><path class="pr-head" d="M258,140 H354 A4,4 0 0 1 358,144 V172 H254 V144 A4,4 0 0 1 258,140 Z"/><circle class="pr-badge" cx="271" cy="158" r="7"/><text class="pr-badge-text" x="271" y="161.5" text-anchor="middle">N</text><text class="pr-header" x="284" y="162">server</text><line class="pr-sep" x1="254" y1="172" x2="358" y2="172"/><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="270" cy="180" r="6"/><text class="pr-badge-text" x="270" y="183" text-anchor="middle">C</text></g><text x="284" y="184">Response</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="270" cy="198" r="6"/><text class="pr-badge-text" x="270" y="201" text-anchor="middle">C</text></g><text x="284" y="202">Server</text></g>
+<g id="prig0w26-hola@shell" data-id="hola@shell" class="pr-box pr-classifier-interface pr-abstract"><rect x="0" y="0" width="328" height="60" rx="4"/><path class="pr-head" d="M4,0 H324 A4,4 0 0 1 328,4 V32 H0 V4 A4,4 0 0 1 4,0 Z"/><circle class="pr-badge" cx="17" cy="18" r="7"/><text class="pr-badge-text" x="17" y="21.5" text-anchor="middle">I</text><text class="pr-header" x="30" y="22">shell</text><line class="pr-sep" x1="0" y1="32" x2="328" y2="32"/><text x="10" y="44"><tspan class="pr-name">greet</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">name</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">string</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">core::Greeting</tspan></text></g>
+<g id="prig0w26-hola@web" data-id="hola@web" class="pr-box pr-classifier-interface pr-abstract"><rect x="368" y="0" width="328" height="60" rx="4"/><path class="pr-head" d="M372,0 H692 A4,4 0 0 1 696,4 V32 H368 V4 A4,4 0 0 1 372,0 Z"/><circle class="pr-badge" cx="385" cy="18" r="7"/><text class="pr-badge-text" x="385" y="21.5" text-anchor="middle">I</text><text class="pr-header" x="398" y="22">web</text><line class="pr-sep" x1="368" y1="32" x2="696" y2="32"/><text x="378" y="44"><tspan class="pr-name">greet</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">name</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">string</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">core::Greeting</tspan></text></g>
+</svg>

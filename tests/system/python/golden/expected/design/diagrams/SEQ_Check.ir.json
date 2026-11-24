@@ -1,0 +1,1408 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "check(workspace: path)",
+      "order": 0,
+      "refs": {
+        "location": "design/ds/cli.ds:12"
+      },
+      "title": "driftspec@ds@cli::check",
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "app::main(workspace) / check",
+      "order": 1,
+      "refs": {
+        "expands": "driftspec@ds@app::main::sequence/check",
+        "location": "design/ds/cli.ds:61",
+        "span": "2-84"
+      },
+      "title": "driftspec@ds@app::app::main\nexpanded below: main/check",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "check(metamodel, argv, json)",
+      "order": 2,
+      "refs": {
+        "expands": "driftspec@ds@app::check::sequence",
+        "location": "design/ds/app.ds:75",
+        "span": "3-83"
+      },
+      "title": "driftspec@ds@app::check\nexpanded below: check",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loadWorkspace(metamodel, dir, findings, diagram, model)",
+      "order": 3,
+      "refs": {
+        "expands": "driftspec@ds@app::loadWorkspace::sequence",
+        "location": "design/ds/app.ds:58",
+        "span": "4-76"
+      },
+      "title": "driftspec@ds@app::loadWorkspace\nexpanded below: loadWorkspace",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "isDirectory(dir)",
+      "order": 4,
+      "refs": {
+        "location": "design/ds/app.ds:46"
+      },
+      "title": "driftspec@ds@app::isDirectory",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 5,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "load(metamodel, dir, output, diagram)",
+      "order": 6,
+      "refs": {
+        "expands": "driftspec@ds@app::load::sequence",
+        "location": "design/ds/app.ds:50",
+        "span": "7-75"
+      },
+      "title": "driftspec@ds@app::load\nexpanded below: load",
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "parseDirectory(dir)",
+      "order": 7,
+      "refs": {
+        "expands": "driftspec@ds@parse::Parser::parseDirectory::sequence",
+        "location": "design/ds/app.ds:68",
+        "span": "8-25"
+      },
+      "title": "driftspec@ds@parse::Parser::parseDirectory\nexpanded below: Parser::parseDirectory",
+      "to": "driftspec@ds@parse::Parser|parser"
+    },
+    {
+      "from": "driftspec@ds@parse::Parser|parser",
+      "kind": "message",
+      "label": "parseFile(path)",
+      "order": 8,
+      "refs": {
+        "expands": "driftspec@ds@parse::Parser::parseFile::sequence",
+        "location": "design/ds/parse.ds:242",
+        "span": "9-24"
+      },
+      "title": "driftspec@ds@parse::Parser::parseFile\nexpanded below: Parser::parseFile",
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "message",
+      "label": "parseText(path, text)",
+      "order": 9,
+      "refs": {
+        "expands": "driftspec@ds@parse::Parser::parseText::sequence",
+        "location": "design/ds/parse.ds:220",
+        "span": "10-23"
+      },
+      "title": "driftspec@ds@parse::Parser::parseText\nexpanded below: Parser::parseText",
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "message",
+      "label": "place(root, file)",
+      "order": 10,
+      "refs": {
+        "expands": "driftspec@ds@parse::SyntaxError::place::sequence",
+        "location": "design/ds/parse.ds:183",
+        "span": "11-22"
+      },
+      "title": "driftspec@ds@parse::SyntaxError::place\nexpanded below: SyntaxError::place",
+      "to": "driftspec@ds@parse::SyntaxError|error"
+    },
+    {
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "place(child, file)",
+      "order": 11,
+      "refs": {
+        "expands": "driftspec@ds@parse::SyntaxError::place::sequence",
+        "location": "design/ds/parse.ds:192"
+      },
+      "title": "driftspec@ds@parse::SyntaxError::place\nexpanded below: SyntaxError::place",
+      "to": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError",
+      "kind": "message",
+      "label": "found",
+      "order": 12,
+      "to": "driftspec@ds@parse::SyntaxError|error"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "return true",
+      "order": 13,
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "contextOf(node)",
+      "order": 14,
+      "refs": {
+        "location": "design/ds/parse.ds:199"
+      },
+      "title": "driftspec@ds@parse::SyntaxError::contextOf",
+      "to": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError",
+      "kind": "message",
+      "label": "where",
+      "order": 15,
+      "to": "driftspec@ds@parse::SyntaxError|error"
+    },
+    {
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "expectedAt(node)",
+      "order": 16,
+      "refs": {
+        "location": "design/ds/parse.ds:200"
+      },
+      "title": "driftspec@ds@parse::SyntaxError::expectedAt",
+      "to": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError",
+      "kind": "message",
+      "label": "takes",
+      "order": 17,
+      "to": "driftspec@ds@parse::SyntaxError|error"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "return true",
+      "order": 18,
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "return false",
+      "order": 19,
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "place(child, file)",
+      "order": 20,
+      "refs": {
+        "expands": "driftspec@ds@parse::SyntaxError::place::sequence",
+        "location": "design/ds/parse.ds:207"
+      },
+      "title": "driftspec@ds@parse::SyntaxError::place\nexpanded below: SyntaxError::place",
+      "to": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError",
+      "kind": "message",
+      "label": "found",
+      "order": 21,
+      "to": "driftspec@ds@parse::SyntaxError|error"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "return true",
+      "order": 22,
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "message",
+      "label": "placed",
+      "order": 23,
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "message",
+      "label": "file",
+      "order": 24,
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "message",
+      "label": "file",
+      "order": 25,
+      "to": "driftspec@ds@parse::Parser|parser"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::Parser|parser",
+      "kind": "message",
+      "label": "files",
+      "order": 26,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "load(files, output, diagram)",
+      "order": 27,
+      "refs": {
+        "expands": "driftspec@ds@api::Api::load::sequence",
+        "location": "design/ds/app.ds:69",
+        "span": "28-74"
+      },
+      "title": "driftspec@ds@api::Api::load\nexpanded below: Api::load",
+      "to": "driftspec@ds@api::Api|api"
+    },
+    {
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "bind(file)",
+      "order": 28,
+      "refs": {
+        "expands": "driftspec@ds@bind::Binder::bind::sequence",
+        "location": "design/ds/api.ds:198",
+        "span": "29-51"
+      },
+      "title": "driftspec@ds@bind::Binder::bind\nexpanded below: Binder::bind",
+      "to": "driftspec@ds@bind::Binder|binder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder|binder",
+      "kind": "message",
+      "label": "root()",
+      "order": 29,
+      "refs": {
+        "location": "design/ds/bind.ds:190"
+      },
+      "title": "driftspec@ds@parse::TreeReader::root",
+      "to": "driftspec@ds@parse::TreeReader|reader"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@parse::TreeReader|reader",
+      "kind": "message",
+      "label": "root",
+      "order": 30,
+      "to": "driftspec@ds@bind::Binder|binder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder|binder",
+      "kind": "message",
+      "label": "children(root)",
+      "order": 31,
+      "refs": {
+        "expands": "driftspec@ds@bind::BindContext::children::sequence",
+        "location": "design/ds/bind.ds:191",
+        "span": "32-51"
+      },
+      "title": "driftspec@ds@bind::BindContext::children\nexpanded below: BindContext::children",
+      "to": "driftspec@ds@bind::BindContext|ctx"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext|ctx",
+      "kind": "message",
+      "label": "bindChildren(node, self)",
+      "order": 32,
+      "refs": {
+        "expands": "driftspec@ds@bind::Dispatch::bindChildren::sequence",
+        "location": "design/ds/bind.ds:196",
+        "span": "33-51"
+      },
+      "title": "driftspec@ds@bind::Dispatch::bindChildren\nexpanded below: Dispatch::bindChildren",
+      "to": "driftspec@ds@bind::Dispatch|dispatch"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch|dispatch",
+      "kind": "message",
+      "label": "of(child)",
+      "order": 33,
+      "refs": {
+        "location": "design/ds/bind.ds:411"
+      },
+      "title": "driftspec@ds@bind::Dispatch::of",
+      "to": "driftspec@ds@bind::Dispatch"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@bind::Dispatch",
+      "kind": "message",
+      "label": "binder",
+      "order": 34,
+      "to": "driftspec@ds@bind::Dispatch|dispatch"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch|dispatch",
+      "kind": "message",
+      "label": "bind(child, ctx)",
+      "order": 35,
+      "refs": {
+        "expands": "driftspec@ds@bind::INodeBinder::bind::sequence",
+        "location": "design/ds/bind.ds:413",
+        "span": "36-51"
+      },
+      "title": "driftspec@ds@bind::INodeBinder::bind\nexpanded below: INodeBinder::bind",
+      "to": "driftspec@ds@bind::INodeBinder|binder"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder|binder",
+      "kind": "message",
+      "label": "declare(e)",
+      "order": 36,
+      "refs": {
+        "expands": "driftspec@ds@bind::BindContext::declare::sequence",
+        "location": "design/ds/bind.ds:205",
+        "span": "37-41"
+      },
+      "title": "driftspec@ds@bind::BindContext::declare\nexpanded below: BindContext::declare",
+      "to": "driftspec@ds@bind::BindContext|ctx"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext|ctx",
+      "kind": "message",
+      "label": "declare(entity)",
+      "order": 37,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::declare::sequence",
+        "location": "design/ds/bind.ds:217",
+        "span": "38-40"
+      },
+      "title": "driftspec@ds@model::Model::declare\nexpanded below: Model::declare",
+      "to": "driftspec@ds@model::Model|model"
+    },
+    {
+      "from": "driftspec@ds@model::Model|model",
+      "kind": "message",
+      "label": "indexEntity(entity, true)",
+      "order": 38,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::indexEntity::sequence",
+        "location": "design/ds/model.ds:1079",
+        "span": "39-40"
+      },
+      "title": "driftspec@ds@model::Model::indexEntity\nexpanded below: Model::indexEntity",
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "message",
+      "label": "withoutRevision()",
+      "order": 39,
+      "refs": {
+        "location": "design/ds/model.ds:1151"
+      },
+      "title": "driftspec@ds@model::ArtefactName::withoutRevision",
+      "to": "driftspec@ds@model::ArtefactName|name"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::ArtefactName|name",
+      "kind": "message",
+      "label": "bare",
+      "order": 40,
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Model|model",
+      "kind": "message",
+      "label": "declared",
+      "order": 41,
+      "to": "driftspec@ds@bind::BindContext|ctx"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@bind::BindContext|ctx",
+      "kind": "message",
+      "label": "declared",
+      "order": 42,
+      "to": "driftspec@ds@bind::INodeBinder|binder"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder|binder",
+      "kind": "message",
+      "label": "annotate(declared.id, key, value)",
+      "order": 43,
+      "refs": {
+        "expands": "driftspec@ds@bind::BindContext::annotate::sequence",
+        "location": "design/ds/bind.ds:207",
+        "span": "44-46"
+      },
+      "title": "driftspec@ds@bind::BindContext::annotate\nexpanded below: BindContext::annotate",
+      "to": "driftspec@ds@bind::BindContext|ctx"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext|ctx",
+      "kind": "message",
+      "label": "annotate(id, key, value)",
+      "order": 44,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::annotate::sequence",
+        "location": "design/ds/bind.ds:226",
+        "span": "45-46"
+      },
+      "title": "driftspec@ds@model::Model::annotate\nexpanded below: Model::annotate",
+      "to": "driftspec@ds@model::Model|model"
+    },
+    {
+      "from": "driftspec@ds@model::Model|model",
+      "kind": "message",
+      "label": "held(id)",
+      "order": 45,
+      "refs": {
+        "location": "design/ds/model.ds:1091"
+      },
+      "title": "driftspec@ds@model::Model::held",
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Model",
+      "kind": "message",
+      "label": "kept",
+      "order": 46,
+      "to": "driftspec@ds@model::Model|model"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder|binder",
+      "kind": "message",
+      "label": "relate(relation)",
+      "order": 47,
+      "refs": {
+        "expands": "driftspec@ds@bind::BindContext::relate::sequence",
+        "location": "design/ds/bind.ds:210",
+        "span": "48-50"
+      },
+      "title": "driftspec@ds@bind::BindContext::relate\nexpanded below: BindContext::relate",
+      "to": "driftspec@ds@bind::BindContext|ctx"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext|ctx",
+      "kind": "message",
+      "label": "relate(relation)",
+      "order": 48,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::relate::sequence",
+        "location": "design/ds/bind.ds:222",
+        "span": "49-50"
+      },
+      "title": "driftspec@ds@model::Model::relate\nexpanded below: Model::relate",
+      "to": "driftspec@ds@model::Model|model"
+    },
+    {
+      "from": "driftspec@ds@model::Model|model",
+      "kind": "message",
+      "label": "relationOf(relation.kind)",
+      "order": 49,
+      "refs": {
+        "location": "design/ds/model.ds:1139"
+      },
+      "title": "driftspec@ds@model::Metamodel::relationOf",
+      "to": "driftspec@ds@model::Metamodel|metamodel_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Metamodel|metamodel_",
+      "kind": "message",
+      "label": "declared",
+      "order": 50,
+      "to": "driftspec@ds@model::Model|model"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder|binder",
+      "kind": "message",
+      "label": "children(node)",
+      "order": 51,
+      "refs": {
+        "expands": "driftspec@ds@bind::BindContext::children::sequence",
+        "location": "design/ds/bind.ds:212"
+      },
+      "title": "driftspec@ds@bind::BindContext::children\nexpanded below: BindContext::children",
+      "to": "driftspec@ds@bind::BindContext|ctx"
+    },
+    {
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "stepsFor(output, model, diagram)",
+      "order": 52,
+      "refs": {
+        "expands": "driftspec@ds@api::Api::stepsFor::sequence",
+        "location": "design/ds/api.ds:201",
+        "span": "53-54"
+      },
+      "title": "driftspec@ds@api::Api::stepsFor\nexpanded below: Api::stepsFor",
+      "to": "driftspec@ds@api::Api"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "message",
+      "label": "check::Selection::of(steps)",
+      "order": 53,
+      "refs": {
+        "location": "design/ds/api.ds:220"
+      },
+      "title": "driftspec@ds@check::Selection::check::Selection::of",
+      "to": "driftspec@ds@check::Selection"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Selection",
+      "kind": "message",
+      "label": "drawing",
+      "order": 54,
+      "to": "driftspec@ds@api::Api"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@api::Api",
+      "kind": "message",
+      "label": "selection",
+      "order": 55,
+      "to": "driftspec@ds@api::Api|api"
+    },
+    {
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "check::steps(selection)",
+      "order": 56,
+      "refs": {
+        "expands": "driftspec@ds@check::steps::sequence",
+        "location": "design/ds/api.ds:202",
+        "span": "57-60"
+      },
+      "title": "driftspec@ds@check::check::steps\nexpanded below: steps",
+      "to": "driftspec@ds@check"
+    },
+    {
+      "from": "driftspec@ds@check",
+      "kind": "message",
+      "label": "has(kind)",
+      "order": 57,
+      "refs": {
+        "location": "design/ds/check.ds:338"
+      },
+      "title": "driftspec@ds@check::Selection::has",
+      "to": "driftspec@ds@check::Selection|selection"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Selection|selection",
+      "kind": "message",
+      "label": "named",
+      "order": 58,
+      "to": "driftspec@ds@check"
+    },
+    {
+      "from": "driftspec@ds@check",
+      "kind": "message",
+      "label": "needs()",
+      "order": 59,
+      "refs": {
+        "location": "design/ds/check.ds:341"
+      },
+      "title": "driftspec@ds@check::IStep::needs",
+      "to": "driftspec@ds@check::IStep|step"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::IStep|step",
+      "kind": "message",
+      "label": "needs",
+      "order": 60,
+      "to": "driftspec@ds@check"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check",
+      "kind": "message",
+      "label": "steps",
+      "order": 61,
+      "to": "driftspec@ds@api::Api|api"
+    },
+    {
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "notes()",
+      "order": 62,
+      "refs": {
+        "location": "design/ds/api.ds:203"
+      },
+      "title": "driftspec@ds@bind::Binder::notes",
+      "to": "driftspec@ds@bind::Binder|binder"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@bind::Binder|binder",
+      "kind": "message",
+      "label": "notes",
+      "order": 63,
+      "to": "driftspec@ds@api::Api|api"
+    },
+    {
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "run(notes)",
+      "order": 64,
+      "refs": {
+        "expands": "driftspec@ds@check::Checker::run::sequence",
+        "location": "design/ds/api.ds:204",
+        "span": "65-72"
+      },
+      "title": "driftspec@ds@check::Checker::run\nexpanded below: Checker::run",
+      "to": "driftspec@ds@check::Checker|checker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker|checker",
+      "kind": "message",
+      "label": "order()",
+      "order": 65,
+      "refs": {
+        "location": "design/ds/check.ds:657"
+      },
+      "title": "driftspec@ds@check::Checker::order",
+      "to": "driftspec@ds@check::Checker"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Checker",
+      "kind": "message",
+      "label": "keys",
+      "order": 66,
+      "to": "driftspec@ds@check::Checker|checker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker|checker",
+      "kind": "message",
+      "label": "run(context)",
+      "order": 67,
+      "refs": {
+        "location": "design/ds/check.ds:659"
+      },
+      "title": "driftspec@ds@check::IStep::run",
+      "to": "driftspec@ds@check::IStep|step"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::IStep|step",
+      "kind": "message",
+      "label": "found",
+      "order": 68,
+      "to": "driftspec@ds@check::Checker|checker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker|checker",
+      "kind": "message",
+      "label": "report(finding)",
+      "order": 69,
+      "refs": {
+        "location": "design/ds/check.ds:661"
+      },
+      "title": "driftspec@ds@model::Model::report",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "from": "driftspec@ds@check::Checker|checker",
+      "kind": "message",
+      "label": "cover()",
+      "order": 70,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::cover::sequence",
+        "location": "design/ds/check.ds:665",
+        "span": "71-72"
+      },
+      "title": "driftspec@ds@model::Model::cover\nexpanded below: Model::cover",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "from": "driftspec@ds@model::Model|model_",
+      "kind": "message",
+      "label": "severityOf(severity)",
+      "order": 71,
+      "refs": {
+        "location": "design/ds/model.ds:1107"
+      },
+      "title": "driftspec@ds@model::Metamodel::severityOf",
+      "to": "driftspec@ds@model::Metamodel|metamodel_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Metamodel|metamodel_",
+      "kind": "message",
+      "label": "row",
+      "order": 72,
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "withdrawEchoes(broken)",
+      "order": 73,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::withdrawEchoes::sequence",
+        "location": "design/ds/api.ds:206"
+      },
+      "title": "driftspec@ds@model::Model::withdrawEchoes\nexpanded below: Model::withdrawEchoes",
+      "to": "driftspec@ds@model::Model|model"
+    },
+    {
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "sortFindings()",
+      "order": 74,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::sortFindings::sequence",
+        "location": "design/ds/api.ds:207"
+      },
+      "title": "driftspec@ds@model::Model::sortFindings\nexpanded below: Model::sortFindings",
+      "to": "driftspec@ds@model::Model|model"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@api::Api|api",
+      "kind": "message",
+      "label": "loaded",
+      "order": 75,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "loaded",
+      "order": 76,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "found",
+      "order": 77,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "check::Report::of(model, metamodel)",
+      "order": 78,
+      "refs": {
+        "location": "design/ds/app.ds:59"
+      },
+      "title": "driftspec@ds@check::Report::check::Report::of",
+      "to": "driftspec@ds@check::Report"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Report",
+      "kind": "message",
+      "label": "report",
+      "order": 79,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "format::reportFormats()",
+      "order": 80,
+      "refs": {
+        "location": "design/ds/app.ds:60"
+      },
+      "title": "driftspec@ds@format::format::reportFormats",
+      "to": "driftspec@ds@format"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format",
+      "kind": "message",
+      "label": "formats",
+      "order": 81,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "write(report, options)",
+      "order": 82,
+      "refs": {
+        "location": "design/ds/app.ds:61"
+      },
+      "title": "driftspec@ds@format::ReportText::write",
+      "to": "driftspec@ds@format::ReportText|chosen"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@format::ReportText|chosen",
+      "kind": "message",
+      "label": "written",
+      "order": 83,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "code",
+      "order": 84,
+      "to": "driftspec@ds@app"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@app",
+      "kind": "message",
+      "label": "code",
+      "order": 85,
+      "to": "driftspec@ds@cli"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@cli",
+      "kind": "message",
+      "label": "none",
+      "order": 86,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@cli",
+      "id": "driftspec@ds@cli",
+      "kind": "lifeline",
+      "label": "self: cli",
+      "refs": {
+        "location": "design/ds/cli.ds:6"
+      },
+      "title": "driftspec@ds@cli"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@app",
+      "id": "driftspec@ds@app",
+      "kind": "lifeline",
+      "label": "app",
+      "refs": {
+        "location": "design/ds/app.ds:8"
+      },
+      "title": "driftspec@ds@app"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@parse::Parser",
+      "id": "driftspec@ds@parse::Parser|parser",
+      "kind": "lifeline",
+      "label": "parser: Parser",
+      "refs": {
+        "location": "design/ds/parse.ds:141"
+      },
+      "title": "driftspec@ds@parse::Parser"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@parse::Parser",
+      "id": "driftspec@ds@parse::Parser",
+      "kind": "lifeline",
+      "label": "Parser",
+      "refs": {
+        "location": "design/ds/parse.ds:141"
+      },
+      "title": "driftspec@ds@parse::Parser"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@parse::SyntaxError",
+      "id": "driftspec@ds@parse::SyntaxError|error",
+      "kind": "lifeline",
+      "label": "error: SyntaxError",
+      "refs": {
+        "location": "design/ds/parse.ds:156"
+      },
+      "title": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@parse::SyntaxError",
+      "id": "driftspec@ds@parse::SyntaxError",
+      "kind": "lifeline",
+      "label": "SyntaxError",
+      "refs": {
+        "location": "design/ds/parse.ds:156"
+      },
+      "title": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@parse::SyntaxError::place::sequence::f0",
+      "kind": "frame",
+      "label": "opt the node is an error",
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@parse::SyntaxError::place::sequence::f1",
+      "kind": "frame",
+      "label": "loop each child with an error",
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@parse::SyntaxError::place::sequence::f2",
+      "kind": "frame",
+      "label": "opt the child placed it",
+      "span": [
+        13,
+        13
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@parse::SyntaxError::place::sequence::f3",
+      "kind": "frame",
+      "label": "opt the node is an error or a missing token",
+      "span": [
+        14,
+        18
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@parse::SyntaxError::place::sequence::f4",
+      "kind": "frame",
+      "label": "opt nothing under the node has an error",
+      "span": [
+        19,
+        19
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@parse::SyntaxError::place::sequence::f5",
+      "kind": "frame",
+      "label": "loop each child",
+      "span": [
+        20,
+        22
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@parse::SyntaxError::place::sequence::f6",
+      "kind": "frame",
+      "label": "opt the child placed it",
+      "span": [
+        22,
+        22
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@parse::Parser::parseText::sequence::f0",
+      "kind": "frame",
+      "label": "opt the tree has an error",
+      "span": [
+        10,
+        23
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@parse::Parser::parseDirectory::sequence::f3",
+      "kind": "frame",
+      "label": "loop each path",
+      "span": [
+        8,
+        25
+      ]
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@api::Api",
+      "id": "driftspec@ds@api::Api|api",
+      "kind": "lifeline",
+      "label": "api: Api",
+      "refs": {
+        "location": "design/ds/api.ds:154"
+      },
+      "title": "driftspec@ds@api::Api"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@bind::Binder",
+      "id": "driftspec@ds@bind::Binder|binder",
+      "kind": "lifeline",
+      "label": "binder: Binder",
+      "refs": {
+        "location": "design/ds/bind.ds:159"
+      },
+      "title": "driftspec@ds@bind::Binder"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@parse::TreeReader",
+      "id": "driftspec@ds@parse::TreeReader|reader",
+      "kind": "lifeline",
+      "label": "reader: TreeReader",
+      "refs": {
+        "location": "design/ds/parse.ds:255"
+      },
+      "title": "driftspec@ds@parse::TreeReader"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@bind::BindContext",
+      "id": "driftspec@ds@bind::BindContext|ctx",
+      "kind": "lifeline",
+      "label": "ctx: BindContext",
+      "refs": {
+        "location": "design/ds/bind.ds:353"
+      },
+      "title": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@bind::Dispatch",
+      "id": "driftspec@ds@bind::Dispatch|dispatch",
+      "kind": "lifeline",
+      "label": "dispatch: Dispatch",
+      "refs": {
+        "location": "design/ds/bind.ds:397"
+      },
+      "title": "driftspec@ds@bind::Dispatch"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@bind::Dispatch",
+      "id": "driftspec@ds@bind::Dispatch",
+      "kind": "lifeline",
+      "label": "Dispatch",
+      "refs": {
+        "location": "design/ds/bind.ds:397"
+      },
+      "title": "driftspec@ds@bind::Dispatch"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@bind::INodeBinder",
+      "id": "driftspec@ds@bind::INodeBinder|binder",
+      "kind": "lifeline",
+      "label": "binder: INodeBinder",
+      "refs": {
+        "location": "design/ds/bind.ds:417"
+      },
+      "title": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@model::Model",
+      "id": "driftspec@ds@model::Model|model",
+      "kind": "lifeline",
+      "label": "model: Model",
+      "refs": {
+        "location": "design/ds/model.ds:1000"
+      },
+      "title": "driftspec@ds@model::Model"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@model::Model",
+      "id": "driftspec@ds@model::Model",
+      "kind": "lifeline",
+      "label": "Model",
+      "refs": {
+        "location": "design/ds/model.ds:1000"
+      },
+      "title": "driftspec@ds@model::Model"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@model::ArtefactName",
+      "id": "driftspec@ds@model::ArtefactName|name",
+      "kind": "lifeline",
+      "label": "name: ArtefactName",
+      "refs": {
+        "location": "design/ds/model.ds:147"
+      },
+      "title": "driftspec@ds@model::ArtefactName"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@model::Metamodel",
+      "id": "driftspec@ds@model::Metamodel|metamodel_",
+      "kind": "lifeline",
+      "label": "metamodel_: Metamodel",
+      "refs": {
+        "location": "design/ds/model.ds:490"
+      },
+      "title": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@bind::INodeBinder::bind::sequence::f0",
+      "kind": "frame",
+      "label": "loop each field written",
+      "span": [
+        43,
+        46
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@bind::INodeBinder::bind::sequence::f1",
+      "kind": "frame",
+      "label": "opt it has an owner",
+      "span": [
+        47,
+        50
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@bind::Dispatch::bindChildren::sequence::f0",
+      "kind": "frame",
+      "label": "loop each named child of the node",
+      "span": [
+        33,
+        51
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@bind::Dispatch::bindChildren::sequence::f1",
+      "kind": "frame",
+      "label": "opt a binder takes it",
+      "span": [
+        35,
+        51
+      ]
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@api::Api",
+      "id": "driftspec@ds@api::Api",
+      "kind": "lifeline",
+      "label": "Api",
+      "refs": {
+        "location": "design/ds/api.ds:154"
+      },
+      "title": "driftspec@ds@api::Api"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Selection",
+      "id": "driftspec@ds@check::Selection",
+      "kind": "lifeline",
+      "label": "Selection",
+      "refs": {
+        "location": "design/ds/check.ds:323"
+      },
+      "title": "driftspec@ds@check::Selection"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check",
+      "id": "driftspec@ds@check",
+      "kind": "lifeline",
+      "label": "check",
+      "refs": {
+        "location": "design/ds/check.ds:9"
+      },
+      "title": "driftspec@ds@check"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Selection",
+      "id": "driftspec@ds@check::Selection|selection",
+      "kind": "lifeline",
+      "label": "selection: Selection",
+      "refs": {
+        "location": "design/ds/check.ds:323"
+      },
+      "title": "driftspec@ds@check::Selection"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::IStep",
+      "id": "driftspec@ds@check::IStep|step",
+      "kind": "lifeline",
+      "label": "step: IStep",
+      "refs": {
+        "location": "design/ds/check.ds:234"
+      },
+      "title": "driftspec@ds@check::IStep"
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@check::steps::sequence::f0",
+      "kind": "frame",
+      "label": "loop each step of the check",
+      "span": [
+        57,
+        58
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@check::steps::sequence::f1",
+      "kind": "frame",
+      "label": "loop each step taken, until none it needs is missing",
+      "span": [
+        59,
+        60
+      ]
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Checker",
+      "id": "driftspec@ds@check::Checker|checker",
+      "kind": "lifeline",
+      "label": "checker: Checker",
+      "refs": {
+        "location": "design/ds/check.ds:292"
+      },
+      "title": "driftspec@ds@check::Checker"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Checker",
+      "id": "driftspec@ds@check::Checker",
+      "kind": "lifeline",
+      "label": "Checker",
+      "refs": {
+        "location": "design/ds/check.ds:292"
+      },
+      "title": "driftspec@ds@check::Checker"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@model::Model",
+      "id": "driftspec@ds@model::Model|model_",
+      "kind": "lifeline",
+      "label": "model_: Model",
+      "refs": {
+        "location": "design/ds/model.ds:1000"
+      },
+      "title": "driftspec@ds@model::Model"
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@model::Model::cover::sequence::f0",
+      "kind": "frame",
+      "label": "loop each finding, in the order reported",
+      "span": [
+        71,
+        72
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@check::Checker::run::sequence::f0",
+      "kind": "frame",
+      "label": "loop each key, in order",
+      "span": [
+        67,
+        69
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@check::Checker::run::sequence::f1",
+      "kind": "frame",
+      "label": "loop each finding found",
+      "span": [
+        69,
+        69
+      ]
+    },
+    {
+      "classifier": "loop",
+      "id": "driftspec@ds@api::Api::load::sequence::f0",
+      "kind": "frame",
+      "label": "loop each file",
+      "span": [
+        28,
+        51
+      ]
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Report",
+      "id": "driftspec@ds@check::Report",
+      "kind": "lifeline",
+      "label": "Report",
+      "refs": {
+        "location": "design/ds/check.ds:218"
+      },
+      "title": "driftspec@ds@check::Report"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@format",
+      "id": "driftspec@ds@format",
+      "kind": "lifeline",
+      "label": "format",
+      "refs": {
+        "location": "design/ds/format.ds:50"
+      },
+      "title": "driftspec@ds@format"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@format::ReportText",
+      "id": "driftspec@ds@format::ReportText|chosen",
+      "kind": "lifeline",
+      "label": "chosen: ReportText",
+      "refs": {
+        "location": "design/ds/format.ds:206"
+      },
+      "title": "driftspec@ds@format::ReportText"
+    }
+  ],
+  "title": "SEQ_Check"
+}

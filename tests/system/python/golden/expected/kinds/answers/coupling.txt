@@ -1,0 +1,8 @@
+couples-structural  hola@core::Greeter  App::run in hola@app
+couples-structural  hola@core::Greeter  App::run/empty-name in hola@app
+couples-transient  hola@app::main  shell::greet in hola@
+couples-transient  hola@app::main  shell::greet/empty-name in hola@
+couples-transient  hola@server::Server  web::greet in hola@
+couples-transient  hola@server::Server  web::greet/empty-name in hola@
+couples-structural  hola@core::Greeter  Server::greet in hola@server
+couples-structural  hola@core::Greeter  Server::greet/empty-name in hola@server

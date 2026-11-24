@@ -1,0 +1,159 @@
+{
+  "edges": [
+    {
+      "from": "hola@app",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@app",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@web",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@web",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@server"
+    },
+    {
+      "from": "hola@server",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@server",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@app"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "namespace",
+      "id": "hola@app",
+      "kind": "box",
+      "label": "app",
+      "sectionKinds": [
+        "class",
+        "function"
+      ],
+      "sections": [
+        [
+          "Console"
+        ],
+        [
+          "main"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "hola@core",
+      "kind": "box",
+      "label": "core",
+      "sectionKinds": [
+        "class",
+        "dataclass"
+      ],
+      "sections": [
+        [
+          "Casual",
+          "Channel",
+          "Formal",
+          "Greeter",
+          "GreetingCache",
+          "Style"
+        ],
+        [
+          "Greeting",
+          "Locale"
+        ]
+      ]
+    },
+    {
+      "classifier": "namespace",
+      "id": "hola@server",
+      "kind": "box",
+      "label": "server",
+      "sectionKinds": [
+        "class"
+      ],
+      "sections": [
+        [
+          "Response",
+          "Server"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "hola@shell",
+      "kind": "box",
+      "label": "shell",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "greet(name: string) -> core::Greeting"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "hola@web",
+      "kind": "box",
+      "label": "web",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "greet(name: string) -> core::Greeting"
+        ]
+      ]
+    }
+  ],
+  "title": "HLD_Hola"
+}
