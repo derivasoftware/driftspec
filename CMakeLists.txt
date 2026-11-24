@@ -390,15 +390,16 @@ else()
 endif()
 
 # ---- every format of every document, pinned as golden files (DS-395): the ds
-# built here against tests/system/python/golden/expected ----
+# built here against tests/system/python/golden/expected. The comparison runs as
+# a plain script (--check), so it needs python3 and nothing installed in it: a
+# local failure is a document that differs, never a missing pytest. ----
 find_program(DS_PYTHON3 python3)
 if(DS_PYTHON3)
   add_test(
     NAME golden
-    COMMAND ${DS_PYTHON3} -m pytest -q -p no:cacheprovider
-            ${CMAKE_SOURCE_DIR}/tests/system/python/test_golden.py
+    COMMAND ${DS_PYTHON3} ${CMAKE_SOURCE_DIR}/tests/system/python/test_golden.py
+            --check --ds $<TARGET_FILE:ds>
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-  set_tests_properties(golden PROPERTIES ENVIRONMENT "DS=$<TARGET_FILE:ds>")
 else()
   # no python: the test fails rather than vanish, so a runner without it is
   # noticed
