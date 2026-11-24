@@ -69,12 +69,13 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string apiChooses = "driftspec@ds@api::only-the-api-chooses-the-steps";
   const std::string machineClasses = "driftspec@ds@machine::machine-operations-belong-to-classes";
   const std::string machineReads = "driftspec@ds@machine::the-machine-reads-the-model";
+  const std::string queryClasses = "driftspec@ds@query::query-operations-belong-to-classes";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule : {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads,
-                                  exporterClasses, exporterReads, apiChooses, machineClasses, machineReads})
+                                  exporterClasses, exporterReads, apiChooses, machineClasses, machineReads, queryClasses})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -122,6 +123,19 @@ TEST_F(TestEnginePrinciples, AFunctionOfTheAxisIsTold) {
       broken({{"ds/axis.ds", "  module axis {", "    function loose(text: std::string) -> std::string\n"}});
   EXPECT_TRUE(has(rules, axisClasses));
   EXPECT_FALSE(has(rules, axisReads));
+}
+
+/// A function of the query is told, a public one or one hidden in the module (DS-385): which filter a diagram has, how
+/// a pattern reads and how an entity is answered are each a class's.
+TEST_F(TestEnginePrinciples, AFunctionOfTheQueryIsTold) {
+  const std::vector<std::string> loose =
+      broken({{"ds/query.ds", "  module query {", "    function filterFor(diagram: model::Entity) -> std::string\n"}});
+  EXPECT_TRUE(has(loose, queryClasses));
+  EXPECT_FALSE(has(loose, axisClasses));
+  const std::vector<std::string> hidden =
+      broken({{"ds/query.ds", "  module query {", "    - function inPattern(pattern: std::string, entity: model::Entity) -> bool\n"}});
+  EXPECT_TRUE(has(hidden, queryClasses));
+  EXPECT_FALSE(has(hidden, modelClasses));
 }
 
 TEST_F(TestEnginePrinciples, AnAxisThatChangesTheModelIsTold) {

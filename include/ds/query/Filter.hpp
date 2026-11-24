@@ -35,9 +35,16 @@ class ClassFilter : public IFilter {
   std::set<std::string> boxes(const model::Model& model) const;
   /// The modules and nested packages that hold what is taken: drawn around it.
   static std::set<std::string> containers(const model::Model& model, const std::set<std::string>& taken);
+  /// The box a class diagram draws a relation of `entity` from (DS-219): a box, a module or a package is itself; a
+  /// member is its class; a behaviour is its subject's box (a method's class, a function, an operation's interface),
+  /// not the module it is written in; anything else is its scope.
+  static std::string drawnFrom(const model::Model& model, const model::Entity& entity);
 
  private:
-  bool matches(const model::Model& model, const std::string& pattern, const model::Entity& entity) const;
+  static bool isBox(const model::Entity& entity);        // a class, an enum, an interface or a function of a module
+  static bool isContainer(const model::Entity& entity);  // a module, or a package below the system
+  static bool drawable(const model::Entity& entity);     // a box, or a box that holds others
+  static bool drawnAsEdge(const std::string& relation);  // the relations drawn as edges, the ones the neighbours follow
   const model::Metamodel& metamodel_;
   std::vector<std::string> include_;
   std::vector<std::string> exclude_;
@@ -94,6 +101,7 @@ class RequirementsFilter : public IFilter {
   std::set<std::string> select(const model::Model& model) const override;
 
  private:
+  static bool isArtefact(const model::Entity& entity);  // a requirement, a constraint or a verification
   const model::Metamodel& metamodel_;
   std::vector<std::string> include_;
   bool design_ = true;
@@ -101,18 +109,18 @@ class RequirementsFilter : public IFilter {
   std::string cutOf_;
 };
 
-/// Whether an entity falls under a pattern of include, exclude or open: one reading for every kind of
-/// diagram (DS-212).
-bool inPattern(const model::Model& model, const std::string& pattern, const model::Entity& entity);
+/// The one place that names the filter of each kind of diagram (DS-385), as Steps names the steps of the check
+/// (DS-382): what asks what a diagram takes asks it here, and never names a filter itself.
+class Filters {
+ public:
+  /// The filter of `diagram`'s kind, built from its fields and read in `metamodel` (DS-351); null when the entity is
+  /// no diagram.
+  static std::unique_ptr<IFilter> of(const model::Metamodel& metamodel, const model::Entity& diagram);
 
-/// The box a class diagram draws a relation of `entity` from (DS-219): a box, a module or a package is itself; a member is its
-/// class; a behaviour is its subject's box (a method's class, a function, an operation's interface), not the
-/// module it is written in; anything else is its scope.
-std::string drawnFrom(const model::Model& model, const model::Entity& entity);
-
-/// The one place that names the filter of each kind of diagram, built from the diagram's fields and read in
-/// `metamodel` (DS-351); null when the entity is no diagram.
-std::unique_ptr<IFilter> filterFor(const model::Metamodel& metamodel, const model::Entity& diagram);
+ private:
+  /// A number field of a diagram: `every` when it is written `*`, 0 when it is not written or is no number an int holds.
+  static int number(const model::Entity& diagram, const std::string& key, int every);
+};
 
 }  // namespace query
 }  // namespace ds
