@@ -18,7 +18,7 @@
 namespace ds {
 namespace check {
 
-std::string UseCaseContracts::name() const { return "usecases"; }
+std::string UseCaseContracts::name() const { return "contract-2-usecases"; }
 
 std::vector<std::string> UseCaseContracts::needs() const {
   // what ContractCheck needed: the expansions behaviour typing made, over the links the linker made, and what

@@ -18,7 +18,7 @@
 namespace ds {
 namespace check {
 
-std::string ScenarioCheck::name() const { return "scenarios"; }
+std::string ScenarioCheck::name() const { return "contract-4-scenarios"; }
 
 std::vector<std::string> ScenarioCheck::needs() const {
   // what ContractCheck needed: the expansions behaviour typing made, over the links the linker made, and what
