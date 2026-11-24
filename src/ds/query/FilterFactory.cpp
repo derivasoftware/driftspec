@@ -1,6 +1,7 @@
 #include "ds/axis/Cut.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Paths.hpp"
+#include "ds/query/ClassBoxes.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Pattern.hpp"
 #include "ds/query/Walk.hpp"
@@ -21,43 +22,13 @@ ClassFilter::ClassFilter(const model::Metamodel& metamodel, std::vector<std::str
       neighbours_(neighbours),
       cutOf_(std::move(cutOf)) {}
 
-// what a class diagram draws as a box: a class, an enum, an interface or a function of a module
-bool ClassFilter::isBox(const model::Entity& entity) {
-  return entity.kind == model::Kind::Class || entity.kind == model::Kind::Enum || entity.kind == model::Kind::Function ||
-         entity.kind == model::Kind::Interface;
-}
-
-// a box that holds others: a module, or a package below the system (the outermost package is the drawing)
-bool ClassFilter::isContainer(const model::Entity& entity) {
-  return entity.kind == model::Kind::Module || (entity.kind == model::Kind::Package && !entity.scope.empty());
-}
-
-bool ClassFilter::drawable(const model::Entity& entity) { return isBox(entity) || isContainer(entity); }
-
-// the relations a class diagram draws as edges, the ones its neighbours follow
-bool ClassFilter::drawnAsEdge(const std::string& relation) {
-  return relation == "inherits" || relation == "owns" || relation == "refs" || relation == "shares" || relation == "uses" ||
-         relation == "bounded-by" || relation == "realises" || relation == "consumes" || relation == "sends";
-}
-
-std::string ClassFilter::drawnFrom(const model::Model& model, const model::Entity& entity) {
-  if (isBox(entity) || entity.kind == model::Kind::Module || entity.kind == model::Kind::Package)
-    return entity.id;  // a box's own @consumes
-  if (entity.kind == model::Kind::Sequence || entity.kind == model::Kind::State) {
-    const model::Entity* subject = model.find(model::Identity(entity.id).subject().text());
-    if (!subject && entity.kind == model::Kind::State) subject = model.find(model::Identity(entity.id).machineSubject().text());
-    if (subject) return isBox(*subject) ? subject->id : subject->scope;
-  }
-  return entity.scope;
-}
-
 std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
   // each pattern read once, then asked of every entity (DS-385)
   std::set<std::string> selected;
   for (const auto& text : include_) {
     const Pattern pattern(model, text);
     for (const auto& pair : model.entities()) {
-      if (drawable(pair.second) && !pair.second.expected && pattern.takes(pair.second)) selected.insert(pair.first);
+      if (ClassBoxes::drawable(pair.second) && !pair.second.expected && pattern.takes(pair.second)) selected.insert(pair.first);
     }
   }
   for (const auto& text : exclude_) {
@@ -72,13 +43,13 @@ std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
   for (int step = 0; step < neighbours_; ++step) {
     std::set<std::string> grown = selected;
     for (const auto& r : model.index().all()) {
-      if (!drawnAsEdge(r.kind)) continue;
+      if (!ClassBoxes::drawnAsEdge(r.kind)) continue;
       const model::Entity* from = model.find(r.from);
       const model::Entity* to = model.find(r.to);
       if (!from || !to) continue;
-      const std::string fromClass = drawnFrom(model, *from);
+      const std::string fromClass = ClassBoxes::drawnFrom(model, *from);
       const model::Entity* fromEntity = model.find(fromClass);
-      if (!fromEntity || !isBox(*fromEntity) || !isBox(*to) || to->expected || fromEntity->expected) continue;
+      if (!fromEntity || !ClassBoxes::isBox(*fromEntity) || !ClassBoxes::isBox(*to) || to->expected || fromEntity->expected) continue;
       if (selected.count(fromClass)) grown.insert(r.to);
       if (selected.count(r.to)) grown.insert(fromClass);
     }
@@ -88,30 +59,9 @@ std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
   return selected;
 }
 
-std::set<std::string> ClassFilter::containers(const model::Model& model, const std::set<std::string>& taken) {
-  // modules of the selected classes become containers (R2), and so do nested packages (the HLD
-  // boxes); the outermost package is the drawing itself
-  std::set<std::string> out;
-  auto up = [](const std::string& s) {
-    return model::Scope(model::Scope(s).outer().text()).box().text();
-  };  // ds@ds::b → ds@ds, app@core@model → app@core
-  // every box is drawn, with or without children (DS-218): a container taken is drawn itself, and the boxes
-  // around anything taken are drawn around it; a package scope (p@q@) names the package p@q
-  for (const auto& id : taken) {
-    const model::Entity* e = model.find(id);
-    if (!e || (!isBox(*e) && !isContainer(*e))) continue;
-    const std::string start = isContainer(*e) ? id : model::Scope(e->scope).box().text();
-    for (std::string s = start; !s.empty(); s = up(s)) {
-      const model::Entity* m = model.find(s);
-      if (m && isContainer(*m)) out.insert(s);
-    }
-  }
-  return out;
-}
-
 std::set<std::string> ClassFilter::select(const model::Model& model) const {
   const std::set<std::string> taken = boxes(model);
-  const std::set<std::string> around = containers(model, taken);
+  const std::set<std::string> around = ClassBoxes::containers(model, taken);
   std::set<std::string> out = taken;
   for (const auto& c : around) out.insert(c);
   const model::Entity* diagram = cutOf_.empty() ? nullptr : model.find(cutOf_);

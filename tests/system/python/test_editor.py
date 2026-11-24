@@ -62,7 +62,7 @@ class TestEditorSession:
         )
         out = Pipe()
         try:
-            driftspec.lsp.server.start_io(io.BytesIO(session), out)
+            driftspec.lsp.DesignServer().ls.start_io(io.BytesIO(session), out)
         except SystemExit:
             pass
         replies = unframed(out.getvalue())

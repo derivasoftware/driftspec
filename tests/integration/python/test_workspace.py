@@ -78,3 +78,24 @@ class TestWorkspace:
         assert driftspec.subject_of("p@m::C::run::sequence") == "p@m::C::run"
         assert driftspec.scenario_of("p@m::C::run::sequence/s") == "s"
         assert driftspec.without_revision("REQ-00001-2") == "REQ-00001"
+
+
+class TestReload:
+    """DS-420: a workspace loaded again in place reads as one made anew from the same files, and what it answered
+    before stays as it was."""
+
+    def test_a_reload_answers_as_a_workspace_made_anew_from_the_same_files(self):
+        changed = SHOP.replace("class Vault {", "class Vault {\n      + count() -> int")
+        ws = driftspec.Workspace({"shop.ds": SHOP})
+        before = ws.model()
+        ws.reload({"shop.ds": changed, "more.ds": "package q { }\n"})
+        anew = driftspec.Workspace({"shop.ds": changed, "more.ds": "package q { }\n"})
+        assert ws._native.export() == anew._native.export() and ws._native.report() == anew._native.report()
+        assert ws.find("p@m::Vault::count") is not None and before.find("p@m::Vault::count") is None
+
+    def test_a_file_that_stops_parsing_and_parses_again_reloads_both_ways(self):
+        ws = driftspec.Workspace({"shop.ds": SHOP})
+        ws.reload({"shop.ds": SHOP.replace("class Desk {", "class Desk {{")})
+        assert [f.code for f in ws.report().findings][:1] == ["E-SYNTAX"]
+        ws.reload({"shop.ds": SHOP})
+        assert ws._native.report() == driftspec.Workspace({"shop.ds": SHOP})._native.report()

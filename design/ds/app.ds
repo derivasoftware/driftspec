@@ -140,23 +140,25 @@ package driftspec@ds {
     // check a drawing reads (DS-376)
     sequence main / render-diagram {
       local metamodel: model::Metamodel
+      local theme: theme::Theme             // the style, made once where the command starts (DS-393)
       local model: model::Model
       local ir: render::IrExport
       local chosen: format::DiagramSvg
       -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
       -> diagramId(diagram) -> id
       -> ir.render(id, pretty) -> document
-      -> format::diagramFormats() -> formats
+      -> format::diagramFormats(theme) -> formats
       -> chosen.write(document, options) -> picture
       -> emit(output, picture) -> written
       return 0
     }
 
     sequence main / render-document {
+      local theme: theme::Theme
       local chosen: format::DiagramSvg
       local document: render::IrText       // the text read, as the IR document the format draws
       -> readFile(argv) -> text
-      -> format::diagramFormats() -> formats
+      -> format::diagramFormats(theme) -> formats
       -> chosen.write(document, options) -> picture
       -> emit(output, picture) -> written
       return 0

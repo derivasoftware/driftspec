@@ -68,4 +68,12 @@ TEST(TestEscapeXml, TheCharactersXmlGivesAMeaningBecomeEntities) {
   EXPECT_EQ(ds::text::escapeXml("it's"), "it's");  // an apostrophe is written as it is, as the SVGs always had it
 }
 
+TEST(TestCharacters, EachCodePointCountsOnceWhateverItsBytes) {
+  EXPECT_EQ(ds::text::characters(""), 0u);
+  EXPECT_EQ(ds::text::characters("run"), 3u);
+  EXPECT_EQ(ds::text::characters("Console \u25C1 Channel"), 17u);  // the triangle takes three bytes, one character
+  EXPECT_EQ(ds::text::characters("\xC2\xB7"), 1u);                 // a middle dot: two bytes
+  EXPECT_EQ(ds::text::characters("\xE2\x86\x92 int"), 5u);         // an arrow, three bytes, then four more
+}
+
 }  // namespace

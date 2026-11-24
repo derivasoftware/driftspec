@@ -45,7 +45,7 @@ BEHAVIOUR = (
 
 @pytest.fixture
 def directory(tmp_path):
-    (tmp_path / "a.ds").write_text(DESIGN)
+    (tmp_path / "a.ds").write_bytes(DESIGN.encode())  # as written, on every system: read() gives the bytes
     (tmp_path / "notes.txt").write_text("not a design")
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "b.ds").write_text("package q { }\n")
@@ -74,10 +74,11 @@ class TestRead:
     def test_a_directory_gives_its_ds_files_and_nothing_else(self, directory):
         files = read(directory)
         assert sorted(os.path.relpath(p, directory) for p in files) == ["a.ds", os.path.join("sub", "b.ds")]
-        assert files[os.path.join(directory, "a.ds")] == DESIGN
+        assert files[os.path.join(directory, "a.ds")] == DESIGN.encode()  # as its bytes: the engine reads the encoding (DS-411)
 
     def test_a_mapping_is_given_as_it_is(self):
         assert read({"x.ds": "package x { }\n"}) == {"x.ds": "package x { }\n"}
+        assert read({"x.ds": b"package x { }\n"}) == {"x.ds": b"package x { }\n"}  # bytes stay bytes (DS-411)
 
     def test_a_path_that_is_no_directory_is_refused(self, tmp_path):
         with pytest.raises(NotADirectoryError):

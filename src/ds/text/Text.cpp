@@ -117,5 +117,11 @@ std::string escapeXml(const std::string& text) {
   return out;
 }
 
+std::size_t characters(const std::string& text) {
+  std::size_t n = 0;
+  for (const unsigned char c : text) n += (c & 0xC0) != 0x80 ? 1 : 0;  // every byte but one that continues a character
+  return n;
+}
+
 }  // namespace text
 }  // namespace ds
