@@ -3688,6 +3688,13 @@
             "values": []
           },
           {
+            "meaning": "the states it ends in (DS-442): a transition out of one is a contradiction",
+            "name": "final",
+            "source": "syntax",
+            "type": "names",
+            "values": []
+          },
+          {
             "meaning": "its transitions",
             "name": "transitions",
             "source": "syntax",
