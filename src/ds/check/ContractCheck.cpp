@@ -18,11 +18,17 @@
 namespace ds {
 namespace check {
 
-namespace {
+std::string ContractCheck::name() const { return "contracts"; }
+
+std::vector<std::string> ContractCheck::needs() const {
+  // the expansions behaviour typing made, over the links the linker made, and what escapes each operation
+  return {"linker", "behaviour", "failures"};
+}
 
 // whether a pattern of a diagram names something the workspace declares: an identity, a prefix of one, a
 // template written without its arity, the subject of a scenario (DS-212)
-bool namesSomething(const model::Model& model, const std::string& written) {
+bool ContractCheck::namesSomething(const std::string& written) const {
+  const model::Model& model = *model_;
   std::string pattern = written;
   const auto slash = pattern.find(" / ");
   if (slash != std::string::npos) pattern = pattern.substr(0, slash);  // a scenario: its behaviour's subject
@@ -38,15 +44,6 @@ bool namesSomething(const model::Model& model, const std::string& written) {
     if (id.size() > base.size() && id.rfind(base, 0) == 0 && id[base.size()] == '<') return true;  // a template
   }
   return false;
-}
-
-}  // namespace
-
-std::string ContractCheck::name() const { return "contracts"; }
-
-std::vector<std::string> ContractCheck::needs() const {
-  // the expansions behaviour typing made, over the links the linker made, and what escapes each operation
-  return {"linker", "behaviour", "failures"};
 }
 
 std::vector<model::Finding> ContractCheck::check(const Context& context) {
@@ -488,7 +485,7 @@ void ContractCheck::checkDiagrams() {
         // a cut may name a kind of box instead of a box (DS-229)
         const bool kind = (key == std::string("open") || key == std::string("close")) &&
                           (pattern == metamodel_->nameOf(model::Kind::Module) || pattern == metamodel_->nameOf(model::Kind::Package));
-        if (kind || namesSomething(*model_, pattern)) continue;
+        if (kind || namesSomething(pattern)) continue;
         found_.push_back(context_->metamodel().finding(
             model::Code::W_DIAGRAM_UNDECLARED, pair.second.name + " " + key + "s " + pattern + ", which the workspace declares nowhere",
             pair.second.location));

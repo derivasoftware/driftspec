@@ -6,14 +6,30 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.58
+## 0.1.60
 
 Every operation of the query is a member of its class (DS-385). A pattern of a diagram's include or exclude is read
-once, by Pattern, which then takes or leaves each entity by comparing its identity and scope with what it read, with no
-text built for each one. The one place that names the filter of each kind of diagram is the class Filters, where it was
-a function, and the box a relation is drawn from, with the helpers the filters hid, are members of the filter they
-serve. A rule of ds's design holds that the query writes no function, refining what the query answers. Nothing changes
-for a design: every finding, export, drawing, viewer page, answer and exit code is the same.
+once, by Pattern, which then takes or leaves each entity by comparing its identity and scope with what it read, with
+no text built for each one. The one place that names the filter of each kind of diagram is the class Filters, where it
+was a function, with a static of() as check's Steps has (DS-382), and the box a relation is drawn from, with the
+helpers the filters hid, are members of the filter they serve. A rule of ds's design holds that the query writes no
+function, refining what the query answers. Nothing changes for a design: every finding, export, drawing, viewer page,
+answer and exit code is the same.
+
+## 0.1.59
+
+The Owner approves the roadmap's drafts: the evaluator's requirement and its verification (REQ-00192-1,
+VER-00212-1), the render steps' verification (VER-00094-3), the viewer's compression fixture (VER-00083-4) and the golden
+outputs' system verification (SVER-00029-1). Nothing a design writes changes.
+
+## 0.1.58
+
+The check names its steps in a class, and its steps keep no hidden helpers (DS-382). The free function that made the
+steps a selection asks for is `Steps::of`, the one place that names the concrete steps. What three steps did in
+functions hidden in their files is now theirs: CallOrder says the states a call could come from, ContractCheck tells
+whether a pattern names something declared, and LevelCoherence finds the operation a message calls, the behaviour below
+an entry, the crossings below it and where each one said finds its place. The crossings and what lies below an entry are
+written in the design. Nothing a design writes changes.
 
 ## 0.1.57
 

@@ -89,7 +89,7 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
     }
     binder.bind(parsed);
   }
-  const auto steps = check::steps(stepsFor(output, model, diagram));  // only the steps the output reads (DS-376)
+  const auto steps = check::Steps::of(stepsFor(output, model, diagram));  // only the steps the output reads (DS-376)
   check::Checker(model, metamodel_, steps).run(binder.notes());
   // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
   // the rest of that file, and every name now declared nowhere. They go until the file parses (DS-304)

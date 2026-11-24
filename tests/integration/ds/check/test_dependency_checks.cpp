@@ -42,7 +42,7 @@ class TestDependencyChecks : public ::testing::Test {
                                            consumer);
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -122,7 +122,7 @@ TEST_F(TestDependencyChecks, AMethodTheInterfaceDoesNotOfferIsNoBypass) {
                                          face("", "      local api: p@core::Api\n      -> api.reset()\n      local json: string\n"));
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   EXPECT_TRUE(uses().empty());
 }
@@ -153,7 +153,7 @@ TEST(TestRealisation, AMethodThatAnswersAnInterfaceOperationWithAnotherSignature
                                "    }\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   std::vector<std::string> found;
   for (const auto& f : model.findings())

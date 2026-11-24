@@ -7,19 +7,15 @@
 namespace ds {
 namespace check {
 
-namespace {
+std::string CallOrder::name() const { return "order"; }
 
-std::string either(const std::vector<std::string>& names) {
+std::vector<std::string> CallOrder::needs() const { return {"behaviour"}; }
+
+std::string CallOrder::either(const std::vector<std::string>& names) {
   std::string out;
   for (const auto& name : names) out += (out.empty() ? "" : " or ") + name;
   return out;
 }
-
-}  // namespace
-
-std::string CallOrder::name() const { return "order"; }
-
-std::vector<std::string> CallOrder::needs() const { return {"behaviour"}; }
 
 std::vector<model::Finding> CallOrder::check(const Context& context) {
   std::vector<model::Finding> found;

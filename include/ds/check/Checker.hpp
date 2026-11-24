@@ -25,7 +25,7 @@ class IChecker {
 };
 
 /// A runner of steps: it orders the steps it is given by what each needs and runs them over one
-/// context, knowing none of them. The steps, keyed by name, are built outside it, by steps() or by a
+/// context, knowing none of them. The steps, keyed by name, are built outside it, by Steps::of or by a
 /// test; it holds the map by reference, so the map outlives it.
 class Checker : public IChecker {
  public:

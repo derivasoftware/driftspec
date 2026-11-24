@@ -15,7 +15,7 @@ package driftspec@ds {
     // ---- the evaluator in its pieces (DS-380), as a requirement and the rule that holds it -------------------------
     requirement REQ-00192-1 {
       tags: architecture, check, rules
-      status: draft
+      status: approved
       @refines REQ-00096-1
       title: The evaluator shall direct four pieces, and the solver shall read the facts and never the model
       text:
@@ -29,7 +29,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-378, DS-380): one class did five things; split, the solver can run over facts
         without a design, and each piece can be read and tested on its own.
       verification VER-00212-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds keeps the solver on the facts, and is told when the solver depends on the model
         method: test
         tests:
@@ -303,13 +303,14 @@ package driftspec@ds {
     }
 
     // the one place that names each step: it pairs each with what it does, makes the ones a selection names and
-    // every one they need, and keys them by name (DS-376)
-    function steps(selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>> {
+    // every one they need, and keys them by name (DS-376); a class, as every operation of check is (DS-382)
+    class Steps {
       @requirement REQ-00012-1
       @requirement REQ-00085-1
+      + static of(selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>>
     }
 
-    // Each step of the check, by what it does (DS-376): what a selection is made of. steps() pairs each with the
+    // Each step of the check, by what it does (DS-376): what a selection is made of. Steps::of pairs each with the
     // step it makes, so the names the steps are keyed by stay theirs.
     enum Step {
       @requirement REQ-00085-1
@@ -318,7 +319,7 @@ package driftspec@ds {
     }
 
     // The steps of the check a load runs (DS-376): chosen by the Api for what the load is to give, and read by
-    // steps(), which makes them and every step they need. The checker runs what it is given and knows nothing
+    // Steps::of, which makes them and every step they need. The checker runs what it is given and knows nothing
     // of it; a drawing that runs fewer steps reads the same model where it looks.
     class Selection {
       @requirement REQ-00085-1
@@ -331,14 +332,14 @@ package driftspec@ds {
     }
 
     // the steps a selection names and every step they need: a step chosen never runs without what it reads
-    sequence steps {
+    sequence Steps::of {
       local step: IStep
       local made: std::map<std::string, std::unique_ptr<IStep>>
       loop each step of the check {
-        -> selection.has(kind) -> named
+        self -> selection.has(kind) -> named
       }
       loop each step taken, until none it needs is missing {
-        -> step.needs() -> needs
+        self -> step.needs() -> needs
       }
       return made
     }
@@ -501,6 +502,7 @@ package driftspec@ds {
       - checkDiagrams() -> void {
         @requirement REQ-00049-3
       }
+      - namesSomething(written: std::string) -> bool   // a pattern a diagram writes names something declared (DS-382)
     }
 
     class Derivation : IStep {            // what the model says without writing it: the stereotypes, the languages
@@ -567,6 +569,27 @@ package driftspec@ds {
       + name() -> std::string
       + needs() -> std::vector<std::string>
       - check(context: Context) -> std::vector<model::Finding>
+      - static calleeOf(model: model::Model, message: std::string) -> std::string     // the operation a message calls (DS-382)
+      - static behaviourBelow(model: model::Model, scenario: model::Entity, entry: model::Entity) -> std::pair<std::string, std::string>
+      - static collect(model: model::Model, sequence: std::string, path: std::string, on: On, stack: std::set<std::string>, out: Below) -> void
+      - static same(said: Crossing, done: Crossing) -> bool
+      - static placed(said: std::vector<Crossing>, done: std::vector<Crossing>) -> std::vector<int>   // the longest in-order matching
+    }
+
+    dataclass Crossing {                     // one message that crosses from a participant of a scenario to another (DS-382)
+      @requirement REQ-00136-1
+      + from: std::string
+      + to: std::string
+      + op: std::string                      // the operation it calls; empty for a label
+      + label: std::string                   // the operation as written
+      + owns location: model::Location
+    }
+
+    dataclass Below {                        // what happens below a scenario's entries (DS-382)
+      @requirement REQ-00136-1
+      + many crossings: std::vector<Crossing>   // in the order they happen
+      + entered: std::set<std::string>          // the participants something is seen to happen in
+      + open: std::set<std::string>             // those in which a call is made whose behaviour is not written
     }
 
     // the states of a machine, written as rules over what its subject holds (DS-249), held to each other
@@ -585,6 +608,7 @@ package driftspec@ds {
       + name() -> std::string
       + needs() -> std::vector<std::string>
       - check(context: Context) -> std::vector<model::Finding>
+      - static either(names: std::vector<std::string>) -> std::string   // the states a call could come from: Open or Paid (DS-382)
     }
 
     class DependencyCheck : ACheck {       // what a box declares it uses against what its behaviours call

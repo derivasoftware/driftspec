@@ -26,7 +26,7 @@ class TestQuery : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) binder.bind(f);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -113,7 +113,7 @@ class TestQueryOfTheDesign : public TestQuery {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 };
@@ -154,7 +154,7 @@ ds::model::Model aMachine(const ds::model::Metamodel& metamodel) {
                                "    }\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   return model;
 }

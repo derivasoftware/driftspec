@@ -59,7 +59,7 @@ class TestModelOfADesign : public ::testing::Test {
   }
 
   void check() {
-    const auto steps = ds::check::steps();
+    const auto steps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 

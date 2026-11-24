@@ -25,7 +25,7 @@ class TestAuditDefects : public ::testing::Test {
     const auto file = parser.parseText("a.ds", text);
     parsed = !file.hasSyntaxErrors;
     binder.bind(file);
-    const auto checkSteps = ds::check::steps();
+    const auto checkSteps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   }
 
@@ -201,7 +201,7 @@ TEST_F(TestAuditDefects, AMemberNamedAfterABehaviourOfItsHolderIsToldSoAndTheBeh
   ds::parse::Parser parser;
   ds::bind::Binder binder(other, metamodel);
   binder.bind(parser.parseText("b.ds", "package p {\n  module m {\n    class Gauge {\n      + state() -> int\n    }\n  }\n}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(other, metamodel, checkSteps).run(binder.notes());
   EXPECT_TRUE(other.findings().empty());
 }
