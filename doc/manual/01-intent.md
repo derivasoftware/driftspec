@@ -7,20 +7,69 @@ else points at them.
 
 ## How things link
 
-Every link is written in the body of what points, and names what it points at:
+Everything in a design points at the requirement it serves, and a link is always written inside
+the thing that points: an `@` word and the id of what it points at. This small shop has every kind
+of link, each marked with a comment; the drawing beside it shows them as arrows.
 
-| To say that | write | in |
-|---|---|---|
-| a piece of the design makes a requirement true | `@requirement REQ-00001-1` | the package, module, class, member, sequence or rule |
-| a verification proves a requirement | nest it in the requirement, or `@requirement REQ-00001-1` | the verification |
-| a requirement details another | nest it in the other, or `@refines SREQ-00001-1` | the requirement |
-| a piece of the design obeys a constraint | `@constraint CST-00001-1` | what obeys it |
-| a verification proves a constraint | `@constraint CST-00001-1` | the verification |
-| an interface operation carries out a use case | `: UC-00001-1` after its signature | the operation |
-| a class carries out an interface | `@interface IPricing` | the class |
+```ds
+package shop {
+  requirement SREQ-00001-1: The shop shall sell an item from the command line
+  constraint CST-00001-1: Every price shall be kept in cents
 
-`ds query <workspace> relations REQ-00001-1` shows every link of one artefact, both ways, and
-`ds manual annotations` lists them all.
+  module store {
+    requirement REQ-00001-1 {
+      title: The cart shall total the price of its lines
+      status: draft
+      @refines SREQ-00001-1               // details the system requirement
+
+      verification VER-00001-1 {          // nested: proves REQ-00001-1
+        title: Unit tests confirm the cart totals its lines
+        method: test
+        tests:
+          tests/test_cart.cpp::TestCart.Totals
+      }
+    }
+
+    dataclass Money {
+      @constraint CST-00001-1             // obeys the constraint
+      + cents: int
+    }
+
+    class Cart {
+      + total() -> Money {
+        @requirement REQ-00001-1          // makes the requirement true
+      }
+    }
+  }
+
+  verification VER-00002-1 {
+    title: A review confirms every price is kept in cents
+    method: review
+    @constraint CST-00001-1               // proves the constraint
+    evidence:
+      The fields of the store's money are reviewed on every change.
+  }
+}
+
+diagram REQ_Shop {
+  kind: requirement
+  include: shop@*
+}
+```
+
+Read the links as five verbs:
+
+- **makes true**: `@requirement` in the part of the design that does it, a package, a module, a
+  class, a member, a sequence or a rule.
+- **proves**: a verification nested in what it proves, or with `@requirement` or `@constraint`
+  inside it.
+- **details**: a requirement nested in another, or with `@refines` inside it.
+- **obeys**: `@constraint` in what keeps the constraint.
+- **carries out**: an interface operation names its use case after its signature
+  (`operation buy(item: string) -> int : UC-00001-1`), and a class names the interface it
+  implements (`@interface IPricing`).
+
+`ds query <workspace> relations REQ-00001-1` shows every link of one artefact, both ways.
 
 ## A requirement
 
