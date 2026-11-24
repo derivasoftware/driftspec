@@ -31,9 +31,40 @@ TEST(TestSequenceStyleSheet, ItIsTheStyleSheetASequenceCarried) {
 TEST(TestThemeWriterFactory, ItNamesEveryWriterByTheFormItWrites) {
   const ds::theme::Theme theme;
   const auto writers = ds::theme::ThemeWriterFactory::of();
-  EXPECT_EQ(writers.size(), 2u);
+  EXPECT_EQ(writers.size(), 7u);
+  for (const char* page : {"viewer", "viewer-night", "live", "playground", "design-page"}) EXPECT_TRUE(writers.count(page)) << page;
   EXPECT_EQ(writers.at("svg")->write(theme), ds::theme::SvgStyleSheet().write(theme));
   EXPECT_EQ(writers.at("sequence")->write(theme), ds::theme::SequenceStyleSheet().write(theme));
 }
+
+/// A page's writer puts each of its page's tokens where the page reads it (DS-393): every value of the page, light and
+/// dark, is in what it writes, and nothing else of the theme is. The pages carry it between their theme markers
+/// (tools/theme.py, the ctest theme_pages).
+void writesItsPage(const ds::theme::IThemeWriter& writer, const char* page) {
+  const ds::theme::Theme theme;
+  const std::string written = writer.write(theme);
+  for (const auto& t : theme.page(page)) {
+    if (!t.light.empty()) EXPECT_NE(written.find("--" + t.name), std::string::npos) << page << " " << t.name;
+    if (!t.light.empty()) EXPECT_NE(written.find(t.light), std::string::npos) << page << " " << t.name;
+    if (!t.dark.empty()) EXPECT_NE(written.find(t.dark), std::string::npos) << page << " " << t.name << " dark";
+  }
+  EXPECT_EQ(written.find("{{"), std::string::npos) << page << ": a placeholder left";
+}
+
+TEST(TestViewerVariables, ItWritesTheViewersTokensLightAndDark) { writesItsPage(ds::theme::ViewerVariables(), "viewer"); }
+
+TEST(TestViewerNightVariables, ItWritesTheNightThemesTokens) { writesItsPage(ds::theme::ViewerNightVariables(), "viewer-night"); }
+
+TEST(TestLivePageVariables, ItWritesTheLivePagesTokensLightAndDark) { writesItsPage(ds::theme::LivePageVariables(), "live"); }
+
+TEST(TestPlaygroundVariables, ItWritesThePlaygroundsTokensDarkFirst) {
+  writesItsPage(ds::theme::PlaygroundVariables(), "playground");
+  const ds::theme::Theme theme;
+  const std::string written = ds::theme::PlaygroundVariables().write(theme);
+  // dark first: the page's own :root holds the dark values, the light ones come where a page sets data-theme
+  EXPECT_LT(written.find(theme.page("playground").front().dark), written.find("data-theme=\"light\""));
+}
+
+TEST(TestDesignPageVariables, ItWritesTheDesignPagesTokensLightAndDark) { writesItsPage(ds::theme::DesignPageVariables(), "design-page"); }
 
 }  // namespace
