@@ -25,7 +25,7 @@ class TestJsonExport : public ::testing::Test {
     e.location = {"a.ds", 3, 5};
     model.declare(e);
     model.relate({"uses", "p@m::A", "p@m::B", {"a.ds", 4, 1}, "*"});
-    model.report({"W-REF-UNDECLARED", "warning", "B is declared nowhere", {"a.ds", 4, 1}});
+    model.report({"W-REF-UNDECLARED", ds::model::Severity::warning, "B is declared nowhere", {"a.ds", 4, 1}});
   }
 };
 

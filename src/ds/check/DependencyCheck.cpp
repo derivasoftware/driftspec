@@ -98,8 +98,9 @@ void DependencyCheck::checkDependencies() {
       }
       const auto offered = offeredBy.find(iface);
       if (declares || inside(subject, iface) || (offered != offeredBy.end() && inside(subject, offered->second))) continue;
-      found_.push_back({"W-CONSUMES-UNDECLARED", "warning",
-                        subject + " calls " + op->id + ", and nothing it lives in declares @consumes " + iface, location});
+      found_.push_back(context_->metamodel().finding(model::Code::W_CONSUMES_UNDECLARED,
+                                                     subject + " calls " + op->id + ", and nothing it lives in declares @consumes " + iface,
+                                                     location));
     } else if (op->kind == model::Kind::Method) {
       const auto r2 = realised.find(op->scope);
       const model::Entity* cls = model_->find(op->scope);
@@ -115,10 +116,11 @@ void DependencyCheck::checkDependencies() {
         if (iface.empty() && operation && operation->kind == model::Kind::Operation) iface = i;
       }
       if (iface.empty()) continue;
-      found_.push_back({"W-CONSUMES-BYPASS", "warning",
-                        subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
-                            ": call the interface (a local or a parameter typed " + iface + ") and declare @consumes " + iface,
-                        location});
+      found_.push_back(context_->metamodel().finding(model::Code::W_CONSUMES_BYPASS,
+                                                     subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
+                                                         ": call the interface (a local or a parameter typed " + iface +
+                                                         ") and declare @consumes " + iface,
+                                                     location));
     }
   }
   for (const auto& d : declared) {
@@ -133,8 +135,9 @@ void DependencyCheck::checkDependencies() {
     if (!behaves) continue;  // a box drawn before its behaviour: its uses are a plan, not yet a claim
     for (const auto& iface : d.second) {
       if (called[d.first].count(iface)) continue;
-      found_.push_back({"W-CONSUMES-UNUSED", "warning", d.first + " declares @consumes " + iface + ", and none of its behaviours calls it",
-                        written[{d.first, iface}]});
+      found_.push_back(context_->metamodel().finding(model::Code::W_CONSUMES_UNUSED,
+                                                     d.first + " declares @consumes " + iface + ", and none of its behaviours calls it",
+                                                     written[{d.first, iface}]));
     }
   }
 }

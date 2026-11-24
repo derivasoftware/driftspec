@@ -96,9 +96,50 @@ class TestAnnotationSpec : public Metamodelled {};
 TEST_F(TestCodeSpec, ACodeIsFoundWithItsSeverityItsMeaningAndWhatToDo) {
   const auto* code = metamodel.codeOf("E-SYNTAX");
   ASSERT_NE(code, nullptr);
-  EXPECT_EQ(code->severity, "error");
+  EXPECT_EQ(code->severity, ds::model::Severity::error);
   EXPECT_FALSE(code->fix.empty());
   EXPECT_EQ(metamodel.codeOf("E-NOTHING"), nullptr);
+  EXPECT_EQ(&metamodel.rowOf(ds::model::Code::E_SYNTAX), code);  // by its slot, the same row as by its name (DS-379)
+}
+
+/// The catalogue holds one row per Code, in its order, each printed as its value is named (DS-379).
+TEST_F(TestCodeSpec, EveryCodeHasItsRowInTheOrderOfCode) {
+  ASSERT_EQ(metamodel.codes().size(), static_cast<std::size_t>(ds::model::Code::W_USECASE_UNREALISED) + 1);
+  for (std::size_t i = 0; i < metamodel.codes().size(); ++i) {
+    const auto& c = metamodel.codes()[i];
+    EXPECT_EQ(static_cast<std::size_t>(c.id), i) << c.code;
+    EXPECT_EQ(&metamodel.rowOf(c.id), &c) << c.code;
+  }
+}
+
+/// A finding is made from its code: the printed code and the severity come from the catalogue (DS-379).
+TEST_F(TestCodeSpec, AFindingIsMadeFromItsCode) {
+  const ds::model::Finding f = metamodel.finding(ds::model::Code::W_REQ_NO_VERIFICATION, "said", {"a.ds", 3, 5});
+  EXPECT_EQ(f.code, "W-REQ-NO-VERIFICATION");
+  EXPECT_EQ(f.severity, ds::model::Severity::coverage);
+  EXPECT_EQ(f.message, "said");
+  EXPECT_EQ(f.location.line, 3);
+  EXPECT_EQ(metamodel.finding(ds::model::Code::E_SYNTAX, "", {}).severity, ds::model::Severity::error);
+}
+
+/// What each severity means is a row, in the order of Severity: its name, whether it fails the check, whether it is
+/// kept apart, and what an editor shows it as (DS-379).
+TEST_F(TestCodeSpec, EverySeverityIsARowThatSaysWhatItMeans) {
+  ASSERT_EQ(metamodel.severities().size(), 3u);
+  for (std::size_t i = 0; i < metamodel.severities().size(); ++i) EXPECT_EQ(static_cast<std::size_t>(metamodel.severities()[i].id), i);
+  const auto& error = metamodel.severityOf(ds::model::Severity::error);
+  const auto& warning = metamodel.severityOf(ds::model::Severity::warning);
+  const auto& coverage = metamodel.severityOf(ds::model::Severity::coverage);
+  EXPECT_EQ(error.name, "error");
+  EXPECT_EQ(warning.name, "warning");
+  EXPECT_EQ(coverage.name, "coverage");
+  EXPECT_TRUE(error.fails);
+  EXPECT_FALSE(warning.fails || coverage.fails);
+  EXPECT_TRUE(coverage.keptApart);
+  EXPECT_FALSE(error.keptApart || warning.keptApart);
+  EXPECT_EQ(error.editor, "error");
+  EXPECT_EQ(warning.editor, "warning");
+  EXPECT_EQ(coverage.editor, "information");
 }
 
 TEST_F(TestAnnotationSpec, EveryAnnotationThatMeansSomethingNamesTheRelationItMakes) {

@@ -50,12 +50,23 @@ struct KindSpec {
   std::string example = {};   ///< a minimal workspace that declares one and checks clean
 };
 
-/// A finding code ds reports: what it means and what to do about it.
+/// A finding code ds reports: what it means and what to do about it. The catalogue holds one per Code, in its order.
 struct CodeSpec {
-  std::string code;
-  std::string severity;  ///< error, warning, or coverage: something not yet written, answered when asked (DS-216)
+  Code id;
+  std::string code;   ///< as it is printed: E-SYNTAX
+  Severity severity;  ///< error, warning, or coverage: something not yet written, answered when asked (DS-216)
   std::string meaning;
   std::string fix;
+};
+
+/// What a severity means (DS-379): the severity table holds one per Severity, in its order, and every reader asks a
+/// row instead of naming a severity.
+struct SeveritySpec {
+  Severity id;
+  std::string name;    ///< as it is printed: error, warning, coverage
+  bool fails;          ///< a finding of it fails the check: it counts for the exit code
+  bool keptApart;      ///< it is no finding but coverage: kept apart and answered when asked (DS-216)
+  std::string editor;  ///< what an editor shows it as: error, warning, information or hint
 };
 
 /// An annotation that means something, and the relation it makes; any other @word refers to nothing in particular.
@@ -100,7 +111,19 @@ class Metamodel {
   /// Whether a relation of this kind may go from one kind to another.
   bool joins(const RelationSpec& relation, Kind from, Kind to) const;
   const std::vector<CodeSpec>& codes() const { return codes_; }
+  /// A code as the catalogue describes it: one slot, by its place in Code.
+  const CodeSpec& rowOf(Code code) const { return codes_[static_cast<std::size_t>(code)]; }
+  /// A code by its printed name, as a reader asks for it (ds manual E-SYNTAX); nullptr when the catalogue lacks it.
   const CodeSpec* codeOf(const std::string& code) const;
+  const std::vector<SeveritySpec>& severities() const { return severities_; }
+  /// What a severity means: one slot, by its place in Severity.
+  const SeveritySpec& severityOf(Severity severity) const { return severities_[static_cast<std::size_t>(severity)]; }
+  /// The finding of `code` (DS-379): its printed code and its severity read from the catalogue, so nobody writes a
+  /// severity and a code the catalogue lacks does not compile.
+  Finding finding(Code code, std::string message, Location location) const {
+    const CodeSpec& spec = rowOf(code);
+    return {spec.code, spec.severity, std::move(message), std::move(location)};
+  }
   /// Every row the manual lists: the annotations that mean something, then any other word and the use case an
   /// operation names after a colon, which only document.
   const std::vector<AnnotationSpec>& annotations() const { return annotations_; }
@@ -148,8 +171,10 @@ class Metamodel {
   static std::vector<std::string> buildNames();
   /// How each kind is written and a minimal workspace that declares one, by kind (WrittenForms.cpp).
   static std::map<Kind, std::pair<std::string, std::string>> writtenForms();
-  /// The catalogue of finding codes (Codes.cpp).
+  /// The catalogue of finding codes (Codes.cpp), checked to hold one row per Code in its order.
   static std::vector<CodeSpec> buildCodes();
+  /// The severity table (Codes.cpp), checked to hold one row per Severity in its order.
+  static std::vector<SeveritySpec> buildSeverities();
   /// The annotations that mean something.
   static std::vector<AnnotationSpec> buildKnownAnnotations();
   /// What any other word binds as: a link the language gives no meaning to.
@@ -167,6 +192,7 @@ class Metamodel {
   std::vector<std::string> identityFields_;  ///< the fields that hold an identity, from the kinds
   std::vector<RelationSpec> relations_;
   std::vector<CodeSpec> codes_;
+  std::vector<SeveritySpec> severities_;
   std::vector<AnnotationSpec> known_;
   AnnotationSpec other_;
   std::vector<AnnotationSpec> annotations_;

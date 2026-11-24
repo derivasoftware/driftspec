@@ -70,8 +70,7 @@ TEST_F(TestCodes, EveryCodeIsAnErrorOrAWarningWithAMeaning) {
   std::set<std::string> seen;
   for (const auto& c : metamodel.codes()) {
     EXPECT_TRUE(seen.insert(c.code).second) << c.code;
-    EXPECT_TRUE(c.severity == "error" || c.severity == "warning" || c.severity == "coverage") << c.code;
-    EXPECT_EQ(c.code.rfind(c.severity == "error" ? "E-" : "W-", 0), 0u) << c.code;
+    EXPECT_EQ(c.code.rfind(c.severity == ds::model::Severity::error ? "E-" : "W-", 0), 0u) << c.code;
     EXPECT_FALSE(c.meaning.empty()) << c.code;
   }
 }

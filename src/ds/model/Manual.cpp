@@ -216,7 +216,7 @@ std::string Manual::page(const std::string& topic) const {
   if (topic == "grammar") return grammarPage();
   if (const KindSpec* k = metamodel_.specNamed(topic)) return kindPage(*k);
   if (const CodeSpec* c = metamodel_.codeOf(topic))
-    return c->code + " (" + c->severity + ")\n\n" + c->meaning + "\n\nWhat to do: " + c->fix + "\n";
+    return c->code + " (" + metamodel_.severityOf(c->severity).name + ")\n\n" + c->meaning + "\n\nWhat to do: " + c->fix + "\n";
   if (topic == "commands") {
     std::string out;
     for (const auto& c : commands_) {
@@ -233,7 +233,8 @@ std::string Manual::page(const std::string& topic) const {
   }
   if (topic == "codes") {
     std::string out;
-    for (const auto& c : metamodel_.codes()) out += "  " + pad(c.code, 26) + pad(c.severity, 9) + c.meaning + "\n";
+    for (const auto& c : metamodel_.codes())
+      out += "  " + pad(c.code, 26) + pad(metamodel_.severityOf(c.severity).name, 9) + c.meaning + "\n";
     return out + "\nds manual <CODE> says what to do about one.\n";
   }
   return "";

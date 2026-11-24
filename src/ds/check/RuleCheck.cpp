@@ -46,16 +46,18 @@ void RuleCheck::checkRules() {
     if (e.expected) continue;
     if (e.kind == model::Kind::Rule) {
       if (!linked.count(e.id))
-        context_->report({"W-RULE-NO-REQUIREMENT", "warning", e.id + " answers to no requirement: write @requirement <ID>", e.location});
+        context_->report(context_->metamodel().finding(model::Code::W_RULE_NO_REQUIREMENT,
+                                                       e.id + " answers to no requirement: write @requirement <ID>", e.location));
       const auto f = model_->formulas().find(e.id);
       const std::size_t claims = f == model_->formulas().end() ? 0 : f->second.claims.size();
       if (claims != 1)
-        context_->report({"W-RULE-NO-CLAIM", "warning",
-                          e.id + (claims ? " says more than one claim: write one holds or one never"
-                                         : " says neither what holds nor what must never happen"),
-                          e.location});
+        context_->report(context_->metamodel().finding(model::Code::W_RULE_NO_CLAIM,
+                                                       e.id + (claims ? " says more than one claim: write one holds or one never"
+                                                                      : " says neither what holds nor what must never happen"),
+                                                       e.location));
     } else if (e.kind == model::Kind::Definition && !said(e, "if")) {
-      context_->report({"W-DEFINITION-NO-CASE", "warning", e.id + " says no case in which it holds: write if <literals>", e.location});
+      context_->report(context_->metamodel().finding(model::Code::W_DEFINITION_NO_CASE,
+                                                     e.id + " says no case in which it holds: write if <literals>", e.location));
     }
   }
   for (const auto& f : Evaluator(*model_, *metamodel_, *resolver_).run()) context_->report(f);

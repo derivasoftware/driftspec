@@ -111,8 +111,8 @@ std::string Evaluator::scopeOf(const std::string& owner) const {
   return e ? e->scope : "";
 }
 
-void Evaluator::report(const std::string& code, const std::string& owner, const std::string& message, const model::Location& at) {
-  found_.push_back({code, "error", owner + " " + message, at});
+void Evaluator::report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at) {
+  found_.push_back(metamodel_.finding(code, owner + " " + message, at));
 }
 
 // Everything a formula names exists in the metamodel or the model, every definition it applies takes
@@ -124,13 +124,13 @@ bool Evaluator::validate(const std::string& id, const model::Formula& formula) {
   std::set<std::string> bound;
   for (const auto& range : formula.ranges) {
     if (!metamodel_.specNamed(range.kind)) {
-      report("E-RULE-UNKNOWN", id, "ranges over '" + range.kind + "', which is no kind of the language", range.location);
+      report(model::Code::E_RULE_UNKNOWN, id, "ranges over '" + range.kind + "', which is no kind of the language", range.location);
       ok = false;
     }
     if (!range.scope.empty()) {
       const std::string scope = resolver_.resolve(range.scope, e->scope);
       if (scope.empty()) {
-        report("E-RULE-UNKNOWN", id, "ranges inside '" + range.scope + "', which nothing declares", range.location);
+        report(model::Code::E_RULE_UNKNOWN, id, "ranges inside '" + range.scope + "', which nothing declares", range.location);
         ok = false;
       }
       constants_[key(id, range.scope)] = scope;
@@ -155,8 +155,8 @@ bool Evaluator::validate(const std::string& id, const model::Formula& formula) {
       ok = validateBody(id, c, inCase) && ok;
       for (const auto& p : formula.parameters) {
         if (inCase.count(p) || c.empty()) continue;
-        report("E-RULE-UNSAFE", id, "leaves its parameter '" + p + "' unbound in one of its cases: name it in a positive literal",
-               c.front().location);
+        report(model::Code::E_RULE_UNSAFE, id,
+               "leaves its parameter '" + p + "' unbound in one of its cases: name it in a positive literal", c.front().location);
         ok = false;
       }
     }
@@ -214,11 +214,11 @@ void Evaluator::checkVacuity(const std::string& id, const model::Formula& formul
       for (int end = 0; end < 2; ++end) {
         model::Kind kind;
         if (!kindOfTerm(l.terms[end], &kind) || joinsAtEnd(*spec, kind, end == 0)) continue;
-        found_.push_back({"W-RULE-NEVER-MATCHES", "warning",
-                          id + " writes '" + l.terms[0].text + " " + l.name + " " + l.terms[1].text + "', and " + l.name +
-                              (end == 0 ? " never leaves " : " never reaches ") + metamodel_.nameOf(kind) + " (" + l.terms[end].text +
-                              "): the literal matches nothing",
-                          l.location});
+        found_.push_back(metamodel_.finding(model::Code::W_RULE_NEVER_MATCHES,
+                                            id + " writes '" + l.terms[0].text + " " + l.name + " " + l.terms[1].text + "', and " + l.name +
+                                                (end == 0 ? " never leaves " : " never reaches ") + metamodel_.nameOf(kind) + " (" +
+                                                l.terms[end].text + "): the literal matches nothing",
+                                            l.location));
         break;
       }
     }
@@ -229,23 +229,23 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
   const std::string scope = scopeOf(id);
   for (const auto& l : body) {
     if (l.form == Form::Relation && !metamodel_.relationOf(l.name)) {
-      report("E-RULE-UNKNOWN", id, "names the relation '" + l.name + "', which the metamodel does not declare", l.location);
+      report(model::Code::E_RULE_UNKNOWN, id, "names the relation '" + l.name + "', which the metamodel does not declare", l.location);
       ok = false;
     } else if (l.form == Form::Kind && !metamodel_.specNamed(l.name)) {
-      report("E-RULE-UNKNOWN", id, "names the kind '" + l.name + "', which is no kind of the language", l.location);
+      report(model::Code::E_RULE_UNKNOWN, id, "names the kind '" + l.name + "', which is no kind of the language", l.location);
       ok = false;
     } else if (l.form == Form::Call) {
       const std::string d = resolver_.resolve(l.name, scope);
       const model::Entity* def = d.empty() ? nullptr : model_.find(d);
       if (!def || def->kind != model::Kind::Definition) {
-        report("E-RULE-UNKNOWN", id, "applies '" + l.name + "', which no definition in scope declares", l.location);
+        report(model::Code::E_RULE_UNKNOWN, id, "applies '" + l.name + "', which no definition in scope declares", l.location);
         ok = false;
       } else {
         constants_[key(id, "call:" + l.name)] = d;
         const auto it = model_.formulas().find(d);
         const std::size_t arity = it == model_.formulas().end() ? 0 : it->second.parameters.size();
         if (arity != l.terms.size()) {
-          report("E-RULE-ARITY", id,
+          report(model::Code::E_RULE_ARITY, id,
                  "applies " + d + " to " + std::to_string(l.terms.size()) + " arguments; it takes " + std::to_string(arity), l.location);
           ok = false;
         }
@@ -255,7 +255,7 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
       if (t.variable || t.value) continue;
       const std::string entity = resolver_.resolve(t.text, scope);
       if (entity.empty()) {
-        report("E-RULE-UNKNOWN", id, "names '" + t.text + "', which nothing declares", l.location);
+        report(model::Code::E_RULE_UNKNOWN, id, "names '" + t.text + "', which nothing declares", l.location);
         ok = false;
       }
       constants_[key(id, t.text)] = entity;
@@ -278,7 +278,7 @@ bool Evaluator::validateBody(const std::string& id, const std::vector<model::Lit
   for (const auto& l : body)
     for (const auto& t : l.terms)
       if (!known(t) && told.insert(t.text).second) {
-        report("E-RULE-UNSAFE", id,
+        report(model::Code::E_RULE_UNSAFE, id,
                "leaves the variable '" + t.text + "' unbound: a negation or a comparison tests only what a positive literal binds",
                l.location);
         ok = false;
@@ -322,7 +322,7 @@ bool Evaluator::stratify() {
   for (const auto& d : definitions)
     if (stratum_[d] > ceiling) {
       const model::Entity* e = model_.find(d);
-      report("E-RULE-UNSTRATIFIED", d, "negates itself through recursion: no order of evaluation decides it", e->location);
+      report(model::Code::E_RULE_UNSTRATIFIED, d, "negates itself through recursion: no order of evaluation decides it", e->location);
       invalid_.insert(d);
       ok = false;
     }
@@ -507,10 +507,10 @@ void Evaluator::evaluateRule(const std::string& id, const model::Formula& formul
     if (formula.never && !witness.empty()) message += ": " + describe(witness);
     // the finding sits on what breaks the rule, the first thing it ranges over (a call in its sequence,
     // a class in its file), so the reader lands there; the message names the rule
-    report("E-RULE-BROKEN", id, message, at);
+    report(model::Code::E_RULE_BROKEN, id, message, at);
   }
   if (broken > kReportsPerRule)
-    report("E-RULE-BROKEN", id, "is broken " + std::to_string(broken - kReportsPerRule) + " more times", rule->location);
+    report(model::Code::E_RULE_BROKEN, id, "is broken " + std::to_string(broken - kReportsPerRule) + " more times", rule->location);
 }
 
 bool Evaluator::value(const std::string& owner, const model::Term& term, const Bindings& bindings, std::string& out_value) const {

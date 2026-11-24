@@ -361,7 +361,7 @@ std::string Machine::initial() const {
   return starts.size() == 1 ? starts[0] : "";
 }
 
-std::vector<model::Finding> Machine::faults() const {
+std::vector<model::Finding> Machine::faults(const model::Metamodel& metamodel) const {
   std::vector<model::Finding> found;
   const model::Entity* owner = model_.find(subject_);
   const std::string who = owner ? owner->name : machine_.name;
@@ -375,25 +375,26 @@ std::vector<model::Finding> Machine::faults() const {
       const std::vector<std::string> values = valuesOf(model_, subject_, l.name);
       if (!attributeOf(model_, subject_, l.name)) {
         sound = false;
-        found.push_back({"W-STATE-UNDECLARED", "warning",
-                         "the state " + all[i].state + " of " + who + " asks " + written(l) + ", and " + who + " holds no " + l.name,
-                         at(machine_, all[i].line)});
+        found.push_back(
+            metamodel.finding(model::Code::W_STATE_UNDECLARED,
+                              "the state " + all[i].state + " of " + who + " asks " + written(l) + ", and " + who + " holds no " + l.name,
+                              at(machine_, all[i].line)));
       } else if (!values.empty() && std::find(values.begin(), values.end(), l.value) == values.end()) {
         sound = false;
-        found.push_back({"W-STATE-VALUE", "warning",
-                         "the state " + all[i].state + " of " + who + " asks " + written(l) + ", and " + l.name + " is never " + l.value +
-                             ": it is one of " + joined(values, ", "),
-                         at(machine_, all[i].line)});
+        found.push_back(metamodel.finding(model::Code::W_STATE_VALUE,
+                                          "the state " + all[i].state + " of " + who + " asks " + written(l) + ", and " + l.name +
+                                              " is never " + l.value + ": it is one of " + joined(values, ", "),
+                                          at(machine_, all[i].line)));
       }
     }
     can[i] = allowed(model_, subject_, all[i], &asks[i]);
     if (!sound) {
       can[i] = false;
     } else if (!can[i]) {
-      found.push_back({"W-STATE-IMPOSSIBLE", "warning",
-                       "the state " + all[i].state + " of " + who + " can never be: its rule (" + all[i].text +
-                           ") asks two things that exclude each other",
-                       at(machine_, all[i].line)});
+      found.push_back(metamodel.finding(model::Code::W_STATE_IMPOSSIBLE,
+                                        "the state " + all[i].state + " of " + who + " can never be: its rule (" + all[i].text +
+                                            ") asks two things that exclude each other",
+                                        at(machine_, all[i].line)));
     }
   }
   for (std::size_t i = 0; i < all.size(); ++i) {
@@ -401,10 +402,10 @@ std::vector<model::Finding> Machine::faults() const {
       if (all[i].state == all[j].state || !can[i] || !can[j]) continue;
       Context both;
       if (!together(asks[i], asks[j], &both)) continue;
-      found.push_back({"W-STATE-OVERLAP", "warning",
-                       who + " can be " + all[i].state + " and " + all[j].state + " at once: when " + told(both) +
-                           ". The rules of a machine exclude each other",
-                       at(machine_, all[j].line)});
+      found.push_back(metamodel.finding(model::Code::W_STATE_OVERLAP,
+                                        who + " can be " + all[i].state + " and " + all[j].state + " at once: when " + told(both) +
+                                            ". The rules of a machine exclude each other",
+                                        at(machine_, all[j].line)));
     }
   }
   return found;

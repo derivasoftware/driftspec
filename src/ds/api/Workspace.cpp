@@ -36,7 +36,7 @@ Workspace::Workspace(const model::Metamodel& metamodel, const Files& files) : me
 
 std::string Workspace::exportModel() const { return exporter::JsonExport(metamodel_).render(model_, false); }
 
-std::string Workspace::report() const { return Api::report(model_); }
+std::string Workspace::report() const { return Api(metamodel_).report(model_); }
 
 std::string Workspace::find(const std::string& id) const {
   const model::Entity* e = model_.find(id);

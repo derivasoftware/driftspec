@@ -95,11 +95,12 @@ void Derivation::fillLanguages() {
     for (const auto& item : splitTrimmed(written->second, ',')) said.insert(item);
     const std::string first = *said.begin();
     if (said.size() > 1) {
-      context_->report(
-          {"W-LANGUAGE-UNKNOWN", "warning", e.id + " says two languages (" + written->second + "): one box, one language", e.location});
+      context_->report(context_->metamodel().finding(
+          model::Code::W_LANGUAGE_UNKNOWN, e.id + " says two languages (" + written->second + "): one box, one language", e.location));
     } else if (!kKnown.count(first)) {
-      context_->report({"W-LANGUAGE-UNKNOWN", "warning",
-                        e.id + " is written in '" + first + "', which is none of cpp, c, python, typescript, lua", e.location});
+      context_->report(context_->metamodel().finding(
+          model::Code::W_LANGUAGE_UNKNOWN, e.id + " is written in '" + first + "', which is none of cpp, c, python, typescript, lua",
+          e.location));
     }
     own[e.id] = first;
   }
