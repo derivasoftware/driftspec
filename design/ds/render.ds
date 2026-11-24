@@ -256,7 +256,7 @@ package driftspec@ds {
     // with no open: field, told by its main steps. What comes back is the JSON dumped,
     // so a name for it, not a checked value.
     sequence IrExport::render {
-      local filter: query::ClassFilter
+      local filter: query::IFilter
       self -> model_.find(diagramId) -> diagram
       opt there is no such diagram / no-diagram {
         return ""
@@ -293,10 +293,10 @@ package driftspec@ds {
     }
 
     sequence IrExport::renderBoxes {
-      local filter: query::ClassFilter
+      local filter: query::IFilter
       -> query::FilterFactory::of(metamodel_, diagram) -> made
       -> filter.boxes(model_) -> selected
-      -> filter.containers(model_, selected) -> containers
+      -> query::ClassBoxes::containers(model_, selected) -> containers   // what is drawn around, never a filter's (DS-423)
       loop each selected id {
         self -> model_.find(id) -> entity
       }
