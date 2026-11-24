@@ -15,9 +15,9 @@ TEST(TestGraph, AGraphRefersToItsBoxesAndHoldsNoShelfUntilTold) {
   EXPECT_FALSE(graph.following);
   const ds::layout::Frame root;
   graph.root = &root;
-  graph.edges.push_back({"a", "b", "inherits"});
+  graph.edges.push_back({"a", "b", true});
   EXPECT_EQ(graph.root, &root);
-  EXPECT_EQ(graph.edges.front().kind, "inherits");
+  EXPECT_TRUE(graph.edges.front().upward);
 }
 
 }  // namespace

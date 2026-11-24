@@ -22,6 +22,7 @@ Packed PackingEngine::size(const Frame& frame, const Graph& graph, Placement& ou
     case Frame::Arrangement::Tree:
       return tree(frame, graph, out);
     case Frame::Arrangement::Fixed:
+    case Frame::Arrangement::Layered:  // layering is the layered engine's: packing keeps the frame's size
       break;
   }
   return fixed(frame, graph, out);

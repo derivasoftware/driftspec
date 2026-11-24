@@ -16,6 +16,7 @@ struct Frame {
     Fixed,    ///< the box has its size and each child sits where it is told
     Shelves,  ///< the children fill shelves left to right, no wider than a target, with room around them
     Tree,     ///< the first child is centred over the row of the others, with room between them for a trunk
+    Layered,  ///< the children are layered along the edges between them, as a container of a drawing (DS-392)
   };
 
   std::string id;                                ///< what the box is known by, to whoever reads where it lands
@@ -35,6 +36,7 @@ struct Frame {
   double portTop = 0;                            ///< Shelves: where the first port sits
   double portGap = 0;                            ///< Shelves: between ports
   double drop = 0;                               ///< Tree: between the first child and the row
+  double label = 0;                              ///< Layered: the width its label takes
 };
 
 }  // namespace layout

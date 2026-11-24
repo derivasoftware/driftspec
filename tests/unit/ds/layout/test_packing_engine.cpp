@@ -121,7 +121,7 @@ TEST_F(TestPackingEngine, AGraphWithoutBoxesPlacesNothingAndEdgesAreNotRouted) {
   const Frame unit = leaf("u", 10, 10);
   Graph graph;
   graph.root = &unit;
-  graph.edges = {{"u", "u", "uses"}};
+  graph.edges = {{"u", "u", false}};
   EXPECT_TRUE(PackingEngine().place(graph).routes.empty());
 }
 
