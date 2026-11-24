@@ -19,7 +19,6 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -28,6 +27,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
+#include "ds/emit/SinkFactory.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
@@ -123,22 +123,37 @@ int manual(const ds::model::Metamodel& metamodel, const ds::model::Manual& book,
     std::cout << page;
     return 0;
   }
-  nlohmann::json out{{"topic", topic.empty() ? "index" : topic}, {"text", page}};
-  for (const auto& k : metamodel.kinds()) {
-    if (topic != metamodel.nameOf(k.kind)) continue;
-    nlohmann::json fields = nlohmann::json::array();
-    for (const auto& f : k.fields)
-      fields.push_back({{"name", f.name},
-                        {"type", metamodel.fieldTypeName(f.type)},
-                        {"source", metamodel.fieldSourceName(f.source)},
-                        {"meaning", f.meaning},
-                        {"values", f.values}});
-    out["kind"] = {{"meaning", k.meaning}, {"syntax", k.syntax}, {"fields", fields}, {"flags", k.flags}, {"example", k.example}};
+  // the page as JSON, written by the sink asked for here (DS-397): its fields in byte order
+  const auto sink = ds::emit::SinkFactory::json(true);
+  sink->beginRecord();
+  if (const ds::model::CodeSpec* c = metamodel.codeOf(topic)) {
+    sink->field("code").beginRecord().field("code").value(c->code).field("fix").value(c->fix).field("meaning").value(c->meaning);
+    sink->field("severity").value(metamodel.severityOf(c->severity).name).endRecord();
   }
-  if (const ds::model::CodeSpec* c = metamodel.codeOf(topic))
-    out["code"] = {{"code", c->code}, {"severity", metamodel.severityOf(c->severity).name}, {"meaning", c->meaning}, {"fix", c->fix}};
-  if (topic.empty()) out["topics"] = book.topics();
-  std::cout << out.dump(2) << "\n";
+  const ds::model::KindSpec* kind = nullptr;  // the kind the topic names, the last when two did
+  for (const auto& k : metamodel.kinds())
+    if (topic == metamodel.nameOf(k.kind)) kind = &k;
+  if (kind) {
+    sink->field("kind").beginRecord().field("example").value(kind->example).field("fields").beginList();
+    for (const auto& f : kind->fields) {
+      sink->beginRecord().field("meaning").value(f.meaning).field("name").value(f.name).field("source").value(
+          metamodel.fieldSourceName(f.source));
+      sink->field("type").value(metamodel.fieldTypeName(f.type)).field("values").beginList();
+      for (const auto& v : f.values) sink->value(v);
+      sink->endList().endRecord();
+    }
+    sink->endList().field("flags").beginList();
+    for (const auto& flag : kind->flags) sink->value(flag);
+    sink->endList().field("meaning").value(kind->meaning).field("syntax").value(kind->syntax).endRecord();
+  }
+  sink->field("text").value(page).field("topic").value(topic.empty() ? "index" : topic);
+  if (topic.empty()) {
+    sink->field("topics").beginList();
+    for (const auto& t : book.topics()) sink->value(t);
+    sink->endList();
+  }
+  sink->endRecord();
+  std::cout << sink->result() << "\n";
   return 0;
 }
 
@@ -149,9 +164,9 @@ int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool js
   // the one report of a check (DS-120), written by the format asked for (DS-126)
   const ds::check::Report report = ds::check::Report::of(model, metamodel);
   ds::format::FormatOptions options;
-  options.pretty = true;
   options.title = dir;  // the workspace as it was given: where the report says the open coverage is listed (DS-431)
-  std::cout << ds::format::reportFormats().at(json ? "json" : "text")->write(report, options) << (json ? "\n" : "");
+  const auto sink = ds::emit::SinkFactory::json(true);  // indented, as ds check --json has always printed it
+  std::cout << ds::format::reportFormats().at(json ? "json" : "text")->write(report, options, *sink) << (json ? "\n" : "");
   return report.errors ? 1 : 0;
 }
 
@@ -178,7 +193,8 @@ struct Render {
         std::cerr << "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace\n";
         return 2;
       }
-      return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(false)));  // as it came, drawn by the format named
+      const auto sink = ds::emit::SinkFactory::json(false);                                   // what layout and cells write
+      return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(false), *sink));  // as it came, drawn by the format named
     }
     // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376)
     const bool viewer = format == "html" || format == "json";
@@ -189,8 +205,8 @@ struct Render {
       const auto formats = ds::format::sceneFormats();
       ds::format::FormatOptions options;
       if (format == "json") {
-        options.pretty = true;
-        return emit(output, formats.at("json")->write(ds::scene::Scene(model, metamodel).build(), options) + "\n");
+        const auto sink = ds::emit::SinkFactory::json(true);  // the scene indented for a reader
+        return emit(output, formats.at("json")->write(ds::scene::Scene(model, metamodel).build(), options, *sink) + "\n");
       }
       std::vector<std::string> focus;
       if (!diagram.empty()) {
@@ -206,7 +222,8 @@ struct Render {
       options.focus = focus;
       options.embed = embed;
       options.height = height;
-      return emit(output, formats.at("html")->write(ds::scene::Scene(model, metamodel).build(), options));
+      const auto sink = ds::emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
+      return emit(output, formats.at("html")->write(ds::scene::Scene(model, metamodel).build(), options, *sink));
     }
     if (diagram.empty()) {
       std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
@@ -217,7 +234,8 @@ struct Render {
       std::cerr << "no diagram named " << diagram << "\n";
       return 1;
     }
-    return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(true)) + (format == "ir" ? "\n" : ""));
+    const auto sink = ds::emit::SinkFactory::json(false);  // what layout and cells write
+    return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(true), *sink) + (format == "ir" ? "\n" : ""));
   }
 
   // a diagram is its IR, written by the format named (DS-126); the IR of a workspace is indented
@@ -315,13 +333,16 @@ int run(int argc, char** argv) {
   ds::model::Model model(metamodel);
   if (!loadWorkspace(metamodel, dir, exportCmd->parsed() ? ds::api::Output::Model : ds::api::Output::Answers, "", &model)) return 2;
   if (exportCmd->parsed()) {
-    std::cout << ds::exporter::JsonExport(metamodel).render(model) << "\n";
+    const auto sink = ds::emit::SinkFactory::json(true);  // indented, as ds export has always printed it; written whole or not at all
+    ds::exporter::JsonExport(metamodel).render(model, *sink);
+    std::cout << sink->result() << "\n";
     return 0;
   }
   const ds::query::Query query(model, metamodel);
   const std::vector<ds::query::Answer> answers = query.ask(question, subject);
   if (!answers.empty() && answers.front().kind == "error") {
-    if (json) std::cout << ds::format::AnswersJson().write(answers, {}) << "\n";  // asked for JSON, the error is an answer too
+    const auto sink = ds::emit::SinkFactory::json(false);
+    if (json) std::cout << ds::format::AnswersJson().write(answers, {}, *sink) << "\n";  // asked for JSON, the error is an answer too
     std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
     if (answers.front().detail.find("not a question") != std::string::npos) {
       std::cerr << "questions:";
@@ -331,7 +352,8 @@ int run(int argc, char** argv) {
     return 1;
   }
   // the answers, written by the format asked for (DS-126)
-  std::cout << ds::format::answerFormats().at(json ? "json" : "text")->write(answers, {}) << (json ? "\n" : "");
+  const auto sink = ds::emit::SinkFactory::json(false);
+  std::cout << ds::format::answerFormats().at(json ? "json" : "text")->write(answers, {}, *sink) << (json ? "\n" : "");
   return 0;
 }
 

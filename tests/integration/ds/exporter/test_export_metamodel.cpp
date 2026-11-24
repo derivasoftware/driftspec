@@ -7,6 +7,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -27,7 +28,9 @@ class TestExportMetamodel : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
     ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
-    doc = nlohmann::json::parse(ds::exporter::JsonExport(metamodel).render(model, false));
+    ds::emit::JsonSink sink(false, true);
+    ds::exporter::JsonExport(metamodel).render(model, sink);
+    doc = nlohmann::json::parse(sink.result());
   }
 };
 

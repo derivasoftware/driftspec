@@ -1,112 +1,135 @@
 #include "ds/export/JsonExport.hpp"
 
-#include <nlohmann/json.hpp>
-
 #include "ds/model/Metamodel.hpp"
 
 namespace ds {
 namespace exporter {
 
-nlohmann::json JsonExport::locationJson(const model::Location& l) {
-  nlohmann::json out = {{"file", l.file}, {"line", l.line}, {"column", l.column}};
-  if (l.endLine > 0) out["end"] = {{"line", l.endLine}, {"column", l.endColumn}};
-  return out;
+void JsonExport::location(const model::Location& l, emit::ISink& out_sink) {
+  out_sink.beginRecord().field("column").integer(l.column);
+  if (l.endLine > 0) out_sink.field("end").beginRecord().field("column").integer(l.endColumn).field("line").integer(l.endLine).endRecord();
+  out_sink.field("file").value(l.file).field("line").integer(l.line).endRecord();
 }
 
-nlohmann::json JsonExport::entityJson(const model::Entity& e) const {
-  return {{"id", e.id},
-          {"kind", metamodel_.nameOf(e.kind)},
-          {"name", e.name},
-          {"scope", e.scope},
-          {"expected", e.expected},
-          {"fields", e.fields},
-          {"flags", e.flags},
-          {"location", locationJson(e.location)}};
+void JsonExport::texts(const std::vector<std::string>& texts, emit::ISink& out_sink) {
+  out_sink.beginList();
+  for (const auto& t : texts) out_sink.value(t);
+  out_sink.endList();
 }
 
-nlohmann::json JsonExport::relationJson(const model::Relation& r) {
-  nlohmann::json rel = {{"kind", r.kind}, {"from", r.from}, {"to", r.to}, {"location", locationJson(r.location)}};
-  if (!r.multiplicity.empty()) rel["multiplicity"] = r.multiplicity;
-  return rel;
+void JsonExport::pairs(const std::vector<std::pair<std::string, std::string>>& pairs, emit::ISink& out_sink) {
+  out_sink.beginList();
+  for (const auto& p : pairs) out_sink.beginList().value(p.first).value(p.second).endList();
+  out_sink.endList();
 }
 
-nlohmann::json JsonExport::kindNames(const std::vector<model::Kind>& kinds) const {
-  nlohmann::json out = nlohmann::json::array();
-  for (model::Kind k : kinds) out.push_back(metamodel_.nameOf(k));
-  return out;
+void JsonExport::entity(const model::Entity& e, emit::ISink& out_sink) const {
+  out_sink.beginRecord().field("expected").boolean(e.expected).field("fields").beginRecord();
+  for (const auto& f : e.fields) out_sink.field(f.first).value(f.second);  // a std::map: in byte order
+  out_sink.endRecord().field("flags");
+  texts(e.flags, out_sink);
+  out_sink.field("id").value(e.id).field("kind").value(metamodel_.nameOf(e.kind)).field("location");
+  location(e.location, out_sink);
+  out_sink.field("name").value(e.name).field("scope").value(e.scope).endRecord();
 }
 
-nlohmann::json JsonExport::metamodelJson() const {
-  nlohmann::json out;
-  out["kinds"] = nlohmann::json::array();
+void JsonExport::relation(const model::Relation& r, emit::ISink& out_sink) {
+  out_sink.beginRecord().field("from").value(r.from).field("kind").value(r.kind).field("location");
+  location(r.location, out_sink);
+  if (!r.multiplicity.empty()) out_sink.field("multiplicity").value(r.multiplicity);
+  out_sink.field("to").value(r.to).endRecord();
+}
+
+void JsonExport::relations(const std::vector<model::Relation>& relations, emit::ISink& out_sink) const {
+  out_sink.beginList();
+  for (const auto& r : relations) relation(r, out_sink);
+  out_sink.endList();
+}
+
+void JsonExport::findings(const std::vector<model::Finding>& findings, emit::ISink& out_sink) const {
+  out_sink.beginList();
+  for (const auto& f : findings) {
+    out_sink.beginRecord().field("code").value(f.code).field("location");
+    location(f.location, out_sink);
+    out_sink.field("message").value(f.message).field("severity").value(metamodel_.severityOf(f.severity).name).endRecord();
+  }
+  out_sink.endList();
+}
+
+void JsonExport::breaches(const model::Model& model, emit::ISink& out_sink) {
+  out_sink.beginRecord();
+  for (const auto& rule : model.breaches()) {  // a std::map: in byte order
+    out_sink.field(rule.first).beginList();
+    for (const auto& b : rule.second) {
+      out_sink.beginRecord().field("bindings");
+      pairs(b.bindings, out_sink);
+      out_sink.field("location");
+      location(b.location, out_sink);
+      out_sink.field("witness");
+      pairs(b.witness, out_sink);
+      out_sink.endRecord();
+    }
+    out_sink.endList();
+  }
+  out_sink.endRecord();
+}
+
+void JsonExport::kindNames(const std::vector<model::Kind>& kinds, emit::ISink& out_sink) const {
+  out_sink.beginList();
+  for (model::Kind k : kinds) out_sink.value(metamodel_.nameOf(k));
+  out_sink.endList();
+}
+
+void JsonExport::metamodel(emit::ISink& out_sink) const {
+  out_sink.beginRecord().field("kinds").beginList();
   for (const auto& k : metamodel_.kinds()) {
-    nlohmann::json fields = nlohmann::json::array();
+    out_sink.beginRecord().field("fields").beginList();
     for (const auto& f : k.fields) {
-      fields.push_back({{"name", f.name},
-                        {"type", metamodel_.fieldTypeName(f.type)},
-                        {"source", metamodel_.fieldSourceName(f.source)},
-                        {"meaning", f.meaning},
-                        {"values", f.values}});
+      out_sink.beginRecord().field("meaning").value(f.meaning).field("name").value(f.name);
+      out_sink.field("source").value(metamodel_.fieldSourceName(f.source)).field("type").value(metamodel_.fieldTypeName(f.type));
+      out_sink.field("values");
+      texts(f.values, out_sink);
+      out_sink.endRecord();
     }
-    out["kinds"].push_back({{"kind", metamodel_.nameOf(k.kind)},
-                            {"meaning", k.meaning},
-                            {"fields", fields},
-                            {"flags", k.flags},
-                            {"parents", kindNames(k.parents)},
-                            {"top", k.top}});
+    out_sink.endList().field("flags");
+    texts(k.flags, out_sink);
+    out_sink.field("kind").value(metamodel_.nameOf(k.kind)).field("meaning").value(k.meaning).field("parents");
+    kindNames(k.parents, out_sink);
+    out_sink.field("top").boolean(k.top).endRecord();
   }
-  out["relations"] = nlohmann::json::array();
+  out_sink.endList().field("relations").beginList();
   for (const auto& r : metamodel_.relations()) {
-    nlohmann::json spec = {{"kind", r.kind}, {"meaning", r.meaning}, {"from", kindNames(r.from)}, {"to", kindNames(r.to)}};
-    if (!r.pairs.empty()) {
-      spec["pairs"] = nlohmann::json::array();
-      for (const auto& p : r.pairs) spec["pairs"].push_back({metamodel_.nameOf(p.first), metamodel_.nameOf(p.second)});
+    out_sink.beginRecord().field("from");
+    kindNames(r.from, out_sink);
+    out_sink.field("kind").value(r.kind).field("meaning").value(r.meaning);
+    if (!r.pairs.empty()) {  // the pairs of kinds it may join, when it says them
+      out_sink.field("pairs").beginList();
+      for (const auto& p : r.pairs) out_sink.beginList().value(metamodel_.nameOf(p.first)).value(metamodel_.nameOf(p.second)).endList();
+      out_sink.endList();
     }
-    out["relations"].push_back(spec);
+    out_sink.field("to");
+    kindNames(r.to, out_sink);
+    out_sink.endRecord();
   }
-  return out;
+  out_sink.endList().endRecord();
 }
 
-std::string JsonExport::render(const model::Model& model, bool pretty) const {
-  nlohmann::json out;
-  // who wrote it and in which shape: a reader can tell a document it does not know (DS-278)
-  out["version"] = metamodel_.version();
-  out["format"] = 1;
-  out["entities"] = nlohmann::json::array();
-  for (const auto& pair : model.entities()) out["entities"].push_back(entityJson(pair.second));
-  out["relations"] = nlohmann::json::array();
-  for (const auto& r : model.index().all()) out["relations"].push_back(relationJson(r));
-  out["coverage"] = nlohmann::json::array();
-  for (const auto& f : model.coverage())
-    out["coverage"].push_back({{"code", f.code},
-                               {"severity", metamodel_.severityOf(f.severity).name},
-                               {"message", f.message},
-                               {"location", locationJson(f.location)}});
-  out["findings"] = nlohmann::json::array();
-  for (const auto& f : model.findings()) {
-    out["findings"].push_back({{"code", f.code},
-                               {"severity", metamodel_.severityOf(f.severity).name},
-                               {"message", f.message},
-                               {"location", locationJson(f.location)}});
-  }
+void JsonExport::render(const model::Model& model, emit::ISink& out_sink) const {
   // what breaks each rule, structured (DS-108): a reader lights it without reading the findings' prose
-  out["breaches"] = nlohmann::json::object();
-  for (const auto& rule : model.breaches()) {
-    nlohmann::json list = nlohmann::json::array();
-    for (const auto& b : rule.second)
-      list.push_back({{"bindings", b.bindings}, {"witness", b.witness}, {"location", locationJson(b.location)}});
-    out["breaches"][rule.first] = list;
-  }
-  out["metamodel"] = metamodelJson();
-  return pretty ? out.dump(2) : out.dump();
-}
-
-std::string JsonExport::entity(const model::Entity& entity) const { return entityJson(entity).dump(); }
-
-std::string JsonExport::relations(const std::vector<model::Relation>& relations) const {
-  nlohmann::json out = nlohmann::json::array();
-  for (const auto& r : relations) out.push_back(relationJson(r));
-  return out.dump();
+  out_sink.beginRecord().field("breaches");
+  breaches(model, out_sink);
+  out_sink.field("coverage");
+  findings(model.coverage(), out_sink);
+  out_sink.field("entities").beginList();
+  for (const auto& pair : model.entities()) entity(pair.second, out_sink);
+  out_sink.endList().field("findings");
+  findings(model.findings(), out_sink);
+  // who wrote it and in which shape: a reader can tell a document it does not know (DS-278)
+  out_sink.field("format").integer(1).field("metamodel");
+  metamodel(out_sink);
+  out_sink.field("relations");
+  relations(model.index().all(), out_sink);
+  out_sink.field("version").value(metamodel_.version()).endRecord();
 }
 
 }  // namespace exporter

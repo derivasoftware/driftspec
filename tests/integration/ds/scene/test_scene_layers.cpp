@@ -3,6 +3,7 @@
 #include <string>
 
 #include "ds/api/Api.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
@@ -59,11 +60,12 @@ TEST_F(TestSceneLayersOfADesign, TheLayersComeInOrderAndEachAddsItsOwnPartOfTheD
 }
 
 TEST_F(TestSceneLayersOfADesign, TheSceneBuildsTheSameDocumentEveryTime) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::scene::Scene scene(model, metamodel);
-  const std::string first = ds::format::SceneJson().write(scene.build(), {});
-  EXPECT_EQ(first, ds::format::SceneJson().write(scene.build(), {}));
-  EXPECT_EQ(first,
-            ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}));  // and for another scene of the same model
+  const std::string first = ds::format::SceneJson().write(scene.build(), {}, sink);
+  EXPECT_EQ(first, ds::format::SceneJson().write(scene.build(), {}, sink));
+  EXPECT_EQ(first, ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {},
+                                                 sink));  // and for another scene of the same model
 }
 
 }  // namespace

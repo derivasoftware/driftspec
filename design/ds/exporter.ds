@@ -122,40 +122,39 @@ package driftspec@ds {
       @requirement REQ-00068-1
       - refs metamodel_: model::Metamodel     // the language it writes in: the kinds by name, and itself (DS-341)
       + JsonExport(metamodel: model::Metamodel)
-      + render(model: model::Model, pretty: bool) -> std::string
-      + entity(entity: model::Entity) -> std::string     // one entity, as the whole model writes it (DS-173)
-      + relations(relations: std::vector<model::Relation>) -> std::string
-      - static locationJson(l: model::Location) -> nlohmann::json
-      - entityJson(e: model::Entity) -> nlohmann::json
-      - static relationJson(r: model::Relation) -> nlohmann::json
-      - kindNames(kinds: std::vector<model::Kind>) -> nlohmann::json
-      - metamodelJson() -> nlohmann::json
+      // written into the sink it is lent, indented or compact as the sink writes, each record's fields in byte order (DS-397)
+      + render(model: model::Model, out_sink: emit::ISink) -> void
+      + entity(entity: model::Entity, out_sink: emit::ISink) -> void     // one entity, as the whole model writes it (DS-173)
+      + relations(relations: std::vector<model::Relation>, out_sink: emit::ISink) -> void
+      - static location(l: model::Location, out_sink: emit::ISink) -> void
+      - static relation(r: model::Relation, out_sink: emit::ISink) -> void
+      - findings(findings: std::vector<model::Finding>, out_sink: emit::ISink) -> void
+      - static breaches(model: model::Model, out_sink: emit::ISink) -> void
+      - kindNames(kinds: std::vector<model::Kind>, out_sink: emit::ISink) -> void
+      - metamodel(out_sink: emit::ISink) -> void
+      - static pairs(pairs: std::vector<std::pair<std::string, std::string>>, out_sink: emit::ISink) -> void
+      - static texts(texts: std::vector<std::string>, out_sink: emit::ISink) -> void
     }
 
-    // The document under construction is an nlohmann::json, a type the design does not
-    // know, so it is not a participant; what comes back is its dump().
+    // The document is written into the sink lent, field after field in byte order; nothing comes back:
+    // the one who lent the sink takes the document (DS-397).
     sequence JsonExport::render {
+      -> out_sink.beginRecord()
+      -> breaches(model, out_sink)
+      self -> model.coverage() -> coverage
+      -> findings(coverage, out_sink)
       self -> model.entities() -> entities
       loop each entity {
-        self -> metamodel_.nameOf(entity.kind) -> kind
+        -> entity(e, out_sink)
       }
+      self -> model.findings() -> found
+      -> findings(found, out_sink)
+      -> metamodel(out_sink)
       self -> model.index() -> index
-      self -> index.all() -> relations
-      loop each relation {
-        opt it has a multiplicity {
-        }
-      }
-      self -> model.findings() -> findings
-      loop each finding {
-      }
+      self -> index.all() -> all
+      -> relations(all, out_sink)
       self -> metamodel_.version() -> version
-      self -> metamodel_.kinds() -> kinds
-      self -> metamodel_.relations() -> relationSpecs
-      alt pretty {
-        return indented
-      } else {
-        return compact
-      }
+      -> out_sink.endRecord()
     }
   }
 }

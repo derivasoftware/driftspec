@@ -8,6 +8,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/TextFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -105,13 +106,14 @@ TEST_F(TestFindingPrinciples, EveryFindingOfADesignCarriesTheSeverityOfItsCode) 
 
 /// The report counts what fails, and its JSON prints each severity by the name of its row (DS-379).
 TEST_F(TestFindingPrinciples, TheReportCountsWhatFailsAndPrintsEachSeverityByName) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   checkAudit();
   const ds::check::Report report = ds::check::Report::of(model, metamodel);
   int fails = 0;
   for (const auto& f : report.findings) fails += metamodel.severityOf(f.severity).fails ? 1 : 0;
   EXPECT_GT(fails, 0);
   EXPECT_EQ(report.errors, fails);
-  const auto json = nlohmann::json::parse(ds::format::ReportJson().write(report, {}));
+  const auto json = nlohmann::json::parse(ds::format::ReportJson().write(report, {}, sink));
   ASSERT_EQ(json["findings"].size(), report.findings.size());
   for (std::size_t i = 0; i < report.findings.size(); ++i)
     EXPECT_EQ(json["findings"][i]["severity"], metamodel.severityOf(report.findings[i].severity).name);

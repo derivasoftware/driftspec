@@ -1,6 +1,5 @@
 #include "ds/api/Api.hpp"
 
-#include <nlohmann/json.hpp>
 #include <set>
 #include <vector>
 
@@ -8,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/SinkFactory.hpp"
 #include "ds/format/TextFormats.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
@@ -105,9 +105,9 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
 }
 
 std::string Api::report(const model::Model& model, bool pretty) const {
-  format::FormatOptions options;  // the one report of a check (DS-120), as JSON (DS-126)
-  options.pretty = pretty;
-  return format::ReportJson().write(check::Report::of(model, metamodel_), options);
+  // the one report of a check (DS-120), as JSON (DS-126), written by the sink asked for here (DS-397)
+  const auto sink = emit::SinkFactory::json(pretty);
+  return format::ReportJson().write(check::Report::of(model, metamodel_), {}, *sink);
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)
@@ -125,15 +125,30 @@ std::string Api::page(const Files& files, const std::string& title, const std::v
 }
 
 std::string Api::severities() const {
-  nlohmann::json out = nlohmann::json::array();
+  const auto sink = emit::SinkFactory::json(false);  // asked for here, at the engine's edge (DS-397)
+  sink->beginList();
   for (const auto& s : metamodel_.severities())
-    out.push_back({{"name", s.name}, {"fails", s.fails}, {"keptApart", s.keptApart}, {"editor", s.editor}});
-  return out.dump();
+    sink->beginRecord()
+        .field("editor")
+        .value(s.editor)
+        .field("fails")
+        .boolean(s.fails)
+        .field("keptApart")
+        .boolean(s.keptApart)
+        .field("name")
+        .value(s.name)
+        .endRecord();
+  sink->endList();
+  return sink->result();
 }
 
 std::string Api::expectedAt(const std::string& text, int line, int column) {
   parse::Parser parser;
-  return nlohmann::json(parser.expectedAt(text, line, column)).dump();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
+  for (const auto& word : parser.expectedAt(text, line, column)) sink->value(word);
+  sink->endList();
+  return sink->result();
 }
 
 }  // namespace api

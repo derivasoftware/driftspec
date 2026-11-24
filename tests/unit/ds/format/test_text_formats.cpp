@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ds/check/Report.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/TextFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 
@@ -50,25 +51,26 @@ TEST(TestTextFormats, AReportIsBuiltOnceFromTheModelAndCountsWhatItSays) {
 }
 
 TEST(TestTextFormats, AReportReadsTheSameAsTextAndAsJson) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   ds::check::Report report;
   report.severities = ds::model::Metamodel().severities();
   report.findings = {finding("E-X", ds::model::Severity::error)};
   report.entities = 4;
   report.relations = 2;
   report.errors = 1;
-  EXPECT_EQ(ds::format::ReportText().write(report, {}), "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings\n");
+  EXPECT_EQ(ds::format::ReportText().write(report, {}, sink), "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings\n");
   report.coverage = {finding("W-REQ-NO-VERIFICATION", ds::model::Severity::coverage),
                      finding("W-OPERATION-NO-BEHAVIOUR", ds::model::Severity::coverage)};
   ds::format::FormatOptions where;
   where.title = "design";
-  EXPECT_EQ(ds::format::ReportText().write(report, where),
+  EXPECT_EQ(ds::format::ReportText().write(report, where, sink),
             "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings · 2 open\n"
             "2 open items of coverage: ds query design coverage lists them\n");  // DS-431
   report.coverage.pop_back();
-  EXPECT_EQ(ds::format::ReportText().write(report, {}),
+  EXPECT_EQ(ds::format::ReportText().write(report, {}, sink),
             "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings · 1 open\n"
             "1 open item of coverage: ds query <workspace> coverage lists them\n");
-  const auto json = nlohmann::json::parse(ds::format::ReportJson().write(report, {}));
+  const auto json = nlohmann::json::parse(ds::format::ReportJson().write(report, {}, sink));
   EXPECT_EQ(json["errors"], 1);
   EXPECT_EQ(json["findings"][0]["location"]["column"], 5);
   EXPECT_EQ(json["entities"], 4);

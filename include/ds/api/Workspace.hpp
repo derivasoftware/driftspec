@@ -75,6 +75,10 @@ class Workspace {
  private:
   /// The files given, parsed (each one the workspace holds with the same text kept as it was parsed), bound and checked.
   model::Model loaded(const Files& files);
+  /// Texts as a JSON list; one text as a JSON string; relations as the export writes them.
+  static std::string texts(const std::vector<std::string>& list);
+  static std::string text(const std::string& value);
+  std::string relations(const std::vector<model::Relation>& relations) const;
 
   const model::Metamodel& metamodel_;
   const theme::Theme theme_;  ///< the style its drawings are written in, made once with it (DS-393)

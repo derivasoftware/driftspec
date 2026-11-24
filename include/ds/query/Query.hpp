@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_QUERY_QUERY_HPP
 #define DRIFTSPEC_QUERY_QUERY_HPP
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -63,6 +64,14 @@ class Query : public IQuery {
   static bool endsWith(const std::string& text, const std::string& suffix);           // a finding's file, the one asked
   const model::Model& model_;
   const model::Metamodel& metamodel_;
+};
+
+/// The one place that names the query (DS-397), as FilterFactory names the filters: what asks the model a question
+/// is handed an IQuery.
+class QueryFactory {
+ public:
+  /// The questions about `model`, written in `metamodel`; both outlive what is handed.
+  static std::unique_ptr<IQuery> of(const model::Model& model, const model::Metamodel& metamodel);
 };
 
 }  // namespace query

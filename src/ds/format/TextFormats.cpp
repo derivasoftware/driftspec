@@ -1,13 +1,11 @@
 #include "ds/format/TextFormats.hpp"
 
-#include <nlohmann/json.hpp>
-
 namespace ds {
 namespace format {
 
 std::string AnswersText::name() const { return "text"; }
 
-std::string AnswersText::write(const std::vector<query::Answer>& document, const FormatOptions&) const {
+std::string AnswersText::write(const std::vector<query::Answer>& document, const FormatOptions&, emit::ISink&) const {
   std::string out;
   for (const auto& a : document) out += a.kind + "  " + a.id + (a.detail.empty() ? "" : "  " + a.detail) + "\n";
   return out;
@@ -15,10 +13,12 @@ std::string AnswersText::write(const std::vector<query::Answer>& document, const
 
 std::string AnswersJson::name() const { return "json"; }
 
-std::string AnswersJson::write(const std::vector<query::Answer>& document, const FormatOptions&) const {
-  nlohmann::json out = nlohmann::json::array();
-  for (const auto& a : document) out.push_back({{"kind", a.kind}, {"id", a.id}, {"detail", a.detail}});
-  return out.dump();
+std::string AnswersJson::write(const std::vector<query::Answer>& document, const FormatOptions&, emit::ISink& out_sink) const {
+  out_sink.beginList();
+  for (const auto& a : document)
+    out_sink.beginRecord().field("detail").value(a.detail).field("id").value(a.id).field("kind").value(a.kind).endRecord();
+  out_sink.endList();
+  return out_sink.result();
 }
 
 std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> answerFormats() {
@@ -30,7 +30,7 @@ std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> answ
 
 std::string ReportText::name() const { return "text"; }
 
-std::string ReportText::write(const check::Report& document, const FormatOptions& options) const {
+std::string ReportText::write(const check::Report& document, const FormatOptions& options, emit::ISink&) const {
   std::string out;
   for (const auto& f : document.findings)
     out += f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column) + "  " + f.code + "  " +
@@ -49,28 +49,9 @@ std::string ReportText::write(const check::Report& document, const FormatOptions
 
 std::string ReportJson::name() const { return "json"; }
 
-std::string ReportJson::write(const check::Report& document, const FormatOptions& options) const {
-  nlohmann::json findings = nlohmann::json::array();
-  for (const auto& f : document.findings) {
-    findings.push_back({{"code", f.code},
-                        {"severity", document.severityOf(f.severity).name},
-                        {"message", f.message},
-                        {"location", {{"file", f.location.file}, {"line", f.location.line}, {"column", f.location.column}}}});
-  }
-  nlohmann::json coverage = nlohmann::json::array();
-  for (const auto& f : document.coverage) {
-    coverage.push_back({{"code", f.code},
-                        {"severity", document.severityOf(f.severity).name},
-                        {"message", f.message},
-                        {"location", {{"file", f.location.file}, {"line", f.location.line}, {"column", f.location.column}}}});
-  }
-  const nlohmann::json out{{"findings", findings},
-                           {"coverage", coverage},
-                           {"entities", document.entities},
-                           {"expected", document.expected},
-                           {"relations", document.relations},
-                           {"errors", document.errors}};
-  return options.pretty ? out.dump(2) : out.dump();
+std::string ReportJson::write(const check::Report& document, const FormatOptions&, emit::ISink& out_sink) const {
+  common::ReportEncoder(document).encode(out_sink);
+  return out_sink.result();
 }
 
 std::map<std::string, std::unique_ptr<IFormat<check::Report>>> reportFormats() {

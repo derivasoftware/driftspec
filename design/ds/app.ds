@@ -51,14 +51,16 @@ package driftspec@ds {
       return true
     }
 
-    // the one report of a check, written by the format asked for: text, or JSON with --json (DS-126)
+    // the one report of a check, written by the format asked for: text, or JSON with --json (DS-126), into the
+    // sink the command line asks for (DS-397)
     sequence check {
       local model: model::Model
       local chosen: format::ReportText
       -> loadWorkspace(metamodel, dir, findings, diagram, model) -> found
       -> check::Report::of(model, metamodel) -> report
+      -> emit::SinkFactory::json(true) -> sink
       -> format::reportFormats() -> formats
-      -> chosen.write(report, options) -> written
+      -> chosen.write(report, options, sink) -> written
       return 0
     }
 
@@ -92,7 +94,9 @@ package driftspec@ds {
       local model: model::Model
       local exporter: exporter::JsonExport
       -> loadWorkspace(metamodel, argv, whole, diagram, model) -> found
-      -> exporter.render(model, pretty) -> json
+      -> emit::SinkFactory::json(true) -> sink   // asked for here, lent to the exporter, taken whole (DS-397)
+      -> exporter.render(model, sink)
+      -> sink.result() -> json
       return 0
     }
 
@@ -118,7 +122,8 @@ package driftspec@ds {
       -> readFile(css) -> style
       -> scene.build() -> document
       -> format::sceneFormats() -> formats
-      -> html.write(document, options) -> page
+      -> emit::SinkFactory::json(false) -> sink
+      -> html.write(document, options, sink) -> page
       -> emit(output, page) -> written
       return 0
     }
@@ -131,7 +136,8 @@ package driftspec@ds {
       -> loadWorkspace(metamodel, argv, viewer, diagram, model) -> found
       -> scene.build() -> document
       -> format::sceneFormats() -> formats
-      -> json.write(document, options) -> text
+      -> emit::SinkFactory::json(true) -> sink
+      -> json.write(document, options, sink) -> text
       -> emit(output, text) -> written
       return 0
     }
@@ -148,7 +154,8 @@ package driftspec@ds {
       -> diagramId(diagram) -> id
       -> ir.render(id, pretty) -> document
       -> format::diagramFormats(theme) -> formats
-      -> chosen.write(document, options) -> picture
+      -> emit::SinkFactory::json(false) -> sink
+      -> chosen.write(document, options, sink) -> picture
       -> emit(output, picture) -> written
       return 0
     }
@@ -159,7 +166,8 @@ package driftspec@ds {
       local document: render::IrText       // the text read, as the IR document the format draws
       -> readFile(argv) -> text
       -> format::diagramFormats(theme) -> formats
-      -> chosen.write(document, options) -> picture
+      -> emit::SinkFactory::json(false) -> sink
+      -> chosen.write(document, options, sink) -> picture
       -> emit(output, picture) -> written
       return 0
     }
@@ -181,7 +189,8 @@ package driftspec@ds {
       -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
       -> query.ask(question, subject) -> answers
       -> format::answerFormats() -> formats
-      -> chosen.write(answers, options) -> text
+      -> emit::SinkFactory::json(false) -> sink
+      -> chosen.write(answers, options, sink) -> text
       return 0
     }
 
