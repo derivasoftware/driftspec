@@ -20,6 +20,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -123,6 +124,22 @@ TEST_F(TestQualification, TheCheckJsonSaysTheFindingsAndTheCounts) {
   for (const char* key : {"findings", "entities", "expected", "relations", "errors"}) EXPECT_TRUE(out.contains(key)) << key;
   EXPECT_GT(out["errors"].get<int>(), 0);
   EXPECT_EQ(check.code, 1);
+}
+
+// DS-431: a check that says nothing of the coverage reads as a design done; it says how much is open and where it is
+// listed, never fails for it, and says nothing more when nothing is open
+TEST_F(TestQualification, TheCheckSaysHowMuchCoverageIsOpenAndWhereItIsListed) {
+  std::vector<std::string> lines;
+  const Outcome open = ds("check " + examples("diag"));
+  std::istringstream text(open.out);
+  for (std::string l; std::getline(text, l);) lines.push_back(l.empty() || l.back() != '\r' ? l : l.substr(0, l.size() - 1));
+  ASSERT_GE(lines.size(), 2u);
+  EXPECT_NE(lines[lines.size() - 2].find(" findings · 3 open"), std::string::npos) << lines[lines.size() - 2];
+  EXPECT_EQ(lines.back(), "3 open items of coverage: ds query " + examples("diag") + " coverage lists them");
+  EXPECT_EQ(open.code, 0);  // coverage is no finding: it never fails the check
+  const Outcome clean = ds("check " + examples("branches"));
+  EXPECT_EQ(clean.out.find("open"), std::string::npos) << clean.out;
+  EXPECT_EQ(clean.code, 0);
 }
 
 // SREQ-00002-1: a file that does not parse is a finding like any other, whatever the text it quotes (DS-334)
