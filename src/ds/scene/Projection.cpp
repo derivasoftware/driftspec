@@ -1,9 +1,11 @@
 #include "ds/scene/Projection.hpp"
 
 #include <algorithm>
-#include <regex>
 #include <set>
 #include <unordered_map>
+
+#include "ds/model/WrittenType.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace scene {
@@ -16,23 +18,6 @@ const double kModulePad = 24, kModuleHead = 46, kUnitGap = 22;
 const double kPackagePad = 60, kPackageHead = 90, kBoxGap = 70, kLeftForInterfaces = 300;
 const double kInterfaceW = 360, kOperationRow = 30, kTopGap = 120;
 const double kTreeGap = 44;  // between a base and the row of what inherits from it: room for the trunk
-
-std::string field(const model::Entity& e, const std::string& key) {
-  const auto it = e.fields.find(key);
-  return it == e.fields.end() ? "" : it->second;
-}
-
-// a qualified type reads better unqualified in a box: std::vector<model::Entity> is vector<Entity>
-std::string unqualified(const std::string& type) {
-  static const std::regex qualifier(R"(\b[A-Za-z_]\w*::)");
-  return std::regex_replace(type, qualifier, "");
-}
-
-size_t characters(const std::string& text) {
-  size_t n = 0;
-  for (const unsigned char c : text) n += (c & 0xC0) != 0x80 ? 1 : 0;
-  return n;
-}
 
 }  // namespace
 
@@ -138,7 +123,7 @@ Frame Projection::interface(const model::Entity& e, const std::string& parent) {
   double y = 56;
   for (const model::Entity* op : children(e.id)) {
     if (op->kind != model::Kind::Operation) continue;
-    std::string command = field(*op, "command");
+    std::string command = op->field("command");
     command = command.substr(0, command.find(" ["));
     node(op->id, "row", e.id, op->name + (command.empty() ? "" : "  ·  " + command), "operation", "+", op->id);
     f.kids.push_back(leaf(op->id, kInterfaceW - 20, 22));
@@ -156,9 +141,9 @@ Frame Projection::unit(const model::Entity& e, const std::string& parent) {
   };
   std::vector<Row> rows;
   if (e.kind == model::Kind::Function) {
-    rows.push_back({e.id + "#sig", signature(e.name, e.params, field(e, "returns")), "signature", "+", ""});
+    rows.push_back({e.id + "#sig", signature(e.name, e.params, e.field("returns")), "signature", "+", ""});
   } else if (e.kind == model::Kind::Enum) {
-    const std::string values = field(e, "values");
+    const std::string values = e.field("values");
     size_t start = 0;
     while (start < values.size()) {
       size_t end = values.find(',', start);
@@ -182,17 +167,18 @@ Frame Projection::unit(const model::Entity& e, const std::string& parent) {
     for (const model::Entity* m : members) {
       const std::string vis = visibility(*m);
       if (lean_ && vis == "-") continue;
-      const std::string label = m->kind == model::Kind::Attribute ? vis + " " + m->name + ": " + unqualified(field(*m, "type"))
-                                                                  : vis + " " + signature(m->name, m->params, field(*m, "returns"));
+      const std::string label = m->kind == model::Kind::Attribute
+                                    ? vis + " " + m->name + ": " + model::WrittenType(m->field("type")).unqualified()
+                                    : vis + " " + signature(m->name, m->params, m->field("returns"));
       rows.push_back({m->id, label, metamodel_.nameOf(m->kind), vis, m->id});
     }
   }
-  double title = static_cast<double>(characters(e.name));
+  double title = static_cast<double>(text::characters(e.name));
   const auto bases = bases_.find(e.id);  // a header may name what it inherits from: Console ◁ Channel
   if (bases != bases_.end())
-    for (const auto& b : bases->second) title += static_cast<double>(characters(b.substr(b.rfind(':') + 1))) * 0.85 + 3;
+    for (const auto& b : bases->second) title += static_cast<double>(text::characters(b.substr(b.rfind(':') + 1))) * 0.85 + 3;
   double widest = title * 1.6 + 14;
-  for (const auto& r : rows) widest = std::max(widest, static_cast<double>(characters(r.label)));
+  for (const auto& r : rows) widest = std::max(widest, static_cast<double>(text::characters(r.label)));
   const double w = std::max(kUnitMinW, std::min(kUnitMaxW, widest * kCharWidth + 18));
   Frame f = leaf(e.id, w, kHead + static_cast<double>(rows.size()) * kRow + kUnitPadBottom);
   for (size_t i = 0; i < rows.size(); ++i) {
@@ -303,7 +289,7 @@ Node& Projection::node(const std::string& id, const std::string& kind, const std
 
 std::string Projection::stereotypeOf(const model::Entity& e) const {
   if (e.has("dataclass")) return "dataclass";
-  const std::string derived = field(e, "stereotypes");
+  const std::string derived = e.field("stereotypes");
   if (derived.find("abstract") != std::string::npos) return "abstract";
   return metamodel_.nameOf(e.kind);
 }
@@ -316,13 +302,14 @@ Frame Projection::leaf(const std::string& id, double w, double h) {
   return f;
 }
 
-std::string Projection::visibility(const model::Entity& e) { return field(e, "visibility") == "-" ? "-" : "+"; }
+std::string Projection::visibility(const model::Entity& e) { return e.field("visibility") == "-" ? "-" : "+"; }
 
 std::string Projection::signature(const std::string& name, const std::vector<model::Param>& params, const std::string& returns) {
   std::string out = name + "(";
   for (size_t i = 0; i < params.size(); ++i) out += (i ? ", " : "") + params[i].name;
   out += ")";
-  if (!returns.empty()) out += " → " + unqualified(returns);  // the return as written: void, None, whatever the code says
+  if (!returns.empty())
+    out += " → " + model::WrittenType(returns).unqualified();  // the return as written: void, None, whatever the code says
   return out;
 }
 

@@ -163,6 +163,7 @@ TEST_F(TestFilters, ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort) {  /
 /// A filter of our own: built with its criteria and passed in; the query knows nothing of it.
 class PublicMethods : public ds::query::IFilter {
  public:
+  std::set<std::string> boxes(const ds::model::Model& model) const override { return select(model); }
   std::set<std::string> select(const ds::model::Model& model) const override {
     std::set<std::string> out;
     for (const auto& pair : model.entities()) {

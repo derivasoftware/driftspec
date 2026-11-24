@@ -55,7 +55,7 @@ class TestLayers : public ::testing::Test {
 /// and each adds its own part of the document.
 TEST_F(TestLayers, TheLayersComeInOrderAndEachAddsItsOwnPart) {
   const ds::scene::Map map({});
-  const auto all = ds::scene::layers(model, metamodel, map);
+  const auto all = ds::scene::LayerFactory::of(model, metamodel, map);
   ASSERT_EQ(all.size(), 4u);
   EXPECT_NE(dynamic_cast<ds::scene::StructureLayer*>(all[0].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::BehaviourLayer*>(all[1].get()), nullptr);

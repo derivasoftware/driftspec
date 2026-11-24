@@ -145,6 +145,7 @@ package driftspec@ds {
       @requirement REQ-00003-2
       + ~IFilter()
       + abstract select(model: model::Model) -> std::set<std::string>
+      + abstract boxes(model: model::Model) -> std::set<std::string>   // what the patterns take, without what is drawn around (DS-423)
     }
 
     // the one place that names the filter of each kind of diagram, built from the diagram's fields and read in the
@@ -174,6 +175,21 @@ package driftspec@ds {
     }
 
     // include and exclude patterns, the neighbours, the boxes around; a closed box stands for what it holds
+    // What a class diagram draws, read of the model (DS-423): the class filter and the exporter both read it, and
+    // neither reaches the other for it.
+    class ClassBoxes {
+      @requirement REQ-00047-1
+      + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
+      // the box a relation is drawn from: a behaviour's is its subject's, a box's is its own (DS-219)
+      + static drawnFrom(model: model::Model, entity: model::Entity) -> std::string {
+        @requirement REQ-00121-1
+      }
+      + static isBox(entity: model::Entity) -> bool               // a class, an enum, an interface or a function
+      + static isContainer(entity: model::Entity) -> bool         // a module, or a package below the system
+      + static drawable(entity: model::Entity) -> bool            // a box, or a box that holds others
+      + static drawnAsEdge(relation: std::string) -> bool         // the relations the neighbours follow
+    }
+
     class ClassFilter : IFilter {
       @requirement REQ-00047-1
       @requirement REQ-00019-1
@@ -188,15 +204,6 @@ package driftspec@ds {
       + ClassFilter(metamodel: model::Metamodel, include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
       + boxes(model: model::Model) -> std::set<std::string>   // the neighbours walk ends at the first step that adds nothing (DS-362)
-      + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
-      // the box a relation is drawn from: a behaviour's is its subject's, a box's is its own (DS-219)
-      + static drawnFrom(model: model::Model, entity: model::Entity) -> std::string {
-        @requirement REQ-00121-1
-      }
-      - static isBox(entity: model::Entity) -> bool               // a class, an enum, an interface or a function
-      - static isContainer(entity: model::Entity) -> bool         // a module, or a package below the system
-      - static drawable(entity: model::Entity) -> bool            // a box, or a box that holds others
-      - static drawnAsEdge(relation: std::string) -> bool         // the relations the neighbours follow
     }
 
     // a behaviour a sequence diagram takes, and the scenario it follows (* for every branch)
@@ -217,6 +224,7 @@ package driftspec@ds {
       - cutOf_: std::string
       + SequenceFilter(metamodel: model::Metamodel, include: std::vector<std::string>, depth: int, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
+      + boxes(model: model::Model) -> std::set<std::string>   // what it selects (DS-423)
       + behaviours(model: model::Model) -> std::vector<Behaviour>
     }
 
@@ -226,6 +234,7 @@ package driftspec@ds {
       - include_: std::vector<std::string>
       + StateFilter(include: std::vector<std::string>)
       + select(model: model::Model) -> std::set<std::string>
+      + boxes(model: model::Model) -> std::set<std::string>   // what it selects (DS-423)
       + machines(model: model::Model) -> std::vector<std::string>
     }
 
@@ -241,6 +250,7 @@ package driftspec@ds {
       - cutOf_: std::string
       + RequirementsFilter(metamodel: model::Metamodel, include: std::vector<std::string>, design: bool, verifications: bool, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
+      + boxes(model: model::Model) -> std::set<std::string>   // what it selects (DS-423)
       - static isArtefact(entity: model::Entity) -> bool          // a requirement, a constraint or a verification
     }
 

@@ -7,6 +7,8 @@
 
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/parse/Parser.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace api {
@@ -31,6 +33,10 @@ class Workspace {
   /// the model it asks (DS-351), for what it is to give (DS-376): every question, unless it is loaded to draw one
   /// diagram; then only the drawing of that diagram is an answer.
   Workspace(const model::Metamodel& metamodel, const Files& files, Output output = Output::Model, const std::string& diagram = "");
+  /// The workspace loaded again from the files given, for what it was loaded to give, without being made anew (DS-420):
+  /// a file whose text is the one it holds is not parsed again; the model is bound and checked again whole. What a
+  /// caller asked before is a copy and stays as it was.
+  void reload(const Files& files);
   /// The model it keeps, for a caller in this process.
   const model::Model& model() const { return model_; }
 
@@ -67,7 +73,14 @@ class Workspace {
   std::string page(const std::string& title, const std::vector<std::string>& focus) const;
 
  private:
+  /// The files given, parsed (each one the workspace holds with the same text kept as it was parsed), bound and checked.
+  model::Model loaded(const Files& files);
+
   const model::Metamodel& metamodel_;
+  const theme::Theme theme_;  ///< the style its drawings are written in, made once with it (DS-393)
+  Output output_;
+  std::string diagram_;
+  std::map<std::string, parse::ParsedFile> parsed_;  ///< each file as it was last parsed, by its path
   model::Model model_;
 };
 

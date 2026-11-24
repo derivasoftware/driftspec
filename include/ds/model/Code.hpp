@@ -10,6 +10,7 @@ namespace model {
 /// metamodel, so a code the catalogue does not hold does not compile. Each value is the printed code with - as _.
 enum class Code : std::size_t {
   E_SYNTAX,
+  E_ENCODING,
   E_NAME_RESERVED,
   E_DUPLICATE_IDENTITY,
   E_MSG_ARITY,

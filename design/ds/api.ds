@@ -20,13 +20,18 @@ package driftspec@ds {
         Audit for 0.1.0 (DS-7, DS-304): one lost brace in DriftSpec's own design gave dozens of
         findings, every one an echo of it, and the error stood lines below the block left open.
       tags: parse, syntax
-      verification VER-00184-1 {
-        status: approved
-        title: Integration tests confirm a lost brace is reported at the block it leaves open, and the findings that echo the cut go while an intact file keeps its own
+      verification VER-00184-2 {
+        status: draft
+        title: Integration tests confirm a lost brace is reported at the block it leaves open, and the findings that echo the cut go while an intact file keeps its own, a file that is not UTF-8 included
+        text:
+          Revision 2 (DS-411): a file that is not UTF-8 is cut whole. Its one finding, E-ENCODING at its
+          first such byte, stays; the names it declared and the findings in it go; another file keeps its
+          own, and the export and the scene are written.
         method: test
         tests:
           tests/integration/ds/api/test_cut_file.cpp::TestCutFile.ALostBraceIsReportedAtTheBlockItLeavesOpen
           tests/integration/ds/api/test_cut_file.cpp::TestCutFile.WhatOnlyEchoesTheCutGoesAndTheOtherFilesKeepTheirFindings
+          tests/integration/ds/api/test_cut_file.cpp::TestCutFile.AFileThatIsNotUtf8IsSaidOnceAndWhatOnlyEchoesItGoes
       }
     }
 
@@ -78,9 +83,15 @@ package driftspec@ds {
       @requirement REQ-00107-2
       @constraint CST-00009-1
       - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
+      - owns theme_: theme::Theme             // the style its drawings are written in, made once with it (DS-393)
+      - output_: Output                       // what it is loaded to give, kept for each reload (DS-420)
+      - diagram_: std::string
+      - owns many parsed_: std::map<std::string, parse::ParsedFile>  // each file as last parsed: a reload parses only what changed
       - owns model_: model::Model
       // loaded in the language it is given (DS-341), for every question unless it is loaded to draw one diagram (DS-376)
       + Workspace(metamodel: model::Metamodel, files: Files, output: Output, diagram: std::string)
+      + reload(files: Files) -> void          // loaded again in place, for what it was loaded to give (DS-420)
+      - loaded(files: Files) -> model::Model
       + model() -> model::Model
       + exportModel() -> std::string
       + report() -> std::string
@@ -135,6 +146,26 @@ package driftspec@ds {
         tests/integration/python/test_workspace.py::TestWorkspace::test_an_identity_is_written_as_the_engine_writes_it
     }
 
+    verification VER-00255-1 {
+      status: draft
+      @requirement REQ-00107-2
+      title: Integration tests confirm a workspace loaded again in place answers as one made anew from the same files, both ways across a file that stops parsing, and what it answered before stays as it was
+      text: DS-420, the long-lived workspace the language server keeps and DS-408 absorbs.
+      method: test
+      tests:
+        tests/integration/python/test_workspace.py::TestReload::test_a_reload_answers_as_a_workspace_made_anew_from_the_same_files
+        tests/integration/python/test_workspace.py::TestReload::test_a_file_that_stops_parsing_and_parses_again_reloads_both_ways
+    }
+
+    // A reload: each file whose text it holds kept as parsed, the rest parsed, and the whole bound and checked again.
+    sequence Workspace::loaded {
+      local parser: parse::Parser
+      local api: Api
+      -> parser.parseText(path, text) -> parsed
+      -> api.load(files, output, diagram) -> model
+      return model
+    }
+
     // One hop asked of the model's index, written as the export writes it: the caller gets a copy.
     sequence Workspace::from {
       local exporter: exporter::JsonExport
@@ -186,15 +217,20 @@ package driftspec@ds {
     }
 
     // How every caller loads a workspace (DS-120): the files bound into one model written in the
-    // metamodel the Api holds, then checked; what only echoes a cut file goes (DS-304).
+    // metamodel the Api holds, then checked; what only echoes a cut file, or one that is not UTF-8,
+    // goes (DS-304, DS-411).
     sequence Api::load {
       local model: model::Model
       local binder: bind::Binder
       local broken: std::set<std::string>
       loop each file {
+        opt it is not UTF-8 / not-utf8 {
+          // it is said once, at its first byte that is not, and kept among the broken (DS-411)
+        }
         opt it does not parse / cut {
           // it is said once, where the file stops parsing, and kept among the broken
         }
+        // a file that is not UTF-8 has the empty tree: nothing of it is bound
         -> binder.bind(file)
       }
       // the steps the output reads, chosen here and nowhere else (DS-376)
@@ -387,6 +423,7 @@ package driftspec@ds {
     @requirement REQ-00107-2
     @constraint CST-00009-1
     operation export() -> std::string
+    operation reload(files: Files) -> void     // loaded again in place (DS-420)
     operation report() -> std::string
     operation find(id: std::string) -> std::string
     operation from(id: std::string) -> std::string
@@ -493,6 +530,11 @@ package driftspec@ds {
     local api: api::Api
     -> api.expectedAt(text, line, column) -> words
     return words
+  }
+
+  sequence workspace::reload {
+    local loaded: api::Workspace
+    -> loaded.reload(files)
   }
 
   sequence workspace::export {

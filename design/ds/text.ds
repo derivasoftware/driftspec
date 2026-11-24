@@ -82,5 +82,39 @@ package driftspec@ds {
       @requirement REQ-00075-5
     }
     function escapeXml(text: std::string) -> std::string                               // & < > " as entities
+    function characters(text: std::string) -> std::size_t                             // each UTF-8 code point once (DS-390)
+
+    // ---- UTF-8, what the parser holds a file to before it reads it (DS-411) ---------------------------------------
+    requirement REQ-00201-1 {
+      tags: text, encoding
+      status: draft
+      @refines REQ-00008-2
+      title: The text module shall find the first byte of a text that is not part of a well-formed UTF-8 character
+      text:
+        UTF-8 as the Unicode standard writes it (table 3-7): ASCII and every well-formed character of two, three
+        or four bytes pass; a continuation byte nothing leads, a byte that leads nothing (0xC0, 0xC1, 0xF5 to
+        0xFF), and the lead of a character cut short, written in an overlong form, a surrogate or above U+10FFFF
+        stop it, at that byte. One pass over the bytes, and nothing allocated.
+      rationale:
+        Owner, 2026-11-24 (DS-411): the parser holds each file to UTF-8 before it reads it (REQ-00008-2), and
+        telling where a text stops being UTF-8 is text work, the member of a named class of text. One pass with
+        no allocation keeps a valid design as fast to read as before.
+      verification VER-00221-1 {
+        status: draft
+        title: Integration tests confirm every well-formed character is read, and a character cut short, an overlong form, a surrogate, a code point above U+10FFFF, a byte that leads nothing and a lone continuation byte are each E-ENCODING at that byte
+        method: test
+        tests:
+          tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.EveryFormUtf8RefusesIsReportedAtItsByteAndEveryWellFormedOneIsRead
+      }
+    }
+
+    // UTF-8 as the Unicode standard writes it: one pass over the bytes, nothing allocated; it holds nothing.
+    class Utf8 {
+      @requirement REQ-00201-1
+      // the offset of the first byte that is not part of a well-formed character, npos when there is none: a
+      // continuation byte nothing leads, a byte that leads nothing, or the lead of a character cut short, overlong,
+      // a surrogate or above U+10FFFF
+      + static invalidAt(text: std::string_view) -> std::size_t
+    }
   }
 }

@@ -12,7 +12,7 @@
 
 namespace {
 
-/// A specification is a directory of text files read as one (REQ-00008-1, REQ-00051-1, CST-00007-1):
+/// A specification is a directory of text files read as one (REQ-00008-2, REQ-00051-1, CST-00007-1):
 /// the grammar reads every file of an example, and a file it cannot read is reported where it stops.
 class TestWorkspaceParsing : public ::testing::Test {
  protected:
@@ -73,6 +73,52 @@ TEST_F(TestWorkspaceParsing, AFileThatParsesReportsNoSyntaxErrorBesideOneThatDoe
   ASSERT_EQ(errors.size(), 1u);
   EXPECT_EQ(errors[0].location.file, "bad.ds");
   EXPECT_NE(model.find("a@m::A"), nullptr);  // the file that parses is read all the same
+}
+
+TEST_F(TestWorkspaceParsing, AFileThatIsNotUtf8IsReportedOnceAtItsFirstSuchByteAndTheOthersLoad) {
+  // DS-411: a Latin-1 é, the byte 0xE9, in a title; the file is reported there and read no further
+  const ds::model::Model model = ds::api::Api(metamodel).load(
+      {parser.parseText("good.ds", "package a {\n  module m {\n    class A { }\n  }\n}\n"),
+       parser.parseText("latin1.ds", "package b {\n  requirement REQ-00001-1 {\n    status: draft\n    title: caf\xe9 latin1\n  }\n}\n")});
+  std::vector<ds::model::Finding> encoding;
+  for (const auto& f : model.findings())
+    if (f.code == "E-ENCODING") encoding.push_back(f);
+  ASSERT_EQ(encoding.size(), 1u);
+  EXPECT_EQ(encoding[0].severity, ds::model::Severity::error);
+  EXPECT_EQ(encoding[0].location.file, "latin1.ds");
+  EXPECT_EQ(encoding[0].location.line, 4);
+  EXPECT_EQ(encoding[0].location.column, 15);
+  EXPECT_NE(encoding[0].message.find("byte 0xE9"), std::string::npos) << encoding[0].message;
+  EXPECT_TRUE(syntax(model).empty());             // it is not read as a syntax error
+  EXPECT_EQ(model.find("REQ-00001-1"), nullptr);  // nothing of it reaches the model
+  EXPECT_NE(model.find("a@m::A"), nullptr);       // the file that is UTF-8 is read all the same
+}
+
+TEST_F(TestWorkspaceParsing, EveryFormUtf8RefusesIsReportedAtItsByteAndEveryWellFormedOneIsRead) {
+  // DS-411: UTF-8 as the Unicode standard writes it, in a title written after "    title: x" (column 13 on line 4)
+  const auto loaded = [this](const std::string& bytes) {
+    const std::string text = "package p {\n  requirement REQ-00001-1 {\n    status: draft\n    title: x" + bytes + "\n  }\n}\n";
+    return ds::api::Api(metamodel).load({parser.parseText("t.ds", text)});
+  };
+  for (const std::string& written :
+       std::vector<std::string>{"\xc3\xa9", "\xe2\x86\x92", "\xf0\x9f\x98\x80", "\xed\x9f\xbf", "\xf4\x8f\xbf\xbf"}) {
+    const ds::model::Model model = loaded(written);
+    EXPECT_TRUE(model.findings().empty()) << written;
+    ASSERT_NE(model.find("REQ-00001-1"), nullptr) << written;
+    EXPECT_EQ(model.find("REQ-00001-1")->field("title"), "x" + written);
+  }
+  // a character cut short, an overlong form, a surrogate, a code point above U+10FFFF, a byte that leads nothing and a
+  // continuation byte nothing leads: each is E-ENCODING at its first byte, after one well-formed character of two bytes
+  for (const std::string& refused :
+       std::vector<std::string>{"\xe9 ", "\xc0\x80", "\xe0\x80\x80", "\xed\xa0\x80", "\xf4\x90\x80\x80", "\xff", "\x80"}) {
+    const ds::model::Model model = loaded("\xc3\xa9" + refused);
+    ASSERT_EQ(model.findings().size(), 1u) << refused;
+    const auto& f = model.findings()[0];
+    EXPECT_EQ(f.code, "E-ENCODING");
+    EXPECT_EQ(f.location.line, 4);
+    EXPECT_EQ(f.location.column, 15);  // the é before it is two bytes, so two columns
+    EXPECT_EQ(model.find("REQ-00001-1"), nullptr);
+  }
 }
 
 }  // namespace

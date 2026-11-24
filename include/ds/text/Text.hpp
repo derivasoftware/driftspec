@@ -38,6 +38,9 @@ std::string fromBase64(const std::string& text);
 /// `text` with the characters XML gives a meaning written as entities: & < > ".
 std::string escapeXml(const std::string& text);
 
+/// How many characters `text` holds as UTF-8: each code point once, whatever bytes it takes (DS-390).
+std::size_t characters(const std::string& text);
+
 }  // namespace text
 }  // namespace ds
 
