@@ -582,6 +582,7 @@ package driftspec@ds {
       @requirement REQ-00060-1
       @requirement REQ-00061-1
       @requirement REQ-00109-2
+      @requirement REQ-00233-1               // a transition out of a final state (DS-442)
       @requirement REQ-00119-2
       + InterfaceContracts(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context

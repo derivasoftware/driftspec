@@ -7,6 +7,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/machine/Machine.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -105,10 +106,19 @@ TEST_F(TestStates, ATransitionOutOfAFinalStateIsAFindingAndAStateWithNoWayOutIsN
   EXPECT_EQ(said("W-STATE-LEAVES-FINAL").size(), 1U);
   EXPECT_TRUE(says("W-STATE-LEAVES-FINAL", "the transition Closed -> Open of Ticket leaves a final state"));
   EXPECT_FALSE(says("W-STATE-LEAVES-FINAL", "Kettle"));
-  EXPECT_FALSE(says("W-STATE-UNREACHABLE", "Ticket"));  // its finals are reached
+}
+
+/// A machine keeps the states it ends in as its final lines name them, in order, and counts them among its states
+/// (DS-442): a final state nothing leads to would be unreachable as any other.
+TEST_F(TestStates, AMachineKeepsItsFinalStatesInOrderAmongItsStates) {
   const ds::model::Entity* ticket = model.find("shop@ends::Ticket::state");
   ASSERT_NE(ticket, nullptr);
   EXPECT_EQ(ticket->field("final"), "Closed, Rejected");
+  const ds::machine::Machine machine(model, *ticket);
+  EXPECT_EQ(machine.finals(), (std::vector<std::string>{"Closed", "Rejected"}));
+  const std::vector<std::string> states = machine.states();
+  EXPECT_NE(std::find(states.begin(), states.end(), "Rejected"), states.end());
+  EXPECT_FALSE(says("W-STATE-UNREACHABLE", "Ticket"));  // its finals are reached
 }
 
 }  // namespace
