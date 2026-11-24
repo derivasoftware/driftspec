@@ -117,19 +117,15 @@ class Watcher:
         self.stamp: tuple | None = None         # what the .ds files were at the last look; none before the first
 
     def files_stamp(self) -> tuple:
-        """What the .ds files are now: a save changes it."""
+        """What the .ds files are now, the ones the engine reads (driftspec.files): a save changes it."""
         stamp = []
-        for root, dirs, files in os.walk(self.workspace):
-            dirs[:] = [d for d in dirs if not d.startswith(".")]
-            for f in files:
-                if f.endswith(".ds"):
-                    p = os.path.join(root, f)
-                    try:
-                        st = os.stat(p)
-                        stamp.append((p, st.st_mtime_ns, st.st_size))
-                    except OSError:
-                        pass
-        return tuple(sorted(stamp))
+        for p in driftspec.files(self.workspace):
+            try:
+                st = os.stat(p)
+                stamp.append((p, st.st_mtime_ns, st.st_size))
+            except OSError:
+                pass  # gone between the listing and the look
+        return tuple(stamp)
 
     def changed(self) -> bool:
         """Whether the files changed since the last look; the first look is a change."""
