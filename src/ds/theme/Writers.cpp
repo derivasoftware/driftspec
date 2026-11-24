@@ -45,18 +45,18 @@ const char* const kStyle = R"CSS(
   .pr-diagram { font-family: var(--pr-font, {{font-family}}); font-size: {{font-size}}px;
     --pr-text: {{text}}; --pr-muted: {{muted}}; --pr-stroke: {{stroke}}; --pr-edge: {{edge}}; --pr-box-fill: {{box-fill}}; --pr-container-fill: {{container-fill}}; --pr-container-stroke: {{container-stroke}};
     --pr-note-fill: {{note-fill}}; --pr-note-stroke: {{note-stroke}}; --pr-head-class: {{head-class}}; --pr-head-interface: {{head-interface}}; --pr-head-enum: {{head-enum}}; --pr-head-function: {{head-function}}; --pr-head-abstract: {{head-abstract}};
-    --pr-badge-class: {{badge-class}}; --pr-badge-interface: {{badge-interface}}; --pr-badge-enum: {{badge-enum}}; --pr-badge-function: {{badge-function}}; --pr-badge-abstract: {{badge-abstract}};
+    --pr-badge-class: {{badge-class}}; --pr-badge-interface: {{badge-interface}}; --pr-badge-enum: {{badge-enum}}; --pr-badge-function: {{badge-function}}; --pr-badge-abstract: {{badge-abstract}}; --pr-badge-dataclass: {{badge-dataclass}}; --pr-badge-requirement: {{badge-requirement}}; --pr-badge-verification: {{badge-verification}}; --pr-badge-constraint: {{badge-constraint}};
     --pr-name: {{name}}; --pr-type: {{type}}; --pr-param: {{param}}; --pr-punct: {{punct}};
     --pr-vis-public: {{vis-public}}; --pr-vis-private: {{vis-private}}; --pr-vis-protected: {{vis-protected}}; --pr-vis-package: {{vis-package}};
     --pr-port-in: {{port-in}}; --pr-port-out: {{port-out}}; --pr-focus: {{focus}}; --pr-dimmed: {{dimmed}};
     --pr-stroke-width: {{stroke-width}}; --pr-container-stroke-width: {{container-stroke-width}}; --pr-edge-width: {{edge-width}}; --pr-edge-hit: {{edge-hit}}; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: {{text:dark}}; --pr-muted: {{muted:dark}}; --pr-stroke: {{stroke:dark}}; --pr-edge: {{edge:dark}}; --pr-box-fill: {{box-fill:dark}}; --pr-container-fill: {{container-fill:dark}}; --pr-container-stroke: {{container-stroke:dark}};
     --pr-note-fill: {{note-fill:dark}}; --pr-note-stroke: {{note-stroke:dark}}; --pr-head-class: {{head-class:dark}}; --pr-head-interface: {{head-interface:dark}}; --pr-head-enum: {{head-enum:dark}}; --pr-head-function: {{head-function:dark}}; --pr-head-abstract: {{head-abstract:dark}};
-    --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}};
+    --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}}; --pr-badge-dataclass: {{badge-dataclass:dark}}; --pr-badge-requirement: {{badge-requirement:dark}}; --pr-badge-verification: {{badge-verification:dark}}; --pr-badge-constraint: {{badge-constraint:dark}};
     --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; } }
   [data-theme="dark"] .pr-diagram { --pr-text: {{text:dark}}; --pr-muted: {{muted:dark}}; --pr-stroke: {{stroke:dark}}; --pr-edge: {{edge:dark}}; --pr-box-fill: {{box-fill:dark}}; --pr-container-fill: {{container-fill:dark}}; --pr-container-stroke: {{container-stroke:dark}};
     --pr-note-fill: {{note-fill:dark}}; --pr-note-stroke: {{note-stroke:dark}}; --pr-head-class: {{head-class:dark}}; --pr-head-interface: {{head-interface:dark}}; --pr-head-enum: {{head-enum:dark}}; --pr-head-function: {{head-function:dark}}; --pr-head-abstract: {{head-abstract:dark}};
-    --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}};
+    --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}}; --pr-badge-dataclass: {{badge-dataclass:dark}}; --pr-badge-requirement: {{badge-requirement:dark}}; --pr-badge-verification: {{badge-verification:dark}}; --pr-badge-constraint: {{badge-constraint:dark}};
     --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; }
   .pr-diagram text { fill: var(--pr-text); }
   .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
@@ -67,14 +67,15 @@ const char* const kStyle = R"CSS(
   .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
   .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
   .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
-  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-requirement); }
   .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
-  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-verification); }
   .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
-  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-constraint); }
   .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
   .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
   .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-classifier-dataclass .pr-badge { fill: var(--pr-badge-dataclass); }
   .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
   .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
   .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
@@ -167,7 +168,7 @@ const char* const kViewerVariables = R"CSS(:root{
   --bg:{{bg}};--panel:{{panel}};--fg:{{fg}};--muted:{{muted}};--line:{{line}};--soft:{{soft}};
   --accent:{{accent}};--accent-soft:{{accent-soft}};--req:{{req}};--req-soft:{{req-soft}};
   --priv:{{priv}};--pkg:{{pkg}};--mod:{{mod}};--ifc:{{ifc}};
-  --k-class:{{k-class}};--k-function:{{k-function}};--k-dataclass:{{k-dataclass}};--k-enum:{{k-enum}};--ok:{{ok}};--warn:{{warn}};--bad:{{bad}};
+  --k-class:{{k-class}};--k-function:{{k-function}};--k-dataclass:{{k-dataclass}};--k-enum:{{k-enum}};--k-interface:{{k-interface}};--k-abstract:{{k-abstract}};--ok:{{ok}};--warn:{{warn}};--bad:{{bad}};
   --r-owns:{{r-owns}};--r-agg:{{r-agg}};--r-uses:{{r-uses}};--r-calls:{{r-calls}};
   --you:{{you}};--shadow:{{shadow}};--shadow-pop:{{shadow-pop}};--shadow-soft:{{shadow-soft}};
   --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
@@ -177,7 +178,7 @@ const char* const kViewerVariables = R"CSS(:root{
   --bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--soft:{{soft:dark}};
   --accent:{{accent:dark}};--accent-soft:{{accent-soft:dark}};--req:{{req:dark}};--req-soft:{{req-soft:dark}};
   --priv:{{priv:dark}};--pkg:{{pkg:dark}};--mod:{{mod:dark}};--ifc:{{ifc:dark}};
-  --k-class:{{k-class:dark}};--k-function:{{k-function:dark}};--k-dataclass:{{k-dataclass:dark}};--k-enum:{{k-enum:dark}};--ok:{{ok:dark}};--warn:{{warn:dark}};--bad:{{bad:dark}};
+  --k-class:{{k-class:dark}};--k-function:{{k-function:dark}};--k-dataclass:{{k-dataclass:dark}};--k-enum:{{k-enum:dark}};--k-interface:{{k-interface:dark}};--k-abstract:{{k-abstract:dark}};--ok:{{ok:dark}};--warn:{{warn:dark}};--bad:{{bad:dark}};
   --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};}}
 )CSS";
 
@@ -201,6 +202,8 @@ const char* const kViewerNightVariables = R"CSS(:root {
   --k-function: {{k-function}};
   --k-dataclass: {{k-dataclass}};
   --k-enum: {{k-enum}};
+  --k-interface: {{k-interface}};
+  --k-abstract: {{k-abstract}};
   --r-owns: {{r-owns}};      /* what a touched box composes, aggregates, calls and uses */
   --r-agg: {{r-agg}};
   --r-uses: {{r-uses}};
@@ -230,7 +233,7 @@ const char* const kPlaygroundVariables = R"CSS(:root {
   --rule: {{rule:dark}}; --fg: {{fg:dark}}; --muted: {{muted:dark}}; --faint: {{faint:dark}}; --soft: {{soft:dark}};
   --accent: {{accent:dark}};
   --c-req: {{c-req:dark}}; --c-cst: {{c-cst:dark}}; --c-rule: {{c-rule:dark}}; --c-seq: {{c-seq:dark}}; --c-state: {{c-state:dark}}; --c-fail: {{c-fail:dark}};
-  --k-class: {{k-class:dark}}; --k-interface: {{k-interface:dark}}; --k-dataclass: {{k-dataclass:dark}}; --k-enum: {{k-enum:dark}};
+  --k-class: {{k-class:dark}}; --k-interface: {{k-interface:dark}}; --k-dataclass: {{k-dataclass:dark}}; --k-enum: {{k-enum:dark}}; --k-function: {{k-function:dark}}; --k-abstract: {{k-abstract:dark}};
   --s-fn: {{s-fn:dark}}; --s-pn: {{s-pn:dark}}; --s-ty: {{s-ty:dark}}; --s-kw: {{s-kw:dark}}; --s-str: {{s-str:dark}};
   --v-pub: {{v-pub:dark}}; --v-prot: {{v-prot:dark}}; --v-priv: {{v-priv:dark}};
   --r-inherits: {{r-inherits:dark}}; --r-has: {{r-has:dark}}; --r-refers: {{r-refers:dark}}; --r-uses: {{r-uses:dark}};
@@ -247,7 +250,7 @@ const char* const kPlaygroundVariables = R"CSS(:root {
   --rule: {{rule}}; --fg: {{fg}}; --muted: {{muted}}; --faint: {{faint}}; --soft: {{soft}};
   --accent: {{accent}};
   --c-req: {{c-req}}; --c-cst: {{c-cst}}; --c-rule: {{c-rule}}; --c-seq: {{c-seq}}; --c-state: {{c-state}}; --c-fail: {{c-fail}};
-  --k-class: {{k-class}}; --k-interface: {{k-interface}}; --k-dataclass: {{k-dataclass}}; --k-enum: {{k-enum}};
+  --k-class: {{k-class}}; --k-interface: {{k-interface}}; --k-dataclass: {{k-dataclass}}; --k-enum: {{k-enum}}; --k-function: {{k-function}}; --k-abstract: {{k-abstract}};
   --s-fn: {{s-fn}}; --s-pn: {{s-pn}}; --s-ty: {{s-ty}}; --s-kw: {{s-kw}}; --s-str: {{s-str}};
   --v-pub: {{v-pub}}; --v-prot: {{v-prot}}; --v-priv: {{v-priv}};
   --r-inherits: {{r-inherits}}; --r-has: {{r-has}}; --r-refers: {{r-refers}}; --r-uses: {{r-uses}};

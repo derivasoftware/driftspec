@@ -14,6 +14,7 @@
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Scene.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
 
@@ -135,7 +136,13 @@ TEST_F(TestSceneOfTheDesign, AReadersStylesheetLandsAfterTheViewersAndCannotClos
   ASSERT_NE(theme, std::string::npos);
   // the viewer's own styles travel packed and go in before the theme, which wins
   const auto at = page.find("const STYLE='") + std::string("const STYLE='").size();
-  EXPECT_NE(ds::format::common::unpack(page.substr(at, page.find('\'', at) - at)).find("--k-class:#3567a0"), std::string::npos);
+  // the viewer's own class colour, as its theme writes it (DS-393)
+  std::string own;
+  const ds::theme::Theme style;
+  for (const auto& t : style.page("viewer"))
+    if (t.name == "k-class") own = "--k-class:" + t.light;
+  ASSERT_FALSE(own.empty());
+  EXPECT_NE(ds::format::common::unpack(page.substr(at, page.find('\'', at) - at)).find(own), std::string::npos);
   EXPECT_NE(page.find("insertBefore(st,document.getElementById('theme'))"), std::string::npos);
   EXPECT_LT(page.find("<style id=\"theme\">"), theme);
   EXPECT_NE(page.find("<\\/style><script>bad()"), std::string::npos);  // left as text inside the style, never a tag

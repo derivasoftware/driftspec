@@ -41,6 +41,8 @@ struct TextPen {
   ChangeMark renamed;
   ChangeMark changed;
   std::map<std::string, std::uint32_t> cellColours;  ///< what a host that paints cells gives each colour
+  std::map<std::string, std::string> badges;         ///< a badge's colour by its classifier (DS-441)
+  std::string abstractBadge;
 
   explicit TextPen(const theme::Theme& t)
       : M(Metrics::text(t.measures(theme::Sink::text))),
@@ -59,7 +61,25 @@ struct TextPen {
         removed{"-", t.sgr(theme::Role::removed)},
         renamed{">", t.sgr(theme::Role::renamed)},
         changed{"~", t.sgr(theme::Role::changed)},
-        cellColours(t.cellColours()) {}
+        cellColours(t.cellColours()),
+        badges{{"class", t.sgr(theme::Role::classBadge)},
+               {"", t.sgr(theme::Role::classBadge)},
+               {"interface", t.sgr(theme::Role::interfaceBadge)},
+               {"enum", t.sgr(theme::Role::enumBadge)},
+               {"dataclass", t.sgr(theme::Role::dataclassBadge)},
+               {"function", t.sgr(theme::Role::functionBadge)},
+               {"requirement", t.sgr(theme::Role::requirementBadge)},
+               {"verification", t.sgr(theme::Role::verificationBadge)},
+               {"constraint", t.sgr(theme::Role::constraintBadge)}},
+        abstractBadge(t.sgr(theme::Role::abstractBadge)) {}
+
+  /// The colour of a badge: its kind's, an abstract class's, or the badge colour for a classifier the palette does not
+  /// name.
+  const std::string& badgeColour(const std::string& classifier, bool abstract) const {
+    if (abstract && (classifier.empty() || classifier == "class")) return abstractBadge;
+    const auto b = badges.find(classifier);
+    return b == badges.end() ? badge : b->second;
+  }
 
   /// A change the pen does not name is drawn as changed.
   const ChangeMark& changeMarkOf(const std::string& change) const {

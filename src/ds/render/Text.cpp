@@ -300,9 +300,6 @@ void box(Grid& g, const Placed& p, const TextPen& pen) {
   const Metrics& M = pen.M;
   const std::string& kMuted = pen.muted;
   const std::string& kName = pen.name;
-  const std::string& kPublic = pen.publicMember;
-  const std::string& kProtected = pen.protectedMember;
-  const std::string& kBadge = pen.badge;
   const std::string& kNote = pen.note;
   const IrNode& n = *p.node;
   const Rect& r = p.rect;
@@ -323,10 +320,7 @@ void box(Grid& g, const Placed& p, const TextPen& pen) {
     const std::string mark = pen.changeMarkOf(change->second).mark;
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
-    g.text(r.x + M.PAD_X, y, badge,
-           n.classifier == "interface" || n.classifier == "verification" ? kPublic
-           : n.classifier == "enum" || n.classifier == "constraint"      ? kProtected
-                                                                         : kBadge);
+    g.text(r.x + M.PAD_X, y, badge, pen.badgeColour(n.classifier, n.abstract));
   }
   g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
@@ -342,7 +336,7 @@ void box(Grid& g, const Placed& p, const TextPen& pen) {
     const std::string offered = s < n.sectionKinds.size() && !holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
     for (const auto& line : section) {
       if (!offered.empty()) {
-        g.text(r.x + M.PAD_X, y, badgeOf(offered, false), offered == "interface" ? kPublic : offered == "enum" ? kProtected : kBadge);
+        g.text(r.x + M.PAD_X, y, badgeOf(offered, false), pen.badgeColour(offered, false));
         g.text(r.x + M.PAD_X + M.BADGE_W, y++, line);
       } else if (members)
         member(g, r.x + M.PAD_X, y++, line, pen);

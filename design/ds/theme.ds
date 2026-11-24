@@ -69,7 +69,8 @@ package driftspec@ds {
 
     enum Role {                              // what the terminal drawing colours
       @requirement REQ-00231-1
-      muted, name, type, publicMember, privateMember, protectedMember, badge, note, container, edge, added, removed, renamed, changed, against
+      muted, name, type, publicMember, privateMember, protectedMember, badge, note, container, edge, added, removed, renamed, changed, against,
+      classBadge, interfaceBadge, enumBadge, dataclassBadge, functionBadge, abstractBadge, requirementBadge, verificationBadge, constraintBadge
     }
 
     // A role's terminal colour, and the token whose light value a host that paints cells gives it.

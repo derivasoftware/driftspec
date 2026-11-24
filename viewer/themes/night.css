@@ -16,10 +16,12 @@
   --pkg: #12161c;         /* a package */
   --mod: #181d24;         /* a module */
   --ifc: #15263a;         /* an interface */
-  --k-class: #79b8ff;     /* the stripe of each kind */
-  --k-function: #56d4b0;
-  --k-dataclass: #c297ff;
-  --k-enum: #e3b341;
+  --k-class: #a5b4fc;     /* the stripe of each kind */
+  --k-function: #cbd5e1;
+  --k-dataclass: #fcd34d;
+  --k-enum: #6ee7b7;
+  --k-interface: #f9a8d4;
+  --k-abstract: #c4b5fd;
   --r-owns: #f778ba;      /* what a touched box composes, aggregates, calls and uses */
   --r-agg: #39c5cf;
   --r-uses: #a5b4fc;

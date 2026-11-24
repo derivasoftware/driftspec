@@ -51,7 +51,18 @@ enum class Role {
   removed,
   renamed,
   changed,
-  against
+  against,
+  // the badge of each kind (DS-441): one colour per kind, the nearest of the terminal's basic ones
+  classBadge,
+  interfaceBadge,
+  enumBadge,
+  dataclassBadge,
+  functionBadge,
+  abstractBadge,
+  // an artefact's badge keeps its own colour, apart from the kinds'
+  requirementBadge,
+  verificationBadge,
+  constraintBadge
 };
 
 /// A role's terminal colour (an SGR parameter, "" for the terminal's own) and the token whose light value a host that

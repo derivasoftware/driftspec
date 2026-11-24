@@ -4,18 +4,18 @@
   .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
     --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
     --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
-    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #be185d; --pr-badge-enum: #047857; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed; --pr-badge-dataclass: #b45309; --pr-badge-requirement: #475569; --pr-badge-verification: #059669; --pr-badge-constraint: #d97706;
     --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
     --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
     --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
     --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
     --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
-    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #f9a8d4; --pr-badge-enum: #6ee7b7; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd; --pr-badge-dataclass: #fcd34d; --pr-badge-requirement: #cbd5e1; --pr-badge-verification: #6ee7b7; --pr-badge-constraint: #fcd34d;
     --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
   [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
     --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
-    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #f9a8d4; --pr-badge-enum: #6ee7b7; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd; --pr-badge-dataclass: #fcd34d; --pr-badge-requirement: #cbd5e1; --pr-badge-verification: #6ee7b7; --pr-badge-constraint: #fcd34d;
     --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
   .pr-diagram text { fill: var(--pr-text); }
   .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
@@ -26,14 +26,15 @@
   .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
   .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
   .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
-  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-requirement); }
   .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
-  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-verification); }
   .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
-  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-constraint); }
   .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
   .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
   .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-classifier-dataclass .pr-badge { fill: var(--pr-badge-dataclass); }
   .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
   .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
   .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
