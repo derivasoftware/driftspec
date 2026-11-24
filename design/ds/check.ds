@@ -336,15 +336,15 @@ package driftspec@ds {
       + ~IStep()
       + abstract name() -> std::string
       + abstract needs() -> std::vector<std::string>
-      + abstract run(out_context: Context) -> std::vector<model::Finding>
+      + abstract run() -> std::vector<model::Finding>   // over the context it was made with (DS-425)
     }
 
     // A step that only checks (DS-138): run hands check the context to read, whose model is const,
     // so no check can change the model; what it finds it gives back. The one abstract class here.
     class ACheck : IStep {
       @requirement REQ-00012-1
-      + run(out_context: Context) -> std::vector<model::Finding>
-      - abstract check(context: Context) -> std::vector<model::Finding>
+      + run() -> std::vector<model::Finding>
+      - abstract check() -> std::vector<model::Finding>
     }
 
     // What every step of one check is given: the model, the metamodel it is written in, what the binder
@@ -354,11 +354,14 @@ package driftspec@ds {
       @requirement REQ-00012-1
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel     // the language, handed by the checker to every step (DS-351)
-      - refs resolver_: Resolver
+      - owns resolver_: Resolver              // made once with the context, for every run (DS-425)
       - owns renamed_: std::map<std::string, std::string>
       - owns reported_: std::set<std::string>
       - owns many found_: std::vector<model::Finding>
-      + Context(model: model::Model, metamodel: model::Metamodel, resolver: Resolver, notes: bind::Notes)
+      + Context(model: model::Model, metamodel: model::Metamodel)   // once, for every run of one checker (DS-425)
+      + reset(notes: bind::Notes) -> void {   // a run starts over: its notes, and nothing of the run before (DS-425)
+        @requirement REQ-00012-1
+      }
       + model() -> model::Model
       + metamodel() -> model::Metamodel
       + resolver() -> Resolver
@@ -389,7 +392,18 @@ package driftspec@ds {
     // The one place that makes the checker (DS-404): what asks for a check holds it as the IChecker it is.
     class CheckerFactory {
       @requirement REQ-00053-2
-      + static make(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>) -> std::unique_ptr<IChecker>
+      + static make(model: model::Model, metamodel: model::Metamodel, selection: Selection) -> std::unique_ptr<IChecker>
+    }
+
+    // A checker made for a selection of steps (DS-425): it holds the context, the steps made with it and the checker
+    // that runs them, so what the factory hands back lives as long as it is held.
+    class SelectedChecker : IChecker {
+      @requirement REQ-00053-2
+      - owns context_: Context
+      - owns many steps_: std::map<std::string, std::unique_ptr<IStep>>
+      - owns checker_: Checker
+      + SelectedChecker(model: model::Model, metamodel: model::Metamodel, selection: Selection)
+      + run(notes: bind::Notes) -> void
     }
 
     // A runner of steps: it orders the steps it is given by what each needs, runs them over one
@@ -398,11 +412,9 @@ package driftspec@ds {
     class Checker : IChecker {               // realises the language step by step: each step names its requirements
       @requirement REQ-00053-2
       @requirement REQ-00012-1
-      - refs model_: model::Model
-      - refs metamodel_: model::Metamodel     // the language the model is written in (DS-341), handed to the steps in their context (DS-351)
-      - owns resolver_: Resolver
+      - refs context_: Context                // the model, its language and the resolver, reset for each run (DS-425)
       - refs many steps_: std::map<std::string, std::unique_ptr<IStep>>
-      + Checker(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>)
+      + Checker(context: Context, steps: std::map<std::string, std::unique_ptr<IStep>>)
       + run(notes: bind::Notes) -> void
       + resolver() -> Resolver
       + order() -> std::vector<std::string>
@@ -413,7 +425,7 @@ package driftspec@ds {
     class StepFactory {
       @requirement REQ-00012-1
       @requirement REQ-00085-1
-      + static of(selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>>
+      + static of(context: Context, selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>>   // each made with the context (DS-425)
     }
 
     // Each step of the check, by what it does (DS-376): what a selection is made of. StepFactory::of pairs each with the
@@ -453,6 +465,7 @@ package driftspec@ds {
     class Linker : IStep {                // references become relations, behaviours take their subject's identity
       @requirement REQ-00043-1
       @requirement REQ-00053-2
+      + Linker(context: Context)                 // given what it reads once, when it is made (DS-425)
       @constraint CST-00006-1
       @constraint CST-00003-2
       @requirement REQ-00066-1
@@ -464,7 +477,7 @@ package driftspec@ds {
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(out_context: Context) -> std::vector<model::Finding>
+      + run() -> std::vector<model::Finding>
       - resolveReference(reference: bind::Reference) -> void {
         @requirement REQ-00043-1
         @requirement REQ-00053-2
@@ -498,13 +511,14 @@ package driftspec@ds {
       @requirement REQ-00040-1
       @requirement REQ-00132-1
       @requirement REQ-00138-1
+      + BehaviourTyping(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
       - owns results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(out_context: Context) -> std::vector<model::Finding>
+      + run() -> std::vector<model::Finding>
       - subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity {
         @requirement REQ-00036-2
       }
@@ -565,6 +579,7 @@ package driftspec@ds {
       @requirement REQ-00061-1
       @requirement REQ-00109-2
       @requirement REQ-00119-2
+      + InterfaceContracts(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
@@ -572,7 +587,7 @@ package driftspec@ds {
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string {
         @requirement REQ-00060-1
       }
@@ -592,6 +607,7 @@ package driftspec@ds {
 
     class UseCaseContracts : ACheck {      // a use case as a contract its operations realise, outcome by outcome (DS-77, DS-382)
       @requirement REQ-00082-1
+      + UseCaseContracts(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
@@ -599,7 +615,7 @@ package driftspec@ds {
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - checkUseCases() -> void {
         @requirement REQ-00082-1
       }
@@ -608,6 +624,7 @@ package driftspec@ds {
     class FailureCheck : ACheck {          // what escapes each operation against its promise, and handlers that handle nothing; reads only (DS-382)
       @requirement REQ-00112-1
       @requirement REQ-00123-1
+      + FailureCheck(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
@@ -615,7 +632,7 @@ package driftspec@ds {
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - checkHandlers() -> void {
         @requirement REQ-00123-1
       }
@@ -626,6 +643,7 @@ package driftspec@ds {
 
     class ScenarioCheck : ACheck {         // a scenario written twice for one behaviour (DS-382)
       @requirement REQ-00065-1
+      + ScenarioCheck(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
@@ -633,7 +651,7 @@ package driftspec@ds {
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - checkScenarios() -> void {
         @requirement REQ-00065-1
       }
@@ -641,6 +659,7 @@ package driftspec@ds {
 
     class DiagramCheck : ACheck {          // what a diagram names exists, and how deep it asks to be drawn (DS-382)
       @requirement REQ-00049-3
+      + DiagramCheck(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
@@ -648,7 +667,7 @@ package driftspec@ds {
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - checkDiagrams() -> void {
         @requirement REQ-00049-3
       }
@@ -658,12 +677,13 @@ package driftspec@ds {
     class Derivation : IStep {            // what the model says without writing it: the stereotypes, the languages
       @requirement REQ-00031-2
       @requirement REQ-00084-1
+      + Derivation(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(out_context: Context) -> std::vector<model::Finding>
+      + run() -> std::vector<model::Finding>
       - classify() -> void {
         @requirement REQ-00031-2
         @requirement REQ-00101-1                 // a destructor is no part of the contract
@@ -676,6 +696,7 @@ package driftspec@ds {
     class StructureCheck : ACheck {        // ownership, artefacts, extensions and fields
       @requirement REQ-00028-2
       @requirement REQ-00045-1
+      + StructureCheck(context: Context)                 // given what it reads once, when it is made (DS-425)
       @constraint CST-00003-2
       @requirement REQ-00067-1
       @requirement REQ-00118-1
@@ -687,7 +708,7 @@ package driftspec@ds {
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - checkOwnershipCycles() -> void {
         @requirement REQ-00028-2
       }
@@ -716,9 +737,11 @@ package driftspec@ds {
     // behaviour of the operation it is asked through, unfolded and lifted onto the scenario's participants
     class LevelCoherence : ACheck {
       @requirement REQ-00136-1
+      + LevelCoherence(context: Context)                 // given what it reads once, when it is made (DS-425)
+      - refs context_: Context                // what it reads, given at construction (DS-425)
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - static calleeOf(model: model::Model, message: std::string) -> std::string     // the operation a message calls (DS-382)
       - static behaviourBelow(model: model::Model, scenario: model::Entity, entry: model::Entity) -> std::pair<std::string, std::string>
       - static collect(model: model::Model, sequence: std::string, path: std::string, on: On, stack: std::set<std::string>, out: Below) -> void
@@ -747,29 +770,34 @@ package driftspec@ds {
     class StateRules : ACheck {
       @requirement REQ-00141-1
       @requirement REQ-00142-1
+      + StateRules(context: Context)                 // given what it reads once, when it is made (DS-425)
+      - refs context_: Context                // what it reads, given at construction (DS-425)
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
     }
 
     // the calls of the behaviours written, held to the machine of what they are made on (DS-250)
     class CallOrder : ACheck {
       @requirement REQ-00145-1
+      + CallOrder(context: Context)                 // given what it reads once, when it is made (DS-425)
+      - refs context_: Context                // what it reads, given at construction (DS-425)
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - static either(names: std::vector<std::string>) -> std::string   // the states a call could come from: Open or Paid (DS-382)
     }
 
     class DependencyCheck : ACheck {       // what a box declares it uses against what its behaviours call
       @requirement REQ-00094-2
+      + DependencyCheck(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs resolver_: Resolver
       - owns many found_: std::vector<model::Finding>
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      - check(context: Context) -> std::vector<model::Finding>
+      - check() -> std::vector<model::Finding>
       - checkDependencies() -> void {
         @requirement REQ-00094-2
       }
@@ -777,13 +805,14 @@ package driftspec@ds {
 
     class RuleCheck : IStep {             // rules and definitions, decided by the evaluator
       @requirement REQ-00095-2
+      + RuleCheck(context: Context)                 // given what it reads once, when it is made (DS-425)
       - refs context_: Context
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       - refs resolver_: Resolver
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(out_context: Context) -> std::vector<model::Finding>
+      + run() -> std::vector<model::Finding>
       - checkRules() -> void {
         @requirement REQ-00095-2
       }
@@ -798,10 +827,12 @@ package driftspec@ds {
 
     class FailureFlow : IStep {           // what failures escape each operation, and the path each comes by (DS-188)
       @requirement REQ-00111-1
+      + FailureFlow(context: Context)                 // given what it reads once, when it is made (DS-425)
+      - refs context_: Context                // what it reads, given at construction (DS-425)
       - refs model_: model::Model
       + name() -> std::string
       + needs() -> std::vector<std::string>
-      + run(out_context: Context) -> std::vector<model::Finding>
+      + run() -> std::vector<model::Finding>
       - handledAround(step: std::string) -> std::set<std::string>
       - originOf(step: std::string, sequence: std::string) -> std::string
       - hasBehaviour(operation: std::string) -> bool
@@ -813,12 +844,12 @@ package driftspec@ds {
     // Until nothing changes: a pass over every behaviour adds what starts in it and what its calls
     // let escape, unless an attempt around the call handles it; then each operation is written.
     sequence FailureFlow::run {
-      self -> out_context.model() -> model
+      self -> context_.model() -> model
       loop until a pass adds nothing {
         -> pass(escapes) -> changed
       }
       -> write(escapes)
-      self -> out_context.take() -> found
+      self -> context_.take() -> found
       return found
     }
 
@@ -826,17 +857,19 @@ package driftspec@ds {
     // first; behaviour typing and derivation each need only the linker; the checks of contracts and
     // dependencies need the calls typing made; structure and rules read the finished model.
     sequence Checker::run {
-      local context: Context
       local step: IStep
+      local model: model::Model
+      self -> context_.reset(notes)          // nothing of a run before stays (DS-425)
+      self -> context_.model() -> model
       self -> order() -> keys
       loop each key, in order {
-        -> step.run(context) -> found
+        -> step.run() -> found
         loop each finding found {
-          self -> model_.report(finding)
+          self -> model.report(finding)
         }
       }
       // what is not yet written is no finding: the model keeps apart what its metamodel calls coverage (DS-216)
-      self -> model_.cover()
+      self -> model.cover()
     }
 
     sequence Linker::run {

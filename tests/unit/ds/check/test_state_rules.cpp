@@ -22,8 +22,7 @@ class TestStateRules : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     binder.bind(parser.parseText("a.ds", "package p {\n  module m {\n" + body + "  }\n}\n"));
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code.rfind("W-STATE-", 0) == 0) out.push_back(f.code);
@@ -39,7 +38,10 @@ const char* const kLamp =
     "    }\n";
 
 TEST_F(TestStateRules, ItIsAStepOfTheCheckThatNeedsTheSubjectsLinked) {
-  const auto all = ds::check::StepFactory::of();
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::check::Context context(model, metamodel);
+  const auto all = ds::check::StepFactory::of(context);
   ASSERT_EQ(all.count("states"), 1u);
   EXPECT_EQ(all.at("states")->name(), "states");
   EXPECT_EQ(all.at("states")->needs(), (std::vector<std::string>{"linker"}));

@@ -26,11 +26,10 @@ std::vector<std::string> InterfaceContracts::needs() const {
   return {"linker", "behaviour", "failures"};
 }
 
-std::vector<model::Finding> InterfaceContracts::check(const Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  metamodel_ = &context.metamodel();
-  resolver_ = &context.resolver();
+InterfaceContracts::InterfaceContracts(const Context& context)
+    : context_(&context), model_(&context.model()), metamodel_(&context.metamodel()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> InterfaceContracts::check() {
   found_.clear();
   checkInterfaces();
   checkRealisations();

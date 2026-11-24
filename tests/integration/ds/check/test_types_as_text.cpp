@@ -24,8 +24,7 @@ class TestTypesAsText : public ::testing::Test {
     const auto file = parser.parseText("a.ds", text);
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   bool related(const std::string& kind, const std::string& from, const std::string& to, const std::string& multiplicity = "?") const {

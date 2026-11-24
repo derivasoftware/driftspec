@@ -9,9 +9,6 @@
 namespace ds {
 namespace check {
 
-Checker::Checker(model::Model& model, const model::Metamodel& metamodel, const std::map<std::string, std::unique_ptr<IStep>>& steps)
-    : model_(model), metamodel_(metamodel), resolver_(model), steps_(steps) {}
-
 // each step after every step it needs; among the steps ready at once, by key, so the order is one
 std::vector<std::string> Checker::order() const {
   std::vector<std::string> out;
@@ -34,15 +31,15 @@ std::vector<std::string> Checker::order() const {
 }
 
 void Checker::run(const bind::Notes& notes) {
-  Context context(model_, metamodel_, resolver_, notes);  // the steps read the language from it (DS-351)
+  context_.reset(notes);  // the steps read the language from it (DS-351); nothing of a run before stays (DS-425)
+  model::Model& model = context_.model();
   for (const auto& key : order())
-    for (const auto& f : steps_.at(key)->run(context)) model_.report(f);  // in the order the steps run
-  model_.cover();  // what is not yet written is no finding (Owner, 2026-11-15; DS-216): the model keeps it apart
+    for (const auto& f : steps_.at(key)->run()) model.report(f);  // in the order the steps run
+  model.cover();  // what is not yet written is no finding (Owner, 2026-11-15; DS-216): the model keeps it apart
 }
 
-std::unique_ptr<IChecker> CheckerFactory::make(model::Model& model, const model::Metamodel& metamodel,
-                                               const std::map<std::string, std::unique_ptr<IStep>>& steps) {
-  return std::make_unique<Checker>(model, metamodel, steps);
+std::unique_ptr<IChecker> CheckerFactory::make(model::Model& model, const model::Metamodel& metamodel, const Selection& selection) {
+  return std::make_unique<SelectedChecker>(model, metamodel, selection);
 }
 
 }  // namespace check

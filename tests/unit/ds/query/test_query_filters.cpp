@@ -65,8 +65,7 @@ class Shop : public ::testing::Test {
                                        "}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto steps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, steps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 };
 
@@ -129,8 +128,7 @@ TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnde
                                      "}\n");
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  const auto steps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, steps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   EXPECT_TRUE(ds::query::RequirementsFilter(metamodel, {"shop@*"}, true, true).select(model).count("UC-00001-1"));
   EXPECT_FALSE(ds::query::RequirementsFilter(metamodel, {"shop@*"}, false, true).select(model).count("UC-00001-1"));  // design hidden
 }

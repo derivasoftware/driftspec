@@ -19,11 +19,10 @@ std::string Linker::name() const { return "linker"; }
 
 std::vector<std::string> Linker::needs() const { return {}; }
 
-std::vector<model::Finding> Linker::run(Context& out_context) {
-  context_ = &out_context;
-  model_ = &out_context.model();
-  metamodel_ = &out_context.metamodel();
-  resolver_ = &out_context.resolver();
+Linker::Linker(Context& context)
+    : context_(&context), model_(&context.model()), metamodel_(&context.metamodel()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> Linker::run() {
   defineLoneExtensions();
   // a name read out of a type, a base or a bound relates only to what the design declares; any other name is
   // text, with no expected node and no finding: allow incompleteness, say incoherence (DS-18)
@@ -38,7 +37,7 @@ std::vector<model::Finding> Linker::run(Context& out_context) {
   }
   unifyBehaviours();
   for (const auto& r : context_->notes().references) checkTemplateBound(r);
-  return out_context.take();
+  return context_->take();
 }
 
 // a bare name two classes of its package share relates nothing, and is said once for each place it is

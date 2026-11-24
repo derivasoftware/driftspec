@@ -89,8 +89,8 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
     }
     binder.bind(parsed);
   }
-  const auto steps = check::StepFactory::of(stepsFor(output, model, diagram));  // only the steps the output reads (DS-376)
-  check::CheckerFactory::make(model, metamodel_, steps)->run(binder.notes());   // held as the IChecker it is (DS-404)
+  // only the steps the output reads (DS-376), held as the IChecker it is (DS-404)
+  check::CheckerFactory::make(model, metamodel_, stepsFor(output, model, diagram))->run(binder.notes());
   // what a file that does not parse leaves out of the model comes back as findings that only echo the cut:
   // the rest of that file, and every name now declared nowhere. They go until the file parses (DS-304)
   model.withdrawEchoes(broken);

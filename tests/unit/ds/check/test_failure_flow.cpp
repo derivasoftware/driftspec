@@ -18,8 +18,7 @@ ds::model::Model load(const ds::model::Metamodel& metamodel, const std::string& 
   const auto file = parser.parseText("a.ds", text);
   EXPECT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  const auto steps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, steps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   return model;
 }
 

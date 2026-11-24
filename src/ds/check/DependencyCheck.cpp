@@ -22,10 +22,9 @@ std::vector<std::string> DependencyCheck::needs() const {
   return {"linker", "behaviour"};
 }
 
-std::vector<model::Finding> DependencyCheck::check(const Context& context) {
-  context_ = &context;
-  model_ = &context.model();
-  resolver_ = &context.resolver();
+DependencyCheck::DependencyCheck(const Context& context) : context_(&context), model_(&context.model()), resolver_(&context.resolver()) {}
+
+std::vector<model::Finding> DependencyCheck::check() {
   found_.clear();
   checkDependencies();
   std::vector<model::Finding> out;
