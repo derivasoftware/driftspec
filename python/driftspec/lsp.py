@@ -37,10 +37,8 @@ def uri_of(path: str) -> str:
 
 
 def holds_ds(directory: str) -> bool:
-    try:
-        return any(name.endswith(".ds") for name in os.listdir(directory))
-    except OSError:
-        return False
+    """Whether a folder holds .ds files of its own, by the rule the engine reads them with (driftspec.files)."""
+    return bool(driftspec.files(directory, nested=False))
 
 
 def workspace_of(ls: LanguageServer, path: str) -> str:

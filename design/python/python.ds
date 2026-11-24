@@ -149,6 +149,16 @@ package driftspec@driftspec {
         tests/integration/python/test_live.py::TestLiveSession::test_a_change_to_a_file_reaches_a_new_version_of_the_state
         tests/integration/python/test_live.py::TestLiveSession::test_a_reader_receives_the_model_and_is_taken_where_it_is_asked
     }
+    verification VER-00251-1 {
+      status: draft
+      title: Integration tests confirm the facade, the watcher and the language server read a workspace's files by the engine's one rule, and the watcher sees a save in a dot-folder
+      method: test
+      tests:
+        tests/integration/python/test_workspace_files.py::TestWorkspaceFiles::test_the_facade_reads_the_files_the_engine_reads_and_no_other
+        tests/integration/python/test_workspace_files.py::TestWorkspaceFiles::test_the_watcher_stamps_the_same_files_and_sees_a_save_in_a_dot_folder
+        tests/integration/python/test_workspace_files.py::TestWorkspaceFiles::test_the_language_server_finds_a_folder_s_own_files_by_the_same_rule
+        tests/integration/python/test_workspace_files.py::TestWorkspaceFiles::test_the_engine_reads_the_same_files_when_its_binary_is_at_hand
+    }
   }
 
   requirement REQ-00090-1 {
@@ -858,7 +868,15 @@ package driftspec@driftspec {
       return found
     }
 
+    // A workspace's files, by one rule: the engine's own (Parser::parseDirectory). The facade reads with it,
+    // the live session's watcher stamps with it and the language server finds a folder's own with it.
+    function files(root: Union[str, os.PathLike], nested: bool) -> list[str]
     function read(source: Source) -> dict[str, str]
+
+    sequence read {
+      -> files(root, nested) -> paths
+      return texts
+    }
     function load(source: Source) -> Model
     function check(source: Source) -> Report
     function render(source: Source, diagram: str, format: str, width: int) -> str
@@ -937,6 +955,12 @@ package driftspec@driftspec {
     sequence changed {
       -> workspace_of(ls, path) -> ws
       -> refresh(ls, ws)
+    }
+
+    // a folder's own .ds files, by the rule the engine reads a workspace with
+    sequence holds_ds {
+      -> driftspec::files(directory, nested) -> own
+      return held
     }
 
     // The design loaded once in the engine: its findings, its drawings and the viewer ask it (DS-173).
@@ -1112,6 +1136,20 @@ package driftspec@driftspec {
       + files_stamp() -> tuple
       + changed() -> bool                      // the first look is a change
       + follow(tick: Callable[[], None], every: float, stopped: Callable[[], bool]) -> None
+    }
+
+    // The files the engine reads, stamped: a save in a dot-folder is a change, as the engine reads it.
+    sequence Watcher::files_stamp {
+      -> driftspec::files(workspace, nested) -> paths
+      return stamp
+    }
+
+    rule the-watcher-stamps-what-the-engine-reads {
+      title: the watcher lists a workspace's files by the facade's one rule, the engine's, and by no walk of its own
+      @requirement REQ-00089-2
+      for class w in driftspec@driftspec@live_session
+      where w = driftspec@driftspec@live_session::Watcher
+      holds m in w, s behaviour-of m, s couples-transient driftspec@driftspec@driftspec::files
     }
 
     // A save: the version loaded once, and its model, its page and its check asked of it (DS-173).

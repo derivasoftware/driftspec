@@ -10,6 +10,9 @@
     driftspec.expected_at(text, line, column)     # what the grammar takes there
     driftspec.qualify("p@m", "C")                 # how an identity is written, asked of the engine
 
+A workspace is the design's folder (e.g. design/): every .ds file below it is read, as ds reads it, so a
+folder that holds more than the design is read whole, and is slower for it.
+
 The engine answers in JSON it writes itself (the shapes of ds export, ds check --json and
 ds query --json); this module only reads it into its own types, and computes nothing the engine
 knows, so a tool sees the same thing whether it calls Python or the binary.
@@ -30,7 +33,7 @@ Source = Union[str, os.PathLike, Mapping[str, str]]
 
 __all__ = [
     "Location", "Entity", "Relation", "Finding", "Model", "Report", "Answer", "Step", "Walked", "Frame", "Tree",
-    "Workspace", "read", "load", "check", "expected_at", "render", "page", "qualify", "outer", "box_of",
+    "Workspace", "files", "read", "load", "check", "expected_at", "render", "page", "qualify", "outer", "box_of",
     "package_of", "behaviour_of", "subject_of", "scenario_of", "without_revision",
 ]
 
@@ -163,21 +166,35 @@ class Report:
         return int(self.counts.get("errors", 0))
 
 
+def files(root: Union[str, os.PathLike], nested: bool = True) -> list[str]:
+    """The .ds files of the design's folder (e.g. design/), as the engine reads a workspace
+    (Parser::parseDirectory): every regular file whose extension is .ds in every folder below it, dot-folders
+    too; a link to a file is followed and a link to a folder is not; a broken link and a file named only ".ds"
+    are no file of it; sorted. Only the folder's own files when nested is false."""
+    found: list[str] = []
+    for here, _, names in os.walk(os.fspath(root)):
+        for name in names:
+            path = os.path.join(here, name)
+            if os.path.splitext(name)[1] == ".ds" and os.path.isfile(path):
+                found.append(path)
+        if not nested:
+            break
+    return sorted(found)
+
+
 def read(source: Source) -> dict[str, str]:
-    """The texts of a workspace: a directory's .ds files, or a mapping given as it is."""
+    """The texts of a workspace: the .ds files of the design's folder (e.g. design/; files() says which), or a
+    mapping given as it is."""
     if isinstance(source, Mapping):
         return {str(k): str(v) for k, v in source.items()}
     root = os.fspath(source)
     if not os.path.isdir(root):
         raise NotADirectoryError(root)
-    files: dict[str, str] = {}
-    for here, _, names in os.walk(root):
-        for name in sorted(names):
-            if name.endswith(".ds"):
-                path = os.path.join(here, name)
-                with open(path, encoding="utf-8") as fh:
-                    files[path] = fh.read()
-    return files
+    texts: dict[str, str] = {}
+    for path in files(root):
+        with open(path, encoding="utf-8") as fh:
+            texts[path] = fh.read()
+    return texts
 
 
 def _entity(e: Mapping) -> Entity:

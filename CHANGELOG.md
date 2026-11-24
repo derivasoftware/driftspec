@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.67
+## 0.1.69
 
 A rule reads what an entity is, matches a value against a pattern and reads a member's flag (DS-403). `name(x)`,
 `id(x)` and `kind(x)` are the name, the identity and the kind of the entity bound to x; they read it and never bind
@@ -18,6 +18,23 @@ language. A definition of one of those names is reported (E-RULE-RESERVED) and c
 the three can stand as a variable where a literal begins. A pattern that is no string or does not compile is reported
 at the rule (E-RULE-PATTERN). No kind may declare a field named `name` or `id`. Every design that used none of them
 checks, draws and exports as before.
+
+## 0.1.68
+
+A workspace's files are read by one rule, the engine's, wherever Python reads them (DS-413). `driftspec.files()` lists
+the .ds files of a folder as `ds` reads a workspace: every regular .ds file in every folder below it, dot-folders included;
+a link to a file is followed and a link to a folder is not; a broken link, and a file named only `.ds`, are skipped; sorted.
+`driftspec.read()` reads with it, so a broken link no longer stops it and `.ds` is no longer read. The live session's
+watcher stamps with it, so a save inside a dot-folder now reaches a new version, as the engine already read it. The
+language server finds a folder's own files with it.
+
+## 0.1.67
+
+The scene builds what it places from the model apart from how it is placed (DS-389). A projection reads the model
+into nested frames, each package, module, interface, unit and row sized by what it shows, its children in the order
+they are read and the room each kind of box asks for; a packer that knows no model turns those frames into boxes:
+a frame keeps its size, fills shelves no wider than a target, or centres its first child over the row of the others.
+Nothing a design writes changes: the viewer, its scene and every drawing are the same.
 
 ## 0.1.66
 

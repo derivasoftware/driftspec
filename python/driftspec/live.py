@@ -9,6 +9,7 @@
     python -m driftspec.live state                                       version, the findings
     python -m driftspec.live mcp [--port 4747]                           the same, as MCP tools over stdio
 
+<workspace> is the design's folder (e.g. design/); the session reads and watches every .ds file below it.
 The design stays text: whoever edits it edits the .ds files. The session watches them, loads the
 model on every change and pushes the new state to every page
 that follows it. Focus, notes, highlights and the reader's selection go both ways, so the one who

@@ -5,9 +5,9 @@ import os
 import pytest
 
 import driftspec
-from driftspec import Workspace, check, expected_at, load, page, read, render
+from driftspec import Workspace, check, expected_at, files, load, page, read, render
 
-__covers__ = (read, load, check, render, page, expected_at, Workspace)
+__covers__ = (files, read, load, check, render, page, expected_at, Workspace)
 
 DESIGN = (
     "package p {\n"
@@ -50,6 +50,16 @@ def directory(tmp_path):
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "b.ds").write_text("package q { }\n")
     return str(tmp_path)
+
+
+class TestFiles:
+    def test_the_ds_files_below_a_folder_sorted_and_only_its_own_when_not_nested(self, tmp_path):
+        (tmp_path / "in").mkdir()
+        for name in ("b.ds", "a.ds", "notes.txt", "in/c.ds"):
+            (tmp_path / name).write_text("package p { }\n")
+        assert files(tmp_path) == [str(tmp_path / n) for n in ("a.ds", "b.ds", "in/c.ds")]
+        assert files(tmp_path, nested=False) == [str(tmp_path / n) for n in ("a.ds", "b.ds")]
+        assert files(tmp_path / "nowhere") == []
 
 
 class TestRead:
