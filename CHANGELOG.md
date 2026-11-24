@@ -6,6 +6,19 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.65
+
+The contracts are checked in five steps, and the order of what the check reports no longer follows its steps
+(DS-382). ContractCheck becomes InterfaceContracts, UseCaseContracts, DiagramCheck, ScenarioCheck and FailureCheck,
+each run on its own and chosen on its own (`interfaces`, `usecases`, `diagrams`, `scenarios`, `failure-check`); the
+findings each one says are the ones ContractCheck said.
+
+An intended change of output: the findings and the coverage are both ordered by file, then line, and on one line by
+code, then message. The coverage was never sorted and came out in the order the steps ran in, so a design whose
+coverage spans several steps now reads it by where each entry is written. On the 28 workspaces of the comparison this
+reorders the coverage of three (the audit and levels corpora and the repository) and two pairs of findings on one
+line; nothing is added or removed, and the golden files do not move.
+
 ## 0.1.64
 
 Every operation of the query is a member of its class (DS-385). A pattern of a diagram's include or exclude is read

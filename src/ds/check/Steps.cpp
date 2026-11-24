@@ -11,7 +11,11 @@ std::map<std::string, std::unique_ptr<IStep>> Steps::of(const Selection& selecti
   std::vector<std::pair<Step, std::unique_ptr<IStep>>> all;
   all.emplace_back(Step::Linker, std::make_unique<Linker>());
   all.emplace_back(Step::Behaviour, std::make_unique<BehaviourTyping>());
-  all.emplace_back(Step::Contracts, std::make_unique<ContractCheck>());
+  all.emplace_back(Step::Interfaces, std::make_unique<InterfaceContracts>());
+  all.emplace_back(Step::UseCases, std::make_unique<UseCaseContracts>());
+  all.emplace_back(Step::Diagrams, std::make_unique<DiagramCheck>());
+  all.emplace_back(Step::Scenarios, std::make_unique<ScenarioCheck>());
+  all.emplace_back(Step::FailureChecks, std::make_unique<FailureCheck>());
   all.emplace_back(Step::Derivation, std::make_unique<Derivation>());
   all.emplace_back(Step::Structure, std::make_unique<StructureCheck>());
   all.emplace_back(Step::Dependencies, std::make_unique<DependencyCheck>());

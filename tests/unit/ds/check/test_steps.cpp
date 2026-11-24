@@ -41,7 +41,7 @@ class FakeStep : public ds::check::IStep {
 /// and run after every step it needs.
 TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
   const auto all = ds::check::Steps::of();
-  ASSERT_EQ(all.size(), 11u);
+  ASSERT_EQ(all.size(), 15u);  // ContractCheck became five (DS-382)
   for (const auto& s : all) EXPECT_EQ(s.first, s.second->name());
 }
 
@@ -51,8 +51,8 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const auto checkSteps = ds::check::Steps::of();
   const ds::check::Checker checker(model, metamodel, checkSteps);
   const std::vector<std::string> order = checker.order();
-  EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "contracts", "levels",
-                                             "order", "rules", "states", "structure"}));
+  EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "diagrams", "failure-check",
+                                             "interfaces", "levels", "order", "rules", "scenarios", "states", "structure", "usecases"}));
   const auto all = ds::check::Steps::of();
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())
@@ -68,7 +68,9 @@ TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
   EXPECT_EQ(all.at("linker")->needs(), Needs{});
   EXPECT_EQ(all.at("behaviour")->needs(), Needs{"linker"});
   EXPECT_EQ(all.at("derivation")->needs(), Needs{"linker"});
-  EXPECT_EQ(all.at("contracts")->needs(), (Needs{"linker", "behaviour", "failures"}));
+  // what ContractCheck needed, each of the five it became (DS-382): the failure check reads what FailureFlow wrote
+  for (const char* contract : {"interfaces", "usecases", "diagrams", "scenarios", "failure-check"})
+    EXPECT_EQ(all.at(contract)->needs(), (Needs{"linker", "behaviour", "failures"})) << contract;
   EXPECT_EQ(all.at("dependencies")->needs(), (Needs{"linker", "behaviour"}));
   EXPECT_EQ(all.at("structure")->needs(), (Needs{"linker", "behaviour", "derivation"}));
   EXPECT_EQ(all.at("rules")->needs(), (Needs{"linker", "behaviour", "derivation"}));
@@ -82,8 +84,8 @@ std::vector<std::string> keysOf(const ds::check::Selection& selection) {
   return out;
 }
 
-/// A load runs the steps it is given (DS-376): each step a selection names is made under its own name, the eleven
-/// steps of the check are eleven steps of a selection, and with none named none is made.
+/// A load runs the steps it is given (DS-376): each step a selection names is made under its own name, the fifteen
+/// steps of the check are fifteen steps of a selection, and with none named none is made.
 TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
   using ds::check::Selection;
   using ds::check::Step;
@@ -91,7 +93,11 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
                                                         {Step::Behaviour, "behaviour"},
                                                         {Step::Derivation, "derivation"},
                                                         {Step::Failures, "failures"},
-                                                        {Step::Contracts, "contracts"},
+                                                        {Step::Interfaces, "interfaces"},
+                                                        {Step::UseCases, "usecases"},
+                                                        {Step::Diagrams, "diagrams"},
+                                                        {Step::Scenarios, "scenarios"},
+                                                        {Step::FailureChecks, "failure-check"},
                                                         {Step::Structure, "structure"},
                                                         {Step::Dependencies, "dependencies"},
                                                         {Step::Rules, "rules"},
@@ -108,19 +114,20 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
   std::sort(names.begin(), names.end());
   EXPECT_EQ(keysOf(Selection::every()), names);  // one step each, and every step of the check
   EXPECT_EQ(keysOf(Selection::every()), keysOf(Selection::every().with(Step::Rules)));
-  EXPECT_EQ(ds::check::Steps::of().size(), 11u);  // with no selection, every step
+  EXPECT_EQ(ds::check::Steps::of().size(), 15u);  // with no selection, every step
   EXPECT_TRUE(ds::check::Steps::of(Selection::of({})).empty());
 }
 
 /// A step chosen brings every step it needs (DS-376), so none runs without what it reads: the rules bring what
-/// writes the finished model, the contracts what escapes each operation, and the checker orders what it is given.
+/// writes the finished model, the interfaces and the failure check what escapes each operation, and the checker orders what it is given.
 TEST(TestSteps, AStepChosenBringsEveryStepItNeeds) {
   using ds::check::Selection;
   using ds::check::Step;
   using Keys = std::vector<std::string>;
   EXPECT_EQ(keysOf(Selection::of({Step::Linker})), Keys{"linker"});
   EXPECT_EQ(keysOf(Selection::of({Step::Rules})), (Keys{"behaviour", "derivation", "linker", "rules"}));
-  EXPECT_EQ(keysOf(Selection::of({Step::Contracts})), (Keys{"behaviour", "contracts", "failures", "linker"}));
+  EXPECT_EQ(keysOf(Selection::of({Step::Interfaces})), (Keys{"behaviour", "failures", "interfaces", "linker"}));
+  EXPECT_EQ(keysOf(Selection::of({Step::FailureChecks})), (Keys{"behaviour", "failure-check", "failures", "linker"}));
   EXPECT_EQ(keysOf(Selection::of({Step::Order})), (Keys{"behaviour", "linker", "order"}));
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
@@ -150,7 +157,11 @@ TEST(TestFindings, TheContextHandsBackWhatAStepReportedInOrderAndOnce) {
 /// gives the model const, so the compiler stops a check that tries to change it.
 TEST(TestFindings, AStepThatOnlyChecksReadsTheModelAndCannotChangeIt) {
   using ds::check::ACheck;
-  EXPECT_TRUE((std::is_base_of<ACheck, ds::check::ContractCheck>::value));
+  EXPECT_TRUE((std::is_base_of<ACheck, ds::check::InterfaceContracts>::value));  // what ContractCheck was (DS-382)
+  EXPECT_TRUE((std::is_base_of<ACheck, ds::check::UseCaseContracts>::value));
+  EXPECT_TRUE((std::is_base_of<ACheck, ds::check::FailureCheck>::value));  // reads what FailureFlow wrote
+  EXPECT_TRUE((std::is_base_of<ACheck, ds::check::ScenarioCheck>::value));
+  EXPECT_TRUE((std::is_base_of<ACheck, ds::check::DiagramCheck>::value));
   EXPECT_TRUE((std::is_base_of<ACheck, ds::check::StructureCheck>::value));
   EXPECT_TRUE((std::is_base_of<ACheck, ds::check::DependencyCheck>::value));
   EXPECT_FALSE((std::is_base_of<ACheck, ds::check::Linker>::value));  // these enrich the model

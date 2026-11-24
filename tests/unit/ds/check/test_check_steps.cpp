@@ -92,7 +92,7 @@ TEST(TestBehaviourTyping, AMessageGivenMoreArgumentsThanItsOperationTakesIsAnErr
   EXPECT_TRUE(has(codes, "E-MSG-ARITY"));
 }
 
-TEST(TestContractCheck, AStateNothingLeadsToIsAFinding) {
+TEST(TestInterfaceContracts, AStateNothingLeadsToIsAFinding) {
   const auto codes = codesOf(std::string(kShop) +
                                  "    state Stock {\n"
                                  "      initial Full\n"
@@ -101,8 +101,62 @@ TEST(TestContractCheck, AStateNothingLeadsToIsAFinding) {
                                  "    }\n"
                                  "  }\n"
                                  "}\n",
-                             "contracts");
+                             "interfaces");
   EXPECT_TRUE(has(codes, "W-STATE-UNREACHABLE"));
+}
+
+TEST(TestUseCaseContracts, AUseCaseNoOperationRealisesIsAFinding) {
+  const auto codes = codesOf(
+      "package p {\n"
+      "  usecase UC-00001-1 greet(name: string) -> int {\n"
+      "    title: Greet by name\n"
+      "  }\n"
+      "}\n",
+      "usecases");
+  EXPECT_TRUE(has(codes, "W-USECASE-UNREALISED"));
+}
+
+TEST(TestDiagramCheck, APatternThatNamesNothingDeclaredIsAFinding) {
+  const auto codes = codesOf(std::string(kShop) +
+                                 "  }\n"
+                                 "}\n"
+                                 "diagram HLD_Nothing {\n"
+                                 "  kind: component\n"
+                                 "  include: shop@nowhere::*\n"
+                                 "}\n",
+                             "diagrams");
+  EXPECT_TRUE(has(codes, "W-DIAGRAM-UNDECLARED"));
+}
+
+TEST(TestScenarioCheck, AScenarioNamedTwiceForOneBehaviourIsAFinding) {
+  const auto codes = codesOf(std::string(kShop) +
+                                 "    sequence Stock::take {\n"
+                                 "      opt nothing left / empty {\n"
+                                 "        return\n"
+                                 "      }\n"
+                                 "    }\n"
+                                 "    sequence Stock::take / empty {\n"
+                                 "    }\n"
+                                 "  }\n"
+                                 "}\n",
+                             "scenarios");
+  EXPECT_TRUE(has(codes, "W-SCENARIO-TWICE"));
+}
+
+TEST(TestFailureCheck, AFailureTheSignatureSaysAndNoPathReachesIsAFinding) {
+  const auto codes = codesOf(
+      "package shop {\n"
+      "  module till {\n"
+      "    class Stock {\n"
+      "      + take(item: string) -> none fails Busy\n"
+      "    }\n"
+      "    sequence Stock::take {\n"
+      "      return\n"
+      "    }\n"
+      "  }\n"
+      "}\n",
+      "failure-check");
+  EXPECT_TRUE(has(codes, "W-FAILURE-UNREACHED"));
 }
 
 TEST(TestStructureCheck, AFieldItsKindDoesNotDeclareIsAFinding) {
