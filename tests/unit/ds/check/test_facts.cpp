@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -64,10 +65,15 @@ TEST_F(TestFacts, TheEntitiesOfAKindAndARelationBothWaysAreRead) {
 }
 
 TEST_F(TestFacts, WhatHoldsWhatAndTheFieldsOfAnEntityAreAnswered) {
-  const ds::check::Facts facts(model, metamodel);
+  ds::check::Facts facts(model, metamodel);
+  facts.index();  // what holds what is copied from the index, once (DS-381)
   EXPECT_TRUE(facts.contains("p", "p@m::A"));
   EXPECT_FALSE(facts.contains("p@m::A", "p"));
-  EXPECT_EQ(facts.parentOf("p@m::A"), "p@m");
+  ASSERT_NE(facts.parentOf("p@m::A"), nullptr);
+  EXPECT_EQ(*facts.parentOf("p@m::A"), "p@m");
+  EXPECT_EQ(facts.parentOf("p"), nullptr);
+  ASSERT_NE(facts.childrenOf("p@m"), nullptr);
+  EXPECT_EQ(*facts.childrenOf("p@m"), (std::vector<std::string>{"p@m::A", "p@m::B", "p@m::r", "p@m::d"}));
   EXPECT_EQ(facts.fieldOf("p@m::A", "name"), "A");
   EXPECT_EQ(facts.fieldOf("p@m::A", "id"), "p@m::A");
   EXPECT_EQ(facts.fieldOf("nothing", "name"), "");
@@ -89,6 +95,17 @@ TEST_F(TestFacts, WhatTheEvaluatorRecordsIsReadBack) {
   EXPECT_TRUE(facts.derive("p@m::d", {"p@m::A"}));
   EXPECT_FALSE(facts.derive("p@m::d", {"p@m::A"}));  // already held
   EXPECT_EQ(facts.derived("p@m::d")->size(), 1u);
+}
+
+/// While a solve reads the facts they refuse to grow: a binding points into them (DS-381).
+TEST_F(TestFacts, WhileASolveReadsTheFactsRefuseToGrow) {
+  ds::check::Facts facts(model, metamodel);
+  facts.reading();
+  EXPECT_THROW(facts.record("p@m::r", "A", "p@m::A"), std::logic_error);
+  EXPECT_THROW(facts.derive("p@m::d", {"p@m::A"}), std::logic_error);
+  facts.done();
+  facts.record("p@m::r", "A", "p@m::A");
+  EXPECT_TRUE(facts.derive("p@m::d", {"p@m::A"}));
 }
 
 }  // namespace

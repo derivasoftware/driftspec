@@ -16,6 +16,19 @@ void Facts::index() {
     const model::Entity& e = pair.second;
     if (!e.expected) byKind_[metamodel_.nameOf(e.kind)].push_back(e.id);
   }
+  // what holds what, as the index answers it: every entity and every end a `contains` reaches may have a holder
+  const model::Index index = model_.index();
+  const auto copy = [&](const std::string& id) {
+    if (parent_.count(id)) return;
+    const std::string up = index.parent(id);
+    if (up.empty()) return;
+    parent_.emplace(id, up);
+    if (!children_.count(up)) children_.emplace(up, index.children(up));
+  };
+  for (const auto& pair : model_.entities()) copy(pair.first);
+  const auto contains = forward_.find("contains");
+  if (contains != forward_.end())
+    for (const auto& r : contains->second) copy(r.second);
 }
 
 bool Facts::kindIs(const std::string& id, model::Kind kind) const {
@@ -56,15 +69,18 @@ bool Facts::holds(const std::string& rule) const {
 }
 
 bool Facts::contains(const std::string& outer, const std::string& inner) const {
-  const model::Index index = model_.index();
-  std::string up = index.parent(inner);
-  if (up.empty()) {  // an artefact hangs from no box by `contains`: it is in the box it was written in (DS-268)
+  const std::string* up = parentOf(inner);
+  std::string box;
+  if (!up) {  // an artefact hangs from no box by `contains`: it is in the box it was written in (DS-268)
     const model::Entity* e = model_.find(inner);
-    up = e ? e->scope : "";
-    while (!up.empty() && (up.back() == '@' || up.back() == ':')) up.pop_back();
+    box = e ? e->scope : "";
+    while (!box.empty() && (box.back() == '@' || box.back() == ':')) box.pop_back();
+    if (box.empty()) return false;
+    if (box == outer) return true;
+    up = parentOf(box);
   }
-  for (; !up.empty(); up = index.parent(up))
-    if (up == outer) return true;
+  for (; up; up = parentOf(*up))
+    if (*up == outer) return true;
   return false;
 }
 

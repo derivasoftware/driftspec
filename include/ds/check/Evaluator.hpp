@@ -2,8 +2,10 @@
 #define DRIFTSPEC_CHECK_EVALUATOR_HPP
 
 #include <cstddef>
+#include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ds/check/Facts.hpp"
@@ -11,6 +13,7 @@
 #include "ds/check/RuleValidator.hpp"
 #include "ds/check/Solver.hpp"
 #include "ds/check/Strata.hpp"
+#include "ds/check/Variables.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -40,7 +43,7 @@ class Evaluator {
   void tabulate(const std::string& id, const model::Formula& formula);
   void report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at);
   /// Bindings as the message of a finding writes them: x = a, y = b.
-  static std::string describe(const std::map<std::string, std::string>& bindings);
+  static std::string describe(const std::vector<std::pair<std::string, std::string>>& bindings);
 
   model::Model& model_;  ///< written: the breaches and the tables the rules say; read through the facts
   const model::Metamodel& metamodel_;
@@ -49,7 +52,8 @@ class Evaluator {
   Strata strata_;
   Solver solver_;
   std::vector<model::Finding> found_;
-  std::set<std::string> invalid_;  ///< formulas with an error: not evaluated
+  std::set<std::string> invalid_;               ///< formulas with an error: not evaluated
+  std::map<std::string, Variables> variables_;  ///< each formula's variables and their slots (DS-381)
 };
 
 }  // namespace check
