@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.66
+
+The check's architecture decisions are requirements held by rules (DS-383). The checker runs each step through IStep
+and knows none of the concrete ones, no step knows another, and every operation of the check is a member of a class;
+three rules of ds's own design hold them, each proven by a deliberate violation. SEQ_Load draws a load from the command
+line two levels down. Nothing a design writes changes.
+
 ## 0.1.65
 
 The contracts are checked in five steps, and the order of what the check reports no longer follows its steps
