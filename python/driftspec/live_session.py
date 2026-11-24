@@ -8,6 +8,7 @@ contract a client relies on is declared once, in live_contract.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import queue
@@ -102,8 +103,11 @@ class Events:
             self.listeners.remove(q)
 
     def broadcast(self, event: str, data: dict) -> None:
+        """Put an event on every page's queue, as it is now: a page takes it later, and what it reads is what
+        was sent, not the session's lists as they are by then (DS-414). One copy serves every page."""
+        sent = copy.deepcopy(data)
         for q in list(self.listeners):
-            q.put((event, data))
+            q.put((event, sent))
 
     def count(self) -> int:
         return len(self.listeners)

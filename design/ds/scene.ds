@@ -272,13 +272,16 @@ package driftspec@ds {
     verification VER-00085-1 {
       status: approved
       @requirement REQ-00076-1
-      title: Integration tests confirm the classes of examples/hola sit under their bases in both variants, with derived stereotypes, and core comes before the modules that inherit from it
+      title: Integration tests confirm the classes of examples/hola sit under their bases in both variants, with derived stereotypes, and core comes before the modules that inherit from it; in a package a chain of bases is placed base first, a module that inherits nothing keeps its place, and modules that inherit from each other keep their order
       method: test
       tests:
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.HeirsSitInARowBelowTheirBaseCentredOverThem
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AbstractIsTheStereotypeTheCheckerDerives
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.TheModuleThatHoldsTheBasesComesBeforeTheModulesThatInherit
         tests/integration/ds/scene/test_scene_taxonomy.cpp::TestSceneOfTheTaxonomy.AHeaderThatNamesABaseInAnotherModuleIsWideEnoughForIt
+        tests/integration/ds/scene/test_scene_module_order.cpp::TestSceneOrderOfModules.AChainOfBasesIsPlacedBaseFirstThoughItsHeirsComeFirst
+        tests/integration/ds/scene/test_scene_module_order.cpp::TestSceneOrderOfModules.OnlyABaseMovesAModuleThatInheritsNothingKeepsItsPlace
+        tests/integration/ds/scene/test_scene_module_order.cpp::TestSceneOrderOfModules.ModulesThatInheritFromEachOtherKeepTheirOrderAfterTheirBase
     }
 
     verification VER-00086-1 {

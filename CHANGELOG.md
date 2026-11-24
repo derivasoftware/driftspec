@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.61
+## 0.1.64
 
 A workspace's files are read by one rule, the engine's, wherever Python reads them (DS-413). `driftspec.files()` lists
 the .ds files of a folder as `ds` reads a workspace: every regular .ds file in every folder below it, dot-folders included;
@@ -15,7 +15,14 @@ a link to a file is followed and a link to a folder is not; a broken link, and a
 watcher stamps with it, so a save inside a dot-folder now reaches a new version, as the engine already read it. The
 language server finds a folder's own files with it.
 
-## 0.1.60
+## 0.1.62
+
+A live event carries what it was sent with (DS-414). Each event shared the session's own notes, highlights and comments,
+and a page serialised them when it took the event off its queue, so an event could show a change made after it was
+sent (an annotate event for a clear, carrying the comment written next). The events now carry a copy taken when they
+are sent, one for every page. Nothing else a page reads changes.
+
+## 0.1.61
 
 The live session is split into its parts, and its contract is declared once (DS-412). `Live` holds the version shown
 and composes `Annotations` (the notes, highlights and comments, kept in `.driftspec/live.json`), `Events` (the pages
@@ -23,6 +30,16 @@ that follow it) and `Watcher` (the .ds files it watches). The contract is one ta
 operation with its route, what the session answers, its MCP tool and its command word. The HTTP routes, the MCP tools and
 the command line are read from it, and a test checks that they agree. What a client sees does not change: GET /contract,
 the state, the events, tools/list and the command line are the same, byte for byte (contract version 4).
+
+## 0.1.60
+
+The viewer orders the boxes of a package in one pass over the inheritances (DS-388). To put a module whose classes
+are inherited from before the modules that inherit, the layout asked of every pair of boxes, again for each box it
+placed, whether one inherits from the other, by walking every inheritance of the model; on a design of a few
+thousand classes that was half of the layout and a sixth of `ds render -f json`. Each inheritance is now read once, as the boxes it
+joins, and the boxes are taken in the same order as before: the first one written that waits for none of those
+left, and the first one left when they wait for each other. Nothing a design writes changes: the viewer, its scene
+and every drawing are the same.
 
 ## 0.1.59
 
