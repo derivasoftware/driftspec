@@ -15,10 +15,11 @@ PORT = 4747
 
 # The fields of the state, in the order a client reads them: the contract says them and state() gives
 # exactly these, so adding one is a new version a client can see (DS-123).
-STATE = ["contract", "workspace", "title", "version", "boot", "findings", "counts", "history", "selection",
+STATE = ["contract", "workspace", "title", "version", "boot", "findings", "coverage", "counts", "history", "selection",
          "error", "notes", "highlights", "rules", "comments", "isolated"]
 
-VERSION = 4  # 4: what changed and the baseline left with ds diff (DS-277); 3: seen notes, comments, isolation
+VERSION = 5  # 5: the coverage, kept apart from the findings (DS-386); 4: what changed and the baseline left with ds diff
+# (DS-277); 3: seen notes, comments, isolation
 
 TONES = ["accent", "info", "ok", "bad", "req", "you"]
 

@@ -160,6 +160,7 @@ class Live:
         self.loaded: driftspec.Workspace | None = None  # the version shown, loaded once in the engine (DS-173)
         self.history: list[dict] = []
         self.findings: list[dict] = []
+        self.coverage: list[dict] = []  # what is not yet written, kept apart from the findings (DS-386)
         self.counts: dict = {}
         self.selection: dict = {}
         self.rules: list[dict] = []
@@ -258,9 +259,8 @@ class Live:
             first = self.version == 0
             self.loaded, self.page, self.error = loaded, page, ""
             self.version += 1
-            self.findings = [{"code": f.code, "severity": f.severity, "message": f.message,
-                              "file": os.path.relpath(f.location.file, self.workspace) if f.location.file.startswith("/") else f.location.file,
-                              "line": f.location.line} for f in report.findings]
+            self.findings = [self.shown(f) for f in report.findings]
+            self.coverage = [self.shown(f) for f in report.coverage]
             self.counts = dict(report.counts)
             self.rules = self.rules_of(model, report.findings)
             if not first:
@@ -269,10 +269,15 @@ class Live:
         self.events.broadcast("model", self.state())
         return True
 
+    def shown(self, f) -> dict:
+        """A finding as a page reads it: its code, severity and message, and where, relative to the workspace."""
+        file = os.path.relpath(f.location.file, self.workspace) if f.location.file.startswith("/") else f.location.file
+        return {"code": f.code, "severity": f.severity, "message": f.message, "file": file, "line": f.location.line}
+
     def state(self) -> dict:
         a = self.annotations
         return {"contract": VERSION, "workspace": self.workspace, "title": self.title, "version": self.version,
-                "boot": self.boot, "findings": self.findings,
+                "boot": self.boot, "findings": self.findings, "coverage": self.coverage,
                 "counts": self.counts, "history": self.history, "selection": self.selection, "error": self.error,
                 "notes": a.notes, "highlights": a.highlights, "rules": self.rules, "comments": a.comments,
                 "isolated": self.isolated}

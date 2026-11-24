@@ -6,13 +6,19 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+A merge request does not edit this file: it writes its entry as `changelog.d/<card>.md`, and
+`tools/changelog.py` later moves each entry under the version its merge was released as (see
+`changelog.d/README.md`).
+
 ## 0.1.71
 
-A diff's change on a relation or a message is drawn as on a box (DS-419). In the text drawing, a changed relation is
-marked `~` in its colour and a renamed one `>`; before, every change but `added` was marked `-` in red, as removed. A
-renamed message is marked `>` (it was `~`). In the SVG, a changed or renamed relation is drawn in its colour; the
-stylesheet had no rule for them, so they looked unchanged. Every SVG ds writes carries the one new stylesheet line. Nothing
-a design writes changes.
+The language server and the live viewer show a finding's severity as the severity table gives it (DS-386). The engine
+hands the table to Python (`driftspec.severities()`: each severity's name, whether it fails, whether it is kept apart as
+coverage, and what an editor shows it as), and no severity is named in Python. The language server publishes each finding
+with the table's editor mapping; what it publishes does not change. The live viewer colours each finding by its row,
+errors red and warnings amber; its findings pill counts what fails, with the rest beside it; and the coverage, which
+reached no Python door, has a folded section of its own in the information colour, fed by a new `coverage` field of the
+state. The live contract is version 5.
 
 ## 0.1.70
 
