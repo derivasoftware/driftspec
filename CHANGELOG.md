@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.51
+## 0.1.52
 
 The evaluator of the rules is five pieces (DS-380). `Facts` reads the model once into what a rule is evaluated over:
 the entities of each kind, every relation both ways, the names a formula writes resolved, and what each definition holds
@@ -15,6 +15,16 @@ orders the definitions, and `Solver` answers a body over the facts and never the
 records into the facts what the validator resolved and what the definitions derive, and writes the breaches and the
 tables into the model. The design of ds holds the solver to the facts with a rule. Nothing a design writes changes:
 findings, breaches and tables read the same.
+
+## 0.1.51
+
+A drawing loads only the steps of the check it reads (DS-376). `ds render` to svg, text, cells, ir or layout, and the
+engine's render that Python and an editor's preview call, run the linker, behaviour typing and derivation, and the rules
+as well when the diagram is a table written as rows and columns. The viewer (html, json), check, export and query run
+every step, as before. The Api chooses the steps from what the command gives, in one place, and a rule of ds's design
+holds that decision there. Drawing CL_Ds takes about half the time: 243 to 111 ms on DriftSpec's design, 577 to 252 ms
+on the whole repository. Nothing changes for a design: every drawing, finding, export, viewer page and exit code is the
+same.
 
 ## 0.1.50
 
