@@ -41,8 +41,7 @@ class TestEvaluatorPrinciples : public ::testing::Test {
       }
       binder.bind(file);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code == "E-RULE-BROKEN") out.push_back(f.message.substr(0, f.message.find(' ')));

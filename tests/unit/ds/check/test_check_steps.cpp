@@ -27,7 +27,8 @@ std::vector<std::string> codesOf(const std::string& text, const std::string& ste
   const auto file = parser.parseText("a.ds", text);
   EXPECT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  auto all = ds::check::StepFactory::of();
+  ds::check::Context context(model, metamodel);
+  auto all = ds::check::StepFactory::of(context);
   std::map<std::string, std::unique_ptr<ds::check::IStep>> chosen;
   std::vector<std::string> pending{step};
   while (!pending.empty()) {  // the step and every step it needs, nothing else
@@ -37,7 +38,7 @@ std::vector<std::string> codesOf(const std::string& text, const std::string& ste
     for (const auto& need : all.at(key)->needs()) pending.push_back(need);
     chosen[key] = std::move(all.at(key));
   }
-  ds::check::Checker(model, metamodel, chosen).run(binder.notes());
+  ds::check::Checker(context, chosen).run(binder.notes());
   std::vector<std::string> out;
   for (const auto& f : model.findings()) out.push_back(f.code);
   for (const auto& f : model.coverage()) out.push_back(f.code);  // what is not yet written, kept apart (DS-216)
@@ -201,8 +202,8 @@ TEST(TestContext, AnIdentityIsReadAfterTheRenamesLinkingMade) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
   ds::bind::Binder binder(model, metamodel);
-  const ds::check::Resolver resolver(model);
-  ds::check::Context context(model, metamodel, resolver, binder.notes());
+  ds::check::Context context(model, metamodel);
+  context.reset(binder.notes());
   context.renamed()["p@m::Old"] = "p@m::New";
   EXPECT_EQ(context.current("p@m::Old"), "p@m::New");
   EXPECT_EQ(context.current("p@m::Kept"), "p@m::Kept");

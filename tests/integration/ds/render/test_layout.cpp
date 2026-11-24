@@ -31,8 +31,7 @@ class TestLayout : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   IrDocument document(const std::string& diagram) {
@@ -138,8 +137,7 @@ TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
                              "    class D1 { }\n    class D2 { }\n    class D3 { }\n    class D4 { }\n"
                              "  }\n}\n"
                              "diagram CL_Chain {\n  kind: class\n  include: p@*\n}\n"));
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     const IrDocument doc = IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_Chain", false)).bundled();
     const LayoutResult lay = ds::render::Layout().place(doc);
     int bottomOfB = -1, topOfC = -1;
@@ -191,8 +189,7 @@ class TestSequenceSvg : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/behaviour")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   std::string svg(const std::string& diagram) {

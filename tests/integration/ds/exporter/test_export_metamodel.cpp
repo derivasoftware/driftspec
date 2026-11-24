@@ -26,8 +26,7 @@ class TestExportMetamodel : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     doc = nlohmann::json::parse(ds::exporter::JsonExport(metamodel).render(model, false));
   }
 };

@@ -199,8 +199,7 @@ package driftspec@ds {
       }
       // the steps the output reads, chosen here and nowhere else (DS-376)
       -> stepsFor(output, model, diagram) -> selection
-      -> check::StepFactory::of(selection) -> steps
-      -> check::CheckerFactory::make(model, metamodel_, steps) -> checker   // held as the IChecker it is (DS-404)
+      -> check::CheckerFactory::make(model, metamodel_, selection) -> checker   // held as the IChecker it is (DS-404, DS-425)
       self -> binder.notes() -> notes
       -> checker.run(notes)
       // what only echoes a file that does not parse goes until it parses (DS-304); the rest by where it is written
