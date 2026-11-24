@@ -8,8 +8,8 @@ import os
 import sys
 import urllib.request
 
+from driftspec.live_contract import CONTRACT, LIVE, Operation, Tool
 from driftspec.live_http import browser_open, serve
-from driftspec.live_session import CONTRACT
 
 
 def call(port: int, path: str, data: dict | None = None) -> dict:
@@ -20,24 +20,12 @@ def call(port: int, path: str, data: dict | None = None) -> dict:
 
 
 # ---------------------------------------------------------------- MCP over stdio: the same contract, for an agent
-TOOLS = [
-    {"name": "live_open", "description": "Open a DriftSpec workspace in the live viewer (starts the server if needed) and open the browser.",
-     "inputSchema": {"type": "object", "properties": {"workspace": {"type": "string"}}, "required": ["workspace"]}},
-    {"name": "live_focus", "description": "Take the reader to an identity (a box, class, member, interface, requirement or sequence) in the live viewer: it is selected and framed.",
-     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "also": {"type": "array", "items": {"type": "string"}}}, "required": ["id"]}},
-    {"name": "live_note", "description": "Put a speech bubble on an identity in the live viewer; the same identity replaces its bubble, empty text removes it. tone: accent, info, ok, bad, req.",
-     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "text": {"type": "string"}, "tone": {"type": "string"}}, "required": ["id", "text"]}},
-    {"name": "live_highlight", "description": "Highlight identities of any perspective in the live viewer with a tone; replaces the previous highlight unless add is true.",
-     "inputSchema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "string"}}, "tone": {"type": "string"}, "add": {"type": "boolean"}}, "required": ["ids"]}},
-    {"name": "live_clear", "description": "Clear the notes, the highlights or both (what: notes, highlights, all) in the live viewer.",
-     "inputSchema": {"type": "object", "properties": {"what": {"type": "string"}}}},
-    {"name": "live_comments", "description": "What the reader wrote for the agent in the live viewer since the last call: each comment with the identity it is on; they are marked read unless peek is true. Answer with live_note on the same identity.",
-     "inputSchema": {"type": "object", "properties": {"peek": {"type": "boolean"}}}},
-    {"name": "live_isolate", "description": "Show only these boxes in the live viewer, with what they use from outside as ghosts; an empty list shows everything.",
-     "inputSchema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "string"}}}, "required": ["ids"]}},
-    {"name": "live_selection", "description": "What the reader has selected in the live viewer.", "inputSchema": {"type": "object", "properties": {}}},
-    {"name": "live_state", "description": "The live session: its version and the findings.", "inputSchema": {"type": "object", "properties": {}}},
-]
+# live_open is this door's own: it starts a session rather than asking one. Every other tool is an
+# operation of the contract, read from it.
+OPEN = Tool("live_open", "Open a DriftSpec workspace in the live viewer (starts the server if needed) and open the browser.",
+            {"workspace": {"type": "string"}}, ("workspace",), 0)
+
+TOOLS = [OPEN.schema()] + [op.tool.schema() for op in LIVE.tools()]
 
 
 def open_workspace(port: int, args: dict, opened: dict) -> str:
@@ -55,24 +43,23 @@ def open_workspace(port: int, args: dict, opened: dict) -> str:
 
 def state(port: int) -> dict:
     """live_state: the session's state, its first 30 findings only."""
-    st = call(port, "/state")
-    st["findings"] = st["findings"][:30]
-    return st
+    return asked(port, LIVE_STATE)
 
+
+def asked(port: int, op: Operation, args: dict | None = None) -> object:
+    """An operation of the contract asked of the session on the port, with the body the tool's arguments make."""
+    return op.tool.after(call(port, op.path, op.tool.body(args or {})))
+
+
+def answering(op: Operation):
+    """The call of a tool: its operation asked of the session on the port with the tool's arguments."""
+    return lambda port, a, _: asked(port, op, a)
+
+
+LIVE_STATE = next(op for op in LIVE.tools() if op.tool.name == "live_state")
 
 # Each tool, answered through the session's routes: port, arguments and what the call opened.
-CALLS = {
-    "live_open": open_workspace,
-    "live_focus": lambda port, a, _: call(port, "/focus", {"id": a["id"], "also": a.get("also", [])}),
-    "live_note": lambda port, a, _: call(port, "/note", {"id": a["id"], "text": a["text"], "tone": a.get("tone", "accent")}),
-    "live_highlight": lambda port, a, _: call(port, "/highlight", {"ids": a["ids"], "tone": a.get("tone", "accent"),
-                                                                   "add": a.get("add", False)}),
-    "live_clear": lambda port, a, _: call(port, "/clear", {"what": a.get("what", "all")}),
-    "live_comments": lambda port, a, _: call(port, "/unread", {"mark": not a.get("peek", False)}),
-    "live_isolate": lambda port, a, _: call(port, "/isolate", {"ids": a.get("ids", [])}),
-    "live_selection": lambda port, a, _: call(port, "/selection"),
-    "live_state": lambda port, a, _: state(port),
-}
+CALLS = {"live_open": open_workspace} | {op.tool.name: answering(op) for op in LIVE.tools()}
 
 
 def tool(port: int, name: str, args: dict, opened: dict) -> object:

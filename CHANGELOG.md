@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.61
+## 0.1.63
 
 Every operation of the query is a member of its class (DS-385). A pattern of a diagram's include or exclude is read
 once, by Pattern, which then takes or leaves each entity by comparing its identity and scope with what it read, with
@@ -15,6 +15,22 @@ was a function, with a static of() as check's Steps has (DS-382), and the box a 
 helpers the filters hid, are members of the filter they serve. A rule of ds's design holds that the query writes no
 function, refining what the query answers. Nothing changes for a design: every finding, export, drawing, viewer page,
 answer and exit code is the same.
+
+## 0.1.62
+
+A live event carries what it was sent with (DS-414). Each event shared the session's own notes, highlights and comments,
+and a page serialised them when it took the event off its queue, so an event could show a change made after it was
+sent (an annotate event for a clear, carrying the comment written next). The events now carry a copy taken when they
+are sent, one for every page. Nothing else a page reads changes.
+
+## 0.1.61
+
+The live session is split into its parts, and its contract is declared once (DS-412). `Live` holds the version shown
+and composes `Annotations` (the notes, highlights and comments, kept in `.driftspec/live.json`), `Events` (the pages
+that follow it) and `Watcher` (the .ds files it watches). The contract is one table in `driftspec.live_contract`: each
+operation with its route, what the session answers, its MCP tool and its command word. The HTTP routes, the MCP tools and
+the command line are read from it, and a test checks that they agree. What a client sees does not change: GET /contract,
+the state, the events, tools/list and the command line are the same, byte for byte (contract version 4).
 
 ## 0.1.60
 

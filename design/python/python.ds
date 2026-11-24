@@ -175,6 +175,28 @@ package driftspec@driftspec {
         tests/integration/python/test_live.py::TestLiveSession::test_the_contract_says_its_routes_and_its_version
         tests/integration/python/test_live.py::TestLiveSession::test_the_page_goes_fullscreen_whole_when_the_viewer_asks
     }
+    verification VER-00250-1 {
+      status: draft
+      title: Integration tests confirm the HTTP routes, the MCP tools and the command line are read from one contract, agree with it, and publish what version 4 did byte for byte
+      method: test
+      tests:
+        tests/integration/python/test_live_contract.py::TestContract::test_the_contract_publishes_what_version_4_did_byte_for_byte
+        tests/integration/python/test_live_contract.py::TestContract::test_the_tools_an_agent_lists_are_what_version_4_listed_byte_for_byte
+        tests/integration/python/test_live_contract.py::TestContract::test_every_route_of_the_contract_is_served_and_nothing_else
+        tests/integration/python/test_live_contract.py::TestContract::test_every_route_answers_on_a_session
+        tests/integration/python/test_live_contract.py::TestContract::test_every_tool_is_an_operation_of_the_contract_or_the_door_s_own
+        tests/integration/python/test_live_contract.py::TestContract::test_every_command_is_an_operation_of_the_contract_or_the_door_s_own
+        tests/integration/python/test_live_contract.py::TestContract::test_a_get_takes_no_body_from_a_tool_or_a_command
+    }
+    verification VER-00252-1 {
+      status: draft
+      title: Integration tests confirm an event a page reads later carries the notes, highlights, comments and state it was sent with
+      text: DS-414, the regression test of a race the events had: each carried the session's own lists, and a page serialised them when it took the event, so an annotate event could show a comment written after it.
+      method: test
+      tests:
+        tests/integration/python/test_live_events.py::TestEventsCarryWhatTheyWereSentWith::test_an_annotate_event_keeps_the_annotations_it_was_sent_with
+        tests/integration/python/test_live_events.py::TestEventsCarryWhatTheyWereSentWith::test_a_model_event_keeps_the_state_it_was_sent_with
+    }
   }
 
   requirement REQ-00091-3 {
@@ -339,8 +361,10 @@ package driftspec@driftspec {
 
   sequence session::events {
     local s: live_session::Live
+    local pages: live_session::Events
+    -> pages.listen() -> q
     -> s.state() -> state
-    -> s.broadcast(event, data)
+    -> pages.leave(q)
     return state
   }
 
@@ -966,19 +990,38 @@ package driftspec@driftspec {
       + name: str                              // the command; serve when there is none
       + static option(args: list[str], flag: str, default)  // the value after a flag, taken out with it
       + word(k: int, default: str) -> str
-      + ask(path: str, data: dict | None, indent: int | None) -> None  // the session's answer to a route, printed
-      + state() -> None
+      + ask(op: Operation) -> None             // the session's answer to an operation of the contract, printed as its word shows it
     }
 
+    function asking(op: Operation)             // the command of an operation of the contract
     function main(argv: list[str] | None) -> None
   }
 
-  module live_session {                        // the session over one workspace and the contract a client relies on
+  module live_session {                        // the session over one workspace, and the parts it is made of
     @requirement REQ-00089-2
     @requirement REQ-00090-1
     @requirement REQ-00102-1
     @requirement REQ-00103-1
     @requirement REQ-00104-1
+
+    // The session holds the version shown and composes three parts, each with one job (DS-322): what
+    // both sides keep, the pages that follow it, and the files it watches. None of them knows the
+    // session; the session tells the pages when what is kept changes.
+    rule the-parts-of-the-session-know-no-session {
+      title: the annotations, the events and the watcher know nothing of the session that composes them
+      @requirement REQ-00089-2
+      for class c in driftspec@driftspec@live_session
+      where c != driftspec@driftspec@live_session::Live
+      never depends(c, driftspec@driftspec@live_session::Live)
+    }
+
+    rule the-parts-of-the-session-reach-no-engine {
+      title: only the session loads the design; what is kept, the pages and the files ask no engine
+      @requirement REQ-00089-2
+      for class c in driftspec@driftspec@live_session
+      where c != driftspec@driftspec@live_session::Live
+      never depends(c, driftspec@driftspec@driftspec::Workspace)
+    }
 
     class Live {                               // a session over one workspace: its model version by version, and what both sides point at
       @requirement REQ-00089-2
@@ -993,32 +1036,26 @@ package driftspec@driftspec {
       + findings: list[dict]
       + counts: dict
       + selection: dict
-      + notes: list[dict]
-      + highlights: list[dict]
       + rules: list[dict]
-      + comments: list[dict]
       + isolated: list[str]
-      + listeners: list[queue.Queue]           // one per page following the session
-      + stamp: None                            // what the .ds files were at the last reload; none before the first
       + error: str
       + boot: str                              // when the server started: a page from an older one reloads itself
-      + store: str                             // <workspace>/.driftspec/live.json
+      + owns annotations: Annotations          // what both sides keep, beside the design
+      + owns events: Events                    // the pages that follow the session
+      + owns watcher: Watcher                  // the .ds files, watched
       + reload() -> bool
-      + files_stamp()                          // what the .ds files are now: a save changes it
       + rules_of(model, findings) -> list[dict] {
         @requirement REQ-00100-1
       }
       + state() -> dict
-      + broadcast(event: str, data: dict) -> None
+      + tick() -> None                         // one look at the files; an error is kept, never raised
       + watch(every: float) -> None
-      + annotations(frame: list[str]) -> None  // the notes, highlights and comments kept, and told to every page
+      + annotated(frame: list[str]) -> None    // what is kept, saved and told to every page
       + focus(identity: str, also: list[str] | None) -> int
       + note(identity: str, text: str, tone: str, frame: bool) -> int
       + highlight(ids: list[str], tone: str, add: bool, frame: bool) -> int
       + clear(what: str) -> None
       + select(identity: str | None, label: str) -> None
-      + load() -> None
-      + save() -> None
       + seen(ids: list[str], seen: bool) -> int {
         @requirement REQ-00102-1
       }
@@ -1033,10 +1070,54 @@ package driftspec@driftspec {
       }
     }
 
+    class Annotations {                        // what both sides point at and keep: notes, highlights, comments
+      @requirement REQ-00090-1
+      + store: str                             // <workspace>/.driftspec/live.json
+      + notes: list[dict]
+      + highlights: list[dict]
+      + comments: list[dict]
+      + load() -> None
+      + save() -> None                         // a read-only workspace keeps them for the session only
+      + told(frame: list[str]) -> dict         // what a page is told when they change
+      + note(identity: str, text: str, tone: str) -> int
+      + highlight(ids: list[str], tone: str, add: bool) -> int
+      + clear(what: str) -> None
+      + seen(ids: list[str], seen: bool) -> int {
+        @requirement REQ-00102-1
+      }
+      + comment(identity: str, text: str) -> int {
+        @requirement REQ-00103-1
+      }
+      + unread() -> list[dict] {
+        @requirement REQ-00103-1
+      }
+      + mark_read() -> None {
+        @requirement REQ-00103-1
+      }
+    }
+
+    class Events {                             // the pages that follow the session, a queue each
+      @requirement REQ-00090-1
+      + listeners: list[queue.Queue]
+      + listen() -> queue.Queue
+      + leave(q: queue.Queue) -> None
+      + broadcast(event: str, data: dict) -> None  // a copy, taken when sent: a page reads what was sent (DS-414)
+      + count() -> int
+    }
+
+    class Watcher {                            // the .ds files of a workspace: what they were, and whether a save changed them
+      @requirement REQ-00089-2
+      + workspace: str
+      + stamp: tuple | None                    // what the files were at the last look; none before the first
+      + files_stamp() -> tuple
+      + changed() -> bool                      // the first look is a change
+      + follow(tick: Callable[[], None], every: float, stopped: Callable[[], bool]) -> None
+    }
+
     // A save: the version loaded once, and its model, its page and its check asked of it (DS-173).
     sequence Live::reload {
       local loaded: driftspec.Workspace
-      -> files_stamp() -> stamp
+      -> watcher.changed() -> changed
       opt nothing was saved since / unchanged {
         return false
       }
@@ -1044,8 +1125,73 @@ package driftspec@driftspec {
       -> loaded.page(title, focus) -> page
       -> loaded.report() -> report
       -> rules_of(model, findings) -> rules
-      -> broadcast(event, data)
+      -> events.broadcast(event, data)
       return true
+    }
+  }
+
+  module live_contract {                       // the contract of the session, declared once
+    @requirement REQ-00090-1
+    @requirement REQ-00091-3
+    @requirement REQ-00089-2
+
+    // Each operation is one row: its route, what the contract says of it, what the session answers, the
+    // MCP tool and the word of the command line that call it (DS-322). The HTTP routes, the tools and the
+    // commands are read from the table, so the three doors cannot disagree; GET /contract is described
+    // from it too.
+    rule the-contract-knows-no-door {
+      title: the contract names what the session answers and knows none of the doors that serve it
+      @requirement REQ-00090-1
+      for class c in driftspec@driftspec@live_contract, class d in driftspec@driftspec@live_http
+      never depends(c, d)
+    }
+
+    rule the-contract-holds-no-session {
+      title: the contract asks the session it is given and holds none
+      @requirement REQ-00090-1
+      for class c in driftspec@driftspec@live_contract
+      never depends(c, driftspec@driftspec@live_session::Live)
+    }
+
+    dataclass Tool {                           // an operation as an MCP tool
+      @requirement REQ-00091-3
+      + name: str
+      + description: str
+      + properties: dict                       // its arguments, as a JSON schema
+      + required: tuple[str, ...]
+      + rank: int                              // where tools/list puts it
+      + body: Callable[[dict], dict | None]    // the request its arguments make; none for a GET
+      + after: Callable[[dict], object]        // what of the answer it gives back
+      + schema() -> dict
+    }
+
+    dataclass Word {                           // an operation as a word of the command line
+      @requirement REQ-00089-2
+      + word: str
+      + body: Callable                         // the request its words make; none for a GET
+      + optional indent: int | None
+      + show: Callable[[dict], object]         // what of the answer it prints
+    }
+
+    dataclass Operation {                      // one operation of the session
+      @requirement REQ-00090-1
+      + verb: str
+      + path: str
+      + doc: str                               // what the contract says of it
+      + optional answer: Callable | None       // what the session answers; none for a route the server writes itself
+      + optional tool: Tool | None
+      + optional word: Word | None
+      + route() -> str
+    }
+
+    class Contract {                           // the operations in the order the contract lists them
+      @requirement REQ-00090-1
+      + operations: tuple[Operation, ...]
+      + describe() -> dict                     // what GET /contract answers
+      + gets() -> dict[str, Callable]
+      + posts() -> dict[str, Callable]
+      + tools() -> list[Operation]             // in the order tools/list gives them
+      + words() -> list[Operation]
     }
   }
 
@@ -1091,6 +1237,8 @@ package driftspec@driftspec {
     function call(port: int, path: str, data: dict | None) -> dict
     function open_workspace(port: int, args: dict, opened: dict) -> str
     function state(port: int) -> dict
+    function asked(port: int, op: Operation, args: dict | None) -> object  // an operation asked with the body its tool makes
+    function answering(op: Operation)          // the call of a tool of the contract
     function tool(port: int, name: str, args: dict, opened: dict) -> object
     function initialize(port: int, msg: dict, opened: dict) -> dict
     function called(port: int, msg: dict, opened: dict) -> dict
@@ -1104,6 +1252,7 @@ diagram CL_LiveModule {                         // the live session's modules: t
   kind: class
   include: driftspec@driftspec@live::*
   include: driftspec@driftspec@live_session::*
+  include: driftspec@driftspec@live_contract::*
   include: driftspec@driftspec@live_page::*
   include: driftspec@driftspec@live_http::*
   include: driftspec@driftspec@live_mcp::*
