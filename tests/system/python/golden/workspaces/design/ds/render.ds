@@ -1,0 +1,495 @@
+// LLD of the render namespace (ds::render): the model drawn. A diagram selects
+// and decides what to print (IrExport → the render-IR of the plantuml family,
+// SREQ-00006-1, SREQ-00010-1); the IR is laid out once and drawn twice, as SVG
+// and as terminal text, wrapping to a width (SREQ-00005-1). Layout itself is the
+// class Layout, over the types below.
+
+package driftspec@ds {
+
+
+  module render {
+
+    requirement REQ-00006-1 {
+      status: approved
+      @refines SREQ-00010-1
+      title: The export shall turn a diagram into the render-IR of its kind: class, requirement or sequence
+      text:
+        A diagram's include and exclude select entities by id, module or
+        package; hide and show decide what is printed. A class diagram prints
+        boxes with their sections inside the containers of their modules and
+        nested packages, and the edges lifted from members to classes; a
+        requirement diagram prints the artefacts and what refines, verifies
+        and realises them; a sequence diagram prints lifelines, messages and
+        frames at the depth and level asked for. The IR carries ids, links by
+        identity and locations.
+      rationale:
+        If the drawing is a projection of the model, it cannot drift from it;
+        the IR keeps the family's renderers interchangeable.
+      tags: render, diagrams
+    }
+
+    requirement REQ-00007-1 {
+      status: approved
+      @refines SREQ-00005-1
+      title: The renderers shall draw one layout of the IR as SVG and as terminal text, within a given width
+      text:
+        One layered layout places every node inside its container with no two
+        leaves overlapping, bases above subtypes, wholes above parts, and
+        routes every edge orthogonally around the nodes it crosses, bundling
+        parallel relations; given a width it wraps the layers. The SVG carries
+        stable ids, links, tooltips and the script to fold and focus; the text
+        draws the same layout with box characters and optional colour, and
+        can hand out the cell grid for a host that draws itself. Both are
+        deterministic.
+      rationale:
+        The same drawing in a browser, an editor and a terminal is what makes
+        the model usable where it is written.
+      tags: render, svg, terminal
+    }
+
+    verification VER-00006-2 {
+      status: approved
+      @requirement REQ-00006-1
+      title: Unit tests cover the class, requirement and sequence projections of the corpora
+      method: test
+      tests:
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.DerivedStereotypesAndMembersArePrinted
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.EdgesAreLiftedFromMembersToClasses
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.TheDiagramReadsARelationAsTheViewerDoes
+        tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
+        tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
+        tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
+        tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.AClassDiagramHangsItsArtefactsAsANote
+    }
+
+    verification VER-00007-3 {
+      status: approved
+      @requirement REQ-00007-1
+      title: Unit tests cover placement, routing, wrapping, the lanes a gap keeps and the determinism of both drawings
+      method: test
+      tests:
+        tests/integration/ds/render/test_layout.cpp::TestLayout.EveryNodeIsPlacedAndNoTwoLeavesOverlap
+        tests/integration/ds/render/test_layout.cpp::TestLayout.ChildrenSitInsideTheirContainer
+        tests/integration/ds/render/test_layout.cpp::TestLayout.BasesAreDrawnAboveSubtypesAndWholesAboveParts
+        tests/integration/ds/render/test_layout.cpp::TestLayout.EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute
+        tests/integration/ds/render/test_layout.cpp::TestLayout.LongEdgesStepAroundTheNodesTheyCross
+        tests/integration/ds/render/test_layout.cpp::TestLayoutLanes.AStraightLongEdgeReservesNoLaneRow
+        tests/integration/ds/render/test_layout.cpp::TestLayout.ParallelRelationsAreBundledWithTheirLabelsStacked
+        tests/integration/ds/render/test_layout.cpp::TestLayout.TheSvgIsDeterministicAndCarriesStableIds
+        tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.DrawsLifelinesRowsFramesAndTheCaller
+        tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.CarriesLinksSpansLocationsAndTheScript
+        tests/integration/ds/render/test_layout.cpp::TestSequenceSvg.IsDeterministic
+        tests/integration/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
+        tests/integration/ds/render/test_text.cpp::TestText.IsDeterministicAndPlainWithoutColor
+        tests/integration/ds/render/test_text.cpp::TestText.BoxesDoNotCollideOnTheGrid
+        tests/integration/ds/render/test_text.cpp::TestText.FramesOpeningAtTheSameMessageStackTheirHeaders
+    }
+
+    // ---- the IR: what a diagram prints, in the plantuml family's vocabulary ----
+
+    dataclass IrNode {
+      @requirement REQ-00006-1
+      + id: std::string
+      + kind: std::string
+      + label: std::string
+      + classifier: std::string
+      + stereotype: std::string
+      + parent: std::string
+      + title: std::string
+      + href: std::string
+      + part: std::string                   // the part of the drawing it belongs to, in a drawing made of several
+      + abstract: bool
+      + refs: std::map<std::string, std::string>
+      + sections: std::vector<std::vector<std::string>>
+      + sectionKinds: std::vector<std::string>
+      + span: std::pair<int, int>
+      + dividers: std::vector<std::pair<int, std::string>>
+    }
+
+    dataclass IrEdge {
+      @requirement REQ-00006-1
+      + from: std::string
+      + to: std::string
+      + kind: std::string
+      + label: std::string
+      + title: std::string
+      + href: std::string
+      + part: std::string                   // the part of the drawing it belongs to, in a drawing made of several
+      + dashed: bool
+      + order: int
+      + refs: std::map<std::string, std::string>
+    }
+
+    function badgeOf(classifier: std::string, abstract: bool) -> std::string {
+      @requirement REQ-00006-1
+    }
+
+    // whether a section of a box holds members, written as signatures; any other holds what a closed box
+    // offers, all of one kind (DS-244)
+    function holdsMembers(sectionKind: std::string) -> bool {
+      @requirement REQ-00064-5
+    }
+
+    // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
+    // another tool may hand ds; the document a diagram's formats write (DS-126)
+    dataclass IrText {
+      @requirement REQ-00106-1
+      + json: std::string
+    }
+
+    // a drawing that is a table (DS-251): a corner, the headings of its columns, and its rows; a cell
+    // says what it is, and the renderers draw each kind its own way
+    dataclass IrCell {
+      @requirement REQ-00006-1
+      + text: std::string
+      + kind: std::string
+      + title: std::string
+    }
+
+    dataclass IrRow {
+      @requirement REQ-00006-1
+      + label: std::string
+      + title: std::string
+      + owns many cells: std::vector<IrCell>
+    }
+
+    dataclass IrTable {
+      @requirement REQ-00006-1
+      + corner: std::string
+      + columns: std::vector<std::string>
+      + owns many rows: std::vector<IrRow>
+    }
+
+    dataclass IrDocument {
+      @requirement REQ-00006-1
+      + title: std::string
+      + notice: std::string
+      + owns table: IrTable                 // when it has columns, the document is drawn as this table
+      + owns many nodes: std::vector<IrNode>
+      + owns many edges: std::vector<IrEdge>
+      // a drawing made of several, each drawn as itself and placed beside the last: a tour (DS-245)
+      + parts: std::vector<std::string>
+      + static parse(json: std::string) -> IrDocument
+      + part(name: std::string) -> IrDocument
+      + bundled() -> IrDocument
+    }
+
+    // All of it is JSON reads and field writes, so only what it creates can be told.
+    sequence IrDocument::parse {
+      local doc: IrDocument
+      loop each node of the JSON {
+        local node: IrNode
+      }
+      loop each edge of the JSON {
+        local edge: IrEdge
+      }
+      return doc
+    }
+
+    sequence IrDocument::bundled {
+      local out: IrDocument                  // title, notice and nodes copied
+      loop each edge {
+        alt same ends, kind, dash and link as an earlier edge {
+          // its label and title are joined to the first one's, a line each
+        } else {
+          // kept as it is
+        }
+      }
+      return out
+    }
+
+    class IrExport {                         // the projection: takes what the query's filter of a diagram takes, decides what to print, writes the IR
+      @requirement REQ-00006-1
+      @requirement REQ-00121-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the language of the model: the kinds it draws by name (DS-351)
+      + IrExport(model: model::Model, metamodel: model::Metamodel)
+      + diagrams() -> std::vector<std::string>
+      + render(diagramId: std::string, pretty: bool) -> std::string {
+        @requirement REQ-00057-1
+      }
+      - closeBoxes(ir: std::string, cut: axis::Cut, pretty: bool) -> std::string {
+        @requirement REQ-00064-5
+        @requirement REQ-00126-1
+        @requirement REQ-00137-1
+        @requirement REQ-00155-1
+      }
+      - renderState(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00062-1
+        @requirement REQ-00144-1
+        @requirement REQ-00146-1
+      }
+      // a machine as a table: what machine::Table says, written as the table of the IR
+      - renderTable(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00006-1
+      }
+      - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00049-3
+        @requirement REQ-00056-1
+        @requirement REQ-00129-1
+        @requirement REQ-00130-1
+        @requirement REQ-00134-1
+      }
+      // the boxes that take part in a behaviour and its sequence, two parts of one drawing on one cut (DS-245)
+      - renderTour(tour: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00139-1
+      }
+      // a class diagram: the boxes a diagram takes, and the cut it is lifted onto
+      - renderBoxes(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00057-1
+      }
+      - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {
+        @requirement REQ-00050-1
+        @requirement REQ-00131-1
+      }
+    }
+
+    sequence IrExport::diagrams {
+      local out: std::vector<std::string>
+      self -> model_.entities() -> entities
+      return out
+    }
+
+    // The kind written in the diagram picks the scenario. The default is a class diagram
+    // with no open: field, told by its main steps. What comes back is the JSON dumped,
+    // so a name for it, not a checked value.
+    sequence IrExport::render {
+      local filter: query::ClassFilter
+      self -> model_.find(diagramId) -> diagram
+      opt there is no such diagram / no-diagram {
+        return ""
+      }
+      opt it is a sequence diagram / sequence-diagram {
+        -> renderSequence(diagram, pretty) -> ir
+        return ir
+      }
+      opt it is a requirement diagram / requirement-diagram {
+        -> renderRequirements(diagram, pretty) -> ir
+        return ir
+      }
+      opt it is a state diagram / state-diagram {
+        -> renderState(diagram, pretty) -> ir
+        return ir
+      }
+      opt it is a table / table-diagram {
+        -> renderTable(diagram, pretty) -> ir
+        return ir
+      }
+      opt it is a tour / tour {
+        -> renderTour(diagram, pretty) -> ir
+        return ir
+      }
+      -> renderBoxes(diagram, pretty) -> ir
+      return ir
+    }
+
+    // a tour: the sequence of the same fields, and who takes part in it drawn as boxes on the same cut
+    sequence IrExport::renderTour {
+      -> renderSequence(tour, pretty) -> sequence
+      -> renderBoxes(boxes, pretty) -> drawn
+      return ir
+    }
+
+    sequence IrExport::renderBoxes {
+      local filter: query::ClassFilter
+      -> query::filterFor(metamodel_, diagram) -> made
+      -> filter.boxes(model_) -> selected
+      -> filter.containers(model_, selected) -> containers
+      loop each selected id {
+        self -> model_.find(id) -> entity
+      }
+      loop each container {
+        self -> model_.find(id) -> container
+      }
+      loop each selected box {
+        self -> model_.find(id) -> entity
+        // its members and what it answers to are asked of the model's index (DS-171)
+        self -> model_.index() -> index
+        opt it is a class or an interface {
+          self -> index.members(id) -> members
+        }
+        opt requirements are shown {
+          self -> index.from(id) -> leaving
+        }
+      }
+      self -> model_.index() -> all
+      self -> all.all() -> relations
+      opt a cut is written / open-boxes {
+        self -> all.ofKinds(coupling) -> behaviourCoupling
+        -> closeBoxes(ir, cut, pretty) -> closed
+        return closed
+      }
+      return ir
+    }
+
+    // ---- the layout: geometry the two drawings share ----
+
+    dataclass Point {
+      @requirement REQ-00007-1
+      + x: int
+      + y: int
+    }
+
+    dataclass Rect {
+      @requirement REQ-00007-1
+      + x: int
+      + y: int
+      + w: int
+      + h: int
+    }
+
+    dataclass Route {
+      @requirement REQ-00007-1
+      + owns many points: std::vector<Point>
+    }
+
+    dataclass Placed {
+      @requirement REQ-00007-1
+      + refs node: IrNode
+      + owns rect: Rect
+    }
+
+    dataclass LayoutResult {
+      @requirement REQ-00007-1
+      + owns many placed: std::vector<Placed>
+      + owns many routes: std::map<size_t, Route>
+    }
+
+    dataclass Metrics {                      // the runtime table of sizes: one for SVG pixels, one for terminal cells
+      @requirement REQ-00007-1
+      + CHAR_W: int
+      + LINE_H: int
+      + PAD_X: int
+      + PAD_Y: int
+      + SECTION_GAP: int
+      + BADGE_W: int
+      + DOT_W: int
+      + NOTE_FOLD: int
+      + GAP_X: int
+      + GAP_Y: int
+      + LANE: int
+      + LANE_PAD: int
+      + CONTAINER_PAD: int
+      + CONTAINER_LABEL_H: int
+      + ASPECT: double
+      + static svg() -> Metrics
+      + static text() -> Metrics
+    }
+
+    // The layout itself, in one table of metrics (DS-185).
+    class Layout {
+      @requirement REQ-00007-1
+      - m_: Metrics
+      + Layout(m: Metrics)
+      + sizeOf(node: IrNode) -> Rect                                  // from its text alone
+      + place(doc: IrDocument, maxWidth: int) -> LayoutResult         // layered, wrapped to the width
+    }
+
+    class Svg {                              // the SVG drawing, with its links, tooltips and script
+      @requirement REQ-00007-1
+      + render(doc: IrDocument, maxWidth: int) -> std::string   // also over a layout already made: one identity per member
+    }
+
+    class Text {                             // the terminal drawing, box characters and optional colour
+      @requirement REQ-00007-1
+      + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // also over a layout already made
+      + cells(doc: IrDocument, maxWidth: int) -> std::string
+    }
+
+    // ---- what the drawings keep to their source files ----
+
+    - function sequenceSvg(doc: IrDocument) -> std::string     // a sequence document, drawn without the layout
+    - function tableSvg(doc: IrDocument) -> std::string        // a table document, drawn cell by cell
+
+    - class Grid {                           // the character grid Text fills, cell by cell
+      @requirement REQ-00007-1
+      + dump(color: bool) -> std::string
+      + encode() -> std::string
+      + columns() -> int
+      + rows() -> int
+    }
+
+    - function sequenceGrid(doc: IrDocument) -> Grid
+    - function classGrid(doc: IrDocument, lay: LayoutResult) -> Grid
+    - function tableGrid(doc: IrDocument) -> Grid
+
+    // metrics is the pixel table, Metrics::svg(), a static call. The drawing over the
+    // layout is the second render, an overload: neither can be told, so the drawing of a
+    // class document comes back as a name.
+    sequence Svg::render {
+      opt the document is a table / table-document {
+        -> tableSvg(doc) -> drawing
+        return drawing
+      }
+      opt a node of the document is a lifeline / sequence-document {
+        -> sequenceSvg(doc) -> drawing
+        return drawing
+      }
+      self -> doc.bundled() -> bundled
+      local layout: Layout
+      self -> layout.place(bundled, maxWidth) -> lay
+      return drawing
+    }
+
+    // metrics is the cell table, Metrics::text(), and width is maxWidth less the grid's
+    // margin. The drawing over the layout is the second render, an overload.
+    sequence Text::render {
+      opt the document is a table / table-document {
+        -> tableGrid(doc) -> grid
+        self -> grid.dump(color) -> drawing
+        return drawing
+      }
+      opt a node of the document is a lifeline / sequence-document {
+        -> sequenceGrid(doc) -> grid
+        self -> grid.dump(color) -> drawing
+        return drawing
+      }
+      self -> doc.bundled() -> bundled
+      local layout: Layout
+      self -> layout.place(bundled, width) -> lay
+      return drawing
+    }
+
+    // What comes back is the JSON of the grid, so a name for it.
+    sequence Text::cells {
+      self -> doc.bundled() -> bundled
+      alt a node of the document is a lifeline / sequence-document {
+        -> sequenceGrid(doc) -> grid         // bundled all the same, and not used
+      } else {
+        local layout: Layout
+        self -> layout.place(bundled, width) -> lay
+        -> classGrid(bundled, lay) -> grid
+      }
+      self -> grid.columns() -> columns
+      self -> grid.rows() -> rows
+      self -> grid.encode() -> encoded
+      self -> grid.dump(false) -> text
+      return json
+    }
+  }
+}
+
+// The render box drawn inside, names only: every class of the namespace.
+diagram CL_RenderNamespace {
+  kind: class
+  include: driftspec@ds@render::*
+  hide: fields, methods
+}
+
+// Two views, one per intent: the namespace mixes the projection (REQ-00006-1)
+// and the drawing (REQ-00007-1), two requirement families in one namespace;
+// splitting the namespace is a backlog task.
+diagram CL_RenderIr {
+  kind: class
+  include: driftspec@ds@render::IrNode, driftspec@ds@render::IrEdge, driftspec@ds@render::IrDocument, driftspec@ds@render::IrExport, driftspec@ds@render::IrTable, driftspec@ds@render::IrRow, driftspec@ds@render::IrCell
+  show: ownership
+}
+
+diagram CL_RenderDrawing {
+  kind: class
+  include: driftspec@ds@render::Point, driftspec@ds@render::Rect, driftspec@ds@render::Route, driftspec@ds@render::Placed, driftspec@ds@render::LayoutResult, driftspec@ds@render::Metrics, driftspec@ds@render::Svg, driftspec@ds@render::Text
+  show: ownership
+  hide: fields
+}

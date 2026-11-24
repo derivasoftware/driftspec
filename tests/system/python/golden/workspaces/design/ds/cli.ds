@@ -1,0 +1,146 @@
+// The interface of ds for a person or a script: its command line. What they see: each
+// command, what it prints and how it exits. Each operation has its trace, and each
+// exit code names the scenario that ends in it, so `ds check` keeps saying what it does.
+
+package driftspec@ds {
+  interface cli {
+    kind: cli
+    transport: process
+    encoding: utf-8 text
+    @constraint CST-00001-1
+
+    operation check(workspace: path) -> none : UC-00001-1 {
+      @requirement SREQ-00002-1
+      command: ds check <workspace> [--json]
+      stdout: one line per finding, then the counts of the model; with --json, both as JSON
+      stderr: why nothing was read: a path that is no workspace (exit 2)
+      exit 0: default
+      exit 1: errors
+      exit 2: bad-usage
+    }
+
+    operation export(workspace: path) -> none : UC-00005-1 {
+      @requirement SREQ-00006-1
+      command: ds export <workspace>
+      stdout: the model as JSON, with its relations, findings and metamodel
+      exit 0: default
+      exit 2: no-workspace
+    }
+
+    operation render(input: path, diagram: string) -> none : UC-00002-1 {
+      @requirement SREQ-00005-1
+      @requirement SREQ-00010-1
+      @requirement SREQ-00013-1
+      command: ds render <workspace|ir.json> [diagram] [-f html|json|svg|text|cells|ir|layout] [-w N] [-o file] [--embed [--height N]] [--css file]
+      stdout: html, the viewer of the whole model, framed on the diagram when one is named; json, its scene; svg, text or cells, the diagram drawn; ir or layout, its data
+      exit 0: default
+      exit 1: no-diagram
+      exit 2: no-workspace
+    }
+
+    operation query(workspace: path, question: string, subject: string) -> none : UC-00004-1 {
+      @requirement SREQ-00011-1
+      @requirement SREQ-00004-1
+      command: ds query <workspace> <question> [subject] [--json]
+      stdout: one answer per line, or JSON; coupling answers what every behaviour touches outside its module
+      exit 0: default
+      exit 1: unknown-question
+      exit 2: no-workspace
+    }
+
+    operation manual(topic: string) -> none : UC-00006-1 {
+      @requirement SREQ-00014-1
+      command: ds manual [topic] [--json]
+      stdout: the index, or the page of a kind, a finding code, the commands, the annotations or the codes
+      exit 0: default
+      exit 1: no-topic
+    }
+  }
+
+  sequence cli::check {
+    -> app::main(workspace) / check -> code
+  }
+
+  sequence cli::check / errors {
+    -> app::main(workspace) / check-errors -> code
+  }
+
+  sequence cli::check / bad-usage {
+    -> app::main(workspace) / bad-usage -> code
+  }
+
+  sequence cli::export {
+    -> app::main(workspace) / export -> code
+  }
+
+  sequence cli::export / no-workspace {
+    -> app::main(workspace) / no-workspace -> code
+  }
+
+  sequence cli::render {
+    -> app::main(input) / render -> code
+  }
+
+  sequence cli::render / no-diagram {
+    -> app::main(input) / no-diagram -> code
+  }
+
+  sequence cli::render / no-workspace {
+    -> app::main(input) / no-workspace -> code
+  }
+
+  sequence cli::query {
+    -> app::main(workspace) / query -> code
+  }
+
+  sequence cli::query / unknown-question {
+    -> app::main(workspace) / unknown-question -> code
+  }
+
+  sequence cli::query / no-workspace {
+    -> app::main(workspace) / no-workspace -> code
+  }
+
+  sequence cli::manual {
+    -> app::main(topic) / manual -> code
+  }
+
+  sequence cli::manual / no-topic {
+    -> app::main(topic) / no-topic -> code
+  }
+}
+
+diagram IF_Cli {
+  kind: interface
+  include: driftspec@ds@cli
+}
+
+diagram SEQ_Check {
+  kind: sequence
+  include: driftspec@ds@cli::check
+  depth: *
+}
+
+diagram SEQ_CheckSyntaxError {
+  kind: sequence
+  include: driftspec@ds@cli::check / errors
+  depth: 2
+}
+
+diagram SEQ_Render {
+  kind: sequence
+  include: driftspec@ds@cli::render
+  depth: 2
+}
+
+diagram SEQ_Query {
+  kind: sequence
+  include: driftspec@ds@cli::query
+  depth: 2
+}
+
+diagram HLD_Ds {                     // every box closed: who depends on whom, derived
+  kind: class
+  include: driftspec@ds@*
+  open: driftspec@ds
+}

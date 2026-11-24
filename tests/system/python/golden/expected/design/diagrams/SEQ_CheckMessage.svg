@@ -1,0 +1,261 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="pr1839k9e-root" viewBox="0 0 1438 1940" data-viewbox="0 0 1438 1940" width="1438" height="1940" style="max-width:100%;height:auto" class="pr-diagram pr-sequence" role="img">
+<title>SEQ_CheckMessage</title>
+<style>
+  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
+    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
+    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
+    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+  .pr-diagram text { fill: var(--pr-text); }
+  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
+  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
+  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
+  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
+  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
+  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
+  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
+  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
+  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-name { fill: var(--pr-name); }
+  .pr-diagram .pr-type { fill: var(--pr-type); }
+  .pr-diagram .pr-param { fill: var(--pr-param); }
+  .pr-diagram .pr-punct { fill: var(--pr-punct); }
+  .pr-diagram .pr-static { text-decoration: underline; }
+  .pr-diagram .pr-abstract-member { font-style: italic; }
+  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
+  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
+  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
+  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
+  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
+  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
+  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
+  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
+  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
+  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
+  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
+  .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+
+  .pr-diagram .pr-lifeline-line { stroke: var(--pr-stroke); stroke-dasharray: 4 4; }
+  .pr-diagram .pr-lifeline-head > rect { fill: var(--pr-head-class); stroke: var(--pr-stroke); }
+  .pr-diagram .pr-actor circle, .pr-diagram .pr-actor path { fill: none; stroke: var(--pr-text); stroke-width: 1.4; stroke-linecap: round; }
+  .pr-diagram .pr-msg { stroke: var(--pr-edge); fill: none; pointer-events: none; }
+  .pr-diagram .pr-msg-dashed { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-msg-label { fill: var(--pr-text); font-size: 11.5px; text-anchor: middle; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram .pr-msg-self .pr-msg-label { text-anchor: start; }
+  .pr-diagram { --pr-frame-alt: #4338ca; --pr-frame-loop: #047857; --pr-frame-opt: #b45309; --pr-frame-other: #334155; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; } }
+  [data-theme="dark"] .pr-diagram { --pr-frame-alt: #a5b4fc; --pr-frame-loop: #6ee7b7; --pr-frame-opt: #fcd34d; --pr-frame-other: #cbd5e1; }
+  .pr-diagram .pr-frame { --pr-frame: var(--pr-frame-other); }
+  .pr-diagram .pr-frame-alt { --pr-frame: var(--pr-frame-alt); }
+  .pr-diagram .pr-frame-loop { --pr-frame: var(--pr-frame-loop); }
+  .pr-diagram .pr-frame-opt { --pr-frame: var(--pr-frame-opt); }
+  .pr-diagram .pr-frame > rect { fill: none; stroke: var(--pr-frame); stroke-width: 1.6px; }
+  .pr-diagram .pr-frame-tab { fill: var(--pr-frame); stroke: none; }
+  .pr-diagram .pr-frame-label { font-weight: 700; fill: var(--pr-box-fill); font-size: 11px; letter-spacing: .3px; }
+  .pr-diagram .pr-frame-cond { fill: var(--pr-text); font-size: 11px; }
+  .pr-diagram .pr-frame-divider { stroke: var(--pr-frame); stroke-dasharray: 5 4; stroke-width: 1.2px; }
+  .pr-diagram .pr-expandable { cursor: pointer; }
+  .pr-diagram .pr-toggle { fill: var(--pr-muted); font-size: 10px; }
+  .pr-diagram .pr-toggle-closed { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-open { display: none; }
+  .pr-diagram .pr-collapsed .pr-toggle-closed { display: inline; }
+  .pr-diagram .pr-collapsed .pr-msg-label { font-weight: 700; }
+  .pr-diagram.pr-focusing .pr-row, .pr-diagram.pr-focusing .pr-lifeline, .pr-diagram.pr-focusing .pr-frame { opacity: var(--pr-dimmed, .25); transition: opacity .12s; }
+  .pr-diagram.pr-focusing .pr-focus { opacity: 1; }
+  .pr-diagram .pr-link:hover .pr-msg-label, .pr-diagram .pr-link:hover .pr-header { text-decoration: underline; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-added .pr-msg-label { fill: var(--pr-added); font-weight: 700; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-row.pr-change-removed .pr-msg-label { fill: var(--pr-removed); text-decoration: line-through; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-row.pr-change-changed .pr-msg-label { fill: var(--pr-changed); font-weight: 700; }
+  .pr-diagram .pr-lifeline.pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-lifeline.pr-change-added .pr-header { fill: var(--pr-added); }
+</style>
+<defs>
+  <marker id="pr1839k9e-tri" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" orient="auto"><path d="M1,1 L13,6 L1,11 Z"/></marker>
+  <marker id="pr1839k9e-diamond-filled" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="pr-filled" d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pr1839k9e-diamond" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pr1839k9e-arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path class="pr-open" d="M1,1 L11,6 L1,11"/></marker>
+  <marker id="pr1839k9e-msg" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path class="pr-filled" d="M1,1 L11,6 L1,11 Z"/></marker>
+</defs>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f0" data-first="1" data-last="2" data-top="112" data-bottom="208" transform="translate(0,112)"><title>opt: it is a return of the behaviour, not a call</title><rect x="20" y="0" width="612" height="96" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">it is a return of the behaviour, not a call</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f1" data-first="11" data-last="11" data-top="462" data-bottom="516" transform="translate(0,462)"><title>opt: the behaviour or the message is gone from the model</title><rect x="20" y="0" width="444" height="54" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">the behaviour or the message is gone from the model</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f10" data-first="35" data-last="35" data-top="1622" data-bottom="1688" transform="translate(0,1622)"><title>opt: the target is not self</title><rect x="340" y="0" width="356" height="66" rx="3"/><path class="pr-frame-tab" d="M340,0 H377 V16 L371,22 H340 Z"/><text class="pr-frame-label" x="348" y="15">opt</text><text class="pr-frame-cond" x="387" y="15">the target is not self</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f11" data-first="38" data-last="39" data-top="1762" data-bottom="1846" transform="translate(0,1762)"><title>opt: the type does not declare the operation</title><rect x="20" y="0" width="1004" height="84" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">the type does not declare the operation</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f2" data-first="14" data-last="14" data-top="614" data-bottom="668" transform="translate(0,614)"><title>opt: nothing declares the subject yet, it waits</title><rect x="20" y="0" width="408" height="54" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">nothing declares the subject yet, it waits</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f3" data-first="15" data-last="23" data-top="682" data-bottom="1076" transform="translate(0,682)"><title>opt: a call to self the class does not declare</title><rect x="4" y="0" width="1372" height="394" rx="3"/><path class="pr-frame-tab" d="M4,0 H41 V16 L35,22 H4 Z"/><text class="pr-frame-label" x="12" y="15">opt</text><text class="pr-frame-cond" x="51" y="15">a call to self the class does not declare</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f4" data-first="19" data-last="21" data-top="832" data-bottom="970" transform="translate(0,832)"><title>opt: it is a function of the module</title><rect x="20" y="0" width="660" height="138" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">it is a function of the module</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f5" data-first="22" data-last="23" data-top="984" data-bottom="1068" transform="translate(0,984)"><title>opt: the caller is itself a function</title><rect x="20" y="0" width="1004" height="84" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">the caller is itself a function</text></g>
+<g class="pr-frame pr-frame-alt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f6" data-first="24" data-last="29" data-top="1090" data-bottom="1382" transform="translate(0,1090)"><title>alt: the target is self</title><rect x="4" y="0" width="1372" height="292" rx="3"/><path class="pr-frame-tab" d="M4,0 H41 V16 L35,22 H4 Z"/><text class="pr-frame-label" x="12" y="15">alt</text><text class="pr-frame-cond" x="51" y="15">the target is self</text><line class="pr-frame-divider" data-divider-row="24" data-y="1118" x1="4" y1="28" x2="1376" y2="28"/><text class="pr-frame-cond" data-divider-row="24" data-y="1118" x="12" y="32">[else]</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f7" data-first="26" data-last="27" data-top="1230" data-bottom="1314" transform="translate(0,1230)"><title>opt: the context has nothing by that name</title><rect x="20" y="0" width="1004" height="84" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">the context has nothing by that name</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f8" data-first="30" data-last="30" data-top="1396" data-bottom="1450" transform="translate(0,1396)"><title>opt: a primitive or an unknown spelling, nothing to check</title><rect x="20" y="0" width="451" height="54" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">a primitive or an unknown spelling, nothing to check</text></g>
+<g class="pr-frame pr-frame-opt" data-id="driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f9" data-first="33" data-last="33" data-top="1524" data-bottom="1578" transform="translate(0,1524)"><title>opt: the type is not declared yet, reported once it is</title><rect x="20" y="0" width="430" height="54" rx="3"/><path class="pr-frame-tab" d="M20,0 H57 V16 L51,22 H20 Z"/><text class="pr-frame-label" x="28" y="15">opt</text><text class="pr-frame-cond" x="67" y="15">the type is not declared yet, reported once it is</text></g>
+<g class="pr-lifeline pr-actor" data-id="caller"><line class="pr-lifeline-line" x1="64" y1="58" x2="64" y2="1930" data-y2="1930"/><g class="pr-lifeline-head"><circle cx="64" cy="26" r="5"/><path d="M64,31 V42 M56,35 H72 M64,42 L57,52 M64,42 L71,52"/><text class="pr-header" x="64" y="68" text-anchor="middle" font-size="11">caller</text></g></g>
+<g class="pr-lifeline" data-id="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:383"><title>driftspec@ds@check::BehaviourTyping</title><line class="pr-lifeline-line" x1="384" y1="58" x2="384" y2="1930" data-y2="1930"/><a href="#driftspec@ds@check::BehaviourTyping" class="pr-link"><g class="pr-lifeline-head"><rect x="290" y="20" width="188" height="38" rx="4"/><text class="pr-header" x="384" y="44" text-anchor="middle">self: BehaviourTyping</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@check::Context|context_" data-ref-location="design/ds/check.ds:253"><title>driftspec@ds@check::Context</title><line class="pr-lifeline-line" x1="980" y1="58" x2="980" y2="1930" data-y2="1930"/><a href="#driftspec@ds@check::Context" class="pr-link"><g class="pr-lifeline-head"><rect x="902" y="20" width="156" height="38" rx="4"/><text class="pr-header" x="980" y="44" text-anchor="middle">context_: Context</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@model::Model|model_" data-ref-location="design/ds/model.ds:1000"><title>driftspec@ds@model::Model</title><line class="pr-lifeline-line" x1="1144" y1="58" x2="1144" y2="1930" data-y2="1930"/><a href="#driftspec@ds@model::Model" class="pr-link"><g class="pr-lifeline-head"><rect x="1082" y="20" width="124" height="38" rx="4"/><text class="pr-header" x="1144" y="44" text-anchor="middle">model_: Model</text></g></a></g>
+<g class="pr-lifeline" data-id="driftspec@ds@check::Resolver|resolver_" data-ref-location="design/ds/check.ds:182"><title>driftspec@ds@check::Resolver</title><line class="pr-lifeline-line" x1="1316" y1="58" x2="1316" y2="1930" data-y2="1930"/><a href="#driftspec@ds@check::Resolver" class="pr-link"><g class="pr-lifeline-head"><rect x="1230" y="20" width="172" height="38" rx="4"/><text class="pr-header" x="1316" y="44" text-anchor="middle">resolver_: Resolver</text></g></a></g>
+<g class="pr-row pr-msg-group" data-row="0" data-y="74" data-h="30" data-from="caller" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:416"><title>driftspec@ds@check::BehaviourTyping::checkMessage</title><path class="pr-edge-hit" d="M64,94 L382,94"/><path class="pr-msg" d="M64,94 L382,94" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="224" y="89">checkMessage(message: bind::Message)</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="1" data-y="104" data-h="72" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:793"><title>driftspec@ds@check::BehaviourTyping::checkReturn</title><path class="pr-edge-hit" d="M384,154 H416 V170 H387"/><path class="pr-msg" d="M384,154 H416 V170 H387" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="422" y="166">checkReturn(message)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="2" data-y="176" data-h="38" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,196 L66,196"/><path class="pr-msg pr-msg-dashed" d="M384,196 L66,196" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="191">return</text></g>
+<g class="pr-row pr-msg-group" data-row="3" data-y="214" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::Context|context_" data-ref-location="design/ds/check.ds:797"><title>driftspec@ds@check::Context::current</title><path class="pr-edge-hit" d="M384,234 L978,234"/><path class="pr-msg" d="M384,234 L978,234" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="682" y="229">current(message.sequence)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="4" data-y="244" data-h="30" data-from="driftspec@ds@check::Context|context_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M980,264 L386,264"/><path class="pr-msg pr-msg-dashed" d="M980,264 L386,264" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="682" y="259">sequenceId</text></g>
+<g class="pr-row pr-msg-group" data-row="5" data-y="274" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@model::Model|model_" data-ref-location="design/ds/check.ds:798"><title>driftspec@ds@model::Model::find</title><path class="pr-edge-hit" d="M384,294 L1142,294"/><path class="pr-msg" d="M384,294 L1142,294" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="764" y="289">find(sequenceId)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="6" data-y="304" data-h="30" data-from="driftspec@ds@model::Model|model_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M1144,324 L386,324"/><path class="pr-msg pr-msg-dashed" d="M1144,324 L386,324" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="764" y="319">seq</text></g>
+<g class="pr-row pr-msg-group" data-row="7" data-y="334" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::Context|context_" data-ref-location="design/ds/check.ds:799"><title>driftspec@ds@check::Context::current</title><path class="pr-edge-hit" d="M384,354 L978,354"/><path class="pr-msg" d="M384,354 L978,354" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="682" y="349">current(message.message)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="8" data-y="364" data-h="30" data-from="driftspec@ds@check::Context|context_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M980,384 L386,384"/><path class="pr-msg pr-msg-dashed" d="M980,384 L386,384" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="682" y="379">messageId</text></g>
+<g class="pr-row pr-msg-group" data-row="9" data-y="394" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@model::Model|model_" data-ref-location="design/ds/check.ds:800"><title>driftspec@ds@model::Model::find</title><path class="pr-edge-hit" d="M384,414 L1142,414"/><path class="pr-msg" d="M384,414 L1142,414" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="764" y="409">find(messageId)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="10" data-y="424" data-h="30" data-from="driftspec@ds@model::Model|model_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M1144,444 L386,444"/><path class="pr-msg pr-msg-dashed" d="M1144,444 L386,444" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="764" y="439">msg</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="11" data-y="454" data-h="68" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,504 L66,504"/><path class="pr-msg pr-msg-dashed" d="M384,504 L66,504" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="499">return</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="12" data-y="522" data-h="42" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:805"><title>driftspec@ds@check::BehaviourTyping::subjectClass</title><path class="pr-edge-hit" d="M384,542 H416 V558 H387"/><path class="pr-msg" d="M384,542 H416 V558 H387" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="422" y="554">subjectClass(seq, subject)</text></g>
+<g class="pr-row pr-msg-group pr-msg-self pr-msg-return" data-row="13" data-y="564" data-h="42" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M384,584 H416 V600 H387"/><path class="pr-msg pr-msg-dashed" d="M384,584 H416 V600 H387" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="422" y="596">cls</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="14" data-y="606" data-h="68" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,656 L66,656"/><path class="pr-msg pr-msg-dashed" d="M384,656 L66,656" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="651">return</text></g>
+<g class="pr-row pr-msg-group" data-row="15" data-y="674" data-h="60" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::Resolver|resolver_" data-ref-expands="driftspec@ds@check::Resolver::resolve::sequence" data-ref-location="design/ds/check.ds:813"><a href="#driftspec@ds@check::Resolver::resolve::sequence" class="pr-link"><title>driftspec@ds@check::Resolver::resolve
+expands to: Resolver::resolve</title><path class="pr-edge-hit" d="M384,724 L1314,724"/><path class="pr-msg" d="M384,724 L1314,724" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="850" y="719">resolve(message.op, home)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="16" data-y="734" data-h="30" data-from="driftspec@ds@check::Resolver|resolver_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M1316,754 L386,754"/><path class="pr-msg pr-msg-dashed" d="M1316,754 L386,754" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="850" y="749">id</text></g>
+<g class="pr-row pr-msg-group" data-row="17" data-y="764" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@model::Model|model_" data-ref-location="design/ds/check.ds:814"><title>driftspec@ds@model::Model::find</title><path class="pr-edge-hit" d="M384,784 L1142,784"/><path class="pr-msg" d="M384,784 L1142,784" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="764" y="779">find(id)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="18" data-y="794" data-h="30" data-from="driftspec@ds@model::Model|model_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M1144,814 L386,814"/><path class="pr-msg pr-msg-dashed" d="M1144,814 L386,814" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="764" y="809">target</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="19" data-y="824" data-h="72" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:816"><title>driftspec@ds@check::BehaviourTyping::couple</title><path class="pr-edge-hit" d="M384,874 H416 V890 H387"/><path class="pr-msg" d="M384,874 H416 V890 H387" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="422" y="886">couple(seq, target, true)</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="20" data-y="896" data-h="42" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:817"><title>driftspec@ds@check::BehaviourTyping::call</title><path class="pr-edge-hit" d="M384,916 H416 V932 H387"/><path class="pr-msg" d="M384,916 H416 V932 H387" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="422" y="928">call(msg, target, message)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="21" data-y="938" data-h="38" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,958 L66,958"/><path class="pr-msg pr-msg-dashed" d="M384,958 L66,958" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="953">return</text></g>
+<g class="pr-row pr-msg-group" data-row="22" data-y="976" data-h="60" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::Context|context_" data-ref-location="design/ds/check.ds:821"><title>driftspec@ds@check::Context::report</title><path class="pr-edge-hit" d="M384,1026 L978,1026"/><path class="pr-msg" d="M384,1026 L978,1026" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="682" y="1021">report(finding)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="23" data-y="1036" data-h="46" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,1056 L66,1056"/><path class="pr-msg pr-msg-dashed" d="M384,1056 L66,1056" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="1051">return</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="24" data-y="1082" data-h="98" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:829"><title>driftspec@ds@check::BehaviourTyping::typeOfName</title><path class="pr-edge-hit" d="M384,1158 H416 V1174 H387"/><path class="pr-msg" d="M384,1158 H416 V1174 H387" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="422" y="1170">typeOfName(seq, cls, subject, message.to, value, transient)</text></g>
+<g class="pr-row pr-msg-group pr-msg-self pr-msg-return" data-row="25" data-y="1180" data-h="42" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M384,1200 H416 V1216 H387"/><path class="pr-msg pr-msg-dashed" d="M384,1200 H416 V1216 H387" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="422" y="1212">known</text></g>
+<g class="pr-row pr-msg-group" data-row="26" data-y="1222" data-h="60" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::Context|context_" data-ref-location="design/ds/check.ds:831"><title>driftspec@ds@check::Context::report</title><path class="pr-edge-hit" d="M384,1272 L978,1272"/><path class="pr-msg" d="M384,1272 L978,1272" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="682" y="1267">report(finding)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="27" data-y="1282" data-h="38" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,1302 L66,1302"/><path class="pr-msg pr-msg-dashed" d="M384,1302 L66,1302" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="1297">return</text></g>
+<g class="pr-row pr-msg-group" data-row="28" data-y="1320" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::Resolver|resolver_" data-ref-location="design/ds/check.ds:834"><title>driftspec@ds@check::Resolver::resolveTypeText</title><path class="pr-edge-hit" d="M384,1340 L1314,1340"/><path class="pr-msg" d="M384,1340 L1314,1340" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="850" y="1335">resolveTypeText(value.first, value.second)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="29" data-y="1350" data-h="38" data-from="driftspec@ds@check::Resolver|resolver_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M1316,1370 L386,1370"/><path class="pr-msg pr-msg-dashed" d="M1316,1370 L386,1370" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="850" y="1365">typeId</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="30" data-y="1388" data-h="68" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,1438 L66,1438"/><path class="pr-msg pr-msg-dashed" d="M384,1438 L66,1438" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="1433">return</text></g>
+<g class="pr-row pr-msg-group" data-row="31" data-y="1456" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@model::Model|model_" data-ref-location="design/ds/check.ds:840"><title>driftspec@ds@model::Model::find</title><path class="pr-edge-hit" d="M384,1476 L1142,1476"/><path class="pr-msg" d="M384,1476 L1142,1476" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="764" y="1471">find(typeId)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="32" data-y="1486" data-h="30" data-from="driftspec@ds@model::Model|model_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M1144,1506 L386,1506"/><path class="pr-msg pr-msg-dashed" d="M1144,1506 L386,1506" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="764" y="1501">type</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="33" data-y="1516" data-h="68" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,1566 L66,1566"/><path class="pr-msg pr-msg-dashed" d="M384,1566 L66,1566" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="1561">return</text></g>
+<g class="pr-row pr-msg-group" data-row="34" data-y="1584" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@model::Model|model_" data-ref-expands="driftspec@ds@model::Model::annotate::sequence" data-ref-location="design/ds/check.ds:845"><a href="#driftspec@ds@model::Model::annotate::sequence" class="pr-link"><title>driftspec@ds@model::Model::annotate
+expands to: Model::annotate</title><path class="pr-edge-hit" d="M384,1604 L1142,1604"/><path class="pr-msg" d="M384,1604 L1142,1604" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="764" y="1599">annotate(messageId, key, typeId)</text></a></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="35" data-y="1614" data-h="80" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:848"><title>driftspec@ds@check::BehaviourTyping::couple</title><path class="pr-edge-hit" d="M384,1664 H416 V1680 H387"/><path class="pr-msg" d="M384,1664 H416 V1680 H387" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="422" y="1676">couple(seq, type, transient)</text></g>
+<g class="pr-row pr-msg-group" data-row="36" data-y="1694" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@model::Model|model_" data-ref-location="design/ds/check.ds:850"><title>driftspec@ds@model::Model::find</title><path class="pr-edge-hit" d="M384,1714 L1142,1714"/><path class="pr-msg" d="M384,1714 L1142,1714" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="764" y="1709">find(opId)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="37" data-y="1724" data-h="30" data-from="driftspec@ds@model::Model|model_" data-to="driftspec@ds@check::BehaviourTyping"><path class="pr-edge-hit" d="M1144,1744 L386,1744"/><path class="pr-msg pr-msg-dashed" d="M1144,1744 L386,1744" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="764" y="1739">op</text></g>
+<g class="pr-row pr-msg-group" data-row="38" data-y="1754" data-h="60" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::Context|context_" data-ref-location="design/ds/check.ds:852"><title>driftspec@ds@check::Context::report</title><path class="pr-edge-hit" d="M384,1804 L978,1804"/><path class="pr-msg" d="M384,1804 L978,1804" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="682" y="1799">report(finding)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="39" data-y="1814" data-h="38" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,1834 L66,1834"/><path class="pr-msg pr-msg-dashed" d="M384,1834 L66,1834" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="1829">return</text></g>
+<g class="pr-row pr-msg-group pr-msg-self" data-row="40" data-y="1852" data-h="42" data-from="driftspec@ds@check::BehaviourTyping" data-to="driftspec@ds@check::BehaviourTyping" data-ref-location="design/ds/check.ds:855"><title>driftspec@ds@check::BehaviourTyping::call</title><path class="pr-edge-hit" d="M384,1872 H416 V1888 H387"/><path class="pr-msg" d="M384,1872 H416 V1888 H387" marker-end="url(#pr1839k9e-msg)"/><text class="pr-msg-label" x="422" y="1884">call(msg, op, message)</text></g>
+<g class="pr-row pr-msg-group pr-msg-return" data-row="41" data-y="1894" data-h="30" data-from="driftspec@ds@check::BehaviourTyping" data-to="caller"><path class="pr-edge-hit" d="M384,1914 L66,1914"/><path class="pr-msg pr-msg-dashed" d="M384,1914 L66,1914" marker-end="url(#pr1839k9e-arrow)"/><text class="pr-msg-label" x="224" y="1909">void</text></g>
+<script><![CDATA[
+(function () {
+  var root = document.getElementById('pr1839k9e-root');
+  if (!root || root.dataset.wired) return;
+  root.dataset.wired = '1';
+  var rows = Array.prototype.slice.call(root.querySelectorAll('.pr-row')).map(function (el) {
+    return { el: el, row: +el.dataset.row, y: +el.dataset.y, h: +el.dataset.h, span: el.dataset.refSpan };
+  }).sort(function (a, b) { return a.row - b.row; });
+  var frames = Array.prototype.slice.call(root.querySelectorAll('.pr-frame'));
+  var lines = Array.prototype.slice.call(root.querySelectorAll('.pr-lifeline-line'));
+  var collapsed = {};
+  function relayout() {
+    var hidden = {};
+    rows.forEach(function (r) {
+      if (!collapsed[r.row] || !r.span) return;
+      var ab = r.span.split('-').map(Number);
+      rows.forEach(function (q) { if (q.row >= ab[0] && q.row <= ab[1]) hidden[q.row] = true; });
+    });
+    var shift = 0, shiftOf = {}, endOf = {};
+    rows.forEach(function (r) {
+      shiftOf[r.row] = shift;
+      if (hidden[r.row]) { r.el.style.display = 'none'; shift += r.h; return; }
+      r.el.style.display = '';
+      r.el.setAttribute('transform', 'translate(0,' + (-shift) + ')');
+      r.el.classList.toggle('pr-collapsed', !!collapsed[r.row]);
+      endOf[r.row] = r.y + r.h - shift;
+    });
+    frames.forEach(function (f) {
+      var first = +f.dataset.first, last = +f.dataset.last, top = +f.dataset.top, bottom = +f.dataset.bottom;
+      var lastVisible = -1;
+      for (var q = last; q >= first; q--) { if (!hidden[q] && endOf[q] !== undefined) { lastVisible = q; break; } }
+      if (hidden[first] || lastVisible < 0) { f.style.display = 'none'; return; }
+      f.style.display = '';
+      var newTop = top - shiftOf[first];
+      var newBottom = lastVisible === last ? bottom - shiftOf[last] : endOf[lastVisible] - 2;
+      f.setAttribute('transform', 'translate(0,' + newTop + ')');
+      f.querySelector('rect').setAttribute('height', Math.max(24, newBottom - newTop));
+      Array.prototype.forEach.call(f.querySelectorAll('[data-divider-row]'), function (d) {
+        var row = +d.dataset.dividerRow, dy = +d.dataset.y - shiftOf[row] - newTop;
+        if (d.tagName === 'line') { d.setAttribute('y1', dy); d.setAttribute('y2', dy); } else { d.setAttribute('y', dy + 4); }
+        d.style.display = hidden[row] ? 'none' : '';
+      });
+    });
+    lines.forEach(function (l) { l.setAttribute('y2', +l.dataset.y2 - shift); });
+    var vb = root.dataset.viewbox.split(' ').map(Number);
+    vb[3] -= shift;
+    root.setAttribute('viewBox', vb.join(' '));
+    root.setAttribute('height', vb[3]);
+  }
+  rows.forEach(function (r) {
+    if (!r.span) return;
+    r.el.classList.add('pr-expandable');
+    r.el.addEventListener('click', function (e) { e.preventDefault(); collapsed[r.row] = !collapsed[r.row]; relayout(); });
+  });
+  function focus(ids, rowEl) {
+    root.classList.add('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (el) { el.classList.toggle('pr-focus', !!ids[el.dataset.id]); });
+    rows.forEach(function (r) { r.el.classList.toggle('pr-focus', rowEl ? r.el === rowEl : !!(ids[r.el.dataset.from] || ids[r.el.dataset.to])); });
+  }
+  function unfocus() {
+    root.classList.remove('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-focus'), function (el) { el.classList.remove('pr-focus'); });
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (l) {
+    l.addEventListener('mouseenter', function () { var ids = {}; ids[l.dataset.id] = true; focus(ids); });
+    l.addEventListener('mouseleave', unfocus);
+  });
+  rows.forEach(function (r) {
+    r.el.addEventListener('mouseenter', function () { var ids = {}; ids[r.el.dataset.from] = true; ids[r.el.dataset.to] = true; focus(ids, r.el); });
+    r.el.addEventListener('mouseleave', unfocus);
+  });
+})();
+]]></script>
+</svg>

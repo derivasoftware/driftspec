@@ -1,0 +1,7839 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "realization",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@workspace"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Output"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@exporter::JsonExport"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::SequenceTree"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "realization",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@engine"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Output"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Selection"
+    },
+    {
+      "from": "driftspec@ds@api::Browser",
+      "kind": "realization",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@browser"
+    },
+    {
+      "from": "driftspec@ds@api::Browser",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@api::Browser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Binder"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Checker"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Workspace"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "from": "driftspec@ds@api::Browser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Manual"
+    },
+    {
+      "from": "driftspec@ds@api::Browser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Workspace"
+    },
+    {
+      "from": "driftspec@ds@browser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Browser"
+    },
+    {
+      "from": "driftspec@ds@engine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Api"
+    },
+    {
+      "from": "driftspec@ds@workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Workspace"
+    },
+    {
+      "from": "driftspec@ds@app::load",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@app::load",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Output"
+    },
+    {
+      "from": "driftspec@ds@app::load",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@app::loadWorkspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@app::loadWorkspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Output"
+    },
+    {
+      "from": "driftspec@ds@app::loadWorkspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@app::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@app::manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@app::manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Manual"
+    },
+    {
+      "from": "driftspec@ds@app::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@app::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::ReportText"
+    },
+    {
+      "from": "driftspec@ds@app::load",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::Parser"
+    },
+    {
+      "from": "driftspec@ds@app::load",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Api"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@exporter::JsonExport"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Scene"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Query"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::SceneHtml"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::SceneJson"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrExport"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::DiagramSvg"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrText"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::AnswersText"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Manual"
+    },
+    {
+      "from": "driftspec@ds@axis::Cut",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@axis::Cut",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@axis::Cut",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::Reference",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@bind::Reference",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@bind::Message",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@bind::Event",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Dispatch"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::TreeReader"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@bind::AnnotationBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@parse::TreeReader"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Dispatch"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Reference"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Message"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Event"
+    },
+    {
+      "from": "driftspec@ds@bind::Notes",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Reference"
+    },
+    {
+      "from": "driftspec@ds@bind::Notes",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Message"
+    },
+    {
+      "from": "driftspec@ds@bind::Notes",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Event"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::AnnotationBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::AnnotationBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@bind::AnnotationBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::AnnotationSpec"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@bind::FieldBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::FieldBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::FormulaBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::FormulaBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::FormulaBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::TreeReader"
+    },
+    {
+      "from": "driftspec@ds@bind::FormulaBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Term"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::SignatureBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SignatureBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SignatureBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::SignatureBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::TypeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::TypeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@bind::TypeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::TreeReader"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::MemberBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::RuleValidator"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Strata"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Solver"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Variables"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Code"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Code"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::RelationSpec"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@check::Strata",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Strata",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Variables"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::LiteralForm"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Term"
+    },
+    {
+      "from": "driftspec@ds@check::Variables",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@check::Variables",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@check::Resolver",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Resolver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Resolver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@check::Report",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::Report",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::SeveritySpec"
+    },
+    {
+      "from": "driftspec@ds@check::Report",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Report",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Report",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@check::Report",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::SeveritySpec"
+    },
+    {
+      "from": "driftspec@ds@check::IStep",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::IStep",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::ACheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::ACheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::ACheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@check::IChecker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IChecker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::steps",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Selection"
+    },
+    {
+      "from": "driftspec@ds@check::steps",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Selection",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Step"
+    },
+    {
+      "from": "driftspec@ds@check::Selection",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Step"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Reference"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Message"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Event"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Code"
+    },
+    {
+      "from": "driftspec@ds@check::LevelCoherence",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::LevelCoherence",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::LevelCoherence",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::StateRules",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::StateRules",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::StateRules",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::CallOrder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::CallOrder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::CallOrder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Escape"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::ArtefactName"
+    },
+    {
+      "from": "driftspec@ds@check::Resolver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@check::Resolver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::ArtefactName"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@format::IFormat<1>",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::common::encode",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@format::sceneFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::sceneFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@format::SceneJson",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::SceneJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@format::SceneJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::diagramFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::diagramFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrText"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramIr",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramIr",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrText"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramIr",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramLayout",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramLayout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrText"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramLayout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramSvg",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramSvg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrText"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramSvg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramText",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrText"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramCells",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramCells",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrText"
+    },
+    {
+      "from": "driftspec@ds@format::DiagramCells",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::answerFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::answerFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersText",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersJson",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@format::AnswersJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::reportFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::reportFormats",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Report"
+    },
+    {
+      "from": "driftspec@ds@format::ReportText",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::ReportText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Report"
+    },
+    {
+      "from": "driftspec@ds@format::ReportText",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@format::ReportJson",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@format::IFormat<1>"
+    },
+    {
+      "from": "driftspec@ds@format::ReportJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Report"
+    },
+    {
+      "from": "driftspec@ds@format::ReportJson",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::FormatOptions"
+    },
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@machine::Call"
+    },
+    {
+      "from": "driftspec@ds@machine::Row",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@machine::Cell"
+    },
+    {
+      "from": "driftspec@ds@machine::Table",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@machine::Row"
+    },
+    {
+      "from": "driftspec@ds@machine::Table",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@machine::Table",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@machine::Table",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@machine::Row"
+    },
+    {
+      "from": "driftspec@ds@model::Identity",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@model::Scope",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Identity"
+    },
+    {
+      "from": "driftspec@ds@model::Paths",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Paths",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Paths",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::Branches",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::SequenceTree"
+    },
+    {
+      "from": "driftspec@ds@model::Branches",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::SequenceTree"
+    },
+    {
+      "from": "driftspec@ds@model::Branches",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::SequenceTree",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::SequenceTree",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::SequenceTree",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::FieldSpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::FieldType"
+    },
+    {
+      "from": "driftspec@ds@model::FieldSpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::FieldSource"
+    },
+    {
+      "from": "driftspec@ds@model::KindSpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::KindSpec",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::FieldSpec"
+    },
+    {
+      "from": "driftspec@ds@model::RelationSpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::CodeSpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Code"
+    },
+    {
+      "from": "driftspec@ds@model::CodeSpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::SeveritySpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::AnnotationSpec",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::KindSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::RelationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::CodeSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::SeveritySpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::AnnotationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::KindSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::RelationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::FieldSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::CodeSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Code"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::SeveritySpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::AnnotationSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::FieldType"
+    },
+    {
+      "from": "driftspec@ds@model::Metamodel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::FieldSource"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::CommandSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::CommandSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Manual",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::KindSpec"
+    },
+    {
+      "from": "driftspec@ds@model::Entity",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Entity",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Param"
+    },
+    {
+      "from": "driftspec@ds@model::Entity",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Relation",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Literal",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::LiteralForm"
+    },
+    {
+      "from": "driftspec@ds@model::Literal",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Term"
+    },
+    {
+      "from": "driftspec@ds@model::Literal",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Range",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Column",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@model::Column",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Range"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Literal"
+    },
+    {
+      "from": "driftspec@ds@model::Formula",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Column"
+    },
+    {
+      "from": "driftspec@ds@model::Breach",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Finding",
+      "kind": "association",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Severity"
+    },
+    {
+      "from": "driftspec@ds@model::Finding",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Location"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Breach"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Tabulated"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Indexed"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Relation"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Finding"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Formula"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Breach"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Tabulated"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Kind"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::ArtefactName"
+    },
+    {
+      "from": "driftspec@ds@model::Model",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@model::Index",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::ArtefactName"
+    },
+    {
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::SyntaxError",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::Parser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::SyntaxError"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::ParsedFile"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::Field"
+    },
+    {
+      "from": "driftspec@ds@parse::TreeReader",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@parse::Span"
+    },
+    {
+      "from": "driftspec@ds@query::IQuery",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@query::IQuery",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::IFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::filterFor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::filterFor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@query::filterFor",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::inPattern",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::inPattern",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@query::drawnFrom",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::drawnFrom",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@query::ClassFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::ClassFilter",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::ClassFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::ClassFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::ClassFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@query::Behaviour",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@query::SequenceFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::SequenceFilter",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::SequenceFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::SequenceFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::SequenceFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Behaviour"
+    },
+    {
+      "from": "driftspec@ds@query::StateFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::StateFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::RequirementsFilter",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::RequirementsFilter",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::RequirementsFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::RequirementsFilter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::Walker",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::Walker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::Walker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Taken"
+    },
+    {
+      "from": "driftspec@ds@query::Walker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@axis::Cut"
+    },
+    {
+      "from": "driftspec@ds@query::Walker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Walked"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@query::IQuery"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::IFilter"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@query::entityAnswer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@query::entityAnswer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@query::entityAnswer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::Answer"
+    },
+    {
+      "from": "driftspec@ds@render::IrRow",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrCell"
+    },
+    {
+      "from": "driftspec@ds@render::IrTable",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrRow"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrTable"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrEdge"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrEdge"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@axis::Cut"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Entity"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::ClassFilter"
+    },
+    {
+      "from": "driftspec@ds@render::Route",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Point"
+    },
+    {
+      "from": "driftspec@ds@render::Placed",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::Placed",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Rect"
+    },
+    {
+      "from": "driftspec@ds@render::LayoutResult",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Placed"
+    },
+    {
+      "from": "driftspec@ds@render::LayoutResult",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Route"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Metrics"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Metrics"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Rect"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::LayoutResult"
+    },
+    {
+      "from": "driftspec@ds@render::Svg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::Text",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::sequenceSvg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::tableSvg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::sequenceGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::sequenceGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Grid"
+    },
+    {
+      "from": "driftspec@ds@render::classGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::classGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::LayoutResult"
+    },
+    {
+      "from": "driftspec@ds@render::classGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Grid"
+    },
+    {
+      "from": "driftspec@ds@render::tableGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrDocument"
+    },
+    {
+      "from": "driftspec@ds@render::tableGrid",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Grid"
+    },
+    {
+      "from": "driftspec@ds@render::Svg",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Layout"
+    },
+    {
+      "from": "driftspec@ds@render::Text",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::Layout"
+    },
+    {
+      "from": "driftspec@ds@scene::RuleView",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::BreachView"
+    },
+    {
+      "from": "driftspec@ds@scene::Requirement",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Outcome"
+    },
+    {
+      "from": "driftspec@ds@scene::Behaviour",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Call"
+    },
+    {
+      "from": "driftspec@ds@scene::Node",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Box"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Node"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Box"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Link"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::DiagramView"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Behaviour"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Tour"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Requirement"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Verification"
+    },
+    {
+      "from": "driftspec@ds@scene::SceneDocument",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::RuleView"
+    },
+    {
+      "from": "driftspec@ds@scene::IScene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Layout",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::Layout",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::Layout",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Map",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Node"
+    },
+    {
+      "from": "driftspec@ds@scene::ILayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::layers",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::layers",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::layers",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::layers",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::StructureLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::TraceLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::RulesLayer",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::IScene"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::Map"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Model"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Metamodel"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::SceneDocument"
+    },
+    {
+      "from": "driftspec@ds@scene::Scene",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@scene::ILayer"
+    },
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::steps"
+    },
+    {
+      "from": "driftspec@ds@app::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Report"
+    },
+    {
+      "from": "driftspec@ds@app::check",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::reportFormats"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::sceneFormats"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::diagramFormats"
+    },
+    {
+      "from": "driftspec@ds@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::answerFormats"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@check::Resolver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@check::Facts",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@cli",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@app::main"
+    },
+    {
+      "from": "driftspec@ds@exporter::JsonExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::common::encode"
+    },
+    {
+      "from": "driftspec@ds@format::SceneHtml",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@format::common::pack"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    },
+    {
+      "from": "driftspec@ds@query::Query",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Scope"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@query::filterFor"
+    },
+    {
+      "from": "driftspec@ds@render::IrExport",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@model::Index"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@api",
+      "kind": "container",
+      "label": "api",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@app",
+      "kind": "container",
+      "label": "app",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@axis",
+      "kind": "container",
+      "label": "axis",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@bind",
+      "kind": "container",
+      "label": "bind",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@check",
+      "kind": "container",
+      "label": "check",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@exporter",
+      "kind": "container",
+      "label": "exporter",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@format",
+      "kind": "container",
+      "label": "format",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@format::common",
+      "kind": "container",
+      "label": "format::common",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@machine",
+      "kind": "container",
+      "label": "machine",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@model",
+      "kind": "container",
+      "label": "model",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@parse",
+      "kind": "container",
+      "label": "parse",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@query",
+      "kind": "container",
+      "label": "query",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@render",
+      "kind": "container",
+      "label": "render",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@scene",
+      "kind": "container",
+      "label": "scene",
+      "parent": "driftspec@ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@text",
+      "kind": "container",
+      "label": "text",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Api",
+      "kind": "box",
+      "label": "Api",
+      "parent": "driftspec@ds@api"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Browser",
+      "kind": "box",
+      "label": "Browser",
+      "parent": "driftspec@ds@api"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Identity",
+      "kind": "box",
+      "label": "Identity",
+      "parent": "driftspec@ds@api"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@api::Output",
+      "kind": "box",
+      "label": "Output",
+      "parent": "driftspec@ds@api",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Findings",
+          "Model",
+          "Answers",
+          "Viewer",
+          "Drawing"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Workspace",
+      "kind": "box",
+      "label": "Workspace",
+      "parent": "driftspec@ds@api"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::check",
+      "kind": "box",
+      "label": "check",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::diagramId",
+      "kind": "box",
+      "label": "diagramId",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::emit",
+      "kind": "box",
+      "label": "emit",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::holdsDesign",
+      "kind": "box",
+      "label": "holdsDesign",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::isDirectory",
+      "kind": "box",
+      "label": "isDirectory",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::load",
+      "kind": "box",
+      "label": "load",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::loadWorkspace",
+      "kind": "box",
+      "label": "loadWorkspace",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::main",
+      "kind": "box",
+      "label": "main",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::manual",
+      "kind": "box",
+      "label": "manual",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::readFile",
+      "kind": "box",
+      "label": "readFile",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::run",
+      "kind": "box",
+      "label": "run",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::titleOf",
+      "kind": "box",
+      "label": "titleOf",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@app::work",
+      "kind": "box",
+      "label": "work",
+      "parent": "driftspec@ds@app",
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@axis::Cut",
+      "kind": "box",
+      "label": "Cut",
+      "parent": "driftspec@ds@axis"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::AnnotationBinder",
+      "kind": "box",
+      "label": "AnnotationBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "box",
+      "label": "ArtefactBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::BindContext",
+      "kind": "box",
+      "label": "BindContext",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::Binder",
+      "kind": "box",
+      "label": "Binder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ClassBinder",
+      "kind": "box",
+      "label": "ClassBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::DiagramBinder",
+      "kind": "box",
+      "label": "DiagramBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::Dispatch",
+      "kind": "box",
+      "label": "Dispatch",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::EnumBinder",
+      "kind": "box",
+      "label": "EnumBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::Event",
+      "kind": "box",
+      "label": "Event",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "box",
+      "label": "ExtensionBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::FieldBinder",
+      "kind": "box",
+      "label": "FieldBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::FormulaBinder",
+      "kind": "box",
+      "label": "FormulaBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::FunctionBinder",
+      "kind": "box",
+      "label": "FunctionBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::INodeBinder",
+      "kind": "box",
+      "label": "INodeBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "box",
+      "label": "InterfaceBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::MemberBinder",
+      "kind": "box",
+      "label": "MemberBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "box",
+      "label": "MemberBodyBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::Message",
+      "kind": "box",
+      "label": "Message",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ModuleBinder",
+      "kind": "box",
+      "label": "ModuleBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::Notes",
+      "kind": "box",
+      "label": "Notes",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::PackageBinder",
+      "kind": "box",
+      "label": "PackageBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::Reference",
+      "kind": "box",
+      "label": "Reference",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::RuleBinder",
+      "kind": "box",
+      "label": "RuleBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::SequenceBinder",
+      "kind": "box",
+      "label": "SequenceBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::SignatureBinder",
+      "kind": "box",
+      "label": "SignatureBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::StateBinder",
+      "kind": "box",
+      "label": "StateBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::TypeBinder",
+      "kind": "box",
+      "label": "TypeBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::TypeToken",
+      "kind": "box",
+      "label": "TypeToken",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "box",
+      "label": "UseCaseBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@browser",
+      "kind": "box",
+      "label": "browser",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@check::ACheck",
+      "kind": "box",
+      "label": "ACheck",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::BehaviourTyping",
+      "kind": "box",
+      "label": "BehaviourTyping",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::CallOrder",
+      "kind": "box",
+      "label": "CallOrder",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Checker",
+      "kind": "box",
+      "label": "Checker",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Context",
+      "kind": "box",
+      "label": "Context",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::ContractCheck",
+      "kind": "box",
+      "label": "ContractCheck",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::DependencyCheck",
+      "kind": "box",
+      "label": "DependencyCheck",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Derivation",
+      "kind": "box",
+      "label": "Derivation",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@check::Escape",
+      "kind": "box",
+      "label": "Escape",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Evaluator",
+      "kind": "box",
+      "label": "Evaluator",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Facts",
+      "kind": "box",
+      "label": "Facts",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::FailureFlow",
+      "kind": "box",
+      "label": "FailureFlow",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@check::IChecker",
+      "kind": "box",
+      "label": "IChecker",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@check::IStep",
+      "kind": "box",
+      "label": "IStep",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::LevelCoherence",
+      "kind": "box",
+      "label": "LevelCoherence",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Linker",
+      "kind": "box",
+      "label": "Linker",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@check::Report",
+      "kind": "box",
+      "label": "Report",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Resolver",
+      "kind": "box",
+      "label": "Resolver",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::RuleCheck",
+      "kind": "box",
+      "label": "RuleCheck",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::RuleValidator",
+      "kind": "box",
+      "label": "RuleValidator",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Selection",
+      "kind": "box",
+      "label": "Selection",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Solver",
+      "kind": "box",
+      "label": "Solver",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::StateRules",
+      "kind": "box",
+      "label": "StateRules",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@check::Step",
+      "kind": "box",
+      "label": "Step",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Linker",
+          "Behaviour",
+          "Derivation",
+          "Failures",
+          "Contracts",
+          "Structure",
+          "Dependencies",
+          "Rules",
+          "Levels",
+          "States",
+          "Order"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Strata",
+      "kind": "box",
+      "label": "Strata",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::StructureCheck",
+      "kind": "box",
+      "label": "StructureCheck",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Variables",
+      "kind": "box",
+      "label": "Variables",
+      "parent": "driftspec@ds@check"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@check::steps",
+      "kind": "box",
+      "label": "steps",
+      "parent": "driftspec@ds@check",
+      "stereotype": "function"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@cli",
+      "kind": "box",
+      "label": "cli",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@engine",
+      "kind": "box",
+      "label": "engine",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@exporter::JsonExport",
+      "kind": "box",
+      "label": "JsonExport",
+      "parent": "driftspec@ds@exporter"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::AnswersJson",
+      "kind": "box",
+      "label": "AnswersJson",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::AnswersText",
+      "kind": "box",
+      "label": "AnswersText",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramCells",
+      "kind": "box",
+      "label": "DiagramCells",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramIr",
+      "kind": "box",
+      "label": "DiagramIr",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramLayout",
+      "kind": "box",
+      "label": "DiagramLayout",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramSvg",
+      "kind": "box",
+      "label": "DiagramSvg",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::DiagramText",
+      "kind": "box",
+      "label": "DiagramText",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@format::FormatOptions",
+      "kind": "box",
+      "label": "FormatOptions",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@format::IFormat<1>",
+      "kind": "box",
+      "label": "IFormat<D>",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::ReportJson",
+      "kind": "box",
+      "label": "ReportJson",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::ReportText",
+      "kind": "box",
+      "label": "ReportText",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::SceneHtml",
+      "kind": "box",
+      "label": "SceneHtml",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@format::SceneJson",
+      "kind": "box",
+      "label": "SceneJson",
+      "parent": "driftspec@ds@format"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::answerFormats",
+      "kind": "box",
+      "label": "answerFormats",
+      "parent": "driftspec@ds@format",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::common::encode",
+      "kind": "box",
+      "label": "encode",
+      "parent": "driftspec@ds@format::common",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::common::pack",
+      "kind": "box",
+      "label": "pack",
+      "parent": "driftspec@ds@format::common",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::common::unpack",
+      "kind": "box",
+      "label": "unpack",
+      "parent": "driftspec@ds@format::common",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::diagramFormats",
+      "kind": "box",
+      "label": "diagramFormats",
+      "parent": "driftspec@ds@format",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::reportFormats",
+      "kind": "box",
+      "label": "reportFormats",
+      "parent": "driftspec@ds@format",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::sceneFormats",
+      "kind": "box",
+      "label": "sceneFormats",
+      "parent": "driftspec@ds@format",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@format::viewerTemplate",
+      "kind": "box",
+      "label": "viewerTemplate",
+      "parent": "driftspec@ds@format",
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@machine::Call",
+      "kind": "box",
+      "label": "Call",
+      "parent": "driftspec@ds@machine"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@machine::Cell",
+      "kind": "box",
+      "label": "Cell",
+      "parent": "driftspec@ds@machine"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@machine::Machine",
+      "kind": "box",
+      "label": "Machine",
+      "parent": "driftspec@ds@machine"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@machine::Row",
+      "kind": "box",
+      "label": "Row",
+      "parent": "driftspec@ds@machine"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@machine::Table",
+      "kind": "box",
+      "label": "Table",
+      "parent": "driftspec@ds@machine"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::AnnotationSpec",
+      "kind": "box",
+      "label": "AnnotationSpec",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::ArtefactName",
+      "kind": "box",
+      "label": "ArtefactName",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Branches",
+      "kind": "box",
+      "label": "Branches",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Breach",
+      "kind": "box",
+      "label": "Breach",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::Code",
+      "kind": "box",
+      "label": "Code",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "E_SYNTAX",
+          "E_NAME_RESERVED",
+          "E_DUPLICATE_IDENTITY",
+          "E_MSG_ARITY",
+          "E_MODIFIER_CONFLICT",
+          "E_OPERATOR_UNDECLARED",
+          "E_OWNERSHIP_CYCLE",
+          "E_RELATION_KIND",
+          "E_REF_UNPINNED",
+          "E_REFINES_CYCLE",
+          "E_INHERITANCE_CYCLE",
+          "E_TEMPLATE_BOUND",
+          "E_DATACLASS_ABSTRACT",
+          "W_REF_UNDECLARED",
+          "W_NAME_AMBIGUOUS",
+          "W_REVISION_DRIFT",
+          "W_PARENT_IGNORED",
+          "W_FIELD_UNKNOWN",
+          "W_ANNOTATION_UNKNOWN",
+          "W_DIAGRAM_UNDECLARED",
+          "W_RULE_NEVER_MATCHES",
+          "W_REFINES_UPWARD",
+          "W_SATISFIES_OUTSIDE_HOME",
+          "W_INTERFACE_SIGNATURE",
+          "W_HANDLER_UNREACHED",
+          "W_FIELD_VALUE",
+          "W_MSG_UNDECLARED",
+          "W_MSG_NOT_STATIC",
+          "W_ARG_TYPE",
+          "W_RETURN_TYPE",
+          "W_SCENARIO_UNDECLARED",
+          "W_SCENARIO_TWICE",
+          "W_LEVEL_NO_CROSSING",
+          "W_LEVEL_ORDER",
+          "W_LEVEL_NOT_BELOW",
+          "W_STATE_OVERLAP",
+          "W_STATE_VALUE",
+          "W_STATE_UNDECLARED",
+          "W_STATE_IMPOSSIBLE",
+          "W_STATE_ORDER",
+          "W_MESSAGE_NO_OPERATION",
+          "W_OPERATION_NO_BEHAVIOUR",
+          "W_OUTCOME_MISMATCH",
+          "W_EVENT_UNDECLARED",
+          "W_ACTION_UNDECLARED",
+          "W_VIEW_UNDECLARED",
+          "W_VIEW_UNREACHABLE",
+          "W_STATE_UNREACHABLE",
+          "W_FAILURE_UNDECLARED",
+          "W_FAILURE_UNREACHED",
+          "W_VIEW_NO_WAY_OUT",
+          "W_NOT_VISIBLE",
+          "W_PRIVATE_LEAK",
+          "W_DIAGRAM_DEPTH",
+          "W_DIAGRAM_NEIGHBOURS",
+          "W_REQ_NO_VERIFICATION",
+          "W_VER_NO_TEST",
+          "W_RULE_NO_REQUIREMENT",
+          "W_RULE_NO_CLAIM",
+          "W_DEFINITION_NO_CASE",
+          "E_RULE_BROKEN",
+          "E_RULE_UNKNOWN",
+          "E_RULE_ARITY",
+          "E_RULE_UNSAFE",
+          "E_RULE_UNSTRATIFIED",
+          "W_CONSUMES_UNDECLARED",
+          "W_CONSUMES_UNUSED",
+          "W_CONSUMES_BYPASS",
+          "W_LANGUAGE_UNKNOWN",
+          "W_USECASE_UNDECLARED",
+          "W_USECASE_SIGNATURE",
+          "W_USECASE_OUTCOME_UNHANDLED",
+          "W_SCENARIO_NO_OUTCOME",
+          "W_USECASE_UNREALISED"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::CodeSpec",
+      "kind": "box",
+      "label": "CodeSpec",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Column",
+      "kind": "box",
+      "label": "Column",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::CommandSpec",
+      "kind": "box",
+      "label": "CommandSpec",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Entity",
+      "kind": "box",
+      "label": "Entity",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::FieldSource",
+      "kind": "box",
+      "label": "FieldSource",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Written",
+          "Syntax",
+          "Derived"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::FieldSpec",
+      "kind": "box",
+      "label": "FieldSpec",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::FieldType",
+      "kind": "box",
+      "label": "FieldType",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Text",
+          "Name",
+          "Names",
+          "Type",
+          "Params",
+          "Number",
+          "Status",
+          "Patterns"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Finding",
+      "kind": "box",
+      "label": "Finding",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Formula",
+      "kind": "box",
+      "label": "Formula",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Identity",
+      "kind": "box",
+      "label": "Identity",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Index",
+      "kind": "box",
+      "label": "Index",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Indexed",
+      "kind": "box",
+      "label": "Indexed",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::Kind",
+      "kind": "box",
+      "label": "Kind",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Package",
+          "Module",
+          "Requirement",
+          "Verification",
+          "Interface",
+          "Operation",
+          "View",
+          "Constraint",
+          "Class",
+          "Enum",
+          "Function",
+          "Method",
+          "Attribute",
+          "Operator",
+          "Sequence",
+          "Message",
+          "Frame",
+          "State",
+          "Diagram",
+          "UseCase",
+          "Outcome",
+          "Rule",
+          "Definition"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::KindSpec",
+      "kind": "box",
+      "label": "KindSpec",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Literal",
+      "kind": "box",
+      "label": "Literal",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::LiteralForm",
+      "kind": "box",
+      "label": "LiteralForm",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Relation",
+          "Kind",
+          "In",
+          "Equal",
+          "NotEqual",
+          "Less",
+          "LessEqual",
+          "Greater",
+          "GreaterEqual",
+          "Call",
+          "Arg"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Location",
+      "kind": "box",
+      "label": "Location",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Manual",
+      "kind": "box",
+      "label": "Manual",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Metamodel",
+      "kind": "box",
+      "label": "Metamodel",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Model",
+      "kind": "box",
+      "label": "Model",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Param",
+      "kind": "box",
+      "label": "Param",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Paths",
+      "kind": "box",
+      "label": "Paths",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Range",
+      "kind": "box",
+      "label": "Range",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Relation",
+      "kind": "box",
+      "label": "Relation",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::RelationSpec",
+      "kind": "box",
+      "label": "RelationSpec",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::Scope",
+      "kind": "box",
+      "label": "Scope",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@model::SequenceTree",
+      "kind": "box",
+      "label": "SequenceTree",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@model::Severity",
+      "kind": "box",
+      "label": "Severity",
+      "parent": "driftspec@ds@model",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "error",
+          "warning",
+          "coverage"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::SeveritySpec",
+      "kind": "box",
+      "label": "SeveritySpec",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Tabulated",
+      "kind": "box",
+      "label": "Tabulated",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@model::Term",
+      "kind": "box",
+      "label": "Term",
+      "parent": "driftspec@ds@model"
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@parse::Field",
+      "kind": "box",
+      "label": "Field",
+      "parent": "driftspec@ds@parse",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "action",
+          "base",
+          "body",
+          "bound",
+          "call",
+          "code",
+          "condition",
+          "default_",
+          "definition",
+          "else_scenario",
+          "entity",
+          "event",
+          "fails",
+          "failure",
+          "family",
+          "field",
+          "from",
+          "guard",
+          "id",
+          "key",
+          "kind",
+          "left",
+          "many",
+          "modifier",
+          "name",
+          "negated",
+          "of",
+          "op",
+          "operator_",
+          "operators",
+          "optional",
+          "otherwise",
+          "ownership",
+          "package",
+          "parameter",
+          "params",
+          "prefix",
+          "realises",
+          "relation",
+          "result",
+          "returns",
+          "right",
+          "scenario",
+          "scope",
+          "show",
+          "subject",
+          "symbol",
+          "target",
+          "text",
+          "title",
+          "to",
+          "type",
+          "value",
+          "variable",
+          "visibility"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::Lookahead",
+      "kind": "box",
+      "label": "Lookahead",
+      "parent": "driftspec@ds@parse"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@parse::ParsedFile",
+      "kind": "box",
+      "label": "ParsedFile",
+      "parent": "driftspec@ds@parse"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::Parser",
+      "kind": "box",
+      "label": "Parser",
+      "parent": "driftspec@ds@parse"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@parse::Span",
+      "kind": "box",
+      "label": "Span",
+      "parent": "driftspec@ds@parse"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::SyntaxError",
+      "kind": "box",
+      "label": "SyntaxError",
+      "parent": "driftspec@ds@parse"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@parse::TreeReader",
+      "kind": "box",
+      "label": "TreeReader",
+      "parent": "driftspec@ds@parse"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Answer",
+      "kind": "box",
+      "label": "Answer",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Behaviour",
+      "kind": "box",
+      "label": "Behaviour",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::ClassFilter",
+      "kind": "box",
+      "label": "ClassFilter",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@query::IFilter",
+      "kind": "box",
+      "label": "IFilter",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@query::IQuery",
+      "kind": "box",
+      "label": "IQuery",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::Query",
+      "kind": "box",
+      "label": "Query",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::RequirementsFilter",
+      "kind": "box",
+      "label": "RequirementsFilter",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::SequenceFilter",
+      "kind": "box",
+      "label": "SequenceFilter",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::StateFilter",
+      "kind": "box",
+      "label": "StateFilter",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Taken",
+      "kind": "box",
+      "label": "Taken",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@query::Walked",
+      "kind": "box",
+      "label": "Walked",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@query::Walker",
+      "kind": "box",
+      "label": "Walker",
+      "parent": "driftspec@ds@query"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::drawnFrom",
+      "kind": "box",
+      "label": "drawnFrom",
+      "parent": "driftspec@ds@query",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::entityAnswer",
+      "kind": "box",
+      "label": "entityAnswer",
+      "parent": "driftspec@ds@query",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::filterFor",
+      "kind": "box",
+      "label": "filterFor",
+      "parent": "driftspec@ds@query",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@query::inPattern",
+      "kind": "box",
+      "label": "inPattern",
+      "parent": "driftspec@ds@query",
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Grid",
+      "kind": "box",
+      "label": "Grid",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrCell",
+      "kind": "box",
+      "label": "IrCell",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrDocument",
+      "kind": "box",
+      "label": "IrDocument",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrEdge",
+      "kind": "box",
+      "label": "IrEdge",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::IrExport",
+      "kind": "box",
+      "label": "IrExport",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrNode",
+      "kind": "box",
+      "label": "IrNode",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrRow",
+      "kind": "box",
+      "label": "IrRow",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrTable",
+      "kind": "box",
+      "label": "IrTable",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrText",
+      "kind": "box",
+      "label": "IrText",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Layout",
+      "kind": "box",
+      "label": "Layout",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::LayoutResult",
+      "kind": "box",
+      "label": "LayoutResult",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Metrics",
+      "kind": "box",
+      "label": "Metrics",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Placed",
+      "kind": "box",
+      "label": "Placed",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Point",
+      "kind": "box",
+      "label": "Point",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Rect",
+      "kind": "box",
+      "label": "Rect",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Route",
+      "kind": "box",
+      "label": "Route",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Svg",
+      "kind": "box",
+      "label": "Svg",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Text",
+      "kind": "box",
+      "label": "Text",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::badgeOf",
+      "kind": "box",
+      "label": "badgeOf",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::classGrid",
+      "kind": "box",
+      "label": "classGrid",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::holdsMembers",
+      "kind": "box",
+      "label": "holdsMembers",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::sequenceGrid",
+      "kind": "box",
+      "label": "sequenceGrid",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::sequenceSvg",
+      "kind": "box",
+      "label": "sequenceSvg",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::tableGrid",
+      "kind": "box",
+      "label": "tableGrid",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@render::tableSvg",
+      "kind": "box",
+      "label": "tableSvg",
+      "parent": "driftspec@ds@render",
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Behaviour",
+      "kind": "box",
+      "label": "Behaviour",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::BehaviourLayer",
+      "kind": "box",
+      "label": "BehaviourLayer",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Box",
+      "kind": "box",
+      "label": "Box",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::BreachView",
+      "kind": "box",
+      "label": "BreachView",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Call",
+      "kind": "box",
+      "label": "Call",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::DiagramView",
+      "kind": "box",
+      "label": "DiagramView",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::ILayer",
+      "kind": "box",
+      "label": "ILayer",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::IScene",
+      "kind": "box",
+      "label": "IScene",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::Layout",
+      "kind": "box",
+      "label": "Layout",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Link",
+      "kind": "box",
+      "label": "Link",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::Map",
+      "kind": "box",
+      "label": "Map",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Node",
+      "kind": "box",
+      "label": "Node",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Outcome",
+      "kind": "box",
+      "label": "Outcome",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Requirement",
+      "kind": "box",
+      "label": "Requirement",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::RuleView",
+      "kind": "box",
+      "label": "RuleView",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::RulesLayer",
+      "kind": "box",
+      "label": "RulesLayer",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::Scene",
+      "kind": "box",
+      "label": "Scene",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::SceneDocument",
+      "kind": "box",
+      "label": "SceneDocument",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::StructureLayer",
+      "kind": "box",
+      "label": "StructureLayer",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Tour",
+      "kind": "box",
+      "label": "Tour",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@scene::TraceLayer",
+      "kind": "box",
+      "label": "TraceLayer",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@scene::Verification",
+      "kind": "box",
+      "label": "Verification",
+      "parent": "driftspec@ds@scene"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@scene::layers",
+      "kind": "box",
+      "label": "layers",
+      "parent": "driftspec@ds@scene",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::base64",
+      "kind": "box",
+      "label": "base64",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::escapeXml",
+      "kind": "box",
+      "label": "escapeXml",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::fromBase64",
+      "kind": "box",
+      "label": "fromBase64",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::join",
+      "kind": "box",
+      "label": "join",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::linesOf",
+      "kind": "box",
+      "label": "linesOf",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::splitTrimmed",
+      "kind": "box",
+      "label": "splitTrimmed",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::trimSpaces",
+      "kind": "box",
+      "label": "trimSpaces",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@text::trimWhitespace",
+      "kind": "box",
+      "label": "trimWhitespace",
+      "parent": "driftspec@ds@text",
+      "stereotype": "function"
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "driftspec@ds@workspace",
+      "kind": "box",
+      "label": "workspace",
+      "parent": "driftspec@ds"
+    }
+  ],
+  "title": "CL_Ds"
+}

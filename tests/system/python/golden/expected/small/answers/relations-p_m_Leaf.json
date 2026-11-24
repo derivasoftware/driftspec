@@ -1,0 +1,1 @@
+[{"detail":"<-","id":"p@m","kind":"contains"},{"detail":"->","id":"p@m::Leaf::work","kind":"contains"},{"detail":"->","id":"p@m::Leaf::step","kind":"contains"},{"detail":"<-","id":"p@m::A::leaf","kind":"owns"},{"detail":"<-","id":"p@m::B::leaf","kind":"owns"}]

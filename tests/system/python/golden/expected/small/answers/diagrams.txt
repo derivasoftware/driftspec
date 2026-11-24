@@ -1,0 +1,3 @@
+diagram  CL_Small  class
+diagram  SEQ_Loose  sequence
+diagram  SEQ_Run  sequence

@@ -1,0 +1,624 @@
+// LLD of the bind namespace (ds::bind): a parsed tree walked into the model.
+// The binder declares every entity under its qualified identity and records
+// every reference, message and event as written; it resolves nothing
+// (SREQ-00001-1). Resolution and checking are the checker's.
+
+package driftspec@ds {
+
+  module bind {
+    @requirement REQ-00173-1                 // every operation of the binder is a member of a class (DS-365)
+
+    dataclass Reference {                    // a name as written, with where and for which relation
+      @requirement REQ-00023-1
+      + from: std::string
+      + target: std::string
+      + scope: std::string
+      + relation: std::string
+      + expectedKind: model::Kind
+      + owns location: model::Location
+      + multiplicity: std::string
+      + args: std::vector<std::string>
+      + soft: bool                           // read out of a type, a base or a bound: text when nobody designs it (DS-18)
+    }
+
+    // one name a type's text holds, with the arguments of a bracket right after it (DS-18)
+    dataclass TypeToken {
+      @requirement REQ-00028-2
+      + name: std::string
+      + args: std::vector<std::string>
+      // the names of a type as the code writes it, left to right: no name of any language is known (DS-18);
+      // a dot qualifies as :: does, so lsp.Location is read lsp::Location (DS-319)
+      + static scan(text: std::string) -> std::vector<TypeToken> {
+        @requirement REQ-00028-2
+      }
+    }
+
+    dataclass Message {                      // a message of a behaviour, checked later against the static context
+      @requirement REQ-00037-1
+      + sequence: std::string
+      + message: std::string
+      + to: std::string
+      + op: std::string
+      + argc: int
+      + owns location: model::Location
+      + returns: bool
+    }
+
+    dataclass Event {                        // an event or action of a state machine, checked later as an operation
+      @requirement REQ-00040-1
+      + state: std::string
+      + entity: std::string
+      + scope: std::string
+      + event: std::string
+      + action: bool
+      + owns location: model::Location
+    }
+
+    // ---- what the binder is, as requirements and the rules that hold them (DS-365) ---------------------------
+    requirement REQ-00171-1 {
+      tags: architecture, bind
+      status: approved
+      @refines REQ-00053-2
+      title: The binder shall bind each construct of the language through a binder of its own, reached through one interface
+      text:
+        A node binder takes the kinds of node of one construct and binds one of them. The binder reaches every one
+        through INodeBinder, by the table, and what several constructs share is a part each is given by reference.
+        A construct added to the language is a binder added beside the others, which do not change.
+      rationale:
+        Owner, 2026-11-24 (DS-353, DS-365): a requirement is often an architecture decision, and the rules make it
+        hold. One walk bound every construct; split by construct, each binds alone and can be read on its own.
+      verification VER-00188-1 {
+        status: approved
+        title: Integration tests confirm the design of ds binds each construct through a binder of its own reached through INodeBinder, and is told when the binder holds a concrete binder or one binder knows another
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheBinderHoldingAConcreteBinderIsTold
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ABinderThatKnowsAnotherIsTold
+      }
+    }
+
+    requirement REQ-00172-1 {
+      tags: architecture, bind
+      status: approved
+      @refines REQ-00053-2
+      title: Every binder shall write into the model through the bind context
+      text:
+        A node binder and a part declare, relate, annotate and note through the context they are given, which holds
+        the model, the notes and where the node is written. What binds a file holds no model of its own.
+      rationale:
+        Owner, 2026-11-24 (DS-353, DS-365): with every write in one place, a file can later bind into a context of
+        its own and be merged into the model in file order (per-file contexts, DS-358).
+      verification VER-00189-1 {
+        status: approved
+        title: Integration tests confirm the design of ds writes into the model through the bind context, and is told when a binder holds the model
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ABinderThatHoldsTheModelIsTold
+      }
+    }
+
+    requirement REQ-00173-1 {
+      tags: architecture, bind
+      status: approved
+      @refines REQ-00053-2
+      title: Every operation of the binder shall be a member of the class whose responsibility it is
+      text:
+        What binds a construct is its node binder's, what several share is a part's, what reads the tree is the
+        reader's and what reads a type's text is the token's. A function of the module would be a responsibility
+        no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-339, DS-365): every module has its architecture decisions and patterns, and its rules
+        check that they hold; a free function means a responsibility is missing.
+      verification VER-00191-1 {
+        status: approved
+        title: Integration tests confirm the design of the binder holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheBinderIsTold
+      }
+    }
+
+    // ---- the principles of the binder, as rules (DS-365) -----------------------------------------------
+    // Each construct binds through its own binder, a node binder registered by kind in the table; what several
+    // share is a part, given by reference; and all of them write through the context, never through the model
+    // itself, so a file can later bind into a batch of its own (DS-358).
+    rule binders-write-through-the-context {
+      title: a binder and a part depend on the context they are given and never on the model itself, so every write of a file goes through its context
+      @requirement REQ-00172-1
+      for class c in driftspec@ds@bind
+      where c != driftspec@ds@bind::Binder, c != driftspec@ds@bind::BindContext
+      never depends(c, driftspec@ds@model::Model)
+    }
+
+    rule binder-knows-binders-as-inodebinder {
+      title: the binder holds the node binders as INodeBinder and its constructor names the concrete ones, so every construct is reached through the one interface
+      @requirement REQ-00171-1
+      for class c in driftspec@ds@bind
+      where c = driftspec@ds@bind::Binder
+      never depends(c, x), x inherits driftspec@ds@bind::INodeBinder
+    }
+
+    rule no-binder-knows-another {
+      title: a node binder depends on no other node binder, so each construct binds through a binder of its own; what they share goes through the parts
+      @requirement REQ-00171-1
+      for class a in driftspec@ds@bind, class b in driftspec@ds@bind
+      where a inherits driftspec@ds@bind::INodeBinder, b inherits driftspec@ds@bind::INodeBinder, a != b
+      never depends(a, b)
+    }
+
+    rule binder-operations-belong-to-classes {
+      title: no function is written in the binder's module, so every operation of the binder is a member of a class
+      @requirement REQ-00173-1
+      for function f in driftspec@ds@bind
+      never f in driftspec@ds@bind
+    }
+
+    class Binder {                           // builds the binders and their table once, then binds each file through it (DS-355)
+      @requirement REQ-00171-1
+      @requirement REQ-00053-2
+      @requirement REQ-00021-1
+      @requirement REQ-00110-1
+      @requirement REQ-00112-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // what an annotation means, and which ones it knows (DS-341)
+      + Binder(model: model::Model, metamodel: model::Metamodel)
+      + bind(file: parse::ParsedFile) -> void
+      - owns notes_: Notes
+      + notes() -> Notes
+      - owns fields_: FieldBinder
+      - owns annotations_: AnnotationBinder
+      - owns extensions_: ExtensionBinder
+      - owns types_: TypeBinder
+      - owns signatures_: SignatureBinder
+      - owns formulas_: FormulaBinder
+      - owns bodies_: MemberBodyBinder
+      - owns members_: MemberBinder
+      - owns many binders_: std::vector<std::unique_ptr<INodeBinder>>   // held as INodeBinder; the constructor names the concrete ones (DS-365)
+      - owns dispatch_: std::optional<Dispatch>   // built from the grammar of the first file bound (DS-374)
+    }
+
+
+    // Reads the file's tree and binds what is written at its root, packages and diagrams, with no scope and no owner,
+    // writing through one context into the model and the notes (DS-354). The table sends each to the binder of its
+    // kind (DS-355, DS-356), which the binder knows as INodeBinder (DS-365).
+    sequence Binder::bind {
+      local reader: parse::TreeReader
+      local ctx: BindContext
+      self -> reader.root() -> root
+      self -> ctx.children(root)
+    }
+
+    // The context binds a node's children through the table it was given (DS-355).
+    sequence BindContext::children {
+      self -> dispatch.bindChildren(node, self)
+    }
+
+    // What every binder does with a node of its kinds (DS-365): it declares the entity the node writes through the
+    // context, writes the fields the declaration says on what the model keeps, relates it to the entity that holds
+    // it, and binds the children the node holds in turn. Each binder says more in its own.
+    sequence INodeBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      self -> ctx.declare(e) -> declared
+      loop each field written {
+        self -> ctx.annotate(declared.id, key, value)
+      }
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> ctx.children(node)
+    }
+
+    // The context's writes are the model's (DS-355): each passes its argument on, so a binder holds no model.
+    sequence BindContext::declare {
+      self -> model.declare(entity) -> declared
+      return declared
+    }
+
+    sequence BindContext::relate {
+      self -> model.relate(relation)
+    }
+
+    sequence BindContext::annotate {
+      self -> model.annotate(id, key, value)
+    }
+
+    sequence BindContext::refine {
+      self -> model.refine(later)
+    }
+
+    // What an annotation means is the metamodel's (DS-341): the relation its word makes, and for a word it
+    // does not know a link that refers, said with the annotations it knows. The reference is linked later.
+    sequence AnnotationBinder::bind {
+      local metamodel: model::Metamodel        // the context's
+      loop each annotation written in the node {
+        self -> metamodel.annotationOf(word) -> spec
+        opt the language gives the word no meaning {
+          self -> metamodel.knownAnnotations() -> known
+          self -> ctx.report(finding)
+        }
+      }
+    }
+
+    // A state machine is the behaviour of a class: its initial state, rules, views and transitions are written on the
+    // state entity, and its events and actions are kept for the checker to find on the class (DS-356).
+    sequence StateBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      local entityName: std::string
+      self -> at.qualify(entityName) -> id
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e)
+      self -> annotations_.bind(node, ctx, e.id, scope)
+      loop each view and transition {
+        local t: TSNode
+        local v: model::Entity
+        opt the initial state, a state rule or a transition, written on the state entity {
+          self -> ctx.annotate(e.id, key, value)
+        }
+        opt a view {
+          self -> fields_.bind(t, ctx, v)
+          self -> ctx.declare(v)
+          self -> ctx.relate(relation)
+          self -> annotations_.bind(t, ctx, v.id, scope)
+        }
+      }
+    }
+
+    sequence PackageBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      self -> ctx.locationOf(node) -> loc
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e) -> declared
+      loop each field written {
+        // a reopened package takes what this declaration writes (DS-346)
+        self -> ctx.annotate(declared.id, key, value)
+      }
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+    }
+
+    sequence ModuleBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      self -> at.qualify(e.name) -> id
+      opt it has an owner {
+        self -> ctx.find(owner) -> ownerEntity
+      }
+      self -> ctx.declare(e) -> declared
+      loop each field written {
+        opt it adds to what the module already says / reopened {
+          // two values that differ are both kept
+          self -> ctx.annotate(declared.id, key, value)
+        }
+      }
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> ctx.children(node)
+    }
+
+    sequence InterfaceBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      self -> at.qualify(e.name) -> id
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e)
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> annotations_.bind(node, ctx, e.id, scope)
+      loop each operation {
+        local op: TSNode
+        local o: model::Entity
+        self -> ctx.locationOf(op)
+        self -> fields_.bind(op, ctx, o)
+        self -> ctx.declare(o)
+        self -> ctx.relate(relation)
+        self -> annotations_.bind(op, ctx, o.id, scope)
+      }
+    }
+
+    sequence EnumBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      self -> at.qualify(e.name) -> id
+      self -> ctx.declare(e)
+      opt it has an owner {
+        self -> ctx.relate(relation)
+      }
+      self -> annotations_.bind(node, ctx, e.id, scope)
+    }
+
+    sequence DiagramBinder::bind {
+      local e: model::Entity
+      self -> ctx.locationOf(node) -> loc
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e)
+    }
+
+    class BindContext {                      // what binding one node is given; the only place it writes (DS-354)
+      @requirement REQ-00172-1
+      @requirement REQ-00053-2
+      + refs model: model::Model
+      + refs notes: Notes
+      + refs reader: parse::TreeReader
+      + scope: std::string
+      + owner: std::string
+      + within(inner: std::string, holder: std::string) -> BindContext
+      + locationOf(node: TSNode) -> model::Location
+      + refs metamodel: model::Metamodel
+      + refs dispatch: Dispatch
+      + children(node: TSNode) -> void
+      + declare(entity: model::Entity) -> model::Entity
+      + relate(relation: model::Relation) -> void
+      + report(finding: model::Finding) -> void
+      + find(id: std::string) -> model::Entity
+      + annotate(id: std::string, key: std::string, value: std::string) -> void
+      + refine(later: model::Entity) -> void
+      + state(id: std::string, formula: model::Formula) -> void
+      + refer(reference: Reference) -> void
+      + noteMessage(message: Message) -> void
+      + noteEvent(event: Event) -> void
+    }
+    class Notes {                            // what binding leaves for the checker, the only thing it reads of bind (DS-354)
+      @requirement REQ-00053-2
+      + owns references: std::vector<Reference>
+      + owns messages: std::vector<Message>
+      + owns events: std::vector<Event>
+    }
+
+    class ArtefactBinder : INodeBinder {     // requirements, verifications and constraints, by their id (DS-355)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00125-1
+        @requirement REQ-00018-1
+        @requirement REQ-00042-1
+        @requirement REQ-00045-1
+      }
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs extensions_: ExtensionBinder
+      + ArtefactBinder(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder)
+    }
+    class Dispatch {                         // which binder binds a node: one slot per grammar symbol, built once (DS-355)
+      @requirement REQ-00171-1
+      @requirement REQ-00053-2
+      - refs bySymbol_: std::vector<const INodeBinder*>
+      + Dispatch(language: TSLanguage, binders: std::vector<const INodeBinder*>)
+      + of(node: TSNode) -> INodeBinder
+      + bindChildren(node: TSNode, ctx: BindContext) -> void
+    }
+
+    // Each named child goes to the binder its kind is given to: its symbol read, one slot of the table. A child no
+    // binder takes (a name, a field, an annotation, a comment) binds nothing by itself.
+    sequence Dispatch::bindChildren {
+      loop each named child of the node {
+        local child: TSNode
+        -> of(child) -> binder
+        opt a binder takes it {
+          self -> binder.bind(child, ctx)
+        }
+      }
+    }
+    class INodeBinder {                      // what binds one construct: the kinds it takes, and one node bound (DS-355)
+      @requirement REQ-00171-1
+      @requirement REQ-00053-2
+      + ~INodeBinder()
+      + abstract kinds() -> std::vector<std::string>
+      + abstract bind(node: TSNode, ctx: BindContext) -> void
+    }
+
+    class AnnotationBinder {                 // the annotations every construct may write, each a reference for the checker (DS-356)
+      + bind(node: TSNode, ctx: BindContext, from: std::string, scope: std::string) -> void {
+        @requirement REQ-00044-1
+        @requirement REQ-00114-1
+      }
+      - static relationOf(from: model::Kind, spec: model::AnnotationSpec) -> std::string
+    }
+    class DiagramBinder : INodeBinder {      // a diagram: its fields and the table its clauses say (DS-356)
+      - refs fields_: FieldBinder
+      - refs formulas_: FormulaBinder
+      + DiagramBinder(fields: FieldBinder, formulas: FormulaBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00048-1
+      }
+    }
+    class EnumBinder : INodeBinder {         // an enum and its values (DS-356)
+      - refs annotations_: AnnotationBinder
+      + EnumBinder(annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00033-1
+      }
+    }
+    class ExtensionBinder {                  // a block of annotations only adds them to what is defined elsewhere (DS-356)
+      @requirement REQ-00053-2
+      - refs annotations_: AnnotationBinder
+      + ExtensionBinder(annotations: AnnotationBinder)
+      + static extends(body: TSNode, idNode: TSNode) -> bool
+      + bind(node: TSNode, ctx: BindContext, id: std::string, kind: model::Kind, name: std::string, scope: std::string, loc: model::Location) -> void {
+        @constraint CST-00003-2
+      }
+    }
+    class FieldBinder {                      // the key: value fields every construct may write (DS-356)
+      + bind(node: TSNode, ctx: BindContext, out_entity: model::Entity) -> void {
+        @requirement REQ-00032-2
+      }
+    }
+    class FormulaBinder {                    // what a rule, a definition or a table says, as the model's formula (DS-356)
+      + bind(node: TSNode, ctx: BindContext, out_entity: model::Entity) -> void {
+        @requirement REQ-00095-2
+      }
+      - static termOf(reader: parse::TreeReader, node: TSNode) -> model::Term
+      - static clauseText(reader: parse::TreeReader, clause: TSNode) -> std::string
+    }
+    class InterfaceBinder : INodeBinder {    // an interface of a box and its operations (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs signatures_: SignatureBinder
+      + InterfaceBinder(fields: FieldBinder, annotations: AnnotationBinder, signatures: SignatureBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00020-2
+      }
+    }
+    class ModuleBinder : INodeBinder {       // a module: qualified in its package, its reopenings adding up (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + ModuleBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00022-1
+        @requirement REQ-00017-2
+      }
+    }
+    class PackageBinder : INodeBinder {      // a package: named with @, reopened with no new relation (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + PackageBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00013-1
+        @requirement REQ-00014-1
+        @requirement REQ-00015-1
+        @requirement REQ-00017-2
+      }
+    }
+    class RuleBinder : INodeBinder {         // a rule or a definition, in the box, class or member it applies to (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs formulas_: FormulaBinder
+      + RuleBinder(fields: FieldBinder, annotations: AnnotationBinder, formulas: FormulaBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00095-2
+      }
+    }
+    class SignatureBinder {                  // the parameters and the return of an operation, a method or a function (DS-356)
+      - refs types_: TypeBinder
+      + SignatureBinder(types: TypeBinder)
+      + bind(node: TSNode, ctx: BindContext, out_entity: model::Entity, scope: std::string, params: std::vector<std::string>) -> void {
+        @requirement REQ-00028-2
+        @requirement REQ-00055-2
+        @requirement REQ-00112-1
+      }
+    }
+    class TypeBinder {                       // a type as the code writes it: each name it declares related from the holder (DS-356)
+      + bind(type: TSNode, ctx: BindContext, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> std::string {
+        @requirement REQ-00028-2
+        @requirement REQ-00024-3
+      }
+      + static params(reader: parse::TreeReader, node: TSNode) -> std::vector<std::string>
+      - static isOwnership(relation: std::string) -> bool
+      - static contains(items: std::vector<std::string>, item: std::string) -> bool
+    }
+
+    class StateBinder : INodeBinder {        // a state machine: the behaviour of a class, its transitions and events (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + StateBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00039-1
+      }
+    }
+    class UseCaseBinder : INodeBinder {      // a use case: its signature and the outcomes it may end in (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs types_: TypeBinder
+      - refs signatures_: SignatureBinder
+      + UseCaseBinder(fields: FieldBinder, annotations: AnnotationBinder, types: TypeBinder, signatures: SignatureBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00081-1
+      }
+    }
+
+    class ClassBinder : INodeBinder {        // a class or a dataclass: its bases, header operators and members (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs extensions_: ExtensionBinder
+      - refs members_: MemberBinder
+      + ClassBinder(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder, members: MemberBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00025-1
+        @requirement REQ-00029-2
+        @requirement REQ-00033-1
+      }
+      - declareOperator(ctx: BindContext, cls: model::Entity, symbol: std::string, location: model::Location) -> void {
+        @requirement REQ-00030-1
+      }
+    }
+    class FunctionBinder : INodeBinder {     // a function of a module: a method's signature and body in the module (DS-356)
+      - refs signatures_: SignatureBinder
+      - refs bodies_: MemberBodyBinder
+      + FunctionBinder(signatures: SignatureBinder, bodies: MemberBodyBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00054-2
+      }
+    }
+    class MemberBinder {                     // a member of a class: a method, an attribute or an operator (DS-356)
+      - refs types_: TypeBinder
+      - refs signatures_: SignatureBinder
+      - refs bodies_: MemberBodyBinder
+      + MemberBinder(types: TypeBinder, signatures: SignatureBinder, bodies: MemberBodyBinder)
+      + bind(m: TSNode, ctx: BindContext, cls: model::Entity, params: std::vector<std::string>, operators: std::set<std::string>) -> void {
+        @requirement REQ-00170-1
+        @requirement REQ-00026-2
+        @requirement REQ-00101-1                 // ~Name() flagged destructor
+      }
+    }
+    class MemberBodyBinder {                 // what a member or a function writes in its body (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + MemberBodyBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + bind(member: TSNode, ctx: BindContext, out_entity: model::Entity, scope: std::string) -> void {
+        @requirement REQ-00032-2
+      }
+    }
+
+    class SequenceBinder : INodeBinder {     // a sequence: the behaviour of an operation, its steps and frames (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs types_: TypeBinder
+      + SequenceBinder(fields: FieldBinder, annotations: AnnotationBinder, types: TypeBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00034-1
+        @requirement REQ-00035-1
+        @requirement REQ-00036-2
+      }
+      - bindSteps(ctx: BindContext, node: TSNode, sequence: model::Entity, holder: std::string, out_order: int, out_frames: int) -> void {
+        @requirement REQ-00037-1
+        @requirement REQ-00110-1
+      }
+      - branch(ctx: BindContext, at: TSNode, sequence: std::string, alt: std::string, side: int, scenario: std::string) -> std::string {
+        @requirement REQ-00037-1
+      }
+    }
+  }
+}
+
+diagram CL_BindNamespace {
+  kind: class
+  include: driftspec@ds@bind::*
+  show: ownership
+  hide: methods
+}

@@ -1,0 +1,76 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "run()",
+      "order": 0,
+      "refs": {
+        "location": "small/small.ds:11"
+      },
+      "title": "p@m::A::run",
+      "to": "p@m::A"
+    },
+    {
+      "from": "p@m::A",
+      "href": "#p@m::Leaf::work::sequence",
+      "kind": "message",
+      "label": "work(1)",
+      "order": 1,
+      "refs": {
+        "expands": "p@m::Leaf::work::sequence",
+        "location": "small/small.ds:19"
+      },
+      "title": "p@m::Leaf::work\nexpands to: Leaf::work",
+      "to": "p@m::Leaf|leaf"
+    },
+    {
+      "dashed": true,
+      "from": "p@m::Leaf|leaf",
+      "kind": "message",
+      "label": "done",
+      "order": 2,
+      "to": "p@m::A"
+    },
+    {
+      "dashed": true,
+      "from": "p@m::A",
+      "kind": "message",
+      "label": "none",
+      "order": 3,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#p@m::A",
+      "id": "p@m::A",
+      "kind": "lifeline",
+      "label": "self: A",
+      "refs": {
+        "location": "small/small.ds:9"
+      },
+      "title": "p@m::A"
+    },
+    {
+      "classifier": "participant",
+      "href": "#p@m::Leaf",
+      "id": "p@m::Leaf|leaf",
+      "kind": "lifeline",
+      "label": "leaf: Leaf",
+      "refs": {
+        "location": "small/small.ds:5"
+      },
+      "title": "p@m::Leaf"
+    }
+  ],
+  "title": "SEQ_Run"
+}

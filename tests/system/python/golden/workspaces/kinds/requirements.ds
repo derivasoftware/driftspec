@@ -1,0 +1,36 @@
+// What the system promises, and how each module refines it.
+
+package hola {
+  requirement SREQ-00001-1 {
+    title: The system shall greet a person by name from the command line
+    status: draft
+  }
+
+  requirement SREQ-00002-1 {
+    title: The system shall answer within 100 milliseconds
+    status: draft
+  }
+
+  requirement SREQ-00003-1 {
+    title: The system shall let a person correct a wrong name without losing the page
+    status: draft
+  }
+
+  constraint CST-00001-1: Every view shall take its colours from the palette's CSS variables, never a literal value
+
+  module core {
+    requirement REQ-00001-1 {
+      @refines SREQ-00001-1
+      title: The greeter shall build the greeting of a name
+      status: draft
+    }
+  }
+
+  module app {
+    requirement REQ-00002-1 {
+      @refines SREQ-00001-1
+      title: The command shall exit 2 when the name is empty
+      status: draft
+    }
+  }
+}

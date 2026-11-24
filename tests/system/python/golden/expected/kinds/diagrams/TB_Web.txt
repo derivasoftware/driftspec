@@ -1,0 +1,5 @@
+ web   │ Home                       │ Result │ About
+───────┼────────────────────────────┼────────┼─────────
+ greet │ Result / Home [empty name] │ ·      │ ·
+ about │ About                      │ ·      │ ·
+ back  │ ·                          │ Home   │ Home

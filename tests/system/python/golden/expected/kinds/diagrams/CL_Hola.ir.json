@@ -1,0 +1,489 @@
+{
+  "edges": [
+    {
+      "from": "hola@app::App",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@app::Console"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@app::Console",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Channel"
+    },
+    {
+      "from": "hola@app::main",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@core::Channel",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Style"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Locale"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::GreetingCache"
+    },
+    {
+      "from": "hola@core::Greeter",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::Formal",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Style"
+    },
+    {
+      "from": "hola@core::Casual",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Style"
+    },
+    {
+      "from": "hola@core::GreetingCache",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@core::GreetingCache",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@web",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@web",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@server::Server"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "aggregation",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@server::Response"
+    },
+    {
+      "from": "hola@server::Server",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@core::Greeting"
+    },
+    {
+      "from": "hola@server::Response",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "hola@core::Channel"
+    },
+    {
+      "from": "hola@shell",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "hola@app::main"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "namespace",
+      "id": "hola@app",
+      "kind": "container",
+      "label": "app"
+    },
+    {
+      "classifier": "namespace",
+      "id": "hola@core",
+      "kind": "container",
+      "label": "core"
+    },
+    {
+      "classifier": "namespace",
+      "id": "hola@server",
+      "kind": "container",
+      "label": "server"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@app::App",
+      "kind": "box",
+      "label": "App",
+      "parent": "hola@app",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- greeter: core::Greeter",
+          "- console: Console"
+        ],
+        [
+          "+ run(name: std::string) -> int",
+          "- print(greeting: core::Greeting) -> void",
+          "- fail(text: std::string) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@app::Console",
+      "kind": "box",
+      "label": "Console",
+      "parent": "hola@app",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- colour: bool"
+        ],
+        [
+          "# write(text: std::string) -> void"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "hola@app::main",
+      "kind": "box",
+      "label": "main",
+      "parent": "hola@app",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ main(argv: std::vector<std::string>) -> int"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@core::Casual",
+      "kind": "box",
+      "label": "Casual",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- emoji: std::string"
+        ],
+        [
+          "+ apply(text: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "hola@core::Channel",
+      "kind": "box",
+      "label": "Channel",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ deliver(greeting: Greeting) -> void",
+          "# abstract write(text: std::string) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@core::Formal",
+      "kind": "box",
+      "label": "Formal",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ apply(text: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@core::Greeter",
+      "kind": "box",
+      "label": "Greeter",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- style: Style",
+          "- history: std::vector<Greeting>",
+          "- locale: Locale",
+          "- cache: GreetingCache"
+        ],
+        [
+          "+ greet(name: std::string) -> Greeting",
+          "+ valid(name: std::string) -> bool",
+          "- format(name: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "hola@core::Greeting",
+      "kind": "box",
+      "label": "Greeting",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ text: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@core::GreetingCache",
+      "kind": "box",
+      "label": "GreetingCache",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- entries: std::map<std::string, Greeting>"
+        ],
+        [
+          "+ find(name: std::string) -> std::optional<Greeting>",
+          "+ keep(greeting: Greeting) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "hola@core::Locale",
+      "kind": "box",
+      "label": "Locale",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ language: std::string",
+          "+ region: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "hola@core::Style",
+      "kind": "box",
+      "label": "Style",
+      "parent": "hola@core",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ abstract apply(text: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@server::Response",
+      "kind": "box",
+      "label": "Response",
+      "parent": "hola@server",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ status: int"
+        ],
+        [
+          "# write(text: std::string) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "hola@server::Server",
+      "kind": "box",
+      "label": "Server",
+      "parent": "hola@server",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- greeter: core::Greeter",
+          "- response: Response"
+        ],
+        [
+          "+ greet(name: std::string) -> core::Greeting",
+          "- reject(reason: std::string) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "hola@shell",
+      "kind": "box",
+      "label": "shell",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "greet(name: string) -> core::Greeting"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "hola@web",
+      "kind": "box",
+      "label": "web",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "greet(name: string) -> core::Greeting"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_Hola"
+}

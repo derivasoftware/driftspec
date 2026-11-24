@@ -1,0 +1,587 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "checkMessage(message: bind::Message)",
+      "order": 0,
+      "refs": {
+        "location": "design/ds/check.ds:416"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::checkMessage",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "checkReturn(message)",
+      "order": 1,
+      "refs": {
+        "location": "design/ds/check.ds:793"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::checkReturn",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 2,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "current(message.sequence)",
+      "order": 3,
+      "refs": {
+        "location": "design/ds/check.ds:797"
+      },
+      "title": "driftspec@ds@check::Context::current",
+      "to": "driftspec@ds@check::Context|context_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Context|context_",
+      "kind": "message",
+      "label": "sequenceId",
+      "order": 4,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "find(sequenceId)",
+      "order": 5,
+      "refs": {
+        "location": "design/ds/check.ds:798"
+      },
+      "title": "driftspec@ds@model::Model::find",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Model|model_",
+      "kind": "message",
+      "label": "seq",
+      "order": 6,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "current(message.message)",
+      "order": 7,
+      "refs": {
+        "location": "design/ds/check.ds:799"
+      },
+      "title": "driftspec@ds@check::Context::current",
+      "to": "driftspec@ds@check::Context|context_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Context|context_",
+      "kind": "message",
+      "label": "messageId",
+      "order": 8,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "find(messageId)",
+      "order": 9,
+      "refs": {
+        "location": "design/ds/check.ds:800"
+      },
+      "title": "driftspec@ds@model::Model::find",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Model|model_",
+      "kind": "message",
+      "label": "msg",
+      "order": 10,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 11,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "subjectClass(seq, subject)",
+      "order": 12,
+      "refs": {
+        "location": "design/ds/check.ds:805"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::subjectClass",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "cls",
+      "order": 13,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 14,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "href": "#driftspec@ds@check::Resolver::resolve::sequence",
+      "kind": "message",
+      "label": "resolve(message.op, home)",
+      "order": 15,
+      "refs": {
+        "expands": "driftspec@ds@check::Resolver::resolve::sequence",
+        "location": "design/ds/check.ds:813"
+      },
+      "title": "driftspec@ds@check::Resolver::resolve\nexpands to: Resolver::resolve",
+      "to": "driftspec@ds@check::Resolver|resolver_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Resolver|resolver_",
+      "kind": "message",
+      "label": "id",
+      "order": 16,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "find(id)",
+      "order": 17,
+      "refs": {
+        "location": "design/ds/check.ds:814"
+      },
+      "title": "driftspec@ds@model::Model::find",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Model|model_",
+      "kind": "message",
+      "label": "target",
+      "order": 18,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "couple(seq, target, true)",
+      "order": 19,
+      "refs": {
+        "location": "design/ds/check.ds:816"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::couple",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "call(msg, target, message)",
+      "order": 20,
+      "refs": {
+        "location": "design/ds/check.ds:817"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::call",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 21,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "report(finding)",
+      "order": 22,
+      "refs": {
+        "location": "design/ds/check.ds:821"
+      },
+      "title": "driftspec@ds@check::Context::report",
+      "to": "driftspec@ds@check::Context|context_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 23,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "typeOfName(seq, cls, subject, message.to, value, transient)",
+      "order": 24,
+      "refs": {
+        "location": "design/ds/check.ds:829"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::typeOfName",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "known",
+      "order": 25,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "report(finding)",
+      "order": 26,
+      "refs": {
+        "location": "design/ds/check.ds:831"
+      },
+      "title": "driftspec@ds@check::Context::report",
+      "to": "driftspec@ds@check::Context|context_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 27,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "resolveTypeText(value.first, value.second)",
+      "order": 28,
+      "refs": {
+        "location": "design/ds/check.ds:834"
+      },
+      "title": "driftspec@ds@check::Resolver::resolveTypeText",
+      "to": "driftspec@ds@check::Resolver|resolver_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::Resolver|resolver_",
+      "kind": "message",
+      "label": "typeId",
+      "order": 29,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 30,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "find(typeId)",
+      "order": 31,
+      "refs": {
+        "location": "design/ds/check.ds:840"
+      },
+      "title": "driftspec@ds@model::Model::find",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Model|model_",
+      "kind": "message",
+      "label": "type",
+      "order": 32,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 33,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "href": "#driftspec@ds@model::Model::annotate::sequence",
+      "kind": "message",
+      "label": "annotate(messageId, key, typeId)",
+      "order": 34,
+      "refs": {
+        "expands": "driftspec@ds@model::Model::annotate::sequence",
+        "location": "design/ds/check.ds:845"
+      },
+      "title": "driftspec@ds@model::Model::annotate\nexpands to: Model::annotate",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "couple(seq, type, transient)",
+      "order": 35,
+      "refs": {
+        "location": "design/ds/check.ds:848"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::couple",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "find(opId)",
+      "order": 36,
+      "refs": {
+        "location": "design/ds/check.ds:850"
+      },
+      "title": "driftspec@ds@model::Model::find",
+      "to": "driftspec@ds@model::Model|model_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@model::Model|model_",
+      "kind": "message",
+      "label": "op",
+      "order": 37,
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "report(finding)",
+      "order": 38,
+      "refs": {
+        "location": "design/ds/check.ds:852"
+      },
+      "title": "driftspec@ds@check::Context::report",
+      "to": "driftspec@ds@check::Context|context_"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "return",
+      "order": 39,
+      "to": "caller"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "call(msg, op, message)",
+      "order": 40,
+      "refs": {
+        "location": "design/ds/check.ds:855"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping::call",
+      "to": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "dashed": true,
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "message",
+      "label": "void",
+      "order": 41,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::BehaviourTyping",
+      "id": "driftspec@ds@check::BehaviourTyping",
+      "kind": "lifeline",
+      "label": "self: BehaviourTyping",
+      "refs": {
+        "location": "design/ds/check.ds:383"
+      },
+      "title": "driftspec@ds@check::BehaviourTyping"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Context",
+      "id": "driftspec@ds@check::Context|context_",
+      "kind": "lifeline",
+      "label": "context_: Context",
+      "refs": {
+        "location": "design/ds/check.ds:253"
+      },
+      "title": "driftspec@ds@check::Context"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@model::Model",
+      "id": "driftspec@ds@model::Model|model_",
+      "kind": "lifeline",
+      "label": "model_: Model",
+      "refs": {
+        "location": "design/ds/model.ds:1000"
+      },
+      "title": "driftspec@ds@model::Model"
+    },
+    {
+      "classifier": "participant",
+      "href": "#driftspec@ds@check::Resolver",
+      "id": "driftspec@ds@check::Resolver|resolver_",
+      "kind": "lifeline",
+      "label": "resolver_: Resolver",
+      "refs": {
+        "location": "design/ds/check.ds:182"
+      },
+      "title": "driftspec@ds@check::Resolver"
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f0",
+      "kind": "frame",
+      "label": "opt it is a return of the behaviour, not a call",
+      "span": [
+        1,
+        2
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f1",
+      "kind": "frame",
+      "label": "opt the behaviour or the message is gone from the model",
+      "span": [
+        11,
+        11
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f10",
+      "kind": "frame",
+      "label": "opt the target is not self",
+      "span": [
+        35,
+        35
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f11",
+      "kind": "frame",
+      "label": "opt the type does not declare the operation",
+      "span": [
+        38,
+        39
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f2",
+      "kind": "frame",
+      "label": "opt nothing declares the subject yet, it waits",
+      "span": [
+        14,
+        14
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f3",
+      "kind": "frame",
+      "label": "opt a call to self the class does not declare",
+      "span": [
+        15,
+        23
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f4",
+      "kind": "frame",
+      "label": "opt it is a function of the module",
+      "span": [
+        19,
+        21
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f5",
+      "kind": "frame",
+      "label": "opt the caller is itself a function",
+      "span": [
+        22,
+        23
+      ]
+    },
+    {
+      "classifier": "alt",
+      "dividers": [
+        {
+          "at": 24,
+          "label": "else"
+        }
+      ],
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f6",
+      "kind": "frame",
+      "label": "alt the target is self",
+      "span": [
+        24,
+        29
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f7",
+      "kind": "frame",
+      "label": "opt the context has nothing by that name",
+      "span": [
+        26,
+        27
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f8",
+      "kind": "frame",
+      "label": "opt a primitive or an unknown spelling, nothing to check",
+      "span": [
+        30,
+        30
+      ]
+    },
+    {
+      "classifier": "opt",
+      "id": "driftspec@ds@check::BehaviourTyping::checkMessage::sequence::f9",
+      "kind": "frame",
+      "label": "opt the type is not declared yet, reported once it is",
+      "span": [
+        33,
+        33
+      ]
+    }
+  ],
+  "title": "SEQ_CheckMessage"
+}

@@ -1,0 +1,48 @@
+{
+  "edges": [],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@exporter",
+      "kind": "container",
+      "label": "exporter",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@exporter::JsonExport",
+      "kind": "box",
+      "label": "JsonExport",
+      "parent": "driftspec@ds@exporter",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel"
+        ],
+        [
+          "+ JsonExport(metamodel: model::Metamodel)",
+          "+ render(model: model::Model, pretty: bool) -> std::string",
+          "+ entity(entity: model::Entity) -> std::string",
+          "+ relations(relations: std::vector<model::Relation>) -> std::string",
+          "- static locationJson(l: model::Location) -> nlohmann::json",
+          "- entityJson(e: model::Entity) -> nlohmann::json",
+          "- static relationJson(r: model::Relation) -> nlohmann::json",
+          "- kindNames(kinds: std::vector<model::Kind>) -> nlohmann::json",
+          "- metamodelJson() -> nlohmann::json"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_ExporterNamespace"
+}

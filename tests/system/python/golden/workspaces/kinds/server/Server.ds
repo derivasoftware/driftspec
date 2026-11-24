@@ -1,0 +1,35 @@
+// The web process: turns a request into a call and a response. It uses the same
+// Greeter as the command line, and core does not know this one exists either.
+
+package hola {
+  module server {
+    requirement REQ-00003-1 {
+      @refines SREQ-00003-1
+      title: The server shall answer an empty name with an error the page can show
+      status: draft
+    }
+
+    class Server {
+      @requirement REQ-00003-1
+      - shares greeter: core::Greeter
+      - owns response: Response
+      + greet(name: std::string) -> core::Greeting
+      - reject(reason: std::string) -> void
+    }
+
+    class Response : core::Channel {
+      # write(text: std::string) -> void
+      + status: int
+    }
+
+    sequence Server::greet {
+      self -> greeter.valid(name) -> ok
+      self -> greeter.greet(name) -> greeting
+    }
+
+    sequence Server::greet / empty-name {
+      self -> greeter.valid(name) -> ok
+      -> reject(reason)
+    }
+  }
+}

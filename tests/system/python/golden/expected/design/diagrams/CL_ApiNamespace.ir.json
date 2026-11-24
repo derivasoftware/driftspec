@@ -1,0 +1,184 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@api::Workspace",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Output"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Output"
+    },
+    {
+      "from": "driftspec@ds@api::Api",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Workspace"
+    },
+    {
+      "from": "driftspec@ds@api::Browser",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@api::Workspace"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@api",
+      "kind": "container",
+      "label": "api",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Api",
+      "kind": "box",
+      "label": "Api",
+      "parent": "driftspec@ds@api",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel"
+        ],
+        [
+          "+ Api(metamodel: model::Metamodel)",
+          "+ check(files: Files) -> std::string",
+          "+ load(files: std::vector<parse::ParsedFile>, output: Output, diagram: std::string) -> model::Model",
+          "+ static stepsFor(output: Output, bound: model::Model, diagram: std::string) -> check::Selection",
+          "+ report(model: model::Model, pretty: bool) -> std::string",
+          "+ exportModel(files: Files) -> std::string",
+          "+ static expectedAt(text: std::string, line: int, column: int) -> std::string",
+          "+ render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string",
+          "+ page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Browser",
+      "kind": "box",
+      "label": "Browser",
+      "parent": "driftspec@ds@api",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel"
+        ],
+        [
+          "+ Browser(metamodel: model::Metamodel)",
+          "+ answer(request: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Identity",
+      "kind": "box",
+      "label": "Identity",
+      "parent": "driftspec@ds@api",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ static qualify(scope: std::string, name: std::string) -> std::string",
+          "+ static outer(scope: std::string) -> std::string",
+          "+ static boxOf(scope: std::string) -> std::string",
+          "+ static packageOf(scope: std::string) -> std::string",
+          "+ static behaviourOf(id: std::string) -> std::string",
+          "+ static subjectOf(id: std::string) -> std::string",
+          "+ static scenarioOf(id: std::string) -> std::string",
+          "+ static withoutRevision(id: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@api::Output",
+      "kind": "box",
+      "label": "Output",
+      "parent": "driftspec@ds@api",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Findings",
+          "Model",
+          "Answers",
+          "Viewer",
+          "Drawing"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@api::Workspace",
+      "kind": "box",
+      "label": "Workspace",
+      "parent": "driftspec@ds@api",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel",
+          "- model_: model::Model"
+        ],
+        [
+          "+ Workspace(metamodel: model::Metamodel, files: Files, output: Output, diagram: std::string)",
+          "+ model() -> model::Model",
+          "+ exportModel() -> std::string",
+          "+ report() -> std::string",
+          "+ find(id: std::string) -> std::string",
+          "+ from(id: std::string) -> std::string",
+          "+ to(id: std::string) -> std::string",
+          "+ touching(id: std::string) -> std::string",
+          "+ members(scope: std::string) -> std::string",
+          "+ parent(id: std::string) -> std::string",
+          "+ children(id: std::string) -> std::string",
+          "+ revisionOf(artefact: std::string) -> std::string",
+          "+ tree(sequence: std::string) -> std::string",
+          "+ steps(sequence: std::string, path: std::string) -> std::string",
+          "+ walk(sequence: std::string, path: std::string, depth: int) -> std::string",
+          "+ ask(question: std::string, subject: std::string) -> std::string",
+          "+ shows(diagram: std::string) -> std::string",
+          "+ render(diagram: std::string, format: std::string, width: int) -> std::string",
+          "+ page(title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_ApiNamespace"
+}

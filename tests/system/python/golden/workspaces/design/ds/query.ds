@@ -1,0 +1,432 @@
+// LLD of the query namespace (ds::query): the engine that asks the model (SREQ-00011-1,
+// DS-127). It answers named questions (ask) and applies a filter it is given (select);
+// both give identities. A diagram's content is one filter, built from the diagram by
+// filterFor(), the one place that names the filter of each kind of diagram. Not its
+// jobs: drawing, writing answers as text or JSON (their formats', ds::format), changing
+// the model.
+
+package driftspec@ds {
+
+
+  module query {
+    @requirement REQ-00003-2
+
+    // ---- the principles, as rules ---------------------------------------------------------------
+    rule query-draws-nothing {
+      title: the query asks the model; it never depends on what draws it
+      @requirement REQ-00003-2
+      for class c in driftspec@ds@query
+      never m in c, s behaviour-of m, s uses x, x in driftspec@ds@render
+    }
+
+    rule query-knows-no-filter {
+      title: the engine takes a filter as IFilter; none of its members names a concrete one
+      @requirement REQ-00003-2
+      for class c in driftspec@ds@query
+      where c = driftspec@ds@query::Query
+      never m in c, m uses x, x inherits driftspec@ds@query::IFilter
+    }
+
+    requirement REQ-00003-2 {
+      status: approved
+      @refines SREQ-00011-1
+      title: The query shall answer each question with answers that name an identity, as text or as JSON
+      text:
+        Seven questions: diagrams (each with its kind), entities of a scope (a
+        package named plainly or a module), relations of an identity in both
+        directions, artefacts a class realises and what verifies them,
+        behaviours of a method or class, what a diagram shows (the entities the
+        filter of its kind takes from the model: a class diagram's patterns,
+        neighbours and the boxes around them, a closed box standing for what it
+        holds; who takes part in a sequence; a state machine and its states; a
+        requirement and its umbrella), findings of a file. An unknown question
+        is one answer of kind error. The answers print as lines `kind  identity
+        detail` or as a JSON array of the same three fields.
+      rationale:
+        The command line, the editor, the agent pane and argos ask the same
+        questions; one mechanism with identities as answers serves them all.
+        Revision 2 (DS-127): what a diagram shows is asked of the model, never
+        read back from a drawing, so every answer names an identity.
+      tags: query, identity
+    }
+
+    verification VER-00079-2 {
+      status: approved
+      @requirement REQ-00003-2
+      title: Integration tests confirm coupling answers, over ds's design, what each behaviour touches outside its module
+      method: test
+      tests:
+        tests/integration/ds/query/test_query.cpp::TestQueryOfTheDesign.CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule
+    }
+
+    verification VER-00003-6 {
+      status: approved
+      @requirement REQ-00003-2
+      title: Integration tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram; revision 3 adds that a class answers its machine and its operations' sequences (DS-53)
+      text:
+        Revision 4 (DS-185) names the test of the filter of each kind after filterFor, the one it covers. Revision 5 (DS-137) registers the filters where they are tested: over a design read by the real steps.
+        Revision 6 (DS-362): the neighbours of a class diagram past what its selection reaches take the reach, and the walk ends at the first step that adds nothing; neighbours: 2000000000 over three classes draws them at once.
+      method: test
+      tests:
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheEntitiesOfAScope
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheRelationsOfAnEntityInBothDirections
+        tests/integration/ds/query/test_query.cpp::TestQuery.WhatAClassRealisesAndWhatProvesIt
+        tests/integration/ds/query/test_query.cpp::TestQuery.WhatADiagramShows
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheFindingsOfAFile
+        tests/integration/ds/query/test_query.cpp::TestQuery.AnUnknownQuestionIsAnError
+        tests/integration/ds/query/test_query.cpp::TestQuery.AnswersAsTextAndAsJson
+        tests/integration/ds/query/test_query.cpp::TestQueryOfAClass.TheBehavioursOfAClassAreItsMachineAndTheSequencesOfItsOperations
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.AClassDiagramTakesItsPatternsMinusItsExclusionsAndTheBoxesAround
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.NeighboursWidenAClassDiagramByTheRelationsItDraws
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.NeighboursPastWhatTheSelectionReachesTakeTheReach
+        tests/integration/ds/render/test_open_boxes.cpp::TestNeighboursPastTheReach.NeighboursPastTheReachDrawTheReachAndEndPromptly
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.AClosedBoxStandsForWhatItHolds
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.ASequenceDiagramTakesWhoTakesPartNotHowItIsDrawn
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.ARequirementsDiagramTakesItsRootsAndTheirUmbrella
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilterFor.EachKindOfDiagramHasItsFilterAndAnythingElseHasNone
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.TheQueryAppliesAFilterItIsGivenWithoutKnowingIt
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.WhatADiagramShowsIsAnswerdByIdentityOnly
+    }
+
+    dataclass Answer {                       // one line of an answer: an identity and what the question asked about it
+      @requirement REQ-00003-2
+      + kind: std::string
+      + id: std::string
+      + detail: std::string
+    }
+
+    // ---- the contract ------------------------------------------------------------------------
+    // what the rest of ds asks of the module: a question answered, or the model filtered
+    class IQuery {
+      @requirement REQ-00003-2
+      + ~IQuery()
+      + abstract ask(question: std::string, subject: std::string) -> std::vector<Answer>
+      + abstract select(filter: IFilter) -> std::set<std::string>
+    }
+
+    // ---- filters: what to take from the model, passed into the query ----------------------------
+    // A filter carries its criteria, given when it is built, and reads the model it is handed.
+    // A filter of our own: a class with select(); build it and pass it to IQuery::select.
+    class IFilter {
+      @requirement REQ-00003-2
+      + ~IFilter()
+      + abstract select(model: model::Model) -> std::set<std::string>
+    }
+
+    // the one place that names the filter of each kind of diagram, built from the diagram's fields and read in the metamodel
+    function filterFor(metamodel: model::Metamodel, diagram: model::Entity) -> std::unique_ptr<IFilter> {
+      @requirement REQ-00003-2
+    }
+
+    // one reading of a pattern of include, exclude or open for every kind of diagram (DS-212)
+    function inPattern(model: model::Model, pattern: std::string, entity: model::Entity) -> bool {
+      @requirement REQ-00116-1
+    }
+
+    // the box a relation is drawn from: a behaviour's is its subject's, a box's is its own (DS-219)
+    function drawnFrom(model: model::Model, entity: model::Entity) -> std::string {
+      @requirement REQ-00121-1
+    }
+
+    // include and exclude patterns, the neighbours, the boxes around; a closed box stands for what it holds
+    class ClassFilter : IFilter {
+      @requirement REQ-00047-1
+      @requirement REQ-00019-1
+      @requirement REQ-00048-1
+      @requirement REQ-00064-5
+      @requirement REQ-00120-1
+      - refs metamodel_: model::Metamodel     // the language its cut is read in (DS-351)
+      - include_: std::vector<std::string>
+      - exclude_: std::vector<std::string>
+      - neighbours_: int
+      - cutOf_: std::string
+      + ClassFilter(metamodel: model::Metamodel, include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, cutOf: std::string)
+      + select(model: model::Model) -> std::set<std::string>
+      + boxes(model: model::Model) -> std::set<std::string>   // the neighbours walk ends at the first step that adds nothing (DS-362)
+      + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
+      - matches(model: model::Model, pattern: std::string, entity: model::Entity) -> bool
+    }
+
+    // a behaviour a sequence diagram takes, and the scenario it follows (* for every branch)
+    dataclass Behaviour {
+      @requirement REQ-00049-3
+      + refs sequence: model::Entity
+      + path: std::string
+    }
+
+    // the behaviours its patterns name (a subject, a scenario, a prefix) and who takes part in them
+    class SequenceFilter : IFilter {
+      @requirement REQ-00049-3
+      @requirement REQ-00056-1
+      @requirement REQ-00129-1
+      - refs metamodel_: model::Metamodel     // the language its cut is read in (DS-351)
+      - include_: std::vector<std::string>
+      - depth_: int
+      - cutOf_: std::string
+      + SequenceFilter(metamodel: model::Metamodel, include: std::vector<std::string>, depth: int, cutOf: std::string)
+      + select(model: model::Model) -> std::set<std::string>
+      + behaviours(model: model::Model) -> std::vector<Behaviour>
+    }
+
+    // the machines it names and the states of each the design describes
+    class StateFilter : IFilter {
+      @requirement REQ-00062-1
+      - include_: std::vector<std::string>
+      + StateFilter(include: std::vector<std::string>)
+      + select(model: model::Model) -> std::set<std::string>
+      + machines(model: model::Model) -> std::vector<std::string>
+    }
+
+    // the artefacts it names and their umbrella: what refines, verifies and realises them
+    class RequirementsFilter : IFilter {
+      @requirement REQ-00050-1
+      @requirement REQ-00122-1
+      @requirement REQ-00131-1
+      - refs metamodel_: model::Metamodel     // the language its cut is read in (DS-351)
+      - include_: std::vector<std::string>
+      - design_: bool
+      - verifications_: bool
+      - cutOf_: std::string
+      + RequirementsFilter(metamodel: model::Metamodel, include: std::vector<std::string>, design: bool, verifications: bool, cutOf: std::string)
+      + select(model: model::Model) -> std::set<std::string>
+    }
+
+    // ---- the one walk of a behaviour (DS-130) ---------------------------------------------------
+    // one message a behaviour takes, and the behaviour its call goes on into with the branch it follows
+    dataclass Taken {
+      @requirement REQ-00073-2
+      + message: std::string
+      + next: std::string
+      + nextPath: std::string
+    }
+
+    // one step of a behaviour walked into what it calls: a message, at the depth it was reached
+    dataclass Walked {
+      @requirement REQ-00073-2
+      + message: std::string
+      + depth: int
+    }
+
+    // the ways through the behaviours of one model (DS-185)
+    class Walker {
+      @requirement REQ-00073-2
+      @requirement REQ-00049-3
+      - refs model_: model::Model
+      + Walker(model: model::Model)
+      // the messages a behaviour takes along a scenario, each with where it goes on: the one place that says it
+      + steps(sequence: std::string, path: std::string, out_kept: std::set<std::string>) -> std::vector<Taken>
+      // a behaviour walked into what its calls enter, down to a depth or as far as a cut says; a cycle ends
+      + walk(sequence: std::string, path: std::string, depth: int, cut: axis::Cut) -> std::vector<Walked>
+    }
+
+    // ---- the engine ---------------------------------------------------------------------------
+    // the questions, and any filter it is given, over one model
+    class Query : IQuery {
+      @requirement REQ-00003-2
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel     // the language of the model: the kinds of the answers by name (DS-351)
+      + Query(model: model::Model, metamodel: model::Metamodel)
+      + select(filter: IFilter) -> std::set<std::string>
+      + static questions() -> std::vector<std::pair<std::string, std::string>>
+      + ask(question: std::string, subject: std::string) -> std::vector<Answer>
+      + diagrams() -> std::vector<Answer>
+      + entities(scope: std::string) -> std::vector<Answer>
+      + relations(id: std::string) -> std::vector<Answer>
+      + artefacts(id: std::string) -> std::vector<Answer>
+      + behaviours(id: std::string) -> std::vector<Answer>
+      + failures(id: std::string) -> std::vector<Answer> {   // what escapes an operation, by where each starts (DS-188)
+        @requirement REQ-00111-1
+      }
+      + shows(diagram: std::string) -> std::vector<Answer>
+      + findings(file: std::string) -> std::vector<Answer>
+      + coverage(identity: std::string) -> std::vector<Answer> {
+        @requirement REQ-00124-1
+      }
+      + coupling() -> std::vector<Answer>
+      - known(id: std::string) -> bool                       // an entity, or a scope something is declared in
+      - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
+    }
+
+    - function entityAnswer(metamodel: model::Metamodel, entity: model::Entity, detail: std::string) -> Answer
+
+    // An entity as an answer: its kind is named by the metamodel the model is written in.
+    sequence entityAnswer {
+      local answer: Answer
+      -> metamodel.nameOf(entity.kind) -> kind
+      return answer
+    }
+
+    // The first question that matches answers; the order is the code's. None matches:
+    // one answer of kind error, built in the return itself.
+    sequence Query::ask {
+      opt question is diagrams {
+        -> diagrams() -> answers
+        return answers
+      }
+      opt question is entities {
+        -> entities(subject) -> answers
+        return answers
+      }
+      opt question is relations {
+        -> relations(subject) -> answers
+        return answers
+      }
+      opt question is artefacts {
+        -> artefacts(subject) -> answers
+        return answers
+      }
+      opt question is behaviours {
+        -> behaviours(subject) -> answers
+        return answers
+      }
+      opt question is failures {
+        -> failures(subject) -> answers
+        return answers
+      }
+      opt question is shows {
+        -> shows(subject) -> answers
+        return answers
+      }
+      opt question is findings {
+        -> findings(subject) -> answers
+        return answers
+      }
+      opt none of them is the question / unknown {
+        return error
+      }
+    }
+
+    sequence Query::diagrams {
+      local out: std::vector<Answer>
+      self -> model_.entities() -> held
+      loop each entity held {
+        opt it is a diagram {
+          self -> metamodel_.nameOf(entity.kind) -> kind
+        }
+      }
+      return out
+    }
+
+    sequence Query::entities {
+      self -> model_.find(scope) -> package
+      local out: std::vector<Answer>
+      self -> model_.entities() -> held
+      loop each entity held {
+        opt in the scope, written with @ when it names a package, and not expected {
+          -> entityAnswer(metamodel_, entity, title) -> answer
+        }
+      }
+      return out
+    }
+
+    // The questions about one entity ask the model's index: what touches it, what leaves it, what
+    // reaches it. None walks the relations (DS-171).
+    sequence Query::relations {
+      local out: std::vector<Answer>
+      self -> model_.index() -> index
+      self -> index.touching(id) -> held
+      loop each relation that leaves or reaches id, in the order stated {
+        alt it starts at id {
+        } else {
+        }
+      }
+      return out
+    }
+
+    sequence Query::artefacts {
+      local out: std::vector<Answer>
+      self -> model_.index() -> index
+      self -> index.from(id) -> leaving
+      loop each relation that leaves id {
+        opt it realises, satisfies or is constrained by {
+          self -> index.to(relation.to) -> reaching
+          loop each relation that reaches the same target {
+            opt it verifies it {
+            }
+          }
+        }
+      }
+      return out
+    }
+
+    sequence Query::behaviours {
+      local out: std::vector<Answer>
+      self -> model_.index() -> index
+      self -> index.to(id) -> reaching
+      loop each relation that reaches id {
+        opt it is a behaviour-of {
+          self -> model_.find(relation.from) -> behaviour
+          opt the model holds it {
+            -> entityAnswer(metamodel_, behaviour, scenario) -> answer
+          }
+        }
+      }
+      self -> model_.find(id) -> asked
+      opt it is a class {
+        self -> index.from(id) -> held
+        loop each method the class contains {
+          self -> model_.find(relation.to) -> member
+          -> behaviours(member.id) -> ofMember
+        }
+      }
+      return out
+    }
+
+    // An identity is known when the model declares it, or when something is declared in it as a scope.
+    sequence Query::known {
+      self -> model_.find(id) -> entity
+      opt the model declares it / declared {
+        return true
+      }
+      -> model::Scope::inside(id) -> scope
+      self -> model_.index() -> index
+      self -> index.members(scope) -> inPackage
+      self -> index.members(id) -> inScope
+      opt something is declared in it / scope {
+        return true
+      }
+      return false
+    }
+
+    // What a diagram shows is the filter of its kind, applied to the model: nothing is drawn (DS-127).
+    sequence Query::shows {
+      local out: std::vector<Answer>
+      local filter: IFilter
+      self -> model_.find(diagram) -> entity
+      opt no diagram has that name / no-such-diagram {
+        return error
+      }
+      -> filterFor(metamodel_, entity) -> filter
+      -> select(filter) -> ids
+      loop each id {
+        self -> model_.find(id) -> taken
+        -> entityAnswer(metamodel_, taken, "") -> answer
+      }
+      return out
+    }
+
+    // The engine hands the filter its model; it never knows which filter it is.
+    sequence Query::select {
+      local filter: IFilter
+      -> filter.select(model_) -> ids
+      return ids
+    }
+
+    sequence Query::findings {
+      local out: std::vector<Answer>
+      self -> model_.findings() -> held
+      loop each finding held {
+        opt no file was asked, or its file ends in the one asked {
+        }
+      }
+      return out
+    }
+  }
+}
+
+diagram CL_QueryNamespace {
+  kind: class
+  include: driftspec@ds@query::*
+  show: ownership
+}

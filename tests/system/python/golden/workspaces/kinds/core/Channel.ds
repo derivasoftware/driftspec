@@ -1,0 +1,11 @@
+// Where a greeting goes. One abstract method left: an abstract class, which
+// the console of the command line and the response of the server inherit.
+
+package hola {
+  module core {
+    class Channel {
+      + deliver(greeting: Greeting) -> void
+      # abstract write(text: std::string) -> void
+    }
+  }
+}

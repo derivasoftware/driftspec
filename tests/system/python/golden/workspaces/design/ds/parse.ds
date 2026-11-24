@@ -1,0 +1,285 @@
+// LLD of the parse namespace (ds::parse): every .ds file of a workspace read
+// into a tree-sitter tree (SREQ-00001-1). The tree-sitter C API is borrowed
+// through the extern catalogue; its names stay as the code writes them.
+
+package driftspec@ds {
+
+
+
+  module parse {
+    @requirement REQ-00008-1
+    @requirement REQ-00176-1                 // parse reads syntax and knows no model (DS-374)
+    @requirement REQ-00177-1                 // every operation of parse is a member of a class (DS-374)
+
+    requirement REQ-00008-1 {
+      status: approved
+      @refines SREQ-00001-1
+      title: The parser shall read every .ds file under a directory into a tree, in any order, marking the files that do not parse
+      text:
+        A directory is walked recursively; every .ds file is read whole and
+        parsed with the DriftSpec grammar into a tree that lives as long as
+        the parsed file. A file with a syntax error is still returned, marked,
+        so the workspace loads whole and the error is reported once at the
+        file. Text is parsed the same way without a file.
+      rationale:
+        Loading never fails on one file; the model absorbs the rest and says
+        which file did not parse.
+      tags: parse, workspace
+    }
+
+    verification VER-00008-2 {
+      status: approved
+      @requirement REQ-00008-1
+      title: Integration tests cover a whole workspace parsed without errors and a syntax error marked
+      method: test
+      tests:
+        tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AWholeWorkspaceIsReadWithoutSyntaxErrors
+        tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.ASyntaxErrorIsReportedWhereTheFileStopsParsing
+    }
+
+    requirement REQ-00080-1 {
+      status: approved
+      @refines SREQ-00002-1
+      title: The parser shall say where a syntax error sits and what the grammar takes there
+      text:
+        The detail of a syntax error names the declaration it is in (in a
+        module, in a class, in a sequence...) and the words the grammar takes
+        at that place, read from the parse state: its keywords, an annotation
+        when it takes one, a field when it takes key: value. A block the
+        parser had to close early says what it would have taken. When the
+        parser has lost its place the list is left out, rather than naming
+        the whole language.
+      rationale:
+        Owner, 2026-11-06 (DS-79): a newcomer agent wrote a design in three
+        attempts with the manual, and two of them were spent on syntax errors
+        that said what was wrong but not what was allowed.
+      tags: parse, syntax, manual
+    }
+
+    verification VER-00089-1 {
+      status: approved
+      @requirement REQ-00080-1
+      title: Integration tests confirm a syntax error names the declaration it is in and what the grammar takes there
+      method: test
+      tests:
+        tests/integration/ds/parse/test_syntax_errors.cpp::TestSyntaxErrors.AWordTheGrammarDoesNotTakeNamesWhatTheModuleTakes
+        tests/integration/ds/parse/test_syntax_errors.cpp::TestSyntaxErrors.ADeclarationAnInterfaceDoesNotHoldNamesWhatItHolds
+    }
+
+    // ---- what parse is, as requirements and the rules that hold them (DS-374) ---------------------------------------
+    requirement REQ-00176-1 {
+      tags: architecture, parse
+      status: approved
+      @refines REQ-00008-1
+      title: The parser shall read the syntax of a file and know nothing of the model
+      text:
+        Parsing reads text into a tree, says where a syntax error is and what the grammar takes there, and reads a
+        node's fields and text for whoever binds it. No class of the module depends on the model: what the tree
+        means is the binder's.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-374): every module has its architecture decisions and patterns, and its rules
+        check that they hold; parse is the first level of the engine and leans on no other module.
+      verification VER-00193-1 {
+        status: approved
+        title: Integration tests confirm the design of parse depends on no part of the model, and is told when a class of parse does
+        method: test
+        tests:
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.TheDesignOfDsKeepsTheRulesOfParseAndText
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.AClassOfParseThatKnowsTheModelIsTold
+      }
+    }
+
+    requirement REQ-00177-1 {
+      tags: architecture, parse
+      status: approved
+      @refines REQ-00008-1
+      title: Every operation of parse shall be a member of the class whose responsibility it is
+      text:
+        Reading a text into a tree is the Parser's, finding and describing the first syntax error is the
+        SyntaxError's, what the grammar takes in a parse state is the Lookahead's and reading a node of a tree is
+        the TreeReader's. A function of the module would be a responsibility no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-374): describing a syntax error was four functions hidden in the parser's file; a
+        free function means a responsibility is missing.
+      verification VER-00194-1 {
+        status: approved
+        title: Integration tests confirm the design of parse holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.TheDesignOfDsKeepsTheRulesOfParseAndText
+          tests/integration/ds/check/test_parse_text_principles.cpp::TestParseTextPrinciples.AFunctionOfParseIsTold
+      }
+    }
+
+    // ---- the principles of parse, as rules (DS-374) -----------------------------------------------------------
+    rule parse-knows-no-model {
+      title: no class of parse depends on the model, so parsing reads syntax and what it means is the binder's
+      @requirement REQ-00176-1
+      for class c in driftspec@ds@parse
+      never depends(c, x), x in driftspec@ds@model
+    }
+
+    rule parse-operations-belong-to-classes {
+      title: no function is written in the module of parse, so every operation of parse is a member of a class
+      @requirement REQ-00177-1
+      for function f in driftspec@ds@parse
+      never f in driftspec@ds@parse
+    }
+
+    dataclass ParsedFile {                   // one file read: its path, text, tree and whether it parsed
+      @requirement REQ-00008-1
+      @requirement REQ-00080-1
+      + path: std::string
+      + text: std::string
+      + owns tree: std::shared_ptr<TSTree>
+      + hasSyntaxErrors: bool
+      + errorLine: int                       // where it stops parsing (SREQ-00002-1: a finding at its place)
+      + errorColumn: int
+      + errorDetail: std::string             // where it sits and what the grammar takes there (REQ-00080-1)
+    }
+
+    class Parser {                           // the tree-sitter parser with the DriftSpec language set
+      @requirement REQ-00008-1
+      @requirement REQ-00012-1
+      @constraint CST-00007-1
+      - owns parser_: TSParser
+      + Parser()
+      + language() -> TSLanguage             // the grammar it reads with; a parsed file carries it in its tree (DS-374)
+      + parseText(path: std::string, text: std::string) -> ParsedFile
+      + parseFile(path: std::string) -> ParsedFile
+      + parseDirectory(directory: std::string) -> std::vector<ParsedFile>
+      + expectedAt(text: std::string, line: int, column: int) -> std::vector<std::string> {
+        @requirement REQ-00085-1                 // what the grammar takes at a place: what an editor completes with
+      }
+    }
+
+    class SyntaxError {                      // the first place a tree does not parse, where it sits and what the grammar takes there (DS-374)
+      @requirement REQ-00080-1
+      - refs text_: std::string
+      + SyntaxError(text: std::string)
+      + place(node: TSNode, file: ParsedFile) -> bool
+      - static contextOf(node: TSNode) -> std::string     // the nearest declaration around it, in the reader's words
+      - static expectedAt(node: TSNode) -> std::string    // what the grammar takes where it starts; "" when recovery lost its place
+    }
+
+    class Lookahead {                        // what the grammar takes in one parse state: an error's hint and an editor's completion (DS-374)
+      @requirement REQ-00080-1
+      @requirement REQ-00085-1
+      - keywords_: std::vector<std::string>
+      - annotation_: bool
+      - field_: bool
+      + Lookahead(language: TSLanguage, state: TSStateId)
+      + keywords() -> std::vector<std::string>
+      + words() -> std::vector<std::string>
+    }
+
+    // Most of parsing is the tree-sitter C API, whose functions the design does not declare: what
+    // is left of parseText is the file it fills and, when the tree has an error, where it is.
+    sequence Parser::parseText {
+      local file: ParsedFile
+      opt the tree has an error {
+        local root: TSNode
+        local error: SyntaxError
+        self -> error.place(root, file) -> placed
+      }
+      return file
+    }
+
+    // An error node may wrap a whole block: a narrower error inside it is found first.
+    sequence SyntaxError::place {
+      opt the node is an error {
+        loop each child with an error {
+          self -> place(child, file) -> found
+          opt the child placed it {
+            return true
+          }
+        }
+      }
+      opt the node is an error or a missing token {
+        self -> contextOf(node) -> where
+        self -> expectedAt(node) -> takes
+        return true
+      }
+      opt nothing under the node has an error {
+        return false
+      }
+      loop each child {
+        self -> place(child, file) -> found
+        opt the child placed it {
+          return true
+        }
+      }
+      return false
+    }
+
+    // The file cannot be opened: it throws, and nothing comes back.
+    sequence Parser::parseFile {
+      opt the file cannot be opened / unreadable {
+        return
+      }
+      -> parseText(path, text) -> file
+      return file
+    }
+
+    // The directory does not exist: walking it throws before any file is read. One file
+    // cannot be opened: the exception goes up and no file comes back.
+    sequence Parser::parseDirectory {
+      local paths: std::vector<std::string>
+      opt the directory does not exist / no-directory {
+        return
+      }
+      loop each entry under the directory, recursively {
+        opt a regular file ending in .ds {
+        }
+      }
+      // the paths are sorted here, so the order of the files is the order of the paths
+      local files: std::vector<ParsedFile>
+      loop each path {
+        alt the file cannot be opened / unreadable {
+          -> parseFile(path) / unreadable
+          return
+        } else {
+          -> parseFile(path) -> file
+        }
+      }
+      return files
+    }
+
+    dataclass Span {                         // where a node is written in its file: lines and columns from 1, its end included
+      @requirement REQ-00008-1
+      + line: int
+      + column: int
+      + endLine: int
+      + endColumn: int
+    }
+    class TreeReader {                       // the syntax tree of one parsed file, read; it knows no model (DS-354)
+      @requirement REQ-00008-1
+      - refs file_: ParsedFile
+      - ids_: std::vector<TSFieldId>         // each field's id in the grammar of the file, resolved with the reader (DS-374)
+      + TreeReader(file: ParsedFile)
+      + static is(node: TSNode, type: char) -> bool
+      + child(node: TSNode, field: Field) -> TSNode
+      + childrenNamed(node: TSNode, field: Field) -> std::vector<TSNode>
+      + fieldText(node: TSNode, field: Field) -> std::string
+      + textOf(node: TSNode) -> std::string
+      + static spanOf(node: TSNode) -> Span
+      + root() -> TSNode
+      + file() -> ParsedFile
+      + language() -> TSLanguage                  // the grammar the file was parsed with, as its tree carries it (DS-374)
+      + static nameOf(field: Field) -> char       // the name grammar.js gives the field
+      - idOf(field: Field) -> TSFieldId
+      - static resolve(language: TSLanguage) -> std::vector<TSFieldId>   // each field's id, looked up by its name
+    }
+
+    enum Field {                             // a field of the grammar, as grammar.js names it, read by its id (DS-360)
+      @requirement REQ-00008-1
+      action, base, body, bound, call, code, condition, default_, definition, else_scenario, entity, event, fails, failure, family, field, from, guard, id, key, kind, left, many, modifier, name, negated, of, op, operator_, operators, optional, otherwise, ownership, package, parameter, params, prefix, realises, relation, result, returns, right, scenario, scope, show, subject, symbol, target, text, title, to, type, value, variable, visibility
+    }
+  }
+}
+
+diagram CL_ParseNamespace {
+  kind: class
+  include: driftspec@ds@parse::*
+  show: ownership
+}

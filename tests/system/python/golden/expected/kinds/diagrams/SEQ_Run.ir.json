@@ -1,0 +1,166 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "run(name: std::string)",
+      "order": 0,
+      "refs": {
+        "location": "kinds/app/App.ds:10"
+      },
+      "title": "hola@app::App::run",
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "message",
+      "label": "valid(name)",
+      "order": 1,
+      "refs": {
+        "location": "kinds/app/App.ds:21"
+      },
+      "title": "hola@core::Greeter::valid",
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "ok",
+      "order": 2,
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "message",
+      "label": "greet(name)",
+      "order": 3,
+      "refs": {
+        "expands": "hola@core::Greeter::greet::sequence",
+        "location": "kinds/app/App.ds:22",
+        "span": "4-7"
+      },
+      "title": "hola@core::Greeter::greet\nexpanded below: Greeter::greet",
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "format(name)",
+      "order": 4,
+      "refs": {
+        "location": "kinds/core/Greeter.ds:19"
+      },
+      "title": "hola@core::Greeter::format",
+      "to": "hola@core::Greeter"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Greeter",
+      "kind": "message",
+      "label": "text",
+      "order": 5,
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "apply(text)",
+      "order": 6,
+      "refs": {
+        "location": "kinds/core/Greeter.ds:20"
+      },
+      "title": "hola@core::Style::apply",
+      "to": "hola@core::Style|style"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Style|style",
+      "kind": "message",
+      "label": "styled",
+      "order": 7,
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "greeting",
+      "order": 8,
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "message",
+      "label": "print(greeting)",
+      "order": 9,
+      "refs": {
+        "location": "kinds/app/App.ds:23"
+      },
+      "title": "hola@app::App::print",
+      "to": "hola@app::App"
+    },
+    {
+      "dashed": true,
+      "from": "hola@app::App",
+      "kind": "message",
+      "label": "0",
+      "order": 10,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@app::App",
+      "id": "hola@app::App",
+      "kind": "lifeline",
+      "label": "self: App",
+      "refs": {
+        "location": "kinds/app/App.ds:6"
+      },
+      "title": "hola@app::App"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@core::Greeter",
+      "id": "hola@core::Greeter|greeter",
+      "kind": "lifeline",
+      "label": "greeter: Greeter",
+      "refs": {
+        "location": "kinds/core/Greeter.ds:7"
+      },
+      "title": "hola@core::Greeter"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@core::Greeter",
+      "id": "hola@core::Greeter",
+      "kind": "lifeline",
+      "label": "Greeter",
+      "refs": {
+        "location": "kinds/core/Greeter.ds:7"
+      },
+      "title": "hola@core::Greeter"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@core::Style",
+      "id": "hola@core::Style|style",
+      "kind": "lifeline",
+      "label": "style: Style",
+      "refs": {
+        "location": "kinds/core/Style.ds:6"
+      },
+      "title": "hola@core::Style"
+    }
+  ],
+  "title": "SEQ_Run"
+}
