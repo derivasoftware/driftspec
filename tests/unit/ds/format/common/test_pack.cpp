@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/Format.hpp"
 #include "ds/scene/Document.hpp"
 
@@ -24,14 +25,16 @@ TEST(TestUnpack, ThePackGivesBackItsTextAndAnythingElseNothing) {
   EXPECT_EQ(ds::format::common::unpack("not a pack"), "");
 }
 
-TEST(TestEncode, EveryRecordIsAnArrayWhoseColumnsTheFieldsName) {
+TEST(TestSceneEncoder, EveryRecordIsAnArrayWhoseColumnsTheFieldsName) {
   ds::scene::SceneDocument doc;
   ds::scene::Node node;
   node.id = "p@m::C";
   node.kind = "unit";
   node.label = "C";
   doc.nodes.push_back(node);
-  const auto json = nlohmann::json::parse(ds::format::common::encode(doc, false));
+  ds::emit::JsonSink sink(false, true);
+  ds::format::common::SceneEncoder(doc).encode(sink);
+  const auto json = nlohmann::json::parse(sink.result());
   EXPECT_EQ(json["version"], 2);
   const auto columns = json["fields"]["node"];
   ASSERT_EQ(columns[0], "id");

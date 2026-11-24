@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <cstring>
 #include <map>
-#include <nlohmann/json.hpp>
 #include <regex>
 #include <stdexcept>
 #include <string_view>
@@ -767,14 +766,14 @@ std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool co
   return classGrid(doc, lay, pen_).dump(color);
 }
 
-std::string Text::cells(const IrDocument& doc, int maxWidth) const {
+void Text::cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const {
   const IrDocument bundled = doc.bundled();
   const Grid g = !doc.table.columns.empty() ? tableGrid(doc, pen_)
                  : !doc.parts.empty()       ? partsGrid(doc, maxWidth, pen_)
                  : isSequence(doc)          ? sequenceGrid(doc, pen_)
                                             : classGrid(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)), pen_);
-  nlohmann::json out = {{"columns", g.columns()}, {"rows", g.rows()}, {"cells", g.encode(pen_.cellColours)}, {"text", g.dump(false)}};
-  return out.dump();
+  out_sink.beginRecord().field("cells").value(g.encode(pen_.cellColours)).field("columns").integer(g.columns());
+  out_sink.field("rows").integer(g.rows()).field("text").value(g.dump(false)).endRecord();
 }
 
 }  // namespace render

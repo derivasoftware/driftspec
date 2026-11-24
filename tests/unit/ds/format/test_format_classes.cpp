@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ds/check/Report.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
 #include "ds/format/TextFormats.hpp"
@@ -32,34 +33,38 @@ ds::format::FormatOptions wide(int width) {
 }
 
 TEST(TestDiagramIr, TheIrAsItCameOrIndented) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::DiagramIr f;
   EXPECT_EQ(f.name(), "ir");
   ds::format::FormatOptions pretty;
   pretty.pretty = true;
-  EXPECT_EQ(nlohmann::json::parse(f.write(kDiagram, pretty)), nlohmann::json::parse(kDiagram.json));
+  EXPECT_EQ(nlohmann::json::parse(f.write(kDiagram, pretty, sink)), nlohmann::json::parse(kDiagram.json));
 }
 
 TEST(TestDiagramLayout, EveryNodePlacedAndEveryEdgeRouted) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::DiagramLayout f(kTheme);
   EXPECT_EQ(f.name(), "layout");
-  const auto json = nlohmann::json::parse(f.write(kDiagram, {}));
+  const auto json = nlohmann::json::parse(f.write(kDiagram, {}, sink));
   EXPECT_EQ(json["nodes"].size(), 2u);
   EXPECT_EQ(json["routes"].size(), 1u);
 }
 
 TEST(TestDiagramSvg, AnSvgThatNamesEveryBox) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::DiagramSvg f(kTheme);
   EXPECT_EQ(f.name(), "svg");
-  const std::string svg = f.write(kDiagram, {});
+  const std::string svg = f.write(kDiagram, {}, sink);
   EXPECT_EQ(svg.find("<svg"), svg.find('<'));
   EXPECT_NE(svg.find(">A<"), std::string::npos);
   EXPECT_NE(svg.find(">B<"), std::string::npos);
 }
 
 TEST(TestDiagramText, BoxCharactersWithinTheWidthAsked) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::DiagramText f(kTheme);
   EXPECT_EQ(f.name(), "text");
-  const std::string text = f.write(kDiagram, wide(60));
+  const std::string text = f.write(kDiagram, wide(60), sink);
   EXPECT_NE(text.find('A'), std::string::npos);
   EXPECT_NE(text.find('B'), std::string::npos);
   std::istringstream lines(text);
@@ -70,9 +75,10 @@ TEST(TestDiagramText, BoxCharactersWithinTheWidthAsked) {
 }
 
 TEST(TestDiagramCells, TheGridAsJson) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::DiagramCells f(kTheme);
   EXPECT_EQ(f.name(), "cells");
-  const auto json = nlohmann::json::parse(f.write(kDiagram, wide(60)));
+  const auto json = nlohmann::json::parse(f.write(kDiagram, wide(60), sink));
   EXPECT_FALSE(json.empty());
 }
 
@@ -90,19 +96,21 @@ ds::scene::SceneDocument onePackage() {
 }
 
 TEST(TestSceneJson, TheSceneAsCompactJsonThatSaysHowToReadIt) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::SceneJson f;
   EXPECT_EQ(f.name(), "json");
-  const auto json = nlohmann::json::parse(f.write(onePackage(), {}));
+  const auto json = nlohmann::json::parse(f.write(onePackage(), {}, sink));
   EXPECT_EQ(json["nodes"][0][0], "p");
   EXPECT_EQ(json["fields"]["node"][0], "id");
 }
 
 TEST(TestSceneHtml, APageTitledAsAskedThatCarriesTheScene) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::SceneHtml f;
   EXPECT_EQ(f.name(), "html");
   ds::format::FormatOptions options;
   options.title = "The shop";
-  const std::string page = f.write(onePackage(), options);
+  const std::string page = f.write(onePackage(), options, sink);
   EXPECT_NE(page.find("The shop"), std::string::npos);
   EXPECT_NE(page.find("<html"), std::string::npos);
 }
@@ -110,18 +118,20 @@ TEST(TestSceneHtml, APageTitledAsAskedThatCarriesTheScene) {
 const std::vector<ds::query::Answer> kAnswers{{"class", "p@m::A", "a class"}, {"class", "p@m::B", ""}};
 
 TEST(TestAnswersText, OneLinePerAnswerKindIdentityAndDetail) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::AnswersText f;
   EXPECT_EQ(f.name(), "text");
-  const std::string text = f.write(kAnswers, {});
+  const std::string text = f.write(kAnswers, {}, sink);
   EXPECT_NE(text.find("p@m::A"), std::string::npos);
   EXPECT_NE(text.find("a class"), std::string::npos);
   EXPECT_EQ(std::count(text.begin(), text.end(), '\n'), 2);
 }
 
 TEST(TestAnswersJson, AnArrayOfTheSameThreeFields) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::AnswersJson f;
   EXPECT_EQ(f.name(), "json");
-  const auto json = nlohmann::json::parse(f.write(kAnswers, {}));
+  const auto json = nlohmann::json::parse(f.write(kAnswers, {}, sink));
   ASSERT_EQ(json.size(), 2u);
   EXPECT_EQ(json[0]["kind"], "class");
   EXPECT_EQ(json[0]["id"], "p@m::A");
@@ -145,18 +155,32 @@ ds::check::Report aReport() {
 }
 
 TEST(TestReportText, EachFindingAtItsPlaceThenTheCounts) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::ReportText f;
   EXPECT_EQ(f.name(), "text");
-  EXPECT_EQ(f.write(aReport(), {}), "a.ds:2:1  W-Y  odd\n3 entities · 0 expected · 1 relations · 1 findings\n");
+  EXPECT_EQ(f.write(aReport(), {}, sink), "a.ds:2:1  W-Y  odd\n3 entities · 0 expected · 1 relations · 1 findings\n");
 }
 
 TEST(TestReportJson, TheFindingsAndTheCountsAsJson) {
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::ReportJson f;
   EXPECT_EQ(f.name(), "json");
-  const auto json = nlohmann::json::parse(f.write(aReport(), {}));
+  const auto json = nlohmann::json::parse(f.write(aReport(), {}, sink));
   EXPECT_EQ(json["entities"], 3);
   EXPECT_EQ(json["errors"], 0);
   EXPECT_EQ(json["findings"][0]["code"], "W-Y");
+}
+
+TEST(TestReportEncoder, TheReportAsOneValueWhereTheSinkStandsAsReportJsonWritesIt) {
+  // the browser carries the report as one field of its answer (DS-397): the same value ds check --json writes whole
+  const ds::check::Report report = aReport();
+  ds::emit::JsonSink whole(false, true);
+  const std::string written = ds::format::ReportJson().write(report, {}, whole);
+  ds::emit::JsonSink carried(false, true);
+  carried.beginRecord().field("report");
+  ds::format::common::ReportEncoder(report).encode(carried);
+  carried.endRecord();
+  EXPECT_EQ(carried.result(), R"({"report":)" + written + "}");
 }
 
 }  // namespace

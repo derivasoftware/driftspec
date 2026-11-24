@@ -1,0 +1,144 @@
+// LLD of the emit namespace (ds::emit, DS-394, DS-397): what a document is written into, at the bottom of the
+// engine like text. A sink takes records of named fields, lists and values in the order a writer gives them, and
+// knows no document; a document knows no technology. Whoever asks for an output (the command line, the api) asks
+// SinkFactory for the sink, lends it to the writer and takes the result. The first technology is JSON; the IR is
+// still written with nlohmann until it stops reading its own output back (DS-418).
+
+package driftspec@ds {
+  module emit {
+    @requirement REQ-00202-1                 // the sinks are made by SinkFactory alone and reached through their interface (DS-397)
+    @requirement REQ-00203-1                 // emit depends on no other module of the engine (DS-397)
+
+    // ---- what emit is, as requirements and the rules that hold them (DS-397) --------------------------------------
+    requirement REQ-00202-1 {
+      tags: architecture, emit, format
+      status: draft
+      @refines REQ-00106-2
+      title: A sink of emit shall be made only by emit's SinkFactory, for the doors that ask for an output, and every other module shall reach it through its interface
+      text:
+        The command line and the api are the doors: each asks SinkFactory for the sink of the technology asked for,
+        holds it as an ISink, lends it by reference to whoever writes the document and takes the result. SinkFactory
+        is the one place that names a sink. Every other module writes into the ISink it is lent and names no sink of
+        its own, so a writer never knows which technology it writes and a new sink changes none of them.
+      rationale:
+        Owner, 2026-11-24 (DS-394, DS-397): a taxonomy is used through its interface, its factories exempt. A family
+        is reached through its interface by every class but its own and its factories (REQ-00198-1, DS-405), so the
+        doors ask SinkFactory for the sink rather than build it; the catalogue of formats will take that over when
+        it names the technologies (DS-398), and a use case is lent one by its door (DS-406).
+      verification VER-00223-1 {
+        status: draft
+        title: Integration tests confirm the design of ds names a sink of emit only in emit, and is told when a door, a format, the exporter or the render does
+        method: test
+        tests:
+          tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.TheDesignOfDsKeepsTheRulesOfEmit
+          tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.AFormatLentTheJsonSinkIsTold
+          tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.AnExporterThatHoldsTheJsonSinkIsTold
+          tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.ABehaviourOfTheRenderThatBuildsTheJsonSinkIsTold
+          tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.ADoorThatBuildsTheJsonSinkIsTold
+      }
+    }
+
+    requirement REQ-00203-1 {
+      tags: architecture, emit
+      status: draft
+      @refines REQ-00106-2
+      title: The emit module shall depend on no other module of the engine
+      text:
+        A sink takes names, texts, numbers and truth values and gives text. It reads no model and no document, so
+        every module may write into it and it uses none of them.
+      rationale:
+        Owner, 2026-11-24 (DS-394): emit is a bottom module that knows no document, as text is; a dependence on
+        another module would make it know what it writes.
+      verification VER-00224-1 {
+        status: draft
+        title: Integration tests confirm the design of emit depends on no other module of the engine, and is told when a sink does
+        method: test
+        tests:
+          tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.TheDesignOfDsKeepsTheRulesOfEmit
+          tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.ASinkThatKnowsTheModelIsTold
+      }
+    }
+
+    // ---- the principles of emit, as rules (DS-397) ---------------------------------------------------------------
+    rule sinks-are-reached-through-their-interface {
+      title: no module but emit itself depends on a sink of emit, so a door asks SinkFactory for one and every writer is lent one through its interface
+      @requirement REQ-00202-1
+      for module b in driftspec@ds, class t in driftspec@ds@emit
+      where b != driftspec@ds@emit, t inherits i
+      never depends(x, t), x in b
+    }
+
+    rule emit-depends-on-no-engine-module {
+      title: nothing of emit depends on anything of the engine outside emit, so every module may write into a sink and a sink uses none
+      @requirement REQ-00203-1
+      for class c in driftspec@ds@emit
+      never depends(c, x), x in driftspec@ds, not x in driftspec@ds@emit
+    }
+
+    // THE EXTENSION POINT: what a document is written into; each technology is a class that realises it
+    class ISink {
+      @requirement REQ-00106-2
+      + ~ISink()
+      + abstract beginRecord() -> ISink                   // a record opens where the sink stands
+      + abstract endRecord() -> ISink
+      + abstract field(name: std::string_view) -> ISink   // the next field of the open record; its value follows
+      + abstract beginList() -> ISink
+      + abstract endList() -> ISink
+      + abstract value(text: std::string_view) -> ISink
+      + abstract integer(value: std::int64_t) -> ISink
+      + abstract number(value: double) -> ISink
+      + abstract boolean(value: bool) -> ISink
+      + abstract null() -> ISink
+      + abstract result() -> std::string                  // the document written, handed over; the sink is empty after
+    }
+
+    // JSON as ds has always written it (nlohmann 3.11.3's dump()), without a tree: kept whole until it is taken,
+    // so a write that fails writes nothing. Checked (every build without NDEBUG, and the tests), it refuses a field
+    // out of byte order or repeated, and a document that is no JSON.
+    class JsonSink : ISink {
+      @requirement REQ-00106-2
+      - owns out_: std::string
+      - pretty_: bool
+      - checked_: bool
+      - owns open_: std::string                          // the containers open, innermost last
+      - owns many keys_: std::vector<std::string>        // checked: the last field of each open record
+      - awaiting_: bool
+      - done_: bool
+      + JsonSink(pretty: bool, checked: bool)
+      + beginRecord() -> ISink
+      + endRecord() -> ISink
+      + field(name: std::string_view) -> ISink
+      + beginList() -> ISink
+      + endList() -> ISink
+      + value(text: std::string_view) -> ISink
+      + integer(value: std::int64_t) -> ISink
+      + number(value: double) -> ISink                    // the shortest digits that read back (std::to_chars), in nlohmann's layout
+      + boolean(value: bool) -> ISink
+      + null() -> ISink
+      + result() -> std::string
+      - static checkedByDefault() -> bool
+      - beforeValue() -> void
+      - open(kind: char) -> void
+      - close(kind: char) -> void
+      - separator() -> void
+      - quoted(text: std::string_view) -> void           // escaped as nlohmann escapes; refused when not UTF-8
+      - static sequenceEnd(text: std::string_view, at: std::size_t) -> std::size_t
+      - static invalidByte(at: std::size_t, byte: unsigned char) -> void
+      - static incomplete(last: unsigned char) -> void
+      - static hexByte(byte: unsigned char) -> std::string
+      - static misuse(what: std::string) -> void
+    }
+
+    // the one place that names the sinks (DS-397): a door asks it for the sink of the technology it writes, holds an
+    // ISink, lends it to the writer and takes the result. It makes the JsonSink
+    class SinkFactory {
+      @requirement REQ-00202-1
+      + static json(pretty: bool) -> std::unique_ptr<ISink>   // indented by two spaces when pretty, else compact
+    }
+  }
+}
+
+diagram CL_Emit {
+  kind: class
+  include: driftspec@ds@emit::*
+}

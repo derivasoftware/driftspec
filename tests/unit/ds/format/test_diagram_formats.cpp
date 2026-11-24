@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "ds/emit/JsonSink.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/theme/Theme.hpp"
 
@@ -23,19 +24,21 @@ TEST(TestDiagramFormats, EachFormatOfADiagramIsFoundByItsName) {
 }
 
 TEST(TestDiagramFormats, TheIrIsWrittenAsItCameUnlessAskedToIndent) {
-  EXPECT_EQ(ds::format::DiagramIr().write(kDiagram, {}), kDiagram.json);
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  EXPECT_EQ(ds::format::DiagramIr().write(kDiagram, {}, sink), kDiagram.json);
   ds::format::FormatOptions indented;
   indented.pretty = true;
-  EXPECT_EQ(ds::format::DiagramIr().write(kDiagram, indented), nlohmann::json::parse(kDiagram.json).dump(2));
+  EXPECT_EQ(ds::format::DiagramIr().write(kDiagram, indented, sink), nlohmann::json::parse(kDiagram.json).dump(2));
 }
 
 TEST(TestDiagramFormats, EachDrawingFormatDrawsTheSameDiagram) {
-  const std::string svg = ds::format::DiagramSvg(kTheme).write(kDiagram, {});
+  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+  const std::string svg = ds::format::DiagramSvg(kTheme).write(kDiagram, {}, sink);
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find(">A<"), std::string::npos);
-  EXPECT_NE(ds::format::DiagramText(kTheme).write(kDiagram, {}).find('B'), std::string::npos);
-  EXPECT_FALSE(ds::format::DiagramCells(kTheme).write(kDiagram, {}).empty());
-  const auto layout = nlohmann::json::parse(ds::format::DiagramLayout(kTheme).write(kDiagram, {}));
+  EXPECT_NE(ds::format::DiagramText(kTheme).write(kDiagram, {}, sink).find('B'), std::string::npos);
+  EXPECT_FALSE(ds::format::DiagramCells(kTheme).write(kDiagram, {}, sink).empty());
+  const auto layout = nlohmann::json::parse(ds::format::DiagramLayout(kTheme).write(kDiagram, {}, sink));
   EXPECT_EQ(layout["nodes"].size(), 2u);
   EXPECT_EQ(layout["routes"].size(), 1u);
 }

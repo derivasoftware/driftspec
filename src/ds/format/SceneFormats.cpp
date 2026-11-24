@@ -1,6 +1,5 @@
 #include "ds/format/SceneFormats.hpp"
 
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -9,13 +8,12 @@ namespace format {
 
 const char* viewerTemplate();  // viewer/scene.html, compiled into ds by CMake
 
-namespace {
-
 // the viewer as one self-contained page with the scene inside, titled after the workspace
-std::string page(const scene::SceneDocument& document, const std::string& title, const std::string& css,
-                 const std::vector<std::string>& focus) {
+std::string SceneHtml::page(const scene::SceneDocument& document, const std::string& title, const std::string& css,
+                            const std::vector<std::string>& focus, emit::ISink& out_sink) {
+  common::SceneEncoder(document).encode(out_sink);
   const std::string json =
-      common::pack(common::encode(document, false));  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
+      common::pack(out_sink.result());  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
   std::string safe;
   for (const char c : title) safe += c == '<' ? "&lt;" : c == '>' ? "&gt;" : c == '&' ? "&amp;" : std::string(1, c);
   std::string out = viewerTemplate();
@@ -27,7 +25,10 @@ std::string page(const scene::SceneDocument& document, const std::string& title,
   put("/*SCENE*/", json);
   put("/*TITLE*/", safe);
   put("/*CSS*/", style);
-  std::string framed = nlohmann::json(focus).dump();
+  out_sink.beginList();
+  for (const auto& id : focus) out_sink.value(id);
+  out_sink.endList();
+  std::string framed = out_sink.result();
   for (size_t at = framed.find("</"); at != std::string::npos; at = framed.find("</", at + 3)) framed.replace(at, 2, "<\\/");
   put("/*FOCUS*/", framed);
   // the viewer's code travels packed as well: the page carries the scene and the code as two packs
@@ -69,7 +70,7 @@ std::string page(const scene::SceneDocument& document, const std::string& title,
 }
 
 // a page as an iframe that carries it whole (srcdoc), to paste into any HTML document
-std::string frame(const std::string& page, const std::string& title, int height) {
+std::string SceneHtml::frame(const std::string& page, const std::string& title, int height) {
   const auto attribute = [](const std::string& text) {
     std::string out;
     out.reserve(text.size() + text.size() / 8);
@@ -80,18 +81,17 @@ std::string frame(const std::string& page, const std::string& title, int height)
          "px;border:0;border-radius:8px\" loading=\"lazy\" allowfullscreen srcdoc=\"" + attribute(page) + "\"></iframe>\n";
 }
 
-}  // namespace
-
 std::string SceneJson::name() const { return "json"; }
 
-std::string SceneJson::write(const scene::SceneDocument& document, const FormatOptions& options) const {
-  return common::encode(document, options.pretty);
+std::string SceneJson::write(const scene::SceneDocument& document, const FormatOptions&, emit::ISink& out_sink) const {
+  common::SceneEncoder(document).encode(out_sink);
+  return out_sink.result();
 }
 
 std::string SceneHtml::name() const { return "html"; }
 
-std::string SceneHtml::write(const scene::SceneDocument& document, const FormatOptions& options) const {
-  const std::string written = page(document, options.title, options.css, options.focus);
+std::string SceneHtml::write(const scene::SceneDocument& document, const FormatOptions& options, emit::ISink& out_sink) const {
+  const std::string written = page(document, options.title, options.css, options.focus, out_sink);
   return options.embed ? frame(written, options.title, options.height) : written;
 }
 

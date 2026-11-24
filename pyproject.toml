@@ -54,3 +54,8 @@ test-command = [
   "ds check {project}/examples/hola",
   "python -c \"import driftspec, sys; sys.exit(driftspec.check(sys.argv[1]).errors)\" {project}/examples/hola",
 ]
+
+[tool.cibuildwheel.macos]
+# The JSON sink writes a double with std::to_chars (DS-397), which Apple's C++ library offers from macOS 13.3 on;
+# below that target the build refuses it.
+environment = { MACOSX_DEPLOYMENT_TARGET = "13.3" }

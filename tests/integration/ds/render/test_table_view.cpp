@@ -6,6 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -94,7 +95,9 @@ TEST_F(TestTableView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineM
             std::string::npos)
       << text;
   // the grid a terminal view asks for holds the same table
-  const auto cells = nlohmann::json::parse(ds::render::Text(kTheme).cells(doc, 0));
+  ds::emit::JsonSink sink(false, true);
+  ds::render::Text(kTheme).cells(doc, 0, sink);
+  const auto cells = nlohmann::json::parse(sink.result());
   EXPECT_EQ(cells["rows"], 5);  // the headings, the rule, three events
   EXPECT_NE(cells["text"].get<std::string>().find("! Desk::rush"), std::string::npos);
 }

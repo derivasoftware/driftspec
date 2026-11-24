@@ -4,6 +4,7 @@
 #include <string>
 
 #include "ds/api/Api.hpp"
+#include "ds/emit/JsonSink.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
@@ -71,8 +72,11 @@ TEST_F(TestExportOfADesign, TheThreeArraysCarryWhatTheTextDeclaresRelatesAndGets
 TEST_F(TestExportOfADesign, TheCompactFormSaysTheSameOnOneLine) {
   ds::parse::Parser parser;
   const ds::model::Model model = ds::api::Api(metamodel).load({parser.parseText("a.ds", kDesign)});
-  const std::string pretty = ds::exporter::JsonExport(metamodel).render(model, true);
-  const std::string compact = ds::exporter::JsonExport(metamodel).render(model, false);
+  ds::emit::JsonSink indented(true, true), flat(false, true);
+  ds::exporter::JsonExport(metamodel).render(model, indented);
+  ds::exporter::JsonExport(metamodel).render(model, flat);
+  const std::string pretty = indented.result();
+  const std::string compact = flat.result();
   EXPECT_NE(pretty.find('\n'), std::string::npos);
   EXPECT_EQ(compact.find('\n'), std::string::npos);
   EXPECT_EQ(nlohmann::json::parse(pretty), nlohmann::json::parse(compact));

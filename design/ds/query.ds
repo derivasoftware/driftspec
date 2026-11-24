@@ -314,6 +314,13 @@ package driftspec@ds {
       - static endsWith(text: std::string, suffix: std::string) -> bool   // a finding's file ends in the one asked
     }
 
+    // the one place that names the query (DS-397), as FilterFactory names the filters: what asks the model a
+    // question is handed an IQuery
+    class QueryFactory {
+      @requirement REQ-00003-2
+      + static of(model: model::Model, metamodel: model::Metamodel) -> std::unique_ptr<IQuery>
+    }
+
     // An entity as an answer: its kind is named by the metamodel the model is written in.
     sequence Query::entityAnswer {
       local answer: Answer

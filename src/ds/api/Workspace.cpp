@@ -1,9 +1,8 @@
 #include "ds/api/Workspace.hpp"
 
-#include <nlohmann/json.hpp>
-
 #include "ds/api/Api.hpp"
 #include "ds/check/Report.hpp"
+#include "ds/emit/SinkFactory.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DiagramFormats.hpp"
 #include "ds/format/SceneFormats.hpp"
@@ -18,12 +17,6 @@
 
 namespace ds {
 namespace api {
-
-namespace {
-
-std::string ids(const std::vector<std::string>& list) { return nlohmann::json(list).dump(); }
-
-}  // namespace
 
 Workspace::Workspace(const model::Metamodel& metamodel, const Files& files, Output output, const std::string& diagram)
     : metamodel_(metamodel), output_(output), diagram_(diagram), model_(loaded(files)) {}
@@ -43,69 +36,107 @@ model::Model Workspace::loaded(const Files& files) {
   return Api(metamodel_).load(parsed, output_, diagram_);
 }
 
-std::string Workspace::exportModel() const { return exporter::JsonExport(metamodel_).render(model_, false); }
+// Every answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397).
+std::string Workspace::texts(const std::vector<std::string>& list) {
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
+  for (const auto& t : list) sink->value(t);
+  sink->endList();
+  return sink->result();
+}
+
+std::string Workspace::text(const std::string& value) {
+  const auto sink = emit::SinkFactory::json(false);
+  sink->value(value);
+  return sink->result();
+}
+
+std::string Workspace::exportModel() const {
+  const auto sink = emit::SinkFactory::json(false);
+  exporter::JsonExport(metamodel_).render(model_, *sink);
+  return sink->result();
+}
 
 std::string Workspace::report() const { return Api(metamodel_).report(model_); }
 
 std::string Workspace::find(const std::string& id) const {
+  const auto sink = emit::SinkFactory::json(false);
   const model::Entity* e = model_.find(id);
-  return e ? exporter::JsonExport(metamodel_).entity(*e) : "null";
+  if (e)
+    exporter::JsonExport(metamodel_).entity(*e, *sink);
+  else
+    sink->null();
+  return sink->result();
 }
 
-std::string Workspace::from(const std::string& id) const { return exporter::JsonExport(metamodel_).relations(model_.index().from(id)); }
-
-std::string Workspace::to(const std::string& id) const { return exporter::JsonExport(metamodel_).relations(model_.index().to(id)); }
-
-std::string Workspace::touching(const std::string& id) const {
-  return exporter::JsonExport(metamodel_).relations(model_.index().touching(id));
+std::string Workspace::relations(const std::vector<model::Relation>& relations) const {
+  const auto sink = emit::SinkFactory::json(false);
+  exporter::JsonExport(metamodel_).relations(relations, *sink);
+  return sink->result();
 }
 
-std::string Workspace::members(const std::string& scope) const { return ids(model_.index().members(scope)); }
+std::string Workspace::from(const std::string& id) const { return relations(model_.index().from(id)); }
 
-std::string Workspace::parent(const std::string& id) const { return nlohmann::json(model_.index().parent(id)).dump(); }
+std::string Workspace::to(const std::string& id) const { return relations(model_.index().to(id)); }
 
-std::string Workspace::children(const std::string& id) const { return ids(model_.index().children(id)); }
+std::string Workspace::touching(const std::string& id) const { return relations(model_.index().touching(id)); }
 
-std::string Workspace::revisionOf(const std::string& artefact) const { return nlohmann::json(model_.index().revisionOf(artefact)).dump(); }
+std::string Workspace::members(const std::string& scope) const { return texts(model_.index().members(scope)); }
+
+std::string Workspace::parent(const std::string& id) const { return text(model_.index().parent(id)); }
+
+std::string Workspace::children(const std::string& id) const { return texts(model_.index().children(id)); }
+
+std::string Workspace::revisionOf(const std::string& artefact) const { return text(model_.index().revisionOf(artefact)); }
 
 std::string Workspace::tree(const std::string& sequence) const {
   const model::SequenceTree tree(model_, sequence);
-  nlohmann::json frames = nlohmann::json::array();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginRecord().field("frames").beginList();
   for (const auto& f : tree.frames()) {
-    frames.push_back({{"id", f},
-                      {"kind", model_.find(f)->field("kind")},
-                      {"frame", tree.frameOf(f)},
-                      {"at", tree.at(f)},
-                      {"first", tree.first(f)},
-                      {"else", tree.elseOf(f)},
-                      {"two_sides", tree.twoSides(f)},
-                      {"scenario", tree.scenario(f, false)},
-                      {"else_scenario", tree.scenario(f, true)}});
+    sink->beginRecord()
+        .field("at")
+        .integer(tree.at(f))
+        .field("else")
+        .value(tree.elseOf(f))
+        .field("else_scenario")
+        .value(tree.scenario(f, true));
+    sink->field("first").value(tree.first(f)).field("frame").value(tree.frameOf(f)).field("id").value(f);
+    sink->field("kind").value(model_.find(f)->field("kind")).field("scenario").value(tree.scenario(f, false));
+    sink->field("two_sides").boolean(tree.twoSides(f)).endRecord();
   }
-  nlohmann::json messages = nlohmann::json::array();
-  for (const auto& m : tree.messages()) messages.push_back({{"id", m}, {"frame", tree.frameOf(m)}});
-  return nlohmann::json{{"sequence", sequence}, {"messages", messages}, {"frames", frames}}.dump();
+  sink->endList().field("messages").beginList();
+  for (const auto& m : tree.messages()) sink->beginRecord().field("frame").value(tree.frameOf(m)).field("id").value(m).endRecord();
+  sink->endList().field("sequence").value(sequence).endRecord();
+  return sink->result();
 }
 
 std::string Workspace::steps(const std::string& sequence, const std::string& path) const {
-  nlohmann::json out = nlohmann::json::array();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
   for (const auto& t : query::Walker(model_).steps(sequence, path))
-    out.push_back({{"message", t.message}, {"next", t.next}, {"next_path", t.nextPath}});
-  return out.dump();
+    sink->beginRecord().field("message").value(t.message).field("next").value(t.next).field("next_path").value(t.nextPath).endRecord();
+  sink->endList();
+  return sink->result();
 }
 
 std::string Workspace::walk(const std::string& sequence, const std::string& path, int depth) const {
-  nlohmann::json out = nlohmann::json::array();
-  for (const auto& w : query::Walker(model_).walk(sequence, path, depth)) out.push_back({{"message", w.message}, {"depth", w.depth}});
-  return out.dump();
+  const auto sink = emit::SinkFactory::json(false);
+  sink->beginList();
+  for (const auto& w : query::Walker(model_).walk(sequence, path, depth))
+    sink->beginRecord().field("depth").integer(w.depth).field("message").value(w.message).endRecord();
+  sink->endList();
+  return sink->result();
 }
 
 std::string Workspace::ask(const std::string& question, const std::string& subject) const {
-  return format::AnswersJson().write(query::Query(model_, metamodel_).ask(question, subject), {});
+  const auto sink = emit::SinkFactory::json(false);
+  return format::AnswersJson().write(query::Query(model_, metamodel_).ask(question, subject), {}, *sink);
 }
 
 std::string Workspace::shows(const std::string& diagram) const {
-  return format::AnswersJson().write(query::Query(model_, metamodel_).shows(diagram), {});
+  const auto sink = emit::SinkFactory::json(false);
+  return format::AnswersJson().write(query::Query(model_, metamodel_).shows(diagram), {}, *sink);
 }
 
 std::string Workspace::render(const std::string& diagram, const std::string& format, int width) const {
@@ -115,14 +146,16 @@ std::string Workspace::render(const std::string& diagram, const std::string& for
   options.width = width;
   const auto formats = format::diagramFormats(theme_);
   const auto chosen = formats.find(format);
-  return (chosen != formats.end() ? chosen->second : formats.at("text"))->write({ir}, options);
+  const auto sink = emit::SinkFactory::json(false);  // what layout and cells write
+  return (chosen != formats.end() ? chosen->second : formats.at("text"))->write({ir}, options, *sink);
 }
 
 std::string Workspace::page(const std::string& title, const std::vector<std::string>& focus) const {
   format::FormatOptions options;
   options.title = title;
   options.focus = focus;
-  return format::SceneHtml().write(scene::Scene(model_, metamodel_).build(), options);
+  const auto sink = emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
+  return format::SceneHtml().write(scene::Scene(model_, metamodel_).build(), options, *sink);
 }
 
 std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }

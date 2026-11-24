@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 
+#include "ds/emit/Sink.hpp"
 #include "ds/render/Ir.hpp"
 #include "ds/render/Layout.hpp"
 #include "ds/theme/Theme.hpp"
@@ -100,8 +101,9 @@ class Text {
   /// The same drawing as a cell grid for hosts that paint cells themselves
   /// (a Claude Code mod's Raster, a TUI): JSON {columns, rows, cells, text}
   /// where cells is base64 of little-endian u32 triplets [codepoint, fg, bg]
-  /// per cell, row-major, 0x01000000 meaning the terminal's default colour.
-  std::string cells(const IrDocument& doc, int maxWidth = 0) const;
+  /// per cell, row-major, 0x01000000 meaning the terminal's default colour; written as one value where the
+  /// sink it is lent stands (DS-397).
+  void cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const;
 
  private:
   const TextPen pen_;

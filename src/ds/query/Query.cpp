@@ -1,7 +1,5 @@
 #include "ds/query/Query.hpp"
 
-#include <nlohmann/json.hpp>
-
 #include "ds/model/Metamodel.hpp"
 #include "ds/text/Text.hpp"
 
