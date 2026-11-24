@@ -218,15 +218,28 @@ void StructureCheck::checkSatisfiesHome() {
 }
 
 void StructureCheck::checkArtefacts() {
-  std::set<std::string> verified;
+  std::set<std::string> verified, satisfied;
+  std::map<std::string, std::vector<std::string>> refinedBy;
   for (const auto& r : model_->index().ofKind("verifies")) verified.insert(r.to);
+  for (const auto& r : model_->index().ofKind("satisfies")) satisfied.insert(r.to);
+  for (const auto& r : model_->index().ofKind("refines")) refinedBy[r.to].push_back(r.from);
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.expected) continue;
     const auto status = e.fields.find("status");
-    if (e.kind == model::Kind::Requirement && status != e.fields.end() && status->second == "approved" && !verified.count(e.id)) {
+    const bool approved = status != e.fields.end() && status->second == "approved";  // a draft owes nothing yet
+    if (e.kind == model::Kind::Requirement && approved && !verified.count(e.id)) {
       found_.push_back(
           context_->metamodel().finding(model::Code::W_REQ_NO_VERIFICATION, e.id + " is approved and nothing verifies it", e.location));
+    }
+    std::set<std::string> seen;
+    if (e.kind == model::Kind::Requirement && approved && !realised(e.id, satisfied, refinedBy, seen)) {  // DS-429
+      found_.push_back(context_->metamodel().finding(
+          model::Code::W_REQ_UNREALISED, e.id + " is approved and nothing satisfies it, by itself or through its refinements", e.location));
+    }
+    if (e.kind == model::Kind::Constraint && approved && !verified.count(e.id)) {  // DS-430: obeying it is no verification
+      found_.push_back(
+          context_->metamodel().finding(model::Code::W_CST_NO_VERIFICATION, e.id + " is approved and nothing verifies it", e.location));
     }
     const auto method = e.fields.find("method");
     if (e.kind == model::Kind::Verification && method != e.fields.end() && method->second == "test") {
@@ -236,6 +249,20 @@ void StructureCheck::checkArtefacts() {
             context_->metamodel().finding(model::Code::W_VER_NO_TEST, e.id + " verifies by test but names no tests", e.location));
     }
   }
+}
+
+bool StructureCheck::realised(const std::string& requirement, const std::set<std::string>& satisfied,
+                              const std::map<std::string, std::vector<std::string>>& refinedBy, std::set<std::string>& seen) const {
+  if (satisfied.count(requirement)) return true;
+  // the requirements on the way down to this one: met again, a refinement cycle realises nothing (E-REFINES-CYCLE says
+  // so); a requirement reached twice by two paths (a diamond) is asked each time
+  if (!seen.insert(requirement).second) return false;
+  const auto children = refinedBy.find(requirement);
+  const bool all = children != refinedBy.end() && !children->second.empty() &&
+                   std::all_of(children->second.begin(), children->second.end(),
+                               [&](const std::string& child) { return realised(child, satisfied, refinedBy, seen); });
+  seen.erase(requirement);
+  return all;
 }
 
 // approved requirements are verified; a test verification names its tests

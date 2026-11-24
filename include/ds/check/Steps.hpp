@@ -337,6 +337,10 @@ class StructureCheck : public ACheck {
   void checkRefinesUpward();
   void checkSatisfiesHome();
   void checkArtefacts();
+  /// Whether a requirement is realised (DS-429): something satisfies it, or it is refined and every requirement that
+  /// refines it is realised; one met again on the way down (a cycle, a finding of its own) is not. `seen` holds that way.
+  bool realised(const std::string& requirement, const std::set<std::string>& satisfied,
+                const std::map<std::string, std::vector<std::string>>& refinedBy, std::set<std::string>& seen) const;
   void checkExtensions();
   void checkFields();
   const Context* context_ = nullptr;

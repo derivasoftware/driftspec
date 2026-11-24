@@ -54,7 +54,13 @@ TEST_F(TestArtefacts, TheOracleFindingsAndNothingElse) {
   EXPECT_EQ(byCode["W-REF-UNDECLARED"], 0);       // Report nobody designs: a type, so text (DS-18)
   EXPECT_EQ(byCode["W-ANNOTATION-UNKNOWN"], 1);   // @requirment on Projection
   EXPECT_EQ(model.findings().size(), 4u);
-  EXPECT_EQ(model.coverage().size(), 2u);  // W-REQ-NO-VERIFICATION and W-VER-NO-TEST are no findings (DS-216)
+  // W-REQ-NO-VERIFICATION and W-VER-NO-TEST are no findings (DS-216), nor what nothing realises or verifies (DS-429,
+  // DS-430): SREQ-00001-2 and SREQ-00002-1, whose refinements are drafts or none, and CST-00002-1
+  EXPECT_EQ(model.coverage().size(), 5u);
+  std::map<std::string, int> covered;
+  for (const auto& c : model.coverage()) ++covered[c.code];
+  EXPECT_EQ(covered["W-REQ-UNREALISED"], 2);
+  EXPECT_EQ(covered["W-CST-NO-VERIFICATION"], 1);
 }
 
 TEST_F(TestArtefacts, TheRevisionIsPartOfTheIdentityAndLinksNameIt) {
