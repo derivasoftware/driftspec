@@ -40,7 +40,7 @@ void MemberBinder::bind(TSNode m, const BindContext& ctx, const model::Entity& c
   }
 
   if (TreeReader::is(m, "method") || TreeReader::is(m, "operator")) {
-    for (TSNode mod : TreeReader::childrenNamed(m, Field::modifier)) member.flags.push_back(ctx.reader.textOf(mod));
+    for (TSNode mod : ctx.reader.childrenNamed(m, Field::modifier)) member.flags.push_back(ctx.reader.textOf(mod));
     if (TreeReader::is(m, "method") && member.name == cls.name) member.flags.push_back("constructor");
     if (TreeReader::is(m, "method") && member.name == "~" + cls.name) member.flags.push_back("destructor");  // DS-143
     if (cls.has("dataclass") && member.has("abstract")) {
@@ -48,7 +48,7 @@ void MemberBinder::bind(TSNode m, const BindContext& ctx, const model::Entity& c
           {"E-DATACLASS-ABSTRACT", "error", cls.id + " is a dataclass: a value type has no abstract methods (" + member.name + ")", loc});
     }
     std::vector<std::string> own = params;  // a templated method's own parameters are no entities either (DS-18)
-    for (const std::string& t : TypeBinder::params(ctx.reader, TreeReader::child(m, Field::params))) own.push_back(t);
+    for (const std::string& t : TypeBinder::params(ctx.reader, ctx.reader.child(m, Field::params))) own.push_back(t);
     if (own.size() > params.size())
       member.fields["template"] = join(std::vector<std::string>(own.begin() + params.size(), own.end()), ", ");
     signatures_.bind(m, ctx, member, scope, own);
@@ -76,7 +76,7 @@ void MemberBinder::bind(TSNode m, const BindContext& ctx, const model::Entity& c
     }
     const std::string counted = counting.empty() ? "" : counting.front();
     if (!counted.empty()) member.flags.push_back(counted);
-    member.fields["type"] = types_.bind(TreeReader::child(m, Field::type), ctx, scope, member.id, relation,
+    member.fields["type"] = types_.bind(ctx.reader.child(m, Field::type), ctx, scope, member.id, relation,
                                         counted == "many"       ? "*"
                                         : counted == "optional" ? "0..1"
                                                                 : "",

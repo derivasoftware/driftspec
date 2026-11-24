@@ -14,7 +14,7 @@ void ArtefactBinder::bind(TSNode node, const BindContext& ctx) const {
   const std::string& scope = ctx.scope;
   const std::string& owner = ctx.owner;
   const model::Location loc = ctx.locationOf(node);
-  if (ExtensionBinder::extends(node, TreeReader::child(node, Field::id))) {
+  if (ExtensionBinder::extends(node, ctx.reader.child(node, Field::id))) {
     const model::Kind kind = TreeReader::is(node, "requirement")    ? model::Kind::Requirement
                              : TreeReader::is(node, "verification") ? model::Kind::Verification
                                                                     : model::Kind::Constraint;

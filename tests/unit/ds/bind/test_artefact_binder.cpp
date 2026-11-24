@@ -27,7 +27,7 @@ class TestArtefactBinder : public ::testing::Test {
   const ds::bind::AnnotationBinder annotations{};
   const ds::bind::ExtensionBinder extensions{annotations};
   const ds::bind::ArtefactBinder artefacts{fields, annotations, extensions};
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {&artefacts}};
+  const ds::bind::Dispatch dispatch{parser.language(), {&artefacts}};
 
   /// Binds the artefacts written in the package of `text`, with no owner.
   void bind(const std::string& text) {

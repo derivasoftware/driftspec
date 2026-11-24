@@ -35,7 +35,7 @@ class TestFormulaBinder : public ::testing::Test {
   const ds::bind::SignatureBinder signatures{types};
   const ds::bind::FormulaBinder formulas{};
 
-  const ds::bind::Dispatch dispatch{ds::parse::Parser::language(), {}};
+  const ds::bind::Dispatch dispatch{parser.language(), {}};
   ds::parse::ParsedFile file;
 
   /// The first node of `type` under `node`, depth first.

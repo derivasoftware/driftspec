@@ -15,7 +15,7 @@ TEST(TestBindContext, AnInnerPlaceKeepsTheModelTheNotesAndTheReader) {
   ds::parse::Parser parser;
   const ds::parse::ParsedFile file = parser.parseText("a.ds", "package p {\n}\n");
   const ds::parse::TreeReader reader(file);
-  const ds::bind::Dispatch dispatch(ds::parse::Parser::language(), {});
+  const ds::bind::Dispatch dispatch(parser.language(), {});
   const ds::bind::BindContext top{model, notes, reader, metamodel, dispatch, "", ""};
   const ds::bind::BindContext inner = top.within("p@", "p");
   EXPECT_EQ(inner.scope, "p@");
@@ -34,7 +34,7 @@ TEST(TestBindContext, ANodeIsLocatedAsTheModelKeepsIt) {
   ds::parse::Parser parser;
   const ds::parse::ParsedFile file = parser.parseText("a.ds", "package p {\n}\n");
   const ds::parse::TreeReader reader(file);
-  const ds::bind::Dispatch dispatch(ds::parse::Parser::language(), {});
+  const ds::bind::Dispatch dispatch(parser.language(), {});
   const ds::bind::BindContext ctx{model, notes, reader, metamodel, dispatch, "", ""};
   const ds::model::Location at = ctx.locationOf(reader.root());
   const ds::parse::Span span = reader.spanOf(reader.root());
