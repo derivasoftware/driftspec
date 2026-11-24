@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.50
+## 0.1.51
 
 The evaluator of the rules is five pieces (DS-380). `Facts` reads the model once into what a rule is evaluated over:
 the entities of each kind, every relation both ways, the names a formula writes resolved, and what each definition holds
@@ -15,6 +15,15 @@ orders the definitions, and `Solver` answers a body over the facts and never the
 records into the facts what the validator resolved and what the definitions derive, and writes the breaches and the
 tables into the model. The design of ds holds the solver to the facts with a rule. Nothing a design writes changes:
 findings, breaches and tables read the same.
+
+## 0.1.50
+
+The check finds what each class declares through the index of its members (DS-375). To derive a class's
+stereotypes (abstract, value and the operator families) it read every entity of the model, once per class, so the
+time grew with the square of the design: a synthetic design of 3 200 classes spent most of its check there. Each
+class now reads only its own members, the same ones in the same order. Nothing changes for a design: no finding,
+export or drawing.
+
 ## 0.1.49
 
 The Owner approves the requirements DS-379 left as drafts, with their verifications (every finding is made from the
