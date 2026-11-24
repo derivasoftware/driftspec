@@ -97,6 +97,7 @@ const char* const kStyle = R"CSS(
   .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
   .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
   .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+  .pr-diagram .pr-edge-change-changed { stroke: var(--pr-changed); stroke-width: 2; } .pr-diagram .pr-edge-change-renamed { stroke: var(--pr-renamed); stroke-width: 2; }
 )CSS";
 
 std::string dataAttrs(const std::map<std::string, std::string>& refs);

@@ -6,6 +6,14 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.70
+
+A diff's change on a relation or a message is drawn as on a box (DS-419). In the text drawing, a changed relation is
+marked `~` in its colour and a renamed one `>`; before, every change but `added` was marked `-` in red, as removed. A
+renamed message is marked `>` (it was `~`). In the SVG, a changed or renamed relation is drawn in its colour; the
+stylesheet had no rule for them, so they looked unchanged. Every SVG ds writes carries the one new stylesheet line. Nothing
+a design writes changes.
+
 ## 0.1.69
 
 The Owner approves the roadmap's drafts: check's finding order and architecture (REQ-00193-1..REQ-00195-1 with
