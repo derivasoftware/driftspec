@@ -1,0 +1,28 @@
+// The external interface of the process, and its trace downwards.
+// Quality is not a field: it is a requirement linked to the interface or to an
+// operation.
+
+package hola {
+  interface shell {
+    kind: cli
+    transport: process               // argv in; stdout, stderr and exit code out
+    encoding: utf-8 text
+    @requirement SREQ-00002-1        // binds every operation
+
+    operation greet(name: string) -> core::Greeting : UC-00001-1 {
+      @requirement SREQ-00001-1
+      command: hola <name>
+      stdout: Greeting.text
+      exit 0: default                // each outcome names a scenario of its sequence
+      exit 2: empty-name
+    }
+  }
+
+  sequence shell::greet {
+    -> app::main(name) -> code
+  }
+
+  sequence shell::greet / empty-name {
+    -> app::main(name) / empty-name -> code
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@render::Route",
+      "kind": "composition",
+      "label": "points",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Point"
+    },
+    {
+      "from": "driftspec@ds@render::Placed",
+      "kind": "composition",
+      "label": "rect",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Rect"
+    },
+    {
+      "from": "driftspec@ds@render::LayoutResult",
+      "kind": "composition",
+      "label": "placed",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Placed"
+    },
+    {
+      "from": "driftspec@ds@render::LayoutResult",
+      "kind": "composition",
+      "label": "routes",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::Route"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@render",
+      "kind": "container",
+      "label": "render",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::LayoutResult",
+      "kind": "box",
+      "label": "LayoutResult",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Metrics",
+      "kind": "box",
+      "label": "Metrics",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ static svg() -> Metrics",
+          "+ static text() -> Metrics"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Placed",
+      "kind": "box",
+      "label": "Placed",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Point",
+      "kind": "box",
+      "label": "Point",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Rect",
+      "kind": "box",
+      "label": "Rect",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::Route",
+      "kind": "box",
+      "label": "Route",
+      "parent": "driftspec@ds@render"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Svg",
+      "kind": "box",
+      "label": "Svg",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ render(doc: IrDocument, maxWidth: int) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::Text",
+      "kind": "box",
+      "label": "Text",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ render(doc: IrDocument, color: bool, maxWidth: int) -> std::string",
+          "+ cells(doc: IrDocument, maxWidth: int) -> std::string"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_RenderDrawing"
+}

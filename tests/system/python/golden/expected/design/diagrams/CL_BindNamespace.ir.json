@@ -1,0 +1,1626 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "notes_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "extensions_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "types_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "signatures_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "formulas_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "bodies_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "members_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "binders_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "composition",
+      "label": "dispatch_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Dispatch"
+    },
+    {
+      "from": "driftspec@ds@bind::Binder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "aggregation",
+      "label": "notes",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Notes"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "aggregation",
+      "label": "dispatch",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Dispatch"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Reference"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Message"
+    },
+    {
+      "from": "driftspec@ds@bind::BindContext",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::Event"
+    },
+    {
+      "from": "driftspec@ds@bind::Notes",
+      "kind": "composition",
+      "label": "references",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Reference"
+    },
+    {
+      "from": "driftspec@ds@bind::Notes",
+      "kind": "composition",
+      "label": "messages",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Message"
+    },
+    {
+      "from": "driftspec@ds@bind::Notes",
+      "kind": "composition",
+      "label": "events",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::Event"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "aggregation",
+      "label": "extensions_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch",
+      "kind": "aggregation",
+      "label": "bySymbol_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::Dispatch",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::INodeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::AnnotationBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "aggregation",
+      "label": "formulas_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::DiagramBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::EnumBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::FieldBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::FormulaBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "aggregation",
+      "label": "signatures_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ModuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::PackageBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "aggregation",
+      "label": "formulas_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FormulaBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::RuleBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::SignatureBinder",
+      "kind": "aggregation",
+      "label": "types_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SignatureBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SignatureBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::TypeBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::StateBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "label": "types_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "aggregation",
+      "label": "signatures_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "label": "extensions_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "aggregation",
+      "label": "members_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::ExtensionBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::MemberBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::ClassBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "aggregation",
+      "label": "signatures_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "aggregation",
+      "label": "bodies_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::FunctionBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "aggregation",
+      "label": "types_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "aggregation",
+      "label": "signatures_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "aggregation",
+      "label": "bodies_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::SignatureBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::MemberBodyBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::INodeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "aggregation",
+      "label": "fields_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "aggregation",
+      "label": "annotations_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "aggregation",
+      "label": "types_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::FieldBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::AnnotationBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::TypeBinder"
+    },
+    {
+      "from": "driftspec@ds@bind::SequenceBinder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@bind::BindContext"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@bind",
+      "kind": "container",
+      "label": "bind",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::AnnotationBinder",
+      "kind": "box",
+      "label": "AnnotationBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ArtefactBinder",
+      "kind": "box",
+      "label": "ArtefactBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder",
+          "- extensions_: ExtensionBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::BindContext",
+      "kind": "box",
+      "label": "BindContext",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ model: model::Model",
+          "+ notes: Notes",
+          "+ reader: parse::TreeReader",
+          "+ scope: std::string",
+          "+ owner: std::string",
+          "+ metamodel: model::Metamodel",
+          "+ dispatch: Dispatch"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::Binder",
+      "kind": "box",
+      "label": "Binder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- notes_: Notes",
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder",
+          "- extensions_: ExtensionBinder",
+          "- types_: TypeBinder",
+          "- signatures_: SignatureBinder",
+          "- formulas_: FormulaBinder",
+          "- bodies_: MemberBodyBinder",
+          "- members_: MemberBinder",
+          "- binders_: std::vector<std::unique_ptr<INodeBinder>>",
+          "- dispatch_: std::optional<Dispatch>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ClassBinder",
+      "kind": "box",
+      "label": "ClassBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder",
+          "- extensions_: ExtensionBinder",
+          "- members_: MemberBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::DiagramBinder",
+      "kind": "box",
+      "label": "DiagramBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- formulas_: FormulaBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::Dispatch",
+      "kind": "box",
+      "label": "Dispatch",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- bySymbol_: std::vector<const INodeBinder*>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::EnumBinder",
+      "kind": "box",
+      "label": "EnumBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- annotations_: AnnotationBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::Event",
+      "kind": "box",
+      "label": "Event",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ state: std::string",
+          "+ entity: std::string",
+          "+ scope: std::string",
+          "+ event: std::string",
+          "+ action: bool",
+          "+ location: model::Location"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ExtensionBinder",
+      "kind": "box",
+      "label": "ExtensionBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- annotations_: AnnotationBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::FieldBinder",
+      "kind": "box",
+      "label": "FieldBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::FormulaBinder",
+      "kind": "box",
+      "label": "FormulaBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::FunctionBinder",
+      "kind": "box",
+      "label": "FunctionBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- signatures_: SignatureBinder",
+          "- bodies_: MemberBodyBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::INodeBinder",
+      "kind": "box",
+      "label": "INodeBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::InterfaceBinder",
+      "kind": "box",
+      "label": "InterfaceBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder",
+          "- signatures_: SignatureBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::MemberBinder",
+      "kind": "box",
+      "label": "MemberBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- types_: TypeBinder",
+          "- signatures_: SignatureBinder",
+          "- bodies_: MemberBodyBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::MemberBodyBinder",
+      "kind": "box",
+      "label": "MemberBodyBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::Message",
+      "kind": "box",
+      "label": "Message",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ sequence: std::string",
+          "+ message: std::string",
+          "+ to: std::string",
+          "+ op: std::string",
+          "+ argc: int",
+          "+ location: model::Location",
+          "+ returns: bool"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::ModuleBinder",
+      "kind": "box",
+      "label": "ModuleBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::Notes",
+      "kind": "box",
+      "label": "Notes",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ references: std::vector<Reference>",
+          "+ messages: std::vector<Message>",
+          "+ events: std::vector<Event>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::PackageBinder",
+      "kind": "box",
+      "label": "PackageBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::Reference",
+      "kind": "box",
+      "label": "Reference",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ from: std::string",
+          "+ target: std::string",
+          "+ scope: std::string",
+          "+ relation: std::string",
+          "+ expectedKind: model::Kind",
+          "+ location: model::Location",
+          "+ multiplicity: std::string",
+          "+ args: std::vector<std::string>",
+          "+ soft: bool"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::RuleBinder",
+      "kind": "box",
+      "label": "RuleBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder",
+          "- formulas_: FormulaBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::SequenceBinder",
+      "kind": "box",
+      "label": "SequenceBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder",
+          "- types_: TypeBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::SignatureBinder",
+      "kind": "box",
+      "label": "SignatureBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- types_: TypeBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::StateBinder",
+      "kind": "box",
+      "label": "StateBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::TypeBinder",
+      "kind": "box",
+      "label": "TypeBinder",
+      "parent": "driftspec@ds@bind"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@bind::TypeToken",
+      "kind": "box",
+      "label": "TypeToken",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ name: std::string",
+          "+ args: std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@bind::UseCaseBinder",
+      "kind": "box",
+      "label": "UseCaseBinder",
+      "parent": "driftspec@ds@bind",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "- fields_: FieldBinder",
+          "- annotations_: AnnotationBinder",
+          "- types_: TypeBinder",
+          "- signatures_: SignatureBinder"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_BindNamespace"
+}

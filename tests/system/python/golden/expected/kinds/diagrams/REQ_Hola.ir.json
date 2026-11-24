@@ -1,0 +1,339 @@
+{
+  "edges": [
+    {
+      "from": "REQ-00002-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@app::App"
+    },
+    {
+      "from": "REQ-00002-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@app::main"
+    },
+    {
+      "from": "REQ-00001-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@core::Greeter"
+    },
+    {
+      "from": "SREQ-00002-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@shell"
+    },
+    {
+      "from": "SREQ-00001-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@shell"
+    },
+    {
+      "from": "SREQ-00002-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@web"
+    },
+    {
+      "from": "SREQ-00003-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@web::state::Home"
+    },
+    {
+      "from": "CST-00001-1",
+      "kind": "dependency",
+      "label": "constrains",
+      "to": "hola@web::state::Home"
+    },
+    {
+      "from": "CST-00001-1",
+      "kind": "dependency",
+      "label": "constrains",
+      "to": "hola@web::state::Result"
+    },
+    {
+      "from": "REQ-00001-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "SREQ-00001-1"
+    },
+    {
+      "from": "REQ-00002-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "SREQ-00001-1"
+    },
+    {
+      "from": "REQ-00003-1",
+      "kind": "realization",
+      "label": "refines",
+      "to": "SREQ-00003-1"
+    },
+    {
+      "from": "REQ-00003-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "hola@server::Server"
+    },
+    {
+      "from": "SREQ-00001-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "UC-00001-1"
+    },
+    {
+      "from": "SREQ-00002-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "UC-00001-1"
+    },
+    {
+      "from": "SREQ-00003-1",
+      "kind": "dependency",
+      "label": "satisfied by",
+      "to": "UC-00002-1"
+    },
+    {
+      "from": "REQ-00001-1",
+      "kind": "dependency",
+      "label": "verified by",
+      "to": "VER-00001-1"
+    },
+    {
+      "from": "REQ-00002-1",
+      "kind": "dependency",
+      "label": "verified by",
+      "to": "VER-00002-1"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "constraint",
+      "id": "CST-00001-1",
+      "kind": "box",
+      "label": "CST-00001-1",
+      "refs": {
+        "location": "kinds/requirements.ds:19"
+      },
+      "sections": [
+        [
+          "Every view shall take its colours from the",
+          "palette's CSS variables, never a literal",
+          "value"
+        ]
+      ],
+      "stereotype": "constraint"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00001-1",
+      "kind": "box",
+      "label": "REQ-00001-1",
+      "refs": {
+        "location": "kinds/requirements.ds:22"
+      },
+      "sections": [
+        [
+          "The greeter shall build the greeting of a",
+          "name"
+        ]
+      ],
+      "stereotype": "requirement, draft, core"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00002-1",
+      "kind": "box",
+      "label": "REQ-00002-1",
+      "refs": {
+        "location": "kinds/requirements.ds:30"
+      },
+      "sections": [
+        [
+          "The command shall exit 2 when the name is",
+          "empty"
+        ]
+      ],
+      "stereotype": "requirement, draft, app"
+    },
+    {
+      "classifier": "requirement",
+      "id": "REQ-00003-1",
+      "kind": "box",
+      "label": "REQ-00003-1",
+      "refs": {
+        "location": "kinds/server/Server.ds:6"
+      },
+      "sections": [
+        [
+          "The server shall answer an empty name with",
+          "an error the page can show"
+        ]
+      ],
+      "stereotype": "requirement, draft, server"
+    },
+    {
+      "classifier": "requirement",
+      "id": "SREQ-00001-1",
+      "kind": "box",
+      "label": "SREQ-00001-1",
+      "refs": {
+        "location": "kinds/requirements.ds:4"
+      },
+      "sections": [
+        [
+          "The system shall greet a person by name from",
+          "the command line"
+        ]
+      ],
+      "stereotype": "requirement, draft, system"
+    },
+    {
+      "classifier": "requirement",
+      "id": "SREQ-00002-1",
+      "kind": "box",
+      "label": "SREQ-00002-1",
+      "refs": {
+        "location": "kinds/requirements.ds:9"
+      },
+      "sections": [
+        [
+          "The system shall answer within 100",
+          "milliseconds"
+        ]
+      ],
+      "stereotype": "requirement, draft, system"
+    },
+    {
+      "classifier": "requirement",
+      "id": "SREQ-00003-1",
+      "kind": "box",
+      "label": "SREQ-00003-1",
+      "refs": {
+        "location": "kinds/requirements.ds:14"
+      },
+      "sections": [
+        [
+          "The system shall let a person correct a",
+          "wrong name without losing the page"
+        ]
+      ],
+      "stereotype": "requirement, draft, system"
+    },
+    {
+      "classifier": "usecase",
+      "id": "UC-00001-1",
+      "kind": "box",
+      "label": "UC-00001-1",
+      "refs": {
+        "location": "kinds/usecases.ds:9"
+      },
+      "sections": [
+        [
+          "Greet a person by name"
+        ]
+      ],
+      "stereotype": "usecase, draft"
+    },
+    {
+      "classifier": "usecase",
+      "id": "UC-00002-1",
+      "kind": "box",
+      "label": "UC-00002-1",
+      "refs": {
+        "location": "kinds/usecases.ds:20"
+      },
+      "sections": [
+        [
+          "Greet a person by name from a page, keeping",
+          "what was typed when it fails"
+        ]
+      ],
+      "stereotype": "usecase, draft"
+    },
+    {
+      "classifier": "verification",
+      "id": "VER-00001-1",
+      "kind": "box",
+      "label": "VER-00001-1",
+      "refs": {
+        "location": "kinds/verifications.ds:5"
+      },
+      "sections": [
+        [
+          "Unit tests cover a name and an empty name"
+        ]
+      ],
+      "stereotype": "verification, test"
+    },
+    {
+      "classifier": "verification",
+      "id": "VER-00002-1",
+      "kind": "box",
+      "label": "VER-00002-1",
+      "refs": {
+        "location": "kinds/verifications.ds:16"
+      },
+      "sections": [
+        [
+          "System tests run the binary and read its",
+          "exit code"
+        ]
+      ],
+      "stereotype": "verification, test"
+    },
+    {
+      "classifier": "class",
+      "id": "hola@app::App",
+      "kind": "box",
+      "label": "App"
+    },
+    {
+      "classifier": "function",
+      "id": "hola@app::main",
+      "kind": "box",
+      "label": "main"
+    },
+    {
+      "classifier": "class",
+      "id": "hola@core::Greeter",
+      "kind": "box",
+      "label": "Greeter"
+    },
+    {
+      "classifier": "class",
+      "id": "hola@server::Server",
+      "kind": "box",
+      "label": "Server"
+    },
+    {
+      "classifier": "interface",
+      "id": "hola@shell",
+      "kind": "box",
+      "label": "shell"
+    },
+    {
+      "classifier": "interface",
+      "id": "hola@web",
+      "kind": "box",
+      "label": "web"
+    },
+    {
+      "classifier": "view",
+      "id": "hola@web::state::Home",
+      "kind": "box",
+      "label": "Home"
+    },
+    {
+      "classifier": "view",
+      "id": "hola@web::state::Result",
+      "kind": "box",
+      "label": "Result"
+    }
+  ],
+  "title": "REQ_Hola"
+}

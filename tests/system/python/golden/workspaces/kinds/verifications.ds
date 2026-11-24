@@ -1,0 +1,24 @@
+// How each requirement is proved.
+
+package hola {
+  module core {
+    verification VER-00001-1 {
+      @requirement REQ-00001-1
+      title: Unit tests cover a name and an empty name
+      method: test
+      tests:
+        tests/unit/core/test_greeter.cpp::TestGreeter.GreetsByName
+        tests/unit/core/test_greeter.cpp::TestGreeter.RejectsAnEmptyName
+    }
+  }
+
+  module app {
+    verification VER-00002-1 {
+      @requirement REQ-00002-1
+      title: System tests run the binary and read its exit code
+      method: test
+      tests:
+        tests/system/test_hola.cpp::TestHola.ExitsTwoOnAnEmptyName
+    }
+  }
+}

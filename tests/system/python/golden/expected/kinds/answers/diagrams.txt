@@ -1,0 +1,14 @@
+diagram  CL_Hola  class
+diagram  HLD_App  class
+diagram  HLD_Hola  class
+diagram  IF_Hola  interface
+diagram  IF_Web  interface
+diagram  REQ_Hola  requirement
+diagram  SEQ_EmptyName  sequence
+diagram  SEQ_Greet  sequence
+diagram  SEQ_GreetEmpty  sequence
+diagram  SEQ_Run  sequence
+diagram  SEQ_WebGreet  sequence
+diagram  ST_Web  state
+diagram  TB_Web  table
+diagram  TOUR_Greet  tour

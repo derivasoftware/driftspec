@@ -1,0 +1,604 @@
+// The engine for a caller in the same process (SREQ-00015-1): a workspace as text in, the JSON
+// of the command line out. The Python face and a language server call it; the command line sees
+// the same model through the same JSON, so every caller reads one contract.
+
+package driftspec@ds {
+
+  module api {
+
+    // refines how parse reports a syntax error; the engine's load is what reports a cut file once and drops its echoes
+    requirement REQ-00167-1 {
+      status: approved
+      @refines REQ-00080-1
+      title: A file that does not parse shall be reported once, at the block a lost brace leaves open, and what only echoes it shall not be reported
+      text:
+        When a block is not closed, read from the indentation every file keeps (CST-00007-1), the
+        error is reported at the line that opens it and names it. While a file does not parse, the
+        other findings in it and the names declared nowhere are left out: they come from what the
+        cut leaves out of the model, not from the design. The findings of the files that parse stay.
+      rationale:
+        Audit for 0.1.0 (DS-7, DS-304): one lost brace in DriftSpec's own design gave dozens of
+        findings, every one an echo of it, and the error stood lines below the block left open.
+      tags: parse, syntax
+      verification VER-00184-1 {
+        status: approved
+        title: Integration tests confirm a lost brace is reported at the block it leaves open, and the findings that echo the cut go while an intact file keeps its own
+        method: test
+        tests:
+          tests/integration/ds/api/test_cut_file.cpp::TestCutFile.ALostBraceIsReportedAtTheBlockItLeavesOpen
+          tests/integration/ds/api/test_cut_file.cpp::TestCutFile.WhatOnlyEchoesTheCutGoesAndTheOtherFilesKeepTheirFindings
+      }
+    }
+
+    constraint CST-00009-1 {
+      status: approved
+      category: design
+      bok: BOK-00003-1
+      title: Every answer of the engine to a caller outside it shall be a document it writes, a copy, never a view into a model the caller could keep
+      rationale:
+        The engine knows none of its callers (CST-00008-2 inside it, this one at its edge): a caller that
+        held a view could change the model or be left pointing at what a reload moves. The JSON the
+        engine writes is the same shape the command line prints, so a tool sees one contract.
+      tags: python, api
+    }
+
+    // What a workspace is loaded to give (DS-376), which says which steps of the check its load runs: the
+    // findings (ds check), the whole model (ds export, and a workspace kept for many questions), the answers of
+    // a query, the viewer (its page or its scene) or one diagram drawn (svg, text, cells, the IR or its layout).
+    enum Output {
+      @requirement REQ-00085-1
+      @constraint CST-00001-1
+      Findings, Model, Answers, Viewer, Drawing
+    }
+
+    // ---- who chooses the steps of the check (DS-376) ----------------------------------------------------
+    // The Api chooses, for what a load is to give, which steps of the check it runs; the check makes and runs
+    // what it is given. A command, a format or any other box names what it wants, an Output, never the steps.
+    definition chooses-steps(x) {
+      title: x, a class or a function, names the selection of the steps a load runs, or a behaviour of it makes the steps of the check
+      if x is class, depends(x, driftspec@ds@check::Selection)
+      if x is function, depends(x, driftspec@ds@check::Selection)
+      if x is function, s behaviour-of x, s uses driftspec@ds@check::Selection
+      if x is class, m in x, s behaviour-of m, y in s, y calls driftspec@ds@check::steps
+      if x is function, s behaviour-of x, y in s, y calls driftspec@ds@check::steps
+    }
+
+    rule only-the-api-chooses-the-steps {
+      title: no class or function outside the api and the check names the selection of the steps a load runs or makes them, so the Api alone chooses which steps of the check run for what each command gives
+      @requirement REQ-00085-1
+      for module b in driftspec@ds
+      where b != driftspec@ds@api, b != driftspec@ds@check
+      never chooses-steps(x), x in b
+    }
+
+    // A workspace loaded once (DS-173): its model kept for every question. When it grows, it becomes a
+    // module of its own with its questions grouped by what they look at.
+    class Workspace {
+      @interface workspace                   // the class the in-process interface is linked against
+      @requirement REQ-00107-2
+      @constraint CST-00009-1
+      - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
+      - owns model_: model::Model
+      // loaded in the language it is given (DS-341), for every question unless it is loaded to draw one diagram (DS-376)
+      + Workspace(metamodel: model::Metamodel, files: Files, output: Output, diagram: std::string)
+      + model() -> model::Model
+      + exportModel() -> std::string
+      + report() -> std::string
+      + find(id: std::string) -> std::string
+      + from(id: std::string) -> std::string
+      + to(id: std::string) -> std::string
+      + touching(id: std::string) -> std::string
+      + members(scope: std::string) -> std::string
+      + parent(id: std::string) -> std::string
+      + children(id: std::string) -> std::string
+      + revisionOf(artefact: std::string) -> std::string
+      + tree(sequence: std::string) -> std::string
+      + steps(sequence: std::string, path: std::string) -> std::string
+      + walk(sequence: std::string, path: std::string, depth: int) -> std::string
+      + ask(question: std::string, subject: std::string) -> std::string
+      + shows(diagram: std::string) -> std::string
+      + render(diagram: std::string, format: std::string, width: int) -> std::string
+      + page(title: std::string, focus: std::vector<std::string>) -> std::string
+    }
+
+    // How an identity is written (model/Identity), asked by another language rather than copied into it.
+    class Identity {
+      @requirement REQ-00107-2
+      + static qualify(scope: std::string, name: std::string) -> std::string
+      + static outer(scope: std::string) -> std::string
+      + static boxOf(scope: std::string) -> std::string
+      + static packageOf(scope: std::string) -> std::string
+      + static behaviourOf(id: std::string) -> std::string
+      + static subjectOf(id: std::string) -> std::string
+      + static scenarioOf(id: std::string) -> std::string
+      + static withoutRevision(id: std::string) -> std::string
+    }
+
+    verification VER-00123-3 {
+      status: approved
+      @requirement REQ-00107-2
+      @constraint CST-00009-1
+      title: Integration tests ask a loaded workspace from C++ and from Python, two at once, and change an answer without changing the model
+      method: test
+      tests:
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ItAnswersWhatTheCommandLineAnswers
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.OneHopIsTheIndexOfTheModel
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ABehaviourIsAnsweredAsItsTreePathAndWalk
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ItAsksAsDsQueryAndDrawsAsDsRender
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.TwoLoadedAtOnceEachKeepItsOwnModel
+        tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.AnIdentityIsWrittenAsTheModelWritesIt
+        tests/integration/python/test_workspace.py::TestWorkspace::test_one_load_answers_the_model_the_check_and_one_hop
+        tests/integration/python/test_workspace.py::TestWorkspace::test_a_behaviour_is_read_as_its_tree_path_and_walk
+        tests/integration/python/test_workspace.py::TestWorkspace::test_it_asks_as_ds_query_does_and_draws_as_ds_render_does
+        tests/integration/python/test_workspace.py::TestWorkspace::test_several_are_loaded_at_once_each_with_its_own_model
+        tests/integration/python/test_workspace.py::TestWorkspace::test_an_answer_is_a_copy_the_caller_may_change
+        tests/integration/python/test_workspace.py::TestWorkspace::test_an_identity_is_written_as_the_engine_writes_it
+    }
+
+    // One hop asked of the model's index, written as the export writes it: the caller gets a copy.
+    sequence Workspace::from {
+      local exporter: exporter::JsonExport
+      self -> model_.index() -> index
+      self -> index.from(id) -> leaving
+      -> exporter.relations(leaving) -> document
+      return document
+    }
+
+    sequence Workspace::tree {
+      local tree: model::SequenceTree
+      -> tree.frames() -> frames
+      -> tree.messages() -> messages
+      return document
+    }
+
+    class Api {                              // the engine, called in process, over the metamodel it is given (DS-341)
+      @interface engine                      // the class the binary interface is linked against
+      @requirement REQ-00085-1
+      - refs metamodel_: model::Metamodel
+      + Api(metamodel: model::Metamodel)
+      + check(files: Files) -> std::string
+      + load(files: std::vector<parse::ParsedFile>, output: Output, diagram: std::string) -> model::Model {
+        @requirement REQ-00167-1
+        @requirement REQ-00085-1
+      }
+      // the one place that chooses the steps of the check a load runs, for what it is to give (DS-376)
+      + static stepsFor(output: Output, bound: model::Model, diagram: std::string) -> check::Selection {
+        @requirement REQ-00085-1
+        @constraint CST-00001-1
+      }
+      + report(model: model::Model, pretty: bool) -> std::string   // reads the severity table of its metamodel (DS-379)
+      + exportModel(files: Files) -> std::string
+      + static expectedAt(text: std::string, line: int, column: int) -> std::string
+      + render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string
+      + page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
+    }
+
+    // The engine for a page in a browser (DS-203): one request of texts in, one document out, a copy
+    // (CST-00009-1); app/wasm exports it as the function ds.wasm offers.
+    class Browser {
+      @interface browser                     // the class ds.wasm's one function is linked against
+      @requirement REQ-00113-1
+      @constraint CST-00009-1
+      - refs metamodel_: model::Metamodel
+      + Browser(metamodel: model::Metamodel)
+      + answer(request: std::string) -> std::string
+    }
+
+    // How every caller loads a workspace (DS-120): the files bound into one model written in the
+    // metamodel the Api holds, then checked; what only echoes a cut file goes (DS-304).
+    sequence Api::load {
+      local model: model::Model
+      local binder: bind::Binder
+      local checker: check::Checker
+      local broken: std::set<std::string>
+      loop each file {
+        opt it does not parse / cut {
+          // it is said once, where the file stops parsing, and kept among the broken
+        }
+        -> binder.bind(file)
+      }
+      // the steps the output reads, chosen here and nowhere else (DS-376)
+      -> stepsFor(output, model, diagram) -> selection
+      -> check::steps(selection) -> steps
+      self -> binder.notes() -> notes
+      -> checker.run(notes)
+      // what only echoes a file that does not parse goes until it parses (DS-304); the rest by where it is written
+      -> model.withdrawEchoes(broken)
+      -> model.sortFindings()
+      return model
+    }
+
+    // Every step for every output but a drawing. A drawing shows the relations the linker makes, the calls
+    // and couplings behaviour typing makes and the stereotypes derivation makes; it reads no finding, coverage,
+    // escape or breach. A table written as rows and columns is the answers of its rules (DS-268), so they run
+    // for it.
+    sequence Api::stepsFor {
+      opt anything but a drawing / whole {
+        -> check::Selection::every() -> every
+        return every
+      }
+      -> check::Selection::of(steps) -> drawing
+      opt a table written as rows and columns / table {
+        -> drawing.with(step) -> table
+        return table
+      }
+      return drawing
+    }
+
+    // The functions of text to JSON: a Workspace loaded for one question (DS-173), and for what it gives (DS-376).
+    sequence Api::check {
+      local workspace: Workspace
+      -> workspace.report() -> json
+      return json
+    }
+
+    sequence Api::exportModel {
+      local workspace: Workspace
+      -> workspace.exportModel() -> json
+      return json
+    }
+
+    sequence Api::expectedAt {
+      local parser: parse::Parser
+      -> parser.expectedAt(text, line, column) -> words
+      return json
+    }
+
+    sequence Api::render {
+      local workspace: Workspace
+      -> workspace.render(diagram, format, width) -> drawing
+      return drawing
+    }
+
+    // a request for the manual is answered by a manual made from the metamodel the browser holds (DS-342)
+    sequence Browser::answer {
+      local manual: model::Manual
+      local workspace: Workspace
+      opt a request for the manual {
+        -> manual.page(topic) -> text
+        -> manual.guides() -> guides
+        -> manual.topics() -> topics
+        return json
+      }
+      -> workspace.report() -> report
+      -> workspace.render(diagram, format, width) -> drawing
+      return json
+    }
+
+    sequence Api::page {
+      local workspace: Workspace
+      -> workspace.page(title, focus) -> page
+      return page
+    }
+  }
+}
+
+// ---- the engine's binary interface: what a caller in the same process links against --------------
+package driftspec@ds {
+  // what the engine promises at its edge: the package's, where its interfaces are; module api realises them
+  requirement REQ-00085-1 {
+    status: approved
+    @refines SREQ-00015-1
+    title: The engine shall take a workspace as text, the buffers an editor holds included, and give back the JSON of the command line
+    text:
+      A workspace is a map from each file's path to its text, saved or not. check gives
+      the findings and the counts as ds check --json does, export the model as ds export
+      does, render a diagram drawn as text or svg or its render-IR, page the viewer framed
+      on the identities given, and expectedAt what the grammar takes at a place of a text.
+    rationale:
+      Owner, 2026-11-06 (DS-84): a Python face to depend on, and a language server; text in
+      and JSON out keeps one contract for every caller.
+    tags: api, python
+    // revision 3 (DS-376): a drawing runs only the steps of the check it reads, chosen by the Api alone, and draws
+    // byte for byte as after the whole check
+    verification VER-00094-3 {
+      status: draft
+      title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, says what the grammar takes at a place, and draws a diagram with only the steps of the check it reads, chosen by the Api alone, as after the whole check
+      method: test
+      tests:
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheExampleChecksCleanAsTheCommandLineSays
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheApiReturnsTheReportTheCommandLinePrints
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheModelOfTheExampleExportsByIdentity
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.AnUnsavedBufferIsCheckedAsItIsTyped
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.ADiagramDrawsAsTextOrAsItsRenderIr
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheViewerOpensFramedOnWhatItIsAsked
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.WhatTheGrammarTakesWhereAnEditorAsksInTheExample
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.EveryKindOfDiagramOfTheDesignIsDrawnAsAfterTheWholeCheck
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.AStateMachineAndItsTableAreDrawnAsAfterTheWholeCheck
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.TheApiDrawsADiagramAsTheWorkspaceLoadedWholeDoes
+        tests/integration/ds/api/test_drawing_steps.cpp::TestDrawingSteps.AStepADrawingReadsChangesItWhenItIsLeftOut
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ASelectionOfStepsNamedOutsideTheApiIsTold
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.StepsMadeOutsideTheApiAreTold
+    }
+  }
+
+  requirement REQ-00113-1 {
+    status: approved
+    @refines SREQ-00015-1
+    @refines SREQ-00019-1                  // the one call the playground's page makes
+    title: The engine shall answer a page in a browser in one call, with what the page shows after an edit
+    text:
+      The request is the texts of a workspace by path and a width. The answer is one document: the
+      report of ds check --json; the identities the workspace declares, each with the file and the
+      lines where it is written; its requirements, constraints and use cases as rows, each with what
+      it refines, what keeps it and what proves it; and its diagrams in the order they are written,
+      each with its kind, what it asks for, what it takes and its drawing as svg. A request that
+      cannot be read is answered with an error, never with a crash. Compiled to WebAssembly, this is
+      the one function a page calls (ds.js, ds.wasm).
+    rationale:
+      DS-203 (epic DS-201, the playground): a page that edits a workspace and draws it as it is
+      typed needs the whole picture after each keystroke in milliseconds, with no server; one call
+      keeps one contract between the engine and the page, as REQ-00085-1 does for a caller in process.
+    tags: api, browser
+    verification VER-00129-1 {
+      status: approved
+      title: Unit and integration tests confirm one call answers the report, the identities and their places, the artefacts as rows and the diagrams drawn in order, and an error for a request that cannot be read
+      method: test
+      tests:
+        tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.TheExampleIsCleanAndEachOfItsDiagramsIsDrawnInTheOrderItIsWritten
+        tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.TheArtefactsOfTheExampleComeAsRowsNestedByWhatTheyRefine
+        tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.AClassOfTheExampleIsFoundWhereItIsWritten
+    }
+  }
+
+  requirement REQ-00107-2 {
+    status: approved
+    @refines SREQ-00015-1
+    title: The engine shall load a workspace once and answer every question asked of it, as documents
+    text:
+      A Workspace is a workspace as text loaded once: parsed, bound and checked, its model kept for
+      as many questions as the caller asks. It answers what the engine already knows: one hop by
+      identity (what leaves, reaches or touches an entity, what a scope declares, what holds what,
+      the declared revision of an artefact), a behaviour's tree, the path of a scenario and the walk
+      into what it calls, the questions of ds query and what a diagram takes, a diagram drawn and the
+      viewer. How an identity is written is asked too, not
+      copied by the caller. Several Workspaces may be loaded at once, each with its own model.
+    rationale:
+      DS-173: every call from Python read and checked the whole workspace again (about 130 ms on
+      driftspec's design), and what the engine knows (identities, a behaviour's tree, a diff) was
+      derived again in Python by argos's plugin and the live session. One load, many questions, one
+      contract; the place a reload would live.
+      Revision 2: what changed from another Workspace left with ds diff (Owner, 2026-11-18, DS-277).
+    tags: python, api
+  }
+
+  interface engine {
+    kind: library
+    transport: in process, linked
+    encoding: json text
+    @requirement REQ-00085-1
+
+    operation check(files: api::Files) -> std::string : UC-00001-1
+    operation export(files: api::Files) -> std::string : UC-00005-1
+    operation render(files: api::Files, diagram: std::string, format: std::string, width: int) -> std::string : UC-00002-1
+    operation page(files: api::Files, title: std::string, focus: std::vector<std::string>) -> std::string : UC-00002-1
+    operation expectedAt(text: std::string, line: int, column: int) -> std::string : UC-00007-1
+  }
+
+  // A workspace loaded once and asked as often as needed (DS-173): what the engine offers a caller in
+  // the same process beside engine's one-question functions. Each answer is a copy, in the JSON the
+  // engine writes (CST-00009-1); the Python face's native Workspace holds one (DS-90).
+  interface workspace {
+    kind: library
+    transport: in process, linked
+    encoding: json text
+    @requirement REQ-00107-2
+    @constraint CST-00009-1
+    operation export() -> std::string
+    operation report() -> std::string
+    operation find(id: std::string) -> std::string
+    operation from(id: std::string) -> std::string
+    operation to(id: std::string) -> std::string
+    operation touching(id: std::string) -> std::string
+    operation members(scope: std::string) -> std::string
+    operation parent(id: std::string) -> std::string
+    operation children(id: std::string) -> std::string
+    operation revisionOf(artefact: std::string) -> std::string
+    operation tree(sequence: std::string) -> std::string
+    operation steps(sequence: std::string, path: std::string) -> std::string
+    operation walk(sequence: std::string, path: std::string, depth: int) -> std::string
+    operation ask(question: std::string, subject: std::string) -> std::string
+    operation shows(diagram: std::string) -> std::string
+    operation render(diagram: std::string, format: std::string, width: int) -> std::string
+    operation page(title: std::string, focus: std::vector<std::string>) -> std::string
+  }
+
+  // The engine for a page in a browser (DS-203): one call per edit, the whole of what the page shows
+  // after it, as one document (CST-00009-1); compiled to WebAssembly it is the one function ds.wasm
+  // exports, and a shared library beside the Python face for the playground's lesson checks.
+  interface browser {
+    kind: library
+    transport: webassembly, in the page
+    encoding: json text
+    @requirement REQ-00113-1
+    @constraint CST-00009-1
+    operation answer(request: std::string) -> std::string
+  }
+
+  sequence browser::answer {
+    local browser: api::Browser                  // made once, over the metamodel the page's engine makes (DS-341)
+    -> browser.answer(request) -> json
+    return json
+  }
+
+  sequence engine::check {
+    local api: api::Api
+    -> api.check(files) -> json
+    return json
+  }
+
+  sequence engine::check / errors {            // the errors are among the findings: nothing is raised
+    local api: api::Api
+    -> api.check(files) -> json
+    return json
+  }
+
+  sequence engine::export / no-workspace {     // no texts: an empty model, nothing refused (the caller refuses a path)
+    local api: api::Api
+    -> api.exportModel(files) -> json
+    return json
+  }
+
+  sequence engine::export {
+    local api: api::Api
+    -> api.exportModel(files) -> json
+    return json
+  }
+
+  sequence engine::check / bad-usage {         // no texts: counts of zero, nothing refused (the caller refuses a path)
+    local api: api::Api
+    -> api.check(files) -> json
+    return json
+  }
+
+  sequence engine::render {
+    local api: api::Api
+    -> api.render(files, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence engine::render / no-diagram {       // "" for a diagram the workspace does not have
+    local api: api::Api
+    -> api.render(files, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence engine::render / no-workspace {     // no texts: nothing to draw, ""
+    local api: api::Api
+    -> api.render(files, diagram, format, width) -> drawing
+    return drawing
+  }
+
+  sequence engine::page {
+    local api: api::Api
+    -> api.page(files, title, focus) -> html
+    return html
+  }
+
+  sequence engine::page / no-diagram {         // identities the model does not declare: the viewer opens unframed
+    local api: api::Api
+    -> api.page(files, title, focus) -> html
+    return html
+  }
+
+  sequence engine::page / no-workspace {       // no texts: the viewer of an empty model
+    local api: api::Api
+    -> api.page(files, title, focus) -> html
+    return html
+  }
+
+  sequence engine::expectedAt {
+    local api: api::Api
+    -> api.expectedAt(text, line, column) -> words
+    return words
+  }
+
+  sequence workspace::export {
+    local loaded: api::Workspace
+    -> loaded.exportModel() -> json
+    return json
+  }
+
+  sequence workspace::report {
+    local loaded: api::Workspace
+    -> loaded.report() -> json
+    return json
+  }
+
+  sequence workspace::find {
+    local loaded: api::Workspace
+    -> loaded.find(id) -> json
+    return json
+  }
+
+  sequence workspace::from {
+    local loaded: api::Workspace
+    -> loaded.from(id) -> json
+    return json
+  }
+
+  sequence workspace::to {
+    local loaded: api::Workspace
+    -> loaded.to(id) -> json
+    return json
+  }
+
+  sequence workspace::touching {
+    local loaded: api::Workspace
+    -> loaded.touching(id) -> json
+    return json
+  }
+
+  sequence workspace::members {
+    local loaded: api::Workspace
+    -> loaded.members(scope) -> json
+    return json
+  }
+
+  sequence workspace::parent {
+    local loaded: api::Workspace
+    -> loaded.parent(id) -> json
+    return json
+  }
+
+  sequence workspace::children {
+    local loaded: api::Workspace
+    -> loaded.children(id) -> json
+    return json
+  }
+
+  sequence workspace::revisionOf {
+    local loaded: api::Workspace
+    -> loaded.revisionOf(artefact) -> json
+    return json
+  }
+
+  sequence workspace::tree {
+    local loaded: api::Workspace
+    -> loaded.tree(sequence) -> json
+    return json
+  }
+
+  sequence workspace::steps {
+    local loaded: api::Workspace
+    -> loaded.steps(sequence, path) -> json
+    return json
+  }
+
+  sequence workspace::walk {
+    local loaded: api::Workspace
+    -> loaded.walk(sequence, path, depth) -> json
+    return json
+  }
+
+  sequence workspace::ask {
+    local loaded: api::Workspace
+    -> loaded.ask(question, subject) -> json
+    return json
+  }
+
+  sequence workspace::shows {
+    local loaded: api::Workspace
+    -> loaded.shows(diagram) -> json
+    return json
+  }
+
+  sequence workspace::render {
+    local loaded: api::Workspace
+    -> loaded.render(diagram, format, width) -> json
+    return json
+  }
+
+  sequence workspace::page {
+    local loaded: api::Workspace
+    -> loaded.page(title, focus) -> json
+    return json
+  }
+
+}
+
+diagram CL_ApiNamespace {                   // the api box drawn inside: the engine's three faces and what they share
+  kind: class
+  include: driftspec@ds@api::*
+}

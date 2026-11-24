@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 1453 968" width="1453" height="968" style="max-width:100%;height:auto" class="pr-diagram" role="img">
+<title>REQ_Hola</title>
+<style>
+  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
+    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
+    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
+    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+  .pr-diagram text { fill: var(--pr-text); }
+  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
+  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
+  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
+  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
+  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
+  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
+  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
+  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
+  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-name { fill: var(--pr-name); }
+  .pr-diagram .pr-type { fill: var(--pr-type); }
+  .pr-diagram .pr-param { fill: var(--pr-param); }
+  .pr-diagram .pr-punct { fill: var(--pr-punct); }
+  .pr-diagram .pr-static { text-decoration: underline; }
+  .pr-diagram .pr-abstract-member { font-style: italic; }
+  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
+  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
+  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
+  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
+  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
+  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
+  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
+  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
+  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
+  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
+  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
+  .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+</style>
+<defs>
+  <marker id="pridiuya-tri" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" orient="auto"><path d="M1,1 L13,6 L1,11 Z"/></marker>
+  <marker id="pridiuya-diamond-filled" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="pr-filled" d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pridiuya-diamond" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="pridiuya-arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path class="pr-open" d="M1,1 L11,6 L1,11"/></marker>
+</defs>
+<g class="pr-edge-group" data-from="REQ-00002-1" data-to="hola@app::App"><path class="pr-edge-hit" d="M1029,760 L1029,821 L1076,821 L1076,852"/><path class="pr-edge pr-edge-dependency" d="M1029,760 L1029,821 L1076,821 L1076,852" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="REQ-00002-1" data-to="hola@app::main"><path class="pr-edge-hit" d="M1119,760 L1119,836 L1184,836 L1184,852"/><path class="pr-edge pr-edge-dependency" d="M1119,760 L1119,836 L1184,836 L1184,852" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="REQ-00001-1" data-to="hola@core::Greeter"><path class="pr-edge-hit" d="M374,760 L374,790 L448,790 L448,852"/><path class="pr-edge pr-edge-dependency" d="M374,760 L374,790 L448,790 L448,852" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="SREQ-00002-1" data-to="hola@shell"><path class="pr-edge-hit" d="M1201,548 L1201,635 L1302,635 L1302,664"/><path class="pr-edge pr-edge-dependency" d="M1201,548 L1201,635 L1302,635 L1302,664" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="SREQ-00001-1" data-to="hola@shell"><path class="pr-edge-hit" d="M932,548 L932,620 L1275,620 L1275,664"/><path class="pr-edge pr-edge-dependency" d="M932,548 L932,620 L1275,620 L1275,664" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="SREQ-00002-1" data-to="hola@web"><path class="pr-edge-hit" d="M1277,548 L1277,649 L1401,649 L1401,664"/><path class="pr-edge pr-edge-dependency" d="M1277,548 L1277,649 L1401,649 L1401,664" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="SREQ-00003-1" data-to="hola@web::state::Home"><path class="pr-edge-hit" d="M768,96 L768,175 L712,175 L712,206"/><path class="pr-edge pr-edge-dependency" d="M768,96 L768,175 L712,175 L712,206" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="CST-00001-1" data-to="hola@web::state::Home"><path class="pr-edge-hit" d="M433,114 L433,144 L688,144 L688,206"/><path class="pr-edge pr-edge-dependency" d="M433,114 L433,144 L688,144 L688,206" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="CST-00001-1" data-to="hola@web::state::Result"><path class="pr-edge-hit" d="M310,114 L310,129 L44,129 L44,206"/><path class="pr-edge pr-edge-dependency" d="M310,114 L310,129 L44,129 L44,206" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="REQ-00001-1" data-to="SREQ-00001-1"><path class="pr-edge-hit" d="M314,664 L314,562 L701,562 L701,548"/><path class="pr-edge pr-edge-realization" d="M314,664 L314,562 L701,562 L701,548" marker-end="url(#pridiuya-tri)"/></g>
+<g class="pr-edge-group" data-from="REQ-00002-1" data-to="SREQ-00001-1"><path class="pr-edge-hit" d="M1029,664 L1029,606 L855,606 L855,548"/><path class="pr-edge pr-edge-realization" d="M1029,664 L1029,606 L855,606 L855,548" marker-end="url(#pridiuya-tri)"/></g>
+<g class="pr-edge-group" data-from="REQ-00003-1" data-to="SREQ-00003-1"><path class="pr-edge-hit" d="M440,206 L440,160 L682,160 L682,96"/><path class="pr-edge pr-edge-realization" d="M440,206 L440,160 L682,160 L682,96" marker-end="url(#pridiuya-tri)"/></g>
+<g class="pr-edge-group" data-from="REQ-00003-1" data-to="hola@server::Server"><path class="pr-edge-hit" d="M440,302 L440,358"/><path class="pr-edge pr-edge-dependency" d="M440,302 L440,358" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="SREQ-00001-1" data-to="UC-00001-1"><path class="pr-edge-hit" d="M778,548 L778,577 L603,577 L603,664"/><path class="pr-edge pr-edge-dependency" d="M778,548 L778,577 L603,577 L603,664" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="SREQ-00002-1" data-to="UC-00001-1"><path class="pr-edge-hit" d="M1125,548 L1125,591 L672,591 L672,664"/><path class="pr-edge pr-edge-dependency" d="M1125,548 L1125,591 L672,591 L672,664" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="SREQ-00003-1" data-to="UC-00002-1"><path class="pr-edge-hit" d="M854,96 L854,190 L964,190 L964,206"/><path class="pr-edge pr-edge-dependency" d="M854,96 L854,190 L964,190 L964,206" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="REQ-00001-1" data-to="VER-00001-1"><path class="pr-edge-hit" d="M254,760 L254,775 L180,775 L180,852"/><path class="pr-edge pr-edge-dependency" d="M254,760 L254,775 L180,775 L180,852" marker-end="url(#pridiuya-arrow)"/></g>
+<g class="pr-edge-group" data-from="REQ-00002-1" data-to="VER-00002-1"><path class="pr-edge-hit" d="M939,760 L939,806 L828,806 L828,852"/><path class="pr-edge pr-edge-dependency" d="M939,760 L939,806 L828,806 L828,852" marker-end="url(#pridiuya-arrow)"/></g>
+<g id="pridiuya-CST-00001-1" data-id="CST-00001-1" class="pr-box pr-classifier-constraint pr-stereotype-constraint" data-ref-location="kinds/requirements.ds:19"><rect x="188" y="0" width="368" height="114" rx="4"/><path class="pr-head" d="M192,0 H552 A4,4 0 0 1 556,4 V50 H188 V4 A4,4 0 0 1 192,0 Z"/><text class="pr-stereo" x="198" y="20">«constraint»</text><circle class="pr-badge" cx="205" cy="36" r="7"/><text class="pr-badge-text" x="205" y="39.5" text-anchor="middle">K</text><text class="pr-header" x="218" y="40">CST-00001-1</text><line class="pr-sep" x1="188" y1="50" x2="556" y2="50"/><text x="198" y="62">Every view shall take its colours from the</text><text x="198" y="80">palette's CSS variables, never a literal</text><text x="198" y="98">value</text></g>
+<g id="pridiuya-REQ-00001-1" data-id="REQ-00001-1" class="pr-box pr-classifier-requirement pr-stereotype-requirement--draft--core" data-ref-location="kinds/requirements.ds:22"><rect x="134" y="664" width="360" height="96" rx="4"/><path class="pr-head" d="M138,664 H490 A4,4 0 0 1 494,668 V714 H134 V668 A4,4 0 0 1 138,664 Z"/><text class="pr-stereo" x="144" y="684">«requirement, draft, core»</text><circle class="pr-badge" cx="151" cy="700" r="7"/><text class="pr-badge-text" x="151" y="703.5" text-anchor="middle">R</text><text class="pr-header" x="164" y="704">REQ-00001-1</text><line class="pr-sep" x1="134" y1="714" x2="494" y2="714"/><text x="144" y="726">The greeter shall build the greeting of a</text><text x="144" y="744">name</text></g>
+<g id="pridiuya-REQ-00002-1" data-id="REQ-00002-1" class="pr-box pr-classifier-requirement pr-stereotype-requirement--draft--app" data-ref-location="kinds/requirements.ds:30"><rect x="849" y="664" width="360" height="96" rx="4"/><path class="pr-head" d="M853,664 H1205 A4,4 0 0 1 1209,668 V714 H849 V668 A4,4 0 0 1 853,664 Z"/><text class="pr-stereo" x="859" y="684">«requirement, draft, app»</text><circle class="pr-badge" cx="866" cy="700" r="7"/><text class="pr-badge-text" x="866" y="703.5" text-anchor="middle">R</text><text class="pr-header" x="879" y="704">REQ-00002-1</text><line class="pr-sep" x1="849" y1="714" x2="1209" y2="714"/><text x="859" y="726">The command shall exit 2 when the name is</text><text x="859" y="744">empty</text></g>
+<g id="pridiuya-REQ-00003-1" data-id="REQ-00003-1" class="pr-box pr-classifier-requirement pr-stereotype-requirement--draft--server" data-ref-location="kinds/server/Server.ds:6"><rect x="256" y="206" width="368" height="96" rx="4"/><path class="pr-head" d="M260,206 H620 A4,4 0 0 1 624,210 V256 H256 V210 A4,4 0 0 1 260,206 Z"/><text class="pr-stereo" x="266" y="226">«requirement, draft, server»</text><circle class="pr-badge" cx="273" cy="242" r="7"/><text class="pr-badge-text" x="273" y="245.5" text-anchor="middle">R</text><text class="pr-header" x="286" y="246">REQ-00003-1</text><line class="pr-sep" x1="256" y1="256" x2="624" y2="256"/><text x="266" y="268">The server shall answer an empty name with</text><text x="266" y="286">an error the page can show</text></g>
+<g id="pridiuya-SREQ-00001-1" data-id="SREQ-00001-1" class="pr-box pr-classifier-requirement pr-stereotype-requirement--draft--system" data-ref-location="kinds/requirements.ds:4"><rect x="625" y="452" width="384" height="96" rx="4"/><path class="pr-head" d="M629,452 H1005 A4,4 0 0 1 1009,456 V502 H625 V456 A4,4 0 0 1 629,452 Z"/><text class="pr-stereo" x="635" y="472">«requirement, draft, system»</text><circle class="pr-badge" cx="642" cy="488" r="7"/><text class="pr-badge-text" x="642" y="491.5" text-anchor="middle">R</text><text class="pr-header" x="655" y="492">SREQ-00001-1</text><line class="pr-sep" x1="625" y1="502" x2="1009" y2="502"/><text x="635" y="514">The system shall greet a person by name from</text><text x="635" y="532">the command line</text></g>
+<g id="pridiuya-SREQ-00002-1" data-id="SREQ-00002-1" class="pr-box pr-classifier-requirement pr-stereotype-requirement--draft--system" data-ref-location="kinds/requirements.ds:9"><rect x="1049" y="452" width="304" height="96" rx="4"/><path class="pr-head" d="M1053,452 H1349 A4,4 0 0 1 1353,456 V502 H1049 V456 A4,4 0 0 1 1053,452 Z"/><text class="pr-stereo" x="1059" y="472">«requirement, draft, system»</text><circle class="pr-badge" cx="1066" cy="488" r="7"/><text class="pr-badge-text" x="1066" y="491.5" text-anchor="middle">R</text><text class="pr-header" x="1079" y="492">SREQ-00002-1</text><line class="pr-sep" x1="1049" y1="502" x2="1353" y2="502"/><text x="1059" y="514">The system shall answer within 100</text><text x="1059" y="532">milliseconds</text></g>
+<g id="pridiuya-SREQ-00003-1" data-id="SREQ-00003-1" class="pr-box pr-classifier-requirement pr-stereotype-requirement--draft--system" data-ref-location="kinds/requirements.ds:14"><rect x="596" y="0" width="344" height="96" rx="4"/><path class="pr-head" d="M600,0 H936 A4,4 0 0 1 940,4 V50 H596 V4 A4,4 0 0 1 600,0 Z"/><text class="pr-stereo" x="606" y="20">«requirement, draft, system»</text><circle class="pr-badge" cx="613" cy="36" r="7"/><text class="pr-badge-text" x="613" y="39.5" text-anchor="middle">R</text><text class="pr-header" x="626" y="40">SREQ-00003-1</text><line class="pr-sep" x1="596" y1="50" x2="940" y2="50"/><text x="606" y="62">The system shall let a person correct a</text><text x="606" y="80">wrong name without losing the page</text></g>
+<g id="pridiuya-UC-00001-1" data-id="UC-00001-1" class="pr-box pr-classifier-usecase pr-stereotype-usecase--draft" data-ref-location="kinds/usecases.ds:9"><rect x="534" y="664" width="208" height="78" rx="4"/><path class="pr-head" d="M538,664 H738 A4,4 0 0 1 742,668 V714 H534 V668 A4,4 0 0 1 538,664 Z"/><text class="pr-stereo" x="544" y="684">«usecase, draft»</text><circle class="pr-badge" cx="551" cy="700" r="7"/><text class="pr-badge-text" x="551" y="703.5" text-anchor="middle">U</text><text class="pr-header" x="564" y="704">UC-00001-1</text><line class="pr-sep" x1="534" y1="714" x2="742" y2="714"/><text x="544" y="726">Greet a person by name</text></g>
+<g id="pridiuya-UC-00002-1" data-id="UC-00002-1" class="pr-box pr-classifier-usecase pr-stereotype-usecase--draft" data-ref-location="kinds/usecases.ds:20"><rect x="776" y="206" width="376" height="96" rx="4"/><path class="pr-head" d="M780,206 H1148 A4,4 0 0 1 1152,210 V256 H776 V210 A4,4 0 0 1 780,206 Z"/><text class="pr-stereo" x="786" y="226">«usecase, draft»</text><circle class="pr-badge" cx="793" cy="242" r="7"/><text class="pr-badge-text" x="793" y="245.5" text-anchor="middle">U</text><text class="pr-header" x="806" y="246">UC-00002-1</text><line class="pr-sep" x1="776" y1="256" x2="1152" y2="256"/><text x="786" y="268">Greet a person by name from a page, keeping</text><text x="786" y="286">what was typed when it fails</text></g>
+<g id="pridiuya-VER-00001-1" data-id="VER-00001-1" class="pr-box pr-classifier-verification pr-stereotype-verification--test" data-ref-location="kinds/verifications.ds:5"><rect x="0" y="852" width="360" height="78" rx="4"/><path class="pr-head" d="M4,852 H356 A4,4 0 0 1 360,856 V902 H0 V856 A4,4 0 0 1 4,852 Z"/><text class="pr-stereo" x="10" y="872">«verification, test»</text><circle class="pr-badge" cx="17" cy="888" r="7"/><text class="pr-badge-text" x="17" y="891.5" text-anchor="middle">V</text><text class="pr-header" x="30" y="892">VER-00001-1</text><line class="pr-sep" x1="0" y1="902" x2="360" y2="902"/><text x="10" y="914">Unit tests cover a name and an empty name</text></g>
+<g id="pridiuya-VER-00002-1" data-id="VER-00002-1" class="pr-box pr-classifier-verification pr-stereotype-verification--test" data-ref-location="kinds/verifications.ds:16"><rect x="652" y="852" width="352" height="96" rx="4"/><path class="pr-head" d="M656,852 H1000 A4,4 0 0 1 1004,856 V902 H652 V856 A4,4 0 0 1 656,852 Z"/><text class="pr-stereo" x="662" y="872">«verification, test»</text><circle class="pr-badge" cx="669" cy="888" r="7"/><text class="pr-badge-text" x="669" y="891.5" text-anchor="middle">V</text><text class="pr-header" x="682" y="892">VER-00002-1</text><line class="pr-sep" x1="652" y1="902" x2="1004" y2="902"/><text x="662" y="914">System tests run the binary and read its</text><text x="662" y="932">exit code</text></g>
+<g id="pridiuya-hola@app::App" data-id="hola@app::App" class="pr-box pr-classifier-class"><rect x="1044" y="852" width="64" height="38" rx="4"/><path class="pr-head" d="M1048,852 H1104 A4,4 0 0 1 1108,856 V890 H1044 V856 A4,4 0 0 1 1048,852 Z"/><circle class="pr-badge" cx="1061" cy="870" r="7"/><text class="pr-badge-text" x="1061" y="873.5" text-anchor="middle">C</text><text class="pr-header" x="1074" y="874">App</text></g>
+<g id="pridiuya-hola@app::main" data-id="hola@app::main" class="pr-box pr-classifier-function"><rect x="1148" y="852" width="72" height="38" rx="4"/><path class="pr-head" d="M1152,852 H1216 A4,4 0 0 1 1220,856 V890 H1148 V856 A4,4 0 0 1 1152,852 Z"/><circle class="pr-badge" cx="1165" cy="870" r="7"/><text class="pr-badge-text" x="1165" y="873.5" text-anchor="middle">f</text><text class="pr-header" x="1178" y="874">main</text></g>
+<g id="pridiuya-hola@core::Greeter" data-id="hola@core::Greeter" class="pr-box pr-classifier-class"><rect x="400" y="852" width="96" height="38" rx="4"/><path class="pr-head" d="M404,852 H492 A4,4 0 0 1 496,856 V890 H400 V856 A4,4 0 0 1 404,852 Z"/><circle class="pr-badge" cx="417" cy="870" r="7"/><text class="pr-badge-text" x="417" y="873.5" text-anchor="middle">C</text><text class="pr-header" x="430" y="874">Greeter</text></g>
+<g id="pridiuya-hola@server::Server" data-id="hola@server::Server" class="pr-box pr-classifier-class"><rect x="396" y="358" width="88" height="38" rx="4"/><path class="pr-head" d="M400,358 H480 A4,4 0 0 1 484,362 V396 H396 V362 A4,4 0 0 1 400,358 Z"/><circle class="pr-badge" cx="413" cy="376" r="7"/><text class="pr-badge-text" x="413" y="379.5" text-anchor="middle">C</text><text class="pr-header" x="426" y="380">Server</text></g>
+<g id="pridiuya-hola@shell" data-id="hola@shell" class="pr-box pr-classifier-interface"><rect x="1249" y="664" width="80" height="38" rx="4"/><path class="pr-head" d="M1253,664 H1325 A4,4 0 0 1 1329,668 V702 H1249 V668 A4,4 0 0 1 1253,664 Z"/><circle class="pr-badge" cx="1266" cy="682" r="7"/><text class="pr-badge-text" x="1266" y="685.5" text-anchor="middle">I</text><text class="pr-header" x="1279" y="686">shell</text></g>
+<g id="pridiuya-hola@web" data-id="hola@web" class="pr-box pr-classifier-interface"><rect x="1369" y="664" width="64" height="38" rx="4"/><path class="pr-head" d="M1373,664 H1429 A4,4 0 0 1 1433,668 V702 H1369 V668 A4,4 0 0 1 1373,664 Z"/><circle class="pr-badge" cx="1386" cy="682" r="7"/><text class="pr-badge-text" x="1386" y="685.5" text-anchor="middle">I</text><text class="pr-header" x="1399" y="686">web</text></g>
+<g id="pridiuya-hola@web::state::Home" data-id="hola@web::state::Home" class="pr-box pr-classifier-view"><rect x="664" y="206" width="72" height="38" rx="4"/><path class="pr-head" d="M668,206 H732 A4,4 0 0 1 736,210 V244 H664 V210 A4,4 0 0 1 668,206 Z"/><circle class="pr-badge" cx="681" cy="224" r="7"/><text class="pr-badge-text" x="681" y="227.5" text-anchor="middle">V</text><text class="pr-header" x="694" y="228">Home</text></g>
+<g id="pridiuya-hola@web::state::Result" data-id="hola@web::state::Result" class="pr-box pr-classifier-view"><rect x="0" y="206" width="88" height="38" rx="4"/><path class="pr-head" d="M4,206 H84 A4,4 0 0 1 88,210 V244 H0 V210 A4,4 0 0 1 4,206 Z"/><circle class="pr-badge" cx="17" cy="224" r="7"/><text class="pr-badge-text" x="17" y="227.5" text-anchor="middle">V</text><text class="pr-header" x="30" y="228">Result</text></g>
+<text class="pr-edge-label" x="1035" y="786">satisfied by</text>
+<text class="pr-edge-label" x="1125" y="794">satisfied by</text>
+<text class="pr-edge-label" x="417" y="786">satisfied by</text>
+<text class="pr-edge-label" x="1257" y="631">satisfied by</text>
+<text class="pr-edge-label" x="1109" y="616">satisfied by</text>
+<text class="pr-edge-label" x="1345" y="645">satisfied by</text>
+<text class="pr-edge-label" x="774" y="131">satisfied by</text>
+<text class="pr-edge-label" x="566" y="140">constrains</text>
+<text class="pr-edge-label" x="183" y="125">constrains</text>
+<text class="pr-edge-label" x="513" y="558">refines</text>
+<text class="pr-edge-label" x="948" y="602">refines</text>
+<text class="pr-edge-label" x="567" y="156">refines</text>
+<text class="pr-edge-label" x="446" y="326">satisfied by</text>
+<text class="pr-edge-label" x="696" y="573">satisfied by</text>
+<text class="pr-edge-label" x="904" y="587">satisfied by</text>
+<text class="pr-edge-label" x="915" y="186">satisfied by</text>
+<text class="pr-edge-label" x="186" y="809">verified by</text>
+<text class="pr-edge-label" x="889" y="802">verified by</text>
+</svg>

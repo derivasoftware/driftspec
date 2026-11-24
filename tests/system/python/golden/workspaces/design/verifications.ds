@@ -1,0 +1,338 @@
+// System qualification: one verification per system requirement, each a test
+// that drives the ds binary from outside (tests/system/ds/test_qualification.cpp).
+// System verifications are SVER (argos: qualification/); module ones will be VER.
+
+package driftspec {
+
+  verification SVER-00001-1 {
+    status: approved
+    @requirement SREQ-00001-1
+    title: System tests confirm a workspace loads into one model with one identity per entity
+    text:
+      ds export of the static corpus names ds@ds::Model and the scope of
+      ds@ds::ScopedCheck; ds check of the behaviour corpus reports the scenario
+      declared twice as E-DUPLICATE-IDENTITY and exits with 1.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
+  }
+
+  verification SVER-00002-4 {
+    status: approved
+    @requirement SREQ-00002-1
+    title: System tests confirm every incoherence is a finding with code, severity and location, and a path that is no workspace is bad usage
+    text:
+      ds check prints file:line:column, code and message per finding and
+      exits with 1 when an error is among them; a workspace with an
+      undeclared reference still exports whole, with the warning. A path
+      that is no workspace (none there, or no .ds file under it) exits with
+      2 on every command, as a command line to correct. A file that does not
+      parse comes back the same way, whatever the text its message quotes
+      (revision 4, DS-334).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
+      tests/system/ds/test_qualification.cpp::TestQualification.TheCheckJsonSaysTheFindingsAndTheCounts
+      tests/system/ds/test_qualification.cpp::TestQualification.ASyntaxErrorQuotingAWideCharacterComesBackAsJson
+      tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
+  }
+
+  verification SVER-00003-2 {
+    status: approved
+    @requirement SREQ-00003-2
+    title: System tests confirm artefacts are linked to the design by revision
+    text:
+      The export of the artefacts corpus carries refines, verifies and
+      satisfies relations between pinned ids and the classes that realise them;
+      the packages corpus carries the same satisfies relation from an HLD box
+      (revision 2).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.ArtefactsAreLinkedByRevision
+  }
+
+  verification SVER-00004-2 {
+    status: approved
+    @requirement SREQ-00004-1
+    title: System tests confirm behaviour is bound to its subject and checked against it
+    text:
+      The export of the behaviour corpus carries behaviour-of and expands-to
+      relations; ds check reports E-MSG-ARITY and W-ACTION-UNDECLARED. Revision 2
+      (DS-18): a participant nobody designs is text, no longer a finding.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.BehaviourIsBoundToItsSubjectAndChecked
+  }
+
+  verification SVER-00005-4 {
+    status: approved
+    @requirement SREQ-00005-1
+    title: System tests confirm a selection is drawn as SVG and as text to a given width, and a large one as text within bounded memory
+    text:
+      ds render <workspace> <diagram> -f svg yields an SVG with stable ids;
+      -f text with -w 80 stays within 80 columns while the unbounded drawing
+      exceeds them. Revises SVER-00005-1, which named --svg, --text and
+      --width (DS-80). Revision 3 (DS-350): a class diagram of 250 classes is
+      drawn as text under a 3 GB address-space cap with a peak under 1 GB; it
+      once needed some 5 GB. Revision 4 (DS-350 part 2): 400 classes, which
+      took 14 GB, then 2 GB with compact cells, and 0.55 GB once a gap keeps
+      lanes only for the edges that turn in it.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.ASelectionIsDrawnAsSvgAndAsTextToAWidth
+      tests/system/ds/test_qualification.cpp::TestQualification.ALargeClassDiagramIsDrawnAsTextWithinBoundedMemory
+  }
+
+  verification SVER-00014-2 {
+    status: approved
+    @requirement SREQ-00013-1
+    title: System tests confirm ds render -f json lays out a workspace as nested boxes, in both variants
+    text:
+      ds render <workspace> -f json yields the scene: JSON whose nodes each
+      have a place inside their parent's, with a lean place too unless they
+      are private members. Revises SVER-00014-1, which named ds scene (DS-80).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheWholeModelIsLaidOutOnceForAViewer
+  }
+
+  verification SVER-00015-2 {
+    status: approved
+    @requirement SREQ-00013-1
+    title: System tests confirm ds render writes one page with the whole scene inside, that a browser opens as it is
+    text:
+      Revises SVER-00015-1, which named ds view (DS-80).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheViewerIsOnePageWithTheWholeModelInside
+      tests/system/ds/test_qualification.cpp::TestQualification.TheViewerEmbedsAsAFrameInTheReadersColours
+  }
+
+  verification SVER-00016-1 {
+    status: approved
+    @requirement SREQ-00002-1
+    title: System tests confirm ds check --json gives every finding with its code, severity and location, and the counts
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheFindingsAreJsonForAMachine
+  }
+
+  verification SVER-00017-1 {
+    status: approved
+    @requirement SREQ-00013-1
+    title: System tests confirm ds render with a diagram opens the viewer framed on what that diagram shows
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheViewerOpensFramedOnTheDiagramNamed
+  }
+
+  verification SVER-00006-1 {
+    status: approved
+    @requirement SREQ-00006-1
+    title: System tests confirm the model and the drawings are exported
+    text:
+      ds export yields entities, relations and findings as JSON; ds render
+      yields a render-IR document of the plantuml family.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheModelAndTheDrawingsAreExported
+  }
+
+  verification SVER-00008-1 {
+    status: approved
+    @requirement SREQ-00008-1
+    title: System tests confirm the grammar ships with queries that name its nodes
+    text:
+      Every node the highlight and fold queries name is a node the generated
+      grammar defines, so an editor loading them never gets an invalid query.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheGrammarShipsWithQueriesThatNameItsNodes
+  }
+
+  verification SVER-00009-2 {
+    status: approved
+    @requirement SREQ-00009-2
+    title: System tests confirm the static metamodel is modelled and classified by derivation
+    text:
+      The export carries derived stereotypes (interface, abstract, value with
+      its operator families), template bounds, header operators, ownership
+      with multiplicity, a package boundary, and the identities of classes in
+      nested packages (revision 2: packages nest).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheStaticMetamodelIsModelledAndClassifiedByDerivation
+  }
+
+  verification SVER-00010-2 {
+    status: approved
+    @requirement SREQ-00010-1
+    title: System tests confirm class, requirement, sequence and state diagrams are views of the model
+    text:
+      ds render yields a class diagram with containers, a requirement diagram
+      with artefact boxes, a sequence diagram with lifelines and a state diagram
+      with its states and jumps. Revision 2 adds the fourth view (DS-5).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryKindOfDiagramIsAViewOfTheModel
+  }
+
+  verification SVER-00011-2 {
+    status: approved
+    @constraint CST-00001-1
+    title: System tests confirm a hundred classes check, export and draw in under a hundred milliseconds
+    text:
+      A generated workspace of a hundred classes with inheritance, ownership
+      and dependencies runs ds check, ds export and ds render -f svg each in
+      under one hundred milliseconds. Revises SVER-00011-1, which named
+      --svg (DS-80).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.AHundredClassesCheckAndDrawInUnderAHundredMilliseconds
+  }
+
+  verification SVER-00013-2 {
+    status: approved
+    @requirement SREQ-00012-1
+    title: System tests confirm every oracle corpus means exactly the findings it marks, and every example a newcomer is shown checks clean
+    text:
+      For every corpus under tests/corpus/, the codes ds check reports are
+      exactly the codes the corpus marks in its `// !` comments: every rule
+      of the language is fixed by a text that shows it and by the findings
+      it must and must not raise. The corpora live with the tests; examples/
+      holds what a newcomer is shown, and each of its workspaces checks with
+      no finding. Revision 2: the corpora left examples/ (DS-282).
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryCorpusMeansExactlyTheFindingsItMarks
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryExampleANewcomerIsShownChecksClean
+  }
+
+  verification SVER-00012-2 {
+    status: approved
+    @requirement SREQ-00011-1
+    title: System tests confirm a question about the model is answered by identity, and an identity it does not declare fails with a hint
+    text:
+      ds query lists the diagrams with their kind, the relations of an
+      artefact in both directions, what a class realises and what proves it,
+      and what a diagram shows; each answer names an identity the next
+      question takes, and an unknown question fails. An identity the model
+      does not declare, or none where one is needed, fails too: one answer
+      of kind error, naming the identities that end in what was asked.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.AQuestionAboutTheModelIsAnsweredByIdentity
+      tests/system/ds/test_qualification.cpp::TestQualification.AnIdentityTheModelDoesNotDeclareIsAnError
+  }
+
+  verification SVER-00018-1 {
+    status: approved
+    @requirement SREQ-00014-1
+    title: System tests confirm ds carries its manual: the index, a kind with its example, a code with what to do, exit codes in every help
+    text:
+      ds manual prints the index; ds manual sequence --json gives an
+      example that declares a sequence; ds manual E-SYNTAX says what to do;
+      an unknown topic exits 1; every command's --help lists its exit codes.
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
+  }
+
+  verification SVER-00019-1 {
+    status: approved
+    @requirement SREQ-00015-1
+    title: System tests confirm a program that depends on the driftspec package loads, checks and draws the design of ds in its own process
+    method: test
+    tests:
+      tests/system/python/test_dependency.py::TestDependency::test_a_program_depending_on_driftspec_reads_checks_and_draws_the_design_of_ds
+  }
+
+  verification SVER-00020-1 {
+    status: approved
+    @requirement SREQ-00016-1
+    title: System tests confirm an editor's session with driftspec-lsp gets the findings of what it types and the drawing of what it points at
+    method: test
+    tests:
+      tests/system/python/test_editor.py::TestEditorSession::test_an_editor_gets_what_it_types_wrong_and_the_drawing_of_what_it_points_at
+  }
+
+  verification SVER-00021-1 {
+    status: approved
+    @requirement SREQ-00017-1
+    title: System tests confirm an agent over MCP and a reader in the page share one live session, each pointing at what the other sees
+    method: test
+    tests:
+      tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_points_and_annotates_and_the_reader_sees_it_and_answers
+      tests/system/python/test_live_session.py::TestLiveSessionFromOutside::test_the_agent_finds_every_tool_of_the_contract
+  }
+  verification SVER-00023-5 {
+    status: approved
+    @requirement SREQ-00019-1
+    title: System tests replay the twenty lessons of the playground against the engine to a clean end, and find each of them in English and Spanish
+    method: test
+    tests:
+      tests/system/python/test_playground.py::TestPlayground::test_every_lesson_plays_to_a_clean_end
+      tests/system/python/test_playground.py::TestPlayground::test_every_lesson_speaks_english_and_spanish
+  }
+
+  verification SVER-00024-2 {
+    status: approved
+    @requirement SREQ-00019-1
+    title: System tests confirm every example the playground offers after its lessons checks clean, draws its diagrams and is named in English and Spanish
+    method: test
+    tests:
+      tests/system/python/test_playground.py::TestPlayground::test_every_example_checks_clean_and_has_a_title_in_both_languages
+  }
+
+  verification SVER-00025-1 {
+    status: approved
+    @requirement SREQ-00019-1
+    title: System tests confirm the example the home page shows draws its classes and a sequence, lists its requirements with what keeps each, and has the one error the page shows
+    method: test
+    tests:
+      tests/system/python/test_playground.py::TestPlayground::test_the_example_of_the_home_page_draws_and_has_the_one_error_it_shows
+  }
+
+  verification SVER-00022-1 {
+    status: approved
+    @requirement SREQ-00018-2
+    title: System tests drive the ds binary by its verbs and read its exit codes
+    method: test
+    tests:
+      tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
+      tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
+      tests/system/ds/test_qualification.cpp::TestQualification.InputThatCannotBeReadIsBadUsageAndDeepNestingIsRead
+      tests/system/ds/test_qualification.cpp::TestQualification.TheToolSaysItsVersion
+      tests/system/ds/test_qualification.cpp::TestQualification.TheToolCarriesItsManual
+  }
+
+
+  verification SVER-00026-1 {
+    status: approved
+    @constraint CST-00010-1
+    title: System tests confirm every dependency the build fetches has its notice and the version pinned, and the wheel and the site ship the notices
+    method: test
+    tests:
+      tests/system/python/test_release.py::TestRelease::test_every_dependency_the_build_fetches_has_its_notice_with_the_version_pinned
+      tests/system/python/test_release.py::TestRelease::test_the_wheel_and_the_site_ship_the_notices
+  }
+
+  verification SVER-00028-1 {
+    status: approved
+    @requirement SREQ-00020-1
+    title: System tests confirm the wheel's build makes the ds command and installs it among the environment's scripts
+    method: test
+    tests:
+      tests/system/python/test_release.py::TestRelease::test_the_wheel_installs_the_ds_command_beside_the_package
+  }
+
+  verification SVER-00027-1 {
+    status: approved
+    @constraint CST-00011-1
+    title: System tests confirm the licence is Apache 2.0 with the holder's notice, the grammar's is MIT, and the wheel ships them
+    method: test
+    tests:
+      tests/system/python/test_release.py::TestRelease::test_the_licence_is_apache_and_the_grammar_mit_with_the_holder_named
+  }
+}

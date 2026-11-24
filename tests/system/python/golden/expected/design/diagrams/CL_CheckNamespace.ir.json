@@ -1,0 +1,1338 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "label": "facts_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "label": "validator_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::RuleValidator"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "label": "strata_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Strata"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "label": "solver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Solver"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "composition",
+      "label": "variables_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Variables"
+    },
+    {
+      "from": "driftspec@ds@check::Evaluator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "aggregation",
+      "label": "facts_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::RuleValidator",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Strata",
+      "kind": "aggregation",
+      "label": "facts_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Strata",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "aggregation",
+      "label": "facts_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Facts"
+    },
+    {
+      "from": "driftspec@ds@check::Solver",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Variables"
+    },
+    {
+      "from": "driftspec@ds@check::IStep",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::ACheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::ACheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Context",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IChecker"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "composition",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "aggregation",
+      "label": "steps_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::steps",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Selection"
+    },
+    {
+      "from": "driftspec@ds@check::steps",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Selection",
+      "kind": "association",
+      "label": "steps_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Step"
+    },
+    {
+      "from": "driftspec@ds@check::Selection",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Step"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "aggregation",
+      "label": "context_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Linker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "aggregation",
+      "label": "context_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::BehaviourTyping",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "aggregation",
+      "label": "context_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::ContractCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "aggregation",
+      "label": "context_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::Derivation",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "aggregation",
+      "label": "context_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::StructureCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::LevelCoherence",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::LevelCoherence",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::StateRules",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::StateRules",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::CallOrder",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::CallOrder",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::ACheck"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "aggregation",
+      "label": "context_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::DependencyCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "aggregation",
+      "label": "context_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "aggregation",
+      "label": "resolver_",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::Resolver"
+    },
+    {
+      "from": "driftspec@ds@check::RuleCheck",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "inheritance",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@check::IStep"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    },
+    {
+      "from": "driftspec@ds@check::FailureFlow",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Escape"
+    },
+    {
+      "from": "driftspec@ds@check::Checker",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@check::Context"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@check",
+      "kind": "container",
+      "label": "check",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@check::ACheck",
+      "kind": "box",
+      "label": "ACheck",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ run(out_context: Context) -> std::vector<model::Finding>",
+          "- abstract check(context: Context) -> std::vector<model::Finding>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::BehaviourTyping",
+      "kind": "box",
+      "label": "BehaviourTyping",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- context_: Context",
+          "- model_: model::Model",
+          "- resolver_: Resolver",
+          "- results_: std::map<std::string, std::map<std::string, std::pair<std::string, std::string>>>"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "+ run(out_context: Context) -> std::vector<model::Finding>",
+          "- subjectClass(sequence: model::Entity, subject: model::Entity) -> model::Entity",
+          "- couple(sequence: model::Entity, type: model::Entity, transient: bool) -> void",
+          "- call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void",
+          "- expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void",
+          "- checkReturn(message: bind::Message) -> void",
+          "- checkMessage(message: bind::Message) -> void",
+          "- callStatic(seq: model::Entity, msg: model::Entity, message: bind::Message, home: std::string) -> bool",
+          "- namedEntity(name: std::string, home: std::string) -> std::string",
+          "- typeSender(seq: model::Entity, cls: model::Entity, subject: model::Entity, msg: model::Entity, home: std::string) -> void",
+          "- offered(box: model::Entity, op: std::string) -> model::Entity",
+          "- typeOfName(sequence: model::Entity, cls: model::Entity, subject: model::Entity, name: std::string, value: std::pair<std::string, std::string>, transient: bool) -> bool",
+          "- compatible(argument: std::pair<std::string, std::string>, parameter: std::pair<std::string, std::string>, literal: bool) -> bool",
+          "- checkArguments(msg: model::Entity, op: model::Entity, message: bind::Message) -> void",
+          "- rememberResult(message: bind::Message) -> void",
+          "- checkLocals() -> void",
+          "- checkEvent(event: bind::Event) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::CallOrder",
+      "kind": "box",
+      "label": "CallOrder",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "- check(context: Context) -> std::vector<model::Finding>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Checker",
+      "kind": "box",
+      "label": "Checker",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- resolver_: Resolver",
+          "- steps_: std::map<std::string, std::unique_ptr<IStep>>"
+        ],
+        [
+          "+ Checker(model: model::Model, metamodel: model::Metamodel, steps: std::map<std::string, std::unique_ptr<IStep>>)",
+          "+ run(notes: bind::Notes) -> void",
+          "+ resolver() -> Resolver",
+          "+ order() -> std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Context",
+      "kind": "box",
+      "label": "Context",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- resolver_: Resolver",
+          "- renamed_: std::map<std::string, std::string>",
+          "- reported_: std::set<std::string>",
+          "- found_: std::vector<model::Finding>",
+          "- notes_: bind::Notes"
+        ],
+        [
+          "+ Context(model: model::Model, metamodel: model::Metamodel, resolver: Resolver, notes: bind::Notes)",
+          "+ model() -> model::Model",
+          "+ metamodel() -> model::Metamodel",
+          "+ resolver() -> Resolver",
+          "+ current(id: std::string) -> std::string",
+          "+ renamed() -> std::map<std::string, std::string>",
+          "+ reported() -> std::set<std::string>",
+          "+ report(finding: model::Finding) -> void",
+          "+ take() -> std::vector<model::Finding>",
+          "+ checkVisibility(from: std::string, target: std::string, location: model::Location) -> void",
+          "+ checkLeak(from: std::string, target: std::string, location: model::Location) -> void",
+          "+ notes() -> bind::Notes"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::ContractCheck",
+      "kind": "box",
+      "label": "ContractCheck",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- context_: Context",
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- resolver_: Resolver",
+          "- found_: std::vector<model::Finding>"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "- check(context: Context) -> std::vector<model::Finding>",
+          "- outcomeOf(sequence: std::string, path: std::string, seen: std::set<std::string>) -> std::string",
+          "- checkUseCases() -> void",
+          "- checkInterfaces() -> void",
+          "- checkHandlers() -> void",
+          "- checkRealisations() -> void",
+          "- checkViews(state: model::Entity) -> void",
+          "- checkStates(state: model::Entity) -> void",
+          "- checkFailures(operation: model::Entity) -> void",
+          "- checkScenarios() -> void",
+          "- checkDiagrams() -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::DependencyCheck",
+      "kind": "box",
+      "label": "DependencyCheck",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- context_: Context",
+          "- model_: model::Model",
+          "- resolver_: Resolver",
+          "- found_: std::vector<model::Finding>"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "- check(context: Context) -> std::vector<model::Finding>",
+          "- checkDependencies() -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Derivation",
+      "kind": "box",
+      "label": "Derivation",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- context_: Context",
+          "- model_: model::Model",
+          "- resolver_: Resolver"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "+ run(out_context: Context) -> std::vector<model::Finding>",
+          "- classify() -> void",
+          "- fillLanguages() -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@check::Escape",
+      "kind": "box",
+      "label": "Escape",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ through: std::vector<std::string>",
+          "+ origin: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Evaluator",
+      "kind": "box",
+      "label": "Evaluator",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- facts_: Facts",
+          "- validator_: RuleValidator",
+          "- strata_: Strata",
+          "- solver_: Solver",
+          "- found_: std::vector<model::Finding>",
+          "- invalid_: std::set<std::string>",
+          "- variables_: std::map<std::string, Variables>",
+          "- kReportsPerRule: std::size_t"
+        ],
+        [
+          "+ Evaluator(model: model::Model, metamodel: model::Metamodel, resolver: Resolver)",
+          "+ run() -> std::vector<model::Finding>",
+          "- computeDefinitions() -> void",
+          "- evaluateRule(id: std::string, formula: model::Formula) -> void",
+          "- tabulate(id: std::string, formula: model::Formula) -> void",
+          "- report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void",
+          "- static describe(bindings: std::vector<std::pair<std::string, std::string>>) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Facts",
+      "kind": "box",
+      "label": "Facts",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- byKind_: std::map<std::string, std::vector<std::string>>",
+          "- forward_: std::map<std::string, std::multimap<std::string, std::string>>",
+          "- backward_: std::map<std::string, std::multimap<std::string, std::string>>",
+          "- constants_: std::map<std::string, std::string>",
+          "- extension_: std::map<std::string, std::set<std::vector<std::string>>>",
+          "- parent_: std::unordered_map<std::string, std::string>",
+          "- children_: std::unordered_map<std::string, std::vector<std::string>>",
+          "- readers_: std::size_t"
+        ],
+        [
+          "+ Facts(model: model::Model, metamodel: model::Metamodel)",
+          "+ index() -> void",
+          "+ ofKind(kind: std::string) -> std::vector<std::string>",
+          "+ forward(relation: std::string) -> std::multimap<std::string, std::string>",
+          "+ backward(relation: std::string) -> std::multimap<std::string, std::string>",
+          "+ record(owner: std::string, written: std::string, identity: std::string) -> void",
+          "+ constant(owner: std::string, written: std::string, out_identity: std::string) -> bool",
+          "+ constantOf(owner: std::string, written: std::string) -> std::string",
+          "+ definitionOf(owner: std::string, name: std::string) -> std::string",
+          "+ derived(definition: std::string) -> std::set<std::vector<std::string>>",
+          "+ derive(definition: std::string, tuple: std::vector<std::string>) -> bool",
+          "+ reading() -> void",
+          "+ done() -> void",
+          "+ formulas() -> std::map<std::string, model::Formula>",
+          "+ kindIs(id: std::string, kind: model::Kind) -> bool",
+          "+ kindOf(id: std::string, out_kind: model::Kind) -> bool",
+          "+ isOfKind(id: std::string, kind: std::string) -> bool",
+          "+ scopeOf(id: std::string) -> std::string",
+          "+ locationOf(id: std::string) -> model::Location",
+          "+ fieldOf(id: std::string, field: std::string) -> std::string",
+          "+ holds(rule: std::string) -> bool",
+          "+ parentOf(id: std::string) -> std::string",
+          "+ childrenOf(id: std::string) -> std::vector<std::string>",
+          "+ contains(outer: std::string, inner: std::string) -> bool",
+          "+ argsTo(call: std::string) -> std::vector<std::pair<std::string, std::string>>",
+          "- static key(owner: std::string, written: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::FailureFlow",
+      "kind": "box",
+      "label": "FailureFlow",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "+ run(out_context: Context) -> std::vector<model::Finding>",
+          "- handledAround(step: std::string) -> std::set<std::string>",
+          "- originOf(step: std::string, sequence: std::string) -> std::string",
+          "- hasBehaviour(operation: std::string) -> bool",
+          "- callee(message: std::string) -> std::string",
+          "- pass(out_escapes: std::map<std::string, std::map<std::string, Escape>>) -> bool",
+          "- write(escapes: std::map<std::string, std::map<std::string, Escape>>) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@check::IChecker",
+      "kind": "box",
+      "label": "IChecker",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ ~IChecker()",
+          "+ abstract run(notes: bind::Notes) -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": true,
+      "classifier": "class",
+      "id": "driftspec@ds@check::IStep",
+      "kind": "box",
+      "label": "IStep",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ ~IStep()",
+          "+ abstract name() -> std::string",
+          "+ abstract needs() -> std::vector<std::string>",
+          "+ abstract run(out_context: Context) -> std::vector<model::Finding>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::LevelCoherence",
+      "kind": "box",
+      "label": "LevelCoherence",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "- check(context: Context) -> std::vector<model::Finding>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Linker",
+      "kind": "box",
+      "label": "Linker",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- context_: Context",
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- resolver_: Resolver"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "+ run(out_context: Context) -> std::vector<model::Finding>",
+          "- resolveReference(reference: bind::Reference) -> void",
+          "- reportAmbiguous(reference: bind::Reference) -> bool",
+          "- kindAllowed(reference: bind::Reference, target: std::string) -> bool",
+          "- checkTemplateBound(reference: bind::Reference) -> void",
+          "- unifyBehaviours() -> void",
+          "- defineLoneExtensions() -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@check::Report",
+      "kind": "box",
+      "label": "Report",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ findings: std::vector<model::Finding>",
+          "+ coverage: std::vector<model::Finding>",
+          "+ entities: int",
+          "+ expected: int",
+          "+ relations: int",
+          "+ errors: int",
+          "+ severities: std::vector<model::SeveritySpec>"
+        ],
+        [
+          "+ static of(model: model::Model, metamodel: model::Metamodel) -> Report",
+          "+ severityOf(severity: model::Severity) -> model::SeveritySpec"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Resolver",
+      "kind": "box",
+      "label": "Resolver",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model"
+        ],
+        [
+          "+ Resolver(model: model::Model)",
+          "+ resolve(name: std::string, scope: std::string) -> std::string",
+          "+ ambiguous(name: std::string, scope: std::string) -> std::vector<std::string>",
+          "+ derives(derived: std::string, base: std::string) -> bool",
+          "+ member(type: std::string, name: std::string) -> model::Entity",
+          "+ resolveTypeText(text: std::string, scope: std::string) -> std::string",
+          "- inPackage(name: std::string, scope: std::string) -> std::string",
+          "- namesakes(name: std::string, scope: std::string) -> std::vector<std::string>",
+          "+ privateOnTheWay(from: std::string, target: std::string) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::RuleCheck",
+      "kind": "box",
+      "label": "RuleCheck",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- context_: Context",
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- resolver_: Resolver"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "+ run(out_context: Context) -> std::vector<model::Finding>",
+          "- checkRules() -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::RuleValidator",
+      "kind": "box",
+      "label": "RuleValidator",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- metamodel_: model::Metamodel",
+          "- resolver_: Resolver",
+          "- facts_: Facts",
+          "- found_: std::vector<model::Finding>"
+        ],
+        [
+          "+ RuleValidator(metamodel: model::Metamodel, resolver: Resolver, facts: Facts)",
+          "+ validate(id: std::string, formula: model::Formula, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool",
+          "+ checkVacuity(id: std::string, formula: model::Formula) -> void",
+          "+ take() -> std::vector<model::Finding>",
+          "- validateBody(id: std::string, body: std::vector<model::Literal>, out_bound: std::set<std::string>, out_resolved: std::vector<std::pair<std::string, std::string>>) -> bool",
+          "- report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void",
+          "- static joinsAtEnd(spec: model::RelationSpec, kind: model::Kind, from: bool) -> bool"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Selection",
+      "kind": "box",
+      "label": "Selection",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- steps_: std::set<Step>"
+        ],
+        [
+          "+ static every() -> Selection",
+          "+ static of(steps: std::vector<Step>) -> Selection",
+          "+ with(step: Step) -> Selection",
+          "+ has(step: Step) -> bool"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Solver",
+      "kind": "box",
+      "label": "Solver",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- facts_: Facts",
+          "- texts_: std::unordered_set<std::string>"
+        ],
+        [
+          "+ Solver(facts: Facts)",
+          "+ solve(owner: std::string, body: std::vector<model::Literal>, variables: Variables, bindings: std::vector<const std::string*>, first: bool) -> std::vector<std::vector<const std::string*>>",
+          "+ static compares(form: model::LiteralForm) -> bool",
+          "- solveFrom(owner: std::string, body: std::vector<model::Literal>, variables: Variables, done: std::vector<bool>, bindings: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> void",
+          "- ready(literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> bool",
+          "- answers(owner: std::string, literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> std::vector<std::vector<const std::string*>>",
+          "- value(owner: std::string, term: model::Term, variables: Variables, bindings: std::vector<const std::string*>) -> std::string",
+          "- unify(owner: std::string, term: model::Term, variables: Variables, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool",
+          "- text(text: std::string) -> std::string",
+          "- static number(text: std::string, out_number: double) -> bool",
+          "- static literal(text: std::string) -> bool",
+          "- static compare(form: model::LiteralForm, a: std::string, z: std::string) -> bool"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::StateRules",
+      "kind": "box",
+      "label": "StateRules",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "- check(context: Context) -> std::vector<model::Finding>"
+        ]
+      ]
+    },
+    {
+      "classifier": "enum",
+      "id": "driftspec@ds@check::Step",
+      "kind": "box",
+      "label": "Step",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "Linker",
+          "Behaviour",
+          "Derivation",
+          "Failures",
+          "Contracts",
+          "Structure",
+          "Dependencies",
+          "Rules",
+          "Levels",
+          "States",
+          "Order"
+        ]
+      ],
+      "stereotype": "enum"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Strata",
+      "kind": "box",
+      "label": "Strata",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- facts_: Facts",
+          "- stratum_: std::map<std::string, int>"
+        ],
+        [
+          "+ Strata(facts: Facts)",
+          "+ stratify(invalid: std::set<std::string>) -> std::vector<std::string>",
+          "+ levels(invalid: std::set<std::string>) -> std::map<int, std::vector<std::string>>",
+          "+ dependencyOrder(definitions: std::vector<std::string>) -> std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::StructureCheck",
+      "kind": "box",
+      "label": "StructureCheck",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- context_: Context",
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel",
+          "- resolver_: Resolver",
+          "- found_: std::vector<model::Finding>"
+        ],
+        [
+          "+ name() -> std::string",
+          "+ needs() -> std::vector<std::string>",
+          "- check(context: Context) -> std::vector<model::Finding>",
+          "- checkOwnershipCycles() -> void",
+          "- checkCycles(relation: std::string, code: model::Code, verb: std::string) -> void",
+          "- checkRefinesUpward() -> void",
+          "- checkSatisfiesHome() -> void",
+          "- checkArtefacts() -> void",
+          "- checkExtensions() -> void",
+          "- checkFields() -> void"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@check::Variables",
+      "kind": "box",
+      "label": "Variables",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- names_: std::vector<std::string>"
+        ],
+        [
+          "+ Variables(formula: model::Formula)",
+          "+ size() -> std::size_t",
+          "+ slotOf(name: std::string) -> int",
+          "+ name(slot: std::size_t) -> std::string",
+          "+ before(a: std::vector<const std::string*>, b: std::vector<const std::string*>) -> bool",
+          "+ pairs(bindings: std::vector<const std::string*>) -> std::vector<std::pair<std::string, std::string>>",
+          "- collect(body: std::vector<model::Literal>) -> void"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@ds@check::steps",
+      "kind": "box",
+      "label": "steps",
+      "parent": "driftspec@ds@check",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ steps(selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>>"
+        ]
+      ],
+      "stereotype": "function"
+    }
+  ],
+  "title": "CL_CheckNamespace"
+}

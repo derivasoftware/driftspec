@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 935 887" width="935" height="887" style="max-width:100%;height:auto" class="pr-diagram" role="img">
+<title>HLD_App</title>
+<style>
+  .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
+    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
+    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #059669; --pr-badge-enum: #d97706; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed;
+    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
+    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
+    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #6ee7b7; --pr-badge-enum: #fcd34d; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd;
+    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+  .pr-diagram text { fill: var(--pr-text); }
+  .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
+  .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
+  .pr-diagram .pr-box > rect { fill: var(--pr-box-fill); stroke: var(--pr-stroke); stroke-width: var(--pr-stroke-width); }
+  .pr-diagram .pr-head { fill: var(--pr-head-class); stroke: none; }
+  .pr-diagram .pr-classifier-interface .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-enum .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-abstract .pr-head { fill: var(--pr-head-abstract); }
+  .pr-diagram .pr-classifier-requirement .pr-head { fill: var(--pr-head-function); }
+  .pr-diagram .pr-classifier-requirement .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-classifier-verification .pr-head { fill: var(--pr-head-interface); }
+  .pr-diagram .pr-classifier-verification .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-constraint .pr-head { fill: var(--pr-head-enum); }
+  .pr-diagram .pr-classifier-constraint .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-badge { fill: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-badge { fill: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-enum .pr-badge { fill: var(--pr-badge-enum); }
+  .pr-diagram .pr-abstract .pr-badge { fill: var(--pr-badge-abstract); }
+  .pr-diagram .pr-badge-text { fill: var(--pr-box-fill); font-size: 9.5px; font-weight: 700; }
+  .pr-diagram .pr-offered .pr-badge-text { font-size: 8.5px; }
+  .pr-diagram .pr-classifier-function .pr-badge { fill: var(--pr-badge-function); }
+  .pr-diagram .pr-header { font-weight: 700; fill: var(--pr-name); }
+  .pr-diagram .pr-abstract .pr-header { font-style: italic; }
+  .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
+  .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-name { fill: var(--pr-name); }
+  .pr-diagram .pr-type { fill: var(--pr-type); }
+  .pr-diagram .pr-param { fill: var(--pr-param); }
+  .pr-diagram .pr-punct { fill: var(--pr-punct); }
+  .pr-diagram .pr-static { text-decoration: underline; }
+  .pr-diagram .pr-abstract-member { font-style: italic; }
+  .pr-diagram .pr-vis-public { fill: var(--pr-vis-public); }
+  .pr-diagram .pr-vis-private { fill: var(--pr-vis-private); }
+  .pr-diagram .pr-vis-protected { fill: var(--pr-vis-protected); }
+  .pr-diagram .pr-vis-package { fill: var(--pr-vis-package); }
+  .pr-diagram .pr-container > rect { fill: var(--pr-container-fill); stroke: var(--pr-container-stroke); stroke-width: var(--pr-container-stroke-width); }
+  .pr-diagram .pr-container > .pr-header { fill: var(--pr-muted); font-weight: 600; font-size: 11px; letter-spacing: .4px; }
+  .pr-diagram .pr-note path { fill: var(--pr-note-fill); stroke: var(--pr-note-stroke); }
+  .pr-diagram .pr-notice rect { fill: var(--pr-container-fill); stroke: var(--pr-muted); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-notice text { fill: var(--pr-muted); font-style: italic; }
+  .pr-diagram .pr-edge { stroke: var(--pr-edge); stroke-width: var(--pr-edge-width); fill: none; pointer-events: none; }
+  .pr-diagram .pr-edge-hit { stroke: transparent; stroke-width: var(--pr-edge-hit, 12); fill: none; pointer-events: stroke; }
+  .pr-diagram .pr-edge-realization, .pr-diagram .pr-edge-dependency, .pr-diagram .pr-edge-attachment { stroke-dasharray: 6 4; }
+  .pr-diagram .pr-edge-label { fill: var(--pr-muted); font-size: 11px; paint-order: stroke; stroke: var(--pr-box-fill); stroke-width: 3px; stroke-linejoin: round; }
+  .pr-diagram marker path { fill: var(--pr-box-fill); stroke: var(--pr-edge); }
+  .pr-diagram marker .pr-filled { fill: var(--pr-edge); }
+  .pr-diagram marker .pr-open { fill: none; }
+  .pr-diagram { --pr-added: #15803d; --pr-removed: #b91c1c; --pr-changed: #b45309; --pr-renamed: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; } }
+  [data-theme="dark"] .pr-diagram { --pr-added: #4ade80; --pr-removed: #f87171; --pr-changed: #fbbf24; --pr-renamed: #93c5fd; }
+  .pr-diagram .pr-change-added > rect { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-change-added .pr-header { fill: var(--pr-added); }
+  .pr-diagram .pr-change-removed > rect { stroke: var(--pr-removed); stroke-dasharray: 5 3; }
+  .pr-diagram .pr-change-removed text { fill: var(--pr-removed); opacity: .8; }
+  .pr-diagram .pr-change-removed .pr-head { fill: none; }
+  .pr-diagram .pr-change-changed > rect { stroke: var(--pr-changed); stroke-width: 2; }
+  .pr-diagram .pr-change-changed .pr-header { fill: var(--pr-changed); }
+  .pr-diagram .pr-change-renamed > rect { stroke: var(--pr-renamed); stroke-width: 2; }
+  .pr-diagram .pr-change-renamed .pr-header { fill: var(--pr-renamed); }
+  .pr-diagram .pr-edge-change-added { stroke: var(--pr-added); stroke-width: 2; }
+  .pr-diagram .pr-edge-change-removed { stroke: var(--pr-removed); stroke-dasharray: 3 3; }
+  .pr-diagram .pr-edge-change-added + text, .pr-diagram .pr-edge-change-removed + text { font-weight: 700; }
+</style>
+<defs>
+  <marker id="prq8mnxn-tri" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" orient="auto"><path d="M1,1 L13,6 L1,11 Z"/></marker>
+  <marker id="prq8mnxn-diamond-filled" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path class="pr-filled" d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="prq8mnxn-diamond" viewBox="0 0 16 10" refX="15" refY="5" markerWidth="16" markerHeight="10" orient="auto"><path d="M1,5 L8,1 L15,5 L8,9 Z"/></marker>
+  <marker id="prq8mnxn-arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path class="pr-open" d="M1,1 L11,6 L1,11"/></marker>
+</defs>
+<g id="prq8mnxn-hola@app" data-id="hola@app" class="pr-container pr-classifier-namespace"><rect x="0" y="140" width="482" height="457" rx="6"/><text class="pr-header" x="10" y="155">app</text></g>
+<g class="pr-edge-group" data-from="hola@app::App" data-to="hola@core" data-ref-bond="structural"><path class="pr-edge-hit" d="M268,441 L268,469 L205,469 L205,677"/><path class="pr-edge pr-edge-association" d="M268,441 L268,469 L205,469 L205,677" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@app::App" data-to="hola@app::Console" data-ref-bond="structural"><path class="pr-edge-hit" d="M170,497 L170,455 L178,455 L178,441"/><path class="pr-edge pr-edge-composition" d="M170,497 L170,455 L178,455 L178,441" marker-end="url(#prq8mnxn-diamond-filled)"/></g>
+<g class="pr-edge-group" data-from="hola@app::App" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M358,441 L358,483 L223,483 L223,677"/><path class="pr-edge pr-edge-dependency" d="M358,441 L358,483 L223,483 L223,677" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@app::Console" data-to="hola@core" data-ref-bond="structural"><path class="pr-edge-hit" d="M170,579 L170,607 L187,607 L187,677"/><path class="pr-edge pr-edge-association" d="M170,579 L170,607 L187,607 L187,677" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@app::main" data-to="hola@app::App" data-ref-bond="uses"><path class="pr-edge-hit" d="M268,249 L268,305"/><path class="pr-edge pr-edge-dependency" d="M268,249 L268,305" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@shell" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M437,60 L437,92 L526,92 L526,613 L241,613 L241,677"/><path class="pr-edge pr-edge-dependency" d="M437,60 L437,92 L526,92 L526,613 L241,613 L241,677" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@web" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M805,60 L805,124 L718,124 L718,661 L295,661 L295,677"/><path class="pr-edge pr-edge-dependency" d="M805,60 L805,124 L718,124 L718,661 L295,661 L295,677" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@web" data-to="hola@server" data-ref-bond="uses"><path class="pr-edge-hit" d="M696,60 L696,108 L622,108 L622,140"/><path class="pr-edge pr-edge-dependency" d="M696,60 L696,108 L622,108 L622,140" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@server" data-to="hola@core" data-ref-bond="structural"><path class="pr-edge-hit" d="M604,218 L604,629 L259,629 L259,677"/><path class="pr-edge pr-edge-association" d="M604,218 L604,629 L259,629 L259,677" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@server" data-to="hola@core" data-ref-bond="uses"><path class="pr-edge-hit" d="M639,218 L639,645 L277,645 L277,677"/><path class="pr-edge pr-edge-dependency" d="M639,218 L639,645 L277,645 L277,677" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g class="pr-edge-group" data-from="hola@shell" data-to="hola@app::main" data-ref-bond="uses"><path class="pr-edge-hit" d="M328,60 L328,76 L268,76 L268,171"/><path class="pr-edge pr-edge-dependency" d="M328,60 L328,76 L268,76 L268,171" marker-end="url(#prq8mnxn-arrow)"/></g>
+<g id="prq8mnxn-hola@core" data-id="hola@core" class="pr-box pr-classifier-namespace"><rect x="169" y="677" width="144" height="190" rx="4"/><path class="pr-head" d="M173,677 H309 A4,4 0 0 1 313,681 V709 H169 V681 A4,4 0 0 1 173,677 Z"/><circle class="pr-badge" cx="186" cy="695" r="7"/><text class="pr-badge-text" x="186" y="698.5" text-anchor="middle">N</text><text class="pr-header" x="199" y="699">core</text><line class="pr-sep" x1="169" y1="709" x2="313" y2="709"/><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="185" cy="717" r="6"/><text class="pr-badge-text" x="185" y="720" text-anchor="middle">C</text></g><text x="199" y="721">Casual</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="185" cy="735" r="6"/><text class="pr-badge-text" x="185" y="738" text-anchor="middle">C</text></g><text x="199" y="739">Channel</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="185" cy="753" r="6"/><text class="pr-badge-text" x="185" y="756" text-anchor="middle">C</text></g><text x="199" y="757">Formal</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="185" cy="771" r="6"/><text class="pr-badge-text" x="185" y="774" text-anchor="middle">C</text></g><text x="199" y="775">Greeter</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="185" cy="789" r="6"/><text class="pr-badge-text" x="185" y="792" text-anchor="middle">C</text></g><text x="199" y="793">GreetingCache</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="185" cy="807" r="6"/><text class="pr-badge-text" x="185" y="810" text-anchor="middle">C</text></g><text x="199" y="811">Style</text><line class="pr-sep" x1="169" y1="821" x2="313" y2="821"/><g class="pr-offered pr-classifier-dataclass"><circle class="pr-badge" cx="185" cy="829" r="6"/><text class="pr-badge-text" x="185" y="832" text-anchor="middle">D</text></g><text x="199" y="833">Greeting</text><g class="pr-offered pr-classifier-dataclass"><circle class="pr-badge" cx="185" cy="847" r="6"/><text class="pr-badge-text" x="185" y="850" text-anchor="middle">D</text></g><text x="199" y="851">Locale</text></g>
+<g id="prq8mnxn-hola@server" data-id="hola@server" class="pr-box pr-classifier-namespace"><rect x="570" y="140" width="104" height="78" rx="4"/><path class="pr-head" d="M574,140 H670 A4,4 0 0 1 674,144 V172 H570 V144 A4,4 0 0 1 574,140 Z"/><circle class="pr-badge" cx="587" cy="158" r="7"/><text class="pr-badge-text" x="587" y="161.5" text-anchor="middle">N</text><text class="pr-header" x="600" y="162">server</text><line class="pr-sep" x1="570" y1="172" x2="674" y2="172"/><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="586" cy="180" r="6"/><text class="pr-badge-text" x="586" y="183" text-anchor="middle">C</text></g><text x="600" y="184">Response</text><g class="pr-offered pr-classifier-class"><circle class="pr-badge" cx="586" cy="198" r="6"/><text class="pr-badge-text" x="586" y="201" text-anchor="middle">C</text></g><text x="600" y="202">Server</text></g>
+<g id="prq8mnxn-hola@app::App" data-id="hola@app::App" class="pr-box pr-classifier-class"><rect x="88" y="305" width="360" height="136" rx="4"/><path class="pr-head" d="M92,305 H444 A4,4 0 0 1 448,309 V337 H88 V309 A4,4 0 0 1 92,305 Z"/><circle class="pr-badge" cx="105" cy="323" r="7"/><text class="pr-badge-text" x="105" y="326.5" text-anchor="middle">C</text><text class="pr-header" x="118" y="327">App</text><line class="pr-sep" x1="88" y1="337" x2="448" y2="337"/><circle class="pr-vis pr-vis-private" cx="102" cy="345" r="3.5"/><text x="110" y="349"><tspan class="pr-name">greeter</tspan><tspan class="pr-punct"> : </tspan><tspan class="pr-type">core::Greeter</tspan></text><circle class="pr-vis pr-vis-private" cx="102" cy="363" r="3.5"/><text x="110" y="367"><tspan class="pr-name">console</tspan><tspan class="pr-punct"> : </tspan><tspan class="pr-type">Console</tspan></text><line class="pr-sep" x1="88" y1="377" x2="448" y2="377"/><circle class="pr-vis pr-vis-public" cx="102" cy="385" r="3.5"/><text x="110" y="389"><tspan class="pr-name">run</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">name</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">std::string</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">int</tspan></text><circle class="pr-vis pr-vis-private" cx="102" cy="403" r="3.5"/><text x="110" y="407"><tspan class="pr-name">print</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">greeting</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">core::Greeting</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">void</tspan></text><circle class="pr-vis pr-vis-private" cx="102" cy="421" r="3.5"/><text x="110" y="425"><tspan class="pr-name">fail</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">text</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">std::string</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">void</tspan></text></g>
+<g id="prq8mnxn-hola@app::Console" data-id="hola@app::Console" class="pr-box pr-classifier-class"><rect x="18" y="497" width="304" height="82" rx="4"/><path class="pr-head" d="M22,497 H318 A4,4 0 0 1 322,501 V529 H18 V501 A4,4 0 0 1 22,497 Z"/><circle class="pr-badge" cx="35" cy="515" r="7"/><text class="pr-badge-text" x="35" y="518.5" text-anchor="middle">C</text><text class="pr-header" x="48" y="519">Console</text><line class="pr-sep" x1="18" y1="529" x2="322" y2="529"/><circle class="pr-vis pr-vis-private" cx="32" cy="537" r="3.5"/><text x="40" y="541"><tspan class="pr-name">colour</tspan><tspan class="pr-punct"> : </tspan><tspan class="pr-type">bool</tspan></text><line class="pr-sep" x1="18" y1="551" x2="322" y2="551"/><circle class="pr-vis pr-vis-protected" cx="32" cy="559" r="3.5"/><text x="40" y="563"><tspan class="pr-name">write</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">text</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">std::string</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">void</tspan></text></g>
+<g id="prq8mnxn-hola@app::main" data-id="hola@app::main" class="pr-box pr-classifier-function pr-stereotype-function"><rect x="72" y="171" width="392" height="78" rx="4"/><path class="pr-head" d="M76,171 H460 A4,4 0 0 1 464,175 V221 H72 V175 A4,4 0 0 1 76,171 Z"/><text class="pr-stereo" x="82" y="191">«function»</text><circle class="pr-badge" cx="89" cy="207" r="7"/><text class="pr-badge-text" x="89" y="210.5" text-anchor="middle">f</text><text class="pr-header" x="102" y="211">main</text><line class="pr-sep" x1="72" y1="221" x2="464" y2="221"/><circle class="pr-vis pr-vis-public" cx="86" cy="229" r="3.5"/><text x="94" y="233"><tspan class="pr-name">main</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">argv</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">std::vector&lt;std::string&gt;</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">int</tspan></text></g>
+<g id="prq8mnxn-hola@shell" data-id="hola@shell" class="pr-box pr-classifier-interface pr-abstract"><rect x="219" y="0" width="328" height="60" rx="4"/><path class="pr-head" d="M223,0 H543 A4,4 0 0 1 547,4 V32 H219 V4 A4,4 0 0 1 223,0 Z"/><circle class="pr-badge" cx="236" cy="18" r="7"/><text class="pr-badge-text" x="236" y="21.5" text-anchor="middle">I</text><text class="pr-header" x="249" y="22">shell</text><line class="pr-sep" x1="219" y1="32" x2="547" y2="32"/><text x="229" y="44"><tspan class="pr-name">greet</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">name</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">string</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">core::Greeting</tspan></text></g>
+<g id="prq8mnxn-hola@web" data-id="hola@web" class="pr-box pr-classifier-interface pr-abstract"><rect x="587" y="0" width="328" height="60" rx="4"/><path class="pr-head" d="M591,0 H911 A4,4 0 0 1 915,4 V32 H587 V4 A4,4 0 0 1 591,0 Z"/><circle class="pr-badge" cx="604" cy="18" r="7"/><text class="pr-badge-text" x="604" y="21.5" text-anchor="middle">I</text><text class="pr-header" x="617" y="22">web</text><line class="pr-sep" x1="587" y1="32" x2="915" y2="32"/><text x="597" y="44"><tspan class="pr-name">greet</tspan><tspan class="pr-punct">(</tspan><tspan class="pr-param">name</tspan><tspan class="pr-punct">: </tspan><tspan class="pr-type">string</tspan><tspan class="pr-punct">)</tspan><tspan class="pr-punct"> -> </tspan><tspan class="pr-type">core::Greeting</tspan></text></g>
+</svg>

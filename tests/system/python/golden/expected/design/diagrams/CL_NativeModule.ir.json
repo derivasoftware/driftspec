@@ -1,0 +1,281 @@
+{
+  "edges": [],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@driftspec",
+      "kind": "container",
+      "label": "driftspec"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@driftspec@_native",
+      "kind": "container",
+      "label": "_native",
+      "parent": "driftspec@driftspec"
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@driftspec@_native::Workspace",
+      "kind": "box",
+      "label": "Workspace",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- workspace: driftspec@ds@api::Workspace"
+        ],
+        [
+          "+ Workspace(files: std::map<std::string, std::string>)",
+          "+ export() -> std::string",
+          "+ report() -> std::string",
+          "+ find(id: std::string) -> std::string",
+          "+ relations_from(id: std::string) -> std::string",
+          "+ relations_to(id: std::string) -> std::string",
+          "+ touching(id: std::string) -> std::string",
+          "+ members(scope: std::string) -> std::string",
+          "+ parent(id: std::string) -> std::string",
+          "+ children(id: std::string) -> std::string",
+          "+ revision_of(artefact: std::string) -> std::string",
+          "+ tree(sequence: std::string) -> std::string",
+          "+ steps(sequence: std::string, path: std::string) -> std::string",
+          "+ walk(sequence: std::string, path: std::string, depth: int) -> std::string",
+          "+ ask(question: std::string, subject: std::string) -> std::string",
+          "+ shows(diagram: std::string) -> std::string",
+          "+ render(diagram: std::string, format: std::string, width: int) -> std::string",
+          "+ page(title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ]
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::behaviour_of",
+      "kind": "box",
+      "label": "behaviour_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ behaviour_of(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::box_of",
+      "kind": "box",
+      "label": "box_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ box_of(scope: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::check",
+      "kind": "box",
+      "label": "check",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ check(files: std::map<std::string, std::string>) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::expected_at",
+      "kind": "box",
+      "label": "expected_at",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ expected_at(text: std::string, line: int, column: int) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::export",
+      "kind": "box",
+      "label": "export",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ export(files: std::map<std::string, std::string>) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::outer",
+      "kind": "box",
+      "label": "outer",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ outer(scope: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::package_of",
+      "kind": "box",
+      "label": "package_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ package_of(scope: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::page",
+      "kind": "box",
+      "label": "page",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ page(files: std::map<std::string, std::string>, title: std::string, focus: std::vector<std::string>) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::qualify",
+      "kind": "box",
+      "label": "qualify",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ qualify(scope: std::string, name: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::render",
+      "kind": "box",
+      "label": "render",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ render(files: std::map<std::string, std::string>, diagram: std::string, format: std::string, width: int) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::scenario_of",
+      "kind": "box",
+      "label": "scenario_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ scenario_of(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::subject_of",
+      "kind": "box",
+      "label": "subject_of",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ subject_of(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::version",
+      "kind": "box",
+      "label": "version",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ version() -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    },
+    {
+      "classifier": "function",
+      "id": "driftspec@driftspec@_native::without_revision",
+      "kind": "box",
+      "label": "without_revision",
+      "parent": "driftspec@driftspec@_native",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ without_revision(id: std::string) -> std::string"
+        ]
+      ],
+      "stereotype": "function"
+    }
+  ],
+  "title": "CL_NativeModule"
+}

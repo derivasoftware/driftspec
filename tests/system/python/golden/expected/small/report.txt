@@ -1,0 +1,4 @@
+small/small.ds:23:7  W-MSG-UNDECLARED  B::run calls p@m::Leaf::nothing, which p@m::Leaf does not declare
+small/small.ds:24:7  E-MSG-ARITY  p@m::Leaf::work takes 1 parameter, 2 given
+small/small.ds:47:1  W-DIAGRAM-UNDECLARED  SEQ_Loose includes p@m::Nobody::run, which the workspace declares nowhere
+28 entities · 0 expected · 37 relations · 3 findings

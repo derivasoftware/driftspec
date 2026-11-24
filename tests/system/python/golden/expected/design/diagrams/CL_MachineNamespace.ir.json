@@ -1,0 +1,165 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@machine::Machine",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@machine::Call"
+    },
+    {
+      "from": "driftspec@ds@machine::Row",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@machine::Cell"
+    },
+    {
+      "from": "driftspec@ds@machine::Table",
+      "kind": "composition",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@machine::Row"
+    },
+    {
+      "from": "driftspec@ds@machine::Table",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@machine::Row"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@machine",
+      "kind": "container",
+      "label": "machine",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@machine::Call",
+      "kind": "box",
+      "label": "Call",
+      "parent": "driftspec@ds@machine",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ behaviour: std::string",
+          "+ message: std::string",
+          "+ receiver: std::string",
+          "+ event: std::string",
+          "+ from: std::vector<std::string>",
+          "+ fits: bool"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@machine::Cell",
+      "kind": "box",
+      "label": "Cell",
+      "parent": "driftspec@ds@machine",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ to: std::string",
+          "+ against: std::vector<std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@machine::Machine",
+      "kind": "box",
+      "label": "Machine",
+      "parent": "driftspec@ds@machine",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- machine_: model::Entity",
+          "- subject_: std::string"
+        ],
+        [
+          "+ Machine(model: model::Model, machine: model::Entity)",
+          "+ states() -> std::vector<std::string>",
+          "+ rules(state: std::string) -> std::vector<std::string>",
+          "+ initial() -> std::string",
+          "+ faults(metamodel: model::Metamodel) -> std::vector<model::Finding>",
+          "+ subject() -> std::string",
+          "+ targets(event: std::string, from: std::string) -> std::vector<std::string>",
+          "+ events() -> std::vector<std::string>",
+          "+ sources(event: std::string) -> std::vector<std::string>",
+          "+ calls() -> std::vector<Call>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@machine::Row",
+      "kind": "box",
+      "label": "Row",
+      "parent": "driftspec@ds@machine",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ event: std::string",
+          "+ callers: std::vector<std::string>",
+          "+ cells: std::vector<Cell>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@machine::Table",
+      "kind": "box",
+      "label": "Table",
+      "parent": "driftspec@ds@machine",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- subject_: std::string",
+          "- states_: std::vector<std::string>",
+          "- rows_: std::vector<Row>"
+        ],
+        [
+          "+ Table(model: model::Model, machine: model::Entity)",
+          "+ subject() -> std::string",
+          "+ states() -> std::vector<std::string>",
+          "+ rows() -> std::vector<Row>"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_MachineNamespace"
+}

@@ -1,0 +1,187 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "greet(name: string)",
+      "order": 0,
+      "refs": {
+        "location": "kinds/interfaces/web.ds:12"
+      },
+      "title": "hola@web::greet",
+      "to": "hola@web"
+    },
+    {
+      "from": "hola@web",
+      "kind": "message",
+      "label": "greet(name)",
+      "order": 1,
+      "refs": {
+        "expands": "hola@server::Server::greet::sequence",
+        "location": "kinds/interfaces/web.ds:48",
+        "span": "2-9"
+      },
+      "title": "hola@server::Server::greet\nexpanded below: Server::greet",
+      "to": "hola@server::Server|server"
+    },
+    {
+      "from": "hola@server::Server|server",
+      "kind": "message",
+      "label": "valid(name)",
+      "order": 2,
+      "refs": {
+        "location": "kinds/server/Server.ds:26"
+      },
+      "title": "hola@core::Greeter::valid",
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "ok",
+      "order": 3,
+      "to": "hola@server::Server|server"
+    },
+    {
+      "from": "hola@server::Server|server",
+      "kind": "message",
+      "label": "greet(name)",
+      "order": 4,
+      "refs": {
+        "expands": "hola@core::Greeter::greet::sequence",
+        "location": "kinds/server/Server.ds:27",
+        "span": "5-8"
+      },
+      "title": "hola@core::Greeter::greet\nexpanded below: Greeter::greet",
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "format(name)",
+      "order": 5,
+      "refs": {
+        "location": "kinds/core/Greeter.ds:19"
+      },
+      "title": "hola@core::Greeter::format",
+      "to": "hola@core::Greeter"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Greeter",
+      "kind": "message",
+      "label": "text",
+      "order": 6,
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "apply(text)",
+      "order": 7,
+      "refs": {
+        "location": "kinds/core/Greeter.ds:20"
+      },
+      "title": "hola@core::Style::apply",
+      "to": "hola@core::Style|style"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Style|style",
+      "kind": "message",
+      "label": "styled",
+      "order": 8,
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "greeting",
+      "order": 9,
+      "to": "hola@server::Server|server"
+    },
+    {
+      "dashed": true,
+      "from": "hola@server::Server|server",
+      "kind": "message",
+      "label": "greeting",
+      "order": 10,
+      "to": "hola@web"
+    },
+    {
+      "dashed": true,
+      "from": "hola@web",
+      "kind": "message",
+      "label": "core::Greeting",
+      "order": 11,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@web",
+      "id": "hola@web",
+      "kind": "lifeline",
+      "label": "self: web",
+      "refs": {
+        "location": "kinds/interfaces/web.ds:8"
+      },
+      "title": "hola@web"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@server::Server",
+      "id": "hola@server::Server|server",
+      "kind": "lifeline",
+      "label": "server: Server",
+      "refs": {
+        "location": "kinds/server/Server.ds:12"
+      },
+      "title": "hola@server::Server"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@core::Greeter",
+      "id": "hola@core::Greeter|greeter",
+      "kind": "lifeline",
+      "label": "greeter: Greeter",
+      "refs": {
+        "location": "kinds/core/Greeter.ds:7"
+      },
+      "title": "hola@core::Greeter"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@core::Greeter",
+      "id": "hola@core::Greeter",
+      "kind": "lifeline",
+      "label": "Greeter",
+      "refs": {
+        "location": "kinds/core/Greeter.ds:7"
+      },
+      "title": "hola@core::Greeter"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@core::Style",
+      "id": "hola@core::Style|style",
+      "kind": "lifeline",
+      "label": "style: Style",
+      "refs": {
+        "location": "kinds/core/Style.ds:6"
+      },
+      "title": "hola@core::Style"
+    }
+  ],
+  "title": "SEQ_WebGreet"
+}

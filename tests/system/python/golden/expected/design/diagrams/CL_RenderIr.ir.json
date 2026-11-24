@@ -1,0 +1,248 @@
+{
+  "edges": [
+    {
+      "from": "driftspec@ds@render::IrRow",
+      "kind": "composition",
+      "label": "cells",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrCell"
+    },
+    {
+      "from": "driftspec@ds@render::IrTable",
+      "kind": "composition",
+      "label": "rows",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrRow"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "label": "table",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrTable"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "label": "nodes",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "composition",
+      "label": "edges",
+      "refs": {
+        "bond": "structural"
+      },
+      "to": "driftspec@ds@render::IrEdge"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrEdge"
+    },
+    {
+      "from": "driftspec@ds@render::IrDocument",
+      "kind": "dependency",
+      "refs": {
+        "bond": "uses"
+      },
+      "to": "driftspec@ds@render::IrNode"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "package",
+      "id": "driftspec@ds",
+      "kind": "container",
+      "label": "ds"
+    },
+    {
+      "classifier": "namespace",
+      "id": "driftspec@ds@render",
+      "kind": "container",
+      "label": "render",
+      "parent": "driftspec@ds"
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrCell",
+      "kind": "box",
+      "label": "IrCell",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ text: std::string",
+          "+ kind: std::string",
+          "+ title: std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrDocument",
+      "kind": "box",
+      "label": "IrDocument",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "+ title: std::string",
+          "+ notice: std::string",
+          "+ table: IrTable",
+          "+ nodes: std::vector<IrNode>",
+          "+ edges: std::vector<IrEdge>",
+          "+ parts: std::vector<std::string>"
+        ],
+        [
+          "+ static parse(json: std::string) -> IrDocument",
+          "+ part(name: std::string) -> IrDocument",
+          "+ bundled() -> IrDocument"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrEdge",
+      "kind": "box",
+      "label": "IrEdge",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ from: std::string",
+          "+ to: std::string",
+          "+ kind: std::string",
+          "+ label: std::string",
+          "+ title: std::string",
+          "+ href: std::string",
+          "+ part: std::string",
+          "+ dashed: bool",
+          "+ order: int",
+          "+ refs: std::map<std::string, std::string>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "class",
+      "id": "driftspec@ds@render::IrExport",
+      "kind": "box",
+      "label": "IrExport",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "attributes",
+        "methods"
+      ],
+      "sections": [
+        [
+          "- model_: model::Model",
+          "- metamodel_: model::Metamodel"
+        ],
+        [
+          "+ IrExport(model: model::Model, metamodel: model::Metamodel)",
+          "+ diagrams() -> std::vector<std::string>",
+          "+ render(diagramId: std::string, pretty: bool) -> std::string",
+          "- closeBoxes(ir: std::string, cut: axis::Cut, pretty: bool) -> std::string",
+          "- renderState(diagram: model::Entity, pretty: bool) -> std::string",
+          "- renderTable(diagram: model::Entity, pretty: bool) -> std::string",
+          "- renderSequence(diagram: model::Entity, pretty: bool) -> std::string",
+          "- renderTour(tour: model::Entity, pretty: bool) -> std::string",
+          "- renderBoxes(diagram: model::Entity, pretty: bool) -> std::string",
+          "- renderRequirements(diagram: model::Entity, pretty: bool) -> std::string"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrNode",
+      "kind": "box",
+      "label": "IrNode",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ id: std::string",
+          "+ kind: std::string",
+          "+ label: std::string",
+          "+ classifier: std::string",
+          "+ stereotype: std::string",
+          "+ parent: std::string",
+          "+ title: std::string",
+          "+ href: std::string",
+          "+ part: std::string",
+          "+ abstract: bool",
+          "+ refs: std::map<std::string, std::string>",
+          "+ sections: std::vector<std::vector<std::string>>",
+          "+ sectionKinds: std::vector<std::string>",
+          "+ span: std::pair<int, int>",
+          "+ dividers: std::vector<std::pair<int, std::string>>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrRow",
+      "kind": "box",
+      "label": "IrRow",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ label: std::string",
+          "+ title: std::string",
+          "+ cells: std::vector<IrCell>"
+        ]
+      ]
+    },
+    {
+      "abstract": false,
+      "classifier": "dataclass",
+      "id": "driftspec@ds@render::IrTable",
+      "kind": "box",
+      "label": "IrTable",
+      "parent": "driftspec@ds@render",
+      "sectionKinds": [
+        "attributes"
+      ],
+      "sections": [
+        [
+          "+ corner: std::string",
+          "+ columns: std::vector<std::string>",
+          "+ rows: std::vector<IrRow>"
+        ]
+      ]
+    }
+  ],
+  "title": "CL_RenderIr"
+}

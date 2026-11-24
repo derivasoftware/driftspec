@@ -1,0 +1,85 @@
+{
+  "edges": [
+    {
+      "from": "caller",
+      "kind": "message",
+      "label": "run(name: std::string)",
+      "order": 0,
+      "refs": {
+        "location": "kinds/app/App.ds:10"
+      },
+      "title": "hola@app::App::run",
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "message",
+      "label": "valid(name)",
+      "order": 1,
+      "refs": {
+        "location": "kinds/app/App.ds:28"
+      },
+      "title": "hola@core::Greeter::valid",
+      "to": "hola@core::Greeter|greeter"
+    },
+    {
+      "dashed": true,
+      "from": "hola@core::Greeter|greeter",
+      "kind": "message",
+      "label": "ok",
+      "order": 2,
+      "to": "hola@app::App"
+    },
+    {
+      "from": "hola@app::App",
+      "kind": "message",
+      "label": "fail(reason)",
+      "order": 3,
+      "refs": {
+        "location": "kinds/app/App.ds:29"
+      },
+      "title": "hola@app::App::fail",
+      "to": "hola@app::App"
+    },
+    {
+      "dashed": true,
+      "from": "hola@app::App",
+      "kind": "message",
+      "label": "2",
+      "order": 4,
+      "to": "caller"
+    }
+  ],
+  "ir": 1,
+  "nodes": [
+    {
+      "classifier": "actor",
+      "id": "caller",
+      "kind": "lifeline",
+      "label": "caller"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@app::App",
+      "id": "hola@app::App",
+      "kind": "lifeline",
+      "label": "self: App",
+      "refs": {
+        "location": "kinds/app/App.ds:6"
+      },
+      "title": "hola@app::App"
+    },
+    {
+      "classifier": "participant",
+      "href": "#hola@core::Greeter",
+      "id": "hola@core::Greeter|greeter",
+      "kind": "lifeline",
+      "label": "greeter: Greeter",
+      "refs": {
+        "location": "kinds/core/Greeter.ds:7"
+      },
+      "title": "hola@core::Greeter"
+    }
+  ],
+  "title": "SEQ_EmptyName"
+}

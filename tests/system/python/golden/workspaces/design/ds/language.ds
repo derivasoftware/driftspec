@@ -1,0 +1,2531 @@
+// The requirements of the language as a DAG (SREQ-00012-1): the purpose at
+// the root, then the domains of the language, then the entities, then one
+// requirement per characteristic; the rules that hold for every instance of
+// a category are constraints, hung where they apply. Nesting is refinement.
+// Every leaf names the oracle test that fixes it, and the member of ds that
+// implements it realises it. The grammar box holds the rules of the text
+// (grammar/grammar.ds). This file knows nothing of who consumes the language:
+// the connections to the system's SREQ live in design/wiring.ds, the
+// consumer's file (decided 2026-10-26).
+
+package driftspec@ds {
+
+  requirement REQ-00012-1 {
+    tags: language
+    status: approved
+    verification VER-00048-1 {
+      status: approved
+      title: Unit tests confirm every oracle corpus of the language means what it marks
+      method: test
+      tests:
+        tests/integration/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
+        tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
+        tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+    }
+    title: The language shall specify a software design as text: its high-level design, its low-level design, the artefacts about it and the views of it
+    rationale:
+      One text, one meaning, for the whole of a design: what the tool loads,
+      checks, draws, compares and asks about.
+
+    // ======================= metamodel ====================================
+    requirement REQ-00066-1 {
+      tags: language, metamodel
+      status: approved
+      title: The language shall be declared once as a metamodel: every kind with its fields, flags and parents, every relation with the kinds it joins
+      text:
+        Each kind names the fields it carries, each with a type (text, name,
+        names, type, params, number, status, patterns) and who sets it (the
+        author, the syntax, or the checker), the flags it takes and the kinds
+        it may be declared inside; a field whose name ends in * is a family
+        (local.*, exit *, contract.*). Each relation names the kinds it may go
+        from and to. Everything the binder and the checker put in a model is
+        something the metamodel declares.
+      rationale:
+        Owner, 2026-11-05: DriftSpec has its own data model, not argos's. The
+        binder wrote some fifty field names that nothing declared, and every
+        reader parsed them again; the render of the whole model (DS-67) needs
+        to know what exists before drawing it.
+      verification VER-00072-3 {
+        status: approved
+        title: Integration tests confirm that the design of ds and every example corpus are made only of what the metamodel declares, a relation the language does not allow is reported and not bound, and the metamodel places each kind where the grammar does and declares every flag the binder sets
+        method: test
+        tests:
+          tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.EveryEntityAndRelationIsOneTheMetamodelDeclares
+          tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.ARelationTheLanguageDoesNotAllowIsReportedAndNotBound
+          tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AnAttributeThatOwnsAnInterfaceIsToldToWriteRefs
+          tests/integration/ds/model/test_metamodel_truth.cpp::TestMetamodelTruth.EveryKindIsDeclaredInWhatTheGrammarLetsItBeWrittenIn
+          tests/integration/ds/model/test_metamodel_truth.cpp::TestMetamodelTruth.EveryFlagTheBinderSetsIsOneItsKindDeclares
+      }
+      verification VER-00075-1 {
+        status: approved
+        title: Integration tests confirm parameters and arguments are read once into structures that agree with their text, over the design of ds and every example
+        method: test
+        tests:
+          tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.ParametersAndArgumentsAreReadOnceAndAgreeWithTheirText
+      }
+      requirement REQ-00067-1 {
+        tags: language, metamodel, fields
+        status: approved
+        title: A field that its kind does not declare shall be reported as W-FIELD-UNKNOWN
+        text:
+          A key: value an entity carries that the metamodel does not declare
+          for its kind (a typo, or a field the language does not know) is a
+          warning at the entity, naming the field and the kind. It is kept in
+          the model: the warning does not drop it.
+        rationale:
+          DS-22: a misspelt field entered silently. The metamodel now says
+          which fields exist, so the checker can say which do not.
+        verification VER-00073-1 {
+          status: approved
+          title: Integration tests confirm an undeclared field is reported and a declared one is not, and the diag corpus marks its layout field
+          method: test
+          tests:
+            tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AFieldItsKindDoesNotDeclareIsReportedAndADeclaredOneIsNot
+        }
+      }
+
+      requirement REQ-00115-2 {
+        tags: language, metamodel, fields
+        status: approved
+        title: A closed field carrying a value it does not take shall be reported as W-FIELD-VALUE
+        text:
+          The metamodel names the values of its closed fields: status (draft,
+          approved, obsolete), a verification's method and level, a diagram's
+          kind. Any other value is a warning at the entity, naming the
+          field, the value and the values it takes; an empty value is left alone.
+          The value is kept in the model.
+          Revision 2 (DS-231): a diagram has no level any more; the cut is written
+          with close: (REQ-00126-1).
+        rationale:
+          Model audit 2026-11, findings G4 and G3 (DS-211): status: aproved
+          passed, stopped counting as approved and so switched
+          W-REQ-NO-VERIFICATION off; kind: clas fell back to a class diagram and
+          level: package was ignored in silence.
+        verification VER-00131-1 {
+          status: approved
+          title: Integration tests confirm a closed field with a value it does not take is reported and one it takes is not, and the diag corpus marks a component kind
+          method: test
+          tests:
+            tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AClosedFieldWithAValueItDoesNotTakeIsReportedAndOneItTakesIsNot
+        }
+      }
+    }
+
+    // ======================= workspace ====================================
+    requirement REQ-00053-2 {
+      tags: language, workspace
+      status: approved
+      title: A specification shall be a directory of .ds files read as one, in any order
+      text:
+        Files are read whole and are not units of meaning; a link nobody
+        declares (an annotation, the subject of a behaviour) is an expected node
+        reported once (W-REF-UNDECLARED) and never stops the load; a name in a
+        type, a base, a bound or a call is text instead (REQ-00024-3); only
+        syntax stops a file (E-SYNTAX).
+      rationale:
+        A specification that lives per file cannot say that two files talk
+        about the same thing (R1, R6). Revision 2 (DS-18, 2026-11-20): names in
+        types are text.
+      verification VER-00041-2 {
+        title: Integration tests confirm a specification is a directory of .ds files read as one, in any order
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_checker.cpp::TestChecker.UndeclaredReferencesBecomeExpectedNodesReportedOnce
+          tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.TheFilesOfADirectoryAreReadAsOneInAnyOrder
+          tests/integration/ds/parse/test_workspace_parsing.cpp::TestWorkspaceParsing.AFileThatParsesReportsNoSyntaxErrorBesideOneThatDoesNot
+      }
+      constraint CST-00002-1 {
+        tags: language, workspace
+        status: approved
+        category: language
+        bok: BOK-00004-1
+        title: Every entity shall have one identity, and a second declaration of it shall be E-DUPLICATE-IDENTITY
+        rationale: R5: identity across the workspace is what makes references, diagrams and diffs mean the same entity everywhere.
+      }
+      requirement REQ-00164-1 {
+        tags: language, workspace, behaviour
+        status: approved
+        title: A member named after a behaviour its holder has shall be E-NAME-RESERVED, and the behaviour keep its identity
+        text:
+          A state machine is its subject's identity with ::state, and a sequence its subject's with
+          ::sequence; a member written with that name takes the identity of the behaviour when the
+          behaviour is written too. The member is reported where it is written, once, and the
+          behaviour keeps the identity whichever of the two is written first, with nothing else said
+          of the collision. A member named state or sequence whose holder has no such behaviour is
+          an ordinary member.
+        rationale:
+          Owner, 2026-11-18 (DS-222, model audit finding I1): the names are the language's, not a new
+          separator, so the identities users write in diagrams (Cart::add::sequence/sold-out) do not
+          change. Reported only where the two meet: DriftSpec's own design has nine members called
+          state or sequence (Identity::state(), the live session's GET /state) with no behaviour of
+          that name, and they stay as the code has them.
+        verification VER-00180-1 {
+          status: approved
+          title: Integration tests confirm a method named state beside its class's state machine is E-NAME-RESERVED once, the machine keeps its identity, and without a machine the method is ordinary
+          method: test
+          tests:
+            tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AMemberNamedAfterABehaviourOfItsHolderIsToldSoAndTheBehaviourKeepsItsIdentity
+        }
+      }
+      constraint CST-00003-2 {
+        tags: language, workspace
+        status: approved
+        category: language
+        bok: BOK-00004-1
+        title: Every entity shall be defined once and extended only by blocks of annotations
+        text:
+          An extension adds relations and never touches the definition; an extension of nothing is an expected node,
+          except a class: written with annotations only and defined by no other block, it is the class, empty, and its
+          scope contains it (revision 2, DS-20: an exception class that only carries its requirements).
+        rationale: A box writes its requirements without knowing who consumes them (2026-10-26).
+      }
+    }
+
+    // ======================= HLD ==========================================
+    requirement REQ-00013-1 {
+      tags: language, hld
+      status: approved
+      verification VER-00049-1 {
+        status: approved
+        title: Unit tests confirm the HLD is modelled as nested packages
+        method: test
+        tests:
+          tests/integration/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
+      }
+      title: The language shall model the high-level design as packages, the organisation above the implementation
+      rationale:
+        The HLD is where a system is divided into deployable units and
+        boundaries; argos reads it as boxes that own namespaces.
+
+      requirement REQ-00014-1 {
+        tags: language, hld
+        status: approved
+        verification VER-00050-1 {
+          status: approved
+          title: Unit tests confirm a package is a box holding packages, modules and artefacts
+          method: test
+          tests:
+            tests/integration/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
+            tests/integration/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
+        }
+        title: A package shall be a box of the high-level design: a black box that holds packages, modules and artefacts
+        rationale: R1, R2; nested packages 2026-10-26.
+
+        requirement REQ-00015-1 {
+          tags: language, hld
+          status: approved
+          title: A package shall nest in a package, written nested or reopened flat by its full path
+          text:
+            package app { package core { } } and package app@core { } are the
+            same box; the flat form needs the outer package declared somewhere.
+          verification VER-00012-1 {
+            title: Integration tests confirm a package nests in a package, written nested or reopened flat by its full path
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.EveryPackageLevelAddsItsNameWithAt
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.TheFlatFormIsTheSameIdentityAsNesting
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.AnOuterPackageNobodyDeclaresIsExpected
+          }
+        }
+        constraint CST-00004-1 {
+          tags: language, hld
+          status: approved
+          category: language
+          bok: BOK-00004-1
+          title: Every identity shall name its packages with @ and its namespaces with ::, the box that holds the modules rooting the code's namespace
+          text:
+            app@core@model::Entity: boxes with @, namespaces with ::; outer
+            boxes are organisation and drop out of the qualified name.
+          rationale: decided 2026-10-26 with argos's reading by namespace (R4).
+        }
+        requirement REQ-00017-2 {
+          tags: language, hld
+          status: approved
+          title: A package or a module shall realise requirements and carry constraints through annotations, like a class
+          text: @requirement and @constraint in the package or module body.
+          rationale:
+            Revises REQ-00017-1, which named the package only: the metamodel let
+            a module answer to a requirement but the grammar did not let one
+            write it (DS-82, found by a newcomer agent, 2026-11-06).
+          verification VER-00014-2 {
+            title: Integration tests confirm a package or a module realises requirements and carries constraints through annotations, like a class
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.ABoxRealisesRequirementsLikeAClass
+              tests/integration/ds/bind/test_module_annotations.cpp::TestModuleAnnotations.AModuleAnswersToTheRequirementItsBodyNames
+          }
+        }
+        requirement REQ-00084-1 {
+          tags: language, hld
+          status: approved
+          title: A package or a module shall say what its code is written in, and what it holds shall be written in the same unless it says otherwise
+          text:
+            language: cpp in a package or a module; cpp, c, python, typescript or lua, the
+            languages argos reads. What a box holds is written in its language unless it says
+            another, and the check fills the language down, so every package and module of the
+            model carries it. One ds does not know, or two at once (a reopened box that says
+            two), is W-LANGUAGE-UNKNOWN. A box that says nothing and is held by nothing that
+            says has no language.
+          rationale:
+            Owner, 2026-11-06 (DS-86): nothing said which technology each package used, and
+            DriftSpec designs both C++ and Python (iris; the Python face of ds itself). Knowing
+            it, argos picks the reader of each box and writes its types the way that language
+            does.
+          verification VER-00093-1 {
+            title: Integration tests confirm a box's language is held by what it holds unless it says otherwise, and an unknown one or two at once is a finding
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_language.cpp::TestLanguage.WhatABoxHoldsIsWrittenInItsLanguageUnlessItSaysOtherwise
+              tests/integration/ds/check/test_language.cpp::TestLanguage.ABoxThatSaysNothingAndHoldsNothingThatSaysHasNoLanguage
+              tests/integration/ds/check/test_language.cpp::TestLanguage.ALanguageDsDoesNotKnowOrTwoAtOnceIsAFinding
+          }
+        }
+        requirement REQ-00018-1 {
+          tags: language, hld
+          status: approved
+          title: The outermost package shall be the system, and the level of an artefact shall follow from where it is declared
+          text:
+            In the outermost package an artefact is of the system; in an inner
+            package or a module, of that level. No keyword, no field.
+          verification VER-00015-2 {
+            title: Integration tests confirm the outermost package is the system, and the level of an artefact follows from where it is declared
+            status: approved
+            text: Revision 2 (DS-184) cites the integration test alone; the unit test of a scope is the class's own.
+            method: test
+            tests:
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.LevelByPlacementThroughTheLevels
+          }
+        }
+        requirement REQ-00019-1 {
+          tags: language, hld
+          status: approved
+          title: A package shall draw as a container of its modules in a class diagram
+          verification VER-00016-1 {
+            title: Integration tests confirm a package draws as a container of its modules in a class diagram
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.NestedPackagesAreContainersOfTheDrawing
+          }
+        }
+        requirement REQ-00020-2 {
+          tags: language, hld
+          status: approved
+          title: A package shall declare the external interfaces of what it builds, with their kind and typed operations
+          text:
+            interface shell { kind: cli; operation buy(sku: string) -> int { exit 2: refused } }, at any
+            level of packages. The kind and the fields of an operation are data, not grammar, so a new
+            kind changes no syntax. Quality is a requirement or a constraint linked to the interface or
+            to an operation. Replaces boundary (DS-54): an interface of the high level design is the
+            external interface of a process, or of a library when it is binary.
+          rationale: Owner, 2026-11-05. The syntax is self-contained, with no other formats or parsers.
+          verification VER-00064-1 {
+            title: Integration tests confirm a package declares the external interfaces of what it builds, with their kind and typed operations
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceHoldsItsTypedOperationsAndTheirFields
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.RequirementsAndConstraintsLinkToAnInterfaceOrAnOperation
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnInterfaceIsDrawnAsABoxWithItsOperations
+          }
+        }
+        requirement REQ-00088-1 {
+          tags: language, hld, dependencies
+          status: approved
+          title: A package, a module or a class shall declare that it uses an interface another box offers, in its own body or from another file
+          text:
+            @consumes sistema@broker@publish in a box binds a consumes relation from the box to the interface; the
+            box that offers the interface is the provider. Like every annotation it binds the same
+            written in the box or in an extension block anywhere else, so the wiring of a system can
+            live in a file of its own (as design/wiring.ds does for requirements) and a design brought
+            in whole can be connected from above without being touched. What an annotation means is
+            read from the metamodel's table of annotations, declared once.
+          rationale:
+            Owner, 2026-11-07 (DS-96): designing a distributed system live, the high level design could
+            not say that the service uses the broker's publish interface; the boxes stood apart. The
+            Owner asked for the link to be external, like the wiring of requirements.
+          verification VER-00097-1 {
+            title: Integration tests confirm a box uses an interface of another, written in its body or in another file, and a use of something that is no interface is reported
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/bind/test_uses.cpp::TestUses.APackageAModuleOrAClassUsesAnInterfaceOfAnotherBox
+              tests/integration/ds/bind/test_uses.cpp::TestUses.AUseWrittenInAnotherFileBindsTheSame
+              tests/integration/ds/bind/test_uses.cpp::TestUses.AUseOfSomethingThatIsNoInterfaceIsReportedAndNotBound
+              tests/integration/ds/bind/test_uses.cpp::TestUses.AnAnnotationMeansWhatTheMetamodelSaysWhereverItIsWritten
+          }
+        }
+        requirement REQ-00093-1 {
+          tags: language, hld, dependencies
+          status: approved
+          title: A module shall offer interfaces like a package, and a behaviour shall call an interface's operation through a local, a parameter or an attribute typed by it
+          text:
+            interface port { ... } inside module face is p@face::port, offered by the module. A
+            behaviour reaches an interface's operation as it reaches a method: local ds: p@engine
+            then -> ds.check(text), or a parameter or an attribute typed by the interface; the call
+            names the operation, so the consumer depends on the contract and not on the class that
+            realises it. In the viewer a module's interfaces come first inside it.
+          rationale:
+            Owner, 2026-11-07 (DS-92): the Python face called the engine's class Api because a
+            sequence could not call engine; and a dependency between two modules of one package had
+            no interface to go through.
+          verification VER-00102-1 {
+            title: Integration tests confirm a module offers interfaces and a behaviour calls an interface's operation through a local, a parameter or an attribute
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.AModuleDeclaresAnInterfaceAndOffersIt
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.ABehaviourCallsAnInterfaceOperationThroughALocal
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.ThroughAParameterOrAnAttributeTypedByTheInterface
+              tests/integration/ds/check/test_interface_calls.cpp::TestInterfaceCalls.TheSceneDrawsAModulesInterfaceInsideIt
+          }
+        }
+        requirement REQ-00094-2 {
+          tags: language, hld, dependencies, check
+          status: approved
+          title: The checker shall compare what a box declares it uses with what its behaviours call, and report what is not declared, what is declared and never called, and a call that goes around an interface
+          text:
+            A call to an operation of an interface another box offers needs a @consumes of that interface
+            on the caller or on a box it lives in, written there or in a wiring file
+            (W-CONSUMES-UNDECLARED). A @consumes that none of the box's behaviours calls is dead, said only once
+            the box has behaviours (W-CONSUMES-UNUSED). A call to a method of a class that realises an
+            interface, from outside the class's module, goes around the contract when the method
+            answers an operation of that interface (W-CONSUMES-BYPASS); a method the interface does not
+            offer cannot be called through it and is no bypass (DS-106). An
+            interface's own sequences realise it, and a box calling an interface it offers depends on
+            nothing.
+          rationale: Owner, 2026-11-07 (DS-96, DS-92): declared dependencies are only worth what the behaviour confirms.
+          verification VER-00103-2 {
+            title: Integration tests confirm undeclared, unused and bypassing dependencies are reported, and what is declared, planned or realised is not
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.ACallToAnotherBoxsInterfaceNeedsAUseOnTheCallerOrWhereItLives
+              tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AUseOnTheModuleOrInAWiringBlockOnItsPackageCoversTheCall
+              tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AUseNoBehaviourCallsIsDeadOnceTheBoxHasBehaviours
+              tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.CallingTheClassBehindAnInterfaceFromOutsideGoesAroundIt
+              tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AnInterfacesOwnSequenceRealisesItAndNothingIsReported
+              tests/integration/ds/check/test_dependency_checks.cpp::TestDependencyChecks.AMethodTheInterfaceDoesNotOfferIsNoBypass
+          }
+        }
+        requirement REQ-00119-2 {
+          tags: language, hld, interfaces, check
+          status: approved
+          title: A method that answers an operation of an interface its class realises shall take and give what the operation does, or be reported as W-INTERFACE-SIGNATURE
+          text:
+            When a class realises an interface (@interface) and declares, or inherits, a method named
+            like one of the interface's operations, their parameters and returns are compared as the
+            idea each type commits to: qualifiers and spaces dropped, the rest as the code writes it.
+            A difference is a warning at the method. An operation the class does not declare is no
+            finding: that is absence.
+          rationale:
+            Model audit 2026-11, finding G5 (DS-215): a class realising keeper declared feed(animal:
+            int, extra: bool) against feed(animal: string) and nothing was said, while between an
+            operation and its use case the signatures were compared. It is the link from the
+            high-level design to the low-level one. Revision 2 (DS-18, 2026-11-20): no neutral name
+            is read any more; the types are the code's text.
+          verification VER-00135-1 {
+            title: Integration tests confirm a method that answers an interface operation with another signature is reported, one that says the same idea is not, and an operation the class does not declare is no finding
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_dependency_checks.cpp::TestRealisation.AMethodThatAnswersAnInterfaceOperationWithAnotherSignatureIsReported
+          }
+        }
+        requirement REQ-00081-1 {
+          tags: language, hld, usecase
+          status: approved
+          title: A use case shall be declared as a contract with its outcomes, realised by interface operations and specialised by a specific use case
+          text:
+            usecase UC-00001-1 greet(name: string) -> Greeting { outcome default: ...; outcome
+            empty-name -> none: ... } is an artefact identified by its id with its revision: a
+            title, a status, the requirements that bind it (@requirement), an optional signature
+            and its outcomes, default the ending that goes well and every other one a scenario.
+            It names no interface: an interface operation realises it (operation greet(...) :
+            UC-00001-1), whoever drives that interface. A specific use case specialises a
+            generic one after a colon and keeps its signature, its outcomes and its
+            requirements. A design without use cases owes none.
+          rationale:
+            Owner, 2026-11-06 (DS-77): a use case is its own entity, close to a requirement; it
+            may be bound by several requirements and triggered from several interfaces of the
+            high level design, and it should be seen whole from each of them. No actor: the
+            interface already says what drives it.
+          verification VER-00090-1 {
+            title: Integration tests confirm hola realises its use cases from both interfaces, a specific one inherits the outcomes of its generic, and a design without use cases owes none
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.HolaRealisesItsUseCasesFromBothInterfacesAndChecksClean
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.ASpecificUseCaseInheritsTheOutcomesOfItsGeneric
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.ADesignWithoutUseCasesOwesNone
+          }
+        }
+        requirement REQ-00082-1 {
+          tags: language, hld, usecase, check
+          status: approved
+          title: The check shall hold every operation that realises a use case to its contract, outcome by outcome
+          text:
+            An operation that takes or gives something else than the use case it realises, or a
+            specific use case that does so against its generic, is W-USECASE-SIGNATURE. An
+            outcome, its own or inherited, that the operation handles with no scenario is
+            W-USECASE-OUTCOME-UNHANDLED; a scenario the operation handles that no outcome names
+            is W-SCENARIO-NO-OUTCOME. A use case no operation realises, directly or through one
+            that specialises it, is W-USECASE-UNREALISED; a realisation or a specialisation of an
+            id that is no use case is W-USECASE-UNDECLARED.
+          rationale:
+            The use case is what makes "from which interfaces, and how does it end" checkable:
+            on ds's own design these checks caught the outcomes the command line changed.
+          verification VER-00091-1 {
+            title: Integration tests confirm each way an operation can break its use case is a finding, and keeping the contract is none
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOperationThatHandlesEveryOutcomeKeepsTheContract
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOperationThatGivesSomethingElseBreaksTheContract
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AnOutcomeNoScenarioHandlesIsReported
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AScenarioNoOutcomeNamesIsReported
+              tests/integration/ds/check/test_usecases.cpp::TestUseCases.AUseCaseNothingRealisesAndAnUnknownOneAreReported
+          }
+        }
+      }
+    }
+
+    // ======================= LLD ==========================================
+    requirement REQ-00021-1 {
+      tags: language, lld
+      status: approved
+      verification VER-00051-1 {
+        status: approved
+        title: Unit tests confirm the LLD is modelled as modules of classes and behaviours: the static oracle
+        method: test
+        tests:
+          tests/integration/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
+      }
+      title: The language shall model the low-level design as modules of classes and their behaviours
+      rationale: The white box: what argos compares with the code.
+
+      // ---- module ----
+      requirement REQ-00022-1 {
+        tags: language, lld, module
+        status: approved
+        verification VER-00052-1 {
+          status: approved
+          title: Unit tests confirm a module is a namespace that reopens
+          method: test
+          tests:
+            tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+        }
+        title: A module shall be a namespace that reopens across files and resolves names outward
+        rationale: R2, R9, R10.
+
+        requirement REQ-00023-1 {
+          tags: language, lld, module
+          status: approved
+          title: A bare name shall resolve from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
+          text: No includes, no using; what already encloses you is omitted.
+          verification VER-00017-2 {
+            title: Integration tests confirm a bare name resolves from the innermost scope outward, a qualified name across modules, a pkg@ one across packages
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_checker.cpp::TestChecker.ResolvesInnermostScopeFirst
+              tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.ABareNameFindsTheClassBesideItBeforeARootPackageOfItsName
+              tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesResolveByTheModuleOrByThePackage
+              tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+          }
+        }
+        requirement REQ-00024-3 {
+          tags: language, lld, module
+          status: approved
+          title: A name the design does not declare shall be text in a type, a base, a bound or a call, relating nothing and reported nowhere
+          text:
+            A design declares what it designs and nothing else. A name read out of a
+            type, a base, a template bound or a call that resolves to nothing the
+            design declares is text: no relation, no expected node, no finding
+            (std::string, Exception, subprocess::run). There is no extern module:
+            a design that still writes one fails with E-SYNTAX until it is migrated.
+          rationale:
+            R11; the extern catalogue of 2026-10-26. Revision 3 (DS-18, Owner
+            2026-11-20): allow incompleteness, say incoherence. Designs inherit
+            from and call the standard and outside libraries all the time, and
+            declaring them cost preludes that existed only to be named; a
+            misspelt name of the design is caught by argos against the code and
+            shows as a missing arrow in the drawing.
+          verification VER-00018-3 {
+            title: Integration tests confirm a name the design does not declare is text in a type, a base, a bound or a call, relating nothing and reported nowhere
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static.cpp::TestStatic.ANameNobodyDesignsIsTextAndRelatesNothing
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.ANameNobodyDesignsIsTextAndSaysNothing
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.OnlyTheNamesTheDesignDeclaresRelateTheRestIsText
+          }
+        }
+        requirement REQ-00169-2 {
+          tags: language, lld, module
+          status: approved
+          title: A bare name that no scope declares shall resolve to the one class of that name in its package, and warn when two share it
+          text:
+            After the scopes, from the innermost outward, a bare name (no :: and no
+            @) is looked for among the classes and enums of the package it is
+            written in, at any depth of its modules: the one of that name and arity
+            is it, and another package is never asked. When two or more share it,
+            it relates nothing and W-NAME-AMBIGUOUS is reported once where it is
+            written, naming every candidate by its identity. A name written from
+            the top package, a name nobody declares and a template parameter say
+            nothing. It is the rule argos applies to the code, so Plan, written as
+            a Python module imports it from a sibling module, finds the class there.
+          rationale:
+            DS-18, Owner 2026-11-20, agreed with the argos side: a type written as
+            the code writes it names imported classes bare, and without this rule
+            the design of a Python package lost every relation between its modules.
+            Revision 2 (DS-325, Owner 2026-11-20): two candidates are an
+            ambiguity, an incoherence, and an incoherence is said.
+          verification VER-00186-2 {
+            title: Integration tests confirm a bare name no scope declares is the one class of that name in its package, warns once naming the candidates when two share it, and is never one of another package
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABareNameNoScopeDeclaresIsTheOneClassOfThePackage
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABareNameTwoClassesOfThePackageShareWarnsOnceForItsUse
+              tests/integration/ds/check/test_static.cpp::TestStatic.CrossModuleReferencesResolveByTheModuleOrByThePackage
+          }
+        }
+      }
+
+      // ---- class ----
+      requirement REQ-00025-1 {
+        tags: language, lld, class
+        status: approved
+        verification VER-00053-1 {
+          status: approved
+          title: Unit tests confirm classes, dataclasses and enums have identities and members
+          method: test
+          tests:
+            tests/integration/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
+            tests/integration/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
+        }
+        title: A class shall be a type of the design: class, dataclass or enum, with members
+        rationale: R12, R14, R19.
+
+        requirement REQ-00026-2 {
+          tags: language, lld, class
+          status: approved
+          title: A member shall carry visibility, modifiers, a name, a type and an optional default
+          text:
+            + # -, then abstract | static | const for methods, or owns | refs |
+            shares and many | optional for attributes, then the name; a method
+            named like its class is a constructor; name: type = default, the
+            type as the code writes it. *args and **kwargs are parameter names
+            like any other. Members are identified by name: an overload is one
+            member.
+          rationale: Revision 2 (DS-18, 2026-11-20): many and optional say the multiplicity, and a type is the code's text.
+          verification VER-00019-2 {
+            title: Integration tests confirm a member carries visibility, modifiers, a name, a type and an optional default
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static.cpp::TestStatic.DefaultsAndModifiersAreKept
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.MultiplicityIsWrittenInFrontOfTheName
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.OnlyTheNamesTheDesignDeclaresRelateTheRestIsText
+          }
+        }
+        requirement REQ-00170-1 {
+          tags: language, lld, class
+          status: approved
+          title: An attribute written with two ownerships or two multiplicities shall be reported as E-MODIFIER-CONFLICT
+          text:
+            An attribute has one ownership (owns, refs, shares) and one
+            multiplicity (many, optional). Two of either kind, or one written
+            twice, say two things at once: an error at the attribute, which keeps
+            the first one written.
+          rationale: DS-18, Owner 2026-11-20: what contradicts itself is said, never guessed.
+          verification VER-00187-1 {
+            title: Integration tests confirm two ownerships, two multiplicities or one written twice are E-MODIFIER-CONFLICT, and the first written is kept
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.TwoOwnershipsOrTwoMultiplicitiesAreAConflict
+              tests/integration/ds/check/test_static.cpp::TestStatic.TheOracleFindingsAndNothingElse
+          }
+        }
+        constraint CST-00005-1 {
+          tags: language, lld, class
+          status: approved
+          category: language
+          bok: BOK-00004-1
+          title: Every modifier shall be a word only in front of a name: nothing is reserved
+          text: + abstract: bool is an attribute named abstract.
+          rationale: decided 2026-10-26: a code base designed in DriftSpec keeps its names.
+        }
+        requirement REQ-00028-2 {
+          tags: language, lld, class
+          status: approved
+          title: Ownership and multiplicity shall be written on the attribute, and every name of its type that the design declares shall be related; parameters and returns shall give use
+          text:
+            owns (default), refs, shares; many is *, optional 0..1, neither 1.
+            A type is the code's text (std::map<std::string, Pool*>, list[Step],
+            Pool | None): each name in it that the design declares is related
+            with the attribute's ownership and multiplicity, or as a use from a
+            parameter or a return; ds knows no container of any language. The
+            one designed name of a type is what a call through it reaches.
+            E-OWNERSHIP-CYCLE.
+          rationale:
+            R16. Revision 2 (DS-18, Owner 2026-11-20): the multiplicity is
+            written, never read from a type whose language ds does not know, and
+            W-MODIFIER-ON-VALUE goes: a modifier on what nobody designs is
+            incompleteness, not incoherence.
+          verification VER-00021-4 {
+            title: Integration tests confirm ownership and multiplicity are written on the attribute, every designed name of its type is related, a name qualified with dots as with ::, and parameters and returns give use
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static.cpp::TestStatic.OwnershipAndMultiplicityComeFromTheAttribute
+              tests/integration/ds/render/test_irexport.cpp::TestIrExport.AnEnumIsAValueSoItIsAssociatedNotOwned
+              tests/integration/ds/check/test_type_reading.cpp::TestTypeReading.AQualifiedContainerHandsTheCallToItsElement
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.MultiplicityIsWrittenInFrontOfTheName
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ADottedNameRelatesAsTheSameNameWithTwoColons
+          }
+        }
+        requirement REQ-00029-2 {
+          tags: language, lld, class
+          status: approved
+          title: A template shall be identified by name and arity and its arguments checked against their bounds, and a base or a method shall carry its template arguments as written
+          text:
+            class Repository<T: Entity>; E-TEMPLATE-BOUND, never against an
+            argument that is the user's own parameter (class Holder<T> : Base<T>).
+            A base is written as the code writes it, IFormat<scene::SceneDocument>
+            or Box[int]: its first name is what the class inherits and the whole
+            text is kept; a method or a function takes parameters of its own,
+            each<F>(f: F).
+          rationale: R15. Revision 2 (DS-18, 2026-11-20): bases with arguments and templated methods, as the code has them (DS-150).
+          verification VER-00022-3 {
+            title: Integration tests confirm a template is identified by name and arity and its arguments checked against their bounds, and a base or a method carries its template arguments as written
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static.cpp::TestStatic.EnumsAndTemplatesHaveIdentities
+              tests/integration/ds/check/test_type_reading.cpp::TestTypeReading.ATemplatesArityCountsItsOwnArgumentsOnly
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ABaseAndAMethodCarryTheirTemplateArgumentsAsWritten
+          }
+        }
+        requirement REQ-00030-1 {
+          tags: language, lld, class
+          status: approved
+          title: Operators shall be declared in the class header as a set and refined in the body
+          text: class Vector <<==, ordered, +, []>>; E-OPERATOR-UNDECLARED.
+          rationale: R17.
+          verification VER-00023-1 {
+            title: Integration tests confirm operators are declared in the class header as a set and refined in the body
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static.cpp::TestStatic.OperatorsAreDeclaredInTheHeaderAndRefinedInTheBody
+          }
+        }
+        requirement REQ-00031-2 {
+          tags: language, lld, class
+          status: approved
+          title: Abstract and value shall be derived from the members, never written
+          rationale:
+            What is derived cannot contradict what is declared (R14). A class whose methods are all
+            abstract is an abstract class, drawn and inherited as one: interface is only the contract of a
+            box (Owner, 2026-11-18, DS-301).
+          verification VER-00024-2 {
+            title: Integration tests confirm abstract and value are derived from the members, never written
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static.cpp::TestStatic.AbstractAndValueAreDerived
+          }
+        }
+        requirement REQ-00032-2 {
+          tags: language, lld, class
+          status: approved
+          title: Any entity or member shall open a body with fields, notes, annotations and nested artefacts, and a member's body with rules
+          rationale:
+            R8, R12, R13. Owner, 2026-11-07 (DS-94): the bracket contracts ([requires: ...]) are gone; what
+            a member requires of its calls is a rule in its body, one syntax for one thing.
+          verification VER-00025-2 {
+            title: Integration tests confirm any entity or member opens a body with fields, notes and annotations, and no prose contract is kept
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static.cpp::TestStatic.NotesLiveInMemberBodies
+              tests/integration/ds/check/test_rules.cpp::TestRules.ABracketContractDoesNotParse
+          }
+        }
+        requirement REQ-00101-1 {
+          tags: language, lld, class
+          status: approved
+          title: A class shall declare its destructor as ~Name(), and an interface may have one
+          text:
+            A method named ~ and the class's name is its destructor (flag destructor). It is no
+            part of the contract: like a constructor, it does not count against the derived
+            interface stereotype, so an interface declares the virtual destructor the C++ guide
+            asks of it.
+          rationale: Found splitting the checker (DS-138, DS-143): IStep needs a virtual destructor and the language could not say it.
+          verification VER-00110-1 {
+            title: Integration tests confirm ~Name() is the destructor and an interface keeps its stereotype with one
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_destructors.cpp::TestDestructors.ATildeAndTheClassNameIsItsDestructor
+              tests/integration/ds/check/test_destructors.cpp::TestDestructors.AnInterfaceKeepsItsDestructorAndStaysAnInterface
+          }
+        }
+        requirement REQ-00033-1 {
+          tags: language, lld, class
+          status: approved
+          title: An enum shall be a value type with its values, annotated like a class
+          verification VER-00026-1 {
+            title: Integration tests confirm an enum is a value type with its values, annotated like a class
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/bind/test_packages.cpp::TestPackages.AnEnumRealisesRequirementsLikeAClass
+          }
+        }
+      }
+
+      // ---- function ----
+      requirement REQ-00063-1 {
+        tags: language, lld, visibility
+        status: approved
+        title: Any child of a box may be private, and nothing outside its parent shall reach it
+        text:
+          One rule at every level: a box connects to another through a public child. A package's
+          public children are its interfaces and modules, a module's its classes and functions, a
+          class's its methods and attributes. A child is public unless it says -, and is seen from
+          inside its parent, so siblings see each other. A member that says # is protected: seen
+          from inside its class and from a class that derives from it (DS-224). A call or a type
+          that crosses anything private or protected on its way down is W-NOT-VISIBLE; a public
+          member showing a private type is W-PRIVATE-LEAK.
+        rationale: Owner, 2026-11-05. There is no port concept: a port is a public child, and an interface is one that crosses a process. Whether the code respects this is argos's job.
+        verification VER-00068-2 {
+          title: Integration tests confirm any child of a box may be private, and nothing outside its parent reaches it
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.AnyChildMayBePrivateAndIsPublicUnlessItSaysSo
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateModuleIsNotReachedFromAnotherBox
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateClassIsNotReachedFromAnotherModule
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateMethodIsNotCalledFromAnotherClass
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APrivateFunctionIsNotCalledFromAnotherBox
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.SiblingsSeeEachOther
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.EveryOtherCrossingIsReportedExactlyAsMarked
+            tests/integration/ds/check/test_visibility.cpp::TestVisibility.APublicMemberThatShowsAPrivateTypeIsALeak
+            tests/integration/ds/check/test_visibility.cpp::TestVisibilityAlone.APublicOperatorThatShowsAPrivateTypeIsALeak
+            tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AProtectedMemberIsHiddenFromAClassThatDoesNotDeriveFromIt
+            tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.AProtectedMemberIsSeenFromADerivedClassAndHiddenFromAnyOther
+        }
+      }
+      requirement REQ-00054-2 {
+        status: approved
+        tags: language, lld, function
+        verification VER-00058-1 {
+          title: Unit tests confirm a function is an operation of its module: the functions oracle
+          method: test
+          tests:
+            tests/integration/ds/check/test_functions.cpp::TestFunctions.TheOracleFindingsAndNothingElse
+        }
+        title: A function shall be an operation of a module, outside any class, identified by its module and its name
+        text:
+          function name(params) -> type in a module, with a member's optional
+          visibility in front, public when absent; two of one name are
+          E-DUPLICATE-IDENTITY. A call to a function nobody designs is text
+          (REQ-00024-3).
+        rationale:
+          A Python module or a C++ namespace declares operations no class
+          holds; a design that wraps them in a class the code does not have
+          drifts from it. Migrating iris (2026-10-26) found 133 of its design
+          entities were functions. Revision 2 (DS-18, 2026-11-20): no extern
+          module declares them.
+
+        requirement REQ-00055-2 {
+
+          status: approved
+          tags: language, lld, function
+          title: A function shall carry a method's signature and body
+          text: Parameters and the return give use; the body holds notes, annotations, rules and nested artefacts.
+          verification VER-00059-1 {
+            title: Integration tests confirm a function carries a method's signature and body
+            method: test
+            tests:
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.AFunctionIsAnOperationOfItsModule
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.ItsSignatureGivesUseAndItsBodyIsAMethods
+          }
+        }
+        requirement REQ-00056-1 {
+          status: approved
+          tags: language, lld, function
+          title: The behaviour of a function shall run on its parameters and locals, and a call with no target shall reach a function of the module
+          text:
+            sequence gather { }; there is no self. A call with no target is a
+            function resolved outward from the module, `-> tasks::gather()` one
+            of another module; a method reaches one its class does not declare.
+            In a sequence diagram a function runs on its module's lifeline.
+          verification VER-00060-1 {
+            title: Integration tests confirm the behaviour of a function runs on its parameters and locals, and a call with no target reaches a function of the module
+            method: test
+            tests:
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.ItsBehaviourRunsOnItsParametersAndCallsItsNeighbours
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.ASequenceOfAFunctionRunsOnItsModule
+          }
+        }
+        requirement REQ-00057-1 {
+          status: approved
+          tags: language, lld, function
+          title: A class diagram shall draw each function as a box of its own, stereotyped function
+          verification VER-00061-1 {
+            title: Integration tests confirm a class diagram draws each function as a box of its own, stereotyped function
+            method: test
+            tests:
+              tests/integration/ds/check/test_functions.cpp::TestFunctions.AClassDiagramDrawsEachFunctionAsABox
+          }
+        }
+      }
+
+      // ---- sequence ----
+      requirement REQ-00034-1 {
+        tags: language, lld, sequence
+        status: approved
+        verification VER-00054-1 {
+          status: approved
+          title: Unit tests confirm a sequence is the behaviour of a method: the behaviour oracle
+          method: test
+          tests:
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.TheOracleFindings
+        }
+        title: A sequence shall be the behaviour of a method, identified by it
+        rationale: block 3, 2026-10-25.
+
+        requirement REQ-00035-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A sequence shall be identified by its resolved subject and scenario, wherever it is written
+          text: sequence Class::method [/ scenario]; two declarations are a duplicate; the unnamed scenario is the default.
+          verification VER-00027-1 {
+            title: Integration tests confirm a sequence is identified by its resolved subject and scenario, wherever it is written
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ABehaviourIsIdentifiedByItsSubject
+          }
+        }
+        requirement REQ-00036-2 {
+          tags: language, lld, sequence
+          status: approved
+          title: The participants of a sequence shall be its static context: self, the attributes, the parameters, the locals written and the results of earlier messages
+          rationale: Revision 2 adds the results (DS-51): a call on what an earlier message returned is an ordinary design, and it read as an undeclared participant.
+          verification VER-00028-6 {
+            title: Integration tests confirm the participants of a sequence are its static context: self, the attributes, the parameters, the locals written and the results of earlier messages, scoped as the code scopes them
+            status: approved
+            text:
+              Revision 5 adds how a name resolves when two of them share it (DDEV-1242): a local
+              hides a member of its name, a method is no value a message is sent to, and a result
+              named like an attribute is stored in that attribute. Revision 6 (DS-18): a name used
+              before the message that gives it is text, unchecked.
+            method: test
+            tests:
+              tests/integration/ds/check/test_values.cpp::TestNameScopes.ALocalHidesAMemberOfItsNameAndAResultIsStoredInTheAttributeOfItsName
+              tests/integration/ds/check/test_values.cpp::TestValues.ALocalInsideAFrameIsALocal
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ParticipantsComeFromTheStaticContext
+              tests/integration/ds/check/test_values.cpp::TestValues.AResultIsAParticipantOfTheMessagesAfterIt
+              tests/integration/ds/check/test_values.cpp::TestValues.AResultUsedBeforeItsMessageIsText
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.ASelfCallReachesAMethodTheClassInherits
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.AnInheritedAttributeIsAParticipant
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.ACallOnASubclassReachesTheMethodOfItsBase
+              tests/integration/ds/check/test_inherited_members.cpp::TestInheritedMembers.APrivateMemberOfTheBaseStaysHidden
+          }
+        }
+        requirement REQ-00132-1 {
+          tags: language, behaviour, levels
+          status: approved
+          title: A sequence shall be the behaviour of a use case, a package or a module as well: a scenario written at their cut
+          text:
+            sequence UC-00001-1 { } is a scenario of the use case, and sequence UC-00001-1 / sold-out
+            another; sequence sales { } is what a box does. Its names resolve from the scope the use
+            case is declared in, or from inside the box. In a scenario of a use case a message with
+            nobody written before its arrow is sent by whoever asks for the use case, from outside the
+            design; in one of a box, by the box. A level written alone is a complete design: nothing
+            below it has to exist.
+          rationale:
+            Owner, 2026-11-15 and 16 (DS-232; model audit findings G18, G6 and G9, probes e03 and
+            e82): a sequence between packages, another between modules, another between classes, each
+            written on its own, without defining every method in between. A calls B and B calls C
+            took two sequences and a diagram with depth, so a high-level flow was as many sequences
+            as hops. The vision said a module or a package could be a subject and the engine refused it.
+          verification VER-00148-1 {
+            title: Integration tests confirm a use case, a package or a module is the subject of a scenario, and that the scenario of a box is drawn between what it names
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AUseCaseOrABoxIsTheSubjectOfAScenario
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioOfABoxIsDrawnBetweenWhatItNames
+          }
+        }
+        requirement REQ-00133-2 {
+          tags: language, behaviour, levels
+          status: approved
+          title: A participant of a sequence shall be nameable as what it is: a package, a module, an interface or a class the behaviour sees
+          text:
+            sales in shell -> sales.sell(item) is the package shop@sales, resolved like any name, from
+            the innermost scope outward; no local declares it. A value of the static context of that
+            name comes first (REQ-00036-2). A name that is neither, the sender's included, is
+            text, and its message is not checked (REQ-00024-3). In a drawing a box that is named is one lifeline, the same one
+            a closed box has on a cut (REQ-00129-1), and ds query shows answers it.
+          rationale:
+            Owner, 2026-11-15 (DS-232, probe e80): a box could not be a participant, so a scenario
+            between boxes needed an interface in every box and a sequence for every operation on the way.
+            Revision 2 (DS-18, 2026-11-20): W-PARTICIPANT-UNDECLARED goes, a name nobody designs being text.
+          verification VER-00149-1 {
+            title: Integration tests confirm a package and a module take part in a scenario by being named, and that the query answers them
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.ABoxTakesPartByBeingNamed
+              tests/integration/ds/check/test_levels.cpp::TestLevels.TheQueryShowsWhoTakesPartInAWrittenScenario
+          }
+        }
+        requirement REQ-00134-1 {
+          tags: language, behaviour, levels
+          status: approved
+          title: A message shall be sent by the participant written before its arrow, and by the subject of the behaviour when none is written
+          text:
+            sales -> warehouse.take(item) leaves the sales. The sender is who calls: what it may see
+            (W-NOT-VISIBLE) and what it declares to use (W-CONSUMES-UNDECLARED) are checked from it, and
+            it is where the message leaves in a drawing. A message with no sender written is the
+            subject's, as before.
+          rationale:
+            Owner, 2026-11-15 (DS-232, probe e80). The grammar kept the sender of a message from the
+            proof of concept and the engine ignored it: written in one block, every message left the
+            first participant.
+          verification VER-00150-1 {
+            title: Integration tests confirm a message leaves the participant written before its arrow, in the model and in the drawing
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.TheParticipantWrittenBeforeTheArrowSendsTheMessage
+          }
+        }
+        requirement REQ-00135-1 {
+          tags: language, behaviour, levels, coverage
+          status: approved
+          title: A message to a box shall be bound to the operation the box offers under that name, and be kept as a label, listed as coverage, when it offers none
+          text:
+            A package offers the operations of its interfaces, a module its functions. Bound, the
+            message is a call like any other: its arguments are checked (E-MSG-ARITY, W-ARG-TYPE), it
+            expands to the behaviour of the operation, one step below, and the box stays the
+            participant. With no operation of that name, or with more than one, the message is a
+            label: the level below is not written yet, which is W-MESSAGE-NO-OPERATION in the coverage
+            (REQ-00124-1) and never a finding. A message to an interface or a class that lacks the
+            operation is still W-MSG-UNDECLARED: what is written is written.
+          rationale:
+            Owner, 2026-11-16 (DS-232): write the high level, and when the level below is implemented
+            the two are matched. The link needs nothing written: the message names what the box
+            offers. A written purchase and its detail lifted onto the same boxes draw the same
+            crossings in the same order, which is what DS-233 will check.
+          verification VER-00151-1 {
+            title: Integration tests confirm a message to a box is bound to the operation the box offers, that one no operation answers is a label listed as coverage, that what clashes with the level below is a finding, and that the written level and the lifted detail draw the same crossings
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AMessageToABoxIsBoundToTheOperationTheBoxOffers
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AMessageNoOperationAnswersIsALabelListedAsCoverage
+              tests/integration/ds/check/test_levels.cpp::TestLevels.WhatClashesWithTheLevelBelowIsAFinding
+              tests/integration/ds/check/test_levels.cpp::TestLevels.TheWrittenLevelAndTheDetailLiftedOntoItsBoxesDrawTheSameCrossings
+          }
+        }
+        requirement REQ-00136-1 {
+          tags: language, behaviour, levels, coverage
+          status: approved
+          title: The scenario of a use case and the behaviour below it shall agree on what crosses between the participants of the scenario, and in what order
+          text:
+            The level below a scenario of a use case is the behaviour of the operation it is asked
+            through: a message nobody sends, bound to an operation that has a behaviour (the scenario
+            of the same name, when the operation has one). That behaviour is unfolded and lifted onto
+            the participants of the scenario: whatever one of them holds, it stands for. The crossings
+            the scenario writes have to be found among those of the level below, in order: a message
+            bound to an operation finds a call of that operation, a label a crossing between the same
+            two. The higher level may leave crossings out. One it writes that the level below never
+            makes, or makes fewer times, is W-LEVEL-NO-CROSSING; one made at another place is
+            W-LEVEL-ORDER. Both need the sender to be all written below: something is seen to happen
+            in it, and every call made in it has a behaviour. Otherwise what the sender does is not
+            known yet and the crossing is W-LEVEL-NOT-BELOW in the coverage (REQ-00124-1), which says
+            which steps of the high level have their detail beneath. A scenario with no behaviour
+            below it is held to nothing.
+          rationale:
+            Owner, 2026-11-15 and 16 (DS-233, model audit finding G18): with behaviour at every level
+            the coherence between the levels can be checked; write the high level and, when the low
+            one is implemented, the two are matched. A finding needs two written facts that clash, so
+            a level that is not written is never one. On a crossing of the finer level that the
+            coarser does not show: no finding, an abstraction omits.
+          verification VER-00152-1 {
+            title: Integration tests confirm a scenario and the behaviour below it that cross alike agree, that a crossing never made and two turned around are findings, that one whose sender is not all written is coverage, and that a scenario with nothing below is held to nothing
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioAndTheBehaviourBelowItThatCrossAlikeAgree
+              tests/integration/ds/check/test_levels.cpp::TestLevels.ACrossingTheBehaviourBelowNeverMakesAndTwoTurnedAroundAreFindings
+              tests/integration/ds/check/test_levels.cpp::TestLevels.ACrossingWhoseSenderIsNotAllWrittenBelowIsCoverage
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AScenarioWhoseLevelBelowIsNotWrittenIsHeldToNothing
+          }
+        }
+        requirement REQ-00138-1 {
+          tags: language, behaviour, levels, relations
+          status: approved
+          title: A message written between two participants shall say that the sender uses the receiver
+          text:
+            sales -> warehouse.take(item) gives the relation sends from the sales to the warehouse,
+            once, however many messages say it. The sender is the participant written before the
+            arrow, or the box a scenario is of; whoever asks for a use case is outside the design
+            and gives none. Between boxes it is a use (REQ-00137-1), so a design that has only its
+            high level draws its boxes connected by what its scenarios say.
+          rationale:
+            Owner, 2026-11-16 (DS-230, DS-232). A design with only its high level drew its boxes
+            unconnected, though its scenarios said who calls whom: the drawing of the boxes knew
+            only the relations of the detail.
+          verification VER-00154-1 {
+            title: Integration tests confirm a message written between two participants gives one sends relation from its sender, and that a design with only its high level draws its boxes connected
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_levels.cpp::TestLevels.AMessageWrittenBetweenTwoParticipantsSaysTheSenderUsesTheReceiver
+              tests/integration/ds/render/test_cut_drawing.cpp::TestWrittenLevel.AMessageWrittenBetweenTwoBoxesConnectsThemInTheDrawingOfTheBoxes
+          }
+        }
+        requirement REQ-00059-2 {
+          tags: language, lld, sequence
+          status: approved
+          title: A behaviour shall say what it gives back with return, and that value shall be checked against what its operation declares
+          text:
+            return takes a name or a literal, never an expression. When the operation
+            promises a designed class, a value of another class, or a literal, is
+            reported (W-RETURN-TYPE); a return the design does not declare (void, int,
+            None) is never compared. A name the context does not know is left alone,
+            as an argument is. An operation that declares no return has nothing to
+            check against.
+          rationale: DS-52. With the scenario a call follows, a trace reaches the value it ends in, which is what lets an interface promise an outcome. Revision 2 (DS-18, 2026-11-20): ds knows no language's types.
+          verification VER-00063-1 {
+            title: Integration tests confirm a behaviour says what it gives back with return, and that value is checked against what its operation declares
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AReturnIsCheckedAgainstWhatTheOperationDeclares
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AReturnThatAgreesIsNotAFinding
+          }
+        }
+        requirement REQ-00060-1 {
+          tags: language, lld, sequence, interface
+          status: approved
+          title: An operation of an interface shall have a sequence, and each outcome it promises shall name a scenario whose trace ends in that value
+          text:
+            sequence shell::buy / refused goes down through the scenario each call names.
+            An operation with no sequence is W-OPERATION-NO-BEHAVIOUR, an outcome naming no
+            scenario W-SCENARIO-UNDECLARED, and one whose trace ends in another value
+            W-OUTCOME-MISMATCH. What cannot be told, a value that is not a literal at the end
+            of the trace, gives no finding.
+          rationale: DS-54. This is the link from the high level design to the low level one, and what keeps a promise such as exit 2 true.
+          verification VER-00065-1 {
+            title: Integration tests confirm an operation of an interface has a sequence, and each outcome it promises names a scenario whose trace ends in that value
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOperationIsTheSubjectOfItsSequenceAndItsTraceGoesDown
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOperationWithNoSequenceIsAFinding
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOutcomeThatNamesNoScenarioIsAFinding
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnOutcomeIsCheckedAgainstTheValueItsTraceEndsIn
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.TheSequenceOfAnOperationIsDrawnDownThroughItsScenario
+          }
+        }
+        requirement REQ-00061-1 {
+          tags: language, lld, state, interface
+          status: approved
+          title: The state machine of an interface shall be its navigation, with views as its states, and shall report the views with no way in or out
+          text:
+            state web { view Home { text: ... } Home -> Done on buy }. A view holds free text and
+            the requirements and constraints that bind it, nothing that reinvents HTML. An event
+            that names an operation goes down to it; any other is a label. W-VIEW-UNDECLARED,
+            W-VIEW-UNREACHABLE and W-VIEW-NO-WAY-OUT. Views are optional: a bare machine asks nothing.
+          rationale: Owner, 2026-11-05. In a graphical interface the navigation is the design; the look is a requirement or a constraint.
+          verification VER-00066-1 {
+            title: Integration tests confirm the state machine of an interface is its navigation, with views as its states, and reports the views with no way in or out
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AViewIsAStateWithItsTextAndWhatBindsIt
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.AnEventThatNamesAnOperationGoesDownAndAnyOtherIsALabel
+              tests/integration/ds/check/test_interfaces.cpp::TestInterfaces.TheNavigationReportsViewsWithNoWayInOrOut
+          }
+        }
+        requirement REQ-00065-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A branch of a sequence shall name a scenario, a path through that one behaviour, so what scenarios share is written once
+          text:
+            opt <prose> / refused { ... return 2 } names a branch; a bare return ends it. The path of a
+            scenario takes what is shared and its own branch, up to the return that ends it; the default
+            path takes no named branch; of an alt with one named side, the other side is taken; a branch it
+            cannot tell is kept as a frame. A call, a diagram and an exit code ask for the path by its
+            name, as they do for a sequence of its own, which stays for paths that share nothing. A name
+            given twice is W-SCENARIO-TWICE. A behaviour asked for by its subject is drawn whole, its early
+            returns included; an unnamed call follows the default path.
+          rationale: Owner, 2026-11-05. Repeating the opening of every scenario was the largest cost of the design of ds, and a maintenance risk. checkMessage went from twelve sequences to one.
+          verification VER-00070-2 {
+            title: Integration tests confirm a branch of a sequence names a scenario, a path through that one behaviour, so what scenarios share is written once
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_branches.cpp::TestBranches.ADiagramThatAsksForAScenarioNobodyDeclaresIsAFinding
+              tests/integration/ds/check/test_branches.cpp::TestBranches.ABranchNamesAScenarioAndABareReturnEndsIt
+              tests/integration/ds/check/test_branches.cpp::TestBranches.APathTakesWhatIsSharedAndItsBranchUpToItsReturn
+              tests/integration/ds/check/test_branches.cpp::TestBranches.TheDefaultPathTakesNoNamedBranch
+              tests/integration/ds/check/test_branches.cpp::TestBranches.ACallThatNamesABranchEntersThatPath
+              tests/integration/ds/check/test_branches.cpp::TestBranches.AnExitCodeIsCheckedAgainstTheEndOfItsPath
+              tests/integration/ds/check/test_branches.cpp::TestBranches.ANameGivenTwiceIsAFinding
+              tests/integration/ds/check/test_branches.cpp::TestBranches.ABehaviourAskedForByItsSubjectIsDrawnWholeWithItsEarlyReturns
+              tests/integration/ds/check/test_branches.cpp::TestBranches.AScenarioIsDrawnAsItsPathWithoutTheBranchesItSkips
+              tests/integration/ds/check/test_branches.cpp::TestBranches.AnUnnamedCallFollowsTheDefaultPath
+          }
+        }
+        requirement REQ-00110-1 {
+          tags: language, lld, sequence, failure
+          status: approved
+          title: A sequence shall say where a path ends failing and where a failure of what it calls is handled, whatever the mechanism
+          text:
+            fail ParseError ends a path where a return would go, with the failure's name as text, as a
+            type is written. attempt { ... } on IoError / unreadable { ... } runs its steps and handles
+            what they fail with, one on each: a handler that fails with another translates the failure,
+            one that returns resolves it, and a failure no handler names goes on to the caller. The
+            default path does not fail: it takes the attempt's steps and no handler; a handler that
+            names a scenario is the path of that failure. The diagram draws the failure and each handler.
+          rationale: Owner, 2026-11-13 (DS-180, DS-187). One model of failure for exceptions, error values and error codes; what escapes each operation is computed from where failures start and where they are handled (DS-188).
+          verification VER-00126-2 {
+            title: Integration tests confirm a path ends failing with its failure's name, an attempt runs on every path and a handler only on the path that names it, and the diagram draws both
+            status: approved
+            text: Revision 2 (DS-189) holds the example to reporting only the failures its signatures misstate, now that it has some.
+            method: test
+            tests:
+              tests/integration/ds/check/test_failures.cpp::TestFailures.TheExampleReportsNothingButTheFailuresItsSignaturesMisstate
+              tests/integration/ds/check/test_failures.cpp::TestFailures.APathThatFailsEndsThereWithTheFailuresName
+              tests/integration/ds/check/test_failures.cpp::TestFailures.AnAttemptRunsOnEveryPathAndAHandlerOnlyOnThePathThatNamesIt
+              tests/integration/ds/check/test_failures.cpp::TestFailures.AHandlerKeepsTheFailureItHandles
+              tests/integration/ds/check/test_failures.cpp::TestFailures.TheSequenceDiagramDrawsTheFailureAndTheHandlers
+          }
+        }
+        requirement REQ-00111-1 {
+          tags: language, lld, sequence, failure, check, query
+          status: approved
+          title: The checker shall compute what failures escape each operation, with the path each comes up by, and the query shall answer it
+          text:
+            A failure starts where a path ends failing and goes up to every caller that does not handle
+            it: an attempt handles, around the steps it runs, what its handlers name; a handler's own
+            steps are not handled by its attempt. Computed until nothing changes, so calls that call
+            each other end. Each operation carries escapes, the failures, and escape.<failure>, the
+            operations it comes up through and the behaviour (or the scenario of one) that starts it.
+            A call ds cannot follow, to an operation with no behaviour, is taken not to fail.
+            ds query <workspace> failures <operation> answers each escaping failure, named by the
+            operation it starts in.
+          rationale: Owner, 2026-11-13 (DS-180, DS-188). The design writes only where a failure starts and where it is handled; what escapes is inferred, for exceptions, error values and codes alike.
+          verification VER-00127-2 {
+            title: Tests confirm a failure escapes every caller that does not handle it, with its path and the scenario it starts in, that a handler's own failure goes on, that calls calling each other end, and that the query answers it
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_failures.cpp::TestFailures.AFailureEscapesEveryCallerThatDoesNotHandleIt
+              tests/integration/ds/check/test_failures.cpp::TestFailures.EachEscapeKeepsThePathItComesUpByAndTheScenarioItStartsIn
+              tests/integration/ds/check/test_failures.cpp::TestFailures.TheQueryAnswersWhatEscapesAnOperationByWhereEachStarts
+              tests/integration/ds/check/test_failure_escapes.cpp::TestFailureEscapes.AFailureInsideAnAttemptThatHandlesItEscapesNothing
+              tests/integration/ds/check/test_failure_escapes.cpp::TestFailureEscapes.AHandlersOwnFailureIsNotHandledByTheAttemptThatHoldsIt
+              tests/integration/ds/check/test_failure_escapes.cpp::TestFailureEscapes.CallsThatCallEachOtherEndWithWhatEitherLetsEscape
+          }
+        }
+        requirement REQ-00112-1 {
+          tags: language, lld, failure, check
+          status: approved
+          title: A signature shall say what an operation may fail with, and the checker shall hold it to what escapes, and a boundary to saying it
+          text:
+            + load(path: string) -> Book fails LoadError, ParseError promises what may escape; fails
+            nothing promises none. What escapes and the signature does not say is W-FAILURE-UNDECLARED;
+            what it says and no path of its behaviour fails with is W-FAILURE-UNREACHED. An interface
+            operation is a boundary: what escapes it is said in its signature, or nothing may. Any other
+            operation is held to its signature only when it writes one. An operation with no behaviour
+            fails as its signature says, so a call into a library can be said to fail.
+          rationale: Owner, 2026-11-13 (DS-180, DS-189). noexcept is the promise that nothing escapes, decided per operation by the design, not by a rule over every method.
+          verification VER-00128-1 {
+            title: Tests confirm a signature is held to what escapes, a boundary says what escapes it, and an operation with no behaviour fails as its signature says
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.WhatEscapesAndTheSignatureDoesNotSayIsAFinding
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.WhatTheSignatureSaysAndNoPathFailsWithIsAFinding
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.AnOperationWithNoBehaviourFailsAsItsSignatureSays
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.ABoundarySaysWhatEscapesItOrNothingMay
+          }
+        }
+        requirement REQ-00123-1 {
+          tags: language, lld, failure, check
+          status: approved
+          title: A handler of a failure that no step of its attempt can fail with shall be reported as W-HANDLER-UNREACHED
+          text:
+            The failures the steps of an attempt can raise are those its messages fail with and those
+            that escape the operations they call. A handler that names none of them handles nothing.
+            Said only when every operation called in the attempt says how it fails, by a behaviour or by
+            a signature; a call that says nothing leaves the handler alone.
+          rationale:
+            Model audit 2026-11, finding G17 (DS-224): on IoErorr handled nothing and was reported only
+            when the operation happened to promise what it fails with. The failures corpus handled Busy,
+            which no step raised; its read now says it may fail with Busy.
+          verification VER-00139-1 {
+            title: Integration tests confirm a handler of a failure no step raises is reported and the one that handles a raised failure is not
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.AHandlerOfAFailureNoStepRaisesHandlesNothing
+          }
+        }
+        requirement REQ-00058-3 {
+          tags: language, lld, sequence
+          status: approved
+          title: A value of a sequence shall have the type of what produced it, and its uses shall be checked against that type
+          text:
+            The result of a message has the type its operation returns. A call on a
+            result is checked as a call on any other participant, and an argument
+            against its parameter (W-ARG-TYPE): a value of a designed class must
+            derive from the designed class the parameter names, and a literal, a
+            number or a string, fits no designed class. A type the design does not
+            declare (int, std::string, None) is the code's word, which ds does not
+            read: it is never compared, and the result of any operation may be
+            taken. A value whose type is not known, because its operation declares
+            no return or does not resolve, has nothing to be checked against and
+            gives no finding.
+          rationale: DS-51; revision 2 adds literal arguments (DS-64): the code passes them, and naming them invented values. Static and dynamic joined only by name and arity, so a sequence could not say anything about what flows through it. Revision 3 (DS-18, Owner 2026-11-20): ds knows no language, so the families of literals and W-RESULT-NONE go; what needs no table of a language stays.
+          verification VER-00062-3 {
+            title: Integration tests confirm a value of a sequence has the type of what produced it, and its uses are checked against that type
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_values.cpp::TestValues.ALiteralDiffersOnlyFromADesignedClass
+              tests/integration/ds/check/test_values.cpp::TestValues.ACallOnAResultIsCheckedAgainstItsType
+              tests/integration/ds/check/test_values.cpp::TestValues.AValueOfUnknownTypeHasNothingToBeCheckedAgainst
+              tests/integration/ds/check/test_values.cpp::TestValues.AnArgumentOfTheWrongTypeIsReported
+              tests/integration/ds/check/test_values.cpp::TestValues.ADerivedClassSatisfiesItsBaseAsAnArgument
+              tests/integration/ds/check/test_values.cpp::TestValues.ATemplateWithCommasIsOneParameter
+              tests/integration/ds/check/test_values.cpp::TestValues.TheResultOfAnyOperationMayBeTaken
+              tests/integration/ds/check/test_types_as_text.cpp::TestTypesAsText.ALiteralDiffersOnlyFromADesignedClass
+          }
+        }
+        requirement REQ-00037-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A message shall name an operation of its target's type and match its arity, inside loop, alt and opt frames with prose conditions
+          verification VER-00029-2 {
+            title: Integration tests confirm a message names an operation of its target's type and matches its arity, inside loop, alt and opt frames with prose conditions, each step held by what encloses it
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.AnAltHoldsItsSidesAsBranchesAndEachSideItsSteps
+              tests/integration/ds/check/test_checker.cpp::TestChecker.MessagesToExpectedTypesAreNotReportedTwice
+              tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.ASlashFollowedByTextStaysInTheProseOfACondition
+          }
+        }
+        requirement REQ-00108-1 {
+          tags: language, lld, sequence
+          status: approved
+          title: A message shall call a class's static operation by its qualified name, with no instance
+          text:
+            `-> diff::Diff::compare(a, b)`: a message with no participant whose qualified name
+            names an operation of a class calls it on the class itself, as `-> tasks::gather(x)`
+            calls a function of another module. The operation must be static; one that is not
+            is W-MSG-NOT-STATIC, since it needs an instance: a local, an attribute or a parameter.
+          rationale:
+            DS-60 (Owner, 2026-11-13): Diff::compare is static, and a sequence could only call
+            through a participant, so the design declared a local the code does not have.
+          verification VER-00124-1 {
+            title: Integration tests confirm a method's and a function's behaviour call a static operation on its class, and one that is not static is reported
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_static_calls.cpp::TestStaticCalls.AMethodsBehaviourCallsAStaticOperationOnItsClass
+              tests/integration/ds/check/test_static_calls.cpp::TestStaticCalls.AFunctionsBehaviourCallsAStaticOperationOnItsClass
+              tests/integration/ds/check/test_static_calls.cpp::TestStaticCalls.AnOperationThatIsNotStaticNeedsAnInstance
+          }
+        }
+        requirement REQ-00038-2 {
+          tags: language, lld, sequence
+          status: approved
+          title: A message to an operation with a behaviour shall expand to its default scenario or to the one it names, and coupling to another module shall be derived
+          text:
+            A call names a scenario as a declaration does, with a slash, and a scenario
+            the operation does not declare is W-SCENARIO-UNDECLARED. Revision 2 adds the
+            naming (DS-52): a trace could only go down through the default scenario.
+          verification VER-00030-2 {
+            title: Integration tests confirm a message to an operation with a behaviour expands to its default scenario or to the one it names, and coupling to another module is derived
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ACallThatNamesAScenarioExpandsToThatOne
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ACallThatNamesNoScenarioExpandsToTheDefault
+              tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AScenarioNobodyDeclaresIsAFinding
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.AMessageToAnOperationWithABehaviourExpandsToIt
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.CouplingIsDerivedFromWhatABehaviourTouchesOutsideItsModule
+          }
+        }
+      }
+
+      // ---- state ----
+      requirement REQ-00039-1 {
+        tags: language, lld, state
+        status: approved
+        verification VER-00055-1 {
+          status: approved
+          title: Unit tests confirm a state machine is the behaviour of a class
+          method: test
+          tests:
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
+        }
+        title: A state machine shall be the behaviour of a class
+        rationale: block 3, 2026-10-25.
+
+        requirement REQ-00040-1 {
+          tags: language, lld, state
+          status: approved
+          title: The events and actions of a transition shall be operations of the class, and the guard shall be prose
+          text: Idle -> Running on run [guard] / report; no nested states until a design asks for them.
+          verification VER-00031-1 {
+            title: Integration tests confirm the events and actions of a transition are operations of the class, and the guard is prose
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.StateEventsAndActionsAreOperations
+              tests/integration/ds/check/test_checker.cpp::TestChecker.AStateEventMustBeAnOperationOfItsEntity
+          }
+        }
+
+        requirement REQ-00109-2 {
+          tags: language, lld, state, check
+          status: approved
+          title: The checker shall report a state of a class's machine that no transition leads to from its initial state
+          text:
+            A state named in the transitions that the walk from the initial state never enters is
+            W-STATE-UNREACHABLE: a state left over, or a transition missing. The initial state is
+            the one written, or the one the machine starts in when it is not written (REQ-00143-1).
+            A machine with neither says nothing, since where it starts cannot be told. The
+            navigation of an interface has its own (W-VIEW-UNREACHABLE).
+          rationale:
+            DS-53, measured 2026-11-05: `Lost -> Idle on go`, never entered, passed silently.
+            Revised 2026-11-17 (DS-253): the start of a machine whose states have rules is derived
+            and no longer written, and leaving it out turned this check off in silence.
+          verification VER-00125-2 {
+            title: Integration tests confirm a state nothing leads to from the initial one, written or derived, is reported, and a machine fully reached or whose start cannot be told says nothing
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_behaviour.cpp::TestStateReach.AStateNothingLeadsToFromTheInitialOneIsAFinding
+              tests/integration/ds/check/test_behaviour.cpp::TestStateReach.AMachineEveryStateOfWhichIsReachedOrWithNoInitialStateSaysNothing
+              tests/integration/ds/check/test_behaviour.cpp::TestStateReach.TheWalkStartsWhereTheMachineStartsWhenItsStartIsNotWritten
+          }
+        }
+
+        requirement REQ-00140-1 {
+          tags: language, lld, state, logic
+          status: approved
+          title: A state of a machine shall be written with the rule that computes it over what its subject holds
+          text:
+            Paid if status = Paid, not cancelled. A state is computed, not kept: its rule says when the
+            subject of the machine is in it, over what the subject holds. The literals are joined by
+            commas and all hold. A literal is an attribute compared with a value (=, !=), or a name
+            alone: a boolean attribute, or a condition with a name when the subject holds nothing so
+            called; `not` turns a literal round. A state may have several rules, each one way of being
+            in it. The jumps are written beside the rules as they always were (REQ-00040-1), and a
+            state with no rule is a name, as before.
+          rationale:
+            Owner, 2026-11-16 and 17 (DS-249). The states of a machine are a layer above the structure
+            and the behaviour: neither has to name them, and real code keeps its state in several
+            places. The author writes the machine whole, and what he writes is then held to the rest.
+          verification VER-00156-1 {
+            title: Integration tests confirm a state is written with the rule that computes it, over an enum value, a boolean and a difference, that a state takes several rules and that a name the subject does not hold is a condition
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.AStateIsWrittenWithTheRuleThatComputesItOverWhatItsSubjectHolds
+              tests/integration/ds/check/test_states.cpp::TestStates.SeveralRulesOfOneStateAndAConditionWithANameAreNoFinding
+          }
+        }
+
+        requirement REQ-00141-1 {
+          tags: language, lld, state, logic, check
+          status: approved
+          title: The checker shall report two states of a machine that can hold at once, with a context in which both do
+          text:
+            The rules of a machine exclude each other, so that whatever its subject holds it is in one
+            state. Two rules of different states that some context satisfies together are
+            W-STATE-OVERLAP, and the finding says one such context: Lamps can be Left and Both at once:
+            when hazard = true, lever = Left. It is read from the rules alone: two rules exclude each
+            other when they ask one name for values that cannot both be. Two rules of one state may
+            hold together. What no rule covers is nothing to report: a machine that says less is
+            complete.
+          rationale:
+            Owner, 2026-11-17 (DS-249): at any moment the machine is computed again and falls into one
+            state. Measured on a sketch: rules read in order, with one that takes the rest, hide every
+            context their author did not think of; rules that each stand alone show them.
+          verification VER-00157-1 {
+            title: Integration tests confirm two states that can hold at once are a finding that says a context in which both do
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.TwoStatesThatCanHoldAtOnceAreAFindingThatSaysAContextInWhichTheyDo
+          }
+        }
+
+        requirement REQ-00142-1 {
+          tags: language, lld, state, logic, check
+          status: approved
+          title: The checker shall report a rule of a state that cannot hold as it is written
+          text:
+            A comparison with a value the type of the attribute does not have is W-STATE-VALUE, and it
+            says the values the type has. A comparison of something the subject does not hold is
+            W-STATE-UNDECLARED. A rule whose literals exclude each other is W-STATE-IMPOSSIBLE: the
+            subject can never be in that state. A rule reported so is said once and is not held to the
+            others. An attribute whose values cannot be listed (a number, a text) is compared as
+            written.
+          rationale:
+            DS-249. Probe s01 of the model audit: an enum of Open, Paid and Sent beside a machine of
+            Open, Paid and Shipped passed in silence.
+          verification VER-00158-1 {
+            title: Integration tests confirm a value its type lacks, an attribute the subject lacks and a rule that excludes itself are findings, each said once
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.AValueItsTypeLacksAnAttributeTheSubjectLacksAndARuleThatExcludesItselfAreFindings
+          }
+        }
+
+        requirement REQ-00143-1 {
+          tags: language, lld, state, logic
+          status: approved
+          title: A machine shall start in the state the defaults of its subject are in, when its start is not written
+          text:
+            The start of a machine whose states have rules is derived: the state in which the defaults
+            of the attributes its rules read are. A start that is written is the start. Defaults that
+            are in no state, and an attribute with no default, give no start.
+          rationale: DS-249. Derived things are never written (vision 3): the defaults already say where the subject starts.
+          verification VER-00159-1 {
+            title: Integration tests confirm a machine with no start written starts in the state its subject's defaults are in
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/render/test_state_view.cpp::TestStateView.AMachineWithNoStartWrittenStartsWhereTheDefaultsOfItsSubjectAre
+          }
+        }
+
+        requirement REQ-00145-1 {
+          tags: language, lld, state, logic, check
+          status: approved
+          title: The checker shall report a call of an event that the machine of its receiver lets happen from no state the receiver may be in
+          text:
+            The behaviours written are read as they are, and nothing is asked of them. Along a
+            behaviour, what it calls an event on may be in any state to begin with; a call of an
+            event moves it by the jumps on that event, and a jump with a guard may leave it where it
+            was. A frame may not happen: what comes after it finds the receiver as the frame leaves it
+            or as it was; the sides of an alt are each one way, and a loop is read once, since its
+            receiver may be another each time. An operation that is no event of the machine moves
+            nothing. A call the machine lets happen from none of the states its receiver may be in is
+            W-STATE-ORDER, where the call is made: Desk::rush calls order.cancel() when order can only
+            be Shipped: the machine of Order lets cancel happen from Open or Paid.
+          rationale:
+            Owner, 2026-11-17 (DS-250): the author writes the machine whole, and the tool looks for
+            where each of its events is called. From a state not every other can be reached, so the order of
+            the calls is what a behaviour can contradict.
+          verification VER-00161-1 {
+            title: Integration tests confirm a call out of the order of the machine is a finding where it is made, and that calls in order, a call after a frame that may not happen and a first call are not
+            status: approved
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.ACallOfAnEventTheMachineLetsHappenFromNoStateItsReceiverMayBeInIsAFindingWhereItIsMade
+              tests/integration/ds/check/test_states.cpp::TestStates.CallsInTheOrderOfTheMachineACallAfterAFrameThatMayNotHappenAndAFirstCallAreNoFinding
+          }
+        }
+      }
+
+    }
+
+    // ======================= logic ========================================
+    requirement REQ-00095-2 {
+      tags: language, logic, rules
+      status: approved
+      title: The language shall declare rules and definitions in the box they apply to, in a formal syntax: what they speak about, which of them, and what holds, answering to a requirement
+      text:
+        rule <name> { @requirement <ID>; for <kind> <variable> [in <box>], ...; where <literals>;
+        holds <literals> | never <literals> } in a package, a module, a class or a member;
+        definition <name>(<parameters>) { if <literals> ... } names a relation derived from others,
+        one case per if line. A literal is a relation of the metamodel (c uses x), a kind (x is
+        class), containment (x in p@core), a comparison (=, !=, <, <=, >, >=) of entities or values,
+        a definition applied (reaches(c, x)) or the literal argument of a call (arg(k, msg, v)),
+        negated by not; a bare name is a variable, an entity is written qualified and a value is a
+        number or a string. What a rule
+        says is read from this syntax and never from prose: holds: <words> does not parse. A rule
+        is a design piece with a name, not an artefact with a revision: it makes a requirement real
+        in a narrower context and may name the entities of the design, which a requirement does not.
+        A rule that answers to no requirement, or says no claim or more than one, and a definition
+        with no case, are findings.
+      rationale:
+        Owner, 2026-11-07 (DS-94): the logic perspective of a design, beside its structure and its
+        behaviour; constraints that spoke about the design and design rules hidden in comments get a
+        place where they can be checked.
+      verification VER-00104-2 {
+        title: Integration tests confirm rules and definitions are declared in the box they apply to, link to their requirement, and the ones that say nothing are reported
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rules.cpp::TestRules.ARuleIsADesignPieceInTheBoxItAppliesTo
+          tests/integration/ds/check/test_rules.cpp::TestRules.ADefinitionIsARelationWithTheCasesInWhichItHolds
+          tests/integration/ds/check/test_rules.cpp::TestRules.ARuleThatAnswersToNothingOrClaimsNothingIsReported
+          tests/integration/ds/check/test_rules.cpp::TestRules.ProseIsNotARule
+          tests/integration/ds/check/test_rules.cpp::TestRules.ARuleOfAMemberIsNamedUnderIt
+          tests/integration/ds/check/test_audit_defects.cpp::TestAuditDefects.ARuleOfAnAttributeIsNamedUnderTheAttribute
+          tests/integration/ds/check/test_rules.cpp::TestRules.RuleAndDefinitionStayNamesWhereANameIsExpected
+      }
+    }
+
+    requirement REQ-00117-1 {
+      tags: language, logic, rules, check
+      status: approved
+      title: A relation literal that binds an end to a kind the relation never joins there shall be reported as W-RULE-NEVER-MATCHES
+      text:
+        The kind of a variable is read from its range or from a positive kind literal, and the kind
+        of an entity from the model. When a relation literal binds its source to a kind the relation
+        never leaves, or its target to a kind it never reaches, by the metamodel, the literal matches
+        nothing: the rule is decided by vacuity. It is a warning at the literal; the rule is still
+        evaluated.
+      rationale:
+        Model audit 2026-11, finding G1 (DS-213): for class c ... never c uses x could never be
+        broken, since uses leaves members and never a class, and it was the example of ds manual
+        rule. A vacuous rule stands as the verification of a requirement and is always green. The
+        manual's example now speaks about the members.
+      verification VER-00133-1 {
+        status: approved
+        title: Integration tests confirm a literal that can never match is reported and the member-level rule is broken where the design breaks it
+        method: test
+        tests:
+          tests/integration/ds/check/test_rules.cpp::TestRules.ALiteralThatCanNeverMatchIsReported
+      }
+    }
+
+    requirement REQ-00096-1 {
+      tags: language, logic, rules, check
+      status: approved
+      title: The checker shall decide every structural rule over the model and report each binding of its ranges that breaks it
+      text:
+        Rules are evaluated as Datalog with stratified negation over the model: the facts are the
+        declared entities with their kinds, every relation of the metamodel and containment at any
+        depth. A definition is computed to its fixpoint, recursion included; a rule's holds is broken
+        by each binding of its ranges and where that has no answer, its never by each binding that
+        has one, reported with the binding and the answer (E-RULE-BROKEN). The model is finite, so
+        every rule is decided. A formula that names an unknown kind, relation, entity or definition
+        (E-RULE-UNKNOWN), applies a definition to the wrong number of arguments (E-RULE-ARITY),
+        tests a variable no positive literal binds (E-RULE-UNSAFE) or negates a definition through
+        its own recursion (E-RULE-UNSTRATIFIED) is reported and not evaluated.
+      rationale:
+        Owner, 2026-11-07 (DS-94): structural rules are always decidable in the design, in a formal
+        or semi-formal syntax; nothing is inferred from prose or keywords. Rules about behaviour wait
+        for contracts and recorded runs.
+      verification VER-00105-4 {
+        title: Integration tests confirm rules are decided over the model, broken bindings are reported with their answer, whichever argument of a definition is bound and in whatever order its stratum is fixed, malformed or undecidable formulas are rejected, and the rules of a file that stops parsing are decided to the end
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ARuleIsBrokenByEveryBindingThatBreaksIt
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationTestsWhatIsAlreadyBound
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionRecursUntilItsFixpoint
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionAnswersWhicheverOfItsArgumentsIsBound
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ADefinitionThatAppliesAnotherIsFixedAfterIt
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.WhatARuleNamesMustExistAndItsVariablesBeBound
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ANegationThroughRecursionIsRejected
+          tests/integration/ds/check/test_half_typed.cpp::TestHalfTypedFile.TheRulesOfAFileThatStopsParsingAreDecidedAndTheCheckEnds
+          tests/integration/ds/check/test_half_typed.cpp::TestHalfTypedFile.TheSameRulesAreDecidedOnceTheFileParses
+      }
+    }
+
+    requirement REQ-00097-1 {
+      tags: language, logic, rules, check, sequence
+      status: approved
+      title: The checker shall decide the rules over the calls of the sequences against the literal arguments they pass, and report each call that breaks one where the call is written
+      text:
+        A call of a sequence is a message entity that calls an operation; arg(k, p, v) holds when
+        the call k passes to the parameter p of what it calls a value v written as a literal in the
+        sequence, a number or a string. Values compare numbers as numbers and anything else as
+        written. A call that passes a name instead of a literal has no arg fact for that parameter,
+        so a rule that asks for one in its where leaves it out: undecided in the design, it is
+        neither kept nor broken. A broken rule is reported at the first thing it ranges over, the
+        call in its sequence.
+      rationale:
+        Owner, 2026-11-07 (DS-94): contracts are rules too, with the rule's syntax; brackets gone,
+        one syntax for one thing.
+      verification VER-00106-1 {
+        title: Integration tests confirm rules over calls are decided against their literal arguments, calls passing names are left out, and the finding sits on the call
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ARuleOfAMemberIsKeptOrBrokenByTheLiteralsItsCallsPass
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.ValuesCompareNumbersAsNumbersAndTheRestAsWritten
+      }
+    }
+
+    requirement REQ-00098-1 {
+      tags: logic, rules, check, export
+      status: approved
+      title: The engine shall keep every binding that breaks a rule, with its answer and where it lands, and hand it structured to the export and to the Python package
+      text:
+        Each breach the evaluator finds is kept by the rule's identity: the variables of its ranges
+        and where as bound, for a never the answer that breaks it, and the location of the first
+        thing the rule ranges over. All of them are kept, although the findings stop at a few per
+        rule. The JSON export carries them under breaches, and the Python package loads them as Model.breaches, so
+        a reader lights what breaks a rule without reading the findings' prose.
+      rationale:
+        Owner, 2026-11-09 (DS-108): the rules must be seen to be understood; the prototype read the
+        findings' messages, which is no contract.
+      verification VER-00107-1 {
+        title: Tests confirm every breach is kept with its bindings, its answer and where it lands, and travels structured through the export and the Python package
+        status: approved
+        method: test
+        tests:
+          tests/integration/ds/check/test_rule_evaluation.cpp::TestRuleEvaluation.EveryBreachIsKeptWithItsBindingsItsAnswerAndWhereItLands
+          tests/integration/python/test_driftspec.py::TestRules::test_what_breaks_a_rule_comes_with_its_bindings_and_its_answer
+      }
+    }
+
+    // ======================= artefacts ====================================
+    requirement REQ-00042-1 {
+      tags: language, artefacts
+      status: approved
+      verification VER-00056-1 {
+        status: approved
+        title: Unit tests confirm artefacts are held in the same model: the artefacts oracle
+        method: test
+        tests:
+          tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+      }
+      title: The language shall hold requirements, constraints and verifications as artefacts of the same model
+      rationale: block 1, 2026-10-25.
+
+      requirement REQ-00043-1 {
+        tags: language, artefacts
+        status: approved
+        title: An artefact shall be identified by its id with its revision
+        text: REQ-00001-2: the revision is part of the identity; a link to a revision no longer declared is W-REVISION-DRIFT, resolved to the declared one.
+        verification VER-00032-2 {
+          title: Integration tests confirm an artefact is identified by its id with its revision
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
+            tests/integration/ds/check/test_usecase_links.cpp::TestUseCaseLinks.ARealisationBehindTheRevisionIsReportedAndFollowsIt
+            tests/integration/ds/check/test_usecase_links.cpp::TestUseCaseLinks.ASpecialisationThatNamesNoRevisionIsUnpinned
+            tests/integration/ds/check/test_usecase_links.cpp::TestUseCaseLinksAlone.AUseCaseNobodyDeclaresIsSaidOnce
+        }
+        constraint CST-00006-1 {
+          tags: language, artefacts
+          status: approved
+          category: language
+          bok: BOK-00004-1
+          title: Every link to an artefact shall name a revision
+          text: An unpinned link is E-REF-UNPINNED.
+          rationale: Pinning links to a revision is what lets the tool tell who stayed behind when an artefact moved (block 1).
+        }
+      }
+      requirement REQ-00125-1 {
+        tags: language, artefacts
+        status: approved
+        title: Nesting an artefact in a design entity shall say what annotating it says, and whatever may nest an artefact may annotate it
+        text:
+          A requirement nested in a class, a member, a function or another design entity binds
+          requires from the entity, and a nested constraint binds constrained-by, as @requirement
+          and @constraint do: two syntaxes that only change where the artefact is filed. Every kind
+          that may nest an artefact, an attribute and an operator among them, may carry either
+          annotation, and satisfies and constrained-by leave the same kinds, a state machine
+          included. In a package or a module a nested artefact still gives its level.
+        rationale:
+          Owner, 2026-11-15, on the model audit (findings I7 and I6, DS-217): nesting and annotating
+          mean exactly the same. A requirement nested in a class bound about, which no step read, so
+          the class answered to nothing. Whether a requirement written in a box also means the box
+          answers to it is left to the Owner.
+        verification VER-00141-1 {
+          title: Integration tests confirm nesting in a design entity gives satisfies or constrained-by, an attribute annotates as it nests, and a box keeps the level
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_static.cpp::TestNesting.NestingAnArtefactInADesignEntityIsAnnotatingIt
+            tests/integration/ds/check/test_static.cpp::TestStatic.ConstraintsAreArtefactsInBothForms
+        }
+      }
+      requirement REQ-00044-1 {
+        tags: language, artefacts
+        status: approved
+        title: Nesting shall give the relation between artefacts, and annotations shall add relations from elsewhere
+        text: a requirement in a requirement refines it; a verification in a requirement verifies it; @refines, @requirement, @constraint elsewhere.
+        verification VER-00033-1 {
+          title: Integration tests confirm nesting gives the relation between artefacts, and annotations add relations from elsewhere
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/bind/test_binder.cpp::TestBinder.NestingGivesTheRelation
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.LevelByPlacementAndNestingGivesTheRelation
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheSeparateFileIsTheNormalPlace
+        }
+      }
+      requirement REQ-00114-1 {
+        tags: language, artefacts, annotations
+        status: approved
+        title: An annotation word the language gives no meaning to shall be reported as W-ANNOTATION-UNKNOWN
+        text:
+          A @word outside the table of annotations is a warning where it is written,
+          naming the word and the words the language knows. The link it makes is kept
+          (refers): the warning does not drop it, and loading never fails on it.
+        rationale:
+          Model audit 2026-11, finding G2 (DS-210): @requirment REQ-1 traced nothing and
+          reported nothing, the easiest silent failure of the language and in its
+          traceability. No design of the fleet uses a free annotation word.
+        verification VER-00130-1 {
+          status: approved
+          title: Integration tests confirm an unknown annotation word is reported where it is written and its link is kept, and the artefacts corpus marks one
+          method: test
+          tests:
+            tests/integration/ds/bind/test_binder.cpp::TestBinder.AnAnnotationWordTheLanguageDoesNotKnowIsReportedAndKept
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+        }
+      }
+      requirement REQ-00118-1 {
+        tags: language, artefacts, static
+        status: approved
+        title: A cycle of refines or of inherits shall be an error, and a requirement that refines one written inside its own box shall be reported as W-REFINES-UPWARD
+        text:
+          Requirements that refine each other through any chain are E-REFINES-CYCLE; classes or
+          use cases that derive from each other are E-INHERITANCE-CYCLE; each cycle is said once.
+          A requirement whose refined requirement is written inside its own box, further down the
+          containment axis, is a warning: the detail stands above what it details. The axis is
+          read from where each is written, never from the prefix of its id.
+        rationale:
+          Model audit 2026-11, finding G10 (DS-214): only the ownership cycle was reported. A
+          cycle is a contradiction between written things, not an absence. Reporting a
+          requirement that nothing answers to stays out on purpose: that is absence (DS-216).
+        verification VER-00134-1 {
+          status: approved
+          title: Integration tests confirm refines and inherits cycles are errors, a tree is not, and an upward refinement is reported while a downward one is not
+          method: test
+          tests:
+            tests/integration/ds/check/test_cycles.cpp::TestCycles.RequirementsThatRefineEachOtherAreACycleAndTheUpwardOneIsSaid
+            tests/integration/ds/check/test_cycles.cpp::TestCycles.ClassesThatDeriveFromEachOtherAreACycleAndATreeIsNot
+            tests/integration/ds/check/test_cycles.cpp::TestCycles.ARequirementThatRefinesOneOfTheSystemIsNoFinding
+        }
+      }
+      requirement REQ-00168-1 {
+        tags: language, artefacts, static
+        status: approved
+        title: A piece that answers to a requirement whose home does not hold it shall be reported as W-SATISFIES-OUTSIDE-HOME, naming the box that holds the home and every piece that realises it
+        text:
+          A requirement written in a box has that box as its home. A box, interface, class,
+          function or member that answers to it from outside that box is a warning: the
+          requirement is written at one place and realised outside it. The finding names the
+          innermost box around the home that holds every piece realising the requirement: where
+          the requirement would stand with all of them inside. What holds a piece is read from
+          where it is written, never from the prefix of its id. A requirement written at the root
+          holds everything, and a requirement nothing realises is no finding. A system that
+          adopts the requirement of another, written in a package of its own that no box shares
+          with it (a library's), answers to it as to any artefact: no finding either.
+        rationale:
+          Owner, 2026-11-19 and 2026-11-20 (DDEV-1460, DDEV-1470): a requirement two modules
+          realise is the requirement of the package that holds them both, and the coherence of
+          the design is the language's to check, forwarded to argos by its plugin; argos crosses
+          the design with the code. The nesting and the annotation are two written facts that
+          clash, not an absence.
+        verification VER-00185-1 {
+          status: approved
+          title: Integration tests confirm a piece outside its requirement's home is reported with the box that holds them all, and a piece inside the home, a requirement at the root or one another system adopts is not
+          method: test
+          tests:
+            tests/integration/ds/check/test_satisfies_home.cpp::TestSatisfiesHome.APieceOutsideTheHomeIsReportedWithTheBoxThatHoldsThemAll
+            tests/integration/ds/check/test_satisfies_home.cpp::TestSatisfiesHome.APieceInsideTheHomeARequirementAtTheRootOrOneAnotherSystemAdoptsIsNoFinding
+        }
+      }
+      requirement REQ-00124-1 {
+        tags: language, check, coverage
+        status: approved
+        title: What is not yet written shall be no finding, kept apart as coverage and answered when asked
+        text:
+          Six codes say that something is not yet written: an interface operation with no
+          sequence (W-OPERATION-NO-BEHAVIOUR), an outcome with no scenario
+          (W-USECASE-OUTCOME-UNHANDLED), a use case nothing realises (W-USECASE-UNREALISED), an
+          approved requirement nothing verifies (W-REQ-NO-VERIFICATION), a verification by test
+          with no tests (W-VER-NO-TEST), a rule that answers to no requirement
+          (W-RULE-NO-REQUIREMENT). They are of severity coverage: ds check does not report or
+          count them, the check's JSON and the export carry them apart, and ds query <workspace>
+          coverage [identity] lists them. An oracle corpus marks them with // ? as it marks a
+          finding with // !.
+        rationale:
+          Owner, 2026-11-15, on the model audit (finding I12, DS-216): the mechanism punishes
+          information that is not consistent, never information that is missing. A finding needs
+          two written facts that clash. A design with only its high level drew five warnings and no
+          contradiction. Where else coverage is asked (argos's report) is left open.
+        verification VER-00140-1 {
+          title: Integration and system tests confirm the six absences are kept apart as coverage, not reported by the check, and every corpus means exactly the coverage it marks
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
+            tests/integration/ds/check/test_coverage.cpp::TestCoverage.AnAbsenceIsNoFindingAndTheQueryAnswersIt
+        }
+      }
+      requirement REQ-00045-1 {
+        tags: language, artefacts
+        status: approved
+        title: An artefact shall carry title, text, rationale, status and tags; a verification its method and tests; a constraint its category and bok
+        text: One-line forms for a requirement and a constraint; draft when no status.
+        verification VER-00034-1 {
+          title: Integration tests confirm an artefact carries title, text, rationale, status and tags; a verification its method and tests; a constraint its category and bok
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.FieldsAsDecided
+            tests/integration/ds/check/test_static.cpp::TestStatic.ConstraintsAreArtefactsInBothForms
+        }
+      }
+    }
+
+    // ======================= diagrams =====================================
+    requirement REQ-00047-1 {
+      tags: language, diagrams
+      status: approved
+      verification VER-00057-1 {
+        status: approved
+        title: Unit tests confirm a diagram is a selection of the model
+        method: test
+        tests:
+          tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.ThePackageTreeWithoutDesign
+          tests/integration/ds/render/test_text.cpp::TestText.DrawsEveryBoxWithItsNameAndMembers
+      }
+      title: A diagram shall be a selection of the model that decides what to print and never what to draw
+      rationale: Keeping the views as selections keeps them from drifting.
+
+      requirement REQ-00048-1 {
+        tags: language, diagrams
+        status: approved
+        title: A diagram shall select by id, module or package, with include and exclude, and print by hide and show
+        verification VER-00036-1 {
+          title: Integration tests confirm a diagram selects by id, module or package, with include and exclude, and prints by hide and show
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_irexport.cpp::TestIrExport.ListsTheDeclaredDiagrams
+            tests/integration/ds/render/test_irexport.cpp::TestIrExport.IncludeSelectsAndTheModuleBecomesAContainer
+        }
+      }
+      requirement REQ-00116-1 {
+        tags: language, diagrams
+        status: approved
+        title: A diagram pattern shall read the same in every kind of diagram, and one that names what nothing declares shall be reported as W-DIAGRAM-UNDECLARED
+        text:
+          include, exclude and open take an identity, a prefix with * over the identity or
+          the scope (p@m::* is the module p@m and everything in it), a module named as such,
+          or a template written without its arity, read alike by class, sequence, state and
+          requirement diagrams. A pattern that names nothing the workspace declares is a
+          warning at the diagram. A pattern over a box that exists and is empty is not: a
+          level with no children is valid.
+        rationale:
+          Model audit 2026-11, findings G3 and I9 (DS-212): a diagram whose include named a
+          class that had been moved drew less and said nothing, while the same broken
+          reference in the model is a finding; p@m::* selected a module in a class diagram and
+          nothing in a requirement diagram; package:x, documented, selected nothing anywhere.
+          The check found two such diagrams in driftspec's own design.
+        verification VER-00132-1 {
+          status: approved
+          title: Integration tests confirm a pattern that names nothing is reported and an empty box is not, and a requirement diagram reads a module pattern as a class diagram does
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.APatternThatNamesWhatNothingDeclaresIsAFinding
+            tests/integration/ds/render/test_open_boxes.cpp::TestDiagramPatterns.ARequirementDiagramReadsAModulePatternAsAClassDiagramDoes
+        }
+      }
+      requirement REQ-00049-3 {
+        tags: language, diagrams
+        status: approved
+        title: A sequence diagram shall select a behaviour as it is written and expand by depth
+        text:
+          Revision 3 (DS-231): it no longer lifts to a level asked for with level: module;
+          it stands on the cut the diagram writes (REQ-00129-1), and the calls it follows
+          are said with unfold:, fold: and depth: (REQ-00130-1).
+        verification VER-00037-7 {
+          title: Integration tests confirm a sequence diagram selects a behaviour as it is written and expands by depth
+          status: approved
+          text:
+            Revision 6 (DS-337): a depth too large for an int is the finding of a depth that is no
+            number, at the same place, and is drawn as one; it no longer stops ds. The filters read
+            a neighbours: too large for an int the same way.
+            Revision 7 (DS-362): the check of a depth is the check of a neighbours: too, which, as a
+            word or too large for an int, is W-DIAGRAM-NEIGHBOURS at the diagram and draws no
+            neighbours; and a depth past what the calls reach draws as *, at once.
+          method: test
+          tests:
+            tests/integration/ds/check/test_values.cpp::TestValues.TwoObjectsOfOneTypeAreTwoLifelines
+            tests/integration/ds/check/test_values.cpp::TestValues.AFrameWithNoMessageIsStillDrawn
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.DepthStarIsEveryLevelAndNeverAnAbort
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADepthThatIsNoNumberIsAFindingAndStillDraws
+            tests/integration/ds/render/test_open_boxes.cpp::TestDepthTooLarge.ADepthTooLargeForAnIntIsTheFindingOfADepthThatIsNoNumber
+            tests/integration/ds/render/test_open_boxes.cpp::TestDepthTooLarge.ADepthTooLargeForAnIntDrawsAsADepthThatIsNoNumberAndNeverAnAbort
+            tests/integration/ds/query/test_diagram_filters.cpp::TestFilterFor.ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort
+            tests/integration/ds/render/test_open_boxes.cpp::TestNeighboursPastTheReach.NeighboursThatAreNoNumberAreAFindingAtTheDiagramAsADepthIs
+            tests/integration/ds/render/test_open_boxes.cpp::TestDepthPastTheReach.ADepthPastTheCallsDrawsAsEveryLevelAndEndsPromptly
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.ASubjectAloneDrawsItsDefaultScenario
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AScenarioIsSelectedAsItIsWrittenAndItsTraceFollowsIt
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.AStarSelectsEveryScenario
+            tests/integration/ds/check/test_scenarios.cpp::TestScenarios.TheArrowBackCarriesWhatTheBehaviourReturns
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ASequenceDiagramExpandsByDepthAndLinksAtDepthZero
+        }
+      }
+      requirement REQ-00129-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A sequence diagram shall stand on the cut the diagram writes: one lifeline for each closed box, and the messages that cross from one to another
+        text:
+          The open:, close: and cut: of a class diagram mean the same in a sequence diagram. Every
+          participant is drawn as what stands for it on the cut: a closed box is one lifeline for
+          everything inside it, and what no closed box holds keeps a lifeline of its own. A message
+          whose two ends have the same representative is internal and is not drawn; one that
+          crosses is drawn between the representatives, and into a closed box it says which of its
+          children takes it (Desk::sell). A frame of the detail is kept around what crosses inside
+          it, and one in which nothing crosses is not drawn. ds query shows answers the same
+          participants. It replaces level: module, which lifted to one fixed rung, drew only the
+          direct calls and ignored depth; a diagram that still writes it is told so
+          (W-FIELD-UNKNOWN).
+        rationale:
+          Owner, 2026-11-16 (DS-229, DS-231), model audit finding I13. The sketch showed the same
+          purchase on ten lifelines with every class, on six with the sales open, and on eight at
+          the modules, the conditions of the detail still framing what crosses; driftspec's own
+          check went from twenty lifelines to eight. A high-level view of behaviour is the detail
+          lifted, so the two cannot disagree.
+        verification VER-00145-1 {
+          title: Integration tests confirm a sequence diagram draws one lifeline for each closed box and only the messages that cross, keeps the frames around them, takes the cut of another diagram, and is asked with the same cut
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.WithNoCutEveryObjectIsALifelineAndDepthSaysHowFar
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.EachClosedBoxIsOneLifelineForEverythingInsideIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.AMessageInsideAClosedBoxIsNotDrawnAndOneThatCrossesSaysWhoTakesIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.AFrameIsKeptAroundWhatCrossesInsideIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.TheCutRunsAtAKindOfBoxAndWhatIsAboveItStaysOpen
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.ASequenceTakesTheCutOfTheBoxesDrawnAndStandsOnIt
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.TheQueryShowsWhoTakesPartOnTheCut
+            tests/integration/ds/check/test_behaviour.cpp::TestBehaviour.ADiagramThatClosesTheModulesKeepsOnlyWhatCrossesThem
+        }
+      }
+      requirement REQ-00130-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A sequence diagram shall follow the calls that unfold:, fold: and depth: say, and every call when it stands on a cut and they say nothing
+        text:
+          The calls have a cut of their own, written like the cut of the boxes. fold: names the
+          calls that are not followed (* for every call, a box for every call that lands in it, an
+          operation), and every other call is followed. unfold: names the calls that are followed,
+          whatever fold: says; written alone it folds every other call, and with nothing after it
+          the diagram draws only what the behaviour itself writes. depth: n is the uniform case
+          for the calls neither names. With none of the three, a diagram that writes a cut follows
+          every call, since what a closed box does inside is seen only through what crosses out of
+          it, and a diagram that writes no cut follows none, as before. A pattern that names
+          nothing is W-DIAGRAM-UNDECLARED.
+        rationale:
+          Owner, 2026-11-16 (DS-229, DS-231): depth defined formally. depth: n counts calls and is
+          as rigid as a numbered level; the calls worth following are named by where they land.
+          The sketch drew a cut at the modules with nothing unfolded and it showed almost nothing,
+          which is why a cut follows every call unless told otherwise.
+        verification VER-00146-1 {
+          title: Integration tests confirm a sequence diagram follows the calls unfold: names, stops at those fold: names, lets unfold: go through fold:, keeps depth: as the uniform case and reports a pattern that names nothing
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.UnfoldAloneFoldsEveryOtherCall
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.FoldStopsAtWhatItNamesAndEveryOtherCallIsFollowed
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.UnfoldGoesThroughWhatFoldFolds
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.DepthIsTheUniformCaseOnACutToo
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.ACallPatternThatNamesNothingAndTheRetiredLevelAreReported
+        }
+      }
+      requirement REQ-00131-1 {
+        tags: language, diagrams, cut, artefacts
+        status: approved
+        title: A requirement diagram shall draw what answers to a requirement as the box that stands for it on the cut the diagram writes
+        text:
+          With close: module, a requirement a class answers to is drawn realised by the module
+          that holds the class, once. The artefacts themselves are never lifted. ds query shows
+          answers the same boxes.
+        rationale:
+          Model audit finding G9 (DS-231): a requirement diagram had no cut at all, so the trace
+          from a requirement of the system could only be read down to the classes.
+        verification VER-00147-1 {
+          title: Integration tests confirm a requirement diagram draws what answers to a requirement as the box that stands for it, and is asked with the same cut
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_sequences.cpp::TestCutSequences.WhatAnswersToARequirementIsTheBoxThatStandsForIt
+        }
+      }
+      requirement REQ-00139-1 {
+        tags: language, diagrams, cut, behaviour
+        status: approved
+        title: A tour shall draw, in one diagram and on one cut, the boxes that take part in a behaviour and the sequence between them
+        text:
+          diagram TOUR_Buy { kind: tour; include: shop@shell::buy; close: module } takes the fields
+          of a sequence diagram: the behaviour it follows, the cut, and the calls it follows. It is
+          one drawing of two parts. The sequence, as a sequence diagram of the same fields draws
+          it. And who takes part, drawn as boxes: each lifeline of the sequence is one box of the
+          other part, whether the cut closes it or a scenario written between boxes names it, with
+          the relations between them lifted (REQ-00137-1) and the boxes around them as open
+          context. The parts are drawn side by side, and one under the other where the width asked
+          for does not hold them, or in a terminal. ds query shows answers who takes part.
+        rationale:
+          Owner, 2026-11-16 (DS-245). A sequence says who talks to whom and a drawing of boxes says
+          how they are held and related; reading one against the other by eye, when each is cut its
+          own way, was confusing. One diagram relates the two, so that a step of the behaviour can
+          be shown on the boxes it joins: the playground plays it.
+        verification VER-00155-1 {
+          title: Integration tests confirm a tour is one drawing of two parts on one cut, each lifeline of its sequence one box of the other part with the relations between them, drawn side by side or one under the other, and asked by who takes part
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_tour.cpp::TestTour.ATourIsOneDrawingOfTwoPartsTheBoxesAndTheSequence
+            tests/integration/ds/render/test_tour.cpp::TestTour.EachLifelineOfTheSequenceIsOneBoxOfTheOtherPart
+            tests/integration/ds/render/test_tour.cpp::TestTour.TheBoxesAreJoinedByTheRelationsBetweenThem
+            tests/integration/ds/render/test_tour.cpp::TestTour.TheSequencePartIsTheSequenceDiagramOfTheSameFields
+            tests/integration/ds/render/test_tour.cpp::TestTour.ABoxNamedInAScenarioTakesPartAsOneBoxWithNoCutWritten
+            tests/integration/ds/render/test_tour.cpp::TestTour.TheQueryShowsWhoTakesPart
+            tests/integration/ds/render/test_tour.cpp::TestTour.ItsPartsAreDrawnSideBySideAndOneUnderTheOtherWhenTheWidthAsksForIt
+            tests/integration/ds/render/test_tour.cpp::TestTour.InATerminalTheBoxesComeAboveTheSequence
+        }
+      }
+      requirement REQ-00120-1 {
+        tags: language, diagrams, hld
+        status: approved
+        title: A class diagram shall draw every box it includes, whatever the box holds
+        text:
+          A package below the system or a module that a pattern takes is drawn as a box, with or
+          without children, and an entity is drawn inside the box its scope names, a package scope
+          included: an interface declared in a package sits in that package. Nothing below a box is
+          needed to see the box.
+        rationale:
+          Model audit 2026-11, finding I3 (DS-218), and the Owner's decision of 2026-11-15: every
+          abstraction level stands on its own. A design that had only its high level drew two loose
+          interfaces and no box, and a package with nothing inside did not appear.
+        verification VER-00136-1 {
+          title: Integration tests confirm a box with nothing inside is drawn and an interface sits in the package that declares it
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestEveryBox.ABoxIsDrawnWithOrWithoutChildren
+        }
+      }
+      requirement REQ-00121-1 {
+        tags: language, diagrams, dependencies
+        status: approved
+        title: A class diagram shall draw a behaviour's dependencies from its subject, count behaviour with or without open, and draw a declared @consumes
+        text:
+          What a sequence uses or couples to is drawn from its subject's box (a method's class, a
+          function, an operation's interface), not from the module it is written in. Behaviour that
+          crosses boxes is drawn whether or not the diagram writes open:, so a diagram that does not
+          write open: draws what one that opens every box draws; a coupling an edge between the
+          two already says gives no second arrow. A box's @consumes of an interface is drawn as a
+          dependency, before any behaviour confirms it.
+        rationale:
+          Model audit 2026-11, finding I2 (DS-219): one dependency was drawn three ways. Without
+          open: the arrow left the module; with open: a second arrow appeared; a declared @consumes was
+          drawn by the viewer and by no diagram. The single rule for lifting relations is DS-230.
+        verification VER-00137-1 {
+          title: Integration tests confirm one dependency is drawn alike with or without open, from the subject of its behaviour, and a declared use is drawn
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestDependencyDrawing.OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclaredUseIsDrawn
+        }
+      }
+      requirement REQ-00064-5 {
+        tags: language, diagrams, visibility
+        status: approved
+        title: A class diagram shall open the boxes it names and close the rest, each closed box showing only its public children
+        text:
+          open: shop@store@stock opens that box and the way to it; open: written alone closes every
+          other box, and open: with nothing after it closes them all; a diagram that writes no cut
+          draws everything open. An edge that loses an end to a closed box is lifted to it, and what
+          stays inside a closed box is not drawn. A behaviour that crosses boxes counts too, so an
+          interface reaches what handles it though no type says so. The component view is derived,
+          never written.
+          Revision 3 (DS-229): open: is one of the ways a cut is written (REQ-00126-1,
+          REQ-00127-1, REQ-00128-1); alone it means what it meant.
+          Revision 4 (DS-230): a lifted edge no longer says only that one box depends on the other;
+          it is a structural bond or a use (REQ-00137-1).
+          Revision 5 (DS-244): a closed box lists what it offers as a class lists its members, a
+          compartment for each kind of thing in one order (packages, modules, interfaces, classes,
+          dataclasses, enums, functions), each by name and each marked with the badge a box of
+          its own would carry.
+        rationale: Owner, 2026-11-05. Encapsulation has to be seen: which box holds what, and what each one offers.
+        verification VER-00069-4 {
+          title: Integration tests confirm a class diagram opens the boxes it names and closes the rest, each closed box showing only its public children
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxesBehaviour.ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawing
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpenAloneClosesEveryBox
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AClosedBoxShowsOnlyItsPublicChildren
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AClosedBoxListsWhatItOffersByKindEachMarkedWithWhatItIs
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.EdgesLiftToTheBoxesThatAreSeenAndOnlyOnceForEachBond
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.OpeningABoxShowsTheWayToItAndClosesTheRest
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.AnEdgeReachesInsideAnOpenBoxFromAClosedOne
+            tests/integration/ds/render/test_open_boxes.cpp::TestOpenBoxes.ADiagramThatDoesNotSayOpenDrawsEverythingOpen
+        }
+      }
+      requirement REQ-00126-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A diagram shall close the boxes close: names, by name, by prefix or by kind, and leave every other box open
+        text:
+          close: shop@warehouse closes that box; close: shop@sales@* every box that begins so;
+          close: module every module wherever it is, and close: package every package below the
+          outermost one, so a cut runs at one kind of box without counting levels. What a closed box
+          holds is lifted to it, as with open:. The outermost package is the drawing itself and
+          never closes. The drawing and ds query shows read the same cut. A pattern that names no
+          box is W-DIAGRAM-UNDECLARED; a kind names no box and is none.
+        rationale:
+          Owner, 2026-11-16 (DS-229), on a sketch run over a shop and over driftspec's own design.
+          The abstraction axis is elastic (vision 2b.5): a cut is written as what closes and what
+          opens, never as its frontier, so whatever is written is a cut, one branch may go down to
+          its classes while another stays one box, and nothing has to be written to make it valid.
+        verification VER-00142-1 {
+          title: Integration tests confirm a diagram closes the boxes close: names by name or by kind, lifts what they hold, and is asked with the same cut it is drawn with
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.CloseClosesTheBoxItNamesAndTheRestStaysOpen
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AnEdgeThatLosesAnEndToAClosedBoxIsLiftedToIt
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AKindClosesTheBoxesOfThatKindWhereverTheyAre
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ACloseThatNamesNoBoxIsAFindingAndAKindIsNone
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.TheQueryShowsWhatTheDrawingDrawsUnderEveryCut
+        }
+      }
+      requirement REQ-00127-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A box that open: names shall stay open, with the way to it, whatever close: closes
+        text:
+          With both written, close: draws the line and open: goes through it: close: module with
+          open: shop@sales@till closes every module but the till. One rule for the two fields, with
+          no order between patterns to learn. open: written alone keeps its meaning (REQ-00064-3).
+        rationale:
+          Owner, 2026-11-16 (DS-229). The sketch first let the pattern that named a box more closely
+          win, and a kind leave the rest open; that was a rule to learn, and the Owner asked for a
+          cut that is easy to understand.
+        verification VER-00143-1 {
+          title: Integration tests confirm open: goes through what close: closes, and that open: alone still closes every other box
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.OpenGoesThroughWhatCloseCloses
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.OpenAloneStillClosesEveryOtherBox
+        }
+      }
+      requirement REQ-00128-1 {
+        tags: language, diagrams, cut
+        status: approved
+        title: A diagram shall take the cut of the diagram cut: names and add what it writes itself
+        text:
+          cut: HLD_Till takes the open: and close: of that diagram, and what the diagram writes
+          itself is added to them, so several drawings share one cut written once. A diagram named
+          that nothing declares is W-DIAGRAM-UNDECLARED, and the diagram is drawn with what it
+          writes itself. Diagrams that take each other's cut are read once each.
+        rationale:
+          Owner, 2026-11-16 (DS-229): is a cut declared once and cited, or written by each diagram.
+          Both: each diagram writes its cut and another may take it, with no new kind of artefact;
+          a cut with a name of its own waits for the open core.
+        verification VER-00144-1 {
+          title: Integration tests confirm a diagram draws the cut it takes from another with its own added, and that a cut taken from a diagram nobody declares is reported
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ADiagramDrawsTheCutItTakesFromAnotherAndAddsItsOwn
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ACutTakenFromADiagramNobodyDeclaresIsAFindingAndStillDraws
+        }
+      }
+      requirement REQ-00137-1 {
+        tags: language, diagrams, cut, relations
+        status: approved
+        title: A relation lifted onto a closed box shall read as one of two bonds, structural or uses, with one arrow of each at most between two boxes
+        text:
+          Between classes a relation keeps its own kind: composition, aggregation, inheritance,
+          realisation, use. When an end of it is lost to a closed box it is lifted, and between
+          boxes it is one of two things. A structural bond: one owns, refers to, derives from or
+          realises something of the other; drawn as a solid arrow. A use: it names a type of the
+          other, calls it, sends it a message or declares its use; drawn as a dashed arrow. Each
+          is drawn once between two boxes, however many relations of the detail make it, and what
+          stays inside a closed box is not drawn. With the boxes open nothing changes.
+        rationale:
+          Owner, 2026-11-15 and 16 (DS-230, model audit findings I2 and G1). Relations are never
+          merged: using is not composing, aggregating or inheriting, and a closed box turned them
+          all into one dependency. Asked which kinds to keep once lifted: use and structural,
+          nothing more. A reference a class keeps to something of another box is structural.
+        verification VER-00153-2 {
+          title: Integration tests confirm a relation lifted onto closed boxes is a structural bond or a use, drawn once each, and that with the boxes open every relation keeps its own kind
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.ARelationLiftedOntoClosedBoxesIsOneOfTwoBondsAndOneArrowOfEachAtMost
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.WithTheBoxesOpenEveryRelationKeepsItsOwnKind
+            tests/integration/ds/check/test_levels.cpp::TestLevels.AUseSaidByAScenarioAndByTheDetailBelowIsDrawnOnceBetweenTwoBoxes
+        }
+      }
+      requirement REQ-00155-1 {
+        tags: language, diagrams, cut, relations
+        status: approved
+        title: A use drawn between two boxes shall say the interfaces of the one it reaches that the other goes through, with the operations asked of each
+        text:
+          What a box consumes, uses or calls of an interface of another box is said by the use
+          drawn between the two, lifted or written between them as they are: a line per interface,
+          its name and the operations asked of it. A use that goes through no interface says
+          nothing, and a structural bond never does. The drawing carries it as what the arrow says
+          when pointed at.
+        rationale:
+          Owner, 2026-11-17 (DS-266): in the HLD, resting on a box lights its relations and says
+          which interface each one uses. The arrow between two closed boxes is a summary; this is
+          what it is made of, read from the model and never drawn by hand.
+        verification VER-00171-1 {
+          title: Integration tests confirm a use between two closed boxes says the interface it goes through and the operation asked, and that a use through none says nothing
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_cut_drawing.cpp::TestCutDrawing.AUseBetweenTwoBoxesSaysTheInterfacesItGoesThrough
+        }
+      }
+      requirement REQ-00062-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A state diagram shall draw the states and the jumps of a machine, and of an interface its navigation with what each view shows
+        text:
+          diagram ST_Web { kind: state; include: shop@web }. It reads from the initial state down;
+          a jump is an edge with its event and guard, a jump to the same state is a loop, and a view
+          shows its text and what binds it. A view no jump names is still drawn.
+        rationale: DS-5. In a graphical interface the navigation is the design, so it has to be seen.
+        verification VER-00067-1 {
+          title: Integration tests confirm a state diagram draws the states and the jumps of a machine, and of an interface its navigation with what each view shows
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheViewsAreBoxesWithWhatTheyShowAndWhatBindsThem
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheJumpsAreEdgesWithTheirEventAndGuard
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineStartsFromItsInitialState
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AViewNoJumpNamesIsStillDrawn
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineOfAClassIsDrawnFromItsTransitionsAlone
+            tests/integration/ds/render/test_state_view.cpp::TestSelfLoop.ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack
+        }
+      }
+      requirement REQ-00144-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A state diagram shall draw each state with the rule that computes it
+        text:
+          A state a rule computes shows its rule under its name, one line for each rule it has, and
+          is drawn though no jump names it. The arrow from the start goes to the state the machine
+          starts in (REQ-00143-1).
+        rationale: DS-249. The rule is what the state means, so it is read where the state is.
+        verification VER-00160-1 {
+          title: Integration tests confirm a state diagram draws each state with the rule that computes it, one line for each rule, and a state no jump names
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateIsDrawnWithTheRuleThatComputesIt
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateWithNoJumpIsStillDrawnAndOneWithTwoRulesShowsBoth
+        }
+      }
+      requirement REQ-00146-1 {
+        tags: language, diagrams, state
+        status: approved
+        title: A state diagram shall say, on each jump, the behaviours that call its event
+        text:
+          The jump keeps its label as it is written, and says besides the behaviours written that
+          call its event: pay is called in Desk::rush, Desk::sell. A jump whose event no behaviour
+          calls says nothing more.
+        rationale: DS-250. The machine is written apart from the behaviours; the drawing is where the two are seen together.
+        verification VER-00162-1 {
+          title: Integration tests confirm a jump of a state diagram says the behaviours that call its event, and that one nobody calls says nothing more
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.AJumpSaysTheBehavioursThatCallItsEventAndOneNobodyCallsSaysNothing
+        }
+      }
+      requirement REQ-00147-2 {
+        tags: language, diagrams, state
+        status: approved
+        title: A table diagram shall draw a machine as a table: its events down, its states across, and in each cell where the event takes the state
+        text:
+          diagram TB_Order { kind: table; include: shop@order::Order }. The events and the states
+          are in the order the machine writes them. A cell says the state the jumps on the event
+          lead to from the state above it, with the guard of a jump that has one and every jump when
+          there are several; where the machine has no jump the cell is empty. It is drawn as SVG and
+          as terminal text, like every diagram.
+        rationale:
+          Owner, 2026-11-16 and 17 (DS-251): the machine seen as a matrix, the states across and the
+          operations down. Named table, not matrix (Owner, 2026-11-17, DS-254): the more general word,
+          for a table may later cross other things (requirements, constraints, rules). The state diagram shows the ways through; the table shows what is not
+          there: every pair of an event and a state the machine says nothing of.
+        verification VER-00163-2 {
+          title: Integration tests confirm a table diagram is a table of the events of a machine down and its states across with where each event takes each state, drawn as SVG and as text, and that one that names no machine says so
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_table_view.cpp::TestTableView.ATableDiagramIsATableOfTheEventsOfAMachineDownItsStatesAcrossAndWhereEachEventTakesEachState
+            tests/integration/ds/render/test_table_view.cpp::TestTableView.TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineMarked
+            tests/integration/ds/render/test_table_view.cpp::TestTableView.ATableThatNamesNoMachineSaysSo
+        }
+      }
+      requirement REQ-00148-2 {
+        tags: language, diagrams, state
+        status: approved
+        title: A table diagram shall say who calls each event, and the cell in which a behaviour calls one against the machine
+        text:
+          The heading of a row says the behaviours written that call its event. A call the machine
+          lets happen from no state its receiver may be in (REQ-00145-1) is said in the cell of each
+          of those states, with the behaviour that makes it: the place in the table where the
+          behaviours and the machine disagree.
+        rationale: DS-251. The finding says the call; the table shows which jump the author of one of the two left out.
+        verification VER-00164-2 {
+          title: Integration tests confirm the table says who calls each event and marks the cell in which a behaviour calls one against the machine
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_table_view.cpp::TestTableView.TheTableSaysWhoCallsEachEventAndTheCellInWhichABehaviourCallsOneAgainstTheMachine
+        }
+      }
+      requirement REQ-00154-1 {
+        tags: language, diagrams, table
+        status: approved
+        title: A table diagram shall list what its ranges and its filter answer, a row each, with a cell under each column it writes
+        text:
+          diagram TB { kind: table; for <kind> <variable> [in <box>], ...; where <literals>;
+          column <name>: <what> ... }. The rows are said as a rule says what it speaks about: every
+          binding of the ranges that passes the filter. A column is a field of the row (r.title;
+          name and id are what every entity has, holds says of a rule whether the model keeps it),
+          what is related to the row (x where r satisfies x: every x that answers, by its name), or
+          a yes or no (holds <literals>). The first column heads each row. A comparison reads a
+          field of what a variable is bound to (r.status = "draft"), in a table and in a rule alike,
+          and an artefact is in the box it is written in. A table written this way is the model's
+          answer, kept when the design is checked; one that names a machine is REQ-00147-2. A cell
+          too long for one line goes on several.
+        rationale:
+          Owner, 2026-11-17 (DS-268): one idea of table. The rows are a filter written as a rule and
+          each column a question, so whatever a rule may range over a table may list: rules,
+          requirements, use cases, constraints, classes. Nothing new to learn but the word column.
+          Named tables and the cross (rows of one range, columns of another) come after it.
+        verification VER-00170-1 {
+          title: Integration tests confirm a table written with its rows and columns answers a cell for each, heads each row by its first column, says a yes or no, and keeps only the rows its filter reads
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_table_view.cpp::TestTableView.ATableWrittenWithRowsAndColumnsAnswersEachCell
+        }
+      }
+      requirement REQ-00122-1 {
+        tags: language, diagrams, artefacts
+        status: approved
+        title: A requirement diagram shall draw whatever answers to a requirement, a member through the class or interface that holds it
+        text:
+          Every source of satisfies and constrained-by is drawn under the artefact: a package, a module,
+          an interface, a class, an enum, a function, a use case, a rule. A method, an attribute, an
+          operator or an operation answers through the class or the interface that holds it, and a
+          holder and its member that answer the same artefact draw one edge.
+        rationale:
+          Model audit 2026-11, finding G11 (DS-220): nine pieces answered to one requirement and the
+          diagram drew one, the class. The high-level design was the most affected: the box that says
+          which requirements of the system it realises was not drawn under them. Members are lifted so
+          the whole system's diagram stays readable.
+        verification VER-00138-1 {
+          title: Integration tests confirm whatever answers to a requirement is drawn and a member answers through its holder, once
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsViewOfAnyAnswer.WhateverAnswersToARequirementIsDrawnAndAMemberThroughItsHolder
+        }
+      }
+      requirement REQ-00050-1 {
+        tags: language, diagrams
+        status: approved
+        title: A requirement diagram shall show the umbrella of an artefact: what refines, verifies and realises it
+        verification VER-00038-1 {
+          title: Integration tests confirm a requirement diagram shows the umbrella of an artefact: what refines, verifies and realises it
+          status: approved
+          method: test
+          tests:
+            tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsView.TheUmbrellaOfARequirement
+            tests/integration/ds/render/test_requirements_view.cpp::TestRequirementsViewOfAUseCase.AUseCaseThatRealisesARequirementIsDrawnAsItsCard
+        }
+      }
+    }
+
+  }
+
+  verification VER-00042-2 {
+    status: approved
+    @constraint CST-00002-1
+    title: Integration tests confirm a second declaration of one identity is reported and reopenable scopes are not
+    method: test
+    tests:
+      tests/integration/ds/bind/test_binder.cpp::TestBinder.ModulesCanBeReopenedAcrossFilesButClassesCannot
+      tests/integration/ds/model/test_model_of_a_design.cpp::TestModelOfADesign.ASecondDeclarationIsReportedWithWhereTheFirstIs
+  }
+  verification VER-00043-2 {
+    status: approved
+    @constraint CST-00003-2
+    title: Unit tests confirm an extension adds relations without redefining, an extension of nothing is expected, and a lone class of annotations is its definition
+    method: test
+    tests:
+      tests/integration/ds/bind/test_packages.cpp::TestPackages.AnExtensionAddsRelationsWithoutRedefining
+      tests/integration/ds/bind/test_packages.cpp::TestPackages.AnExtensionOfNothingIsExpected
+      tests/integration/ds/bind/test_packages.cpp::TestLoneExtension.AClassWithRequirementsAndNoMembersIsADefinitionWhenNothingElseDefinesIt
+  }
+  verification VER-00044-2 {
+    status: approved
+    @constraint CST-00004-1
+    title: Integration tests confirm packages qualify with @ and modules with ::
+    text: Revision 2 (DS-184) cites the integration test alone; the unit tests of a name are the class's own.
+    method: test
+    tests:
+      tests/integration/ds/bind/test_binder.cpp::TestBinder.PackagesQualifyWithAtAndModulesWithColons
+  }
+  verification VER-00045-1 {
+    status: approved
+    @constraint CST-00005-1
+    title: Unit tests confirm a modifier is a word only in front of a name
+    method: test
+    tests:
+      tests/integration/ds/bind/test_packages.cpp::TestPackages.AModifierIsAWordOnlyInFrontOfAName
+  }
+  verification VER-00046-1 {
+    status: approved
+    @constraint CST-00006-1
+    title: Unit tests confirm an unpinned link is an error and a drifted one resolves to the declared revision
+    method: test
+    tests:
+      tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheRevisionIsPartOfTheIdentityAndLinksNameIt
+  }
+}
+
+diagram REQ_Language {
+  kind: requirement
+  include: REQ-00012-1
+  show: requirements
+}
+
+diagram REQ_LanguageVerified {
+  kind: requirement
+  include: REQ-00012-1
+  show: verifications
+}

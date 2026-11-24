@@ -1,0 +1,117 @@
+// LLD of the axis namespace (ds::axis): the abstraction axis of a design (vision 2b.5, epic
+// DS-205). Containment is the axis; a cut is a flat layer through it. This namespace says what a
+// diagram's cut is and what stands for each entity on it, once, for everything that reads a
+// design at a cut: the query that says what a diagram shows, the drawing of it, and the check
+// that holds a scenario written between boxes to the behaviour below it. Not its jobs:
+// selecting what a diagram takes (ds::query), drawing (ds::render), checking.
+
+package driftspec@ds {
+
+  module axis {
+    @requirement REQ-00180-1                 // every operation of the axis is a member of a class (DS-367)
+
+    // ---- what the axis is, as requirements and the rules that hold them (DS-367) ---------------------------
+    requirement REQ-00180-1 {
+      tags: architecture, axis
+      status: approved
+      @refines REQ-00126-1
+      title: Every operation of the axis shall be a member of the class whose responsibility it is
+      text:
+        What a cut is, what stands for an id on it, how a box is lifted and how a relation reads once lifted are the
+        Cut's. A function of the module would be a responsibility no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-367): every module has its architecture decisions and patterns, and its rules
+        check that they hold; a free function means a responsibility is missing.
+      verification VER-00200-1 {
+        status: approved
+        title: Integration tests confirm the design of the axis holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheAxisIsTold
+      }
+    }
+
+    requirement REQ-00181-1 {
+      tags: architecture, axis
+      status: approved
+      @refines REQ-00126-1
+      title: The axis shall read the model it cuts and leave it as it is
+      text:
+        A cut is computed from what the model keeps and the diagram writes, and read by the query, the drawing and
+        the check alike. The axis asks the model its questions and calls none of what changes it.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-367): everything that reads a design at a cut reads the same cut; an axis that
+        changed the model would change what the next reader sees.
+      verification VER-00201-1 {
+        status: approved
+        title: Integration tests confirm the design of the axis reads the model, and is told when a behaviour of the axis changes it
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AnAxisThatChangesTheModelIsTold
+      }
+    }
+
+    rule axis-operations-belong-to-classes {
+      title: no function is written in the axis's module, so every operation of the axis is a member of a class
+      @requirement REQ-00180-1
+      for function f in driftspec@ds@axis
+      never f in driftspec@ds@axis
+    }
+
+    rule the-axis-reads-the-model {
+      title: no behaviour of the axis calls what changes the model, so the axis reads the model and leaves it as it is
+      @requirement REQ-00181-1
+      for class c in driftspec@ds@axis, method b in driftspec@ds@model::Model
+      where changes-the-model(b)
+      never m in c, s behaviour-of m, x in s, x calls b
+    }
+
+    // the cut of a diagram (DS-229): what closes and what opens. close: draws the line (a name, a
+    // prefix, a kind of box), open: goes through it, cut: adds another diagram's
+    class Cut {
+      @requirement REQ-00181-1
+      @requirement REQ-00064-5
+      @requirement REQ-00126-1
+      @requirement REQ-00127-1
+      @requirement REQ-00128-1
+      @requirement REQ-00130-1
+      - written_: bool
+      - closed_: std::set<std::string>
+      - unfold_: std::vector<std::string>
+      - fold_: std::vector<std::string>
+      - unfolds_: bool
+      - folds_: bool
+      - deep_: bool
+      + Cut(model: model::Model, metamodel: model::Metamodel, diagram: model::Entity)   // the kinds a pattern closes are the metamodel's (DS-351)
+      + written() -> bool
+      + closed(box: std::string) -> bool
+      + standsFor(id: std::string) -> std::string
+      // the second cut of a sequence, over its calls: fold: draws the line, unfold: goes through it, depth: is the uniform case
+      + follows(operation: std::string, left: int) -> bool
+      // what stands for an id among a set of boxes: the outermost of them around it. The one way anything is
+      // lifted: onto the cut of a diagram, onto the participants of a scenario (DS-233)
+      + static standsAmong(id: std::string, boxes: std::set<std::string>) -> std::string {
+        @requirement REQ-00126-1
+        @requirement REQ-00136-1
+      }
+      // how a relation reads between two boxes once lifted: a structural bond, a use, or nothing (DS-230)
+      + static bondOf(relation: std::string) -> std::string {
+        @requirement REQ-00137-1
+      }
+      - static outerOf(id: std::string) -> std::string
+      - static pathTo(id: std::string) -> std::vector<std::string>
+      - static closes(e: model::Entity) -> bool
+      - static names(metamodel: model::Metamodel, pattern: std::string, box: model::Entity) -> bool
+      - static namedBy(metamodel: model::Metamodel, patterns: std::vector<std::string>, box: model::Entity) -> bool
+      - static reaches(patterns: std::vector<std::string>, operation: std::string) -> bool
+    }
+
+  }
+}
+
+diagram CL_AxisNamespace {
+  kind: class
+  include: driftspec@ds@axis::*
+}

@@ -1,0 +1,218 @@
+// The ds command: CLI11 reads the command line (five commands: check, export, render, query,
+// manual, each with its options and its help), main loads the workspace and hands it to
+// whoever answers.
+// One scenario of main per thing it can end in; the rest of the tool knows nothing of
+// a command line.
+
+package driftspec@ds {
+  module app {
+    @requirement SREQ-00018-2
+    @requirement REQ-00166-1
+
+    requirement REQ-00166-1 {
+      status: approved
+      @refines SREQ-00020-1
+      title: The build of the Python wheel shall make the ds command and install it among the environment's scripts
+      text:
+        The wheel's build compiles ds beside the extension and installs it where pip puts the
+        commands of a package, so ds, driftspec-lsp and driftspec-live arrive together.
+      rationale: Owner, 2026-11-18 (DS-303).
+      tags: cli, python, release
+      verification VER-00183-1 {
+        status: approved
+        title: Integration tests confirm the wheel's build makes ds and installs it as a script in a component the wheel carries
+        method: test
+        tests:
+          tests/integration/python/test_packaging.py::TestPackaging::test_the_wheels_build_makes_ds_and_installs_it_as_a_script
+      }
+    }
+    function main(argv: std::vector<std::string>) -> int       // the program's main hands its command line here (DS-311)
+    function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279); it makes the metamodel (DS-341) and its manual (DS-342) once
+    - function work(argv: std::vector<std::string>) -> int         // runs the command; what cannot be read is said, exit 2
+
+    // loaded for what the command gives (DS-376); the Api chooses which steps of the check run for it
+    - function load(metamodel: model::Metamodel, dir: std::string, output: api::Output, diagram: std::string) -> model::Model
+    - function loadWorkspace(metamodel: model::Metamodel, dir: std::string, output: api::Output, diagram: std::string, model: model::Model) -> bool
+    - function titleOf(dir: std::string) -> std::string
+    - function readFile(path: std::string) -> std::string
+    - function emit(output: std::string, text: std::string) -> int
+    - function check(metamodel: model::Metamodel, dir: std::string, json: bool) -> int
+    - function holdsDesign(dir: std::string) -> bool         // a directory with no .ds file under it is no workspace
+    - function manual(metamodel: model::Metamodel, book: model::Manual, topic: std::string, json: bool) -> int
+    - function diagramId(name: std::string) -> std::string
+    - function isDirectory(path: std::string) -> bool
+
+    sequence loadWorkspace {
+      -> isDirectory(dir) -> found
+      opt the path is not a directory / missing {
+        return false
+      }
+      -> load(metamodel, dir, output, diagram) -> loaded
+      return true
+    }
+
+    // the one report of a check, written by the format asked for: text, or JSON with --json (DS-126)
+    sequence check {
+      local model: model::Model
+      local chosen: format::ReportText
+      -> loadWorkspace(metamodel, dir, findings, diagram, model) -> found
+      -> check::Report::of(model, metamodel) -> report
+      -> format::reportFormats() -> formats
+      -> chosen.write(report, options) -> written
+      return 0
+    }
+
+    sequence load {
+      local parser: parse::Parser
+      local api: api::Api
+      -> parser.parseDirectory(dir) -> files
+      -> api.load(files, output, diagram) -> loaded
+      return loaded
+    }
+
+    sequence main / check {
+      local metamodel: model::Metamodel
+      -> check(metamodel, argv, json) -> code
+      return code
+    }
+
+    sequence main / check-errors {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      -> loadWorkspace(metamodel, argv, findings, diagram, model) -> found
+      return 1
+    }
+
+    sequence main / bad-usage {               // CLI11 says what is wrong with the command line
+      return 2
+    }
+
+    sequence main / export {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      local exporter: exporter::JsonExport
+      -> loadWorkspace(metamodel, argv, whole, diagram, model) -> found
+      -> exporter.render(model, pretty) -> json
+      return 0
+    }
+
+    sequence main / no-workspace {            // not a directory, or none with a .ds file: the command line names no design
+      -> isDirectory(argv) -> found
+      return 2
+    }
+
+    // render: the whole model in the viewer (html, or its scene as json), or one diagram drawn
+    // still (svg, text, cells) or as its data (ir, layout); a render-IR file is drawn as it is
+    // the scene builds the document; the format named by -f writes it (DS-126)
+    sequence main / render {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      local scene: scene::Scene
+      local query: query::Query
+      local html: format::SceneHtml
+      -> loadWorkspace(metamodel, argv, viewer, diagram, model) -> found
+      opt a diagram to open the viewer framed on / framed {
+        -> query.ask(question, diagram) -> shown
+      }
+      -> titleOf(argv) -> title
+      -> readFile(css) -> style
+      -> scene.build() -> document
+      -> format::sceneFormats() -> formats
+      -> html.write(document, options) -> page
+      -> emit(output, page) -> written
+      return 0
+    }
+
+    sequence main / render-scene {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      local scene: scene::Scene
+      local json: format::SceneJson
+      -> loadWorkspace(metamodel, argv, viewer, diagram, model) -> found
+      -> scene.build() -> document
+      -> format::sceneFormats() -> formats
+      -> json.write(document, options) -> text
+      -> emit(output, text) -> written
+      return 0
+    }
+
+    // a diagram is its IR, written by the format named by -f (DS-126); loaded with only the steps of the
+    // check a drawing reads (DS-376)
+    sequence main / render-diagram {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      local ir: render::IrExport
+      local chosen: format::DiagramSvg
+      -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
+      -> diagramId(diagram) -> id
+      -> ir.render(id, pretty) -> document
+      -> format::diagramFormats() -> formats
+      -> chosen.write(document, options) -> picture
+      -> emit(output, picture) -> written
+      return 0
+    }
+
+    sequence main / render-document {
+      local chosen: format::DiagramSvg
+      local document: render::IrText       // the text read, as the IR document the format draws
+      -> readFile(argv) -> text
+      -> format::diagramFormats() -> formats
+      -> chosen.write(document, options) -> picture
+      -> emit(output, picture) -> written
+      return 0
+    }
+
+    sequence main / no-diagram {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      local ir: render::IrExport
+      -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
+      -> ir.render(name, pretty) / no-diagram -> document
+      return 1
+    }
+
+    sequence main / query {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      local query: query::Query
+      local chosen: format::AnswersText
+      -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
+      -> query.ask(question, subject) -> answers
+      -> format::answerFormats() -> formats
+      -> chosen.write(answers, options) -> text
+      return 0
+    }
+
+    sequence main / unknown-question {
+      local metamodel: model::Metamodel
+      local model: model::Model
+      local query: query::Query
+      -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
+      -> query.ask(question, subject) -> answers
+      return 1
+    }
+
+    sequence main / manual {                  // no workspace: the manual is in the tool
+      local metamodel: model::Metamodel
+      local book: model::Manual
+      -> manual(metamodel, book, topic, json) -> code
+      return code
+    }
+
+    sequence main / no-topic {
+      local metamodel: model::Metamodel
+      local book: model::Manual
+      -> manual(metamodel, book, topic, json) / no-topic -> code
+      return 1
+    }
+
+    sequence manual {
+      -> book.page(topic) -> page
+      opt no such topic / no-topic {
+        -> book.topics() -> topics
+        return 1
+      }
+      return 0
+    }
+  }
+}

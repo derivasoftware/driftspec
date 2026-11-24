@@ -1,0 +1,13 @@
+// The two kinds hola does not draw, so this copy draws every kind a diagram is written in
+// (DS-395): a table of the web's views and a tour of greeting someone from the shell.
+
+diagram TB_Web {
+  kind: table
+  include: hola@web
+}
+
+diagram TOUR_Greet {
+  kind: tour
+  include: hola@shell::greet
+  close: module
+}

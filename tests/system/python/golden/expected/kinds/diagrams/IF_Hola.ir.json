@@ -1,0 +1,22 @@
+{
+  "edges": [],
+  "ir": 1,
+  "nodes": [
+    {
+      "abstract": true,
+      "classifier": "interface",
+      "id": "hola@shell",
+      "kind": "box",
+      "label": "shell",
+      "sectionKinds": [
+        "methods"
+      ],
+      "sections": [
+        [
+          "greet(name: string) -> core::Greeting"
+        ]
+      ]
+    }
+  ],
+  "title": "IF_Hola"
+}

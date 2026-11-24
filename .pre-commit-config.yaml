@@ -1,8 +1,9 @@
 # Pre-commit hooks scaffolded by argos init --language cpp (REQ-00469-1).
 # Extend as the project's toolchain grows; the default set keeps a fresh
 # project's `pre-commit run --all-files` green out of the box.
-# generated parser sources are tree-sitter's, not ours
-exclude: ^(grammar/src/|third_party/)
+# generated parser sources are tree-sitter's, not ours; the golden outputs are
+# ds's, byte for byte (DS-395): no hook may rewrite their whitespace
+exclude: ^(grammar/src/|third_party/|tests/system/python/golden/expected/)
 repos:
   - repo: local
     hooks:

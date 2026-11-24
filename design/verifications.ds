@@ -335,4 +335,16 @@ package driftspec {
     tests:
       tests/system/python/test_release.py::TestRelease::test_the_licence_is_apache_and_the_grammar_mit_with_the_holder_named
   }
+
+  verification SVER-00029-1 {
+    status: draft
+    @requirement SREQ-00018-2
+    title: System tests confirm every verb of ds writes, in every format, what its golden file pins and ends with the exit code pinned, over ds's design, a diagram of every kind and a small workspace with findings
+    text: DS-395, before the format refactor (DS-394). ds is driven from outside over three frozen workspaces: render (the scene as json and html, each diagram as ir, layout, svg, text and cells), check and query (text and json) and export, and each document and exit code is compared with the files under tests/system/python/golden/expected. Updating them is a reviewed change, made by the same file that compares them.
+    method: test
+    tests:
+      tests/system/python/test_golden.py::TestGolden::test_every_document_of_ds_s_design_matches_its_golden_file
+      tests/system/python/test_golden.py::TestGolden::test_every_document_of_a_diagram_of_every_kind_matches_its_golden_file
+      tests/system/python/test_golden.py::TestGolden::test_every_document_of_a_small_workspace_with_findings_matches_its_golden_file
+  }
 }
