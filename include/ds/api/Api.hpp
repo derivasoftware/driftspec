@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "ds/api/Workspace.hpp"
+#include "ds/check/Selection.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -22,8 +23,14 @@ class Api {
   /// The findings of the workspace, then its counts: what `ds check --json` prints, built by report.
   std::string check(const Files& files) const;
   /// The files parsed, bound and checked, findings in file and line order: how every caller loads a
-  /// workspace, the command line from a directory and the Api from texts (DS-120).
-  model::Model load(const std::vector<parse::ParsedFile>& files) const;
+  /// workspace, the command line from a directory and the Api from texts (DS-120). The check runs only the
+  /// steps its output reads (DS-376); `diagram` is the one a drawing draws.
+  model::Model load(const std::vector<parse::ParsedFile>& files, Output output = Output::Model, const std::string& diagram = "") const;
+  /// The steps of the check a load runs for what it is to give, over the model as bound: the one place that
+  /// chooses them (DS-376). Every step, but for a drawing: the relations the linker makes, the calls behaviour
+  /// typing makes and the stereotypes derivation makes, and the rules when the diagram is a table written as
+  /// rows and columns, whose cells are the rules' answers.
+  static check::Selection stepsFor(Output output, const model::Model& bound, const std::string& diagram);
   /// The findings, then the counts: entities declared, expected, relations, errors. The one shape of
   /// a check, printed by `ds check --json` and returned by check (DS-120).
   std::string report(const model::Model& model, bool pretty = false) const;

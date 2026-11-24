@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "ds/api/Workspace.hpp"
 #include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -21,11 +22,14 @@ int run(int argc, char** argv);
 int work(int argc, char** argv);
 
 bool isDirectory(const std::string& path);
-ds::model::Model load(const ds::model::Metamodel& metamodel, const std::string& dir);
+/// The files of a directory loaded as the Api loads texts (DS-120), for what the command gives of them (DS-376).
+ds::model::Model load(const ds::model::Metamodel& metamodel, const std::string& dir, ds::api::Output output, const std::string& diagram);
 /// Whether any .ds file lies under a directory: a directory with none is no workspace (a mistyped path, most often).
 bool holdsDesign(const std::string& dir);
-/// The workspace loaded, or nothing when the path is no workspace (reported on stderr) (DS-83).
-bool loadWorkspace(const ds::model::Metamodel& metamodel, const std::string& dir, ds::model::Model* model);
+/// The workspace loaded for what the command gives of it (DS-376), or nothing when the path is no workspace
+/// (reported on stderr) (DS-83).
+bool loadWorkspace(const ds::model::Metamodel& metamodel, const std::string& dir, ds::api::Output output, const std::string& diagram,
+                   ds::model::Model* model);
 std::string titleOf(std::string dir);
 std::string readFile(const std::string& path);
 /// Writes to the file -o names, or to stdout.

@@ -45,7 +45,7 @@ TEST_F(TestHoldsDesign, ADirectoryHoldsADesignWhenADsFileLiesUnderIt) {
 class TestLoad : public Workspaces {};
 
 TEST_F(TestLoad, TheFilesOfADirectoryAreReadAsOneModel) {
-  const ds::model::Model model = ds::app::load(metamodel, hola);
+  const ds::model::Model model = ds::app::load(metamodel, hola, ds::api::Output::Model, "");
   EXPECT_FALSE(model.entities().empty());
 }
 
@@ -53,12 +53,12 @@ class TestLoadWorkspace : public Workspaces {};
 
 TEST_F(TestLoadWorkspace, AWorkspaceIsLoadedAndAnythingElseIsSaidAndRefused) {
   ds::model::Model model{metamodel};
-  EXPECT_TRUE(ds::app::loadWorkspace(metamodel, hola, &model));
+  EXPECT_TRUE(ds::app::loadWorkspace(metamodel, hola, ds::api::Output::Model, "", &model));
   EXPECT_FALSE(model.entities().empty());
   ::testing::internal::CaptureStderr();
   ds::model::Model none{metamodel};
-  EXPECT_FALSE(ds::app::loadWorkspace(metamodel, file, &none));
-  EXPECT_FALSE(ds::app::loadWorkspace(metamodel, empty, &none));
+  EXPECT_FALSE(ds::app::loadWorkspace(metamodel, file, ds::api::Output::Model, "", &none));
+  EXPECT_FALSE(ds::app::loadWorkspace(metamodel, empty, ds::api::Output::Model, "", &none));
   const std::string said = ::testing::internal::GetCapturedStderr();
   EXPECT_NE(said.find("not a directory"), std::string::npos);
   EXPECT_NE(said.find("no workspace"), std::string::npos);

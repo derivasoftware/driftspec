@@ -12,6 +12,15 @@ The exporter is written as requirements held by rules (DS-367): every operation 
 class whose responsibility it is, and the exporter reads the model it writes and leaves it as it is. The helpers
 JsonExport's source hid (a location, an entity, a relation, the names of kinds and the metamodel as JSON) are its
 private members. Nothing a design writes, no finding, export or drawing changes.
+## 0.1.51
+
+A drawing loads only the steps of the check it reads (DS-376). `ds render` to svg, text, cells, ir or layout, and the
+engine's render that Python and an editor's preview call, run the linker, behaviour typing and derivation, and the rules
+as well when the diagram is a table written as rows and columns. The viewer (html, json), check, export and query run
+every step, as before. The Api chooses the steps from what the command gives, in one place, and a rule of ds's design
+holds that decision there. Drawing CL_Ds takes about half the time: 243 to 111 ms on DriftSpec's design, 577 to 252 ms
+on the whole repository. Nothing changes for a design: every drawing, finding, export, viewer page and exit code is the
+same.
 
 ## 0.1.50
 
