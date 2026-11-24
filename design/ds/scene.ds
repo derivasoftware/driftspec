@@ -139,14 +139,12 @@ package driftspec@ds {
     tags: render, scene, size
   }
 
-  // what places the boxes: the layout, its projection and packer, and their frames (DS-391)
+  // what places the boxes: the scene's layout and projection, and everything of the layout module (DS-391, DS-392)
   definition lays-out(b) {
-    title: b is one of the pieces that place the boxes of the scene (DS-391)
+    title: b is one of the pieces that place the boxes of the scene: its layout and projection, and the layout's engines and their boxes (DS-391, DS-392)
     if b = driftspec@ds@scene::Layout
     if b = driftspec@ds@scene::Projection
-    if b = driftspec@ds@scene::Packer
-    if b = driftspec@ds@scene::Frame
-    if b = driftspec@ds@scene::Packed
+    if b in driftspec@ds@layout
   }
 
   module scene {
@@ -218,24 +216,25 @@ package driftspec@ds {
       }
     }
 
-    requirement REQ-00189-1 {
+    requirement REQ-00189-2 {
       tags: architecture, scene
-      status: approved
+      status: draft
       @refines REQ-00069-2
-      title: The packer shall place boxes knowing nothing of the model
+      title: The scene shall place its boxes with an engine that knows nothing of the model
       text:
-        Frames in, boxes out: sizes, arrangements and identities are all it is given. So it can pack the boxes of any
-        drawing; DS-368 moves it, with render's layered engine, into a geometry module.
+        The scene projects the model into frames and hands them to the layout's packing engine; frames in, boxes
+        out. The engine is held to know nothing of the model by the layout's own requirement, REQ-00211-1.
       rationale:
         Owner, 2026-11-24 (DS-366, DS-387): every module has its architecture decisions and patterns, and its rules
-        check that they hold.
-      verification VER-00209-1 {
-        status: approved
-        title: Integration tests confirm the design of ds keeps it, and is told when the packer depends on the model
+        check that they hold. Revision 2 (DS-392, 2026-11-24): the packer left the scene for the layout module, as
+        the packing engine; what it may not know is the layout's rule now, and the scene's part is to place with it.
+      verification VER-00209-2 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and every box of the scene is where the layout's packing engine places the projection's frames
         method: test
         tests:
           tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
-          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.APackerThatKnowsTheModelIsTold
+          tests/integration/ds/scene/test_scene_placement.cpp::TestScenePlacement.EveryBoxOfTheSceneIsWhereThePackingEnginePlacesTheProjectionsFrames
       }
     }
 
@@ -656,14 +655,6 @@ package driftspec@ds {
       + nodes: std::vector<std::string>
     }
 
-    dataclass Box {                          // a rectangle of the scene: one unit is a pixel at zoom 1
-      @requirement REQ-00069-2
-      + x: double
-      + y: double
-      + w: double
-      + h: double
-    }
-
     dataclass Node {                         // one thing drawn: a package, module, interface, unit or row
       @requirement REQ-00069-2
       + id: std::string
@@ -673,16 +664,16 @@ package driftspec@ds {
       + stereotype: std::string
       + visibility: std::string
       + requirements: std::vector<std::string>
-      + owns full: Box
+      + owns full: layout::Box
       + lean: bool
-      + owns leanBox: Box
+      + owns leanBox: layout::Box
     }
 
     dataclass SceneDocument {                // the scene: its nodes in drawing order and the world each variant spans
       @requirement REQ-00069-2
       + many nodes: std::vector<Node>
-      + owns world: Box
-      + owns leanWorld: Box
+      + owns world: layout::Box
+      + owns leanWorld: layout::Box
       + owns many links: std::vector<Link>
       + owns many diagrams: std::vector<DiagramView>
       + titles: std::map<std::string, std::string>
@@ -744,31 +735,24 @@ package driftspec@ds {
     rule no-layer-knows-the-layout {
       title: no layer depends on what places the boxes, so a layer reaches them only through the map and the document
       @requirement REQ-00188-1
-      for class a in driftspec@ds@scene, class b in driftspec@ds@scene
+      for class a in driftspec@ds@scene, class b in driftspec@ds
       where a inherits driftspec@ds@scene::ILayer, lays-out(b)
       never depends(a, b)
     }
 
-    rule the-packer-knows-no-model {
-      title: the packer depends on nothing of the model, so it places boxes from their sizes and arrangements alone
-      @requirement REQ-00189-1
-      for class c in driftspec@ds@scene
-      where c = driftspec@ds@scene::Packer
-      never depends(c, x), x in driftspec@ds@model
-    }
-
     // ---- placing the boxes, and the map --------------------------------------------------------
     // where every box goes, once per variant (lean hides private members): the model projected into frames, then
-    // packed; the base document
+    // placed by the layout's packing engine; the base document
     class Layout {
       @requirement REQ-00069-2
       @requirement REQ-00076-1
       @requirement REQ-00093-1
+      @requirement REQ-00189-2                 // it places with an engine that knows no model (DS-392)
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel     // the language of the model: the kind of each box by name (DS-351)
       + Layout(model: model::Model, metamodel: model::Metamodel)
       + place() -> SceneDocument
-      - static bounds(nodes: std::vector<Node>, lean: bool) -> Box
+      - static bounds(nodes: std::vector<Node>, lean: bool) -> layout::Box
     }
 
     // the model projected and packed once per variant: the lean packing follows the widths the full one kept, so
@@ -776,11 +760,13 @@ package driftspec@ds {
     sequence Layout::place {
       local full: Projection
       local lean: Projection
-      local packer: Packer
+      local engine: layout::IEngine           // from the layout's EngineFactory
+      local fullGraph: layout::Graph
+      local leanGraph: layout::Graph
       -> full.root() -> fullRoot
-      -> packer.pack(fullRoot) -> fullBoxes
+      -> engine.place(fullGraph) -> fullPlaced
       -> lean.root() -> leanRoot
-      -> packer.pack(leanRoot) -> leanBoxes
+      -> engine.place(leanGraph) -> leanPlaced
       -> bounds(nodes, false) -> world
       -> bounds(nodes, true) -> leanWorld
       return document
@@ -798,72 +784,23 @@ package driftspec@ds {
       - linked_: std::map<std::string, std::vector<std::string>>   // requirements and constraints, by what is linked to them
       - bases_: std::map<std::string, std::vector<std::string>>    // what each class inherits from or realises
       - owns nodes_: std::map<std::string, Node>
-      - owns root_: Frame
+      - owns root_: layout::Frame
       + Projection(model: model::Model, metamodel: model::Metamodel, lean: bool)
-      + root() -> Frame
+      + root() -> layout::Frame
       + nodes() -> std::map<std::string, Node>
-      - package(e: model::Entity, parent: std::string) -> Frame
-      - module(e: model::Entity, parent: std::string) -> Frame
-      - interface(e: model::Entity, parent: std::string) -> Frame
-      - unit(e: model::Entity, parent: std::string) -> Frame
-      - tree(base: Frame, units: std::map<std::string, Frame>, below: std::map<std::string, std::vector<std::string>>) -> Frame
-      - taxonomy(units: std::vector<Frame>) -> std::map<std::string, std::string>
-      - order(boxes: std::vector<Frame>) -> void
+      - package(e: model::Entity, parent: std::string) -> layout::Frame
+      - module(e: model::Entity, parent: std::string) -> layout::Frame
+      - interface(e: model::Entity, parent: std::string) -> layout::Frame
+      - unit(e: model::Entity, parent: std::string) -> layout::Frame
+      - tree(base: layout::Frame, units: std::map<std::string, layout::Frame>, below: std::map<std::string, std::vector<std::string>>) -> layout::Frame
+      - taxonomy(units: std::vector<layout::Frame>) -> std::map<std::string, std::string>
+      - order(boxes: std::vector<layout::Frame>) -> void
       - children(scope: std::string) -> std::vector<const model::Entity*>
       - node(id: std::string, kind: std::string, parent: std::string, label: std::string, stereotype: std::string, vis: std::string, linkedFrom: std::string) -> Node
       - stereotypeOf(e: model::Entity) -> std::string
-      - static leaf(id: std::string, w: double, h: double) -> Frame
+      - static leaf(id: std::string, w: double, h: double) -> layout::Frame
       - static visibility(e: model::Entity) -> std::string
       - static signature(name: std::string, params: std::vector<model::Param>, returns: std::string) -> std::string
-    }
-
-    // where nested boxes go (DS-389): frames in, a box for each out. It knows no model, only sizes, arrangements and
-    // identities; a shelf can be held to the width it came out at in an earlier packing
-    class Packer {
-      @requirement REQ-00069-2
-      @requirement REQ-00076-1
-      @requirement REQ-00189-1                 // it knows no model (DS-391)
-      - widths_: std::map<std::string, double>   // the width each shelved frame came out at, kept or followed
-      - following_: bool
-      + Packer(widths: std::map<std::string, double>, following: bool)
-      + pack(root: Frame) -> std::map<std::string, Box>
-      - size(frame: Frame) -> Packed
-      - fixed(frame: Frame) -> Packed
-      - shelves(frame: Frame) -> Packed
-      - tree(frame: Frame) -> Packed
-      - width(id: std::string, computed: double) -> double
-      - static shelf(kids: std::vector<Packed>, gap: double, target: double, at: std::vector<std::pair<double, double>>) -> std::pair<double, double>
-      - static target(kids: std::vector<Packed>, atLeast: double, factor: double) -> double
-      - static place(frame: Frame, packed: Packed, x: double, y: double, out: std::map<std::string, Box>) -> void
-    }
-
-    dataclass Packed {                       // a frame packed (DS-389): its size and where each child sits, from its top left corner
-      @requirement REQ-00069-2
-      + w: double
-      + h: double
-      + at: std::vector<std::pair<double, double>>
-      + kids: std::vector<Packed>                 // its kids, then its ports
-    }
-
-    dataclass Frame {                        // a box to pack (DS-389): its identity, how its children are arranged, and their frames
-      @requirement REQ-00069-2
-      + id: std::string
-      + arrangement: Arrangement               // fixed, in shelves, or a tree
-      + kids: std::vector<Frame>
-      + w: double
-      + h: double
-      + at: std::vector<std::pair<double, double>>
-      + gap: double
-      + atLeast: double
-      + factor: double
-      + left: double
-      + top: double
-      + right: double
-      + bottom: double
-      + ports: std::vector<Frame>
-      + portTop: double
-      + portGap: double
-      + drop: double
     }
 
     // the boxes placed and where each identity of the model lands among them: built once, read by

@@ -54,7 +54,7 @@ class TestSceneOfTheTaxonomy : public ::testing::Test {
   }
 
   // a base above the row of its heirs, centred over it, in one variant
-  static void baseOverItsHeirs(const ds::scene::Box& base, const std::vector<ds::scene::Box>& heirs) {
+  static void baseOverItsHeirs(const ds::layout::Box& base, const std::vector<ds::layout::Box>& heirs) {
     double left = heirs.front().x, right = heirs.front().x + heirs.front().w;
     for (const auto& h : heirs) {
       EXPECT_GT(h.y, base.y + base.h);         // below the base, with room for the trunk
