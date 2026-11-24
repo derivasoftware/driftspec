@@ -29,7 +29,6 @@ class LegacyBinder : public INodeBinder {
 
  private:
   // every method binds through its context: the model and the notes are written there and nowhere else (DS-354)
-  void bindUseCase(const BindContext& ctx, TSNode node) const;
   void bindClass(const BindContext& ctx, TSNode node) const;
   void bindMember(const BindContext& ctx, TSNode node, const model::Entity& cls, const std::vector<std::string>& params,
                   const std::set<std::string>& operators) const;

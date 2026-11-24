@@ -78,6 +78,8 @@ package driftspec@ds {
       - owns enums_: EnumBinder
       - owns rules_: RuleBinder
       - owns diagrams_: DiagramBinder
+      - owns usecases_: UseCaseBinder
+      - owns states_: StateBinder
       - owns legacy_: LegacyBinder
       - owns dispatch_: Dispatch
     }
@@ -90,9 +92,6 @@ package driftspec@ds {
         @requirement REQ-00014-1
         @requirement REQ-00015-1
         @requirement REQ-00022-1
-      }
-      - bindUseCase(ctx: BindContext, node: TSNode) -> void {
-        @requirement REQ-00081-1
       }
       - bindClass(ctx: BindContext, node: TSNode) -> void {
         @requirement REQ-00025-1
@@ -185,13 +184,6 @@ package driftspec@ds {
     // already set. A package's children are bound with its id plus @ as scope, an expression: that call and its
     // annotations are not told here.
     sequence LegacyBinder::bind {
-      local e: model::Entity
-      local relation: model::Relation
-      local at: model::Scope
-      self -> ctx.locationOf(node) -> loc
-      opt a use case, with its outcomes {
-        -> bindUseCase(ctx, node)
-      }
       opt a class {
         -> bindClass(ctx, node)
       }
@@ -201,24 +193,31 @@ package driftspec@ds {
       opt a sequence {
         -> bindSequence(ctx, node)
       }
-      opt a state machine: its events and actions are kept for the checker {
-        local entityName: std::string
-        self -> at.qualify(entityName) -> id
-        self -> fields_.bind(node, ctx, e)
-        self -> ctx.declare(e)
-        self -> annotations_.bind(node, ctx, e.id, scope)
-        loop each view and transition {
-          local t: TSNode
-          local v: model::Entity
-          opt the initial state, a state rule or a transition, written on the state entity {
-            self -> ctx.annotate(e.id, key, value)
-          }
-          opt a view {
-            self -> fields_.bind(t, ctx, v)
-            self -> ctx.declare(v)
-            self -> ctx.relate(relation)
-            self -> annotations_.bind(t, ctx, v.id, scope)
-          }
+    }
+
+    // A state machine is the behaviour of a class: its initial state, rules, views and transitions are written on the
+    // state entity, and its events and actions are kept for the checker to find on the class (DS-356).
+    sequence StateBinder::bind {
+      local e: model::Entity
+      local relation: model::Relation
+      local at: model::Scope
+      self -> ctx.locationOf(node) -> loc
+      local entityName: std::string
+      self -> at.qualify(entityName) -> id
+      self -> fields_.bind(node, ctx, e)
+      self -> ctx.declare(e)
+      self -> annotations_.bind(node, ctx, e.id, scope)
+      loop each view and transition {
+        local t: TSNode
+        local v: model::Entity
+        opt the initial state, a state rule or a transition, written on the state entity {
+          self -> ctx.annotate(e.id, key, value)
+        }
+        opt a view {
+          self -> fields_.bind(t, ctx, v)
+          self -> ctx.declare(v)
+          self -> ctx.relate(relation)
+          self -> annotations_.bind(t, ctx, v.id, scope)
         }
       }
     }
@@ -472,6 +471,27 @@ package driftspec@ds {
       + static params(reader: parse::TreeReader, node: TSNode) -> std::vector<std::string>
       - static isOwnership(relation: std::string) -> bool
       - static contains(items: std::vector<std::string>, item: std::string) -> bool
+    }
+
+    class StateBinder : INodeBinder {        // a state machine: the behaviour of a class, its transitions and events (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      + StateBinder(fields: FieldBinder, annotations: AnnotationBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00039-1
+      }
+    }
+    class UseCaseBinder : INodeBinder {      // a use case: its signature and the outcomes it may end in (DS-356)
+      - refs fields_: FieldBinder
+      - refs annotations_: AnnotationBinder
+      - refs types_: TypeBinder
+      - refs signatures_: SignatureBinder
+      + UseCaseBinder(fields: FieldBinder, annotations: AnnotationBinder, types: TypeBinder, signatures: SignatureBinder)
+      + kinds() -> std::vector<std::string>
+      + bind(node: TSNode, ctx: BindContext) -> void {
+        @requirement REQ-00081-1
+      }
     }
   }
 }

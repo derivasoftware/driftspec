@@ -21,46 +21,6 @@ using text::splitTrimmed;
 
 // A use case is an artefact identified by its id (R5) and a contract: its signature, the base it
 // specialises, its outcomes as entities of their own (DS-77).
-void LegacyBinder::bindUseCase(const BindContext& ctx, TSNode node) const {
-  const std::string& scope = ctx.scope;
-  const std::string& owner = ctx.owner;
-  model::Entity e;
-  e.kind = model::Kind::UseCase;
-  e.name = ctx.reader.fieldText(node, Field::id);
-  e.id = e.name;
-  e.scope = scope;
-  e.location = ctx.locationOf(node);
-  const std::string operation = ctx.reader.fieldText(node, Field::name);
-  if (!operation.empty()) {
-    e.fields["operation"] = operation;
-    signatures_.bind(node, ctx, e, scope, {});
-  }
-  fields_.bind(node, ctx, e);
-  ctx.declare(e);
-  if (!owner.empty()) ctx.relate({"about", e.id, owner, e.location, ""});
-  const std::string base = ctx.reader.fieldText(node, Field::base);
-  // the use case it specialises is resolved like any artefact link: pinned, followed to its revision (DS-116)
-  if (!base.empty())
-    ctx.refer({e.id, std::string(text::trimWhitespace(base)), scope, "inherits", model::Kind::UseCase, e.location, "", {}});
-  annotations_.bind(node, ctx, e.id, scope);
-  const uint32_t n = ts_node_named_child_count(node);
-  for (uint32_t i = 0; i < n; ++i) {
-    TSNode o = ts_node_named_child(node, i);
-    if (!TreeReader::is(o, "outcome")) continue;
-    model::Entity out;
-    out.kind = model::Kind::Outcome;
-    out.name = ctx.reader.fieldText(o, Field::name);
-    out.id = e.id + "::" + out.name;
-    out.scope = e.id;
-    out.location = ctx.locationOf(o);
-    out.fields["text"] = std::string(text::trimWhitespace(ctx.reader.fieldText(o, Field::text)));
-    const std::string returns = types_.bind(TreeReader::child(o, Field::returns), ctx, scope, out.id, "uses", "", {}, out.location);
-    if (!returns.empty()) out.fields["returns"] = returns;
-    ctx.declare(out);
-    ctx.relate({"contains", e.id, out.id, out.location, ""});
-  }
-}
-
 // ---- types (R15, R16) ----------------------------------------------------------
 
 // A type is the code's text (DS-18). Its names are read out of it; each that the design declares is related
@@ -434,77 +394,15 @@ void LegacyBinder::bindSequence(const BindContext& ctx, TSNode c) const {
 
 // ---- the walk --------------------------------------------------------------------
 
-std::vector<std::string> LegacyBinder::kinds() const { return {"usecase", "class", "function", "sequence", "state"}; }
+std::vector<std::string> LegacyBinder::kinds() const { return {"class", "function", "sequence"}; }
 
 void LegacyBinder::bind(TSNode c, const BindContext& ctx) const {
-  const std::string& scope = ctx.scope;
-  const model::Location loc = ctx.locationOf(c);
-
-  if (TreeReader::is(c, "usecase")) {
-    bindUseCase(ctx, c);
-
-  } else if (TreeReader::is(c, "class")) {
+  if (TreeReader::is(c, "class")) {
     bindClass(ctx, c);
-
   } else if (TreeReader::is(c, "function")) {
     bindFunction(ctx, c);
-
   } else if (TreeReader::is(c, "sequence")) {
     bindSequence(ctx, c);
-
-  } else if (TreeReader::is(c, "state")) {
-    const std::string entityName = ctx.reader.fieldText(c, Field::entity);
-    model::Entity e;
-    e.kind = model::Kind::State;
-    e.name = entityName;
-    e.id = model::Identity(model::Scope(scope).qualify(entityName).text()).state().text();
-    e.scope = scope;
-    e.location = loc;
-    fields_.bind(c, ctx, e);
-    ctx.declare(e);
-    ctx.refer({e.id, entityName, scope, "behaviour-of", model::Kind::Class, loc, "", {}});
-    annotations_.bind(c, ctx, e.id, scope);
-    std::vector<std::string> transitions;
-    std::vector<std::string> rules;
-    const uint32_t n = ts_node_named_child_count(c);
-    for (uint32_t j = 0; j < n; ++j) {
-      TSNode t = ts_node_named_child(c, j);
-      if (TreeReader::is(t, "initial")) ctx.annotate(e.id, "initial", ctx.reader.fieldText(t, Field::name));
-      if (TreeReader::is(t, "state_rule")) {  // a state computed by a rule (DS-249): state|literal,literal|line, `not` as a leading !
-        std::vector<std::string> literals;
-        const uint32_t nl = ts_node_named_child_count(t);
-        for (uint32_t x = 0; x < nl; ++x) {
-          TSNode l = ts_node_named_child(t, x);
-          if (!TreeReader::is(l, "state_literal")) continue;
-          literals.push_back((ctx.reader.fieldText(l, Field::negated).empty() ? "" : "!") + ctx.reader.fieldText(l, Field::left) +
-                             ctx.reader.fieldText(l, Field::operator_) + ctx.reader.fieldText(l, Field::right));
-        }
-        rules.push_back(ctx.reader.fieldText(t, Field::name) + "|" + join(literals, ",") + "|" + std::to_string(ctx.locationOf(t).line));
-        ctx.annotate(e.id, "rules", join(rules, "\n"));
-      }
-      if (TreeReader::is(t, "view")) {
-        model::Entity v;
-        v.kind = model::Kind::View;
-        v.name = ctx.reader.fieldText(t, Field::name);
-        v.id = e.id + "::" + v.name;
-        v.scope = e.id;
-        v.location = ctx.locationOf(t);
-        fields_.bind(t, ctx, v);
-        ctx.declare(v);
-        ctx.relate({"contains", e.id, v.id, v.location, ""});
-        annotations_.bind(t, ctx, v.id, scope);
-      }
-      if (!TreeReader::is(t, "transition")) continue;
-      const std::string guard = std::string(text::trimWhitespace(ctx.reader.fieldText(t, Field::guard)));
-      const std::string does = ctx.reader.fieldText(t, Field::action);
-      transitions.push_back(ctx.reader.fieldText(t, Field::from) + ">" + ctx.reader.fieldText(t, Field::to) + ">" +
-                            ctx.reader.fieldText(t, Field::event) + (guard.empty() ? "" : " " + guard) +
-                            (does.empty() ? "" : " / " + does));
-      ctx.annotate(e.id, "transitions", join(transitions, "\n"));  // from>to>label, one per line
-      ctx.noteEvent({e.id, entityName, scope, ctx.reader.fieldText(t, Field::event), false, ctx.locationOf(t)});
-      const std::string action = ctx.reader.fieldText(t, Field::action);
-      if (!action.empty()) ctx.noteEvent({e.id, entityName, scope, action, true, ctx.locationOf(t)});
-    }
   }
 }
 
