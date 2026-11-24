@@ -159,6 +159,7 @@ package driftspec@ds {
     // The one place that names the concrete node binders (DS-404): each made with the parts it uses, handed back as
     // the INodeBinder it is to the binder.
     class NodeBinderFactory {
+      @requirement REQ-00197-1
       @requirement REQ-00171-1
       + static make(fields: FieldBinder, annotations: AnnotationBinder, extensions: ExtensionBinder, types: TypeBinder, signatures: SignatureBinder, formulas: FormulaBinder, bodies: MemberBodyBinder, members: MemberBinder) -> std::vector<std::unique_ptr<INodeBinder>>
     }
@@ -358,6 +359,7 @@ package driftspec@ds {
     }
 
     class BindContext {                      // what binding one node is given; the only place it writes (DS-354)
+      @requirement REQ-00199-1
       @requirement REQ-00172-1
       @requirement REQ-00053-2
       + BindContext(model: model::Model, notes: Notes, reader: parse::TreeReader, metamodel: model::Metamodel, dispatch: Dispatch, scope: std::string, owner: std::string)   // given whole (DS-424)

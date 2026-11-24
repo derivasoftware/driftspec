@@ -3,6 +3,76 @@
 
 package driftspec@ds {
 
+  requirement REQ-00197-1 {
+    tags: architecture, conventions
+    status: draft
+    @refines REQ-00053-2
+    title: What a class of the engine is named shall say what it is: a pure interface I and a capital, an abstract class A and a capital, a factory its product and Factory
+    text:
+      A pure interface declares abstract members and nothing concrete; a class with both abstract and concrete
+      members is abstract; a factory is a class that names two or more classes of one family, the one place that
+      makes them. Each is named by what it is, so a reader knows from the name alone whether it is a contract, a
+      partial implementation or the place that chooses.
+    rationale:
+      Owner, 2026-11-24 (DS-402, DS-405): the conventions the Owner uses in every design, checked by the design itself.
+    verification VER-00217-1 {
+      status: draft
+      title: Integration tests confirm ds's design names its interfaces, abstract classes and factories by what they are, and is told when one is named otherwise
+      method: test
+      tests:
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AnInterfaceNamedOtherwiseIsTold
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AnAbstractClassNamedOtherwiseIsTold
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFactoryNamedOtherwiseIsTold
+    }
+  }
+
+  requirement REQ-00198-1 {
+    tags: architecture, conventions
+    status: draft
+    @refines REQ-00053-2
+    title: A class of a family shall be reached through the family's interface by every class but its own family and the factories
+    text:
+      A family is the classes that implement a pure interface, directly or through a class between. Outside the
+      family, only a factory names one of its classes; everyone else holds, takes and calls the interface, so a
+      class added to the family or taken out of it changes nothing that uses it.
+    rationale:
+      Owner, 2026-11-24 (DS-402, DS-405): horizontal extension through interfaces; tried on a copy, the rule found
+      the exporter reaching a concrete filter (DS-423).
+    verification VER-00218-1 {
+      status: draft
+      title: Integration tests confirm ds's design reaches every family through its interface, and is told when a class outside it names one of its classes
+      method: test
+      tests:
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AConcreteClassOfAFamilyReachedFromOutsideIsTold
+    }
+  }
+
+  requirement REQ-00199-1 {
+    tags: architecture, conventions
+    status: draft
+    @refines REQ-00053-2
+    title: What a class refers to shall be given to its constructor, itself or inside what it is given
+    text:
+      A class that holds a reference to something takes it when it is made, as a parameter of its constructor or held
+      by one, and keeps it for its life; nothing it refers to is set by a later call. A long-lived object that starts
+      over for each use takes what changes with each use through a reset, and nothing else sets it. A dataclass,
+      made whole as a value, is not asked.
+    rationale:
+      Owner, 2026-11-24 (DS-402, DS-405): what a class refers to is aggregated at construction; tried on a copy, the
+      rule found the check steps storing what they read in run() (DS-425) and the bind context with no constructor
+      in the design (DS-424).
+    verification VER-00219-1 {
+      status: draft
+      title: Integration tests confirm every class of ds's design is given what it refers to at construction, and is told when one is not
+      method: test
+      tests:
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AReferenceNoConstructorGivesIsTold
+    }
+  }
+
   definition has-abstract(c) {
     title: c has an abstract member
     if m is method, m in c, m is abstract
@@ -32,6 +102,7 @@ package driftspec@ds {
 
   rule pure-interfaces-are-named-i {
     title: a pure interface is named I and a capital
+    @requirement REQ-00197-1
     for class c in driftspec@ds
     where pure-interface(c)
     holds name(c) matches "^I[A-Z]"
@@ -39,6 +110,7 @@ package driftspec@ds {
 
   rule abstract-classes-are-named-a {
     title: a class with abstract and concrete members is named A and a capital
+    @requirement REQ-00197-1
     for class c in driftspec@ds
     where has-abstract(c), has-concrete(c)
     holds name(c) matches "^A[A-Z]"
@@ -46,6 +118,7 @@ package driftspec@ds {
 
   rule factories-are-named-factory {
     title: the one place that makes the classes of a family is named after what it makes and Factory
+    @requirement REQ-00197-1
     for class f in driftspec@ds
     where factory(f)
     holds name(f) matches "Factory$"
@@ -53,15 +126,30 @@ package driftspec@ds {
 
   rule families-are-reached-through-their-interface {
     title: a class of a family is reached through its interface by every class but its own family and the factories
+    @requirement REQ-00198-1
     for class c in driftspec@ds, class x in driftspec@ds
     where implements(x, i), c != x, not implements(c, i), not factory(c)
     never depends(c, x)
   }
 
+  definition gives(k, t) {
+    title: the constructor k is given t: as one of its parameters, or held by one of them
+    if k is method, k uses t
+    if k is method, k uses u, m in u, m is attribute, m refs t
+    if k is method, k uses u, m in u, m is attribute, m owns t
+  }
+
+  definition gives-what-it-holds(k) {
+    title: k is how a class is given what it refers to: its constructor, or the reset of a long-lived object that starts over
+    if k is method, k is constructor
+    if k is method, name(k) = "reset"
+  }
+
   rule what-a-class-refers-to-is-given-to-it {
-    title: what a class refers to is given to its constructor, never set later
+    title: what a class refers to is given to its constructor, itself or inside what it is given, or to the reset that starts it over; never set by any other call
+    @requirement REQ-00199-1
     for class c in driftspec@ds
     where not c is dataclass, a in c, a is attribute, a refs t
-    holds k in c, k is constructor, k uses t
+    holds k in c, gives-what-it-holds(k), gives(k, t)
   }
 }

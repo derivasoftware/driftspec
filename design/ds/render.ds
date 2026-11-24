@@ -203,6 +203,7 @@ package driftspec@ds {
     }
 
     class IrExport {                         // the projection: takes what the query's filter of a diagram takes, decides what to print, writes the IR
+      @requirement REQ-00198-1
       @requirement REQ-00006-1
       @requirement REQ-00121-1
       - refs model_: model::Model

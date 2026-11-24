@@ -152,6 +152,7 @@ package driftspec@ds {
     // metamodel (DS-385), as StepFactory names the steps of the check (DS-382): what asks what a diagram takes asks it here,
     // and never names a filter itself
     class FilterFactory {
+      @requirement REQ-00197-1
       @requirement REQ-00003-2
       @requirement REQ-00200-1
       + static of(metamodel: model::Metamodel, diagram: model::Entity) -> std::unique_ptr<IFilter>
@@ -178,6 +179,7 @@ package driftspec@ds {
     // What a class diagram draws, read of the model (DS-423): the class filter and the exporter both read it, and
     // neither reaches the other for it.
     class ClassBoxes {
+      @requirement REQ-00198-1
       @requirement REQ-00047-1
       + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
       // the box a relation is drawn from: a behaviour's is its subject's, a box's is its own (DS-219)
