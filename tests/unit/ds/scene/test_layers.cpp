@@ -46,7 +46,7 @@ class TestLayers : public ::testing::Test {
                          "package p {\n  requirement REQ-00001-1: The system shall run\n  module m {\n"
                          "    class A {\n      @requirement REQ-00001-1\n      - b: B\n      + run() -> none\n    }\n"
                          "    class B {\n      + go() -> int\n    }\n    sequence A::run {\n      self -> b.go() -> n\n    }\n  }\n}\n"));
-    const auto steps = ds::check::steps();
+    const auto steps = ds::check::Steps::of();
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
   }
 };

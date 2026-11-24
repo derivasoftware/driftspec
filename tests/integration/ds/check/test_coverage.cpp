@@ -36,7 +36,7 @@ TEST_F(TestCoverage, AnAbsenceIsNoFindingAndTheQueryAnswersIt) {
                                "    @requirement SREQ-00001-1\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::steps();
+  const auto checkSteps = ds::check::Steps::of();
   ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().code;
   const auto report = ds::check::Report::of(model, metamodel);

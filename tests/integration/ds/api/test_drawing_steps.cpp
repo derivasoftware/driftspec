@@ -60,7 +60,7 @@ class TestDrawingSteps : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     ds::parse::Parser parser;
     for (const auto& f : files) binder.bind(parser.parseText(f.first, f.second));
-    const auto steps = ds::check::steps(selection);
+    const auto steps = ds::check::Steps::of(selection);
     ds::check::Checker(model, metamodel, steps).run(binder.notes());
     return ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false);
   }
