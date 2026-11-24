@@ -135,27 +135,12 @@ TEST(TestRequirementsFilterUseCase, AUseCaseThatAnswersToARequirementIsDrawnUnde
   EXPECT_FALSE(ds::query::RequirementsFilter(metamodel, {"shop@*"}, false, true).select(model).count("UC-00001-1"));  // design hidden
 }
 
-class TestInPattern : public Shop {};
-
-TEST_F(TestInPattern, AnIdentityAPrefixAndAModuleEachTakeWhatTheyName) {
-  const ds::model::Entity& item = *model.find("shop@store::Item");
-  const ds::model::Entity& till = *model.find("shop@till::Till");
-  EXPECT_TRUE(ds::query::inPattern(model, "shop@store::Item", item));  // its identity
-  EXPECT_TRUE(ds::query::inPattern(model, "shop@store::*", item));     // a prefix over the scope
-  EXPECT_TRUE(ds::query::inPattern(model, "shop@store", item));        // the module, named as such
-  EXPECT_FALSE(ds::query::inPattern(model, "shop@store::*", till));
-  EXPECT_FALSE(ds::query::inPattern(model, "shop@store", till));
-  EXPECT_FALSE(ds::query::inPattern(model, "shop@store::Stock", item));  // another identity
-}
-
-class TestDrawnFrom : public Shop {};
-
-TEST_F(TestDrawnFrom, ABoxIsItselfAMemberItsClassAndABehaviourItsSubject) {
-  EXPECT_EQ(ds::query::drawnFrom(model, *model.find("shop@till::Till")), "shop@till::Till");
-  EXPECT_EQ(ds::query::drawnFrom(model, *model.find("shop@till")), "shop@till");
-  EXPECT_EQ(ds::query::drawnFrom(model, *model.find("shop@till::Till::stock")), "shop@till::Till");
-  EXPECT_EQ(ds::query::drawnFrom(model, *model.find("shop@till::Till::sell::sequence")), "shop@till::Till");
-  EXPECT_EQ(ds::query::drawnFrom(model, *model.find("shop@store::Stock::state")), "shop@store::Stock");
+TEST_F(TestClassFilter, ARelationIsDrawnFromItsBoxAMembersClassOrABehavioursSubject) {  // DS-219
+  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till::Till")), "shop@till::Till");
+  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till")), "shop@till");
+  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till::Till::stock")), "shop@till::Till");
+  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@till::Till::sell::sequence")), "shop@till::Till");
+  EXPECT_EQ(ds::query::ClassFilter::drawnFrom(model, *model.find("shop@store::Stock::state")), "shop@store::Stock");
 }
 
 class TestQuery : public Shop {};

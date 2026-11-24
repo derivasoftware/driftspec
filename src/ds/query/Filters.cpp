@@ -1,69 +1,15 @@
-#include <sstream>
-
 #include "ds/axis/Cut.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Paths.hpp"
 #include "ds/query/Filter.hpp"
+#include "ds/query/Pattern.hpp"
 #include "ds/query/Walk.hpp"
 #include "ds/text/Text.hpp"
 
 namespace ds {
 namespace query {
 
-using text::join;
 using text::splitTrimmed;
-
-namespace {
-
-/// What a class diagram draws as a box: a class, an enum, an interface or a function of a module.
-bool isBox(const model::Entity& e) {
-  return e.kind == model::Kind::Class || e.kind == model::Kind::Enum || e.kind == model::Kind::Function || e.kind == model::Kind::Interface;
-}
-
-/// A box that holds others: a module, or a package below the system (the outermost package is the drawing).
-bool isContainer(const model::Entity& e) { return e.kind == model::Kind::Module || (e.kind == model::Kind::Package && !e.scope.empty()); }
-
-bool drawable(const model::Entity& e) { return isBox(e) || isContainer(e); }
-
-/// The relations a class diagram draws as edges, the ones its neighbours follow.
-bool drawnAsEdge(const std::string& relation) {
-  return relation == "inherits" || relation == "owns" || relation == "refs" || relation == "shares" || relation == "uses" ||
-         relation == "bounded-by" || relation == "realises" || relation == "consumes" || relation == "sends";
-}
-
-/// A number field of a diagram: `every` when it is written `*`, 0 when it is not written or is no number an int holds.
-int number(const model::Entity& diagram, const std::string& key, int every) {
-  if (diagram.field(key) == "*") return every;
-  int read = 0;
-  return diagram.number(key, read) ? read : 0;
-}
-
-bool isArtefact(const model::Entity& e) {
-  return e.kind == model::Kind::Requirement || e.kind == model::Kind::Constraint || e.kind == model::Kind::Verification;
-}
-
-/// The scenario of a behaviour taken as written: every branch.
-const char* const kWhole = kEveryBranch;
-
-}  // namespace
-
-// one reading of a pattern for every kind of diagram (DS-212): an identity; a prefix with * over the
-// identity or the scope (`p@m::*` is the module p@m and everything in it); a module named as such; a
-// template written without its arity
-bool inPattern(const model::Model& model, const std::string& pattern, const model::Entity& entity) {
-  if (pattern == entity.id) return true;
-  if (!pattern.empty() && pattern.back() == '*') {
-    const std::string prefix = pattern.substr(0, pattern.size() - 1);
-    if (entity.id.rfind(prefix, 0) == 0 || entity.scope.rfind(prefix, 0) == 0) return true;
-    const bool modulePrefix = prefix.size() > 2 && prefix.compare(prefix.size() - 2, 2, "::") == 0;
-    return modulePrefix && entity.scope == prefix.substr(0, prefix.size() - 2);
-  }
-  if (const model::Entity* m = model.find(pattern)) {
-    if (m->kind == model::Kind::Module) return entity.scope == pattern || entity.scope.rfind(pattern + "::", 0) == 0;
-  }
-  const auto lt = entity.id.find('<');
-  return lt != std::string::npos && entity.id.substr(0, lt) == pattern;
-}
 
 // ---- class diagrams --------------------------------------------------------------------------
 
@@ -75,7 +21,26 @@ ClassFilter::ClassFilter(const model::Metamodel& metamodel, std::vector<std::str
       neighbours_(neighbours),
       cutOf_(std::move(cutOf)) {}
 
-std::string drawnFrom(const model::Model& model, const model::Entity& entity) {
+// what a class diagram draws as a box: a class, an enum, an interface or a function of a module
+bool ClassFilter::isBox(const model::Entity& entity) {
+  return entity.kind == model::Kind::Class || entity.kind == model::Kind::Enum || entity.kind == model::Kind::Function ||
+         entity.kind == model::Kind::Interface;
+}
+
+// a box that holds others: a module, or a package below the system (the outermost package is the drawing)
+bool ClassFilter::isContainer(const model::Entity& entity) {
+  return entity.kind == model::Kind::Module || (entity.kind == model::Kind::Package && !entity.scope.empty());
+}
+
+bool ClassFilter::drawable(const model::Entity& entity) { return isBox(entity) || isContainer(entity); }
+
+// the relations a class diagram draws as edges, the ones its neighbours follow
+bool ClassFilter::drawnAsEdge(const std::string& relation) {
+  return relation == "inherits" || relation == "owns" || relation == "refs" || relation == "shares" || relation == "uses" ||
+         relation == "bounded-by" || relation == "realises" || relation == "consumes" || relation == "sends";
+}
+
+std::string ClassFilter::drawnFrom(const model::Model& model, const model::Entity& entity) {
   if (isBox(entity) || entity.kind == model::Kind::Module || entity.kind == model::Kind::Package)
     return entity.id;  // a box's own @consumes
   if (entity.kind == model::Kind::Sequence || entity.kind == model::Kind::State) {
@@ -86,21 +51,19 @@ std::string drawnFrom(const model::Model& model, const model::Entity& entity) {
   return entity.scope;
 }
 
-bool ClassFilter::matches(const model::Model& model, const std::string& pattern, const model::Entity& entity) const {
-  if (pattern == entity.id) return true;
-  return inPattern(model, pattern, entity);
-}
-
 std::set<std::string> ClassFilter::boxes(const model::Model& model) const {
+  // each pattern read once, then asked of every entity (DS-385)
   std::set<std::string> selected;
-  for (const auto& pattern : include_) {
+  for (const auto& text : include_) {
+    const Pattern pattern(model, text);
     for (const auto& pair : model.entities()) {
-      if (drawable(pair.second) && !pair.second.expected && matches(model, pattern, pair.second)) selected.insert(pair.first);
+      if (drawable(pair.second) && !pair.second.expected && pattern.takes(pair.second)) selected.insert(pair.first);
     }
   }
-  for (const auto& pattern : exclude_) {
+  for (const auto& text : exclude_) {
+    const Pattern pattern(model, text);
     for (auto it = selected.begin(); it != selected.end();) {
-      it = matches(model, pattern, *model.find(*it)) ? selected.erase(it) : std::next(it);
+      it = pattern.takes(*model.find(*it)) ? selected.erase(it) : std::next(it);
     }
   }
   // neighbours: n widens the selection to what the selected entities relate to, n steps away. A step that adds
@@ -178,7 +141,7 @@ std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) con
       // as it is written: `Class::op` the default, `Class::op / scenario` that one, `Class::op*` them all
       const bool isDefault = e.fields.find("scenario") == e.fields.end();
       const bool named = !isDefault && pattern == subjectId + " / " + e.fields.at("scenario");
-      if (pattern == e.id || (pattern == subjectId && isDefault) || named || prefix) out.push_back({&e, kWhole});
+      if (pattern == e.id || (pattern == subjectId && isDefault) || named || prefix) out.push_back({&e, kEveryBranch});
       // `Class::op / scenario` with no behaviour of its own: a named branch of the default one
       const auto slash = pattern.find(" / ");
       if (isDefault && slash != std::string::npos && pattern.substr(0, slash) == subjectId &&
@@ -245,6 +208,10 @@ std::set<std::string> StateFilter::select(const model::Model& model) const {
 
 // ---- requirements diagrams -------------------------------------------------------------------
 
+bool RequirementsFilter::isArtefact(const model::Entity& entity) {
+  return entity.kind == model::Kind::Requirement || entity.kind == model::Kind::Constraint || entity.kind == model::Kind::Verification;
+}
+
 RequirementsFilter::RequirementsFilter(const model::Metamodel& metamodel, std::vector<std::string> include, bool design, bool verifications,
                                        std::string cutOf)
     : metamodel_(metamodel), include_(std::move(include)), design_(design), verifications_(verifications), cutOf_(std::move(cutOf)) {}
@@ -252,11 +219,12 @@ RequirementsFilter::RequirementsFilter(const model::Metamodel& metamodel, std::v
 std::set<std::string> RequirementsFilter::select(const model::Model& model) const {
   // the roots: artefacts named, or every artefact of a package / module
   std::set<std::string> roots;
-  for (const auto& pattern : include_) {
+  for (const auto& text : include_) {
+    const Pattern pattern(model, text);  // the same reading as a class diagram's (DS-212), read once (DS-385)
     for (const auto& pair : model.entities()) {
       const model::Entity& e = pair.second;
       if (!isArtefact(e) || e.expected) continue;
-      if (inPattern(model, pattern, e)) roots.insert(e.id);  // the same reading as a class diagram's (DS-212)
+      if (pattern.takes(e)) roots.insert(e.id);
     }
   }
   // on a cut, what answers to a requirement is the box that stands for it (DS-231)
@@ -290,21 +258,28 @@ std::set<std::string> RequirementsFilter::select(const model::Model& model) cons
 
 // ---- the filter of each kind of diagram ------------------------------------------------------
 
-std::unique_ptr<IFilter> filterFor(const model::Metamodel& metamodel, const model::Entity& diagram) {
+int Filters::number(const model::Entity& diagram, const std::string& key, int every) {
+  if (diagram.field(key) == "*") return every;
+  int read = 0;
+  return diagram.number(key, read) ? read : 0;
+}
+
+// the one place that names each filter: what a diagram takes is asked of it, by the kind the diagram writes
+std::unique_ptr<IFilter> Filters::of(const model::Entity& diagram) const {
   if (diagram.kind != model::Kind::Diagram) return nullptr;
   const std::string kind = diagram.field("kind");
   const std::vector<std::string> include = splitTrimmed(diagram.field("include"), ',');
   if (kind == "sequence" || kind == "tour")
-    return std::unique_ptr<IFilter>(new SequenceFilter(metamodel, include, number(diagram, "depth", 1000), diagram.id));
+    return std::unique_ptr<IFilter>(new SequenceFilter(metamodel_, include, number(diagram, "depth", 1000), diagram.id));
   if (kind == "state" || kind == "table") return std::unique_ptr<IFilter>(new StateFilter(include));  // both are of a machine
   if (kind == "requirement") {
     const std::vector<std::string> shown = splitTrimmed(diagram.field("show"), ',');
     const std::set<std::string> show(shown.begin(), shown.end());
-    return std::unique_ptr<IFilter>(new RequirementsFilter(metamodel, include, show.empty() || show.count("design"),
+    return std::unique_ptr<IFilter>(new RequirementsFilter(metamodel_, include, show.empty() || show.count("design"),
                                                            show.empty() || show.count("verifications"), diagram.id));
   }
   return std::unique_ptr<IFilter>(
-      new ClassFilter(metamodel, include, splitTrimmed(diagram.field("exclude"), ','), number(diagram, "neighbours", 0), diagram.id));
+      new ClassFilter(metamodel_, include, splitTrimmed(diagram.field("exclude"), ','), number(diagram, "neighbours", 0), diagram.id));
 }
 
 }  // namespace query

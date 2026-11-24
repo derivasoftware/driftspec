@@ -6,6 +6,15 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.52
+
+Every operation of the query is a member of its class (DS-385). A pattern of a diagram's include or exclude is read
+once, by Pattern, which then takes or leaves each entity by comparing its identity and scope with what it read, with no
+text built for each one. The one place that names the filter of each kind of diagram is the class Filters, where it was
+a function, and the box a relation is drawn from, with the helpers the filters hid, are members of the filter they
+serve. A rule of ds's design holds that the query writes no function, refining what the query answers. Nothing changes
+for a design: every finding, export, drawing, viewer page, answer and exit code is the same.
+
 ## 0.1.51
 
 A drawing loads only the steps of the check it reads (DS-376). `ds render` to svg, text, cells, ir or layout, and the

@@ -38,7 +38,7 @@ class TestFilters : public ::testing::Test {
   Ids of(const std::string& diagram) {
     const ds::model::Entity* d = model.find("diagram:" + diagram);
     if (!d) return {"no diagram " + diagram};
-    return ds::query::Query(model, metamodel).select(*ds::query::filterFor(metamodel, *d));
+    return ds::query::Query(model, metamodel).select(*ds::query::Filters(metamodel).of(*d));
   }
 
   static const char* shop() {
@@ -114,10 +114,8 @@ TEST_F(TestFilters, ARequirementsDiagramTakesItsRootsAndTheirUmbrella) {
   EXPECT_EQ(of("REQ_Sell"), (Ids{"REQ-00001-1", "REQ-00002-1", "p@m::Till"}));
 }
 
-/// filterFor: the one place that names the filter of each kind of diagram.
-class TestFilterFor : public TestFilters {};
-
-TEST_F(TestFilterFor, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
+/// Filters: the one place that names the filter of each kind of diagram (DS-385).
+TEST_F(TestFilters, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   load(std::string(shop()) + "diagram SEQ_Sell {\n  kind: sequence\n  include: shop@till::Till::sell\n}\n" +
        "diagram REQ_None {\n  kind: requirement\n  include: REQ-09999-1\n}\n");
   // a failed load leaves the model empty: say so, never dereference what it does not hold
@@ -127,12 +125,29 @@ TEST_F(TestFilterFor, EachKindOfDiagramHasItsFilterAndAnythingElseHasNone) {
   ASSERT_NE(sell, nullptr);
   ASSERT_NE(none, nullptr);
   ASSERT_NE(till, nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::filterFor(metamodel, *sell).get()), nullptr);
-  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::filterFor(metamodel, *none).get()), nullptr);
-  EXPECT_EQ(ds::query::filterFor(metamodel, *till), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::SequenceFilter*>(ds::query::Filters(metamodel).of(*sell).get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::query::RequirementsFilter*>(ds::query::Filters(metamodel).of(*none).get()), nullptr);
+  EXPECT_EQ(ds::query::Filters(metamodel).of(*till), nullptr);
 }
 
-TEST_F(TestFilterFor, ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort) {  // DS-337: std::stoi threw out_of_range
+/// Each form of a pattern, read once by Pattern (DS-385), takes in a class diagram what it names: a template written
+/// without its arity, a module named as such, a prefix over the identity or the scope; an exclusion takes out alike.
+TEST_F(TestFilters, EachFormOfAPatternTakesWhatItNamesInAClassDiagram) {
+  load(
+      "package p {\n"
+      "  module m {\n    class Box<T> { }\n    class Boxes { }\n    class Item { }\n  }\n"
+      "  module n {\n    class Till { }\n    class Tray { }\n  }\n"
+      "  module o {\n    class Old { }\n    class Gone { }\n  }\n"
+      "}\n"
+      "diagram CL_Template {\n  include: p@m::Box\n}\n"
+      "diagram CL_Module {\n  include: p@n\n  exclude: p@n::Tray\n}\n"
+      "diagram CL_Prefix {\n  include: p@o::*, p@m::It*\n  exclude: p@o::Go*\n}\n");
+  EXPECT_EQ(of("CL_Template"), (Ids{"p@m", "p@m::Box<1>"}));  // Box<T>, by its arity
+  EXPECT_EQ(of("CL_Module"), (Ids{"p@n", "p@n::Till"}));
+  EXPECT_EQ(of("CL_Prefix"), (Ids{"p@m", "p@m::Item", "p@o", "p@o::Old"}));
+}
+
+TEST_F(TestFilters, ANumberTooLargeForAnIntIsReadAsNoNumberAndNeverAnAbort) {  // DS-337: std::stoi threw out_of_range
   load(std::string(shop()) + "diagram SEQ_Deep {\n  kind: sequence\n  include: shop@till::Till::sell\n  depth: 99999999999\n}\n" +
        "diagram SEQ_Lots {\n  kind: sequence\n  include: shop@till::Till::sell\n  depth: lots\n}\n" +
        "diagram CL_Wide {\n  kind: class\n  include: shop@till::Till\n  neighbours: 99999999999\n}\n" +

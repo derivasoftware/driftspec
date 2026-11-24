@@ -153,7 +153,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   auto hidden = [&](const char* what) { return hide.count(what) > 0; };
 
   // what the diagram takes is the query's filter of it (DS-127); the boxes around are drawn here
-  const auto filter = query::filterFor(metamodel_, *diagram);
+  const auto filter = query::Filters(metamodel_).of(*diagram);
   const std::set<std::string> selected = static_cast<const query::ClassFilter&>(*filter).boxes(model_);
   const std::set<std::string> containers = query::ClassFilter::containers(model_, selected);
   auto up = [](const std::string& s) { return model::Scope(model::Scope(s).outer().text()).box().text(); };
@@ -287,7 +287,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
     const model::Entity* to = model_.find(r.to);
     if (!from || !to) continue;
     if (to->kind == model::Kind::Enum && kind == "composition") kind = "association";  // a value has no lifetime to own
-    const std::string fromClass = query::drawnFrom(model_, *from);                     // a behaviour's relation is its subject's (DS-219)
+    const std::string fromClass = query::ClassFilter::drawnFrom(model_, *from);        // a behaviour's relation is its subject's (DS-219)
     if (!placed.count(fromClass) || !placed.count(r.to) || fromClass == r.to) continue;
     std::string label;
     if (r.kind == "owns" || r.kind == "refs" || r.kind == "shares") {
@@ -308,7 +308,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   for (const auto& r : model_.index().ofKinds({"couples-transient", "couples-structural"})) {
     const model::Entity* seq = model_.find(r.from);
     if (!seq || !placed.count(r.to)) continue;
-    const std::string owner = query::drawnFrom(model_, *seq);
+    const std::string owner = query::ClassFilter::drawnFrom(model_, *seq);
     if (!placed.count(owner) || owner == r.to) continue;
     // an edge between the two already says it (an attribute's ownership, a type used): no second arrow
     const std::string pair = owner + "|" + r.to + "|";

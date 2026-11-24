@@ -57,8 +57,10 @@ class Query : public IQuery {
   std::vector<Answer> coupling() const;                             ///< what each behaviour touches outside its module, and how
 
  private:
-  bool known(const std::string& id) const;                         // an entity, or a scope something is declared in
-  std::vector<std::string> nearTo(const std::string& name) const;  // identities ending in the name, for a hint
+  bool known(const std::string& id) const;                                            // an entity, or a scope something is declared in
+  std::vector<std::string> nearTo(const std::string& name) const;                     // identities ending in the name, for a hint
+  Answer entityAnswer(const model::Entity& entity, const std::string& detail) const;  // an entity, its kind by name
+  static bool endsWith(const std::string& text, const std::string& suffix);           // a finding's file, the one asked
   const model::Model& model_;
   const model::Metamodel& metamodel_;
 };

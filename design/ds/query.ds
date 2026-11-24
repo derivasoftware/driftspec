@@ -1,15 +1,16 @@
 // LLD of the query namespace (ds::query): the engine that asks the model (SREQ-00011-1,
 // DS-127). It answers named questions (ask) and applies a filter it is given (select);
 // both give identities. A diagram's content is one filter, built from the diagram by
-// filterFor(), the one place that names the filter of each kind of diagram. Not its
-// jobs: drawing, writing answers as text or JSON (their formats', ds::format), changing
-// the model.
+// Filters, the one place that names the filter of each kind of diagram; a pattern of the
+// diagram is read once, by Pattern. Not its jobs: drawing, writing answers as text or
+// JSON (their formats', ds::format), changing the model.
 
 package driftspec@ds {
 
 
   module query {
     @requirement REQ-00003-2
+    @requirement REQ-00200-1                 // every operation of the query is a member of a class (DS-385)
 
     // ---- the principles, as rules ---------------------------------------------------------------
     rule query-draws-nothing {
@@ -25,6 +26,36 @@ package driftspec@ds {
       for class c in driftspec@ds@query
       where c = driftspec@ds@query::Query
       never m in c, m uses x, x inherits driftspec@ds@query::IFilter
+    }
+
+    rule query-operations-belong-to-classes {
+      title: no function is written in the query's module, so every operation of the query is a member of a class
+      @requirement REQ-00200-1
+      for function f in driftspec@ds@query
+      never f in driftspec@ds@query
+    }
+
+    requirement REQ-00200-1 {
+      tags: architecture, query
+      status: draft
+      @refines REQ-00003-2
+      title: Every operation of the query shall be a member of the class whose responsibility it is
+      text:
+        What a diagram takes is its filter's; which filter a diagram has is the one place that names them, Filters;
+        how a pattern of include or exclude reads is the Pattern's; the box a relation is drawn from is the class
+        filter's; an entity written as an answer is the query's. A function of the module would be a responsibility
+        no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-366, DS-385): every module has its architecture decisions and patterns, and its rules
+        check that they hold; a free function means a responsibility is missing.
+      verification VER-00220-1 {
+        status: draft
+        title: Integration tests confirm the design of the query holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheQueryIsTold
+      }
     }
 
     requirement REQ-00003-2 {
@@ -59,13 +90,14 @@ package driftspec@ds {
         tests/integration/ds/query/test_query.cpp::TestQueryOfTheDesign.CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule
     }
 
-    verification VER-00003-6 {
-      status: approved
+    verification VER-00003-7 {
+      status: draft
       @requirement REQ-00003-2
       title: Integration tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram; revision 3 adds that a class answers its machine and its operations' sequences (DS-53)
       text:
         Revision 4 (DS-185) names the test of the filter of each kind after filterFor, the one it covers. Revision 5 (DS-137) registers the filters where they are tested: over a design read by the real steps.
         Revision 6 (DS-362): the neighbours of a class diagram past what its selection reaches take the reach, and the walk ends at the first step that adds nothing; neighbours: 2000000000 over three classes draws them at once.
+        Revision 7 (DS-385): the filter of each kind is named by Filters, so its test is TestFilters'; and every form of a pattern, read once by Pattern, takes in a class diagram what it names.
       method: test
       tests:
         tests/integration/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
@@ -84,7 +116,8 @@ package driftspec@ds {
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.AClosedBoxStandsForWhatItHolds
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.ASequenceDiagramTakesWhoTakesPartNotHowItIsDrawn
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.ARequirementsDiagramTakesItsRootsAndTheirUmbrella
-        tests/integration/ds/query/test_diagram_filters.cpp::TestFilterFor.EachKindOfDiagramHasItsFilterAndAnythingElseHasNone
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.EachKindOfDiagramHasItsFilterAndAnythingElseHasNone
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.EachFormOfAPatternTakesWhatItNamesInAClassDiagram
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.TheQueryAppliesAFilterItIsGivenWithoutKnowingIt
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.WhatADiagramShowsIsAnswerdByIdentityOnly
     }
@@ -114,19 +147,31 @@ package driftspec@ds {
       + abstract select(model: model::Model) -> std::set<std::string>
     }
 
-    // the one place that names the filter of each kind of diagram, built from the diagram's fields and read in the metamodel
-    function filterFor(metamodel: model::Metamodel, diagram: model::Entity) -> std::unique_ptr<IFilter> {
+    // the one place that names the filter of each kind of diagram, built from the diagram's fields and read in the
+    // metamodel (DS-385): what asks what a diagram takes asks it here, and never names a filter itself
+    class Filters {
       @requirement REQ-00003-2
+      @requirement REQ-00200-1
+      - refs metamodel_: model::Metamodel     // the language the filters it makes read their cut in (DS-351)
+      + Filters(metamodel: model::Metamodel)
+      + of(diagram: model::Entity) -> std::unique_ptr<IFilter>
+      // a number field of a diagram: every when it is written *, 0 when it is not written or no int holds it
+      - static number(diagram: model::Entity, key: std::string, every: int) -> int
     }
 
-    // one reading of a pattern of include, exclude or open for every kind of diagram (DS-212)
-    function inPattern(model: model::Model, pattern: std::string, entity: model::Entity) -> bool {
+    // one pattern of a diagram's include or exclude, read once: one reading for every kind of diagram (DS-212). An
+    // identity; a prefix with * over the identity or the scope (p@m::* is the module p@m and everything in it); a
+    // module named as such; a template written without its arity. Taking an entity builds no text (DS-385)
+    class Pattern {
       @requirement REQ-00116-1
-    }
-
-    // the box a relation is drawn from: a behaviour's is its subject's, a box's is its own (DS-219)
-    function drawnFrom(model: model::Model, entity: model::Entity) -> std::string {
-      @requirement REQ-00121-1
+      @requirement REQ-00200-1
+      - text_: std::string                    // as written
+      - prefix_: bool                         // written with a * at the end
+      - module_: bool                         // names a module the model declares
+      - start_: std::string                   // a prefix: what comes before the *; a module: the module and its ::
+      - whole_: std::string                   // a prefix ending in ::, the module before it
+      + Pattern(model: model::Model, text: std::string)
+      + takes(entity: model::Entity) -> bool
     }
 
     // include and exclude patterns, the neighbours, the boxes around; a closed box stands for what it holds
@@ -145,7 +190,14 @@ package driftspec@ds {
       + select(model: model::Model) -> std::set<std::string>
       + boxes(model: model::Model) -> std::set<std::string>   // the neighbours walk ends at the first step that adds nothing (DS-362)
       + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
-      - matches(model: model::Model, pattern: std::string, entity: model::Entity) -> bool
+      // the box a relation is drawn from: a behaviour's is its subject's, a box's is its own (DS-219)
+      + static drawnFrom(model: model::Model, entity: model::Entity) -> std::string {
+        @requirement REQ-00121-1
+      }
+      - static isBox(entity: model::Entity) -> bool               // a class, an enum, an interface or a function
+      - static isContainer(entity: model::Entity) -> bool         // a module, or a package below the system
+      - static drawable(entity: model::Entity) -> bool            // a box, or a box that holds others
+      - static drawnAsEdge(relation: std::string) -> bool         // the relations the neighbours follow
     }
 
     // a behaviour a sequence diagram takes, and the scenario it follows (* for every branch)
@@ -190,6 +242,7 @@ package driftspec@ds {
       - cutOf_: std::string
       + RequirementsFilter(metamodel: model::Metamodel, include: std::vector<std::string>, design: bool, verifications: bool, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
+      - static isArtefact(entity: model::Entity) -> bool          // a requirement, a constraint or a verification
     }
 
     // ---- the one walk of a behaviour (DS-130) ---------------------------------------------------
@@ -246,14 +299,14 @@ package driftspec@ds {
       + coupling() -> std::vector<Answer>
       - known(id: std::string) -> bool                       // an entity, or a scope something is declared in
       - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
+      - entityAnswer(entity: model::Entity, detail: std::string) -> Answer
+      - static endsWith(text: std::string, suffix: std::string) -> bool   // a finding's file ends in the one asked
     }
 
-    - function entityAnswer(metamodel: model::Metamodel, entity: model::Entity, detail: std::string) -> Answer
-
     // An entity as an answer: its kind is named by the metamodel the model is written in.
-    sequence entityAnswer {
+    sequence Query::entityAnswer {
       local answer: Answer
-      -> metamodel.nameOf(entity.kind) -> kind
+      self -> metamodel_.nameOf(entity.kind) -> kind
       return answer
     }
 
@@ -314,7 +367,7 @@ package driftspec@ds {
       self -> model_.entities() -> held
       loop each entity held {
         opt in the scope, written with @ when it names a package, and not expected {
-          -> entityAnswer(metamodel_, entity, title) -> answer
+          -> entityAnswer(entity, title) -> answer
         }
       }
       return out
@@ -358,7 +411,7 @@ package driftspec@ds {
         opt it is a behaviour-of {
           self -> model_.find(relation.from) -> behaviour
           opt the model holds it {
-            -> entityAnswer(metamodel_, behaviour, scenario) -> answer
+            -> entityAnswer(behaviour, scenario) -> answer
           }
         }
       }
@@ -392,16 +445,17 @@ package driftspec@ds {
     // What a diagram shows is the filter of its kind, applied to the model: nothing is drawn (DS-127).
     sequence Query::shows {
       local out: std::vector<Answer>
+      local filters: Filters
       local filter: IFilter
       self -> model_.find(diagram) -> entity
       opt no diagram has that name / no-such-diagram {
         return error
       }
-      -> filterFor(metamodel_, entity) -> filter
+      -> filters.of(entity) -> filter
       -> select(filter) -> ids
       loop each id {
         self -> model_.find(id) -> taken
-        -> entityAnswer(metamodel_, taken, "") -> answer
+        -> entityAnswer(taken, "") -> answer
       }
       return out
     }

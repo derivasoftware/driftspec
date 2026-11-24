@@ -116,7 +116,7 @@ TEST_F(TestCutSequences, ASequenceTakesTheCutOfTheBoxesDrawnAndStandsOnIt) {
   const Labels drawn = lifelines(ir);
   EXPECT_NE(std::find(drawn.begin(), drawn.end(), "till: Till"), drawn.end());  // the till is open there: its objects
   EXPECT_NE(std::find(drawn.begin(), drawn.end(), "desk"), drawn.end());        // the desk is closed there: the box
-  const auto filter = ds::query::filterFor(metamodel, *model.find("diagram:HLD_Till"));
+  const auto filter = ds::query::Filters(metamodel).of(*model.find("diagram:HLD_Till"));
   for (const auto& id : participants(ir)) EXPECT_EQ(filter->select(model).count(id), 1U) << id;  // each is a box of that drawing
 }
 
@@ -144,7 +144,7 @@ TEST_F(TestCutSequences, DepthIsTheUniformCaseOnACutToo) {
 TEST_F(TestCutSequences, TheQueryShowsWhoTakesPartOnTheCut) {
   for (const char* name : {"SEQ_Classes", "SEQ_Open", "SEQ_Modules", "SEQ_Borrowed", "SEQ_AsWritten", "SEQ_UnfoldSales", "SEQ_FoldSupply",
                            "SEQ_Through", "SEQ_OneLevel"}) {
-    const auto filter = ds::query::filterFor(metamodel, *model.find(std::string("diagram:") + name));
+    const auto filter = ds::query::Filters(metamodel).of(*model.find(std::string("diagram:") + name));
     EXPECT_EQ(filter->select(model), participants(diagram(name))) << name;
   }
 }
@@ -167,7 +167,7 @@ TEST_F(TestCutSequences, WhatAnswersToARequirementIsTheBoxThatStandsForIt) {
   EXPECT_TRUE(has(modules, "shop@sales@desk"));
   EXPECT_FALSE(has(modules, "shop@sales@desk::Desk"));
   EXPECT_TRUE(message(modules, "REQ-00002-1", "shop@warehouse@stock", "satisfied by"));
-  const auto filter = ds::query::filterFor(metamodel, *model.find("diagram:REQ_Modules"));
+  const auto filter = ds::query::Filters(metamodel).of(*model.find("diagram:REQ_Modules"));
   std::set<std::string> drawn;
   for (const auto& n : modules["nodes"]) drawn.insert(n["id"].get<std::string>());
   EXPECT_EQ(filter->select(model), drawn);

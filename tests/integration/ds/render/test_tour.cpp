@@ -110,7 +110,7 @@ TEST_F(TestTour, ABoxNamedInAScenarioTakesPartAsOneBoxWithNoCutWritten) {
 }
 
 TEST_F(TestTour, TheQueryShowsWhoTakesPart) {
-  const auto filter = ds::query::filterFor(metamodel, *detail.find("diagram:TOUR_Packages"));
+  const auto filter = ds::query::Filters(metamodel).of(*detail.find("diagram:TOUR_Packages"));
   EXPECT_EQ(filter->select(detail), (std::set<std::string>{"shop@bank", "shop@sales", "shop@shell", "shop@warehouse"}));
 }
 
