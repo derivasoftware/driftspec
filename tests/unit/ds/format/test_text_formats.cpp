@@ -12,7 +12,7 @@ namespace {
 
 /// The answers of a query and the report of a check are documents (DS-126): each written as text or
 /// as JSON by formats found by name; the report is built once from the model and written without it.
-ds::model::Finding finding(const std::string& code, const std::string& severity) {
+ds::model::Finding finding(const std::string& code, ds::model::Severity severity) {
   ds::model::Finding f;
   f.code = code;
   f.severity = severity;
@@ -40,9 +40,9 @@ TEST(TestTextFormats, AReportIsBuiltOnceFromTheModelAndCountsWhatItSays) {
   e.kind = ds::model::Kind::Package;
   e.id = "p";
   model.declare(e);
-  model.report(finding("E-X", "error"));
-  model.report(finding("W-Y", "warning"));
-  const ds::check::Report report = ds::check::Report::of(model);
+  model.report(finding("E-X", ds::model::Severity::error));
+  model.report(finding("W-Y", ds::model::Severity::warning));
+  const ds::check::Report report = ds::check::Report::of(model, metamodel);
   EXPECT_EQ(report.findings.size(), 2u);
   EXPECT_EQ(report.errors, 1);
   EXPECT_EQ(report.entities, 1);
@@ -51,7 +51,8 @@ TEST(TestTextFormats, AReportIsBuiltOnceFromTheModelAndCountsWhatItSays) {
 
 TEST(TestTextFormats, AReportReadsTheSameAsTextAndAsJson) {
   ds::check::Report report;
-  report.findings = {finding("E-X", "error")};
+  report.severities = ds::model::Metamodel().severities();
+  report.findings = {finding("E-X", ds::model::Severity::error)};
   report.entities = 4;
   report.relations = 2;
   report.errors = 1;

@@ -52,10 +52,10 @@ bool Linker::reportAmbiguous(const bind::Reference& reference) {
   if (!context_->reported().insert("ambiguous " + use).second) return true;
   std::string names;
   for (const auto& c : candidates) names += (names.empty() ? "" : ", ") + c;
-  context_->report({"W-NAME-AMBIGUOUS", "warning",
-                    "'" + written + "' in " + reference.from + " names " + std::to_string(candidates.size()) +
-                        " classes of its package: " + names + "; it relates nothing until it is qualified",
-                    reference.location});
+  context_->report(context_->metamodel().finding(model::Code::W_NAME_AMBIGUOUS,
+                                                 "'" + written + "' in " + reference.from + " names " + std::to_string(candidates.size()) +
+                                                     " classes of its package: " + names + "; it relates nothing until it is qualified",
+                                                 reference.location));
   return true;
 }
 
@@ -80,19 +80,19 @@ void Linker::resolveReference(const bind::Reference& reference) {
   if (artefactRef && model::ArtefactName::matches(reference.target)) {
     if (!model::ArtefactName(reference.target).hasRevision()) {
       // a link goes against a revision: an unpinned one says nothing about which text was meant
-      context_->report(
-          {"E-REF-UNPINNED", "error",
-           reference.from + " refers to " + reference.target + " without a revision; write " + reference.target + "-<revision>",
-           reference.location});
+      context_->report(context_->metamodel().finding(
+          model::Code::E_REF_UNPINNED,
+          reference.from + " refers to " + reference.target + " without a revision; write " + reference.target + "-<revision>",
+          reference.location));
       return;
     }
     // the declared revision of that artefact, whatever it is
     const std::string declaredId = model_->index().revisionOf(reference.target);
     if (!declaredId.empty() && declaredId != reference.target) {
-      context_->report({"W-REVISION-DRIFT", "warning",
-                        reference.from + " refers to " + reference.target + " but the workspace declares " + declaredId +
-                            ": the link is behind the artefact",
-                        reference.location});
+      context_->report(context_->metamodel().finding(model::Code::W_REVISION_DRIFT,
+                                                     reference.from + " refers to " + reference.target + " but the workspace declares " +
+                                                         declaredId + ": the link is behind the artefact",
+                                                     reference.location));
       model_->relate({reference.relation, reference.from, declaredId, reference.location, reference.multiplicity});
       return;
     }
@@ -122,10 +122,10 @@ void Linker::resolveReference(const bind::Reference& reference) {
     // a use case nobody declares is said once, by the use case check (W-USECASE-UNDECLARED), as before its
     // links were resolved here (DS-116)
     if (reference.expectedKind != model::Kind::UseCase && context_->reported().insert(target).second) {
-      context_->report({"W-REF-UNDECLARED", "warning",
-                        metamodel_->nameOf(expected.kind) + " '" + reference.target + "' is referenced by " + reference.from +
-                            " but declared nowhere in the workspace",
-                        reference.location});
+      context_->report(context_->metamodel().finding(model::Code::W_REF_UNDECLARED,
+                                                     metamodel_->nameOf(expected.kind) + " '" + reference.target + "' is referenced by " +
+                                                         reference.from + " but declared nowhere in the workspace",
+                                                     reference.location));
     }
   }
   if (reference.relation == "part-of") {  // a package reopened by its path: the outer package contains it, as nesting would say
@@ -158,7 +158,7 @@ bool Linker::kindAllowed(const bind::Reference& reference, const std::string& ta
   else if (reference.relation == "inherits" && to->kind == model::Kind::Interface)
     message =
         reference.from + " names the interface " + target + " as its base: a class realises an interface, write @interface " + to->name;
-  context_->report({"E-RELATION-KIND", "error", message, reference.location});
+  context_->report(context_->metamodel().finding(model::Code::E_RELATION_KIND, message, reference.location));
   return false;
 }
 
@@ -176,10 +176,10 @@ void Linker::checkTemplateBound(const bind::Reference& reference) {
     const model::Entity* arg = argId.empty() ? nullptr : model_->find(argId);
     if (boundId.empty() || !arg || arg->expected) continue;  // waits for a declaration (R6)
     if (!resolver_->derives(argId, boundId)) {
-      context_->report({"E-TEMPLATE-BOUND", "error",
-                        reference.args[i] + " does not satisfy " + params[i].name + ": " + params[i].type + " of " + templateId +
-                            " (used by " + reference.from + ")",
-                        reference.location});
+      context_->report(context_->metamodel().finding(model::Code::E_TEMPLATE_BOUND,
+                                                     reference.args[i] + " does not satisfy " + params[i].name + ": " + params[i].type +
+                                                         " of " + templateId + " (used by " + reference.from + ")",
+                                                     reference.location));
     }
   }
 }

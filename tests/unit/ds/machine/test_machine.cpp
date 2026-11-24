@@ -34,7 +34,7 @@ class TestMachine : public ::testing::Test {
   /// The codes of what a machine says cannot be, in the order found.
   std::vector<std::string> codes(const std::string& subject) const {
     std::vector<std::string> out;
-    for (const auto& f : machine(subject).faults()) out.push_back(f.code);
+    for (const auto& f : machine(subject).faults(metamodel)) out.push_back(f.code);
     return out;
   }
 
@@ -120,7 +120,7 @@ TEST_F(TestMachine, RulesThatExcludeEachOtherSayNothing) {
        "      Shipped if status = Shipped\n"
        "      Cancelled if cancelled, status != Shipped\n"
        "    }\n");
-  EXPECT_TRUE(machine("Order").faults().empty());
+  EXPECT_TRUE(machine("Order").faults(metamodel).empty());
 }
 
 TEST_F(TestMachine, TwoStatesThatCanHoldAtOnceAreSaidWithAContextInWhichTheyDo) {
@@ -129,7 +129,7 @@ TEST_F(TestMachine, TwoStatesThatCanHoldAtOnceAreSaidWithAContextInWhichTheyDo) 
        "      Open if status = Open\n"
        "      Cancelled if cancelled\n"
        "    }\n");
-  const auto faults = machine("Order").faults();
+  const auto faults = machine("Order").faults(metamodel);
   ASSERT_EQ(faults.size(), 1u);
   EXPECT_EQ(faults[0].code, "W-STATE-OVERLAP");
   EXPECT_NE(faults[0].message.find("Order can be Open and Cancelled at once: when cancelled = true, status = Open"), std::string::npos)
@@ -144,7 +144,7 @@ TEST_F(TestMachine, TwoRulesOfOneStateMayHoldAtOnce) {
        "      Gone if status = Shipped\n"
        "      Live if not cancelled, status != Shipped\n"
        "    }\n");
-  EXPECT_TRUE(machine("Order").faults().empty());
+  EXPECT_TRUE(machine("Order").faults(metamodel).empty());
 }
 
 TEST_F(TestMachine, AValueItsTypeDoesNotHaveIsSaidWithTheValuesItHas) {
@@ -153,7 +153,7 @@ TEST_F(TestMachine, AValueItsTypeDoesNotHaveIsSaidWithTheValuesItHas) {
        "      Open if status = Open\n"
        "      Lost if status = Missing\n"
        "    }\n");
-  const auto faults = machine("Order").faults();
+  const auto faults = machine("Order").faults(metamodel);
   ASSERT_EQ(faults.size(), 1u);
   EXPECT_EQ(faults[0].code, "W-STATE-VALUE");
   EXPECT_NE(faults[0].message.find("status is never Missing: it is one of Open, Paid, Shipped"), std::string::npos) << faults[0].message;
@@ -175,7 +175,7 @@ TEST_F(TestMachine, ANameAloneTheSubjectDoesNotHoldIsAConditionWithAName) {
        "      Stale if status = Open, stale\n"
        "      Done if status != Open\n"
        "    }\n");
-  EXPECT_TRUE(machine("Order").faults().empty());
+  EXPECT_TRUE(machine("Order").faults(metamodel).empty());
 }
 
 TEST_F(TestMachine, ARuleThatExcludesItselfIsSaidAndIsNotHeldToTheOthers) {
@@ -206,7 +206,7 @@ TEST_F(TestMachine, AnAttributeWhoseValuesCannotBeListedIsComparedAsWritten) {
       "      Empty if level = 0\n"
       "      Filled if level != 0\n"
       "    }\n");
-  EXPECT_TRUE(machine("Tank").faults().empty());
+  EXPECT_TRUE(machine("Tank").faults(metamodel).empty());
   EXPECT_EQ(machine("Tank").initial(), "Empty");
 }
 

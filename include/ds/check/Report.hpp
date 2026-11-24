@@ -1,8 +1,10 @@
 #ifndef DRIFTSPEC_CHECK_REPORT_HPP
 #define DRIFTSPEC_CHECK_REPORT_HPP
 
+#include <cstddef>
 #include <vector>
 
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -16,10 +18,13 @@ struct Report {
   int entities = 0;                      ///< declared: what the design says
   int expected = 0;                      ///< named but declared nowhere
   int relations = 0;
-  int errors = 0;  ///< findings of severity error: what makes the check fail
+  int errors = 0;                               ///< findings of a severity that fails: what makes the check fail
+  std::vector<model::SeveritySpec> severities;  ///< what each severity means, copied from the metamodel (DS-379)
 
-  /// The report of a checked model.
-  static Report of(const model::Model& model);
+  /// The report of a checked model, written in `metamodel`.
+  static Report of(const model::Model& model, const model::Metamodel& metamodel);
+  /// What a severity means, as the metamodel the report was built in says.
+  const model::SeveritySpec& severityOf(model::Severity severity) const { return severities[static_cast<std::size_t>(severity)]; }
 };
 
 }  // namespace check

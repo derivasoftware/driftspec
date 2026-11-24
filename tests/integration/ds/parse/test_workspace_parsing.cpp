@@ -33,14 +33,14 @@ TEST_F(TestWorkspaceParsing, AWholeWorkspaceIsReadWithoutSyntaxErrors) {
   for (const auto& f : files) EXPECT_FALSE(f.hasSyntaxErrors) << f.path;
   const ds::model::Model model = ds::api::Api(metamodel).load(files);
   EXPECT_TRUE(syntax(model).empty());
-  EXPECT_GT(ds::check::Report::of(model).entities, 13);  // every file gave what it declares
+  EXPECT_GT(ds::check::Report::of(model, metamodel).entities, 13);  // every file gave what it declares
 }
 
 TEST_F(TestWorkspaceParsing, TheFilesOfADirectoryAreReadAsOneInAnyOrder) {
   auto files = parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/diag");
-  const ds::check::Report forwards = ds::check::Report::of(ds::api::Api(metamodel).load(files));
+  const ds::check::Report forwards = ds::check::Report::of(ds::api::Api(metamodel).load(files), metamodel);
   std::reverse(files.begin(), files.end());
-  const ds::check::Report backwards = ds::check::Report::of(ds::api::Api(metamodel).load(files));
+  const ds::check::Report backwards = ds::check::Report::of(ds::api::Api(metamodel).load(files), metamodel);
   EXPECT_EQ(forwards.entities, backwards.entities);
   EXPECT_EQ(forwards.expected, backwards.expected);
   EXPECT_EQ(forwards.relations, backwards.relations);
@@ -59,7 +59,7 @@ TEST_F(TestWorkspaceParsing, ASyntaxErrorIsReportedWhereTheFileStopsParsing) {
                                                                                 "}\n")});
   const auto errors = syntax(model);
   ASSERT_EQ(errors.size(), 1u);
-  EXPECT_EQ(errors[0].severity, "error");
+  EXPECT_EQ(errors[0].severity, ds::model::Severity::error);
   EXPECT_EQ(errors[0].location.file, "x.ds");
   EXPECT_EQ(errors[0].location.line, 5);  // the dot a qualified name does not take, not the top of the file
   EXPECT_GT(errors[0].location.column, 1);
