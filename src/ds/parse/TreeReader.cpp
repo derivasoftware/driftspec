@@ -13,7 +13,7 @@ const char* TreeReader::nameOf(Field field) {
       "action",   "base",      "body",      "bound",    "call",       "code",    "condition", "default",  "definition", "else_scenario",
       "entity",   "event",     "fails",     "failure",  "family",     "field",   "from",      "guard",    "id",         "key",
       "kind",     "left",      "many",      "modifier", "name",       "negated", "of",        "op",       "operator",   "operators",
-      "optional", "otherwise", "ownership", "package",  "parameter",  "params",  "prefix",    "realises", "relation",   "result",
+      "optional", "otherwise", "ownership", "package",  "parameter",  "params",  "prefix",    "property", "realises",   "relation", "result",
       "returns",  "right",     "scenario",  "scope",    "show",       "subject", "symbol",    "target",   "text",       "title",
       "to",       "type",      "value",     "variable", "visibility",
   };

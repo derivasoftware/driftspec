@@ -1652,6 +1652,39 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00196-1 {
+      tags: language, logic, rules, check
+      status: draft
+      @refines SREQ-00012-1
+      title: A rule shall read what an entity is as name(x), id(x) and kind(x), match a value against a pattern, and read a member's flag with is
+      text:
+        name(x), id(x) and kind(x) are what the entity bound to x is: its name as written, its identity and the name of
+        its kind. They are the language's, so no definition takes those names (E-RULE-RESERVED), and no kind declares a
+        field named name or id; the dot stays for a field the design writes, as r.status. A term of either kind reads
+        what its variable is bound to and never binds it. `name(c) matches "^I[A-Z]"` holds when the value contains a
+        match of the pattern, an ECMAScript regular expression; each pattern is compiled once, when its formula is
+        validated, and a pattern that is no string or does not compile is reported at the literal and its formula is
+        not evaluated (E-RULE-PATTERN). `m is abstract` holds when m is bound to an entity that carries the flag, a
+        flag some kind declares; like a match, it tests what is bound and binds nothing.
+      rationale:
+        Owner, 2026-11-24 (DS-402, DS-403): the design rules the Owner uses in every design (an interface named I and a
+        capital, an abstract class A and a capital, a factory ending in Factory) need what a class is called, a pattern
+        and whether a member is abstract. The syntax is the Owner's.
+      verification VER-00216-1 {
+        status: draft
+        title: Integration tests confirm a rule reads an entity's name, identity and kind, matches a value against a pattern compiled once, reads a member's flag, and is told when its pattern is no string or does not compile, a definition takes a reserved name or a property is all that binds a variable
+        method: test
+        tests:
+          tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.ARuleReadsTheNameTheIdentityAndTheKindOfAnEntity
+          tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.ANameMatchesAPattern
+          tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.AMembersFlagIsReadWithIs
+          tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.APatternThatIsNoStringOrDoesNotCompileIsReported
+          tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.ADefinitionThatTakesAReservedNameIsReported
+          tests/integration/ds/check/test_rule_properties.cpp::TestRuleProperties.APropertyNeverBindsItsVariable
+          tests/unit/ds/model/test_metamodel.cpp::TestReservedFields.NoKindDeclaresAFieldNamedNameOrId
+      }
+    }
+
     requirement REQ-00097-1 {
       tags: language, logic, rules, check, sequence
       status: approved

@@ -17,6 +17,8 @@ using text::join;
 model::Term FormulaBinder::termOf(const parse::TreeReader& reader, TSNode node) {
   const std::string text = reader.textOf(node);
   if (TreeReader::is(node, "field_term")) return {reader.fieldText(node, Field::of), true, false, reader.fieldText(node, Field::field)};
+  // name(x), id(x), kind(x): what the entity bound to x is (DS-403)
+  if (TreeReader::is(node, "property_term")) return {reader.fieldText(node, Field::of), true, false, "", reader.fieldText(node, Field::property)};
   if (!TreeReader::is(node, "qualified_name")) return {text, false, true};  // a number or a string: a value
   // a bare name is a variable; an entity is always written qualified (the form decides, nothing is guessed)
   return {text, !model::Identity(text).isQualified(), false};
@@ -45,8 +47,10 @@ void FormulaBinder::bind(TSNode node, const BindContext& ctx, model::Entity& out
         l.name = ctx.reader.fieldText(atom, Field::relation);
         l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::left)), termOf(ctx.reader, ctx.reader.child(atom, Field::right))};
       } else if (TreeReader::is(atom, "kind_atom")) {
-        l.form = model::LiteralForm::Kind;
         l.name = ctx.reader.fieldText(atom, Field::kind);
+        // `m is abstract`: a word no kind is named but a flag some kind declares reads the flag (DS-403)
+        const bool flag = !ctx.metamodel.specNamed(l.name) && ctx.metamodel.flagNamed(l.name);
+        l.form = flag ? model::LiteralForm::Flag : model::LiteralForm::Kind;
         l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::left))};
       } else if (TreeReader::is(atom, "in_atom")) {
         l.form = model::LiteralForm::In;
@@ -54,7 +58,8 @@ void FormulaBinder::bind(TSNode node, const BindContext& ctx, model::Entity& out
       } else if (TreeReader::is(atom, "compare_atom")) {
         static const std::map<std::string, model::LiteralForm> kOperators = {
             {"=", model::LiteralForm::Equal},      {"!=", model::LiteralForm::NotEqual}, {"<", model::LiteralForm::Less},
-            {"<=", model::LiteralForm::LessEqual}, {">", model::LiteralForm::Greater},   {">=", model::LiteralForm::GreaterEqual}};
+            {"<=", model::LiteralForm::LessEqual}, {">", model::LiteralForm::Greater},   {">=", model::LiteralForm::GreaterEqual},
+            {"matches", model::LiteralForm::Matches}};
         l.form = kOperators.at(ctx.reader.fieldText(atom, Field::operator_));
         l.terms = {termOf(ctx.reader, ctx.reader.child(atom, Field::left)), termOf(ctx.reader, ctx.reader.child(atom, Field::right))};
       } else if (TreeReader::is(atom, "arg_atom")) {

@@ -103,6 +103,10 @@ class Metamodel {
   const KindSpec& specOf(Kind kind) const;
   /// The kind a word names, as nameOf writes it (class, sequence...); nullptr when it names none.
   const KindSpec* specNamed(const std::string& name) const;
+  /// Whether a field name is the entity's own, never a field a kind declares: name and id (DS-403).
+  static bool reservedField(const std::string& name);
+  /// Whether a word is a flag some kind declares (abstract, static, owns...): what `m is abstract` tests (DS-403).
+  bool flagNamed(const std::string& name) const;
   /// The field a key names for a kind, families included; nullptr when the kind does not declare it.
   const FieldSpec* fieldOf(Kind kind, const std::string& key) const;
   /// The fields that hold an entity's identity, whatever kind carries them, each once: what a rename carries along.
@@ -145,6 +149,8 @@ class Metamodel {
   std::string version() const;
 
  private:
+  /// A field of a kind, refused when its name is reserved (DS-403).
+  static FieldSpec spec(const std::string& name, FieldType type, FieldSource source, const std::string& meaning);
   /// A field the author writes, one the binder takes from the syntax, one the checker derives.
   static FieldSpec writtenField(const std::string& name, FieldType type, const std::string& meaning);
   static FieldSpec syntax(const std::string& name, FieldType type, const std::string& meaning);
