@@ -70,12 +70,16 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string machineClasses = "driftspec@ds@machine::machine-operations-belong-to-classes";
   const std::string machineReads = "driftspec@ds@machine::the-machine-reads-the-model";
   const std::string queryClasses = "driftspec@ds@query::query-operations-belong-to-classes";
+  const std::string stepsAsInterface = "driftspec@ds@check::checker-knows-steps-as-istep";
+  const std::string stepsAlone = "driftspec@ds@check::no-step-knows-another";
+  const std::string checkClasses = "driftspec@ds@check::check-operations-belong-to-classes";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
-  for (const std::string& rule : {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads,
-                                  exporterClasses, exporterReads, apiChooses, machineClasses, machineReads, queryClasses})
+  for (const std::string& rule :
+       {context, asInterface, alone, builtOnce, binderClasses, modelClasses, axisClasses, axisReads, exporterClasses, exporterReads,
+        apiChooses, machineClasses, machineReads, queryClasses, stepsAsInterface, stepsAlone, checkClasses})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -181,6 +185,28 @@ TEST_F(TestEnginePrinciples, StepsMadeOutsideTheApiAreTold) {
       broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::Steps::of(selection) -> steps\n"}});
   EXPECT_TRUE(has(rules, apiChooses));
   EXPECT_FALSE(has(rules, builtOnce));
+}
+
+/// The check is a runner of steps (DS-383): the checker knows each step only as IStep, no step knows another, and
+/// every operation of the check is a member of a class.
+TEST_F(TestEnginePrinciples, TheCheckerHoldingAConcreteStepIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/check.ds", "    class Checker : IChecker {", "      - owns linker_: Linker\n"}});
+  EXPECT_TRUE(has(rules, stepsAsInterface));
+  EXPECT_FALSE(has(rules, stepsAlone));
+}
+
+TEST_F(TestEnginePrinciples, AStepThatKnowsAnotherIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/check.ds", "    class InterfaceContracts : ACheck {", "      - refs usecases_: UseCaseContracts\n"}});
+  EXPECT_TRUE(has(rules, stepsAlone));
+  EXPECT_FALSE(has(rules, stepsAsInterface));
+}
+
+TEST_F(TestEnginePrinciples, AFunctionOfTheCheckIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/check.ds", "  module check {", "    function loose(text: std::string) -> std::string\n"}});
+  EXPECT_TRUE(has(rules, checkClasses));
+  EXPECT_FALSE(has(rules, machineClasses));
 }
 
 TEST_F(TestEnginePrinciples, AFunctionOfTheMachineIsTold) {

@@ -46,6 +46,86 @@ package driftspec@ds {
       never depends(c, driftspec@ds@model::Model)
     }
 
+    // ---- the check as a runner of steps, as requirements and the rules that hold them (DS-383) ----------------
+    // The checker runs what it is given through IStep and knows no concrete step; Steps is the one place that names
+    // them. A step reads what the steps it needs wrote into the model, never those steps; and every operation of
+    // the check is a member of the class whose responsibility it is.
+    requirement REQ-00194-1 {
+      tags: architecture, check
+      status: draft
+      @refines REQ-00053-2
+      title: The checker shall run each step of the check through IStep, and no step shall know another
+      text:
+        The checker is handed the steps, keyed by name, and runs each one after the steps it needs, knowing each only
+        as an IStep; Steps is the one place that names the concrete steps. A step reads what the steps it needs
+        wrote into the model, and never holds, calls or makes another step, so a step added, removed or split leaves
+        the checker and the other steps as they are.
+      rationale:
+        Owner, 2026-11-24 (DS-378, DS-383): a requirement is often an architecture decision, and the rules make it
+        hold. ContractCheck split into five (DS-382) without touching the checker, because the checker and the steps
+        already kept to it.
+      verification VER-00214-1 {
+        status: draft
+        title: Integration tests confirm the design of ds runs the steps through IStep with no step knowing another, and is told when the checker holds a concrete step or one step knows another
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheCheckerHoldingAConcreteStepIsTold
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AStepThatKnowsAnotherIsTold
+      }
+    }
+
+    requirement REQ-00195-1 {
+      tags: architecture, check
+      status: draft
+      @refines REQ-00053-2
+      title: Every operation of the check shall be a member of the class whose responsibility it is
+      text:
+        What a step checks is the step's, what resolves a name is the resolver's, what decides a rule is one of the
+        evaluator's pieces, and what makes the steps is Steps'. A function of the module would be a responsibility
+        no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-378, DS-382, DS-383): the hidden helpers of the steps became members of their step;
+        the rule keeps a new one from being written outside a class.
+      verification VER-00215-1 {
+        status: draft
+        title: Integration tests confirm the design of the check holds no function of the module, and is told when one is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheCheckIsTold
+      }
+    }
+
+    definition is-step(x) {
+      title: x is a step of the check: it inherits IStep, itself or through ACheck
+      if x inherits driftspec@ds@check::IStep
+      if x inherits driftspec@ds@check::ACheck
+    }
+
+    rule checker-knows-steps-as-istep {
+      title: the checker holds the steps as IStep and names none of the concrete ones, so every step is run through the one interface
+      @requirement REQ-00194-1
+      for class c in driftspec@ds@check
+      where c = driftspec@ds@check::Checker
+      never depends(c, x), is-step(x)
+    }
+
+    rule no-step-knows-another {
+      title: a step depends on no other step, so each reads what the steps it needs wrote into the model and never the steps themselves
+      @requirement REQ-00194-1
+      for class a in driftspec@ds@check, class b in driftspec@ds@check
+      where is-step(a), is-step(b), a != b, b != driftspec@ds@check::ACheck
+      never depends(a, b)
+    }
+
+    rule check-operations-belong-to-classes {
+      title: no function is written in the check's module, so every operation of the check is a member of a class
+      @requirement REQ-00195-1
+      for function f in driftspec@ds@check
+      never f in driftspec@ds@check
+    }
+
     class Evaluator {                        // decides the structural rules over the model: it directs the four pieces (DS-380)
       @requirement REQ-00096-1
       @requirement REQ-00097-1
@@ -1039,6 +1119,12 @@ package driftspec@ds {
 diagram SEQ_CheckerRun {
   kind: sequence
   include: driftspec@ds@check::Checker::run
+}
+
+diagram SEQ_Load {                         // a load from the command line, two levels down: parse, then the Api's steps (DS-383)
+  kind: sequence
+  include: driftspec@ds@app::load
+  depth: 2
 }
 
 diagram CL_CheckNamespace {
