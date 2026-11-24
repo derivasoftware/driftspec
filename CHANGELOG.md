@@ -6,6 +6,15 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.43
+
+A large `neighbours:` no longer keeps `ds render` busy for good (DS-362). The walk took every step a class diagram
+asked for, each over every relation, so `neighbours: 2000000000` over three classes never ended while `ds check`
+said nothing; it now ends at the first step that adds nothing, so a number past what the diagram reaches draws the
+reach at once. A `neighbours:` that is no number, a word or one too large for an int, gets the new
+`W-DIAGRAM-NEIGHBOURS` at the diagram, as such a depth gets `W-DIAGRAM-DEPTH`, and still adds no neighbours. A large
+depth already ended where the calls end. Nothing a design writes draws differently.
+
 ## 0.1.42
 
 The test of CST-00001-1, a hundred classes checked and drawn in under a hundred milliseconds, times each command

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <set>
@@ -12,7 +13,9 @@
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/render/Ir.hpp"
 #include "ds/render/IrExport.hpp"
+#include "ds/render/Svg.hpp"
 
 namespace {
 
@@ -324,6 +327,175 @@ TEST_F(TestDepthTooLarge, ADepthTooLargeForAnIntDrawsAsADepthThatIsNoNumberAndNe
   EXPECT_FALSE(drawn["edges"].empty());
   EXPECT_EQ(drawn["nodes"], word["nodes"]);
   EXPECT_EQ(drawn["edges"], word["edges"]);
+}
+
+/// A diagram drawn as ds render -f svg draws it, from the model to the page: what it draws and how long it takes.
+struct Drawn {
+  std::string ir;
+  std::string svg;
+  long long ms = 0;
+};
+
+/// A workspace of one file, read by the real steps, whose diagrams are drawn and timed.
+class TestPastTheReach : public ::testing::Test {
+ protected:
+  void load(const std::string& file, const std::string& text) {
+    ds::parse::Parser parser;
+    ds::bind::Binder binder(model, metamodel);
+    const auto parsed = parser.parseText(file, text);
+    ASSERT_FALSE(parsed.hasSyntaxErrors) << parsed.errorDetail;
+    binder.bind(parsed);
+    const auto checkSteps = ds::check::steps();
+    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  }
+
+  Drawn draw(const std::string& diagram) const {
+    Drawn out;
+    const auto start = std::chrono::steady_clock::now();
+    out.ir = ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false);
+    out.svg = ds::render::Svg().render(ds::render::IrDocument::parse(out.ir));
+    out.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+    return out;
+  }
+
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+};
+
+/// A neighbours: an int holds but past what the selection reaches (DS-362): the walk took every step it was asked
+/// for, each one over every relation, so neighbours: 2000000000 kept ds render busy for good while ds check said
+/// nothing. A step that adds nothing ends it. A neighbours: that is no number is a finding, as a depth is.
+class TestNeighboursPastTheReach : public TestPastTheReach {
+ protected:
+  void SetUp() override {
+    load("near.ds",
+         "package p {\n"
+         "  module m {\n"
+         "    class A {\n"
+         "      - b: B\n"
+         "    }\n"
+         "    class B {\n"
+         "      - c: C\n"
+         "    }\n"
+         "    class C\n"
+         "  }\n"
+         "}\n"
+         "\n"
+         "diagram CL_N {\n"
+         "  kind: class\n"
+         "  include: p@m::A\n"
+         "  neighbours: 2000000000\n"
+         "}\n"
+         "diagram CL_Lots {\n"
+         "  kind: class\n"
+         "  include: p@m::A\n"
+         "  neighbours: lots\n"
+         "}\n"
+         "diagram CL_Wide {\n"
+         "  kind: class\n"
+         "  include: p@m::A\n"
+         "  neighbours: 99999999999\n"
+         "}\n");
+  }
+
+  /// The W-DIAGRAM-NEIGHBOURS findings that name a diagram.
+  std::vector<ds::model::Finding> neighboursOf(const std::string& diagram) const {
+    std::vector<ds::model::Finding> out;
+    for (const auto& f : model.findings()) {
+      if (f.code == "W-DIAGRAM-NEIGHBOURS" && f.message.rfind(diagram + " ", 0) == 0) out.push_back(f);
+    }
+    return out;
+  }
+
+  static std::set<std::string> nodes(const std::string& ir) {
+    std::set<std::string> out;
+    const auto drawn = nlohmann::json::parse(ir);  // held: a range over a member of a temporary would dangle
+    for (const auto& n : drawn["nodes"]) out.insert(n["id"].get<std::string>());
+    return out;
+  }
+};
+
+TEST_F(TestNeighboursPastTheReach, NeighboursPastTheReachDrawTheReachAndEndPromptly) {
+  const Drawn n = draw("CL_N");
+  EXPECT_LT(n.ms, 1000);  // it never ended; three classes take a few milliseconds, in a Debug build too
+  EXPECT_NE(n.svg.find("<svg"), std::string::npos);
+  // A, and what it relates to two steps away, in the module around them: the reach, and nothing else
+  EXPECT_EQ(nodes(n.ir), (std::set<std::string>{"p@m", "p@m::A", "p@m::B", "p@m::C"}));
+  EXPECT_TRUE(neighboursOf("CL_N").empty());  // a number an int holds, however large, is no finding
+}
+
+TEST_F(TestNeighboursPastTheReach, NeighboursThatAreNoNumberAreAFindingAtTheDiagramAsADepthIs) {
+  const auto lots = neighboursOf("CL_Lots");
+  const auto wide = neighboursOf("CL_Wide");
+  ASSERT_EQ(lots.size(), 1U);
+  ASSERT_EQ(wide.size(), 1U);
+  EXPECT_EQ(lots[0].severity, "warning");
+  EXPECT_EQ(lots[0].message, "CL_Lots asks for neighbours 'lots': a number of steps");
+  EXPECT_EQ(wide[0].message, "CL_Wide asks for neighbours '99999999999': a number of steps");  // too large for an int
+  // where the diagram is written, as for a depth
+  const ds::model::Location& at = model.find("diagram:CL_Lots")->location;
+  EXPECT_EQ(lots[0].location.file, "near.ds");
+  EXPECT_EQ(lots[0].location.line, at.line);
+  EXPECT_EQ(lots[0].location.column, at.column);
+  EXPECT_EQ(lots[0].location.line, 18);
+  // and drawn with no neighbours, never an abort
+  std::string drawn;
+  EXPECT_NO_THROW(drawn = draw("CL_Lots").ir);
+  EXPECT_EQ(nodes(drawn), (std::set<std::string>{"p@m", "p@m::A"}));
+}
+
+/// A depth an int holds but past what the calls reach (DS-362): the walk goes down only into a behaviour a call
+/// enters, once on each way down, so it ends where the calls end, as * does, whatever the number.
+class TestDepthPastTheReach : public TestPastTheReach {
+ protected:
+  void SetUp() override {
+    load("calls.ds",
+         "package p {\n"
+         "  module m {\n"
+         "    class A {\n"
+         "      + run() -> void\n"
+         "      + go() -> void\n"
+         "      + stop() -> void\n"
+         "    }\n"
+         "    sequence A::run {\n"
+         "      -> go()\n"
+         "    }\n"
+         "    sequence A::go {\n"
+         "      -> stop()\n"
+         "    }\n"
+         "    sequence A::stop {\n"
+         "      -> run()\n"
+         "    }\n"
+         "  }\n"
+         "}\n"
+         "diagram SEQ_Huge {\n"
+         "  kind: sequence\n"
+         "  include: p@m::A::run\n"
+         "  depth: 2147483647\n"
+         "}\n"
+         "diagram SEQ_All {\n"
+         "  kind: sequence\n"
+         "  include: p@m::A::run\n"
+         "  depth: *\n"
+         "}\n"
+         "diagram SEQ_One {\n"
+         "  kind: sequence\n"
+         "  include: p@m::A::run\n"
+         "  depth: 1\n"
+         "}\n");
+  }
+};
+
+TEST_F(TestDepthPastTheReach, ADepthPastTheCallsDrawsAsEveryLevelAndEndsPromptly) {
+  const Drawn huge = draw("SEQ_Huge");
+  EXPECT_LT(huge.ms, 1000);
+  const auto drawn = nlohmann::json::parse(huge.ir);
+  const auto all = nlohmann::json::parse(draw("SEQ_All").ir);
+  const auto one = nlohmann::json::parse(draw("SEQ_One").ir);
+  EXPECT_FALSE(drawn["edges"].empty());
+  EXPECT_EQ(drawn["nodes"], all["nodes"]);
+  EXPECT_EQ(drawn["edges"], all["edges"]);
+  EXPECT_NE(drawn["edges"], one["edges"]);  // the depth is read: one level draws less
 }
 
 }  // namespace

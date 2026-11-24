@@ -75,6 +75,19 @@ TEST_F(TestFilters, NeighboursWidenAClassDiagramByTheRelationsItDraws) {
   EXPECT_EQ(of("CL_Till"), (Ids{"shop@till", "shop@till::Till", "shop@store", "shop@store::Stock"}));
 }
 
+TEST_F(TestFilters, NeighboursPastWhatTheSelectionReachesTakeTheReach) {  // DS-362: a step that adds nothing ends the walk
+  std::string text =
+      "package p {\n  module m {\n    class A {\n      - b: B\n    }\n    class B {\n      - c: C\n    }\n    class C\n  }\n}\n";
+  for (const char* n : {"1", "2", "3", "2147483647"})
+    text += std::string("diagram CL_") + n + " {\n  kind: class\n  include: p@m::A\n  neighbours: " + n + "\n}\n";
+  load(text);
+  const Ids reach{"p@m", "p@m::A", "p@m::B", "p@m::C"};     // A and what it relates to, two steps away
+  EXPECT_EQ(of("CL_1"), (Ids{"p@m", "p@m::A", "p@m::B"}));  // one step short of it
+  EXPECT_EQ(of("CL_2"), reach);
+  EXPECT_EQ(of("CL_3"), reach);           // the step past it adds nothing
+  EXPECT_EQ(of("CL_2147483647"), reach);  // and nor does any after it: the walk ends there
+}
+
 TEST_F(TestFilters, AClosedBoxStandsForWhatItHolds) {
   load(std::string(shop()) + "diagram HLD_Shop {\n  kind: class\n  include: shop@*\n  open: shop@till\n}\n");
   const Ids shown = of("HLD_Shop");

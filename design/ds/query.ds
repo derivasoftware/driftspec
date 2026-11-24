@@ -59,11 +59,13 @@ package driftspec@ds {
         tests/integration/ds/query/test_query.cpp::TestQueryOfTheDesign.CouplingAnswersWhatEachBehaviourTouchesOutsideItsModule
     }
 
-    verification VER-00003-5 {
-      status: approved
+    verification VER-00003-6 {
+      status: draft
       @requirement REQ-00003-2
       title: Integration tests cover the seven questions, the unknown question, both answer forms and the filter of each kind of diagram; revision 3 adds that a class answers its machine and its operations' sequences (DS-53)
-      text: Revision 4 (DS-185) names the test of the filter of each kind after filterFor, the one it covers. Revision 5 (DS-137) registers the filters where they are tested: over a design read by the real steps.
+      text:
+        Revision 4 (DS-185) names the test of the filter of each kind after filterFor, the one it covers. Revision 5 (DS-137) registers the filters where they are tested: over a design read by the real steps.
+        Revision 6 (DS-362): the neighbours of a class diagram past what its selection reaches take the reach, and the walk ends at the first step that adds nothing; neighbours: 2000000000 over three classes draws them at once.
       method: test
       tests:
         tests/integration/ds/query/test_query.cpp::TestQuery.TheDiagramsAWorkspaceDeclaresWithTheirKind
@@ -77,6 +79,8 @@ package driftspec@ds {
         tests/integration/ds/query/test_query.cpp::TestQueryOfAClass.TheBehavioursOfAClassAreItsMachineAndTheSequencesOfItsOperations
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.AClassDiagramTakesItsPatternsMinusItsExclusionsAndTheBoxesAround
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.NeighboursWidenAClassDiagramByTheRelationsItDraws
+        tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.NeighboursPastWhatTheSelectionReachesTakeTheReach
+        tests/integration/ds/render/test_open_boxes.cpp::TestNeighboursPastTheReach.NeighboursPastTheReachDrawTheReachAndEndPromptly
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.AClosedBoxStandsForWhatItHolds
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.ASequenceDiagramTakesWhoTakesPartNotHowItIsDrawn
         tests/integration/ds/query/test_diagram_filters.cpp::TestFilters.ARequirementsDiagramTakesItsRootsAndTheirUmbrella
@@ -139,7 +143,7 @@ package driftspec@ds {
       - cutOf_: std::string
       + ClassFilter(metamodel: model::Metamodel, include: std::vector<std::string>, exclude: std::vector<std::string>, neighbours: int, cutOf: std::string)
       + select(model: model::Model) -> std::set<std::string>
-      + boxes(model: model::Model) -> std::set<std::string>
+      + boxes(model: model::Model) -> std::set<std::string>   // the neighbours walk ends at the first step that adds nothing (DS-362)
       + static containers(model: model::Model, taken: std::set<std::string>) -> std::set<std::string>
       - matches(model: model::Model, pattern: std::string, entity: model::Entity) -> bool
     }
