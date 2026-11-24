@@ -1,12 +1,16 @@
 #ifndef DRIFTSPEC_CHECK_EVALUATOR_HPP
 #define DRIFTSPEC_CHECK_EVALUATOR_HPP
 
-#include <map>
+#include <cstddef>
 #include <set>
 #include <string>
 #include <vector>
 
+#include "ds/check/Facts.hpp"
 #include "ds/check/Resolver.hpp"
+#include "ds/check/RuleValidator.hpp"
+#include "ds/check/Solver.hpp"
+#include "ds/check/Strata.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -15,6 +19,8 @@ namespace check {
 /// Evaluates the structural rules over the model (REQ-00096-1): Datalog with stratified negation over
 /// a finite model, so every rule is decided. A definition is computed bottom-up to its fixpoint; a
 /// rule is broken by every binding of its ranges where its holds has no answer, or its never has one.
+/// It directs (DS-380): the facts read the model, the validator checks each formula, the strata order the
+/// definitions and the solver answers bodies over the facts; it writes what the rules say into the model.
 class Evaluator {
  public:
   /// Evaluates over `model`, written in `metamodel` (DS-351), asking `resolver` what a name means.
@@ -25,49 +31,24 @@ class Evaluator {
   std::vector<model::Finding> run();
 
  private:
-  void index();
-  bool validate(const std::string& id, const model::Formula& formula);
-  bool validateBody(const std::string& id, const std::vector<model::Literal>& body, std::set<std::string>& out_bound);
-  /// A relation literal whose bound end is a kind the relation never joins there (W-RULE-NEVER-MATCHES).
-  void checkVacuity(const std::string& id, const model::Formula& formula);
-  bool stratify();
+  /// How many findings a broken rule gets before the rest are counted in one; every breach is kept.
+  static constexpr std::size_t kReportsPerRule = 10;
+
   void computeDefinitions();
-  /// The definitions of one stratum, each after the ones of the stratum it applies; empty when one of them reaches
-  /// itself through the others (recursion), which is fixed by passes to its fixpoint instead (DS-338).
-  std::vector<std::string> dependencyOrder(const std::vector<std::string>& definitions) const;
   void evaluateRule(const std::string& id, const model::Formula& formula);
   /// A table (DS-268): a row per binding of its ranges that passes its where, a cell per column.
   void tabulate(const std::string& id, const model::Formula& formula);
-
-  /// Every answer of `body` that extends `bindings`; `first` stops at the first one.
-  std::vector<std::map<std::string, std::string>> solve(const std::string& owner, const std::vector<model::Literal>& body,
-                                                        const std::map<std::string, std::string>& bindings, bool first) const;
-  void solveFrom(const std::string& owner, const std::vector<model::Literal>& body, std::vector<bool> done,
-                 const std::map<std::string, std::string>& bindings, bool first,
-                 std::vector<std::map<std::string, std::string>>& out_answers) const;
-  bool ready(const model::Literal& literal, const std::map<std::string, std::string>& bindings) const;
-  /// The bindings that extend `bindings` with an answer of one positive literal.
-  std::vector<std::map<std::string, std::string>> answers(const std::string& owner, const model::Literal& literal,
-                                                          const std::map<std::string, std::string>& bindings) const;
-  bool value(const std::string& owner, const model::Term& term, const std::map<std::string, std::string>& bindings,
-             std::string& out_value) const;
-  bool unify(const std::string& owner, const model::Term& term, const std::string& entity,
-             std::map<std::string, std::string>& out_bindings) const;
-  std::string definitionOf(const std::string& owner, const std::string& name) const;
-  std::string scopeOf(const std::string& owner) const;
-  bool contains(const std::string& outer, const std::string& inner) const;
   void report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at);
+  /// Bindings as the message of a finding writes them: x = a, y = b.
+  static std::string describe(const std::map<std::string, std::string>& bindings);
 
-  model::Model& model_;
+  model::Model& model_;  ///< written: the breaches and the tables the rules say; read through the facts
   const model::Metamodel& metamodel_;
+  Facts facts_;
+  RuleValidator validator_;
+  Strata strata_;
+  Solver solver_;
   std::vector<model::Finding> found_;
-  const Resolver& resolver_;
-  std::map<std::string, std::vector<std::string>> byKind_;                   ///< the declared entities of each kind name
-  std::map<std::string, std::multimap<std::string, std::string>> forward_;   ///< relation, from, to
-  std::map<std::string, std::multimap<std::string, std::string>> backward_;  ///< relation, to, from
-  std::map<std::string, std::string> constants_;                             ///< owner and name as written, to identity
-  std::map<std::string, std::set<std::vector<std::string>>> extension_;      ///< what each definition holds for
-  std::map<std::string, int> stratum_;
   std::set<std::string> invalid_;  ///< formulas with an error: not evaluated
 };
 
