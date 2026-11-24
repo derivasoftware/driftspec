@@ -69,7 +69,7 @@ package driftspec@ds {
     // ---- what parse is, as requirements and the rules that hold them (DS-374) ---------------------------------------
     requirement REQ-00176-1 {
       tags: architecture, parse
-      status: draft
+      status: approved
       @refines REQ-00008-1
       title: The parser shall read the syntax of a file and know nothing of the model
       text:
@@ -80,7 +80,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-366, DS-374): every module has its architecture decisions and patterns, and its rules
         check that they hold; parse is the first level of the engine and leans on no other module.
       verification VER-00193-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of parse depends on no part of the model, and is told when a class of parse does
         method: test
         tests:
@@ -91,7 +91,7 @@ package driftspec@ds {
 
     requirement REQ-00177-1 {
       tags: architecture, parse
-      status: draft
+      status: approved
       @refines REQ-00008-1
       title: Every operation of parse shall be a member of the class whose responsibility it is
       text:
@@ -102,7 +102,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-374): describing a syntax error was four functions hidden in the parser's file; a
         free function means a responsibility is missing.
       verification VER-00194-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of parse holds no function of the module, and is told when one is written
         method: test
         tests:

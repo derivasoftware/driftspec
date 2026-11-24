@@ -8,7 +8,7 @@ package driftspec@ds {
     // ---- what text is, as requirements and the rules that hold them (DS-374) ----------------------------------------
     requirement REQ-00178-1 {
       tags: architecture, text
-      status: draft
+      status: approved
       @refines REQ-00028-2
       title: The text module shall depend on no other module of the engine
       text:
@@ -18,7 +18,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-344, DS-374): text is a module of functions by design, the one level under every other;
         a dependence on another module would make it a level of its own.
       verification VER-00195-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of text depends on no other module of the engine, and is told when a function of text does
         method: test
         tests:
@@ -29,7 +29,7 @@ package driftspec@ds {
 
     requirement REQ-00179-1 {
       tags: architecture, text
-      status: draft
+      status: approved
       @refines REQ-00028-2
       title: The text module shall hold no state
       text:
@@ -39,7 +39,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-344, DS-374): a module of functions is sound only while it holds nothing; state would
         need a class that owns it and says why.
       verification VER-00196-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of text holds no attribute, and is told when one is written
         method: test
         tests:

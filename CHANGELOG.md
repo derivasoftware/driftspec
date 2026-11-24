@@ -6,6 +6,12 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.47
+
+The Owner approves the white-box requirements DS-374 left as drafts, with their verifications: parse knows no model and its
+operations are class members (REQ-00176-1, REQ-00177-1); text depends on no other engine module and holds no state
+(REQ-00178-1, REQ-00179-1). Nothing a design writes changes.
+
 ## 0.1.46
 
 Parse and text keep their own rules (DS-374). Describing a syntax error is a class of its own, `SyntaxError`, and what
