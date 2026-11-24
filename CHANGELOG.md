@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.52
+
+The exporter is written as requirements held by rules (DS-367): every operation of the exporter is a member of the
+class whose responsibility it is, and the exporter reads the model it writes and leaves it as it is. The helpers
+JsonExport's source hid (a location, an entity, a relation, the names of kinds and the metamodel as JSON) are its
+private members. Nothing a design writes, no finding, export or drawing changes.
+
 ## 0.1.50
 
 The check finds what each class declares through the index of its members (DS-375). To derive a class's
