@@ -6,6 +6,12 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.49
+
+The Owner approves the requirements DS-379 left as drafts, with their verifications (every finding is made from the
+catalogue; nothing else writes a severity: REQ-00190-1, REQ-00191-1), and the viewer-tours verification VER-00082-3.
+Nothing a design writes changes.
+
 ## 0.1.48
 
 A finding is made from its code (DS-379). Seventy places wrote a finding's code and severity as two strings, which
