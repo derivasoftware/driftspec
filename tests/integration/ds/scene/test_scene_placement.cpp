@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <functional>
+#include <map>
 #include <string>
 
 #include "ds/bind/Binder.hpp"
@@ -14,6 +16,21 @@
 #include "ds/scene/Projection.hpp"
 
 namespace {
+
+/// The boxes of a placement by the identities of their frames, which the engine numbers in the order the graph is read:
+/// the root first, then each frame followed by its kids and its ports.
+std::map<std::string, ds::layout::Box> byId(const ds::layout::Frame& root, const ds::layout::Placement& placed) {
+  std::map<std::string, ds::layout::Box> out;
+  std::size_t n = 0;
+  std::function<void(const ds::layout::Frame&)> walk = [&](const ds::layout::Frame& f) {
+    if (n < placed.boxes.size()) out[f.id] = placed.boxes[n];
+    ++n;
+    for (const ds::layout::Frame& k : f.kids) walk(k);
+    for (const ds::layout::Frame& p : f.ports) walk(p);
+  };
+  walk(root);
+  return out;
+}
 
 /// The scene places its boxes with the layout's packing engine (REQ-00189-2): every box of the scene's document is
 /// where that engine places the projection's frames, over examples/hola.
@@ -37,11 +54,11 @@ TEST_F(TestScenePlacement, EveryBoxOfTheSceneIsWhereThePackingEnginePlacesThePro
   const ds::scene::Projection full(model, metamodel, false);
   ds::layout::Graph graph;
   graph.root = &full.root();
-  const ds::layout::Placement placed = ds::layout::EngineFactory::packing()->place(graph);
+  const auto boxes = byId(full.root(), ds::layout::EngineFactory::packing()->place(graph));
   ASSERT_FALSE(doc.nodes.empty());
   for (const auto& n : doc.nodes) {
-    const auto it = placed.boxes.find(n.id);
-    ASSERT_NE(it, placed.boxes.end()) << n.id;
+    const auto it = boxes.find(n.id);
+    ASSERT_NE(it, boxes.end()) << n.id;
     EXPECT_DOUBLE_EQ(n.full.x, it->second.x) << n.id;
     EXPECT_DOUBLE_EQ(n.full.y, it->second.y) << n.id;
     EXPECT_DOUBLE_EQ(n.full.w, it->second.w) << n.id;
