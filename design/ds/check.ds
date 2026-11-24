@@ -351,6 +351,7 @@ package driftspec@ds {
     // collected, the resolver, the renames linking made, what was already reported as undeclared, and
     // what the running step found, until it takes it back.
     class Context {
+      @requirement REQ-00199-1
       @requirement REQ-00012-1
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel     // the language, handed by the checker to every step (DS-351)
@@ -391,6 +392,7 @@ package driftspec@ds {
 
     // The one place that makes the checker (DS-404): what asks for a check holds it as the IChecker it is.
     class CheckerFactory {
+      @requirement REQ-00197-1
       @requirement REQ-00053-3
       + static make(model: model::Model, metamodel: model::Metamodel, selection: Selection) -> std::unique_ptr<IChecker>
     }
@@ -398,6 +400,7 @@ package driftspec@ds {
     // A checker made for a selection of steps (DS-425): it holds the context, the steps made with it and the checker
     // that runs them, so what the factory hands back lives as long as it is held.
     class SelectedChecker : IChecker {
+      @requirement REQ-00199-1
       @requirement REQ-00053-3
       - owns context_: Context
       - owns many steps_: std::map<std::string, std::unique_ptr<IStep>>
@@ -423,6 +426,7 @@ package driftspec@ds {
     // the one place that names each step: it pairs each with what it does, makes the ones a selection names and
     // every one they need, and keys them by name (DS-376); a class, as every operation of check is (DS-382)
     class StepFactory {
+      @requirement REQ-00197-1
       @requirement REQ-00012-1
       @requirement REQ-00085-1
       + static of(context: Context, selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>>   // each made with the context (DS-425)
