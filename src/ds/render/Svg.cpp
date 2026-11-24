@@ -127,6 +127,7 @@ std::string emitNode(const Placed& p, const std::string& px, const Metrics& M) {
   const IrNode& n = *p.node;
   const Rect& r = p.rect;
   std::string classes = "pr-" + n.kind;
+  if (n.kind == "state") classes += " pr-box";  // a state is a box with round ends: it takes a box's frame (DS-442)
   if (!n.classifier.empty()) classes += " pr-classifier-" + n.classifier;
   if (!n.stereotype.empty()) {
     std::string st;
@@ -153,25 +154,42 @@ std::string emitNode(const Placed& p, const std::string& px, const Metrics& M) {
       out << "<text x=\"" << r.x + M.PAD_X << "\" y=\"" << r.y + M.PAD_X + 12 + static_cast<int>(i) * M.LINE_H << "\">"
           << text::escapeXml(lines[i]) << "</text>";
     }
+  } else if (n.kind == "initial" || n.kind == "final") {
+    // where a machine starts, UML's filled dot; where it ends, a bullseye (DS-442). Their colour is the text's token
+    const int cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    if (n.kind == "initial") {
+      out << "<circle cx=\"" << cx << "\" cy=\"" << cy << "\" r=\"7\" style=\"fill: var(--pr-text)\"/>";
+    } else {
+      out << "<circle cx=\"" << cx << "\" cy=\"" << cy << "\" r=\"9\" style=\"fill: none; stroke: var(--pr-text); stroke-width: 1.5\"/>"
+          << "<circle cx=\"" << cx << "\" cy=\"" << cy << "\" r=\"5\" style=\"fill: var(--pr-text)\"/>";
+    }
   } else {
-    out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"4\"/>";
+    // a state is a capsule: round ends, no head band and no badge (DS-442); a box keeps its corners and its band
+    const bool state = n.kind == "state";
+    const int rad = state ? (n.sections.empty() ? r.h / 2 : 10) : 4;
+    out << "<rect x=\"" << r.x << "\" y=\"" << r.y << "\" width=\"" << r.w << "\" height=\"" << r.h << "\" rx=\"" << rad << "\"/>";
     int ty = r.y + M.PAD_X + 12;
-    const int rad = 4;
     const int bandH = n.sections.empty() ? r.h : M.PAD_X + 12 + (n.stereotype.empty() ? 0 : M.LINE_H) + M.SECTION_GAP + 6;
-    out << "<path class=\"pr-head\" d=\"M" << r.x + rad << "," << r.y << " H" << r.x + r.w - rad << " A" << rad << "," << rad << " 0 0 1 "
-        << r.x + r.w << "," << r.y + rad << " V" << r.y + bandH << " H" << r.x << " V" << r.y + rad << " A" << rad << "," << rad
-        << " 0 0 1 " << r.x + rad << "," << r.y << " Z\"/>";
+    if (!state)
+      out << "<path class=\"pr-head\" d=\"M" << r.x + rad << "," << r.y << " H" << r.x + r.w - rad << " A" << rad << "," << rad << " 0 0 1 "
+          << r.x + r.w << "," << r.y + rad << " V" << r.y + bandH << " H" << r.x << " V" << r.y + rad << " A" << rad << "," << rad
+          << " 0 0 1 " << r.x + rad << "," << r.y << " Z\"/>";
     if (!n.stereotype.empty()) {
       out << "<text class=\"pr-stereo\" x=\"" << r.x + M.PAD_X << "\" y=\"" << ty - 2 << "\">"
           << text::escapeXml("\xC2\xAB" + n.stereotype + "\xC2\xBB") << "</text>";
       ty += M.LINE_H;
     }
-    const std::string letter = badgeOf(n.classifier, n.abstract);
-    out << "<circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
-    out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">"
-        << text::escapeXml(letter) << "</text>";
-    out << "<text class=\"pr-header\" x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << text::escapeXml(n.label)
-        << "</text>";
+    if (state) {  // its name in the middle, as the capsule is drawn round it
+      out << "<text class=\"pr-header\" x=\"" << r.x + r.w / 2 << "\" y=\"" << ty << "\" text-anchor=\"middle\">"
+          << text::escapeXml(n.label) << "</text>";
+    } else {
+      const std::string letter = badgeOf(n.classifier, n.abstract);
+      out << "<circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
+      out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">"
+          << text::escapeXml(letter) << "</text>";
+      out << "<text class=\"pr-header\" x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << text::escapeXml(n.label)
+          << "</text>";
+    }
     ty += M.LINE_H;
     for (size_t s = 0; s < n.sections.size(); ++s) {
       const auto& section = n.sections[s];

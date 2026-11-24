@@ -304,6 +304,10 @@ void box(Grid& g, const Placed& p, const TextPen& pen) {
   const IrNode& n = *p.node;
   const Rect& r = p.rect;
   clear(g, r);
+  if (n.kind == "initial" || n.kind == "final") {  // a dot where the machine starts, a bullseye where it ends (DS-442)
+    g.text(r.x + r.w / 2, r.y, n.kind == "initial" ? "\xE2\x97\x8F" : "\xE2\x97\x89", kName);  // ● ◉
+    return;
+  }
   if (n.kind == "note") {
     frame(g, r, false, kNote);
     const auto lines = text::linesOf(n.label);
@@ -316,13 +320,14 @@ void box(Grid& g, const Placed& p, const TextPen& pen) {
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
   const std::string badge = badgeOf(n.classifier, n.abstract);  // the same letter as the SVG
-  if (change != n.refs.end()) {
+  if (n.kind == "state") {                                      // a state carries no badge (DS-442)
+  } else if (change != n.refs.end()) {
     const std::string mark = pen.changeMarkOf(change->second).mark;
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
     g.text(r.x + M.PAD_X, y, badge, pen.badgeColour(n.classifier, n.abstract));
   }
-  g.text(r.x + M.PAD_X + M.BADGE_W, y, n.label, change == n.refs.end() ? kName : changeColor);
+  g.text(r.x + M.PAD_X + (n.kind == "state" ? 0 : M.BADGE_W), y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
   // only class members are tokenised; an artefact's title is prose and stays plain
   const bool members = !n.sectionKinds.empty();

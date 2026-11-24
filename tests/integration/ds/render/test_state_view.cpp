@@ -157,4 +157,22 @@ TEST_F(TestStateView, AJumpSaysTheBehavioursThatCallItsEventAndOneNobodyCallsSay
   for (const auto& e : web["edges"]) EXPECT_FALSE(e.contains("title")) << e;
 }
 
+/// Where a machine starts is UML's filled dot and where it ends a bullseye, one for each final state; the states are
+/// capsules (DS-442). The dot comes first, so the drawing flows down from it.
+TEST_F(TestStateView, TheMachineStartsAtADotAndEndsAtABullseyeForEachFinalStateAndItsStatesAreCapsules) {
+  const auto ir = draw("states", "STM_Ticket");
+  ASSERT_NE(node(ir, "shop@ends::Ticket::state::initial"), nullptr);
+  EXPECT_EQ((*node(ir, "shop@ends::Ticket::state::initial"))["kind"], "initial");
+  EXPECT_EQ(ir["nodes"][0]["id"], "shop@ends::Ticket::state::initial");
+  EXPECT_NE(edge(ir, "shop@ends::Ticket::state::initial", "shop@ends::Ticket::state::Open"), nullptr);
+  for (const std::string end : {"Closed", "Rejected"}) {
+    const std::string id = "shop@ends::Ticket::state::final::" + end;
+    ASSERT_NE(node(ir, id), nullptr) << end;
+    EXPECT_EQ((*node(ir, id))["kind"], "final");
+    EXPECT_NE(edge(ir, "shop@ends::Ticket::state::" + end, id), nullptr) << end;
+  }
+  EXPECT_EQ((*node(ir, "shop@ends::Ticket::state::Open"))["kind"], "state");
+  for (const auto& n : ir["nodes"]) EXPECT_NE(n["label"], "start");  // the box that said "start" is gone
+}
+
 }  // namespace
