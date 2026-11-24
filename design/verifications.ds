@@ -18,7 +18,7 @@ package driftspec {
   }
 
   verification SVER-00002-5 {
-    status: draft
+    status: approved
     @requirement SREQ-00002-1
     title: System tests confirm every incoherence is a finding with code, severity and location, a file that is not UTF-8 among them, and a path that is no workspace is bad usage
     text:
@@ -333,7 +333,7 @@ package driftspec {
   }
 
   verification SVER-00031-1 {
-    status: draft
+    status: approved
     @constraint CST-00012-1
     title: System tests confirm no colour is written outside the theme in what DriftSpec ships, and that a colour written by hand is found
     text: DS-393. The engine, the viewer, the playground's page, the Python face and the tools that write pages are read; a colour may stand only in the theme's values and in a page's region between its theme markers, which the ctest theme_pages holds to what the theme writes.
@@ -365,7 +365,7 @@ package driftspec {
   }
 
   verification SVER-00030-1 {
-    status: draft
+    status: approved
     @requirement SREQ-00002-1
     title: System tests confirm ds check says how much coverage is open and where it is listed, never fails for it, and says nothing more when nothing is open
     text: DS-431, the Owner's decision of 2026-11-24 after first readers took a clean check for a finished design while coverage held open items.

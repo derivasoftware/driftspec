@@ -114,7 +114,7 @@ package driftspec@ds {
     // ======================= workspace ====================================
     requirement REQ-00053-3 {
       tags: language, workspace
-      status: draft
+      status: approved
       title: A specification shall be a directory of .ds files read as one, in any order
       text:
         Files are read whole and are not units of meaning; a link nobody
@@ -1656,7 +1656,7 @@ package driftspec@ds {
 
     requirement REQ-00196-1 {
       tags: language, logic, rules, check
-      status: draft
+      status: approved
       @refines SREQ-00012-1
       title: A rule shall read what an entity is as name(x), id(x) and kind(x), match a value against a pattern, and read a member's flag with is
       text:
@@ -1673,7 +1673,7 @@ package driftspec@ds {
         capital, an abstract class A and a capital, a factory ending in Factory) need what a class is called, a pattern
         and whether a member is abstract. The syntax is the Owner's.
       verification VER-00216-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm a rule reads an entity's name, identity and kind, matches a value against a pattern compiled once, reads a member's flag, and is told when its pattern is no string or does not compile, a definition takes a reserved name or a property is all that binds a variable
         method: test
         tests:
@@ -1890,7 +1890,7 @@ package driftspec@ds {
       }
       requirement REQ-00124-2 {
         tags: language, check, coverage
-        status: draft
+        status: approved
         title: What is not yet written shall be no finding, kept apart as coverage and answered when asked
         text:
           Eight codes say that something is not yet written: an interface operation with no
@@ -1914,7 +1914,7 @@ package driftspec@ds {
           nothing verifies are coverage too, as the intent chapter says DriftSpec tells.
         verification VER-00140-2 {
           title: Integration and system tests confirm the eight absences are kept apart as coverage, not reported by the check, and every corpus means exactly the coverage it marks
-          status: draft
+          status: approved
           method: test
           tests:
             tests/integration/ds/check/test_artefacts.cpp::TestArtefacts.TheOracleFindingsAndNothingElse
