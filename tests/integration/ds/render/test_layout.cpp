@@ -166,6 +166,18 @@ TEST_F(TestLayout, ParallelRelationsAreBundledWithTheirLabelsStacked) {
   EXPECT_TRUE(stacked);
 }
 
+/// Every change a diff marks on a relation has its style in the SVG (DS-419): a changed or renamed relation is drawn in
+/// its colour, not as one that did not change.
+TEST_F(TestLayout, EveryChangeOfARelationHasItsStyleInTheSvg) {
+  const IrDocument doc = IrDocument::parse(R"({"ir": 1, "title": "diff", "nodes": [{"id": "A", "kind": "box", "label": "A"},
+    {"id": "B", "kind": "box", "label": "B"}],
+    "edges": [{"from": "A", "to": "B", "kind": "dependency", "label": "alters", "refs": {"change": "changed"}}]})");
+  const std::string svg = ds::render::Svg().render(doc);
+  EXPECT_NE(svg.find("pr-edge-change-changed"), std::string::npos);
+  for (const char* change : {"added", "removed", "changed", "renamed"})
+    EXPECT_NE(svg.find(std::string(".pr-diagram .pr-edge-change-") + change + " {"), std::string::npos) << change;
+}
+
 TEST_F(TestLayout, TheSvgIsDeterministicAndCarriesStableIds) {
   const IrDocument doc = document("CL_Values");
   const std::string once = ds::render::Svg().render(doc);

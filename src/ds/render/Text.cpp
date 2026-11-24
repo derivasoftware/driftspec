@@ -226,6 +226,20 @@ const char* const kNote = "33";
 const char* const kContainer = "2";
 const char* const kEdge = "";
 
+/// What a change a diff marks is drawn as (DS-419): its mark and its ANSI colour, one row per change, the same for a box,
+/// a relation and a message. A change the table does not name is drawn as changed.
+struct ChangeMark {
+  const char* mark;
+  const char* colour;
+};
+
+ChangeMark changeMarkOf(const std::string& change) {
+  if (change == "added") return {"+", "32"};
+  if (change == "removed") return {"-", "31"};
+  if (change == "renamed") return {">", "34"};
+  return {"~", "33"};
+}
+
 void frame(Grid& g, const Rect& r, bool rounded, const std::string& color) {
   const char* tl = rounded ? "\xE2\x95\xAD" : "\xE2\x94\x8C";  // ╭ ┌
   const char* tr = rounded ? "\xE2\x95\xAE" : "\xE2\x94\x90";  // ╮ ┐
@@ -316,17 +330,13 @@ void box(Grid& g, const Placed& p) {
     return;
   }
   const auto change = n.refs.find("change");
-  const std::string changeColor = change == n.refs.end()        ? ""
-                                  : change->second == "added"   ? "32"
-                                  : change->second == "removed" ? "31"
-                                  : change->second == "renamed" ? "34"
-                                                                : "33";
+  const std::string changeColor = change == n.refs.end() ? "" : changeMarkOf(change->second).colour;
   frame(g, r, true, changeColor);
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
   const std::string badge = badgeOf(n.classifier, n.abstract);  // the same letter as the SVG
   if (change != n.refs.end()) {
-    const std::string mark = change->second == "added" ? "+" : change->second == "removed" ? "-" : change->second == "renamed" ? ">" : "~";
+    const std::string mark = changeMarkOf(change->second).mark;
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
     g.text(r.x + M.PAD_X, y, badge,
@@ -380,7 +390,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
   const auto change = e.refs.find("change");
   const bool removed = change != e.refs.end() && change->second == "removed";
   const bool dashed = removed || e.kind == "dependency" || e.kind == "realization" || e.kind == "attachment";
-  const std::string edgeColor = change == e.refs.end() ? std::string(kEdge) : change->second == "added" ? "32" : "31";
+  const std::string edgeColor = change == e.refs.end() ? std::string(kEdge) : changeMarkOf(change->second).colour;
   // an anchor on a top or left border names the border cell itself: step outside it
   auto outside = [&](Point& p, const std::string& id, bool first) {
     const auto it = byId.find(id);
@@ -447,7 +457,7 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
       }
     }
     const Point a = pts[best], b = pts[best + 1];
-    const auto lines = text::linesOf(change == e.refs.end() ? e.label : (change->second == "added" ? "+ " : "- ") + e.label);
+    const auto lines = text::linesOf(change == e.refs.end() ? e.label : changeMarkOf(change->second).mark + std::string(" ") + e.label);
     if (a.y == b.y) {
       std::string joined;
       for (const auto& l : lines) joined += (joined.empty() ? "" : ", ") + l;
@@ -605,16 +615,9 @@ Grid sequenceGrid(const IrDocument& doc) {
     const int y = rowOf[m->order] + 1;
     const int a = lines[index[m->from]].centre, b = lines[index[m->to]].centre;
     const auto change = m->refs.find("change");
-    const std::string colour = change == m->refs.end()       ? std::string(kEdge)
-                               : change->second == "added"   ? "32"
-                               : change->second == "removed" ? "31"
-                                                             : "33";
+    const std::string colour = change == m->refs.end() ? std::string(kEdge) : changeMarkOf(change->second).colour;
     const std::string labelColour = change == m->refs.end() ? std::string(kMuted) : colour;
-    const std::string label = change == m->refs.end() ? m->label
-                                                      : std::string(change->second == "added"     ? "+ "
-                                                                    : change->second == "removed" ? "- "
-                                                                                                  : "~ ") +
-                                                            m->label;
+    const std::string label = change == m->refs.end() ? m->label : changeMarkOf(change->second).mark + std::string(" ") + m->label;
     const std::string dash =
         m->dashed || (change != m->refs.end() && change->second == "removed") ? "\xE2\x94\x84" : "\xE2\x94\x80";  // ┄ ─
     if (a == b) {
