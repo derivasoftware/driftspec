@@ -87,6 +87,7 @@ package driftspec@ds {
     // where it starts, what its rules say that cannot be, and the calls of its events
     class Machine {
       @requirement REQ-00185-1
+      @requirement REQ-00232-1               // the states it ends in (DS-442)
       @requirement REQ-00140-1
       @requirement REQ-00141-1
       @requirement REQ-00142-1
@@ -100,6 +101,7 @@ package driftspec@ds {
       + rules(state: std::string) -> std::vector<std::string>
       // the state written, else the one the defaults of the subject are in
       + initial() -> std::string
+      + finals() -> std::vector<std::string>   // the states it ends in, as its final lines name them (DS-442)
       // an attribute the subject lacks, a value its type lacks, a rule that excludes itself, two states at once
       + faults(metamodel: model::Metamodel) -> std::vector<model::Finding>   // each made by the metamodel from its code (DS-379)
       // what it is of, by identity

@@ -41,13 +41,14 @@
     {
       "classifier": "initial",
       "id": "hola@web::state::initial",
-      "kind": "box",
-      "label": "start"
+      "kind": "initial",
+      "label": "",
+      "title": "where web starts"
     },
     {
       "classifier": "state",
       "id": "hola@web::state::Home",
-      "kind": "box",
+      "kind": "state",
       "label": "Home",
       "refs": {
         "location": "kinds/interfaces/web.ds:18"
@@ -73,7 +74,7 @@
     {
       "classifier": "state",
       "id": "hola@web::state::Result",
-      "kind": "box",
+      "kind": "state",
       "label": "Result",
       "refs": {
         "location": "kinds/interfaces/web.ds:27"
@@ -95,7 +96,7 @@
     {
       "classifier": "state",
       "id": "hola@web::state::About",
-      "kind": "box",
+      "kind": "state",
       "label": "About",
       "refs": {
         "location": "kinds/interfaces/web.ds:33"

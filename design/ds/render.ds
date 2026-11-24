@@ -204,6 +204,7 @@ package driftspec@ds {
 
     class IrExport {                         // the projection: takes what the query's filter of a diagram takes, decides what to print, writes the IR
       @requirement REQ-00198-1
+      @requirement REQ-00234-1               // a machine's start, its ends and its states as capsules (DS-442)
       @requirement REQ-00006-1
       @requirement REQ-00121-1
       - refs model_: model::Model
@@ -407,6 +408,7 @@ package driftspec@ds {
 
     class Svg {                              // the SVG drawing, with its links, tooltips and script
       @requirement REQ-00007-1
+      @requirement REQ-00234-1
       @requirement REQ-00231-1
       - owns metrics_: Metrics                 // in pixels, its text measured as the theme measures it
       - style_: std::string                    // the stylesheet every drawing carries, written from the theme
@@ -417,6 +419,7 @@ package driftspec@ds {
 
     class Text {                             // the terminal drawing, box characters and optional colour
       @requirement REQ-00007-1
+      @requirement REQ-00234-1
       @requirement REQ-00231-1
       - owns pen_: TextPen
       + Text(theme: theme::Theme)

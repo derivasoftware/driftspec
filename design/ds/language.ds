@@ -1434,6 +1434,43 @@ package driftspec@ds {
           }
         }
 
+        requirement REQ-00232-1 {
+          tags: language, lld, state
+          status: draft
+          title: A state machine shall say the states it ends in
+          text:
+            `final <State>, ...` inside a state block names the states the machine ends in; every
+            final line adds to them. A final state is a state of the machine like any other, so one
+            nothing leads to is W-STATE-UNREACHABLE (REQ-00109-2). A state nothing leaves is not
+            taken as final: a machine written in part says only what it says.
+          rationale: DS-442, the Owner, 2026-11-24, on a side-by-side mock; the word is his.
+          verification VER-00258-1 {
+            title: Integration tests confirm a machine keeps the final states its final lines name, in order, and they are among its states
+            status: draft
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.AMachineKeepsItsFinalStatesInOrderAmongItsStates
+          }
+        }
+
+        requirement REQ-00233-1 {
+          tags: language, lld, state, check
+          status: draft
+          title: The checker shall report a transition out of a state the machine says is final
+          text:
+            A transition whose source is a final state is W-STATE-LEAVES-FINAL, said where the
+            machine is written: the machine cannot both end there and go on. A state with no way out
+            that is not final says nothing.
+          rationale: DS-442. A final state is a promise about the machine; a transition out of it is a contradiction, and a contradiction is what the checker says.
+          verification VER-00259-1 {
+            title: Integration tests confirm a transition out of a final state is a finding, once, and a state with no way out is not taken as final
+            status: draft
+            method: test
+            tests:
+              tests/integration/ds/check/test_states.cpp::TestStates.ATransitionOutOfAFinalStateIsAFindingAndAStateWithNoWayOutIsNotTakenAsFinal
+          }
+        }
+
         requirement REQ-00140-1 {
           tags: language, lld, state, logic
           status: approved
@@ -2386,6 +2423,25 @@ package driftspec@ds {
           tests:
             tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateIsDrawnWithTheRuleThatComputesIt
             tests/integration/ds/render/test_state_view.cpp::TestStateView.AStateWithNoJumpIsStillDrawnAndOneWithTwoRulesShowsBoth
+        }
+      }
+      requirement REQ-00234-1 {
+        tags: language, diagrams, state
+        status: draft
+        title: A state diagram shall draw the start of its machine as a filled dot, its final states with an arrow to a bullseye, and its states as capsules
+        text:
+          The start is UML's filled dot with an arrow to the state the machine starts in (the box
+          that said start is gone); each final state has an arrow to a bullseye of its own; a state
+          is a capsule, rounded where it has sections, with its name in the middle and no badge. In
+          the render-IR they are the kinds initial, final and state. The terminal draws ●, ◉ and
+          rounded boxes.
+        rationale: DS-442, the Owner, 2026-11-24, on a side-by-side mock: "there is no comparison".
+        verification VER-00260-1 {
+          title: Integration tests confirm a state diagram starts at a dot, ends at a bullseye for each final state and draws its states as capsules
+          status: draft
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineStartsAtADotAndEndsAtABullseyeForEachFinalStateAndItsStatesAreCapsules
         }
       }
       requirement REQ-00146-1 {

@@ -1060,6 +1060,22 @@
     }
   },
   {
+    "type": "final",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "function",
     "named": true,
     "fields": {
@@ -2647,6 +2663,10 @@
           "named": true
         },
         {
+          "type": "final",
+          "named": true
+        },
+        {
           "type": "initial",
           "named": true
         },
@@ -3150,6 +3170,10 @@
   },
   {
     "type": "false",
+    "named": false
+  },
+  {
+    "type": "final",
     "named": false
   },
   {

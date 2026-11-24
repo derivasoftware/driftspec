@@ -29,6 +29,11 @@ bool isHierarchy(const std::string& kind) { return kind == "inheritance" || kind
 Rect Layout::sizeOf(const IrNode& node) const {
   const Metrics& M = m_;
   Rect r;
+  if (node.kind == "initial" || node.kind == "final") {  // a dot, a bullseye: three characters wide and a line high (DS-442)
+    r.w = 3 * M.CHAR_W;
+    r.h = M.LINE_H;
+    return r;
+  }
   if (node.kind == "note") {
     const auto lines = text::linesOf(node.label);
     r.w = static_cast<int>(std::max<size_t>(1, longest(lines))) * M.CHAR_W + 2 * M.PAD_X + M.NOTE_FOLD;

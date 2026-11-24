@@ -3,7 +3,7 @@
 (comment) @comment
 
 [ "package" "module" "requirement" "constraint" "verification" "interface" "view" "operation"
-  "class" "dataclass" "enum" "function" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "on" "return"
+  "class" "dataclass" "enum" "function" "operator" "sequence" "state" "diagram" "participant" "local" "initial" "final" "on" "return"
   "loop" "alt" "opt" "else" "fail" "attempt" "fails" ] @keyword
 
 (method_modifier) @keyword.modifier

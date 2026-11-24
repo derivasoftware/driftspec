@@ -752,7 +752,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
     const auto box = [&](const std::string& name) {
       const std::string id = state->id + "::" + name;
       if (!drawn.insert(id).second) return id;
-      nlohmann::json node = {{"id", id}, {"kind", "box"}, {"label", name}, {"classifier", "state"}};
+      nlohmann::json node = {{"id", id}, {"kind", "state"}, {"label", name}, {"classifier", "state"}};  // a capsule (DS-442)
       const std::vector<std::string> rules = written.rules(name);
       if (!rules.empty()) {
         nlohmann::json lines = nlohmann::json::array();
@@ -786,11 +786,13 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       nodes.push_back(node);
       return id;
     };
-    // the machine reads from where it starts: first in the document, so the layout flows down from it
+    // the machine reads from where it starts: first in the document, so the layout flows down from it. Where it starts
+    // is UML's filled dot, with an arrow to the initial state (DS-442)
     const std::string initial = written.initial();  // the one written, else where the defaults are (DS-249)
     if (!initial.empty()) {
       const std::string start = state->id + "::initial";
-      nodes.push_back({{"id", start}, {"kind", "box"}, {"label", "start"}, {"classifier", "initial"}});
+      nodes.push_back(
+          {{"id", start}, {"kind", "initial"}, {"label", ""}, {"classifier", "initial"}, {"title", "where " + state->name + " starts"}});
       edges.push_back({{"from", start}, {"to", box(initial)}, {"kind", "association"}});
     }
     std::stringstream first(state->field("transitions"));
@@ -801,7 +803,13 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       const auto end = move.find('>', cut + 1);
       if (end != std::string::npos) box(move.substr(cut + 1, end - cut - 1));
     }
-    for (const std::string& name : written.states()) box(name);     // a state a rule computes is drawn though no jump names it
+    for (const std::string& name : written.states()) box(name);  // a state a rule computes is drawn though no jump names it
+    for (const std::string& name : written.finals()) {           // each final state ends in a bullseye (DS-442)
+      const std::string end = state->id + "::final::" + name;
+      nodes.push_back(
+          {{"id", end}, {"kind", "final"}, {"label", ""}, {"classifier", "final"}, {"title", state->name + " ends in " + name}});
+      edges.push_back({{"from", box(name)}, {"to", end}, {"kind", "association"}});
+    }
     for (const auto& member : model_.index().members(state->id)) {  // a view no transition names is still drawn: it is the finding
       const model::Entity& view = *model_.find(member);
       if (view.kind == model::Kind::View) box(view.name);

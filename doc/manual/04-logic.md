@@ -338,6 +338,7 @@ package shop {
 
     state Order {
       initial Open
+      final Shipped, Cancelled
       Open -> Paid on pay
       Paid -> Shipped on ship
       Open -> Cancelled on cancel
@@ -351,6 +352,12 @@ diagram ST_Order {
   include: shop@store::Order
 }
 ```
+
+`initial` says where the machine starts, and `final` the states it ends in. The drawing shows
+the start as a filled dot with an arrow to the initial state, and each final state with an
+arrow to a bullseye. A transition out of a final state is reported (W-STATE-LEAVES-FINAL): the
+machine cannot both end there and go on. A state that nothing leaves is not taken as final; a
+machine written in part says only what it says.
 
 ## The machine as a table
 

@@ -7,6 +7,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
+#include "ds/machine/Machine.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -97,6 +98,27 @@ TEST_F(TestStates, CallsInTheOrderOfTheMachineACallAfterAFrameThatMayNotHappenAn
   EXPECT_FALSE(says("W-STATE-ORDER", "Desk::sell"));   // pay, then ship
   EXPECT_FALSE(says("W-STATE-ORDER", "Desk::close"));  // ship inside an opt, then cancel: the order may still be open
   EXPECT_FALSE(says("W-STATE-ORDER", "Desk::label"));  // ship as the first call: the order may be in any state
+}
+
+/// A transition out of a final state is a contradiction, said where the machine is written (DS-442); a state nothing
+/// leaves is not taken as final, and a machine that says no end says nothing of one.
+TEST_F(TestStates, ATransitionOutOfAFinalStateIsAFindingAndAStateWithNoWayOutIsNotTakenAsFinal) {
+  EXPECT_EQ(said("W-STATE-LEAVES-FINAL").size(), 1U);
+  EXPECT_TRUE(says("W-STATE-LEAVES-FINAL", "the transition Closed -> Open of Ticket leaves a final state"));
+  EXPECT_FALSE(says("W-STATE-LEAVES-FINAL", "Kettle"));
+}
+
+/// A machine keeps the states it ends in as its final lines name them, in order, and counts them among its states
+/// (DS-442): a final state nothing leads to would be unreachable as any other.
+TEST_F(TestStates, AMachineKeepsItsFinalStatesInOrderAmongItsStates) {
+  const ds::model::Entity* ticket = model.find("shop@ends::Ticket::state");
+  ASSERT_NE(ticket, nullptr);
+  EXPECT_EQ(ticket->field("final"), "Closed, Rejected");
+  const ds::machine::Machine machine(model, *ticket);
+  EXPECT_EQ(machine.finals(), (std::vector<std::string>{"Closed", "Rejected"}));
+  const std::vector<std::string> states = machine.states();
+  EXPECT_NE(std::find(states.begin(), states.end(), "Rejected"), states.end());
+  EXPECT_FALSE(says("W-STATE-UNREACHABLE", "Ticket"));  // its finals are reached
 }
 
 }  // namespace

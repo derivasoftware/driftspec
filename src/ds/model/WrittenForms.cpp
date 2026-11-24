@@ -170,9 +170,11 @@ std::map<Kind, std::pair<std::string, std::string>> Metamodel::writtenForms() {
         "attempt { ... } on <Failure> [/ <scenario>] { ... } [on ...]",
         kShopSequence}},
       {Kind::State,
-       {"state <Class | interface> {\n  initial <State>\n  <A> -> <B> on <operation> [<guard, as prose>] / <action>\n}",
+       {"state <Class | interface> {\n  initial <State>\n  final <State>, ...\n  <A> -> <B> on <operation> [<guard, as prose>] / "
+        "<action>\n}",
         "package shop {\n  module store {\n    class Order {\n      + pay() -> none\n      + ship() -> none\n    }\n\n"
-        "    state Order {\n      initial Open\n      Open -> Paid on pay\n      Paid -> Shipped on ship\n    }\n  }\n}\n"}},
+        "    state Order {\n      initial Open\n      final Shipped\n      Open -> Paid on pay\n      Paid -> Shipped on ship\n    }\n  "
+        "}\n}\n"}},
       {Kind::UseCase,
        {"usecase <ID> [<name>(<param>: <type>, ...) [-> <type>]] [: <generic ID>] {\n  title: <what it is for>\n  status: draft | "
         "approved | obsolete\n  @requirement <ID>\n  outcome default: <what is obtained>\n  outcome <scenario> [-> <type>]: <what is "
