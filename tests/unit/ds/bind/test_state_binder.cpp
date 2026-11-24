@@ -85,4 +85,14 @@ TEST_F(TestStateBinder, AStateMachineIsTheBehaviourOfItsClassWithItsTransitionsA
   EXPECT_EQ(notes.events[0].event, "take");
 }
 
+/// The states a machine ends in, as every `final` line names them, in order (DS-442).
+TEST_F(TestStateBinder, TheFinalStatesAreThoseEveryFinalLineNames) {
+  bindText(
+      "package p {\n  module m {\n    state Stock {\n      initial Full\n      final Empty, Gone\n      final Sold\n"
+      "      Full -> Empty on take\n    }\n  }\n}\n");
+  const ds::model::Entity* state = model.find("p@m::Stock::state");
+  ASSERT_NE(state, nullptr);
+  EXPECT_EQ(state->field("final"), "Empty, Gone, Sold");
+}
+
 }  // namespace

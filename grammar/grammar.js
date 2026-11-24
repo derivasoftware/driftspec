@@ -236,7 +236,7 @@ module.exports = grammar({
     // prose; a slash starts the scenario's name only when a space follows it: `the ratio a/b` and `/tmp` stay prose (DS-224)
     condition: $ => /([^{\/\n]|\/[^\s{\/])+/,
 
-    state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.view, $.transition, $.state_rule)), '}'),
+    state: $ => seq('state', field('entity', $.qualified_name), '{', repeat(choice($.field, $.annotation, $.initial, $.final, $.view, $.transition, $.state_rule)), '}'),
     // a state computed by a rule over the context of its subject (DS-249): `Paid if status = Paid, not cancelled`.
     // The literals are joined by commas and all hold. A name alone is a boolean of the subject or a condition
     // with a name; `not` turns a literal round; a comparison names a value of the attribute's type
@@ -246,6 +246,8 @@ module.exports = grammar({
     // a state of the navigation of a graphical interface: what it shows, in text, and what binds it (2026-11-05)
     view: $ => seq('view', field('name', $.name), '{', repeat(choice($.field, $.annotation)), '}'),
     initial: $ => seq('initial', field('name', $.name)),
+    // the states the machine ends in (DS-442): a transition out of one is a contradiction; a state with no way out is not one
+    final: $ => seq('final', field('name', $.name), repeat(seq(',', field('name', $.name)))),
     transition: $ => seq(field('from', $.name), '->', field('to', $.name), 'on', field('event', $.name), optional(field('guard', $.guard)), optional(seq('/', field('action', $.name)))),
 
     // ---- representations --------------------------------------------------

@@ -405,6 +405,7 @@ package shop {
 
     state Order {
       initial Open
+      final Shipped, Cancelled
       Open -> Paid on pay
       Paid -> Shipped on ship
       Open -> Cancelled on cancel
@@ -450,6 +451,9 @@ diagram ST_Order {
         (qualified_name
           (name))
         (initial
+          (name))
+        (final
+          (name)
           (name))
         (transition
           (name)

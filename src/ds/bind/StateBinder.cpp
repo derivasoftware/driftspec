@@ -32,10 +32,15 @@ void StateBinder::bind(TSNode node, const BindContext& ctx) const {
   annotations_.bind(node, ctx, e.id, scope);
   std::vector<std::string> transitions;
   std::vector<std::string> rules;
+  std::vector<std::string> finals;  // what every `final` line names, in order (DS-442)
   const uint32_t n = ts_node_named_child_count(node);
   for (uint32_t j = 0; j < n; ++j) {
     TSNode t = ts_node_named_child(node, j);
     if (TreeReader::is(t, "initial")) ctx.annotate(e.id, "initial", ctx.reader.fieldText(t, Field::name));
+    if (TreeReader::is(t, "final")) {
+      for (TSNode name : ctx.reader.childrenNamed(t, Field::name)) finals.push_back(ctx.reader.textOf(name));
+      ctx.annotate(e.id, "final", join(finals, ", "));
+    }
     if (TreeReader::is(t, "state_rule")) {  // a state computed by a rule (DS-249): state|literal,literal|line, `not` as a leading !
       std::vector<std::string> literals;
       const uint32_t nl = ts_node_named_child_count(t);

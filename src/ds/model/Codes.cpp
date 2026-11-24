@@ -170,6 +170,9 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
        "Add a transition into it, or make it the initial one."},
       {Code::W_STATE_UNREACHABLE, "W-STATE-UNREACHABLE", Severity::warning,
        "Nothing leads to a state of a class's machine from its initial state.", "Add a transition into it, or remove the state."},
+      {Code::W_STATE_LEAVES_FINAL, "W-STATE-LEAVES-FINAL", Severity::warning,
+       "A transition leaves a state the machine says is final: a final state is one the machine ends in.",
+       "Remove the transition, or take the state out of final."},
       {Code::W_FAILURE_UNDECLARED, "W-FAILURE-UNDECLARED", Severity::warning,
        "An operation lets a failure escape that its signature does not say it may fail with; an interface operation is a "
        "boundary and must say it.",

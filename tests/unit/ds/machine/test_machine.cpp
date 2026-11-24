@@ -351,4 +351,14 @@ TEST_F(TestCalls, AnEventLeadsFromAStateWhereItsJumpsSayEachWithItsGuard) {
   EXPECT_TRUE(machine("Order").targets("audit", "Open").empty());      // no event of the machine
 }
 
+/// The states a machine ends in, each name as written, and among its states though no jump leads to one (DS-442).
+TEST_F(TestMachine, ItsFinalStatesAreTheNamesItsFinalLinesSayAndTheyAreAmongItsStates) {
+  load(
+      "    class Stock {\n      + take() -> none\n    }\n"
+      "    state Stock {\n      initial Full\n      final  Empty ,Gone\n      Full -> Empty on take\n    }\n");
+  EXPECT_EQ(machine("Stock").finals(), (std::vector<std::string>{"Empty", "Gone"}));
+  const std::vector<std::string> states = machine("Stock").states();
+  EXPECT_NE(std::find(states.begin(), states.end(), "Gone"), states.end());
+}
+
 }  // namespace

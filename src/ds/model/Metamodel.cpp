@@ -221,7 +221,9 @@ std::vector<KindSpec> Metamodel::build() {
                {Kind::Sequence, Kind::Frame}});
   k.push_back({Kind::State,
                "the state machine of a class or the navigation of an interface",
-               {syntax("initial", FieldType::Name, "the initial state"), syntax("transitions", FieldType::Text, "its transitions"),
+               {syntax("initial", FieldType::Name, "the initial state"),
+                syntax("final", FieldType::Names, "the states it ends in (DS-442): a transition out of one is a contradiction"),
+                syntax("transitions", FieldType::Text, "its transitions"),
                 syntax("rules", FieldType::Text, "its states as rules over the context of its subject: state|literals|line, one per line")},
                {},
                {P, M}});

@@ -126,6 +126,39 @@ package shop {
   }
 }
 
+// Where a machine ends (DS-442): a transition out of a final state is a contradiction; a state nothing leaves is not
+// taken as final, and nothing is said of it.
+package shop {
+  module ends {
+    class Ticket {
+      + close() -> void
+      + reopen() -> void
+    }
+
+    state Ticket {
+      initial Open
+      final Closed, Rejected
+      Open -> Closed on close
+      Open -> Rejected on close
+      Closed -> Open on reopen                        // ! W-STATE-LEAVES-FINAL: Closed is final
+    }
+
+    class Kettle {
+      + boil() -> void
+    }
+
+    state Kettle {
+      initial Cold
+      Cold -> Boiled on boil                          // Boiled has no way out and is not final: nothing is said
+    }
+  }
+}
+
+diagram STM_Ticket {
+  kind: state
+  include: shop@ends::Ticket
+}
+
 diagram STM_Order {
   kind: state
   include: shop@order::Order

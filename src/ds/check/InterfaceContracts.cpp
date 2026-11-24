@@ -190,6 +190,17 @@ void InterfaceContracts::checkStates(const model::Entity& state) {
   // with neither, where it starts cannot be told
   const auto moves = state.fields.find("transitions");
   if (moves == state.fields.end()) return;
+  // a final state is one the machine ends in: a transition out of one says otherwise (DS-442). A state with no way out is
+  // not taken as final, nor said to be: a machine written in part is complete
+  const std::vector<std::string> finals = machine::Machine(*model_, state).finals();
+  for (const auto& move : splitTrimmed(moves->second, '\n')) {
+    const auto gt = move.find('>');
+    if (gt == std::string::npos || std::find(finals.begin(), finals.end(), move.substr(0, gt)) == finals.end()) continue;
+    const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
+    found_.push_back(context_->metamodel().finding(
+        model::Code::W_STATE_LEAVES_FINAL,
+        "the transition " + move.substr(0, gt) + " -> " + to + " of " + state.name + " leaves a final state", state.location));
+  }
   const std::string initial = machine::Machine(*model_, state).initial();
   if (initial.empty()) return;
   std::vector<std::string> states{initial};

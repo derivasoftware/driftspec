@@ -36,6 +36,8 @@ class Machine {
   /// The state the subject starts in: the one written, else the one its defaults are in; empty when the
   /// defaults are in no state or do not tell.
   std::string initial() const;
+  /// The states the machine ends in, as its `final` lines name them (DS-442); none when it names none.
+  std::vector<std::string> finals() const;
   /// What the rules say that cannot be: an attribute the subject does not hold, a value its type does not
   /// have, a rule that excludes itself, and two states that can hold at once, with a context in which they do.
   /// Each is made by `metamodel` from its code (DS-379).

@@ -12,6 +12,7 @@
 #include "ds/machine/Subject.hpp"
 #include "ds/machine/WrittenFields.hpp"
 #include "ds/model/Identity.hpp"
+#include "ds/text/Text.hpp"
 
 namespace ds {
 namespace machine {
@@ -38,6 +39,7 @@ std::vector<std::string> Machine::states() const {
   std::vector<std::string> out;
   for (const StateRule& rule : StateRule::of(machine_)) note(out, rule.state);
   note(out, machine_.field("initial"));
+  for (const std::string& end : finals()) note(out, end);
   for (const std::string& jump : WrittenFields::pieces(machine_.field("transitions"), '\n')) {
     const std::vector<std::string> ends = WrittenFields::pieces(jump, '>');
     if (ends.size() < 2) continue;
@@ -51,6 +53,15 @@ std::vector<std::string> Machine::rules(const std::string& state) const {
   std::vector<std::string> out;
   for (const StateRule& rule : StateRule::of(machine_))
     if (rule.state == state) out.push_back(rule.text);
+  return out;
+}
+
+std::vector<std::string> Machine::finals() const {
+  std::vector<std::string> out;  // written "A, B": each name, trimmed
+  for (const std::string& piece : WrittenFields::pieces(machine_.field("final"), ',')) {
+    const std::string name(text::trimWhitespace(piece));
+    if (!name.empty()) out.push_back(name);
+  }
   return out;
 }
 
