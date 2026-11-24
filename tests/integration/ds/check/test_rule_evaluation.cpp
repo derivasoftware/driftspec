@@ -25,8 +25,7 @@ class TestRuleEvaluation : public ::testing::Test {
     const auto file = parser.parseText("a.ds", text);
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   std::vector<std::string> messages(const std::string& code) const {

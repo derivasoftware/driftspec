@@ -18,8 +18,9 @@ class IStep {
   virtual ~IStep() = default;
   virtual std::string name() const = 0;
   virtual std::vector<std::string> needs() const = 0;
-  /// Run over the context and give back what was found; the checker adds it to the model, in order.
-  virtual std::vector<model::Finding> run(Context& out_context) = 0;
+  /// Run over the context it was given when it was made, and give back what was found; the checker adds it to the
+  /// model, in order (DS-425).
+  virtual std::vector<model::Finding> run() = 0;
 };
 
 }  // namespace check

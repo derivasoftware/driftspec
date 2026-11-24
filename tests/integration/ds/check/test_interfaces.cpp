@@ -25,8 +25,7 @@ class TestInterfaces : public ::testing::Test {
       syntaxErrors += f.hasSyntaxErrors ? 1 : 0;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     for (const auto& f : model.findings()) lines[f.code].push_back(f.message);
     for (const auto& f : model.coverage()) lines[f.code].push_back(f.message);  // kept apart (DS-216)
   }

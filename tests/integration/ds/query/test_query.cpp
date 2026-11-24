@@ -26,8 +26,7 @@ class TestQuery : public ::testing::Test {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/artefacts")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   static bool names(const std::vector<Answer>& answers, const std::string& id, const std::string& kind = "") {
@@ -113,8 +112,7 @@ class TestQueryOfTheDesign : public TestQuery {
     ds::parse::Parser parser;
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/design")) binder.bind(f);
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 };
 
@@ -156,8 +154,7 @@ ds::model::Model aMachine(const ds::model::Metamodel& metamodel) {
                                "    }\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   return model;
 }
 

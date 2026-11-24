@@ -43,8 +43,7 @@ class TestEnginePrinciples : public ::testing::Test {
       }
       binder.bind(file);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     std::vector<std::string> out;
     for (const auto& f : model.findings())
       if (f.code == "E-RULE-BROKEN") out.push_back(f.message.substr(0, f.message.find(' ')));
@@ -78,14 +77,20 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string layerLayout = "driftspec@ds@scene::no-layer-knows-the-layout";
   const std::string packerModel = "driftspec@ds@layout::layout-knows-no-model";
   const std::string layersAlone = "driftspec@ds@scene::no-layer-knows-another";
+  const std::string namedI = "driftspec@ds@pure-interfaces-are-named-i";
+  const std::string namedA = "driftspec@ds@abstract-classes-are-named-a";
+  const std::string namedFactory = "driftspec@ds@factories-are-named-factory";
+  const std::string throughInterface = "driftspec@ds@families-are-reached-through-their-interface";
+  const std::string givenAtConstruction = "driftspec@ds@what-a-class-refers-to-is-given-to-it";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule :
-       {context,          asInterface,     alone,         builtOnce,    binderClasses,  modelClasses, axisClasses,
-        axisReads,        exporterClasses, exporterReads, apiChooses,   machineClasses, machineReads, queryClasses,
-        stepsAsInterface, stepsAlone,      checkClasses,  sceneClasses, sceneReads,     layerLayout,  packerModel})
+       {context,          asInterface,     alone,         builtOnce,        binderClasses,      modelClasses, axisClasses,
+        axisReads,        exporterClasses, exporterReads, apiChooses,       machineClasses,     machineReads, queryClasses,
+        stepsAsInterface, stepsAlone,      checkClasses,  sceneClasses,     sceneReads,         layerLayout,  packerModel,
+        namedI,           namedA,          namedFactory,  throughInterface, givenAtConstruction})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -269,6 +274,52 @@ TEST_F(TestEnginePrinciples, APackerThatKnowsTheModelIsTold) {
       broken({{"ds/layout.ds", "    class PackingEngine : IEngine {", "      - refs model_: model::Model\n"}});
   EXPECT_TRUE(has(rules, packerModel));
   EXPECT_FALSE(has(rules, sceneReads));  // holding the model is not changing it
+}
+
+/// The Owner's conventions (DS-405): what a class is named says what it is, a family is reached through its
+/// interface, and what a class refers to is given to it when it is made. Each is told when it is broken, and only it.
+TEST_F(TestEnginePrinciples, AnInterfaceNamedOtherwiseIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/check.ds", "  module check {",
+                                                  "    class Shape {\n"
+                                                  "      + abstract area() -> int\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, namedI));
+  EXPECT_FALSE(has(rules, namedA));
+}
+
+TEST_F(TestEnginePrinciples, AnAbstractClassNamedOtherwiseIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/check.ds", "  module check {",
+                                                  "    class Shape {\n"
+                                                  "      + abstract area() -> int\n"
+                                                  "      + name() -> std::string\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, namedA));
+  EXPECT_FALSE(has(rules, namedI));
+}
+
+TEST_F(TestEnginePrinciples, AFactoryNamedOtherwiseIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/check.ds", "  module check {",
+                                                  "    class Maker {\n"
+                                                  "      - owns linker_: Linker\n"
+                                                  "      - owns derivation_: Derivation\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, namedFactory));
+  EXPECT_FALSE(has(rules, throughInterface));  // a factory may name the family it makes
+}
+
+TEST_F(TestEnginePrinciples, AConcreteClassOfAFamilyReachedFromOutsideIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/render.ds", "    class IrExport {", "      - owns classes_: query::ClassFilter\n"}});
+  EXPECT_TRUE(has(rules, throughInterface));
+  EXPECT_FALSE(has(rules, namedFactory));
+}
+
+TEST_F(TestEnginePrinciples, AReferenceNoConstructorGivesIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/check.ds", "  module check {",
+                                                  "    class Holder {\n"
+                                                  "      - refs model_: model::Model\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, givenAtConstruction));
+  EXPECT_FALSE(has(rules, throughInterface));
 }
 
 }  // namespace

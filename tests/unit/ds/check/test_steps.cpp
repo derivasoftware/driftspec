@@ -20,13 +20,22 @@
 namespace {
 
 /// A step of a test: it says its name, what it needs, and one finding when it runs.
+/// What a step is made with, for a test that asks only what the factory makes (DS-425): one context, kept for every
+/// such test.
+ds::check::Context& sharedContext() {
+  static const ds::model::Metamodel metamodel;
+  static ds::model::Model model{metamodel};
+  static ds::check::Context context(model, metamodel);
+  return context;
+}
+
 class FakeStep : public ds::check::IStep {
  public:
   FakeStep(std::string name, std::vector<std::string> needs, std::vector<std::string>& log)
       : name_(std::move(name)), needs_(std::move(needs)), log_(log) {}
   std::string name() const override { return name_; }
   std::vector<std::string> needs() const override { return needs_; }
-  std::vector<ds::model::Finding> run(ds::check::Context&) override {
+  std::vector<ds::model::Finding> run() override {
     log_.push_back(name_);
     return {{"W-" + name_, ds::model::Severity::warning, name_ + " ran", {}}};
   }
@@ -40,7 +49,7 @@ class FakeStep : public ds::check::IStep {
 /// The checker is a runner of steps (DS-138): every step is made in one place, keyed by its name,
 /// and run after every step it needs.
 TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
-  const auto all = ds::check::StepFactory::of();
+  const auto all = ds::check::StepFactory::of(sharedContext());
   ASSERT_EQ(all.size(), 15u);  // ContractCheck became five (DS-382)
   for (const auto& s : all) EXPECT_EQ(s.first, s.second->name());
 }
@@ -48,12 +57,12 @@ TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
 TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
-  const auto checkSteps = ds::check::StepFactory::of();
-  const ds::check::Checker checker(model, metamodel, checkSteps);
+  const auto checkSteps = ds::check::StepFactory::of(sharedContext());
+  const ds::check::Checker checker(sharedContext(), checkSteps);
   const std::vector<std::string> order = checker.order();
   EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "diagrams", "failure-check",
                                              "interfaces", "levels", "order", "rules", "scenarios", "states", "structure", "usecases"}));
-  const auto all = ds::check::StepFactory::of();
+  const auto all = ds::check::StepFactory::of(sharedContext());
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())
       EXPECT_LT(std::find(order.begin(), order.end(), need) - order.begin(), static_cast<long>(i)) << order[i] << " needs " << need;
@@ -63,7 +72,7 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
 /// behaviour typing and derivation both start from the linker and neither reads the other, and a
 /// step that reads the whole model runs after every step that enriches it.
 TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
-  const auto all = ds::check::StepFactory::of();
+  const auto all = ds::check::StepFactory::of(sharedContext());
   using Needs = std::vector<std::string>;
   EXPECT_EQ(all.at("linker")->needs(), Needs{});
   EXPECT_EQ(all.at("behaviour")->needs(), Needs{"linker"});
@@ -80,7 +89,7 @@ TEST(TestOrder, AStepNeedsTheStepsThatWriteWhatItReads) {
 /// The keys of the steps made for a selection, in the order of the map.
 std::vector<std::string> keysOf(const ds::check::Selection& selection) {
   std::vector<std::string> out;
-  for (const auto& s : ds::check::StepFactory::of(selection)) out.push_back(s.first);
+  for (const auto& s : ds::check::StepFactory::of(sharedContext(), selection)) out.push_back(s.first);
   return out;
 }
 
@@ -106,7 +115,7 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
                                                         {Step::Order, "order"}};
   std::vector<std::string> names;
   for (const auto& n : named) {
-    const auto made = ds::check::StepFactory::of(Selection::of({n.first}));
+    const auto made = ds::check::StepFactory::of(sharedContext(), Selection::of({n.first}));
     ASSERT_TRUE(made.count(n.second)) << n.second;
     EXPECT_EQ(made.at(n.second)->name(), n.second);
     names.push_back(n.second);
@@ -114,8 +123,8 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
   std::sort(names.begin(), names.end());
   EXPECT_EQ(keysOf(Selection::every()), names);  // one step each, and every step of the check
   EXPECT_EQ(keysOf(Selection::every()), keysOf(Selection::every().with(Step::Rules)));
-  EXPECT_EQ(ds::check::StepFactory::of().size(), 15u);  // with no selection, every step
-  EXPECT_TRUE(ds::check::StepFactory::of(Selection::of({})).empty());
+  EXPECT_EQ(ds::check::StepFactory::of(sharedContext()).size(), 15u);  // with no selection, every step
+  EXPECT_TRUE(ds::check::StepFactory::of(sharedContext(), Selection::of({})).empty());
 }
 
 /// A step chosen brings every step it needs (DS-376), so none runs without what it reads: the rules bring what
@@ -131,8 +140,8 @@ TEST(TestSteps, AStepChosenBringsEveryStepItNeeds) {
   EXPECT_EQ(keysOf(Selection::of({Step::Order})), (Keys{"behaviour", "linker", "order"}));
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
-  const auto drawing = ds::check::StepFactory::of(Selection::of({Step::Derivation, Step::Behaviour}));
-  EXPECT_EQ(ds::check::Checker(model, metamodel, drawing).order(), (Keys{"linker", "behaviour", "derivation"}));
+  const auto drawing = ds::check::StepFactory::of(sharedContext(), Selection::of({Step::Derivation, Step::Behaviour}));
+  EXPECT_EQ(ds::check::Checker(sharedContext(), drawing).order(), (Keys{"linker", "behaviour", "derivation"}));
 }
 
 /// A step gives back what it found (DS-138): a step that enriches reports to the context, which
@@ -141,8 +150,8 @@ TEST(TestFindings, TheContextHandsBackWhatAStepReportedInOrderAndOnce) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
   ds::bind::Binder binder(model, metamodel);
-  const ds::check::Resolver resolver(model);
-  ds::check::Context context(model, metamodel, resolver, binder.notes());
+  ds::check::Context context(model, metamodel);
+  context.reset(binder.notes());
   context.report({"W-A", ds::model::Severity::warning, "first", {}});
   context.report({"W-B", ds::model::Severity::warning, "second", {}});
   const auto taken = context.take();
@@ -182,8 +191,7 @@ TEST(TestFindings, TheCheckerAddsTheFindingsOfEachStepInTheOrderTheStepsRun) {
   const auto file = parser.parseText("s.ds", "package shop {\n  language: cobol\n  colour: red\n}\n");
   ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
   binder.bind(file);
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   std::vector<std::string> codes;
   for (const auto& f : model.findings()) codes.push_back(f.code);
   EXPECT_EQ(codes, (std::vector<std::string>{"W-LANGUAGE-UNKNOWN", "W-FIELD-UNKNOWN"}));
@@ -201,7 +209,8 @@ TEST(TestChecker, RunsTheStepsItIsGivenAfterWhatEachNeeds) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
   ds::bind::Binder binder(model, metamodel);
-  ds::check::Checker checker(model, metamodel, given);
+  ds::check::Context context(model, metamodel);
+  ds::check::Checker checker(context, given);
   ds::check::IChecker& entry = checker;  // what the rest of ds sees
   entry.run(binder.notes());
   EXPECT_EQ(log, (std::vector<std::string>{"b", "c", "a"}));
@@ -217,33 +226,47 @@ TEST(TestChecker, StepsThatNeedEachOtherAreACycleAndNoOrder) {
   given["b"] = std::unique_ptr<ds::check::IStep>(new FakeStep("b", {"a"}, log));
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
-  const ds::check::Checker checker(model, metamodel, given);
+  ds::check::Context context(model, metamodel);
+  const ds::check::Checker checker(context, given);
   EXPECT_THROW(checker.order(), std::logic_error);
 }
 
 /// The checker holds the map by reference, so it refuses a temporary one, which would die first.
 TEST(TestChecker, TakesNoTemporaryMap) {
-  EXPECT_TRUE((std::is_constructible<ds::check::Checker, ds::model::Model&, const ds::model::Metamodel&,
+  EXPECT_TRUE((std::is_constructible<ds::check::Checker, ds::check::Context&,
                                      const std::map<std::string, std::unique_ptr<ds::check::IStep>>&>::value));
-  EXPECT_FALSE((std::is_constructible<ds::check::Checker, ds::model::Model&, const ds::model::Metamodel&,
-                                      std::map<std::string, std::unique_ptr<ds::check::IStep>>&&>::value));
+  EXPECT_FALSE(
+      (std::is_constructible<ds::check::Checker, ds::check::Context&, std::map<std::string, std::unique_ptr<ds::check::IStep>>&&>::value));
   EXPECT_TRUE((std::is_base_of<ds::check::IChecker, ds::check::Checker>::value));
 }
 
 /// The factory by its own name (DS-404): every step it makes is keyed by the name the step gives, and the checker it
 /// makes is handed back as an IChecker that runs them.
 TEST(TestStepFactory, EveryStepItMakesIsKeyedByItsOwnName) {
-  for (const auto& s : ds::check::StepFactory::of()) EXPECT_EQ(s.first, s.second->name());
+  for (const auto& s : ds::check::StepFactory::of(sharedContext())) EXPECT_EQ(s.first, s.second->name());
 }
 
 TEST(TestCheckerFactory, TheCheckerItMakesRunsTheStepsItIsGiven) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
-  const auto steps = ds::check::StepFactory::of();
-  const std::unique_ptr<ds::check::IChecker> checker = ds::check::CheckerFactory::make(model, metamodel, steps);
+  const std::unique_ptr<ds::check::IChecker> checker = ds::check::CheckerFactory::make(model, metamodel);  // every step
   ASSERT_NE(checker, nullptr);
   checker->run(ds::bind::Notes{});
   EXPECT_TRUE(model.findings().empty());  // an empty model breaks nothing
+}
+
+/// A checker made for a selection (DS-425): it makes the steps the selection names, and only those, with one context.
+TEST(TestSelectedChecker, ItRunsOnlyTheStepsItsSelectionNames) {
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model, metamodel);
+  binder.bind(parser.parseText("s.ds", "package shop {\n  language: cobol\n  colour: red\n}\n"));
+  ds::check::SelectedChecker checker(model, metamodel, ds::check::Selection::of({ds::check::Step::Derivation}));
+  checker.run(binder.notes());
+  std::vector<std::string> codes;
+  for (const auto& f : model.findings()) codes.push_back(f.code);
+  EXPECT_EQ(codes, (std::vector<std::string>{"W-LANGUAGE-UNKNOWN"}));  // derivation ran; the structure check did not
 }
 
 }  // namespace

@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -17,8 +18,15 @@ namespace check {
 /// binder collected, the resolver, the renames linking made and the identities already reported as undeclared.
 class Context {
  public:
-  Context(model::Model& model, const model::Metamodel& metamodel, const Resolver& resolver, const bind::Notes& notes)
-      : model_(model), metamodel_(metamodel), resolver_(resolver), notes_(notes) {}
+  /// Made once, for every run of one checker: it resolves names in `model`, the model written in `metamodel` (DS-425).
+  Context(model::Model& model, const model::Metamodel& metamodel) : model_(model), metamodel_(metamodel), resolver_(model) {}
+  /// A run starts over: what binding left to resolve and check, and nothing of the run before (DS-425).
+  void reset(const bind::Notes& notes) {
+    notes_ = &notes;
+    renamed_.clear();
+    reported_.clear();
+    found_.clear();
+  }
 
   model::Model& model() { return model_; }
   /// What a step that only checks is given: the model, to read.
@@ -27,7 +35,10 @@ class Context {
   const model::Metamodel& metamodel() const { return metamodel_; }
   const Resolver& resolver() const { return resolver_; }
   /// What binding left to resolve and check: the references, the messages and the events (DS-354).
-  const bind::Notes& notes() const { return notes_; }
+  const bind::Notes& notes() const {
+    if (!notes_) throw std::logic_error("the context is read before a run reset it with the notes");
+    return *notes_;
+  }
   /// An identity after the renames linking made.
   std::string current(const std::string& id) const;
   std::map<std::string, std::string>& renamed() { return renamed_; }
@@ -44,8 +55,8 @@ class Context {
  private:
   model::Model& model_;
   const model::Metamodel& metamodel_;
-  const Resolver& resolver_;
-  const bind::Notes& notes_;
+  Resolver resolver_;
+  const bind::Notes* notes_ = nullptr;  ///< the run's, set by reset
   std::map<std::string, std::string> renamed_;
   std::set<std::string> reported_;
   std::vector<model::Finding> found_;

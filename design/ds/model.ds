@@ -418,7 +418,8 @@ package driftspec@ds {
       W_RULE_NO_REQUIREMENT, W_RULE_NO_CLAIM, W_DEFINITION_NO_CASE, E_RULE_BROKEN, E_RULE_UNKNOWN, E_RULE_ARITY,
       E_RULE_UNSAFE, E_RULE_UNSTRATIFIED, W_CONSUMES_UNDECLARED, W_CONSUMES_UNUSED, W_CONSUMES_BYPASS,
       W_LANGUAGE_UNKNOWN, W_USECASE_UNDECLARED, W_USECASE_SIGNATURE, W_USECASE_OUTCOME_UNHANDLED,
-      W_SCENARIO_NO_OUTCOME, W_USECASE_UNREALISED, E_RULE_PATTERN, E_RULE_RESERVED
+      W_SCENARIO_NO_OUTCOME, W_USECASE_UNREALISED, E_RULE_PATTERN, E_RULE_RESERVED, W_REQ_UNREALISED,
+      W_CST_NO_VERIFICATION
     }
 
     enum Severity {                          // how much a finding weighs; what it means is its row of the severity table (DS-379)
@@ -1069,10 +1070,10 @@ package driftspec@ds {
       - relations() -> std::vector<Relation>
       + findings() -> std::vector<Finding>
       + coverage() -> std::vector<Finding> {
-        @requirement REQ-00124-1
+        @requirement REQ-00124-2
       }
       + cover() -> void {                     // what the metamodel calls coverage leaves the findings (DS-216)
-        @requirement REQ-00124-1
+        @requirement REQ-00124-2
       }
       + withdrawEchoes(broken: std::set<std::string>) -> void   // what only echoes files that do not parse or are not UTF-8 (DS-304, DS-411)
       + sortFindings() -> void {              // findings and coverage by file, line, code and message: no order of the steps (DS-382)

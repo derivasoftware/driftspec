@@ -26,8 +26,7 @@ class TestStatic : public ::testing::Test {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path;
       binder.bind(f);
     }
-    const auto checkSteps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     for (const auto& f : model.findings()) ++byCode[f.code];
   }
 
@@ -101,8 +100,7 @@ TEST(TestNesting, NestingAnArtefactInADesignEntityIsAnnotatingIt) {
                                "    }\n"
                                "  }\n"
                                "}\n"));
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   EXPECT_TRUE(model.findings().empty()) << model.findings().front().message;  // an attribute may annotate, as it may nest
   const auto has = [&model](const std::string& kind, const std::string& from, const std::string& to) {
     for (const auto& r : model.index().from(from))

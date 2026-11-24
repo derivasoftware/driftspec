@@ -2,6 +2,7 @@
 #define DRIFTSPEC_BIND_BINDCONTEXT_HPP
 
 #include <string>
+#include <utility>
 
 #include "ds/bind/Dispatch.hpp"
 #include "ds/bind/Notes.hpp"
@@ -17,6 +18,17 @@ namespace bind {
 /// node's children; and where the node is written, its scope and the entity that holds it. A binder writes through
 /// this alone, so a file could later bind into a batch of its own. It holds no binding of its own (DS-356).
 struct BindContext {
+  /// What a node is bound with, given whole: nothing it refers to is set later (DS-424).
+  BindContext(model::Model& model, Notes& notes, const parse::TreeReader& reader, const model::Metamodel& metamodel,
+              const Dispatch& dispatch, std::string scope, std::string owner)
+      : model(model),
+        notes(notes),
+        reader(reader),
+        metamodel(metamodel),
+        dispatch(dispatch),
+        scope(std::move(scope)),
+        owner(std::move(owner)) {}
+
   model::Model& model;
   Notes& notes;
   const parse::TreeReader& reader;

@@ -48,8 +48,7 @@ class TestSequenceTreeOfADesign : public ::testing::Test {
                                        "  }\n}\n");
     ASSERT_FALSE(file.hasSyntaxErrors) << file.errorDetail;
     binder.bind(file);
-    const auto steps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, steps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   static std::vector<std::string> names(const std::vector<std::string>& ids) {

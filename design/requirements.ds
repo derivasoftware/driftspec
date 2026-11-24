@@ -341,6 +341,26 @@ package driftspec {
     tags: release, licence
   }
 
+  constraint CST-00012-1 {
+    status: draft
+    category: style
+    bok: BOK-00005-1
+    title: Every drawing and page DriftSpec writes shall take its colours, fonts and text measures from one theme
+    text:
+      The theme holds each value once: every token of the --pr-* contract shared with
+      plantuml-render, light and dark, the font with how it measures in pixels and in terminal
+      cells, the terminal's palette and the variables of each page in its own vocabulary. A writer
+      per form puts them where that form reads them; a page carries what its writer writes between
+      its theme markers. No colour is written anywhere else in what DriftSpec ships; a gradient's
+      mask stop reads alpha only and stays where it is.
+    rationale:
+      Owner, 2026-11-24 (DS-393): style lived in five places with four vocabularies, each kind's
+      colour defined apart in each, and the SVG's font size coupled silently to the layout's
+      measures. One source makes a change of colour one change, and lets a common palette be
+      chosen and applied in one place.
+    tags: style, render
+  }
+
   constraint CST-00010-1 {
     status: approved
     category: release

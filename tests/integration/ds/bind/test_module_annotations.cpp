@@ -30,8 +30,7 @@ TEST_F(TestModuleAnnotations, AModuleAnswersToTheRequirementItsBodyNames) {
                                      "}\n");
   ASSERT_FALSE(file.hasSyntaxErrors);
   binder.bind(file);
-  const auto checkSteps = ds::check::StepFactory::of();
-  ds::check::Checker(model, metamodel, checkSteps).run(binder.notes());
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   bool required = false;
   for (const auto& r : model.index().all()) required |= r.kind == "satisfies" && r.from == "p@store" && r.to == "REQ-00001-1";
   EXPECT_TRUE(required);

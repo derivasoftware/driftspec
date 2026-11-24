@@ -28,8 +28,7 @@ class TestFailures : public ::testing::Test {
       ASSERT_FALSE(f.hasSyntaxErrors) << f.path << ": " << f.errorDetail;
       binder.bind(f);
     }
-    const auto steps = ds::check::StepFactory::of();
-    ds::check::Checker(model, metamodel, steps).run(binder.notes());
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   }
 
   /// What a path takes, a call by its operation, an ending by what it gives back or fails with.

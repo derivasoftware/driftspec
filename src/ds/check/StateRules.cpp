@@ -11,12 +11,14 @@ std::string StateRules::name() const { return "states"; }
 
 std::vector<std::string> StateRules::needs() const { return {"linker"}; }
 
-std::vector<model::Finding> StateRules::check(const Context& context) {
+StateRules::StateRules(const Context& context) : context_(&context) {}
+
+std::vector<model::Finding> StateRules::check() {
   std::vector<model::Finding> found;
-  for (const auto& pair : context.model().entities()) {
+  for (const auto& pair : context_->model().entities()) {
     const model::Entity& e = pair.second;
     if (e.kind != model::Kind::State || e.field("rules").empty()) continue;
-    for (const model::Finding& fault : machine::Machine(context.model(), e).faults(context.metamodel())) found.push_back(fault);
+    for (const model::Finding& fault : machine::Machine(context_->model(), e).faults(context_->metamodel())) found.push_back(fault);
   }
   return found;
 }

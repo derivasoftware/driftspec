@@ -62,14 +62,17 @@ struct Terminal {
   std::string token;
 };
 
-/// The one source of style (DS-393): every colour, the font and its measures, light and dark, and the terminal's
-/// palette. Made once where the engine starts and handed by const reference to what draws; no colour is written
+/// The one source of style (DS-393): every colour, the font and its measures, light and dark, the terminal's palette and
+/// the variables of each page. Made once where the engine starts and handed by const reference to what draws; no colour is written
 /// anywhere else. The --pr-* names are the theming contract shared with plantuml-render.
 class Theme {
  public:
   Theme();
 
   const std::vector<Token>& tokens() const { return tokens_; }
+  /// The tokens of a page, in its own vocabulary (DS-393): viewer, viewer-night, live, playground, design-page. A page the
+  /// theme lacks is a logic error.
+  const std::vector<Token>& page(const std::string& name) const;
   /// A token by its name; a name the theme lacks is a logic error.
   const Token& token(const std::string& name) const;
   const Font& font() const { return font_; }
@@ -82,6 +85,7 @@ class Theme {
 
  private:
   std::vector<Token> tokens_;
+  std::map<std::string, std::vector<Token>> pages_;
   Font font_;
   std::vector<Terminal> terminal_;
   std::map<std::string, std::uint32_t> cellColours_;
