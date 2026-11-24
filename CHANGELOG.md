@@ -6,13 +6,26 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.70
+## 0.1.71
 
 A diff's change on a relation or a message is drawn as on a box (DS-419). In the text drawing, a changed relation is
 marked `~` in its colour and a renamed one `>`; before, every change but `added` was marked `-` in red, as removed. A
 renamed message is marked `>` (it was `~`). In the SVG, a changed or renamed relation is drawn in its colour; the
 stylesheet had no rule for them, so they looked unchanged. Every SVG ds writes carries the one new stylesheet line. Nothing
 a design writes changes.
+
+## 0.1.70
+
+A rule reads what an entity is, matches a value against a pattern and reads a member's flag (DS-403). `name(x)`,
+`id(x)` and `kind(x)` are the name, the identity and the kind of the entity bound to x; they read it and never bind
+it. `name(c) matches "^I[A-Z]"` holds when the value contains a match of the pattern, an ECMAScript regular
+expression compiled once when the rule is checked. `m is abstract` holds when m carries the flag.
+
+What a design written for the release before has to change: `name`, `id` and `kind` are now words of the rule
+language. A definition of one of those names is reported (E-RULE-RESERVED) and can no longer be applied, and none of
+the three can stand as a variable where a literal begins. A pattern that is no string or does not compile is reported
+at the rule (E-RULE-PATTERN). No kind may declare a field named `name` or `id`. Every design that used none of them
+checks, draws and exports as before.
 
 ## 0.1.69
 

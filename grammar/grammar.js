@@ -64,7 +64,9 @@ module.exports = grammar({
     // Datalog over the model. A bare name is a variable; an entity is written qualified (p@core,
     // p@core::Checker). A literal is a relation of the metamodel (`c uses x`), a kind (`x is class`),
     // containment (`x in p@core`, transitive), (in)equality or a definition (`reaches(c, x)`); `not`
-    // negates one. Nothing is read from prose.
+    // negates one. What an entity is comes as a function of it, name(x), id(x) or kind(x), and a value matches
+    // a pattern: `name(c) matches "^I[A-Z]"`; a member's flag reads as a kind does, `m is abstract` (DS-403).
+    // Nothing is read from prose.
     rule: $ => seq('rule', field('name', $.name), '{', repeat(choice($.field, $.annotation, $.rule_for, $.rule_where, $.rule_holds, $.rule_never)), '}'),
     rule_for: $ => seq('for', $.range, repeat(seq(',', $.range))),
     range: $ => seq(field('kind', $._kind_word), field('variable', $.name), optional(seq('in', field('scope', $.qualified_name)))),
@@ -83,8 +85,11 @@ module.exports = grammar({
     kind_atom: $ => seq(field('left', $.qualified_name), 'is', field('kind', $._kind_word)),
     in_atom: $ => seq(field('left', $.qualified_name), 'in', field('right', $.qualified_name)),
     // values compare: numbers as numbers, strings as written
-    compare_atom: $ => seq(field('left', $._term), field('operator', choice('=', '!=', '<', '<=', '>', '>=')), field('right', $._term)),
-    _term: $ => choice($.field_term, $.qualified_name, $.number, $.string),
+    compare_atom: $ => seq(field('left', $._term), field('operator', choice('=', '!=', '<', '<=', '>', '>=', 'matches')), field('right', $._term)),
+    _term: $ => choice($.property_term, $.field_term, $.qualified_name, $.number, $.string),
+    // what an entity is, as a function of the variable bound to it: its name, its identity or its kind (DS-403);
+    // the three names are the language's, so no definition takes them
+    property_term: $ => seq(field('property', choice('name', 'id', 'kind')), '(', field('of', $.name), ')'),
     // a field of what a variable is bound to: `r.status = "draft"` (DS-268)
     field_term: $ => seq(field('of', $.name), '.', field('field', $.name)),
     // arg(k, p, v): the call k passes v, a literal written in the sequence, to the parameter p of what it calls
