@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <regex>
 
 namespace ds {
 namespace check {
@@ -10,7 +11,8 @@ using Form = model::LiteralForm;
 using Bindings = std::vector<const std::string*>;
 
 bool Solver::compares(Form form) {
-  return form == Form::NotEqual || form == Form::Less || form == Form::LessEqual || form == Form::Greater || form == Form::GreaterEqual;
+  return form == Form::NotEqual || form == Form::Less || form == Form::LessEqual || form == Form::Greater || form == Form::GreaterEqual ||
+         form == Form::Matches || form == Form::Flag;
 }
 
 bool Solver::number(const std::string& text, double& out_number) {
@@ -52,8 +54,9 @@ const std::string* Solver::value(const std::string& owner, const model::Term& te
   if (term.variable) {
     const int slot = variables.slotOf(term.text);
     if (slot < 0 || !bindings[slot]) return nullptr;
-    if (term.field.empty()) return bindings[slot];
-    std::string field = facts_.fieldOf(*bindings[slot], term.field);  // a field of what it is bound to (DS-268)
+    if (term.field.empty() && term.property.empty()) return bindings[slot];
+    std::string field = term.property.empty() ? facts_.fieldOf(*bindings[slot], term.field)  // a field of what it is bound to (DS-268)
+                                              : facts_.propertyOf(*bindings[slot], term.property);  // what it is (DS-403)
     double ignored = 0;
     if (!number(field, ignored)) field = "\"" + field + "\"";  // a text compares with a string as written
     return text(field);
@@ -71,6 +74,9 @@ bool Solver::ready(const model::Literal& literal, const Variables& variables, co
     return slot >= 0 && bindings[slot] != nullptr;
   };
   if (literal.negated || compares(literal.form)) return std::all_of(literal.terms.begin(), literal.terms.end(), known);
+  // name(x) reads what x is bound to: it waits for x, and never binds it (DS-403)
+  for (const auto& t : literal.terms)
+    if (!t.property.empty() && !known(t)) return false;
   if (literal.form == Form::In || literal.form == Form::Equal) return std::any_of(literal.terms.begin(), literal.terms.end(), known);
   return true;
 }
@@ -199,6 +205,17 @@ std::vector<Bindings> Solver::answers(const std::string& owner, const model::Lit
     case Form::Greater:
     case Form::GreaterEqual:
       if (compare(l.form, hasA ? *a : *empty, hasZ ? *z : *empty)) out.push_back(bindings);
+      break;
+    case Form::Matches: {  // the value, as it reads, against the pattern the validator compiled (DS-403)
+      const std::regex* pattern = facts_.patternOf(owner, l.terms[1].text);
+      if (!pattern || !hasA) break;
+      const bool quoted = a->size() >= 2 && a->front() == '"' && a->back() == '"';
+      const std::string subject = quoted ? a->substr(1, a->size() - 2) : *a;
+      if (std::regex_search(subject, *pattern)) out.push_back(bindings);
+      break;
+    }
+    case Form::Flag:  // `m is abstract`: a flag of what m is bound to (DS-403)
+      if (hasA && facts_.flagged(*a, l.name)) out.push_back(bindings);
       break;
     case Form::Arg: {  // the literal a call passes to the parameter named, as the sequence writes it
       std::vector<const std::string*> calls;

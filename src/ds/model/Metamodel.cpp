@@ -21,14 +21,21 @@ Metamodel::Metamodel()
       other_(buildOtherAnnotation()),
       annotations_(buildAnnotations()) {}
 
+bool Metamodel::reservedField(const std::string& name) { return name == "name" || name == "id"; }
+
+FieldSpec Metamodel::spec(const std::string& name, FieldType type, FieldSource source, const std::string& meaning) {
+  // what a rule reads as name(x) and id(x) is the entity's own: no kind declares a field that would shadow it (DS-403)
+  if (reservedField(name)) throw std::logic_error("'" + name + "' is reserved: no kind declares a field of that name");
+  return {name, type, source, meaning};
+}
 FieldSpec Metamodel::writtenField(const std::string& name, FieldType type, const std::string& meaning) {
-  return {name, type, FieldSource::Written, meaning};
+  return spec(name, type, FieldSource::Written, meaning);
 }
 FieldSpec Metamodel::syntax(const std::string& name, FieldType type, const std::string& meaning) {
-  return {name, type, FieldSource::Syntax, meaning};
+  return spec(name, type, FieldSource::Syntax, meaning);
 }
 FieldSpec Metamodel::derived(const std::string& name, FieldType type, const std::string& meaning) {
-  return {name, type, FieldSource::Derived, meaning};
+  return spec(name, type, FieldSource::Derived, meaning);
 }
 // a field written with one of a closed set of values: any other is W-FIELD-VALUE (DS-211)
 FieldSpec Metamodel::closed(const std::string& name, FieldType type, const std::string& meaning, std::vector<std::string> values) {
@@ -441,6 +448,12 @@ const KindSpec* Metamodel::specNamed(const std::string& name) const {
   for (const auto& k : kinds_)
     if (name == nameOf(k.kind)) return &k;
   return nullptr;
+}
+
+bool Metamodel::flagNamed(const std::string& name) const {
+  for (const auto& k : kinds_)
+    if (std::find(k.flags.begin(), k.flags.end(), name) != k.flags.end()) return true;
+  return false;
 }
 
 const FieldSpec* Metamodel::fieldOf(Kind kind, const std::string& key) const {

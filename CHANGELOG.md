@@ -6,7 +6,7 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
-## 0.1.70
+## 0.1.71
 
 The language server and the live viewer show a finding's severity as the severity table gives it (DS-386). The engine
 hands the table to Python (`driftspec.severities()`: each severity's name, whether it fails, whether it is kept apart as
@@ -15,6 +15,19 @@ with the table's editor mapping; what it publishes does not change. The live vie
 errors red and warnings amber; its findings pill counts what fails, with the rest beside it; and the coverage, which
 reached no Python door, has a folded section of its own in the information colour, fed by a new `coverage` field of the
 state. The live contract is version 5.
+
+## 0.1.70
+
+A rule reads what an entity is, matches a value against a pattern and reads a member's flag (DS-403). `name(x)`,
+`id(x)` and `kind(x)` are the name, the identity and the kind of the entity bound to x; they read it and never bind
+it. `name(c) matches "^I[A-Z]"` holds when the value contains a match of the pattern, an ECMAScript regular
+expression compiled once when the rule is checked. `m is abstract` holds when m carries the flag.
+
+What a design written for the release before has to change: `name`, `id` and `kind` are now words of the rule
+language. A definition of one of those names is reported (E-RULE-RESERVED) and can no longer be applied, and none of
+the three can stand as a variable where a literal begins. A pattern that is no string or does not compile is reported
+at the rule (E-RULE-PATTERN). No kind may declare a field named `name` or `id`. Every design that used none of them
+checks, draws and exports as before.
 
 ## 0.1.69
 
