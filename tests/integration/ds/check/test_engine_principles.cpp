@@ -313,6 +313,20 @@ TEST_F(TestEnginePrinciples, AConcreteClassOfAFamilyReachedFromOutsideIsTold) {
   EXPECT_FALSE(has(rules, namedFactory));
 }
 
+/// A factory is exempt by its name, so a factory of one product names it in the design (DS-451); a class that is no
+/// factory and names one concrete class of a family is still told.
+TEST_F(TestEnginePrinciples, OneConcreteNamedByAClassThatIsNoFactoryIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/emit.ds", "  module emit {",
+                                                  "    class Writer {\n"
+                                                  "      + write() -> void\n"
+                                                  "    }\n"
+                                                  "    sequence Writer::write {\n"
+                                                  "      local sink: JsonSink\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, throughInterface));
+  EXPECT_FALSE(has(rules, namedFactory));  // one product: no family is named twice
+}
+
 TEST_F(TestEnginePrinciples, AReferenceNoConstructorGivesIsTold) {
   const std::vector<std::string> rules = broken({{"ds/check.ds", "  module check {",
                                                   "    class Holder {\n"

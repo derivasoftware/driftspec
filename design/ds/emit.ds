@@ -135,6 +135,11 @@ package driftspec@ds {
       @requirement REQ-00202-1
       + static json(pretty: bool) -> std::unique_ptr<ISink>   // indented by two spaces when pretty, else compact
     }
+
+    sequence SinkFactory::json {
+      local sink: JsonSink
+      return sink
+    }
   }
 }
 
