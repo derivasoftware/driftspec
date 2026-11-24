@@ -332,7 +332,7 @@ package driftspec@ds {
     }
 
     verification VER-00083-4 {
-      status: draft
+      status: approved
       @requirement REQ-00074-1
       title: Integration tests confirm ds's design writes each behaviour once and its page stays under 250 KB, and a behaviour written once is replayed by every tour that calls it
       method: test
