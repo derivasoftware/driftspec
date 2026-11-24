@@ -309,6 +309,28 @@ package driftspec@ds {
     // and how each kind is written. The binder, the checker and the kinds read them here; the manual
     // derives its pages from them and the metamodel never reads the manual
     // ---- a finding is made from its code (DS-379), as requirements and the rules that hold them ------------------
+    requirement REQ-00193-1 {
+      tags: architecture, model, findings
+      status: draft
+      @refines REQ-00001-1
+      title: The findings and the coverage shall be ordered by where they are written and then by what they say, never by the order the check's steps ran in
+      text:
+        Both lists are ordered by file, then by line, and on one line by code, then by message. Which step found a
+        finding, and when it ran, leaves no trace in the order: steps can be split, added or scheduled otherwise and
+        every output reads the same.
+      rationale:
+        Owner, 2026-11-24 (DS-382): splitting one step into five reordered the coverage, which no sort ever ordered,
+        and could reorder two findings on one line; the order of the output should follow the design, not the engine.
+      verification VER-00213-1 {
+        status: draft
+        title: Integration tests confirm the findings and the coverage of a design are ordered by file, line, code and message, and the same findings reported in another order come out in the same order
+        method: test
+        tests:
+          tests/integration/ds/check/test_finding_order.cpp::TestFindingOrder.TheFindingsAndTheCoverageOfADesignAreInTheOrderOfWhereAndWhat
+          tests/integration/ds/check/test_finding_order.cpp::TestFindingOrder.TheOrderTheyWereReportedInLeavesNoTrace
+      }
+    }
+
     requirement REQ-00190-1 {
       tags: architecture, model, findings
       status: approved
@@ -1033,7 +1055,9 @@ package driftspec@ds {
         @requirement REQ-00124-1
       }
       + withdrawEchoes(broken: std::set<std::string>) -> void   // what only echoes files that do not parse (DS-304)
-      + sortFindings() -> void                // by file, then by line; on one line, as reported
+      + sortFindings() -> void {              // findings and coverage by file, line, code and message: no order of the steps (DS-382)
+        @requirement REQ-00193-1
+      }
       + formulas() -> std::map<std::string, Formula> {
         @requirement REQ-00095-2
       }
@@ -1126,7 +1150,7 @@ package driftspec@ds {
     }
 
     sequence Model::sortFindings {
-      // by file, then by line; the order reported stays among those on one line
+      // the findings, then the coverage: by file, then by line, and on one line by code, then by message (DS-382)
     }
 
     sequence Model::tabulate {

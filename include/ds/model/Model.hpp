@@ -200,7 +200,8 @@ class Model {
   /// The findings that only echo what files that do not parse leave out of the model go: everything else said
   /// in those files, and every name declared nowhere. What says the files do not parse stays (DS-304).
   void withdrawEchoes(const std::set<std::string>& broken);
-  /// The findings in the order of where they are written: by file, then by line; on one line, as reported.
+  /// The findings, and the coverage, in the order of where they are written: by file, then by line, and on one line
+  /// by code, then by message (DS-382). Neither depends on the order the steps of the check ran in.
   void sortFindings();
   /// What the rules and definitions say, by the identity of each.
   const std::map<std::string, Formula>& formulas() const { return formulas_; }

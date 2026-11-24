@@ -9,8 +9,9 @@ namespace {
 using ds::check::Selection;
 using ds::check::Step;
 
-const std::vector<Step> kEvery{Step::Linker,       Step::Behaviour, Step::Derivation, Step::Failures, Step::Contracts, Step::Structure,
-                               Step::Dependencies, Step::Rules,     Step::Levels,     Step::States,   Step::Order};
+const std::vector<Step> kEvery{Step::Linker,       Step::Behaviour, Step::Derivation, Step::Failures,      Step::Interfaces,
+                               Step::UseCases,     Step::Diagrams,  Step::Scenarios,  Step::FailureChecks, Step::Structure,
+                               Step::Dependencies, Step::Rules,     Step::Levels,     Step::States,        Step::Order};
 
 /// Which steps of the check a load runs (DS-376): a set of steps, every one unless it is said otherwise.
 TEST(TestSelection, EveryStepIsInTheWholeSelection) {

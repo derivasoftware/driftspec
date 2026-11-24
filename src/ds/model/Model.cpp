@@ -231,9 +231,15 @@ void Model::withdrawEchoes(const std::set<std::string>& broken) {
 }
 
 void Model::sortFindings() {
-  std::stable_sort(findings_.begin(), findings_.end(), [](const Finding& a, const Finding& b) {
-    return a.location.file != b.location.file ? a.location.file < b.location.file : a.location.line < b.location.line;
-  });
+  // where it is written, then what it says: two findings on one line keep no order of the steps that found them (DS-382)
+  const auto before = [](const Finding& a, const Finding& b) {
+    if (a.location.file != b.location.file) return a.location.file < b.location.file;
+    if (a.location.line != b.location.line) return a.location.line < b.location.line;
+    if (a.code != b.code) return a.code < b.code;
+    return a.message < b.message;
+  };
+  std::stable_sort(findings_.begin(), findings_.end(), before);
+  std::stable_sort(coverage_.begin(), coverage_.end(), before);
 }
 
 }  // namespace model
