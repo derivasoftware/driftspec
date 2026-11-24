@@ -6,6 +6,13 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.45
+
+The axis is written as requirements held by rules (DS-367): every operation of the axis is a member of the class
+whose responsibility it is, and the axis reads the model it cuts and leaves it as it is. standsAmong and bondOf are
+static members of Cut, and so are the helpers its source hid. Nothing a design writes, no finding, export or
+drawing changes.
+
 ## 0.1.44
 
 The architecture of the binder and the model is written in the design as requirements, each held by rules
