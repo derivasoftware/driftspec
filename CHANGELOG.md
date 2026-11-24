@@ -6,6 +6,17 @@ release before has to change. The version is the one `ds --version` prints.
 While DriftSpec is below 1.0 a release may still rename a word of the language; when it does, the
 entry says which word and what to write instead.
 
+## 0.1.44
+
+The architecture of the binder and the model is written in the design as requirements, each held by rules
+(DS-365): the binder binds each construct through a binder of its own, reached through one interface; every binder
+writes into the model through the bind context; the metamodel builds its own tables when it is created; and every
+operation of the binder and of the model is a member of the class whose responsibility it is. A design that breaks
+one is told so with E-RULE-BROKEN. The binder now holds its node binders as INodeBinder, and the scan of a type's
+text is TypeToken::scan. Nothing a design writes, no finding, export or drawing changes.
+
+VER-00037-7 (under REQ-00049-3) and VER-00003-6 (under REQ-00003-2), which DS-337 and DS-362 left as drafts, are approved.
+
 ## 0.1.43
 
 A large `neighbours:` no longer keeps `ds render` busy for good (DS-362). The walk took every step a class diagram
