@@ -621,14 +621,15 @@ std::string Svg::tableSvg(const IrDocument& doc) const {
     std::istringstream in(text);
     std::string word;
     while (in >> word) {
-      if (!out.back().empty() && out.back().size() + 1 + word.size() > kWrap) out.push_back("");
+      // measured in characters, as the terminal's table measures (DS-466): ≠ is one, though UTF-8 writes it in three bytes
+      if (!out.back().empty() && text::characters(out.back()) + 1 + text::characters(word) > kWrap) out.push_back("");
       out.back() += (out.back().empty() ? "" : " ") + word;
     }
     return out;
   };
   const auto widest = [&](const std::string& text) {
     std::size_t w = 0;
-    for (const auto& l : lines(text)) w = std::max(w, l.size());
+    for (const auto& l : lines(text)) w = std::max(w, text::characters(l));
     return static_cast<int>(w);
   };
   std::vector<int> widths{widest(t.corner)};

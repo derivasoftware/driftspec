@@ -123,7 +123,7 @@ std::string Api::report(const model::Model& model, bool pretty) const {
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173), its use case run
-// into the JSON sink taken here (DS-459); the drawings and the page are writers, not descriptions, until DS-399
+// into the JSON sink taken here (DS-459); the drawings and the page are writers, not descriptions, until DS-400
 std::string Api::check(const Files& files) const { return described("check-design", files); }
 
 std::string Api::exportModel(const Files& files) const { return described("hand-model", files); }
