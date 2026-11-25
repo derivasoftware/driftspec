@@ -21,6 +21,7 @@ enum class FieldType {
   Number,    ///< an integer, or * where the field says so
   Status,    ///< draft, approved, obsolete
   Patterns,  ///< identities with * wildcards, separated by commas
+  Records,   ///< a list of records, one per item written, each of named fields (DS-384)
 };
 
 /// Who sets a field.

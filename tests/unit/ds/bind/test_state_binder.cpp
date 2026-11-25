@@ -79,7 +79,11 @@ TEST_F(TestStateBinder, AStateMachineIsTheBehaviourOfItsClassWithItsTransitionsA
   ASSERT_NE(state, nullptr);
   EXPECT_EQ(state->kind, ds::model::Kind::State);
   EXPECT_EQ(state->field("initial"), "Full");
-  EXPECT_EQ(state->field("transitions"), "Full>Empty>take");
+  ASSERT_EQ(state->transitions.size(), 1u);  // a record, not joined text (DS-384)
+  EXPECT_EQ(state->transitions[0].from, "Full");
+  EXPECT_EQ(state->transitions[0].to, "Empty");
+  EXPECT_EQ(state->transitions[0].event, "take");
+  EXPECT_TRUE(state->field("transitions").empty());
   EXPECT_TRUE(refers("p@m::Stock::state", "Stock", "behaviour-of"));
   ASSERT_EQ(notes.events.size(), 1U);  // the event, for the checker to find on Stock
   EXPECT_EQ(notes.events[0].event, "take");
