@@ -29,14 +29,15 @@ struct Outcome {
   int code = -1;
 };
 
-Outcome ds(const std::string& args) {
+/// What ds writes on stdout and its exit code; `said` adds what it says on stderr, after it.
+Outcome ds(const std::string& args, bool said = false) {
   Outcome run;
 #ifdef _WIN32
   // cmd.exe takes the whole line in one more pair of quotes; the exit code comes back as it is (DS-283)
-  const std::string command = "\"\"" + std::string(DRIFTSPEC_DS_BIN) + "\" " + args + " 2>NUL\"";
+  const std::string command = "\"\"" + std::string(DRIFTSPEC_DS_BIN) + "\" " + args + (said ? " 2>&1\"" : " 2>NUL\"");
   FILE* p = ::_popen(command.c_str(), "rb");
 #else
-  const std::string command = std::string(DRIFTSPEC_DS_BIN) + " " + args + " 2>/dev/null";
+  const std::string command = std::string(DRIFTSPEC_DS_BIN) + " " + args + (said ? " 2>&1" : " 2>/dev/null");
   FILE* p = ::popen(command.c_str(), "r");
 #endif
   if (!p) return run;
@@ -190,6 +191,45 @@ TEST_F(TestQualification, AFileThatIsNotUtf8IsAFindingAtItsByteAndEveryCommandSt
   const Outcome svg = ds("render " + tmp + " CL_Q -f svg");
   EXPECT_EQ(svg.code, 0);
   EXPECT_NE(svg.out.find("<svg"), std::string::npos);
+  std::filesystem::remove_all(tmp);
+}
+
+// SREQ-00002-1: a diagram is not drawn of a file it reads that does not parse (DS-433): a table with E-SYNTAX in its
+// file drew a blank line and exited 0
+TEST_F(TestQualification, ADiagramIsNotDrawnOfAFileItReadsThatDoesNotParse) {
+  const std::string tmp = scratch("ds-unparsed");
+  const auto write = [&tmp](const std::string& name, const std::string& text) { std::ofstream(tmp + "/" + name) << text; };
+  const std::string design = "package p {\n  module m {\n    class C {\n      + n: int\n    }\n  }\n}\n";
+  const std::string diagrams =
+      "diagram CL_P {\n  kind: class\n  include: p@m::*\n}\n\ndiagram TB_P {\n  kind: table\n  include: p@m::C\n}\n";
+  write("p.ds", design);
+  write("d.ds", diagrams);
+  EXPECT_EQ(ds("render " + tmp + " CL_P -f text").code, 0);  // it reads whole: drawn
+  // the file of what it draws does not parse: the finding, as ds check writes it, and nothing drawn
+  write("p.ds", "package p {\n  module m {\n    class C {\n      + n: int\n      + bad bad bad\n    }\n  }\n}\n");
+  for (const std::string& format : {"text", "svg", "ir"}) {
+    const Outcome run = ds("render " + tmp + " CL_P -f " + format, true);
+    EXPECT_EQ(run.code, 1) << format;
+    EXPECT_NE(run.out.find("p.ds:1:1  E-SYNTAX"), std::string::npos) << format << ": " << run.out;
+    EXPECT_EQ(run.out.find("<svg"), std::string::npos) << format;  // nothing drawn
+  }
+  // the diagram's own file does not parse
+  write("p.ds", design);
+  write("d.ds", "diagram TB_P {\n  kind: table\n  include p@m::C\n}\n");
+  const Outcome own = ds("render " + tmp + " TB_P -f text", true);
+  EXPECT_EQ(own.code, 1);
+  EXPECT_NE(own.out.find("d.ds:3:3  E-SYNTAX"), std::string::npos) << own.out;
+  // a block left open loses the next diagram: it is not found, and why may be the file that did not parse
+  write("d.ds", "diagram CL_P {\n  kind: class\n  include: p@m::*\n\ndiagram TB_P {\n  kind: table\n  include: p@m::C\n}\n");
+  const Outcome lost = ds("render " + tmp + " TB_P -f text", true);
+  EXPECT_EQ(lost.code, 1);
+  EXPECT_NE(lost.out.find("TB_P is not found"), std::string::npos) << lost.out;
+  EXPECT_NE(lost.out.find("E-SYNTAX"), std::string::npos) << lost.out;
+  // a file it does not read stops nothing
+  write("d.ds", diagrams);
+  write("z.ds", "package z {\n  module y {\n    class W {\n      + bad bad\n    }\n  }\n}\n");
+  const Outcome apart = ds("render " + tmp + " CL_P -f text");
+  EXPECT_EQ(apart.code, 0) << apart.out;
   std::filesystem::remove_all(tmp);
 }
 

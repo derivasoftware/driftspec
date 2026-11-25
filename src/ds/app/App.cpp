@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -225,6 +226,36 @@ struct Render {
       const auto sink = ds::emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
       return emit(output, formats.at("html")->write(ds::scene::Scene(model, metamodel).build(), options, *sink));
     }
+    // a diagram is not drawn of what did not read whole (DS-433): a file of its own, or one that declares what it
+    // shows, that did not parse may hold the very boxes it draws. A diagram that is missing or shows nothing may have
+    // been lost to any of them; a file it does not read stops nothing (DS-411)
+    if (!diagram.empty()) {
+      std::set<std::string> reads;
+      const ds::model::Entity* d = model.find(diagramId(diagram));
+      if (d) reads.insert(d->location.file);
+      std::size_t shown = 0;
+      for (const auto& a : ds::query::Query(model, metamodel).ask("shows", diagram))
+        if (const ds::model::Entity* e = a.kind == "error" ? nullptr : model.find(a.id)) {
+          reads.insert(e->location.file);
+          ++shown;
+        }
+      const bool lost = !d || shown == 0;  // missing, or showing nothing: what did not parse may be why
+      std::size_t unread = 0;
+      for (const auto& f : model.findings()) {
+        if ((f.code != "E-SYNTAX" && f.code != "E-ENCODING") || !(lost || reads.count(f.location.file))) continue;
+        std::cerr << f.location.file << ":" << f.location.line << ":" << f.location.column << "  " << f.code << "  " << f.message << "\n";
+        ++unread;
+      }
+      if (unread) {
+        const std::string files = unread == 1 ? "a file" : std::to_string(unread) + " files";
+        if (!lost)
+          std::cerr << diagram << " is not drawn: " << files << " it reads " << (unread == 1 ? "does" : "do") << " not read whole\n";
+        else
+          std::cerr << diagram << (d ? " shows nothing" : " is not found") << ", and " << files << " of " << input << " "
+                    << (unread == 1 ? "does" : "do") << " not read whole: what did not parse may be why\n";
+        return 1;
+      }
+    }
     if (diagram.empty()) {
       std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
       return 2;
@@ -298,12 +329,12 @@ int run(int argc, char** argv) {
   renderCmd->add_option("--css", render.css, "a stylesheet over the viewer's; it may redefine its colour and font variables")
       ->check(CLI::ExistingFile);
 
-  auto* queryCmd = app.add_subcommand(
-      "query",
-      "ask the model: diagrams · entities · relations · artefacts · behaviours · shows · findings · coverage · coupling · failures");
+  auto* queryCmd = app.add_subcommand("query", "ask the model: " + ds::query::Query::usage());
   workspace(queryCmd, &dir);
   queryCmd->add_option("question", question, "what to ask")->required();
-  queryCmd->add_option("subject", subject, "what it is asked about");
+  std::string takes = "what it is asked about:";  // each question's, from the table the check of a subject reads (DS-436)
+  for (const auto& q : ds::query::Query::questions()) takes += "\n  " + q.name + ": " + q.takes;
+  queryCmd->add_option("subject", subject, takes);
   queryCmd->add_flag("--json", json, "answer as JSON");
 
   std::string topic;
@@ -345,9 +376,7 @@ int run(int argc, char** argv) {
     if (json) std::cout << ds::format::AnswersJson().write(answers, {}, *sink) << "\n";  // asked for JSON, the error is an answer too
     std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
     if (answers.front().detail.find("not a question") != std::string::npos) {
-      std::cerr << "questions:";
-      for (const auto& q : ds::query::Query::questions()) std::cerr << " " << q.first << (q.second.empty() ? "" : " " + q.second) << " ·";
-      std::cerr << "\n";
+      std::cerr << "questions: " << ds::query::Query::usage() << "\n";
     }
     return 1;
   }

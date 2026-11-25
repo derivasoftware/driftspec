@@ -129,12 +129,12 @@ std::vector<KindSpec> Metamodel::build() {
                                  writtenField("bok", FieldType::Names, "the guides that ground it")}),
                {"extension"},
                aboutAnything});
-  k.push_back(
-      {Kind::UseCase,
-       "a contract an interface operation realises: what goes in, what comes out, the outcomes it ends in",
-       plus(artefact(), {syntax("operation", FieldType::Name, "the name of its contract, when it has a signature"), kParams, kReturns}),
-       {},
-       {P, M}});
+  k.push_back({Kind::UseCase,
+               "a contract an interface operation realises: what goes in, what comes out, the outcomes it ends in",
+               plus(artefact(), {syntax("operation", FieldType::Name, "the name of its contract, when it has a signature"), kParams,
+                                 kReturns, kEscapes, kEscapePath}),
+               {},
+               {P, M}});
   k.push_back({Kind::Outcome,
                "one way a use case ends: default when it goes well, a named scenario when it does not",
                {writtenField("text", FieldType::Text, "what is obtained, in a line"),

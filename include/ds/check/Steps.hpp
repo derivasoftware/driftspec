@@ -199,6 +199,7 @@ class FailureCheck : public ACheck {
   void checkHandlers();
   /// What an operation lets escape against what its signature promises, and at a boundary (DS-189).
   void checkFailures(const model::Entity& operation);
+  void checkScenario(const model::Entity& usecase);
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
   const model::Metamodel* metamodel_ = nullptr;

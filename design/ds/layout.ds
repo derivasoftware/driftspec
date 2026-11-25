@@ -73,6 +73,16 @@ package driftspec@ds {
       + static layered(spacing: Spacing, router: std::unique_ptr<IRouter>) -> std::unique_ptr<IEngine>   // orthogonal when handed none
     }
 
+    sequence EngineFactory::packing {
+      local engine: PackingEngine
+      return engine
+    }
+
+    sequence EngineFactory::layered {
+      local engine: LayeredEngine
+      return engine
+    }
+
     // render's engine (DS-185): in every layered frame, bases above what inherits and wholes above parts, components
     // packed towards a readable aspect, routes orthogonal through lanes; a frame wider than the graph's width wraps its
     // layers onto further lines. It computes in whole units, which the doubles of a graph and a placement carry exactly
