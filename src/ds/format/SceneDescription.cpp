@@ -84,10 +84,19 @@ void SceneDescription::say(emit::ISink& out_sink) const {
   texts({"id", "kind", "title", "status", "text", "parent", "scope", "nodes", "signature", "outcomes", "binds"}, out_sink);
   out_sink.field("rule");
   texts({"id", "kind", "name", "title", "scope", "lines", "requirements", "breaches", "file", "line"}, out_sink);
+  const bool walks = !doc.walkthroughs.empty();  // a workspace with none is written as it was (DS-471)
+  if (walks) {
+    out_sink.field("step");
+    texts({"title", "diagram", "behaviour", "focus", "highlight", "at", "text"}, out_sink);
+  }
   out_sink.field("tour");
   texts({"behaviour", "group"}, out_sink);
   out_sink.field("verification");
   texts({"id", "title", "status", "method", "tests", "requirements"}, out_sink);
+  if (walks) {
+    out_sink.field("walkthrough");
+    texts({"name", "title", "steps"}, out_sink);
+  }
   out_sink.endRecord().field("lean_world");
   box(doc.leanWorld, out_sink);
   out_sink.field("links").beginList();
@@ -149,7 +158,23 @@ void SceneDescription::say(emit::ISink& out_sink) const {
       if (requirement(r) >= 0) out_sink.integer(requirement(r));
     out_sink.endList().endList();
   }
-  out_sink.endList().field("version").integer(2).field("world");
+  out_sink.endList().field("version").integer(2);
+  if (walks) {
+    out_sink.field("walkthroughs").beginList();
+    for (const auto& w : doc.walkthroughs) {
+      out_sink.beginList().value(w.name).value(w.title).beginList();
+      for (const auto& s : w.steps) {
+        out_sink.beginList().value(s.title).value(s.diagram).integer(s.behaviour.empty() ? -1 : behaviourOf(s.behaviour)).beginList();
+        for (const auto& n : s.focus) out_sink.integer(node(n));
+        out_sink.endList().beginList();
+        for (const auto& n : s.highlight) out_sink.integer(node(n));
+        out_sink.endList().integer(s.at.empty() ? -1 : node(s.at)).value(s.text).endList();
+      }
+      out_sink.endList().endList();
+    }
+    out_sink.endList();
+  }
+  out_sink.field("world");
   box(doc.world, out_sink);
   out_sink.endRecord();
 }

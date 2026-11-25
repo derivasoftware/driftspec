@@ -1718,6 +1718,33 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00243-1 {
+      tags: language, walkthrough, export, scene, query
+      status: draft
+      @refines REQ-00241-1
+      title: The export, the scene and the query shall give each walkthrough with its steps in order, built once from the model, and a workspace with none as it was
+      text:
+        A walkthrough's steps are resolved once, from the steps declared and the relations the linker made. The export
+        gives each walkthrough by identity, its steps with the diagram shown, what each focuses, highlights and points
+        at, and its text. The scene gives the same in its own convention: the diagram by the name its diagrams use,
+        what a step lights by node index, landed on its box as the diagrams land it, and a step that shows a sequence
+        the index of the behaviour it replays. `ds query <ws> walkthroughs` lists them, and with a walkthrough named its
+        steps. A workspace that writes no walkthrough is written as it was: neither document carries the key.
+      rationale:
+        Owner, 2026-11-25 (DS-447, the page reads the scene): a walkthrough's page needs its steps where it reads
+        everything else; a fact resolved in one place cannot be told two ways.
+      verification VER-00265-1 {
+        status: draft
+        title: Integration tests confirm the export, the scene and the query give a walkthrough's steps in order, and a workspace with none is written as it was
+        method: test
+        tests:
+          tests/integration/ds/exporter/test_walkthrough_output.cpp::TestWalkthroughOutput.TheExportGivesEachStepByIdentityInTheOrderWritten
+          tests/integration/ds/exporter/test_walkthrough_output.cpp::TestWalkthroughOutput.TheSceneGivesEachStepByTheNamesAndNodesItDraws
+          tests/integration/ds/exporter/test_walkthrough_output.cpp::TestWalkthroughOutput.AWorkspaceWithNoWalkthroughIsWrittenAsItWas
+          tests/integration/ds/exporter/test_walkthrough_output.cpp::TestWalkthroughOutput.TheQueryListsTheWalkthroughsAndTheStepsOfOne
+      }
+    }
+
     requirement REQ-00242-1 {
       tags: language, walkthrough, check
       status: draft
