@@ -270,6 +270,17 @@ class PySink : public ds::emit::ISink {
     Py_INCREF(Py_None);
     return put(Py_None);
   }
+  // the presentation (DS-399) is the text sink's: a document of records, lists and values takes none of it, as the
+  // JSON sink takes none (DS-475)
+  ds::emit::ISink& paragraph(std::string_view) override { return *this; }
+  ds::emit::ISink& table(const std::vector<std::string_view>&) override { return *this; }
+  ds::emit::ISink& row(const std::vector<std::string_view>&) override { return *this; }
+  ds::emit::ISink& endTable() override { return *this; }
+  /// The description of `document` ends: one that built nothing here fails NotImplemented, as the JSON sink does.
+  ds::emit::ISink& described(std::string_view document) override {
+    if (!root_) throw ds::emit::NotImplemented(std::string(document), "python", {});
+    return *this;
+  }
   /// A text is no document of this sink: what it built is taken with take().
   std::string result() override { return ""; }
   /// The object built, handed over (a new reference); None when nothing was written.
