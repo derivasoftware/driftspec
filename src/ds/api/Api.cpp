@@ -69,6 +69,12 @@ check::Selection Api::stepsFor(Output output, const model::Model& bound, const s
 }
 
 model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output output, const std::string& diagram) const {
+  Bound b = bound(files);
+  const check::Selection selection = stepsFor(output, b.model, diagram);
+  return checked(std::move(b), selection);
+}
+
+Bound Api::bound(const std::vector<parse::ParsedFile>& files) const {
   model::Model model(metamodel_);
   bind::Binder binder(model, metamodel_);
   std::set<std::string> broken;
@@ -94,14 +100,18 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
     }
     binder.bind(parsed);  // a file that is not UTF-8 has the empty tree: nothing of it is bound
   }
-  // only the steps the output reads (DS-376), held as the IChecker it is (DS-404, DS-425)
-  check::CheckerFactory::make(model, metamodel_, stepsFor(output, model, diagram))->run(binder.notes());
+  return {std::move(model), binder.notes(), std::move(broken)};
+}
+
+model::Model Api::checked(Bound bound, const check::Selection& selection) const {
+  // only the steps asked for (DS-376, DS-408), held as the IChecker it is (DS-404, DS-425)
+  check::CheckerFactory::make(bound.model, metamodel_, selection)->run(bound.notes);
   // what a file that does not parse, or is not UTF-8, leaves out of the model comes back as findings that only echo
   // the cut: the rest of that file, and every name now declared nowhere. They go until the file is read whole (DS-304,
   // DS-411)
-  model.withdrawEchoes(broken);
-  model.sortFindings();
-  return model;
+  bound.model.withdrawEchoes(bound.broken);
+  bound.model.sortFindings();
+  return std::move(bound.model);
 }
 
 std::string Api::report(const model::Model& model, bool pretty) const {
@@ -113,18 +123,18 @@ std::string Api::report(const model::Model& model, bool pretty) const {
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)
-std::string Api::check(const Files& files) const { return Workspace(metamodel_, files, Output::Findings).report(); }
+std::string Api::check(const Files& files) const { return Workspace::madeFor(metamodel_, files, Output::Findings).report(); }
 
-std::string Api::exportModel(const Files& files) const { return Workspace(metamodel_, files, Output::Model).exportModel(); }
+std::string Api::exportModel(const Files& files) const { return Workspace::madeFor(metamodel_, files, Output::Model).exportModel(); }
 
 std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) const {
   // the format named, as the workspace draws it: svg, text, cells, layout or the IR, and NotImplemented for any other
   // (DS-453); loaded with the steps the drawing reads (DS-376)
-  return Workspace(metamodel_, files, Output::Drawing, diagram).render(diagram, format, width);
+  return Workspace::madeFor(metamodel_, files, Output::Drawing, diagram).render(diagram, format, width);
 }
 
 std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) const {
-  return Workspace(metamodel_, files, Output::Viewer).page(title, focus);
+  return Workspace::madeFor(metamodel_, files, Output::Viewer).page(title, focus);
 }
 
 std::string Api::severities() const {

@@ -174,7 +174,9 @@ PyObject* workspaceNew(PyTypeObject* type, PyObject* args, PyObject*) {
   if (!PyArg_ParseTuple(args, "O", &dict) || !filesOf(dict, &files)) return nullptr;
   ds::api::Workspace* loaded = nullptr;
   std::string failure;
-  Py_BEGIN_ALLOW_THREADS try { loaded = new ds::api::Workspace(kMetamodel, files); } catch (const std::exception& e) {
+  Py_BEGIN_ALLOW_THREADS try {
+    loaded = new ds::api::Workspace(ds::api::Workspace::madeFor(kMetamodel, files));
+  } catch (const std::exception& e) {
     failure = e.what();
   }
   Py_END_ALLOW_THREADS if (!loaded) {

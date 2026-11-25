@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 #include "ds/api/Api.hpp"
 #include "ds/emit/NotImplemented.hpp"
@@ -28,6 +30,33 @@ const char* const kDesign =
     "  include: p@m::*\n"
     "}\n";
 
+/// A sink that writes into another and says whether anything was written (DS-462): a use case that ends in an outcome
+/// such as no-diagram writes nothing, since an outcome is returned, not written, and nothing written has no result.
+class Counted : public ds::emit::ISink {
+ public:
+  explicit Counted(ds::emit::ISink& to) : to_(to) {}
+  bool written() const { return written_; }
+  ds::emit::ISink& beginRecord() override { return mark(to_.beginRecord()); }
+  ds::emit::ISink& endRecord() override { return mark(to_.endRecord()); }
+  ds::emit::ISink& field(std::string_view name) override { return mark(to_.field(name)); }
+  ds::emit::ISink& beginList() override { return mark(to_.beginList()); }
+  ds::emit::ISink& endList() override { return mark(to_.endList()); }
+  ds::emit::ISink& value(std::string_view text) override { return mark(to_.value(text)); }
+  ds::emit::ISink& integer(std::int64_t value) override { return mark(to_.integer(value)); }
+  ds::emit::ISink& number(double value) override { return mark(to_.number(value)); }
+  ds::emit::ISink& boolean(bool value) override { return mark(to_.boolean(value)); }
+  ds::emit::ISink& null() override { return mark(to_.null()); }
+  std::string result() override { return to_.result(); }
+
+ private:
+  ds::emit::ISink& mark(ds::emit::ISink&) {
+    written_ = true;
+    return *this;
+  }
+  ds::emit::ISink& to_;
+  bool written_ = false;
+};
+
 class Fixture : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
@@ -38,11 +67,12 @@ class Fixture : public ::testing::Test {
     return ds::api::Api(metamodel).load({parser.parseText("p.ds", kDesign)});
   }
 
-  /// What a use case describes into a compact JSON sink, and how it ended.
+  /// What a use case describes into a compact JSON sink ("" when it wrote nothing), and how it ended.
   std::pair<std::string, std::string> run(const ds::service::IUseCase& use, const Request& request) const {
     const auto sink = ds::emit::SinkFactory::json(false);
-    const ds::service::Outcome outcome = use.run(model, request, *sink);
-    return {sink->result(), outcome.name};
+    Counted counted(*sink);
+    const ds::service::Outcome outcome = use.run(model, request, counted);
+    return {counted.written() ? sink->result() : std::string(), outcome.name};
   }
 };
 
@@ -89,7 +119,7 @@ TEST_F(TestSeeDesign, ADiagramIsDrawnAsItsLayoutAndOneTheWorkspaceLacksIsNoDiagr
   const ds::service::SeeDesign see(metamodel);
   EXPECT_FALSE(see.diagram(model, "CL_P").json.empty());
   EXPECT_EQ(run(see, {{{"format", "layout"}, {"diagram", "CL_P"}}}).second, "default");
-  EXPECT_EQ(run(see, {{{"format", "layout"}, {"diagram", "CL_Nope"}}}).second, "no-diagram");
+  EXPECT_EQ(run(see, {{{"format", "layout"}, {"diagram", "CL_Nope"}}}), (std::pair<std::string, std::string>{"", "no-diagram"}));
   EXPECT_THROW(run(see, {{{"format", "svg"}, {"diagram", "CL_P"}}}), ds::emit::NotImplemented);               // a writer until DS-399
   EXPECT_FALSE(see.needs(model, {{{"format", "layout"}, {"diagram", "CL_P"}}}).has(ds::check::Step::Rules));  // a class diagram
   EXPECT_TRUE(see.needs(model, {{{"format", "json"}}}).has(ds::check::Step::Rules));                          // the viewer reads every step
@@ -114,7 +144,7 @@ TEST_F(TestLearnLanguage, APageIsDescribedAndOneTheManualLacksIsNoTopic) {
   const ds::service::LearnLanguage learn(metamodel);
   EXPECT_FALSE(learn.page("").empty());
   EXPECT_EQ(run(learn, {}).second, "default");
-  EXPECT_EQ(run(learn, {{{"topic", "no-such-topic"}}}).second, "no-topic");
+  EXPECT_EQ(run(learn, {{{"topic", "no-such-topic"}}}), (std::pair<std::string, std::string>{"", "no-topic"}));
   EXPECT_FALSE(learn.needs(model, {}).has(ds::check::Step::Linker));  // it reads no design
 }
 

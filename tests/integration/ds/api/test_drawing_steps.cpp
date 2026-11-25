@@ -42,9 +42,9 @@ class TestDrawingSteps : public ::testing::Test {
 
   /// Each diagram drawn in each format from a workspace loaded for the whole model and from one loaded to draw it.
   void expectDrawnAlike(const ds::api::Files& files, const std::vector<std::string>& diagrams) const {
-    const ds::api::Workspace whole(metamodel, files, ds::api::Output::Model);
+    const ds::api::Workspace whole = ds::api::Workspace::madeFor(metamodel, files, ds::api::Output::Model);
     for (const auto& diagram : diagrams) {
-      const ds::api::Workspace drawing(metamodel, files, ds::api::Output::Drawing, diagram);
+      const ds::api::Workspace drawing = ds::api::Workspace::madeFor(metamodel, files, ds::api::Output::Drawing, diagram);
       for (const auto& format : formats) {
         const std::string expected = whole.render(diagram, format, 0);
         EXPECT_FALSE(expected.empty()) << diagram << " " << format;
@@ -90,7 +90,7 @@ TEST_F(TestDrawingSteps, AStateMachineAndItsTableAreDrawnAsAfterTheWholeCheck) {
 
 TEST_F(TestDrawingSteps, TheApiDrawsADiagramAsTheWorkspaceLoadedWholeDoes) {
   const ds::api::Files files = filesOf("examples/shop");
-  const ds::api::Workspace whole(metamodel, files);
+  const ds::api::Workspace whole = ds::api::Workspace::madeFor(metamodel, files);
   for (const std::string diagram : {"CL_Shop", "HLD_ShopSales", "SEQ_Buy", "TOUR_Buy"})
     for (const auto& format : formats)  // all five: cells and layout as the workspace draws them, not as text (DS-453)
       EXPECT_EQ(ds::api::Api(metamodel).render(files, diagram, format, 0), whole.render(diagram, format, 0)) << diagram << " " << format;

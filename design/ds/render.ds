@@ -524,6 +524,35 @@ package driftspec@ds {
       - sequenceStyle_: std::string            // what a sequence adds to it
       + Svg(theme: theme::Theme)
       + render(doc: IrDocument, maxWidth: int) -> std::string   // also over a layout already made: one identity per member
+      - kMarkerByKind: std::map<std::string, std::string>   // the marker an edge of each kind ends in
+      - kSeqScript: char                     // the script a sequence carries, so it folds and links wherever it is shown
+      - static idPrefix(title: std::string) -> std::string           // FNV-1a of the title in base 36: several drawings share a page
+      - static markers(px: std::string) -> std::string               // the arrowheads and diamonds, defined once per drawing
+      - static splitParams(text: std::string) -> std::vector<std::string>   // on top-level commas
+      - static typed(type: std::string) -> std::string
+      - static memberMarkup(line: std::string) -> std::pair<std::string, std::string>   // a member's line as coloured tspans
+      - static num(v: int) -> std::string                            // and a double: whole pixels
+      - emitNode(p: Placed, px: std::string) -> std::string          // a box, a container or a note where it was placed
+      - static emitEdge(e: IrEdge, route: Route, px: std::string) -> EdgeMarkup
+      - static dataAttrs(refs: std::map<std::string, std::string>) -> std::string
+      - sequenceSvg(doc: IrDocument) -> std::string                  // a sequence, drawn without the layout
+      - tableSvg(doc: IrDocument) -> std::string                     // a table, drawn cell by cell (DS-251)
+      - static besideEachOther(drawings: std::vector<std::pair<std::string, std::string>>, maxWidth: int) -> std::string   // the parts of a drawing (DS-245)
+    }
+
+    // an edge drawn in SVG: its path, and its label written apart so every label goes above every path
+    - dataclass EdgeMarkup {
+      @requirement REQ-00007-1
+      + path: std::string
+      + label: std::string
+    }
+
+    // a lifeline of a sequence drawn in SVG: its node, the x of its centre and the width of its head
+    - dataclass Lane {
+      @requirement REQ-00007-1
+      + refs node: IrNode
+      + cx: int
+      + headW: int
     }
 
     class Text {                             // the terminal drawing, box characters and optional colour
@@ -584,8 +613,6 @@ package driftspec@ds {
 
     // ---- what the drawings keep to their source files ----
 
-    - function sequenceSvg(doc: IrDocument, M: Metrics, style: std::string, sequenceStyle: std::string) -> std::string     // a sequence document, drawn without the layout
-    - function tableSvg(doc: IrDocument, style: std::string) -> std::string        // a table document, drawn cell by cell
 
     // the character grid Text fills, cell by cell (DS-371): each cell a glyph, its colour and what an edge drew there
     - class Grid {
@@ -641,11 +668,11 @@ package driftspec@ds {
     // class document comes back as a name.
     sequence Svg::render {
       opt the document is a table / table-document {
-        -> tableSvg(doc, style_) -> drawing
+        -> tableSvg(doc) -> drawing
         return drawing
       }
       opt a node of the document is a lifeline / sequence-document {
-        -> sequenceSvg(doc, metrics_, style_, sequenceStyle_) -> drawing
+        -> sequenceSvg(doc) -> drawing
         return drawing
       }
       self -> doc.bundled() -> bundled

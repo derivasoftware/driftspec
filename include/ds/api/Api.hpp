@@ -2,10 +2,12 @@
 #define DRIFTSPEC_API_API_HPP
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
 #include "ds/api/Workspace.hpp"
+#include "ds/bind/Notes.hpp"
 #include "ds/check/Selection.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -17,6 +19,14 @@ namespace api {
 /// The engine for a caller in the same process (DS-84): text in, the JSON of the command line out,
 /// so a Python face, a language server or the command line itself see one contract. It reads the
 /// language from the metamodel it is given, which outlives it (DS-341).
+/// A workspace bound and not yet checked (DS-408): its model, what the binder noted for the check, and the files that
+/// did not read whole. What a use case reads of it says which steps of the check run (IUseCase::needs).
+struct Bound {
+  model::Model model;
+  bind::Notes notes;
+  std::set<std::string> broken;
+};
+
 class Api {
  public:
   explicit Api(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
@@ -26,6 +36,12 @@ class Api {
   /// workspace, the command line from a directory and the Api from texts (DS-120). The check runs only the
   /// steps its output reads (DS-376); `diagram` is the one a drawing draws.
   model::Model load(const std::vector<parse::ParsedFile>& files, Output output = Output::Model, const std::string& diagram = "") const;
+  /// The first half of a load (DS-408): the files bound, each that does not read whole said where it stops; no step
+  /// of the check run yet.
+  Bound bound(const std::vector<parse::ParsedFile>& files) const;
+  /// The second half: the model checked with the steps chosen, what only echoes a broken file withdrawn, the findings
+  /// in file and line order. load is bound, then checked with the steps its output reads.
+  model::Model checked(Bound bound, const check::Selection& selection) const;
   /// The steps of the check a load runs for what it is to give, over the model as bound: the one place that
   /// chooses them (DS-376). Every step, but for a drawing: the relations the linker makes, the calls behaviour
   /// typing makes and the stereotypes derivation makes, and the rules when the diagram is a table written as

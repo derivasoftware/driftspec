@@ -79,7 +79,7 @@ class TestDiagramFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares) {
   ASSERT_EQ(ds::format::FormatFactory::diagram(kTheme).size(), 3u);  // ir, svg, text; layout and cells are descriptions
-  const ds::api::Workspace workspace(metamodel, files);
+  const ds::api::Workspace workspace = ds::api::Workspace::madeFor(metamodel, files);
   std::set<std::string> drawn;
   for (const char* format : {"cells", "ir", "layout", "svg", "text"}) {
     // the engine draws the format it is asked for, as the workspace draws it, never a text drawing instead (DS-453)

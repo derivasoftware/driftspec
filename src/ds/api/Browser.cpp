@@ -101,7 +101,7 @@ void Browser::respond(const std::string& request, emit::ISink& out_sink) const {
   }
   Files files;
   for (const auto& f : in.at("files").items()) files[f.key()] = f.value().get<std::string>();
-  const Workspace workspace(metamodel_, files);
+  const Workspace workspace = Workspace::madeFor(metamodel_, files);
   out_sink.beginRecord().field("artefacts");
   artefacts(workspace.model(), out_sink);
   out_sink.field("diagrams");

@@ -8,18 +8,94 @@
 #include <sstream>
 #include <vector>
 
+#include "ds/render/EdgeMarkup.hpp"
+#include "ds/render/Lane.hpp"
 #include "ds/text/Text.hpp"
 #include "ds/theme/Writers.hpp"
 
 namespace ds {
 namespace render {
 
-namespace {
+const std::map<std::string, std::string> Svg::kMarkerByKind = {
+    {"inheritance", "tri"},     {"realization", "tri"},  {"composition", "diamond-filled"},
+    {"aggregation", "diamond"}, {"dependency", "arrow"}, {"association", "arrow"}};
 
-std::string dataAttrs(const std::map<std::string, std::string>& refs);
+const char* const Svg::kSeqScript = R"JS(
+(function () {
+  var root = document.getElementById('%ROOT%');
+  if (!root || root.dataset.wired) return;
+  root.dataset.wired = '1';
+  var rows = Array.prototype.slice.call(root.querySelectorAll('.pr-row')).map(function (el) {
+    return { el: el, row: +el.dataset.row, y: +el.dataset.y, h: +el.dataset.h, span: el.dataset.refSpan };
+  }).sort(function (a, b) { return a.row - b.row; });
+  var frames = Array.prototype.slice.call(root.querySelectorAll('.pr-frame'));
+  var lines = Array.prototype.slice.call(root.querySelectorAll('.pr-lifeline-line'));
+  var collapsed = {};
+  function relayout() {
+    var hidden = {};
+    rows.forEach(function (r) {
+      if (!collapsed[r.row] || !r.span) return;
+      var ab = r.span.split('-').map(Number);
+      rows.forEach(function (q) { if (q.row >= ab[0] && q.row <= ab[1]) hidden[q.row] = true; });
+    });
+    var shift = 0, shiftOf = {}, endOf = {};
+    rows.forEach(function (r) {
+      shiftOf[r.row] = shift;
+      if (hidden[r.row]) { r.el.style.display = 'none'; shift += r.h; return; }
+      r.el.style.display = '';
+      r.el.setAttribute('transform', 'translate(0,' + (-shift) + ')');
+      r.el.classList.toggle('pr-collapsed', !!collapsed[r.row]);
+      endOf[r.row] = r.y + r.h - shift;
+    });
+    frames.forEach(function (f) {
+      var first = +f.dataset.first, last = +f.dataset.last, top = +f.dataset.top, bottom = +f.dataset.bottom;
+      var lastVisible = -1;
+      for (var q = last; q >= first; q--) { if (!hidden[q] && endOf[q] !== undefined) { lastVisible = q; break; } }
+      if (hidden[first] || lastVisible < 0) { f.style.display = 'none'; return; }
+      f.style.display = '';
+      var newTop = top - shiftOf[first];
+      var newBottom = lastVisible === last ? bottom - shiftOf[last] : endOf[lastVisible] - 2;
+      f.setAttribute('transform', 'translate(0,' + newTop + ')');
+      f.querySelector('rect').setAttribute('height', Math.max(24, newBottom - newTop));
+      Array.prototype.forEach.call(f.querySelectorAll('[data-divider-row]'), function (d) {
+        var row = +d.dataset.dividerRow, dy = +d.dataset.y - shiftOf[row] - newTop;
+        if (d.tagName === 'line') { d.setAttribute('y1', dy); d.setAttribute('y2', dy); } else { d.setAttribute('y', dy + 4); }
+        d.style.display = hidden[row] ? 'none' : '';
+      });
+    });
+    lines.forEach(function (l) { l.setAttribute('y2', +l.dataset.y2 - shift); });
+    var vb = root.dataset.viewbox.split(' ').map(Number);
+    vb[3] -= shift;
+    root.setAttribute('viewBox', vb.join(' '));
+    root.setAttribute('height', vb[3]);
+  }
+  rows.forEach(function (r) {
+    if (!r.span) return;
+    r.el.classList.add('pr-expandable');
+    r.el.addEventListener('click', function (e) { e.preventDefault(); collapsed[r.row] = !collapsed[r.row]; relayout(); });
+  });
+  function focus(ids, rowEl) {
+    root.classList.add('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (el) { el.classList.toggle('pr-focus', !!ids[el.dataset.id]); });
+    rows.forEach(function (r) { r.el.classList.toggle('pr-focus', rowEl ? r.el === rowEl : !!(ids[r.el.dataset.from] || ids[r.el.dataset.to])); });
+  }
+  function unfocus() {
+    root.classList.remove('pr-focusing');
+    Array.prototype.forEach.call(root.querySelectorAll('.pr-focus'), function (el) { el.classList.remove('pr-focus'); });
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (l) {
+    l.addEventListener('mouseenter', function () { var ids = {}; ids[l.dataset.id] = true; focus(ids); });
+    l.addEventListener('mouseleave', unfocus);
+  });
+  rows.forEach(function (r) {
+    r.el.addEventListener('mouseenter', function () { var ids = {}; ids[r.el.dataset.from] = true; ids[r.el.dataset.to] = true; focus(ids, r.el); });
+    r.el.addEventListener('mouseleave', unfocus);
+  });
+})();
+)JS";
 
 /// FNV-1a of the title in base 36, as shared.ts idPrefix: several SVGs share one page.
-std::string idPrefix(const std::string& title) {
+std::string Svg::idPrefix(const std::string& title) {
   uint32_t h = 0x811c9dc5u;
   for (unsigned char c : title) {
     h ^= c;
@@ -35,7 +111,7 @@ std::string idPrefix(const std::string& title) {
   return "pr" + digits + "-";
 }
 
-std::string markers(const std::string& px) {
+std::string Svg::markers(const std::string& px) {
   return "\n  <marker id=\"" + px +
          "tri\" viewBox=\"0 0 14 12\" refX=\"13\" refY=\"6\" markerWidth=\"14\" markerHeight=\"12\" orient=\"auto\"><path d=\"M1,1 L13,6 "
          "L1,11 Z\"/></marker>"
@@ -53,12 +129,8 @@ std::string markers(const std::string& px) {
          "class=\"pr-open\" d=\"M1,1 L11,6 L1,11\"/></marker>\n";
 }
 
-const std::map<std::string, std::string> kMarkerByKind = {
-    {"inheritance", "tri"},     {"realization", "tri"},  {"composition", "diamond-filled"},
-    {"aggregation", "diamond"}, {"dependency", "arrow"}, {"association", "arrow"}};
-
 /// Split on top-level commas: generics and parentheses stay whole.
-std::vector<std::string> splitParams(const std::string& text) {
+std::vector<std::string> Svg::splitParams(const std::string& text) {
   std::vector<std::string> out;
   int depth = 0;
   std::string current;
@@ -76,13 +148,13 @@ std::vector<std::string> splitParams(const std::string& text) {
   return out;
 }
 
-std::string typed(const std::string& type) {
+std::string Svg::typed(const std::string& type) {
   return "<tspan class=\"pr-type\">" + text::escapeXml(std::string(text::trimSpaces(type))) + "</tspan>";
 }
 
 /// One member line of `ds render` (`+ abstract run(model: Model) -> list<Finding>`,
 /// `- items: list<T> = 0`) tokenised into the engine's syntax-coloured tspans.
-std::pair<std::string, std::string> memberMarkup(const std::string& line) {
+std::pair<std::string, std::string> Svg::memberMarkup(const std::string& line) {
   static const std::regex head(R"(^\s*([+\-#~])?\s*((?:(?:abstract|static|const)\s+)*)(.*)$)");
   static const std::regex method(R"(^([^\s(]+)\s*\((.*)\)\s*(?:->\s*(.+))?$)");
   static const std::regex attribute(R"(^([^\s:]+)\s*:\s*([^=]+?)(?:\s*=\s*(.+))?$)");
@@ -120,10 +192,8 @@ std::pair<std::string, std::string> memberMarkup(const std::string& line) {
   return {vis, "<tspan class=\"" + nameClass + "\">" + text::escapeXml(body) + "</tspan>"};
 }
 
-std::string num(int v) { return std::to_string(v); }
-std::string num(double v) { return num(static_cast<int>(v)); }  // a position computed in doubles, drawn in whole pixels
-
-std::string emitNode(const Placed& p, const std::string& px, const Metrics& M) {
+std::string Svg::emitNode(const Placed& p, const std::string& px) const {
+  const Metrics& M = metrics_;
   const IrNode& n = *p.node;
   const Rect& r = p.rect;
   std::string classes = "pr-" + n.kind;
@@ -224,12 +294,7 @@ std::string emitNode(const Placed& p, const std::string& px, const Metrics& M) {
   return n.href.empty() ? g : "<a href=\"" + text::escapeXml(n.href) + "\" class=\"pr-link\">" + g + "</a>";
 }
 
-struct EdgeMarkup {
-  std::string path;
-  std::string label;
-};
-
-EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) {
+EdgeMarkup Svg::emitEdge(const IrEdge& e, const Route& route, const std::string& px) {
   std::vector<Point> points = route.points;
   // the diamond sits on the whole, the edge's source: draw from the part so the end marker lands there
   if (e.kind == "composition" || e.kind == "aggregation") std::reverse(points.begin(), points.end());
@@ -294,105 +359,16 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
   return out;
 }
 
-}  // namespace
-
-// ---- sequences: lifelines as lanes, messages as rows; interaction lives in the SVG -----------
-//
-// The drawing carries its own usability: a tooltip on everything, links by identity
-// (a lifeline to its class, a message to the behaviour it expands to), focus on hover,
-// and expansions that fold on click with every row below moving up. A small script is
-// embedded so this works wherever the SVG is inline or opened on its own; as an <img>
-// it is simply static.
-
-namespace {
-
-const char* const kSeqScript = R"JS(
-(function () {
-  var root = document.getElementById('%ROOT%');
-  if (!root || root.dataset.wired) return;
-  root.dataset.wired = '1';
-  var rows = Array.prototype.slice.call(root.querySelectorAll('.pr-row')).map(function (el) {
-    return { el: el, row: +el.dataset.row, y: +el.dataset.y, h: +el.dataset.h, span: el.dataset.refSpan };
-  }).sort(function (a, b) { return a.row - b.row; });
-  var frames = Array.prototype.slice.call(root.querySelectorAll('.pr-frame'));
-  var lines = Array.prototype.slice.call(root.querySelectorAll('.pr-lifeline-line'));
-  var collapsed = {};
-  function relayout() {
-    var hidden = {};
-    rows.forEach(function (r) {
-      if (!collapsed[r.row] || !r.span) return;
-      var ab = r.span.split('-').map(Number);
-      rows.forEach(function (q) { if (q.row >= ab[0] && q.row <= ab[1]) hidden[q.row] = true; });
-    });
-    var shift = 0, shiftOf = {}, endOf = {};
-    rows.forEach(function (r) {
-      shiftOf[r.row] = shift;
-      if (hidden[r.row]) { r.el.style.display = 'none'; shift += r.h; return; }
-      r.el.style.display = '';
-      r.el.setAttribute('transform', 'translate(0,' + (-shift) + ')');
-      r.el.classList.toggle('pr-collapsed', !!collapsed[r.row]);
-      endOf[r.row] = r.y + r.h - shift;
-    });
-    frames.forEach(function (f) {
-      var first = +f.dataset.first, last = +f.dataset.last, top = +f.dataset.top, bottom = +f.dataset.bottom;
-      var lastVisible = -1;
-      for (var q = last; q >= first; q--) { if (!hidden[q] && endOf[q] !== undefined) { lastVisible = q; break; } }
-      if (hidden[first] || lastVisible < 0) { f.style.display = 'none'; return; }
-      f.style.display = '';
-      var newTop = top - shiftOf[first];
-      var newBottom = lastVisible === last ? bottom - shiftOf[last] : endOf[lastVisible] - 2;
-      f.setAttribute('transform', 'translate(0,' + newTop + ')');
-      f.querySelector('rect').setAttribute('height', Math.max(24, newBottom - newTop));
-      Array.prototype.forEach.call(f.querySelectorAll('[data-divider-row]'), function (d) {
-        var row = +d.dataset.dividerRow, dy = +d.dataset.y - shiftOf[row] - newTop;
-        if (d.tagName === 'line') { d.setAttribute('y1', dy); d.setAttribute('y2', dy); } else { d.setAttribute('y', dy + 4); }
-        d.style.display = hidden[row] ? 'none' : '';
-      });
-    });
-    lines.forEach(function (l) { l.setAttribute('y2', +l.dataset.y2 - shift); });
-    var vb = root.dataset.viewbox.split(' ').map(Number);
-    vb[3] -= shift;
-    root.setAttribute('viewBox', vb.join(' '));
-    root.setAttribute('height', vb[3]);
-  }
-  rows.forEach(function (r) {
-    if (!r.span) return;
-    r.el.classList.add('pr-expandable');
-    r.el.addEventListener('click', function (e) { e.preventDefault(); collapsed[r.row] = !collapsed[r.row]; relayout(); });
-  });
-  function focus(ids, rowEl) {
-    root.classList.add('pr-focusing');
-    Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (el) { el.classList.toggle('pr-focus', !!ids[el.dataset.id]); });
-    rows.forEach(function (r) { r.el.classList.toggle('pr-focus', rowEl ? r.el === rowEl : !!(ids[r.el.dataset.from] || ids[r.el.dataset.to])); });
-  }
-  function unfocus() {
-    root.classList.remove('pr-focusing');
-    Array.prototype.forEach.call(root.querySelectorAll('.pr-focus'), function (el) { el.classList.remove('pr-focus'); });
-  }
-  Array.prototype.forEach.call(root.querySelectorAll('.pr-lifeline'), function (l) {
-    l.addEventListener('mouseenter', function () { var ids = {}; ids[l.dataset.id] = true; focus(ids); });
-    l.addEventListener('mouseleave', unfocus);
-  });
-  rows.forEach(function (r) {
-    r.el.addEventListener('mouseenter', function () { var ids = {}; ids[r.el.dataset.from] = true; ids[r.el.dataset.to] = true; focus(ids, r.el); });
-    r.el.addEventListener('mouseleave', unfocus);
-  });
-})();
-)JS";
-
-struct Lane {
-  const IrNode* node;
-  int cx = 0;
-  int headW = 0;
-};
-
-std::string dataAttrs(const std::map<std::string, std::string>& refs) {
+std::string Svg::dataAttrs(const std::map<std::string, std::string>& refs) {
   std::string out;
   for (const auto& r : refs) out += " data-ref-" + r.first + "=\"" + text::escapeXml(r.second) + "\"";
   return out;
 }
 
-std::string sequenceSvg(const IrDocument& doc, const Metrics& M, const std::string& style, const std::string& sequenceStyle) {
+std::string Svg::sequenceSvg(const IrDocument& doc) const {
+  const Metrics& M = metrics_;
+  const std::string& style = style_;
+  const std::string& sequenceStyle = sequenceStyle_;
   const int HEAD_H = 38, ROW_H = 30, SELF_H = 42, MARGIN = 20, SELF_W = 32;
   const int FRAME_LEAD = 30, FRAME_GAP = 8, FRAME_HEAD = 22, DIVIDER_LEAD = 26, FRAME_INSET = 16;
   std::vector<Lane> lanes;
@@ -633,11 +609,9 @@ std::string sequenceSvg(const IrDocument& doc, const Metrics& M, const std::stri
   return out.str();
 }
 
-}  // namespace
-
-namespace {
 /// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
-std::string tableSvg(const IrDocument& doc, const std::string& style) {
+std::string Svg::tableSvg(const IrDocument& doc) const {
+  const std::string& style = style_;
   const IrTable& t = doc.table;
   const int charW = 8, padX = 14, rowH = 34, headH = 38, lineH = 17;
   const std::size_t kWrap = 40;  // a cell is as wide as this many characters; what is longer goes on more lines (DS-268)
@@ -724,7 +698,7 @@ std::string tableSvg(const IrDocument& doc, const std::string& style) {
 
 /// Several drawings in one (DS-245): each keeps its own drawing and is placed beside the last, or under it when
 /// the width asked for does not hold them side by side. Each is a nested svg that says which part it is.
-std::string besideEachOther(const std::vector<std::pair<std::string, std::string>>& drawings, int maxWidth) {
+std::string Svg::besideEachOther(const std::vector<std::pair<std::string, std::string>>& drawings, int maxWidth) {
   static const std::regex size(R"re(width="([0-9.]+)" height="([0-9.]+)")re");
   const int gap = 32;
   std::vector<std::pair<double, double>> sizes;
@@ -752,7 +726,6 @@ std::string besideEachOther(const std::vector<std::pair<std::string, std::string
       << "\" height=\"" << num(height) << "\" class=\"pr-parts\">" << inside << "</svg>";
   return out.str();
 }
-}  // namespace
 
 Svg::Svg(const theme::Theme& theme)
     : metrics_(Metrics::svg(theme.measures(theme::Sink::svg))),
@@ -760,14 +733,14 @@ Svg::Svg(const theme::Theme& theme)
       sequenceStyle_(theme::ThemeWriterFactory::of().at("sequence")->write(theme)) {}
 
 std::string Svg::render(const IrDocument& doc, int maxWidth) const {
-  if (!doc.table.columns.empty()) return tableSvg(doc, style_);
+  if (!doc.table.columns.empty()) return tableSvg(doc);
   if (!doc.parts.empty()) {
     std::vector<std::pair<std::string, std::string>> drawings;
     for (const auto& name : doc.parts) drawings.push_back({name, render(doc.part(name), maxWidth)});
     return besideEachOther(drawings, maxWidth);
   }
   for (const auto& n : doc.nodes) {
-    if (n.kind == "lifeline") return sequenceSvg(doc, metrics_, style_, sequenceStyle_);
+    if (n.kind == "lifeline") return sequenceSvg(doc);
   }
   const IrDocument bundled = doc.bundled();
   return render(bundled, Layout(metrics_).place(bundled, maxWidth, true));  // routed as its kind is drawn (DS-443)
@@ -815,9 +788,9 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
     for (std::string s = b->node->parent; !s.empty() && byId.count(s); s = byId[s]->node->parent) ++db;
     return da < db;
   });
-  for (const Placed* f : frames) containers.push_back(emitNode(*f, px, metrics_));
+  for (const Placed* f : frames) containers.push_back(emitNode(*f, px));
   for (const auto& p : lay.placed) {
-    if (p.node->kind != "container") leaves.push_back(emitNode(p, px, metrics_));
+    if (p.node->kind != "container") leaves.push_back(emitNode(p, px));
   }
   std::vector<std::string> paths, labels, missing;
   for (size_t i = 0; i < doc.edges.size(); ++i) {
