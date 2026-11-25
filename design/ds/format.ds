@@ -10,7 +10,7 @@
 package driftspec@ds {
   // every document ds writes, whichever module builds it: the package's, not the format module's
   requirement REQ-00106-3 {
-    status: draft
+    status: approved
     @refines SREQ-00013-1
     title: Each document ds writes shall be described once into the sink of the technology asked for, or written by a writer found by name, none of which reads the model, and a pair ds does not write shall fail NotImplemented
     text:
@@ -86,7 +86,7 @@ package driftspec@ds {
         tests/integration/ds/emit/test_json_of_a_design.cpp::TestJsonOfADesign.AWriteThatFailsHalfWayWritesNothingOfTheDocument
     }
     verification VER-00225-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm the design of ds keeps the rules of format, and is told when a description names a technology, anything but its factory names a description or a writer, format writes a function, a description uses another or a writer reads the model
       method: test
       tests:
@@ -101,7 +101,7 @@ package driftspec@ds {
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.AWriterThatReadsTheModelIsTold
     }
     verification VER-00226-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm a diagram asked of a workspace in a format ds does not write fails NotImplemented, naming the document and the technology, in C++ and as driftspec.NotImplemented in Python, and the engine's render draws as it always has
       method: test
       tests:
