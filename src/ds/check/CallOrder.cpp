@@ -24,7 +24,7 @@ std::vector<model::Finding> CallOrder::check() {
   const model::Model& model = context_->model();
   for (const auto& pair : model.entities()) {
     const model::Entity& e = pair.second;
-    if (e.kind != model::Kind::State || e.field("transitions").empty()) continue;
+    if (e.kind != model::Kind::State || e.transitions.empty()) continue;
     const machine::Machine written(model, e);
     for (const machine::Call& call : written.calls()) {
       if (call.fits) continue;

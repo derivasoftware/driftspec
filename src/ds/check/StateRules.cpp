@@ -17,7 +17,7 @@ std::vector<model::Finding> StateRules::check() {
   std::vector<model::Finding> found;
   for (const auto& pair : context_->model().entities()) {
     const model::Entity& e = pair.second;
-    if (e.kind != model::Kind::State || e.field("rules").empty()) continue;
+    if (e.kind != model::Kind::State || e.rules.empty()) continue;
     for (const model::Finding& fault : machine::Machine(context_->model(), e).faults(context_->metamodel())) found.push_back(fault);
   }
   return found;
