@@ -48,8 +48,8 @@ TEST_F(TestRenderPage, ThePageFramedOnADiagramIsTheEnginesFramedOnWhatItShows) {
   const ds::api::Workspace workspace = loaded(dir);
   const auto diagrams = nlohmann::json::parse(workspace.ask("diagrams", ""));
   ASSERT_FALSE(diagrams.empty());
-  const std::string id = diagrams.front()["id"].get<std::string>();
-  const std::string diagram = id.substr(id.find("diagram:") + 8);
+  const std::string diagram = diagrams.front()["id"].get<std::string>();  // a diagram is answered by its name
+  ASSERT_FALSE(diagram.empty());
   std::vector<std::string> focus;
   for (const auto& shown : nlohmann::json::parse(workspace.shows(diagram))) focus.push_back(shown["id"].get<std::string>());
   EXPECT_EQ(written({"ds", "render", dir, diagram}), workspace.page(ds::app::Disk::titleOf(dir), focus)) << diagram;
