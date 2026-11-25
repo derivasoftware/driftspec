@@ -9,8 +9,7 @@
 #include "ds/render/ComposerFactory.hpp"
 #include "ds/render/Ir.hpp"
 #include "ds/render/Layout.hpp"
-#include "ds/render/SequenceSvgComposer.hpp"
-#include "ds/render/SequenceTextComposer.hpp"
+#include "ds/render/SequenceComposer.hpp"
 #include "ds/theme/Theme.hpp"
 
 namespace {
@@ -47,9 +46,9 @@ TEST(TestComposerFactory, EachKindAndTechnologyHasItsComposerAndAnyOtherIsRefuse
   EXPECT_NE(dynamic_cast<const ds::render::BoxesTextComposer*>(text.get()), nullptr);
   EXPECT_THROW(ds::render::ComposerFactory::of("boxes", "png", m), std::invalid_argument);
   const auto sequenceSvg = ds::render::ComposerFactory::of("sequence", "svg", m);
-  EXPECT_NE(dynamic_cast<const ds::render::SequenceSvgComposer*>(sequenceSvg.get()), nullptr);
+  EXPECT_NE(dynamic_cast<const ds::render::SequenceComposer*>(sequenceSvg.get()), nullptr);
   const auto sequenceText = ds::render::ComposerFactory::of("sequence", "text", m);
-  EXPECT_NE(dynamic_cast<const ds::render::SequenceTextComposer*>(sequenceText.get()), nullptr);
+  EXPECT_NE(dynamic_cast<const ds::render::SequenceComposer*>(sequenceText.get()), nullptr);
   EXPECT_THROW(ds::render::ComposerFactory::of("table", "svg", m), std::invalid_argument);  // not yet below the drawing
 }
 

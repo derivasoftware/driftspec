@@ -4,8 +4,7 @@
 
 #include "ds/render/BoxesSvgComposer.hpp"
 #include "ds/render/BoxesTextComposer.hpp"
-#include "ds/render/SequenceSvgComposer.hpp"
-#include "ds/render/SequenceTextComposer.hpp"
+#include "ds/render/SequenceComposer.hpp"
 
 namespace ds {
 namespace render {
@@ -13,8 +12,8 @@ namespace render {
 std::unique_ptr<IComposer> ComposerFactory::of(const std::string& kind, const std::string& technology, const Metrics& metrics) {
   if (kind == "boxes" && technology == "svg") return std::make_unique<BoxesSvgComposer>(metrics);
   if (kind == "boxes" && technology == "text") return std::make_unique<BoxesTextComposer>(metrics);
-  if (kind == "sequence" && technology == "svg") return std::make_unique<SequenceSvgComposer>(metrics);
-  if (kind == "sequence" && technology == "text") return std::make_unique<SequenceTextComposer>(metrics);
+  if (kind == "sequence" && (technology == "svg" || technology == "text"))
+    return std::make_unique<SequenceComposer>(metrics);  // one engine, the sink's metrics
   throw std::invalid_argument("no composer of " + kind + " drawn in " + technology);
 }
 
