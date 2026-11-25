@@ -83,7 +83,7 @@ void FailureCheck::checkHandlers() {
         model::Code::W_HANDLER_UNREACHED,
         "the handler of " + failure + " handles nothing: no step of its attempt fails with it" +
             (possible.empty() ? "" : " (they fail with " + join(std::vector<std::string>(possible.begin(), possible.end()), ", ") + ")"),
-        handler.location));
+        handler.location, handler.id));
   }
 }
 
@@ -105,14 +105,15 @@ void FailureCheck::checkFailures(const model::Entity& op) {
         model::Code::W_FAILURE_UNDECLARED,
         op.id + " lets " + name + " escape (" + how + "), and " +
             (promises ? "its signature does not say it may fail with it" : "a boundary must say what it fails with"),
-        op.location));
+        op.location, op.id));
   }
   const bool behaviour = !model_->index().toOfKind(op.id, "behaviour-of").empty();
   if (!behaviour) return;  // with no behaviour, the signature is what it fails with
   for (const auto& name : declared) {
     if (escaping.count(name)) continue;
-    found_.push_back(context_->metamodel().finding(
-        model::Code::W_FAILURE_UNREACHED, op.id + " says it may fail with " + name + ", and no path of its behaviour does", op.location));
+    found_.push_back(context_->metamodel().finding(model::Code::W_FAILURE_UNREACHED,
+                                                   op.id + " says it may fail with " + name + ", and no path of its behaviour does",
+                                                   op.location, op.id));
   }
 }
 
@@ -127,7 +128,8 @@ void FailureCheck::checkScenario(const model::Entity& usecase) {
   for (const auto& name : text::splitTrimmed(usecase.field("escapes"), ','))
     found_.push_back(context_->metamodel().finding(
         model::Code::W_FAILURE_UNDECLARED,
-        usecase.id + " lets " + name + " escape (" + usecase.field("escape." + name) + "), and its scenario does not handle it", at));
+        usecase.id + " lets " + name + " escape (" + usecase.field("escape." + name) + "), and its scenario does not handle it", at,
+        usecase.id));
 }
 
 }  // namespace check

@@ -100,13 +100,13 @@ std::vector<model::Finding> Machine::faults(const model::Metamodel& metamodel) c
         found.push_back(
             metamodel.finding(model::Code::W_STATE_UNDECLARED,
                               "the state " + all[i].state + " of " + who + " asks " + l.written() + ", and " + who + " holds no " + l.name,
-                              at(machine_, all[i].line)));
+                              at(machine_, all[i].line), machine_.id));
       } else if (!values.empty() && std::find(values.begin(), values.end(), l.value) == values.end()) {
         sound = false;
         found.push_back(metamodel.finding(model::Code::W_STATE_VALUE,
                                           "the state " + all[i].state + " of " + who + " asks " + l.written() + ", and " + l.name +
                                               " is never " + l.value + ": it is one of " + WrittenFields::joined(values, ", "),
-                                          at(machine_, all[i].line)));
+                                          at(machine_, all[i].line), machine_.id));
       }
     }
     can[i] = Context::allowed(Subject(model_, subject_), all[i], &asks[i]);
@@ -116,7 +116,7 @@ std::vector<model::Finding> Machine::faults(const model::Metamodel& metamodel) c
       found.push_back(metamodel.finding(model::Code::W_STATE_IMPOSSIBLE,
                                         "the state " + all[i].state + " of " + who + " can never be: its rule (" + all[i].text +
                                             ") asks two things that exclude each other",
-                                        at(machine_, all[i].line)));
+                                        at(machine_, all[i].line), machine_.id));
     }
   }
   for (std::size_t i = 0; i < all.size(); ++i) {
@@ -127,7 +127,7 @@ std::vector<model::Finding> Machine::faults(const model::Metamodel& metamodel) c
       found.push_back(metamodel.finding(model::Code::W_STATE_OVERLAP,
                                         who + " can be " + all[i].state + " and " + all[j].state + " at once: when " + both.told() +
                                             ". The rules of a machine exclude each other",
-                                        at(machine_, all[j].line)));
+                                        at(machine_, all[j].line), machine_.id));
     }
   }
   return found;

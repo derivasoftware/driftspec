@@ -8,7 +8,8 @@
         "line": 7
       },
       "message": "REQ-00051-1 is approved and nothing satisfies it, by itself or through its refinements",
-      "severity": "coverage"
+      "severity": "coverage",
+      "subject": "REQ-00051-1"
     },
     {
       "code": "W-REQ-UNREALISED",
@@ -18,7 +19,8 @@
         "line": 35
       },
       "message": "REQ-00052-1 is approved and nothing satisfies it, by itself or through its refinements",
-      "severity": "coverage"
+      "severity": "coverage",
+      "subject": "REQ-00052-1"
     }
   ],
   "entities": 3483,
