@@ -192,27 +192,30 @@ std::string Workspace::ask(const std::string& question, const std::string& subje
 std::string Workspace::shows(const std::string& diagram) const { return ask("shows", diagram); }
 
 std::string Workspace::render(const std::string& diagram, const std::string& format, int width) const {
-  // a diagram is its IR: its layout and its cells are described in JSON, a line after (DS-398); the IR and the drawings
-  // are written by their writers; a name that is none of them is a pair ds does not write, said before anything is drawn
-  const bool described = format == "layout" || format == "cells";
+  // a diagram is its IR: the IR, its layout and its cells are described in JSON, the layout and the cells a line after
+  // (DS-398); the drawings are written by their writers, each handed the document (DS-458); a name that is none of
+  // them is a pair ds does not write, said before anything is drawn
+  const bool described = format == "ir" || format == "layout" || format == "cells";
   const auto writers = format::FormatFactory::diagram(theme_);
   const auto chosen = writers.find(format);
   if (!described && chosen == writers.end()) throw emit::NotImplemented("diagram", format, {"cells", "ir", "layout", "svg", "text"});
   const std::optional<render::IrDocument> document =
       render::IrExport(model_, metamodel_).document(model::Identity::ofDiagram(diagram).text());
   if (!document) return "";
-  const auto sink = emit::SinkFactory::json(false);  // the IR travels compact to the writers that draw it (DS-418)
-  format::DescriptionFactory::ir(*document)->describe(*sink);
-  const render::IrText ir{sink->result()};
+  const auto sink = emit::SinkFactory::json(false);
+  if (format == "ir") {
+    format::DescriptionFactory::ir(*document)->describe(*sink);
+    return sink->result();
+  }
   if (described) {
-    const auto description =
-        format == "layout" ? format::DescriptionFactory::layout(ir, theme_, width) : format::DescriptionFactory::cells(ir, theme_, width);
+    const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
+                                                : format::DescriptionFactory::cells(*document, theme_, width);
     description->describe(*sink);
     return sink->result() + "\n";
   }
   format::FormatOptions options;
   options.width = width;
-  return chosen->second->write(ir, options, *sink);
+  return chosen->second->write(*document, options, *sink);
 }
 
 std::string Workspace::page(const std::string& title, const std::vector<std::string>& focus) const {

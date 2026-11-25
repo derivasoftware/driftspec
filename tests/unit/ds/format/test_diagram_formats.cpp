@@ -16,22 +16,15 @@ const ds::theme::Theme kTheme;
 
 /// A diagram is its render-IR (DS-126): three writers write it, found by name, its layout and its cells are
 /// descriptions (DS-398), and none needs a model.
-const ds::render::IrText kDiagram{R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
+const ds::render::IrDocument kDiagram =
+    ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
                                   R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
-                                  R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})"};
+                                  R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
 
 TEST(TestFormatFactory, EachWriterOfADiagramIsFoundByItsName) {
   const auto formats = ds::format::FormatFactory::diagram(kTheme);
-  ASSERT_EQ(formats.size(), 3u);
+  ASSERT_EQ(formats.size(), 2u);  // svg and text: the IR is a description, written by the door that asks (DS-458)
   for (const auto& f : formats) EXPECT_EQ(f.first, f.second->name());
-}
-
-TEST(TestDiagramFormats, TheIrIsWrittenAsItCameUnlessAskedToIndent) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  EXPECT_EQ(ds::format::DiagramIr().write(kDiagram, {}, sink), kDiagram.json);
-  ds::format::FormatOptions indented;
-  indented.pretty = true;
-  EXPECT_EQ(ds::format::DiagramIr().write(kDiagram, indented, sink), nlohmann::json::parse(kDiagram.json).dump(2));
 }
 
 TEST(TestDiagramFormats, EachDrawingFormatDrawsTheSameDiagram) {

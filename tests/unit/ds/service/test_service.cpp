@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -163,6 +164,49 @@ TEST_F(TestEditDesign, TheWordsThatMayComeAtAPlaceAreDescribedAndALineThatIsNoNu
   EXPECT_FALSE(edit.expectedAt("package p {\n}\n", 1, 0).empty());
   EXPECT_EQ(run(edit, {{{"text", "package p {\n}\n"}, {"line", "1"}, {"column", "0"}}}).second, "default");
   EXPECT_THROW(run(edit, {{{"text", ""}, {"line", "one"}, {"column", "0"}}}), ds::service::BadRequest);
+}
+
+/// A sink that builds what it is given elsewhere and has no text to give back, as a Python sink builds objects (DS-459):
+/// its result() is empty. What was written through it is taken from where it went.
+class NoText : public ds::emit::ISink {
+ public:
+  ds::emit::ISink& beginRecord() override { return keep(to_.beginRecord()); }
+  ds::emit::ISink& endRecord() override { return keep(to_.endRecord()); }
+  ds::emit::ISink& field(std::string_view name) override { return keep(to_.field(name)); }
+  ds::emit::ISink& beginList() override { return keep(to_.beginList()); }
+  ds::emit::ISink& endList() override { return keep(to_.endList()); }
+  ds::emit::ISink& value(std::string_view text) override { return keep(to_.value(text)); }
+  ds::emit::ISink& integer(std::int64_t value) override { return keep(to_.integer(value)); }
+  ds::emit::ISink& number(double value) override { return keep(to_.number(value)); }
+  ds::emit::ISink& boolean(bool value) override { return keep(to_.boolean(value)); }
+  ds::emit::ISink& null() override { return keep(to_.null()); }
+  ds::emit::ISink& paragraph(std::string_view text) override { return keep(to_.paragraph(text)); }
+  ds::emit::ISink& table(const std::vector<std::string_view>& columns) override { return keep(to_.table(columns)); }
+  ds::emit::ISink& row(const std::vector<std::string_view>& cells) override { return keep(to_.row(cells)); }
+  ds::emit::ISink& endTable() override { return keep(to_.endTable()); }
+  ds::emit::ISink& described(std::string_view document) override {
+    to_.described(document);
+    return *this;
+  }
+  std::string result() override { return ""; }  // nothing to read back: what it built is elsewhere
+  /// What was written through it, taken where it went.
+  std::string taken() { return to_.result(); }
+
+ private:
+  ds::emit::ISink& keep(ds::emit::ISink&) { return *this; }
+  const std::unique_ptr<ds::emit::ISink> owned_ = ds::emit::SinkFactory::json(false);
+  ds::emit::ISink& to_ = *owned_;
+};
+
+/// A use case describes into the sink it is lent and never reads it back (DS-458): seeing a diagram's layout or cells
+/// through a sink with no text to give back still draws it, since the descriptions are handed the document itself.
+TEST_F(TestSeeDesign, ALayoutAndItsCellsAreDrawnThroughASinkThatGivesNoTextBack) {
+  const ds::service::SeeDesign see(metamodel);
+  for (const char* format : {"layout", "cells"}) {
+    NoText sink;
+    EXPECT_EQ(see.run(model, {{{"format", format}, {"diagram", "CL_P"}}}, sink).name, "default") << format;
+    EXPECT_FALSE(sink.taken().empty()) << format;  // the drawing, written through it
+  }
 }
 
 }  // namespace

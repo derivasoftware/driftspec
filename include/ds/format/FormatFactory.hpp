@@ -21,7 +21,7 @@ class FormatFactory {
   /// html: the viewer as one page, the scene inside.
   static std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>> scene();
   /// ir, svg and text; the drawings in `theme` (DS-393).
-  static std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> diagram(const theme::Theme& theme);
+  static std::map<std::string, std::unique_ptr<IFormat<render::IrDocument>>> diagram(const theme::Theme& theme);
 };
 
 }  // namespace format
