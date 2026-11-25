@@ -47,7 +47,7 @@ Rect Layout::sizeOf(const IrNode& node) const {
   for (size_t i = 0; i < node.sections.size(); ++i) {
     const auto& s = node.sections[i];
     // a row of what a closed box offers carries a badge, wider than the dot of a member's visibility (DS-244)
-    const bool offered = i < node.sectionKinds.size() && !holdsMembers(node.sectionKinds[i]);
+    const bool offered = i < node.sectionKinds.size() && !IrNode::holdsMembers(node.sectionKinds[i]);
     for (const auto& line : s) textW = std::max(textW, static_cast<int>(line.size()) * M.CHAR_W + (offered ? M.BADGE_W : M.DOT_W));
     sectionLines += static_cast<int>(s.size());
   }
