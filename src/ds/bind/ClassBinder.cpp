@@ -92,6 +92,14 @@ void ClassBinder::bind(TSNode node, const BindContext& ctx) const {
     baseTexts.push_back(std::string(text::trimWhitespace(ctx.reader.textOf(base))));
   if (!baseTexts.empty()) ctx.annotate(declared.id, "bases", join(baseTexts, "; "));
   for (const std::string& written : baseTexts) {
+    // a base written as an artefact's name (class Cart : UC-00001-1) is that artefact, read whole: the type's words
+    // would read it as a class UC nobody designs, and drop it silently (DS-226)
+    if (model::ArtefactName::matches(written)) {
+      Reference ref{declared.id, written, scope, "inherits", model::Kind::Class, loc, "", {}};
+      ref.soft = true;
+      ctx.refer(ref);
+      continue;
+    }
     const std::vector<TypeToken> tokens = TypeToken::scan(written);
     if (tokens.empty()) continue;
     const TypeToken& token = tokens.front();

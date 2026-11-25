@@ -699,6 +699,7 @@ package driftspec@ds {
       - static build() -> std::vector<KindSpec>
       - buildIdentityFields() -> std::vector<std::string>            // read from the kinds, each once, in the order declared
       - static rel(kind: std::string, meaning: std::string, from: std::vector<Kind>, to: std::vector<Kind>) -> RelationSpec
+      - static paired(kind: std::string, meaning: std::string, pairs: std::vector<std::pair<Kind, Kind>>) -> RelationSpec   // a relation of exact (from, to) pairs (DS-226)
       - buildRelations() -> std::vector<RelationSpec>               // containment first, then the others
       - static among(kinds: std::vector<Kind>, kind: Kind) -> bool
       - static matches(name: std::string, key: std::string) -> bool

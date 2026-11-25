@@ -7,7 +7,6 @@ package ds {
   verification VF-0001-0 {
     @requirement DS-0001-0
     level: system
-    @interface LSP
     precondition: a client connected over LSP to a loaded workspace
     postcondition: the same finding arrives as a publishDiagnostics notification
     test: tests/system/test_lsp_diagnose.py::test_one_broken_link

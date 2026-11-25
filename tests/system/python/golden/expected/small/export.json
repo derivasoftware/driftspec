@@ -2466,11 +2466,20 @@
       {
         "from": [
           "class",
-          "verification",
           "operation"
         ],
         "kind": "realises",
         "meaning": "the entity carries out an interface, or an interface operation a use case",
+        "pairs": [
+          [
+            "class",
+            "interface"
+          ],
+          [
+            "operation",
+            "usecase"
+          ]
+        ],
         "to": [
           "interface",
           "usecase"
@@ -2493,6 +2502,16 @@
         ],
         "kind": "inherits",
         "meaning": "a class derives from another; a use case specialises another",
+        "pairs": [
+          [
+            "class",
+            "class"
+          ],
+          [
+            "usecase",
+            "usecase"
+          ]
+        ],
         "to": [
           "class",
           "usecase"
@@ -2567,6 +2586,48 @@
         ],
         "kind": "behaviour-of",
         "meaning": "a sequence or a state machine is the behaviour of its subject",
+        "pairs": [
+          [
+            "sequence",
+            "class"
+          ],
+          [
+            "sequence",
+            "function"
+          ],
+          [
+            "sequence",
+            "method"
+          ],
+          [
+            "sequence",
+            "operation"
+          ],
+          [
+            "sequence",
+            "interface"
+          ],
+          [
+            "sequence",
+            "package"
+          ],
+          [
+            "sequence",
+            "module"
+          ],
+          [
+            "sequence",
+            "usecase"
+          ],
+          [
+            "state",
+            "class"
+          ],
+          [
+            "state",
+            "interface"
+          ]
+        ],
         "to": [
           "class",
           "function",

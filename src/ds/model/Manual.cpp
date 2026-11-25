@@ -106,11 +106,21 @@ std::string Manual::kindPage(const KindSpec& k) const {
   std::string from, to;
   for (const auto& r : metamodel_.relations()) {
     if (r.kind == "contains" || r.kind == "refers") continue;
+    // a relation of exact pairs says, of each kind, only the kinds it joins it to (DS-226)
+    std::vector<Kind> targets = r.to, sources = r.from;
+    if (!r.pairs.empty()) {
+      targets.clear();
+      sources.clear();
+      for (const auto& [f, t] : r.pairs) {
+        if (f == k.kind) targets.push_back(t);
+        if (t == k.kind) sources.push_back(f);
+      }
+    }
     for (Kind f : r.from)
       if (f == k.kind)
-        from += "  " + pad(r.kind, 20) + "to " + (r.to.empty() ? std::string("anything") : names(r.to)) + "   " + r.meaning + "\n";
+        from += "  " + pad(r.kind, 20) + "to " + (targets.empty() ? std::string("anything") : names(targets)) + "   " + r.meaning + "\n";
     for (Kind t : r.to)
-      if (t == k.kind) to += "  " + pad(r.kind, 20) + "from " + (r.from.empty() ? std::string("anything") : names(r.from)) + "\n";
+      if (t == k.kind) to += "  " + pad(r.kind, 20) + "from " + (sources.empty() ? std::string("anything") : names(sources)) + "\n";
   }
   if (!from.empty()) out += "Relations from it\n" + from + "\n";
   if (!to.empty()) out += "Relations to it\n" + to + "\n";
