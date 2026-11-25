@@ -71,6 +71,49 @@ package driftspec@ds {
         tests/integration/ds/check/test_finding_subject.cpp::TestFindingSubjects.EveryCheckNamesTheEntityItsFindingIsAbout
     }
 
+    // the doors attach a finding to its subject (DS-488, phase c of DS-426): one requirement per capability
+    requirement REQ-00330-1 {
+      tags: finding, subject, editor
+      status: draft
+      @refines REQ-00240-1
+      title: The editor shall show a finding on the entity it is about
+      text:
+        Each diagnostic the language server publishes carries, as data.subject, the identity of the entity its finding
+        is about, when it names one. Hover on an entity lists its own problems, the findings and coverage whose subject
+        it is, wherever they are written, five at most and then how many more.
+      rationale:
+        A problem written in one file about an entity declared in another reaches the entity, not only the line.
+      verification VER-00380-1 {
+        status: draft
+        title: Integration tests confirm a diagnostic carries its subject and hover on an entity lists a problem written in another file
+        method: test
+        tests:
+          tests/integration/python/test_lsp.py::TestAFindingOnItsSubject::test_each_diagnostic_carries_the_entity_it_is_about
+          tests/integration/python/test_lsp.py::TestAFindingOnItsSubject::test_hover_on_an_entity_lists_a_problem_written_in_another_file
+      }
+    }
+
+    requirement REQ-00331-1 {
+      tags: finding, subject, live
+      status: draft
+      @refines REQ-00240-1
+      title: The live viewer shall frame the entity a finding is about
+      text:
+        The live state gives each finding and coverage item its subject. Clicked, a finding with a subject frames that
+        entity on the map. With something selected and the selection filter on, the findings and the coverage keep
+        only those about what is selected or what it holds.
+      rationale:
+        The live viewer's rules panel attaches by subject since DS-426; the findings follow it.
+      verification VER-00381-1 {
+        status: draft
+        title: Integration tests confirm the live state carries each finding's subject and the page frames and keeps it on the selection
+        method: test
+        tests:
+          tests/integration/python/test_live_subjects.py::TestAFindingOnItsSubject::test_the_state_gives_each_finding_and_coverage_item_its_subject
+          tests/integration/python/test_live_subjects.py::TestAFindingOnItsSubject::test_a_finding_about_an_entity_is_drawn_to_frame_it_and_kept_on_its_selection
+      }
+    }
+
     requirement REQ-00240-1 {
       tags: findings, model
       status: approved

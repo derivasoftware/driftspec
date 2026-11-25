@@ -271,9 +271,10 @@ class Live:
         return True
 
     def shown(self, f) -> dict:
-        """A finding as a page reads it: its code, severity and message, and where, relative to the workspace."""
+        """A finding as a page reads it: its code, severity and message, where, relative to the workspace, and the
+        entity it is about, by identity, when it says (DS-488)."""
         file = os.path.relpath(f.location.file, self.workspace) if f.location.file.startswith("/") else f.location.file
-        return {"code": f.code, "severity": f.severity, "message": f.message, "file": file, "line": f.location.line}
+        return {"code": f.code, "severity": f.severity, "message": f.message, "file": file, "line": f.location.line, "subject": f.subject}
 
     def state(self) -> dict:
         a = self.annotations

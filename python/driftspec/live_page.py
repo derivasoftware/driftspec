@@ -83,7 +83,15 @@ async function swap(state){ // a new viewer loads hidden; it takes the reader's 
   if(v){v.perspective_(PERSP); if(ACTIVE) v.lightRule(ACTIVE); if(v.isolate&&ISOLATED.length) v.isolate(ISOLATED); paint();}
   f.style.visibility='visible'; if(cur) cur.remove(); cur=f; busy=false;
   if(pending){const p=pending; pending=null; swap(p);} }
-let RULES=[], ACTIVE=null, FILTER='all', SELID=null, PERSP='structure';
+let RULES=[], ACTIVE=null, FILTER='all', SELID=null, PERSP='structure', FINDS=[], COVS=[];
+// a finding goes to the entity it is about (DS-488): clicked, it frames it, through the side's [data-id]; on the
+// selection, only the findings about what is selected or what it holds
+function about(f,id){const x=f.subject||''; return !!id&&(x===id||x.startsWith(id+'::')||x.startsWith(id+'@'));}
+function finds(){const keep=f=>FILTER!=='sel'||about(f,SELID);
+  const li=f=>`<li class="f"${f.subject?` data-id="${esc(f.subject)}"`:''}><code class="${tone(f.severity)}">${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`;
+  const none=FILTER==='sel'?(SELID?'<li class="v">none about it</li>':'<li class="v">select something in the viewer</li>'):'<li class="v">none</li>';
+  $('findings').innerHTML=FINDS.filter(keep).slice(0,60).map(li).join('')||none;
+  $('coverage').innerHTML=COVS.filter(keep).slice(0,60).map(li).join('')||none;}
 function perspective(p){PERSP=p; $('rulesbox').hidden=p!=='logic'; if(p!=='logic'&&ACTIVE){const v=view(); if(v&&v.rule) v.lightRule(v.rule); ACTIVE=null; rules();}}
 function paint(){const v=view(); if(!v) return; v.highlight(ann.highlights); v.notes(drawnNotes());}
 // ---- the reader's side (DS-102, DS-139, DS-147): folded and seen notes, comments, isolation
@@ -130,7 +138,7 @@ function rules(){const list=RULES.filter(r=>FILTER==='all'||(FILTER==='bad'&&(r.
       `<div class="rq">${esc(short(r.scope||''))}${r.requirements.length?' · '+esc(r.requirements.join(', ')):''} · ${esc(r.file.split('/').pop())}:${r.line}</div></li>`;}).join('')||
     `<li class="v">${FILTER==='sel'?(SELID?'no rule speaks of it':'select something in the viewer'):'none'}</li>`;}
 document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('[data-f]'); if(!b) return; FILTER=b.dataset.f;
-  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); rules();};
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); rules(); finds();};
 function applyAnn(d){ann={notes:d.notes||[],highlights:d.highlights||[]}; COMMENTS=d.comments||COMMENTS; paint(); notesList(); thread();}
 function side(s){
   $('ver').textContent='v'+s.version; const c=s.counts||{}; $('counts').textContent=`${c.entities||0} entities · ${c.relations||0} relations`;
@@ -138,9 +146,8 @@ function side(s){
   const rest=SEVERITIES.filter(x=>!x.fails).map(x=>[x.name,fs.filter(f=>f.severity===x.name).length]).filter(([,k])=>k).map(([nm,k])=>`${k} ${nm}${k===1?'':'s'}`).join(', ');
   $('find').textContent=n?`${failing} failing`+(rest?` · ${rest}`:''):'no findings'; $('find').className='pill'+(failing?' err':(n?' warn':'')); $('findn').textContent=n?String(n):'';
   const cov=s.coverage||[]; $('covn').textContent=cov.length?String(cov.length):'';
-  $('coverage').innerHTML=cov.slice(0,60).map(f=>`<li class="f"><code class="${tone(f.severity)}">${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
+  FINDS=s.findings||[]; COVS=cov; finds();
   ISOLATED=s.isolated||ISOLATED; isoPill();
-  $('findings').innerHTML=(s.findings||[]).slice(0,60).map(f=>`<li class="f"><code class="${tone(f.severity)}">${esc(f.code)}</code> ${esc(f.file)}:${f.line}<br>${esc(f.message)}</li>`).join('')||'<li class="v">none</li>';
   RULES=s.rules||[]; if(ACTIVE&&!RULES.find(r=>r.id===ACTIVE)) ACTIVE=null; rules();
   $('hist').innerHTML=(s.history||[]).slice().reverse().map(h=>`<li class="v">v${h.version} · ${h.at} · ${h.ms} ms</li>`).join('');
   $('side').classList.remove('flash'); void $('side').offsetWidth; $('side').classList.add('flash');}
@@ -153,7 +160,7 @@ addEventListener('message',e=>{if(e.data&&e.data.ds==='fullscreen'&&cur&&e.sourc
 addEventListener('message',e=>{if(!e.data||!cur||e.source!==cur.contentWindow) return;
   if(e.data.ds==='note'){if(e.data.act==='seen'){const n=ann.notes.find(x=>x.id===e.data.ids[0]); if(n) seen([n.id],!n.seen);} else fold(e.data.ids,e.data.act);}
   if(e.data.ds==='isolate'){ISOLATED=e.data.ids||[]; isoPill(); fetch('/isolate',{method:'POST',body:JSON.stringify({ids:ISOLATED,tell:false})});}});
-addEventListener('message',e=>{if(e.data&&e.data.ds==='select'&&cur&&e.source===cur.contentWindow){keepSel=e.data.id; SELID=e.data.id; if(FILTER==='sel') rules(); thread();
+addEventListener('message',e=>{if(e.data&&e.data.ds==='select'&&cur&&e.source===cur.contentWindow){keepSel=e.data.id; SELID=e.data.id; if(FILTER==='sel'){rules(); finds();} thread();
   $('sel').hidden=!e.data.id; $('sel').textContent=e.data.id?'◉ '+e.data.id:'';
   fetch('/selection',{method:'POST',body:JSON.stringify({id:e.data.id,label:e.data.label})});}});
 function connect(){const es=new EventSource('/events'); es.onopen=()=>$('dot').className='dot on';
