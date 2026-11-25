@@ -12,6 +12,7 @@
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/query/Pattern.hpp"
 #include "ds/query/Query.hpp"
 
 namespace {
@@ -109,7 +110,8 @@ TEST_F(TestQuery, EachQuestionTakesTheSubjectItSaysAndAnswersAnotherKindWithAnEr
             "iris@projection::Projection: iris@projection::Projection is a class: failures takes what a failure may escape");
   EXPECT_EQ(refused("behaviours", "VER-00050-1"), "VER-00050-1: VER-00050-1 is a verification: behaviours takes what has a behaviour");
   EXPECT_EQ(refused("entities", "diagram:REQ_Tracker"),
-            "diagram:REQ_Tracker: diagram:REQ_Tracker is a diagram: entities takes a scope: something others are declared in");
+            "diagram:REQ_Tracker: diagram:REQ_Tracker is a diagram: entities takes a scope: something others are declared in; with * "
+            "after it (shop@*), all it holds at any depth");
   EXPECT_NE(refused("entities", "artefacts.ds"), "");  // a file is no scope: only the findings and the coverage take one
   // what each takes is answered as before
   EXPECT_EQ(refused("artefacts", "iris@projection::Projection"), "");
@@ -154,6 +156,22 @@ TEST_F(TestQuery, TheManualListsTheQuestionsAsTheQueryDoes) {
       EXPECT_EQ(c.does, "ask the model: " + ds::query::Query::usage());
     }
   EXPECT_TRUE(found);
+}
+
+TEST_F(TestQuery, TheEntitiesOfAPatternAreAllItTakesAtAnyDepth) {
+  const ds::query::Query query(model, metamodel);
+  // the include syntax (DS-444): shop@* is all the package holds, at any depth, one line each
+  const auto deep = query.ask("entities", "iris@*");
+  const auto level = query.ask("entities", "iris");
+  EXPECT_TRUE(names(deep, "iris@projection", "module"));
+  EXPECT_TRUE(names(deep, "iris@projection::Projection", "class"));  // two levels down: not among the package's own
+  EXPECT_FALSE(names(level, "iris@projection::Projection"));
+  EXPECT_GT(deep.size(), level.size());
+  // what it takes is what a diagram's include takes
+  const ds::query::Pattern pattern(model, "iris@projection::*");
+  for (const auto& a : query.ask("entities", "iris@projection::*")) EXPECT_TRUE(pattern.takes(*model.find(a.id))) << a.id;
+  // a pattern that takes nothing is said, as a scope the model does not declare is
+  EXPECT_EQ(query.ask("entities", "nope@*").front().kind, "error");
 }
 
 TEST_F(TestQuery, AnUnknownQuestionIsAnError) {

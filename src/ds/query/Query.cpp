@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "ds/model/Metamodel.hpp"
+#include "ds/query/Pattern.hpp"
 #include "ds/text/Text.hpp"
 
 namespace ds {
@@ -10,7 +11,7 @@ namespace query {
 
 std::vector<Question> Query::questions() {
   return {{"diagrams", "", "no subject"},
-          {"entities", "[scope]", "a scope: something others are declared in"},
+          {"entities", "[scope]", "a scope: something others are declared in; with * after it (shop@*), all it holds at any depth"},
           {"relations", "<identity>", "any identity"},
           {"artefacts", "<identity>", "a design element: what realises, satisfies or obeys an artefact"},
           {"behaviours", "<identity>", "what has a behaviour"},
@@ -37,6 +38,8 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   const bool aboutOne = question == "relations" || question == "artefacts" || question == "behaviours" || question == "failures";
   if (aboutOne && subject.empty()) return {{"error", question, "needs an identity: ds query <workspace> " + question + " <identity>"}};
   const bool ofFile = (question == "findings" || question == "coverage") && isFile(subject);  // they may take a file
+  const bool deep = question == "entities" && endsWith(subject, "*");                         // the include syntax: all it holds (DS-444)
+  if (deep) return entities(subject);
   const bool aboutWhat = (question == "entities" || question == "findings" || question == "coverage") && !subject.empty() && !ofFile;
   if ((aboutOne || aboutWhat) && !known(subject)) {
     const std::vector<std::string> near = nearTo(subject);
@@ -154,6 +157,15 @@ std::vector<Answer> Query::diagrams() const {
 }
 
 std::vector<Answer> Query::entities(const std::string& asked) const {
+  if (endsWith(asked, "*")) {  // written as a diagram's include writes it: what it takes at any depth (DS-444)
+    const Pattern pattern(model_, asked);
+    std::vector<Answer> out;
+    for (const auto& p : model_.entities())
+      if (!p.second.expected && pattern.takes(p.second))
+        out.push_back(entityAnswer(p.second, p.second.fields.count("title") ? p.second.fields.at("title") : ""));
+    if (out.empty()) return {{"error", asked, "nothing in the model falls under the pattern"}};
+    return out;
+  }
   // a package's members carry the scope `pkg@`; the question may name the package plainly
   const model::Entity* pkg = model_.find(asked);
   const std::string scope = pkg && pkg->kind == model::Kind::Package ? asked + "@" : asked;
