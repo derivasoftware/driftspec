@@ -228,6 +228,7 @@ package driftspec@ds {
       + bottomPad: int
       + dividerOffset: int
       + static of(advance: int, lineHeight: int, smallAdvance: int) -> SequenceSpacing
+      + kLine: double                        // the SVG's 18 px line the proportions are written in (DS-477)
     }
 
     // a sequence to place, knowing nothing of what it stands for: its lanes, its messages by row, its frames

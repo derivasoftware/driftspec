@@ -44,6 +44,8 @@ struct SequenceSpacing {
   /// The distances in a sink that measures a character `advance` across, a line `lineHeight` down and a character of
   /// small text `smallAdvance` across.
   static SequenceSpacing of(int advance, int lineHeight, int smallAdvance);
+  /// The SVG's proportions: across in characters of its 8 px advance, down in lines of its 18 px line (DS-477).
+  static constexpr double kLine = 18.0;
 };
 
 }  // namespace layout
