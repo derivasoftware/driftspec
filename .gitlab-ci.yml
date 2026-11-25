@@ -55,20 +55,29 @@ variables:
       ) 200>/tmp/ccache-4.10.2.install.lock
       # 12 GB (DS-449): at 5 GB the gcc, the instrumented clang and the wheel builds of every branch in
       # flight evicted one another (4.7/5.0 GiB, 22 cleanups in one job, 16% hits on the evidence build)
-      export CCACHE_DIR="$HOME/.cache/ccache/$CI_PROJECT_NAME" CCACHE_MAXSIZE=12G
+      # CCACHE_NAME and CCACHE_SIZE let a job keep a cache of its own (cpp-evidence, DS-482)
+      export CCACHE_DIR="$HOME/.cache/ccache/${CCACHE_NAME:-$CI_PROJECT_NAME}" CCACHE_MAXSIZE="${CCACHE_SIZE:-12G}"
       # a job runs in one of several folders of the runner (builds/<runner>/<slot>/...): the objects
       # are made independent of it, so the cache serves every slot and the coverage maps stay right
       export CCACHE_BASEDIR="$CI_PROJECT_DIR" CCACHE_NOHASHDIR=1
       export CFLAGS="${CFLAGS:-} -ffile-prefix-map=$CI_PROJECT_DIR/=" CXXFLAGS="${CXXFLAGS:-} -ffile-prefix-map=$CI_PROJECT_DIR/="
       export CMAKE_C_COMPILER_LAUNCHER="$CCACHE_HOME/ccache" CMAKE_CXX_COMPILER_LAUNCHER="$CCACHE_HOME/ccache"
-      "$CCACHE_HOME/ccache" --zero-stats > /dev/null
+      # this job's own counters: the cache is shared by the jobs running at once (DS-482)
+      export CCACHE_STATSLOG="$CI_PROJECT_DIR/ccache-stats.log"
   after_script:
-    - CCACHE_DIR="$HOME/.cache/ccache/$CI_PROJECT_NAME" "$HOME/.cache/ccache-4.10.2/ccache" --show-stats || true
+    - CCACHE_STATSLOG="$CI_PROJECT_DIR/ccache-stats.log" "$HOME/.cache/ccache-4.10.2/ccache" --show-log-stats || true
     # the disk the cache leaves on the runners' host, to grow it with data (DS-449)
     - df -h "$HOME" | tail -1 || true
 
 cpp-evidence:
   extends: [.ccache]
+  variables:
+    # it sets the pace of every merge request (DS-482): 6 of the host's 24 cores, and a cache of
+    # its own so its instrumented objects do not evict cpp-test's
+    CMAKE_BUILD_PARALLEL_LEVEL: "6"
+    ARGOS_EVIDENCE_JOBS: "6"
+    CCACHE_NAME: $CI_PROJECT_NAME-evidence
+    CCACHE_SIZE: 20G
 
 # The tests run the Release engine with the JSON sink's checks on (DS-461): fields in byte order, one document, no
 # result taken with nothing written. A Release build leaves them off by default, so a broken contract passed CI while a
