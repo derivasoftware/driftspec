@@ -7,8 +7,9 @@ package driftspec@ds {
   // what whoever places reaches only through IEngine and IRouter: an engine, a router, or a phase of the layered
   // engine (DS-392)
   definition engine-part(x) {
-    title: x is an engine of the layout, a router, or one of the layered engine's phases (DS-392)
+    title: x is an engine of the layout, a sequence's engine, a router, or one of the layered engine's phases (DS-392, DS-464)
     if x inherits driftspec@ds@layout::IEngine
+    if x inherits driftspec@ds@layout::ISequenceEngine
     if x inherits driftspec@ds@layout::IRouter
     if x = driftspec@ds@layout::Framer
     if x = driftspec@ds@layout::Layerer
@@ -156,6 +157,7 @@ package driftspec@ds {
       @requirement REQ-00210-1
       + static packing() -> std::unique_ptr<IEngine>
       + static layered(spacing: Spacing, router: std::unique_ptr<IRouter>) -> std::unique_ptr<IEngine>   // orthogonal when handed none
+      + static sequence(spacing: SequenceSpacing) -> std::unique_ptr<ISequenceEngine>   // the stacked one, in the sink's spacing (DS-464)
     }
 
     sequence EngineFactory::packing {
@@ -166,6 +168,139 @@ package driftspec@ds {
     sequence EngineFactory::layered {
       local engine: LayeredEngine
       return engine
+    }
+
+    sequence EngineFactory::sequence {
+      local engine: StackedEngine
+      return engine
+    }
+
+    // ---- a sequence's engine (DS-464): lanes, rows and frames, placed once with the sink's measures ----------------
+
+    // a sequence engine: a sequence graph in, where its lanes, rows and frames land out
+    class ISequenceEngine {
+      @requirement REQ-00210-1
+      + ~ISequenceEngine()
+      + abstract place(graph: SequenceGraph) -> SequencePlacement
+    }
+
+    // lanes side by side, wide enough for their heads and the labels that cross them, a label's lack of room spread
+    // over the gaps it crosses; a row per message, a lead above it for each frame that opens there and each else; frames
+    // around the rows they span, those that open together outer first, nested ones further out
+    class StackedEngine : ISequenceEngine {
+      @requirement REQ-00210-1
+      - owns spacing_: SequenceSpacing
+      + StackedEngine(spacing: SequenceSpacing)
+      + place(graph: SequenceGraph) -> SequencePlacement
+    }
+
+    // the distances a sequence is placed with, in the sink's units: proportions written once, across in characters and
+    // down in lines, scaled by the sink's measures and rounded; the SVG's own, so its 8 px and 18 px give its pixels
+    dataclass SequenceSpacing {
+      @requirement REQ-00210-1
+      + laneGap: int
+      + headPad: int
+      + actorPad: int
+      + crossPad: int
+      + selfWidth: int
+      + selfLead: int
+      + selfTail: int
+      + edge: int
+      + marginX: int
+      + frameInset: int
+      + frameSide: int
+      + selfFrameTail: int
+      + frameLabelLead: int
+      + frameLabelGap: int
+      + frameLabelTail: int
+      + advance: int
+      + smallAdvance: int                    // a character of the small text a frame's label is written in
+      + marginY: int
+      + headHeight: int
+      + headGap: int
+      + rowHeight: int
+      + selfHeight: int
+      + lineOffset: int
+      + frameLead: int
+      + frameGap: int
+      + dividerLead: int
+      + frameBottom: int
+      + bottomPad: int
+      + dividerOffset: int
+      + static of(advance: int, lineHeight: int, smallAdvance: int) -> SequenceSpacing
+    }
+
+    // a sequence to place, knowing nothing of what it stands for: its lanes, its messages by row, its frames
+    dataclass SequenceGraph {
+      @requirement REQ-00210-1
+      + owns many lanes: std::vector<SequenceLane>
+      + owns many messages: std::vector<SequenceMessage>
+      + owns many blocks: std::vector<SequenceBlock>
+    }
+
+    dataclass SequenceLane {                 // a head's label, in characters, and whether it is an actor's
+      @requirement REQ-00210-1
+      + labelLength: std::size_t
+      + actor: bool
+    }
+
+    dataclass SequenceMessage {              // the lanes it runs between, its label in characters, its row
+      @requirement REQ-00210-1
+      + from: std::size_t
+      + to: std::size_t
+      + labelLength: std::size_t
+      + row: int
+    }
+
+    dataclass SequenceBlock {                // a frame: the rows it spans, its kind and condition in characters, its elses' rows
+      @requirement REQ-00210-1
+      + first: int
+      + last: int
+      + classifierLength: std::size_t
+      + labelLength: std::size_t
+      + dividers: std::vector<int>
+    }
+
+    // where a sequence lands, in the sink's units: a place per lane, per row and per frame, its size, and the
+    // proportions its marks keep
+    dataclass SequencePlacement {
+      @requirement REQ-00210-1
+      + owns many lanes: std::vector<LanePlace>
+      + owns many rows: std::vector<RowPlace>
+      + owns many blocks: std::vector<BlockPlace>
+      + width: int
+      + height: int
+      + headTop: int
+      + headHeight: int
+      + selfWidth: int
+    }
+
+    dataclass LanePlace {                    // a lane's centre and its head's width
+      @requirement REQ-00210-1
+      + centre: int
+      + head: int
+    }
+
+    dataclass RowPlace {                     // a row's top, the line its arrow runs on, its bottom
+      @requirement REQ-00210-1
+      + top: int
+      + line: int
+      + bottom: int
+    }
+
+    dataclass BlockPlace {                   // a frame's four sides and its elses within the rows drawn
+      @requirement REQ-00210-1
+      + top: int
+      + bottom: int
+      + left: int
+      + right: int
+      + owns many dividers: std::vector<DividerPlace>
+    }
+
+    dataclass DividerPlace {                 // which of its frame's elses, and the y of its line
+      @requirement REQ-00210-1
+      + index: std::size_t
+      + y: int
     }
 
     // render's engine (DS-185): in every layered frame, bases above what inherits and wholes above parts, components
