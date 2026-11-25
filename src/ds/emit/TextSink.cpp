@@ -1,6 +1,7 @@
 #include "ds/emit/TextSink.hpp"
 
 #include <cstddef>
+#include <stdexcept>
 
 #include "ds/emit/NotImplemented.hpp"
 
@@ -54,6 +55,15 @@ ISink& TextSink::endTable() {
   return *this;
 }
 
+ISink& TextSink::verbatim(std::string_view text) {
+  // a text already written for a terminal or a page, written whole: a second one would be a second document (DS-474)
+  if (verbatim_) throw std::logic_error("ds::emit::TextSink: a second verbatim text in one document");
+  verbatim_ = true;
+  accepted_ = true;
+  out_.append(text);
+  return *this;
+}
+
 ISink& TextSink::described(std::string_view document) {
   if (!accepted_) throw NotImplemented(std::string(document), "text", {});
   return *this;
@@ -63,6 +73,7 @@ std::string TextSink::result() {
   std::string written;
   written.swap(out_);
   accepted_ = false;
+  verbatim_ = false;
   return written;
 }
 

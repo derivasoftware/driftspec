@@ -25,5 +25,22 @@ int Request::number(const std::string& name, const std::string& fallback) const 
   throw BadRequest(name + " is no whole number: " + text);
 }
 
+bool Request::flag(const std::string& name) const { return getOr(name, "false") == "true"; }
+
+std::vector<std::string> Request::lines(const std::string& name) const {
+  const std::string text = getOr(name, "");
+  std::vector<std::string> out;
+  for (std::size_t from = 0; from < text.size();) {
+    const std::size_t end = text.find('\n', from);
+    if (end == std::string::npos) {
+      out.push_back(text.substr(from));
+      break;
+    }
+    out.push_back(text.substr(from, end - from));
+    from = end + 1;
+  }
+  return out;
+}
+
 }  // namespace service
 }  // namespace ds

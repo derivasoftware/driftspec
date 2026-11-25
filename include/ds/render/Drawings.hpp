@@ -1,5 +1,5 @@
-#ifndef DRIFTSPEC_API_DRAWINGS_HPP
-#define DRIFTSPEC_API_DRAWINGS_HPP
+#ifndef DRIFTSPEC_RENDER_DRAWINGS_HPP
+#define DRIFTSPEC_RENDER_DRAWINGS_HPP
 
 #include <map>
 #include <string>
@@ -9,10 +9,11 @@
 #include "ds/theme/Theme.hpp"
 
 namespace ds {
-namespace api {
+namespace render {
 
 /// A diagram drawn in svg (DS-470): the one path from a diagram to its drawing, that `ds render <ws> <D> -f svg` and
-/// a walkthrough's cards both take, so a card is exactly what render draws.
+/// a walkthrough's cards both take, so a card is exactly what render draws. It is render's (DS-474): the diagram's IR
+/// exported from the model and drawn by Svg, below every door, so see-design draws through it.
 class Drawings {
  public:
   /// One diagram, by name, drawn in svg and wrapped to `width` pixels (0: none); "" when there is no such diagram.
@@ -22,7 +23,7 @@ class Drawings {
   static std::map<std::string, std::string> of(const model::Model& model, const model::Metamodel& metamodel, const theme::Theme& theme);
 };
 
-}  // namespace api
+}  // namespace render
 }  // namespace ds
 
-#endif  // DRIFTSPEC_API_DRAWINGS_HPP
+#endif  // DRIFTSPEC_RENDER_DRAWINGS_HPP

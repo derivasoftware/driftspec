@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "ds/check/Selection.hpp"
 #include "ds/emit/Sink.hpp"
@@ -20,8 +21,14 @@ struct Request {
   const std::string& get(const std::string& name) const;
   /// The argument of that name, or `fallback` when the request does not carry it.
   std::string getOr(const std::string& name, const std::string& fallback) const;
-  /// The argument of that name, or `fallback`, written as a whole number; BadRequest when it is not one (DS-477).
+  /// The argument of that name written as a whole number, `fallback` when the request does not carry it; BadRequest
+  /// when it is not one.
   int number(const std::string& name, const std::string& fallback) const;
+  /// Whether the argument of that name is "true"; false when the request does not carry it (DS-474).
+  bool flag(const std::string& name) const;
+  /// The items of the argument of that name, each ended by a line break, the last one with or without it: the
+  /// identities a viewer opens framed on (DS-474); none when the request does not carry it.
+  std::vector<std::string> lines(const std::string& name) const;
 };
 
 /// How a use case ended: one of the outcomes its use case declares in design/usecases.ds (default, errors...), and for

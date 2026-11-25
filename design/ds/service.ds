@@ -34,6 +34,43 @@ package driftspec@ds {
     }
   }
 
+  requirement REQ-00301-1 {
+    status: draft
+    @refines REQ-00261-1
+    title: The see-design use case shall draw a workspace's diagram in svg and text, describe its render-IR and write the viewer's page framed on a diagram, so that no door draws
+    text:
+      see-design is asked a format and what the format needs, and is the one place a workspace is drawn: the
+      scene (json); the viewer's page (html), framed on what the diagram asked shows, or on the identities of
+      focus, titled, with a reader's stylesheet, embedded and how tall as asked; a diagram's layout, cells and
+      render-IR, described into the sink lent; and its drawing in svg or in text, wrapped to the width asked and
+      in colour when asked, drawn through render and handed to the sink as a verbatim text, as is the page. A
+      diagram the workspace lacks ends in no-diagram, saying it, and so does a page framed on one. Asked whole,
+      as the command line asks, a diagram is not drawn of what did not read whole (DS-433): when a file of its
+      own, or of what it shows, does not parse or is not UTF-8, or when it is missing or shows nothing while a
+      file of the workspace does not read whole, it ends in no-diagram and the outcome says each such finding as
+      ds check does, then why it is not drawn. Not asked whole, as the engine's interfaces ask, it draws what it
+      can. A format that is none of these fails NotImplemented. What see-design writes is byte for byte what the
+      door wrote of the same diagram, page and IR.
+    rationale:
+      DS-474 (from DS-409's CLI half, agreed with code-62, 2026-11-25): the command line still drew svg, text
+      and the IR at the door, over the workspace's model, and read the viewer's focus and DS-433's unread files
+      there too. Coordinator, 2026-11-25: the drawings reach the sink as a verbatim text, a bridge until DS-463
+      describes a figure as marks; the unread-file check runs only when the request asks it whole, so an
+      editor's preview of a diagram whose file is broken mid-edit still draws, as it always did.
+    tags: service, use-cases, render
+    verification VER-00322-1 {
+      status: draft
+      title: Integration tests confirm see-design draws every diagram of the golden workspaces in svg and text and describes its IR byte for byte as ds render wrote them, writes the viewer's page the command line and the engine both write, with a walkthrough's cards only when there is one, and says a diagram that is missing or did not read whole
+      method: test
+      tests:
+        tests/integration/ds/service/test_use_cases.cpp::TestUseCases.SeeDesignDrawsEveryDiagramAsDsRenderWroteIt
+        tests/integration/ds/service/test_use_cases.cpp::TestUseCases.SeeDesignWritesTheViewersPageFramedOnADiagram
+        tests/integration/ds/service/test_use_cases.cpp::TestUseCases.SeeDesignAskedWholeSaysADiagramThatDidNotReadWhole
+        tests/integration/ds/app/test_render_page.cpp::TestRenderPage.TheCommandLinesPageIsTheEnginesWithTheWalkthroughsCardsOnlyWhenThereAreWalkthroughs
+        tests/integration/ds/app/test_render_page.cpp::TestRenderPage.ThePageFramedOnADiagramIsTheEnginesFramedOnWhatItShows
+    }
+  }
+
   interface check-design {
     kind: library
     transport: in process, linked
@@ -102,8 +139,9 @@ package driftspec@ds {
     return document
   }
 
-  sequence see-design::viewer / no-diagram {         // the diagram named is not in the workspace: nothing is drawn
+  sequence see-design::viewer / no-diagram {         // the diagram named is not in the workspace, or asked whole did not read whole: nothing is drawn
     local sees: service::SeeDesign
+    -> sees.unread(model, name, workspace) -> why
     -> sees.diagram(model, name) -> ir
     return ir
   }
@@ -242,13 +280,17 @@ package driftspec@ds {
       never f in driftspec@ds@service
     }
 
-    // what a use case is asked: its arguments by name (the diagram, the question, the topic, the line...)
+    // what a use case is asked: its arguments by name (the diagram, the question, the topic, the line...), each a text,
+    // read as it is, as a whole number, as a flag or as lines
     class Request {
       @requirement REQ-00261-1
+      @requirement REQ-00301-1
       + arguments: std::map<std::string, std::string>
       + get(name: std::string) -> std::string fails BadRequest
       + getOr(name: std::string, fallback: std::string) -> std::string
-      + number(name: std::string, fallback: std::string) -> int fails BadRequest   // an argument written as a whole number (DS-477)
+      + number(name: std::string, fallback: std::string) -> int fails BadRequest   // a whole number, or BadRequest
+      + flag(name: std::string) -> bool                  // "true"; false when not given
+      + lines(name: std::string) -> std::vector<std::string>   // its items, each ended by a line break (the last may not be)
     }
 
     // how a use case ended: one of the outcomes its UC declares, and for any but default what happened, in a line, which
@@ -284,17 +326,40 @@ package driftspec@ds {
       + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented
     }
 
-    class SeeDesign : IUseCase {                        // UC-00002-1: see the design, the viewer's scene or a diagram drawn
+    // UC-00002-1: see the design, the viewer's scene or its page, or a diagram drawn; every drawing of a workspace is
+    // drawn here (DS-474), so no door draws. Its request contract, the arguments it reads:
+    //   format     json (the scene) · html (the viewer's page) · ir, layout, cells, svg, text (a diagram); any other is
+    //              NotImplemented
+    //   diagram    the diagram drawn; for html, the one the page is framed on (what it shows), no-diagram when none
+    //   focus      html: the identities the page is framed on, one a line, when no diagram is named
+    //   title, css, embed, height   html: the page's title, a reader's stylesheet, an iframe that carries it, how tall
+    //   width      a diagram: wrapped to it, columns for text and cells, pixels for svg; 0 lets it be
+    //   color      text: true for a terminal that shows colour
+    //   whole      a diagram: true asks it drawn only of what read whole (DS-433), as the command line asks; then a
+    //              file of its own or of what it shows that did not read whole, or one of the workspace when it is
+    //              missing or shows nothing, ends it in no-diagram, the outcome saying each finding and why, naming
+    //   workspace  the workspace as its door was given it. Not asked whole, it draws what it can, as an editor asks.
+    // The structure is described into the sink lent; a drawing and the page are handed to it as one verbatim text.
+    class SeeDesign : IUseCase {
       @interface see-design
       @requirement REQ-00261-1
+      @requirement REQ-00301-1
       - refs metamodel_: model::Metamodel
       - owns theme_: theme::Theme                       // the style its drawings are measured and drawn in (DS-393)
       + SeeDesign(metamodel: model::Metamodel)
       + viewer(model: model::Model) -> scene::SceneDocument
       + diagram(model: model::Model, name: std::string) -> std::optional<render::IrDocument>   // the IR as a value; none when no such diagram (DS-418)
+      + unread(model: model::Model, name: std::string, workspace: std::string) -> std::string   // what it reads that did not read whole (DS-433); "" when it read whole
       + name() -> std::string
       + needs(bound: model::Model, request: Request) -> check::Selection
-      + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented
+      // what escapes it: a request it cannot read, a format it does not write, a document its sink does not write
+      // (NotImplemented, as emit's sink and description say it), a diagram of a kind render does not draw, a second
+      // verbatim text
+      + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented, NotImplemented, std::invalid_argument, std::logic_error
+      - page(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, NotImplemented, std::logic_error   // the viewer's page, a verbatim text
+      - drawn(model: model::Model, format: std::string, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, NotImplemented, std::invalid_argument, std::logic_error
+      - picture(model: model::Model, format: std::string, name: std::string, request: Request) -> std::optional<std::string> fails BadRequest, std::invalid_argument   // svg through Drawings, or text; none when no such diagram
+      - static formats() -> std::vector<std::string>    // the formats it is asked in, for a message
     }
 
     class AskModel : IUseCase {                         // UC-00004-1: ask the model
@@ -336,6 +401,111 @@ package driftspec@ds {
       + name() -> std::string
       + needs(bound: model::Model, request: Request) -> check::Selection
       + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented
+    }
+
+    // every format is asked here: the scene described, the page and a diagram each handled by its own member; one that
+    // is none of them is a pair ds does not write
+    sequence SeeDesign::run {
+      opt a format it does not write / unknown {
+        -> formats() -> there
+        fail emit::NotImplemented
+      }
+      alt the scene / json {
+        -> viewer(model) -> document
+        -> format::DescriptionFactory::scene(document) -> description
+        -> description.describe(sink)
+      } else {
+        alt the page / html {
+          -> page(model, request, sink) -> outcome
+        } else {
+          -> drawn(model, format, request, sink) -> outcome
+        }
+      }
+      return outcome
+    }
+
+    // the page is the scene in JSON inside its template (DS-126): the scene and the focus travel compact inside it,
+    // written into a sink of their own, and the page, written whole, is handed to the sink lent as it is
+    sequence SeeDesign::page {
+      local query: query::IQuery
+      local html: format::IFormat<scene::SceneDocument>   // the page FormatFactory finds by name
+      -> request.lines(focus) -> framed
+      opt framed on a diagram / framed {
+        -> query::QueryFactory::of(model, metamodel_) -> query
+        -> query.ask(question, diagram) -> shown
+        opt no such diagram / no-diagram {
+          return noDiagram
+        }
+      }
+      -> request.flag(embed) -> embedded
+      -> request.number(height, fallback) -> tall
+      -> viewer(model) -> document
+      opt its scene has a walkthrough: the cards its steps show, drawn as render draws them (DS-470) / walked {
+        -> render::Drawings::of(model, metamodel_, theme_) -> drawings
+      }
+      -> emit::SinkFactory::json(false) -> inside
+      -> format::FormatFactory::scene() -> writers
+      -> html.write(document, options, inside) -> page
+      -> sink.verbatim(page)
+      return drawn
+    }
+
+    // a diagram is its IR (DS-126), handed as a document to what draws it (DS-458): its IR, layout and cells described
+    // into the sink lent; its drawing in svg or text drawn by picture and handed to the sink as it is, a bridge until a
+    // figure is described as marks (DS-463)
+    sequence SeeDesign::drawn {
+      -> request.get(diagram) -> name
+      opt asked whole, as the command line asks (DS-433) / whole {
+        -> unread(model, name, workspace) -> why
+      }
+      alt a drawing in svg or text / drawing {
+        -> picture(model, format, name, request) -> drawing
+        -> sink.verbatim(drawing)
+      } else {
+        -> diagram(model, name) -> ir
+        alt its IR / ir {
+          -> format::DescriptionFactory::ir(ir) -> description
+          -> description.describe(sink)
+        } else {
+          -> request.number(width, fallback) -> wide
+          -> format::DescriptionFactory::layout(ir, theme_, wide) -> description
+          -> description.describe(sink)
+        }
+      }
+      return drawn
+    }
+
+    // svg through render's Drawings, the one path a walkthrough's cards take too (DS-470); text through render's Text
+    sequence SeeDesign::picture {
+      local text: render::Text
+      alt in svg / svg {
+        -> request.number(width, fallback) -> wide
+        -> render::Drawings::svg(model, metamodel_, theme_, name, wide) -> drawing
+      } else {
+        -> diagram(model, name) -> ir
+        -> request.flag(color) -> coloured
+        -> request.number(width, fallback) -> wide
+        -> text.render(ir, coloured, wide) -> drawing
+      }
+      return drawing
+    }
+
+    sequence SeeDesign::drawn / no-diagram {          // no such diagram, or asked whole, one that did not read whole
+      -> request.get(diagram) -> name
+      -> unread(model, name, workspace) -> why
+      -> diagram(model, name) -> ir
+      return noDiagram
+    }
+
+    // what a diagram reads: its own file and those of what it shows; what did not read whole among them is said as ds
+    // check says it
+    sequence SeeDesign::unread {
+      local query: query::IQuery
+      -> model.find(id) -> diagram
+      -> query::QueryFactory::of(model, metamodel_) -> query
+      -> query.ask(question, name) -> shown
+      -> model.findings() -> findings
+      return said
     }
 
     // THE ONE PLACE THAT NAMES THE USE CASES: a door, or the workspace, asks for one by its name

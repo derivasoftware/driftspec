@@ -112,14 +112,6 @@ package driftspec@ds {
       never chooses-steps(x), x in b
     }
 
-    // a diagram drawn in svg: the one path that `ds render <ws> <D> -f svg` and a walkthrough's cards both take, so a
-    // card is exactly what render draws (DS-470)
-    class Drawings {
-      @requirement REQ-00244-1
-      + static svg(model: model::Model, metamodel: model::Metamodel, theme: theme::Theme, diagram: std::string, width: int) -> std::string
-      + static of(model: model::Model, metamodel: model::Metamodel, theme: theme::Theme) -> std::map<std::string, std::string>
-    }
-
     // A workspace loaded once (DS-173): its model kept for every question. When it grows, it becomes a
     // module of its own with its questions grouped by what they look at.
     class Workspace {
@@ -129,7 +121,6 @@ package driftspec@ds {
       @requirement REQ-00262-1
       - owns useCases_: service::UseCaseFactory   // the use cases it serves, aggregated: one reference to the metamodel (DS-408)
       - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
-      - owns theme_: theme::Theme             // the style its drawings are written in, made once with it (DS-393)
       - output_: Output                       // what it is loaded to give, kept for each reload (DS-420)
       - diagram_: std::string
       - given_: bool                          // made for an output: every reload checks what it reads
@@ -170,14 +161,22 @@ package driftspec@ds {
       + walk(sequence: std::string, path: std::string, depth: int) -> std::string
       + ask(question: std::string, subject: std::string) -> std::string
       + shows(diagram: std::string) -> std::string
-      // a format that is none of the five is a pair ds does not write: NotImplemented, never text instead (DS-398)
+      // render and page are the surface of a workspace made with madeFor (DS-474): see-design over the model it
+      // holds, with no prepare, since madeFor checked it for what it gives; a long-lived one, whose model is stale
+      // until a use case runs, asks run instead. A format that is none of the five is a pair ds does not write:
+      // NotImplemented, never text instead (DS-398)
       + render(diagram: std::string, format: std::string, width: int) -> std::string fails NotImplemented
+      // the viewer's page is see-design's too, through seen, framed on the identities given, one a line, written as it
+      // is into the text sink. It promises no failure, so it is written with no behaviour: what seen may fail with
+      // cannot happen for the request it builds (DS-474)
       + page(title: std::string, focus: std::vector<std::string>) -> std::string
       // each answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397)
       - static texts(list: std::vector<std::string>) -> std::string
       - static text(value: std::string) -> std::string
       - relations(relations: std::vector<model::Relation>) -> std::string
       - static answers(answers: std::vector<query::Answer>) -> std::string   // their description in the JSON sink (DS-398)
+      // see-design over the model it holds, for render and page (DS-474); a BadRequest is said as NotImplemented
+      - seen(request: service::Request, sink: emit::ISink) -> service::Outcome fails NotImplemented
     }
 
     // How an identity is written (model/Identity), asked by another language rather than copied into it.
@@ -301,34 +300,39 @@ package driftspec@ds {
       return json
     }
 
-    // a diagram is its IR: its layout and its cells described in JSON, the IR and the drawings written by their
-    // writers; a name that is none of them is a pair ds does not write, said before anything is drawn (DS-398)
+    // a diagram is see-design's (DS-474), run over the model a workspace made with madeFor holds, with no prepare: its
+    // IR, layout and cells in compact JSON, the layout and the cells a line after (DS-398), a drawing in svg or text in
+    // the text sink, as it is; a name that is none of the five is a pair ds does not write, said before anything is
+    // drawn (DS-453)
     sequence Workspace::render {
-      local ir: render::IrExport
-      local chosen: format::IFormat<render::IrDocument>   // the writer FormatFactory finds by name
-      -> format::FormatFactory::diagram(theme_) -> writers
       opt a format that is none of the five / unknown {
         fail NotImplemented
       }
-      -> ir.document(diagram) -> document
+      -> emit::SinkFactory::of(technology, false) -> sink
+      -> seen(request, sink) -> outcome
       opt no such diagram / no-diagram {
         return nothing
       }
-      -> emit::SinkFactory::json(false) -> sink
-      opt the IR itself / ir {                     // described here, compact; every other format is handed the document (DS-458)
-        -> format::DescriptionFactory::ir(document) -> irDescription
-        -> irDescription.describe(sink)
-        -> sink.result() -> json
-        return json
-      }
-      alt its layout or its cells / described {
-        -> format::DescriptionFactory::layout(document, theme_, width) -> description
-        -> description.describe(sink)
-        -> sink.result() -> json
-        return json
-      }
-      -> chosen.write(document, options, sink) -> drawing
+      -> sink.result() -> drawing
       return drawing
+    }
+
+    // see-design, the use case its factory makes by name, run over the model it holds for render and page. Neither
+    // handler fires in practice: render checks the format before it runs, both build the request themselves, and
+    // see-design is always one of the use cases. A BadRequest becomes NotImplemented only because these doors build
+    // their own request: one here would be a bug in Workspace, said as the one failure render promises; emit's
+    // NotImplemented is that same failure, named as render names it
+    sequence Workspace::seen {
+      local see: service::IUseCase
+      attempt {
+        -> useCases_.of(seeDesign) -> see
+        -> see.run(model_, request, sink) -> outcome
+      } on BadRequest {
+        fail NotImplemented
+      } on emit::NotImplemented {
+        fail NotImplemented
+      }
+      return outcome
     }
 
     // a workspace bound and not yet checked (DS-408): what a use case reads of it says which steps run

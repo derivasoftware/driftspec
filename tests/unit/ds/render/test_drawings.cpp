@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "ds/api/Drawings.hpp"
 #include "ds/api/Workspace.hpp"
 #include "ds/model/Metamodel.hpp"
+#include "ds/render/Drawings.hpp"
 #include "ds/theme/Theme.hpp"
 
 namespace {
@@ -35,11 +35,11 @@ TEST(TestDrawings, EveryDiagramButAWalkthroughIsDrawnAsItIsDrawnAlone) {
   const ds::model::Metamodel metamodel;
   const ds::theme::Theme theme;
   const auto ws = ds::api::Workspace::madeFor(metamodel, {{"p.ds", kDesign}});
-  const auto all = ds::api::Drawings::of(ws.model(), metamodel, theme);
+  const auto all = ds::render::Drawings::of(ws.model(), metamodel, theme);
   ASSERT_EQ(all.size(), 1u);
-  EXPECT_EQ(all.at("CL_P"), ds::api::Drawings::svg(ws.model(), metamodel, theme, "CL_P", 0));
+  EXPECT_EQ(all.at("CL_P"), ds::render::Drawings::svg(ws.model(), metamodel, theme, "CL_P", 0));
   EXPECT_EQ(all.at("CL_P").rfind("<svg", 0), 0u);
-  EXPECT_EQ(ds::api::Drawings::svg(ws.model(), metamodel, theme, "CL_None", 0), "");
+  EXPECT_EQ(ds::render::Drawings::svg(ws.model(), metamodel, theme, "CL_None", 0), "");
 }
 
 }  // namespace

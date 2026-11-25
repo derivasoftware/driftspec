@@ -278,4 +278,18 @@ TEST_F(TestJsonSink, ADocumentItAcceptedNothingOfFailsNotImplementedNamingIt) {
   EXPECT_EQ(sink.result(), "{}");
 }
 
+TEST_F(TestJsonSink, AVerbatimTextIsNotImplemented) {
+  // a drawing in svg or text is no JSON (DS-474): the sink says it cannot write it, rather than skip it
+  ds::emit::JsonSink sink(false, true);
+  try {
+    sink.verbatim("<svg/>");
+    FAIL() << "a drawing was skipped by the JSON sink";
+  } catch (const ds::emit::NotImplemented& e) {
+    EXPECT_EQ(e.technology(), "json");
+    EXPECT_EQ(std::string(e.what()), "the verbatim text is not written in json");
+  }
+  sink.beginList().endList();  // nothing of it was written: the sink writes the next document as before
+  EXPECT_EQ(sink.result(), "[]");
+}
+
 }  // namespace

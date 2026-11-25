@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "ds/model/Manual.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/query/Filter.hpp"
 
@@ -19,14 +20,6 @@ struct Answer {
   std::string detail;     ///< what else the question asked: a direction, a diagram kind, a title, a finding
   std::string from = {};  ///< for a relation question, the relation's two ends as the model holds them (DS-445);
   std::string to = {};    ///< "" for every other question, whose answers carry neither
-};
-
-/// A question `ask` understands, with the subject it takes (DS-436): the one table the usage, the help and the
-/// check of a subject read.
-struct Question {
-  std::string name;
-  std::string subject;  ///< as a usage writes it: "" for none, <subject> when it needs one, [subject] when it may take one
-  std::string takes;    ///< what it takes, in words: said to a subject of another kind
 };
 
 /// The query module's entry point (DS-127): what the rest of ds asks of the model. A named question
@@ -49,9 +42,9 @@ class Query : public IQuery {
   /// The identities the filter takes from the model.
   std::set<std::string> select(const IFilter& filter) const override;
 
-  /// The questions `ask` understands, with the subject each takes.
-  static std::vector<Question> questions();
-  /// The questions as a usage line: diagrams · entities [scope] · relations <identity> · ...
+  /// The questions `ask` understands, with the subject each takes: the manual's one table (DS-436, DS-474).
+  static std::vector<model::Question> questions();
+  /// The questions as a usage line, as the manual writes it: diagrams · entities [scope] · relations <identity> · ...
   static std::string usage();
 
   /// Answer `question` about `subject` ("" for the questions that take none); an unknown question, a missing
@@ -73,13 +66,13 @@ class Query : public IQuery {
   std::vector<Answer> walkthroughs(const std::string& subject) const;  ///< the walkthroughs, or one's steps in order (DS-471)
 
  private:
-  bool known(const std::string& id) const;                                            // an entity, or a scope something is declared in
-  std::string refused(const Question& question, const std::string& subject) const;    // why the subject is of no kind it takes; ""
-  bool within(const model::Location& at, const std::string& id) const;                // on the entity or on anything it holds
-  static bool isFile(const std::string& subject);                                     // a subject that names a file: ends in .ds
-  std::vector<std::string> nearTo(const std::string& name) const;                     // identities ending in the name, for a hint
-  Answer entityAnswer(const model::Entity& entity, const std::string& detail) const;  // an entity, its kind by name
-  static bool endsWith(const std::string& text, const std::string& suffix);           // a finding's file, the one asked
+  bool known(const std::string& id) const;                                                 // an entity, or a scope something is declared in
+  std::string refused(const model::Question& question, const std::string& subject) const;  // why the subject is of no kind it takes; ""
+  bool within(const model::Location& at, const std::string& id) const;                     // on the entity or on anything it holds
+  static bool isFile(const std::string& subject);                                          // a subject that names a file: ends in .ds
+  std::vector<std::string> nearTo(const std::string& name) const;                          // identities ending in the name, for a hint
+  Answer entityAnswer(const model::Entity& entity, const std::string& detail) const;       // an entity, its kind by name
+  static bool endsWith(const std::string& text, const std::string& suffix);                // a finding's file, the one asked
   const model::Model& model_;
   const model::Metamodel& metamodel_;
 };

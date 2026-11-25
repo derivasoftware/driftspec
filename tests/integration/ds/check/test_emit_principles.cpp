@@ -55,11 +55,24 @@ class TestEmitPrinciples : public ::testing::Test {
 
   const std::string throughInterface = "driftspec@ds@emit::sinks-are-reached-through-their-interface";
   const std::string emitAlone = "driftspec@ds@emit::emit-depends-on-no-engine-module";
+  const std::string verbatimOnce = "driftspec@ds@emit::a-verbatim-text-is-handed-once";
 };
 
 TEST_F(TestEmitPrinciples, TheDesignOfDsKeepsTheRulesOfEmit) {
   const std::vector<std::string> rules = broken({});
-  for (const std::string& rule : {throughInterface, emitAlone}) EXPECT_FALSE(has(rules, rule)) << rule;
+  for (const std::string& rule : {throughInterface, emitAlone, verbatimOnce}) EXPECT_FALSE(has(rules, rule)) << rule;
+}
+
+/// A verbatim text is the whole of its document (DS-474): a description that hands its sink two of them is told by the
+/// rule, as the sink refuses the second when it runs; one, as see-design hands a drawing, is not.
+TEST_F(TestEmitPrinciples, ADescriptionThatHandsTwoVerbatimTextsIsTold) {
+  const std::vector<std::string> twice = broken({{"ds/format.ds", "    sequence ADescription::describe {",
+                                                  "      -> out_sink.verbatim(drawing)\n      -> out_sink.verbatim(again)\n"}});
+  EXPECT_TRUE(has(twice, verbatimOnce));
+  EXPECT_FALSE(has(twice, emitAlone));
+  const std::vector<std::string> once =
+      broken({{"ds/format.ds", "    sequence ADescription::describe {", "      -> out_sink.verbatim(drawing)\n"}});
+  EXPECT_FALSE(has(once, verbatimOnce));
 }
 
 TEST_F(TestEmitPrinciples, AFormatLentTheJsonSinkIsTold) {

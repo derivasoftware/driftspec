@@ -5,9 +5,7 @@
 
 #include "ds/api/Workspace.hpp"
 #include "ds/app/ICommand.hpp"
-#include "ds/format/Format.hpp"
 #include "ds/model/Metamodel.hpp"
-#include "ds/model/Model.hpp"
 #include "ds/render/Ir.hpp"
 #include "ds/service/UseCase.hpp"
 #include "ds/theme/Theme.hpp"
@@ -48,10 +46,10 @@ class ExportCommand : public ICommand {
 
 /// ds render <workspace|ir.json> [diagram] [-f ...] (UC-00002-1): the workspace opened for what the format shows of
 /// it (the viewer reads every step of the check, a drawing only what it draws, DS-376) and see-design run on it for
-/// the scene (json) and a diagram's layout and cells. What see-design does not offer yet is the door's still: the
-/// viewer's page around the scene with its focus, a diagram drawn in svg and text (until DS-400) or written as its IR,
-/// the files a diagram reads that did not read whole (DS-433), and a render-IR document someone else produced, which
-/// has no workspace. -o writes to a file.
+/// every format: the scene and the page, a diagram's IR, layout and cells, and its drawings in svg and text, each in
+/// the sink of its technology, with every option the command line was given (DS-474). The door draws nothing of a
+/// workspace and holds no model; what it draws itself is a render-IR document someone else produced, which has no
+/// workspace and no use case. -o writes to a file.
 class RenderCommand : public ICommand {
  public:
   RenderCommand(const model::Metamodel& metamodel, const theme::Theme& theme) : metamodel_(metamodel), theme_(theme) {}
@@ -63,23 +61,17 @@ class RenderCommand : public ICommand {
  private:
   /// A render-IR document, drawn as -f names: it has no workspace, so the viewer has none to show.
   service::Outcome document() const;
-  /// The viewer's scene, described by see-design into the JSON sink, indented for a reader (DS-398).
-  service::Outcome scene(api::Workspace& workspace) const;
-  /// The viewer as one page around the scene, framed on the diagram named (DS-126).
-  service::Outcome page(const api::Workspace& workspace) const;
-  /// One diagram: its layout and its cells described by see-design, its drawings and its IR written by their writers.
-  service::Outcome diagram(api::Workspace& workspace) const;
-  /// What a diagram reads that did not read whole (DS-433), said finding by finding: "" when it read whole.
-  std::string unread(const model::Model& model) const;
-  /// A diagram's IR drawn as -f names: its layout, its cells, or a drawing in svg or text; `workspace` when the IR is a
-  /// workspace's.
-  std::string draw(const render::IrDocument& ir, bool workspace) const;
-  format::FormatOptions drawingOptions(bool workspace) const;
+  /// What see-design is asked: the format, the diagram, the width, whether the terminal shows colour, the workspace as
+  /// it was given and that a diagram is drawn only of what read whole (DS-433), and for the page its title, a reader's
+  /// stylesheet and whether it is embedded and how tall.
+  service::Request request() const;
+  /// A render-IR document drawn as -f names: its layout, its cells, or a drawing in svg or text (DS-458).
+  std::string draw(const render::IrDocument& ir) const;
   /// The outcome, once the text is written where -o says; unwritten when the file cannot be.
   service::Outcome written(const std::string& text, const std::string& end, const service::Outcome& outcome) const;
 
   const model::Metamodel& metamodel_;
-  const theme::Theme& theme_;  ///< the style every drawing is written in, made once where the command starts (DS-393)
+  const theme::Theme& theme_;  ///< the style a render-IR document is drawn in, made once where the command starts (DS-393)
   std::string input_;
   std::string diagram_;
   std::string format_ = "html";

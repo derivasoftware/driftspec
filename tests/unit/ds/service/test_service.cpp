@@ -10,9 +10,13 @@
 #include "ds/api/Api.hpp"
 #include "ds/emit/NotImplemented.hpp"
 #include "ds/emit/SinkFactory.hpp"
+#include "ds/emit/TextSink.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
 #include "ds/service/UseCases.hpp"
+#include "ds/theme/Theme.hpp"
 
 namespace {
 
@@ -52,6 +56,7 @@ class Counted : public ds::emit::ISink {
   ds::emit::ISink& table(const std::vector<std::string_view>& columns) override { return mark(to_.table(columns)); }
   ds::emit::ISink& row(const std::vector<std::string_view>& cells) override { return mark(to_.row(cells)); }
   ds::emit::ISink& endTable() override { return mark(to_.endTable()); }
+  ds::emit::ISink& verbatim(std::string_view text) override { return mark(to_.verbatim(text)); }
   /// The end of a description writes nothing: the sink it writes into says whether it accepted any of it (DS-399).
   ds::emit::ISink& described(std::string_view document) override {
     to_.described(document);
@@ -104,6 +109,21 @@ TEST_F(TestRequest, AnArgumentIsReadByItsNameAndAMissingOneIsABadRequestOrItsFal
   EXPECT_THROW(request.get("subject"), ds::service::BadRequest);
 }
 
+TEST_F(TestRequest, ANumberAFlagAndLinesAreReadByTheirName) {
+  const Request request{{{"width", "60"}, {"wide", "sixty"}, {"color", "true"}, {"embed", "yes"}, {"focus", "p@m::C\n\np@m::D"}}};
+  EXPECT_EQ(request.number("width", "0"), 60);
+  EXPECT_EQ(request.number("height", "640"), 640);  // not given: its fallback
+  EXPECT_THROW(request.number("wide", "0"), ds::service::BadRequest);
+  EXPECT_TRUE(request.flag("color"));
+  EXPECT_FALSE(request.flag("embed"));  // only "true" is true
+  EXPECT_FALSE(request.flag("whole"));  // not given
+  EXPECT_EQ(request.lines("focus"), (std::vector<std::string>{"p@m::C", "", "p@m::D"}));
+  const Request ended{{{"focus", "a\nb\n"}}}, empty{{{"focus", "\n"}}};
+  EXPECT_EQ(ended.lines("focus"), (std::vector<std::string>{"a", "b"}));  // each item ended by a line break
+  EXPECT_EQ(empty.lines("focus"), (std::vector<std::string>{""}));        // one empty item
+  EXPECT_TRUE(request.lines("none").empty());
+}
+
 TEST_F(TestBadRequest, ABadRequestIsAnInvalidArgumentThatSaysWhatIsMissing) {
   try {
     Request{}.get("diagram");
@@ -131,7 +151,7 @@ TEST_F(TestSeeDesign, ADiagramIsDrawnAsItsLayoutAndOneTheWorkspaceLacksIsNoDiagr
   EXPECT_TRUE(see.diagram(model, "CL_P").has_value());
   EXPECT_EQ(run(see, {{{"format", "layout"}, {"diagram", "CL_P"}}}).second, "default");
   EXPECT_EQ(run(see, {{{"format", "layout"}, {"diagram", "CL_Nope"}}}), (std::pair<std::string, std::string>{"", "no-diagram"}));
-  EXPECT_THROW(run(see, {{{"format", "svg"}, {"diagram", "CL_P"}}}), ds::emit::NotImplemented);               // a writer until DS-399
+  EXPECT_THROW(run(see, {{{"format", "svg"}, {"diagram", "CL_P"}}}), ds::emit::NotImplemented);  // no JSON: its sink says so (DS-474)
   EXPECT_FALSE(see.needs(model, {{{"format", "layout"}, {"diagram", "CL_P"}}}).has(ds::check::Step::Rules));  // a class diagram
   EXPECT_TRUE(see.needs(model, {{{"format", "json"}}}).has(ds::check::Step::Rules));                          // the viewer reads every step
 }
@@ -166,6 +186,61 @@ TEST_F(TestEditDesign, TheWordsThatMayComeAtAPlaceAreDescribedAndALineThatIsNoNu
   EXPECT_THROW(run(edit, {{{"text", ""}, {"line", "one"}, {"column", "0"}}}), ds::service::BadRequest);
 }
 
+/// A drawing is see-design's (DS-474): drawn through render as it draws, and handed to the sink lent as one verbatim text,
+/// so a door draws nothing; the text sink writes it as it is.
+TEST_F(TestSeeDesign, ADrawingIsHandedToTheSinkAsOneVerbatimTextAsRenderDrawsIt) {
+  const ds::service::SeeDesign see(metamodel);
+  const ds::theme::Theme theme;
+  const ds::render::IrDocument ir = *see.diagram(model, "CL_P");
+  ds::emit::TextSink sink;
+  EXPECT_EQ(see.run(model, {{{"format", "svg"}, {"diagram", "CL_P"}, {"width", "300"}}}, sink).name, "default");
+  EXPECT_EQ(sink.result(), ds::render::Svg(theme).render(ir, 300));
+  for (const bool color : {false, true}) {
+    EXPECT_EQ(see.run(model, {{{"format", "text"}, {"diagram", "CL_P"}, {"color", color ? "true" : "false"}}}, sink).name, "default");
+    EXPECT_EQ(sink.result(), ds::render::Text(theme).render(ir, color, 0)) << color;
+  }
+  // one verbatim text a document: the sink refuses a second, so a drawing is never two
+  EXPECT_EQ(see.run(model, {{{"format", "text"}, {"diagram", "CL_P"}}}, sink).name, "default");
+  EXPECT_THROW(see.run(model, {{{"format", "text"}, {"diagram", "CL_P"}}}, sink), std::logic_error);
+  sink.result();
+  // the IR is described, as the structure it is: the text sink writes nothing of it
+  EXPECT_THROW(see.run(model, {{{"format", "ir"}, {"diagram", "CL_P"}}}, sink), ds::emit::NotImplemented);
+  EXPECT_EQ(run(see, {{{"format", "text"}, {"diagram", "CL_Nope"}}}), (std::pair<std::string, std::string>{"", "no-diagram"}));
+  EXPECT_THROW(run(see, {{{"format", "svg"}, {"diagram", "CL_P"}, {"width", "wide"}}}), ds::service::BadRequest);
+}
+
+TEST_F(TestSeeDesign, ThePageIsFramedOnWhatTheDiagramShowsAndOneTheWorkspaceLacksIsNoDiagram) {
+  const ds::service::SeeDesign see(metamodel);
+  ds::emit::TextSink sink;
+  EXPECT_EQ(see.run(model, {{{"format", "html"}, {"title", "the <p> design"}, {"diagram", "CL_P"}}}, sink).name, "default");
+  const std::string page = sink.result();
+  EXPECT_NE(page.find("<html"), std::string::npos);
+  EXPECT_NE(page.find("the &lt;p&gt; design"), std::string::npos);
+  EXPECT_NE(page.find("const FOCUS=[\"p@m\",\"p@m::C\"]"), std::string::npos);  // what CL_P shows
+  EXPECT_EQ(see.run(model, {{{"format", "html"}, {"title", "p"}, {"focus", "p@m::C\np\n"}}}, sink).name, "default");
+  EXPECT_NE(sink.result().find("const FOCUS=[\"p@m::C\",\"p\"]"), std::string::npos);  // the identities given, one a line
+  EXPECT_EQ(see.run(model, {{{"format", "html"}, {"title", "p"}, {"embed", "true"}, {"height", "300"}}}, sink).name, "default");
+  const std::string frame = sink.result();
+  EXPECT_EQ(frame.rfind("<iframe", 0), 0u);
+  EXPECT_NE(frame.find("height:300px"), std::string::npos);
+  const auto [written, end] = run(see, {{{"format", "html"}, {"diagram", "CL_Nope"}}});
+  EXPECT_EQ(end, "no-diagram");
+  EXPECT_EQ(written, "");
+  EXPECT_TRUE(see.needs(model, {{{"format", "html"}}}).has(ds::check::Step::Rules));  // the viewer reads every step
+}
+
+TEST_F(TestSeeDesign, AFormatItDoesNotWriteIsNotImplemented) {
+  const ds::service::SeeDesign see(metamodel);
+  try {
+    run(see, {{{"format", "yaml"}, {"diagram", "CL_P"}}});
+    FAIL() << "a format see-design does not write was written";
+  } catch (const ds::emit::NotImplemented& e) {
+    EXPECT_EQ(e.document(), "diagram");
+    EXPECT_EQ(e.technology(), "yaml");
+    EXPECT_EQ(std::string(e.what()), "the diagram is not written in yaml; there is: cells html ir json layout svg text");
+  }
+}
+
 /// A sink that builds what it is given elsewhere and has no text to give back, as a Python sink builds objects (DS-459):
 /// its result() is empty. What was written through it is taken from where it went.
 class NoText : public ds::emit::ISink {
@@ -184,6 +259,7 @@ class NoText : public ds::emit::ISink {
   ds::emit::ISink& table(const std::vector<std::string_view>& columns) override { return keep(to_.table(columns)); }
   ds::emit::ISink& row(const std::vector<std::string_view>& cells) override { return keep(to_.row(cells)); }
   ds::emit::ISink& endTable() override { return keep(to_.endTable()); }
+  ds::emit::ISink& verbatim(std::string_view text) override { return keep(to_.verbatim(text)); }
   ds::emit::ISink& described(std::string_view document) override {
     to_.described(document);
     return *this;

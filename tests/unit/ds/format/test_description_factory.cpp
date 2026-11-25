@@ -43,6 +43,7 @@ class TestDescriptionFactory : public ::testing::Test {
     ISink& table(const std::vector<std::string_view>& columns) override { return word("table" + joined(columns)); }
     ISink& row(const std::vector<std::string_view>& cells) override { return word("row" + joined(cells)); }
     ISink& endTable() override { return word("/table"); }
+    ISink& verbatim(std::string_view text) override { return word("<" + std::string(text) + ">"); }
     ISink& described(std::string_view) override { return *this; }
     std::string result() override {
       std::string out;

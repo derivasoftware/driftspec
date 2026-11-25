@@ -94,7 +94,7 @@ TEST_F(TestSceneTrace, AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealises
 
 TEST_F(TestSceneTrace, ThePageListsTheRequirementsInTheBottomPanel) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"}, sink);
+  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {"hola"}, sink);
   EXPECT_NE(page.find("data-tab=\"reqs\""), std::string::npos);  // a tab beside the tours
   const std::string scene = packedIn(page);
   EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\",\"signature\","

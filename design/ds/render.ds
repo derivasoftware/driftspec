@@ -328,8 +328,9 @@ package driftspec@ds {
 
     // what projects a diagram: the export, the projectors and what they are built of (DS-372)
     definition projects(c) {
-      title: c is the export, a projector, the one that names them, or what a projector is built of
+      title: c is the export, a projector, the one that names them, what a projector is built of, or the drawings of a model's diagrams through the export
       if c = driftspec@ds@render::IrExport
+      if c = driftspec@ds@render::Drawings
       if c = driftspec@ds@render::IProjector
       if c = driftspec@ds@render::ProjectorFactory
       if c inherits driftspec@ds@render::IProjector
@@ -373,6 +374,15 @@ package driftspec@ds {
       for class c in driftspec@ds@render
       where not projects(c)
       never depends(c, x), x in driftspec@ds@axis
+    }
+
+    // a diagram drawn in svg: the one path that `ds render <ws> <D> -f svg` and a walkthrough's cards both take, so a
+    // card is exactly what render draws (DS-470). It is render's, below every door (DS-474): see-design draws through
+    // it, its IR exported from the model and drawn by Svg
+    class Drawings {
+      @requirement REQ-00244-1
+      + static svg(model: model::Model, metamodel: model::Metamodel, theme: theme::Theme, diagram: std::string, width: int) -> std::string
+      + static of(model: model::Model, metamodel: model::Metamodel, theme: theme::Theme) -> std::map<std::string, std::string>
     }
 
     // the projection (DS-369): the projector of a diagram's kind draws its body, from what the query's filter of the

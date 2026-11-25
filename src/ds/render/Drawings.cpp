@@ -1,24 +1,19 @@
-#include "ds/api/Drawings.hpp"
+#include "ds/render/Drawings.hpp"
 
 #include <optional>
 
-#include "ds/emit/SinkFactory.hpp"
-#include "ds/format/FormatFactory.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/render/IrExport.hpp"
+#include "ds/render/Svg.hpp"
 
 namespace ds {
-namespace api {
+namespace render {
 
 std::string Drawings::svg(const model::Model& model, const model::Metamodel& metamodel, const theme::Theme& theme,
                           const std::string& diagram, int width) {
-  const std::optional<render::IrDocument> document =
-      render::IrExport(model, metamodel).document(model::Identity::ofDiagram(diagram).text());
+  const std::optional<IrDocument> document = IrExport(model, metamodel).document(model::Identity::ofDiagram(diagram).text());
   if (!document) return "";
-  format::FormatOptions options;
-  options.width = width;
-  const auto sink = emit::SinkFactory::json(false);
-  return format::FormatFactory::diagram(theme).at("svg")->write(*document, options, *sink);
+  return Svg(theme).render(*document, width);  // as the svg writer drew it before it went (DS-474)
 }
 
 std::map<std::string, std::string> Drawings::of(const model::Model& model, const model::Metamodel& metamodel, const theme::Theme& theme) {
@@ -33,5 +28,5 @@ std::map<std::string, std::string> Drawings::of(const model::Model& model, const
   return out;
 }
 
-}  // namespace api
+}  // namespace render
 }  // namespace ds
