@@ -12,7 +12,8 @@
         "line": 23
       },
       "message": "B::run calls p@m::Leaf::nothing, which p@m::Leaf does not declare",
-      "severity": "warning"
+      "severity": "warning",
+      "subject": "p@m::B::run::sequence"
     },
     {
       "code": "E-MSG-ARITY",
@@ -22,7 +23,8 @@
         "line": 24
       },
       "message": "p@m::Leaf::work takes 1 parameter, 2 given",
-      "severity": "error"
+      "severity": "error",
+      "subject": "p@m::Leaf::work"
     },
     {
       "code": "W-DIAGRAM-UNDECLARED",
@@ -32,7 +34,8 @@
         "line": 47
       },
       "message": "SEQ_Loose includes p@m::Nobody::run, which the workspace declares nowhere",
-      "severity": "warning"
+      "severity": "warning",
+      "subject": "diagram:SEQ_Loose"
     }
   ],
   "relations": 37
