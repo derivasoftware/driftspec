@@ -412,8 +412,8 @@ package driftspec@ds {
         tests/integration/viewer/tours.test.ts::every interface command of ds's design is a tour that reaches the model and comes back
     }
 
-    requirement REQ-00074-1 {
-      status: approved
+    requirement REQ-00074-2 {
+      status: draft
       @refines SREQ-00013-1
       title: The scene shall write each behaviour once and name its nodes by index, so the page of a design stays small
       text:
@@ -422,23 +422,28 @@ package driftspec@ds {
         names the behaviour it starts from, and a viewer expands it to the
         depth asked. Every record of the document is an array whose columns
         the document names in fields, nodes, links, calls and diagrams name
-        nodes and behaviours by index, and places are whole units. The page
-        of ds's own design stays under 250 KB with the viewer in it.
+        nodes and behaviours by index, and places are whole units. So a
+        behaviour called from many places costs the page once: what a caller
+        adds is its own call, never the steps its tour replays.
       rationale:
         Owner, 2026-11-06: keep the page small and usable. The tours of ds
         replayed 3,147 steps out of 229 distinct calls, every identity spelt
         in full: written once, the page went from 593 KB to 146 KB, and depth
-        is no longer capped by what was written.
+        is no longer capped by what was written. Revision 2 (DS-452,
+        2026-11-25): the bound of 250 KB on ds's own design broke as the
+        design grew (256 KB at DS-392), a number on a design that is meant to
+        grow; what keeps the page small is held on a design made for it.
       tags: render, scene, size
     }
 
-    verification VER-00083-4 {
-      status: approved
-      @requirement REQ-00074-1
-      title: Integration tests confirm ds's design writes each behaviour once and its page stays under 250 KB, and a behaviour written once is replayed by every tour that calls it
+    verification VER-00083-5 {
+      status: draft
+      @requirement REQ-00074-2
+      title: Integration tests confirm ds's design writes each behaviour once, a caller adds to the page its call and not the steps it replays, and a behaviour written once is replayed by every tour that calls it
       method: test
       tests:
-        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce
+        tests/integration/ds/scene/test_scene_design.cpp::TestSceneOfTheDesign.EachBehaviourOfTheDesignIsWrittenOnce
+        tests/integration/ds/scene/test_scene_page_size.cpp::TestScenePageOfACalledBehaviour.CallersAddTheirCallsToThePageNotTheStepsTheyReplay
         tests/integration/viewer/tours.test.ts::a behaviour written once is replayed by every tour that calls it
     }
 
@@ -617,7 +622,7 @@ package driftspec@ds {
     }
 
     dataclass Call {                         // one call of a behaviour: whom it calls, the behaviour it goes on into
-      @requirement REQ-00074-1
+      @requirement REQ-00074-2
       + to: std::string
       + label: std::string
       + expands: int
@@ -625,7 +630,7 @@ package driftspec@ds {
     }
 
     dataclass Behaviour {                    // a sequence along one scenario, its calls in order, written once
-      @requirement REQ-00074-1
+      @requirement REQ-00074-2
       + id: std::string
       + subject: std::string
       + scenario: std::string
