@@ -6,7 +6,6 @@
 <title>/*TITLE*/ · DriftSpec</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* theme: viewer, written from the theme (DS-393): tools/theme.py --write */
 :root{
@@ -284,7 +283,11 @@ let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
 // the playground's look (DS-495): the theme set on the page, and the fonts once they arrive, redraw the map in them
 new MutationObserver(()=>{css(); loop();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>loop());
+// the playground's fonts, asked for once the page has loaded so the first draw never waits on the network; the system's
+// meanwhile, or for good offline, and the map drawn again when they arrive
+if(document.fonts) document.fonts.addEventListener('loadingdone',()=>loop());
+addEventListener('load',()=>setTimeout(()=>{const l=document.createElement('link'); l.rel='stylesheet';
+  l.href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap'; document.head.appendChild(l);},0));
 const LETTER={class:'C',interface:'I',dataclass:'D',enum:'E',function:'F',abstract:'A',package:'P',module:'M'}, TIP=.75;
 // a kind's badge, as the playground draws one: a disc in its colour, its letter in the panel's
 function badge(x,y,r,col,letter){ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fillStyle=col; ctx.fill(); const t=r*1.36;
