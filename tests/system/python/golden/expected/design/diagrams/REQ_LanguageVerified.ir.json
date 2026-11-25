@@ -1436,6 +1436,7 @@
     }
   ],
   "ir": 1,
+  "kind": "requirement",
   "nodes": [
     {
       "classifier": "requirement",

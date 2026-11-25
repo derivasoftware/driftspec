@@ -83,6 +83,7 @@
     }
   ],
   "ir": 1,
+  "kind": "sequence",
   "nodes": [
     {
       "classifier": "actor",

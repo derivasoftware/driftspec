@@ -37,6 +37,7 @@
     }
   ],
   "ir": 1,
+  "kind": "state",
   "nodes": [
     {
       "classifier": "initial",

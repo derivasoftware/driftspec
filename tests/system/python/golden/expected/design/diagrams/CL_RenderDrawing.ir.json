@@ -38,6 +38,7 @@
     }
   ],
   "ir": 1,
+  "kind": "class",
   "nodes": [
     {
       "classifier": "package",
