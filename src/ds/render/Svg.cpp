@@ -11,6 +11,7 @@
 #include "ds/render/ComposerFactory.hpp"
 #include "ds/render/EdgeMarkup.hpp"
 #include "ds/render/Lane.hpp"
+#include "ds/render/SequenceLayout.hpp"
 #include "ds/text/Text.hpp"
 #include "ds/theme/Writers.hpp"
 
@@ -366,25 +367,16 @@ std::string Svg::dataAttrs(const std::map<std::string, std::string>& refs) {
   return out;
 }
 
-std::string Svg::sequenceSvg(const IrDocument& doc) const {
+std::string Svg::sequenceSvg(const Figure& figure) const {
+  const IrDocument& doc = figure.document;
+  const SequenceLayout& s = *figure.sequence;
   const Metrics& M = metrics_;
   const std::string& style = style_;
   const std::string& sequenceStyle = sequenceStyle_;
-  const int HEAD_H = 38, ROW_H = 30, SELF_H = 42, MARGIN = 20, SELF_W = 32;
-  const int FRAME_LEAD = 30, FRAME_GAP = 8, FRAME_HEAD = 22, DIVIDER_LEAD = 26, FRAME_INSET = 16;
-  std::vector<Lane> lanes;
-  std::map<std::string, size_t> laneOf;
-  for (const auto& n : doc.nodes) {
-    if (n.kind != "lifeline") continue;
-    laneOf[n.id] = lanes.size();
-    const bool actor = n.classifier == "actor";
-    lanes.push_back({&n, 0, static_cast<int>(n.label.size()) * M.CHAR_W + (actor ? 8 : 2 * M.PAD_X)});
-  }
-  std::vector<const IrEdge*> messages;
-  for (const auto& e : doc.edges) {
-    if (e.kind == "message" && laneOf.count(e.from) && laneOf.count(e.to)) messages.push_back(&e);
-  }
-  std::sort(messages.begin(), messages.end(), [](const IrEdge* a, const IrEdge* b) { return a->order < b->order; });
+  const int HEAD_H = s.headHeight, MARGIN = s.margin, SELF_W = s.selfWidth, FRAME_HEAD = 22;
+  const std::vector<Lane>& lanes = s.lanes;
+  const std::map<std::string, size_t>& laneOf = s.laneOf;
+  const std::vector<const IrEdge*>& messages = s.messages;
   const std::string px = idPrefix(doc.title);
   const std::string rootId = px + "root";
   if (lanes.empty()) {
@@ -393,109 +385,7 @@ std::string Svg::sequenceSvg(const IrDocument& doc) const {
            style + "</style><text x=\"10\" y=\"25\">" + text::escapeXml(doc.notice.empty() ? "Nothing to draw." : doc.notice) +
            "</text></svg>\n";
   }
-
-  // ---- lanes: gaps wide enough for the heads and for the labels crossing them
-  const size_t count = lanes.size();
-  std::vector<int> gap(count, 0);
-  auto half = [&](size_t i) { return (lanes[i].headW + 1) / 2; };
-  for (size_t i = 0; i + 1 < count; ++i) gap[i] = half(i) + half(i + 1) + 24;
-  auto need = [&](size_t a, size_t b, int width) {
-    if (a >= b || b >= count) return;
-    int have = 0;
-    for (size_t j = a; j < b; ++j) have += gap[j];
-    if (have >= width) return;
-    const int deficit = width - have, each = deficit / static_cast<int>(b - a);
-    for (size_t j = a; j < b; ++j) gap[j] += each;
-    gap[b - 1] += deficit - each * static_cast<int>(b - a);
-  };
-  for (const IrEdge* m : messages) {
-    const size_t a = laneOf[m->from], b = laneOf[m->to];
-    const int textW = static_cast<int>(m->label.size()) * M.CHAR_W;
-    if (a == b) {
-      if (a + 1 < count) need(a, a + 1, SELF_W + 6 + textW + 8 + half(a + 1));
-    } else {
-      need(std::min(a, b), std::max(a, b), textW + 32);
-    }
-  }
-  int x = MARGIN + half(0) + 16;
-  for (size_t i = 0; i < count; ++i) {
-    lanes[i].cx = x;
-    if (i + 1 < count) x += gap[i];
-  }
-  int width = lanes.back().cx + half(count - 1) + 16 + MARGIN;
-
-  // ---- frames and rows
-  struct Frame {
-    const IrNode* node;
-    int first, last;
-    int depth = 0;  // frames enclosing it
-    int inner = 0;  // levels nested inside it
-    int top = 0, bottom = 0, left = 0, right = 0;
-  };
-  std::vector<Frame> frames;
-  for (const auto& n : doc.nodes) {
-    if (n.kind == "frame" && n.span.first >= 0) frames.push_back({&n, n.span.first, n.span.second});
-  }
-  for (size_t i = 0; i < frames.size(); ++i) {
-    for (size_t j = 0; j < frames.size(); ++j) {
-      if (i == j) continue;
-      const bool inside = frames[j].first <= frames[i].first && frames[i].last <= frames[j].last &&
-                          (frames[j].first < frames[i].first || frames[i].last < frames[j].last);
-      if (inside) ++frames[i].depth;
-    }
-  }
-  for (size_t i = 0; i < frames.size(); ++i) {
-    for (size_t j = 0; j < frames.size(); ++j) {
-      if (i != j && frames[i].first <= frames[j].first && frames[j].last <= frames[i].last && frames[j].depth > frames[i].depth) {
-        frames[i].inner = std::max(frames[i].inner, frames[j].depth - frames[i].depth);
-      }
-    }
-  }
-  const int rowsCount = messages.empty() ? 0 : messages.back()->order + 1;
-  std::vector<int> rowStart(rowsCount, 0), rowLine(rowsCount, 0), rowEnd(rowsCount, 0);
-  std::vector<std::vector<Frame*>> opensAt(rowsCount), closesAt(rowsCount);
-  std::vector<std::vector<std::pair<Frame*, std::string>>> dividersAt(rowsCount);
-  for (Frame& f : frames) {
-    if (f.first < rowsCount) opensAt[f.first].push_back(&f);
-    if (f.last < rowsCount) closesAt[f.last].push_back(&f);
-    for (const auto& d : f.node->dividers) {
-      if (d.first < rowsCount) dividersAt[d.first].push_back({&f, d.second});
-    }
-  }
-  for (auto& v : opensAt) std::sort(v.begin(), v.end(), [](Frame* a, Frame* b) { return a->depth < b->depth; });   // outer first
-  for (auto& v : closesAt) std::sort(v.begin(), v.end(), [](Frame* a, Frame* b) { return a->depth > b->depth; });  // inner first
-  int y = MARGIN + HEAD_H + 16;
-  for (const IrEdge* m : messages) {
-    const int r = m->order;
-    rowStart[r] = y;
-    for (size_t k = 0; k < opensAt[r].size(); ++k) {
-      opensAt[r][k]->top = y + FRAME_GAP;
-      y += FRAME_LEAD;
-    }
-    for (size_t k = 0; k < dividersAt[r].size(); ++k) y += DIVIDER_LEAD;
-    rowLine[r] = y + 20;
-    y += m->from == m->to ? SELF_H : ROW_H;
-    for (size_t k = 0; k < closesAt[r].size(); ++k) {
-      closesAt[r][k]->bottom = y + 2;
-      y += FRAME_GAP;
-    }
-    rowEnd[r] = y;
-  }
-  const int bottomY = y + 16;
-  for (Frame& f : frames) {
-    int left = width, right = 0;
-    for (const IrEdge* m : messages) {
-      if (m->order < f.first || m->order > f.last) continue;
-      left = std::min({left, lanes[laneOf[m->from]].cx, lanes[laneOf[m->to]].cx});
-      right = std::max({right, lanes[laneOf[m->from]].cx, lanes[laneOf[m->to]].cx});
-      if (m->from == m->to) right = std::max(right, lanes[laneOf[m->to]].cx + SELF_W + static_cast<int>(m->label.size()) * M.CHAR_W + 12);
-    }
-    f.left = left - 44 - FRAME_INSET * f.inner;
-    f.right = right + 44 + FRAME_INSET * f.inner;
-    const int labelW = 8 + static_cast<int>(f.node->classifier.size()) * 7 + 10 + static_cast<int>(f.node->label.size()) * 7 + 20;
-    f.right = std::max(f.right, f.left + labelW);
-    width = std::max(width, f.right + MARGIN);
-  }
+  const int width = s.width, bottomY = s.height;
 
   // ---- emission
   std::ostringstream out;
@@ -508,7 +398,7 @@ std::string Svg::sequenceSvg(const IrDocument& doc) const {
       << "msg\" viewBox=\"0 0 12 12\" refX=\"11\" refY=\"6\" markerWidth=\"11\" markerHeight=\"11\" orient=\"auto\"><path "
          "class=\"pr-filled\" d=\"M1,1 L11,6 L1,11 Z\"/></marker>\n</defs>\n";
   // frames under everything
-  for (const Frame& f : frames) {
+  for (const SequenceFrame& f : s.frames) {
     const std::string kind = f.node->classifier;
     std::string condition = f.node->label;
     if (condition.rfind(kind + " ", 0) == 0) condition = condition.substr(kind.size() + 1);
@@ -524,16 +414,12 @@ std::string Svg::sequenceSvg(const IrDocument& doc) const {
         << "</text>";
     out << "<text class=\"pr-frame-cond\" x=\"" << f.left + tabW + 10 << "\" y=\"" << FRAME_HEAD - 7 << "\">" << text::escapeXml(condition)
         << "</text>";
-    for (const auto& d : f.node->dividers) {
-      if (d.first >= rowsCount) continue;
-      // the divider sits in the lead reserved above its row
-      int dy = rowStart[d.first];
-      for (size_t k = 0; k < opensAt[d.first].size(); ++k) dy += FRAME_LEAD;
-      dy += 6;
-      out << "<line class=\"pr-frame-divider\" data-divider-row=\"" << d.first << "\" data-y=\"" << dy << "\" x1=\"" << f.left << "\" y1=\""
+    for (const SequenceDivider& d : f.dividers) {
+      const int dy = d.y;  // in the lead reserved above its row
+      out << "<line class=\"pr-frame-divider\" data-divider-row=\"" << d.row << "\" data-y=\"" << dy << "\" x1=\"" << f.left << "\" y1=\""
           << dy - f.top << "\" x2=\"" << f.right << "\" y2=\"" << dy - f.top << "\"/>";
-      out << "<text class=\"pr-frame-cond\" data-divider-row=\"" << d.first << "\" data-y=\"" << dy << "\" x=\"" << f.left + 8 << "\" y=\""
-          << dy - f.top + 4 << "\">[" << text::escapeXml(d.second) << "]</text>";
+      out << "<text class=\"pr-frame-cond\" data-divider-row=\"" << d.row << "\" data-y=\"" << dy << "\" x=\"" << f.left + 8 << "\" y=\""
+          << dy - f.top + 4 << "\">[" << text::escapeXml(d.label) << "]</text>";
     }
     out << "</g>\n";
   }
@@ -564,15 +450,16 @@ std::string Svg::sequenceSvg(const IrDocument& doc) const {
   // rows: one group per message, positioned at its absolute y, movable by the script
   for (const IrEdge* m : messages) {
     const int r = m->order;
-    const Lane& a = lanes[laneOf[m->from]];
-    const Lane& b = lanes[laneOf[m->to]];
-    const int ly = rowLine[r];
+    const Lane& a = lanes[laneOf.at(m->from)];
+    const Lane& b = lanes[laneOf.at(m->to)];
+    const int ly = s.rows[r].line;
     const bool self = m->from == m->to;
     std::string classes = std::string("pr-row pr-msg-group") + (self ? " pr-msg-self" : "") + (m->dashed ? " pr-msg-return" : "");
     const auto change = m->refs.find("change");
     if (change != m->refs.end()) classes += " pr-change-" + change->second;
-    out << "<g class=\"" << classes << "\" data-row=\"" << r << "\" data-y=\"" << rowStart[r] << "\" data-h=\"" << rowEnd[r] - rowStart[r]
-        << "\" data-from=\"" << text::escapeXml(m->from) << "\" data-to=\"" << text::escapeXml(m->to) << "\"" << dataAttrs(m->refs) << ">";
+    out << "<g class=\"" << classes << "\" data-row=\"" << r << "\" data-y=\"" << s.rows[r].top << "\" data-h=\""
+        << s.rows[r].bottom - s.rows[r].top << "\" data-from=\"" << text::escapeXml(m->from) << "\" data-to=\"" << text::escapeXml(m->to)
+        << "\"" << dataAttrs(m->refs) << ">";
     std::string body;
     if (!m->title.empty()) body += "<title>" + text::escapeXml(m->title) + "</title>";
     std::string d;
@@ -741,12 +628,13 @@ std::string Svg::render(const IrDocument& doc, int maxWidth) const {
     return besideEachOther(drawings, maxWidth);
   }
   for (const auto& n : doc.nodes) {
-    if (n.kind == "lifeline") return sequenceSvg(doc);
+    if (n.kind == "lifeline") return draw(ComposerFactory::of("sequence", "svg", metrics_)->compose(doc, maxWidth));
   }
   return draw(ComposerFactory::of("boxes", "svg", metrics_)->compose(doc, maxWidth));
 }
 
 std::string Svg::draw(const Figure& figure) const {
+  if (figure.sequence) return sequenceSvg(figure);
   const IrDocument& doc = figure.document;
   const LayoutResult& lay = figure.layout;
   const Metrics& M = metrics_;

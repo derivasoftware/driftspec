@@ -12,7 +12,8 @@
 
 #include "ds/render/ComposerFactory.hpp"
 #include "ds/render/Grid.hpp"
-#include "ds/render/SeqLine.hpp"
+#include "ds/render/Lane.hpp"
+#include "ds/render/SequenceLayout.hpp"
 #include "ds/text/Text.hpp"
 #include "ds/theme/Theme.hpp"
 
@@ -240,119 +241,25 @@ void Text::edge(Grid& g, const IrEdge& e, Route route, const std::map<std::strin
   }
 }
 
-Grid Text::sequenceGrid(const IrDocument& doc) const {
+Grid Text::sequenceGrid(const Figure& figure) const {
   const TextPen& pen = pen_;
   const std::string& kMuted = pen.muted;
   const std::string& kName = pen.name;
   const std::string& kEdge = pen.edge;
-  std::vector<SeqLine> lines;
-  std::map<std::string, size_t> index;
-  for (const auto& n : doc.nodes) {
-    if (n.kind != "lifeline") continue;
-    index[n.id] = lines.size();
-    lines.push_back({n.id, n.label, 0, static_cast<int>(n.label.size()) + 4});
-  }
-  if (lines.empty()) return Grid(0, 0, 1, 1);
-  std::vector<const IrEdge*> messages;
-  for (const auto& e : doc.edges) {
-    if (e.kind == "message" && index.count(e.from) && index.count(e.to)) messages.push_back(&e);
-  }
-  std::sort(messages.begin(), messages.end(), [](const IrEdge* a, const IrEdge* b) { return a->order < b->order; });
-  // lanes: wide enough for the heads and for the longest label that crosses each gap
-  std::vector<int> gap(lines.size(), 0);
-  for (size_t i = 0; i + 1 < lines.size(); ++i) gap[i] = (lines[i].width + lines[i + 1].width) / 2 + 2;
-  for (const IrEdge* m : messages) {
-    const size_t a = std::min(index[m->from], index[m->to]), b = std::max(index[m->from], index[m->to]);
-    const int need = static_cast<int>(m->label.size()) + 6;
-    if (a == b) {
-      if (a + 1 < lines.size()) gap[a] = std::max(gap[a], need + lines[a].width / 2);
-      continue;
-    }
-    int have = 0;
-    for (size_t i = a; i < b; ++i) have += gap[i];
-    if (have < need) gap[b - 1] += need - have;
-  }
-  int x = lines[0].width / 2 + 1;
-  for (size_t i = 0; i < lines.size(); ++i) {
-    lines[i].centre = x;
-    if (i + 1 < lines.size()) x += gap[i];
-  }
-  const int width = x + lines.back().width / 2 + 24;
-  // frames, by the row range they cover
-  struct FrameAt {
-    int first, last;
-    std::string label;
-    std::vector<std::pair<int, std::string>> dividers;
-  };
-  std::vector<FrameAt> frames;
-  for (const auto& n : doc.nodes) {
-    if (n.kind != "frame") continue;
-    FrameAt f{n.span.first, n.span.second, n.label, {}};
-    for (const auto& d : n.dividers) f.dividers.push_back(d);
-    frames.push_back(f);
-  }
-  // rows: 3 for the heads, then per message 2 rows (label, arrow), plus frame rows
-  const size_t count = messages.empty() ? 0 : static_cast<size_t>(messages.back()->order) + 1;
-  std::vector<int> rowOf(count, 0), heightOf(count, 2);
-  int rows = 4;
-  std::vector<int> opens(count, 0), closes(count, 0), divs(count, 0);
-  std::vector<int> depthOf(frames.size(), 0);  // how many frames enclose each frame
-  for (size_t i = 0; i < frames.size(); ++i) {
-    for (size_t j = 0; j < frames.size(); ++j) {
-      if (i != j && frames[j].first <= frames[i].first && frames[i].last <= frames[j].last &&
-          (frames[j].first < frames[i].first || frames[i].last < frames[j].last)) {
-        ++depthOf[i];
-      }
-    }
-    if (frames[i].first < static_cast<int>(count)) ++opens[frames[i].first];
-    if (frames[i].last < static_cast<int>(count)) ++closes[frames[i].last];
-    for (const auto& d : frames[i].dividers) {
-      if (d.first < static_cast<int>(count)) ++divs[d.first];
-    }
-  }
-  for (const IrEdge* m : messages) {
-    rows += opens[m->order] + divs[m->order];
-    rowOf[m->order] = rows;
-    heightOf[m->order] = m->from == m->to ? 3 : 2;
-    rows += heightOf[m->order] + closes[m->order];
-  }
-  rows += 1;
-  Grid g(0, 0, width, rows);
+  const SequenceLayout& s = *figure.sequence;
+  if (s.lanes.empty()) return Grid(0, 0, 1, 1);
+  const int rows = s.height;
+  Grid g(0, 0, s.width, rows);
   // lifelines
-  for (const auto& l : lines) {
-    const int x0 = l.centre - l.width / 2;
-    g.frame(Rect{x0, 0, l.width, 3}, true, "");
-    g.text(x0 + 2, 1, l.label, kName);
-    for (int y = 3; y < rows; ++y) g.put(l.centre, y, "\xE2\x94\x86", kMuted);  // ┆
+  for (const Lane& l : s.lanes) {
+    const int x0 = l.cx - l.headW / 2;
+    g.frame(Rect{x0, 0, l.headW, 3}, true, "");
+    g.text(x0 + 2, 1, l.node->label, kName);
+    for (int y = 3; y < rows; ++y) g.put(l.cx, y, "\xE2\x94\x86", kMuted);  // ┆
   }
-  // frames: a box from the row above the first message to the row below the last
-  for (size_t fi = 0; fi < frames.size(); ++fi) {
-    const FrameAt& f = frames[fi];
-    if (f.first >= static_cast<int>(count) || f.last >= static_cast<int>(count)) continue;
-    int left = width, right = 0;
-    for (const IrEdge* m : messages) {
-      if (m->order < f.first || m->order > f.last) continue;
-      left = std::min({left, lines[index[m->from]].centre, lines[index[m->to]].centre});
-      right = std::max({right, lines[index[m->from]].centre, lines[index[m->to]].centre});
-    }
-    // an outer frame wraps its inner ones: three cells per level
-    int outer = 0;
-    for (size_t j = 0; j < frames.size(); ++j) {
-      if (j != fi && frames[fi].first <= frames[j].first && frames[j].last <= frames[fi].last && depthOf[j] > depthOf[fi])
-        outer = std::max(outer, depthOf[j] - depthOf[fi]);
-    }
-    left -= 3 + 3 * outer;
-    right += static_cast<int>(f.label.size()) + 6 + 3 * outer;
-    // frames that open (or close) at the same message stack: one row further out per frame inside
-    // this one that opens (or closes) there too, as the SVG does (DS-13)
-    int innerOpening = 0, innerClosing = 0;
-    for (size_t j = 0; j < frames.size(); ++j) {
-      if (j == fi || depthOf[j] <= depthOf[fi]) continue;
-      if (frames[j].first == f.first) ++innerOpening;
-      if (frames[j].last == f.last) ++innerClosing;
-    }
-    const int top = rowOf[f.first] - 1 - innerOpening;
-    const int bottom = rowOf[f.last] + heightOf[f.last] + innerClosing;
+  // frames, where they were placed
+  for (const SequenceFrame& f : s.frames) {
+    const int left = f.left, right = f.right, top = f.top, bottom = f.bottom;
     for (int xx = left; xx <= right; ++xx) {
       g.put(xx, top, "\xE2\x94\x80", kMuted);
       g.put(xx, bottom, "\xE2\x94\x80", kMuted);
@@ -365,18 +272,17 @@ Grid Text::sequenceGrid(const IrDocument& doc) const {
     g.put(right, top, "\xE2\x94\x90", kMuted);
     g.put(left, bottom, "\xE2\x94\x94", kMuted);
     g.put(right, bottom, "\xE2\x94\x98", kMuted);
-    g.text(left + 1, top, " " + f.label + " ", kMuted);
-    for (const auto& d : f.dividers) {
-      if (d.first >= static_cast<int>(rowOf.size())) continue;
-      const int yy = rowOf[d.first] - 1;
+    g.text(left + 1, top, " " + f.node->label + " ", kMuted);
+    for (const SequenceDivider& d : f.dividers) {
+      const int yy = d.y;
       for (int xx = left + 1; xx < right; ++xx) g.put(xx, yy, "\xE2\x94\x84", kMuted);
-      g.text(left + 1, yy, " " + d.second + " ", kMuted);
+      g.text(left + 1, yy, " " + d.label + " ", kMuted);
     }
   }
   // messages; a diff marks them: + added, - removed, ~ changed
-  for (const IrEdge* m : messages) {
-    const int y = rowOf[m->order] + 1;
-    const int a = lines[index[m->from]].centre, b = lines[index[m->to]].centre;
+  for (const IrEdge* m : s.messages) {
+    const int y = s.rows[m->order].line;
+    const int a = s.lanes[s.laneOf.at(m->from)].cx, b = s.lanes[s.laneOf.at(m->to)].cx;
     const auto change = m->refs.find("change");
     const std::string colour = change == m->refs.end() ? std::string(kEdge) : pen.changeMarkOf(change->second).colour;
     const std::string labelColour = change == m->refs.end() ? std::string(kMuted) : colour;
@@ -505,7 +411,7 @@ Grid Text::partsGrid(const IrDocument& doc, int maxWidth) const {
   int w = 1, h = 0;
   for (const auto& name : doc.parts) {
     const IrDocument part = doc.part(name);
-    grids.push_back(isSequence(part) ? sequenceGrid(part)
+    grids.push_back(isSequence(part) ? sequenceGrid(ComposerFactory::of("sequence", "text", M)->compose(part, 0))
                                      : classGrid(ComposerFactory::of("boxes", "text", M)->compose(part, contentWidth(maxWidth))));
     w = std::max(w, grids.back().columns());
     h += grids.back().rows() + (h ? 1 : 0);
@@ -524,16 +430,18 @@ Text::Text(const theme::Theme& theme) : pen_(theme) {}
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
   if (doc.table && !doc.table->columns.empty()) return tableGrid(doc).dump(color);
   if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
-  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
+  if (isSequence(doc)) return draw(ComposerFactory::of("sequence", "text", pen_.M)->compose(doc, 0), color);
   return draw(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)), color);
 }
 
-std::string Text::draw(const Figure& figure, bool color) const { return classGrid(figure).dump(color); }
+std::string Text::draw(const Figure& figure, bool color) const {
+  return (figure.sequence ? sequenceGrid(figure) : classGrid(figure)).dump(color);
+}
 
 void Text::cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const {
   const Grid g = doc.table && !doc.table->columns.empty() ? tableGrid(doc)
                  : !doc.parts.empty()                     ? partsGrid(doc, maxWidth)
-                 : isSequence(doc)                        ? sequenceGrid(doc)
+                 : isSequence(doc)                        ? sequenceGrid(ComposerFactory::of("sequence", "text", pen_.M)->compose(doc, 0))
                                    : classGrid(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)));
   out_sink.beginRecord().field("cells").value(g.encode(pen_.cellColours)).field("columns").integer(g.columns());
   out_sink.field("rows").integer(g.rows()).field("text").value(g.dump(false)).endRecord();
