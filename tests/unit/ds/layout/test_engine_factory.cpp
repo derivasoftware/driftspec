@@ -3,9 +3,11 @@
 #include "ds/layout/EngineFactory.hpp"
 #include "ds/layout/Frame.hpp"
 #include "ds/layout/Graph.hpp"
+#include "ds/layout/GridEngine.hpp"
 #include "ds/layout/PackingEngine.hpp"
 #include "ds/layout/SequenceSpacing.hpp"
 #include "ds/layout/StackedEngine.hpp"
+#include "ds/layout/TableSpacing.hpp"
 
 namespace {
 
@@ -29,6 +31,13 @@ TEST(TestEngineFactory, TheStackedEngineIsHandedOutAsASequenceEngine) {
   ASSERT_NE(engine, nullptr);
   EXPECT_NE(dynamic_cast<const ds::layout::StackedEngine*>(engine.get()), nullptr);
   EXPECT_TRUE(engine->place(ds::layout::SequenceGraph()).lanes.empty());
+}
+
+/// A table is placed by the grid engine, handed out as a table engine (DS-464).
+TEST(TestEngineFactory, TheGridEngineIsHandedOutAsATableEngine) {
+  const auto engine = ds::layout::EngineFactory::table(ds::layout::TableSpacing::of(8, 18));
+  ASSERT_NE(engine, nullptr);
+  EXPECT_NE(dynamic_cast<const ds::layout::GridEngine*>(engine.get()), nullptr);
 }
 
 }  // namespace

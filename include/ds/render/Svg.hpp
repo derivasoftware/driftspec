@@ -57,7 +57,7 @@ class Svg {
   /// embedded so this works wherever the SVG is inline or opened on its own; as an <img> it is simply static.
   std::string sequenceSvg(const Figure& figure) const;
   /// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
-  std::string tableSvg(const IrDocument& doc) const;
+  std::string tableSvg(const Figure& figure) const;
   /// Several drawings in one (DS-245): each keeps its own drawing and is placed beside the last, or under it when
   /// the width asked for does not hold them side by side. Each is a nested svg that says which part it is.
   static std::string besideEachOther(const std::vector<std::pair<std::string, std::string>>& drawings, int maxWidth);

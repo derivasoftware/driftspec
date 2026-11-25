@@ -130,7 +130,7 @@ class Text {
   static int contentWidth(int maxWidth);
   /// A drawing that is a table (DS-251): a row of headings, a rule under it, and a row for each of its rows; a
   /// cell against the machine is marked with a bang.
-  Grid tableGrid(const IrDocument& doc) const;
+  Grid tableGrid(const Figure& figure) const;
   /// The parts of a drawing (DS-245), one under the other with a line between: a terminal reads down.
   Grid partsGrid(const IrDocument& doc, int maxWidth) const;
 

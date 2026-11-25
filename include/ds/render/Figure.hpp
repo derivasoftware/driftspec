@@ -6,6 +6,7 @@
 #include "ds/render/Ir.hpp"
 #include "ds/render/Layout.hpp"
 #include "ds/render/SequenceLayout.hpp"
+#include "ds/render/TableLayout.hpp"
 
 namespace ds {
 namespace render {
@@ -21,6 +22,7 @@ struct Figure {
   const IrDocument* source = nullptr;      ///< the document composed from, when it is drawn as it is
   LayoutResult layout;                     ///< where each node of the document lands, and each route
   std::optional<SequenceLayout> sequence;  ///< where a sequence's lanes, rows and frames land, when the figure is one
+  std::optional<TableLayout> table;        ///< where a table's columns, rows and lines land, when the figure is one
 
   Figure() = default;
   Figure(const Figure&) = delete;
