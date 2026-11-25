@@ -252,7 +252,10 @@ module.exports = grammar({
 
     // ---- representations --------------------------------------------------
     // a table says its rows as a rule says its ranges (`for`, `where`) and a column per question (DS-268)
-    diagram: $ => seq('diagram', field('name', $.name), '{', repeat(choice($.field, $.rule_for, $.rule_where, $.column)), '}'),
+    diagram: $ => seq('diagram', field('name', $.name), '{', repeat(choice($.field, $.rule_for, $.rule_where, $.column, $.walk_step)), '}'),
+    // one step of a walkthrough (DS-468): its title is free text up to the brace, as a frame's condition is, and its
+    // body is fields: show, focus, highlight, at, text
+    walk_step: $ => seq('step', field('title', $.condition), '{', repeat($.field), '}'),
     column: $ => seq('column', field('name', $.name), ':', choice($.column_field, $.property_term, $.column_related, $.column_holds)),
     column_field: $ => seq(field('of', $.name), '.', field('field', $.name)),           // a field of the row: r.title
     // what an entity of the row is, as a rule reads it: kind(r), id(r), name(r) (DS-437); a property_term, as in a literal

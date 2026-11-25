@@ -110,8 +110,9 @@ TEST_F(TestQuery, EachQuestionTakesTheSubjectItSaysAndAnswersAnotherKindWithAnEr
   EXPECT_EQ(refused("failures", "iris@projection::Projection"),
             "iris@projection::Projection: iris@projection::Projection is a class: failures takes what a failure may escape");
   EXPECT_EQ(refused("behaviours", "VER-00050-1"), "VER-00050-1: VER-00050-1 is a verification: behaviours takes what has a behaviour");
-  EXPECT_EQ(refused("entities", "diagram:REQ_Tracker"),
-            "diagram:REQ_Tracker: diagram:REQ_Tracker is a diagram: entities takes a scope: something others are declared in; with * "
+  // a diagram is a scope now: a walkthrough declares its steps in it (DS-468); a verification declares nothing
+  EXPECT_EQ(refused("entities", "VER-00050-1"),
+            "VER-00050-1: VER-00050-1 is a verification: entities takes a scope: something others are declared in; with * "
             "after it (shop@*), all it holds at any depth");
   EXPECT_NE(refused("entities", "artefacts.ds"), "");  // a file is no scope: only the findings and the coverage take one
   // what each takes is answered as before
