@@ -312,11 +312,13 @@ class Workspace:
 
     def model(self) -> Model:
         """The whole model, typed: what ds export says."""
-        return _model(self._native.run("hand-model", {})[1])  # built as Python objects, never as text (DS-459)
+        _outcome, built, _message = self._native.run("hand-model", {})  # built as Python objects, never as text (DS-459)
+        return _model(built)
 
     def report(self) -> Report:
         """The check: what ds check --json says."""
-        return _report(self._native.run("check-design", {})[1])
+        _outcome, built, _message = self._native.run("check-design", {})
+        return _report(built)
 
     def find(self, identity: str) -> Entity | None:
         data = json.loads(self._native.find(identity))
@@ -360,7 +362,7 @@ class Workspace:
 
     def ask(self, question: str, subject: str = "") -> list[Answer]:
         """A question of ds query, answered as ds query --json does."""
-        answers = self._native.run("ask-model", {"question": question, "subject": subject})[1]
+        _outcome, answers, _message = self._native.run("ask-model", {"question": question, "subject": subject})
         return [Answer(a["kind"], a["id"], a["detail"], a.get("from", ""), a.get("to", "")) for a in answers]
 
     def shows(self, diagram: str) -> list[Answer]:
