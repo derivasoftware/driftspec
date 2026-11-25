@@ -26,7 +26,7 @@ class Grid {
   Cell* at(int x, int y);
 
   /// One glyph at (x, y), in `color`.
-  void put(int x, int y, const std::string& glyph, const std::string& color = "");
+  void put(int x, int y, std::string_view glyph, const std::string& color = "");
 
   /// A text from (x, y) on, one code point per cell.
   void text(int x, int y, const std::string& s, const std::string& color = "");
@@ -58,7 +58,7 @@ class Grid {
   static constexpr std::size_t kMaxCells = std::size_t{128} * 1024 * 1024;
   /// The index of `color` in the palette, added the first time it is asked.
   std::uint8_t paint(const std::string& color);
-  void setGlyph(Cell& c, const std::string& glyph);
+  void setGlyph(Cell& c, std::string_view glyph);
   std::string_view glyphOf(const Cell& c) const;
 
   int minX_;
@@ -79,7 +79,7 @@ inline Cell* Grid::at(int x, int y) {
   return &cells_[static_cast<size_t>(y) * w_ + x];
 }
 
-inline void Grid::put(int x, int y, const std::string& glyph, const std::string& color) {
+inline void Grid::put(int x, int y, std::string_view glyph, const std::string& color) {
   if (Cell* c = at(x, y)) {
     setGlyph(*c, glyph);
     c->colour = paint(color);
@@ -99,7 +99,7 @@ inline void Grid::text(int x, int y, const std::string& s, const std::string& co
       len = 3;
     else if (c >= 0xC0)
       len = 2;
-    put(col++, y, s.substr(i, len), color);
+    put(col++, y, std::string_view(s).substr(i, len), color);
     i += len;
   }
 }
@@ -127,14 +127,14 @@ inline std::uint8_t Grid::paint(const std::string& color) {
   return static_cast<std::uint8_t>(palette_.size() - 1);
 }
 
-inline void Grid::setGlyph(Cell& c, const std::string& glyph) {
+inline void Grid::setGlyph(Cell& c, std::string_view glyph) {
   if (glyph.size() <= c.glyph.size()) {
     std::copy(glyph.begin(), glyph.end(), c.glyph.begin());
     c.size = static_cast<std::uint8_t>(glyph.size());
     return;
   }
   const auto index = static_cast<std::uint32_t>(long_.size());
-  long_.push_back(glyph);
+  long_.emplace_back(glyph);
   std::memcpy(c.glyph.data(), &index, sizeof index);
   c.size = Cell::kLong;
 }

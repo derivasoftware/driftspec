@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 
+#include "ds/render/ComposerFactory.hpp"
 #include "ds/render/EdgeMarkup.hpp"
 #include "ds/render/Lane.hpp"
 #include "ds/text/Text.hpp"
@@ -742,11 +743,12 @@ std::string Svg::render(const IrDocument& doc, int maxWidth) const {
   for (const auto& n : doc.nodes) {
     if (n.kind == "lifeline") return sequenceSvg(doc);
   }
-  const IrDocument bundled = doc.bundled();
-  return render(bundled, Layout(metrics_).place(bundled, maxWidth, true));  // routed as its kind is drawn (DS-443)
+  return draw(ComposerFactory::of("boxes", "svg", metrics_)->compose(doc, maxWidth));
 }
 
-std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
+std::string Svg::draw(const Figure& figure) const {
+  const IrDocument& doc = figure.document;
+  const LayoutResult& lay = figure.layout;
   const Metrics& M = metrics_;
   int minX = std::numeric_limits<int>::max(), minY = minX, maxX = std::numeric_limits<int>::min(), maxY = maxX;
   auto extend = [&](int x, int y) {
