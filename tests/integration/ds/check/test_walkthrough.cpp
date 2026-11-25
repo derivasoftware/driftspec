@@ -163,4 +163,37 @@ TEST_F(TestWalkthrough, AMissingScenarioAndAnEmptyWalkthroughAreTold) {
   EXPECT_TRUE(nothing);
 }
 
+/// A scenario written apart, `sequence X / s`, is a scenario of X as much as a named branch is (DS-472: WALK_Buy).
+TEST_F(TestWalkthrough, AScenarioWrittenApartIsOneTheStepMayShow) {
+  load(
+      "package shop {\n"
+      "  module desk {\n"
+      "    sequence Desk::sell {\n"
+      "      return 0\n"
+      "    }\n"
+      "    sequence Desk::sell / late {\n"
+      "      return 1\n"
+      "    }\n"
+      "  }\n"
+      "}\n"
+      "diagram SEQ_Sell {\n"
+      "  kind: sequence\n"
+      "  include: shop@desk::Desk::sell\n"
+      "}\n"
+      "diagram WALK_Shop {\n"
+      "  kind: walkthrough\n"
+      "  step Late {\n"
+      "    show: SEQ_Sell / late\n"
+      "    text: The late sale.\n"
+      "  }\n"
+      "  step Lost {\n"
+      "    show: SEQ_Sell / lost\n"
+      "    text: No such scenario.\n"
+      "  }\n"
+      "}\n");
+  const auto told = said("W-SCENARIO-UNDECLARED");
+  ASSERT_EQ(told.size(), 1u);
+  EXPECT_EQ(told[0].rfind("diagram:WALK_Shop::2: ", 0), 0u) << told[0];
+}
+
 }  // namespace
