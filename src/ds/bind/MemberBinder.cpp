@@ -36,7 +36,8 @@ void MemberBinder::bind(TSNode m, const BindContext& ctx, const model::Entity& c
   } else {
     member.kind = TreeReader::is(m, "method") ? model::Kind::Method : model::Kind::Attribute;
     member.name = ctx.reader.fieldText(m, Field::name);
-    member.id = cls.id + "::" + member.name;
+    member.id = TreeReader::is(m, "method") ? SignatureBinder::identityOf(ctx.reader, m, cls.id + "::" + member.name)  // DS-455
+                                            : cls.id + "::" + member.name;
     member.fields["visibility"] = ctx.reader.fieldText(m, Field::visibility);
   }
 
