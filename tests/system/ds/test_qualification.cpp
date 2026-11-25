@@ -522,6 +522,18 @@ TEST_F(TestQualification, AQuestionAboutTheModelIsAnsweredByIdentity) {
   bool refinedBy = false;
   for (const auto& a : nlohmann::json::parse(relations.out)) refinedBy |= a["kind"] == "refines" && a["detail"] == "<-";
   EXPECT_TRUE(refinedBy);
+  // each relation says its two ends, as the model holds them: what refines the requirement is from, it is to (DS-445)
+  bool ends = true;
+  for (const auto& a : nlohmann::json::parse(relations.out)) {
+    const bool in = a["detail"] == "<-";
+    const std::string other = a["id"].get<std::string>();
+    const std::string asked = "SREQ-00001-2";
+    ends = ends && a.value("to", std::string()) == (in ? asked : other) && a.value("from", std::string()) == (in ? other : asked);
+  }
+  EXPECT_TRUE(ends);
+  // and no other answer carries them
+  const Outcome listed = ds("query " + examples("artefacts") + " diagrams --json");
+  for (const auto& a : nlohmann::json::parse(listed.out)) EXPECT_FALSE(a.contains("from") || a.contains("to"));
   // the answer names an identity that the next question takes
   const Outcome artefacts = ds("query " + examples("artefacts") + " artefacts iris@projection::Projection");
   EXPECT_NE(artefacts.out.find("satisfies  REQ-00001-2"), std::string::npos);

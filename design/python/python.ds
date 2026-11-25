@@ -869,6 +869,8 @@ package driftspec@driftspec {
       + kind: str
       + id: str
       + detail: str
+      + source: str                          // a relation's ends, "" for every other answer (DS-445)
+      + target: str
     }
     dataclass Step {
       @requirement REQ-00086-1
