@@ -92,9 +92,9 @@ TEST_F(TestJsonOfADesign, EveryWriterLentACheckedSinkWritesWhatNlohmannWrote) {
       asNlohmannWrites(sink.result(), false, e.first + " touching");
     }
     for (const auto& q : ds::query::Query::questions()) {
-      const auto answers = ds::query::Query(model, metamodel()).ask(q.first, "");
+      const auto answers = ds::query::Query(model, metamodel()).ask(q.name, "");
       ds::format::DescriptionFactory::answers(answers)->describe(sink);
-      asNlohmannWrites(sink.result(), false, loaded.name + " " + q.first);
+      asNlohmannWrites(sink.result(), false, loaded.name + " " + q.name);
     }
     const ds::render::IrExport ir(model, metamodel());
     for (const auto& id : ir.diagrams()) {
@@ -147,7 +147,7 @@ TEST_F(TestJsonOfADesign, EveryAnswerOfTheDoorsReadsBackAsNlohmannWritesIt) {
         }
       }
     }
-    for (const auto& q : ds::query::Query::questions()) asNlohmannWrites(ws.ask(q.first, ""), false, loaded.name + " " + q.first);
+    for (const auto& q : ds::query::Query::questions()) asNlohmannWrites(ws.ask(q.name, ""), false, loaded.name + " " + q.name);
     nlohmann::json request{{"files", loaded.files}, {"width", 0}};
     const std::string answer = ds::api::Browser(metamodel()).answer(request.dump());
     EXPECT_EQ(answer.find("{\"error\""), std::string::npos) << answer.substr(0, 200);

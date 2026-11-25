@@ -17,8 +17,8 @@ package driftspec {
       tests/system/ds/test_qualification.cpp::TestQualification.AWorkspaceLoadsIntoOneModelWithOneIdentityPerEntity
   }
 
-  verification SVER-00002-5 {
-    status: approved
+  verification SVER-00002-6 {
+    status: draft
     @requirement SREQ-00002-1
     title: System tests confirm every incoherence is a finding with code, severity and location, a file that is not UTF-8 among them, and a path that is no workspace is bad usage
     text:
@@ -32,13 +32,18 @@ package driftspec {
       line and byte column of its first such byte: ds check exits with 1,
       and ds export, ds render (the scene as JSON, a diagram as svg) and
       ds query --json write, the other files checked as usual (revision 5,
-      DS-411).
+      DS-411). A diagram is not drawn of a file it reads that does not read
+      whole: ds render of a diagram whose file, or a file of what it shows,
+      does not parse writes the finding as ds check does and exits 1, and so
+      does one that is missing or shows nothing while a file does not parse;
+      a broken file it does not read stops nothing (revision 6, DS-433).
     method: test
     tests:
       tests/system/ds/test_qualification.cpp::TestQualification.EveryIncoherenceIsAFindingAtItsLocation
       tests/system/ds/test_qualification.cpp::TestQualification.TheCheckJsonSaysTheFindingsAndTheCounts
       tests/system/ds/test_qualification.cpp::TestQualification.ASyntaxErrorQuotingAWideCharacterComesBackAsJson
       tests/system/ds/test_qualification.cpp::TestQualification.AFileThatIsNotUtf8IsAFindingAtItsByteAndEveryCommandStillWrites
+      tests/system/ds/test_qualification.cpp::TestQualification.ADiagramIsNotDrawnOfAFileItReadsThatDoesNotParse
       tests/system/ds/test_qualification.cpp::TestQualification.CheckingAPathThatIsNoWorkspaceIsBadUsage
       tests/system/ds/test_qualification.cpp::TestQualification.EveryCommandTreatsAPathThatIsNoWorkspaceAsBadUsage
   }

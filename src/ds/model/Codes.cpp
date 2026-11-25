@@ -175,7 +175,7 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
        "Remove the transition, or take the state out of final."},
       {Code::W_FAILURE_UNDECLARED, "W-FAILURE-UNDECLARED", Severity::warning,
        "An operation lets a failure escape that its signature does not say it may fail with; an interface operation is a "
-       "boundary and must say it.",
+       "boundary and must say it. A use case has no signature: a failure that escapes its scenario is said there.",
        "Handle it in an attempt, or add it to the signature: fails <Failure>."},
       {Code::W_FAILURE_UNREACHED, "W-FAILURE-UNREACHED", Severity::warning,
        "An operation says it may fail with something no path of its behaviour fails with.",

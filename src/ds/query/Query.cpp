@@ -1,34 +1,51 @@
 #include "ds/query/Query.hpp"
 
+#include <algorithm>
+
 #include "ds/model/Metamodel.hpp"
 #include "ds/text/Text.hpp"
 
 namespace ds {
 namespace query {
 
-std::vector<std::pair<std::string, std::string>> Query::questions() {
-  return {{"diagrams", ""},
-          {"entities", "<scope>"},
-          {"relations", "<identity>"},
-          {"artefacts", "<identity>"},
-          {"behaviours", "<identity>"},
-          {"failures", "<identity>"},
-          {"shows", "<diagram>"},
-          {"findings", "[file]"},
-          {"coverage", "[identity]"},
-          {"coupling", ""}};
+std::vector<Question> Query::questions() {
+  return {{"diagrams", "", "no subject"},
+          {"entities", "[scope]", "a scope: something others are declared in"},
+          {"relations", "<identity>", "any identity"},
+          {"artefacts", "<identity>", "a design element: what realises, satisfies or obeys an artefact"},
+          {"behaviours", "<identity>", "what has a behaviour"},
+          {"failures", "<identity>", "what a failure may escape"},
+          {"shows", "<diagram>", "a diagram"},
+          {"findings", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
+          {"coverage", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
+          {"coupling", "", "no subject"}};
+}
+
+std::string Query::usage() {
+  std::string out;
+  for (const auto& q : questions()) out += (out.empty() ? "" : " · ") + q.name + (q.subject.empty() ? "" : " " + q.subject);
+  return out;
 }
 
 std::vector<Answer> Query::ask(const std::string& question, const std::string& subject) const {
+  const std::vector<Question> all = questions();
+  const auto q = std::find_if(all.begin(), all.end(), [&question](const Question& each) { return each.name == question; });
+  if (q == all.end()) return {{"error", question, "not a question ds answers"}};
+  if (q->subject.empty() && !subject.empty())  // a subject it would ignore: the answer would not be about it
+    return {{"error", subject, question + " takes no subject: ds query <workspace> " + question}};
   // a question about an identity needs one the model declares: an empty answer would read as "it has none"
   const bool aboutOne = question == "relations" || question == "artefacts" || question == "behaviours" || question == "failures";
   if (aboutOne && subject.empty()) return {{"error", question, "needs an identity: ds query <workspace> " + question + " <identity>"}};
-  if ((aboutOne || (question == "entities" && !subject.empty())) && !known(subject)) {
+  const bool ofFile = (question == "findings" || question == "coverage") && isFile(subject);  // they may take a file
+  const bool aboutWhat = (question == "entities" || question == "findings" || question == "coverage") && !subject.empty() && !ofFile;
+  if ((aboutOne || aboutWhat) && !known(subject)) {
     const std::vector<std::string> near = nearTo(subject);
     std::string detail = "nothing in the model is named so";
     for (size_t i = 0; i < near.size(); ++i) detail += (i ? ", " : "; did you mean ") + near[i];
     return {{"error", subject, detail}};
   }
+  const std::string why = refused(*q, subject);
+  if (!why.empty()) return {{"error", subject, why}};
   if (question == "diagrams") return diagrams();
   if (question == "entities") return entities(subject);
   if (question == "relations") return relations(subject);
@@ -38,8 +55,61 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   if (question == "shows") return shows(subject);
   if (question == "findings") return findings(subject);
   if (question == "coverage") return coverage(subject);
-  if (question == "coupling") return coupling();
-  return {{"error", question, "not a question ds answers"}};
+  return coupling();
+}
+
+// What each question takes, read from the metamodel so a kind the language gains is taken where it fits (DS-436):
+// a scope is a kind others are declared in, a design element what may realise, satisfy or obey, what has a
+// behaviour what a behaviour may be of (and a class, whose methods' are its own, DS-53), and what a failure may
+// escape what has the escapes the check writes.
+std::string Query::refused(const Question& question, const std::string& subject) const {
+  const model::Entity* e = subject.empty() ? nullptr : model_.find(subject);
+  if (!e) return "";  // a scope with no entity of its own, or none asked
+  const model::Kind kind = e->kind;
+  const auto relates = [this, kind](const std::string& relation, bool from) {
+    const model::RelationSpec* r = metamodel_.relationOf(relation);
+    const std::vector<model::Kind>& kinds = r ? (from ? r->from : r->to) : std::vector<model::Kind>{};
+    return r && (kinds.empty() || std::find(kinds.begin(), kinds.end(), kind) != kinds.end());
+  };
+  bool takes = true;
+  if (question.name == "entities") {
+    takes = false;
+    for (const auto& spec : metamodel_.kinds())
+      takes = takes || std::find(spec.parents.begin(), spec.parents.end(), kind) != spec.parents.end();
+  } else if (question.name == "artefacts") {
+    takes = relates("realises", true) || relates("satisfies", true) || relates("constrained-by", true);
+  } else if (question.name == "behaviours") {
+    takes = kind == model::Kind::Class || relates("behaviour-of", false);
+  } else if (question.name == "failures") {
+    takes = metamodel_.fieldOf(kind, "escapes") != nullptr;
+  }
+  if (takes) return "";
+  const std::string a = metamodel_.nameOf(kind);
+  std::string why =
+      subject + " is " + (a.find_first_of("aeio") == 0 ? "an " : "a ") + a + ": " + question.name + " takes " + question.takes;
+  if (question.name == "artefacts" && metamodel_.isArtefact(kind))
+    why += "; ds query <workspace> relations " + subject + " says what it links";
+  return why;
+}
+
+bool Query::isFile(const std::string& subject) { return endsWith(subject, ".ds"); }
+
+bool Query::within(const model::Location& at, const std::string& id) const {
+  // the entity's span or a span of what it holds, down every level: a package's modules may sit in many files
+  const model::Index index = model_.index();
+  std::vector<std::string> pending{id};
+  std::set<std::string> seen;
+  while (!pending.empty()) {
+    const std::string next = pending.back();
+    pending.pop_back();
+    if (!seen.insert(next).second) continue;
+    if (const model::Entity* e = model_.find(next)) {
+      const model::Location& span = e->location;
+      if (span.file == at.file && at.line >= span.line && at.line <= std::max(span.line, span.endLine)) return true;
+    }
+    for (const auto& r : index.fromOfKind(next, "contains")) pending.push_back(r.to);
+  }
+  return false;
 }
 
 // an entity as an answer: its kind named by the metamodel the model is written in
@@ -172,20 +242,24 @@ std::vector<Answer> Query::coupling() const {
   return out;
 }
 
-std::vector<Answer> Query::findings(const std::string& file) const {
+std::vector<Answer> Query::findings(const std::string& subject) const {
+  // a file as today (DS-436 keeps it), or an identity: what lies on the entity or on anything it holds
   std::vector<Answer> out;
   for (const auto& f : model_.findings()) {
-    if (!file.empty() && !endsWith(f.location.file, file)) continue;
+    if (!subject.empty() && (isFile(subject) ? !endsWith(f.location.file, subject) : !within(f.location, subject))) continue;
     out.push_back({f.code, f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column), f.message});
   }
   return out;
 }
 
-// What is not yet written (DS-216): every absence the check keeps apart, or those that name an identity.
-std::vector<Answer> Query::coverage(const std::string& identity) const {
+// What is not yet written (DS-216): every absence the check keeps apart; of a file, or of an identity: those that
+// name it, and those that lie on it or on anything it holds (DS-436)
+std::vector<Answer> Query::coverage(const std::string& subject) const {
   std::vector<Answer> out;
   for (const auto& f : model_.coverage()) {
-    if (!identity.empty() && f.message.find(identity) == std::string::npos) continue;
+    if (!subject.empty() && (isFile(subject) ? !endsWith(f.location.file, subject)
+                                             : f.message.find(subject) == std::string::npos && !within(f.location, subject)))
+      continue;
     out.push_back({f.code, f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column), f.message});
   }
   return out;

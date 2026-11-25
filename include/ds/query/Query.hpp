@@ -19,6 +19,14 @@ struct Answer {
   std::string detail;  ///< what else the question asked: a direction, a diagram kind, a title, a finding
 };
 
+/// A question `ask` understands, with the subject it takes (DS-436): the one table the usage, the help and the
+/// check of a subject read.
+struct Question {
+  std::string name;
+  std::string subject;  ///< as a usage writes it: "" for none, <subject> when it needs one, [subject] when it may take one
+  std::string takes;    ///< what it takes, in words: said to a subject of another kind
+};
+
 /// The query module's entry point (DS-127): what the rest of ds asks of the model. A named question
 /// answered by identity, or the model taken through a filter the caller gives.
 class IQuery {
@@ -39,26 +47,32 @@ class Query : public IQuery {
   /// The identities the filter takes from the model.
   std::set<std::string> select(const IFilter& filter) const override;
 
-  /// The questions `ask` understands, with the argument each takes.
-  static std::vector<std::pair<std::string, std::string>> questions();
+  /// The questions `ask` understands, with the subject each takes.
+  static std::vector<Question> questions();
+  /// The questions as a usage line: diagrams · entities [scope] · relations <identity> · ...
+  static std::string usage();
 
-  /// Answer `question` about `subject` ("" for the questions that take none); an unknown question,
-  /// a missing identity or one the model does not declare yields one answer of kind "error".
+  /// Answer `question` about `subject` ("" for the questions that take none); an unknown question, a missing
+  /// identity, one the model does not declare, or a subject of a kind the question does not take (DS-436) yields one
+  /// answer of kind "error" that says so.
   std::vector<Answer> ask(const std::string& question, const std::string& subject) const override;
 
-  std::vector<Answer> diagrams() const;                             ///< every diagram, with its kind
-  std::vector<Answer> entities(const std::string& scope) const;     ///< the direct members of a scope ("" = the top level)
-  std::vector<Answer> relations(const std::string& id) const;       ///< every relation touching `id`, with its direction
-  std::vector<Answer> artefacts(const std::string& id) const;       ///< the requirements and constraints on `id`, and what verifies them
-  std::vector<Answer> behaviours(const std::string& id) const;      ///< the sequences and state machines of a method or class
-  std::vector<Answer> failures(const std::string& id) const;        ///< the failures escaping an operation, by where each starts
-  std::vector<Answer> shows(const std::string& diagram) const;      ///< the entities a diagram takes, by the filter of its kind
-  std::vector<Answer> findings(const std::string& file) const;      ///< the findings of a file ("" = all)
-  std::vector<Answer> coverage(const std::string& identity) const;  ///< what is not yet written ("" = all, DS-216)
-  std::vector<Answer> coupling() const;                             ///< what each behaviour touches outside its module, and how
+  std::vector<Answer> diagrams() const;                            ///< every diagram, with its kind
+  std::vector<Answer> entities(const std::string& scope) const;    ///< the direct members of a scope ("" = the top level)
+  std::vector<Answer> relations(const std::string& id) const;      ///< every relation touching `id`, with its direction
+  std::vector<Answer> artefacts(const std::string& id) const;      ///< the requirements and constraints on `id`, and what verifies them
+  std::vector<Answer> behaviours(const std::string& id) const;     ///< the sequences and state machines of a method or class
+  std::vector<Answer> failures(const std::string& id) const;       ///< the failures escaping an operation, by where each starts
+  std::vector<Answer> shows(const std::string& diagram) const;     ///< the entities a diagram takes, by the filter of its kind
+  std::vector<Answer> findings(const std::string& subject) const;  ///< the findings of a file, or of an entity and all it holds ("" = all)
+  std::vector<Answer> coverage(const std::string& subject) const;  ///< what is not yet written, as findings asks (DS-216)
+  std::vector<Answer> coupling() const;                            ///< what each behaviour touches outside its module, and how
 
  private:
   bool known(const std::string& id) const;                                            // an entity, or a scope something is declared in
+  std::string refused(const Question& question, const std::string& subject) const;    // why the subject is of no kind it takes; ""
+  bool within(const model::Location& at, const std::string& id) const;                // on the entity or on anything it holds
+  static bool isFile(const std::string& subject);                                     // a subject that names a file: ends in .ds
   std::vector<std::string> nearTo(const std::string& name) const;                     // identities ending in the name, for a hint
   Answer entityAnswer(const model::Entity& entity, const std::string& detail) const;  // an entity, its kind by name
   static bool endsWith(const std::string& text, const std::string& suffix);           // a finding's file, the one asked

@@ -114,6 +114,10 @@ void FormulaBinder::bind(TSNode node, const BindContext& ctx, model::Entity& out
         column.form = "field";
         column.variable = ctx.reader.fieldText(what, Field::of);
         column.field = ctx.reader.fieldText(what, Field::field);
+      } else if (TreeReader::is(what, "property_term")) {  // kind(r), id(r), name(r): the terms a rule reads (DS-437)
+        column.form = "property";
+        column.variable = ctx.reader.fieldText(what, Field::of);
+        column.property = ctx.reader.fieldText(what, Field::property);
       } else if (TreeReader::is(what, "column_related")) {
         column.form = "related";
         column.variable = ctx.reader.fieldText(what, Field::show);

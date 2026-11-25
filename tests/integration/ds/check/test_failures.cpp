@@ -142,6 +142,13 @@ TEST_F(TestFailurePromises, AnOperationWithNoBehaviourFailsAsItsSignatureSays) {
 TEST_F(TestFailurePromises, ABoundarySaysWhatEscapesItOrNothingMay) {
   EXPECT_EQ(said("W-FAILURE-UNDECLARED", "shelf@library::open").size(), 2u);  // LoadError and ParseError, said by no one
   EXPECT_TRUE(said("W-FAILURE-UNDECLARED", "shelf@library::show").empty());   // nothing escapes it
+  // a use case writes no signature: what escapes its scenario is said there, never as a field it lacks (DS-434)
+  const auto read = said("W-FAILURE-UNDECLARED", "UC-00001-1");
+  ASSERT_EQ(read.size(), 2u);
+  EXPECT_NE(read[0].find("lets LoadError escape"), std::string::npos);
+  EXPECT_EQ(model.find("UC-00001-1")->field("escapes"), "LoadError, ParseError");
+  EXPECT_TRUE(said("W-FAILURE-UNDECLARED", "UC-00002-1").empty());  // the shelf handles all it calls fails with
+  for (const auto& f : model.findings()) EXPECT_NE(f.code, "W-FIELD-UNKNOWN") << f.message;
 }
 
 }  // namespace

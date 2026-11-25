@@ -12,7 +12,9 @@ namespace ds {
 namespace layout {
 
 /// What an engine is given to place (DS-392): nested boxes of given sizes, the edges between them and how wide the
-/// drawing may be. It refers to the boxes and owns none of them; whoever builds it keeps them.
+/// drawing may be. It refers to the boxes and owns none of them; whoever builds it keeps them. The boxes are numbered in
+/// the order the graph is read: the root is 0, then each frame is followed by its kids and then its ports. The edges
+/// name their ends by those numbers, and a placement gives the boxes back in that order.
 struct Graph {
   const Frame* root = nullptr;           ///< the boxes, nested, each sized and arranged
   std::vector<Edge> edges;               ///< the edges between them, for an engine that routes

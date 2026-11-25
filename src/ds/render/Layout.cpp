@@ -74,10 +74,13 @@ LayoutResult Layout::place(const IrDocument& doc, int maxWidth) const {
       roots.push_back(static_cast<int>(i));
     }
   }
+  // the number each node takes in the order the graph is read (the root is 0); a node no root reaches has none
+  std::vector<std::size_t> number(n, layout::Edge::none);
+  std::size_t next = 1;
   std::function<layout::Frame(int)> frameOf = [&](int i) {
     const IrNode& node = doc.nodes[i];
+    number[i] = next++;
     layout::Frame f;
-    f.id = node.id;
     if (node.kind == "container") {
       f.arrangement = layout::Frame::Arrangement::Layered;
       f.label = static_cast<double>(static_cast<int>(node.label.size()) * m_.CHAR_W);
@@ -94,7 +97,11 @@ LayoutResult Layout::place(const IrDocument& doc, int maxWidth) const {
   layout::Graph graph;
   graph.root = &root;
   graph.maxWidth = maxWidth;
-  for (const IrEdge& e : doc.edges) graph.edges.push_back({e.from, e.to, isHierarchy(e.kind)});
+  const auto numberOf = [&](const std::string& id) {
+    const auto it = index.find(id);
+    return it == index.end() ? layout::Edge::none : number[it->second];
+  };
+  for (const IrEdge& e : doc.edges) graph.edges.push_back({numberOf(e.from), numberOf(e.to), isHierarchy(e.kind)});
   layout::Spacing spacing;
   spacing.channel = m_.CHAR_W;
   spacing.gapX = m_.GAP_X;
@@ -106,13 +113,14 @@ LayoutResult Layout::place(const IrDocument& doc, int maxWidth) const {
   spacing.aspect = m_.ASPECT;
   const layout::Placement placed = layout::EngineFactory::layered(spacing)->place(graph);
   LayoutResult out;
-  for (const IrNode& node : doc.nodes) {
+  out.placed.reserve(n);
+  for (size_t i = 0; i < n; ++i) {
     Rect r;
-    const auto box = placed.boxes.find(node.id);
-    if (box != placed.boxes.end())
-      r = {static_cast<int>(box->second.x), static_cast<int>(box->second.y), static_cast<int>(box->second.w),
-           static_cast<int>(box->second.h)};
-    out.placed.push_back({&node, r});
+    if (number[i] < placed.boxes.size()) {
+      const layout::Box& b = placed.boxes[number[i]];
+      r = {static_cast<int>(b.x), static_cast<int>(b.y), static_cast<int>(b.w), static_cast<int>(b.h)};
+    }
+    out.placed.push_back({&doc.nodes[i], r});
   }
   for (const auto& route : placed.routes) {
     Route& to = out.routes[route.first];

@@ -58,6 +58,34 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00260-1 {
+      status: draft
+      @refines SREQ-00011-1
+      title: The query shall say which subject each question takes, answer a subject of another kind with an error that says what it takes, and take a file or an identity for the findings and the coverage
+      text:
+        Each question names the subject it takes, in one table the usage, the help and the check of a
+        subject read: none (diagrams, coupling), a scope (entities, optional), any identity (relations),
+        a design element (artefacts), what has a behaviour (behaviours), what a failure may escape
+        (failures), a diagram (shows), a file or an identity (findings, coverage, optional). What each
+        takes is read from the metamodel: a kind others are declared in, a kind that may realise, satisfy
+        or obey, a kind a behaviour may be of or a class, a kind with the escapes the check writes. A
+        subject given to a question that takes none, or of a kind it does not take, is one answer of kind
+        error naming the subject's kind and what the question takes; ds query exits 1. The findings and the
+        coverage of an identity are those that lie on the entity or on anything it holds, and the coverage
+        also those that name it. Every answer to a subject a question takes is as before.
+      rationale: Owner's coordinator, 2026-11-24 (DS-436, D1 exit 1, D2 widen): a wrong subject printed nothing with exit 0, which reads as "it has none"; a first-time user asked coverage shop@sales@cart and coverage of a file and got nothing.
+      tags: query, cli
+      verification VER-00280-1 {
+        status: draft
+        title: Integration tests confirm each question refuses a subject of another kind by saying what it takes, the findings and coverage take a file or an entity and what it holds, and the help and the manual list the questions from the one table
+        method: test
+        tests:
+          tests/integration/ds/query/test_query.cpp::TestQuery.EachQuestionTakesTheSubjectItSaysAndAnswersAnotherKindWithAnError
+          tests/integration/ds/query/test_query.cpp::TestQuery.FindingsAndCoverageTakeAFileOrAnEntityAndEverythingItHolds
+          tests/integration/ds/query/test_query.cpp::TestQuery.TheManualListsTheQuestionsAsTheQueryDoes
+      }
+    }
+
     requirement REQ-00003-2 {
       status: approved
       @refines SREQ-00011-1
@@ -127,6 +155,13 @@ package driftspec@ds {
       + kind: std::string
       + id: std::string
       + detail: std::string
+    }
+
+    dataclass Question {                     // a question and the subject it takes: the one table usage, help and check read (DS-436)
+      @requirement REQ-00260-1
+      + name: std::string
+      + subject: std::string
+      + takes: std::string
     }
 
     // ---- the contract ------------------------------------------------------------------------
@@ -292,8 +327,15 @@ package driftspec@ds {
       - refs metamodel_: model::Metamodel     // the language of the model: the kinds of the answers by name (DS-351)
       + Query(model: model::Model, metamodel: model::Metamodel)
       + select(filter: IFilter) -> std::set<std::string>
-      + static questions() -> std::vector<std::pair<std::string, std::string>>
-      + ask(question: std::string, subject: std::string) -> std::vector<Answer>
+      + static questions() -> std::vector<Question> {
+        @requirement REQ-00260-1
+      }
+      + static usage() -> std::string {     // the questions as a usage line, for the help and the manual
+        @requirement REQ-00260-1
+      }
+      + ask(question: std::string, subject: std::string) -> std::vector<Answer> {
+        @requirement REQ-00260-1
+      }
       + diagrams() -> std::vector<Answer>
       + entities(scope: std::string) -> std::vector<Answer>
       + relations(id: std::string) -> std::vector<Answer>
@@ -303,15 +345,25 @@ package driftspec@ds {
         @requirement REQ-00111-1
       }
       + shows(diagram: std::string) -> std::vector<Answer>
-      + findings(file: std::string) -> std::vector<Answer>
-      + coverage(identity: std::string) -> std::vector<Answer> {
+      + findings(subject: std::string) -> std::vector<Answer> {
+        @requirement REQ-00260-1
+      }
+      + coverage(subject: std::string) -> std::vector<Answer> {
         @requirement REQ-00124-2
+        @requirement REQ-00260-1
       }
       + coupling() -> std::vector<Answer>
       - known(id: std::string) -> bool                       // an entity, or a scope something is declared in
       - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
       - entityAnswer(entity: model::Entity, detail: std::string) -> Answer
       - static endsWith(text: std::string, suffix: std::string) -> bool   // a finding's file ends in the one asked
+      - refused(question: Question, subject: std::string) -> std::string {   // why a subject is of no kind the question takes
+        @requirement REQ-00260-1
+      }
+      - within(at: model::Location, id: std::string) -> bool {   // on the entity or on anything it holds
+        @requirement REQ-00260-1
+      }
+      - static isFile(subject: std::string) -> bool              // a subject that names a file: ends in .ds
     }
 
     // the one place that names the query (DS-397), as FilterFactory names the filters: what asks the model a
@@ -319,6 +371,11 @@ package driftspec@ds {
     class QueryFactory {
       @requirement REQ-00003-2
       + static of(model: model::Model, metamodel: model::Metamodel) -> std::unique_ptr<IQuery>
+    }
+
+    sequence QueryFactory::of {
+      local query: Query
+      return query
     }
 
     // An entity as an answer: its kind is named by the metamodel the model is written in.

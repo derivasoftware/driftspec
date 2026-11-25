@@ -164,6 +164,11 @@ package driftspec@ds {
       -> json(pretty) -> sink
       return sink
     }
+
+    sequence SinkFactory::json {
+      local sink: JsonSink
+      return sink
+    }
   }
 }
 

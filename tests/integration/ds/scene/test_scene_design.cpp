@@ -187,8 +187,7 @@ TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirement
     for (const auto& r : n.requirements) EXPECT_TRUE(doc.titles.count(r)) << r;
 }
 
-TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
+TEST_F(TestSceneOfTheDesign, EachBehaviourOfTheDesignIsWrittenOnce) {
   const auto doc = ds::scene::Scene(model, metamodel).build();
   std::set<std::string> seen;
   size_t calls = 0;
@@ -196,9 +195,7 @@ TEST_F(TestSceneOfTheDesign, ThePageStaysSmallBecauseEachBehaviourIsWrittenOnce)
     EXPECT_TRUE(seen.insert(b.id).second) << b.id;
     calls += b.calls.size();
   }
-  EXPECT_GT(calls, 0u);  // how many more steps the tours replay: tests/integration/viewer/tours.test.ts (DS-130)
-  EXPECT_LT(ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "design"}, sink).size(),
-            300u * 1024u);  // the whole viewer of ds's design, which grows with it: 250 KiB from DS-70 until DS-398 passed it
+  EXPECT_GT(calls, 0u);  // how much a behaviour written once keeps the page small: test_scene_page_size.cpp (DS-452)
 }
 
 TEST_F(TestSceneOfTheDesign, HidingPrivateMembersMakesNoBoxWider) {

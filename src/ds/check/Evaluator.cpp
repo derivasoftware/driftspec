@@ -121,6 +121,9 @@ void Evaluator::tabulate(const std::string& id, const model::Formula& formula) {
         } else if (bound) {
           text = facts_.fieldOf(entity, column.field);
         }
+      } else if (column.form == "property") {  // what the entity is, as a rule reads it (DS-437)
+        const int slot = variables.slotOf(column.variable);
+        if (slot >= 0 && subject[slot]) text = facts_.propertyOf(*subject[slot], column.property);
       } else if (column.form == "related") {
         std::set<std::string> seen;
         const int slot = variables.slotOf(column.variable);
@@ -141,6 +144,46 @@ void Evaluator::tabulate(const std::string& id, const model::Formula& formula) {
     table.kinds.push_back(kinds);
   }
   model_.tabulate(id, table);
+}
+
+std::string Evaluator::through(const std::string& owner, const std::vector<model::Literal>& claim, const Variables& variables,
+                               const Bindings& answer) const {
+  std::string out;
+  for (const auto& l : claim) {
+    if (l.form != model::LiteralForm::Call || l.negated) continue;
+    const std::string definition = facts_.definitionOf(owner, l.name);
+    const auto f = facts_.formulas().find(definition);
+    const auto v = variables_.find(definition);
+    if (f == facts_.formulas().end() || v == variables_.end() || f->second.parameters.size() != l.terms.size()) continue;
+    const Variables& inner = v->second;
+    Bindings seed(inner.size(), nullptr);  // the definition's parameters, as the answer gives its arguments
+    bool known = true;
+    for (std::size_t i = 0; i < l.terms.size() && known; ++i) {
+      const model::Term& t = l.terms[i];
+      const std::string* given = nullptr;
+      if (t.variable && t.field.empty() && t.property.empty()) {
+        const int slot = variables.slotOf(t.text);
+        given = slot < 0 ? nullptr : answer[slot];
+      } else if (!t.variable && !t.value) {
+        given = facts_.constantOf(owner, t.text);
+      }
+      const int at = inner.slotOf(f->second.parameters[i]);
+      known = given && at >= 0;
+      if (known) seed[at] = given;
+    }
+    if (!known) continue;  // an argument read from a field, or a value: the case is not looked for
+    for (const auto& c : f->second.cases) {
+      const auto found = solver_.solve(definition, c, inner, seed, true);
+      if (found.empty()) continue;
+      Bindings extra(inner.size(), nullptr);  // what the case binds beyond the parameters
+      for (std::size_t s = 0; s < inner.size(); ++s)
+        if (!seed[s]) extra[s] = found.front()[s];
+      const auto named = inner.pairs(extra);
+      if (!named.empty()) out += " (" + l.name + ": " + describe(named) + ")";
+      break;
+    }
+  }
+  return out;
 }
 
 void Evaluator::evaluateRule(const std::string& id, const model::Formula& formula) {
@@ -191,6 +234,7 @@ void Evaluator::evaluateRule(const std::string& id, const model::Formula& formul
     std::string message = "is broken";
     if (!named.empty()) message += " for " + describe(named);
     if (formula.never && !beyond.empty()) message += ": " + describe(beyond);
+    if (formula.never && answered) message += through(id, claim, variables, found.front());
     // the finding sits on what breaks the rule, the first thing it ranges over (a call in its sequence,
     // a class in its file), so the reader lands there; the message names the rule
     report(model::Code::E_RULE_BROKEN, id, message, at);
