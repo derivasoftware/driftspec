@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -34,7 +35,7 @@ class TestOpenBoxes : public ::testing::Test {
   }
 
   nlohmann::json diagram(const std::string& name) {
-    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + name, false));
+    return nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + name));
   }
 
   static const nlohmann::json* node(const nlohmann::json& ir, const std::string& id) {
@@ -100,7 +101,7 @@ TEST_F(TestOpenBoxes, ADiagramThatDoesNotSayOpenDrawsEverythingOpen) {
   ds::bind::Binder binder(plain, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/static")) binder.bind(f);
   ds::check::CheckerFactory::make(plain, metamodel)->run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(plain, metamodel).render("diagram:CL_Model", false));
+  const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(plain, metamodel), "diagram:CL_Model"));
   EXPECT_EQ(ir["nodes"][0]["kind"], "container");
 }
 
@@ -111,7 +112,7 @@ TEST(TestOpenBoxesBehaviour, ABehaviourThatCrossesBoxesIsAnEdgeOfTheClosedDrawin
   ds::bind::Binder binder(shop, metamodel);
   for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/interfaces")) binder.bind(f);
   ds::check::CheckerFactory::make(shop, metamodel)->run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(shop, metamodel).render("diagram:HLD_Shop", false));
+  const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(shop, metamodel), "diagram:HLD_Shop"));
   bool reached = false;
   for (const auto& e : ir["edges"]) reached = reached || (e["from"] == "shop@shell" && e["to"] == "shop@till");
   EXPECT_TRUE(reached);  // no type says it: only the sequence of shell::buy calls till::main
@@ -160,7 +161,7 @@ TEST(TestDiagramPatterns, ARequirementDiagramReadsAModulePatternAsAClassDiagramD
                                "  include: shop@empty::*\n"
                                "}\n"));
   ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:REQ_Store", false));
+  const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:REQ_Store"));
   bool requirement = false;
   for (const auto& n : ir["nodes"]) requirement = requirement || n["id"] == "REQ-00001-1";
   EXPECT_TRUE(requirement);
@@ -190,7 +191,7 @@ TEST(TestEveryBox, ABoxIsDrawnWithOrWithoutChildren) {
                                "  include: shop@*\n"
                                "}\n"));
   ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:HLD_Shop", false));
+  const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:HLD_Shop"));
   std::map<std::string, std::string> parentOf;
   for (const auto& n : ir["nodes"]) parentOf[n["id"]] = n.contains("parent") ? n["parent"].get<std::string>() : "";
   EXPECT_TRUE(parentOf.count("shop@sales"));                        // a box with nothing inside
@@ -241,7 +242,7 @@ TEST(TestDependencyDrawing, OneDependencyIsDrawnAlikeWithOrWithoutOpenAndADeclar
   ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   const auto edges = [&model, &metamodel](const std::string& d) {
     std::set<std::string> out;
-    const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + d, false));
+    const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + d));
     for (const auto& e : ir["edges"]) out.insert(e["from"].get<std::string>() + " -> " + e["to"].get<std::string>());
     return out;
   };
@@ -317,10 +318,10 @@ TEST_F(TestDepthTooLarge, ADepthTooLargeForAnIntIsTheFindingOfADepthThatIsNoNumb
 TEST_F(TestDepthTooLarge, ADepthTooLargeForAnIntDrawsAsADepthThatIsNoNumberAndNeverAnAbort) {
   const ds::render::IrExport ir(model, metamodel);
   std::string deep;
-  EXPECT_NO_THROW(deep = ir.render("diagram:SEQ_Deep", false));
+  EXPECT_NO_THROW(deep = ds::test::irJson(ir, "diagram:SEQ_Deep"));
   ASSERT_FALSE(deep.empty());
   const auto drawn = nlohmann::json::parse(deep);
-  const auto word = nlohmann::json::parse(ir.render("diagram:SEQ_Lots", false));
+  const auto word = nlohmann::json::parse(ds::test::irJson(ir, "diagram:SEQ_Lots"));
   EXPECT_FALSE(drawn["edges"].empty());
   EXPECT_EQ(drawn["nodes"], word["nodes"]);
   EXPECT_EQ(drawn["edges"], word["edges"]);
@@ -348,7 +349,7 @@ class TestPastTheReach : public ::testing::Test {
   Drawn draw(const std::string& diagram) const {
     Drawn out;
     const auto start = std::chrono::steady_clock::now();
-    out.ir = ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false);
+    out.ir = ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram);
     out.svg = ds::render::Svg(kTheme).render(ds::render::IrDocument::parse(out.ir));
     out.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
     return out;

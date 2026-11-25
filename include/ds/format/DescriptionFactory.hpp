@@ -25,6 +25,8 @@ class DescriptionFactory {
   static std::unique_ptr<IDescription> report(const check::Report& report);
   /// A query's answers.
   static std::unique_ptr<IDescription> answers(const std::vector<query::Answer>& answers);
+  /// A diagram's render-IR (DS-418): the document IrExport made, as plantuml-render's contract writes it.
+  static std::unique_ptr<IDescription> ir(const render::IrDocument& document);
   /// Where each node and route of a diagram goes, in cells measured as the theme measures a terminal's text.
   static std::unique_ptr<IDescription> layout(const render::IrText& ir, const theme::Theme& theme, int width);
   /// A diagram as the terminal's coloured cells, drawn in the theme.

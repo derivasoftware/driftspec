@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -30,7 +31,7 @@ class TestText : public ::testing::Test {
   }
 
   std::string draw(const std::string& diagram, bool color = false) {
-    const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
+    const auto doc = ds::render::IrDocument::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram));
     return ds::render::Text(kTheme).render(doc, color);
   }
 };
@@ -126,7 +127,7 @@ TEST_F(TestText, FramesOpeningAtTheSameMessageStackTheirHeaders) {
                                "  include: app@m::A::run::sequence/nested\n"
                                "}\n"));
   ds::check::CheckerFactory::make(nested, metamodel)->run(binder.notes());
-  const auto doc = ds::render::IrDocument::parse(ds::render::IrExport(nested, metamodel).render("diagram:SEQ_Nested", false));
+  const auto doc = ds::render::IrDocument::parse(ds::test::irJson(ds::render::IrExport(nested, metamodel), "diagram:SEQ_Nested"));
   const std::string out = ds::render::Text(kTheme).render(doc, false);
   const auto outer = out.find("loop N"), inner = out.find("loop M");
   ASSERT_NE(outer, std::string::npos);

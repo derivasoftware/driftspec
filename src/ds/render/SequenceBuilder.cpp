@@ -45,13 +45,16 @@ std::string SequenceBuilder::lifeline(const std::string& key, const std::string&
                                       const std::string& typeId) {
   auto it = lifelineOf_.find(key);
   if (it != lifelineOf_.end()) return it->second;
-  nlohmann::json node = {{"id", key}, {"kind", "lifeline"}, {"label", label}, {"classifier", classifier}};
+  IrNode node;
+  node.id = key;
+  node.kind = "lifeline";
+  node.label = label;
+  node.classifier = classifier;
   if (!typeId.empty()) {
-    node["href"] = "#" + typeId;  // a page that also shows the class diagram lands on the class
-    node["title"] = typeId;
+    node.href = "#" + typeId;  // a page that also shows the class diagram lands on the class
+    node.title = typeId;
     const model::Entity* type = model_.find(typeId);
-    if (type && !type->location.file.empty())
-      node["refs"] = {{"location", type->location.file + ":" + std::to_string(type->location.line)}};
+    if (type && !type->location.file.empty()) node.refs["location"] = type->location.file + ":" + std::to_string(type->location.line);
   }
   nodes.push_back(node);
   lifelineOf_[key] = key;
@@ -88,7 +91,11 @@ void SequenceBuilder::emit(const model::Entity& seq, const std::string& selfLine
   auto flushEmpty = [&](int before) {
     for (; nextEmpty < empty.size() && tree.at(empty[nextEmpty]->id) <= before; ++nextEmpty) {
       const model::Entity& f = *empty[nextEmpty];
-      edges.push_back({{"from", selfLine}, {"to", selfLine}, {"kind", "message"}, {"order", order}, {"label", "..."}, {"dashed", true}});
+      IrEdge gap = IrEdge::between(selfLine, selfLine, "message");
+      gap.order = order;
+      gap.label = "...";
+      gap.dashed = true;
+      edges.push_back(gap);
       for (std::string id = f.id; !id.empty(); id = tree.frameOf(id)) {
         if (!firstOrder.count(id)) firstOrder[id] = order;
         lastOrder[id] = order;
@@ -112,14 +119,11 @@ void SequenceBuilder::emit(const model::Entity& seq, const std::string& selfLine
         if (tree.elseOf(f) == m->id) elseOrder[f] = order;
       }
       const std::string value = m->field("result");
-      edges.push_back({{"from", selfLine},
-                       {"to", backLine},
-                       {"kind", "message"},
-                       {"order", order++},
-                       {"label", !fails.empty()  ? "fail " + fails
-                                 : value.empty() ? "return"
-                                                 : "return " + value},
-                       {"dashed", true}});
+      IrEdge back = IrEdge::between(selfLine, backLine, "message");
+      back.order = order++;
+      back.label = !fails.empty() ? "fail " + fails : value.empty() ? "return" : "return " + value;
+      back.dashed = true;
+      edges.push_back(back);
       for (std::string f = frame; !f.empty(); f = tree.frameOf(f)) {
         if (drawn(f)) lastOrder[f] = order - 1;
       }
@@ -164,15 +168,12 @@ void SequenceBuilder::emit(const model::Entity& seq, const std::string& selfLine
       if (tree.elseOf(f) == m->id) elseOrder[f] = order;
     }
     const int row = order++;
-    nlohmann::json edge = {
-        {"from", from},
-        {"to", target},
-        {"kind", "message"},
-        {"order", row},
-        // a message to a closed box says which of its children takes it
-        {"label", (box.empty() || box == typeId ? "" : model::Identity(typeId).lastName() + "::") + m->field("op") + "(" +
-                      m->field("args") + ")" + (m->field("scenario").empty() ? "" : " / " + m->field("scenario"))}};
-    nlohmann::json refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
+    IrEdge edge = IrEdge::between(from, target, "message");
+    edge.order = row;
+    // a message to a closed box says which of its children takes it
+    edge.label = (box.empty() || box == typeId ? "" : model::Identity(typeId).lastName() + "::") + m->field("op") + "(" + m->field("args") +
+                 ")" + (m->field("scenario").empty() ? "" : " / " + m->field("scenario"));
+    std::map<std::string, std::string> refs = {{"location", m->location.file + ":" + std::to_string(m->location.line)}};
     const std::string& expands = taken.next;
     std::string title;
     if (!typeId.empty()) title = typeId + "::" + m->field("op");
@@ -185,9 +186,9 @@ void SequenceBuilder::emit(const model::Entity& seq, const std::string& selfLine
     if (!expands.empty()) {
       refs["expands"] = expands;
       title += (title.empty() ? "" : "\n") + std::string(goesOn ? "expanded below: " : "expands to: ") + model_.find(expands)->name;
-      if (!goesOn) edge["href"] = "#" + expands;  // a page that also shows the child lands on it
+      if (!goesOn) edge.href = "#" + expands;  // a page that also shows the child lands on it
     }
-    if (!title.empty()) edge["title"] = title;
+    edge.title = title;
     const size_t at = edges.size();
     edges.push_back(edge);
     if (goesOn) {
@@ -195,23 +196,28 @@ void SequenceBuilder::emit(const model::Entity& seq, const std::string& selfLine
       emit(*model_.find(expands), target, from, taken.nextPath, depth - 1, stack);
       if (order > first) refs["span"] = std::to_string(first) + "-" + std::to_string(order - 1);  // the rows the expansion occupies
     }
-    edges[at]["refs"] = refs;
+    edges[at].refs = refs;
     const std::string result = m->field("result");
-    if (!result.empty())
-      edges.push_back({{"from", target}, {"to", from}, {"kind", "message"}, {"order", order++}, {"label", result}, {"dashed", true}});
+    if (!result.empty()) {
+      IrEdge answer = IrEdge::between(target, from, "message");
+      answer.order = order++;
+      answer.label = result;
+      answer.dashed = true;
+      edges.push_back(answer);
+    }
     for (std::string f = frame; !f.empty(); f = tree.frameOf(f))
       if (drawn(f)) lastOrder[f] = order - 1;  // after any expansion
   }
   flushEmpty(std::numeric_limits<int>::max());
   for (const auto& f : firstOrder) {
     const model::Entity* fe = model_.find(f.first);
-    nlohmann::json frame = {
-        {"id", f.first},
-        {"kind", "frame"},
-        {"label", fe->field("kind") == "handler" ? "on " + fe->field("failure") : fe->field("kind") + " " + fe->field("condition")},
-        {"classifier", fe->field("kind")},
-        {"span", nlohmann::json::array({f.second, lastOrder[f.first]})}};
-    if (elseOrder.count(f.first)) frame["dividers"] = nlohmann::json::array({{{"at", elseOrder[f.first]}, {"label", "else"}}});
+    IrNode frame;
+    frame.id = f.first;
+    frame.kind = "frame";
+    frame.label = fe->field("kind") == "handler" ? "on " + fe->field("failure") : fe->field("kind") + " " + fe->field("condition");
+    frame.classifier = fe->field("kind");
+    frame.span = {f.second, lastOrder[f.first]};
+    if (elseOrder.count(f.first)) frame.dividers = {{elseOrder[f.first], "else"}};
     nodes.push_back(frame);
   }
   stack.erase(seq.id);

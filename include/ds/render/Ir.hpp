@@ -2,6 +2,7 @@
 #define DRIFTSPEC_RENDER_IR_HPP
 
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -19,8 +20,8 @@ struct IrNode {
   std::string parent;
   std::string title;
   std::string href;
-  std::string part;  ///< the part of the drawing it belongs to, in a drawing made of several (DS-245)
-  bool abstract = false;
+  std::string part;                         ///< the part of the drawing it belongs to, in a drawing made of several (DS-245)
+  std::optional<bool> abstract;             ///< said of a class or an interface, either way; of anything else not said (DS-418)
   std::map<std::string, std::string> refs;  ///< named references (emitted as data-ref-<key>); not `refs`: a modifier keyword in DriftSpec
   std::vector<std::vector<std::string>> sections;
   std::vector<std::string> sectionKinds;
@@ -48,6 +49,9 @@ struct IrEdge {
   bool dashed = false;
   int order = -1;                           ///< sequence row of a message
   std::map<std::string, std::string> refs;  ///< named references: expands, span, location
+
+  /// An edge from `from` to `to` of `kind`, saying nothing else yet (DS-418).
+  static IrEdge between(const std::string& from, const std::string& to, const std::string& kind);
 };
 
 /// One cell of a table: its text, what it is (the renderers draw each kind its own way) and what it says
@@ -77,7 +81,7 @@ struct IrDocument {
   std::string kind;  ///< the diagram's kind, as it is written (class, state, sequence, ...): how it is drawn (DS-443)
   std::string title;
   std::string notice;
-  IrTable table;  ///< when it has columns, the document is drawn as this table
+  std::optional<IrTable> table;  ///< when written and with columns, the document is drawn as this table
   std::vector<IrNode> nodes;
   std::vector<IrEdge> edges;
   /// A drawing made of several, each drawn as itself and laid out beside the last (DS-245): a tour holds the

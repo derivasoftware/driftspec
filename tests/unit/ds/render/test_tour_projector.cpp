@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <nlohmann/json.hpp>
 #include <string>
+#include <vector>
 
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
@@ -25,9 +25,9 @@ class TestTourProjector : public ::testing::Test {
     return *model.find("diagram:" + name);
   }
 
-  static const nlohmann::json* node(const nlohmann::json& body, const std::string& id) {
-    for (const auto& n : body["nodes"]) {
-      if (n["id"] == id) return &n;
+  static const ds::render::IrNode* node(const ds::render::IrDocument& body, const std::string& id) {
+    for (const auto& n : body.nodes) {
+      if (n.id == id) return &n;
     }
     return nullptr;
   }
@@ -37,19 +37,19 @@ class TestTourProjector : public ::testing::Test {
 };
 
 TEST_F(TestTourProjector, EveryNodeSaysWhichOfTheTwoPartsItIsOf) {
-  const nlohmann::json body = ds::render::TourProjector(model, metamodel).project(diagram("cut", "TOUR_Modules"));
-  EXPECT_EQ(body["parts"], nlohmann::json::array({"boxes", "sequence"}));
+  const ds::render::IrDocument body = ds::render::TourProjector(model, metamodel).project(diagram("cut", "TOUR_Modules"));
+  EXPECT_EQ(body.parts, (std::vector<std::string>{"boxes", "sequence"}));
   int boxes = 0, lifelines = 0;
-  for (const auto& n : body["nodes"]) {
-    boxes += n["part"] == "boxes" ? 1 : 0;
-    lifelines += n["part"] == "sequence" ? 1 : 0;
+  for (const auto& n : body.nodes) {
+    boxes += n.part == "boxes" ? 1 : 0;
+    lifelines += n.part == "sequence" ? 1 : 0;
   }
   EXPECT_GT(boxes, 0);
   EXPECT_GT(lifelines, 0);
-  EXPECT_EQ(boxes + lifelines, static_cast<int>(body["nodes"].size()));
+  EXPECT_EQ(boxes + lifelines, static_cast<int>(body.nodes.size()));
   ASSERT_NE(node(body, "shop@sales@desk"), nullptr);
-  EXPECT_EQ((*node(body, "shop@sales@desk"))["part"], "boxes");
-  EXPECT_FALSE(body.contains("ir"));  // the head is IrExport's: a projector writes the body alone
-  EXPECT_FALSE(body.contains("title"));
+  EXPECT_EQ(node(body, "shop@sales@desk")->part, "boxes");
+  EXPECT_TRUE(body.kind.empty());  // the head is IrExport's: a projector writes the body alone
+  EXPECT_TRUE(body.title.empty());
 }
 }  // namespace

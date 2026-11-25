@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -87,7 +88,7 @@ TEST_F(TestValues, TheResultOfAnyOperationMayBeTaken) {
 TEST_F(TestValues, ALocalInsideAFrameIsALocal) { EXPECT_FALSE(reported("W-MSG-UNDECLARED", "spare")); }
 
 TEST_F(TestValues, TwoObjectsOfOneTypeAreTwoLifelines) {
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:SEQ_Sell", false));
+  const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:SEQ_Sell"));
   std::vector<std::string> items;
   for (const auto& n : ir["nodes"]) {
     const std::string label = n["label"];
@@ -97,7 +98,7 @@ TEST_F(TestValues, TwoObjectsOfOneTypeAreTwoLifelines) {
 }
 
 TEST_F(TestValues, AFrameWithNoMessageIsStillDrawn) {
-  const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:SEQ_Sell", false));
+  const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:SEQ_Sell"));
   bool receipt = false;
   for (const auto& n : ir["nodes"]) receipt = receipt || (n["kind"] == "frame" && n["label"] == "loop each line of the receipt");
   EXPECT_TRUE(receipt);

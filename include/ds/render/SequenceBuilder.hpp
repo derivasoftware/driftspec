@@ -2,12 +2,13 @@
 #define DRIFTSPEC_RENDER_SEQUENCEBUILDER_HPP
 
 #include <map>
-#include <nlohmann/json.hpp>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "ds/axis/Cut.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/render/Ir.hpp"
 
 namespace ds {
 namespace render {
@@ -19,9 +20,9 @@ class SequenceBuilder {
   /// Builds over `model`, its lifelines standing on `cut` and following the calls it says (DS-231).
   SequenceBuilder(const model::Model& model, const axis::Cut& cut) : model_(model), cut_(cut) {}
 
-  nlohmann::json nodes = nlohmann::json::array();  ///< the lifelines, in the order they are met
-  nlohmann::json edges = nlohmann::json::array();  ///< the messages, each with its order
-  int order = 0;                                   ///< the order the next message takes
+  std::vector<IrNode> nodes;  ///< the lifelines, in the order they are met
+  std::vector<IrEdge> edges;  ///< the messages, each with its order
+  int order = 0;              ///< the order the next message takes
 
   /// The closed box that stands for a type on the cut; empty when the type draws a lifeline of its own.
   std::string closedAround(const std::string& typeId) const;

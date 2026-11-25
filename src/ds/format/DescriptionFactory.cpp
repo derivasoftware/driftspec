@@ -17,6 +17,10 @@ std::unique_ptr<IDescription> DescriptionFactory::answers(const std::vector<quer
   return std::make_unique<AnswersDescription>(answers);
 }
 
+std::unique_ptr<IDescription> DescriptionFactory::ir(const render::IrDocument& document) {
+  return std::make_unique<IrDescription>(document);
+}
+
 std::unique_ptr<IDescription> DescriptionFactory::layout(const render::IrText& ir, const theme::Theme& theme, int width) {
   return std::make_unique<LayoutDescription>(ir, theme, width);
 }

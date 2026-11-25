@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -39,7 +40,7 @@ class TestScenarios : public ::testing::Test {
   }
 
   std::vector<std::string> labels(const std::string& diagram) {
-    const auto ir = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
+    const auto ir = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram));
     std::vector<std::string> out;
     for (const auto& edge : ir["edges"]) out.push_back(edge["label"].get<std::string>());
     return out;
