@@ -308,11 +308,11 @@ class Workspace:
 
     def model(self) -> Model:
         """The whole model, typed: what ds export says."""
-        return _model(json.loads(self._native.export()))
+        return _model(self._native.run("hand-model", {})[1])  # built as Python objects, never as text (DS-459)
 
     def report(self) -> Report:
         """The check: what ds check --json says."""
-        return _report(json.loads(self._native.report()))
+        return _report(self._native.run("check-design", {})[1])
 
     def find(self, identity: str) -> Entity | None:
         data = json.loads(self._native.find(identity))
@@ -356,10 +356,11 @@ class Workspace:
 
     def ask(self, question: str, subject: str = "") -> list[Answer]:
         """A question of ds query, answered as ds query --json does."""
-        return [Answer(a["kind"], a["id"], a["detail"], a.get("from", ""), a.get("to", "")) for a in json.loads(self._native.ask(question, subject))]
+        answers = self._native.run("ask-model", {"question": question, "subject": subject})[1]
+        return [Answer(a["kind"], a["id"], a["detail"], a.get("from", ""), a.get("to", "")) for a in answers]
 
     def shows(self, diagram: str) -> list[Answer]:
-        return [Answer(a["kind"], a["id"], a["detail"], a.get("from", ""), a.get("to", "")) for a in json.loads(self._native.shows(diagram))]
+        return self.ask("shows", diagram)
 
     def render(self, diagram: str, format: str = "text", width: int = 0) -> str:
         """A diagram drawn (svg, text, cells, ir, layout), wrapped to a width; "" when there is no such diagram.

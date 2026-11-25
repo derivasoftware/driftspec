@@ -103,6 +103,9 @@ package driftspec@ds {
       + run(name: std::string, request: service::Request, sink: emit::ISink) -> service::Outcome fails BadRequest, emit::NotImplemented {
         @requirement REQ-00262-1
       }
+      + prepare(name: std::string, request: service::Request) -> void {   // run's loading, apart: a door holding a lock while it describes (DS-459)
+        @requirement REQ-00262-1
+      }
       + selection() -> check::Selection
       + loads() -> std::size_t
       - parse(files: Files) -> void
@@ -313,6 +316,9 @@ package driftspec@ds {
       }
       + report(model: model::Model, pretty: bool) -> std::string   // reads the severity table of its metamodel (DS-379); its description in a JSON sink (DS-398)
       + exportModel(files: Files) -> std::string
+      + described(useCase: std::string, files: Files) -> std::string {   // a use case over the files, into a compact JSON sink (DS-459)
+        @requirement REQ-00262-1
+      }
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
       + severities() -> std::string            // the severity table, as JSON: name, fails, keptApart, editor (DS-386)
       // the format named, drawn as the workspace draws it; one that is none of the five fails NotImplemented, never
@@ -615,6 +621,8 @@ package driftspec@ds {
     @constraint CST-00009-1
     operation export() -> std::string
     operation reload(files: Files) -> void     // loaded again in place (DS-420)
+    operation prepare(name: std::string, request: service::Request) -> void   // a use case's model loaded (DS-459)
+    operation run(name: std::string, request: service::Request, sink: emit::ISink) -> service::Outcome fails BadRequest, emit::NotImplemented
     operation report() -> std::string fails NotImplemented   // a pair ds does not write reaches the caller as the failure it is (DS-398)
     operation find(id: std::string) -> std::string
     operation from(id: std::string) -> std::string
@@ -726,6 +734,17 @@ package driftspec@ds {
   sequence workspace::reload {
     local loaded: api::Workspace
     -> loaded.reload(files)
+  }
+
+  sequence workspace::prepare {
+    local loaded: api::Workspace
+    -> loaded.prepare(name, request)
+  }
+
+  sequence workspace::run {
+    local loaded: api::Workspace
+    -> loaded.run(name, request, sink) -> outcome
+    return outcome
   }
 
   sequence workspace::export {
