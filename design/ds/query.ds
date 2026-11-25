@@ -157,6 +157,8 @@ package driftspec@ds {
       + kind: std::string
       + id: std::string
       + detail: std::string
+      + from: std::string                    // a relation's two ends, for a relation question only (DS-445)
+      + to: std::string
     }
 
     dataclass Question {                     // a question and the subject it takes: the one table usage, help and check read (DS-436)

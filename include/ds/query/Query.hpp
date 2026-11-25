@@ -14,9 +14,11 @@ namespace query {
 
 /// One line of an answer: an entity named by its identity, with what the question asked about it.
 struct Answer {
-  std::string kind;    ///< the entity's kind, or the relation's kind for a relation question
-  std::string id;      ///< the identity the answer names (follow it with another question or a drawing)
-  std::string detail;  ///< what else the question asked: a direction, a diagram kind, a title, a finding
+  std::string kind;       ///< the entity's kind, or the relation's kind for a relation question
+  std::string id;         ///< the identity the answer names (follow it with another question or a drawing)
+  std::string detail;     ///< what else the question asked: a direction, a diagram kind, a title, a finding
+  std::string from = {};  ///< for a relation question, the relation's two ends as the model holds them (DS-445);
+  std::string to = {};    ///< "" for every other question, whose answers carry neither
 };
 
 /// A question `ask` understands, with the subject it takes (DS-436): the one table the usage, the help and the

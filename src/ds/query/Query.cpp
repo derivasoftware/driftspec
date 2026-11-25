@@ -180,10 +180,11 @@ std::vector<Answer> Query::entities(const std::string& asked) const {
 std::vector<Answer> Query::relations(const std::string& id) const {
   std::vector<Answer> out;
   for (const auto& r : model_.index().touching(id)) {
+    // the other end and the direction, as before, and both ends as the model holds them (DS-445)
     if (r.from == id)
-      out.push_back({r.kind, r.to, "->" + (r.multiplicity.empty() ? "" : " " + r.multiplicity)});
+      out.push_back({r.kind, r.to, "->" + (r.multiplicity.empty() ? "" : " " + r.multiplicity), r.from, r.to});
     else
-      out.push_back({r.kind, r.from, "<-"});
+      out.push_back({r.kind, r.from, "<-", r.from, r.to});
   }
   return out;
 }

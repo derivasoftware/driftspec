@@ -85,14 +85,16 @@ std::vector<Bindings> Solver::solve(const std::string& owner, const std::vector<
                                     const Bindings& bindings, bool first) const {
   std::vector<Bindings> out;
   facts_.reading();  // a binding points into the facts: they do not grow while it is made
-  solveFrom(owner, body, variables, std::vector<bool>(body.size(), false), bindings, first, out);
+  std::vector<bool> done(body.size(), false);
+  Bindings work = bindings;
+  solveFrom(owner, body, variables, done, work, first, out);
   facts_.done();
   return out;
 }
 
-void Solver::solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables,
-                       std::vector<bool> done, const Bindings& bindings, bool first, std::vector<Bindings>& out_answers) const {
-  if (first && !out_answers.empty()) return;
+bool Solver::solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables,
+                       std::vector<bool>& done, Bindings& bindings, bool first, std::vector<Bindings>& out_answers) const {
+  if (first && !out_answers.empty()) return false;
   // the most bound ready literal first: tests prune before generators multiply
   int best = -1;
   std::size_t bestKnown = 0;
@@ -111,20 +113,23 @@ void Solver::solveFrom(const std::string& owner, const std::vector<model::Litera
   }
   if (best < 0) {
     if (std::find(done.begin(), done.end(), false) == done.end()) out_answers.push_back(bindings);
-    return;
+    return !(first && !out_answers.empty());
   }
   done[best] = true;
   const model::Literal& l = body[best];
+  bool go = true;
   if (l.negated) {
-    model::Literal positive = l;
-    positive.negated = false;
-    if (answers(owner, positive, variables, bindings).empty()) solveFrom(owner, body, variables, done, bindings, first, out_answers);
-    return;
+    bool any = false;
+    answers(owner, l, variables, bindings, [&any]() {
+      any = true;
+      return false;  // one answer is enough to know it is not empty
+    });
+    if (!any) go = solveFrom(owner, body, variables, done, bindings, first, out_answers);
+  } else {
+    go = answers(owner, l, variables, bindings, [&]() { return solveFrom(owner, body, variables, done, bindings, first, out_answers); });
   }
-  for (const auto& b : answers(owner, l, variables, bindings)) {
-    solveFrom(owner, body, variables, done, b, first, out_answers);
-    if (first && !out_answers.empty()) return;
-  }
+  done[best] = false;
+  return go;
 }
 
 bool Solver::unify(const std::string& owner, const model::Term& term, const Variables& variables, const std::string* entity,
@@ -134,15 +139,26 @@ bool Solver::unify(const std::string& owner, const model::Term& term, const Vari
   return true;
 }
 
-std::vector<Bindings> Solver::answers(const std::string& owner, const model::Literal& l, const Variables& variables,
-                                      const Bindings& bindings) const {
-  std::vector<Bindings> out;
-  // bind the terms to these texts on top of `bindings`, keeping the result when they fit
+template <class Next>
+bool Solver::answers(const std::string& owner, const model::Literal& l, const Variables& variables, Bindings& bindings, Next&& next) const {
+  // bind the terms to these texts in place, continue, and undo what was bound: the slots it filled, no more (DS-401)
+  int touched[4];
   const auto offer = [&](std::initializer_list<std::pair<std::size_t, const std::string*>> values) {
-    Bindings b = bindings;
-    for (const auto& v : values)
-      if (!unify(owner, l.terms[v.first], variables, v.second, b)) return;
-    out.push_back(std::move(b));
+    int n = 0;
+    bool fits = true;
+    for (const auto& v : values) {
+      const model::Term& t = l.terms[v.first];
+      const int slot = t.variable && t.field.empty() && t.property.empty() ? variables.slotOf(t.text) : -1;
+      const bool open = slot >= 0 && !bindings[slot];
+      if (!unify(owner, t, variables, v.second, bindings)) {
+        fits = false;
+        break;
+      }
+      if (open && bindings[slot]) touched[n++] = slot;
+    }
+    const bool go = fits ? next() : true;
+    for (int i = 0; i < n; ++i) bindings[touched[i]] = nullptr;
+    return go;
   };
   const std::string* empty = text("");
   const std::string* a = l.terms.empty() ? nullptr : value(owner, l.terms[0], variables, bindings);
@@ -155,27 +171,33 @@ std::vector<Bindings> Solver::answers(const std::string& owner, const model::Lit
       if (!fw) break;
       if (hasA) {
         const auto range = fw->equal_range(*a);
-        for (auto it = range.first; it != range.second; ++it) offer({{1, &it->second}});
+        for (auto it = range.first; it != range.second; ++it)
+          if (!offer({{1, &it->second}})) return false;
       } else if (hasZ) {
         const auto range = facts_.backward(l.name).equal_range(*z);
-        for (auto it = range.first; it != range.second; ++it) offer({{0, &it->second}});
+        for (auto it = range.first; it != range.second; ++it)
+          if (!offer({{0, &it->second}})) return false;
       } else {
-        for (const auto& pair : *fw) offer({{0, &pair.first}, {1, &pair.second}});
+        for (const auto& pair : *fw)
+          if (!offer({{0, &pair.first}, {1, &pair.second}})) return false;
       }
       break;
     }
     case Form::Kind: {
       if (hasA) {
-        if (facts_.isOfKind(*a, l.name)) out.push_back(bindings);
+        if (facts_.isOfKind(*a, l.name))
+          if (!next()) return false;
         break;
       }
       if (const std::vector<std::string>* ids = facts_.ofKind(l.name))
-        for (const auto& id : *ids) offer({{0, &id}});
+        for (const auto& id : *ids)
+          if (!offer({{0, &id}})) return false;
       break;
     }
     case Form::In: {
       if (hasA) {  // what holds a, outward
-        for (const std::string* up = facts_.parentOf(*a); up; up = facts_.parentOf(*up)) offer({{1, up}});
+        for (const std::string* up = facts_.parentOf(*a); up; up = facts_.parentOf(*up))
+          if (!offer({{1, up}})) return false;
         break;
       }
       std::vector<const std::string*> stack{hasZ ? z : empty};  // what z holds, inward
@@ -184,7 +206,7 @@ std::vector<Bindings> Solver::answers(const std::string& owner, const model::Lit
         stack.pop_back();
         if (const std::vector<std::string>* kids = facts_.childrenOf(*at))
           for (const auto& kid : *kids) {
-            offer({{0, &kid}});
+            if (!offer({{0, &kid}})) return false;
             stack.push_back(&kid);
           }
       }
@@ -192,11 +214,12 @@ std::vector<Bindings> Solver::answers(const std::string& owner, const model::Lit
     }
     case Form::Equal:
       if (hasA && hasZ) {
-        if (compare(Form::Equal, *a, *z)) out.push_back(bindings);
+        if (compare(Form::Equal, *a, *z))
+          if (!next()) return false;
       } else if (hasA) {
-        offer({{1, a}});
+        if (!offer({{1, a}})) return false;
       } else {
-        offer({{0, hasZ ? z : empty}});
+        if (!offer({{0, hasZ ? z : empty}})) return false;
       }
       break;
     case Form::NotEqual:
@@ -204,18 +227,21 @@ std::vector<Bindings> Solver::answers(const std::string& owner, const model::Lit
     case Form::LessEqual:
     case Form::Greater:
     case Form::GreaterEqual:
-      if (compare(l.form, hasA ? *a : *empty, hasZ ? *z : *empty)) out.push_back(bindings);
+      if (compare(l.form, hasA ? *a : *empty, hasZ ? *z : *empty))
+        if (!next()) return false;
       break;
     case Form::Matches: {  // the value, as it reads, against the pattern the validator compiled (DS-403)
       const std::regex* pattern = facts_.patternOf(owner, l.terms[1].text);
       if (!pattern || !hasA) break;
       const bool quoted = a->size() >= 2 && a->front() == '"' && a->back() == '"';
       const std::string subject = quoted ? a->substr(1, a->size() - 2) : *a;
-      if (std::regex_search(subject, *pattern)) out.push_back(bindings);
+      if (std::regex_search(subject, *pattern))
+        if (!next()) return false;
       break;
     }
     case Form::Flag:  // `m is abstract`: a flag of what m is bound to (DS-403)
-      if (hasA && facts_.flagged(*a, l.name)) out.push_back(bindings);
+      if (hasA && facts_.flagged(*a, l.name))
+        if (!next()) return false;
       break;
     case Form::Arg: {  // the literal a call passes to the parameter named, as the sequence writes it
       std::vector<const std::string*> calls;
@@ -226,7 +252,8 @@ std::vector<Bindings> Solver::answers(const std::string& owner, const model::Lit
       }
       for (const std::string* call : calls)
         for (const auto& passed : facts_.argsTo(*call))
-          if (passed.first == l.name && literal(passed.second)) offer({{0, call}, {1, text(passed.second)}});
+          if (passed.first == l.name && literal(passed.second))
+            if (!offer({{0, call}, {1, text(passed.second)}})) return false;
       break;
     }
     case Form::Call: {
@@ -247,14 +274,22 @@ std::vector<Bindings> Solver::answers(const std::string& owner, const model::Lit
         bool fits = true;
         for (std::size_t k = 0; k < fixed.size() && fits; ++k) fits = (*tuple)[fixed[k].first] == *fixed[k].second;
         if (!fits) continue;
-        Bindings b = bindings;
-        for (std::size_t i = 0; i < tuple->size() && fits; ++i) fits = unify(owner, l.terms[i], variables, &(*tuple)[i], b);
-        if (fits) out.push_back(std::move(b));
+        std::vector<int> set;
+        for (std::size_t i = 0; i < tuple->size() && fits; ++i) {
+          const model::Term& t = l.terms[i];
+          const int slot = t.variable && t.field.empty() && t.property.empty() ? variables.slotOf(t.text) : -1;
+          const bool open = slot >= 0 && !bindings[slot];
+          fits = unify(owner, t, variables, &(*tuple)[i], bindings);
+          if (fits && open && bindings[slot]) set.push_back(slot);
+        }
+        const bool go = fits ? next() : true;
+        for (const int slot : set) bindings[slot] = nullptr;
+        if (!go) return false;
       }
       break;
     }
   }
-  return out;
+  return true;
 }
 
 }  // namespace check
