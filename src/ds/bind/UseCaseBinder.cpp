@@ -51,6 +51,9 @@ void UseCaseBinder::bind(TSNode node, const BindContext& ctx) const {
     out.fields["text"] = std::string(text::trimWhitespace(ctx.reader.fieldText(o, Field::text)));
     const std::string returns = types_.bind(ctx.reader.child(o, Field::returns), ctx, scope, out.id, "uses", "", {}, out.location);
     if (!returns.empty()) out.fields["returns"] = returns;
+    // the failure it is the end of: one escaping the scenario ends here, not as a failure undeclared (DS-467)
+    const std::string fails = std::string(text::trimWhitespace(ctx.reader.fieldText(o, Field::fails)));
+    if (!fails.empty()) out.fields["fails"] = fails;
     ctx.declare(out);
     ctx.relate({"contains", e.id, out.id, out.location, ""});
   }

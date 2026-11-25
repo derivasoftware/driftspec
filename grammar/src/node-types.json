@@ -2027,6 +2027,16 @@
     "type": "outcome",
     "named": true,
     "fields": {
+      "fails": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "qualified_name",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,

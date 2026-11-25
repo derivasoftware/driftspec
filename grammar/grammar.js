@@ -56,7 +56,9 @@ module.exports = grammar({
       optional(seq(field('name', $.name), $.parameters, optional(seq('->', field('returns', $.type))))),
       optional(seq(':', field('base', $.qualified_name))),
       '{', repeat(choice($.field, $.annotation, $.outcome)), '}'),
-    outcome: $ => seq('outcome', field('name', $.name), optional(seq('->', field('returns', $.type))), ':', field('text', $.line_text)),
+    // an outcome may be the end of one failure: one escaping the use case's scenario ends in it (DS-467)
+    outcome: $ => seq('outcome', field('name', $.name), optional(seq('->', field('returns', $.type))),
+      optional(seq('fails', field('fails', $.qualified_name))), ':', field('text', $.line_text)),
     // a rule makes a requirement real in the box it is written in: what it speaks about (for), which
     // of them (where), what holds (holds) or must never happen (never); a definition names a concept
     // derived from others. Design pieces with a name, not artefacts with a revision (DS-94, 2026-11-07)

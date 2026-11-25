@@ -200,6 +200,12 @@ class FailureCheck : public ACheck {
   /// What an operation lets escape against what its signature promises, and at a boundary (DS-189).
   void checkFailures(const model::Entity& operation);
   void checkScenario(const model::Entity& usecase);
+  /// The outcomes a use case may end in: its own, then its bases' it does not redefine by name (DS-467).
+  std::vector<const model::Entity*> outcomesOf(const std::string& usecase) const;
+  /// Each outcome's failure held to the workspace and to the use case's other outcomes (DS-467).
+  void checkOutcomes(const model::Entity& usecase, const std::set<std::string>& named);
+  /// Every name a failure may be: a type's, an enum's value, what a signature may fail with, what a step fails with.
+  std::set<std::string> failureNames() const;
   const Context* context_ = nullptr;
   const model::Model* model_ = nullptr;
   const model::Metamodel* metamodel_ = nullptr;

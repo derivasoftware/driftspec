@@ -87,8 +87,10 @@ enum class Code : std::size_t {
   W_USECASE_UNREALISED,
   E_RULE_PATTERN,
   E_RULE_RESERVED,
-  W_REQ_UNREALISED,      ///< an approved requirement that nothing satisfies (DS-429)
-  W_CST_NO_VERIFICATION  ///< an approved constraint that nothing verifies (DS-430)
+  W_REQ_UNREALISED,           ///< an approved requirement that nothing satisfies (DS-429)
+  W_CST_NO_VERIFICATION,      ///< an approved constraint that nothing verifies (DS-430)
+  W_OUTCOME_FAILURE_UNKNOWN,  ///< an outcome is the end of a failure named nowhere (DS-467)
+  W_OUTCOME_FAILURE_TWICE     ///< two outcomes of one use case are the end of the same failure (DS-467)
 };
 
 }  // namespace model
