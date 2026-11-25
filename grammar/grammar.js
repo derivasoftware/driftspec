@@ -202,7 +202,10 @@ module.exports = grammar({
     // ---- white box: dynamic (block 3) --------------------------------------
     // a behaviour's identity is its subject: the method, class or module it describes;
     // participants are the static context (self, attributes, parameters); only locals are written
-    sequence: $ => seq('sequence', field('subject', $.qualified_name), optional(seq('/', field('scenario', $.name))), '{', repeat($._sequence_item), '}'),
+    // an overloaded operation's behaviour names it with its parameter types (DS-455): sequence Factory::of(Scene) { ... }
+    sequence: $ => seq('sequence', field('subject', $.qualified_name), optional(field('overload', $.overload_types)),
+      optional(seq('/', field('scenario', $.name))), '{', repeat($._sequence_item), '}'),
+    overload_types: $ => seq('(', optional(seq($.type, repeat(seq(',', $.type)))), ')'),
     _sequence_item: $ => choice($.field, $.annotation, $.participant, $.local, $.message, $.return, $.fail, $.loop, $.alt, $.opt, $.attempt),
     participant: $ => seq('participant', field('name', $.name), ':', field('type', $.type)),  // kept for older files: the same as local
     local: $ => seq('local', field('name', $.name), ':', field('type', $.type)),

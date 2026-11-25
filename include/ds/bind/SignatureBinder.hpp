@@ -2,6 +2,7 @@
 #define DRIFTSPEC_BIND_SIGNATUREBINDER_HPP
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ds/bind/BindContext.hpp"
@@ -21,6 +22,8 @@ class SignatureBinder {
   /// its owner is written with the same name, `bare(T1, T2)`, its parameter types as written, whitespace normalised.
   /// Decided where it is bound, from what is written beside it, so nothing is renamed after.
   static std::string identityOf(const parse::TreeReader& reader, TSNode node, const std::string& bare);
+  /// A type as an overload's identity writes it (DS-455): trimmed, each run of whitespace one space.
+  static std::string normalised(std::string_view type);
 
  private:
   const TypeBinder& types_;
