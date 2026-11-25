@@ -120,7 +120,8 @@ artefact is named by its id alone, with no package).
 | `coupling` | nothing | which boxes depend on which, and through what |
 
 In `relations`, `->` means the subject points at the other entity and `<-` that the other
-points at the subject. What a requirement is made of is asked with `relations`, and what a
+points at the subject. With `--json`, an answer of `relations` also says the relation's two ends, `from`
+and `to`, as the model holds them. What a requirement is made of is asked with `relations`, and what a
 class answers for with `artefacts`:
 
 ```
