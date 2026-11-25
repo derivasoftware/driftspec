@@ -8,7 +8,7 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from live_helpers import SYSTEM, Reader, agent, get, post, until, workspace  # noqa: E402
+from live_helpers import ANSWER, SYSTEM, Reader, agent, get, post, until, workspace  # noqa: E402
 
 import driftspec.live  # noqa: E402
 
@@ -90,7 +90,7 @@ class TestLiveSession:
         # the viewer's fullscreen button asks the page, so the side panel stays on screen (DS-141)
         ws, live = session
         import urllib.request
-        with urllib.request.urlopen(live.url, timeout=5) as r:
+        with urllib.request.urlopen(live.url, timeout=ANSWER) as r:
             page = r.read().decode()
         assert "e.data.ds==='fullscreen'" in page and "document.documentElement.requestFullscreen()" in page
 
@@ -134,7 +134,7 @@ class TestLiveSession:
     def test_the_page_folds_notes_marks_them_seen_and_keeps_them_apart(self, session):
         _, live = session
         import urllib.request
-        with urllib.request.urlopen(live.url, timeout=5) as r:
+        with urllib.request.urlopen(live.url, timeout=ANSWER) as r:
             page = r.read().decode()
         for control in ('id="nfold"', 'id="nopen"', 'id="nseen"', 'id="nhide"', "e.data.ds==='note'", "fetch('/seen'"):
             assert control in page, control
@@ -162,7 +162,7 @@ class TestLiveSession:
     def test_the_page_lets_the_reader_comment_on_what_is_selected(self, session):
         _, live = session
         import urllib.request
-        with urllib.request.urlopen(live.url, timeout=5) as r:
+        with urllib.request.urlopen(live.url, timeout=ANSWER) as r:
             page = r.read().decode()
         assert 'id="ctext"' in page and "fetch('/comment'" in page and "body:JSON.stringify({id:SELID,text:t})" in page
 
@@ -196,7 +196,7 @@ class TestLiveSessionIsLocal:
         req = urllib.request.Request(live.url.rstrip("/") + path, method="GET" if data is None else "POST",
                                      data=None if data is None else json.dumps(data).encode(), headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=5) as r:
+            with urllib.request.urlopen(req, timeout=ANSWER) as r:
                 return r.status
         except urllib.error.HTTPError as e:
             return e.code
