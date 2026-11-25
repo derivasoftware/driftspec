@@ -60,6 +60,60 @@ package driftspec@ds {
   module model {
     @requirement REQ-00175-1                 // every operation of the model is a member of a class (DS-365)
 
+    // the other checks name their subject too (DS-478, phase b of DS-426): a verification of its own, beside the
+    // approved one, so REQ-00240-1's text is not touched
+    verification VER-00267-1 {
+      @requirement REQ-00240-1
+      status: draft
+      title: An integration test confirms every check names the entity its finding is about, and one about a file or a word names none
+      method: test
+      tests:
+        tests/integration/ds/check/test_finding_subject.cpp::TestFindingSubjects.EveryCheckNamesTheEntityItsFindingIsAbout
+    }
+
+    // the doors attach a finding to its subject (DS-488, phase c of DS-426): one requirement per capability
+    requirement REQ-00330-1 {
+      tags: finding, subject, editor
+      status: draft
+      @refines REQ-00240-1
+      title: The editor shall show a finding on the entity it is about
+      text:
+        Each diagnostic the language server publishes carries, as data.subject, the identity of the entity its finding
+        is about, when it names one. Hover on an entity lists its own problems, the findings and coverage whose subject
+        it is, wherever they are written, five at most and then how many more.
+      rationale:
+        A problem written in one file about an entity declared in another reaches the entity, not only the line.
+      verification VER-00380-1 {
+        status: draft
+        title: Integration tests confirm a diagnostic carries its subject and hover on an entity lists a problem written in another file
+        method: test
+        tests:
+          tests/integration/python/test_lsp.py::TestAFindingOnItsSubject::test_each_diagnostic_carries_the_entity_it_is_about
+          tests/integration/python/test_lsp.py::TestAFindingOnItsSubject::test_hover_on_an_entity_lists_a_problem_written_in_another_file
+      }
+    }
+
+    requirement REQ-00331-1 {
+      tags: finding, subject, live
+      status: draft
+      @refines REQ-00240-1
+      title: The live viewer shall frame the entity a finding is about
+      text:
+        The live state gives each finding and coverage item its subject. Clicked, a finding with a subject frames that
+        entity on the map. With something selected and the selection filter on, the findings and the coverage keep
+        only those about what is selected or what it holds.
+      rationale:
+        The live viewer's rules panel attaches by subject since DS-426; the findings follow it.
+      verification VER-00381-1 {
+        status: draft
+        title: Integration tests confirm the live state carries each finding's subject and the page frames and keeps it on the selection
+        method: test
+        tests:
+          tests/integration/python/test_live_subjects.py::TestAFindingOnItsSubject::test_the_state_gives_each_finding_and_coverage_item_its_subject
+          tests/integration/python/test_live_subjects.py::TestAFindingOnItsSubject::test_a_finding_about_an_entity_is_drawn_to_frame_it_and_kept_on_its_selection
+      }
+    }
+
     requirement REQ-00240-1 {
       tags: findings, model
       status: approved
@@ -839,6 +893,26 @@ package driftspec@ds {
         tests/integration/ds/model/test_manual.cpp::TestManual.EveryTopicHasAPageAndAnUnknownOneHasNone
     }
 
+    // a question ds query answers and the subject it takes: the one table the usage, the help and the query's check of a
+    // subject read (DS-436), kept by the manual (DS-474)
+    dataclass Question {
+      @requirement REQ-00079-2
+      + name: std::string
+      + subject: std::string
+      + takes: std::string
+    }
+
+    verification VER-00326-1 {
+      status: draft
+      @requirement REQ-00260-1
+      title: Integration tests confirm the manual keeps the one table of questions, whose usage is what its page of ds query says and what the query answers with
+      text: DS-474: the table moves from the query into the manual, so the command line's help reads the manual and the query delegates to it.
+      method: test
+      tests:
+        tests/integration/ds/model/test_manual.cpp::TestManual.TheQuestionsAreTheManualsOneTableAndItsUsageIsWhatTheQueryPageSays
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheManualListsTheQuestionsAsTheQueryDoes
+    }
+
     dataclass CommandSpec {                  // a command of the manual: how it is invoked, what it does, what each exit code says
       @requirement REQ-00079-2
       + name: std::string
@@ -864,6 +938,9 @@ package driftspec@ds {
       }
       + commands() -> std::vector<CommandSpec>
       + commandOf(name: std::string) -> CommandSpec
+      // the one table of questions (DS-436, DS-474): the query reads it to answer, the command line to say its help
+      + static questions() -> std::vector<Question>
+      + static usage() -> std::string           // the questions as a usage line, for the help and the page of ds query
       // how the tables are built, once, by the constructor, and how the pages are written
       - static buildCommands() -> std::vector<CommandSpec>
       - static buildGuides() -> std::vector<std::pair<std::string, std::string>> {  // generated when ds is built (ManualGuides.cpp)
@@ -880,6 +957,16 @@ package driftspec@ds {
     sequence Manual::Manual {
       -> buildCommands() -> commands
       -> buildGuides() -> guides
+    }
+
+    sequence Manual::buildCommands {
+      -> usage() -> questions                   // what ds query asks, from the one table (DS-474)
+      return commands
+    }
+
+    sequence Manual::usage {
+      -> questions() -> table
+      return usage
     }
 
     // a page by its topic: the index, a guide, the grammar, a kind, a code, or one of the tables of the

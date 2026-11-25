@@ -149,7 +149,8 @@ TEST_F(TestQuery, FindingsAndCoverageTakeAFileOrAnEntityAndEverythingItHolds) {
 }
 
 TEST_F(TestQuery, TheManualListsTheQuestionsAsTheQueryDoes) {
-  // the model may not ask the query: the manual writes the usage itself, held equal to the table here (DS-436)
+  // the one table of questions is the manual's, which the query reads (DS-436, DS-474): the usage ds query --help
+  // says is the one the query answers
   const ds::model::Manual manual(metamodel);
   bool found = false;
   for (const auto& c : manual.commands())

@@ -398,6 +398,11 @@ foreach(test_src IN LISTS driftspec_SYSTEM_TESTS)
             DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
             DRIFTSPEC_DS_BIN="$<TARGET_FILE:ds>"
             DRIFTSPEC_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
+  # argos-test-gtest's evidence build (-O0, instrumented): a test that times the
+  # product skips there (DS-480)
+  if(ARGOS_EVIDENCE)
+    target_compile_definitions(${test_name} PRIVATE DS_EVIDENCE_BUILD)
+  endif()
   add_dependencies(${test_name} ds)
   if(test_name STREQUAL "test_walkthrough_cli")
     # it reads the page as the engine packs it and says what the door writes

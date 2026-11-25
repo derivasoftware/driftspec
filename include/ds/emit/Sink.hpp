@@ -11,7 +11,8 @@ namespace emit {
 
 /// What a document is written into (DS-394, DS-397, DS-399), in two halves a description says once, in the order
 /// it gives them: the structure, records of named fields, lists and values, for a program to read; and the
-/// presentation, paragraphs and tables of rows, for a person to read. A sink writes the half its technology writes
+/// presentation, paragraphs and tables of rows, for a person to read, and a text already written in the sink's
+/// technology. A sink writes the half its technology writes
 /// and skips the other, so a description never asks which half it is wanted in. A sink knows no document and a
 /// document knows no technology: whoever asks for the output builds the sink and lends it, the description writes
 /// into it, and the one who built it takes the result. Each call returns the sink, so a record reads as it is
@@ -44,6 +45,11 @@ class ISink {
   /// fewer cells than the table has columns when it has nothing for the last of them.
   virtual ISink& row(const std::vector<std::string_view>& cells) = 0;
   virtual ISink& endTable() = 0;
+  /// A text already written in the sink's technology, written as it is, once per document: a drawing in svg or in
+  /// text, the viewer's page (DS-474). A sink whose technology the text is not in fails NotImplemented rather than skip
+  /// it; a second one before the result fails with std::logic_error. A bridge: a figure described as marks (DS-463)
+  /// replaces it.
+  virtual ISink& verbatim(std::string_view text) = 0;
   // ---- the end of a description ----
   /// The description of `document` ends. A sink that has accepted nothing of its half since its last result fails
   /// with NotImplemented, naming the document and its technology, rather than hand over an empty page.

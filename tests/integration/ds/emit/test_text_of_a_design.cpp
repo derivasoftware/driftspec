@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -16,7 +17,10 @@
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/render/IrExport.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
 #include "ds/scene/Scene.hpp"
+#include "ds/service/UseCases.hpp"
 #include "ds/theme/Theme.hpp"
 
 /// Every document ds writes as text, over designs of every size (DS-399): the report and the answers described once
@@ -162,4 +166,32 @@ TEST_F(TestTextOfADesign, TheJsonSinkSkipsThePresentationOfEveryDocument) {
     EXPECT_EQ(written, ws.ask("entities", "")) << loaded.name;
     if (!answers.empty()) EXPECT_EQ(written.find(answers.front().kind + "  " + answers.front().id), std::string::npos);  // no row
   }
+}
+
+/// A drawing reaches the sink as a verbatim text (DS-474): every diagram of every design, drawn by see-design in svg and
+/// in text, is written by the text sink exactly as render draws it, once per document, a second one refused; the JSON
+/// sink says it cannot write it, rather than skip it.
+TEST_F(TestTextOfADesign, EveryDrawingOfADesignIsWrittenAsItIsByTheTextSinkAndRefusedByTheJsonSink) {
+  std::size_t drawn = 0;
+  const ds::service::SeeDesign see(metamodel());
+  for (const Loaded& loaded : workspaces()) {
+    const ds::model::Model& model = loaded.workspace->model();
+    const ds::render::IrExport ir(model, metamodel());
+    for (const auto& id : ir.diagrams()) {
+      const std::string name = id.substr(id.find("diagram:") + 8);  // ...diagram:NAME
+      const ds::render::IrDocument diagram = *ir.document(id);
+      for (const std::string format : {"svg", "text"}) {
+        const auto text = ds::emit::SinkFactory::text();
+        ASSERT_EQ(see.run(model, {{{"format", format}, {"diagram", name}}}, *text).name, "default") << loaded.name << " " << name;
+        const std::string expected =
+            format == "svg" ? ds::render::Svg(theme()).render(diagram, 0) : ds::render::Text(theme()).render(diagram, false, 0);
+        EXPECT_THROW(text->verbatim("again"), std::logic_error) << name;  // the drawing is the whole document
+        EXPECT_EQ(text->result(), expected) << loaded.name << " " << name << " " << format;
+        const auto json = ds::emit::SinkFactory::json(false);
+        EXPECT_THROW(see.run(model, {{{"format", format}, {"diagram", name}}}, *json), ds::emit::NotImplemented) << name;
+        ++drawn;
+      }
+    }
+  }
+  EXPECT_GT(drawn, 100u);
 }

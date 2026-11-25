@@ -54,8 +54,9 @@ void ScenarioCheck::checkScenarios() {
       const std::string base =
           model::Identity(model::Identity(f.scope).subject().text()).sequence().text();  // the behaviour, whatever scenario holds the frame
       if (++named[model::Identity(base).withScenario(name).text()] == 2 || model_->find(model::Identity(base).withScenario(name).text())) {
-        found_.push_back(context_->metamodel().finding(
-            model::Code::W_SCENARIO_TWICE, base + " names the scenario '" + name + "' twice: a scenario is one path", side->location));
+        found_.push_back(context_->metamodel().finding(model::Code::W_SCENARIO_TWICE,
+                                                       base + " names the scenario '" + name + "' twice: a scenario is one path",
+                                                       side->location, base));
       }
     }
   }

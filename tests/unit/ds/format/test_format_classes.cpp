@@ -10,7 +10,6 @@
 #include "ds/emit/JsonSink.hpp"
 #include "ds/emit/TextSink.hpp"
 #include "ds/format/Descriptions.hpp"
-#include "ds/format/DiagramFormats.hpp"
 #include "ds/format/ViewerPage.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/scene/Document.hpp"
@@ -21,19 +20,13 @@ namespace {
 /// The style the drawings are written in, made once for the file (DS-393).
 const ds::theme::Theme kTheme;
 
-/// Each writer and each description on its own (DS-186, DS-398): a writer's name and what it writes from the
-/// document it is given; what a description writes into the sink it is lent.
+/// Each writer and each description on its own (DS-186, DS-398): the viewer's page, the one writer left (DS-474), its
+/// name and what it writes from the document it is given; what a description writes into the sink it is lent.
 
 const ds::render::IrDocument kDiagram =
     ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
                                   R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
                                   R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
-
-ds::format::FormatOptions wide(int width) {
-  ds::format::FormatOptions o;
-  o.width = width;
-  return o;
-}
 
 /// A diagram's render-IR written once (DS-418): every record's keys in byte order (the sink's check would throw
 /// otherwise), a key written when it says something: a node's label even when empty, abstract when said either way,
@@ -79,30 +72,6 @@ TEST(TestLayoutDescription, EveryNodePlacedAndEveryEdgeRouted) {
   const auto json = nlohmann::json::parse(sink.result());
   EXPECT_EQ(json["nodes"].size(), 2u);
   EXPECT_EQ(json["routes"].size(), 1u);
-}
-
-TEST(TestDiagramSvg, AnSvgThatNamesEveryBox) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramSvg f(kTheme);
-  EXPECT_EQ(f.name(), "svg");
-  const std::string svg = f.write(kDiagram, {}, sink);
-  EXPECT_EQ(svg.find("<svg"), svg.find('<'));
-  EXPECT_NE(svg.find(">A<"), std::string::npos);
-  EXPECT_NE(svg.find(">B<"), std::string::npos);
-}
-
-TEST(TestDiagramText, BoxCharactersWithinTheWidthAsked) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramText f(kTheme);
-  EXPECT_EQ(f.name(), "text");
-  const std::string text = f.write(kDiagram, wide(60), sink);
-  EXPECT_NE(text.find('A'), std::string::npos);
-  EXPECT_NE(text.find('B'), std::string::npos);
-  std::istringstream lines(text);
-  for (std::string line; std::getline(lines, line);) {
-    const auto columns = std::count_if(line.begin(), line.end(), [](char c) { return (c & 0xC0) != 0x80; });  // code points
-    EXPECT_LE(columns, 60) << line;
-  }
 }
 
 TEST(TestCellsDescription, TheGridAsJson) {

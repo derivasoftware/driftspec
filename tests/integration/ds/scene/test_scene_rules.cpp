@@ -114,7 +114,7 @@ TEST_F(TestSceneRules, TheDocumentCarriesTheRulesAndThePageItsThreePerspectives)
   EXPECT_NE(json.find("\"rule\":[\"id\",\"kind\",\"name\",\"title\",\"scope\",\"lines\",\"requirements\",\"breaches\",\"file\",\"line\"]"),
             std::string::npos);
   EXPECT_NE(json.find("\"breach\":[\"node\",\"to\",\"bindings\",\"witness\",\"file\",\"line\"]"), std::string::npos);
-  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "rules"}, sink);
+  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {"rules"}, sink);
   for (const char* p : {"data-p=\"structure\"", "data-p=\"behaviour\"", "data-p=\"logic\""})
     EXPECT_NE(page.find(p), std::string::npos) << p;
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();

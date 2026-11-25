@@ -42,6 +42,9 @@ class JsonSink final : public ISink {
   ISink& table(const std::vector<std::string_view>& columns) override;
   ISink& row(const std::vector<std::string_view>& cells) override;
   ISink& endTable() override;
+  /// NotImplemented, rather than skipped (DS-474): a text already written in another technology, an svg or a text
+  /// drawing, is no JSON, so the sink says it cannot write it.
+  ISink& verbatim(std::string_view text) override;
   /// NotImplemented when nothing is written since the last result: JSON writes a byte for every part of the
   /// structure it accepts, so what it holds says whether it accepted any.
   ISink& described(std::string_view document) override;

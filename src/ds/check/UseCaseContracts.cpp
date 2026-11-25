@@ -56,14 +56,16 @@ void UseCaseContracts::checkUseCases() {
       if (isUseCase(r.to))
         base[r.from] = r.to;
       else
-        found_.push_back(context_->metamodel().finding(
-            model::Code::W_USECASE_UNDECLARED, r.from + " specialises '" + r.to + "', which is no use case of the workspace", r.location));
+        found_.push_back(context_->metamodel().finding(model::Code::W_USECASE_UNDECLARED,
+                                                       r.from + " specialises '" + r.to + "', which is no use case of the workspace",
+                                                       r.location, r.from));
     } else if (r.kind == "realises" && from->kind == model::Kind::Operation) {
       if (isUseCase(r.to))
         realisedBy[r.to].push_back(r);
       else
-        found_.push_back(context_->metamodel().finding(
-            model::Code::W_USECASE_UNDECLARED, r.from + " realises '" + r.to + "', which is no use case of the workspace", r.location));
+        found_.push_back(context_->metamodel().finding(model::Code::W_USECASE_UNDECLARED,
+                                                       r.from + " realises '" + r.to + "', which is no use case of the workspace",
+                                                       r.location, r.from));
     }
   }
   // the chain of a use case up to its most generic, never round a cycle
@@ -102,7 +104,7 @@ void UseCaseContracts::checkUseCases() {
       found_.push_back(context_->metamodel().finding(
           model::Code::W_USECASE_SIGNATURE,
           pair.first + " specialises " + pair.second + " but takes and gives " + signature(*own) + ", not " + signature(*inherited),
-          own->location));
+          own->location, pair.first));
     }
   }
   std::set<std::string> realised;
@@ -115,7 +117,8 @@ void UseCaseContracts::checkUseCases() {
       if (promised && signature(*op) != signature(*promised)) {
         found_.push_back(context_->metamodel().finding(
             model::Code::W_USECASE_SIGNATURE,
-            op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised), r.location));
+            op->id + " realises " + pair.first + " but takes and gives " + signature(*op) + ", not " + signature(*promised), r.location,
+            op->id));
       }
       const std::string behaviour = model::Identity(op->id).sequence().text();
       for (const auto& end : ends) {
@@ -123,7 +126,7 @@ void UseCaseContracts::checkUseCases() {
           continue;
         found_.push_back(context_->metamodel().finding(
             model::Code::W_USECASE_OUTCOME_UNHANDLED,
-            op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r.location));
+            op->id + " realises " + pair.first + " and has no scenario for its outcome '" + end + "'", r.location, op->id));
       }
       for (const auto& other : model_->entities()) {  // a scenario written apart that no outcome names
         const model::Entity& s = other.second;
@@ -134,7 +137,7 @@ void UseCaseContracts::checkUseCases() {
         if (!ends.count(scenario)) {
           found_.push_back(context_->metamodel().finding(
               model::Code::W_SCENARIO_NO_OUTCOME, op->id + " handles '" + scenario + "', and " + pair.first + " names no such outcome",
-              s.location));
+              s.location, op->id));
         }
       }
     }
@@ -144,7 +147,7 @@ void UseCaseContracts::checkUseCases() {
     if (e.kind != model::Kind::UseCase || e.expected || realised.count(e.id)) continue;
     found_.push_back(context_->metamodel().finding(model::Code::W_USECASE_UNREALISED,
                                                    e.id + " is realised by no interface operation, nor is any use case that specialises it",
-                                                   e.location));
+                                                   e.location, e.id));
   }
 }
 

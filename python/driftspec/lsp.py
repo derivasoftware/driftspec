@@ -111,6 +111,8 @@ class Editor:
                     severity=SEVERITY[f.severity],
                     code=f.code,
                     source="ds",
+                    # the entity it is about, by identity (DS-488): kept by the editor and handed back with the diagnostic
+                    data={"subject": f.subject} if f.subject else None,
                 )
             )
         for path in set(by_file) | self.published:  # a file that is clean now is cleared
@@ -282,11 +284,18 @@ class DesignServer:
         if not found:
             return None
         parts = []
+        report = editor.workspace.report() if editor.workspace is not None else None
         for e in found[:3]:
             lines = [f"**{e.kind}** `{e.id}`"]
             for key in Kinds.HOVER:
                 if e.fields.get(key):
                     lines.append(f"{key}: {e.fields[key]}")
+            # its own problems, wherever they are written: the findings whose subject it is (DS-488)
+            own = [f for f in (report.findings + report.coverage if report else []) if f.subject == e.id]
+            for f in own[:5]:
+                lines.append(f"`{f.code}` {f.message}")
+            if len(own) > 5:
+                lines.append(f"and {len(own) - 5} more")
             parts.append("  \n".join(lines))
         return lsp.Hover(contents=lsp.MarkupContent(kind=lsp.MarkupKind.Markdown, value="\n\n---\n\n".join(parts)))
 

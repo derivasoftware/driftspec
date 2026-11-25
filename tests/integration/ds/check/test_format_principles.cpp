@@ -102,7 +102,7 @@ TEST_F(TestFormatPrinciples, AClassThatNamesAWriterIsTold) {
   const std::vector<std::string> api = broken({{"ds/api.ds", "    class Workspace {", "      - owns page_: format::ViewerPage\n"}});
   EXPECT_TRUE(has(api, writersByFactory));
   const std::vector<std::string> app =
-      broken({{"ds/app.ds", "    sequence RenderCommand::page {", "      local page: format::ViewerPage\n"}});
+      broken({{"ds/app.ds", "    sequence RenderCommand::run {", "      local page: format::ViewerPage\n"}});
   EXPECT_TRUE(has(app, writersByFactory));
   EXPECT_FALSE(has(app, descriptionsByFactory));
 }
@@ -122,7 +122,7 @@ TEST_F(TestFormatPrinciples, ADescriptionThatUsesAnotherIsTold) {
 
 TEST_F(TestFormatPrinciples, AWriterThatReadsTheModelIsTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/format.ds", "    class DiagramText : IFormat<render::IrDocument> {", "      + read(model: model::Model) -> void\n"}});
+      broken({{"ds/format.ds", "    class ViewerPage : IFormat<scene::SceneDocument> {", "      + read(model: model::Model) -> void\n"}});
   EXPECT_TRUE(has(rules, readsNoModel));
   const std::vector<std::string> shared = broken({{"ds/format.ds", "      class Packing {", "        - owns page_: ViewerPage\n"}});
   EXPECT_TRUE(has(shared, commonAlone));

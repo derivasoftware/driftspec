@@ -33,14 +33,18 @@ class TextSink final : public ISink {
   ISink& table(const std::vector<std::string_view>& columns) override;
   ISink& row(const std::vector<std::string_view>& cells) override;
   ISink& endTable() override;
-  /// NotImplemented when no paragraph and no table was accepted since the last result. A table with no rows was
+  /// The text exactly as it is given, with no line break added (DS-474); a second one before the result fails with
+  /// std::logic_error, since a text written whole is its document.
+  ISink& verbatim(std::string_view text) override;
+  /// NotImplemented when no paragraph, no table and no verbatim text was accepted since the last result. A table with no rows was
   /// accepted: what it writes is nothing, and that is the document.
   ISink& described(std::string_view document) override;
   std::string result() override;
 
  private:
   std::string out_;        ///< the text written so far
-  bool accepted_ = false;  ///< a paragraph or a table was accepted since the last result
+  bool accepted_ = false;  ///< a paragraph, a table or a verbatim text was accepted since the last result
+  bool verbatim_ = false;  ///< a verbatim text was written since the last result
 };
 
 }  // namespace emit

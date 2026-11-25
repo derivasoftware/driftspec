@@ -216,6 +216,8 @@ ISink& JsonSink::row(const std::vector<std::string_view>&) { return *this; }
 
 ISink& JsonSink::endTable() { return *this; }
 
+ISink& JsonSink::verbatim(std::string_view) { throw NotImplemented("verbatim text", "json", {}); }
+
 ISink& JsonSink::described(std::string_view document) {
   if (out_.empty()) throw NotImplemented(std::string(document), "json", {});
   return *this;

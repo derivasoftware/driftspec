@@ -6,11 +6,6 @@
 namespace ds {
 namespace layout {
 
-namespace {
-// the SVG's proportions: across in characters of its 8 px advance, down in lines of its 18 px line
-constexpr double kLine = 18.0;
-}  // namespace
-
 SequenceSpacing SequenceSpacing::of(int advance, int lineHeight, int smallAdvance, const SequenceLeast& least) {
   const auto across = [advance](double characters) { return static_cast<int>(std::lround(characters * advance)); };
   const auto down = [lineHeight](double pixels) { return static_cast<int>(std::lround(pixels / kLine * lineHeight)); };

@@ -15,17 +15,13 @@
 namespace ds {
 namespace render {
 
-namespace {
-
-size_t longest(const std::vector<std::string>& lines) {
+size_t Layout::longest(const std::vector<std::string>& lines) {
   size_t n = 0;
   for (const auto& l : lines) n = std::max(n, l.size());
   return n;
 }
 
-bool isHierarchy(const std::string& kind) { return kind == "inheritance" || kind == "realization"; }
-
-}  // namespace
+bool Layout::isHierarchy(const std::string& kind) { return kind == "inheritance" || kind == "realization"; }
 
 Rect Layout::sizeOf(const IrNode& node) const {
   const Metrics& M = m_;
