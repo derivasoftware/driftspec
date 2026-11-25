@@ -1436,7 +1436,7 @@ package driftspec@ds {
 
         requirement REQ-00232-1 {
           tags: language, lld, state
-          status: draft
+          status: approved
           title: A state machine shall say the states it ends in
           text:
             `final <State>, ...` inside a state block names the states the machine ends in; every
@@ -1446,7 +1446,7 @@ package driftspec@ds {
           rationale: DS-442, the Owner, 2026-11-24, on a side-by-side mock; the word is his.
           verification VER-00258-1 {
             title: Integration tests confirm a machine keeps the final states its final lines name, in order, and they are among its states
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_states.cpp::TestStates.AMachineKeepsItsFinalStatesInOrderAmongItsStates
@@ -1455,7 +1455,7 @@ package driftspec@ds {
 
         requirement REQ-00233-1 {
           tags: language, lld, state, check
-          status: draft
+          status: approved
           title: The checker shall report a transition out of a state the machine says is final
           text:
             A transition whose source is a final state is W-STATE-LEAVES-FINAL, said where the
@@ -1464,7 +1464,7 @@ package driftspec@ds {
           rationale: DS-442. A final state is a promise about the machine; a transition out of it is a contradiction, and a contradiction is what the checker says.
           verification VER-00259-1 {
             title: Integration tests confirm a transition out of a final state is a finding, once, and a state with no way out is not taken as final
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/check/test_states.cpp::TestStates.ATransitionOutOfAFinalStateIsAFindingAndAStateWithNoWayOutIsNotTakenAsFinal
@@ -1648,7 +1648,7 @@ package driftspec@ds {
         rule. A vacuous rule stands as the verification of a requirement and is always green. The
         manual's example now speaks about the members.
       verification VER-00133-2 {
-        status: draft
+        status: approved
         title: Integration tests confirm a literal that can never match is reported, a rule reading uses off an attribute among them, and the member-level rule is broken where the design breaks it
         method: test
         tests:
@@ -2428,7 +2428,7 @@ package driftspec@ds {
       }
       requirement REQ-00234-1 {
         tags: language, diagrams, state
-        status: draft
+        status: approved
         title: A state diagram shall draw the start of its machine as a filled dot, its final states with an arrow to a bullseye, and its states as capsules
         text:
           The start is UML's filled dot with an arrow to the state the machine starts in (the box
@@ -2439,7 +2439,7 @@ package driftspec@ds {
         rationale: DS-442, the Owner, 2026-11-24, on a side-by-side mock: "there is no comparison".
         verification VER-00260-1 {
           title: Integration tests confirm a state diagram starts at a dot, ends at a bullseye for each final state and draws its states as capsules
-          status: draft
+          status: approved
           method: test
           tests:
             tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineStartsAtADotAndEndsAtABullseyeForEachFinalStateAndItsStatesAreCapsules
@@ -2534,7 +2534,7 @@ package driftspec@ds {
         }
         requirement REQ-00250-1 {
           tags: language, diagrams, table
-          status: draft
+          status: approved
           title: A column of a table shall read what the entity of its row is as a rule reads it: name(x), id(x) and kind(x)
           text:
             column <name>: name(<variable>) | id(<variable>) | kind(<variable>). The cell is what
@@ -2543,7 +2543,7 @@ package driftspec@ds {
           rationale: DS-437, found by first-time users (DS-432): kind(r) in a column was an E-SYNTAX whose message named column while refusing the line. A table reads as a rule reads.
           verification VER-00270-1 {
             title: Integration tests confirm a column reads name(x), id(x) and kind(x) of the entity of its row, and the table binds with no syntax error
-            status: draft
+            status: approved
             method: test
             tests:
               tests/integration/ds/render/test_table_view.cpp::TestTableView.AColumnReadsWhatTheEntityOfTheRowIsAsARuleDoes

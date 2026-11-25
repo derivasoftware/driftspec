@@ -115,7 +115,8 @@ std::map<Kind, std::pair<std::string, std::string>> Metamodel::writtenForms() {
         "  bok: <guides>\n}",
         "package shop {\n  constraint CST-00001-1: Every price shall be kept in cents\n}\n"}},
       {Kind::Interface,
-       {"interface <name> {          in a package: an external interface of what the package builds\n  kind: cli | gui | http | ...\n"
+       {"interface <name> {          in a package: an external interface of what the package builds\n  kind: cli | gui | http | library | "
+        "lsp | mcp\n"
         "  operation ...\n}",
         kShopInterface}},
       {Kind::Operation,

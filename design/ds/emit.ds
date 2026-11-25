@@ -30,7 +30,7 @@ package driftspec@ds {
         Revision 2 (DS-398, Owner 2026-11-24): SinkFactory stays the technology axis, as DescriptionFactory is the
         document axis; it grows a maker by technology rather than handing the technologies to a catalogue of pairs.
       verification VER-00223-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds names a sink of emit only in emit, and is told when a door, a format, the exporter or the render does
         method: test
         tests:
@@ -54,7 +54,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-394): emit is a bottom module that knows no document, as text is; a dependence on
         another module would make it know what it writes.
       verification VER-00224-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of emit depends on no other module of the engine, and is told when a sink does
         method: test
         tests:

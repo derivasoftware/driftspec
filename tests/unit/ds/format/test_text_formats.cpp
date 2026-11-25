@@ -61,17 +61,17 @@ TEST(TestTextFormats, AReportReadsTheSameAsTextAndAsJson) {
   report.entities = 4;
   report.relations = 2;
   report.errors = 1;
-  EXPECT_EQ(ds::format::ReportText().write(report, {}, sink), "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings\n");
+  EXPECT_EQ(ds::format::ReportText().write(report, {}, sink), "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 finding\n");
   report.coverage = {finding("W-REQ-NO-VERIFICATION", ds::model::Severity::coverage),
                      finding("W-OPERATION-NO-BEHAVIOUR", ds::model::Severity::coverage)};
   ds::format::FormatOptions where;
   where.title = "design";
   EXPECT_EQ(ds::format::ReportText().write(report, where, sink),
-            "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings · 2 open\n"
+            "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 finding · 2 open\n"
             "2 open items of coverage: ds query design coverage lists them\n");  // DS-431
   report.coverage.pop_back();
   EXPECT_EQ(ds::format::ReportText().write(report, {}, sink),
-            "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 findings · 1 open\n"
+            "a.ds:3:5  E-X  said\n4 entities · 0 expected · 2 relations · 1 finding · 1 open\n"
             "1 open item of coverage: ds query <workspace> coverage lists them\n");
   ds::format::DescriptionFactory::report(report)->describe(sink);
   const auto json = nlohmann::json::parse(sink.result());

@@ -77,7 +77,7 @@ package driftspec@ds {
         tests/integration/ds/format/test_formats_of_a_design.cpp::TestTextFormatsOfADesign.TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAsTextAndAsJson
     }
     verification VER-00222-1 {
-      status: draft
+      status: approved
       title: Integration tests confirm every JSON document ds writes of a design, through a checked sink and through the doors, has its fields in byte order and reads back as nlohmann writes it, and a write that fails writes nothing
       method: test
       tests:

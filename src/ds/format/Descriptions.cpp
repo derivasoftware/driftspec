@@ -31,8 +31,14 @@ AnswersDescription::AnswersDescription(const std::vector<query::Answer>& answers
 
 void AnswersDescription::describe(emit::ISink& out_sink) const {
   out_sink.beginList();
-  for (const auto& a : answers_)
-    out_sink.beginRecord().field("detail").value(a.detail).field("id").value(a.id).field("kind").value(a.kind).endRecord();
+  for (const auto& a : answers_) {
+    // a relation's two ends when the answer has them (DS-445); every other answer is written as it was
+    out_sink.beginRecord().field("detail").value(a.detail);
+    if (!a.from.empty()) out_sink.field("from").value(a.from);
+    out_sink.field("id").value(a.id).field("kind").value(a.kind);
+    if (!a.to.empty()) out_sink.field("to").value(a.to);
+    out_sink.endRecord();
+  }
   out_sink.endList();
 }
 

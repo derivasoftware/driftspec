@@ -59,7 +59,7 @@ package driftspec@ds {
     }
 
     requirement REQ-00260-1 {
-      status: draft
+      status: approved
       @refines SREQ-00011-1
       title: The query shall say which subject each question takes, answer a subject of another kind with an error that says what it takes, and take a file or an identity for the findings and the coverage
       text:
@@ -77,7 +77,7 @@ package driftspec@ds {
       rationale: Owner's coordinator, 2026-11-24 (DS-436, D1 exit 1, D2 widen; D3 the include syntax for entities, DS-444): a wrong subject printed nothing with exit 0, which reads as "it has none"; a first-time user asked coverage shop@sales@cart and coverage of a file and got nothing.
       tags: query, cli
       verification VER-00280-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm each question refuses a subject of another kind by saying what it takes, the findings and coverage take a file or an entity and what it holds, and the help and the manual list the questions from the one table
         method: test
         tests:
@@ -157,6 +157,8 @@ package driftspec@ds {
       + kind: std::string
       + id: std::string
       + detail: std::string
+      + from: std::string                    // a relation's two ends, for a relation question only (DS-445)
+      + to: std::string
     }
 
     dataclass Question {                     // a question and the subject it takes: the one table usage, help and check read (DS-436)

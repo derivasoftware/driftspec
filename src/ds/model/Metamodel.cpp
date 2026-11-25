@@ -141,12 +141,13 @@ std::vector<KindSpec> Metamodel::build() {
                 syntax("returns", FieldType::Type, "what it gives back when not what the use case returns")},
                {},
                {Kind::UseCase}});
-  k.push_back({Kind::Interface,
-               "an external interface of a process or a library",
-               {writtenField("kind", FieldType::Name, "cli, gui, http, ..."), writtenField("transport", FieldType::Name, "how it travels"),
-                writtenField("encoding", FieldType::Text, "how it is serialised")},
-               {},
-               {P, M}});
+  k.push_back(
+      {Kind::Interface,
+       "an external interface of a process or a library",
+       {closed("kind", FieldType::Name, "what the interface is to who uses it", {"cli", "gui", "http", "library", "lsp", "mcp"}),
+        writtenField("transport", FieldType::Name, "how it travels"), writtenField("encoding", FieldType::Text, "how it is serialised")},
+       {},
+       {P, M}});
   k.push_back(
       {Kind::Operation,
        "an operation an interface offers",
@@ -241,8 +242,10 @@ std::vector<KindSpec> Metamodel::build() {
         writtenField("unfold", FieldType::Patterns,
                      "the calls a sequence follows: *, a box, an operation; alone, every other call is folded"),
         writtenField("fold", FieldType::Patterns, "the calls a sequence does not follow"),
-        writtenField("show", FieldType::Names, "the extras it draws"),
-        writtenField("hide", FieldType::Names, "the compartments it leaves out"),
+        // what a drawing reads of show: and hide:, and nothing else (DS-435)
+        closed("show", FieldType::Names, "the extras it draws",
+               {"ownership", "multiplicity", "operators", "notes", "requirements", "derived-stereotypes", "design", "verifications"}),
+        closed("hide", FieldType::Names, "the compartments it leaves out", {"fields", "methods"}),
         writtenField("neighbours", FieldType::Number, "how many steps of neighbours it adds"),
         syntax("for", FieldType::Text, "the rows of a table: what it ranges over, as a rule does"),
         syntax("where", FieldType::Text, "the rows of a table that stay: the literals each must answer")},
