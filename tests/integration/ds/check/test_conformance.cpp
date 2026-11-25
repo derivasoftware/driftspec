@@ -135,6 +135,43 @@ TEST_F(TestMetamodelConformance, AFieldItsKindDoesNotDeclareIsReportedAndADeclar
   EXPECT_NE(unknown[0].find("'priority'"), std::string::npos);
 }
 
+/// show:, hide: and an interface's kind: are closed too (DS-435): each name of a list is taken or said, once, and a
+/// name the drawing reads passes.
+TEST_F(TestMetamodelConformance, EachNameOfAClosedListIsTakenOrSaid) {
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model, metamodel);
+  binder.bind(parser.parseText("a.ds",
+                               "package p {\n"
+                               "  interface api {\n"
+                               "    kind: telepathy\n"
+                               "  }\n"
+                               "  interface lib {\n"
+                               "    kind: library\n"
+                               "  }\n"
+                               "}\n"
+                               "diagram CL_X {\n"
+                               "  kind: class\n"
+                               "  include: p@*\n"
+                               "  show: ownership, bogus\n"
+                               "  hide: nothing, methods\n"
+                               "}\n"));
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
+  std::vector<std::string> wrong;
+  for (const auto& f : model.findings())
+    if (f.code == "W-FIELD-VALUE") wrong.push_back(f.message);
+  ASSERT_EQ(wrong.size(), 3u);  // telepathy, bogus and nothing; library, ownership and methods pass
+  const auto said = [&](const std::string& part) {
+    for (const auto& w : wrong)
+      if (w.find(part) != std::string::npos) return true;
+    return false;
+  };
+  EXPECT_TRUE(said("kind: telepathy"));
+  EXPECT_TRUE(said("show: bogus"));
+  EXPECT_TRUE(said("hide: nothing"));
+}
+
 TEST_F(TestMetamodelConformance, AClosedFieldWithAValueItDoesNotTakeIsReportedAndOneItTakesIsNot) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};

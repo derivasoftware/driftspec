@@ -1129,11 +1129,18 @@
       {
         "fields": [
           {
-            "meaning": "cli, gui, http, ...",
+            "meaning": "what the interface is to who uses it",
             "name": "kind",
             "source": "written",
             "type": "name",
-            "values": []
+            "values": [
+              "cli",
+              "gui",
+              "http",
+              "library",
+              "lsp",
+              "mcp"
+            ]
           },
           {
             "meaning": "how it travels",
@@ -1857,14 +1864,26 @@
             "name": "show",
             "source": "written",
             "type": "names",
-            "values": []
+            "values": [
+              "ownership",
+              "multiplicity",
+              "operators",
+              "notes",
+              "requirements",
+              "derived-stereotypes",
+              "design",
+              "verifications"
+            ]
           },
           {
             "meaning": "the compartments it leaves out",
             "name": "hide",
             "source": "written",
             "type": "names",
-            "values": []
+            "values": [
+              "fields",
+              "methods"
+            ]
           },
           {
             "meaning": "how many steps of neighbours it adds",

@@ -284,13 +284,20 @@ void StructureCheck::checkFields() {
     const model::Entity& e = pair.second;
     for (const auto& f : e.fields) {
       if (const model::FieldSpec* spec = metamodel_->fieldOf(e.kind, f.first)) {
-        // a closed field takes one of its values; an empty one is left to the field's own check (DS-211)
-        if (!spec->values.empty() && !f.second.empty() &&
-            std::find(spec->values.begin(), spec->values.end(), f.second) == spec->values.end())
-          found_.push_back(context_->metamodel().finding(model::Code::W_FIELD_VALUE,
-                                                         metamodel_->nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + f.second +
-                                                             ", which is none of " + join(spec->values, ", "),
-                                                         e.location));
+        // a closed field takes one of its values; an empty one is left to the field's own check (DS-211); a list of
+        // names takes each of its names from them, and each one it does not take is said once (DS-435)
+        const auto takes = [&](const std::string& v) {
+          return std::find(spec->values.begin(), spec->values.end(), v) != spec->values.end();
+        };
+        const std::vector<std::string> written =
+            spec->type == model::FieldType::Names ? text::splitTrimmed(f.second, ',') : std::vector<std::string>{f.second};
+        if (!spec->values.empty() && !f.second.empty())
+          for (const auto& v : written)
+            if (!v.empty() && !takes(v))
+              found_.push_back(context_->metamodel().finding(model::Code::W_FIELD_VALUE,
+                                                             metamodel_->nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + v +
+                                                                 ", which is none of " + join(spec->values, ", "),
+                                                             e.location));
         continue;
       }
       found_.push_back(context_->metamodel().finding(model::Code::W_FIELD_UNKNOWN,
