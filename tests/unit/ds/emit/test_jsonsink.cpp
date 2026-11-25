@@ -9,6 +9,7 @@
 #include <string>
 
 #include "ds/emit/JsonSink.hpp"
+#include "ds/emit/NotImplemented.hpp"
 
 namespace {
 
@@ -221,6 +222,31 @@ TEST_F(TestJsonSink, TheResultIsHandedOverAndTheSinkWritesTheNextDocument) {
   EXPECT_EQ(sink.result(), R"({"a":2})");
   sink.beginList().value("x").endList();
   EXPECT_EQ(sink.result(), R"(["x"])");
+}
+
+TEST_F(TestJsonSink, ThePresentationIsSkipped) {
+  // a description says its document in both halves (DS-399); JSON writes the structure and nothing of the rest
+  for (bool pretty : {false, true}) {
+    ds::emit::JsonSink sink(pretty, true);
+    sink.table({"kind", "id"}).row({"class", "a@b::C"}).endTable().paragraph("1 answer");
+    sink.beginList().value("x").endList().paragraph("after").table({}).endTable().described("answers");
+    EXPECT_EQ(sink.result(), pretty ? "[\n  \"x\"\n]" : R"(["x"])");
+  }
+}
+
+TEST_F(TestJsonSink, ADocumentItAcceptedNothingOfFailsNotImplementedNamingIt) {
+  ds::emit::JsonSink sink(false, true);
+  sink.paragraph("only prose").table({"a"}).row({"b"}).endTable();
+  try {
+    sink.described("essay");
+    FAIL() << "a document of prose alone was handed over as an empty JSON";
+  } catch (const ds::emit::NotImplemented& e) {
+    EXPECT_EQ(e.document(), "essay");
+    EXPECT_EQ(e.technology(), "json");
+    EXPECT_EQ(std::string(e.what()), "the essay is not written in json");
+  }
+  sink.beginRecord().endRecord().described("empty");  // an empty record is written: accepted, so no failure
+  EXPECT_EQ(sink.result(), "{}");
 }
 
 }  // namespace

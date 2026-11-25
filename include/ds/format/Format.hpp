@@ -21,11 +21,11 @@ struct FormatOptions {
   bool color = false;                   ///< text for a terminal that shows colour
 };
 
-/// A writer of one kind of document that is no description yet (DS-126, DS-398): the report and the answers as
-/// text (until DS-399), a drawing in svg or text (until DS-400), the IR (until DS-418) and the viewer's page,
-/// which is the scene in JSON inside its template. The writers of a document are found by name in the map
-/// FormatFactory makes; a writer never reads the model. Whoever asks for the output lends the sink (DS-397): the
-/// page writes the scene into it; one that writes text returns its text and leaves the sink alone.
+/// A writer of one kind of document that is no description yet (DS-126, DS-398): a drawing in svg or text (until
+/// DS-400), the IR (until DS-418) and the viewer's page, which is the scene in JSON inside its template. The
+/// writers of a document are found by name in the map FormatFactory makes; a writer never reads the model. Whoever
+/// asks for the output lends the sink (DS-397): the page writes the scene into it; one that draws returns its
+/// drawing and leaves the sink alone.
 template <typename D>
 class IFormat {
  public:

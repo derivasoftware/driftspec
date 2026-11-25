@@ -320,7 +320,7 @@ package driftspec@ds {
     // What a check of a workspace says: its findings in order and the counts of the model (DS-120);
     // built once from the model, written by its formats without it (DS-126)
     dataclass Report {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       + many findings: std::vector<model::Finding>
       + many coverage: std::vector<model::Finding>
       + entities: int

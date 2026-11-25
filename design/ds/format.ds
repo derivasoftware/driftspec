@@ -1,38 +1,43 @@
-// LLD of the format namespace (ds::format, DS-126, DS-398): every output of ds is a document. What is written and
-// how it is written are two axes. A document describes itself once (IDescription) into the sink it is lent and knows
-// no technology; a technology is a sink of emit. DescriptionFactory names the descriptions, one maker per document;
-// emit's SinkFactory names the sinks; whoever asks for an output pairs them, description.describe(sink), and a pair
-// ds does not write fails NotImplemented. To add a document: a description and its maker. To add a technology: a
-// sink and its line in SinkFactory. What is no description yet is a writer behind IFormat<its document>, found by
-// name in the map FormatFactory makes: the report and the answers as text (DS-399), the drawings (DS-400), the IR
-// (DS-418) and the viewer's page.
+// LLD of the format namespace (ds::format, DS-126, DS-398, DS-399): every output of ds is a document. What is
+// written and how it is written are two axes. A document describes itself once (ADescription) into the sink it is
+// lent, as structure and as presentation, and knows no technology; a technology is a sink of emit, which writes the
+// half it can. DescriptionFactory names the descriptions, one maker per document; emit's SinkFactory names the
+// sinks; whoever asks for an output pairs them, description.describe(sink), and a pair ds does not write fails
+// NotImplemented. To add a document: a description and its maker. To add a technology: a sink and its line in
+// SinkFactory. What is no description yet is a writer behind IFormat<its document>, found by name in the map
+// FormatFactory makes: the drawings (DS-400), the IR (DS-418) and the viewer's page.
 
 package driftspec@ds {
   // every document ds writes, whichever module builds it: the package's, not the format module's
-  requirement REQ-00106-3 {
-    status: approved
+  requirement REQ-00106-4 {
+    status: draft
     @refines SREQ-00013-1
     title: Each document ds writes shall be described once into the sink of the technology asked for, or written by a writer found by name, none of which reads the model, and a pair ds does not write shall fail NotImplemented
     text:
       What is written and how it is written are two axes. A document (the scene, a check's report, a
-      query's answers, a diagram's layout and its cells) describes itself once, as records of named
-      fields, lists and values, into the sink it is lent, and knows no technology; a technology is a
-      sink of emit. One factory names the descriptions, one maker per document, and emit's SinkFactory
-      names the sinks, found by the technology's name; whoever asks for an output pairs them, the
-      description describing itself into the sink, so a new document or a new technology is one class
-      and one maker and changes neither the other axis nor any door. What is no description yet (the
-      report and the answers as text, a drawing in svg or text, the IR, and the viewer's page, which is
-      the scene in JSON inside its template) is written by a writer behind one interface, found by name
-      in the map its factory makes, with the options it is given (indented, the title, a reader's
-      stylesheet, the identities a page opens framed on, whether a page is embedded and how tall, a
-      width). Nothing of format reads the model, and every operation of format is a member of a class.
+      query's answers, a diagram's layout and its cells) describes itself once into the sink it is
+      lent, in two halves: its structure, as records of named fields, lists and values, and its
+      presentation, as paragraphs and tables of rows. It knows no technology; a technology is a sink
+      of emit, which writes the half it can and skips the other. One factory names the descriptions,
+      one maker per document, and emit's SinkFactory names the sinks, found by the technology's name;
+      whoever asks for an output pairs them, the description describing itself into the sink, so a new
+      document or a new technology is one class and one maker and changes neither the other axis nor
+      any door. The report and the answers say their presentation, so they are written as text by the
+      text sink; the workspace as it was given reaches the report from its door, which names it where
+      the open coverage is listed. What is no description yet (a drawing in svg or text, the IR, and
+      the viewer's page, which is the scene in JSON inside its template) is written by a writer behind
+      one interface, found by name in the map its factory makes, with the options it is given
+      (indented, the title, a reader's stylesheet, the identities a page opens framed on, whether a
+      page is embedded and how tall, a width). Nothing of format reads the model, and every operation
+      of format is a member of a class.
       The documents and the technologies need not make a complete matrix: a document asked in a
       technology ds does not write it in fails with NotImplemented, which names the document, the
-      technology and what there is. The command line says it as bad usage (exit 2), though its
-      options name only the pairs there are; the engine's interfaces let it through to their caller,
-      the browser answers it as its error, and the Python face raises driftspec.NotImplemented, a
-      NotImplementedError. A diagram asked of a workspace in a format that is none of its five fails
-      so, and is not drawn as text instead.
+      technology and, when it is known, what there is; a sink handed a document it accepted nothing of
+      fails so too. The command line says it as bad usage (exit 2), though its options name only the
+      pairs there are; the engine's interfaces let it through to their caller, the browser answers it
+      as its error, and the Python face raises driftspec.NotImplemented, a NotImplementedError. A
+      diagram asked of a workspace in a format that is none of its five fails so, and is not drawn as
+      text instead.
       Every JSON document ds writes, a description's or not (the export, the engine's answers, the
       manual's page, the browser's answer), is written into one sink, emit's JsonSink, as ds has
       always written it: a record's fields in byte order, the escapes of nlohmann 3.11.3, indented
@@ -49,7 +54,9 @@ package driftspec@ds {
       Revision 3 (DS-394, DS-398, Owner 2026-11-24): each document described once and each
       technology a sink, extensible in both dimensions with no method per document on any catalogue
       and no interface per pair; a pair that is missing is a failure the caller handles, never
-      something else written in its place.
+      something else written in its place. Revision 4 (DS-399, 2026-11-25): one describe says both
+      halves and each sink writes the half it can, so the report and the answers as text are their
+      descriptions in the text sink and their writers go (REQ-00204-1).
     tags: format, render, scene, emit
     verification VER-00115-2 {
       status: approved
@@ -114,14 +121,14 @@ package driftspec@ds {
     // ---- the principles, as rules ----------------------------------------------------------
     rule formats-read-no-model {
       title: a description or a writer writes the document it is given; nothing of format reads the model
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       for class c in driftspec@ds@format
       never depends(c, driftspec@ds@model::Model)
     }
 
     rule no-format-uses-another {
       title: descriptions and writers are siblings: none uses another; what two of them need goes in common, and a writer that carries a document asks its factory for the description
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       for class a in driftspec@ds@format, class b in driftspec@ds@format
       where a != b, a inherits x, b inherits y
       never depends(a, b)
@@ -129,16 +136,16 @@ package driftspec@ds {
 
     rule common-classes-know-no-format {
       title: what the writers share knows none of them, nor any description (DS-397)
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       for class c in driftspec@ds@format::common
       never depends(c, x), x in driftspec@ds@format, not x in driftspec@ds@format::common
     }
 
     rule descriptions-know-no-technology {
       title: a description names nothing of emit but the interface of the sinks, so it knows no technology and makes no sink of its own (DS-398)
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       for class d in driftspec@ds@format, class t in driftspec@ds@emit
-      where d inherits driftspec@ds@format::IDescription, t != driftspec@ds@emit::ISink
+      where d inherits driftspec@ds@format::ADescription, t != driftspec@ds@emit::ISink
       never depends(d, t)
     }
 
@@ -150,16 +157,16 @@ package driftspec@ds {
     }
 
     rule descriptions-are-named-by-their-factory {
-      title: nothing but DescriptionFactory names a description, so whoever asks for a document holds it as an IDescription (DS-398)
-      @requirement REQ-00106-3
+      title: nothing but DescriptionFactory names a description, so whoever asks for a document holds it as an ADescription (DS-398)
+      @requirement REQ-00106-4
       for class d in driftspec@ds@format
-      where d inherits driftspec@ds@format::IDescription
+      where d inherits driftspec@ds@format::ADescription
       never depends(x, d), x in driftspec@ds, x != d, not x in d, x != driftspec@ds@format::DescriptionFactory, not of-the-factory(x, driftspec@ds@format::DescriptionFactory)
     }
 
     rule writers-are-named-by-their-factory {
       title: nothing but FormatFactory names a writer, so whoever asks for one finds it by name and holds it as an IFormat (DS-398)
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       for class w in driftspec@ds@format, class i in driftspec@ds@format
       where w inherits i, name(i) = "IFormat"
       never depends(x, w), x in driftspec@ds, x != w, not x in w, x != driftspec@ds@format::FormatFactory, not of-the-factory(x, driftspec@ds@format::FormatFactory)
@@ -167,30 +174,42 @@ package driftspec@ds {
 
     rule format-operations-belong-to-classes {
       title: no function is written in the format module, so every operation of format is a member of a class (DS-398)
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       for function f in driftspec@ds@format
       never f in driftspec@ds@format
     }
 
     // ---- what is written: each document described once, knowing no technology ----------------
-    // THE EXTENSION POINT of the documents: a document describes itself into the sink it is lent
-    class IDescription {
-      @requirement REQ-00106-3
-      + ~IDescription()
-      + abstract describe(out_sink: emit::ISink) -> void fails NotImplemented   // a sink that cannot write what it is given fails
+    // THE EXTENSION POINT of the documents: a document describes itself into the sink it is lent, in both halves.
+    // Abstract (DS-399): every description ends the same way, naming its document to the sink, which fails when it
+    // accepted nothing of it, so no description can leave the check out
+    class ADescription {
+      @requirement REQ-00106-4
+      @requirement REQ-00204-1
+      + ~ADescription()
+      + describe(out_sink: emit::ISink) -> void fails NotImplemented   // said, then the sink is told the document ended
+      + abstract name() -> std::string                                 // the document's: scene, report, answers, layout, cells
+      - abstract say(out_sink: emit::ISink) -> void                    // its structure and its presentation
+    }
+
+    sequence ADescription::describe {
+      -> say(out_sink)
+      -> name() -> document
+      -> out_sink.described(document)
     }
 
     // the scene, for the viewer: every record an array whose columns fields names, a node, a behaviour or a link named
     // by its index; ds render -f json, and the scene inside the viewer's page
-    class SceneDescription : IDescription {
-      @requirement REQ-00106-3
+    class SceneDescription : ADescription {
+      @requirement REQ-00106-4
       - refs document_: scene::SceneDocument
       - owns nodeAt_: std::map<std::string, int>
       - owns behaviourAt_: std::map<std::string, int>
       - owns requirementAt_: std::map<std::string, int>
       - owns landing_: scene::Map                    // where a link's sequence lands: the behaviour it is
       + SceneDescription(document: scene::SceneDocument)
-      + describe(out_sink: emit::ISink) -> void fails NotImplemented
+      + name() -> std::string
+      - say(out_sink: emit::ISink) -> void           // structure alone
       - node(id: std::string) -> int
       - requirement(id: std::string) -> int
       - behaviourOf(sequence: std::string) -> int
@@ -199,62 +218,75 @@ package driftspec@ds {
       - static pairs(pairs: std::vector<std::pair<std::string, std::string>>, out_sink: emit::ISink) -> void
     }
 
-    // a check's report as one record of its findings and counts, the one shape every caller reads: ds check --json,
-    // the api, and the browser's answer, which carries it as one of its fields
-    class ReportDescription : IDescription {
+    // a check's report, in both halves (DS-399): as structure one record of its findings and counts, the one shape
+    // every program reads (ds check --json, the api, and the browser's answer, which carries it as one of its
+    // fields); as presentation what ds check prints, a table of the findings, then the counts as a paragraph and,
+    // when coverage is open, where it is listed as another
+    class ReportDescription : ADescription {
       @requirement SREQ-00002-1
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       - refs report_: check::Report
-      + ReportDescription(report: check::Report)
-      + describe(out_sink: emit::ISink) -> void fails NotImplemented
+      - owns workspace_: std::string                 // the workspace as it was given, named where the open coverage is listed
+      + ReportDescription(report: check::Report, workspace: std::string)
+      + name() -> std::string
+      - say(out_sink: emit::ISink) -> void
       - findings(findings: std::vector<model::Finding>, out_sink: emit::ISink) -> void   // code, location, message, the severity's name
+      - static where(finding: model::Finding) -> std::string   // file:line:column
+      - counts() -> std::string                      // one in the singular (DS-435), the open coverage last (DS-431)
+      - listing() -> std::string                     // the query that lists the open coverage, over the workspace (DS-431)
+      - static count(n: std::size_t, one: std::string_view, many: std::string_view) -> std::string
     }
 
-    // ds query --json: a list of records of the same three fields
-    class AnswersDescription : IDescription {
-      @requirement REQ-00106-3
+    // a query's answers, in both halves (DS-399): as structure ds query --json, a list of records of the same three
+    // fields and a relation's ends (DS-445); as presentation what ds query prints, a table of the kind, the identity
+    // and the detail when there is one
+    class AnswersDescription : ADescription {
+      @requirement REQ-00106-4
       - refs answers_: std::vector<query::Answer>
       + AnswersDescription(answers: std::vector<query::Answer>)
-      + describe(out_sink: emit::ISink) -> void fails NotImplemented
+      + name() -> std::string
+      - say(out_sink: emit::ISink) -> void
     }
 
     // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
-    class LayoutDescription : IDescription {
-      @requirement REQ-00106-3
+    class LayoutDescription : ADescription {
+      @requirement REQ-00106-4
       - refs ir_: render::IrText
       - owns metrics_: render::Metrics
       - width_: int
       + LayoutDescription(ir: render::IrText, theme: theme::Theme, width: int)   // measured as the theme measures text in a terminal (DS-393)
-      + describe(out_sink: emit::ISink) -> void fails NotImplemented
+      + name() -> std::string
+      - say(out_sink: emit::ISink) -> void           // structure alone
       - placed(document: render::IrDocument, part: std::string, out_sink: emit::ISink) -> void   // a part names itself
     }
 
     // ds render -f cells: the terminal's coloured cells
-    class CellsDescription : IDescription {
-      @requirement REQ-00106-3
+    class CellsDescription : ADescription {
+      @requirement REQ-00106-4
       - refs ir_: render::IrText
       - owns text_: render::Text
       - width_: int
       + CellsDescription(ir: render::IrText, theme: theme::Theme, width: int)    // drawn in the theme (DS-393)
-      + describe(out_sink: emit::ISink) -> void fails NotImplemented
+      + name() -> std::string
+      - say(out_sink: emit::ISink) -> void           // structure alone
     }
 
     // THE DOCUMENT AXIS: the one place that names the descriptions, one maker per document. A door asks it for the
     // description, asks emit's SinkFactory for the sink and pairs them; a description refers to the document it is
     // given, which outlives it
     class DescriptionFactory {
-      @requirement REQ-00106-3
-      + static scene(document: scene::SceneDocument) -> std::unique_ptr<IDescription>
-      + static report(report: check::Report) -> std::unique_ptr<IDescription>
-      + static answers(answers: std::vector<query::Answer>) -> std::unique_ptr<IDescription>
-      + static layout(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<IDescription>
-      + static cells(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<IDescription>
+      @requirement REQ-00106-4
+      + static scene(document: scene::SceneDocument) -> std::unique_ptr<ADescription>
+      + static report(report: check::Report, workspace: std::string) -> std::unique_ptr<ADescription>   // the workspace as the door was given it; "" by default, for a door that has none
+      + static answers(answers: std::vector<query::Answer>) -> std::unique_ptr<ADescription>
+      + static layout(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<ADescription>
+      + static cells(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<ADescription>
     }
 
     // ---- what is no description yet: writers found by name ----------------------------------
     // what every writer is given besides its document
     dataclass FormatOptions {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       + pretty: bool
       + title: std::string
       + css: std::string
@@ -269,7 +301,7 @@ package driftspec@ds {
     // base, as the code does (DS-18). Whoever asks for the output lends the sink: the viewer's page describes the
     // scene into it; a writer of text leaves it alone (DS-397)
     class IFormat<D> {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       + ~IFormat()
       + abstract name() -> std::string
       + abstract write(document: D, options: FormatOptions, out_sink: emit::ISink) -> std::string
@@ -286,13 +318,11 @@ package driftspec@ds {
     }
 
     // the one place that names the writers, keyed by name; each goes when its document is described and its
-    // technology is a sink
+    // technology is a sink, as the answers and the report as text went (DS-399)
     class FormatFactory {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       + static scene() -> std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>>   // html
       + static diagram(theme: theme::Theme) -> std::map<std::string, std::unique_ptr<IFormat<render::IrText>>>   // ir, svg, text
-      + static answers() -> std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>>   // text
-      + static report() -> std::map<std::string, std::unique_ptr<IFormat<check::Report>>>   // text
     }
 
     // ds render -f html: the viewer as one page, or that page as an iframe when options.embed asks. It is no
@@ -312,14 +342,14 @@ package driftspec@ds {
 
     // ds render -f ir: the IR as it came, indented when asked
     class DiagramIr : IFormat<render::IrText> {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }
 
     // ds render -f svg
     class DiagramSvg : IFormat<render::IrText> {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       - owns svg_: render::Svg
       + DiagramSvg(theme: theme::Theme)            // drawn in the theme (DS-393)
       + name() -> std::string
@@ -328,25 +358,11 @@ package driftspec@ds {
 
     // ds render -f text: boxes in characters for a terminal
     class DiagramText : IFormat<render::IrText> {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       - owns text_: render::Text
       + DiagramText(theme: theme::Theme)            // drawn in the theme (DS-393)
       + name() -> std::string
       + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
-    }
-
-    // ds query: kind  identity  detail, one answer per line
-    class AnswersText : IFormat<std::vector<query::Answer>> {
-      @requirement REQ-00106-3
-      + name() -> std::string
-      + write(document: std::vector<query::Answer>, options: FormatOptions, out_sink: emit::ISink) -> std::string
-    }
-
-    // ds check: each finding where it is, then the counts
-    class ReportText : IFormat<check::Report> {
-      @requirement SREQ-00002-1
-      + name() -> std::string
-      + write(document: check::Report, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }
 
     // ---- what each factory makes (DS-451: a factory names its products) -----------------------
@@ -384,16 +400,6 @@ package driftspec@ds {
       local ir: DiagramIr
       local svg: DiagramSvg
       local text: DiagramText
-      return writers
-    }
-
-    sequence FormatFactory::answers {
-      local text: AnswersText
-      return writers
-    }
-
-    sequence FormatFactory::report {
-      local text: ReportText
       return writers
     }
 

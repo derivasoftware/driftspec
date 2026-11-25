@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -24,7 +26,7 @@ namespace {
 /// The style the drawings are written in, made once for the file (DS-393).
 const ds::theme::Theme kTheme;
 
-/// Every output of ds is a document (REQ-00106-3), here over examples/hola: the document comes from the design; it
+/// Every output of ds is a document (REQ-00106-4), here over examples/hola: the document comes from the design; it
 /// is described into the sink of the technology named, or written by the writer named, and neither reads the model.
 class TestFormatsOfADesign : public ::testing::Test {
  protected:
@@ -104,38 +106,42 @@ TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDes
   EXPECT_EQ(svg, ds::api::Api(metamodel).render(files, "CL_Hola", "svg", 0));  // what ds render writes
 }
 
-/// The answers of a query and the report of a check on the design, written as text or described in JSON.
+/// The answers of a query and the report of a check on the design, each described once into the sink of the
+/// technology named: text or JSON (DS-399).
 class TestTextFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestTextFormatsOfADesign, TheAnswersOfAQueryAreWrittenAsTextOrJsonByName) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const auto answers = ds::query::Query(model, metamodel).ask("entities", "hola@core");
   ASSERT_FALSE(answers.empty());
-  const auto formats = ds::format::FormatFactory::answers();
-  ASSERT_EQ(formats.size(), 1u);
-  ds::format::DescriptionFactory::answers(answers)->describe(sink);
-  const auto json = nlohmann::json::parse(sink.result());
+  const auto description = ds::format::DescriptionFactory::answers(answers);
+  const auto sink = ds::emit::SinkFactory::of("json", false);  // the technology found by its name (DS-398)
+  description->describe(*sink);
+  const auto json = nlohmann::json::parse(sink->result());
   ASSERT_EQ(json.size(), answers.size());
   EXPECT_EQ(json[0]["id"], answers[0].id);
-  const std::string text = formats.at("text")->write(answers, {}, sink);
-  for (const auto& a : answers) EXPECT_NE(text.find(a.id), std::string::npos) << a.id;
+  const auto text = ds::emit::SinkFactory::of("text", false);
+  description->describe(*text);
+  const std::string written = text->result();
+  EXPECT_EQ(static_cast<std::size_t>(std::count(written.begin(), written.end(), '\n')), answers.size());  // a line each
+  for (const auto& a : answers) EXPECT_NE(written.find(a.kind + "  " + a.id), std::string::npos) << a.id;
 }
 
 TEST_F(TestTextFormatsOfADesign, TheReportOfTheCheckIsBuiltOnceAndReadsTheSameAsTextAndAsJson) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::check::Report report = ds::check::Report::of(model, metamodel);
   EXPECT_GT(report.entities, 0);
   EXPECT_EQ(report.errors, 0);
-  const auto formats = ds::format::FormatFactory::report();
-  ASSERT_EQ(formats.size(), 1u);
-  ds::format::DescriptionFactory::report(report)->describe(sink);
-  const auto json = nlohmann::json::parse(sink.result());
+  const auto description = ds::format::DescriptionFactory::report(report, "examples/hola");
+  const auto sink = ds::emit::SinkFactory::of("json", false);
+  description->describe(*sink);
+  const auto json = nlohmann::json::parse(sink->result());
   EXPECT_EQ(json["entities"], report.entities);
   EXPECT_EQ(json["relations"], report.relations);
   EXPECT_EQ(json["findings"].size(), report.findings.size());
-  const std::string text = formats.at("text")->write(report, {}, sink);
-  EXPECT_NE(text.find(std::to_string(report.entities) + " entities"), std::string::npos) << text;
-  EXPECT_NE(text.find(std::to_string(report.relations) + " relations"), std::string::npos) << text;
+  const auto text = ds::emit::SinkFactory::of("text", false);
+  description->describe(*text);
+  const std::string written = text->result();
+  EXPECT_NE(written.find(std::to_string(report.entities) + " entities"), std::string::npos) << written;
+  EXPECT_NE(written.find(std::to_string(report.relations) + " relations"), std::string::npos) << written;
   EXPECT_EQ(json, nlohmann::json::parse(ds::api::Api(metamodel).check(files)));  // what ds check prints
 }
 

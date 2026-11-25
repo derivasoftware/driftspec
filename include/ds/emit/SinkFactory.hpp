@@ -15,12 +15,14 @@ namespace emit {
 /// result. A new technology is one sink and one line here; no document changes.
 class SinkFactory {
  public:
-  /// The sink of the technology named (json), indented when pretty; NotImplemented for a technology ds has no
-  /// sink of.
+  /// The sink of the technology named (json, text), JSON indented when pretty; NotImplemented for a technology ds
+  /// has no sink of.
   static std::unique_ptr<ISink> of(const std::string& technology, bool pretty);
   /// The sink that writes JSON, the technology every answer of the engine's interfaces is written in: indented by
   /// two spaces when pretty, else compact; checked unless ds is built with NDEBUG.
   static std::unique_ptr<ISink> json(bool pretty);
+  /// The sink that writes text for a terminal: the report and the answers as ds prints them (DS-399).
+  static std::unique_ptr<ISink> text();
   /// The technologies there is a sink of, for a message.
   static std::vector<std::string> names();
 };
