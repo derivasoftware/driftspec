@@ -256,11 +256,22 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
        "Name it with @requirement in what realises it, or refine it into requirements that are."},
       {Code::W_CST_NO_VERIFICATION, "W-CST-NO-VERIFICATION", Severity::coverage, "An approved constraint that nothing verifies.",
        "Name it with @constraint in a verification that shows it is kept."},
+      {Code::W_WALK_UNDECLARED, "W-WALK-UNDECLARED", Severity::warning,
+       "A step of a walkthrough shows a diagram, or focuses, highlights or points at an entity, that nothing declares.",
+       "Write the name of a diagram of the workspace in show:, and the identity of a declared entity in focus:, highlight: and at:."},
+      {Code::W_WALK_NOT_SHOWN, "W-WALK-NOT-SHOWN", Severity::warning,
+       "A step of a walkthrough lights an entity the diagram it shows does not draw, nor any box that holds it.",
+       "Show a diagram that draws it, or light what the diagram draws."},
+      {Code::W_WALK_AT, "W-WALK-AT", Severity::warning,
+       "A step of a walkthrough points its callout at an entity the step neither focuses nor highlights.",
+       "Point at: at one of the step's focus: or highlight:, or add it there."},
+      {Code::W_WALK_EMPTY, "W-WALK-EMPTY", Severity::warning, "A walkthrough has no step, or a step shows no diagram or says nothing.",
+       "Write step <title> { show: <diagram>  text: <a sentence> } for each step of the walk."},
   };
   // a finding is made by its slot: a row out of the order of Code, or a Code with no row, would give another code
   for (std::size_t i = 0; i < out.size(); ++i)
     if (static_cast<std::size_t>(out[i].id) != i) throw std::logic_error("the catalogue is out of the order of Code at " + out[i].code);
-  if (out.size() != static_cast<std::size_t>(Code::W_CST_NO_VERIFICATION) + 1)
+  if (out.size() != static_cast<std::size_t>(Code::W_WALK_EMPTY) + 1)
     throw std::logic_error("the catalogue does not hold one row per Code");
   return out;
 }

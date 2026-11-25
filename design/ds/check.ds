@@ -441,7 +441,7 @@ package driftspec@ds {
     enum Step {
       @requirement REQ-00085-2
       @constraint CST-00001-1
-      Linker, Behaviour, Derivation, Failures, Contracts, Structure, Dependencies, Rules, Levels, States, Order
+      Linker, Behaviour, Derivation, Failures, Interfaces, UseCases, Diagrams, Scenarios, FailureChecks, Structure, Dependencies, Rules, Levels, States, Order, Walkthroughs
     }
 
     // The steps of the check a load runs (DS-376): chosen by the Api for what the load is to give, and read by
@@ -652,6 +652,33 @@ package driftspec@ds {
       }
       - checkScenario(usecase: model::Entity) -> void {   // a use case has no signature: what escapes is said at its scenario (DS-434)
         @requirement REQ-00112-1
+      }
+    }
+
+    // what each walkthrough's steps show and light, against the design (DS-469): what a diagram draws is the
+    // diagram's own filter's, asked through IFilter; each finding's subject is the step (DS-426)
+    class WalkthroughCheck : ACheck {
+      @requirement REQ-00242-1
+      + WalkthroughCheck(context: Context)                 // given what it reads once, when it is made (DS-425)
+      - refs context_: Context
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      - refs resolver_: Resolver
+      - owns many found_: std::vector<model::Finding>
+      + name() -> std::string
+      + needs() -> std::vector<std::string>
+      - check() -> std::vector<model::Finding>
+      - checkStep(step: model::Entity) -> void
+      - drawn(id: std::string, shown: std::set<std::string>) -> bool    // a box taken, or a member in the box taken
+      - report(code: model::Code, step: model::Entity, message: std::string) -> void
+    }
+
+    sequence WalkthroughCheck::checkStep {
+      local filter: query::IFilter
+      -> query::FilterFactory::of(metamodel_, diagram) -> filter      // what the shown diagram draws is its filter's
+      -> filter.select(model_) -> shown
+      loop each name it focuses or highlights {
+        -> drawn(id, shown) -> drawnHere
       }
     }
 

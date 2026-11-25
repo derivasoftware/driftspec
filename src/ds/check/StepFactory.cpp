@@ -24,6 +24,7 @@ std::map<std::string, std::unique_ptr<IStep>> StepFactory::of(Context& context, 
   all.emplace_back(Step::Levels, std::make_unique<LevelCoherence>(context));
   all.emplace_back(Step::States, std::make_unique<StateRules>(context));
   all.emplace_back(Step::Order, std::make_unique<CallOrder>(context));
+  all.emplace_back(Step::Walkthroughs, std::make_unique<WalkthroughCheck>(context));
   std::map<std::string, std::unique_ptr<IStep>> made;
   std::vector<std::string> wanted;
   for (auto& s : all) {
