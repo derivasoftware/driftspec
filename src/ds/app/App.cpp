@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "ds/api/Api.hpp"
+#include "ds/api/Drawings.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
@@ -235,8 +236,10 @@ struct Render {
       options.focus = focus;
       options.embed = embed;
       options.height = height;
+      const ds::scene::SceneDocument document = ds::scene::Scene(model, metamodel).build();
+      if (!document.walkthroughs.empty()) options.drawings = ds::api::Drawings::of(model, metamodel, theme);  // the cards (DS-470)
       const auto sink = ds::emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
-      return emit(output, ds::format::FormatFactory::scene().at("html")->write(ds::scene::Scene(model, metamodel).build(), options, *sink));
+      return emit(output, ds::format::FormatFactory::scene().at("html")->write(document, options, *sink));
     }
     // a diagram is not drawn of what did not read whole (DS-433): a file of its own, or one that declares what it
     // shows, that did not parse may hold the very boxes it draws. A diagram that is missing or shows nothing may have
@@ -282,6 +285,7 @@ struct Render {
       ds::format::DescriptionFactory::ir(*document)->describe(*sink);
       return emit(output, sink->result() + "\n");
     }
+    if (format == "svg") return emit(output, ds::api::Drawings::svg(model, metamodel, theme, diagram, width));  // one path (DS-470)
     return emit(output, draw(*document, true, theme));  // the document drawn, with no text between (DS-458)
   }
 

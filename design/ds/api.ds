@@ -76,6 +76,14 @@ package driftspec@ds {
       never chooses-steps(x), x in b
     }
 
+    // a diagram drawn in svg: the one path that `ds render <ws> <D> -f svg` and a walkthrough's cards both take, so a
+    // card is exactly what render draws (DS-470)
+    class Drawings {
+      @requirement REQ-00244-1
+      + static svg(model: model::Model, metamodel: model::Metamodel, theme: theme::Theme, diagram: std::string, width: int) -> std::string
+      + static of(model: model::Model, metamodel: model::Metamodel, theme: theme::Theme) -> std::map<std::string, std::string>
+    }
+
     // A workspace loaded once (DS-173): its model kept for every question. When it grows, it becomes a
     // module of its own with its questions grouped by what they look at.
     class Workspace {

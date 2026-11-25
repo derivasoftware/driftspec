@@ -1759,6 +1759,37 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00244-1 {
+      tags: language, walkthrough, viewer
+      status: draft
+      @refines REQ-00241-1
+      title: The viewer shall play a walkthrough over every diagram of the workspace drawn as render draws it, and a page with none shall be written as it was
+      text:
+        A page whose workspace writes a walkthrough carries every diagram of the workspace drawn exactly as
+        `ds render <ws> <D> -f svg` draws it, one path for both, and the mode that plays it: every diagram a card, the
+        one a step shows grown calmly into the stage, what the step focuses framed and the rest dimmed, what it
+        highlights marked, and the coach beside what it points at, never over what the step lights, or docked, or on
+        a phone a sheet below the drawing. Consecutive steps on one diagram keep it in place. A step that shows a
+        sequence hands its behaviour to the tour replay. The colours are the viewer's theme, light and dark. A page
+        whose workspace writes none carries neither the drawings nor the mode, and is written as it was.
+      rationale:
+        Owner, 2026-11-24/25 (DS-447 v3, and on it: "like the playground's diagram part, with all the diagram boxes,
+        expanding them"; the first animation "muy bestia"; read on his phone): a design is walked on its real
+        drawings, and one that does not use walkthroughs pays nothing for them.
+      verification VER-00266-1 {
+        status: draft
+        title: Integration tests confirm each card is the diagram as render draws it, byte for byte, that a page with no walkthrough carries neither cards nor mode, and that the viewer decodes each step as ds writes it
+        method: test
+        tests:
+          tests/integration/ds/api/test_walkthrough_page.cpp::TestWalkthroughPage.EveryCardIsTheDiagramAsRenderDrawsItByteForByte
+          tests/integration/ds/api/test_walkthrough_page.cpp::TestWalkthroughPage.APageWithNoWalkthroughCarriesNeitherTheCardsNorTheMode
+          tests/integration/ds/api/test_walkthrough_page.cpp::TestWalkthroughPage.AStepLightsARequirementByItsIdentity
+          tests/integration/viewer/walkthroughs.test.ts::each step comes with its diagram by name and what it lights by identity, in the order written
+          tests/integration/viewer/walkthroughs.test.ts::a step that shows a sequence along a scenario names the behaviour the tour replay plays
+          tests/integration/viewer/walkthroughs.test.ts::a scene with no walkthrough has none to play
+      }
+    }
+
     requirement REQ-00243-1 {
       tags: language, walkthrough, export, scene, query
       status: draft
@@ -1768,8 +1799,8 @@ package driftspec@ds {
         A walkthrough's steps are resolved once, from the steps declared and the relations the linker made. The export
         gives each walkthrough by identity, its steps with the diagram shown, what each focuses, highlights and points
         at, and its text. The scene gives the same in its own convention: the diagram by the name its diagrams use,
-        what a step lights by node index, landed on its box as the diagrams land it, and a step that shows a sequence
-        the index of the behaviour it replays. `ds query <ws> walkthroughs` lists them, and with a walkthrough named its
+        what a step lights by identity, as the drawing it shows names it (a requirement is no node of the map and is
+        lit all the same), and a step that shows a sequence the index of the behaviour it replays. `ds query <ws> walkthroughs` lists them, and with a walkthrough named its
         steps. A workspace that writes no walkthrough is written as it was: neither document carries the key.
       rationale:
         Owner, 2026-11-25 (DS-447, the page reads the scene): a walkthrough's page needs its steps where it reads
