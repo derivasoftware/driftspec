@@ -70,16 +70,17 @@ class Grid {
   std::vector<std::string> long_;         ///< the glyphs longer than one code point
 };
 
-// what is called for every cell, kept where every drawing that fills the grid inlines it
+// what is called for every cell, kept where every drawing that fills the grid inlines it: always, so a change elsewhere
+// in a drawing's file cannot tip the compiler out of it (DS-464 measured 3.4 % on c3200's text when it did)
 
-inline Cell* Grid::at(int x, int y) {
+[[gnu::always_inline]] inline Cell* Grid::at(int x, int y) {
   x -= minX_;
   y -= minY_;
   if (x < 0 || y < 0 || x >= w_ || y >= h_) return nullptr;
   return &cells_[static_cast<size_t>(y) * w_ + x];
 }
 
-inline void Grid::put(int x, int y, std::string_view glyph, const std::string& color) {
+[[gnu::always_inline]] inline void Grid::put(int x, int y, std::string_view glyph, const std::string& color) {
   if (Cell* c = at(x, y)) {
     setGlyph(*c, glyph);
     c->colour = paint(color);
@@ -104,7 +105,7 @@ inline void Grid::text(int x, int y, const std::string& s, const std::string& co
   }
 }
 
-inline void Grid::line(int x, int y, bool horizontal, bool dashed, const std::string& color) {
+[[gnu::always_inline]] inline void Grid::line(int x, int y, bool horizontal, bool dashed, const std::string& color) {
   Cell* c = at(x, y);
   if (!c) return;
   const int bit = horizontal ? 1 : 2;
@@ -127,7 +128,7 @@ inline std::uint8_t Grid::paint(const std::string& color) {
   return static_cast<std::uint8_t>(palette_.size() - 1);
 }
 
-inline void Grid::setGlyph(Cell& c, std::string_view glyph) {
+[[gnu::always_inline]] inline void Grid::setGlyph(Cell& c, std::string_view glyph) {
   if (glyph.size() <= c.glyph.size()) {
     std::copy(glyph.begin(), glyph.end(), c.glyph.begin());
     c.size = static_cast<std::uint8_t>(glyph.size());
