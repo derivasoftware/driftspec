@@ -62,6 +62,11 @@ std::vector<parse::ParsedFile> Workspace::files() const {
 }
 
 service::Outcome Workspace::run(const std::string& name, const service::Request& request, emit::ISink& sink) {
+  prepare(name, request);
+  return useCases_.of(name)->run(model_, request, sink);
+}
+
+void Workspace::prepare(const std::string& name, const service::Request& request) {
   const std::unique_ptr<service::IUseCase> use = useCases_.of(name);
   const Api api(metamodel_);
   if (stale_) {  // bound once: what the use case reads of the bound model says what is checked
@@ -70,15 +75,14 @@ service::Outcome Workspace::run(const std::string& name, const service::Request&
     model_ = api.checked(std::move(bound), selection_);
     stale_ = false;
     ++loads_;
-  } else {
-    const check::Selection needs = use->needs(model_, request);
-    if (!selection_.covers(needs)) {  // a checked model takes no more steps: bound again, with every step asked so far
-      selection_ = selection_.joined(needs);
-      model_ = api.checked(api.bound(files()), selection_);
-      ++loads_;
-    }
+    return;
   }
-  return use->run(model_, request, sink);
+  const check::Selection needs = use->needs(model_, request);
+  if (selection_.covers(needs)) return;
+  // a checked model takes no more steps: bound again, with every step asked so far
+  selection_ = selection_.joined(needs);
+  model_ = api.checked(api.bound(files()), selection_);
+  ++loads_;
 }
 
 // Every answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397).

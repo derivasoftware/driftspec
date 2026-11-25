@@ -51,6 +51,9 @@ class Workspace {
   /// bound once per reload and checked with every step the use cases asked of it so far (a load cannot take more steps
   /// once checked, so one that needs more is bound again from the parsed files, never parsed again).
   service::Outcome run(const std::string& name, const service::Request& request, emit::ISink& sink);
+  /// What run does before the use case describes (DS-459): the model loaded with what it needs. A door that must
+  /// describe holding a lock it does not hold while loading (the Python face, the GIL) prepares first, then runs.
+  void prepare(const std::string& name, const service::Request& request);
   /// The steps its model is checked with: every one the use cases it ran asked for (DS-408).
   const check::Selection& selection() const { return selection_; }
   /// How many times it bound and checked its files: once a reload, and once more for a use case that needed more.
