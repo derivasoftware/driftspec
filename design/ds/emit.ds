@@ -9,6 +9,39 @@
 // does a sink that accepted nothing of the document it was handed.
 
 package driftspec@ds {
+  // every sink of emit and every description of format realise it: the package's, not the module's (DS-399)
+  requirement REQ-00204-1 {
+    tags: architecture, emit, format
+    status: draft
+    @refines REQ-00106-4
+    title: A sink of emit shall write the half of a description its technology writes, structure or presentation, skip the other, and fail NotImplemented naming the document when it accepted nothing of it
+    text:
+      A description says its document once in two halves, its structure and its presentation, and never asks the
+      sink which half it is wanted in. The JSON sink writes the structure and skips the presentation; the text sink
+      writes the presentation and skips the structure: a paragraph is its text and a line break, and a table is
+      its rows, a line each, the cells joined by two spaces, not aligned, under no header, each row ending at its
+      last cell. So the report and the answers as text are what ds check and ds query have always printed. When
+      a description ends, a sink that accepted nothing of its half since its last result fails NotImplemented,
+      naming the document and its technology, rather than hand over an empty page: the text sink handed the
+      scene, a layout or the cells fails so. Accepting is not writing: a table with no rows was accepted, and the
+      text of no answers is empty, as it always was.
+    rationale:
+      Owner, 2026-11-24 (DS-394, proposal-format4): one neutral tree of structure and presentation, each
+      technology writing what it can. DS-399, 2026-11-25: one describe writes both halves and each sink skips the
+      half it does not write, so a description knows no technology; the description, which is abstract, ends by
+      naming its document to the sink, so no description can leave the check out.
+    verification VER-00227-1 {
+      status: draft
+      title: Integration tests confirm the report and the answers of every design are written by the text sink as ds has always printed them, and every other document handed to it fails NotImplemented naming the document
+      method: test
+      tests:
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheReportOfEveryDesignAsTextIsWhatDsCheckPrinted
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheAnswersOfEveryQuestionAsTextAreWhatDsQueryPrinted
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.EveryOtherDocumentOfADesignHandedToTheTextSinkFailsNamingIt
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheJsonSinkSkipsThePresentationOfEveryDocument
+    }
+  }
+
   module emit {
     @requirement REQ-00202-3                 // the sinks are made by SinkFactory alone, by technology, and reached through their interface (DS-397, DS-398)
     @requirement REQ-00203-3                 // emit depends on no other module of the engine (DS-397)
@@ -67,38 +100,6 @@ package driftspec@ds {
         tests:
           tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.TheDesignOfDsKeepsTheRulesOfEmit
           tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.ASinkThatKnowsTheModelIsTold
-      }
-    }
-
-    requirement REQ-00204-1 {
-      tags: architecture, emit, format
-      status: draft
-      @refines REQ-00106-4
-      title: A sink of emit shall write the half of a description its technology writes, structure or presentation, skip the other, and fail NotImplemented naming the document when it accepted nothing of it
-      text:
-        A description says its document once in two halves, its structure and its presentation, and never asks the
-        sink which half it is wanted in. The JSON sink writes the structure and skips the presentation; the text sink
-        writes the presentation and skips the structure: a paragraph is its text and a line break, and a table is
-        its rows, a line each, the cells joined by two spaces, not aligned, under no header, each row ending at its
-        last cell. So the report and the answers as text are what ds check and ds query have always printed. When
-        a description ends, a sink that accepted nothing of its half since its last result fails NotImplemented,
-        naming the document and its technology, rather than hand over an empty page: the text sink handed the
-        scene, a layout or the cells fails so. Accepting is not writing: a table with no rows was accepted, and the
-        text of no answers is empty, as it always was.
-      rationale:
-        Owner, 2026-11-24 (DS-394, proposal-format4): one neutral tree of structure and presentation, each
-        technology writing what it can. DS-399, 2026-11-25: one describe writes both halves and each sink skips the
-        half it does not write, so a description knows no technology; the description, which is abstract, ends by
-        naming its document to the sink, so no description can leave the check out.
-      verification VER-00227-1 {
-        status: draft
-        title: Integration tests confirm the report and the answers of every design are written by the text sink as ds has always printed them, and every other document handed to it fails NotImplemented naming the document
-        method: test
-        tests:
-          tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheReportOfEveryDesignAsTextIsWhatDsCheckPrinted
-          tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheAnswersOfEveryQuestionAsTextAreWhatDsQueryPrinted
-          tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.EveryOtherDocumentOfADesignHandedToTheTextSinkFailsNamingIt
-          tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheJsonSinkSkipsThePresentationOfEveryDocument
       }
     }
 

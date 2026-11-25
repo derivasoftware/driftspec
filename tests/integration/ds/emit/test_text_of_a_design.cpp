@@ -37,7 +37,7 @@ class TestTextOfADesign : public ::testing::Test {
       ds::parse::Parser parser;
       for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/" + dir)) files[f.path] = f.text;
       if (files.empty()) continue;
-      workspaces().push_back({dir, std::make_unique<ds::api::Workspace>(metamodel(), files)});
+      workspaces().push_back({dir, std::make_unique<ds::api::Workspace>(ds::api::Workspace::madeFor(metamodel(), files))});
     }
   }
   static void TearDownTestSuite() { workspaces().clear(); }
