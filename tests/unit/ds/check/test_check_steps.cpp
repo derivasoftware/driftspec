@@ -160,6 +160,21 @@ TEST(TestFailureCheck, AFailureTheSignatureSaysAndNoPathReachesIsAFinding) {
   EXPECT_TRUE(has(codes, "W-FAILURE-UNREACHED"));
 }
 
+TEST(TestWalkthroughCheck, AStepThatShowsNoDiagramIsAFinding) {
+  const auto codes = codesOf(std::string(kShop) +
+                                 "  }\n"
+                                 "}\n"
+                                 "diagram WALK_A {\n"
+                                 "  kind: walkthrough\n"
+                                 "  step Somewhere {\n"
+                                 "    show: CL_Gone\n"
+                                 "    text: Nothing.\n"
+                                 "  }\n"
+                                 "}\n",
+                             "walkthroughs");
+  EXPECT_TRUE(has(codes, "W-WALK-UNDECLARED"));
+}
+
 TEST(TestStructureCheck, AFieldItsKindDoesNotDeclareIsAFinding) {
   EXPECT_TRUE(has(codesOf("package shop {\n  colour: red\n}\n", "structure"), "W-FIELD-UNKNOWN"));
 }

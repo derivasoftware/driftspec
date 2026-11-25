@@ -50,7 +50,7 @@ class FakeStep : public ds::check::IStep {
 /// and run after every step it needs.
 TEST(TestSteps, EveryStepIsMadeOnceAndKeyedByItsName) {
   const auto all = ds::check::StepFactory::of(sharedContext());
-  ASSERT_EQ(all.size(), 15u);  // ContractCheck became five (DS-382)
+  ASSERT_EQ(all.size(), 16u);  // ContractCheck became five (DS-382); the walkthroughs (DS-469)
   for (const auto& s : all) EXPECT_EQ(s.first, s.second->name());
 }
 
@@ -61,7 +61,8 @@ TEST(TestOrder, EachStepRunsAfterWhatItNeeds) {
   const ds::check::Checker checker(sharedContext(), checkSteps);
   const std::vector<std::string> order = checker.order();
   EXPECT_EQ(order, (std::vector<std::string>{"linker", "behaviour", "dependencies", "derivation", "failures", "diagrams", "failure-check",
-                                             "interfaces", "levels", "order", "rules", "scenarios", "states", "structure", "usecases"}));
+                                             "interfaces", "levels", "order", "rules", "scenarios", "states", "structure", "usecases",
+                                             "walkthroughs"}));
   const auto all = ds::check::StepFactory::of(sharedContext());
   for (std::size_t i = 0; i < order.size(); ++i)
     for (const auto& need : all.at(order[i])->needs())
@@ -93,8 +94,8 @@ std::vector<std::string> keysOf(const ds::check::Selection& selection) {
   return out;
 }
 
-/// A load runs the steps it is given (DS-376): each step a selection names is made under its own name, the fifteen
-/// steps of the check are fifteen steps of a selection, and with none named none is made.
+/// A load runs the steps it is given (DS-376): each step a selection names is made under its own name, the sixteen
+/// steps of the check are sixteen steps of a selection, and with none named none is made.
 TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
   using ds::check::Selection;
   using ds::check::Step;
@@ -112,7 +113,8 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
                                                         {Step::Rules, "rules"},
                                                         {Step::Levels, "levels"},
                                                         {Step::States, "states"},
-                                                        {Step::Order, "order"}};
+                                                        {Step::Order, "order"},
+                                                        {Step::Walkthroughs, "walkthroughs"}};
   std::vector<std::string> names;
   for (const auto& n : named) {
     const auto made = ds::check::StepFactory::of(sharedContext(), Selection::of({n.first}));
@@ -123,7 +125,7 @@ TEST(TestSteps, EachStepASelectionNamesIsMadeUnderItsOwnName) {
   std::sort(names.begin(), names.end());
   EXPECT_EQ(keysOf(Selection::every()), names);  // one step each, and every step of the check
   EXPECT_EQ(keysOf(Selection::every()), keysOf(Selection::every().with(Step::Rules)));
-  EXPECT_EQ(ds::check::StepFactory::of(sharedContext()).size(), 15u);  // with no selection, every step
+  EXPECT_EQ(ds::check::StepFactory::of(sharedContext()).size(), 16u);  // with no selection, every step
   EXPECT_TRUE(ds::check::StepFactory::of(sharedContext(), Selection::of({})).empty());
 }
 
@@ -138,6 +140,7 @@ TEST(TestSteps, AStepChosenBringsEveryStepItNeeds) {
   EXPECT_EQ(keysOf(Selection::of({Step::Interfaces})), (Keys{"behaviour", "failures", "interfaces", "linker"}));
   EXPECT_EQ(keysOf(Selection::of({Step::FailureChecks})), (Keys{"behaviour", "failure-check", "failures", "linker"}));
   EXPECT_EQ(keysOf(Selection::of({Step::Order})), (Keys{"behaviour", "linker", "order"}));
+  EXPECT_EQ(keysOf(Selection::of({Step::Walkthroughs})), (Keys{"linker", "walkthroughs"}));
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
   const auto drawing = ds::check::StepFactory::of(sharedContext(), Selection::of({Step::Derivation, Step::Behaviour}));

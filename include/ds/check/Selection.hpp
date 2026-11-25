@@ -24,7 +24,8 @@ enum class Step {
   Rules,
   Levels,
   States,
-  Order
+  Order,
+  Walkthroughs  ///< what each walkthrough's steps show and light (DS-469)
 };
 
 /// The steps of the check a load runs (DS-376): chosen by the one that knows what the load is for, the Api, and read

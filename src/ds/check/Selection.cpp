@@ -8,7 +8,7 @@ namespace check {
 Selection Selection::every() {
   return of({Step::Linker, Step::Behaviour, Step::Derivation, Step::Failures, Step::Interfaces, Step::UseCases, Step::Diagrams,
              Step::Scenarios, Step::FailureChecks, Step::Structure, Step::Dependencies, Step::Rules, Step::Levels, Step::States,
-             Step::Order});
+             Step::Order, Step::Walkthroughs});
 }
 
 Selection Selection::of(const std::vector<Step>& steps) {
