@@ -680,6 +680,7 @@ package driftspec@ds {
       + messages() -> std::vector<const IrEdge*>
       + blocks() -> std::vector<const IrNode*>
       + laneOf() -> std::map<std::string, std::size_t>   // a lifeline's lane, by its id
+      + takeLaneOf() -> std::map<std::string, std::size_t>   // handed over: the projection keeps none after
     }
 
     // the sequence projected into the layout's graph and placed by its sequence engine with the SVG's measures

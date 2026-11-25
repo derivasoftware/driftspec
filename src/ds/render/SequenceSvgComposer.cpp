@@ -16,7 +16,7 @@ namespace render {
 Figure SequenceSvgComposer::compose(const IrDocument& input, int) const {
   Figure figure;
   figure.source = &input;  // drawn as it is: the layout points into it
-  const SequenceProjection projection(input);
+  SequenceProjection projection(input);
   SequenceLayout s;
   if (projection.lanes().empty()) {
     figure.sequence = std::move(s);
@@ -24,7 +24,7 @@ Figure SequenceSvgComposer::compose(const IrDocument& input, int) const {
   }
   const layout::SequenceSpacing spacing = layout::SequenceSpacing::of(metrics_.CHAR_W, metrics_.LINE_H, metrics_.SMALL_W);
   const layout::SequencePlacement placed = layout::EngineFactory::sequence(spacing)->place(projection.graph());
-  s.laneOf = projection.laneOf();
+  s.laneOf = projection.takeLaneOf();
   s.lanes.reserve(projection.lanes().size());
   for (size_t i = 0; i < projection.lanes().size(); ++i)
     s.lanes.push_back({projection.lanes()[i], placed.lanes[i].centre, placed.lanes[i].head});

@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ds/layout/SequenceGraph.hpp"
@@ -24,6 +25,8 @@ class SequenceProjection {
   const std::vector<const IrEdge*>& messages() const { return messages_; }      ///< the edge of each message
   const std::vector<const IrNode*>& blocks() const { return blocks_; }          ///< the frame of each block
   const std::map<std::string, std::size_t>& laneOf() const { return laneOf_; }  ///< a lifeline's lane, by its id
+  /// The lanes by id, handed over: the projection keeps none after.
+  std::map<std::string, std::size_t> takeLaneOf() { return std::move(laneOf_); }
 
  private:
   layout::SequenceGraph graph_;
