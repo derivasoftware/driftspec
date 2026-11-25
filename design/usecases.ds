@@ -1,4 +1,6 @@
-// What DriftSpec is for, as use cases (DS-77): contracts the operations of its interfaces realise.
+// What DriftSpec is for, as use cases (DS-77): contracts the operations of its interfaces realise. Each is one class of
+// the service module (DS-407), which ends in one of its outcomes; an outcome marked the door's happens before any model
+// exists (the path holds nothing, the command is not understood), so the door says it, never the use case (DS-409).
 // A use case says what goes in, what comes out and how it may end; how ds does it is in the
 // sequences of each operation, which the viewer replays. Who drives the interface (a person at a
 // terminal, argos reading the design, an editor) does not matter: the interface does.
@@ -17,7 +19,7 @@ package driftspec {
 
     outcome default: every finding of the model, then its counts
     outcome errors: an error is among the findings; they say where and what to do
-    outcome bad-usage: the command is not understood, or the path holds no design; nothing is read
+    outcome bad-usage: the command is not understood, or the path holds no design; nothing is read   // the door's: no model exists yet (DS-407)
   }
 
   usecase UC-00002-1 {
@@ -29,7 +31,7 @@ package driftspec {
 
     outcome default: the viewer framed on the diagram, or the diagram in the format asked
     outcome no-diagram: the diagram named is not in the workspace; nothing is drawn
-    outcome no-workspace: nothing to read at the path
+    outcome no-workspace: nothing to read at the path   // the door's: no model exists yet (DS-407)
   }
 
   usecase UC-00004-1 {
@@ -40,7 +42,7 @@ package driftspec {
 
     outcome default: one answer per line, or JSON
     outcome unknown-question: the question, or the identity it is about, is not one the model answers
-    outcome no-workspace: there is no workspace at the path
+    outcome no-workspace: there is no workspace at the path   // the door's: no model exists yet (DS-407)
   }
 
   usecase UC-00005-1 {
@@ -49,7 +51,7 @@ package driftspec {
     @requirement SREQ-00006-1
 
     outcome default: the model as JSON
-    outcome no-workspace: there is no workspace at the path; nothing is written
+    outcome no-workspace: there is no workspace at the path; nothing is written   // the door's: no model exists yet (DS-407)
   }
 
   usecase UC-00006-1 {

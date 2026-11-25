@@ -12,7 +12,7 @@
 
 namespace {
 
-/// The engine in process (REQ-00085-1): a workspace as text in, the JSON of the command line out.
+/// The engine in process (REQ-00085-2): a workspace as text in, the JSON of the command line out.
 class TestApi : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
