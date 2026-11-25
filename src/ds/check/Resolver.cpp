@@ -40,7 +40,13 @@ std::string Resolver::inPackage(const std::string& name, const std::string& scop
 
 // a bare name that resolves nowhere because two classes of its package share it: an incoherence, said (DS-325)
 std::vector<std::string> Resolver::ambiguous(const std::string& name, const std::string& scope) const {
-  if (model::Identity(name).isQualified() || model::ArtefactName::matches(name) || !resolve(name, scope).empty()) return {};
+  if (model::ArtefactName::matches(name) || !resolve(name, scope).empty()) return {};
+  if (model::Identity(name).isQualified()) {  // an operation named bare, two of that name in its owner (DS-455)
+    const std::string owner = resolve(model::Identity(name).scope().text(), scope);
+    std::vector<std::string> found = owner.empty() ? std::vector<std::string>{} : overloadsOf(owner, model::Identity(name).lastName());
+    if (found.size() < 2) found.clear();
+    return found;
+  }
   std::vector<std::string> found = namesakes(name, scope);
   if (found.size() < 2) found.clear();
   return found;
@@ -78,7 +84,7 @@ bool Resolver::derives(const std::string& derived, const std::string& base) cons
 }
 
 // a member is found where it is declared, the type first and then its bases, nearest first (DS-105)
-const model::Entity* Resolver::member(const std::string& type, const std::string& name) const {
+const model::Entity* Resolver::member(const std::string& type, const std::string& name, int argc) const {
   std::vector<std::string> level{type};
   std::set<std::string> seen;
   while (!level.empty()) {
@@ -90,7 +96,29 @@ const model::Entity* Resolver::member(const std::string& type, const std::string
     }
     level.swap(next);
   }
-  return nullptr;
+  const std::vector<std::string> overloads = overloadsOf(type, name, argc);  // the one it could be a call of (DS-455)
+  return overloads.size() == 1 ? model_.find(overloads.front()) : nullptr;
+}
+
+std::vector<std::string> Resolver::overloadsOf(const std::string& type, const std::string& name, int argc) const {
+  std::vector<std::string> level{type};
+  std::set<std::string> seen;
+  while (!level.empty()) {
+    std::vector<std::string> next, found;
+    for (const auto& t : level) {
+      if (!seen.insert(t).second) continue;
+      const std::string bare = t + "::" + name;
+      for (const auto& id : model_.index().members(t)) {
+        if (id.size() <= bare.size() || id.back() != ')' || model::Identity(id).bare().text() != bare) continue;
+        const model::Entity* m = model_.find(id);
+        if (m && (argc < 0 || static_cast<int>(m->params.size()) == argc)) found.push_back(id);
+      }
+      for (const auto& r : model_.index().fromOfKind(t, "inherits")) next.push_back(r.to);
+    }
+    if (!found.empty()) return found;  // the nearest that has any, as a member is found
+    level.swap(next);
+  }
+  return {};
 }
 
 std::string Resolver::privateOnTheWay(const std::string& from, const std::string& target) const {
