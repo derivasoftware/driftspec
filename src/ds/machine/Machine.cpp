@@ -40,11 +40,9 @@ std::vector<std::string> Machine::states() const {
   for (const StateRule& rule : StateRule::of(machine_)) note(out, rule.state);
   note(out, machine_.field("initial"));
   for (const std::string& end : finals()) note(out, end);
-  for (const std::string& jump : WrittenFields::pieces(machine_.field("transitions"), '\n')) {
-    const std::vector<std::string> ends = WrittenFields::pieces(jump, '>');
-    if (ends.size() < 2) continue;
-    note(out, ends[0]);
-    note(out, ends[1]);
+  for (const model::WrittenTransition& t : machine_.transitions) {
+    note(out, t.from);
+    note(out, t.to);
   }
   return out;
 }

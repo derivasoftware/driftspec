@@ -8,10 +8,14 @@
 
 namespace {
 
-/// The rules of a state machine, read from the field the binder writes them in (DS-249).
-TEST(TestStateRule, EachLineOfTheRulesIsAStateItsLiteralsAndItsLine) {
+/// The rules of a state machine, from the records the binder reads them into (DS-249, DS-384).
+TEST(TestStateRule, EachRuleIsAStateItsLiteralsAndItsLine) {
   ds::model::Entity machine;
-  machine.fields["rules"] = "Open|status=Open,!cancelled|12\nPaid|status=Paid|14";
+  ds::model::Location at12, at14;
+  at12.line = 12;
+  at14.line = 14;
+  machine.rules = {{"Open", {{false, "status", "=", "Open"}, {true, "cancelled", "", ""}}, at12},
+                   {"Paid", {{false, "status", "=", "Paid"}}, at14}};
   const std::vector<ds::machine::StateRule> rules = ds::machine::StateRule::of(machine);
   ASSERT_EQ(rules.size(), 2u);
   EXPECT_EQ(rules[0].state, "Open");
@@ -22,10 +26,13 @@ TEST(TestStateRule, EachLineOfTheRulesIsAStateItsLiteralsAndItsLine) {
   EXPECT_EQ(rules[1].line, 14);
 }
 
-TEST(TestStateRule, ALineWithoutItsThreePartsIsNoRule) {
+/// A machine that writes no rule has none, and a literal says not when it is negated and stands alone when it compares
+/// nothing (DS-384).
+TEST(TestStateRule, NoRuleWrittenIsNoneAndALiteralSaysWhatItIs) {
   ds::model::Entity machine;
-  machine.fields["rules"] = "Open|status=Open";
   EXPECT_TRUE(ds::machine::StateRule::of(machine).empty());
+  machine.rules = {{"Idle", {{true, "busy", "", ""}, {false, "mode", "!=", "Off"}}, {}}};
+  EXPECT_EQ(ds::machine::StateRule::of(machine).front().text, "not busy, mode != Off");
 }
 
 }  // namespace

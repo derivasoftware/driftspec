@@ -32,6 +32,9 @@ class JsonExport {
   static void location(const model::Location& l, emit::ISink& out_sink);
   /// One relation: its kind, ends, location and multiplicity when set.
   static void relation(const model::Relation& r, emit::ISink& out_sink);
+  /// A machine's transitions and rules as records, each field in byte order, what is not written left out (DS-384).
+  static void machineTransitions(const std::vector<model::WrittenTransition>& transitions, emit::ISink& out_sink);
+  static void machineRules(const std::vector<model::WrittenRule>& rules, emit::ISink& out_sink);
   /// Findings or coverage: code, location, message and severity.
   void findings(const std::vector<model::Finding>& findings, emit::ISink& out_sink) const;
   /// What breaks each rule, structured (DS-108): its bindings, its witness and where.

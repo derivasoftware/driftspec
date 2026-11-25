@@ -146,12 +146,10 @@ void InterfaceContracts::checkViews(const model::Entity& state) {
   }
   if (views.empty()) return;  // the details of a view are optional: a bare machine asks nothing of them
   std::map<std::string, std::set<std::string>> next;
-  const auto moves = state.fields.find("transitions");
-  if (moves != state.fields.end()) {
-    for (const auto& move : splitTrimmed(moves->second, '\n')) {
-      const auto gt = move.find('>');
-      const std::string from = move.substr(0, gt);
-      const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
+  {
+    for (const model::WrittenTransition& move : state.transitions) {  // the records the binder read (DS-384)
+      const std::string& from = move.from;
+      const std::string& to = move.to;
       for (const std::string& name : {from, to}) {
         if (!views.count(name)) {
           found_.push_back(context_->metamodel().finding(
@@ -188,28 +186,23 @@ void InterfaceContracts::checkStates(const model::Entity& state) {
   // a state of a class's machine that no transition leads to from the initial one is never entered (DS-53).
   // The machine starts where it is written to, or in the state the defaults of its subject are in (DS-253);
   // with neither, where it starts cannot be told
-  const auto moves = state.fields.find("transitions");
-  if (moves == state.fields.end()) return;
+  if (state.transitions.empty()) return;
   // a final state is one the machine ends in: a transition out of one says otherwise (DS-442). A state with no way out is
   // not taken as final, nor said to be: a machine written in part is complete
   const std::vector<std::string> finals = machine::Machine(*model_, state).finals();
-  for (const auto& move : splitTrimmed(moves->second, '\n')) {
-    const auto gt = move.find('>');
-    if (gt == std::string::npos || std::find(finals.begin(), finals.end(), move.substr(0, gt)) == finals.end()) continue;
-    const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
+  for (const model::WrittenTransition& move : state.transitions) {
+    if (std::find(finals.begin(), finals.end(), move.from) == finals.end()) continue;
     found_.push_back(context_->metamodel().finding(
-        model::Code::W_STATE_LEAVES_FINAL,
-        "the transition " + move.substr(0, gt) + " -> " + to + " of " + state.name + " leaves a final state", state.location, state.id));
+        model::Code::W_STATE_LEAVES_FINAL, "the transition " + move.from + " -> " + move.to + " of " + state.name + " leaves a final state",
+        state.location, state.id));
   }
   const std::string initial = machine::Machine(*model_, state).initial();
   if (initial.empty()) return;
   std::vector<std::string> states{initial};
   std::map<std::string, std::set<std::string>> next;
-  for (const auto& move : splitTrimmed(moves->second, '\n')) {
-    const auto gt = move.find('>');
-    if (gt == std::string::npos) continue;
-    const std::string from = move.substr(0, gt);
-    const std::string to = move.substr(gt + 1, move.find('>', gt + 1) - gt - 1);
+  for (const model::WrittenTransition& move : state.transitions) {
+    const std::string& from = move.from;
+    const std::string& to = move.to;
     for (const std::string& name : {from, to})
       if (std::find(states.begin(), states.end(), name) == states.end()) states.push_back(name);
     next[from].insert(to);

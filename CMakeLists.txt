@@ -399,6 +399,11 @@ foreach(test_src IN LISTS driftspec_SYSTEM_TESTS)
             DRIFTSPEC_DS_BIN="$<TARGET_FILE:ds>"
             DRIFTSPEC_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
   add_dependencies(${test_name} ds)
+  if(test_name STREQUAL "test_walkthrough_cli")
+    # it reads the page as the engine packs it and says what the door writes
+    # (DS-483)
+    target_link_libraries(${test_name} PRIVATE driftspec)
+  endif()
   add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
 

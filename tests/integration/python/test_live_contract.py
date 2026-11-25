@@ -9,7 +9,7 @@ import urllib.request
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from live_helpers import workspace  # noqa: E402
+from live_helpers import ANSWER, workspace  # noqa: E402
 
 import driftspec.live as live  # noqa: E402
 import driftspec.live_http as live_http  # noqa: E402
@@ -52,7 +52,7 @@ class TestContract:
             body = None if op.verb == "GET" else b"{}"
             req = urllib.request.Request(f"http://127.0.0.1:{session.port}{op.path}", data=body, method=op.verb,
                                          headers={"Host": f"localhost:{session.port}"})
-            with urllib.request.urlopen(req, timeout=5) as r:
+            with urllib.request.urlopen(req, timeout=ANSWER) as r:
                 assert r.status == 200, op.route()
                 if op.path == "/events":
                     break  # a stream: it answers and stays open; the last one asked

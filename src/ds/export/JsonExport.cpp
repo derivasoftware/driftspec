@@ -26,12 +26,52 @@ void JsonExport::pairs(const std::vector<std::pair<std::string, std::string>>& p
 
 void JsonExport::entity(const model::Entity& e, emit::ISink& out_sink) const {
   out_sink.beginRecord().field("expected").boolean(e.expected).field("fields").beginRecord();
-  for (const auto& f : e.fields) out_sink.field(f.first).value(f.second);  // a std::map: in byte order
+  // a std::map, in byte order; a machine's rules and transitions, records, take their places among them (DS-384)
+  const auto records = [&](const std::string& name) {
+    if (name == "rules") machineRules(e.rules, out_sink);
+    if (name == "transitions") machineTransitions(e.transitions, out_sink);
+  };
+  std::vector<std::string> structured;
+  if (!e.rules.empty()) structured.push_back("rules");
+  if (!e.transitions.empty()) structured.push_back("transitions");
+  std::size_t next = 0;
+  for (const auto& f : e.fields) {
+    for (; next < structured.size() && structured[next] < f.first; ++next) records(structured[next]);
+    out_sink.field(f.first).value(f.second);
+  }
+  for (; next < structured.size(); ++next) records(structured[next]);
   out_sink.endRecord().field("flags");
   texts(e.flags, out_sink);
   out_sink.field("id").value(e.id).field("kind").value(metamodel_.nameOf(e.kind)).field("location");
   location(e.location, out_sink);
   out_sink.field("name").value(e.name).field("scope").value(e.scope).endRecord();
+}
+
+void JsonExport::machineTransitions(const std::vector<model::WrittenTransition>& transitions, emit::ISink& out_sink) {
+  out_sink.field("transitions").beginList();
+  for (const model::WrittenTransition& t : transitions) {
+    out_sink.beginRecord();
+    if (!t.action.empty()) out_sink.field("action").value(t.action);
+    out_sink.field("event").value(t.event).field("from").value(t.from);
+    if (!t.guard.empty()) out_sink.field("guard").value(t.guard);
+    out_sink.field("to").value(t.to).endRecord();
+  }
+  out_sink.endList();
+}
+
+void JsonExport::machineRules(const std::vector<model::WrittenRule>& rules, emit::ISink& out_sink) {
+  out_sink.field("rules").beginList();
+  for (const model::WrittenRule& r : rules) {
+    out_sink.beginRecord().field("literals").beginList();
+    for (const model::RuleLiteral& l : r.literals) {
+      out_sink.beginRecord().field("left").value(l.left);
+      if (l.negated) out_sink.field("negated").boolean(true);
+      if (!l.op.empty()) out_sink.field("op").value(l.op).field("right").value(l.right);
+      out_sink.endRecord();
+    }
+    out_sink.endList().field("state").value(r.state).endRecord();
+  }
+  out_sink.endList();
 }
 
 void JsonExport::relation(const model::Relation& r, emit::ISink& out_sink) {

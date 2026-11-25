@@ -265,14 +265,18 @@ std::vector<KindSpec> Metamodel::build() {
                 syntax("scenario", FieldType::Name, "the scenario a loop, an opt or a branch names")},
                {},
                {Kind::Sequence, Kind::Frame}});
-  k.push_back({Kind::State,
-               "the state machine of a class or the navigation of an interface",
-               {syntax("initial", FieldType::Name, "the initial state"),
-                syntax("final", FieldType::Names, "the states it ends in (DS-442): a transition out of one is a contradiction"),
-                syntax("transitions", FieldType::Text, "its transitions"),
-                syntax("rules", FieldType::Text, "its states as rules over the context of its subject: state|literals|line, one per line")},
-               {},
-               {P, M}});
+  k.push_back(
+      {Kind::State,
+       "the state machine of a class or the navigation of an interface",
+       {syntax("initial", FieldType::Name, "the initial state"),
+        syntax("final", FieldType::Names, "the states it ends in (DS-442): a transition out of one is a contradiction"),
+        syntax("transitions", FieldType::Records,
+               "its transitions, one record each in the order written: from, to, event, and guard and action when written (DS-384)"),
+        syntax("rules", FieldType::Records,
+               "its states as rules over the context of its subject, one record each: state, and its literals, each with left, op and "
+               "right when compared, and negated when it says not (DS-249, DS-384)")},
+       {},
+       {P, M}});
   k.push_back(
       {Kind::Diagram,
        "a view asked of the model",
@@ -410,6 +414,8 @@ std::string Metamodel::fieldTypeName(FieldType type) const {
       return "status";
     case FieldType::Patterns:
       return "patterns";
+    case FieldType::Records:
+      return "records";
   }
   return "text";
 }
