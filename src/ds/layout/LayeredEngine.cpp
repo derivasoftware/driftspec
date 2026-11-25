@@ -66,10 +66,19 @@ constexpr int kSink = -2;
 class Engine {
  public:
   Engine(const Graph& graph, const Spacing& s) : edges_(graph.edges), S(s), maxWidth_(static_cast<int>(graph.maxWidth)) {
-    // every frame under the root, numbered in the order the tree is read: a kid after its parent
+    // every frame numbered in the order the graph is read: the root is 0, a frame is followed by its kids and then
+    // its ports. The engine lays out the frames under the root; a port, which it does not place, keeps its number
+    std::function<std::size_t(const Frame&)> size = [&](const Frame& f) {
+      std::size_t n = 1;
+      for (const Frame& k : f.kids) n += size(k);
+      for (const Frame& p : f.ports) n += size(p);
+      return n;
+    };
+    std::size_t next = 1;
     std::function<void(const Frame&, int)> add = [&](const Frame& f, int parent) {
       const int i = static_cast<int>(nodes_.size());
       nodes_.push_back(&f);
+      number_.push_back(next++);
       parent_.push_back(parent);
       children_.push_back({});
       if (parent >= 0) {
@@ -77,11 +86,16 @@ class Engine {
       } else {
         roots_.push_back(i);
       }
-      index_[f.id] = i;
       for (const Frame& k : f.kids) add(k, i);
+      for (const Frame& p : f.ports) next += size(p);
     };
-    if (graph.root != nullptr)
+    if (graph.root != nullptr) {
       for (const Frame& k : graph.root->kids) add(k, -1);
+      for (const Frame& p : graph.root->ports) next += size(p);
+    }
+    count_ = graph.root != nullptr ? next : 0;
+    nodeOf_.assign(count_, -1);
+    for (size_t i = 0; i < nodes_.size(); ++i) nodeOf_[number_[i]] = static_cast<int>(i);
     rel_.assign(nodes_.size(), Rect{});
   }
 
@@ -101,8 +115,9 @@ class Engine {
       for (int c : children_[node]) place(c, cx, cy);
     };
     for (int r : roots_) place(r, 0, 0);
+    out.boxes.assign(count_, Box{});
     for (size_t i = 0; i < nodes_.size(); ++i)
-      out.boxes[nodes_[i]->id] =
+      out.boxes[number_[i]] =
           Box{static_cast<double>(abs[i].x), static_cast<double>(abs[i].y), static_cast<double>(abs[i].w), static_cast<double>(abs[i].h)};
     for (auto& w : ways_) {
       const Point o = origin[wayFrame_[w.first]];
@@ -128,6 +143,9 @@ class Engine {
 
  private:
   // ---- frames: every container lays out its own children ----------------------
+  // the frame laid out under a number, or -1 when the number is no frame under the root
+  int nodeAt(std::size_t number) const { return number < nodeOf_.size() ? nodeOf_[number] : -1; }
+
   int ancestorIn(int node, int frameParent) const {
     while (node >= 0 && parent_[node] != frameParent) node = parent_[node];
     return node;
@@ -159,11 +177,11 @@ class Engine {
     std::set<int> nearTop, nearBottom;
     for (size_t i = 0; i < edges_.size(); ++i) {
       const Edge& e = edges_[i];
-      const auto f = index_.find(e.from);
-      const auto t = index_.find(e.to);
-      if (f == index_.end() || t == index_.end()) continue;
-      const int a = ancestorIn(f->second, parent);
-      const int b = ancestorIn(t->second, parent);
+      const int f = nodeAt(e.from);
+      const int t = nodeAt(e.to);
+      if (f < 0 || t < 0) continue;
+      const int a = ancestorIn(f, parent);
+      const int b = ancestorIn(t, parent);
       if (a >= 0 && b >= 0 && a != b) {
         // bases above subtypes; wholes above parts; a note above what it annotates
         projected.push_back(e.upward ? Projected{b, a, i} : Projected{a, b, i});
@@ -536,39 +554,39 @@ class Engine {
     std::vector<std::pair<int, int>> pairs(edges_.size(), {-1, -1});
     std::vector<bool> verticalEdge(edges_.size(), true);
     for (size_t i = 0; i < edges_.size(); ++i) {
-      const auto f = index_.find(edges_[i].from);
-      const auto t = index_.find(edges_[i].to);
-      if (f == index_.end() || t == index_.end() || f->second == t->second) continue;
-      const Rect& a = abs[f->second];
-      const Rect& b = abs[t->second];
-      pairs[i] = {f->second, t->second};
+      const int f = nodeAt(edges_[i].from);
+      const int t = nodeAt(edges_[i].to);
+      if (f < 0 || t < 0 || f == t) continue;
+      const Rect& a = abs[f];
+      const Rect& b = abs[t];
+      pairs[i] = {f, t};
       const auto way = ways_.find(i);
       const int firstX = way == ways_.end() ? b.x + b.w / 2 : way->second.front().x;
       const int lastX = way == ways_.end() ? a.x + a.w / 2 : way->second.back().x;
       if (b.y + b.h <= a.y) {
-        ends[f->second].push_back({i, true, 0, way == ways_.end() ? firstX : way->second.back().x});
-        ends[t->second].push_back({i, false, 1, way == ways_.end() ? lastX : way->second.front().x});
+        ends[f].push_back({i, true, 0, way == ways_.end() ? firstX : way->second.back().x});
+        ends[t].push_back({i, false, 1, way == ways_.end() ? lastX : way->second.front().x});
       } else if (a.y + a.h <= b.y) {
-        ends[f->second].push_back({i, true, 1, firstX});
-        ends[t->second].push_back({i, false, 0, lastX});
+        ends[f].push_back({i, true, 1, firstX});
+        ends[t].push_back({i, false, 0, lastX});
       } else if (b.x + b.w / 2 >= a.x + a.w / 2) {
         verticalEdge[i] = false;
-        ends[f->second].push_back({i, true, 3, b.y + b.h / 2});
-        ends[t->second].push_back({i, false, 2, a.y + a.h / 2});
+        ends[f].push_back({i, true, 3, b.y + b.h / 2});
+        ends[t].push_back({i, false, 2, a.y + a.h / 2});
       } else {
         verticalEdge[i] = false;
-        ends[f->second].push_back({i, true, 2, b.y + b.h / 2});
-        ends[t->second].push_back({i, false, 3, a.y + a.h / 2});
+        ends[f].push_back({i, true, 2, b.y + b.h / 2});
+        ends[t].push_back({i, false, 3, a.y + a.h / 2});
       }
     }
     // a relation of a box with itself: out by its right side and back, one nested inside the other
     std::map<int, int> loops;
     for (size_t i = 0; i < edges_.size(); ++i) {
-      const auto f = index_.find(edges_[i].from);
-      const auto t = index_.find(edges_[i].to);
-      if (f == index_.end() || t == index_.end() || f->second != t->second) continue;
-      const Rect& r = abs[f->second];
-      const int nth = loops[f->second]++;
+      const int f = nodeAt(edges_[i].from);
+      const int t = nodeAt(edges_[i].to);
+      if (f < 0 || t < 0 || f != t) continue;
+      const Rect& r = abs[f];
+      const int nth = loops[f]++;
       const int reach = (nth + 1) * 3 * S.lane;
       const int top = r.y + r.h / 4;
       const int bottom = r.y + r.h - r.h / 4;
@@ -696,7 +714,9 @@ class Engine {
   const std::vector<Edge>& edges_;
   const Spacing S;
   const int maxWidth_;
-  std::map<std::string, int> index_;
+  std::vector<std::size_t> number_;  ///< each frame's number in the order the graph is read
+  std::vector<int> nodeOf_;          ///< the frame laid out under each number, or -1
+  std::size_t count_ = 0;            ///< how many frames the graph numbers
   std::vector<Rect> rel_;
   std::vector<int> parent_;
   std::vector<std::vector<int>> children_;

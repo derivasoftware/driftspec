@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <functional>
 #include <map>
 #include <string>
 
@@ -10,6 +11,21 @@
 #include "ds/layout/Placement.hpp"
 
 namespace {
+
+/// The boxes of a placement by the identities of their frames, which the engine numbers in the order the graph is read:
+/// the root first, then each frame followed by its kids and its ports.
+std::map<std::string, ds::layout::Box> byId(const ds::layout::Frame& root, const ds::layout::Placement& placed) {
+  std::map<std::string, ds::layout::Box> out;
+  std::size_t n = 0;
+  std::function<void(const ds::layout::Frame&)> walk = [&](const ds::layout::Frame& f) {
+    if (n < placed.boxes.size()) out[f.id] = placed.boxes[n];
+    ++n;
+    for (const ds::layout::Frame& k : f.kids) walk(k);
+    for (const ds::layout::Frame& p : f.ports) walk(p);
+  };
+  walk(root);
+  return out;
+}
 
 using ds::layout::Box;
 using ds::layout::Frame;
@@ -55,7 +71,7 @@ TEST_F(TestPackingEngine, AFixedBoxKeepsItsSizeAndPutsEachChildWhereItIsTold) {
   Frame unit = leaf("u", 150, 50);
   unit.kids = {leaf("u::a", 150, 11), leaf("u::b", 150, 11)};
   unit.at = {{0, 22}, {0, 33}};
-  const auto boxes = pack(unit).boxes;
+  const auto boxes = byId(unit, pack(unit));
   expectBox(boxes.at("u"), 0, 0, 150, 50);
   expectBox(boxes.at("u::a"), 0, 22, 150, 11);
   expectBox(boxes.at("u::b"), 0, 33, 150, 11);
@@ -66,7 +82,7 @@ TEST_F(TestPackingEngine, ShelvesFillLeftToRightNoWiderThanTheirTargetWithRoomAr
   m.left = 5, m.top = 20, m.right = 5, m.bottom = 7;
   m.kids = {leaf("a", 100, 40), leaf("b", 100, 30), leaf("c", 80, 10)};
   const Placement placed = pack(m);
-  const auto& boxes = placed.boxes;
+  const auto boxes = byId(m, placed);
   expectBox(boxes.at("a"), 5, 20, 100, 40);
   expectBox(boxes.at("b"), 5, 70, 100, 30);      // a shelf down: below a's 40 and the gap
   expectBox(boxes.at("c"), 115, 70, 80, 10);     // beside b: 100 + 10 + 80 fits in 200
@@ -80,7 +96,7 @@ TEST_F(TestPackingEngine, PortsSitOnTheLeftBorderHalfOutsideOneUnderAnother) {
   p.portTop = 130, p.portGap = 20;
   p.kids = {leaf("m", 400, 100)};
   p.ports = {leaf("i", 360, 80), leaf("j", 360, 50)};
-  const auto boxes = pack(p).boxes;
+  const auto boxes = byId(p, pack(p));
   expectBox(boxes.at("m"), 300, 90, 400, 100);
   expectBox(boxes.at("i"), -180, 130, 360, 80);
   expectBox(boxes.at("j"), -180, 230, 360, 50);
@@ -94,7 +110,7 @@ TEST_F(TestPackingEngine, ATreeCentresItsFirstBoxOverTheRowOfTheOthers) {
   t.gap = 20;
   t.drop = 44;
   t.kids = {leaf("base", 100, 30), leaf("x", 150, 40), leaf("y", 150, 60)};
-  const auto boxes = pack(t).boxes;
+  const auto boxes = byId(t, pack(t));
   expectBox(boxes.at("base"), 110, 0, 100, 30);  // centred over a row of 150 + 20 + 150
   expectBox(boxes.at("x"), 0, 74, 150, 40);
   expectBox(boxes.at("y"), 170, 74, 150, 60);
@@ -109,10 +125,10 @@ TEST_F(TestPackingEngine, ASecondPackingFollowingTheFirstFillsItsShelvesAsWideAs
   ASSERT_DOUBLE_EQ(first.widths.at("m"), 210);
   Frame shorter = tall;  // the same boxes, shorter: on their own they aim at the widest, 100, one to a shelf
   for (Frame& k : shorter.kids) k.h = 10;
-  EXPECT_DOUBLE_EQ(pack(shorter).boxes.at("m").w, 100);
+  EXPECT_DOUBLE_EQ(byId(shorter, pack(shorter)).at("m").w, 100);
   const Placement second = pack(shorter, first.widths, true);
-  EXPECT_DOUBLE_EQ(second.boxes.at("m").w, 210);  // following the first: two to a shelf, as it came out
-  expectBox(second.boxes.at("d"), 110, 20, 100, 10);
+  EXPECT_DOUBLE_EQ(byId(shorter, second).at("m").w, 210);  // following the first: two to a shelf, as it came out
+  expectBox(byId(shorter, second).at("d"), 110, 20, 100, 10);
   EXPECT_TRUE(second.widths.empty());  // a placement that follows keeps no widths of its own
 }
 
@@ -121,7 +137,7 @@ TEST_F(TestPackingEngine, AGraphWithoutBoxesPlacesNothingAndEdgesAreNotRouted) {
   const Frame unit = leaf("u", 10, 10);
   Graph graph;
   graph.root = &unit;
-  graph.edges = {{"u", "u", false}};
+  graph.edges = {{0, 0, false}};
   EXPECT_TRUE(PackingEngine().place(graph).routes.empty());
 }
 
