@@ -584,14 +584,18 @@ package driftspec@ds {
 
     // ---- what a drawing draws: a figure composed below it (DS-400) ------------------------------------------------
 
-    // a diagram composed: its document as it is drawn and where each node and route lands, in the metrics of the
-    // technology that draws it; a drawing draws a figure and places nothing. Where a node lands points into the
-    // figure's own document, so a figure is moved, never copied
+    // a diagram composed: the document it draws and where each node and route lands, in the metrics of the technology
+    // that draws it; a drawing draws a figure and places nothing. It owns a document composing made, and refers to one
+    // it draws as it is, which outlives it; where a node lands points into that document, so a figure is moved, never
+    // copied
     dataclass Figure {
       @requirement REQ-00007-1
-      + owns document: IrDocument            // what a closed box holds bundled into it
+      + owns owned: IrDocument               // the document composing made, when it made one: boxes bundle what a closed box holds
+      + refs source: IrDocument              // the document composed from, when it is drawn as it is; it outlives the figure
       + owns layout: LayoutResult
+      + owns sequence: std::optional<SequenceLayout>   // a sequence's lanes, rows and frames, when the figure is one
       + Figure()
+      + document() -> IrDocument             // the one it was composed from, or the one composing made
     }
 
     // what composes one kind of diagram for one technology: a document in, its figure out, within a width
@@ -642,13 +646,84 @@ package driftspec@ds {
     sequence ComposerFactory::of {
       local svg: BoxesSvgComposer
       local text: BoxesTextComposer
+      local sequenceSvg: SequenceSvgComposer
+      local sequenceText: SequenceTextComposer
       opt boxes drawn in SVG / boxes-svg {
         return svg
       }
       opt boxes drawn in a terminal / boxes-text {
         return text
       }
+      opt a sequence drawn in SVG / sequence-svg {
+        return sequenceSvg
+      }
+      opt a sequence drawn in a terminal / sequence-text {
+        return sequenceText
+      }
       fail std::invalid_argument
+    }
+
+    // a sequence composed for SVG: lanes wide enough for their heads and the labels that cross them, a row per
+    // message in pixels, frames around the messages they span (DS-400)
+    class SequenceSvgComposer : IComposer {
+      @requirement REQ-00007-1
+      - owns metrics_: Metrics
+      + SequenceSvgComposer(metrics: Metrics)
+      + compose(doc: IrDocument, width: int) -> Figure
+    }
+
+    // a sequence composed for a terminal: two rows per message (three for one to its own lane), frames stacked a row
+    // further out for each frame inside them that opens or closes at the same message (DS-400)
+    class SequenceTextComposer : IComposer {
+      @requirement REQ-00007-1
+      - owns metrics_: Metrics
+      + SequenceTextComposer(metrics: Metrics)
+      + compose(doc: IrDocument, width: int) -> Figure
+    }
+
+    // where a sequence lands, composed for one technology: its lanes, its messages in order and the row each lands on,
+    // its frames, its size and the proportions its marks are drawn with; everything points into the figure's document
+    dataclass SequenceLayout {
+      @requirement REQ-00007-1
+      + owns many lanes: std::vector<Lane>
+      + laneOf: std::map<std::string, size_t>
+      + refs many messages: std::vector<const IrEdge*>
+      + owns many rows: std::vector<SequenceRow>
+      + owns many frames: std::vector<SequenceFrame>
+      + width: int
+      + height: int
+      + margin: int                          // around the drawing, above the heads
+      + headHeight: int
+      + selfWidth: int                       // how far a message to its own lane loops out
+    }
+
+    // where one message of a sequence lands: the top of its row, the line its arrow runs on, the bottom of its row
+    dataclass SequenceRow {
+      @requirement REQ-00007-1
+      + top: int
+      + line: int
+      + bottom: int
+    }
+
+    // where a frame of a sequence lands: the messages it spans, its four sides and its elses
+    dataclass SequenceFrame {
+      @requirement REQ-00007-1
+      + refs node: IrNode
+      + first: int
+      + last: int
+      + top: int
+      + bottom: int
+      + left: int
+      + right: int
+      + owns many dividers: std::vector<SequenceDivider>
+    }
+
+    // an else of a frame: the message it comes before, where its line lands, and the condition it says
+    dataclass SequenceDivider {
+      @requirement REQ-00007-1
+      + row: int
+      + y: int
+      + label: std::string
     }
 
     dataclass Metrics {                      // the runtime table of sizes: one for SVG pixels, one for terminal cells
@@ -718,7 +793,7 @@ package driftspec@ds {
       - emitNode(p: Placed, px: std::string) -> std::string          // a box, a container or a note where it was placed
       - static emitEdge(e: IrEdge, route: Route, px: std::string) -> EdgeMarkup
       - static dataAttrs(refs: std::map<std::string, std::string>) -> std::string
-      - sequenceSvg(doc: IrDocument) -> std::string                  // a sequence, drawn without the layout
+      - sequenceSvg(figure: Figure) -> std::string                   // a sequence where its figure placed it
       - tableSvg(doc: IrDocument) -> std::string                     // a table, drawn cell by cell (DS-251)
       - static besideEachOther(drawings: std::vector<std::pair<std::string, std::string>>, maxWidth: int) -> std::string   // the parts of a drawing (DS-245)
     }
@@ -731,7 +806,7 @@ package driftspec@ds {
     }
 
     // a lifeline of a sequence drawn in SVG: its node, the x of its centre and the width of its head
-    - dataclass Lane {
+    dataclass Lane {                         // a lifeline's lane: in a sequence's composed layout (DS-400)
       @requirement REQ-00007-1
       + refs node: IrNode
       + cx: int
@@ -752,7 +827,7 @@ package driftspec@ds {
       - container(g: Grid, p: Placed) -> void                           // its frame and its label
       - static marker(kind: std::string, dx: int, dy: int) -> std::string   // the glyph of an edge entering its target moving in (dx, dy)
       - edge(g: Grid, e: IrEdge, route: Route, byId: std::map<std::string, const Placed*>) -> void
-      - sequenceGrid(doc: IrDocument) -> Grid                           // lifelines as columns, messages as rows
+      - sequenceGrid(figure: Figure) -> Grid                            // lifelines as columns, messages as rows, where its figure placed them
       - classGrid(figure: Figure) -> Grid                              // the boxes and edges where the figure placed them
       - static isSequence(doc: IrDocument) -> bool                      // a node of it is a lifeline
       - static contentWidth(maxWidth: int) -> int                       // the grid keeps a one-cell margin on each side
@@ -854,11 +929,13 @@ package driftspec@ds {
         -> tableSvg(doc) -> drawing
         return drawing
       }
-      opt a node of the document is a lifeline / sequence-document {
-        -> sequenceSvg(doc) -> drawing
-        return drawing
-      }
       local composer: IComposer
+      opt a node of the document is a lifeline / sequence-document {
+        -> ComposerFactory::of(kind, technology, metrics_) -> sequence   // a sequence, in SVG (DS-400)
+        -> composer.compose(doc, maxWidth) -> composed
+        -> draw(composed) -> drawn
+        return drawn
+      }
       -> ComposerFactory::of(kind, technology, metrics_) -> made     // boxes, in SVG (DS-400)
       -> composer.compose(doc, maxWidth) -> figure
       -> draw(figure) -> drawing
@@ -873,12 +950,13 @@ package driftspec@ds {
         self -> grid.dump(color) -> drawing
         return drawing
       }
-      opt a node of the document is a lifeline / sequence-document {
-        -> sequenceGrid(doc) -> grid
-        self -> grid.dump(color) -> drawing
-        return drawing
-      }
       local composer: IComposer
+      opt a node of the document is a lifeline / sequence-document {
+        -> ComposerFactory::of(kind, technology, pen_.M) -> sequence     // a sequence, in text (DS-400)
+        -> composer.compose(doc, width) -> composed
+        -> draw(composed, color) -> drawn
+        return drawn
+      }
       -> ComposerFactory::of(kind, technology, pen_.M) -> made       // boxes, in text (DS-400)
       -> composer.compose(doc, width) -> figure
       -> draw(figure, color) -> drawing
@@ -887,10 +965,12 @@ package driftspec@ds {
 
     // The grid is written into the sink lent, its fields in byte order; nothing comes back (DS-397).
     sequence Text::cells {
+      local composer: IComposer
       alt a node of the document is a lifeline / sequence-document {
-        -> sequenceGrid(doc) -> grid
+        -> ComposerFactory::of(kind, technology, pen_.M) -> sequence     // a sequence, in text (DS-400)
+        -> composer.compose(doc, width) -> composed
+        -> sequenceGrid(composed) -> grid
       } else {
-        local composer: IComposer
         -> ComposerFactory::of(kind, technology, pen_.M) -> made     // boxes, in text (DS-400)
         -> composer.compose(doc, width) -> figure
         -> classGrid(figure) -> grid

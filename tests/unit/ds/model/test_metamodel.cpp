@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <map>
 #include <set>
 #include <string>
 #include <utility>
@@ -29,6 +30,25 @@ class TestKindSpec : public Metamodelled {};
 class TestFieldSpec : public Metamodelled {};
 class TestRelationSpec : public Metamodelled {};
 class TestJoins : public Metamodelled {};
+
+TEST_F(TestKindSpec, EachKindIsPartOfTheCategoryTheOwnerGaveIt) {
+  // the Owner's five (DS-427, 2026-11-25): what the design is made of, what it answers to, what it does, what judges
+  // it, what shows it
+  const std::map<std::string, std::string> owner = {
+      {"package", "structure"},   {"module", "structure"},   {"interface", "structure"},  {"operation", "structure"},
+      {"class", "structure"},     {"enum", "structure"},     {"function", "structure"},   {"method", "structure"},
+      {"attribute", "structure"}, {"operator", "structure"}, {"requirement", "artefact"}, {"verification", "artefact"},
+      {"constraint", "artefact"}, {"usecase", "artefact"},   {"outcome", "artefact"},     {"sequence", "behaviour"},
+      {"message", "behaviour"},   {"frame", "behaviour"},    {"view", "behaviour"},       {"rule", "logic"},
+      {"definition", "logic"},    {"state", "logic"},        {"diagram", "view"},         {"step", "view"}};
+  ASSERT_EQ(metamodel.kinds().size(), owner.size());
+  for (const auto& k : metamodel.kinds()) {
+    const std::string name = metamodel.nameOf(k.kind);
+    ASSERT_TRUE(owner.count(name)) << name;
+    EXPECT_EQ(ds::model::Metamodel::categoryName(k.category), owner.at(name)) << name;
+    EXPECT_EQ(k.category, ds::model::Metamodel::categoryOf(k.kind)) << name;
+  }
+}
 
 TEST_F(TestKindSpec, EveryKindOfTheModelIsDeclaredOnce) {
   std::set<std::string> seen;

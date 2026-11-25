@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <map>
 #include <string>
@@ -61,7 +62,12 @@ void SceneDescription::say(emit::ISink& out_sink) const {
     for (const auto& c : b.calls) out_sink.beginList().integer(node(c.to)).value(c.label).integer(c.expands).value(c.result).endList();
     out_sink.endList().endList();
   }
-  out_sink.endList().field("diagrams").beginList();
+  // each kind's category (DS-427), its kinds in byte order as a record's fields are
+  std::vector<std::pair<std::string, std::string>> categories = doc.categories;
+  std::sort(categories.begin(), categories.end());
+  out_sink.endList().field("categories").beginRecord();
+  for (const auto& c : categories) out_sink.field(c.first).value(c.second);
+  out_sink.endRecord().field("diagrams").beginList();
   for (const auto& d : doc.diagrams) {
     out_sink.beginList().value(d.name).value(d.kind).beginList();
     for (const auto& n : d.nodes) out_sink.integer(node(n));

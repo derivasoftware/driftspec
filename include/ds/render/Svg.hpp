@@ -55,7 +55,7 @@ class Svg {
   /// usability: a tooltip on everything, links by identity (a lifeline to its class, a message to the behaviour it
   /// expands to), focus on hover, and expansions that fold on click with every row below moving up. A small script is
   /// embedded so this works wherever the SVG is inline or opened on its own; as an <img> it is simply static.
-  std::string sequenceSvg(const IrDocument& doc) const;
+  std::string sequenceSvg(const Figure& figure) const;
   /// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
   std::string tableSvg(const IrDocument& doc) const;
   /// Several drawings in one (DS-245): each keeps its own drawing and is placed beside the last, or under it when

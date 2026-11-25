@@ -86,7 +86,8 @@ void JsonExport::kindNames(const std::vector<model::Kind>& kinds, emit::ISink& o
 void JsonExport::metamodel(emit::ISink& out_sink) const {
   out_sink.beginRecord().field("kinds").beginList();
   for (const auto& k : metamodel_.kinds()) {
-    out_sink.beginRecord().field("fields").beginList();
+    // its fields in byte order: what the kind is part of first (DS-427)
+    out_sink.beginRecord().field("category").value(model::Metamodel::categoryName(k.category)).field("fields").beginList();
     for (const auto& f : k.fields) {
       out_sink.beginRecord().field("meaning").value(f.meaning).field("name").value(f.name);
       out_sink.field("source").value(metamodel_.fieldSourceName(f.source)).field("type").value(metamodel_.fieldTypeName(f.type));

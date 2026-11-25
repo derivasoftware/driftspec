@@ -74,8 +74,51 @@ std::vector<KindSpec> Metamodel::describe(std::vector<KindSpec> kinds) const {  
   for (auto& k : kinds) {
     k.syntax = syntaxOf(k.kind);
     k.example = exampleOf(k.kind);
+    k.category = categoryOf(k.kind);
   }
   return kinds;
+}
+
+// the Owner's table (DS-427, 2026-11-25): structure, artefact, behaviour, logic (as the manual's perspectives have it)
+// and view
+Category Metamodel::categoryOf(Kind kind) {
+  switch (kind) {
+    case Kind::Requirement:
+    case Kind::Verification:
+    case Kind::Constraint:
+    case Kind::UseCase:
+    case Kind::Outcome:
+      return Category::Artefact;
+    case Kind::Sequence:
+    case Kind::Message:
+    case Kind::Frame:
+    case Kind::View:
+      return Category::Behaviour;
+    case Kind::Rule:
+    case Kind::Definition:
+    case Kind::State:
+      return Category::Logic;
+    case Kind::Diagram:
+    case Kind::Step:  // a step of a walkthrough, which is a diagram: what shows the design (DS-468)
+      return Category::View;
+    default:  // package, module, interface, operation, class, enum, function, method, attribute, operator
+      return Category::Structure;
+  }
+}
+
+std::string Metamodel::categoryName(Category category) {
+  switch (category) {
+    case Category::Artefact:
+      return "artefact";
+    case Category::Behaviour:
+      return "behaviour";
+    case Category::Logic:
+      return "logic";
+    case Category::View:
+      return "view";
+    default:
+      return "structure";
+  }
 }
 
 std::vector<KindSpec> Metamodel::build() {

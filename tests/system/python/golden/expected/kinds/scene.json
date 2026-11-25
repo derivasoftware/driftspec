@@ -169,6 +169,32 @@
       ]
     ]
   ],
+  "categories": {
+    "attribute": "structure",
+    "class": "structure",
+    "constraint": "artefact",
+    "definition": "logic",
+    "diagram": "view",
+    "enum": "structure",
+    "frame": "behaviour",
+    "function": "structure",
+    "interface": "structure",
+    "message": "behaviour",
+    "method": "structure",
+    "module": "structure",
+    "operation": "structure",
+    "operator": "structure",
+    "outcome": "artefact",
+    "package": "structure",
+    "requirement": "artefact",
+    "rule": "logic",
+    "sequence": "behaviour",
+    "state": "logic",
+    "step": "view",
+    "usecase": "artefact",
+    "verification": "artefact",
+    "view": "behaviour"
+  },
   "diagrams": [
     [
       "CL_Hola",
