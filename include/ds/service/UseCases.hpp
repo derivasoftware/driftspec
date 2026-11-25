@@ -2,6 +2,7 @@
 #define DRIFTSPEC_SERVICE_USECASES_HPP
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -37,7 +38,7 @@ class SeeDesign : public IUseCase {
   explicit SeeDesign(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
   scene::SceneDocument viewer(const model::Model& model) const;
   /// The diagram's render-IR; empty when the workspace has no diagram of that name.
-  render::IrText diagram(const model::Model& model, const std::string& name) const;
+  std::optional<render::IrDocument> diagram(const model::Model& model, const std::string& name) const;
   std::string name() const override { return "see-design"; }
   check::Selection needs(const model::Model& bound, const Request& request) const override;
   Outcome run(const model::Model& model, const Request& request, emit::ISink& sink) const override;
