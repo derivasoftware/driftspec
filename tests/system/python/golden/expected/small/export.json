@@ -1790,17 +1790,17 @@
             "values": []
           },
           {
-            "meaning": "its transitions",
+            "meaning": "its transitions, one record each in the order written: from, to, event, and guard and action when written (DS-384)",
             "name": "transitions",
             "source": "syntax",
-            "type": "text",
+            "type": "records",
             "values": []
           },
           {
-            "meaning": "its states as rules over the context of its subject: state|literals|line, one per line",
+            "meaning": "its states as rules over the context of its subject, one record each: state, and its literals, each with left, op and right when compared, and negated when it says not (DS-249, DS-384)",
             "name": "rules",
             "source": "syntax",
-            "type": "text",
+            "type": "records",
             "values": []
           }
         ],

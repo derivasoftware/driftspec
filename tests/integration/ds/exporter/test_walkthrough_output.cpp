@@ -78,7 +78,7 @@ TEST_F(TestWalkthroughOutput, TheExportGivesEachStepByIdentityInTheOrderWritten)
   EXPECT_EQ(w["steps"][1]["n"], 2);
 }
 
-TEST_F(TestWalkthroughOutput, TheSceneGivesEachStepByTheNamesAndNodesItDraws) {
+TEST_F(TestWalkthroughOutput, TheSceneGivesEachStepByTheNamesAndNodesItDraws) {  // its diagram by name, what it lights by identity
   const auto doc = nlohmann::json::parse(ds::api::Api(metamodel).described("see-design", {{"shop.ds", kShop}, {"walk.ds", kWalk}}));
   ASSERT_TRUE(doc.contains("walkthroughs"));
   EXPECT_EQ(doc["fields"]["walkthrough"], nlohmann::json::array({"name", "title", "steps"}));
@@ -86,11 +86,11 @@ TEST_F(TestWalkthroughOutput, TheSceneGivesEachStepByTheNamesAndNodesItDraws) {
   const auto& w = doc["walkthroughs"].at(0);
   EXPECT_EQ(w[0], "WALK_Shop");
   const auto& step = w[2].at(0);
-  EXPECT_EQ(step[1], "CL_Shop");  // as diagrams names it
-  EXPECT_EQ(step[2], -1);         // a class diagram replays no behaviour
-  const auto nodeId = [&doc](const nlohmann::json& at) { return doc["nodes"].at(at.get<size_t>())[0].get<std::string>(); };
-  EXPECT_EQ(nodeId(step[3].at(0)), "shop@desk::Desk");
-  EXPECT_EQ(nodeId(step[5]), nodeId(step[4].at(0)));  // the callout on what it highlights
+  EXPECT_EQ(step[1], "CL_Shop");                                   // as diagrams names it
+  EXPECT_EQ(step[2], -1);                                          // a class diagram replays no behaviour
+  EXPECT_EQ(step[3], nlohmann::json::array({"shop@desk::Desk"}));  // by identity, as its drawing names it (DS-470)
+  EXPECT_EQ(step[4], nlohmann::json::array({"shop@desk::Desk::sell"}));
+  EXPECT_EQ(step[5], "shop@desk::Desk::sell");  // the callout on what it highlights
 }
 
 TEST_F(TestWalkthroughOutput, AWorkspaceWithNoWalkthroughIsWrittenAsItWas) {

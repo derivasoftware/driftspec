@@ -170,11 +170,10 @@ void SceneDescription::say(emit::ISink& out_sink) const {
     for (const auto& w : doc.walkthroughs) {
       out_sink.beginList().value(w.name).value(w.title).beginList();
       for (const auto& s : w.steps) {
-        out_sink.beginList().value(s.title).value(s.diagram).integer(s.behaviour.empty() ? -1 : behaviourOf(s.behaviour)).beginList();
-        for (const auto& n : s.focus) out_sink.integer(node(n));
-        out_sink.endList().beginList();
-        for (const auto& n : s.highlight) out_sink.integer(node(n));
-        out_sink.endList().integer(s.at.empty() ? -1 : node(s.at)).value(s.text).endList();
+        out_sink.beginList().value(s.title).value(s.diagram).integer(s.behaviour.empty() ? -1 : behaviourOf(s.behaviour));
+        texts(s.focus, out_sink);  // by identity, as a drawing's data-id names it (DS-470)
+        texts(s.highlight, out_sink);
+        out_sink.value(s.at).value(s.text).endList();
       }
       out_sink.endList().endList();
     }
