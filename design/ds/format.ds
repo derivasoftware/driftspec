@@ -87,13 +87,14 @@ package driftspec@ds {
     }
     verification VER-00225-1 {
       status: draft
-      title: Integration tests confirm the design of ds keeps the rules of format, and is told when a description names a technology, a class but its factory names a description or a writer, format writes a function, a description uses another or a writer reads the model
+      title: Integration tests confirm the design of ds keeps the rules of format, and is told when a description names a technology, anything but its factory names a description or a writer, format writes a function, a description uses another or a writer reads the model
       method: test
       tests:
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.TheDesignOfDsKeepsTheRulesOfFormat
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.ADescriptionThatNamesTheJsonSinkIsTold
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.ADescriptionThatMakesItsOwnSinkIsTold
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.ADoorThatNamesADescriptionIsTold
+        tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.AnotherFactoryThatNamesADescriptionIsTold
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.AClassThatNamesAWriterIsTold
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.AFunctionInFormatIsTold
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.ADescriptionThatUsesAnotherIsTold
@@ -141,12 +142,19 @@ package driftspec@ds {
       never depends(d, t)
     }
 
+    definition of-the-factory(x, f) {
+      title: x is part of the factory f, a behaviour of one of its members, or a box that holds it: what names what f makes
+      if x in f, f is class
+      if x behaviour-of m, m in f, f is class
+      if f in x, f is class
+    }
+
     rule descriptions-are-named-by-their-factory {
       title: nothing but DescriptionFactory names a description, so whoever asks for a document holds it as an IDescription (DS-398)
       @requirement REQ-00106-3
       for class d in driftspec@ds@format
       where d inherits driftspec@ds@format::IDescription
-      never depends(x, d), x in driftspec@ds, x != d, not x in d, x != driftspec@ds@format::DescriptionFactory
+      never depends(x, d), x in driftspec@ds, x != d, not x in d, x != driftspec@ds@format::DescriptionFactory, not of-the-factory(x, driftspec@ds@format::DescriptionFactory)
     }
 
     rule writers-are-named-by-their-factory {
@@ -154,7 +162,7 @@ package driftspec@ds {
       @requirement REQ-00106-3
       for class w in driftspec@ds@format, class i in driftspec@ds@format
       where w inherits i, name(i) = "IFormat"
-      never depends(x, w), x in driftspec@ds, x != w, not x in w, x != driftspec@ds@format::FormatFactory
+      never depends(x, w), x in driftspec@ds, x != w, not x in w, x != driftspec@ds@format::FormatFactory, not of-the-factory(x, driftspec@ds@format::FormatFactory)
     }
 
     rule format-operations-belong-to-classes {
@@ -231,8 +239,7 @@ package driftspec@ds {
       + describe(out_sink: emit::ISink) -> void fails NotImplemented
     }
 
-    // THE DOCUMENT AXIS: the one place that names the descriptions (SceneDescription, ReportDescription,
-    // AnswersDescription, LayoutDescription, CellsDescription), one maker per document. A door asks it for the
+    // THE DOCUMENT AXIS: the one place that names the descriptions, one maker per document. A door asks it for the
     // description, asks emit's SinkFactory for the sink and pairs them; a description refers to the document it is
     // given, which outlives it
     class DescriptionFactory {
@@ -278,8 +285,8 @@ package driftspec@ds {
       }
     }
 
-    // the one place that names the writers (ViewerPage, DiagramIr, DiagramSvg, DiagramText, AnswersText,
-    // ReportText), keyed by name; each goes when its document is described and its technology is a sink
+    // the one place that names the writers, keyed by name; each goes when its document is described and its
+    // technology is a sink
     class FormatFactory {
       @requirement REQ-00106-3
       + static scene() -> std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>>   // html
@@ -340,6 +347,54 @@ package driftspec@ds {
       @requirement SREQ-00002-1
       + name() -> std::string
       + write(document: check::Report, options: FormatOptions, out_sink: emit::ISink) -> std::string
+    }
+
+    // ---- what each factory makes (DS-451: a factory names its products) -----------------------
+    sequence DescriptionFactory::scene {
+      local description: SceneDescription
+      return description
+    }
+
+    sequence DescriptionFactory::report {
+      local description: ReportDescription
+      return description
+    }
+
+    sequence DescriptionFactory::answers {
+      local description: AnswersDescription
+      return description
+    }
+
+    sequence DescriptionFactory::layout {
+      local description: LayoutDescription
+      return description
+    }
+
+    sequence DescriptionFactory::cells {
+      local description: CellsDescription
+      return description
+    }
+
+    sequence FormatFactory::scene {
+      local page: ViewerPage
+      return writers
+    }
+
+    sequence FormatFactory::diagram {
+      local ir: DiagramIr
+      local svg: DiagramSvg
+      local text: DiagramText
+      return writers
+    }
+
+    sequence FormatFactory::answers {
+      local text: AnswersText
+      return writers
+    }
+
+    sequence FormatFactory::report {
+      local text: ReportText
+      return writers
     }
 
     // the scene described into the sink lent and taken as one document, then the focus; the page is the viewer with

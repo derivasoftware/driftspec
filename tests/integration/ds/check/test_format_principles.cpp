@@ -90,6 +90,14 @@ TEST_F(TestFormatPrinciples, ADoorThatNamesADescriptionIsTold) {
   EXPECT_FALSE(has(rules, writersByFactory));
 }
 
+TEST_F(TestFormatPrinciples, AnotherFactoryThatNamesADescriptionIsTold) {
+  // every factory is exempt from the convention of the families by its name (DS-451); a description has one factory
+  const std::vector<std::string> rules =
+      broken({{"ds/query.ds", "    sequence QueryFactory::of {", "      local described: format::SceneDescription\n"}});
+  EXPECT_TRUE(has(rules, descriptionsByFactory));
+  EXPECT_FALSE(has(rules, "driftspec@ds@families-are-reached-through-their-interface"));
+}
+
 TEST_F(TestFormatPrinciples, AClassThatNamesAWriterIsTold) {
   const std::vector<std::string> api = broken({{"ds/api.ds", "    class Workspace {", "      - owns page_: format::ViewerPage\n"}});
   EXPECT_TRUE(has(api, writersByFactory));
