@@ -168,4 +168,24 @@ TEST_F(TestTableView, AColumnReadsWhatTheEntityOfTheRowIsAsARuleDoes) {
   EXPECT_EQ(t["rows"][0]["cells"][1]["text"], "p@m::Cart");
 }
 
+/// The SVG measures a cell by its characters, as the terminal does (DS-466): a column of ≠ is as wide as one of as many
+/// letters, though UTF-8 writes each ≠ in three bytes, and a cell wraps at forty characters, not forty bytes.
+TEST(TestTableSvg, ACellIsMeasuredByItsCharactersNotItsBytes) {
+  const auto table = [](const std::string& cell) {
+    return ds::render::IrDocument::parse(
+        R"({"ir":1,"kind":"table","title":"TB","nodes":[],"edges":[],"table":{"corner":"x","columns":["c"],"rows":[{"label":"r","title":"","cells":[{"text":")" +
+        cell + R"(","kind":"jump","title":""}]}]}})");
+  };
+  const auto widthOf = [](const std::string& svg) {
+    const auto at = svg.find("width=\"");
+    return std::stoi(svg.substr(at + 7));
+  };
+  const ds::render::Svg svg(kTheme);
+  EXPECT_EQ(widthOf(svg.render(table("\u2260\u2260\u2260\u2260"), 0)), widthOf(svg.render(table("aaaa"), 0)));
+  // thirty ≠ and a word: thirty-five characters fit one line of forty, though they are ninety-odd bytes
+  std::string many;
+  for (int i = 0; i < 30; ++i) many += "\u2260";
+  EXPECT_NE(svg.render(table(many + " word"), 0).find("\u2260 word</text>"), std::string::npos);
+}
+
 }  // namespace
