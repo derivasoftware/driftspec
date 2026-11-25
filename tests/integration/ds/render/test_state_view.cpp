@@ -19,7 +19,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// A state machine drawn, of an interface (its navigation) and of a class.
 class TestStateView : public ::testing::Test {
@@ -102,7 +106,7 @@ TEST(TestSelfLoop, ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack) {
   loop.to = "a";
   loop.kind = "association";
   doc.edges.push_back(loop);
-  const ds::render::LayoutResult out = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
+  const ds::render::LayoutResult out = ds::render::Layout(ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg))).place(doc);
   ASSERT_EQ(out.routes.count(0), 1U);
   ASSERT_EQ(out.routes.at(0).points.size(), 4U);
   EXPECT_EQ(out.routes.at(0).points.front().x, out.routes.at(0).points.back().x);
@@ -126,8 +130,8 @@ TEST_F(TestStateView, TheTransitionsAreCurvesAndALoopSitsBesideItsStateWhileOthe
     }
     return n;
   };
-  EXPECT_GT(curves(ds::render::Svg(kTheme).render(doc)), 0);
-  const auto metrics = ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg));
+  EXPECT_GT(curves(ds::render::Svg(theme()).render(doc)), 0);
+  const auto metrics = ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg));
   const ds::render::LayoutResult curved = ds::render::Layout(metrics).place(doc.bundled(), 0, true);
   const ds::render::LayoutResult straight = ds::render::Layout(metrics).place(doc, 0);
   ASSERT_FALSE(curved.routes.empty());
@@ -145,7 +149,7 @@ TEST_F(TestStateView, TheTransitionsAreCurvesAndALoopSitsBesideItsStateWhileOthe
   ds::render::IrEdge e;
   e.from = "a", e.to = "b", e.kind = "association";
   boxes.edges.push_back(e);
-  EXPECT_EQ(curves(ds::render::Svg(kTheme).render(boxes)), 0);
+  EXPECT_EQ(curves(ds::render::Svg(theme()).render(boxes)), 0);
 }
 
 // DS-249: a state a rule computes is drawn with its rule

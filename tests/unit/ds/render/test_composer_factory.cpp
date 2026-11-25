@@ -15,7 +15,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 ds::render::IrNode box(const std::string& id, const std::string& label) {
   ds::render::IrNode n;
@@ -39,7 +43,7 @@ ds::render::IrDocument twoBoxes() {
 
 /// The one place that names the composers (DS-400), by kind and technology.
 TEST(TestComposerFactory, EachKindAndTechnologyHasItsComposerAndAnyOtherIsRefused) {
-  const ds::render::Metrics m = ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg));
+  const ds::render::Metrics m = ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg));
   const auto svg = ds::render::ComposerFactory::of("boxes", "svg", m);
   EXPECT_NE(dynamic_cast<const ds::render::BoxesSvgComposer*>(svg.get()), nullptr);
   const auto text = ds::render::ComposerFactory::of("boxes", "text", m);

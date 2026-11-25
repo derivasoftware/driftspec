@@ -19,15 +19,23 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// Each writer and each description on its own (DS-186, DS-398): a writer's name and what it writes from the
 /// document it is given; what a description writes into the sink it is lent.
 
-const ds::render::IrDocument kDiagram =
-    ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
-                                  R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
-                                  R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
+// built on first use, not when the executable starts (DS-473)
+const ds::render::IrDocument& diagram() {
+  static const ds::render::IrDocument built =
+      ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
+                                    R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
+                                    R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
+  return built;
+}
 
 ds::format::FormatOptions wide(int width) {
   ds::format::FormatOptions o;
@@ -75,7 +83,7 @@ TEST(TestIrDescription, EveryKeyInByteOrderAndWrittenWhenItSaysSomething) {
 
 TEST(TestLayoutDescription, EveryNodePlacedAndEveryEdgeRouted) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  ds::format::LayoutDescription(kDiagram, kTheme, 0).describe(sink);
+  ds::format::LayoutDescription(diagram(), theme(), 0).describe(sink);
   const auto json = nlohmann::json::parse(sink.result());
   EXPECT_EQ(json["nodes"].size(), 2u);
   EXPECT_EQ(json["routes"].size(), 1u);
@@ -83,9 +91,9 @@ TEST(TestLayoutDescription, EveryNodePlacedAndEveryEdgeRouted) {
 
 TEST(TestDiagramSvg, AnSvgThatNamesEveryBox) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramSvg f(kTheme);
+  const ds::format::DiagramSvg f(theme());
   EXPECT_EQ(f.name(), "svg");
-  const std::string svg = f.write(kDiagram, {}, sink);
+  const std::string svg = f.write(diagram(), {}, sink);
   EXPECT_EQ(svg.find("<svg"), svg.find('<'));
   EXPECT_NE(svg.find(">A<"), std::string::npos);
   EXPECT_NE(svg.find(">B<"), std::string::npos);
@@ -93,9 +101,9 @@ TEST(TestDiagramSvg, AnSvgThatNamesEveryBox) {
 
 TEST(TestDiagramText, BoxCharactersWithinTheWidthAsked) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramText f(kTheme);
+  const ds::format::DiagramText f(theme());
   EXPECT_EQ(f.name(), "text");
-  const std::string text = f.write(kDiagram, wide(60), sink);
+  const std::string text = f.write(diagram(), wide(60), sink);
   EXPECT_NE(text.find('A'), std::string::npos);
   EXPECT_NE(text.find('B'), std::string::npos);
   std::istringstream lines(text);
@@ -107,7 +115,7 @@ TEST(TestDiagramText, BoxCharactersWithinTheWidthAsked) {
 
 TEST(TestCellsDescription, TheGridAsJson) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  ds::format::CellsDescription(kDiagram, kTheme, 60).describe(sink);
+  ds::format::CellsDescription(diagram(), theme(), 60).describe(sink);
   const auto json = nlohmann::json::parse(sink.result());
   EXPECT_FALSE(json.empty());
 }

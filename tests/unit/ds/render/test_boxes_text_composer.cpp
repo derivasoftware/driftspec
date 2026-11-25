@@ -11,7 +11,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 ds::render::IrNode box(const std::string& id, const std::string& label) {
   ds::render::IrNode n;
@@ -36,7 +40,7 @@ ds::render::IrDocument twoBoxes() {
 /// A box diagram composed for a terminal (DS-400): every box placed in cells, as the layout places it, and its edge
 /// routed; the figure moved keeps where its boxes land.
 TEST(TestBoxesTextComposer, EveryBoxIsPlacedInCellsAndAMovedFigureKeepsItsPlaces) {
-  const ds::render::Metrics m = ds::render::Metrics::text(kTheme.measures(ds::theme::Sink::text));
+  const ds::render::Metrics m = ds::render::Metrics::text(theme().measures(ds::theme::Sink::text));
   const ds::render::IrDocument doc = twoBoxes();
   ds::render::Figure figure = ds::render::BoxesTextComposer(m).compose(doc, 40);
   ASSERT_EQ(figure.layout.placed.size(), 2u);

@@ -25,7 +25,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// Every output of ds is a document (REQ-00106-4), here over examples/hola: the document comes from the design; it
 /// is described into the sink of the technology named, or written by the writer named, and neither reads the model.
@@ -80,7 +84,7 @@ TEST_F(TestSceneFormatsOfADesign, ThePageOfTheDesignIsAFrameCarryingItWholeWhenA
 class TestDiagramFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares) {
-  ASSERT_EQ(ds::format::FormatFactory::diagram(kTheme).size(), 2u);  // svg, text; the IR, layout and cells are descriptions
+  ASSERT_EQ(ds::format::FormatFactory::diagram(theme()).size(), 2u);  // svg, text; the IR, layout and cells are descriptions
   const ds::api::Workspace workspace = ds::api::Workspace::madeFor(metamodel, files);
   std::set<std::string> drawn;
   for (const char* format : {"cells", "ir", "layout", "svg", "text"}) {
@@ -100,7 +104,7 @@ TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDes
   const auto ir = nlohmann::json::parse(text);
   ASSERT_FALSE(ir["nodes"].empty());
   const ds::render::IrDocument diagram = ds::render::IrDocument::parse(text);  // read once, as a door reads an IR file
-  const auto formats = ds::format::FormatFactory::diagram(kTheme);
+  const auto formats = ds::format::FormatFactory::diagram(theme());
   const std::string svg = formats.at("svg")->write(diagram, {}, sink);
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find("Greeter"), std::string::npos);

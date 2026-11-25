@@ -7,7 +7,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 using ds::render::IrDocument;
 using ds::render::IrNode;
@@ -26,7 +30,7 @@ IrNode box(const std::string& id, const std::string& label, std::vector<std::vec
 /// The layout of a document in one table of metrics (DS-185).
 
 TEST(TestLayout, ABoxIsAsWideAsItsLongestLineAndAsTallAsItsLines) {
-  const Metrics m = Metrics::text(kTheme.measures(ds::theme::Sink::text));
+  const Metrics m = Metrics::text(theme().measures(ds::theme::Sink::text));
   const Layout layout(m);
   const auto narrow = layout.sizeOf(box("a", "A"));
   const auto wide = layout.sizeOf(box("b", "B", {{"+ aMuchLongerMemberThanTheName()"}}));
@@ -37,7 +41,7 @@ TEST(TestLayout, ABoxIsAsWideAsItsLongestLineAndAsTallAsItsLines) {
 TEST(TestLayout, EveryNodeIsPlacedAndTheSameDocumentPlacesTheSameWay) {
   IrDocument doc;
   doc.nodes = {box("a", "A"), box("b", "B")};
-  const Layout layout(Metrics::svg(kTheme.measures(ds::theme::Sink::svg)));
+  const Layout layout(Metrics::svg(theme().measures(ds::theme::Sink::svg)));
   const auto first = layout.place(doc);
   const auto again = layout.place(doc);
   ASSERT_EQ(first.placed.size(), 2u);

@@ -11,7 +11,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 ds::render::IrNode lifeline(const std::string& id, const std::string& label) {
   ds::render::IrNode n;
@@ -51,7 +55,7 @@ ds::render::IrDocument twoLanes() {
 
 /// A sequence composed for SVG (DS-400, DS-464): its lanes, rows and frames in pixels, pointing into the document.
 TEST(TestSequenceComposer, InSvgTheLanesRowsAndFramesAreComposedInPixels) {
-  const ds::render::Metrics m = ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg));
+  const ds::render::Metrics m = ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg));
   const ds::render::Figure figure = ds::render::SequenceComposer(m).compose(twoLanes(), 0);
   ASSERT_TRUE(figure.sequence.has_value());
   const ds::render::SequenceLayout& s = *figure.sequence;
@@ -77,7 +81,7 @@ TEST(TestSequenceComposer, InSvgTheLanesRowsAndFramesAreComposedInPixels) {
 
 /// A sequence with no lifeline is composed empty, and the drawing says what it has.
 TEST(TestSequenceComposer, NoLifelineComposesNoLane) {
-  const ds::render::Metrics m = ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg));
+  const ds::render::Metrics m = ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg));
   const ds::render::Figure figure = ds::render::SequenceComposer(m).compose(ds::render::IrDocument(), 0);
   ASSERT_TRUE(figure.sequence.has_value());
   EXPECT_TRUE(figure.sequence->lanes.empty());
@@ -86,7 +90,7 @@ TEST(TestSequenceComposer, NoLifelineComposesNoLane) {
 /// A sequence composed for a terminal (DS-464): the svg's proportions in cells, a head and a message to its own lane
 /// given the three rows a terminal draws them in.
 TEST(TestSequenceComposer, InATerminalTheSameProportionsAreCellsAndTheMarksGetTheirLeastRoom) {
-  const ds::render::Metrics m = ds::render::Metrics::text(kTheme.measures(ds::theme::Sink::text));
+  const ds::render::Metrics m = ds::render::Metrics::text(theme().measures(ds::theme::Sink::text));
   const ds::render::Figure figure = ds::render::SequenceComposer(m).compose(twoLanes(), 0);
   ASSERT_TRUE(figure.sequence.has_value());
   const ds::render::SequenceLayout& s = *figure.sequence;

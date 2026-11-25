@@ -27,7 +27,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// Every JSON document ds writes, over designs of every size (DS-397): each writer lent a checked sink, and each
 /// door that builds its own, writes its fields in byte order and the bytes nlohmann writes for the same document,
@@ -102,8 +106,8 @@ TEST_F(TestJsonOfADesign, EveryWriterLentACheckedSinkWritesWhatNlohmannWrote) {
       if (ds::test::irJson(ir, id).size() > 64 * 1024) continue;  // a large drawing lays out slowly in a debug build; the goldens hold one
       const ds::render::IrDocument diagram = *ir.document(id);
       for (const char* format : {"layout", "cells"}) {
-        (std::string(format) == "layout" ? ds::format::DescriptionFactory::layout(diagram, kTheme, 0)
-                                         : ds::format::DescriptionFactory::cells(diagram, kTheme, 0))
+        (std::string(format) == "layout" ? ds::format::DescriptionFactory::layout(diagram, theme(), 0)
+                                         : ds::format::DescriptionFactory::cells(diagram, theme(), 0))
             ->describe(sink);
         const std::string drawn = sink.result();
         ASSERT_FALSE(drawn.empty());

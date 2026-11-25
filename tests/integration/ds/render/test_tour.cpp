@@ -22,7 +22,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// A tour (DS-245): one drawing that holds the boxes that take part in a behaviour and the sequence between
 /// them, on one cut. Over tests/corpus/cut, a purchase with its detail, and tests/corpus/levels, the same purchase
@@ -120,12 +124,12 @@ TEST_F(TestTour, TheQueryShowsWhoTakesPart) {
 
 TEST_F(TestTour, ItsPartsAreDrawnSideBySideAndOneUnderTheOtherWhenTheWidthAsksForIt) {
   const auto doc = ds::render::IrDocument::parse(ir(detail, "TOUR_Packages"));
-  const std::string wide = ds::render::Svg(kTheme).render(doc);
+  const std::string wide = ds::render::Svg(theme()).render(doc);
   EXPECT_NE(wide.find("data-part=\"boxes\""), std::string::npos);
   const auto sequence = wide.find("data-part=\"sequence\"");
   ASSERT_NE(sequence, std::string::npos);
   EXPECT_NE(wide.rfind(" y=\"0\" ", sequence), std::string::npos);  // beside the boxes: at the top
-  const std::string narrow = ds::render::Svg(kTheme).render(doc, 600);
+  const std::string narrow = ds::render::Svg(theme()).render(doc, 600);
   const auto under = narrow.find("data-part=\"sequence\"");
   ASSERT_NE(under, std::string::npos);
   EXPECT_NE(narrow.rfind("x=\"0\" y=\"", under), std::string::npos);  // under them: at the left, further down
@@ -133,7 +137,7 @@ TEST_F(TestTour, ItsPartsAreDrawnSideBySideAndOneUnderTheOtherWhenTheWidthAsksFo
 }
 
 TEST_F(TestTour, InATerminalTheBoxesComeAboveTheSequence) {
-  const std::string text = ds::render::Text(kTheme).render(ds::render::IrDocument::parse(ir(detail, "TOUR_Packages")), false);
+  const std::string text = ds::render::Text(theme()).render(ds::render::IrDocument::parse(ir(detail, "TOUR_Packages")), false);
   const auto box = text.find("P sales"), lifeline = text.find("caller");
   ASSERT_NE(box, std::string::npos);
   ASSERT_NE(lifeline, std::string::npos);
