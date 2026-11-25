@@ -352,6 +352,20 @@ TEST_F(TestEnginePrinciples, OneConcreteNamedByAClassThatIsNoFactoryIsTold) {
   EXPECT_FALSE(has(rules, namedFactory));  // one product: no family is named twice
 }
 
+/// A family rooted in an abstract class with concrete members is reached through it too (DS-465): format's
+/// descriptions are rooted in ADescription, and a class that is no factory and names one of them is told.
+TEST_F(TestEnginePrinciples, AConcreteOfAFamilyRootedInAnAbstractClassReachedFromOutsideIsTold) {
+  const std::vector<std::string> rules = broken({{"ds/format.ds", "  module format {",
+                                                  "    class Printer {\n"
+                                                  "      + print() -> void\n"
+                                                  "    }\n"
+                                                  "    sequence Printer::print {\n"
+                                                  "      local d: ReportDescription\n"
+                                                  "    }\n"}});
+  EXPECT_TRUE(has(rules, throughInterface));
+  EXPECT_FALSE(has(rules, namedFactory));  // one concrete named: no factory
+}
+
 TEST_F(TestEnginePrinciples, AReferenceNoConstructorGivesIsTold) {
   const std::vector<std::string> rules = broken({{"ds/check.ds", "  module check {",
                                                   "    class Holder {\n"

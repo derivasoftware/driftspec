@@ -341,3 +341,32 @@ diagram Kept {
             (name)
             (qualified_name
               (name))))))))
+
+========================================
+details: A walkthrough's steps (DS-468)
+========================================
+
+diagram WALK_Buy {
+  kind: walkthrough
+  step When it is sold out {
+    show: SEQ_Buy / sold-out
+    text: The desk answers 1.
+  }
+}
+
+---
+
+(source_file
+  (diagram
+    (name)
+    (field
+      (name)
+      (line_text))
+    (walk_step
+      (condition)
+      (field
+        (name)
+        (line_text))
+      (field
+        (name)
+        (line_text)))))
