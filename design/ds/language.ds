@@ -1815,6 +1815,30 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00320-1 {
+      tags: viewer, playground, drawing
+      status: draft
+      title: A drawing shall rest and light the same on every page that shows it
+      text:
+        A page that shows a diagram as `ds render -f svg` draws it rests it and lights it with one script, the same on
+        the playground and on the viewer: each relation says its kind, one that touches a class or a closed box waits to
+        be asked unless it inherits, the tips are drawn at three quarters of their size in the colour of the card they
+        touch, and pointing at a box lights its relations and the boxes at their other end. The page keeps what is
+        selected and says what it says around it; the script knows nothing else of the page.
+      rationale:
+        Owner, 2026-11-25 (DS-486, "one look", MR2 of four): the playground's drawings had their own rest-and-light
+        code, written in its page and nowhere else; one look needs it once, read by every page that draws ds's SVG.
+      verification VER-00360-1 {
+        status: draft
+        title: Integration tests confirm the script decides each relation's kind and rest, each tip's colour and size, over drawings ds writes, and that the viewer carries it as it ships only on a page with a walkthrough
+        method: test
+        tests:
+          tests/integration/viewer/drawings.test.ts::each relation says its kind, and one that touches a class waits to be asked unless it inherits
+          tests/integration/viewer/drawings.test.ts::a tip wears the colour of the kind of card it touches and is drawn at three quarters of its size
+          tests/integration/viewer/drawings.test.ts::the viewer carries the script as it ships, ahead of the walkthroughs, and only on a page with one
+      }
+    }
+
     requirement REQ-00243-1 {
       tags: language, walkthrough, export, scene, query
       status: draft
