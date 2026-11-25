@@ -646,25 +646,19 @@ package driftspec@ds {
     sequence ComposerFactory::of {
       local svg: BoxesSvgComposer
       local text: BoxesTextComposer
-      local sequenceSvg: SequenceSvgComposer
-      local sequenceText: SequenceTextComposer
+      local sequence: SequenceComposer
       opt boxes drawn in SVG / boxes-svg {
         return svg
       }
       opt boxes drawn in a terminal / boxes-text {
         return text
       }
-      opt a sequence drawn in SVG / sequence-svg {
-        return sequenceSvg
-      }
-      opt a sequence drawn in a terminal / sequence-text {
-        return sequenceText
+      opt a sequence, in SVG or in a terminal / sequence {
+        return sequence                      // one engine: the sink's metrics make the difference (DS-464)
       }
       fail std::invalid_argument
     }
 
-    // a sequence composed for SVG: lanes wide enough for their heads and the labels that cross them, a row per
-    // message in pixels, frames around the messages they span (DS-400)
     // a sequence of the render-IR as the layout's sequence graph: lifelines as lanes, messages between two of them by
     // row, frames that span rows as blocks; what each stands for kept beside it, in the same order (DS-464)
     class SequenceProjection {
@@ -683,34 +677,26 @@ package driftspec@ds {
       + takeLaneOf() -> std::map<std::string, std::size_t>   // handed over: the projection keeps none after
     }
 
-    // the sequence projected into the layout's graph and placed by its sequence engine with the SVG's measures
-    // (DS-464); what each place stands for read back from the projection
-    sequence SequenceSvgComposer::compose {
+    // a sequence composed for a sink: projected into the layout's graph and placed by its sequence engine with the
+    // sink's metrics, the same proportions in pixels or in cells, its marks given the least room they need (DS-464)
+    class SequenceComposer : IComposer {
+      @requirement REQ-00007-1
+      - owns metrics_: Metrics
+      + SequenceComposer(metrics: Metrics)
+      + compose(doc: IrDocument, width: int) -> Figure
+    }
+
+    // what each place stands for read back from the projection
+    sequence SequenceComposer::compose {
       local projection: SequenceProjection
       local engine: layout::ISequenceEngine
       opt there is no lifeline / no-lane {
         return figure
       }
-      -> layout::SequenceSpacing::of(advance, lineHeight, smallAdvance) -> spacing
+      -> layout::SequenceSpacing::of(advance, lineHeight, smallAdvance, least) -> spacing
       -> layout::EngineFactory::sequence(spacing) -> made
       -> engine.place(graph) -> placed
       return figure
-    }
-
-    class SequenceSvgComposer : IComposer {
-      @requirement REQ-00007-1
-      - owns metrics_: Metrics
-      + SequenceSvgComposer(metrics: Metrics)
-      + compose(doc: IrDocument, width: int) -> Figure
-    }
-
-    // a sequence composed for a terminal: two rows per message (three for one to its own lane), frames stacked a row
-    // further out for each frame inside them that opens or closes at the same message (DS-400)
-    class SequenceTextComposer : IComposer {
-      @requirement REQ-00007-1
-      - owns metrics_: Metrics
-      + SequenceTextComposer(metrics: Metrics)
-      + compose(doc: IrDocument, width: int) -> Figure
     }
 
     // where a sequence lands, composed for one technology: its lanes, its messages in order and the row each lands on,
@@ -764,6 +750,10 @@ package driftspec@ds {
       + CHAR_W: int
       + LINE_H: int
       + SMALL_W: int                         // a character of small text: the theme's measures (DS-464)
+      + SEQ_PAD_LEAST: int                   // the least room around a sequence head's label: a terminal's box needs 4
+      + SEQ_HEAD_LEAST: int                  // the least room a head is drawn in: a terminal's box, 3 rows
+      + SEQ_SELF_LEAST: int                  // the least room a message to its own lane is drawn in: a terminal's loop, 3 rows
+      + SEQ_FRAME_LEAST: int                 // the least room between a frame's edge and the next: a terminal's row
       + PAD_X: int
       + PAD_Y: int
       + SECTION_GAP: int

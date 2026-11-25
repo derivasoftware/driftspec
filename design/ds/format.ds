@@ -315,6 +315,7 @@ package driftspec@ds {
       + height: int
       + width: int
       + color: bool
+      + drawings: std::map<std::string, std::string>   // the cards of a page's walkthroughs, by name (DS-470)
     }
 
     // THE EXTENSION POINT of the writers: IFormat<D>, D the document a writer writes; each names its document in its
@@ -354,9 +355,11 @@ package driftspec@ds {
       @requirement REQ-00092-3
       + name() -> std::string
       + write(document: scene::SceneDocument, options: FormatOptions, out_sink: emit::ISink) -> std::string
+      @requirement REQ-00244-1
       + static viewerTemplate() -> std::string    // viewer/scene.html compiled in, with the places the scene fills
+      + static walkTemplate() -> std::string      // viewer/walk.js compiled in: only a page with a walkthrough carries it
       // the scene described and the identities it opens framed on, written one after the other into the compact sink lent
-      - static page(document: scene::SceneDocument, title: std::string, css: std::string, focus: std::vector<std::string>, out_sink: emit::ISink) -> std::string
+      - static page(document: scene::SceneDocument, title: std::string, css: std::string, focus: std::vector<std::string>, drawings: std::map<std::string, std::string>, out_sink: emit::ISink) -> std::string
       - static frame(page: std::string, title: std::string, height: int) -> std::string
     }
 
@@ -433,7 +436,7 @@ package driftspec@ds {
     }
 
     sequence ViewerPage::write {
-      -> page(document, title, css, focus, out_sink) -> written
+      -> page(document, title, css, focus, drawings, out_sink) -> written
       opt embedded / framed {
         -> frame(written, title, height) -> iframe
         return iframe
