@@ -343,28 +343,43 @@ package driftspec@ds {
     }
 
     // How every caller loads a workspace (DS-120): the files bound into one model written in the
-    // metamodel the Api holds, then checked; what only echoes a cut file, or one that is not UTF-8,
-    // goes (DS-304, DS-411).
+    // metamodel the Api holds, then checked with the steps its output reads (DS-376, DS-408); what only
+    // echoes a cut file, or one that is not UTF-8, goes (DS-304, DS-411).
     sequence Api::load {
+      -> bound(files) -> bound
+      // the steps the output reads, chosen here and nowhere else (DS-376)
+      -> stepsFor(output, model, diagram) -> selection
+      -> checked(bound, selection) -> model
+      return model
+    }
+
+    // a load's first half (DS-408): the files bound into one model, each that is not UTF-8 or does not parse said once
+    // and kept among the broken
+    sequence Api::bound {
       local model: model::Model
       local binder: bind::Binder
       local broken: std::set<std::string>
       loop each file {
         opt it is not UTF-8 / not-utf8 {
-          // it is said once, at its first byte that is not, and kept among the broken (DS-411)
+          -> model.report(encoding)        // E-ENCODING, at its first byte that is not (DS-411)
         }
         opt it does not parse / cut {
-          // it is said once, where the file stops parsing, and kept among the broken
+          -> model.report(syntax)          // E-SYNTAX, where the file stops parsing, or where a block left open starts
         }
         // a file that is not UTF-8 has the empty tree: nothing of it is bound
         -> binder.bind(file)
       }
-      // the steps the output reads, chosen here and nowhere else (DS-376)
-      -> stepsFor(output, model, diagram) -> selection
-      -> check::CheckerFactory::make(model, metamodel_, selection) -> checker   // held as the IChecker it is (DS-404, DS-425)
       self -> binder.notes() -> notes
+      return bound
+    }
+
+    // a load's second half (DS-408): checked with only the steps asked for, the checker held as the IChecker it is
+    // (DS-404, DS-425); what only echoes a file that does not parse goes until it parses (DS-304); the rest by where
+    // it is written
+    sequence Api::checked {
+      local model: model::Model
+      -> check::CheckerFactory::make(model, metamodel_, selection) -> checker
       -> checker.run(notes)
-      // what only echoes a file that does not parse goes until it parses (DS-304); the rest by where it is written
       -> model.withdrawEchoes(broken)
       -> model.sortFindings()
       return model
