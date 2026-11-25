@@ -78,7 +78,7 @@ class TestDiagramFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares) {
   ASSERT_EQ(ds::format::FormatFactory::diagram(kTheme).size(), 3u);  // ir, svg, text; layout and cells are descriptions
-  const ds::api::Workspace workspace(metamodel, files);
+  const ds::api::Workspace workspace = ds::api::Workspace::madeFor(metamodel, files);
   for (const char* format : {"cells", "ir", "layout", "svg", "text"}) {
     EXPECT_FALSE(ds::api::Api(metamodel).render(files, "CL_Hola", format, 120).empty()) << format;
     EXPECT_EQ(ds::api::Api(metamodel).render(files, "NoSuchDiagram", format, 120), "") << format;

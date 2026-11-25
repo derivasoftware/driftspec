@@ -36,7 +36,7 @@ const char* kShop =
 class TestWorkspace : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
-  ds::api::Workspace ws{metamodel, {{"shop.ds", kShop}}};
+  ds::api::Workspace ws = ds::api::Workspace::madeFor(metamodel, {{"shop.ds", kShop}});
   static nlohmann::json json(const std::string& text) { return nlohmann::json::parse(text); }
 };
 
@@ -95,7 +95,7 @@ TEST_F(TestWorkspace, ADiagramAskedInAFormatDsDoesNotWriteFailsNotImplemented) {
 TEST_F(TestWorkspace, TwoLoadedAtOnceEachKeepItsOwnModel) {
   std::string after = kShop;
   after.replace(after.find("+ take(n: int) -> int"), 21, "+ take(n: int) -> bool");
-  const ds::api::Workspace later{metamodel, {{"shop.ds", after}}};
+  const ds::api::Workspace later = ds::api::Workspace::madeFor(metamodel, {{"shop.ds", after}});
   // the second load answers from its own model, and the first is as it was
   EXPECT_NE(later.find("p@m::Vault::take").find("bool"), std::string::npos);
   EXPECT_EQ(ws.find("p@m::Vault::take").find("bool"), std::string::npos);
