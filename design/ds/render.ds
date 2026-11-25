@@ -13,6 +13,7 @@ package driftspec@ds {
     @requirement REQ-00214-1                 // every operation of render is a member of a class (DS-372)
     @requirement REQ-00215-1                 // a projector is reached through IProjector, the tour's parts too (DS-372)
     @requirement REQ-00216-1                 // the drawings read the IR alone (DS-372)
+    @requirement REQ-00217-1                 // a drawing places nothing: it draws a figure composed below it (DS-464)
 
     requirement REQ-00006-1 {
       status: approved
@@ -266,6 +267,60 @@ package driftspec@ds {
           tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
           tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ADrawingThatKnowsTheModelIsTold
       }
+    }
+
+    requirement REQ-00217-1 {
+      tags: architecture, render, layout
+      status: draft
+      @refines REQ-00007-1
+      title: A drawing shall place nothing, reaching what places a diagram only through IComposer, from ComposerFactory
+      text:
+        Svg and Text draw a figure composed below them: where each box, route, lane, row and frame lands is the
+        composers' and the layout's engines'. A drawing that knew an engine, the layout's types of placement, render's
+        box projection, the sequence projection or a composer itself would place a part of a diagram on its own, and
+        the two drawings of one diagram would no longer place it alike.
+      rationale:
+        Owner, 2026-11-25 (DS-400, DS-464): figures are composed below and sinks only draw; sequences get one placement
+        engine in the layout, like the structural one.
+      verification VER-00237-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when a drawing holds what places
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ADrawingThatPlacesIsTold
+      }
+    }
+
+    // what draws a diagram: the SVG and the terminal drawings (DS-464)
+    definition draws(c) {
+      title: c is one of the drawings, which draw a composed figure
+      if c = driftspec@ds@render::Svg
+      if c = driftspec@ds@render::Text
+    }
+
+    // what places a diagram, below the drawings: a composer, render's box projection, the sequence projection (DS-464)
+    definition places(x) {
+      title: x composes a figure, or projects the IR into what the layout's engines place
+      if x inherits driftspec@ds@render::IComposer
+      if x = driftspec@ds@render::Layout
+      if x = driftspec@ds@render::SequenceProjection
+    }
+
+    rule the-drawings-place-nothing {
+      title: no drawing depends on a composer or a projection, so a drawing reaches what places only through IComposer
+      @requirement REQ-00217-1
+      for class c in driftspec@ds@render, class x in driftspec@ds@render
+      where draws(c), places(x)
+      never depends(c, x)
+    }
+
+    rule the-drawings-know-no-layout {
+      title: no drawing depends on the layout module, so where a diagram's parts land is the engines', below the drawing
+      @requirement REQ-00217-1
+      for class c in driftspec@ds@render
+      where draws(c)
+      never depends(c, x), x in driftspec@ds@layout
     }
 
     // what projects a diagram: the export, the projectors and what they are built of (DS-372)

@@ -85,6 +85,8 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string drawingsModel = "driftspec@ds@render::the-drawings-read-only-the-ir";
   const std::string drawingsQuery = "driftspec@ds@render::the-drawings-ask-no-query";
   const std::string drawingsAxis = "driftspec@ds@render::the-drawings-know-no-cut";
+  const std::string drawingsPlace = "driftspec@ds@render::the-drawings-place-nothing";
+  const std::string drawingsLayout = "driftspec@ds@render::the-drawings-know-no-layout";
   const std::string layersAlone = "driftspec@ds@scene::no-layer-knows-another";
   const std::string namedI = "driftspec@ds@pure-interfaces-are-named-i";
   const std::string namedA = "driftspec@ds@abstract-classes-are-named-a";
@@ -97,11 +99,11 @@ class TestEnginePrinciples : public ::testing::Test {
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule :
-       {context,          asInterface,         alone,        builtOnce,      binderClasses, modelClasses, axisClasses,      axisReads,
-        exporterClasses,  exporterReads,       apiChooses,   machineClasses, machineReads,  queryClasses, stepsAsInterface, stepsAlone,
-        checkClasses,     sceneClasses,        sceneReads,   layerLayout,    packerModel,   namedI,       namedA,           namedFactory,
-        throughInterface, givenAtConstruction, layoutRender, layoutScene,    sceneEngine,   renderEngine, renderClasses,    projectors,
-        drawingsModel,    drawingsQuery,       drawingsAxis, appClasses})
+       {context,          asInterface,         alone,        builtOnce,      binderClasses, modelClasses,  axisClasses,      axisReads,
+        exporterClasses,  exporterReads,       apiChooses,   machineClasses, machineReads,  queryClasses,  stepsAsInterface, stepsAlone,
+        checkClasses,     sceneClasses,        sceneReads,   layerLayout,    packerModel,   namedI,        namedA,           namedFactory,
+        throughInterface, givenAtConstruction, layoutRender, layoutScene,    sceneEngine,   renderEngine,  renderClasses,    projectors,
+        drawingsModel,    drawingsQuery,       drawingsAxis, appClasses,     drawingsPlace, drawingsLayout})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -432,6 +434,23 @@ TEST_F(TestEnginePrinciples, ADrawingThatKnowsTheModelIsTold) {
   const std::vector<std::string> axis = broken({{"ds/render.ds", "    class Layout {\n", "      - refs cut_: axis::Cut\n"}});
   EXPECT_TRUE(has(axis, drawingsAxis));
   EXPECT_FALSE(has(axis, drawingsModel));
+}
+
+/// A drawing places nothing (DS-464): Svg holding render's box projection or the sequence projection, and Text holding a
+/// composer or the layout's placement, are each told; the projections no family names, so only this rule sees them.
+TEST_F(TestEnginePrinciples, ADrawingThatPlacesIsTold) {
+  const std::string svg = "    class Svg {                              // the SVG drawing, with its links, tooltips and script\n";
+  const std::string text = "    class Text {                             // the terminal drawing, box characters and optional colour\n";
+  const std::vector<std::string> layout = broken({{"ds/render.ds", svg, "      - refs layout_: Layout\n"}});
+  EXPECT_TRUE(has(layout, drawingsPlace));
+  const std::vector<std::string> projection = broken({{"ds/render.ds", svg, "      - owns projection_: SequenceProjection\n"}});
+  EXPECT_TRUE(has(projection, drawingsPlace));
+  EXPECT_FALSE(has(projection, throughInterface));  // a projection is in no family
+  const std::vector<std::string> composer = broken({{"ds/render.ds", text, "      - owns composer_: SequenceComposer\n"}});
+  EXPECT_TRUE(has(composer, drawingsPlace));
+  const std::vector<std::string> placement = broken({{"ds/render.ds", text, "      - owns placed_: layout::SequencePlacement\n"}});
+  EXPECT_TRUE(has(placement, drawingsLayout));
+  EXPECT_FALSE(has(placement, drawingsPlace));
 }
 
 }  // namespace
