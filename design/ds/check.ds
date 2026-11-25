@@ -1250,9 +1250,9 @@ diagram SEQ_CheckerRun {
   include: driftspec@ds@check::Checker::run
 }
 
-diagram SEQ_Load {                         // a load from the command line, two levels down: parse, then the Api's steps (DS-383)
+diagram SEQ_Load {                         // a load as the command line opens a workspace (DS-409), two levels down: parse, then the Api's steps (DS-383)
   kind: sequence
-  include: driftspec@ds@app::load
+  include: driftspec@ds@api::Workspace::reload
   depth: 2
 }
 

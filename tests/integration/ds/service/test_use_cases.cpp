@@ -178,6 +178,8 @@ TEST_F(TestUseCases, EachUseCaseEndsInAnOutcomeItsUseCaseDeclares) {
   std::set<std::string> seen;
   for (const auto& [name, end] : ended) {
     EXPECT_TRUE(declared(name).count(end.name)) << name << " ended in " << end.name << ", which " << uc.at(name) << " does not declare";
+    // an end that is not the default says what happened, which its door words (DS-409)
+    if (end.name != "default") EXPECT_FALSE(end.message.empty()) << name << " ended in " << end.name << " and says nothing";
     seen.insert(name + ":" + end.name);
   }
   // each end the use case can reach of itself is reached here
