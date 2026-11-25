@@ -4,7 +4,43 @@
 
 package driftspec@ds {
 
+  // ---- no free function in the doors in C++ (DS-406, DS-476): the api's and the service's, so the package's ---------
+  requirement REQ-00209-1 {
+    status: draft
+    @refines REQ-00085-2
+    @refines REQ-00261-1
+    title: Every operation of the api and of the service shall be a member of the class whose responsibility it is
+    text:
+      The engine in process is the Api, the Workspace a caller keeps, the Browser a page calls, and Identity, which
+      writes an identity for another language. A use case is its class, made by UseCaseFactory and asked through
+      IUseCase, and what it is asked is its Request. A function of either module, or one hidden in it, would be a
+      responsibility no class names. With the command line's own rule (DS-409), which excepts main alone, no door
+      of the engine written in C++ holds a function but main.
+    rationale:
+      Owner, 2026-11-23 and 2026-11-24 (DS-406): free functions signal a missing class; the doors are thin
+      adapters and main the only function. DS-476 (DS-410a), 2026-11-25: neither module declares a function today,
+      so the rules keep them so, as query's, format's and render's do.
+    tags: architecture, api, service
+    verification VER-00239-1 {
+      status: draft
+      title: Integration tests confirm the design of the api and of the service holds no function, and is told when one is written in either, in the open or hidden
+      method: test
+      tests:
+        tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.TheDesignOfDsKeepsTheRulesOfTheService
+        tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.AFunctionOfTheApiIsTold
+        tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.AFunctionOfTheServiceIsTold
+    }
+  }
+
   module api {
+    @requirement REQ-00209-1                 // every operation of the api is a member of a class (DS-476)
+
+    rule api-operations-belong-to-classes {
+      title: no function is written in the api's module, so every operation of the engine's doors in process is a member of a class
+      @requirement REQ-00209-1
+      for function f in driftspec@ds@api
+      never f in driftspec@ds@api
+    }
 
     // refines how parse reports a syntax error; the engine's load is what reports a cut file once and drops its echoes
     requirement REQ-00167-1 {
