@@ -291,9 +291,13 @@ endif()
 
 find_package(Threads REQUIRED) # the work runs on a thread with a large stack
                                # (DS-279)
-# the command line as functions (ds/app/App.hpp), a library of its own beside
-# the engine so that its unit tests link it (DS-311)
-add_library(ds_app STATIC src/ds/app/App.cpp)
+# the command line (ds/app, DS-409): main, CommandLine and one ICommand per verb
+# made by CommandFactory, a library of its own beside the engine so that its
+# unit tests link it (DS-311)
+add_library(
+  ds_app STATIC
+  src/ds/app/App.cpp src/ds/app/CommandFactory.cpp src/ds/app/CommandLine.cpp
+  src/ds/app/Commands.cpp src/ds/app/Disk.cpp src/ds/app/Output.cpp)
 target_link_libraries(
   ds_app
   PUBLIC driftspec
@@ -326,9 +330,9 @@ foreach(test_src IN LISTS driftspec_TESTS)
   target_include_directories(
     ${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
                                                             # share (DS-418)
-  if(test_src MATCHES "/tests/unit/ds/app/") # the command line's functions
-                                             # (DS-311)
-    target_link_libraries(${test_name} PRIVATE ds_app)
+  if(test_src MATCHES "/tests/unit/ds/app/") # the command line's classes
+                                             # (DS-311, DS-409)
+    target_link_libraries(${test_name} PRIVATE ds_app CLI11::CLI11)
   endif()
   target_compile_definitions(
     ${test_name}

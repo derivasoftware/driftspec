@@ -132,7 +132,7 @@ package driftspec@ds {
     return text
   }
 
-  sequence learn-language::page / no-topic {         // no such page: the topics are listed by the door
+  sequence learn-language::page / no-topic {         // no such page: the outcome lists the topics, and the door says them
     local teaches: service::LearnLanguage
     -> teaches.page(topic) -> text
     return text
@@ -155,10 +155,12 @@ package driftspec@ds {
       + getOr(name: std::string, fallback: std::string) -> std::string
     }
 
-    // how a use case ended: one of the outcomes its UC declares
+    // how a use case ended: one of the outcomes its UC declares, and for any but default what happened, in a line, which
+    // each door words in its own convention: the command line writes it on stderr (DS-409)
     dataclass Outcome {
       @requirement REQ-00261-1
       + name: std::string
+      + message: std::string
     }
 
     // a request that is not the use case's: an argument it needs and is not given, or one it cannot read

@@ -1,13 +1,15 @@
-// The ds command: CLI11 reads the command line (five commands: check, export, render, query,
-// manual, each with its options and its help), main loads the workspace and hands it to
-// whoever answers.
-// One scenario of main per thing it can end in; the rest of the tool knows nothing of
-// a command line.
+// The ds command (DS-409): one CLI11 application reads the command line (five verbs: check, export, render, query,
+// manual, each with its options and its help); the verb it names is a command that opens a workspace and runs its use
+// case on it, lending the use case the sink of the technology asked for; the command line turns how it ended into the
+// exit code. main is the program's entry, the one function C++ requires; the rest of the tool knows nothing of a
+// command line.
 
 package driftspec@ds {
   module app {
     @requirement SREQ-00018-2
     @requirement REQ-00166-1
+    @requirement REQ-00205-1
+    @requirement REQ-00206-1
 
     requirement REQ-00166-1 {
       status: approved
@@ -26,245 +28,617 @@ package driftspec@ds {
           tests/integration/python/test_packaging.py::TestPackaging::test_the_wheels_build_makes_ds_and_installs_it_as_a_script
       }
     }
-    function main(argv: std::vector<std::string>) -> int       // the program's main hands its command line here (DS-311)
-    function run(argv: std::vector<std::string>) -> int           // the command, on the thread main starts with a large stack (DS-279); it makes the metamodel (DS-341) and its manual (DS-342) once
-    - function work(argv: std::vector<std::string>) -> int         // runs the command; what cannot be read, or a pair ds does not write (NotImplemented, DS-398), is said, exit 2
-
-    // loaded for what the command gives (DS-376); the Api chooses which steps of the check run for it
-    - function load(metamodel: model::Metamodel, dir: std::string, output: api::Output, diagram: std::string) -> model::Model
-    - function loadWorkspace(metamodel: model::Metamodel, dir: std::string, output: api::Output, diagram: std::string, model: model::Model) -> bool
-    - function titleOf(dir: std::string) -> std::string
-    - function readFile(path: std::string) -> std::string
-    - function emit(output: std::string, text: std::string) -> int
-    - function check(metamodel: model::Metamodel, dir: std::string, json: bool) -> int
-    - function holdsDesign(dir: std::string) -> bool         // a directory with no .ds file under it is no workspace
-    - function manual(metamodel: model::Metamodel, book: model::Manual, topic: std::string, json: bool) -> int
-    - function diagramId(name: std::string) -> std::string
-    - function isDirectory(path: std::string) -> bool
-
-    sequence loadWorkspace {
-      -> isDirectory(dir) -> found
-      opt the path is not a directory / missing {
-        return false
+    requirement REQ-00205-1 {
+      status: draft
+      @refines SREQ-00018-2
+      title: The command line shall run each verb as one command that opens a workspace and runs its use case, and shall turn how it ended into the exit code in one place
+      text:
+        One CLI11 application owns the parse, the help of every verb, --version and the footers, so every help text
+        and every message about a wrong command line stays as it was. Each verb (check, export, render, query,
+        manual) is a command made by CommandFactory, the one place naming them: it declares its options on its
+        subcommand and keeps what the parse gives them, then opens a workspace for what it gives of it (DS-376) and
+        runs its use case, lending it the sink of the technology asked for. It returns how it ended, the use case's
+        outcome or the door's own: bad-usage and no-workspace, which happen before any model exists, and unwritten,
+        a file -o names that cannot be written. CommandLine turns the outcome into the exit code by its name (the
+        exit table of the cli interface), writes what the outcome says on stderr, and turns BadRequest,
+        NotImplemented and whatever the input makes impossible into exit 2.
+      rationale:
+        Owner, 2026-11-24 (DS-406, DS-409): the doors are thin adapters, the command line one class and one command
+        per verb, main the only function. Coordinator, 2026-11-25: one CLI11 application owns the parse, so the help
+        stays byte for byte, rather than each verb parsing its own words; run() returns the outcome, so the exit
+        codes are decided in one place; what a command refers to is given to its constructor through the factory;
+        writing a file is the door's business, not a use case's.
+      tags: cli, app, architecture
+      verification VER-00228-1 {
+        status: draft
+        title: Unit tests confirm each verb ends in its use case's outcome or the door's, and the command line turns each into its exit code and says it on stderr as ds always has
+        method: test
+        tests:
+          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.EachOutcomeOfAVerbEndsInItsExitCode
+          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.AWrongCommandLineIsBadUsageAndHelpIsNot
+          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.APathThatIsNoWorkspaceIsSaidAndEveryVerbExitsTwo
+          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.AFileThatCannotBeReadIsSaidWithTheCodeOfBadInput
+          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.AFileThatCannotBeWrittenIsSaidAndExitsOne
+          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.ADocumentIsWrittenToTheFileOutputNames
+          tests/unit/ds/app/test_command_line.cpp::TestMain.TheCommandLineRunsOnItsOwnThreadToItsExitCode
+          tests/unit/ds/app/test_commands.cpp::TestCommandFactory.TheFactoryNamesEveryVerbInTheOrderOfTheHelpAndAnyOtherIsNotImplemented
+          tests/unit/ds/app/test_commands.cpp::TestCheckCommand.AWorkspaceIsCheckedAndAPathThatHoldsNoDesignIsTheDoorsBadUsage
+          tests/unit/ds/app/test_commands.cpp::TestExportCommand.TheModelIsWrittenAsJsonAndAPathThatHoldsNoDesignIsNoWorkspace
+          tests/unit/ds/app/test_commands.cpp::TestRenderCommand.ADiagramIsDrawnAndOneTheWorkspaceLacksIsNoDiagram
+          tests/unit/ds/app/test_commands.cpp::TestRenderCommand.ARenderIrDocumentIsDrawnAsItCameAndTheViewerNeedsAWorkspace
+          tests/unit/ds/app/test_commands.cpp::TestQueryCommand.AQuestionIsAnsweredAndAnUnknownOneSaysWhatIsAskedAsJsonToo
+          tests/unit/ds/app/test_commands.cpp::TestManualCommand.APageIsPrintedAsTextOrJsonAndAnUnknownTopicListsTheTopics
+          tests/unit/ds/app/test_disk.cpp::TestDisk.ADirectoryIsOneAndAFileOrNothingIsNot
+          tests/unit/ds/app/test_disk.cpp::TestDisk.ADirectoryHoldsADesignWhenADsFileLiesUnderIt
+          tests/unit/ds/app/test_disk.cpp::TestDisk.WhyAPathIsNoWorkspaceIsSaidAndAWorkspaceHasNoWhy
+          tests/unit/ds/app/test_disk.cpp::TestDisk.TheFilesOfAWorkspaceAreEveryDsFileUnderItReadWholeByItsPath
+          tests/unit/ds/app/test_disk.cpp::TestDisk.AFileOfAWorkspaceThatCannotBeReadFails
+          tests/unit/ds/app/test_disk.cpp::TestDisk.AFileIsReadWholeAndAMissingOneIsEmpty
+          tests/unit/ds/app/test_disk.cpp::TestDisk.ThePageIsTitledAfterTheLastNameOfThePath
+          tests/unit/ds/app/test_output.cpp::TestOutput.TheTextAndItsEndGoToTheFileNamedOrToStdout
+          tests/unit/ds/app/test_output.cpp::TestOutput.AFileThatCannotBeWrittenIsNotWritten
       }
-      -> load(metamodel, dir, output, diagram) -> loaded
-      return true
     }
 
-    // the one report of a check, described once into the sink of the technology the command line asks for (DS-399):
-    // with --json the JSON sink, indented (DS-397, DS-398), else the text sink; the workspace as it was given is where
-    // the report says its open coverage is listed (DS-431)
-    sequence check {
-      local model: model::Model
-      -> loadWorkspace(metamodel, dir, findings, diagram, model) -> found
-      -> check::Report::of(model, metamodel) -> report
-      -> emit::SinkFactory::of(technology, true) -> sink
-      -> format::DescriptionFactory::report(report, dir) -> description
-      -> description.describe(sink)
-      -> sink.result() -> written
-      return 0
+    requirement REQ-00206-1 {
+      status: draft
+      @refines SREQ-00018-2
+      title: Every operation of the command line shall be a member of the class whose responsibility it is, main alone excepted
+      text:
+        Reading the command line and deciding the exit code is CommandLine's, which verbs there are is
+        CommandFactory's, each verb is its command's, what is read from the disk is Disk's and where a document is
+        written is Output's. main is the one function: C++ starts a program at a function, and it runs a CommandLine
+        on a thread with a large stack (DS-279). Any other function of the module, or one hidden in it, would be a
+        responsibility no class names.
+      rationale:
+        Owner, 2026-11-23 and 2026-11-24 (DS-406, DS-409): free functions signal a missing class; no anonymous
+        namespace and no detail in app, as in query, format and render.
+      tags: architecture, cli, app
+      verification VER-00229-1 {
+        status: draft
+        title: Integration tests confirm the design of the command line holds no function but main, and is told when another is written, in the open or hidden
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfTheCommandLineIsTold
+      }
     }
 
-    sequence load {
-      local parser: parse::Parser
-      local api: api::Api
-      -> parser.parseDirectory(dir) -> files
-      -> api.load(files, output, diagram) -> loaded
-      return loaded
+    // ---- app's architecture (DS-409), as rules ----------------------------------------------------------------------
+    rule app-operations-belong-to-classes {
+      title: no function is written in app's module but main, the program's entry, so every other operation of the command line is a member of a class
+      @requirement REQ-00206-1
+      for function f in driftspec@ds@app
+      where f != driftspec@ds@app::main
+      never f in driftspec@ds@app
     }
 
-    // a pair ds does not write is bad usage, as work() says it: exit 2 (DS-398)
-    sequence main / check {
-      local metamodel: model::Metamodel
+    // the program's main hands its command line here (DS-311): C++ starts a program at a function, so it is app's one
+    function main(argv: std::vector<std::string>) -> int
+
+    // ---- the command line: one CLI11 application, the verbs it runs, the exit codes it decides --------------------
+    // Why the verbs declare and the command line parses, rather than each verb parsing its own words (the coordinator,
+    // 2026-11-25): one CLI11 application owns the parse, the help of ds and of every verb, --version and the footers,
+    // so every help text and every message about a wrong command line stays byte for byte what it was; a verb adds its
+    // options to the subcommand it is given and keeps what the parse writes into them, and is run after it.
+    class CommandLine {
+      @requirement REQ-00205-1
+      - owns metamodel_: model::Metamodel            // the language, made once where the command starts (DS-341)
+      - owns manual_: model::Manual                  // its manual: the commands' exit codes for their help (DS-342)
+      - owns theme_: theme::Theme                    // the style every drawing is written in, made once (DS-393)
+      - owns commands_: CommandFactory
+      + CommandLine()
+      + run(argv: std::vector<std::string>) -> int   // what cannot be read, NotImplemented and BadRequest: said, exit 2
+      - execute(argv: std::vector<std::string>) -> int
+      - static exitOf(outcome: service::Outcome) -> int   // the exit table of the cli interface, by the outcome's name
+    }
+
+    // THE COMMON INTERFACE: what the command line asks of a verb
+    class ICommand {
+      @requirement REQ-00205-1
+      + ~ICommand()
+      + abstract name() -> std::string
+      + abstract summary() -> std::string             // the line ds --help lists it with
+      + abstract declare(sub: CLI::App) -> void       // its options added to its subcommand, parsed into its members
+      + abstract run() -> service::Outcome fails std::runtime_error, BadRequest, NotImplemented, emit::NotImplemented   // its use case's outcome, or the door's; it knows no exit code
+    }
+
+    // THE ONE PLACE THAT NAMES THE VERBS, as UseCaseFactory names the use cases: a new verb is a class and a line here
+    class CommandFactory {
+      @requirement REQ-00205-1
+      - refs metamodel_: model::Metamodel
+      - refs theme_: theme::Theme
+      + CommandFactory(metamodel: model::Metamodel, theme: theme::Theme)
+      + of(name: std::string) -> std::unique_ptr<ICommand> fails emit::NotImplemented
+      + static names() -> std::vector<std::string>   // in the order ds --help lists them
+    }
+
+    class CheckCommand : ICommand {                  // ds check: UC-00001-1 through check-design
+      @requirement REQ-00205-1
+      - refs metamodel_: model::Metamodel
+      - workspace_: std::string
+      - json_: bool
+      + CheckCommand(metamodel: model::Metamodel)
+      + name() -> std::string
+      + summary() -> std::string
+      + declare(sub: CLI::App) -> void
+      + run() -> service::Outcome fails std::runtime_error, BadRequest, NotImplemented, emit::NotImplemented
+    }
+
+    class ExportCommand : ICommand {                 // ds export: UC-00005-1 through hand-model
+      @requirement REQ-00205-1
+      - refs metamodel_: model::Metamodel
+      - workspace_: std::string
+      + ExportCommand(metamodel: model::Metamodel)
+      + name() -> std::string
+      + summary() -> std::string
+      + declare(sub: CLI::App) -> void
+      + run() -> service::Outcome fails std::runtime_error, BadRequest, emit::NotImplemented
+    }
+
+    // ds render: UC-00002-1 through see-design for the scene, a diagram's layout and its cells. What see-design does
+    // not offer yet is door work pending, kept as the command line has done it: the viewer's page around the scene and
+    // its focus, a diagram drawn in svg and text (until DS-400) or written as its IR (see-design does not offer it
+    // yet), the files a diagram reads that did not read whole (DS-433), and a render-IR document someone else
+    // produced, which has no workspace.
+    class RenderCommand : ICommand {
+      @requirement REQ-00205-1
+      - refs metamodel_: model::Metamodel
+      - refs theme_: theme::Theme
+      - input_: std::string
+      - diagram_: std::string
+      - format_: std::string
+      - output_: std::string
+      - css_: std::string
+      - width_: int
+      - height_: int
+      - embed_: bool
+      + RenderCommand(metamodel: model::Metamodel, theme: theme::Theme)
+      + name() -> std::string
+      + summary() -> std::string
+      + declare(sub: CLI::App) -> void
+      + run() -> service::Outcome fails std::runtime_error, BadRequest, NotImplemented, emit::NotImplemented
+      - document() -> service::Outcome                          // a render-IR document: no workspace, so no viewer
+      - scene(workspace: api::Workspace) -> service::Outcome    // the viewer's scene, see-design's
+      - page(workspace: api::Workspace) -> service::Outcome     // the viewer's page: door work pending
+      - diagram(workspace: api::Workspace) -> service::Outcome  // a diagram: its layout and cells see-design's, its drawings and IR the door's
+      - unread(model: model::Model) -> std::string              // what a diagram reads that did not read whole (DS-433)
+      - draw(ir: render::IrText, workspace: bool) -> std::string
+      - drawingOptions(workspace: bool) -> format::FormatOptions
+      - written(text: std::string, end: std::string, outcome: service::Outcome) -> service::Outcome   // unwritten when -o cannot be
+    }
+
+    class QueryCommand : ICommand {                  // ds query: UC-00004-1 through ask-model
+      @requirement REQ-00205-1
+      - refs metamodel_: model::Metamodel
+      - workspace_: std::string
+      - question_: std::string
+      - subject_: std::string
+      - json_: bool
+      + QueryCommand(metamodel: model::Metamodel)
+      + name() -> std::string
+      + summary() -> std::string
+      + declare(sub: CLI::App) -> void
+      + run() -> service::Outcome fails std::runtime_error, BadRequest, NotImplemented, emit::NotImplemented
+    }
+
+    class ManualCommand : ICommand {                 // ds manual: UC-00006-1 through learn-language; no design is read
+      @requirement REQ-00205-1
+      - refs metamodel_: model::Metamodel
+      - topic_: std::string
+      - json_: bool
+      + ManualCommand(metamodel: model::Metamodel)
+      + name() -> std::string
+      + summary() -> std::string
+      + declare(sub: CLI::App) -> void
+      + run() -> service::Outcome fails BadRequest, NotImplemented, emit::NotImplemented
+    }
+
+    // what the command line reads from the disk: whether a path is a workspace, its files as the Api takes them, a
+    // file read whole (a stylesheet, a render-IR document), the title of a workspace's page
+    class Disk {
+      @requirement REQ-00205-1
+      + static isDirectory(path: std::string) -> bool
+      + static holdsDesign(dir: std::string) -> bool             // a directory with no .ds file under it is no workspace
+      + static whyNoWorkspace(dir: std::string) -> std::string   // "" when it is one
+      + static files(dir: std::string) -> api::Files fails std::runtime_error
+      + static readable(path: std::string) -> bool
+      + static read(path: std::string) -> std::string
+      + static titleOf(dir: std::string) -> std::string
+    }
+
+    // where a command writes what it was asked for: the file -o names, or stdout; the same bytes on every system (DS-283)
+    class Output {
+      @requirement REQ-00205-1
+      - file_: std::string
+      + Output(file: std::string)
+      + write(text: std::string, end: std::string) -> bool      // false when the file cannot be written
+      + file() -> std::string
+    }
+
+    // ---- how each ends --------------------------------------------------------------------------------------------
+    // main runs a CommandLine on a thread with a large stack (DS-279); on Windows, on the main thread, whose stack is
+    // set when ds is linked (DS-283). One scenario per exit code the command line ends in, the exit table of cli.ds
+    sequence main {                                  // 0: the verb went well
+      local line: CommandLine
+      -> line.run(argv) -> code
+      return code
+    }
+
+    sequence main / failed {                         // 1: its use case ended in another of its outcomes, or -o could not be written
+      local line: CommandLine
+      -> line.run(argv) / failed -> code
+      return code
+    }
+
+    sequence main / bad-usage {                      // 2: the command line is wrong, the path holds no design, or the input cannot be read
+      local line: CommandLine
+      -> line.run(argv) / bad-usage -> code
+      return code
+    }
+
+    // what cannot be read (std::exception in the code), a pair ds does not write (NotImplemented, as emit names it and
+    // as the others do) and a request a use case cannot take are said, exit 2, never an abort (DS-279, DS-398)
+    sequence CommandLine::run {
       attempt {
-        -> check(metamodel, argv, json) -> code
+        -> execute(argv) -> code
+        opt its use case ended in another of its outcomes, or -o could not be written / failed {
+          return code
+        }
+        opt the command line is wrong, or the verb ended in the door's bad-usage or no-workspace / bad-usage {
+          return code
+        }
+      } on emit::NotImplemented {
+        return 2
       } on NotImplemented {
+        return 2
+      } on BadRequest {
+        return 2
+      } on std::runtime_error {
         return 2
       }
       return code
     }
 
-    sequence main / check-errors {
-      local metamodel: model::Metamodel
-      local model: model::Model
-      -> loadWorkspace(metamodel, argv, findings, diagram, model) -> found
-      return 1
-    }
-
-    sequence main / bad-usage {               // CLI11 says what is wrong with the command line
-      return 2
-    }
-
-    sequence main / export {
-      local metamodel: model::Metamodel
-      local model: model::Model
-      local exporter: exporter::JsonExport
-      -> loadWorkspace(metamodel, argv, whole, diagram, model) -> found
-      -> emit::SinkFactory::json(true) -> sink   // asked for here, lent to the exporter, taken whole (DS-397)
-      -> exporter.render(model, sink)
-      -> sink.result() -> json
-      return 0
-    }
-
-    sequence main / no-workspace {            // not a directory, or none with a .ds file: the command line names no design
-      -> isDirectory(argv) -> found
-      return 2
-    }
-
-    // render: the whole model in the viewer (html, or its scene as json), or one diagram drawn
-    // still (svg, text, cells) or as its data (ir, layout); a render-IR file is drawn as it is
-    // the scene builds the document; the viewer's page found by -f writes it (DS-126, DS-398)
-    sequence main / render {
-      local metamodel: model::Metamodel
-      local model: model::Model
-      local scene: scene::Scene
-      local query: query::Query
-      local html: format::IFormat<scene::SceneDocument>   // the viewer's page FormatFactory finds by name
-      -> loadWorkspace(metamodel, argv, viewer, diagram, model) -> found
-      opt a diagram to open the viewer framed on / framed {
-        -> query.ask(question, diagram) -> shown
+    // every verb declared on its subcommand, with the exit codes the manual gives it (DS-79); the verb named run, what
+    // its outcome says written on stderr, and the exit code its outcome's name has
+    sequence CommandLine::execute {
+      local command: ICommand
+      loop each verb, in the order ds --help lists them {
+        -> CommandFactory::names() -> names
+        -> commands_.of(name) -> command
+        -> command.summary() -> summary
+        -> command.declare(sub)
+        -> manual_.commandOf(name) -> spec
       }
-      -> titleOf(argv) -> title
-      -> readFile(css) -> style
-      -> scene.build() -> document
-      -> format::FormatFactory::scene() -> writers
-      -> emit::SinkFactory::json(false) -> sink
-      -> html.write(document, options, sink) -> page
-      -> emit(output, page) -> written
-      return 0
-    }
-
-    // the scene described into the sink of the technology -f names, indented for a reader (DS-398)
-    sequence main / render-scene {
-      local metamodel: model::Metamodel
-      local model: model::Model
-      local scene: scene::Scene
-      -> loadWorkspace(metamodel, argv, viewer, diagram, model) -> found
-      -> scene.build() -> document
-      attempt {
-        -> emit::SinkFactory::of(format, true) -> sink
-        -> format::DescriptionFactory::scene(document) -> description
-        -> description.describe(sink)
-      } on NotImplemented {
+      opt CLI11 says what is wrong with the command line, or gives the help / parse {
         return 2
       }
-      -> sink.result() -> text
-      -> emit(output, text) -> written
-      return 0
+      -> command.run() -> outcome
+      -> exitOf(outcome) -> code
+      return code
     }
 
-    // a diagram is its IR (DS-126): its layout and its cells described in compact JSON, a line after, and the IR and
-    // the drawings written by the writer -f names (DS-398); loaded with only the steps of the check a drawing reads
-    // (DS-376)
-    sequence main / render-diagram {
-      local metamodel: model::Metamodel
-      local theme: theme::Theme             // the style, made once where the command starts (DS-393)
-      local model: model::Model
-      local ir: render::IrExport
-      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
-      -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
-      -> diagramId(diagram) -> id
-      -> ir.document(id) -> made
+    sequence CommandFactory::of {
+      local check: CheckCommand
+      local exporting: ExportCommand
+      local render: RenderCommand
+      local query: QueryCommand
+      local manual: ManualCommand
+      opt check / check {
+        return check
+      }
+      opt export / export {
+        return exporting
+      }
+      opt render / render {
+        return render
+      }
+      opt query / query {
+        return query
+      }
+      opt manual / manual {
+        return manual
+      }
+      -> names() -> there
+      fail emit::NotImplemented
+    }
+
+    // the one report of a check, described into the sink of the technology asked for (DS-399): with --json the JSON
+    // sink, indented (DS-397, DS-398), else the text sink; the workspace as it was given is where the report says its
+    // open coverage is listed (DS-431). An error is said by the report on stdout, never again on stderr
+    sequence CheckCommand::run {
+      local workspace: api::Workspace
+      local output: Output
+      -> Disk::whyNoWorkspace(workspace_) -> why
+      -> Disk::files(workspace_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, findings, diagram) -> workspace
+      -> emit::SinkFactory::of(technology, true) -> sink
+      -> workspace.run(checkDesign, request, sink) -> outcome
+      -> sink.result() -> report
+      -> output.write(report, end) -> written
+      return outcome
+    }
+
+    sequence CheckCommand::run / errors {
+      local workspace: api::Workspace
+      -> Disk::files(workspace_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, findings, diagram) -> workspace
+      -> workspace.run(checkDesign, request, sink) -> outcome
+      return outcome
+    }
+
+    sequence CheckCommand::run / bad-usage {         // not a directory, or none with a .ds file: the door's, no model exists
+      -> Disk::whyNoWorkspace(workspace_) -> why
+      return badUsage
+    }
+
+    // indented, as ds export has always printed it; written whole or not at all
+    sequence ExportCommand::run {
+      local workspace: api::Workspace
+      local output: Output
+      -> Disk::whyNoWorkspace(workspace_) -> why
+      -> Disk::files(workspace_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, whole, diagram) -> workspace
+      -> emit::SinkFactory::json(true) -> sink
+      -> workspace.run(handModel, request, sink) -> outcome
+      -> sink.result() -> model
+      -> output.write(model, end) -> written
+      return outcome
+    }
+
+    sequence ExportCommand::run / no-workspace {
+      -> Disk::whyNoWorkspace(workspace_) -> why
+      return noWorkspace
+    }
+
+    // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376)
+    sequence RenderCommand::run {
+      local workspace: api::Workspace
+      -> Disk::isDirectory(input_) -> found
+      opt a render-IR document someone else produced / document {
+        -> document() -> outcome
+        return outcome
+      }
+      -> Disk::whyNoWorkspace(input_) -> why
+      -> Disk::files(input_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, shown, diagram_) -> workspace
+      opt its scene / scene {
+        -> scene(workspace) -> outcome
+        return outcome
+      }
+      opt the viewer's page / page {
+        -> page(workspace) -> outcome
+        return outcome
+      }
+      -> diagram(workspace) -> outcome
+      return outcome
+    }
+
+    sequence RenderCommand::run / no-workspace {     // nothing to read at the path: the door's, no model exists
+      -> Disk::isDirectory(input_) -> found
+      -> Disk::whyNoWorkspace(input_) -> why
+      return noWorkspace
+    }
+
+    sequence RenderCommand::run / no-diagram {
+      local workspace: api::Workspace
+      -> Disk::files(input_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, shown, diagram_) -> workspace
+      -> diagram(workspace) / no-diagram -> outcome
+      return outcome
+    }
+
+    sequence RenderCommand::run / unwritten {        // the file -o names cannot be written: the door's
+      local workspace: api::Workspace
+      -> Disk::files(input_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, shown, diagram_) -> workspace
+      -> scene(workspace) / unwritten -> outcome
+      return outcome
+    }
+
+    // a render-IR document is drawn as it came, as -f names; the viewer needs a workspace
+    sequence RenderCommand::document {
+      -> Disk::readable(input_) -> found
+      opt it cannot be read / no-workspace {
+        return noWorkspace
+      }
+      -> Disk::read(input_) -> text
+      opt the viewer asked of it / bad-usage {
+        return badUsage
+      }
+      -> draw(text, false) -> picture
+      -> written(picture, end, drawn) -> outcome
+      return outcome
+    }
+
+    // the scene is the document (DS-126), see-design's, described into the sink of the technology -f names, indented
+    // for a reader (DS-398)
+    sequence RenderCommand::scene {
+      -> emit::SinkFactory::of(format_, true) -> sink
+      -> workspace.run(seeDesign, request, sink) -> outcome
+      -> sink.result() -> scene
+      -> written(scene, end, outcome) -> outcome
+      return outcome
+    }
+
+    sequence RenderCommand::scene / unwritten {
+      -> written(scene, end, outcome) / unwritten -> outcome
+      return outcome
+    }
+
+    // door work pending: see-design frames no viewer on a diagram yet. What the diagram shows is the page's focus, and
+    // the page is the viewer's, the one FormatFactory finds by name, around the scene
+    sequence RenderCommand::page {
+      local query: query::IQuery
+      local scene: scene::IScene
+      local html: format::IFormat<scene::SceneDocument>
+      -> workspace.model() -> model
+      opt a diagram to open the viewer framed on / framed {
+        -> query::QueryFactory::of(model, metamodel_) -> query
+        -> query.ask(question, diagram_) -> shown
+        opt no such diagram / no-diagram {
+          return noDiagram
+        }
+      }
+      -> Disk::titleOf(input_) -> title
+      -> Disk::read(css_) -> style
       -> emit::SinkFactory::json(false) -> sink
-      attempt {
+      -> scene.build() -> document
+      -> format::FormatFactory::scene() -> writers
+      -> html.write(document, options, sink) -> page
+      -> written(page, end, drawn) -> outcome
+      return outcome
+    }
+
+    // a diagram is its IR (DS-126): its layout and its cells are see-design's, described in compact JSON, a line after
+    // (DS-398), and the workspace is loaded with only the steps of the check a drawing reads (DS-376). Its drawings in
+    // svg and text (until DS-400) and its IR (see-design does not offer it yet) are door work pending, written by the
+    // writer -f names; a diagram is not drawn of what did not read whole (DS-433)
+    sequence RenderCommand::diagram {
+      local ir: render::IrExport
+      -> workspace.model() -> model
+      -> unread(model) -> why
+      opt no diagram named / bad-usage {
+        return badUsage
+      }
+      alt its layout or its cells / described {
+        -> emit::SinkFactory::json(false) -> sink
+        -> workspace.run(seeDesign, request, sink) -> outcome
+        -> sink.result() -> picture
+      } else {
+        -> model::Identity::ofDiagram(diagram_) -> id
+        -> ir.document(id) -> made
+        -> emit::SinkFactory::json(false) -> sink
         -> format::DescriptionFactory::ir(made) -> irDescription   // the IR, compact, for the writer -f names (DS-418)
         -> irDescription.describe(sink)
         -> sink.result() -> document
-        alt its layout / layout {
-          -> format::DescriptionFactory::layout(document, theme, width) -> description
-          -> description.describe(sink)
-          -> sink.result() -> picture
-        } else {
-          -> format::FormatFactory::diagram(theme) -> writers
-          -> chosen.write(document, options, sink) -> picture
-        }
-      } on NotImplemented {
-        return 2
+        -> draw(document, true) -> picture
       }
-      -> emit(output, picture) -> written
-      return 0
+      -> written(picture, end, outcome) -> outcome
+      return outcome
     }
 
-    sequence main / render-document {
-      local theme: theme::Theme
-      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
-      local document: render::IrText       // the text read, as the IR document the format draws
-      -> readFile(argv) -> text
-      -> emit::SinkFactory::json(false) -> sink
-      attempt {
-        alt its cells / cells {
-          -> format::DescriptionFactory::cells(document, theme, width) -> description
-          -> description.describe(sink)
-          -> sink.result() -> picture
-        } else {
-          -> format::FormatFactory::diagram(theme) -> writers
-          -> chosen.write(document, options, sink) -> picture
-        }
-      } on NotImplemented {
-        return 2
-      }
-      -> emit(output, picture) -> written
-      return 0
-    }
-
-    sequence main / no-diagram {
-      local metamodel: model::Metamodel
-      local model: model::Model
+    sequence RenderCommand::diagram / no-diagram {   // the diagram named is not in the workspace, or what it reads did not read whole
       local ir: render::IrExport
-      -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
-      -> ir.document(name) / no-diagram -> document
-      return 1
+      -> workspace.model() -> model
+      -> unread(model) -> why
+      -> workspace.run(seeDesign, request, sink) -> outcome
+      -> ir.document(id) -> made
+      return noDiagram
     }
 
-    // the answers, described once into the sink of the technology the command line asks for (DS-399): with --json
-    // the JSON sink (DS-398), else the text sink
-    sequence main / query {
-      local metamodel: model::Metamodel
-      local model: model::Model
-      local query: query::Query
-      -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
-      -> query.ask(question, subject) -> answers
-      attempt {
-        -> emit::SinkFactory::of(technology, false) -> sink
-        -> format::DescriptionFactory::answers(answers) -> description
+    sequence RenderCommand::unread {
+      local query: query::IQuery
+      -> model.find(id) -> diagram
+      -> query::QueryFactory::of(model, metamodel_) -> query
+      -> query.ask(question, diagram_) -> shown
+      -> model.findings() -> findings
+      return said
+    }
+
+    sequence RenderCommand::draw {
+      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
+      -> emit::SinkFactory::json(false) -> sink
+      opt its layout or its cells / described {
+        alt its layout / layout {
+          -> format::DescriptionFactory::layout(ir, theme_, width_) -> description
+        } else / cells {
+          -> format::DescriptionFactory::cells(ir, theme_, width_) -> description
+        }
         -> description.describe(sink)
-        -> sink.result() -> text
-      } on NotImplemented {
-        return 2
+        -> sink.result() -> picture
+        return picture
       }
-      return 0
+      -> format::FormatFactory::diagram(theme_) -> writers
+      -> drawingOptions(workspace) -> options
+      -> chosen.write(ir, options, sink) -> picture
+      return picture
     }
 
-    sequence main / unknown-question {
-      local metamodel: model::Metamodel
-      local model: model::Model
-      local query: query::Query
-      -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
-      -> query.ask(question, subject) -> answers
-      return 1
+    sequence RenderCommand::written {
+      local output: Output
+      -> output.write(text, end) -> done
+      return outcome
     }
 
-    sequence main / manual {                  // no workspace: the manual is in the tool
-      local metamodel: model::Metamodel
-      local book: model::Manual
-      -> manual(metamodel, book, topic, json) -> code
-      return code
+    sequence RenderCommand::written / unwritten {
+      local output: Output
+      -> output.write(text, end) -> done
+      return unwritten
     }
 
-    sequence main / no-topic {
-      local metamodel: model::Metamodel
-      local book: model::Manual
-      -> manual(metamodel, book, topic, json) / no-topic -> code
-      return 1
+    // the answers, described into the sink of the technology asked for (DS-399): with --json the JSON sink (DS-398),
+    // else the text sink
+    sequence QueryCommand::run {
+      local workspace: api::Workspace
+      local output: Output
+      -> Disk::whyNoWorkspace(workspace_) -> why
+      -> Disk::files(workspace_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, answers, diagram) -> workspace
+      -> emit::SinkFactory::of(technology, false) -> sink
+      -> workspace.run(askModel, request, sink) -> outcome
+      -> sink.result() -> answers
+      -> output.write(answers, end) -> written
+      return outcome
     }
 
-    sequence manual {
-      -> book.page(topic) -> page
-      opt no such topic / no-topic {
-        -> book.topics() -> topics
-        return 1
+    // what was wrong with the question is said by the command line; asked for JSON, the error is an answer too
+    sequence QueryCommand::run / unknown-question {
+      local workspace: api::Workspace
+      local output: Output
+      -> Disk::files(workspace_) -> files
+      -> api::Workspace::madeFor(metamodel_, files, answers, diagram) -> workspace
+      -> workspace.run(askModel, request, sink) -> outcome
+      opt asked for JSON / json {
+        -> sink.result() -> answers
+        -> output.write(answers, end) -> written
       }
-      return 0
+      return outcome
     }
+
+    sequence QueryCommand::run / no-workspace {
+      -> Disk::whyNoWorkspace(workspace_) -> why
+      return noWorkspace
+    }
+
+    // the manual is in the tool: the workspace holds no design, and learn-language reads none; the page as it is
+    // printed, in the text sink, or as JSON, indented (DS-397)
+    sequence ManualCommand::run {
+      local workspace: api::Workspace
+      local output: Output
+      -> api::Workspace::madeFor(metamodel_, nothing, whole, diagram) -> workspace
+      -> emit::SinkFactory::of(technology, true) -> sink
+      -> workspace.run(learnLanguage, request, sink) -> outcome
+      -> sink.result() -> page
+      -> output.write(page, end) -> written
+      return outcome
+    }
+
+    sequence ManualCommand::run / no-topic {         // no such page: learn-language lists the topics, the command line says them
+      local workspace: api::Workspace
+      -> api::Workspace::madeFor(metamodel_, nothing, whole, diagram) -> workspace
+      -> workspace.run(learnLanguage, request, sink) -> outcome
+      return outcome
+    }
+  }
+
+  // The outcomes of a use case that happen before any model exists are the door's (DS-407, D2), so the door handles
+  // them (DS-409): the command line finds no workspace at the path, says why and runs no use case (the scenarios
+  // bad-usage and no-workspace of CheckCommand::run, RenderCommand::run, QueryCommand::run and ExportCommand::run).
+  sequence check-design::report / bad-usage {
+    -> app::Disk::whyNoWorkspace(workspace) -> why
+  }
+
+  sequence see-design::viewer / no-workspace {
+    -> app::Disk::whyNoWorkspace(workspace) -> why
+  }
+
+  sequence ask-model::ask / no-workspace {
+    -> app::Disk::whyNoWorkspace(workspace) -> why
+  }
+
+  sequence hand-model::run / no-workspace {
+    -> app::Disk::whyNoWorkspace(workspace) -> why
   }
 }

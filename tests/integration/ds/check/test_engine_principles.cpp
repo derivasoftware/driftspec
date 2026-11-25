@@ -91,16 +91,17 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string namedFactory = "driftspec@ds@factories-are-named-factory";
   const std::string throughInterface = "driftspec@ds@families-are-reached-through-their-interface";
   const std::string givenAtConstruction = "driftspec@ds@what-a-class-refers-to-is-given-to-it";
+  const std::string appClasses = "driftspec@ds@app::app-operations-belong-to-classes";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule :
-       {context,          asInterface,     alone,         builtOnce,        binderClasses,       modelClasses,  axisClasses,
-        axisReads,        exporterClasses, exporterReads, apiChooses,       machineClasses,      machineReads,  queryClasses,
-        stepsAsInterface, stepsAlone,      checkClasses,  sceneClasses,     sceneReads,          layerLayout,   packerModel,
-        namedI,           namedA,          namedFactory,  throughInterface, givenAtConstruction, layoutRender,  layoutScene,
-        sceneEngine,      renderEngine,    renderClasses, projectors,       drawingsModel,       drawingsQuery, drawingsAxis})
+       {context,          asInterface,         alone,        builtOnce,      binderClasses, modelClasses, axisClasses,      axisReads,
+        exporterClasses,  exporterReads,       apiChooses,   machineClasses, machineReads,  queryClasses, stepsAsInterface, stepsAlone,
+        checkClasses,     sceneClasses,        sceneReads,   layerLayout,    packerModel,   namedI,       namedA,           namedFactory,
+        throughInterface, givenAtConstruction, layoutRender, layoutScene,    sceneEngine,   renderEngine, renderClasses,    projectors,
+        drawingsModel,    drawingsQuery,       drawingsAxis, appClasses})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -160,6 +161,19 @@ TEST_F(TestEnginePrinciples, AFunctionOfTheQueryIsTold) {
   const std::vector<std::string> hidden =
       broken({{"ds/query.ds", "  module query {", "    - function inPattern(pattern: std::string, entity: model::Entity) -> bool\n"}});
   EXPECT_TRUE(has(hidden, queryClasses));
+  EXPECT_FALSE(has(hidden, modelClasses));
+}
+
+/// A function of the command line is told, a public one or one hidden in the module (DS-409): reading the disk, writing
+/// a document and deciding the exit code are each a class's; main, the program's entry, is the one function app has.
+TEST_F(TestEnginePrinciples, AFunctionOfTheCommandLineIsTold) {
+  const std::vector<std::string> loose =
+      broken({{"ds/app.ds", "  module app {", "    function titleOf(dir: std::string) -> std::string\n"}});
+  EXPECT_TRUE(has(loose, appClasses));
+  EXPECT_FALSE(has(loose, queryClasses));
+  const std::vector<std::string> hidden =
+      broken({{"ds/app.ds", "  module app {", "    - function emit(output: std::string, text: std::string) -> int\n"}});
+  EXPECT_TRUE(has(hidden, appClasses));
   EXPECT_FALSE(has(hidden, modelClasses));
 }
 

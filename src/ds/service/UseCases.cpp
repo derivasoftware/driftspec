@@ -31,10 +31,12 @@ check::Report CheckDesign::report(const model::Model& model) const { return chec
 
 check::Selection CheckDesign::needs(const model::Model&, const Request&) const { return check::Selection::every(); }
 
-Outcome CheckDesign::run(const model::Model& model, const Request&, emit::ISink& sink) const {
+Outcome CheckDesign::run(const model::Model& model, const Request& request, emit::ISink& sink) const {
   const check::Report document = report(model);
-  format::DescriptionFactory::report(document)->describe(sink);
-  return {document.errors ? "errors" : "default"};
+  // the workspace as its door was given it is where the report says the open coverage is listed (DS-431)
+  format::DescriptionFactory::report(document, request.getOr("workspace", ""))->describe(sink);
+  if (!document.errors) return {"default"};
+  return {"errors", std::to_string(document.errors) + (document.errors == 1 ? " error is" : " errors are") + " among the findings"};
 }
 
 // ---- UC-00002-1 ------------------------------------------------------------------------------------------------
@@ -60,10 +62,10 @@ Outcome SeeDesign::run(const model::Model& model, const Request& request, emit::
     format::DescriptionFactory::scene(document)->describe(sink);
     return {"default"};
   }
-  if (format != "layout" && format != "cells")  // the IR and the drawings are writers, not descriptions, until DS-399
+  if (format != "layout" && format != "cells")  // the IR and the drawings are writers, not descriptions, until DS-400
     throw emit::NotImplemented("diagram as " + format, "", {"json", "layout", "cells"});
   const std::optional<render::IrDocument> document = diagram(model, request.get("diagram"));
-  if (!document) return {"no-diagram"};
+  if (!document) return {"no-diagram", "no diagram named " + request.get("diagram")};
   // the layout and the cells read the IR as text until DS-458: it is described into the sink lent, taken, and the
   // sink, empty again, is the drawing's (DS-418)
   format::DescriptionFactory::ir(*document)->describe(sink);
@@ -86,7 +88,11 @@ check::Selection AskModel::needs(const model::Model&, const Request&) const { re
 Outcome AskModel::run(const model::Model& model, const Request& request, emit::ISink& sink) const {
   const std::vector<query::Answer> answers = ask(model, request.get("question"), request.getOr("subject", ""));
   format::DescriptionFactory::answers(answers)->describe(sink);  // an error is an answer too: said as the others are
-  return {!answers.empty() && answers.front().kind == "error" ? "unknown-question" : "default"};
+  if (answers.empty() || answers.front().kind != "error") return {"default"};
+  // what was wrong with the question, and when it is no question at all the ones there are
+  const query::Answer& error = answers.front();
+  const bool unknown = error.detail.find("not a question") != std::string::npos;
+  return {"unknown-question", error.id + ": " + error.detail + (unknown ? "\nquestions: " + query::Query::usage() : "")};
 }
 
 // ---- UC-00005-1 ------------------------------------------------------------------------------------------------
@@ -104,13 +110,17 @@ std::string LearnLanguage::page(const std::string& topic) const { return model::
 
 check::Selection LearnLanguage::needs(const model::Model&, const Request&) const { return check::Selection::of({}); }
 
-// The page as ds manual --json has written it (DS-397): its fields in byte order. ds's own manual command still writes
-// it itself until DS-409 hands it this use case.
+// The page as ds manual has written it: as structure its fields in byte order, as ds manual --json writes them (DS-397);
+// as presentation its text, as ds manual prints it (DS-409). An unknown topic lists the ones there are.
 Outcome LearnLanguage::run(const model::Model&, const Request& request, emit::ISink& sink) const {
   const std::string topic = request.getOr("topic", "");
   const model::Manual book(metamodel_);
   const std::string text = book.page(topic);
-  if (text.empty()) return {"no-topic"};
+  if (text.empty()) {
+    std::string topics;
+    for (const auto& t : book.topics()) topics += " " + t;
+    return {"no-topic", "no page '" + topic + "' in the manual; there are:" + topics};
+  }
   sink.beginRecord();
   if (const model::CodeSpec* c = metamodel_.codeOf(topic)) {
     sink.field("code").beginRecord().field("code").value(c->code).field("fix").value(c->fix).field("meaning").value(c->meaning);
@@ -139,6 +149,9 @@ Outcome LearnLanguage::run(const model::Model&, const Request& request, emit::IS
     sink.endList();
   }
   sink.endRecord();
+  // a paragraph is its text and a line break, and every page ends its last line: the page as it is printed
+  const std::string_view page(text);
+  sink.paragraph(page.back() == '\n' ? page.substr(0, page.size() - 1) : page);
   return {"default"};
 }
 

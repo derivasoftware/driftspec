@@ -57,12 +57,14 @@ package driftspec@ds {
     }
   }
 
+  // each operation is a verb of the process main starts: the command line parses it, runs its command, and ends in
+  // the exit code the operation names for each outcome, the scenario of main of that code (DS-409)
   sequence cli::check {
-    -> app::main(workspace) / check -> code
+    -> app::main(workspace) -> code
   }
 
   sequence cli::check / errors {
-    -> app::main(workspace) / check-errors -> code
+    -> app::main(workspace) / failed -> code
   }
 
   sequence cli::check / bad-usage {
@@ -70,43 +72,43 @@ package driftspec@ds {
   }
 
   sequence cli::export {
-    -> app::main(workspace) / export -> code
+    -> app::main(workspace) -> code
   }
 
   sequence cli::export / no-workspace {
-    -> app::main(workspace) / no-workspace -> code
+    -> app::main(workspace) / bad-usage -> code
   }
 
   sequence cli::render {
-    -> app::main(input) / render -> code
+    -> app::main(input) -> code
   }
 
   sequence cli::render / no-diagram {
-    -> app::main(input) / no-diagram -> code
+    -> app::main(input) / failed -> code
   }
 
   sequence cli::render / no-workspace {
-    -> app::main(input) / no-workspace -> code
+    -> app::main(input) / bad-usage -> code
   }
 
   sequence cli::query {
-    -> app::main(workspace) / query -> code
+    -> app::main(workspace) -> code
   }
 
   sequence cli::query / unknown-question {
-    -> app::main(workspace) / unknown-question -> code
+    -> app::main(workspace) / failed -> code
   }
 
   sequence cli::query / no-workspace {
-    -> app::main(workspace) / no-workspace -> code
+    -> app::main(workspace) / bad-usage -> code
   }
 
   sequence cli::manual {
-    -> app::main(topic) / manual -> code
+    -> app::main(topic) -> code
   }
 
   sequence cli::manual / no-topic {
-    -> app::main(topic) / no-topic -> code
+    -> app::main(topic) / failed -> code
   }
 }
 
