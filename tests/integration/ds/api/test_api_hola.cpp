@@ -14,7 +14,7 @@
 
 namespace {
 
-/// The engine in process over examples/hola (REQ-00085-1): the texts an editor holds win over the
+/// The engine in process over examples/hola (REQ-00085-2): the texts an editor holds win over the
 /// disk, a diagram draws as text or as its render-IR, the viewer opens framed where it is asked.
 class TestApiOverHola : public ::testing::Test {
  protected:
