@@ -18,15 +18,23 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// Each writer and each description on its own (DS-186, DS-398): the viewer's page, the one writer left (DS-474), its
 /// name and what it writes from the document it is given; what a description writes into the sink it is lent.
 
-const ds::render::IrDocument kDiagram =
-    ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
-                                  R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
-                                  R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
+// built on first use, not when the executable starts (DS-473)
+const ds::render::IrDocument& diagram() {
+  static const ds::render::IrDocument built =
+      ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
+                                    R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
+                                    R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
+  return built;
+}
 
 /// A diagram's render-IR written once (DS-418): every record's keys in byte order (the sink's check would throw
 /// otherwise), a key written when it says something: a node's label even when empty, abstract when said either way,
@@ -68,7 +76,7 @@ TEST(TestIrDescription, EveryKeyInByteOrderAndWrittenWhenItSaysSomething) {
 
 TEST(TestLayoutDescription, EveryNodePlacedAndEveryEdgeRouted) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  ds::format::LayoutDescription(kDiagram, kTheme, 0).describe(sink);
+  ds::format::LayoutDescription(diagram(), theme(), 0).describe(sink);
   const auto json = nlohmann::json::parse(sink.result());
   EXPECT_EQ(json["nodes"].size(), 2u);
   EXPECT_EQ(json["routes"].size(), 1u);
@@ -76,7 +84,7 @@ TEST(TestLayoutDescription, EveryNodePlacedAndEveryEdgeRouted) {
 
 TEST(TestCellsDescription, TheGridAsJson) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  ds::format::CellsDescription(kDiagram, kTheme, 60).describe(sink);
+  ds::format::CellsDescription(diagram(), theme(), 60).describe(sink);
   const auto json = nlohmann::json::parse(sink.result());
   EXPECT_FALSE(json.empty());
 }

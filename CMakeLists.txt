@@ -335,52 +335,60 @@ if(MSVC)
                                                    # POSIX (DS-283)
 endif()
 
-# ---- tests: one executable per tests/unit/**/test_*.cpp (argos-test-gtest)
-# ----
+# ---- unit and integration tests: one executable per directory of tests
+# (DS-473), test_<level>_<path>, e.g. tests/unit/ds/model -> test_unit_ds_model.
+# argos-test-gtest names each test by the file gtest says it is written in
+# (DDEV-1563), so the tests' ids are those of one executable per file; 245
+# executables linked the whole engine each, and linking them cost more than
+# their tests. ----
 enable_testing()
-file(GLOB_RECURSE driftspec_TESTS CONFIGURE_DEPENDS "tests/unit/*/test_*.cpp")
-foreach(test_src IN LISTS driftspec_TESTS)
-  get_filename_component(test_name ${test_src} NAME_WE)
-  add_executable(${test_name} ${test_src})
-  target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
+# directories whose files keep an executable each: tests/unit/ds/parse, where
+# test_parser.cpp and test_queries.cpp each define their own fixture class
+# TestParser, which gtest refuses in one executable (DS-473, the Owner's choice)
+set(driftspec_TESTS_ONE_PER_FILE ${CMAKE_SOURCE_DIR}/tests/unit/ds/parse)
+function(driftspec_test target)
+  target_link_libraries(${target} PRIVATE driftspec GTest::gtest_main)
   target_include_directories(
-    ${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
-                                                            # share (DS-418)
-  if(test_src MATCHES "/tests/unit/ds/app/") # the command line's classes
-                                             # (DS-311, DS-409)
-    target_link_libraries(${test_name} PRIVATE ds_app)
-  endif()
+    ${target} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
+                                                         # share (DS-418)
   target_compile_definitions(
-    ${test_name}
+    ${target}
     PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
             DRIFTSPEC_CORPUS_DIR="${CMAKE_SOURCE_DIR}/tests/corpus"
             DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
-  add_test(NAME ${test_name} COMMAND ${test_name})
-endforeach()
-
-# ---- integration tests: the engine over a workspace, one executable per
-# tests/integration/**/test_*.cpp (argos-test-gtest) ----
-enable_testing()
-file(GLOB_RECURSE driftspec_INTEGRATION_TESTS CONFIGURE_DEPENDS
-     "tests/integration/*/test_*.cpp")
-foreach(test_src IN LISTS driftspec_INTEGRATION_TESTS)
-  get_filename_component(test_name ${test_src} NAME_WE)
-  add_executable(${test_name} ${test_src})
-  target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
-  if(test_src MATCHES "/tests/integration/ds/app/") # the command line, run in
-                                                    # process (DS-409)
-    target_link_libraries(${test_name} PRIVATE ds_app)
-  endif()
-  target_include_directories(
-    ${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
-                                                            # share (DS-418)
-  target_compile_definitions(
-    ${test_name}
-    PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"
-            DRIFTSPEC_CORPUS_DIR="${CMAKE_SOURCE_DIR}/tests/corpus"
-            DRIFTSPEC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
-  add_test(NAME ${test_name} COMMAND ${test_name})
-endforeach()
+  add_test(NAME ${target} COMMAND ${target})
+endfunction()
+function(driftspec_test_groups level)
+  file(GLOB_RECURSE sources CONFIGURE_DEPENDS "tests/${level}/*/test_*.cpp")
+  set(dirs)
+  foreach(test_src IN LISTS sources)
+    get_filename_component(dir ${test_src} DIRECTORY)
+    list(APPEND dirs ${dir})
+  endforeach()
+  list(REMOVE_DUPLICATES dirs)
+  foreach(dir IN LISTS dirs)
+    file(RELATIVE_PATH path ${CMAKE_SOURCE_DIR}/tests/${level} ${dir})
+    string(REPLACE "/" "_" path ${path})
+    set(test_name test_${level}_${path})
+    file(GLOB group CONFIGURE_DEPENDS "${dir}/test_*.cpp")
+    if(dir IN_LIST driftspec_TESTS_ONE_PER_FILE)
+      foreach(test_src IN LISTS group)
+        get_filename_component(one ${test_src} NAME_WE)
+        add_executable(${one} ${test_src})
+        driftspec_test(${one})
+      endforeach()
+      continue()
+    endif()
+    add_executable(${test_name} ${group})
+    if(dir MATCHES "/tests/${level}/ds/app$") # the command line's classes, run
+                                              # in process (DS-311, DS-409)
+      target_link_libraries(${test_name} PRIVATE ds_app)
+    endif()
+    driftspec_test(${test_name})
+  endforeach()
+endfunction()
+driftspec_test_groups(unit)
+driftspec_test_groups(integration)
 
 # ---- system qualification: tests/system/**/test_*.cpp drive the ds binary from
 # outside ----

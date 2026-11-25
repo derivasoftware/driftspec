@@ -27,7 +27,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// Every output of ds is a document (REQ-00106-4), here over examples/hola: the document comes from the design; it
 /// is described into the sink of the technology named, or written by the writer named, and neither reads the model.
@@ -102,10 +106,10 @@ TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDes
   const auto ir = nlohmann::json::parse(text);
   ASSERT_FALSE(ir["nodes"].empty());
   const ds::render::IrDocument diagram = ds::render::IrDocument::parse(text);  // read once, as a door reads an IR file
-  const std::string svg = ds::render::Svg(kTheme).render(diagram, 0);
+  const std::string svg = ds::render::Svg(theme()).render(diagram, 0);
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find("Greeter"), std::string::npos);
-  const std::string drawn = ds::render::Text(kTheme).render(diagram, false, 0);
+  const std::string drawn = ds::render::Text(theme()).render(diagram, false, 0);
   EXPECT_NE(drawn.find("Greeter"), std::string::npos);
   EXPECT_EQ(svg, ds::api::Api(metamodel).render(files, "CL_Hola", "svg", 0));  // what ds render writes
   EXPECT_EQ(drawn, ds::api::Api(metamodel).render(files, "CL_Hola", "text", 0));

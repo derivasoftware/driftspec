@@ -20,7 +20,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// A machine drawn as a table (DS-251), over tests/corpus/states: the order, its events down and its states across.
 class TestTableView : public ::testing::Test {
@@ -82,13 +86,13 @@ TEST_F(TestTableView, TheTableSaysWhoCallsEachEventAndTheCellInWhichABehaviourCa
 
 TEST_F(TestTableView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineMarked) {
   const auto doc = ds::render::IrDocument::parse(json);
-  const std::string svg = ds::render::Svg(kTheme).render(doc, 0);
+  const std::string svg = ds::render::Svg(theme()).render(doc, 0);
   EXPECT_NE(svg.find("<g class=\"pr-cell pr-cell-head\"><rect"), std::string::npos);
   EXPECT_NE(svg.find(">Shipped</text>"), std::string::npos);
   EXPECT_NE(svg.find("<g class=\"pr-cell pr-cell-jump\"><title>pay takes Open to Paid</title>"), std::string::npos);
   EXPECT_NE(svg.find("<g class=\"pr-cell pr-cell-against\"><title>Desk::rush calls cancel when it can be Shipped"), std::string::npos);
   EXPECT_NE(svg.find("<title>pay is called in Desk::rush, Desk::sell</title>"), std::string::npos);  // on the heading of the row
-  const std::string text = ds::render::Text(kTheme).render(doc, false, 0);
+  const std::string text = ds::render::Text(theme()).render(doc, false, 0);
   // each column its text and two cells of room each side, as the svg (DS-464)
   EXPECT_NE(text.find("  Order   \xE2\x94\x82 Open       \xE2\x94\x82 Paid       \xE2\x94\x82 Shipped       \xE2\x94\x82 Cancelled"),
             std::string::npos)
@@ -98,7 +102,7 @@ TEST_F(TestTableView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineM
       << text;
   // the grid a terminal view asks for holds the same table
   ds::emit::JsonSink sink(false, true);
-  ds::render::Text(kTheme).cells(doc, 0, sink);
+  ds::render::Text(theme()).cells(doc, 0, sink);
   const auto cells = nlohmann::json::parse(sink.result());
   EXPECT_EQ(cells["rows"], 8);  // the headings and their rule, then three events, two lines each (DS-464)
   EXPECT_NE(cells["text"].get<std::string>().find("! Desk::rush"), std::string::npos);
@@ -181,7 +185,7 @@ TEST(TestTableSvg, ACellIsMeasuredByItsCharactersNotItsBytes) {
     const auto at = svg.find("width=\"");
     return std::stoi(svg.substr(at + 7));
   };
-  const ds::render::Svg svg(kTheme);
+  const ds::render::Svg svg(theme());
   EXPECT_EQ(widthOf(svg.render(table("\u2260\u2260\u2260\u2260"), 0)), widthOf(svg.render(table("aaaa"), 0)));
   // thirty ≠ and a word: thirty-five characters fit one line of forty, though they are ninety-odd bytes
   std::string many;

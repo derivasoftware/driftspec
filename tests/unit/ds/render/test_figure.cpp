@@ -11,7 +11,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 ds::render::IrNode box(const std::string& id, const std::string& label) {
   ds::render::IrNode n;

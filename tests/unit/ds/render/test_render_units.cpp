@@ -22,7 +22,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 using ds::render::IrDocument;
 
@@ -63,8 +67,8 @@ TEST(TestIrDocument, ItParsesItsContractAndBundlesRelationsThatDifferOnlyInText)
 }
 
 TEST(TestMetrics, AScreenCellIsOneCharacterWhereAPixelTableIsWider) {
-  const auto svg = ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg));
-  const auto text = ds::render::Metrics::text(kTheme.measures(ds::theme::Sink::text));
+  const auto svg = ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg));
+  const auto text = ds::render::Metrics::text(theme().measures(ds::theme::Sink::text));
   EXPECT_EQ(text.CHAR_W, 1);
   EXPECT_EQ(text.LINE_H, 1);
   EXPECT_GT(svg.CHAR_W, text.CHAR_W);
@@ -72,14 +76,14 @@ TEST(TestMetrics, AScreenCellIsOneCharacterWhereAPixelTableIsWider) {
 }
 
 TEST(TestSvg, AnSvgOfTheDocumentWithEveryBox) {
-  const std::string svg = ds::render::Svg(kTheme).render(IrDocument::parse(kIr), 0);
+  const std::string svg = ds::render::Svg(theme()).render(IrDocument::parse(kIr), 0);
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find(">A<"), std::string::npos);
   EXPECT_NE(svg.find(">B<"), std::string::npos);
 }
 
 TEST(TestText, TheDocumentInBoxCharactersAndAsCells) {
-  const ds::render::Text text(kTheme);
+  const ds::render::Text text(theme());
   const std::string drawn = text.render(IrDocument::parse(kIr), false, 0);
   EXPECT_NE(drawn.find('A'), std::string::npos);
   EXPECT_NE(drawn.find('B'), std::string::npos);
@@ -107,7 +111,7 @@ TEST(TestIrDocument, ADocumentMadeOfPartsGivesEachAsADocumentOfItsOwn) {
 }
 
 TEST(TestSvg, ADocumentMadeOfPartsIsOneSvgThatHoldsOneForEachPart) {
-  const std::string svg = ds::render::Svg(kTheme).render(IrDocument::parse(kParts));
+  const std::string svg = ds::render::Svg(theme()).render(IrDocument::parse(kParts));
   EXPECT_EQ(svg.find("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox="), 0u);
   EXPECT_NE(svg.find("data-part=\"boxes\""), std::string::npos);
   EXPECT_NE(svg.find("data-part=\"again\""), std::string::npos);
@@ -115,30 +119,30 @@ TEST(TestSvg, ADocumentMadeOfPartsIsOneSvgThatHoldsOneForEachPart) {
 
 TEST(TestText, ADocumentMadeOfPartsIsDrawnOnePartUnderTheOther) {
   const IrDocument doc = IrDocument::parse(kParts);
-  const std::string text = ds::render::Text(kTheme).render(doc, false);
+  const std::string text = ds::render::Text(theme()).render(doc, false);
   const auto first = text.find("C A");
   ASSERT_NE(first, std::string::npos);
   EXPECT_NE(text.find("C A", first + 1), std::string::npos);  // the same box twice: once for each part
   ds::emit::JsonSink sink(false, true);
-  ds::render::Text(kTheme).cells(doc, 0, sink);
+  ds::render::Text(theme()).cells(doc, 0, sink);
   EXPECT_NE(sink.result().find("\"rows\""), std::string::npos);
 }
 
 /// What the terminal drawing draws with is read from the theme (DS-393): its cells and each role's colour.
 TEST(TestTextPen, ItReadsItsMetricsAndColoursFromTheTheme) {
-  const ds::render::TextPen pen(kTheme);
-  EXPECT_EQ(pen.M.CHAR_W, kTheme.measures(ds::theme::Sink::text).advance);
-  EXPECT_EQ(pen.type, kTheme.sgr(ds::theme::Role::type));
+  const ds::render::TextPen pen(theme());
+  EXPECT_EQ(pen.M.CHAR_W, theme().measures(ds::theme::Sink::text).advance);
+  EXPECT_EQ(pen.type, theme().sgr(ds::theme::Role::type));
   EXPECT_EQ(pen.changeMarkOf("renamed").mark, std::string(">"));
-  EXPECT_EQ(pen.changeMarkOf("renamed").colour, kTheme.sgr(ds::theme::Role::renamed));
+  EXPECT_EQ(pen.changeMarkOf("renamed").colour, theme().sgr(ds::theme::Role::renamed));
   EXPECT_EQ(pen.changeMarkOf("anything else").mark, std::string("~"));
-  EXPECT_EQ(pen.cellColours, kTheme.cellColours());
+  EXPECT_EQ(pen.cellColours, theme().cellColours());
   // a badge in its kind's colour (DS-441): an abstract class its own, a classifier the palette does not name the badge's
-  EXPECT_EQ(pen.badgeColour("interface", false), kTheme.sgr(ds::theme::Role::interfaceBadge));
-  EXPECT_EQ(pen.badgeColour("dataclass", false), kTheme.sgr(ds::theme::Role::dataclassBadge));
-  EXPECT_EQ(pen.badgeColour("", true), kTheme.sgr(ds::theme::Role::abstractBadge));
-  EXPECT_EQ(pen.badgeColour("verification", false), kTheme.sgr(ds::theme::Role::verificationBadge));
-  EXPECT_EQ(pen.badgeColour("struct", false), kTheme.sgr(ds::theme::Role::badge));
+  EXPECT_EQ(pen.badgeColour("interface", false), theme().sgr(ds::theme::Role::interfaceBadge));
+  EXPECT_EQ(pen.badgeColour("dataclass", false), theme().sgr(ds::theme::Role::dataclassBadge));
+  EXPECT_EQ(pen.badgeColour("", true), theme().sgr(ds::theme::Role::abstractBadge));
+  EXPECT_EQ(pen.badgeColour("verification", false), theme().sgr(ds::theme::Role::verificationBadge));
+  EXPECT_EQ(pen.badgeColour("struct", false), theme().sgr(ds::theme::Role::badge));
 }
 
 }  // namespace

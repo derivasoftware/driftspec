@@ -22,7 +22,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 /// A diagram opens the boxes it names and closes the rest, over tests/corpus/visibility.
 class TestOpenBoxes : public ::testing::Test {
@@ -350,7 +354,7 @@ class TestPastTheReach : public ::testing::Test {
     Drawn out;
     const auto start = std::chrono::steady_clock::now();
     out.ir = ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram);
-    out.svg = ds::render::Svg(kTheme).render(ds::render::IrDocument::parse(out.ir));
+    out.svg = ds::render::Svg(theme()).render(ds::render::IrDocument::parse(out.ir));
     out.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
     return out;
   }

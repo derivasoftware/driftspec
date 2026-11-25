@@ -18,7 +18,11 @@
 namespace {
 
 /// The style the drawings are written in, made once for the file (DS-393).
-const ds::theme::Theme kTheme;
+// built on first use, not when the executable starts: a test reaches the theme only if it uses it (DS-473)
+const ds::theme::Theme& theme() {
+  static const ds::theme::Theme built;
+  return built;
+}
 
 using ds::render::IrDocument;
 using ds::render::LayoutResult;
@@ -59,7 +63,7 @@ class TestLayout : public ::testing::Test {
 TEST_F(TestLayout, EveryNodeIsPlacedAndNoTwoLeavesOverlap) {
   for (const char* name : {"CL_Model", "CL_Values", "CL_Templates", "CL_Package_ds"}) {
     const IrDocument doc = document(name);
-    const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
+    const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg))).place(doc);
     EXPECT_EQ(lay.placed.size(), doc.nodes.size()) << name;
     for (size_t i = 0; i < lay.placed.size(); ++i) {
       if (lay.placed[i].node->kind == "container") continue;
@@ -75,7 +79,7 @@ TEST_F(TestLayout, EveryNodeIsPlacedAndNoTwoLeavesOverlap) {
 
 TEST_F(TestLayout, ChildrenSitInsideTheirContainer) {
   const IrDocument doc = document("CL_Package_ds");
-  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
+  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg))).place(doc);
   const auto placed = byId(lay);
   for (const auto& p : lay.placed) {
     if (p.node->parent.empty()) continue;
@@ -86,7 +90,7 @@ TEST_F(TestLayout, ChildrenSitInsideTheirContainer) {
 
 TEST_F(TestLayout, BasesAreDrawnAboveSubtypesAndWholesAboveParts) {
   const IrDocument doc = document("CL_Model");
-  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg)))
+  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg)))
                                .place(doc);  // kept: what byId points at lives in it
   const auto placed = byId(lay);
   EXPECT_LT(placed.at("ds@ds::Check")->rect.y + placed.at("ds@ds::Check")->rect.h, placed.at("ds@ds::ScopedCheck")->rect.y);
@@ -95,7 +99,7 @@ TEST_F(TestLayout, BasesAreDrawnAboveSubtypesAndWholesAboveParts) {
 
 TEST_F(TestLayout, EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute) {
   const IrDocument doc = document("CL_Package_ds");
-  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
+  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg))).place(doc);
   EXPECT_EQ(lay.routes.size(), doc.edges.size());
   for (const auto& r : lay.routes) {
     ASSERT_GE(r.second.points.size(), 2u);
@@ -110,7 +114,7 @@ TEST_F(TestLayout, EveryEdgeBetweenPlacedNodesGetsAnOrthogonalRoute) {
 TEST_F(TestLayout, LongEdgesStepAroundTheNodesTheyCross) {
   // Check -> Finding spans the layer of ScopedCheck: the route must not cut through it
   const IrDocument doc = document("CL_Model");
-  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
+  const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg))).place(doc);
   const auto placed = byId(lay);
   const Rect scoped = placed.at("ds@ds::ScopedCheck")->rect;
   for (size_t i = 0; i < doc.edges.size(); ++i) {
@@ -145,7 +149,7 @@ TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
                              "diagram CL_Chain {\n  kind: class\n  include: p@*\n}\n"));
     ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     const IrDocument doc = IrDocument::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:CL_Chain")).bundled();
-    const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
+    const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(theme().measures(ds::theme::Sink::svg))).place(doc);
     int bottomOfB = -1, topOfC = -1;
     for (const auto& p : lay.placed) {
       if (p.node->id == "p@m::B") bottomOfB = p.rect.y + p.rect.h;
@@ -176,7 +180,7 @@ TEST_F(TestLayout, EveryChangeOfARelationHasItsStyleInTheSvg) {
   const IrDocument doc = IrDocument::parse(R"({"ir": 1, "title": "diff", "nodes": [{"id": "A", "kind": "box", "label": "A"},
     {"id": "B", "kind": "box", "label": "B"}],
     "edges": [{"from": "A", "to": "B", "kind": "dependency", "label": "alters", "refs": {"change": "changed"}}]})");
-  const std::string svg = ds::render::Svg(kTheme).render(doc);
+  const std::string svg = ds::render::Svg(theme()).render(doc);
   EXPECT_NE(svg.find("pr-edge-change-changed"), std::string::npos);
   for (const char* change : {"added", "removed", "changed", "renamed"})
     EXPECT_NE(svg.find(std::string(".pr-diagram .pr-edge-change-") + change + " {"), std::string::npos) << change;
@@ -184,8 +188,8 @@ TEST_F(TestLayout, EveryChangeOfARelationHasItsStyleInTheSvg) {
 
 TEST_F(TestLayout, TheSvgIsDeterministicAndCarriesStableIds) {
   const IrDocument doc = document("CL_Values");
-  const std::string once = ds::render::Svg(kTheme).render(doc);
-  const std::string twice = ds::render::Svg(kTheme).render(doc);
+  const std::string once = ds::render::Svg(theme()).render(doc);
+  const std::string twice = ds::render::Svg(theme()).render(doc);
   EXPECT_EQ(once, twice);
   EXPECT_NE(once.find("data-id=\"ds@ds::Finding\""), std::string::npos);
   EXPECT_NE(once.find("class=\"pr-edge pr-edge-composition\""), std::string::npos);
@@ -211,7 +215,7 @@ class TestSequenceSvg : public ::testing::Test {
   }
 
   std::string svg(const std::string& diagram) {
-    return ds::render::Svg(kTheme).render(
+    return ds::render::Svg(theme()).render(
         IrDocument::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram)));
   }
 };
