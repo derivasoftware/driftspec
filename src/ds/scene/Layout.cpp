@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <string_view>
 
 #include "ds/layout/EngineFactory.hpp"
 #include "ds/scene/Projection.hpp"
@@ -28,20 +29,32 @@ SceneDocument Layout::place() const {
   leanGraph.widths = fullPlaced.widths;
   leanGraph.following = true;
   const layout::Placement leanPlaced = engine->place(leanGraph);
-  const auto at = [](const layout::Placement& placed, const std::string& id) {
-    const auto it = placed.boxes.find(id);
-    return it == placed.boxes.end() ? layout::Box{} : it->second;
+  // the lean frames by identity: the lean projection numbers its frames apart from the full one, having fewer rows
+  std::map<std::string_view, std::size_t> leanNumber;
+  std::size_t leanNext = 0;
+  std::function<void(const layout::Frame&)> numberLean = [&](const layout::Frame& f) {
+    leanNumber[f.id] = leanNext++;
+    for (const layout::Frame& k : f.kids) numberLean(k);
+    for (const layout::Frame& p : f.ports) numberLean(p);
+  };
+  numberLean(lean.root());
+  const auto at = [](const layout::Placement& placed, std::size_t number) {
+    return number < placed.boxes.size() ? placed.boxes[number] : layout::Box{};
   };
   SceneDocument doc;
-  // nodes in drawing order: parents before children, as the full projection reads them
+  // nodes in drawing order: parents before children, as the full projection reads them, which is the order its
+  // frames are numbered in (the root is 0)
+  std::size_t fullNext = 1;
   std::function<void(const layout::Frame&)> walk = [&](const layout::Frame& f) {
+    const std::size_t number = fullNext++;
     const auto n = full.nodes().find(f.id);
     if (n != full.nodes().end()) {  // a tree of a taxonomy groups units without being drawn
       Node node = n->second;
-      node.full = at(fullPlaced, f.id);
+      node.full = at(fullPlaced, number);
       if (lean.nodes().count(f.id)) {
         node.lean = true;
-        node.leanBox = at(leanPlaced, f.id);
+        const auto l = leanNumber.find(f.id);
+        node.leanBox = l == leanNumber.end() ? layout::Box{} : at(leanPlaced, l->second);
       }
       doc.nodes.push_back(node);
     }

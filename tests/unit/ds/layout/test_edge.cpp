@@ -4,13 +4,15 @@
 
 namespace {
 
-/// An edge between two boxes (DS-392), by their identities, telling only whether it points up.
-TEST(TestEdge, AnEdgeJoinsTwoBoxesByTheirIdentitiesAndSaysWhetherItPointsUp) {
-  const ds::layout::Edge e{"p@m::Heir", "p@m::Base", true};
-  EXPECT_EQ(e.from, "p@m::Heir");
-  EXPECT_EQ(e.to, "p@m::Base");
+/// An edge between two boxes (DS-392), by their numbers in the order the graph is read, telling only whether it points up.
+TEST(TestEdge, AnEdgeJoinsTwoBoxesByTheirNumbersAndSaysWhetherItPointsUp) {
+  const ds::layout::Edge e{2, 1, true};
+  EXPECT_EQ(e.from, 2u);
+  EXPECT_EQ(e.to, 1u);
   EXPECT_TRUE(e.upward);  // the base sits above what inherits from it
-  EXPECT_FALSE(ds::layout::Edge{}.upward);
+  const ds::layout::Edge loose;
+  EXPECT_EQ(loose.from, ds::layout::Edge::none);  // no box until told
+  EXPECT_FALSE(loose.upward);
 }
 
 }  // namespace

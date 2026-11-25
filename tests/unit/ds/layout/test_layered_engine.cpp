@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <functional>
+#include <map>
 #include <string>
 
 #include "ds/layout/Frame.hpp"
@@ -9,6 +11,21 @@
 #include "ds/layout/Spacing.hpp"
 
 namespace {
+
+/// The boxes of a placement by the identities of their frames, which the engine numbers in the order the graph is read:
+/// the root first, then each frame followed by its kids and its ports.
+std::map<std::string, ds::layout::Box> byId(const ds::layout::Frame& root, const ds::layout::Placement& placed) {
+  std::map<std::string, ds::layout::Box> out;
+  std::size_t n = 0;
+  std::function<void(const ds::layout::Frame&)> walk = [&](const ds::layout::Frame& f) {
+    if (n < placed.boxes.size()) out[f.id] = placed.boxes[n];
+    ++n;
+    for (const ds::layout::Frame& k : f.kids) walk(k);
+    for (const ds::layout::Frame& p : f.ports) walk(p);
+  };
+  walk(root);
+  return out;
+}
 
 using ds::layout::Box;
 using ds::layout::Frame;
@@ -39,9 +56,10 @@ TEST_F(TestLayeredEngine, ABaseSitsAboveWhatInheritsFromIt) {
   Frame root;
   root.kids = {leaf("heir", 100, 40), leaf("base", 100, 40)};
   Graph g;
-  g.edges = {{"heir", "base", true}};
+  g.edges = {{1, 2, true}};  // heir is box 1, base box 2
   const Placement placed = place(root, g);
-  EXPECT_LT(placed.boxes.at("base").y + placed.boxes.at("base").h, placed.boxes.at("heir").y);
+  const auto b = byId(root, placed);
+  EXPECT_LT(b.at("base").y + b.at("base").h, b.at("heir").y);
   ASSERT_EQ(placed.routes.count(0), 1u);
   EXPECT_GE(placed.routes.at(0).points.size(), 2u);
 }
@@ -55,28 +73,29 @@ TEST_F(TestLayeredEngine, AWholeSitsAboveItsPartAndAContainerHoldsWhatItContains
   Frame root;
   root.kids = {box};
   Graph g;
-  g.edges = {{"whole", "part", false}};
+  g.edges = {{3, 2, false}};  // box is 1, part 2, whole 3
   const Placement placed = place(root, g);
-  const Box& c = placed.boxes.at("box");
+  const auto boxes = byId(root, placed);
+  const Box& c = boxes.at("box");
   for (const char* id : {"part", "whole"}) {
-    const Box& b = placed.boxes.at(id);
+    const Box& b = boxes.at(id);
     EXPECT_GE(b.x, c.x) << id;
     EXPECT_GE(b.y, c.y) << id;
     EXPECT_LE(b.x + b.w, c.x + c.w) << id;
     EXPECT_LE(b.y + b.h, c.y + c.h) << id;
   }
-  EXPECT_LT(placed.boxes.at("whole").y, placed.boxes.at("part").y);
+  EXPECT_LT(boxes.at("whole").y, boxes.at("part").y);
 }
 
 TEST_F(TestLayeredEngine, EveryPlaceIsAWholeNumberAndAnEmptyGraphPlacesNothing) {
   Frame root;
   root.kids = {leaf("a", 101, 33), leaf("b", 57, 21), leaf("c", 90, 40)};
   Graph g;
-  g.edges = {{"a", "b", false}, {"a", "c", false}};
+  g.edges = {{1, 2, false}, {1, 3, false}};
   const Placement placed = place(root, g);
-  for (const auto& entry : placed.boxes) {
-    EXPECT_DOUBLE_EQ(entry.second.x, static_cast<int>(entry.second.x)) << entry.first;
-    EXPECT_DOUBLE_EQ(entry.second.y, static_cast<int>(entry.second.y)) << entry.first;
+  for (const Box& b : placed.boxes) {
+    EXPECT_DOUBLE_EQ(b.x, static_cast<int>(b.x));
+    EXPECT_DOUBLE_EQ(b.y, static_cast<int>(b.y));
   }
   EXPECT_TRUE(LayeredEngine(Spacing{}).place(Graph{}).boxes.empty());
 }
