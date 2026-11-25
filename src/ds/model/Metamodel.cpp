@@ -298,7 +298,8 @@ std::vector<RelationSpec> Metamodel::buildRelations() const {
       rel("owns", "an attribute owns its value", {A}, {Cl, E}),
       rel("refs", "an attribute refers to a value it does not own", {A}, {Cl, E, I}),
       rel("shares", "an attribute shares ownership of its value", {A}, {Cl, E}),
-      rel("uses", "the entity names a type", {A, F, Me, Op, O, S, Uc, Kind::Outcome}, {Cl, E, I}),
+      rel("uses", "the entity names a type", {F, Me, Op, O, S, Uc, Kind::Outcome},
+          {Cl, E, I}),  // an attribute owns, refs or shares its type (DS-439)
       rel("behaviour-of", "a sequence or a state machine is the behaviour of its subject", {S, St}, {Cl, F, Me, Op, I, P, M, Uc}),
       rel("calls", "a message calls an operation", {Ms}, {F, Me, Op}),
       rel("expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}),

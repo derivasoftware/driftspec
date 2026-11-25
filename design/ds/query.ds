@@ -64,7 +64,8 @@ package driftspec@ds {
       title: The query shall say which subject each question takes, answer a subject of another kind with an error that says what it takes, and take a file or an identity for the findings and the coverage
       text:
         Each question names the subject it takes, in one table the usage, the help and the check of a
-        subject read: none (diagrams, coupling), a scope (entities, optional), any identity (relations),
+        subject read: none (diagrams, coupling), a scope (entities, optional; written with * after it as a
+        diagram's include writes it, shop@*, everything it holds at any depth, one line each), any identity (relations),
         a design element (artefacts), what has a behaviour (behaviours), what a failure may escape
         (failures), a diagram (shows), a file or an identity (findings, coverage, optional). What each
         takes is read from the metamodel: a kind others are declared in, a kind that may realise, satisfy
@@ -73,7 +74,7 @@ package driftspec@ds {
         error naming the subject's kind and what the question takes; ds query exits 1. The findings and the
         coverage of an identity are those that lie on the entity or on anything it holds, and the coverage
         also those that name it. Every answer to a subject a question takes is as before.
-      rationale: Owner's coordinator, 2026-11-24 (DS-436, D1 exit 1, D2 widen): a wrong subject printed nothing with exit 0, which reads as "it has none"; a first-time user asked coverage shop@sales@cart and coverage of a file and got nothing.
+      rationale: Owner's coordinator, 2026-11-24 (DS-436, D1 exit 1, D2 widen; D3 the include syntax for entities, DS-444): a wrong subject printed nothing with exit 0, which reads as "it has none"; a first-time user asked coverage shop@sales@cart and coverage of a file and got nothing.
       tags: query, cli
       verification VER-00280-1 {
         status: draft
@@ -83,6 +84,7 @@ package driftspec@ds {
           tests/integration/ds/query/test_query.cpp::TestQuery.EachQuestionTakesTheSubjectItSaysAndAnswersAnotherKindWithAnError
           tests/integration/ds/query/test_query.cpp::TestQuery.FindingsAndCoverageTakeAFileOrAnEntityAndEverythingItHolds
           tests/integration/ds/query/test_query.cpp::TestQuery.TheManualListsTheQuestionsAsTheQueryDoes
+          tests/integration/ds/query/test_query.cpp::TestQuery.TheEntitiesOfAPatternAreAllItTakesAtAnyDepth
       }
     }
 
@@ -337,7 +339,9 @@ package driftspec@ds {
         @requirement REQ-00260-1
       }
       + diagrams() -> std::vector<Answer>
-      + entities(scope: std::string) -> std::vector<Answer>
+      + entities(scope: std::string) -> std::vector<Answer> {   // with * after the scope, what the pattern takes (DS-444)
+        @requirement REQ-00260-1
+      }
       + relations(id: std::string) -> std::vector<Answer>
       + artefacts(id: std::string) -> std::vector<Answer>
       + behaviours(id: std::string) -> std::vector<Answer>

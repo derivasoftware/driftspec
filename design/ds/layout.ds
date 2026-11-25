@@ -4,9 +4,24 @@
 
 package driftspec@ds {
 
+  // what whoever places reaches only through IEngine and IRouter: an engine, a router, or a phase of the layered
+  // engine (DS-392)
+  definition engine-part(x) {
+    title: x is an engine of the layout, a router, or one of the layered engine's phases (DS-392)
+    if x inherits driftspec@ds@layout::IEngine
+    if x inherits driftspec@ds@layout::IRouter
+    if x = driftspec@ds@layout::Framer
+    if x = driftspec@ds@layout::Layerer
+    if x = driftspec@ds@layout::Orderer
+    if x = driftspec@ds@layout::Positioner
+    if x = driftspec@ds@layout::Layering
+  }
+
   module layout {
     @requirement REQ-00210-1                 // the layout places boxes, knowing nothing of what they stand for (DS-392)
     @requirement REQ-00211-1                 // the layout depends on nothing of the model (DS-392)
+    @requirement REQ-00212-1                 // nor of render or the scene (DS-392)
+    @requirement REQ-00213-1                 // whoever places reaches the engines through their interfaces (DS-392)
     requirement REQ-00210-1 {
       tags: layout, scene, render
       status: approved
@@ -52,11 +67,81 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00212-1 {
+      tags: architecture, layout
+      status: draft
+      @refines REQ-00210-1
+      title: The layout shall depend on nothing of render or the scene
+      text:
+        Render and the scene project their content into boxes and read the places back; the layout is what they
+        reach, never what reaches them. A class of the layout that knew a diagram's IR or the scene's document
+        would place for one of them, and the geometry would no longer serve the other.
+      rationale:
+        Owner, 2026-11-24 (DS-368, DS-392): layout knows no model, no render and no scene.
+      verification VER-00232-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when a class of the layout depends on render or on the scene
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ALayoutThatKnowsRenderOrTheSceneIsTold
+      }
+    }
+
+    requirement REQ-00213-1 {
+      tags: architecture, layout
+      status: draft
+      @refines REQ-00210-1
+      title: Whoever places shall reach an engine only through IEngine and a router only through IRouter, from the factories that name them
+      text:
+        The scene and render ask EngineFactory for an engine, and the layered engine is handed its router by
+        RouterFactory. Neither holds a concrete engine, a router or a phase of the layered engine, so an engine
+        or a router can be added or changed without either of them knowing.
+      rationale:
+        Owner, 2026-11-24 (DS-368, DS-392): whoever places talks to the engine only through the interface.
+      verification VER-00233-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when the scene or render depends on an engine, a router or a phase of the layered engine
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.APlacerThatHoldsAnEngineOrAPhaseIsTold
+      }
+    }
+
     rule layout-knows-no-model {
       title: no class of the layout depends on the model, so an engine places boxes from their sizes and arrangements alone
       @requirement REQ-00211-1
       for class c in driftspec@ds@layout
       never depends(c, x), x in driftspec@ds@model
+    }
+
+    rule layout-knows-no-render {
+      title: no class of the layout depends on render, so render reaches the geometry and the geometry serves every drawing
+      @requirement REQ-00212-1
+      for class c in driftspec@ds@layout
+      never depends(c, x), x in driftspec@ds@render
+    }
+
+    rule layout-knows-no-scene {
+      title: no class of the layout depends on the scene, so the scene reaches the geometry and never the other way
+      @requirement REQ-00212-1
+      for class c in driftspec@ds@layout
+      never depends(c, x), x in driftspec@ds@scene
+    }
+
+    rule the-scene-places-through-iengine {
+      title: no class of the scene depends on an engine, a router or a phase of the layered engine, so it places through IEngine
+      @requirement REQ-00213-1
+      for class c in driftspec@ds@scene
+      never depends(c, x), engine-part(x)
+    }
+
+    rule render-places-through-iengine {
+      title: no class of render depends on an engine, a router or a phase of the layered engine, so it places through IEngine
+      @requirement REQ-00213-1
+      for class c in driftspec@ds@render
+      never depends(c, x), engine-part(x)
     }
 
     // a layout engine: nested sized boxes and the edges between them in, where they land and how the edges run out
