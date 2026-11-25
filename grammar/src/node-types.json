@@ -896,6 +896,10 @@
         {
           "type": "rule_where",
           "named": true
+        },
+        {
+          "type": "walk_step",
+          "named": true
         }
       ]
     }
@@ -3008,6 +3012,32 @@
     "fields": {}
   },
   {
+    "type": "walk_step",
+    "named": true,
+    "fields": {
+      "title": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "condition",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "field",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "!=",
     "named": false
   },
@@ -3342,6 +3372,10 @@
   },
   {
     "type": "static",
+    "named": false
+  },
+  {
+    "type": "step",
     "named": false
   },
   {

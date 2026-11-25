@@ -205,13 +205,22 @@ std::map<Kind, std::pair<std::string, std::string>> Metamodel::writtenForms() {
         "holds\n}\na rule or another definition applies it: <name>(<a>, ...); it may recur, and negate only what does not rest on it",
         "package shop {\n  module store {\n    class Order {\n      + total() -> int\n    }\n    definition member-of(m, c) {\n"
         "      title: A member and the class that holds it\n      if m in c, c is class\n    }\n  }\n}\n"}},
+      {Kind::Step,
+       {"step <title> {             in a diagram of kind walkthrough, in the order it is walked\n  show: <diagram>          or "
+        "<diagram> / <scenario>\n  focus: <identities>      what it is about: framed, the rest dimmed\n  highlight: <identities>  what "
+        "it talks to: marked\n  at: <identity>           its callout points at it; docked beside the drawing without it\n  text: "
+        "<a sentence or two>\n}",
+        "package shop {\n  module desk {\n    class Desk { }\n  }\n}\n\ndiagram CL_Shop {\n  kind: class\n  include: shop@*\n}\n\n"
+        "diagram WALK_Shop {\n  kind: walkthrough\n  title: Who sells\n  step The desk {\n    show: CL_Shop\n    focus: "
+        "shop@desk::Desk\n    text: The desk sells.\n  }\n}\n"}},
       {Kind::Outcome,
        {"outcome default: <what is obtained>           the ending that goes well\noutcome <scenario> [-> <type>]: <what is "
         "obtained>   any other: every operation that realises the use case handles it as a scenario",
         kShopUseCase}},
       {Kind::Diagram,
        {"diagram <Name> {            at the top of a file, outside any package\n  kind: class | sequence | state | requirement | "
-        "interface | tour\n  include: <patterns>      shop@*, shop@store::*, shop@store::Cart\n  exclude, open, depth, show, hide: ...\n}",
+        "interface | tour | walkthrough\n  include: <patterns>      shop@*, shop@store::*, shop@store::Cart\n  exclude, open, depth, show, "
+        "hide: ...\n}",
         "package shop {\n  module store {\n    class Cart { }\n  }\n}\n\ndiagram CL_Store {\n  kind: class\n  include: "
         "shop@store::*\n}\n"}},
   };

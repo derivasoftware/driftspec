@@ -231,8 +231,9 @@ std::vector<KindSpec> Metamodel::build() {
   k.push_back(
       {Kind::Diagram,
        "a view asked of the model",
-       {closed("kind", FieldType::Name, "class, sequence, state, table, requirement, interface or tour",
-               {"class", "sequence", "state", "table", "requirement", "interface", "tour"}),
+       {closed("kind", FieldType::Name, "class, sequence, state, table, requirement, interface, tour or walkthrough",
+               {"class", "sequence", "state", "table", "requirement", "interface", "tour", "walkthrough"}),
+        writtenField("title", FieldType::Text, "what a walkthrough is about, in one line (DS-468)"),
         writtenField("include", FieldType::Patterns, "what it shows"), writtenField("exclude", FieldType::Patterns, "what it leaves out"),
         writtenField("open", FieldType::Patterns, "the boxes it keeps open, and the way to each; alone, every other box closes"),
         writtenField("close", FieldType::Patterns,
@@ -270,6 +271,17 @@ std::vector<KindSpec> Metamodel::build() {
                 writtenField("rationale", FieldType::Text, "why it is so")},
                {},
                {P, M, Kind::Class}});
+  // a walkthrough's steps, in the order written: what each shows, lights and says (DS-468)
+  k.push_back({Kind::Step,
+               "one step of a walkthrough: the diagram it shows, what it lights and the sentence it says",
+               {writtenField("show", FieldType::Name, "the diagram it shows, or DIAGRAM / scenario"),
+                syntax("scenario", FieldType::Name, "the scenario of the diagram's behaviour it shows, read from show:"),
+                writtenField("focus", FieldType::Names, "what it is about: framed, and the rest dimmed"),
+                writtenField("highlight", FieldType::Names, "what it talks to: marked, nothing dimmed"),
+                writtenField("at", FieldType::Name, "what its callout points at; docked beside the drawing without it"),
+                writtenField("text", FieldType::Text, "what it says, a sentence or two")},
+               {},
+               {Kind::Diagram}});
   return k;
 }
 
@@ -313,6 +325,11 @@ std::vector<RelationSpec> Metamodel::buildRelations() const {
       rel("consumes", "a box depends on an interface another box offers (@consumes)", {P, M, Cl}, {I}),
       rel("sends", "in a scenario written between them, one participant sends a message to another", {P, M, I, Cl}, {P, M, I, Cl, E, F}),
       rel("refers", "an annotation the language gives no meaning to", {}, {}),
+      // what a walkthrough's step shows and lights (DS-468): its own meanings, not one relation with a field
+      rel("shows", "a step of a walkthrough shows a diagram", {Kind::Step}, {Kind::Diagram}),
+      rel("focuses", "a step of a walkthrough is about an entity: framed, the rest dimmed", {Kind::Step}, {}),
+      rel("highlights", "a step of a walkthrough marks an entity it talks to", {Kind::Step}, {}),
+      rel("points-at", "a step of a walkthrough anchors its callout to an entity", {Kind::Step}, {}),
   };
 }
 
@@ -415,6 +432,8 @@ std::vector<std::string> Metamodel::buildNames() {
         return "rule";
       case Kind::Definition:
         return "definition";
+      case Kind::Step:
+        return "step";
     }
     return "?";
   };
