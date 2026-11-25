@@ -530,6 +530,13 @@ package driftspec@ds {
         @requirement REQ-00055-2
         @requirement REQ-00112-1
       }
+      // the identity an operation takes: bare, or with its parameter types when its owner writes another of the name (DS-455)
+      + static identityOf(reader: parse::TreeReader, node: TSNode, bare: std::string) -> std::string {
+        @requirement REQ-00252-1
+      }
+      + static normalised(type: std::string_view) -> std::string {   // a type as an overload's identity writes it
+        @requirement REQ-00252-1
+      }
     }
     class TypeBinder {                       // a type as the code writes it: each name it declares related from the holder (DS-356)
       + bind(type: TSNode, ctx: BindContext, scope: std::string, from: std::string, relation: std::string, multiplicity: std::string, params: std::vector<std::string>, location: model::Location) -> std::string {
