@@ -13,6 +13,8 @@
 namespace ds {
 namespace render {
 
+class Grid;
+
 /// Draws a document on a character grid with box-drawing glyphs: the same
 /// layout as the SVG, run with character metrics (Metrics::text()), so a
 /// box sits in the terminal where it sits on the page.
@@ -106,6 +108,30 @@ class Text {
   void cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const;
 
  private:
+  /// `+ abstract run(model: Model) -> list<Finding>`: visibility coloured, types coloured.
+  void member(Grid& g, int x, int y, const std::string& line) const;
+  /// A box: its frame, its header and its sections, over what it covers.
+  void box(Grid& g, const Placed& p) const;
+  /// A container: its frame and its label.
+  void container(Grid& g, const Placed& p) const;
+  /// The marker glyph for an edge that enters its target moving in (dx, dy).
+  static std::string marker(const std::string& kind, int dx, int dy);
+  /// An edge along its route, its marker at the end it enters.
+  void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId) const;
+  /// A sequence: lifelines as columns, messages as rows.
+  Grid sequenceGrid(const IrDocument& doc) const;
+  /// The boxes and edges of a document over its layout.
+  Grid classGrid(const IrDocument& doc, const LayoutResult& lay) const;
+  /// Whether a node of the document is a lifeline.
+  static bool isSequence(const IrDocument& doc);
+  /// The grid keeps a one-cell margin on each side: the layout gets the rest.
+  static int contentWidth(int maxWidth);
+  /// A drawing that is a table (DS-251): a row of headings, a rule under it, and a row for each of its rows; a
+  /// cell against the machine is marked with a bang.
+  Grid tableGrid(const IrDocument& doc) const;
+  /// The parts of a drawing (DS-245), one under the other with a line between: a terminal reads down.
+  Grid partsGrid(const IrDocument& doc, int maxWidth) const;
+
   const TextPen pen_;
 };
 
