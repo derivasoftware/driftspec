@@ -155,6 +155,20 @@ set_property(
   DIRECTORY
   APPEND
   PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/viewer/scene.html)
+# the walkthroughs' mode of the viewer (DS-470): viewer/walk.js ships inside ds
+# too, and goes into a page only when its workspace writes a walkthrough
+file(READ ${CMAKE_SOURCE_DIR}/viewer/walk.js DS_WALK_JS)
+ds_embedded_pieces("${DS_WALK_JS}" DS_WALK_PIECES)
+file(
+  WRITE ${CMAKE_BINARY_DIR}/generated/ViewerWalk.cpp.in
+  "#include <string>\n\n#include \"ds/format/ViewerPage.hpp\"\n\nnamespace ds {\nnamespace format {\nconst std::string& ViewerPage::walkTemplate() {\n  static const char* const pieces[] = {\n${DS_WALK_PIECES}  };\n  static const std::string whole = [] {\n    std::string out;\n    for (const char* piece : pieces) out += piece;\n    return out;\n  }();\n  return whole;\n}\n}  // namespace format\n}  // namespace ds\n"
+)
+configure_file(${CMAKE_BINARY_DIR}/generated/ViewerWalk.cpp.in
+               ${CMAKE_BINARY_DIR}/generated/ViewerWalk.cpp COPYONLY)
+set_property(
+  DIRECTORY
+  APPEND
+  PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/viewer/walk.js)
 # the guides of the manual ship inside ds too (DS-272): each
 # doc/manual/NN-topic.md becomes a page ds manual <topic> prints and the site
 # draws; one source for both. They are the Manual's (DS-342): the file written
@@ -199,7 +213,9 @@ set_property(
   PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/pyproject.toml)
 add_library(
   driftspec STATIC
-  ${driftspec_SOURCES} ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp
+  ${driftspec_SOURCES}
+  ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp
+  ${CMAKE_BINARY_DIR}/generated/ViewerWalk.cpp
   ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp
   ${CMAKE_BINARY_DIR}/generated/Version.cpp)
 target_include_directories(driftspec PUBLIC include)
@@ -383,6 +399,11 @@ foreach(test_src IN LISTS driftspec_SYSTEM_TESTS)
             DRIFTSPEC_DS_BIN="$<TARGET_FILE:ds>"
             DRIFTSPEC_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
   add_dependencies(${test_name} ds)
+  if(test_name STREQUAL "test_walkthrough_cli")
+    # it reads the page as the engine packs it and says what the door writes
+    # (DS-483)
+    target_link_libraries(${test_name} PRIVATE driftspec)
+  endif()
   add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
 

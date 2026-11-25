@@ -13,6 +13,7 @@
 #include <set>
 #include <vector>
 
+#include "ds/api/Drawings.hpp"
 #include "ds/app/Disk.hpp"
 #include "ds/app/Output.hpp"
 #include "ds/emit/SinkFactory.hpp"
@@ -131,6 +132,7 @@ service::Outcome RenderCommand::page(const api::Workspace& workspace) const {
   options.height = height_;
   const auto sink = emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
   const scene::SceneDocument document = scene::Scene(workspace.model(), metamodel_).build();
+  if (!document.walkthroughs.empty()) options.drawings = api::Drawings::of(workspace.model(), metamodel_, theme_);  // the cards (DS-470)
   return written(format::FormatFactory::scene().at("html")->write(document, options, *sink), "", {"default"});
 }
 
@@ -158,6 +160,8 @@ service::Outcome RenderCommand::diagram(api::Workspace& workspace) const {
     format::DescriptionFactory::ir(*document)->describe(*sink);
     return written(sink->result(), "\n", {"default"});
   }
+  if (format_ == "svg")  // the one path from a diagram to its drawing, the walkthrough's cards' too (DS-470)
+    return written(api::Drawings::svg(workspace.model(), metamodel_, theme_, diagram_, width_), "", {"default"});
   return written(draw(*document, true), "", {"default"});  // the document drawn, with no text between (DS-458)
 }
 

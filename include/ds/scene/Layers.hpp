@@ -70,16 +70,15 @@ class TraceLayer : public ILayer {
   const Map& map_;
 };
 
-/// Walkthroughs (DS-471): each walkthrough the model writes, from the one record model::Walkthroughs builds, its
-/// steps landed on the nodes drawn and a sequence step given the behaviour it replays.
+/// Walkthroughs (DS-471): each walkthrough the model writes, from the one record model::Walkthroughs builds, what its
+/// steps light by identity (DS-470) and a sequence step given the behaviour it replays.
 class WalkthroughLayer : public ILayer {
  public:
-  WalkthroughLayer(const model::Model& model, const Map& map);
+  WalkthroughLayer(const model::Model& model, const Map& map);  ///< the map as every layer is given it: a step lights by identity
   void decorate(SceneDocument& out_document) override;
 
  private:
   const model::Model& model_;
-  const Map& map_;
 };
 
 /// Rules: each rule and definition where it is written, and what breaks it, placed on the map (REQ-00099-1); the

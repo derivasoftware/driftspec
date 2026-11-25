@@ -2549,7 +2549,34 @@
       "expected": false,
       "fields": {
         "initial": "Home",
-        "transitions": "Home>Result>greet\nHome>Home>greet [empty name]\nHome>About>about\nResult>Home>back\nAbout>Home>back"
+        "transitions": [
+          {
+            "event": "greet",
+            "from": "Home",
+            "to": "Result"
+          },
+          {
+            "event": "greet",
+            "from": "Home",
+            "guard": "empty name",
+            "to": "Home"
+          },
+          {
+            "event": "about",
+            "from": "Home",
+            "to": "About"
+          },
+          {
+            "event": "back",
+            "from": "Result",
+            "to": "Home"
+          },
+          {
+            "event": "back",
+            "from": "About",
+            "to": "Home"
+          }
+        ]
       },
       "flags": [],
       "id": "hola@web::state",
@@ -3743,17 +3770,17 @@
             "values": []
           },
           {
-            "meaning": "its transitions",
+            "meaning": "its transitions, one record each in the order written: from, to, event, and guard and action when written (DS-384)",
             "name": "transitions",
             "source": "syntax",
-            "type": "text",
+            "type": "records",
             "values": []
           },
           {
-            "meaning": "its states as rules over the context of its subject: state|literals|line, one per line",
+            "meaning": "its states as rules over the context of its subject, one record each: state, and its literals, each with left, op and right when compared, and negated when it says not (DS-249, DS-384)",
             "name": "rules",
             "source": "syntax",
-            "type": "text",
+            "type": "records",
             "values": []
           }
         ],

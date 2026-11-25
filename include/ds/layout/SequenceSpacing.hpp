@@ -1,5 +1,6 @@
 #ifndef DRIFTSPEC_LAYOUT_SEQUENCESPACING_HPP
 #define DRIFTSPEC_LAYOUT_SEQUENCESPACING_HPP
+#include "ds/layout/SequenceLeast.hpp"
 
 namespace ds {
 namespace layout {
@@ -42,8 +43,8 @@ struct SequenceSpacing {
   int dividerOffset = 0;  ///< an else's line below where its lead begins
 
   /// The distances in a sink that measures a character `advance` across, a line `lineHeight` down and a character of
-  /// small text `smallAdvance` across.
-  static SequenceSpacing of(int advance, int lineHeight, int smallAdvance);
+  /// small text `smallAdvance` across, its marks given at least the room in `least`.
+  static SequenceSpacing of(int advance, int lineHeight, int smallAdvance, const SequenceLeast& least = {});
   /// The SVG's proportions: across in characters of its 8 px advance, down in lines of its 18 px line (DS-477).
   static constexpr double kLine = 18.0;
 };

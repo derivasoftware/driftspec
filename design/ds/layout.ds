@@ -227,8 +227,18 @@ package driftspec@ds {
       + frameBottom: int
       + bottomPad: int
       + dividerOffset: int
-      + static of(advance: int, lineHeight: int, smallAdvance: int) -> SequenceSpacing
+      + static of(advance: int, lineHeight: int, smallAdvance: int, least: SequenceLeast) -> SequenceSpacing
       + kLine: double                        // the SVG's 18 px line the proportions are written in (DS-477)
+    }
+
+    // the least room a sink's marks need in a sequence, in its units: around a head's label, a head's height, a message
+    // to its own lane, and between a frame's edge and the next; the spacing takes the larger of it and its proportion
+    dataclass SequenceLeast {
+      @requirement REQ-00210-1
+      + headPad: int
+      + headHeight: int
+      + selfHeight: int
+      + frameGap: int
     }
 
     // a sequence to place, knowing nothing of what it stands for: its lanes, its messages by row, its frames

@@ -49,15 +49,15 @@ struct DiagramView {
   std::vector<std::string> nodes;
 };
 
-/// One step of a walkthrough as the scene places it (DS-471): what it shows, by the name diagrams gives, and what it
-/// lights, landed on the nodes drawn.
+/// One step of a walkthrough as the scene gives it (DS-471): what it shows, by the name diagrams gives, and what it
+/// lights by identity, as the drawing it shows names it (DS-470).
 struct WalkStepView {
   std::string title;
   std::string diagram;                 ///< the shown diagram's name, as DiagramView names it
   std::string behaviour;               ///< the behaviour a sequence step replays, X::sequence[/scenario]; "" for none
-  std::vector<std::string> focus;      ///< the nodes it focuses, landed
-  std::vector<std::string> highlight;  ///< the nodes it highlights, landed
-  std::string at;                      ///< the node its callout points at; "" for none
+  std::vector<std::string> focus;      ///< the identities it focuses, as its drawing names them (DS-470)
+  std::vector<std::string> highlight;  ///< the identities it highlights
+  std::string at;                      ///< the identity its callout points at; "" for none
   std::string text;
 };
 

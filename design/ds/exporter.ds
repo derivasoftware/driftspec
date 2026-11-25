@@ -128,6 +128,8 @@ package driftspec@ds {
       + relations(relations: std::vector<model::Relation>, out_sink: emit::ISink) -> void
       - static location(l: model::Location, out_sink: emit::ISink) -> void
       - static relation(r: model::Relation, out_sink: emit::ISink) -> void
+      - static machineTransitions(transitions: std::vector<model::WrittenTransition>, out_sink: emit::ISink) -> void   // as records (DS-384)
+      - static machineRules(rules: std::vector<model::WrittenRule>, out_sink: emit::ISink) -> void
       - findings(findings: std::vector<model::Finding>, out_sink: emit::ISink) -> void
       - static breaches(model: model::Model, out_sink: emit::ISink) -> void
       - kindNames(kinds: std::vector<model::Kind>, out_sink: emit::ISink) -> void
