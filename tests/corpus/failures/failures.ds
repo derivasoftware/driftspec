@@ -105,6 +105,23 @@ package shelf {
     -> loader.open(path) -> book
     return book
   }
+  // a use case has no signature: what a call of its scenario fails with is handled there, or it
+  // escapes the use case and is said at the scenario (DS-434)
+  usecase UC-00001-1 {         // ? W-USECASE-UNREALISED
+    title: Read a book
+  }
+  sequence UC-00001-1 {        // ! W-FAILURE-UNDECLARED: the loader's LoadError and ParseError escape it
+    -> Loader.load(path) -> book
+    return book
+  }
+
+  usecase UC-00002-1 {         // ? W-USECASE-UNREALISED
+    title: Show a book
+  }
+  sequence UC-00002-1 {        // the shelf handles what it calls fails with: nothing escapes
+    -> Shelf.show(path) -> title
+    return title
+  }
 }
 
 diagram SEQ_Load {

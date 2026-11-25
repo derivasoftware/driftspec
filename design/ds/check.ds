@@ -644,6 +644,9 @@ package driftspec@ds {
       - checkFailures(operation: model::Entity) -> void {
         @requirement REQ-00112-1
       }
+      - checkScenario(usecase: model::Entity) -> void {   // a use case has no signature: what escapes is said at its scenario (DS-434)
+        @requirement REQ-00112-1
+      }
     }
 
     class ScenarioCheck : ACheck {         // a scenario written twice for one behaviour (DS-382)
@@ -994,11 +997,14 @@ package driftspec@ds {
       -> checkScenarios()
     }
 
-    // what FailureFlow wrote, read: the handlers, then each operation, method and function
+    // what FailureFlow wrote, read: the handlers, each operation, method and function, then each use case
     sequence FailureCheck::check {
       -> checkHandlers()
       loop each operation, method and function {
         -> checkFailures(operation)
+      }
+      loop each use case {
+        -> checkScenario(usecase)
       }
     }
 

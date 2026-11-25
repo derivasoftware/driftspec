@@ -36,6 +36,7 @@ std::vector<model::Finding> FailureCheck::check() {
     const model::Entity& e = pair.second;
     const bool operation = e.kind == model::Kind::Operation || e.kind == model::Kind::Method || e.kind == model::Kind::Function;
     if (operation && !e.expected) checkFailures(e);
+    if (e.kind == model::Kind::UseCase && !e.expected) checkScenario(e);
   }
   std::vector<model::Finding> out;
   out.swap(found_);
@@ -113,6 +114,20 @@ void FailureCheck::checkFailures(const model::Entity& op) {
     found_.push_back(context_->metamodel().finding(
         model::Code::W_FAILURE_UNREACHED, op.id + " says it may fail with " + name + ", and no path of its behaviour does", op.location));
   }
+}
+
+// A use case has no signature to promise failures in (DS-434): what a call of its scenario fails with is handled
+// there, or it escapes the use case, said at the scenario.
+void FailureCheck::checkScenario(const model::Entity& usecase) {
+  model::Location at = usecase.location;
+  for (const auto& r : model_->index().toOfKind(usecase.id, "behaviour-of")) {
+    const model::Entity* seq = model_->find(r.from);
+    if (seq && model::Identity(seq->id).scenario().empty()) at = seq->location;
+  }
+  for (const auto& name : text::splitTrimmed(usecase.field("escapes"), ','))
+    found_.push_back(context_->metamodel().finding(
+        model::Code::W_FAILURE_UNDECLARED,
+        usecase.id + " lets " + name + " escape (" + usecase.field("escape." + name) + "), and its scenario does not handle it", at));
 }
 
 }  // namespace check
