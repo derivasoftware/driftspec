@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
 #include "ds/bind/Binder.hpp"
@@ -61,7 +62,7 @@ class TestDrawingSteps : public ::testing::Test {
     ds::parse::Parser parser;
     for (const auto& f : files) binder.bind(parser.parseText(f.first, f.second));
     ds::check::CheckerFactory::make(model, metamodel, selection)->run(binder.notes());
-    return ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false);
+    return ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram);
   }
 
   /// DriftSpec's design with a table of its rules, written as rows and columns: whether each holds.

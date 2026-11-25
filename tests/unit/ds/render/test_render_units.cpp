@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -44,7 +45,7 @@ TEST(TestIrExport, ItListsTheDiagramsAndExportsEachAsItsIr) {
   ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
   const ds::render::IrExport ir(model, metamodel);
   EXPECT_EQ(ir.diagrams(), (std::vector<std::string>{"diagram:CL_M"}));
-  const auto json = nlohmann::json::parse(ir.render("diagram:CL_M", false));
+  const auto json = nlohmann::json::parse(ds::test::irJson(ir, "diagram:CL_M"));
   std::set<std::string> ids;
   for (const auto& n : json["nodes"]) ids.insert(n["id"].get<std::string>());
   EXPECT_TRUE(ids.count("p@m::A") && ids.count("p@m::B"));

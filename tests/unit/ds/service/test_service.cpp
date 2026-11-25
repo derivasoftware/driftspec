@@ -127,7 +127,7 @@ TEST_F(TestCheckDesign, AWorkspaceThatChecksCleanEndsInDefaultWithItsReport) {
 
 TEST_F(TestSeeDesign, ADiagramIsDrawnAsItsLayoutAndOneTheWorkspaceLacksIsNoDiagram) {
   const ds::service::SeeDesign see(metamodel);
-  EXPECT_FALSE(see.diagram(model, "CL_P").json.empty());
+  EXPECT_TRUE(see.diagram(model, "CL_P").has_value());
   EXPECT_EQ(run(see, {{{"format", "layout"}, {"diagram", "CL_P"}}}).second, "default");
   EXPECT_EQ(run(see, {{{"format", "layout"}, {"diagram", "CL_Nope"}}}), (std::pair<std::string, std::string>{"", "no-diagram"}));
   EXPECT_THROW(run(see, {{{"format", "svg"}, {"diagram", "CL_P"}}}), ds::emit::NotImplemented);               // a writer until DS-399

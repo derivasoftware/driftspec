@@ -1,11 +1,10 @@
 #ifndef DRIFTSPEC_RENDER_STATEPROJECTOR_HPP
 #define DRIFTSPEC_RENDER_STATEPROJECTOR_HPP
 
-#include <nlohmann/json_fwd.hpp>
-
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/render/IProjector.hpp"
+#include "ds/render/Ir.hpp"
 
 namespace ds {
 namespace render {
@@ -14,7 +13,7 @@ namespace render {
 class StateProjector : public IProjector {
  public:
   StateProjector(const model::Model& model, const model::Metamodel& metamodel) : model_(model), metamodel_(metamodel) {}
-  nlohmann::json project(const model::Entity& diagram) const override;
+  IrDocument project(const model::Entity& diagram) const override;
 
  private:
   const model::Model& model_;

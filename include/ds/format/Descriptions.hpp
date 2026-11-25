@@ -115,6 +115,30 @@ class LayoutDescription : public ADescription {
   const int width_;
 };
 
+/// A diagram's render-IR (plantuml-render contract v1, DS-418): the document a projector made, written once, every
+/// record's keys in byte order as they are named here, so it streams into any sink with nothing kept back. A key
+/// is written when it says something: a node's label always, `abstract` when said either way, a message's order
+/// from 0, every key of a table's records; any other only when it holds something.
+class IrDescription : public ADescription {
+ public:
+  explicit IrDescription(const render::IrDocument& document) : document_(document) {}
+  std::string name() const override;
+
+ private:
+  void say(emit::ISink& out_sink) const override;
+  static void node(const render::IrNode& node, emit::ISink& out_sink);
+  static void edge(const render::IrEdge& edge, emit::ISink& out_sink);
+  static void table(const render::IrTable& table, emit::ISink& out_sink);
+  /// A text field, written only when it holds something.
+  static void text(std::string_view name, const std::string& value, emit::ISink& out_sink);
+  /// Named references, in their map's (byte) order; written only when there are any.
+  static void refs(const std::map<std::string, std::string>& refs, emit::ISink& out_sink);
+  /// A list of texts, written only when it holds any.
+  static void texts(std::string_view name, const std::vector<std::string>& values, emit::ISink& out_sink);
+
+  const render::IrDocument& document_;
+};
+
 /// A diagram as the terminal's coloured cells (-f cells), drawn in the theme (DS-393).
 class CellsDescription : public ADescription {
  public:

@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <nlohmann/json.hpp>
 #include <string>
 
 #include "ds/bind/Binder.hpp"
@@ -25,9 +24,9 @@ class TestStateProjector : public ::testing::Test {
     return *model.find("diagram:" + name);
   }
 
-  static const nlohmann::json* node(const nlohmann::json& body, const std::string& id) {
-    for (const auto& n : body["nodes"]) {
-      if (n["id"] == id) return &n;
+  static const ds::render::IrNode* node(const ds::render::IrDocument& body, const std::string& id) {
+    for (const auto& n : body.nodes) {
+      if (n.id == id) return &n;
     }
     return nullptr;
   }
@@ -37,13 +36,13 @@ class TestStateProjector : public ::testing::Test {
 };
 
 TEST_F(TestStateProjector, TheMachineStartsAtADotAndItsStatesAreNodes) {
-  const nlohmann::json body = ds::render::StateProjector(model, metamodel).project(diagram("states", "STM_Order"));
+  const ds::render::IrDocument body = ds::render::StateProjector(model, metamodel).project(diagram("states", "STM_Order"));
   ASSERT_NE(node(body, "shop@order::Order::state::initial"), nullptr);
-  EXPECT_EQ((*node(body, "shop@order::Order::state::initial"))["kind"], "initial");
+  EXPECT_EQ(node(body, "shop@order::Order::state::initial")->kind, "initial");
   ASSERT_NE(node(body, "shop@order::Order::state::Paid"), nullptr);
-  EXPECT_EQ((*node(body, "shop@order::Order::state::Paid"))["kind"], "state");
-  EXPECT_FALSE(body["edges"].empty());
-  EXPECT_FALSE(body.contains("ir"));  // the head is IrExport's: a projector writes the body alone
-  EXPECT_FALSE(body.contains("title"));
+  EXPECT_EQ(node(body, "shop@order::Order::state::Paid")->kind, "state");
+  EXPECT_FALSE(body.edges.empty());
+  EXPECT_TRUE(body.kind.empty());  // the head is IrExport's: a projector writes the body alone
+  EXPECT_TRUE(body.title.empty());
 }
 }  // namespace

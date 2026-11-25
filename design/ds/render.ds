@@ -107,7 +107,7 @@ package driftspec@ds {
       + title: std::string
       + href: std::string
       + part: std::string                   // the part of the drawing it belongs to, in a drawing made of several
-      + abstract: bool
+      + abstract: std::optional<bool>        // said of a class or an interface, either way; of anything else not said (DS-418)
       + refs: std::map<std::string, std::string>
       + sections: std::vector<std::vector<std::string>>
       + sectionKinds: std::vector<std::string>
@@ -135,6 +135,7 @@ package driftspec@ds {
       + dashed: bool
       + order: int
       + refs: std::map<std::string, std::string>
+      + static between(from: std::string, to: std::string, kind: std::string) -> IrEdge   // an edge saying nothing else yet (DS-418)
     }
 
     // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
@@ -173,7 +174,7 @@ package driftspec@ds {
       + kind: std::string                    // the diagram's kind, how it is drawn (DS-443)
       + title: std::string
       + notice: std::string
-      + owns table: IrTable                 // when it has columns, the document is drawn as this table
+      + table: std::optional<IrTable>        // when written and with columns, the document is drawn as this table (DS-418)
       + owns many nodes: std::vector<IrNode>
       + owns many edges: std::vector<IrEdge>
       // a drawing made of several, each drawn as itself and placed beside the last: a tour (DS-245)
@@ -324,7 +325,7 @@ package driftspec@ds {
     }
 
     // the projection (DS-369): the projector of a diagram's kind draws its body, from what the query's filter of the
-    // diagram takes; this one chooses the projector, heads the document and writes it
+    // diagram takes; this one chooses the projector and heads the document, a value format::IrDescription writes (DS-418)
     class IrExport {
       @requirement REQ-00198-1
       @requirement REQ-00251-1               // every document says its diagram's kind (DS-443)
@@ -333,10 +334,10 @@ package driftspec@ds {
       - refs metamodel_: model::Metamodel     // the language of the model: the kinds it draws by name (DS-351)
       + IrExport(model: model::Model, metamodel: model::Metamodel)
       + diagrams() -> std::vector<std::string>
-      + render(diagramId: std::string, pretty: bool) -> std::string {
+      + document(diagramId: std::string) -> std::optional<IrDocument> {
         @requirement REQ-00057-1
       }
-      - static documentHead(diagram: model::Entity) -> nlohmann::json   // what heads every document: ir, the diagram's kind, title (DS-443)
+      - static documentHead(diagram: model::Entity, out_document: IrDocument) -> void   // the diagram's kind and title, filled in one place (DS-443)
     }
 
     sequence IrExport::diagrams {
@@ -345,17 +346,17 @@ package driftspec@ds {
       return out
     }
 
-    // The kind written in the diagram picks the projector; whatever it draws is headed and written here, pretty-printed
-    // when asked. What comes back is the JSON dumped, so a name for it, not a checked value.
-    sequence IrExport::render {
+    // The kind written in the diagram picks the projector; whatever it draws is headed here, and handed on as a value
+    // for its door to describe into the sink it chose (DS-418).
+    sequence IrExport::document {
       local projector: IProjector
       self -> model_.find(diagramId) -> diagram
       opt there is no such diagram / no-diagram {
-        return ""
+        return none
       }
       -> ProjectorFactory::of(kind, model_, metamodel_) -> made
-      -> projector.project(diagram) -> body
-      -> documentHead(diagram) -> head
+      -> projector.project(diagram) -> ir
+      -> documentHead(diagram, ir) -> headed
       return ir
     }
 
@@ -363,7 +364,7 @@ package driftspec@ds {
     class IProjector {
       @requirement REQ-00006-1
       + ~IProjector()
-      + abstract project(diagram: model::Entity) -> nlohmann::json
+      + abstract project(diagram: model::Entity) -> IrDocument   // the body, as a document IrDescription writes (DS-418)
     }
 
     // the one place that names the projectors, by the kind of diagram they draw: a class diagram for any other kind
@@ -403,10 +404,10 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + ClassProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00057-1
       }
-      - closeBoxes(doc: nlohmann::json, cut: axis::Cut) -> nlohmann::json {
+      - closeBoxes(doc: IrDocument, cut: axis::Cut) -> IrDocument {
         @requirement REQ-00064-5
         @requirement REQ-00126-1
         @requirement REQ-00137-1
@@ -456,7 +457,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + SequenceProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00049-3
         @requirement REQ-00056-1
         @requirement REQ-00129-1
@@ -476,8 +477,8 @@ package driftspec@ds {
     // follows the calls
     class SequenceBuilder {
       @requirement REQ-00049-3
-      + nodes: nlohmann::json                  // the lifelines, in the order they are met
-      + edges: nlohmann::json                  // the messages, each with its order
+      + owns many nodes: std::vector<IrNode>   // the lifelines, in the order they are met
+      + owns many edges: std::vector<IrEdge>   // the messages, each with its order
       + order: int                             // the order the next message takes
       - refs model_: model::Model
       - refs cut_: axis::Cut                   // the cut the lifelines stand on, and the calls it follows (DS-231)
@@ -499,7 +500,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + TourProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00139-1
       }
     }
@@ -523,7 +524,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + StateProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00062-1
         @requirement REQ-00144-1
         @requirement REQ-00146-1
@@ -535,7 +536,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + TableProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00006-1
       }
     }
@@ -545,7 +546,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + RequirementProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00050-1
         @requirement REQ-00131-1
       }
