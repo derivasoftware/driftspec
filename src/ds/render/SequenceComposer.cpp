@@ -1,4 +1,4 @@
-#include "ds/render/SequenceSvgComposer.hpp"
+#include "ds/render/SequenceComposer.hpp"
 
 #include <utility>
 
@@ -11,9 +11,9 @@
 namespace ds {
 namespace render {
 
-// The sequence projected into the layout's graph and placed by its sequence engine with the SVG's measures (DS-464);
-// what each place stands for is read back from the projection, in the same order.
-Figure SequenceSvgComposer::compose(const IrDocument& input, int) const {
+// The sequence projected into the layout's graph and placed by its sequence engine with the sink's measures, its marks
+// given the least room they need (DS-464); what each place stands for is read back from the projection, in the same order.
+Figure SequenceComposer::compose(const IrDocument& input, int) const {
   Figure figure;
   figure.source = &input;  // drawn as it is: the layout points into it
   SequenceProjection projection(input);
@@ -22,7 +22,9 @@ Figure SequenceSvgComposer::compose(const IrDocument& input, int) const {
     figure.sequence = std::move(s);
     return figure;
   }
-  const layout::SequenceSpacing spacing = layout::SequenceSpacing::of(metrics_.CHAR_W, metrics_.LINE_H, metrics_.SMALL_W);
+  const layout::SequenceSpacing spacing =
+      layout::SequenceSpacing::of(metrics_.CHAR_W, metrics_.LINE_H, metrics_.SMALL_W,
+                                  {metrics_.SEQ_PAD_LEAST, metrics_.SEQ_HEAD_LEAST, metrics_.SEQ_SELF_LEAST, metrics_.SEQ_FRAME_LEAST});
   const layout::SequencePlacement placed = layout::EngineFactory::sequence(spacing)->place(projection.graph());
   s.laneOf = projection.takeLaneOf();
   s.lanes.reserve(projection.lanes().size());

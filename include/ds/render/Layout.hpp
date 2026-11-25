@@ -16,9 +16,13 @@ namespace render {
 /// pixel table; `text()` is the same table in character cells, so the same
 /// layout lands on a terminal grid.
 struct Metrics {
-  int CHAR_W = 0;   ///< the advance of a character: the theme's measures, never written here (DS-393)
-  int LINE_H = 0;   ///< the height of a line: the theme's measures
-  int SMALL_W = 0;  ///< the advance of a character of small text: the theme's measures (DS-464)
+  int CHAR_W = 0;           ///< the advance of a character: the theme's measures, never written here (DS-393)
+  int LINE_H = 0;           ///< the height of a line: the theme's measures
+  int SMALL_W = 0;          ///< the advance of a character of small text: the theme's measures (DS-464)
+  int SEQ_PAD_LEAST = 0;    ///< the least room around a sequence head's label (DS-464)
+  int SEQ_HEAD_LEAST = 0;   ///< the least room a sequence's head is drawn in (DS-464)
+  int SEQ_SELF_LEAST = 0;   ///< the least room a message to its own lane is drawn in
+  int SEQ_FRAME_LEAST = 0;  ///< the least room between a frame's edge and the next
   int PAD_X = 10;
   int PAD_Y = 10;
   int SECTION_GAP = 4;
@@ -59,7 +63,11 @@ struct Metrics {
     m.LANE_PAD = 2;
     m.CONTAINER_PAD = 2;
     m.CONTAINER_LABEL_H = 1;
-    m.ASPECT = 0.8;  // a terminal cell is about twice as tall as wide: 1.6 on screen is 0.8 in cells
+    m.SEQ_PAD_LEAST = 4;    // a boxed head, an actor's too: a border and a space on each side of its name
+    m.SEQ_HEAD_LEAST = 3;   // a boxed head: its border, its name, its border
+    m.SEQ_SELF_LEAST = 3;   // a loop's label and arrow, and the row it returns on
+    m.SEQ_FRAME_LEAST = 1;  // a frame's edge is a row of its own
+    m.ASPECT = 0.8;         // a terminal cell is about twice as tall as wide: 1.6 on screen is 0.8 in cells
     return m;
   }
 };
