@@ -700,6 +700,11 @@ package driftspec@driftspec {
       + number(value: double) -> driftspec@ds@emit::ISink
       + boolean(value: bool) -> driftspec@ds@emit::ISink
       + null() -> driftspec@ds@emit::ISink
+      + paragraph(text: std::string) -> driftspec@ds@emit::ISink     // the presentation half is the text sink's: none taken (DS-475)
+      + table(columns: std::vector<std::string>) -> driftspec@ds@emit::ISink
+      + row(cells: std::vector<std::string>) -> driftspec@ds@emit::ISink
+      + endTable() -> driftspec@ds@emit::ISink
+      + described(document: std::string) -> driftspec@ds@emit::ISink fails NotImplemented   // nothing built: no document
       + result() -> std::string
       + take() -> object
       - put(value: object) -> driftspec@ds@emit::ISink
