@@ -119,8 +119,11 @@ SequencePlacement StackedEngine::place(const SequenceGraph& graph) const {
   }
 
   // what was placed
+  out.lanes.reserve(count);
   for (size_t i = 0; i < count; ++i) out.lanes.push_back({centre[i], head[i]});
+  out.rows.reserve(rowsCount);
   for (int r = 0; r < rowsCount; ++r) out.rows.push_back({rowStart[r], rowLine[r], rowEnd[r]});
+  out.blocks.reserve(frames.size());
   for (const Frame& f : frames) {
     BlockPlace placed{f.top, f.bottom, f.left, f.right, {}};
     for (size_t k = 0; k < f.block->dividers.size(); ++k) {

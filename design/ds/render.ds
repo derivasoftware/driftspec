@@ -673,11 +673,13 @@ package driftspec@ds {
       - refs many lanes_: std::vector<const IrNode*>
       - refs many messages_: std::vector<const IrEdge*>
       - refs many blocks_: std::vector<const IrNode*>
+      - laneOf_: std::map<std::string, std::size_t>
       + SequenceProjection(doc: IrDocument)
       + graph() -> layout::SequenceGraph
       + lanes() -> std::vector<const IrNode*>
       + messages() -> std::vector<const IrEdge*>
       + blocks() -> std::vector<const IrNode*>
+      + laneOf() -> std::map<std::string, std::size_t>   // a lifeline's lane, by its id
     }
 
     // the sequence projected into the layout's graph and placed by its sequence engine with the SVG's measures

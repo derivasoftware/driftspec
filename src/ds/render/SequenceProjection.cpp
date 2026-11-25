@@ -8,7 +8,7 @@ namespace ds {
 namespace render {
 
 SequenceProjection::SequenceProjection(const IrDocument& doc) {
-  std::map<std::string, size_t> laneOf;
+  std::map<std::string, size_t>& laneOf = laneOf_;
   for (const auto& n : doc.nodes) {
     if (n.kind != "lifeline") continue;
     laneOf[n.id] = lanes_.size();
@@ -19,6 +19,7 @@ SequenceProjection::SequenceProjection(const IrDocument& doc) {
     if (e.kind == "message" && laneOf.count(e.from) && laneOf.count(e.to)) messages_.push_back(&e);
   }
   std::sort(messages_.begin(), messages_.end(), [](const IrEdge* a, const IrEdge* b) { return a->order < b->order; });
+  graph_.messages.reserve(messages_.size());
   for (const IrEdge* m : messages_) graph_.messages.push_back({laneOf.at(m->from), laneOf.at(m->to), m->label.size(), m->order});
   for (const auto& n : doc.nodes) {
     if (n.kind != "frame" || n.span.first < 0) continue;

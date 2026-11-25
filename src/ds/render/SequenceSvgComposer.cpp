@@ -24,11 +24,12 @@ Figure SequenceSvgComposer::compose(const IrDocument& input, int) const {
   }
   const layout::SequenceSpacing spacing = layout::SequenceSpacing::of(metrics_.CHAR_W, metrics_.LINE_H, metrics_.SMALL_W);
   const layout::SequencePlacement placed = layout::EngineFactory::sequence(spacing)->place(projection.graph());
-  for (size_t i = 0; i < projection.lanes().size(); ++i) {
-    s.laneOf[projection.lanes()[i]->id] = i;
+  s.laneOf = projection.laneOf();
+  s.lanes.reserve(projection.lanes().size());
+  for (size_t i = 0; i < projection.lanes().size(); ++i)
     s.lanes.push_back({projection.lanes()[i], placed.lanes[i].centre, placed.lanes[i].head});
-  }
   s.messages = projection.messages();
+  s.rows.reserve(placed.rows.size());
   for (const layout::RowPlace& r : placed.rows) s.rows.push_back({r.top, r.line, r.bottom});
   for (size_t b = 0; b < placed.blocks.size(); ++b) {
     const IrNode* frame = projection.blocks()[b];
