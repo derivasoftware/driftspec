@@ -534,7 +534,7 @@ void Text::cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) con
   const Grid g = doc.table && !doc.table->columns.empty() ? tableGrid(doc)
                  : !doc.parts.empty()                     ? partsGrid(doc, maxWidth)
                  : isSequence(doc)                        ? sequenceGrid(doc)
-                                                          : classGrid(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)));
+                                   : classGrid(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)));
   out_sink.beginRecord().field("cells").value(g.encode(pen_.cellColours)).field("columns").integer(g.columns());
   out_sink.field("rows").integer(g.rows()).field("text").value(g.dump(false)).endRecord();
 }
