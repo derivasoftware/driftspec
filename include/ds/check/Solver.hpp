@@ -33,14 +33,17 @@ class Solver {
   static bool compares(model::LiteralForm form);
 
  private:
-  void solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables, std::vector<bool> done,
-                 const std::vector<const std::string*>& bindings, bool first,
-                 std::vector<std::vector<const std::string*>>& out_answers) const;
+  /// The answers of what is left of `body`, extending `work`: one binding the search binds, continues and undoes
+  /// (DS-401), the literals done marked and unmarked; false once `first` has its answer.
+  bool solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables, std::vector<bool>& done,
+                 std::vector<const std::string*>& work, bool first, std::vector<std::vector<const std::string*>>& out_answers) const;
   /// Whether a literal can be answered with what is bound.
   bool ready(const model::Literal& literal, const Variables& variables, const std::vector<const std::string*>& bindings) const;
-  /// The bindings that extend `bindings` with an answer of one positive literal.
-  std::vector<std::vector<const std::string*>> answers(const std::string& owner, const model::Literal& literal, const Variables& variables,
-                                                       const std::vector<const std::string*>& bindings) const;
+  /// Each answer of one literal, as it reads positively, bound into `work` while `next` continues and undone after
+  /// it, in the order the facts give them (DS-401); false when `next` stops the search. Nothing is copied per answer.
+  template <class Next>
+  bool answers(const std::string& owner, const model::Literal& literal, const Variables& variables, std::vector<const std::string*>& work,
+               Next&& next) const;
   /// What a term stands for under `bindings`: a value as written, a bound variable (or a field of it), a constant;
   /// null for a variable not bound yet.
   const std::string* value(const std::string& owner, const model::Term& term, const Variables& variables,
