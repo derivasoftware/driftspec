@@ -120,7 +120,14 @@ Outcome LearnLanguage::run(const model::Model&, const Request& request, emit::IS
   for (const auto& k : metamodel_.kinds())
     if (topic == metamodel_.nameOf(k.kind)) kind = &k;
   if (kind) {
-    sink.field("kind").beginRecord().field("example").value(kind->example).field("fields").beginList();
+    sink.field("kind")
+        .beginRecord()
+        .field("category")
+        .value(model::Metamodel::categoryName(kind->category))
+        .field("example")
+        .value(kind->example)
+        .field("fields")
+        .beginList();
     for (const auto& f : kind->fields) {
       sink.beginRecord().field("meaning").value(f.meaning).field("name").value(f.name).field("source").value(
           metamodel_.fieldSourceName(f.source));
