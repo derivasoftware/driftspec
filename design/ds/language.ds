@@ -146,6 +146,47 @@ package driftspec@ds {
         title: Every entity shall have one identity, and a second declaration of it shall be E-DUPLICATE-IDENTITY
         rationale: R5: identity across the workspace is what makes references, diagrams and diffs mean the same entity everywhere.
       }
+      requirement REQ-00252-1 {
+        tags: language, workspace, identity
+        status: draft
+        title: An owner shall declare two operations of one name with different parameters
+        text:
+          A class's methods, an interface's operations and a module's functions may share a name.
+          When two of one owner do, each is its name with its parameter types as written, whitespace
+          normalised: Factory::of(Scene), Factory::of(Report, int), Factory::of(). An operation alone
+          with its name keeps its bare identity. The name itself stays bare; the same name with the
+          same types is still E-DUPLICATE-IDENTITY (CST-00002-1). A behaviour names the overload it is
+          of by its types: sequence Factory::of(Scene) { ... }. Decided where the owner is bound, from
+          what is written beside the operation, so nothing is renamed after.
+        rationale: DS-455, the Owner, 2026-11-25. DS-398 wanted DescriptionFactory's makers as one name, of(...), the natural C++, and the language could not say it.
+        verification VER-00272-1 {
+          title: Integration tests confirm each overload of a class, an interface and a module is its name with its parameter types, one alone keeps its bare name, and none is a duplicate
+          status: draft
+          method: test
+          tests:
+            tests/integration/ds/check/test_overloads.cpp::TestOverloads.EachOverloadIsItsNameWithItsParameterTypesAndOneAloneKeepsItsBareName
+        }
+      }
+      requirement REQ-00253-1 {
+        tags: language, workspace, identity, check
+        status: draft
+        title: The checker shall report a call or a reference that two overloads still match after its arguments narrow them
+        text:
+          A call matches only an overload it could be a call of: its arguments narrow the overloads
+          of its name to those taking as many parameters, the type and its nearest base that has any.
+          One left is the one it calls. Two or more left, the call calls none of them and is
+          W-NAME-AMBIGUOUS, naming them. A reference that names an operation bare, such as a
+          behaviour's subject, matches every overload of the name: two or more is W-NAME-AMBIGUOUS
+          until its parameter types are written.
+        rationale: DS-455, the Owner, 2026-11-25: "a reference that matches two is W-NAME-AMBIGUOUS", read after arity (code-62).
+        verification VER-00273-1 {
+          title: Integration tests confirm a call is narrowed by its arguments to the overload it calls, and a call or a bare behaviour subject that two still match is W-NAME-AMBIGUOUS naming them
+          status: draft
+          method: test
+          tests:
+            tests/integration/ds/check/test_overloads.cpp::TestOverloads.ACallIsNarrowedByItsArgumentsAndOneThatTwoStillMatchIsAmbiguous
+        }
+      }
       requirement REQ-00164-1 {
         tags: language, workspace, behaviour
         status: approved

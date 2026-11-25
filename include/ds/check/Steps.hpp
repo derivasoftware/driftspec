@@ -71,6 +71,8 @@ class BehaviourTyping : public IStep {
   void couple(const model::Entity& sequence, const model::Entity& type, bool transient);
   /// A message that reached its operation: the call, its arity, and its expansion (B5).
   void call(const model::Entity& msg, const model::Entity& op, const bind::Message& message);
+  /// A call two overloads of its name could be a call of, by its arguments (DS-455): W-NAME-AMBIGUOUS, and true.
+  bool reportOverloads(const model::Entity& seq, const std::string& typeId, const bind::Message& message);
   void expand(const model::Entity& msg, const model::Entity& op, const bind::Message& message);
   void checkReturn(const bind::Message& message);
   void checkMessage(const bind::Message& message);

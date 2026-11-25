@@ -10,12 +10,12 @@ namespace parse {
 const char* TreeReader::nameOf(Field field) {
   // in the order of Field, which is the grammar's
   static const char* const names[] = {
-      "action",   "base",      "body",      "bound",    "call",      "code",       "condition", "default",  "definition", "else_scenario",
-      "entity",   "event",     "fails",     "failure",  "family",    "field",      "from",      "guard",    "id",         "key",
-      "kind",     "left",      "many",      "modifier", "name",      "negated",    "of",        "op",       "operator",   "operators",
-      "optional", "otherwise", "ownership", "package",  "parameter", "params",     "prefix",    "property", "realises",   "relation",
-      "result",   "returns",   "right",     "scenario", "scope",     "show",       "subject",   "symbol",   "target",     "text",
-      "title",    "to",        "type",      "value",    "variable",  "visibility",
+      "action",   "base",      "body",     "bound",     "call",     "code",      "condition",  "default", "definition", "else_scenario",
+      "entity",   "event",     "fails",    "failure",   "family",   "field",     "from",       "guard",   "id",         "key",
+      "kind",     "left",      "many",     "modifier",  "name",     "negated",   "of",         "op",      "operator",   "operators",
+      "optional", "otherwise", "overload", "ownership", "package",  "parameter", "params",     "prefix",  "property",   "realises",
+      "relation", "result",    "returns",  "right",     "scenario", "scope",     "show",       "subject", "symbol",     "target",
+      "text",     "title",     "to",       "type",      "value",    "variable",  "visibility",
   };
   return names[static_cast<std::size_t>(field)];
 }

@@ -58,6 +58,21 @@ void BehaviourTyping::couple(const model::Entity& sequence, const model::Entity&
   model_->relate({kind, sequence.id, type.id, sequence.location, ""});
 }
 
+bool BehaviourTyping::reportOverloads(const model::Entity& seq, const std::string& typeId, const bind::Message& message) {
+  // a call that two overloads could be a call of, by its arguments, names none of them: an incoherence (DS-455)
+  const std::string name = model::Identity(message.op).lastName();
+  const std::vector<std::string> overloads = resolver_->overloadsOf(typeId, name, message.argc);
+  if (overloads.size() < 2) return false;
+  std::string names;
+  for (const auto& o : overloads) names += (names.empty() ? "" : ", ") + o;
+  context_->report(context_->metamodel().finding(model::Code::W_NAME_AMBIGUOUS,
+                                                 seq.name + " calls " + name + " with " + std::to_string(message.argc) + " argument" +
+                                                     (message.argc == 1 ? "" : "s") + ", which " + std::to_string(overloads.size()) +
+                                                     " operations of " + typeId + " take: " + names + "; it calls none of them",
+                                                 message.location));
+  return true;
+}
+
 void BehaviourTyping::call(const model::Entity& msg, const model::Entity& op, const bind::Message& message) {
   model_->relate({"calls", msg.id, op.id, message.location, ""});
   // seen from who sends it: the sender written, or the behaviour itself (DS-232)
@@ -200,7 +215,8 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
     if (!said) model_->relate({"sends", sender, typeId, message.location, ""});
   }
   const std::string opId = typeId + "::" + message.op;
-  const model::Entity* op = resolver_->member(typeId, message.op);  // its own, or inherited
+  const model::Entity* op =
+      resolver_->member(typeId, message.op, message.argc);  // its own, or inherited; of its overloads, the one it can call
   const bool aBox = type->kind == model::Kind::Package || type->kind == model::Kind::Module;
   if (aBox) op = offered(*type, message.op);  // a message to a box goes down to the operation the box offers under that name
   if (!op && aBox) {
@@ -210,6 +226,7 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
         seq->name + " sends " + message.op + " to " + typeId + ", which offers no operation of that name", message.location));
     return;
   }
+  if (!op && reportOverloads(*seq, typeId, message)) return;
   if (!op) {
     context_->report(context_->metamodel().finding(
         model::Code::W_MSG_UNDECLARED, seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location));
@@ -273,8 +290,8 @@ bool BehaviourTyping::callStatic(const model::Entity& seq, const model::Entity& 
   const std::string typeId = resolver_->resolve(message.op.substr(0, at), home);
   const model::Entity* type = typeId.empty() ? nullptr : model_->find(typeId);
   if (!type || type->kind != model::Kind::Class) return false;
-  const model::Entity* op = resolver_->member(typeId, message.op.substr(at + 2));
-  if (!op) return false;
+  const model::Entity* op = resolver_->member(typeId, message.op.substr(at + 2), message.argc);
+  if (!op) return reportOverloads(seq, typeId, message);  // two it could be a call of: said, and handled
   model_->annotate(msg.id, "type", typeId);
   couple(seq, *type, true);  // the class is reached for one call, like a local
   if (!op->has("static")) {
