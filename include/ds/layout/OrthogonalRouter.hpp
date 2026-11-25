@@ -14,6 +14,7 @@ class OrthogonalRouter : public IRouter {
  public:
   explicit OrthogonalRouter(const Spacing& spacing);
   std::map<std::size_t, Route> route(const Routing& routing) const override;
+  bool lanes() const override { return true; }
 
  private:
   Spacing spacing_;

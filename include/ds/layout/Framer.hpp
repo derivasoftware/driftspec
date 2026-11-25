@@ -43,6 +43,7 @@ class Framer {
   const std::vector<Edge>& edges_;
   const Spacing S;
   const int maxWidth_;
+  bool lanes_ = true;                ///< whether the router run needs lanes in the gaps (DS-443)
   std::vector<std::size_t> number_;  ///< each frame's number in the order the graph is read
   std::vector<int> nodeOf_;          ///< the frame laid out under each number, or -1
   std::size_t count_ = 0;            ///< how many frames the graph numbers

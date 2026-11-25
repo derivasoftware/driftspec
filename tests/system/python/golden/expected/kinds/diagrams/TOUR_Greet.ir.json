@@ -125,6 +125,7 @@
     }
   ],
   "ir": 1,
+  "kind": "tour",
   "nodes": [
     {
       "classifier": "namespace",

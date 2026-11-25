@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_RENDER_IREXPORT_HPP
 #define DRIFTSPEC_RENDER_IREXPORT_HPP
 
+#include <nlohmann/json_fwd.hpp>
 #include <set>
 #include <string>
 #include <vector>
@@ -27,6 +28,10 @@ class IrExport {
   std::string render(const std::string& diagramId, bool pretty) const;
 
  private:
+  /// What heads every render-IR document, and the one place it is written (DS-443): the contract's version, the
+  /// diagram's kind, so a drawing can tell how to draw it without guessing from its nodes (a box diagram that says no
+  /// kind is a class diagram), and its title.
+  static nlohmann::json documentHead(const model::Entity& diagram);
   std::string renderSequence(const model::Entity& diagram, bool pretty) const;
   /// A tour (DS-245): the boxes that take part in a behaviour and its sequence, two parts of one drawing on one cut.
   std::string renderTour(const model::Entity& tour, bool pretty) const;

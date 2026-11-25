@@ -12,6 +12,7 @@
 #include "ds/render/Ir.hpp"
 #include "ds/render/IrExport.hpp"
 #include "ds/render/Layout.hpp"
+#include "ds/render/Svg.hpp"
 #include "ds/theme/Theme.hpp"
 
 namespace {
@@ -105,6 +106,45 @@ TEST(TestSelfLoop, ARelationOfABoxWithItselfIsRoutedOutOfItsSideAndBack) {
   ASSERT_EQ(out.routes.at(0).points.size(), 4U);
   EXPECT_EQ(out.routes.at(0).points.front().x, out.routes.at(0).points.back().x);
   EXPECT_GT(out.routes.at(0).points[1].x, out.routes.at(0).points.front().x);
+}
+
+/// A state diagram says its kind in the render-IR and is drawn by it (DS-443): its transitions are smooth curves, a
+/// transition back to the same state a loop beside it with its label; a box diagram keeps its orthogonal routes, and a
+/// layout not asked to route by the kind, as the terminal's, keeps them too.
+TEST_F(TestStateView, TheTransitionsAreCurvesAndALoopSitsBesideItsStateWhileOtherDiagramsStayOrthogonal) {
+  const auto ir = draw("states", "STM_Ticket");
+  EXPECT_EQ(ir["kind"], "state");
+  const auto doc = ds::render::IrDocument::parse(ir.dump());
+  // how many edges the drawing draws as curves: paths whose course has a cubic stretch
+  const auto curves = [](const std::string& svg) {
+    int n = 0;
+    for (size_t at = svg.find("class=\"pr-edge pr-edge-"); at != std::string::npos; at = svg.find("class=\"pr-edge pr-edge-", at + 1)) {
+      const size_t d = svg.find(" d=\"", at);
+      const size_t end = svg.find('"', d + 4);
+      if (svg.substr(d, end - d).find(" C") != std::string::npos) ++n;
+    }
+    return n;
+  };
+  EXPECT_GT(curves(ds::render::Svg(kTheme).render(doc)), 0);
+  const auto metrics = ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg));
+  const ds::render::LayoutResult curved = ds::render::Layout(metrics).place(doc.bundled(), 0, true);
+  const ds::render::LayoutResult straight = ds::render::Layout(metrics).place(doc, 0);
+  ASSERT_FALSE(curved.routes.empty());
+  for (const auto& r : curved.routes) {
+    EXPECT_TRUE(r.second.curve);
+    EXPECT_TRUE(r.second.label.has_value());
+  }
+  for (const auto& r : straight.routes) EXPECT_FALSE(r.second.curve);
+  ds::render::IrDocument boxes;
+  boxes.kind = "class";
+  boxes.nodes.push_back({});
+  boxes.nodes.push_back({});
+  boxes.nodes[0].id = "a", boxes.nodes[0].kind = "box", boxes.nodes[0].label = "a";
+  boxes.nodes[1].id = "b", boxes.nodes[1].kind = "box", boxes.nodes[1].label = "b";
+  ds::render::IrEdge e;
+  e.from = "a", e.to = "b", e.kind = "association";
+  boxes.edges.push_back(e);
+  EXPECT_EQ(curves(ds::render::Svg(kTheme).render(boxes)), 0);
 }
 
 // DS-249: a state a rule computes is drawn with its rule
