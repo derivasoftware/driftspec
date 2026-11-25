@@ -356,6 +356,7 @@ package driftspec@ds {
       + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented, NotImplemented, std::invalid_argument, std::logic_error
       - page(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, NotImplemented, std::logic_error   // the viewer's page, a verbatim text
       - drawn(model: model::Model, format: std::string, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, NotImplemented, std::invalid_argument, std::logic_error
+      - picture(model: model::Model, format: std::string, name: std::string, request: Request) -> std::optional<std::string> fails BadRequest, std::invalid_argument   // svg through Drawings, or text; none when no such diagram
       - static formats() -> std::vector<std::string>    // the formats it is asked in, for a message
     }
 
@@ -436,8 +437,11 @@ package driftspec@ds {
       }
       -> request.flag(embed) -> embedded
       -> request.number(height, fallback) -> tall
-      -> emit::SinkFactory::json(false) -> inside
       -> viewer(model) -> document
+      opt its scene has a walkthrough: the cards its steps show, drawn as render draws them (DS-470) / walked {
+        -> render::Drawings::of(model, metamodel_, theme_) -> drawings
+      }
+      -> emit::SinkFactory::json(false) -> inside
       -> format::FormatFactory::scene() -> writers
       -> html.write(document, options, inside) -> page
       -> sink.verbatim(page)
@@ -445,35 +449,43 @@ package driftspec@ds {
     }
 
     // a diagram is its IR (DS-126), handed as a document to what draws it (DS-458): its IR, layout and cells described
-    // into the sink lent, its drawing in svg or text drawn through render and handed to the sink as it is, a bridge
-    // until a figure is described as marks (DS-463)
+    // into the sink lent; its drawing in svg or text drawn by picture and handed to the sink as it is, a bridge until a
+    // figure is described as marks (DS-463)
     sequence SeeDesign::drawn {
-      local svg: render::Svg
-      local text: render::Text
       -> request.get(diagram) -> name
       opt asked whole, as the command line asks (DS-433) / whole {
         -> unread(model, name, workspace) -> why
       }
-      -> diagram(model, name) -> ir
-      alt its IR / ir {
-        -> format::DescriptionFactory::ir(ir) -> description
-        -> description.describe(sink)
+      alt a drawing in svg or text / drawing {
+        -> picture(model, format, name, request) -> drawing
+        -> sink.verbatim(drawing)
       } else {
-        -> request.number(width, fallback) -> wide
-        alt its layout or its cells / described {
-          -> format::DescriptionFactory::layout(ir, theme_, wide) -> description
+        -> diagram(model, name) -> ir
+        alt its IR / ir {
+          -> format::DescriptionFactory::ir(ir) -> description
           -> description.describe(sink)
         } else {
-          alt in svg / svg {
-            -> svg.render(ir, wide) -> drawing
-          } else {
-            -> request.flag(color) -> coloured
-            -> text.render(ir, coloured, wide) -> drawing
-          }
-          -> sink.verbatim(drawing)
+          -> request.number(width, fallback) -> wide
+          -> format::DescriptionFactory::layout(ir, theme_, wide) -> description
+          -> description.describe(sink)
         }
       }
       return drawn
+    }
+
+    // svg through render's Drawings, the one path a walkthrough's cards take too (DS-470); text through render's Text
+    sequence SeeDesign::picture {
+      local text: render::Text
+      alt in svg / svg {
+        -> request.number(width, fallback) -> wide
+        -> render::Drawings::svg(model, metamodel_, theme_, name, wide) -> drawing
+      } else {
+        -> diagram(model, name) -> ir
+        -> request.flag(color) -> coloured
+        -> request.number(width, fallback) -> wide
+        -> text.render(ir, coloured, wide) -> drawing
+      }
+      return drawing
     }
 
     sequence SeeDesign::drawn / no-diagram {          // no such diagram, or asked whole, one that did not read whole

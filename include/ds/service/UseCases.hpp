@@ -57,6 +57,10 @@ class SeeDesign : public IUseCase {
   /// One diagram in the format asked: its IR, layout and cells described into the sink, its drawing in svg or text
   /// handed to it as a verbatim text. Asked whole, one that reads a file that did not read whole is not drawn (DS-433).
   Outcome drawn(const model::Model& model, const std::string& format, const Request& request, emit::ISink& sink) const;
+  /// A diagram drawn in svg, through render's Drawings (DS-470), or in text, wrapped to the width asked and in colour
+  /// when asked; none when the workspace has no diagram of that name.
+  std::optional<std::string> picture(const model::Model& model, const std::string& format, const std::string& name,
+                                     const Request& request) const;
   /// The formats it is asked in, for a message.
   static std::vector<std::string> formats();
 

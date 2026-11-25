@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_FORMAT_FORMAT_HPP
 #define DRIFTSPEC_FORMAT_FORMAT_HPP
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -16,6 +17,9 @@ struct FormatOptions {
   std::vector<std::string> focus = {};  ///< the identities a page opens framed on
   bool embed = false;                   ///< the page as an iframe that carries it whole
   int height = 640;                     ///< the height of that frame, in pixels
+  /// The diagrams a page's walkthroughs open, by name, each as render draws it in svg (DS-470); empty for a page
+  /// with no walkthrough, which is written as it was.
+  std::map<std::string, std::string> drawings = {};
 };
 
 /// A writer of one kind of document that is no description yet (DS-126, DS-398): the viewer's page, which is the

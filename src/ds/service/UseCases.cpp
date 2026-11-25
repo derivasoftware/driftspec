@@ -11,7 +11,7 @@
 #include "ds/model/Identity.hpp"
 #include "ds/model/Manual.hpp"
 #include "ds/parse/Parser.hpp"
-#include "ds/render/Svg.hpp"
+#include "ds/render/Drawings.hpp"
 #include "ds/render/Text.hpp"
 
 namespace ds {
@@ -109,10 +109,13 @@ Outcome SeeDesign::page(const model::Model& model, const Request& request, emit:
   options.focus = focus;
   options.embed = request.flag("embed");
   options.height = request.number("height", "640");
+  // a page whose scene has a walkthrough carries every diagram drawn as render draws it in svg, the cards its steps
+  // show (DS-470); any other page is written as it was
+  const scene::SceneDocument document = viewer(model);
+  if (!document.walkthroughs.empty()) options.drawings = render::Drawings::of(model, metamodel_, theme_);
   // the page is the scene in JSON inside its template: the scene and the focus travel compact inside it, written into
   // a sink of their own; the page, written whole, is handed to the sink lent
   const auto inside = emit::SinkFactory::json(false);
-  const scene::SceneDocument document = viewer(model);
   sink.verbatim(format::FormatFactory::scene().at("html")->write(document, options, *inside));
   return {"default"};
 }
@@ -123,6 +126,13 @@ Outcome SeeDesign::drawn(const model::Model& model, const std::string& format, c
     const std::string why = unread(model, name, request.getOr("workspace", ""));
     if (!why.empty()) return {"no-diagram", why};
   }
+  if (format == "svg" || format == "text") {
+    // a drawing, drawn here and handed to the sink as it is: a bridge until a figure is described as marks (DS-463)
+    const std::optional<std::string> drawing = picture(model, format, name, request);
+    if (!drawing) return {"no-diagram", "no diagram named " + name};
+    sink.verbatim(*drawing);
+    return {"default"};
+  }
   const std::optional<render::IrDocument> document = diagram(model, name);
   if (!document) return {"no-diagram", "no diagram named " + name};
   // each is handed the document (DS-458): the sink lent receives the drawing alone, never read back
@@ -131,18 +141,22 @@ Outcome SeeDesign::drawn(const model::Model& model, const std::string& format, c
     return {"default"};
   }
   const int width = request.number("width", "0");
-  if (format == "layout" || format == "cells") {
-    const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
-                                                : format::DescriptionFactory::cells(*document, theme_, width);
-    description->describe(sink);
-    return {"default"};
-  }
-  // a drawing in svg or text, drawn here and handed to the sink as it is: a bridge until a figure is described as marks
-  // (DS-463)
-  const std::string drawing =
-      format == "svg" ? render::Svg(theme_).render(*document, width) : render::Text(theme_).render(*document, request.flag("color"), width);
-  sink.verbatim(drawing);
+  const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
+                                              : format::DescriptionFactory::cells(*document, theme_, width);
+  description->describe(sink);
   return {"default"};
+}
+
+std::optional<std::string> SeeDesign::picture(const model::Model& model, const std::string& format, const std::string& name,
+                                              const Request& request) const {
+  if (format == "svg") {  // the one path from a diagram to its svg, as a walkthrough's cards take it (DS-470)
+    const std::string drawing = render::Drawings::svg(model, metamodel_, theme_, name, request.number("width", "0"));
+    if (drawing.empty()) return std::nullopt;
+    return drawing;
+  }
+  const std::optional<render::IrDocument> document = diagram(model, name);
+  if (!document) return std::nullopt;
+  return render::Text(theme_).render(*document, request.flag("color"), request.number("width", "0"));
 }
 
 // ---- UC-00004-1 ------------------------------------------------------------------------------------------------
