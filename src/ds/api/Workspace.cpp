@@ -18,22 +18,65 @@
 namespace ds {
 namespace api {
 
-Workspace::Workspace(const model::Metamodel& metamodel, const Files& files, Output output, const std::string& diagram)
-    : metamodel_(metamodel), output_(output), diagram_(diagram), model_(loaded(files)) {}
+Workspace Workspace::madeFor(const model::Metamodel& metamodel, const Files& files, Output output, const std::string& diagram) {
+  Workspace made{service::UseCaseFactory(metamodel)};
+  made.output_ = output;
+  made.diagram_ = diagram;
+  made.given_ = true;
+  made.reload(files);
+  return made;
+}
 
-void Workspace::reload(const Files& files) { model_ = loaded(files); }
+Workspace::Workspace(const service::UseCaseFactory& useCases)
+    : useCases_(useCases), metamodel_(useCases.metamodel()), output_(Output::Model), model_(useCases.metamodel()) {}
 
-model::Model Workspace::loaded(const Files& files) {
+void Workspace::reload(const Files& files) {
+  parse(files);
+  stale_ = true;
+  if (!given_) return;  // loaded when a use case asks, for what it needs (DS-408)
+  // made for an output: checked now, with the steps that output reads, as the Api loads it (DS-376, DS-420)
+  Api api(metamodel_);
+  Bound bound = api.bound(this->files());
+  selection_ = Api::stepsFor(output_, bound.model, diagram_);
+  model_ = api.checked(std::move(bound), selection_);
+  stale_ = false;
+  ++loads_;
+}
+
+void Workspace::parse(const Files& files) {
   parse::Parser parser;
   std::map<std::string, parse::ParsedFile> kept;
-  std::vector<parse::ParsedFile> parsed;
   for (const auto& [path, text] : files) {
     const auto held = parsed_.find(path);
     kept[path] = held != parsed_.end() && held->second.text == text ? held->second : parser.parseText(path, text);
-    parsed.push_back(kept[path]);
   }
   parsed_ = std::move(kept);
-  return Api(metamodel_).load(parsed, output_, diagram_);
+}
+
+std::vector<parse::ParsedFile> Workspace::files() const {
+  std::vector<parse::ParsedFile> out;
+  for (const auto& p : parsed_) out.push_back(p.second);
+  return out;
+}
+
+service::Outcome Workspace::run(const std::string& name, const service::Request& request, emit::ISink& sink) {
+  const std::unique_ptr<service::IUseCase> use = useCases_.of(name);
+  const Api api(metamodel_);
+  if (stale_) {  // bound once: what the use case reads of the bound model says what is checked
+    Bound bound = api.bound(files());
+    selection_ = selection_.joined(use->needs(bound.model, request));
+    model_ = api.checked(std::move(bound), selection_);
+    stale_ = false;
+    ++loads_;
+  } else {
+    const check::Selection needs = use->needs(model_, request);
+    if (!selection_.covers(needs)) {  // a checked model takes no more steps: bound again, with every step asked so far
+      selection_ = selection_.joined(needs);
+      model_ = api.checked(api.bound(files()), selection_);
+      ++loads_;
+    }
+  }
+  return use->run(model_, request, sink);
 }
 
 // Every answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397).

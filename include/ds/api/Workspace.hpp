@@ -2,13 +2,17 @@
 #define DRIFTSPEC_API_WORKSPACE_HPP
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "ds/check/Selection.hpp"
+#include "ds/emit/Sink.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
+#include "ds/service/UseCases.hpp"
 #include "ds/theme/Theme.hpp"
 
 namespace ds {
@@ -33,11 +37,24 @@ class Workspace {
   /// The files loaded in the language of `metamodel`, which outlives it (DS-341) and which it hands each reader of
   /// the model it asks (DS-351), for what it is to give (DS-376): every question, unless it is loaded to draw one
   /// diagram; then only the drawing of that diagram is an answer.
-  Workspace(const model::Metamodel& metamodel, const Files& files, Output output = Output::Model, const std::string& diagram = "");
+  static Workspace madeFor(const model::Metamodel& metamodel, const Files& files, Output output = Output::Model,
+                           const std::string& diagram = "");
+  /// A workspace that lives as long as its caller (DS-408): made by aggregating the use cases it serves (the factory,
+  /// one reference to the metamodel, kept as it is given) and through them the metamodel, which outlives it; it holds
+  /// no design until reload gives it files, and loads what each use case it runs needs.
+  explicit Workspace(const service::UseCaseFactory& useCases);
   /// The workspace loaded again from the files given, for what it was loaded to give, without being made anew (DS-420):
   /// a file whose text is the one it holds is not parsed again; the model is bound and checked again whole. What a
   /// caller asked before is a copy and stays as it was.
   void reload(const Files& files);
+  /// Run the use case of that name over the design it holds (DS-408), describing into the sink it is lent: the model is
+  /// bound once per reload and checked with every step the use cases asked of it so far (a load cannot take more steps
+  /// once checked, so one that needs more is bound again from the parsed files, never parsed again).
+  service::Outcome run(const std::string& name, const service::Request& request, emit::ISink& sink);
+  /// The steps its model is checked with: every one the use cases it ran asked for (DS-408).
+  const check::Selection& selection() const { return selection_; }
+  /// How many times it bound and checked its files: once a reload, and once more for a use case that needed more.
+  std::size_t loads() const { return loads_; }
   /// The model it keeps, for a caller in this process.
   const model::Model& model() const { return model_; }
 
@@ -75,8 +92,10 @@ class Workspace {
   std::string page(const std::string& title, const std::vector<std::string>& focus) const;
 
  private:
-  /// The files given, parsed (each one the workspace holds with the same text kept as it was parsed), bound and checked.
-  model::Model loaded(const Files& files);
+  /// The files given parsed, each one the workspace holds with the same text kept as it was parsed (DS-420).
+  void parse(const Files& files);
+  /// The files it holds, as parsed, in the order of their paths.
+  std::vector<parse::ParsedFile> files() const;
   /// Texts as a JSON list; one text as a JSON string; relations as the export writes them.
   static std::string texts(const std::vector<std::string>& list);
   static std::string text(const std::string& value);
@@ -84,11 +103,16 @@ class Workspace {
   /// A query's answers described in JSON, as ds query --json writes them (DS-398).
   static std::string answers(const std::vector<query::Answer>& answers);
 
+  const service::UseCaseFactory useCases_;  ///< the use cases it serves, aggregated (DS-408)
   const model::Metamodel& metamodel_;
   const theme::Theme theme_;  ///< the style its drawings are written in, made once with it (DS-393)
   Output output_;
   std::string diagram_;
-  std::map<std::string, parse::ParsedFile> parsed_;  ///< each file as it was last parsed, by its path
+  bool given_ = false;  ///< made for an output (the doors before DS-409): every reload checks what that output reads
+  std::map<std::string, parse::ParsedFile> parsed_;        ///< each file as it was last parsed, by its path
+  check::Selection selection_ = check::Selection::of({});  ///< the steps its model is checked with
+  bool stale_ = true;                                      ///< the files changed since its model was checked, or it was never checked
+  std::size_t loads_ = 0;
   model::Model model_;
 };
 
