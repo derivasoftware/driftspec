@@ -100,13 +100,16 @@ package driftspec@ds {
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.ADescriptionThatUsesAnotherIsTold
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.AWriterThatReadsTheModelIsTold
     }
-    verification VER-00226-1 {
-      status: approved
-      title: Integration tests confirm a diagram asked of a workspace in a format ds does not write fails NotImplemented, naming the document and the technology, in C++ and as driftspec.NotImplemented in Python, and the engine's render draws as it always has
+    verification VER-00226-2 {
+      status: draft
+      title: Integration tests confirm a diagram asked of a workspace or of the engine in a format ds does not write fails NotImplemented, naming the document and the technology, in C++ and as driftspec.NotImplemented in Python, and is never drawn as text instead
+      text: Revision 2 (DS-453): the engine's render, and driftspec.render on it, fail as the workspace does.
       method: test
       tests:
         tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ADiagramAskedInAFormatDsDoesNotWriteFailsNotImplemented
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.ADiagramAskedInAFormatItHasNoWriterForFailsNotImplemented
         tests/integration/python/test_workspace.py::TestNotImplemented::test_a_diagram_asked_in_a_format_the_engine_does_not_write_raises_not_implemented
+        tests/integration/python/test_driftspec.py::TestDrawing::test_a_format_a_diagram_has_no_writer_for_raises_not_implemented
     }
   }
 
