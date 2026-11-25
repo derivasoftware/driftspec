@@ -249,4 +249,38 @@ TEST_F(TestRules, ALiteralThatCanNeverMatchIsReported) {
   EXPECT_EQ(codes("E-RULE-BROKEN").size(), 1u);  // the member-level rule sees the parameter
 }
 
+/// An attribute owns, refs or shares its type and never uses it (DS-439): a rule reading uses off an attribute matches
+/// nothing and is told so, while the same rule through refs sees the field.
+TEST_F(TestRules, ARuleReadingUsesOffAnAttributeIsToldItMatchesNothingAndRefsSeesTheField) {
+  load(
+      "package p {\n"
+      "  requirement REQ-00001-1: The core shall not hold the face\n"
+      "  module face {\n"
+      "    class Page { }\n"
+      "  }\n"
+      "  module core {\n"
+      "    class Order {\n"
+      "      - refs page: p@face::Page\n"
+      "    }\n"
+      "  }\n"
+      "  rule by-uses {\n"
+      "    @requirement REQ-00001-1\n"
+      "    for attribute a in p@core\n"
+      "    never a uses x, x in p@face\n"
+      "  }\n"
+      "  rule by-refs {\n"
+      "    @requirement REQ-00001-1\n"
+      "    for attribute a in p@core\n"
+      "    never a refs x, x in p@face\n"
+      "  }\n"
+      "}\n");
+  std::vector<std::string> never;
+  for (const auto& f : model.findings())
+    if (f.code == "W-RULE-NEVER-MATCHES") never.push_back(f.message);
+  ASSERT_EQ(never.size(), 1u);
+  EXPECT_NE(never[0].find("p@by-uses"), std::string::npos);
+  EXPECT_NE(never[0].find("never leaves attribute"), std::string::npos);
+  EXPECT_EQ(codes("E-RULE-BROKEN").size(), 1u);  // through refs, the field is seen
+}
+
 }  // namespace

@@ -1647,12 +1647,13 @@ package driftspec@ds {
         broken, since uses leaves members and never a class, and it was the example of ds manual
         rule. A vacuous rule stands as the verification of a requirement and is always green. The
         manual's example now speaks about the members.
-      verification VER-00133-1 {
-        status: approved
-        title: Integration tests confirm a literal that can never match is reported and the member-level rule is broken where the design breaks it
+      verification VER-00133-2 {
+        status: draft
+        title: Integration tests confirm a literal that can never match is reported, a rule reading uses off an attribute among them, and the member-level rule is broken where the design breaks it
         method: test
         tests:
           tests/integration/ds/check/test_rules.cpp::TestRules.ALiteralThatCanNeverMatchIsReported
+          tests/integration/ds/check/test_rules.cpp::TestRules.ARuleReadingUsesOffAnAttributeIsToldItMatchesNothingAndRefsSeesTheField
       }
     }
 

@@ -57,8 +57,9 @@ class Query : public IQuery {
   /// answer of kind "error" that says so.
   std::vector<Answer> ask(const std::string& question, const std::string& subject) const override;
 
-  std::vector<Answer> diagrams() const;                            ///< every diagram, with its kind
-  std::vector<Answer> entities(const std::string& scope) const;    ///< the direct members of a scope ("" = the top level)
+  std::vector<Answer> diagrams() const;  ///< every diagram, with its kind
+  std::vector<Answer> entities(
+      const std::string& scope) const;  ///< the direct members of a scope ("" = the top level); with * after it all it holds
   std::vector<Answer> relations(const std::string& id) const;      ///< every relation touching `id`, with its direction
   std::vector<Answer> artefacts(const std::string& id) const;      ///< the requirements and constraints on `id`, and what verifies them
   std::vector<Answer> behaviours(const std::string& id) const;     ///< the sequences and state machines of a method or class

@@ -76,6 +76,10 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string sceneReads = "driftspec@ds@scene::the-scene-reads-the-model";
   const std::string layerLayout = "driftspec@ds@scene::no-layer-knows-the-layout";
   const std::string packerModel = "driftspec@ds@layout::layout-knows-no-model";
+  const std::string layoutRender = "driftspec@ds@layout::layout-knows-no-render";
+  const std::string layoutScene = "driftspec@ds@layout::layout-knows-no-scene";
+  const std::string sceneEngine = "driftspec@ds@layout::the-scene-places-through-iengine";
+  const std::string renderEngine = "driftspec@ds@layout::render-places-through-iengine";
   const std::string layersAlone = "driftspec@ds@scene::no-layer-knows-another";
   const std::string namedI = "driftspec@ds@pure-interfaces-are-named-i";
   const std::string namedA = "driftspec@ds@abstract-classes-are-named-a";
@@ -87,10 +91,10 @@ class TestEnginePrinciples : public ::testing::Test {
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule :
-       {context,          asInterface,     alone,         builtOnce,        binderClasses,      modelClasses, axisClasses,
-        axisReads,        exporterClasses, exporterReads, apiChooses,       machineClasses,     machineReads, queryClasses,
-        stepsAsInterface, stepsAlone,      checkClasses,  sceneClasses,     sceneReads,         layerLayout,  packerModel,
-        namedI,           namedA,          namedFactory,  throughInterface, givenAtConstruction})
+       {context,          asInterface,         alone,        builtOnce,      binderClasses, modelClasses, axisClasses,      axisReads,
+        exporterClasses,  exporterReads,       apiChooses,   machineClasses, machineReads,  queryClasses, stepsAsInterface, stepsAlone,
+        checkClasses,     sceneClasses,        sceneReads,   layerLayout,    packerModel,   namedI,       namedA,           namedFactory,
+        throughInterface, givenAtConstruction, layoutRender, layoutScene,    sceneEngine,   renderEngine})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -334,6 +338,30 @@ TEST_F(TestEnginePrinciples, AReferenceNoConstructorGivesIsTold) {
                                                   "    }\n"}});
   EXPECT_TRUE(has(rules, givenAtConstruction));
   EXPECT_FALSE(has(rules, throughInterface));
+}
+
+/// The layout depends on nothing of render or the scene (DS-392): a class of the layout that knows either is told.
+TEST_F(TestEnginePrinciples, ALayoutThatKnowsRenderOrTheSceneIsTold) {
+  const std::vector<std::string> render =
+      broken({{"ds/layout.ds", "    class PackingEngine : IEngine {", "      - refs ir_: render::IrDocument\n"}});
+  EXPECT_TRUE(has(render, layoutRender));
+  EXPECT_FALSE(has(render, layoutScene));
+  EXPECT_FALSE(has(render, packerModel));  // the IR is no part of the model
+  const std::vector<std::string> scene =
+      broken({{"ds/layout.ds", "    class PackingEngine : IEngine {", "      - refs doc_: scene::SceneDocument\n"}});
+  EXPECT_TRUE(has(scene, layoutScene));
+  EXPECT_FALSE(has(scene, layoutRender));
+}
+
+/// Whoever places reaches an engine only through IEngine (DS-392): the scene holding a concrete engine is told, and
+/// so is render holding a phase of the layered engine, which no family names.
+TEST_F(TestEnginePrinciples, APlacerThatHoldsAnEngineOrAPhaseIsTold) {
+  const std::vector<std::string> engine = broken({{"ds/scene.ds", "    class Layout {", "      - refs engine_: layout::PackingEngine\n"}});
+  EXPECT_TRUE(has(engine, sceneEngine));
+  EXPECT_FALSE(has(engine, renderEngine));
+  const std::vector<std::string> phase = broken({{"ds/render.ds", "    class Layout {", "      - refs framer_: layout::Framer\n"}});
+  EXPECT_TRUE(has(phase, renderEngine));
+  EXPECT_FALSE(has(phase, throughInterface));  // a phase is in no family: only the layout's rule sees it
 }
 
 }  // namespace
