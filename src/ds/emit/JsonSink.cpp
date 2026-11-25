@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "ds/emit/NotImplemented.hpp"
+
 namespace ds {
 namespace emit {
 
@@ -203,6 +205,19 @@ ISink& JsonSink::boolean(bool value) {
 ISink& JsonSink::null() {
   beforeValue();
   out_.append("null", 4);
+  return *this;
+}
+
+ISink& JsonSink::paragraph(std::string_view) { return *this; }
+
+ISink& JsonSink::table(const std::vector<std::string_view>&) { return *this; }
+
+ISink& JsonSink::row(const std::vector<std::string_view>&) { return *this; }
+
+ISink& JsonSink::endTable() { return *this; }
+
+ISink& JsonSink::described(std::string_view document) {
+  if (out_.empty()) throw NotImplemented(std::string(document), "json", {});
   return *this;
 }
 

@@ -2571,12 +2571,13 @@ package driftspec@ds {
           each column a question, so whatever a rule may range over a table may list: rules,
           requirements, use cases, constraints, classes. Nothing new to learn but the word column.
           Named tables and the cross (rows of one range, columns of another) come after it.
-        verification VER-00170-1 {
-          title: Integration tests confirm a table written with its rows and columns answers a cell for each, heads each row by its first column, says a yes or no, and keeps only the rows its filter reads
-          status: approved
+        verification VER-00170-2 {
+          title: Integration tests confirm a table written with its rows and columns answers a cell for each, heads each row by its first column, says a yes or no, keeps only the rows its filter reads, and measures and wraps a cell by its characters
+          status: draft
           method: test
           tests:
             tests/integration/ds/render/test_table_view.cpp::TestTableView.ATableWrittenWithRowsAndColumnsAnswersEachCell
+            tests/integration/ds/render/test_table_view.cpp::TestTableSvg.ACellIsMeasuredByItsCharactersNotItsBytes
         }
         requirement REQ-00250-1 {
           tags: language, diagrams, table

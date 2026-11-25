@@ -5,27 +5,27 @@
 namespace ds {
 namespace format {
 
-std::unique_ptr<IDescription> DescriptionFactory::scene(const scene::SceneDocument& document) {
+std::unique_ptr<ADescription> DescriptionFactory::scene(const scene::SceneDocument& document) {
   return std::make_unique<SceneDescription>(document);
 }
 
-std::unique_ptr<IDescription> DescriptionFactory::report(const check::Report& report) {
-  return std::make_unique<ReportDescription>(report);
+std::unique_ptr<ADescription> DescriptionFactory::report(const check::Report& report, const std::string& workspace) {
+  return std::make_unique<ReportDescription>(report, workspace);
 }
 
-std::unique_ptr<IDescription> DescriptionFactory::answers(const std::vector<query::Answer>& answers) {
+std::unique_ptr<ADescription> DescriptionFactory::answers(const std::vector<query::Answer>& answers) {
   return std::make_unique<AnswersDescription>(answers);
 }
 
-std::unique_ptr<IDescription> DescriptionFactory::ir(const render::IrDocument& document) {
+std::unique_ptr<ADescription> DescriptionFactory::ir(const render::IrDocument& document) {
   return std::make_unique<IrDescription>(document);
 }
 
-std::unique_ptr<IDescription> DescriptionFactory::layout(const render::IrText& ir, const theme::Theme& theme, int width) {
+std::unique_ptr<ADescription> DescriptionFactory::layout(const render::IrText& ir, const theme::Theme& theme, int width) {
   return std::make_unique<LayoutDescription>(ir, theme, width);
 }
 
-std::unique_ptr<IDescription> DescriptionFactory::cells(const render::IrText& ir, const theme::Theme& theme, int width) {
+std::unique_ptr<ADescription> DescriptionFactory::cells(const render::IrText& ir, const theme::Theme& theme, int width) {
   return std::make_unique<CellsDescription>(ir, theme, width);
 }
 

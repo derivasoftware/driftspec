@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 
+#include "ds/render/ComposerFactory.hpp"
 #include "ds/render/EdgeMarkup.hpp"
 #include "ds/render/Lane.hpp"
 #include "ds/text/Text.hpp"
@@ -620,14 +621,15 @@ std::string Svg::tableSvg(const IrDocument& doc) const {
     std::istringstream in(text);
     std::string word;
     while (in >> word) {
-      if (!out.back().empty() && out.back().size() + 1 + word.size() > kWrap) out.push_back("");
+      // measured in characters, as the terminal's table measures (DS-466): ≠ is one, though UTF-8 writes it in three bytes
+      if (!out.back().empty() && text::characters(out.back()) + 1 + text::characters(word) > kWrap) out.push_back("");
       out.back() += (out.back().empty() ? "" : " ") + word;
     }
     return out;
   };
   const auto widest = [&](const std::string& text) {
     std::size_t w = 0;
-    for (const auto& l : lines(text)) w = std::max(w, l.size());
+    for (const auto& l : lines(text)) w = std::max(w, text::characters(l));
     return static_cast<int>(w);
   };
   std::vector<int> widths{widest(t.corner)};
@@ -742,11 +744,12 @@ std::string Svg::render(const IrDocument& doc, int maxWidth) const {
   for (const auto& n : doc.nodes) {
     if (n.kind == "lifeline") return sequenceSvg(doc);
   }
-  const IrDocument bundled = doc.bundled();
-  return render(bundled, Layout(metrics_).place(bundled, maxWidth, true));  // routed as its kind is drawn (DS-443)
+  return draw(ComposerFactory::of("boxes", "svg", metrics_)->compose(doc, maxWidth));
 }
 
-std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
+std::string Svg::draw(const Figure& figure) const {
+  const IrDocument& doc = figure.document;
+  const LayoutResult& lay = figure.layout;
   const Metrics& M = metrics_;
   int minX = std::numeric_limits<int>::max(), minY = minX, maxX = std::numeric_limits<int>::min(), maxY = maxX;
   auto extend = [&](int x, int y) {

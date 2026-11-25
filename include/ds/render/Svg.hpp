@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#include "ds/render/Figure.hpp"
 #include "ds/render/Ir.hpp"
 #include "ds/render/Layout.hpp"
 #include "ds/theme/Theme.hpp"
@@ -25,7 +26,8 @@ class Svg {
 
   /// `maxWidth` in pixels (0 = unbounded): the drawing wraps to it.
   std::string render(const IrDocument& doc, int maxWidth = 0) const;
-  std::string render(const IrDocument& doc, const LayoutResult& layout) const;
+  /// A figure composed for SVG (DS-400): drawn as it is placed, nothing placed here.
+  std::string draw(const Figure& figure) const;
 
  private:
   /// FNV-1a of the title in base 36, as shared.ts idPrefix: several SVGs share one page.

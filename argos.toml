@@ -73,6 +73,11 @@ source = "CL__native_Workspace"
 reason = "Same: the native Workspace type is a CPython type object, registered, not a class a reader sees."
 
 [[diagnose.exempt]]
+code = "W-DESIGN-NO-CODE"
+source = "CL_PySink"
+reason = "Same: PySink is a C++ class in the native module, which no reader reads (DDEV-1468); the Python face's tests exercise it (VER-00283-1). Granted by the Owner, 2026-11-25 (DS-459)."
+
+[[diagnose.exempt]]
 code = "W-RELATION-NO-CODE"
 source = "driftspec.Workspace"
 reason = "Same: driftspec.Workspace holds the native Workspace (self._native = _native.Workspace(...)), a CPython type no reader sees, so argos cannot find the class the composition points at."

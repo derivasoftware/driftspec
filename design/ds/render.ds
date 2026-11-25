@@ -141,7 +141,7 @@ package driftspec@ds {
     // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
     // another tool may hand ds; the document a diagram's formats write (DS-126)
     dataclass IrText {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
       + json: std::string
     }
 
@@ -589,6 +589,75 @@ package driftspec@ds {
       + owns many routes: std::map<size_t, Route>
     }
 
+    // ---- what a drawing draws: a figure composed below it (DS-400) ------------------------------------------------
+
+    // a diagram composed: its document as it is drawn and where each node and route lands, in the metrics of the
+    // technology that draws it; a drawing draws a figure and places nothing. Where a node lands points into the
+    // figure's own document, so a figure is moved, never copied
+    dataclass Figure {
+      @requirement REQ-00007-1
+      + owns document: IrDocument            // what a closed box holds bundled into it
+      + owns layout: LayoutResult
+      + Figure()
+    }
+
+    // what composes one kind of diagram for one technology: a document in, its figure out, within a width
+    class IComposer {
+      @requirement REQ-00007-1
+      + ~IComposer()
+      + abstract compose(doc: IrDocument, width: int) -> Figure
+    }
+
+    // a box diagram composed for SVG: in pixels, its edges routed as its kind is drawn (DS-443)
+    class BoxesSvgComposer : IComposer {
+      @requirement REQ-00007-1
+      - owns metrics_: Metrics
+      + BoxesSvgComposer(metrics: Metrics)
+      + compose(doc: IrDocument, width: int) -> Figure
+    }
+
+    // a box diagram composed for a terminal: in cells, its edges orthogonal, as a terminal draws every kind
+    class BoxesTextComposer : IComposer {
+      @requirement REQ-00007-1
+      - owns metrics_: Metrics
+      + BoxesTextComposer(metrics: Metrics)
+      + compose(doc: IrDocument, width: int) -> Figure
+    }
+
+    sequence BoxesSvgComposer::compose {
+      local figure: Figure
+      local layout: Layout
+      self -> doc.bundled() -> bundled
+      self -> layout.place(bundled, width, true) -> placed           // routed as its kind is drawn (DS-443)
+      return figure
+    }
+
+    sequence BoxesTextComposer::compose {
+      local figure: Figure
+      local layout: Layout
+      self -> doc.bundled() -> bundled
+      self -> layout.place(bundled, width, false) -> placed
+      return figure
+    }
+
+    // the one place that names the composers, one per kind of diagram and technology
+    class ComposerFactory {
+      @requirement REQ-00007-1
+      + static of(kind: std::string, technology: std::string, metrics: Metrics) -> std::unique_ptr<IComposer>
+    }
+
+    sequence ComposerFactory::of {
+      local svg: BoxesSvgComposer
+      local text: BoxesTextComposer
+      opt boxes drawn in SVG / boxes-svg {
+        return svg
+      }
+      opt boxes drawn in a terminal / boxes-text {
+        return text
+      }
+      fail std::invalid_argument
+    }
+
     dataclass Metrics {                      // the runtime table of sizes: one for SVG pixels, one for terminal cells
       @requirement REQ-00007-1
       @requirement REQ-00231-1              // its text measures are the theme's (DS-393)
@@ -643,7 +712,8 @@ package driftspec@ds {
       - style_: std::string                    // the stylesheet every drawing carries, written from the theme
       - sequenceStyle_: std::string            // what a sequence adds to it
       + Svg(theme: theme::Theme)
-      + render(doc: IrDocument, maxWidth: int) -> std::string   // also over a layout already made: one identity per member
+      + render(doc: IrDocument, maxWidth: int) -> std::string   // a box diagram through the composer of boxes in SVG
+      + draw(figure: Figure) -> std::string                          // a figure as it is composed: nothing placed here (DS-400)
       - kMarkerByKind: std::map<std::string, std::string>   // the marker an edge of each kind ends in
       - kSeqScript: char                     // the script a sequence carries, so it folds and links wherever it is shown
       - static idPrefix(title: std::string) -> std::string           // FNV-1a of the title in base 36: several drawings share a page
@@ -681,7 +751,8 @@ package driftspec@ds {
       @requirement REQ-00231-1
       - owns pen_: TextPen
       + Text(theme: theme::Theme)
-      + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // also over a layout already made
+      + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // a box diagram through the composer of boxes in text
+      + draw(figure: Figure, color: bool) -> std::string             // a figure as it is composed: nothing placed here (DS-400)
       + cells(doc: IrDocument, maxWidth: int, out_sink: emit::ISink) -> void   // as one value where the sink lent stands (DS-397)
       - member(g: Grid, x: int, y: int, line: std::string) -> void       // a member's line: visibility and types coloured
       - box(g: Grid, p: Placed) -> void                                 // its frame, its header and its sections
@@ -689,7 +760,7 @@ package driftspec@ds {
       - static marker(kind: std::string, dx: int, dy: int) -> std::string   // the glyph of an edge entering its target moving in (dx, dy)
       - edge(g: Grid, e: IrEdge, route: Route, byId: std::map<std::string, const Placed*>) -> void
       - sequenceGrid(doc: IrDocument) -> Grid                           // lifelines as columns, messages as rows
-      - classGrid(doc: IrDocument, lay: LayoutResult) -> Grid           // the boxes and edges over the layout
+      - classGrid(figure: Figure) -> Grid                              // the boxes and edges where the figure placed them
       - static isSequence(doc: IrDocument) -> bool                      // a node of it is a lifeline
       - static contentWidth(maxWidth: int) -> int                       // the grid keeps a one-cell margin on each side
       - tableGrid(doc: IrDocument) -> Grid                              // a row of headings, a rule, a row for each row (DS-251)
@@ -747,7 +818,7 @@ package driftspec@ds {
       - kMaxCells: std::size_t               // the most it holds, some 128 million characters (DS-350)
       + Grid(minX: int, minY: int, w: int, h: int)
       + at(x: int, y: int) -> Cell              // none outside the grid
-      + put(x: int, y: int, glyph: std::string, color: std::string) -> void
+      + put(x: int, y: int, glyph: std::string_view, color: std::string) -> void   // a glyph read where it is, never copied first
       + text(x: int, y: int, s: std::string, color: std::string) -> void   // one code point per cell
       + line(x: int, y: int, horizontal: bool, dashed: bool, color: std::string) -> void   // joins with what another edge drew
       + encode(rgb: std::map<std::string, std::uint32_t>) -> std::string
@@ -759,7 +830,7 @@ package driftspec@ds {
       + clear(r: Rect) -> void                  // what a box covers is not drawn through
       - static sized(w: int, h: int) -> std::size_t   // a drawing too large to hold as text is refused (DS-350)
       - paint(color: std::string) -> std::uint8_t     // the colour's index in the palette, added the first time
-      - setGlyph(c: Cell, glyph: std::string) -> void
+      - setGlyph(c: Cell, glyph: std::string_view) -> void
       - glyphOf(c: Cell) -> std::string_view
     }
 
@@ -783,9 +854,8 @@ package driftspec@ds {
       + width: int
     }
 
-    // metrics is the pixel table, made from the theme's measures with the Svg. The drawing over the
-    // layout is the second render, an overload: neither can be told, so the drawing of a
-    // class document comes back as a name.
+    // metrics is the pixel table, made from the theme's measures with the Svg. A box diagram is composed below
+    // and drawn as it is composed (DS-400); the drawing comes back as a name.
     sequence Svg::render {
       opt the document is a table / table-document {
         -> tableSvg(doc) -> drawing
@@ -795,14 +865,15 @@ package driftspec@ds {
         -> sequenceSvg(doc) -> drawing
         return drawing
       }
-      self -> doc.bundled() -> bundled
-      local layout: Layout
-      self -> layout.place(bundled, maxWidth, true) -> lay          // routed as its kind is drawn (DS-443)
+      local composer: IComposer
+      -> ComposerFactory::of(kind, technology, metrics_) -> made     // boxes, in SVG (DS-400)
+      -> composer.compose(doc, maxWidth) -> figure
+      -> draw(figure) -> drawing
       return drawing
     }
 
-    // metrics is the cell table, the pen's, and width is maxWidth less the grid's
-    // margin. The drawing over the layout is the second render, an overload.
+    // metrics is the cell table, the pen's, and width is maxWidth less the grid's margin. A box diagram is composed
+    // below and drawn as it is composed (DS-400).
     sequence Text::render {
       opt the document is a table / table-document {
         -> tableGrid(doc) -> grid
@@ -814,21 +885,22 @@ package driftspec@ds {
         self -> grid.dump(color) -> drawing
         return drawing
       }
-      self -> doc.bundled() -> bundled
-      local layout: Layout
-      self -> layout.place(bundled, width, false) -> lay
+      local composer: IComposer
+      -> ComposerFactory::of(kind, technology, pen_.M) -> made       // boxes, in text (DS-400)
+      -> composer.compose(doc, width) -> figure
+      -> draw(figure, color) -> drawing
       return drawing
     }
 
     // The grid is written into the sink lent, its fields in byte order; nothing comes back (DS-397).
     sequence Text::cells {
-      self -> doc.bundled() -> bundled
       alt a node of the document is a lifeline / sequence-document {
-        -> sequenceGrid(doc) -> grid         // bundled all the same, and not used
+        -> sequenceGrid(doc) -> grid
       } else {
-        local layout: Layout
-        self -> layout.place(bundled, width, false) -> lay
-        -> classGrid(bundled, lay) -> grid
+        local composer: IComposer
+        -> ComposerFactory::of(kind, technology, pen_.M) -> made     // boxes, in text (DS-400)
+        -> composer.compose(doc, width) -> figure
+        -> classGrid(figure) -> grid
       }
       self -> grid.encode(pen_.cellColours) -> encoded
       self -> grid.columns() -> columns
