@@ -7,6 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/emit/JsonSink.hpp"
+#include "ds/format/DescriptionFactory.hpp"
 #include "ds/format/TextFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -102,7 +103,8 @@ TEST_F(TestQuery, AnswersAsTextAndAsJson) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const std::vector<Answer> answers = {{"class", "a@b::C", "x"}, {"package", "a", ""}};
   EXPECT_EQ(ds::format::AnswersText().write(answers, {}, sink), "class  a@b::C  x\npackage  a\n");
-  const auto parsed = nlohmann::json::parse(ds::format::AnswersJson().write(answers, {}, sink));
+  ds::format::DescriptionFactory::answers(answers)->describe(sink);  // as JSON: their description in the sink (DS-398)
+  const auto parsed = nlohmann::json::parse(sink.result());
   EXPECT_EQ(parsed.size(), 2u);
   EXPECT_EQ(parsed[0]["id"], "a@b::C");
 }

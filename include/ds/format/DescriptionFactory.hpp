@@ -1,0 +1,37 @@
+#ifndef DRIFTSPEC_FORMAT_DESCRIPTIONFACTORY_HPP
+#define DRIFTSPEC_FORMAT_DESCRIPTIONFACTORY_HPP
+
+#include <memory>
+#include <vector>
+
+#include "ds/check/Report.hpp"
+#include "ds/format/Description.hpp"
+#include "ds/query/Query.hpp"
+#include "ds/render/Ir.hpp"
+#include "ds/scene/Document.hpp"
+#include "ds/theme/Theme.hpp"
+
+namespace ds {
+namespace format {
+
+/// The document axis (DS-398): the one place that names the descriptions, one maker per document. A door asks it
+/// for the description of its document, asks emit::SinkFactory for the sink of its technology, and pairs them:
+/// description.describe(sink). A description refers to the document it is given, so the document outlives it.
+class DescriptionFactory {
+ public:
+  /// The scene, for the viewer.
+  static std::unique_ptr<IDescription> scene(const scene::SceneDocument& document);
+  /// A check's report: its findings, its coverage and its counts.
+  static std::unique_ptr<IDescription> report(const check::Report& report);
+  /// A query's answers.
+  static std::unique_ptr<IDescription> answers(const std::vector<query::Answer>& answers);
+  /// Where each node and route of a diagram goes, in cells measured as the theme measures a terminal's text.
+  static std::unique_ptr<IDescription> layout(const render::IrText& ir, const theme::Theme& theme, int width);
+  /// A diagram as the terminal's coloured cells, drawn in the theme.
+  static std::unique_ptr<IDescription> cells(const render::IrText& ir, const theme::Theme& theme, int width);
+};
+
+}  // namespace format
+}  // namespace ds
+
+#endif  // DRIFTSPEC_FORMAT_DESCRIPTIONFACTORY_HPP

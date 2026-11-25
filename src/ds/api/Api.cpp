@@ -8,7 +8,7 @@
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/emit/SinkFactory.hpp"
-#include "ds/format/TextFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -105,9 +105,11 @@ model::Model Api::load(const std::vector<parse::ParsedFile>& files, Output outpu
 }
 
 std::string Api::report(const model::Model& model, bool pretty) const {
-  // the one report of a check (DS-120), as JSON (DS-126), written by the sink asked for here (DS-397)
+  // the one report of a check (DS-120), its description written into the JSON sink asked for here (DS-397, DS-398)
+  const check::Report report = check::Report::of(model, metamodel_);
   const auto sink = emit::SinkFactory::json(pretty);
-  return format::ReportJson().write(check::Report::of(model, metamodel_), {}, *sink);
+  format::DescriptionFactory::report(report)->describe(*sink);
+  return sink->result();
 }
 
 // the text functions of the command line's contract: a workspace loaded for one question (DS-173)

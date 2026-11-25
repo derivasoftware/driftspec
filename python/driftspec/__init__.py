@@ -34,7 +34,7 @@ Source = Union[str, os.PathLike, Mapping[str, Union[str, bytes]]]
 __all__ = [
     "Location", "Entity", "Relation", "Finding", "Model", "Report", "Answer", "Step", "Walked", "Frame", "Tree",
     "Workspace", "files", "read", "load", "check", "expected_at", "render", "page", "qualify", "outer", "box_of",
-    "package_of", "behaviour_of", "subject_of", "scenario_of", "without_revision", "severities",
+    "package_of", "behaviour_of", "subject_of", "scenario_of", "without_revision", "severities", "NotImplemented",
 ]
 
 
@@ -230,6 +230,17 @@ def _report(data: Mapping) -> Report:
 # ---- what the engine answers about a loaded workspace (DS-173) -----------------------------------
 
 
+class NotImplemented(NotImplementedError):
+    """A document asked in a technology the engine does not write it in (DS-398): the documents and the technologies
+    need not make a complete matrix. It is a NotImplementedError, so a caller that catches that still does; one
+    that cares reads which pair is missing."""
+
+    def __init__(self, message: str, document: str, technology: str):
+        super().__init__(message)
+        self.document = document  # what was asked to be written: "diagram"; "" for any document
+        self.technology = technology  # what it was asked to be written in
+
+
 @dataclass(frozen=True)
 class Answer:
     """One line of an answer of ds query: an entity named by identity, with what the question asked."""
@@ -348,8 +359,13 @@ class Workspace:
         return [Answer(a["kind"], a["id"], a["detail"]) for a in json.loads(self._native.shows(diagram))]
 
     def render(self, diagram: str, format: str = "text", width: int = 0) -> str:
-        """A diagram drawn (svg, text, cells, ir, layout), wrapped to a width; "" when there is no such diagram."""
-        return self._native.render(diagram, format, width)
+        """A diagram drawn (svg, text, cells, ir, layout), wrapped to a width; "" when there is no such diagram.
+
+        A format that is none of them raises NotImplemented, naming the document and the technology (DS-398)."""
+        try:
+            return self._native.render(diagram, format, width)
+        except NotImplementedError as failure:  # the engine's NotImplemented: its message, document and technology
+            raise NotImplemented(*failure.args) from None
 
     def page(self, title: str, focus: list[str] | tuple[str, ...] = ()) -> str:
         return self._native.page(title, list(focus))
@@ -367,7 +383,11 @@ def check(source: Source) -> Report:
 
 def render(source: Source, diagram: str, format: str = "text", width: int = 0) -> str:
     """A diagram drawn as text or svg, wrapped to a width (0: none); "" when there is no such diagram."""
-    return _native.render(read(source), diagram, format, width)
+    files = read(source)
+    try:
+        return _native.render(files, diagram, format, width)
+    except NotImplementedError as failure:  # the engine's NotImplemented, as Workspace.render raises it (DS-398)
+        raise NotImplemented(*failure.args) from None
 
 
 def page(source: Source, title: str, focus: list[str] | tuple[str, ...] = ()) -> str:

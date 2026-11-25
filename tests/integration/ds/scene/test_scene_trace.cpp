@@ -9,7 +9,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/emit/JsonSink.hpp"
-#include "ds/format/SceneFormats.hpp"
+#include "ds/format/ViewerPage.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -49,7 +49,7 @@ class TestSceneTrace : public ::testing::Test {
 
   static std::string packedIn(const std::string& page) {
     const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
-    return ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
+    return ds::format::common::Packing::unpack(page.substr(at, page.find('\'', at) - at));
   }
 };
 
@@ -94,7 +94,7 @@ TEST_F(TestSceneTrace, AUseCaseIsListedWithItsContractItsOutcomesAndWhatRealises
 
 TEST_F(TestSceneTrace, ThePageListsTheRequirementsInTheBottomPanel) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"}, sink);
+  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"}, sink);
   EXPECT_NE(page.find("data-tab=\"reqs\""), std::string::npos);  // a tab beside the tours
   const std::string scene = packedIn(page);
   EXPECT_NE(scene.find("\"requirement\":[\"id\",\"kind\",\"title\",\"status\",\"text\",\"parent\",\"scope\",\"nodes\",\"signature\","

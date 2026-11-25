@@ -12,6 +12,7 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
+#include "ds/emit/NotImplemented.hpp"
 #include "ds/model/Metamodel.hpp"
 
 namespace {
@@ -48,16 +49,32 @@ bool filesOf(PyObject* dict, ds::api::Files* out) {
   return true;
 }
 
-// runs the engine with the GIL released, turning a C++ failure into a Python exception
+// runs the engine with the GIL released, turning a C++ failure into a Python exception: a pair the engine does not
+// write (emit::NotImplemented) into NotImplementedError(message, document, technology), which the package raises as
+// its own driftspec.NotImplemented (DS-398); any other into RuntimeError
 template <typename F>
 PyObject* run(F work) {
-  std::string out, failure;
-  Py_BEGIN_ALLOW_THREADS try { out = work(); } catch (const std::exception& e) {
+  std::string out, failure, document, technology;
+  bool notImplemented = false;
+  Py_BEGIN_ALLOW_THREADS try { out = work(); } catch (const ds::emit::NotImplemented& e) {
+    failure = e.what();
+    document = e.document();
+    technology = e.technology();
+    notImplemented = true;
+  } catch (const std::exception& e) {
     failure = e.what();
   } catch (...) {
     failure = "the engine failed";
   }
-  Py_END_ALLOW_THREADS if (!failure.empty()) {
+  Py_END_ALLOW_THREADS if (notImplemented) {
+    PyObject* args = Py_BuildValue("(sss)", failure.c_str(), document.c_str(), technology.c_str());
+    if (args) {
+      PyErr_SetObject(PyExc_NotImplementedError, args);
+      Py_DECREF(args);
+    }
+    return nullptr;
+  }
+  if (!failure.empty()) {
     PyErr_SetString(PyExc_RuntimeError, failure.c_str());
     return nullptr;
   }

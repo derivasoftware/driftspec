@@ -100,7 +100,7 @@ package driftspec@driftspec {
 
     operation check(source: driftspec::Source) -> driftspec::Report : UC-00001-1
     operation load(source: driftspec::Source) -> driftspec::Model : UC-00005-1
-    operation render(source: driftspec::Source, diagram: string) -> string : UC-00002-1
+    operation render(source: driftspec::Source, diagram: string) -> string fails NotImplemented : UC-00002-1   // a pair the engine does not write (DS-398)
   }
 
   sequence python::check {
@@ -555,7 +555,7 @@ package driftspec@driftspec {
     operation references(uri: string, line: int, character: int) -> lsprotocol::Location : UC-00007-1
     operation hover(uri: string, line: int, character: int) -> lsprotocol::Hover : UC-00007-1
     operation completion(uri: string, line: int, character: int) -> lsprotocol::CompletionList : UC-00007-1
-    operation draw(uri: string, line: int, character: int) -> string : UC-00007-1
+    operation draw(uri: string, line: int, character: int) -> string fails NotImplemented : UC-00007-1   // the engine's, answered as an error (DS-398)
     operation view(uri: string, line: int, character: int) -> string : UC-00007-1
   }
 
@@ -614,7 +614,7 @@ package driftspec@driftspec {
     function check(files: std::map<std::string, std::string>) -> std::string
     function export(files: std::map<std::string, std::string>) -> std::string
     function expected_at(text: std::string, line: int, column: int) -> std::string
-    function render(files: std::map<std::string, std::string>, diagram: std::string, format: std::string, width: int) -> std::string
+    function render(files: std::map<std::string, std::string>, diagram: std::string, format: std::string, width: int) -> std::string fails NotImplementedError
     function page(files: std::map<std::string, std::string>, title: std::string, focus: std::vector<std::string>) -> std::string
     function qualify(scope: std::string, name: std::string) -> std::string
     function outer(scope: std::string) -> std::string
@@ -649,7 +649,7 @@ package driftspec@driftspec {
       + walk(sequence: std::string, path: std::string, depth: int) -> std::string
       + ask(question: std::string, subject: std::string) -> std::string
       + shows(diagram: std::string) -> std::string
-      + render(diagram: std::string, format: std::string, width: int) -> std::string
+      + render(diagram: std::string, format: std::string, width: int) -> std::string fails NotImplementedError
       + page(title: std::string, focus: std::vector<std::string>) -> std::string
     }
 
@@ -743,9 +743,14 @@ package driftspec@driftspec {
       return json
     }
 
+    // the engine's NotImplemented raised as NotImplementedError(message, document, technology) (DS-398)
     sequence Workspace::render {
       local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
-      -> loaded.render(diagram, format, width) -> json
+      attempt {
+        -> loaded.render(diagram, format, width) -> json
+      } on NotImplemented {
+        fail NotImplementedError
+      }
       return json
     }
 
@@ -780,7 +785,11 @@ package driftspec@driftspec {
 
     sequence render {
       local ds: driftspec@ds@engine         // the engine's binary interface, not the class behind it
-      -> ds.render(files, diagram, format, width) -> drawing
+      attempt {
+        -> ds.render(files, diagram, format, width) -> drawing
+      } on NotImplemented {
+        fail NotImplementedError
+      }
       return drawing
     }
 
@@ -922,8 +931,25 @@ package driftspec@driftspec {
       + walk(sequence: str, path: str, depth: int) -> list[Walked]
       + ask(question: str, subject: str) -> list[Answer]
       + shows(diagram: str) -> list[Answer]
-      + render(diagram: str, format: str, width: int) -> str
+      + render(diagram: str, format: str, width: int) -> str fails NotImplemented   // a format that is none of the five (DS-398)
       + page(title: str, focus: list[str] | tuple[str, ...]) -> str
+    }
+
+    // A document asked in a technology the engine does not write it in (DS-398): a NotImplementedError, so a caller
+    // that catches that still does, naming the pair that is missing
+    class NotImplemented : NotImplementedError {
+      @requirement REQ-00086-1
+      + document: str                          // what was asked to be written: "diagram"; "" for any document
+      + technology: str                        // what it was asked to be written in
+    }
+
+    sequence Workspace::render {
+      attempt {
+        self -> _native.render(diagram, format, width) -> drawing
+      } on NotImplementedError {
+        fail NotImplemented
+      }
+      return drawing
     }
 
     sequence Workspace::relations_from {
@@ -942,7 +968,7 @@ package driftspec@driftspec {
     }
     function load(source: Source) -> Model
     function check(source: Source) -> Report
-    function render(source: Source, diagram: str, format: str, width: int) -> str
+    function render(source: Source, diagram: str, format: str, width: int) -> str fails NotImplemented
     function page(source: Source, title: str, focus: list[str] | tuple[str, ...]) -> str
     function expected_at(text: str, line: int, column: int) -> list[str]
     function severities() -> list[dict]        // the severity table as the engine writes it: a door reads a severity here, never by name
@@ -969,7 +995,11 @@ package driftspec@driftspec {
 
     sequence render {
       -> read(source) -> files
-      -> _native::render(files, diagram, format, width) -> drawing
+      attempt {
+        -> _native::render(files, diagram, format, width) -> drawing
+      } on NotImplementedError {
+        fail NotImplemented
+      }
       return drawing
     }
 

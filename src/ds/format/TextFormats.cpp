@@ -11,23 +11,6 @@ std::string AnswersText::write(const std::vector<query::Answer>& document, const
   return out;
 }
 
-std::string AnswersJson::name() const { return "json"; }
-
-std::string AnswersJson::write(const std::vector<query::Answer>& document, const FormatOptions&, emit::ISink& out_sink) const {
-  out_sink.beginList();
-  for (const auto& a : document)
-    out_sink.beginRecord().field("detail").value(a.detail).field("id").value(a.id).field("kind").value(a.kind).endRecord();
-  out_sink.endList();
-  return out_sink.result();
-}
-
-std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> answerFormats() {
-  std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> out;
-  out["text"] = std::make_unique<AnswersText>();
-  out["json"] = std::make_unique<AnswersJson>();
-  return out;
-}
-
 std::string ReportText::name() const { return "text"; }
 
 std::string ReportText::write(const check::Report& document, const FormatOptions& options, emit::ISink&) const {
@@ -44,20 +27,6 @@ std::string ReportText::write(const check::Report& document, const FormatOptions
   if (open)
     out += std::to_string(open) + (open == 1 ? " open item" : " open items") + " of coverage: ds query " +
            (options.title.empty() ? "<workspace>" : options.title) + " coverage lists them\n";
-  return out;
-}
-
-std::string ReportJson::name() const { return "json"; }
-
-std::string ReportJson::write(const check::Report& document, const FormatOptions&, emit::ISink& out_sink) const {
-  common::ReportEncoder(document).encode(out_sink);
-  return out_sink.result();
-}
-
-std::map<std::string, std::unique_ptr<IFormat<check::Report>>> reportFormats() {
-  std::map<std::string, std::unique_ptr<IFormat<check::Report>>> out;
-  out["text"] = std::make_unique<ReportText>();
-  out["json"] = std::make_unique<ReportJson>();
   return out;
 }
 

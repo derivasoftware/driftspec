@@ -27,11 +27,11 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Report.hpp"
+#include "ds/emit/NotImplemented.hpp"
 #include "ds/emit/SinkFactory.hpp"
 #include "ds/export/JsonExport.hpp"
-#include "ds/format/DiagramFormats.hpp"
-#include "ds/format/SceneFormats.hpp"
-#include "ds/format/TextFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
+#include "ds/format/FormatFactory.hpp"
 #include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
@@ -161,12 +161,18 @@ int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool js
   ds::model::Model model(metamodel);
   if (!loadWorkspace(metamodel, dir, ds::api::Output::Findings, "", &model))
     return 2;  // no workspace to check: the command line is wrong, not the design
-  // the one report of a check (DS-120), written by the format asked for (DS-126)
+  // the one report of a check (DS-120): with --json its description in the JSON sink, indented as ds check --json has
+  // always printed it (DS-398); else written as text by its writer (DS-126)
   const ds::check::Report report = ds::check::Report::of(model, metamodel);
+  const auto sink = ds::emit::SinkFactory::json(true);
+  if (json) {
+    ds::format::DescriptionFactory::report(report)->describe(*sink);
+    std::cout << sink->result() << "\n";
+    return report.errors ? 1 : 0;
+  }
   ds::format::FormatOptions options;
   options.title = dir;  // the workspace as it was given: where the report says the open coverage is listed (DS-431)
-  const auto sink = ds::emit::SinkFactory::json(true);  // indented, as ds check --json has always printed it
-  std::cout << ds::format::reportFormats().at(json ? "json" : "text")->write(report, options, *sink) << (json ? "\n" : "");
+  std::cout << ds::format::FormatFactory::report().at("text")->write(report, options, *sink);
   return report.errors ? 1 : 0;
 }
 
@@ -193,21 +199,22 @@ struct Render {
         std::cerr << "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace\n";
         return 2;
       }
-      const auto sink = ds::emit::SinkFactory::json(false);                                   // what layout and cells write
-      return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(false), *sink));  // as it came, drawn by the format named
+      return emit(output, draw({doc}, false, theme));  // as it came, drawn as -f names
     }
     // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376)
     const bool viewer = format == "html" || format == "json";
     ds::model::Model model(metamodel);
     if (!loadWorkspace(metamodel, input, viewer ? ds::api::Output::Viewer : ds::api::Output::Drawing, diagram, &model)) return 2;
     if (viewer) {
-      // the scene is the document; the format named writes it (DS-126)
-      const auto formats = ds::format::sceneFormats();
-      ds::format::FormatOptions options;
+      // the scene is the document (DS-126): described in the technology -f names, indented for a reader (DS-398), or
+      // inside the viewer's page
       if (format == "json") {
-        const auto sink = ds::emit::SinkFactory::json(true);  // the scene indented for a reader
-        return emit(output, formats.at("json")->write(ds::scene::Scene(model, metamodel).build(), options, *sink) + "\n");
+        const auto sink = ds::emit::SinkFactory::of(format, true);
+        const ds::scene::SceneDocument document = ds::scene::Scene(model, metamodel).build();
+        ds::format::DescriptionFactory::scene(document)->describe(*sink);
+        return emit(output, sink->result() + "\n");
       }
+      ds::format::FormatOptions options;
       std::vector<std::string> focus;
       if (!diagram.empty()) {
         const auto shown = ds::query::Query(model, metamodel).ask("shows", diagram);
@@ -223,7 +230,7 @@ struct Render {
       options.embed = embed;
       options.height = height;
       const auto sink = ds::emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
-      return emit(output, formats.at("html")->write(ds::scene::Scene(model, metamodel).build(), options, *sink));
+      return emit(output, ds::format::FormatFactory::scene().at("html")->write(ds::scene::Scene(model, metamodel).build(), options, *sink));
     }
     if (diagram.empty()) {
       std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
@@ -234,14 +241,20 @@ struct Render {
       std::cerr << "no diagram named " << diagram << "\n";
       return 1;
     }
-    const auto sink = ds::emit::SinkFactory::json(false);  // what layout and cells write
-    return emit(output, diagramFormat(theme)->write({doc}, drawingOptions(true), *sink) + (format == "ir" ? "\n" : ""));
+    return emit(output, draw({doc}, true, theme) + (format == "ir" ? "\n" : ""));
   }
 
-  // a diagram is its IR, written by the format named (DS-126); the IR of a workspace is indented
-  std::unique_ptr<ds::format::IFormat<ds::render::IrText>> diagramFormat(const ds::theme::Theme& theme) const {
-    auto formats = ds::format::diagramFormats(theme);
-    return std::move(formats.at(format));
+  // a diagram is its IR (DS-126): its layout and its cells are described in compact JSON, a line after (DS-398); the
+  // IR, indented when it is a workspace's, and the drawings are written by the writer -f names
+  std::string draw(const ds::render::IrText& ir, bool workspace, const ds::theme::Theme& theme) const {
+    const auto sink = ds::emit::SinkFactory::json(false);
+    if (format == "layout" || format == "cells") {
+      const auto description = format == "layout" ? ds::format::DescriptionFactory::layout(ir, theme, width)
+                                                  : ds::format::DescriptionFactory::cells(ir, theme, width);
+      description->describe(*sink);
+      return sink->result() + "\n";
+    }
+    return ds::format::FormatFactory::diagram(theme).at(format)->write(ir, drawingOptions(workspace), *sink);
   }
   ds::format::FormatOptions drawingOptions(bool workspace) const {
     ds::format::FormatOptions options;
@@ -340,9 +353,12 @@ int run(int argc, char** argv) {
   }
   const ds::query::Query query(model, metamodel);
   const std::vector<ds::query::Answer> answers = query.ask(question, subject);
+  const auto sink = ds::emit::SinkFactory::json(false);
   if (!answers.empty() && answers.front().kind == "error") {
-    const auto sink = ds::emit::SinkFactory::json(false);
-    if (json) std::cout << ds::format::AnswersJson().write(answers, {}, *sink) << "\n";  // asked for JSON, the error is an answer too
+    if (json) {  // asked for JSON, the error is an answer too
+      ds::format::DescriptionFactory::answers(answers)->describe(*sink);
+      std::cout << sink->result() << "\n";
+    }
     std::cerr << answers.front().id << ": " << answers.front().detail << "\n";
     if (answers.front().detail.find("not a question") != std::string::npos) {
       std::cerr << "questions:";
@@ -351,15 +367,23 @@ int run(int argc, char** argv) {
     }
     return 1;
   }
-  // the answers, written by the format asked for (DS-126)
-  const auto sink = ds::emit::SinkFactory::json(false);
-  std::cout << ds::format::answerFormats().at(json ? "json" : "text")->write(answers, {}, *sink) << (json ? "\n" : "");
+  // the answers (DS-126): with --json their description in the JSON sink (DS-398), else written as text
+  if (json) {
+    ds::format::DescriptionFactory::answers(answers)->describe(*sink);
+    std::cout << sink->result() << "\n";
+    return 0;
+  }
+  std::cout << ds::format::FormatFactory::answers().at("text")->write(answers, {}, *sink);
   return 0;
 }
 
 int work(int argc, char** argv) {
   try {
     return run(argc, argv);
+  } catch (const ds::emit::NotImplemented& e) {
+    // a document asked in a technology ds does not write it in: bad usage, as a wrong command line is (DS-398)
+    std::cerr << "ds: " << e.what() << "\n";
+    return 2;
   } catch (const std::exception& e) {
     // a file that cannot be read, or anything else the input makes impossible: said, with the code of bad
     // input, never an abort (DS-279)
