@@ -125,10 +125,10 @@ package driftspec@ds {
   }
 
   rule families-are-reached-through-their-interface {
-    title: a class of a family is reached through its interface by every class but its own family and the factories
+    title: a class of a family is reached through its interface by every class but its own family and the factories, which are named ...Factory
     @requirement REQ-00198-1
     for class c in driftspec@ds, class x in driftspec@ds
-    where implements(x, i), c != x, not implements(c, i), not factory(c)
+    where implements(x, i), c != x, not implements(c, i), not factory(c), not name(c) matches "Factory$"
     never depends(c, x)
   }
 

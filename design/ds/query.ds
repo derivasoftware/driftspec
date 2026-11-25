@@ -377,6 +377,11 @@ package driftspec@ds {
       + static of(model: model::Model, metamodel: model::Metamodel) -> std::unique_ptr<IQuery>
     }
 
+    sequence QueryFactory::of {
+      local query: Query
+      return query
+    }
+
     // An entity as an answer: its kind is named by the metamodel the model is written in.
     sequence Query::entityAnswer {
       local answer: Answer
