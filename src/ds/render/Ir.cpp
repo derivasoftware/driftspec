@@ -29,6 +29,7 @@ std::string text(const nlohmann::json& j, const char* key) {
 IrDocument IrDocument::parse(const std::string& json) {
   const nlohmann::json j = nlohmann::json::parse(json);
   IrDocument doc;
+  doc.kind = text(j, "kind");
   doc.title = text(j, "title");
   doc.notice = text(j, "notice");
   for (const auto& part : j.value("parts", nlohmann::json::array())) doc.parts.push_back(part.get<std::string>());
@@ -97,6 +98,7 @@ IrDocument IrDocument::part(const std::string& name) const {
 
 IrDocument IrDocument::bundled() const {
   IrDocument out;
+  out.kind = kind;
   out.title = title;
   out.notice = notice;
   out.nodes = nodes;

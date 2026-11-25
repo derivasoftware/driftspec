@@ -25,7 +25,10 @@ std::string IrExport::render(const std::string& diagramId, bool pretty) const {
   return pretty ? ir.dump(2) : ir.dump();
 }
 
-nlohmann::json IrExport::documentHead(const model::Entity& diagram) { return {{"ir", 1}, {"title", diagram.name}}; }
+nlohmann::json IrExport::documentHead(const model::Entity& diagram) {
+  const std::string kind = diagram.field("kind");
+  return {{"ir", 1}, {"kind", kind.empty() ? "class" : kind}, {"title", diagram.name}};
+}
 
 }  // namespace render
 }  // namespace ds

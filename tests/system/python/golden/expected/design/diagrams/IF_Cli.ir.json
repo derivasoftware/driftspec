@@ -1,6 +1,7 @@
 {
   "edges": [],
   "ir": 1,
+  "kind": "interface",
   "nodes": [
     {
       "classifier": "package",

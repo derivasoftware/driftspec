@@ -9,6 +9,7 @@
 #include "ds/layout/EngineFactory.hpp"
 #include "ds/layout/Frame.hpp"
 #include "ds/layout/Graph.hpp"
+#include "ds/layout/RouterFactory.hpp"
 #include "ds/text/Text.hpp"
 
 namespace ds {
@@ -60,7 +61,7 @@ Rect Layout::sizeOf(const IrNode& node) const {
 // written; a container layered, sized by the engine, the width of its label given; any other node sized from its text.
 // Every edge is told only whether it points up: a base above what inherits from it. The places come back as they
 // went, in whole units.
-LayoutResult Layout::place(const IrDocument& doc, int maxWidth) const {
+LayoutResult Layout::place(const IrDocument& doc, int maxWidth, bool asItsKind) const {
   const size_t n = doc.nodes.size();
   std::map<std::string, int> index;
   for (size_t i = 0; i < n; ++i) index[doc.nodes[i].id] = static_cast<int>(i);
@@ -111,7 +112,8 @@ LayoutResult Layout::place(const IrDocument& doc, int maxWidth) const {
   spacing.containerPad = m_.CONTAINER_PAD;
   spacing.containerLabelH = m_.CONTAINER_LABEL_H;
   spacing.aspect = m_.ASPECT;
-  const layout::Placement placed = layout::EngineFactory::layered(spacing)->place(graph);
+  const layout::Placement placed =
+      layout::EngineFactory::layered(spacing, asItsKind ? layout::RouterFactory::of(doc.kind, spacing) : nullptr)->place(graph);
   LayoutResult out;
   out.placed.reserve(n);
   for (size_t i = 0; i < n; ++i) {
@@ -125,6 +127,8 @@ LayoutResult Layout::place(const IrDocument& doc, int maxWidth) const {
   for (const auto& route : placed.routes) {
     Route& to = out.routes[route.first];
     for (const auto& p : route.second.points) to.points.push_back({static_cast<int>(p.first), static_cast<int>(p.second)});
+    to.curve = route.second.shape == layout::Route::Shape::curve;
+    if (route.second.label) to.label = Point{static_cast<int>(route.second.label->first), static_cast<int>(route.second.label->second)};
   }
   return out;
 }

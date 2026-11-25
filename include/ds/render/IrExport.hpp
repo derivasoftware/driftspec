@@ -27,7 +27,9 @@ class IrExport {
   std::string render(const std::string& diagramId, bool pretty) const;
 
  private:
-  /// What every render-IR document opens with, whatever its kind: the contract it is written in and its title.
+  /// What heads every render-IR document, and the one place it is written (DS-443): the contract's version, the
+  /// diagram's kind, so a drawing can tell how to draw it without guessing from its nodes (a box diagram that says no
+  /// kind is a class diagram), and its title.
   static nlohmann::json documentHead(const model::Entity& diagram);
 
   const model::Model& model_;
