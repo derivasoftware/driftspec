@@ -241,9 +241,12 @@ package driftspec@ds {
     }
 
     // THE ONE PLACE THAT NAMES THE USE CASES: a door, or the workspace, asks for one by its name
-    class UseCaseFactory {
+    class UseCaseFactory {                  // made over the metamodel and aggregated by what asks it (DS-408)
       @requirement REQ-00261-1
-      + static of(name: std::string, metamodel: model::Metamodel) -> std::unique_ptr<IUseCase> fails emit::NotImplemented
+      - refs metamodel_: model::Metamodel
+      + UseCaseFactory(metamodel: model::Metamodel)
+      + of(name: std::string) -> std::unique_ptr<IUseCase> fails emit::NotImplemented
+      + metamodel() -> model::Metamodel
       + static names() -> std::vector<std::string>
     }
   }

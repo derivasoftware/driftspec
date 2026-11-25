@@ -61,7 +61,7 @@ class TestUseCases : public ::testing::Test {
   /// the goldens mask it.
   std::string described(const std::string& name, const ds::model::Model& model, const Request& request, bool pretty) const {
     const auto sink = ds::emit::SinkFactory::json(pretty);
-    ds::service::UseCaseFactory::of(name, metamodel)->run(model, request, *sink);
+    ds::service::UseCaseFactory(metamodel).of(name)->run(model, request, *sink);
     const std::string text = sink->result() + "\n";
     const std::string version = metamodel.version();
     std::string masked = text;
@@ -72,7 +72,7 @@ class TestUseCases : public ::testing::Test {
 
   ds::service::Outcome outcome(const std::string& name, const ds::model::Model& model, const Request& request) const {
     const auto sink = ds::emit::SinkFactory::json(false);
-    return ds::service::UseCaseFactory::of(name, metamodel)->run(model, request, *sink);
+    return ds::service::UseCaseFactory(metamodel).of(name)->run(model, request, *sink);
   }
 };
 
@@ -189,8 +189,8 @@ TEST_F(TestUseCases, EachUseCaseEndsInAnOutcomeItsUseCaseDeclares) {
 TEST_F(TestUseCases, TheFactoryNamesEveryUseCaseAndAnyOtherNameIsNotImplemented) {
   const auto names = ds::service::UseCaseFactory::names();
   EXPECT_EQ(names.size(), 6u);
-  for (const auto& name : names) EXPECT_EQ(ds::service::UseCaseFactory::of(name, metamodel)->name(), name);
-  EXPECT_THROW(ds::service::UseCaseFactory::of("teleport", metamodel), ds::emit::NotImplemented);
+  for (const auto& name : names) EXPECT_EQ(ds::service::UseCaseFactory(metamodel).of(name)->name(), name);
+  EXPECT_THROW(ds::service::UseCaseFactory(metamodel).of("teleport"), ds::emit::NotImplemented);
 }
 
 TEST_F(TestUseCases, ARequestThatIsNotTheUseCasesIsABadRequestAndADrawingTakesOnlyWhatItReads) {
@@ -199,11 +199,11 @@ TEST_F(TestUseCases, ARequestThatIsNotTheUseCasesIsABadRequestAndADrawingTakesOn
   EXPECT_THROW(outcome("edit-design", small, {{{"text", ""}, {"line", "one"}, {"column", "0"}}}), ds::service::BadRequest);
   EXPECT_THROW(outcome("see-design", small, {{{"format", "svg"}, {"diagram", "CL_Small"}}}), ds::emit::NotImplemented);  // DS-399
   // what each reads of a model: the viewer all a check derives, a drawing its three steps, the manual nothing
-  const auto see = ds::service::UseCaseFactory::of("see-design", metamodel);
+  const auto see = ds::service::UseCaseFactory(metamodel).of("see-design");
   EXPECT_TRUE(same(see->needs(small, {{{"format", "layout"}, {"diagram", "CL_Small"}}}),
                    ds::api::Api::stepsFor(ds::api::Output::Drawing, small, "CL_Small")));
   EXPECT_TRUE(same(see->needs(small, {{{"format", "json"}}}), ds::check::Selection::every()));
-  EXPECT_TRUE(same(ds::service::UseCaseFactory::of("learn-language", metamodel)->needs(small, {}), ds::check::Selection::of({})));
+  EXPECT_TRUE(same(ds::service::UseCaseFactory(metamodel).of("learn-language")->needs(small, {}), ds::check::Selection::of({})));
 }
 
 }  // namespace

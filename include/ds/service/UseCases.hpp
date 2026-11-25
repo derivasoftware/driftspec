@@ -97,13 +97,22 @@ class EditDesign : public IUseCase {
   Outcome run(const model::Model& model, const Request& request, emit::ISink& sink) const override;
 };
 
-/// The one place that names the use cases (DS-407): a door, or the workspace, asks for one by its name.
+/// The one place that names the use cases (DS-407): made over the metamodel the use cases are written in and handed,
+/// by reference, to what asks for them by name (a door, the workspace, DS-408): its dependencies are aggregated where
+/// it is made, as the Owner's pattern has it.
 class UseCaseFactory {
  public:
-  /// The use case of that name, over `metamodel`, which outlives it; emit::NotImplemented when there is none.
-  static std::unique_ptr<IUseCase> of(const std::string& name, const model::Metamodel& metamodel);
+  /// Over `metamodel`, which outlives it and every use case it makes.
+  explicit UseCaseFactory(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
+  /// The use case of that name; emit::NotImplemented when there is none.
+  std::unique_ptr<IUseCase> of(const std::string& name) const;
+  /// The metamodel its use cases are written in.
+  const model::Metamodel& metamodel() const { return metamodel_; }
   /// The names of every use case, in the order of their UCs.
   static std::vector<std::string> names();
+
+ private:
+  const model::Metamodel& metamodel_;
 };
 
 }  // namespace service

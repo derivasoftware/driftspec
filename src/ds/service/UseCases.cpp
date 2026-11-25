@@ -157,12 +157,12 @@ Outcome EditDesign::run(const model::Model&, const Request& request, emit::ISink
 
 // ---- the factory -----------------------------------------------------------------------------------------------
 
-std::unique_ptr<IUseCase> UseCaseFactory::of(const std::string& name, const model::Metamodel& metamodel) {
-  if (name == "check-design") return std::make_unique<CheckDesign>(metamodel);
-  if (name == "see-design") return std::make_unique<SeeDesign>(metamodel);
-  if (name == "ask-model") return std::make_unique<AskModel>(metamodel);
-  if (name == "hand-model") return std::make_unique<HandModel>(metamodel);
-  if (name == "learn-language") return std::make_unique<LearnLanguage>(metamodel);
+std::unique_ptr<IUseCase> UseCaseFactory::of(const std::string& name) const {
+  if (name == "check-design") return std::make_unique<CheckDesign>(metamodel_);
+  if (name == "see-design") return std::make_unique<SeeDesign>(metamodel_);
+  if (name == "ask-model") return std::make_unique<AskModel>(metamodel_);
+  if (name == "hand-model") return std::make_unique<HandModel>(metamodel_);
+  if (name == "learn-language") return std::make_unique<LearnLanguage>(metamodel_);
   if (name == "edit-design") return std::make_unique<EditDesign>();
   throw emit::NotImplemented("", name, names());
 }

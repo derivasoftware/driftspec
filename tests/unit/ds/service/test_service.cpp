@@ -73,8 +73,8 @@ TEST_F(TestBadRequest, ABadRequestIsAnInvalidArgumentThatSaysWhatIsMissing) {
 }
 
 TEST_F(TestUseCaseFactory, ItMakesEachUseCaseByItsNameAndNoOther) {
-  for (const auto& name : ds::service::UseCaseFactory::names()) EXPECT_EQ(ds::service::UseCaseFactory::of(name, metamodel)->name(), name);
-  EXPECT_THROW(ds::service::UseCaseFactory::of("teleport", metamodel), ds::emit::NotImplemented);
+  for (const auto& name : ds::service::UseCaseFactory::names()) EXPECT_EQ(ds::service::UseCaseFactory(metamodel).of(name)->name(), name);
+  EXPECT_THROW(ds::service::UseCaseFactory(metamodel).of("teleport"), ds::emit::NotImplemented);
 }
 
 TEST_F(TestCheckDesign, AWorkspaceThatChecksCleanEndsInDefaultWithItsReport) {

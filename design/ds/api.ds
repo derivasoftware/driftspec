@@ -428,7 +428,7 @@ package driftspec@ds {
     text:
       A workspace is a map from each file's path to its text, saved or not. check gives
       the findings and the counts as ds check --json does, export the model as ds export
-      does, render a diagram drawn as text or svg or its render-IR, page the viewer framed
+      does, render a diagram drawn as text, svg, cells, layout or its render-IR, page the viewer framed
       on the identities given, and expectedAt what the grammar takes at a place of a text.
       Which steps of the check a load runs is chosen by what the load is for: the use case it
       serves, by its needs (DS-407), and the Api for what no use case serves yet.
@@ -436,7 +436,8 @@ package driftspec@ds {
       Owner, 2026-11-06 (DS-84): a Python face to depend on, and a language server; text in
       and JSON out keeps one contract for every caller. Revision 2 (DS-407, following the
       Owner's DS-406, 2026-11-24): every use case says the steps it reads (IUseCase::needs), so
-      the service chooses them too; the Api keeps choosing for the doors not on use cases yet.
+      the service chooses them too; the Api keeps choosing for the doors not on use cases yet. The
+      same revision says render draws cells and layout too (DS-453).
     tags: api, python
     // revision 3 (DS-376): a drawing runs only the steps of the check it reads, chosen by the Api alone, and draws
     // byte for byte as after the whole check
