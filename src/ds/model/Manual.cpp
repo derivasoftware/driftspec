@@ -41,7 +41,7 @@ std::vector<CommandSpec> Manual::buildCommands() {
        "the whole model in the viewer (html, the default), its scene (json), or one diagram drawn (svg, text, cells) or as its data "
        "(ir, layout)",
        {{0, "drawn"},
-        {1, "no such diagram"},
+        {1, "no such diagram, or a file of the workspace does not read whole: a drawing is not made of what did not parse"},
         {2, "bad usage (a format that needs a diagram without one), or nothing to read at the path"}}},
       {"query",
        "ds query <workspace> <question> [subject] [--json]",
