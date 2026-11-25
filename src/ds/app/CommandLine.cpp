@@ -14,9 +14,9 @@ namespace app {
 
 CommandLine::CommandLine() : manual_(metamodel_), commands_(metamodel_, theme_) {}
 
-int CommandLine::run(int argc, char** argv) const {
+int CommandLine::run(const std::vector<std::string>& argv) const {
   try {
-    return execute(argc, argv);
+    return execute(argv);
   } catch (const emit::NotImplemented& e) {
     // a document asked in a technology ds does not write it in: bad usage, as a wrong command line is (DS-398)
     std::cerr << "ds: " << e.what() << "\n";
@@ -33,7 +33,7 @@ int CommandLine::run(int argc, char** argv) const {
   }
 }
 
-int CommandLine::execute(int argc, char** argv) const {
+int CommandLine::execute(const std::vector<std::string>& argv) const {
   CLI::App app{"ds: a software design as text, checked, drawn and asked", "ds"};
   app.set_version_flag("--version", "ds " + metamodel_.version());
   app.require_subcommand(1);
@@ -52,8 +52,11 @@ int CommandLine::execute(int argc, char** argv) const {
     }
     verbs.emplace_back(sub, std::move(command));
   }
+  // CLI11 takes the words after the program's name, last first, as it reads a C command line itself
+  std::vector<std::string> words(argv.rbegin(), argv.rend());
+  if (!words.empty()) words.pop_back();
   try {
-    app.parse(argc, argv);
+    app.parse(std::move(words));
   } catch (const CLI::ParseError& e) {
     const int code = app.exit(e);
     return code == 0 ? 0 : 2;  // help is not a failure; a wrong command line is bad usage

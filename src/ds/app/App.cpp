@@ -11,6 +11,8 @@
 #endif
 
 #include <cstddef>
+#include <string>
+#include <vector>
 
 #include "ds/app/CommandLine.hpp"
 
@@ -24,7 +26,7 @@ int main(int argc, char** argv) {
 #ifdef _WIN32
   // what ds writes is the same bytes on every system: no line ending is turned into \r\n (DS-283)
   _setmode(_fileno(stdout), _O_BINARY);
-  return CommandLine().run(argc, argv);
+  return CommandLine().run(std::vector<std::string>(argv, argv + argc));
 #else
   struct Call {  // what the thread that does the work is given and gives back
     int argc;
@@ -33,7 +35,7 @@ int main(int argc, char** argv) {
   } call{argc, argv, 2};
   const auto thread = [](void* raw) -> void* {
     auto* c = static_cast<Call*>(raw);
-    c->code = CommandLine().run(c->argc, c->argv);
+    c->code = CommandLine().run(std::vector<std::string>(c->argv, c->argv + c->argc));
     return nullptr;
   };
   pthread_attr_t attributes;
@@ -41,7 +43,8 @@ int main(int argc, char** argv) {
   pthread_attr_setstacksize(&attributes, std::size_t{512} * 1024 * 1024);
   pthread_t worker;
   if (pthread_create(&worker, &attributes, thread, &call) != 0) {
-    call.code = CommandLine().run(argc, argv);  // no thread to be had: the work runs here, on the stack there is
+    // no thread to be had: the work runs here, on the stack there is
+    call.code = CommandLine().run(std::vector<std::string>(argv, argv + argc));
   } else {
     pthread_join(worker, nullptr);
   }

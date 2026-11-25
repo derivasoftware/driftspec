@@ -1,13 +1,10 @@
 #ifndef DRIFTSPEC_APP_ICOMMAND_HPP
 #define DRIFTSPEC_APP_ICOMMAND_HPP
 
+#include <CLI/CLI.hpp>
 #include <string>
 
 #include "ds/service/UseCase.hpp"
-
-namespace CLI {
-class App;
-}  // namespace CLI
 
 namespace ds {
 namespace app {

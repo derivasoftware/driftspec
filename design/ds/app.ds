@@ -52,32 +52,15 @@ package driftspec@ds {
       tags: cli, app, architecture
       verification VER-00228-1 {
         status: draft
-        title: Unit tests confirm each verb ends in its use case's outcome or the door's, and the command line turns each into its exit code and says it on stderr as ds always has
+        title: Integration tests confirm each verb ends in its use case's outcome or the door's, and the command line turns each into its exit code and says it on stderr as ds always has
         method: test
         tests:
-          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.EachOutcomeOfAVerbEndsInItsExitCode
-          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.AWrongCommandLineIsBadUsageAndHelpIsNot
-          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.APathThatIsNoWorkspaceIsSaidAndEveryVerbExitsTwo
-          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.AFileThatCannotBeReadIsSaidWithTheCodeOfBadInput
-          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.AFileThatCannotBeWrittenIsSaidAndExitsOne
-          tests/unit/ds/app/test_command_line.cpp::TestCommandLine.ADocumentIsWrittenToTheFileOutputNames
-          tests/unit/ds/app/test_command_line.cpp::TestMain.TheCommandLineRunsOnItsOwnThreadToItsExitCode
-          tests/unit/ds/app/test_commands.cpp::TestCommandFactory.TheFactoryNamesEveryVerbInTheOrderOfTheHelpAndAnyOtherIsNotImplemented
-          tests/unit/ds/app/test_commands.cpp::TestCheckCommand.AWorkspaceIsCheckedAndAPathThatHoldsNoDesignIsTheDoorsBadUsage
-          tests/unit/ds/app/test_commands.cpp::TestExportCommand.TheModelIsWrittenAsJsonAndAPathThatHoldsNoDesignIsNoWorkspace
-          tests/unit/ds/app/test_commands.cpp::TestRenderCommand.ADiagramIsDrawnAndOneTheWorkspaceLacksIsNoDiagram
-          tests/unit/ds/app/test_commands.cpp::TestRenderCommand.ARenderIrDocumentIsDrawnAsItCameAndTheViewerNeedsAWorkspace
-          tests/unit/ds/app/test_commands.cpp::TestQueryCommand.AQuestionIsAnsweredAndAnUnknownOneSaysWhatIsAskedAsJsonToo
-          tests/unit/ds/app/test_commands.cpp::TestManualCommand.APageIsPrintedAsTextOrJsonAndAnUnknownTopicListsTheTopics
-          tests/unit/ds/app/test_disk.cpp::TestDisk.ADirectoryIsOneAndAFileOrNothingIsNot
-          tests/unit/ds/app/test_disk.cpp::TestDisk.ADirectoryHoldsADesignWhenADsFileLiesUnderIt
-          tests/unit/ds/app/test_disk.cpp::TestDisk.WhyAPathIsNoWorkspaceIsSaidAndAWorkspaceHasNoWhy
-          tests/unit/ds/app/test_disk.cpp::TestDisk.TheFilesOfAWorkspaceAreEveryDsFileUnderItReadWholeByItsPath
-          tests/unit/ds/app/test_disk.cpp::TestDisk.AFileOfAWorkspaceThatCannotBeReadFails
-          tests/unit/ds/app/test_disk.cpp::TestDisk.AFileIsReadWholeAndAMissingOneIsEmpty
-          tests/unit/ds/app/test_disk.cpp::TestDisk.ThePageIsTitledAfterTheLastNameOfThePath
-          tests/unit/ds/app/test_output.cpp::TestOutput.TheTextAndItsEndGoToTheFileNamedOrToStdout
-          tests/unit/ds/app/test_output.cpp::TestOutput.AFileThatCannotBeWrittenIsNotWritten
+          tests/integration/ds/app/test_exit_codes.cpp::TestExitCodes.EachOutcomeOfAVerbEndsInItsExitCode
+          tests/integration/ds/app/test_exit_codes.cpp::TestExitCodes.AWrongCommandLineIsBadUsageAndHelpIsNot
+          tests/integration/ds/app/test_exit_codes.cpp::TestExitCodes.APathThatIsNoWorkspaceIsSaidAndEveryVerbExitsTwo
+          tests/integration/ds/app/test_exit_codes.cpp::TestExitCodes.AFileThatCannotBeReadIsSaidWithTheCodeOfBadInput
+          tests/integration/ds/app/test_exit_codes.cpp::TestExitCodes.AFileThatCannotBeWrittenIsSaidAndExitsOne
+          tests/integration/ds/app/test_exit_codes.cpp::TestExitCodes.ADocumentIsWrittenToTheFileOutputNames
       }
     }
 
@@ -253,7 +236,7 @@ package driftspec@ds {
       @requirement REQ-00205-1
       - file_: std::string
       + Output(file: std::string)
-      + write(text: std::string, end: std::string) -> bool      // false when the file cannot be written
+      + write(text: std::string_view, end: std::string_view) -> bool   // false when the file cannot be written
       + file() -> std::string
     }
 
