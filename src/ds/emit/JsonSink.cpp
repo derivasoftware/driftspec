@@ -2,9 +2,12 @@
 
 #include <charconv>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <stdexcept>
 #include <string>
+
+#include "ds/emit/NotImplemented.hpp"
 
 namespace ds {
 namespace emit {
@@ -12,6 +15,10 @@ namespace emit {
 JsonSink::JsonSink(bool pretty, bool checked) : pretty_(pretty), checked_(checked) {}
 
 bool JsonSink::checkedByDefault() {
+  // DS_JSON_CHECK says it whatever the build (DS-461): 1 checks, so a Release test run in CI holds the contract
+  // too; 0 does not. Without it, a debug build checks and a release build does not
+  const char* said = std::getenv("DS_JSON_CHECK");
+  if (said && *said) return std::strcmp(said, "0") != 0;
 #ifdef NDEBUG
   return false;
 #else
@@ -198,6 +205,19 @@ ISink& JsonSink::boolean(bool value) {
 ISink& JsonSink::null() {
   beforeValue();
   out_.append("null", 4);
+  return *this;
+}
+
+ISink& JsonSink::paragraph(std::string_view) { return *this; }
+
+ISink& JsonSink::table(const std::vector<std::string_view>&) { return *this; }
+
+ISink& JsonSink::row(const std::vector<std::string_view>&) { return *this; }
+
+ISink& JsonSink::endTable() { return *this; }
+
+ISink& JsonSink::described(std::string_view document) {
+  if (out_.empty()) throw NotImplemented(std::string(document), "json", {});
   return *this;
 }
 

@@ -48,10 +48,12 @@ void SceneDescription::pairs(const std::vector<std::pair<std::string, std::strin
   out_sink.endList();
 }
 
+std::string SceneDescription::name() const { return "scene"; }
+
 // The document says how to read itself: every record is an array whose columns "fields" names, and a node, a
 // behaviour or a link is named by its index. The keys of the one record with keys, the document itself, are
 // written in byte order.
-void SceneDescription::describe(emit::ISink& out_sink) const {
+void SceneDescription::say(emit::ISink& out_sink) const {
   const scene::SceneDocument& doc = document_;
   out_sink.beginRecord().field("behaviours").beginList();
   for (const auto& b : doc.behaviours) {

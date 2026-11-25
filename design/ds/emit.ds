@@ -1,34 +1,72 @@
-// LLD of the emit namespace (ds::emit, DS-394, DS-397, DS-398): what a document is written into, at the bottom of
-// the engine like text. A sink takes records of named fields, lists and values in the order a description gives
-// them, and knows no document; a document knows no technology. Whoever asks for an output (the command line, the
-// api) asks SinkFactory for the sink of the technology, the technology axis, lends it to the description and takes
-// the result. The first technology is JSON; the IR is still written with nlohmann until it stops reading its own
-// output back (DS-418). A pair of a document and a technology ds does not write fails NotImplemented.
+// LLD of the emit namespace (ds::emit, DS-394, DS-397, DS-398, DS-399): what a document is written into, at the
+// bottom of the engine like text. A sink takes, in the order a description gives them, the two halves the
+// description says once: the structure (records of named fields, lists and values) and the presentation
+// (paragraphs, and tables of rows). It writes the half its technology writes, skips the other and knows no
+// document; a document knows no technology. Whoever asks for an output (the command line, the api) asks SinkFactory
+// for the sink of the technology, the technology axis, lends it to the description and takes the result. JSON
+// writes the structure and text the presentation; the IR is still written with nlohmann until it stops reading its
+// own output back (DS-418). A pair of a document and a technology ds does not write fails NotImplemented, and so
+// does a sink that accepted nothing of the document it was handed.
 
 package driftspec@ds {
+  // every sink of emit and every description of format realise it: the package's, not the module's (DS-399)
+  requirement REQ-00204-1 {
+    tags: architecture, emit, format
+    status: draft
+    @refines REQ-00106-4
+    title: A sink of emit shall write the half of a description its technology writes, structure or presentation, skip the other, and fail NotImplemented naming the document when it accepted nothing of it
+    text:
+      A description says its document once in two halves, its structure and its presentation, and never asks the
+      sink which half it is wanted in. The JSON sink writes the structure and skips the presentation; the text sink
+      writes the presentation and skips the structure: a paragraph is its text and a line break, and a table is
+      its rows, a line each, the cells joined by two spaces, not aligned, under no header, each row ending at its
+      last cell. So the report and the answers as text are what ds check and ds query have always printed. When
+      a description ends, a sink that accepted nothing of its half since its last result fails NotImplemented,
+      naming the document and its technology, rather than hand over an empty page: the text sink handed the
+      scene, a layout or the cells fails so. Accepting is not writing: a table with no rows was accepted, and the
+      text of no answers is empty, as it always was.
+    rationale:
+      Owner, 2026-11-24 (DS-394, proposal-format4): one neutral tree of structure and presentation, each
+      technology writing what it can. DS-399, 2026-11-25: one describe writes both halves and each sink skips the
+      half it does not write, so a description knows no technology; the description, which is abstract, ends by
+      naming its document to the sink, so no description can leave the check out.
+    verification VER-00227-1 {
+      status: draft
+      title: Integration tests confirm the report and the answers of every design are written by the text sink as ds has always printed them, and every other document handed to it fails NotImplemented naming the document
+      method: test
+      tests:
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheReportOfEveryDesignAsTextIsWhatDsCheckPrinted
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheAnswersOfEveryQuestionAsTextAreWhatDsQueryPrinted
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.EveryOtherDocumentOfADesignHandedToTheTextSinkFailsNamingIt
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.TheJsonSinkSkipsThePresentationOfEveryDocument
+    }
+  }
+
   module emit {
-    @requirement REQ-00202-2                 // the sinks are made by SinkFactory alone, by technology, and reached through their interface (DS-397, DS-398)
-    @requirement REQ-00203-2                 // emit depends on no other module of the engine (DS-397)
+    @requirement REQ-00202-3                 // the sinks are made by SinkFactory alone, by technology, and reached through their interface (DS-397, DS-398)
+    @requirement REQ-00203-3                 // emit depends on no other module of the engine (DS-397)
+    @requirement REQ-00204-1                 // each sink writes the half it can and fails on a document it accepted nothing of (DS-399)
 
     // ---- what emit is, as requirements and the rules that hold them (DS-397) --------------------------------------
-    requirement REQ-00202-2 {
+    requirement REQ-00202-3 {
       tags: architecture, emit, format
-      status: approved
-      @refines REQ-00106-3
+      status: draft
+      @refines REQ-00106-4
       title: A sink of emit shall be made only by emit's SinkFactory, by the name of its technology, for the doors that ask for an output, and every other module shall reach it through its interface
       text:
         The command line and the api are the doors: each asks SinkFactory for the sink of the technology asked for,
-        by its name, or for the JSON sink every answer of the engine's interfaces is written in, holds it as an
-        ISink, lends it by reference to the description of the document and takes the result. SinkFactory is the
-        one place that names a sink, and a technology it has no sink of fails NotImplemented, naming it and the
-        technologies there are. Every other module writes into the ISink it is lent and names no sink of its own, so
-        a description never knows which technology it writes and a new sink changes none of them.
+        by its name (json or text), or for the JSON sink every answer of the engine's interfaces is written in,
+        holds it as an ISink, lends it by reference to the description of the document and takes the result.
+        SinkFactory is the one place that names a sink, and a technology it has no sink of fails NotImplemented,
+        naming it and the technologies there are. Every other module writes into the ISink it is lent and names no
+        sink of its own, so a description never knows which technology it writes and a new sink changes none of them.
       rationale:
         Owner, 2026-11-24 (DS-394, DS-397): a taxonomy is used through its interface, its factories exempt. A family
         is reached through its interface by every class but its own and its factories (REQ-00198-1, DS-405), so the
         doors ask SinkFactory for the sink rather than build it, and a use case is lent one by its door (DS-406).
         Revision 2 (DS-398, Owner 2026-11-24): SinkFactory stays the technology axis, as DescriptionFactory is the
         document axis; it grows a maker by technology rather than handing the technologies to a catalogue of pairs.
+        Revision 3 (DS-399): text is the second technology, and its parent is revised (REQ-00106-4).
       verification VER-00223-1 {
         status: approved
         title: Integration tests confirm the design of ds names a sink of emit only in emit, and is told when a door, a format, the exporter or the render does
@@ -42,17 +80,19 @@ package driftspec@ds {
       }
     }
 
-    requirement REQ-00203-2 {
+    requirement REQ-00203-3 {
       tags: architecture, emit
-      status: approved
-      @refines REQ-00106-3
+      status: draft
+      @refines REQ-00106-4
       title: The emit module shall depend on no other module of the engine
       text:
-        A sink takes names, texts, numbers and truth values and gives text. It reads no model and no document, so
-        every module may write into it and it uses none of them.
+        A sink takes names, texts, numbers and truth values, paragraphs and the cells of tables, and gives text. It
+        reads no model and no document, so every module may write into it and it uses none of them; the one thing it
+        is told of a document is its name, to say which one it cannot write.
       rationale:
         Owner, 2026-11-24 (DS-394): emit is a bottom module that knows no document, as text is; a dependence on
-        another module would make it know what it writes. Revision 2 (DS-398): its parent is revised (REQ-00106-3).
+        another module would make it know what it writes. Revision 2 (DS-398): its parent is revised.
+        Revision 3 (DS-399): a sink takes the presentation half too, and its parent is revised (REQ-00106-4).
       verification VER-00224-1 {
         status: approved
         title: Integration tests confirm the design of emit depends on no other module of the engine, and is told when a sink does
@@ -66,7 +106,7 @@ package driftspec@ds {
     // ---- the principles of emit, as rules (DS-397) ---------------------------------------------------------------
     rule sinks-are-reached-through-their-interface {
       title: no module but emit itself depends on a sink of emit, so a door asks SinkFactory for one and every writer is lent one through its interface
-      @requirement REQ-00202-2
+      @requirement REQ-00202-3
       for module b in driftspec@ds, class t in driftspec@ds@emit
       where b != driftspec@ds@emit, t inherits i
       never depends(x, t), x in b
@@ -74,15 +114,18 @@ package driftspec@ds {
 
     rule emit-depends-on-no-engine-module {
       title: nothing of emit depends on anything of the engine outside emit, so every module may write into a sink and a sink uses none
-      @requirement REQ-00203-2
+      @requirement REQ-00203-3
       for class c in driftspec@ds@emit
       never depends(c, x), x in driftspec@ds, not x in driftspec@ds@emit
     }
 
-    // THE EXTENSION POINT: what a document is written into; each technology is a class that realises it
+    // THE EXTENSION POINT: what a document is written into; each technology is a class that realises it, writing
+    // the half it can, the structure or the presentation, and skipping the other (DS-399)
     class ISink {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
+      @requirement REQ-00204-1
       + ~ISink()
+      // the structure
       + abstract beginRecord() -> ISink                   // a record opens where the sink stands
       + abstract endRecord() -> ISink
       + abstract field(name: std::string_view) -> ISink   // the next field of the open record; its value follows
@@ -93,14 +136,23 @@ package driftspec@ds {
       + abstract number(value: double) -> ISink
       + abstract boolean(value: bool) -> ISink
       + abstract null() -> ISink
+      // the presentation
+      + abstract paragraph(text: std::string_view) -> ISink
+      + abstract table(columns: std::vector<std::string_view>) -> ISink   // its rows follow, then endTable
+      + abstract row(cells: std::vector<std::string_view>) -> ISink       // the cells in the order of the columns, ending at the last it has
+      + abstract endTable() -> ISink
+      // the description of the document named ends: a sink that accepted nothing of its half since its last result fails
+      + abstract described(document: std::string_view) -> ISink fails NotImplemented
       + abstract result() -> std::string                  // the document written, handed over; the sink is empty after
     }
 
     // JSON as ds has always written it (nlohmann 3.11.3's dump()), without a tree: kept whole until it is taken,
     // so a write that fails writes nothing. Checked (every build without NDEBUG, and the tests), it refuses a field
-    // out of byte order or repeated, and a document that is no JSON.
+    // out of byte order or repeated, and a document that is no JSON. It writes the structure and skips the
+    // presentation (DS-399)
     class JsonSink : ISink {
-      @requirement REQ-00106-3
+      @requirement REQ-00106-4
+      @requirement REQ-00204-1
       - owns out_: std::string
       - pretty_: bool
       - checked_: bool
@@ -119,8 +171,13 @@ package driftspec@ds {
       + number(value: double) -> ISink                    // the shortest digits that read back (std::to_chars), in nlohmann's layout
       + boolean(value: bool) -> ISink
       + null() -> ISink
+      + paragraph(text: std::string_view) -> ISink        // skipped, as the rest of the presentation
+      + table(columns: std::vector<std::string_view>) -> ISink
+      + row(cells: std::vector<std::string_view>) -> ISink
+      + endTable() -> ISink
+      + described(document: std::string_view) -> ISink fails NotImplemented   // when nothing is written: JSON writes a byte for all it accepts
       + result() -> std::string
-      - static checkedByDefault() -> bool
+      - static checkedByDefault() -> bool                 // as DS_JSON_CHECK says, whatever the build (DS-461); else without NDEBUG
       - beforeValue() -> void
       - open(kind: char) -> void
       - close(kind: char) -> void
@@ -133,12 +190,39 @@ package driftspec@ds {
       - static misuse(what: std::string) -> void
     }
 
+    // text for a terminal, as ds check and ds query have always printed it (DS-399): a paragraph is its text and a
+    // line break, a table its rows, a line each, the cells joined by two spaces, not aligned, under no header. It
+    // writes the presentation and skips the structure; kept whole until it is taken
+    class TextSink : ISink {
+      @requirement REQ-00204-1
+      - owns out_: std::string
+      - accepted_: bool                                   // a paragraph or a table since the last result
+      + beginRecord() -> ISink                            // skipped, as the rest of the structure
+      + endRecord() -> ISink
+      + field(name: std::string_view) -> ISink
+      + beginList() -> ISink
+      + endList() -> ISink
+      + value(text: std::string_view) -> ISink
+      + integer(value: std::int64_t) -> ISink
+      + number(value: double) -> ISink
+      + boolean(value: bool) -> ISink
+      + null() -> ISink
+      + paragraph(text: std::string_view) -> ISink
+      + table(columns: std::vector<std::string_view>) -> ISink   // the columns name the cells; a terminal shows no header
+      + row(cells: std::vector<std::string_view>) -> ISink
+      + endTable() -> ISink
+      + described(document: std::string_view) -> ISink fails NotImplemented   // a table with no rows was accepted
+      + result() -> std::string
+    }
+
     // a pair of a document and a technology ds does not write (DS-394, DS-398): the documents and the technologies
     // need not make a complete matrix. It names the document (none when nothing is written in the technology), the
-    // technology and what there is; whoever asked for the output says it as bad usage
+    // technology and what there is, when the one who fails knows it (a sink does not, DS-399); whoever asked for the
+    // output says it as bad usage
     class NotImplemented : std::logic_error {
-      @requirement REQ-00202-2
-      @requirement REQ-00106-3
+      @requirement REQ-00202-3
+      @requirement REQ-00204-1
+      @requirement REQ-00106-4
       - owns document_: std::string
       - owns technology_: std::string
       + NotImplemented(document: std::string, technology: std::string, there: std::vector<std::string>)
@@ -147,12 +231,14 @@ package driftspec@ds {
       - static said(document: std::string, technology: std::string, there: std::vector<std::string>) -> std::string
     }
 
-    // THE TECHNOLOGY AXIS: the one place that names the sinks (DS-397, DS-398). A door asks it for the sink of the
-    // technology it writes, holds an ISink, lends it to the description and takes the result. It makes the JsonSink
+    // THE TECHNOLOGY AXIS: the one place that names the sinks (DS-397, DS-398, DS-399). A door asks it for the sink
+    // of the technology it writes, holds an ISink, lends it to the description and takes the result. It makes the
+    // JsonSink and the TextSink
     class SinkFactory {
-      @requirement REQ-00202-2
-      + static of(technology: std::string, pretty: bool) -> std::unique_ptr<ISink> fails NotImplemented   // json
+      @requirement REQ-00202-3
+      + static of(technology: std::string, pretty: bool) -> std::unique_ptr<ISink> fails NotImplemented   // json, text
       + static json(pretty: bool) -> std::unique_ptr<ISink>   // the technology of the engine's answers: indented by two spaces when pretty, else compact
+      + static text() -> std::unique_ptr<ISink>               // text for a terminal: the report and the answers as ds prints them
       + static names() -> std::vector<std::string>            // the technologies there are, for a message
     }
 
@@ -161,12 +247,21 @@ package driftspec@ds {
         -> names() -> there
         fail NotImplemented
       }
-      -> json(pretty) -> sink
+      alt json / json {
+        -> json(pretty) -> sink
+      } else {
+        -> text() -> sink
+      }
       return sink
     }
 
     sequence SinkFactory::json {
       local sink: JsonSink
+      return sink
+    }
+
+    sequence SinkFactory::text {
+      local sink: TextSink
       return sink
     }
   }

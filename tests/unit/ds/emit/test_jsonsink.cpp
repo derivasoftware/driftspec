@@ -2,13 +2,16 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
 #include "ds/emit/JsonSink.hpp"
+#include "ds/emit/NotImplemented.hpp"
 
 namespace {
 
@@ -197,6 +200,33 @@ TEST_F(TestJsonSink, CheckedItRefusesADocumentThatIsNoJson) {
   EXPECT_FALSE(refused([](ds::emit::ISink& s) { s.beginRecord().field("a").null().endRecord(); }));
 }
 
+/// DS_JSON_CHECK says whether a sink its builder does not say of is checked, whatever the build (DS-461): CI's Release
+/// tests run with it set to 1, so the contract holds there too; 0 turns the check off. A sink that says is as it says.
+TEST_F(TestJsonSink, DsJsonCheckSaysWhetherASinkIsCheckedWhateverTheBuild) {
+  const auto refusesNothingWritten = [](std::optional<bool> checked) {
+    ds::emit::JsonSink sink = checked ? ds::emit::JsonSink(false, *checked) : ds::emit::JsonSink(false);
+    try {
+      (void)sink.result();
+    } catch (const std::logic_error&) {
+      return true;
+    }
+    return false;
+  };
+  const char* before = std::getenv("DS_JSON_CHECK");
+  const std::string kept = before ? before : "";
+  setenv("DS_JSON_CHECK", "1", 1);
+  EXPECT_TRUE(refusesNothingWritten(std::nullopt));
+  EXPECT_FALSE(refusesNothingWritten(false));  // said by its builder
+  setenv("DS_JSON_CHECK", "0", 1);
+  EXPECT_FALSE(refusesNothingWritten(std::nullopt));
+  EXPECT_TRUE(refusesNothingWritten(true));
+  if (before) {
+    setenv("DS_JSON_CHECK", kept.c_str(), 1);
+  } else {
+    unsetenv("DS_JSON_CHECK");
+  }
+}
+
 TEST_F(TestJsonSink, TheDocumentIsKeptWholeUntilItIsTakenSoAFailureWritesNothing) {
   // as a door uses it: the sink is lent to the writer, and the one who built it writes the result once taken
   std::ostringstream out;
@@ -221,6 +251,31 @@ TEST_F(TestJsonSink, TheResultIsHandedOverAndTheSinkWritesTheNextDocument) {
   EXPECT_EQ(sink.result(), R"({"a":2})");
   sink.beginList().value("x").endList();
   EXPECT_EQ(sink.result(), R"(["x"])");
+}
+
+TEST_F(TestJsonSink, ThePresentationIsSkipped) {
+  // a description says its document in both halves (DS-399); JSON writes the structure and nothing of the rest
+  for (bool pretty : {false, true}) {
+    ds::emit::JsonSink sink(pretty, true);
+    sink.table({"kind", "id"}).row({"class", "a@b::C"}).endTable().paragraph("1 answer");
+    sink.beginList().value("x").endList().paragraph("after").table({}).endTable().described("answers");
+    EXPECT_EQ(sink.result(), pretty ? "[\n  \"x\"\n]" : R"(["x"])");
+  }
+}
+
+TEST_F(TestJsonSink, ADocumentItAcceptedNothingOfFailsNotImplementedNamingIt) {
+  ds::emit::JsonSink sink(false, true);
+  sink.paragraph("only prose").table({"a"}).row({"b"}).endTable();
+  try {
+    sink.described("essay");
+    FAIL() << "a document of prose alone was handed over as an empty JSON";
+  } catch (const ds::emit::NotImplemented& e) {
+    EXPECT_EQ(e.document(), "essay");
+    EXPECT_EQ(e.technology(), "json");
+    EXPECT_EQ(std::string(e.what()), "the essay is not written in json");
+  }
+  sink.beginRecord().endRecord().described("empty");  // an empty record is written: accepted, so no failure
+  EXPECT_EQ(sink.result(), "{}");
 }
 
 }  // namespace

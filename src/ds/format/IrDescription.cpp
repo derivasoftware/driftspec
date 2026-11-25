@@ -6,7 +6,9 @@ namespace format {
 // Every record names its keys in byte order (the sink checks it in tests): edges, ir, kind, nodes, notice, parts,
 // table, title; a node's abstract to title; an edge's dashed to to; a table's columns, corner, rows.
 
-void IrDescription::describe(emit::ISink& out_sink) const {
+std::string IrDescription::name() const { return "ir"; }
+
+void IrDescription::say(emit::ISink& out_sink) const {
   const render::IrDocument& d = document_;
   out_sink.beginRecord().field("edges").beginList();
   for (const render::IrEdge& e : d.edges) edge(e, out_sink);
