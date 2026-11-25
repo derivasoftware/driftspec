@@ -662,6 +662,15 @@ package driftspec@ds {
       - checkScenario(usecase: model::Entity) -> void {   // a use case has no signature: what escapes is said at its scenario (DS-434)
         @requirement REQ-00112-1
       }
+      - outcomesOf(usecase: std::string) -> std::vector<const model::Entity*> {   // its own, then its bases' it does not redefine (DS-467)
+        @requirement REQ-00265-1
+      }
+      - checkOutcomes(usecase: model::Entity, named: std::set<std::string>) -> void {
+        @requirement REQ-00265-1
+      }
+      - failureNames() -> std::set<std::string> {   // a type, an enum's value, what a signature or a step fails with
+        @requirement REQ-00265-1
+      }
     }
 
     // what each walkthrough's steps show and light, against the design (DS-469): what a diagram draws is the
@@ -1047,6 +1056,10 @@ package driftspec@ds {
       }
       loop each use case {
         -> checkScenario(usecase)
+      }
+      -> failureNames() -> named
+      loop each use case {
+        -> checkOutcomes(usecase, named)
       }
     }
 

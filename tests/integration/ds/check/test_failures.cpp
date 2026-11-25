@@ -49,7 +49,8 @@ class TestFailures : public ::testing::Test {
 };
 
 TEST_F(TestFailures, TheExampleReportsNothingButTheFailuresItsSignaturesMisstate) {
-  for (const auto& f : model.findings()) EXPECT_EQ(f.code.rfind("W-FAILURE-", 0), 0u) << f.code << " " << f.message;
+  for (const auto& f : model.findings())  // and what its use cases' outcomes misstate of them (DS-467)
+    EXPECT_TRUE(f.code.rfind("W-FAILURE-", 0) == 0 || f.code.rfind("W-OUTCOME-FAILURE-", 0) == 0) << f.code << " " << f.message;
 }
 
 TEST_F(TestFailures, APathThatFailsEndsThereWithTheFailuresName) {
@@ -150,6 +151,22 @@ TEST_F(TestFailurePromises, ABoundarySaysWhatEscapesItOrNothingMay) {
   EXPECT_EQ(model.find("UC-00001-1")->field("escapes"), "LoadError, ParseError");
   EXPECT_TRUE(said("W-FAILURE-UNDECLARED", "UC-00002-1").empty());  // the shelf handles all it calls fails with
   for (const auto& f : model.findings()) EXPECT_NE(f.code, "W-FIELD-UNKNOWN") << f.message;
+}
+
+TEST_F(TestFailurePromises, AnOutcomeIsTheEndOfTheFailureItNamesAndAFailureEndsInOneOutcome) {
+  // what escapes a use case's scenario and an outcome names ends there (DS-467), its own outcome or its base's
+  EXPECT_TRUE(said("W-FAILURE-UNDECLARED", "UC-00003-1").empty());
+  EXPECT_EQ(said("W-FAILURE-UNDECLARED", "UC-00001-1").size(), 2u);  // the same escapes, and no outcome names them
+  EXPECT_EQ(model.find("UC-00003-1::unreadable")->field("fails"), "LoadError");
+  // a failure the workspace names nowhere; one failure ending in two outcomes
+  const auto unknown = said("W-OUTCOME-FAILURE-UNKNOWN", "UC-00005-1::lost");
+  ASSERT_EQ(unknown.size(), 1u);
+  EXPECT_NE(unknown[0].find("Missing"), std::string::npos);
+  EXPECT_EQ(said("W-OUTCOME-FAILURE-TWICE", "UC-00005-1's").size(), 1u);
+  // a use case that redefines its base's outcome by name has one end for the failure, not two
+  EXPECT_TRUE(said("W-OUTCOME-FAILURE-TWICE", "UC-00004-1's").empty());
+  // Busy is named by a signature, and nothing fails with Missing: only Missing is unknown
+  EXPECT_TRUE(said("W-OUTCOME-FAILURE-UNKNOWN", "UC-00005-1::late").empty());
 }
 
 }  // namespace

@@ -1312,6 +1312,29 @@ package driftspec@ds {
               tests/integration/ds/check/test_failures.cpp::TestFailurePromises.ABoundarySaysWhatEscapesItOrNothingMay
           }
         }
+        requirement REQ-00265-1 {
+          tags: language, failure, check, use-cases
+          status: draft
+          @refines REQ-00112-1
+          title: An outcome of a use case shall say the failure it is the end of, and the checker shall end there what escapes the use case's scenario, hold the failure to the workspace and to one outcome
+          text:
+            outcome bank-down fails BankUnreachable: nothing is paid. A failure that escapes the use case's
+            scenario and an outcome names, its own or one of a use case it specialises, ends in that outcome:
+            it is no W-FAILURE-UNDECLARED. A failure an outcome names that the workspace names nowhere (no
+            type, no value of an enum, no signature that may fail with it, no step that fails with it) is
+            W-OUTCOME-FAILURE-UNKNOWN; one declared and failed by nothing yet is a design partly written and
+            says nothing. Two differently named outcomes of one use case, or of it and its bases, that are the
+            end of the same failure are W-OUTCOME-FAILURE-TWICE; an outcome that redefines its base's of the
+            same name is the same end.
+          rationale: Owner, 2026-11-25 (decision sheet, DS-434's open point: a use case's outcome may say fails); code-62, 2026-11-25 (DS-467: D1 two codes, D2 a base's outcome covers along the chain; absence is no finding, an override no second end).
+          verification VER-00285-1 {
+            status: draft
+            title: Integration tests confirm an outcome is the end of the failure it names, the failure is held to the workspace, and one failure ends in one outcome
+            method: test
+            tests:
+              tests/integration/ds/check/test_failures.cpp::TestFailurePromises.AnOutcomeIsTheEndOfTheFailureItNamesAndAFailureEndsInOneOutcome
+          }
+        }
         requirement REQ-00123-1 {
           tags: language, lld, failure, check
           status: approved
