@@ -63,8 +63,8 @@ TEST_F(TestEmitPrinciples, TheDesignOfDsKeepsTheRulesOfEmit) {
 }
 
 TEST_F(TestEmitPrinciples, AFormatLentTheJsonSinkIsTold) {
-  const std::vector<std::string> rules = broken(
-      {{"ds/format.ds", "    class SceneJson : IFormat<scene::SceneDocument> {", "      + dump(out_sink: emit::JsonSink) -> void\n"}});
+  const std::vector<std::string> rules =
+      broken({{"ds/format.ds", "    class SceneDescription : IDescription {", "      + dump(out_sink: emit::JsonSink) -> void\n"}});
   EXPECT_TRUE(has(rules, throughInterface));
   EXPECT_FALSE(has(rules, emitAlone));
 }

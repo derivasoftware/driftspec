@@ -5,6 +5,7 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
+#include "ds/emit/NotImplemented.hpp"
 #include "ds/model/Metamodel.hpp"
 
 namespace {
@@ -74,6 +75,21 @@ TEST_F(TestWorkspace, ItAsksAsDsQueryAndDrawsAsDsRender) {
   EXPECT_EQ(json(ws.ask("nonsense", ""))[0]["kind"], "error");
   EXPECT_EQ(ws.render("CL_None", "svg", 0), "");
   EXPECT_NE(ws.page("shop", {"p@m::Desk"}).find("<html"), std::string::npos);
+}
+
+TEST_F(TestWorkspace, ADiagramAskedInAFormatDsDoesNotWriteFailsNotImplemented) {
+  // a pair ds does not write fails before anything is drawn, naming the document, the technology and what there is
+  // (DS-398): it does not draw text instead
+  try {
+    (void)ws.render("CL_Any", "yaml", 0);
+    FAIL() << "a diagram was drawn in yaml";
+  } catch (const ds::emit::NotImplemented& e) {
+    EXPECT_EQ(e.document(), "diagram");
+    EXPECT_EQ(e.technology(), "yaml");
+    EXPECT_EQ(std::string(e.what()), "the diagram is not written in yaml; there is: cells ir layout svg text");
+  }
+  // the engine's render draws svg, the IR, or text for any other name, as it always has: it asks no pair there is none of
+  EXPECT_EQ(ds::api::Api(metamodel).render({{"shop.ds", kShop}}, "CL_Any", "yaml", 0), "");
 }
 
 TEST_F(TestWorkspace, TwoLoadedAtOnceEachKeepItsOwnModel) {

@@ -141,13 +141,13 @@ function(ds_embedded_pieces text out)
       PARENT_SCOPE)
 endfunction()
 
-# the viewer page ships inside ds: viewer/scene.html becomes a string the scene
-# fills (ds view)
+# the viewer page ships inside ds: viewer/scene.html becomes the template of
+# format::ViewerPage, a string the scene fills (ds render -f html)
 file(READ ${CMAKE_SOURCE_DIR}/viewer/scene.html DS_VIEWER_HTML)
 ds_embedded_pieces("${DS_VIEWER_HTML}" DS_VIEWER_PIECES)
 file(
   WRITE ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
-  "#include <string>\n\nnamespace ds {\nnamespace format {\nconst char* viewerTemplate() {\n  static const char* const pieces[] = {\n${DS_VIEWER_PIECES}  };\n  static const std::string whole = [] {\n    std::string out;\n    for (const char* piece : pieces) out += piece;\n    return out;\n  }();\n  return whole.c_str();\n}\n}  // namespace format\n}  // namespace ds\n"
+  "#include <string>\n\n#include \"ds/format/ViewerPage.hpp\"\n\nnamespace ds {\nnamespace format {\nconst std::string& ViewerPage::viewerTemplate() {\n  static const char* const pieces[] = {\n${DS_VIEWER_PIECES}  };\n  static const std::string whole = [] {\n    std::string out;\n    for (const char* piece : pieces) out += piece;\n    return out;\n  }();\n  return whole;\n}\n}  // namespace format\n}  // namespace ds\n"
 )
 configure_file(${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp.in
                ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp COPYONLY)

@@ -2,11 +2,7 @@
 
 #include <string>
 
-namespace ds {
-namespace format {
-const char* viewerTemplate();  // viewer/scene.html, compiled into ds by CMake
-}  // namespace format
-}  // namespace ds
+#include "ds/format/ViewerPage.hpp"
 
 namespace {
 
@@ -14,7 +10,7 @@ namespace {
 class TestViewerTemplate : public ::testing::Test {};
 
 TEST_F(TestViewerTemplate, ThePageIsWholeAndHoldsThePlacesDsFills) {
-  const std::string page = ds::format::viewerTemplate();
+  const std::string& page = ds::format::ViewerPage::viewerTemplate();
   EXPECT_EQ(page.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(page.find("</html>"), std::string::npos);
   for (const char* place : {"/*SCENE*/", "/*TITLE*/", "/*CSS*/", "/*FOCUS*/"}) EXPECT_NE(page.find(place), std::string::npos) << place;

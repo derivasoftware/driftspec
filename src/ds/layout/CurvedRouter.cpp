@@ -32,8 +32,15 @@ bool encloses(const Rect& outer, const Rect& inner) {
          (outer.w > inner.w || outer.h > inner.h);
 }
 
-bool inside(const Rect& r, const P& p, int margin) {
-  return p.first > r.x - margin && p.first < r.x + r.w + margin && p.second > r.y - margin && p.second < r.y + r.h + margin;
+/// How far a label's text rises above the point it is set at: a line of edge label, its baseline a little above the
+/// point (DS-454). The text runs from the point to a line above it.
+constexpr int kLabelRise = 16;
+
+/// Whether the text of a label set at `p`, a line tall above it, would cross `r` or come within `margin` of it.
+bool crosses(const Rect& r, const P& p, int margin) {
+  const bool across = p.first > r.x - margin && p.first < r.x + r.w + margin;
+  const bool within = p.second - kLabelRise < r.y + r.h + margin && p.second > r.y - margin;
+  return across && within;
 }
 
 /// The point halfway along a polyline.
@@ -113,13 +120,13 @@ std::map<std::size_t, Route> CurvedRouter::route(const Routing& routing) const {
     r.points.push_back(start);
     for (const P& p : through) r.points.push_back({std::round(p.first), std::round(p.second)});
     r.points.push_back(end);
-    // the label halfway along, moved down and then up a lane at a time until it falls in no box
+    // the label halfway along, moved down and then up a lane at a time until its text crosses no box (DS-454)
     const P mid = halfway(r.points);
     P at = mid;
     for (int step = 1; step <= 8; ++step) {
       bool clear = true;
       for (const Rect& box : routing.boxes)  // a frame around either end is where the edge runs, not in its way
-        if (!encloses(box, a) && !encloses(box, b)) clear = clear && !inside(box, at, 4);
+        if (!encloses(box, a) && !encloses(box, b)) clear = clear && !crosses(box, at, 2);
       if (clear) break;
       const int sign = step % 2 ? 1 : -1;
       at = {mid.first, mid.second + sign * ((step + 1) / 2) * S.lane};

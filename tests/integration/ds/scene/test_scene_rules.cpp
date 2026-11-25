@@ -7,7 +7,8 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/emit/JsonSink.hpp"
-#include "ds/format/SceneFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
+#include "ds/format/ViewerPage.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -107,15 +108,17 @@ TEST_F(TestSceneRules, WhatBreaksARuleIsPlacedOnTheMapWithTheAnswerThatBreaksIt)
 
 TEST_F(TestSceneRules, TheDocumentCarriesTheRulesAndThePageItsThreePerspectives) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const std::string json = ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}, sink);
+  const ds::scene::SceneDocument document = ds::scene::Scene(model, metamodel).build();
+  ds::format::DescriptionFactory::scene(document)->describe(sink);
+  const std::string json = sink.result();
   EXPECT_NE(json.find("\"rule\":[\"id\",\"kind\",\"name\",\"title\",\"scope\",\"lines\",\"requirements\",\"breaches\",\"file\",\"line\"]"),
             std::string::npos);
   EXPECT_NE(json.find("\"breach\":[\"node\",\"to\",\"bindings\",\"witness\",\"file\",\"line\"]"), std::string::npos);
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "rules"}, sink);
+  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "rules"}, sink);
   for (const char* p : {"data-p=\"structure\"", "data-p=\"behaviour\"", "data-p=\"logic\""})
     EXPECT_NE(page.find(p), std::string::npos) << p;
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
-  const std::string viewer = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
+  const std::string viewer = ds::format::common::Packing::unpack(page.substr(at, page.find('\'', at) - at));
   for (const char* part : {"function setPersp(", "function route(", "function spreadLanes(", "function drawLogic(", "lightRule(id){"})
     EXPECT_NE(viewer.find(part), std::string::npos) << part;  // the strokes of each perspective, and a host lights one rule
 }

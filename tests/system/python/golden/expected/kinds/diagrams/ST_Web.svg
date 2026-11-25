@@ -100,7 +100,7 @@
 <g id="prm43fcn-hola@web::state::About" data-id="hola@web::state::About" class="pr-state pr-box pr-classifier-state" data-ref-location="kinds/interfaces/web.ds:33"><rect x="352" y="302" width="264" height="60" rx="10"/><text class="pr-header" x="484" y="324" text-anchor="middle">About</text><line class="pr-sep" x1="352" y1="334" x2="616" y2="334"/><text x="362" y="346"><tspan class="pr-name">What this is and who made it.</tspan></text></g>
 <text class="pr-edge-label" x="255" y="274">greet</text>
 <text class="pr-edge-label" x="526" y="156">greet [empty name]</text>
-<text class="pr-edge-label" text-anchor="end" x="428" y="249">about</text>
+<text class="pr-edge-label" text-anchor="end" x="428" y="261">about</text>
 <text class="pr-edge-label" x="211" y="263">back</text>
 <text class="pr-edge-label" text-anchor="end" x="399" y="273">back</text>
 </svg>

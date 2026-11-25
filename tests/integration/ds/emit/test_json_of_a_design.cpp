@@ -13,9 +13,8 @@
 #include "ds/check/Report.hpp"
 #include "ds/emit/JsonSink.hpp"
 #include "ds/export/JsonExport.hpp"
-#include "ds/format/DiagramFormats.hpp"
-#include "ds/format/SceneFormats.hpp"
-#include "ds/format/TextFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
+#include "ds/format/FormatFactory.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
@@ -77,9 +76,11 @@ TEST_F(TestJsonOfADesign, EveryWriterLentACheckedSinkWritesWhatNlohmannWrote) {
       exporter.render(model, sink);
       asNlohmannWrites(sink.result(), pretty, loaded.name + " export");
       const ds::scene::SceneDocument scene = ds::scene::Scene(model, metamodel()).build();
-      asNlohmannWrites(ds::format::SceneJson().write(scene, {}, sink), pretty, loaded.name + " scene");
-      asNlohmannWrites(ds::format::ReportJson().write(ds::check::Report::of(model, metamodel()), {}, sink), pretty,
-                       loaded.name + " report");
+      ds::format::DescriptionFactory::scene(scene)->describe(sink);
+      asNlohmannWrites(sink.result(), pretty, loaded.name + " scene");
+      const ds::check::Report report = ds::check::Report::of(model, metamodel());
+      ds::format::DescriptionFactory::report(report)->describe(sink);
+      asNlohmannWrites(sink.result(), pretty, loaded.name + " report");
     }
     ds::emit::JsonSink sink(false, true);
     int written = 0;
@@ -92,22 +93,27 @@ TEST_F(TestJsonOfADesign, EveryWriterLentACheckedSinkWritesWhatNlohmannWrote) {
     }
     for (const auto& q : ds::query::Query::questions()) {
       const auto answers = ds::query::Query(model, metamodel()).ask(q.name, "");
-      asNlohmannWrites(ds::format::AnswersJson().write(answers, {}, sink), false, loaded.name + " " + q.name);
+      ds::format::DescriptionFactory::answers(answers)->describe(sink);
+      asNlohmannWrites(sink.result(), false, loaded.name + " " + q.name);
     }
     const ds::render::IrExport ir(model, metamodel());
     for (const auto& id : ir.diagrams()) {
       const ds::render::IrText diagram{ir.render(id, false)};
       if (diagram.json.size() > 64 * 1024) continue;  // a large drawing lays out slowly in a debug build; the goldens hold one
       for (const char* format : {"layout", "cells"}) {
-        std::string drawn = ds::format::diagramFormats(kTheme).at(format)->write(diagram, {}, sink);
+        (std::string(format) == "layout" ? ds::format::DescriptionFactory::layout(diagram, kTheme, 0)
+                                         : ds::format::DescriptionFactory::cells(diagram, kTheme, 0))
+            ->describe(sink);
+        const std::string drawn = sink.result();
         ASSERT_FALSE(drawn.empty());
-        drawn.pop_back();  // the line both end in
         asNlohmannWrites(drawn, false, id + " " + format);
       }
     }
     ds::format::FormatOptions options;
     options.focus = {"no::such", "a \"quoted\" </script> name"};
-    EXPECT_NE(ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel()).build(), options, sink).find("<html"), std::string::npos);
+    EXPECT_NE(
+        ds::format::FormatFactory::scene().at("html")->write(ds::scene::Scene(model, metamodel()).build(), options, sink).find("<html"),
+        std::string::npos);
   }
 }
 

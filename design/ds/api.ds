@@ -108,12 +108,14 @@ package driftspec@ds {
       + walk(sequence: std::string, path: std::string, depth: int) -> std::string
       + ask(question: std::string, subject: std::string) -> std::string
       + shows(diagram: std::string) -> std::string
-      + render(diagram: std::string, format: std::string, width: int) -> std::string
+      // a format that is none of the five is a pair ds does not write: NotImplemented, never text instead (DS-398)
+      + render(diagram: std::string, format: std::string, width: int) -> std::string fails NotImplemented
       + page(title: std::string, focus: std::vector<std::string>) -> std::string
       // each answer is written by a JSON sink asked for here, at the engine's edge, and taken whole (DS-397)
       - static texts(list: std::vector<std::string>) -> std::string
       - static text(value: std::string) -> std::string
       - relations(relations: std::vector<model::Relation>) -> std::string
+      - static answers(answers: std::vector<query::Answer>) -> std::string   // their description in the JSON sink (DS-398)
     }
 
     // How an identity is written (model/Identity), asked by another language rather than copied into it.
@@ -194,6 +196,59 @@ package driftspec@ds {
       return document
     }
 
+    // the report as the Api writes it: its description in a JSON sink (DS-398)
+    sequence Workspace::report {
+      local api: Api
+      -> api.report(model_, pretty) -> json
+      return json
+    }
+
+    // the questions asked through the query's interface, as the browser asks them (DS-405)
+    sequence Workspace::ask {
+      -> query::QueryFactory::of(model_, metamodel_) -> questions
+      -> questions.ask(question, subject) -> asked
+      -> answers(asked) -> json
+      return json
+    }
+
+    sequence Workspace::shows {
+      -> ask(shows, diagram) -> json
+      return json
+    }
+
+    // the door asks for the description of the answers and the sink, and pairs them (DS-398)
+    sequence Workspace::answers {
+      -> emit::SinkFactory::json(false) -> sink
+      -> format::DescriptionFactory::answers(answers) -> description
+      -> description.describe(sink)
+      -> sink.result() -> json
+      return json
+    }
+
+    // a diagram is its IR: its layout and its cells described in JSON, the IR and the drawings written by their
+    // writers; a name that is none of them is a pair ds does not write, said before anything is drawn (DS-398)
+    sequence Workspace::render {
+      local ir: render::IrExport
+      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
+      -> format::FormatFactory::diagram(theme_) -> writers
+      opt a format that is none of the five / unknown {
+        fail NotImplemented
+      }
+      -> ir.render(diagram, pretty) -> document
+      opt no such diagram / no-diagram {
+        return nothing
+      }
+      -> emit::SinkFactory::json(false) -> sink
+      alt its layout or its cells / described {
+        -> format::DescriptionFactory::layout(document, theme_, width) -> description
+        -> description.describe(sink)
+        -> sink.result() -> json
+        return json
+      }
+      -> chosen.write(document, options, sink) -> drawing
+      return drawing
+    }
+
     class Api {                              // the engine, called in process, over the metamodel it is given (DS-341)
       @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-1
@@ -209,7 +264,7 @@ package driftspec@ds {
         @requirement REQ-00085-1
         @constraint CST-00001-1
       }
-      + report(model: model::Model, pretty: bool) -> std::string   // reads the severity table of its metamodel (DS-379)
+      + report(model: model::Model, pretty: bool) -> std::string   // reads the severity table of its metamodel (DS-379); its description in a JSON sink (DS-398)
       + exportModel(files: Files) -> std::string
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
       + severities() -> std::string            // the severity table, as JSON: name, fails, keptApart, editor (DS-386)
@@ -305,10 +360,26 @@ package driftspec@ds {
     }
 
     // the answer is written into a JSON sink asked for here and taken whole, so a request that fails half way is
-    // answered with its error alone (DS-397)
+    // answered with its error alone (DS-397), a pair ds does not write among them (DS-398)
     sequence Browser::answer {
       -> emit::SinkFactory::json(false) -> sink
-      -> respond(request, sink)
+      attempt {
+        -> respond(request, sink)
+      } on NotImplemented {
+        -> emit::SinkFactory::json(false) -> failed
+        -> failed.result() -> error
+        return error
+      }
+      -> sink.result() -> json
+      return json
+    }
+
+    // the one report of a check, its description written into the JSON sink asked for here (DS-397, DS-398)
+    sequence Api::report {
+      -> check::Report::of(model, metamodel_) -> report
+      -> emit::SinkFactory::json(pretty) -> sink
+      -> format::DescriptionFactory::report(report) -> description
+      -> description.describe(sink)
       -> sink.result() -> json
       return json
     }
@@ -317,7 +388,7 @@ package driftspec@ds {
     sequence Browser::respond {
       local manual: model::Manual
       local workspace: Workspace
-      local encoder: format::common::ReportEncoder   // the report as ds check --json writes it, one field of the answer
+
       alt a request for the manual / manual {
         -> manual.guides() -> guides
         -> manual.page(topic) -> text
@@ -326,7 +397,8 @@ package driftspec@ds {
         -> artefacts(model, out_sink)
         -> diagrams(workspace, width, out_sink)
         -> check::Report::of(model, metamodel_) -> checked
-        -> encoder.encode(out_sink)
+        -> format::DescriptionFactory::report(checked) -> report   // as ds check --json writes it, one field of the answer
+        -> report.describe(out_sink)
       }
     }
 
@@ -442,9 +514,10 @@ package driftspec@ds {
     encoding: json text
     @requirement REQ-00085-1
 
-    operation check(files: api::Files) -> std::string : UC-00001-1
+    // a pair ds does not write reaches the caller as the failure it is (DS-398)
+    operation check(files: api::Files) -> std::string fails NotImplemented : UC-00001-1
     operation export(files: api::Files) -> std::string : UC-00005-1
-    operation render(files: api::Files, diagram: std::string, format: std::string, width: int) -> std::string : UC-00002-1
+    operation render(files: api::Files, diagram: std::string, format: std::string, width: int) -> std::string fails NotImplemented : UC-00002-1
     operation page(files: api::Files, title: std::string, focus: std::vector<std::string>) -> std::string : UC-00002-1
     operation expectedAt(text: std::string, line: int, column: int) -> std::string : UC-00007-1
   }
@@ -460,7 +533,7 @@ package driftspec@ds {
     @constraint CST-00009-1
     operation export() -> std::string
     operation reload(files: Files) -> void     // loaded again in place (DS-420)
-    operation report() -> std::string
+    operation report() -> std::string fails NotImplemented   // a pair ds does not write reaches the caller as the failure it is (DS-398)
     operation find(id: std::string) -> std::string
     operation from(id: std::string) -> std::string
     operation to(id: std::string) -> std::string
@@ -472,9 +545,9 @@ package driftspec@ds {
     operation tree(sequence: std::string) -> std::string
     operation steps(sequence: std::string, path: std::string) -> std::string
     operation walk(sequence: std::string, path: std::string, depth: int) -> std::string
-    operation ask(question: std::string, subject: std::string) -> std::string
-    operation shows(diagram: std::string) -> std::string
-    operation render(diagram: std::string, format: std::string, width: int) -> std::string
+    operation ask(question: std::string, subject: std::string) -> std::string fails NotImplemented
+    operation shows(diagram: std::string) -> std::string fails NotImplemented
+    operation render(diagram: std::string, format: std::string, width: int) -> std::string fails NotImplemented   // a format that is none of the five (DS-398)
     operation page(title: std::string, focus: std::vector<std::string>) -> std::string
   }
 

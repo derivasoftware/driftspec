@@ -8,6 +8,7 @@
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/query/Query.hpp"
 #include "ds/theme/Theme.hpp"
 
 namespace ds {
@@ -67,7 +68,8 @@ class Workspace {
   std::string ask(const std::string& question, const std::string& subject) const;
   std::string shows(const std::string& diagram) const;
 
-  /// A diagram drawn in a format (svg, text, cells, ir, layout); "" when there is no such diagram.
+  /// A diagram drawn in a format (svg, text, cells, ir, layout); "" when there is no such diagram. A format that is
+  /// none of them is a pair ds does not write: emit::NotImplemented, naming the diagram and the format (DS-398).
   std::string render(const std::string& diagram, const std::string& format, int width) const;
   /// The viewer as one page, framed on the identities given.
   std::string page(const std::string& title, const std::vector<std::string>& focus) const;
@@ -79,6 +81,8 @@ class Workspace {
   static std::string texts(const std::vector<std::string>& list);
   static std::string text(const std::string& value);
   std::string relations(const std::vector<model::Relation>& relations) const;
+  /// A query's answers described in JSON, as ds query --json writes them (DS-398).
+  static std::string answers(const std::vector<query::Answer>& answers);
 
   const model::Metamodel& metamodel_;
   const theme::Theme theme_;  ///< the style its drawings are written in, made once with it (DS-393)
