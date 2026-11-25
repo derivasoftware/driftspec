@@ -8,6 +8,7 @@
 #include "ds/emit/Sink.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/model/Walkthrough.hpp"
 
 namespace ds {
 namespace exporter {
@@ -43,6 +44,8 @@ class JsonExport {
   static void pairs(const std::vector<std::pair<std::string, std::string>>& pairs, emit::ISink& out_sink);
   /// Texts, as a list.
   static void texts(const std::vector<std::string>& texts, emit::ISink& out_sink);
+  /// Every walkthrough, by identity, its steps in order (DS-471).
+  static void walkthroughs(const std::vector<model::Walkthrough>& walks, emit::ISink& out_sink);
 
   const model::Metamodel& metamodel_;
 };

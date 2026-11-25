@@ -226,6 +226,36 @@ package driftspec@ds {
       - static startsName(c: char) -> bool
     }
 
+    // a walkthrough as written, its steps resolved: built once and written by each document in its own
+    // convention, the export by identity and the scene by index (DS-471)
+    dataclass Walkthrough {
+      @requirement REQ-00243-1
+      + id: std::string
+      + name: std::string
+      + title: std::string
+      + owns many steps: std::vector<WalkStep>
+    }
+
+    dataclass WalkStep {                     // one step of a walkthrough
+      @requirement REQ-00243-1
+      + id: std::string
+      + n: int
+      + title: std::string
+      + show: std::string
+      + diagram: std::string
+      + scenario: std::string
+      + focus: std::vector<std::string>
+      + highlight: std::vector<std::string>
+      + at: std::string
+      + text: std::string
+    }
+
+    // the one place a walkthrough's steps are resolved, from the steps and the relations the linker made (DS-471)
+    class Walkthroughs {
+      @requirement REQ-00243-1
+      + static of(model: Model) -> std::vector<Walkthrough>
+    }
+
     // The walks of a model's behaviours (DS-343): which scenarios a behaviour names, the steps the path of one
     // takes, and who a behaviour runs on, which the check and the state machines ask the same. Made over a model
     // that outlives it, which it reads and never changes; it holds nothing else, so whoever asks makes one where

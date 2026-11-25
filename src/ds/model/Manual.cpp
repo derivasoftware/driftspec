@@ -47,7 +47,7 @@ std::vector<CommandSpec> Manual::buildCommands() {
        "ds query <workspace> <question> [subject] [--json]",
        // the same as Query::usage(), which the model may not ask: a test holds them equal (DS-436)
        "ask the model: diagrams · entities [scope] · relations <identity> · artefacts <identity> · behaviours <identity> · failures "
-       "<identity> · shows <diagram> · findings [file | identity] · coverage [file | identity] · coupling",
+       "<identity> · shows <diagram> · findings [file | identity] · coverage [file | identity] · coupling · walkthroughs [walkthrough]",
        {{0, "answered"},
         {1, "not a question, an identity the model does not declare, or a subject of a kind the question does not take"},
         {2, "bad usage, or no workspace at the path"}}},
