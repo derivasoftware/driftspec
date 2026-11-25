@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "ds/bind/TypeTokens.hpp"
+#include "ds/model/Identity.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/text/Text.hpp"
 
@@ -13,6 +14,38 @@ namespace bind {
 using parse::Field;
 using parse::TreeReader;
 using text::join;
+
+std::string SignatureBinder::normalised(std::string_view type) {
+  std::string written;
+  for (const char c : text::trimWhitespace(type)) {  // a run of whitespace is one space
+    const bool space = c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    if (space && (written.empty() || written.back() == ' ')) continue;
+    written += space ? ' ' : c;
+  }
+  return written;
+}
+
+std::string SignatureBinder::identityOf(const parse::TreeReader& reader, TSNode node, const std::string& bare) {
+  const std::string name = reader.fieldText(node, Field::name);
+  const TSNode parent = ts_node_parent(node);
+  bool overloaded = false;
+  for (uint32_t i = 0; !ts_node_is_null(parent) && i < ts_node_named_child_count(parent) && !overloaded; ++i) {
+    const TSNode other = ts_node_named_child(parent, i);
+    overloaded =
+        !ts_node_eq(other, node) && std::string(ts_node_type(other)) == ts_node_type(node) && reader.fieldText(other, Field::name) == name;
+  }
+  if (!overloaded) return bare;
+  std::vector<std::string> types;
+  for (uint32_t i = 0; i < ts_node_named_child_count(node); ++i) {
+    const TSNode parameters = ts_node_named_child(node, i);
+    if (!TreeReader::is(parameters, "parameters")) continue;
+    for (uint32_t j = 0; j < ts_node_named_child_count(parameters); ++j) {
+      const TSNode type = reader.child(ts_node_named_child(parameters, j), Field::type);
+      types.push_back(ts_node_is_null(type) ? "" : normalised(reader.textOf(type)));
+    }
+  }
+  return model::Identity(bare).withParameters(join(types, ", ")).text();
+}
 
 void SignatureBinder::bind(TSNode node, const BindContext& ctx, model::Entity& out_entity, const std::string& scope,
                            const std::vector<std::string>& params) const {

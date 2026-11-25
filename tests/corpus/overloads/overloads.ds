@@ -1,0 +1,68 @@
+// Overloads (DS-455): an owner may declare two operations of one name with different parameters. Each then carries
+// its parameter types in its identity; a call is narrowed by its arguments first, and one that two could still be a
+// call of, or a reference naming two bare, names none of them.
+package shop {
+  module catalogue {
+    class Scene { }
+    class Report { }
+
+    // the five makers of a factory as one name, as DS-398 wanted DescriptionFactory
+    class Factory {
+      + static of(document: Scene) -> int
+      + static of(report: Report, depth: int) -> int
+      + static of() -> int
+      + single(x: int) -> int
+    }
+
+    interface IMaker {
+      operation make(x: int) -> int                 // ? W-OPERATION-NO-BEHAVIOUR: no sequence says how
+      operation make(scene: Scene) -> int
+    }
+
+    function shown(x: int) -> int
+    function shown(scene: Scene) -> int
+
+    class Desk {
+      - factory: Factory
+      + open(scene: Scene) -> int
+      + close() -> int
+      + mixed() -> int
+    }
+
+    sequence Factory::of(Scene) {
+      return 1
+    }
+
+    sequence Factory::of {                          // ! W-NAME-AMBIGUOUS: three operations are called of
+      return 0
+    }
+
+    sequence Desk::open {
+      self -> factory.of(scene) -> made             // one argument: of(Scene)
+      self -> factory.of() -> none                  // none: of()
+      return made
+    }
+
+    sequence Desk::close {
+      self -> factory.single(1) -> one              // not overloaded: as before
+      return one
+    }
+  }
+
+  module counter {
+    class Twice {
+      + go(a: int) -> int
+      + go(b: shop@catalogue::Scene) -> int
+    }
+
+    class Caller {
+      - twice: Twice
+      + run() -> int
+    }
+
+    sequence Caller::run {
+      self -> twice.go(1) -> r                      // ! W-NAME-AMBIGUOUS: both go take one argument
+      return r
+    }
+  }
+}

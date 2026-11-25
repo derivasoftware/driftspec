@@ -2060,6 +2060,21 @@
     }
   },
   {
+    "type": "overload_types",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "ownership",
     "named": true,
     "fields": {}
@@ -2551,6 +2566,16 @@
     "type": "sequence",
     "named": true,
     "fields": {
+      "overload": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "overload_types",
+            "named": true
+          }
+        ]
+      },
       "scenario": {
         "multiple": false,
         "required": false,
