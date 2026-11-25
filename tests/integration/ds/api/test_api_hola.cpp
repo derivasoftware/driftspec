@@ -8,6 +8,7 @@
 #include <string>
 
 #include "ds/api/Api.hpp"
+#include "ds/emit/NotImplemented.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
 
@@ -78,6 +79,21 @@ TEST_F(TestApiOverHola, ADiagramDrawsAsTextOrAsItsRenderIr) {
   EXPECT_NE(ds::api::Api(metamodel).render(files, "CL_Hola", "text", 120).find("Greeter"), std::string::npos);
   EXPECT_FALSE(nlohmann::json::parse(ds::api::Api(metamodel).render(files, "CL_Hola", "ir", 0)).is_discarded());
   EXPECT_EQ(ds::api::Api(metamodel).render(files, "NoSuchDiagram", "text", 0), "");
+}
+
+TEST_F(TestApiOverHola, ADiagramAskedInAFormatItHasNoWriterForFailsNotImplemented) {
+  // a pair ds does not write is said as the workspace says it (DS-398), before anything is drawn, and never drawn as
+  // text instead (DS-453)
+  for (const std::string diagram : {"CL_Hola", "NoSuchDiagram"}) {
+    try {
+      (void)ds::api::Api(metamodel).render(files, diagram, "yaml", 0);
+      FAIL() << diagram << " was drawn in yaml";
+    } catch (const ds::emit::NotImplemented& e) {
+      EXPECT_EQ(e.document(), "diagram") << diagram;
+      EXPECT_EQ(e.technology(), "yaml") << diagram;
+      EXPECT_EQ(std::string(e.what()), "the diagram is not written in yaml; there is: cells ir layout svg text") << diagram;
+    }
+  }
 }
 
 TEST_F(TestApiOverHola, TheViewerOpensFramedOnWhatItIsAsked) {

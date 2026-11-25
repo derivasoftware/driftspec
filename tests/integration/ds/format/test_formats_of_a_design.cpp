@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <set>
 #include <sstream>
 #include <string>
 
@@ -79,11 +80,16 @@ class TestDiagramFormatsOfADesign : public TestFormatsOfADesign {};
 TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares) {
   ASSERT_EQ(ds::format::FormatFactory::diagram(kTheme).size(), 3u);  // ir, svg, text; layout and cells are descriptions
   const ds::api::Workspace workspace(metamodel, files);
+  std::set<std::string> drawn;
   for (const char* format : {"cells", "ir", "layout", "svg", "text"}) {
-    EXPECT_FALSE(ds::api::Api(metamodel).render(files, "CL_Hola", format, 120).empty()) << format;
+    // the engine draws the format it is asked for, as the workspace draws it, never a text drawing instead (DS-453)
+    const std::string drawing = workspace.render("CL_Hola", format, 120);
+    EXPECT_FALSE(drawing.empty()) << format;
+    EXPECT_EQ(ds::api::Api(metamodel).render(files, "CL_Hola", format, 120), drawing) << format;
     EXPECT_EQ(ds::api::Api(metamodel).render(files, "NoSuchDiagram", format, 120), "") << format;
-    EXPECT_FALSE(workspace.render("CL_Hola", format, 120).empty()) << format;
+    drawn.insert(drawing);
   }
+  EXPECT_EQ(drawn.size(), 5u);  // five documents, none of them another's
 }
 
 TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDescribes) {

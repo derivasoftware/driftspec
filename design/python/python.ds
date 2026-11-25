@@ -36,13 +36,15 @@ package driftspec@driftspec {
       JSON driftspec._native returns. check, render, page and expected_at do the same for their
       answers. The native module is built against the limited API (abi3).
     tags: python, api
-    verification VER-00095-3 {
-      status: approved
-      title: Integration tests confirm the package loads a directory or the texts an editor holds into a typed model, checks it, draws and pages it, and hands the engine a file's bytes so a file that is not UTF-8 is the engine's finding
+    verification VER-00095-4 {
+      status: draft
+      title: Integration tests confirm the package loads a directory or the texts an editor holds into a typed model, checks it, draws it in the format it is asked for and pages it, and hands the engine a file's bytes so a file that is not UTF-8 is the engine's finding
       text:
         Revision 3 (DS-411): a directory's files and a mapping's bytes reach the engine as they are, so a
         file that is not UTF-8 is E-ENCODING at its first such byte, as ds check says it, and not a
         failure of Python's before the engine reads it; a mapping of str loads as before.
+        Revision 4 (DS-453): render draws each of the five formats as a workspace draws it; cells and
+        layout are no longer a text drawing.
       method: test
       tests:
         tests/integration/python/test_driftspec.py::TestLoad::test_a_directory_loads_into_a_typed_model
@@ -53,6 +55,7 @@ package driftspec@driftspec {
         tests/integration/python/test_driftspec.py::TestCheck::test_a_file_that_is_not_utf8_is_the_engines_finding_where_it_is
         tests/integration/python/test_driftspec.py::TestCheck::test_bytes_and_str_load_alike
         tests/integration/python/test_driftspec.py::TestDrawing::test_a_diagram_draws_as_text_and_none_draws_nothing
+        tests/integration/python/test_driftspec.py::TestDrawing::test_a_diagram_draws_in_the_format_it_is_asked_for
         tests/integration/python/test_driftspec.py::TestDrawing::test_the_viewer_opens_framed_where_it_is_asked
         tests/integration/python/test_driftspec.py::TestDrawing::test_what_the_grammar_takes_in_a_module
         tests/integration/python/test_driftspec.py::TestModelReadsTheMetamodel::test_a_member_an_outcome_and_a_rule_are_drawn_inside_what_holds_them
