@@ -85,6 +85,9 @@ describe('the tours the viewer replays', () => {
     }
   });
 
+  // ds's own design is loaded and checked whole to write its scene: about 2.3 s with the machine idle, nearly all of
+  // it in ds (the decoding and every check here take some 15 ms), past vitest's 5 s twice at a load of 10-12, and
+  // growing with the design. The claim is about ds's live design, so the test keeps it and is given the time (DS-457).
   test("every interface command of ds's design is a tour that reaches the model and comes back", () => {
     const s = scene(join(ROOT, 'design'));
     const ids = new Set(s.nodes.map((n: Scene) => n.id));
@@ -101,7 +104,7 @@ describe('the tours the viewer replays', () => {
     assert.ok(check.steps.some((x: Scene) => x.t === 'driftspec@ds@check::IChecker::run'));
     assert.ok(Math.max(...check.steps.map((x: Scene) => x.d)) >= 4);
     assert.equal(check.steps.at(-1).ret, 1); // the command answers
-  });
+  }, 30_000);
 
   // one behaviour of STEPS calls, called from CALLERS places: each caller's tour replays it
   test('a behaviour written once is replayed by every tour that calls it', () => {
