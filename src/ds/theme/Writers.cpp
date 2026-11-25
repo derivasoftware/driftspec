@@ -146,16 +146,27 @@ const char* const ViewerVariables::kStylesheet = R"CSS(:root{
   --priv:{{priv}};--pkg:{{pkg}};--mod:{{mod}};--ifc:{{ifc}};
   --k-class:{{k-class}};--k-function:{{k-function}};--k-dataclass:{{k-dataclass}};--k-enum:{{k-enum}};--k-interface:{{k-interface}};--k-abstract:{{k-abstract}};--ok:{{ok}};--warn:{{warn}};--bad:{{bad}};
   --r-owns:{{r-owns}};--r-agg:{{r-agg}};--r-uses:{{r-uses}};--r-calls:{{r-calls}};
+  --rule:{{rule}};--v-pub:{{v-pub}};--v-prot:{{v-prot}};--v-priv:{{v-priv}};--s-ty:{{s-ty}};--s-pn:{{s-pn}};
   --you:{{you}};--shadow:{{shadow}};--shadow-pop:{{shadow-pop}};--shadow-soft:{{shadow-soft}};
-  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
-  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--soft:{{soft:dark}};
   --accent:{{accent:dark}};--accent-soft:{{accent-soft:dark}};--req:{{req:dark}};--req-soft:{{req-soft:dark}};
   --priv:{{priv:dark}};--pkg:{{pkg:dark}};--mod:{{mod:dark}};--ifc:{{ifc:dark}};
   --k-class:{{k-class:dark}};--k-function:{{k-function:dark}};--k-dataclass:{{k-dataclass:dark}};--k-enum:{{k-enum:dark}};--k-interface:{{k-interface:dark}};--k-abstract:{{k-abstract:dark}};--ok:{{ok:dark}};--warn:{{warn:dark}};--bad:{{bad:dark}};
-  --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};}}
+  --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};
+  --rule:{{rule:dark}};--v-pub:{{v-pub:dark}};--v-prot:{{v-prot:dark}};--v-priv:{{v-priv:dark}};--s-ty:{{s-ty:dark}};--s-pn:{{s-pn:dark}};
+  --you:{{you:dark}};}}
+:root[data-theme="dark"]{
+  --bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--soft:{{soft:dark}};
+  --accent:{{accent:dark}};--accent-soft:{{accent-soft:dark}};--req:{{req:dark}};--req-soft:{{req-soft:dark}};
+  --priv:{{priv:dark}};--pkg:{{pkg:dark}};--mod:{{mod:dark}};--ifc:{{ifc:dark}};
+  --k-class:{{k-class:dark}};--k-function:{{k-function:dark}};--k-dataclass:{{k-dataclass:dark}};--k-enum:{{k-enum:dark}};--k-interface:{{k-interface:dark}};--k-abstract:{{k-abstract:dark}};--ok:{{ok:dark}};--warn:{{warn:dark}};--bad:{{bad:dark}};
+  --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};
+  --rule:{{rule:dark}};--v-pub:{{v-pub:dark}};--v-prot:{{v-prot:dark}};--v-priv:{{v-priv:dark}};--s-ty:{{s-ty:dark}};--s-pn:{{s-pn:dark}};
+  --you:{{you:dark}};}
 )CSS";
 
 // viewer/themes/night.css: where each value of the page goes; the values are the theme's.
@@ -187,6 +198,12 @@ const char* const ViewerNightVariables::kStylesheet = R"CSS(:root {
   --ok: {{ok}};          /* linked to a requirement */
   --warn: {{warn}};        /* linked to none */
   --bad: {{bad}};         /* what breaks a rule, in the logic perspective */
+  --rule: {{rule}};        /* a box's outline and the relations (DS-495) */
+  --v-pub: {{v-pub}};       /* a public member's dot */
+  --v-prot: {{v-prot}};      /* a protected member's dot */
+  --v-priv: {{v-priv}};      /* a private member's dot */
+  --s-ty: {{s-ty}};        /* a member's type */
+  --s-pn: {{s-pn}};        /* a parameter's name */
   --you: {{you}};         /* what the reader wrote, in a note */
   --shadow: {{shadow}};       /* under a card */
   --shadow-pop: {{shadow-pop}};    /* under a popup */
