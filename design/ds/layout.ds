@@ -417,7 +417,7 @@ package driftspec@ds {
       @requirement REQ-00251-1
       + points: std::vector<std::pair<double, double>>
       + shape: Shape                         // polyline or curve (DS-443)
-      + optional label: std::pair<double, double>   // where its label goes, when the router chose
+      + label: std::optional<std::pair<double, double>>   // where its label goes, when the router chose
     }
 
     dataclass Box {                          // where a box lands: its top left corner, its width and its height

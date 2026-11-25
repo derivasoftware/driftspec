@@ -223,6 +223,7 @@ package driftspec@ds {
         @requirement REQ-00137-1
         @requirement REQ-00155-1
       }
+      - static documentHead(diagram: model::Entity) -> nlohmann::json   // what heads every document: ir, the diagram's kind, title (DS-443)
       - renderState(diagram: model::Entity, pretty: bool) -> std::string {
         @requirement REQ-00062-1
         @requirement REQ-00144-1
@@ -352,7 +353,7 @@ package driftspec@ds {
       @requirement REQ-00251-1
       + owns many points: std::vector<Point>
       + curve: bool                          // a smooth curve through the points (DS-443)
-      + owns optional label: Point           // where its label goes, when the router chose
+      + label: std::optional<Point>          // where its label goes, when the router chose
     }
 
     dataclass Placed {
@@ -500,7 +501,7 @@ package driftspec@ds {
       }
       self -> doc.bundled() -> bundled
       local layout: Layout
-      self -> layout.place(bundled, maxWidth) -> lay
+      self -> layout.place(bundled, maxWidth, true) -> lay          // routed as its kind is drawn (DS-443)
       return drawing
     }
 
@@ -519,7 +520,7 @@ package driftspec@ds {
       }
       self -> doc.bundled() -> bundled
       local layout: Layout
-      self -> layout.place(bundled, width) -> lay
+      self -> layout.place(bundled, width, false) -> lay
       return drawing
     }
 
@@ -530,7 +531,7 @@ package driftspec@ds {
         -> sequenceGrid(doc, pen_) -> grid         // bundled all the same, and not used
       } else {
         local layout: Layout
-        self -> layout.place(bundled, width) -> lay
+        self -> layout.place(bundled, width, false) -> lay
         -> classGrid(bundled, lay, pen_) -> grid
       }
       self -> grid.encode(pen_.cellColours) -> encoded

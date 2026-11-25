@@ -80,15 +80,12 @@ std::string edgeKind(const std::string& relation) {
   return "";
 }
 
-/// What heads every render-IR document, and the one place it is written (DS-443): the contract's version, the
-/// diagram's kind, so a drawing can tell how to draw it without guessing from its nodes (a box diagram that says no
-/// kind is a class diagram), and its title.
-nlohmann::json documentHead(const model::Entity& diagram) {
+}  // namespace
+
+nlohmann::json IrExport::documentHead(const model::Entity& diagram) {
   const std::string kind = diagram.field("kind");
   return {{"ir", 1}, {"kind", kind.empty() ? "class" : kind}, {"title", diagram.name}};
 }
-
-}  // namespace
 
 std::vector<std::string> IrExport::diagrams() const {
   std::vector<std::string> out;
